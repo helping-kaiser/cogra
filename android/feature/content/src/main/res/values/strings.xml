@@ -227,11 +227,11 @@
     <string name="content_remove_confirm">Remove</string>
     <string name="content_remove_keep">Keep it</string>
     <string name="content_error_empty_body">The post needs a body.</string>
-    <string name="content_error_title_too_long">Too long — at most %1$d characters.</string>
-    <string name="content_error_description_too_long">Too long — at most %1$d characters.</string>
-    <string name="content_error_body_too_long">Too long — at most %1$d characters.</string>
+    <string name="content_error_title_too_long">A title is at most 100 characters.</string>
+    <string name="content_error_description_too_long">A description is at most 500 characters.</string>
+    <string name="content_error_body_too_long">A post\'s words are at most 5,000 characters.</string>
     <string name="content_error_comment_body_too_long">Too long — at most %1$d characters.</string>
-    <string name="content_error_sensitive_reason_too_long">Too long — at most %1$d characters.</string>
+    <string name="content_error_sensitive_reason_too_long">A reason is at most 140 characters.</string>
     <string name="content_error_alt_text_too_long">Too long — at most %1$d characters.</string>
     <string name="content_error_refused">The server refused this write.</string>
     <string name="content_error_signing">Signing did not finish — the write stays pending.</string>

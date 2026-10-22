@@ -27,6 +27,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.InlineSize
 import com.cogra.core.designsystem.v2.media.CoverPick
 import com.cogra.core.designsystem.v2.media.CoverRow
 import com.cogra.core.designsystem.v2.media.cappedToTallestTile
@@ -214,9 +215,11 @@ internal fun CoverDoor(onOpen: () -> Unit, testTag: String) {
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
+        // `ComposeDetailsVideo`: `InlineAction` at its `sm` rung.
         InlineAction(
             text = "Add a cover",
             onClick = onOpen,
+            size = InlineSize.Small,
             testTag = testTag,
         )
         Text(

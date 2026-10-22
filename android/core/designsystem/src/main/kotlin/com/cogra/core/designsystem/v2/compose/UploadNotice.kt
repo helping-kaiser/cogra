@@ -16,18 +16,19 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
-/**
+/*
  * The two upload notices (`design/components/compose/UploadNotice.jsx`).
  *
  * Upload runs in the background from the moment a picture has its crop —
@@ -37,8 +38,9 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  */
 
 /**
- * The seal's gate: while this shows, the sign button is disabled, because
- * nothing signs until the content it signs exists.
+ * The seal's gate: nothing signs until the content it signs exists. The
+ * commit stays enabled beside it — a press is held until the bytes land
+ * (`SealFooter.jsx`).
  *
  * The words are fixed by the component prompt and carry the count, so the
  * ring beside them is decoration rather than the message — which is why it
@@ -49,6 +51,7 @@ fun UploadStatusLine(
     done: Int,
     total: Int,
     modifier: Modifier = Modifier,
+    media: UploadMedia = UploadMedia.Pictures,
     testTag: String? = null,
 ) {
     // Strictly the in-flight gate (component prompt lines 1, 11): nothing
@@ -75,11 +78,56 @@ fun UploadStatusLine(
             gapSize = 0.dp,
         )
         Text(
-            text = "Uploading $done of $total — signing waits for the pictures.",
+            // The pictures' noun counts: one picture is `the picture`
+            // (jakob 2026-10-05); a clip is one thing already.
+            text = "Uploading $done of $total — signing waits for the ${gateNoun(media, total)}.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+}
+
+/** The noun the gate waits on: `the video`, `the picture` at one, `the pictures`. */
+internal fun gateNoun(media: UploadMedia, total: Int): String = when {
+    media == UploadMedia.Video -> "video"
+    total == 1 -> "picture"
+    else -> "pictures"
+}
+
+/**
+ * THE GATE'S FAULT READING (`UploadStatusLine` `failed`, jakob 2026-10-01):
+ * an upload failed while the seal waits on it, so the ring and the count
+ * give way to the failure's fact in the error ink, the gate's consequence
+ * in the quiet voice, and `Retry` — the commit is disabled at this reading
+ * only, and this line says why. No `Remove it`: the seal reads back, and
+ * what the post carries is changed one stage back.
+ */
+@Composable
+fun UploadGateFailedLine(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+    media: UploadMedia = UploadMedia.Pictures,
+    testTag: String? = null,
+) {
+    val retry = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary))
+    val message = if (media == UploadMedia.Video) "The video didn't upload." else "One picture didn't upload."
+    val text = buildAnnotatedString {
+        withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) { append(message) }
+        append(" ")
+        withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append("Signing waits for it.") }
+        append(" ")
+        withStyle(MaterialTheme.typography.labelLarge.toSpanStyle()) {
+            withLink(LinkAnnotation.Clickable("retry", retry) { onRetry() }) { append("Retry") }
+        }
+    }
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        textAlign = TextAlign.Center,
+        modifier = modifier
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+    )
 }
 
 /**

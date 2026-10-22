@@ -31,6 +31,7 @@ import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.SentContent
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.known
 import com.cogra.domain.signing.postExpectation
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.InMemoryComposeDraftStore
@@ -48,7 +49,6 @@ import com.cogra.domain.testing.fakeReadiness
 import com.cogra.domain.testing.fakeUpload
 import com.cogra.domain.testing.testGraphIds
 import com.cogra.domain.topics.TagClaim
-import com.cogra.domain.signing.known
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -1193,7 +1193,7 @@ class ComposeWizardViewModelTest {
     // -- Refusals --
 
     @Test
-    fun aRefusalNamingAPickLandsOnThatPick() = runTest(dispatcher) {
+    fun aRefusalOfAPickedThingTheStageShouldHaveBlockedReadsAsTheBug() = runTest(dispatcher) {
         content.outcome = Outcome.Refused(
             listOf(UserError(ErrorCode.BAD_INPUT, "already attached", listOf("attachments", "1", "mediaId"))),
         )
@@ -1202,16 +1202,13 @@ class ComposeWizardViewModelTest {
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        val second = vm.state.value.picked[1].upload
-        assertThat(second).isInstanceOf(AssetUpload.Failed::class.java)
-        assertThat((second as AssetUpload.Failed).serverMessage).isEqualTo("already attached")
-        // It landed on the pick, so nothing spills into the one-line
-        // problem the screen shows for the unplaceable.
-        assertThat(vm.state.value.refusal).isNull()
+        // SealFaultBug.md: the notice in the bug's words, and no row marked.
+        assertThat(vm.state.value.fault).isEqualTo(SealFault.Bug)
+        assertThat(vm.state.value.submitting).isFalse()
     }
 
     @Test
-    fun aWholeBatchRefusalSaysItsPieceOnce() = runTest(dispatcher) {
+    fun theWriteRuleReadsAsItsNotice() = runTest(dispatcher) {
         content.outcome = Outcome.Refused(
             listOf(UserError(ErrorCode.WRITE_RULE_FAILED, "the balance cannot carry this")),
         )
@@ -1225,12 +1222,12 @@ class ComposeWizardViewModelTest {
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.refusal).isEqualTo("the balance cannot carry this")
-        assertThat(vm.state.value.signingFailed).isFalse()
+        // The write rule's notice, never Retry (copy-voice, *Faults by code*).
+        assertThat(vm.state.value.fault).isEqualTo(SealFault.WriteRule)
     }
 
     @Test
-    fun aTransportFaultOnTheStageNeverClaimsSigningFailed() = runTest(dispatcher) {
+    fun noAnswerReadsAsTheOfflineFault() = runTest(dispatcher) {
         content.outcome = Outcome.Failed(IOException("offline"))
         val vm = viewModel()
         vm.start()
@@ -1242,8 +1239,50 @@ class ComposeWizardViewModelTest {
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.transportFailed).isTrue()
-        assertThat(vm.state.value.signingFailed).isFalse()
+        assertThat(vm.state.value.fault).isEqualTo(SealFault.Offline)
+    }
+
+    @Test
+    fun discardThePostAsksFirstThenLeavesWithTheDraftGone() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Words)
+        vm.onBodyChange("Salt maps")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onDiscardPost()
+        assertThat(vm.state.value.discardingPost).isTrue()
+        vm.onKeepPost()
+        assertThat(vm.state.value.discardingPost).isFalse()
+        assertThat(vm.state.value.outcome).isNull()
+
+        vm.onDiscardPost()
+        vm.onDiscardConfirmed()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Discarded)
+        assertThat(drafts.draft()).isNull()
+    }
+
+    @Test
+    fun aBodyHoldingWordsAsksBeforeItSwitchesHalves() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Words)
+        assertThat(vm.state.value.mode).isEqualTo(BodyMode.Words)
+        vm.onBodyChange("Salt maps")
+
+        vm.onModeChange(BodyMode.Media)
+        assertThat(vm.state.value.mode).isEqualTo(BodyMode.Words)
+        assertThat(vm.state.value.askingBodySwitch).isEqualTo(BodyMode.Media)
+        vm.onKeepBody()
+        assertThat(vm.state.value.body).isEqualTo("Salt maps")
+
+        vm.onModeChange(BodyMode.Media)
+        vm.onDiscardBody()
+        assertThat(vm.state.value.mode).isEqualTo(BodyMode.Media)
+        assertThat(vm.state.value.body).isEmpty()
     }
 
     @Test

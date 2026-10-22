@@ -187,6 +187,8 @@ data class PostDetail(
     val from: String? = null,
     val commentId: String? = null,
     val aimReply: Boolean = false,
+    /** Just signed here — `ComposeLanded`'s snackbar, said once. */
+    val published: Boolean = false,
 )
 
 /**
@@ -1103,7 +1105,7 @@ private fun CograNavGraphContent(
                         onSigned = { nodeId ->
                             navController.popBackStack<Feed>(inclusive = false)
                             navController.reportToCurrent(contentSignedKey, true)
-                            navController.navigate(PostDetail(nodeId))
+                            navController.navigate(PostDetail(nodeId, published = true))
                         },
                         // "Nothing was spent — your draft is saved": the
                         // notice belongs on the feed, which is where the
@@ -1145,6 +1147,7 @@ private fun CograNavGraphContent(
                     from = detailRoute.from,
                     landOn = detailRoute.commentId,
                     aimReply = detailRoute.aimReply,
+                    published = detailRoute.published,
                     viewerId = accountId,
                     signedIn = signedIn,
                     onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },

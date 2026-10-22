@@ -56,6 +56,13 @@ internal fun TopicEntry(
      */
     pairSheet: Boolean = false,
     /**
+     * The composer's own drawing (`ComposeDetailsBody`): the block headed by
+     * `FieldLabel` `Tags`, 6 apart, and each staged tag a `TopicRemovable`
+     * pill. The edit, reply and comment surfaces keep theirs until their own
+     * boards are conformed.
+     */
+    staged: Boolean = false,
+    /**
      * The section's data-node on a registered screen (`composeDetails.tags`):
      * the section, its heading (`label`), each chip (keyed by its name) and
      * the add action then wear the registered paths. The free-text field, the
@@ -65,12 +72,15 @@ internal fun TopicEntry(
     node: DataNode? = null,
 ) {
     val tagInput = section.input
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.dataNode(node)) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(sectionGap(staged)),
+        modifier = Modifier.fillMaxWidth().dataNode(node),
+    ) {
         if (showHeading) {
-            Text(
-                stringResource(R.string.content_topics_heading),
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.dataNode(node?.div("label")),
+            SectionHeading(
+                text = stagedOr(staged, "Tags", stringResource(R.string.content_topics_heading)),
+                staged = staged,
+                node = node?.div("label"),
             )
         }
         if (section.tags.isNotEmpty()) {
@@ -80,9 +90,10 @@ internal fun TopicEntry(
                 modifier = Modifier.testTag("${testTagPrefix}_tags"),
             ) {
                 section.tags.forEach { row ->
-                    TopicChip(
+                    StagedTagChip(
                         name = row.name,
-                        onClick = { onTuneTag(row.name) },
+                        staged = staged,
+                        onTune = { onTuneTag(row.name) },
                         onRemove = { onRemoveTag(row.name) },
                         testTag = "${testTagPrefix}_tag_${row.name}",
                         node = node?.div("tag")?.keyed(row.name),
@@ -259,3 +270,36 @@ internal fun licenseReadings(license: LicenseChoice): List<LicenseReading> = lis
 /** Whether a pair is the one readers already have a word for. */
 internal fun isPublicDomain(license: LicenseChoice): Boolean =
     license.attribution == 0.0 && license.provenance == 0.0
+
+/** A section's own gap: the composer's 6 (`ComposeDetailsBody`'s blocks), the entry's 8 elsewhere. */
+internal fun sectionGap(staged: Boolean) = if (staged) 6.dp else 8.dp
+
+/** The composer's word where it is drawn, the entry's elsewhere. */
+internal fun stagedOr(staged: Boolean, composer: String, entry: String) = if (staged) composer else entry
+
+/** A section's heading: `FieldLabel` (label-large) on the composer, the entry's title-small elsewhere. */
+@Composable
+internal fun SectionHeading(text: String, staged: Boolean, node: DataNode?) {
+    Text(
+        text = text,
+        style = if (staged) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall,
+        modifier = Modifier.dataNode(node),
+    )
+}
+
+/** One staged tag: `TopicRemovable` on the composer, the entry's chip elsewhere. */
+@Composable
+private fun StagedTagChip(
+    name: String,
+    staged: Boolean,
+    onTune: () -> Unit,
+    onRemove: () -> Unit,
+    testTag: String,
+    node: DataNode?,
+) {
+    if (staged) {
+        TopicRemovable(name = name, onEdit = onTune, onRemove = onRemove, node = node, testTag = testTag)
+    } else {
+        TopicChip(name = name, onClick = onTune, onRemove = onRemove, testTag = testTag, node = node)
+    }
+}

@@ -1,5 +1,6 @@
 package com.cogra.feature.content
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,10 +39,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -64,9 +67,15 @@ import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.BandBell
+import com.cogra.core.designsystem.v2.atom.ButtonKind
+import com.cogra.core.designsystem.v2.atom.ButtonSize
 import com.cogra.core.designsystem.v2.atom.CograBandBell
 import com.cogra.core.designsystem.v2.atom.CograBandChats
 import com.cogra.core.designsystem.v2.atom.CograBandIdentity
+import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.CograMark
+import com.cogra.core.designsystem.v2.atom.taskRing
+import com.cogra.core.designsystem.v2.atom.taskRingColors
 import com.cogra.core.designsystem.v2.media.CoverKind
 import com.cogra.core.designsystem.v2.media.CoveringLayers
 import com.cogra.core.designsystem.v2.media.CoversSurface
@@ -595,15 +604,15 @@ fun FeedScreen(
                                             // the top of the feed the author returns
                                             // to, rather than in the composer they have
                                             // already left.
+                                            // A `TaskCard` in the FeedList, full width, as the
+                                            // vouch card stands.
                                             expiredLabel?.let { label ->
                                                 SeamedSlot {
-                                                    Gutter {
-                                                        ExpiredCard(
-                                                            label = label,
-                                                            onDismiss = onExpiredDismissed,
-                                                            onOpenDraft = onOpenDraft,
-                                                        )
-                                                    }
+                                                    ExpiredCard(
+                                                        label = label,
+                                                        onDismiss = onExpiredDismissed,
+                                                        onOpenDraft = onOpenDraft,
+                                                    )
                                                 }
                                             }
                                         }
@@ -833,37 +842,56 @@ private fun ExpiredCard(
     onDismiss: () -> Unit,
     onOpenDraft: () -> Unit,
 ) {
-    Card(
+    // `TaskCard` (`_shared.jsx`): a `Card` — surface-card, the medium rung,
+    // padding 16, gap 12 — wearing the task ring OUTSIDE its padding; the
+    // title in title-medium beside the mark, the body in body-medium
+    // secondary, the two `sm` answers at the end. The feed card's ground,
+    // not the olive: it says how things stand, nothing is the reader's to do.
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .testTag("feed_expired"),
+            .testTag("feed_expired")
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            .taskRing(taskRingColors(), MaterialTheme.shapes.medium)
+            .padding(Space.x4 + 2.dp),
+        verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
             Text(
                 text = stringResource(R.string.content_expired_title),
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f).semantics { heading() },
             )
-            Text(
-                text = stringResource(R.string.content_expired_body, label),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            CograMark(size = 20.dp)
+        }
+        Text(
+            text = stringResource(R.string.content_expired_body, label),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Space.x2, Alignment.End),
+        ) {
+            CograButton(
+                text = stringResource(R.string.content_expired_dismiss),
+                onClick = onDismiss,
+                kind = ButtonKind.Text,
+                size = ButtonSize.Compact,
+                testTag = "feed_expired_dismiss",
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-            ) {
-                TextButton(onClick = onDismiss, modifier = Modifier.testTag("feed_expired_dismiss")) {
-                    Text(stringResource(R.string.content_expired_dismiss))
-                }
-                Button(onClick = onOpenDraft, modifier = Modifier.testTag("feed_expired_open")) {
-                    Text(stringResource(R.string.content_expired_open))
-                }
-            }
+            CograButton(
+                text = stringResource(R.string.content_expired_open),
+                onClick = onOpenDraft,
+                size = ButtonSize.Compact,
+                testTag = "feed_expired_open",
+            )
         }
     }
 }

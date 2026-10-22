@@ -142,6 +142,8 @@ fun PostDetailRoute(
     landOn: String? = null,
     /** The landing opens the reply composer aimed at that comment (a comment card's glyph). */
     aimReply: Boolean = false,
+    /** Just signed here (`ComposeLanded`): the snackbar says so once. */
+    published: Boolean = false,
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -150,12 +152,7 @@ fun PostDetailRoute(
     // In an effect, not the composition body: a recomposition that never
     // commits would otherwise consume the signal and fire the refetch
     // anyway.
-    LaunchedEffect(refreshSignal) {
-        if (refreshSignal) {
-            onRefreshSignalConsumed()
-            viewModel.refresh()
-        }
-    }
+    OnSignal(refreshSignal, onRefreshSignalConsumed, viewModel::refresh)
     // THE PULL REACHES BOTH OWNERS. The thread is the sheet's and the count
     // on the affordance row is this screen's, so one re-pull has to say so
     // twice — otherwise the reader pulls, opens the thread, and reads the
@@ -169,6 +166,7 @@ fun PostDetailRoute(
     PostDetailScreen(
         state = state,
         viewerId = viewerId,
+        published = published,
         deletionBand = deletionBand,
         onRefresh = {
             threadToken++
@@ -361,6 +359,11 @@ fun PostDetailScreen(
      * the person leaves the feed, never this page.
      */
     hidden: HiddenSet? = null,
+    /**
+     * The post was just signed here (`ComposeLanded`): the page opens wearing
+     * Still settling and says so once on its snackbar.
+     */
+    published: Boolean = false,
 ) {
     val snackbar = remember { SnackbarHostState() }
     // THE PAGE'S SNACKBAR (`postDetail.snackbar`): the scope is the screen's,
@@ -369,6 +372,7 @@ fun PostDetailScreen(
     val notify: (String) -> Unit = { text ->
         scope.launch { snackbar.showSnackbar(NodeSnackbarVisuals(text, POST_DETAIL / "snackbar")) }
     }
+    LandedSnackbar(published, notify)
     // THE MENU SAVES THROUGH THE ONE OVERLAY AND HIDES THROUGH THE ONE SET, its
     // aftermath on this page's snackbar — `Undo` on `postDetail.snackbar.action`.
     val savedHost = rememberSavedHost(saved, snackbar, POST_DETAIL / "snackbar", onRequireAccount, hidden)
@@ -1050,3 +1054,36 @@ internal const val DETAIL_BLOCK_TAG = "detail_block"
 
 private const val TARGET_TITLE_CHARS = 48
 private const val TARGET_SNIPPET_CHARS = 120
+
+/** `ComposeLanded`'s snackbar, verbatim. */
+const val LANDED_SNACKBAR = "Signed — it's in the thread now, still settling."
+
+/**
+ * A one-shot signal from the back stack, consumed in an effect rather than
+ * the composition body: a recomposition that never commits would otherwise
+ * consume it and act anyway.
+ */
+@Composable
+private fun OnSignal(signal: Boolean, onConsumed: () -> Unit, act: () -> Unit) {
+    LaunchedEffect(signal) {
+        if (signal) {
+            onConsumed()
+            act()
+        }
+    }
+}
+
+/**
+ * `ComposeLanded`: the page opens on the post just signed and says so ONCE —
+ * saved, so a return to this page down the back stack never says it twice.
+ */
+@Composable
+private fun LandedSnackbar(published: Boolean, notify: (String) -> Unit) {
+    var said by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(published) {
+        if (published && !said) {
+            said = true
+            notify(LANDED_SNACKBAR)
+        }
+    }
+}

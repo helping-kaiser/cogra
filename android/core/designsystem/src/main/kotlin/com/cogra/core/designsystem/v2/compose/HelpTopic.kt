@@ -10,19 +10,24 @@ package com.cogra.core.designsystem.v2.compose
  * dashes: the copy is the design, so it is transcribed rather than
  * rephrased.
  *
+ * THE ITALIC TAILS ARE `cg-exact` SPANS (copy-voice, *The "?" dialogs*: "the
+ * face is drawn in both reading modes, the digits only when the reader has
+ * asked for them"). They are written here between [EXACT_OPEN] and
+ * [EXACT_CLOSE], so the dialog paints them only in geek mode and its
+ * screen-reader twin says them either way ([exactSpans]).
+ *
  * At most two short paragraphs each, because that is the shape the
  * `HelpDialog` board draws.
  */
 enum class HelpTopic(val title: String, val paragraphs: List<String>) {
-    /** The seal, post and reply. */
-    SignedActions(
-        title = "Signed actions",
+    /** The seal, post and reply (copy-voice: payer-neutral by the v1.0.0 scope cut). */
+    HowSigningWorks(
+        title = "How signing works",
         paragraphs = listOf(
-            "Each piece of a post — the post itself, every topic, every citation — " +
-                "is its own signed action, written in your name. They sign together: " +
-                "all of them land, or none does.",
-            "You don't pay for these — a shared community pool covers members' " +
-                "signings. The pool is real and finite, so each action still counts.",
+            "Each piece of a post — the post itself, every tag, every citation — " +
+                "is signed on its own, in your name. They sign together: all of them " +
+                "land, or none does.",
+            "Each signing is paid for — the cost is real, so each one still counts.",
         ),
     ),
 
@@ -32,7 +37,8 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
         paragraphs = listOf(
             "A description is read aloud by screen readers and shown when a picture " +
                 "can't load — plain words about what's there. It travels with the " +
-                "picture, public like the rest of the post.",
+                "picture, public like the rest of the post. A video takes one " +
+                "description for the whole clip; its cover takes none of its own.",
             "Nothing is described for you: a picture without a description is " +
                 "skipped by screen readers, never guessed at.",
         ),
@@ -66,55 +72,62 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
     ),
 
     /**
-     * Key absent at the seal. On that screen the one `?` belongs to this
-     * notice rather than the header: the key story outranks the seal story
-     * there (design/readme.md §13).
+     * Key absent — the seal, the stance pad and the settings screens. One
+     * text for every key-absent surface (the key-loss round): nothing in it
+     * assumes a write in progress.
      */
     Key(
         title = "Your key",
         paragraphs = listOf(
-            "Signing needs your key, and it isn't in this app. Nothing is signed " +
-                "or sent without it — the draft stays on this device.",
-            "Restore the key with your recovery code to finish. Restoring here is " +
-                "the only way to complete this write.",
+            "Signing needs your key, and it isn't in this app — nothing is signed " +
+                "without it.",
+            "A recovery code brings the key to any device. Until it's here, anything " +
+                "waiting on it stays on this device.",
+        ),
+    ),
+
+    /**
+     * The write rule's notice on the post's seal — the stopper exception's
+     * own "?" (copy-voice: blessed jakob 2026-10-01). The draft clause is
+     * the seal's, the surface that keeps a draft.
+     */
+    WhySigningWaits(
+        title = "Why signing waits",
+        paragraphs = listOf(
+            "There's a limit to how many signed actions can go through in a short " +
+                "time — it keeps the network safe from flooding. You've hit it for now.",
+            "Nothing was signed or spent, and your draft is kept. Try again in a " +
+                "little while.",
         ),
     ),
 
     /**
      * The edit surfaces — the post's, and `CommentEdit`'s own help dot.
      *
-     * Transcribed verbatim, "post" included: copy-voice.md carries one
-     * Editing text and the boards point both edit surfaces at it, so
-     * swapping the noun here would be the rephrasing this file exists
-     * not to do.
+     * Transcribed verbatim: copy-voice.md carries one Editing text and the
+     * boards point both edit surfaces at it.
      */
     Editing(
         title = "Editing",
         paragraphs = listOf(
-            "An edit replaces the whole post; earlier versions stay public under " +
-                "\"Edited\" unless you remove them. An edit never bumps the post as new.",
-            "Topic and citation changes ride the same signing, each as its own " +
-                "signed action. The license never changes.",
+            "An edit signs a full new version on top; earlier versions stay public " +
+                "under \"Edited\". An edit never bumps it as new.",
+            "Tag and citation changes ride the same signing, each as its own signed " +
+                "action. The license never changes.",
         ),
     ),
 
     /**
      * The backing pad — the one-axis pad on one's own post, the seal's and
-     * a post edit's (`ComposePad`, `EditPad`).
-     *
-     * Transcribed from copy-voice.md's entry *Your backing on your post*
-     * (blessed jakob 2026-10-16, round 15), its two paragraphs split where
-     * the guideline's `/` splits them. The guideline italicises `(+0.10)`
-     * as a `cg-exact` span, and this app draws no geek mode yet, so the
-     * text carries it as written. BACKING is the authoring number; the
-     * opinion is the one the post's face takes — the two words never
-     * trade places.
+     * a post edit's (`ComposePad`, `EditPad`). BACKING is the authoring
+     * number; the opinion is the one the post's face takes — the two words
+     * never trade places.
      */
     YourBackingOnYourPost(
         title = "Your backing on your post",
         paragraphs = listOf(
             "Publishing also signs your backing of your own post — for or " +
-                "against, from a gentle 🙂 (+0.10) by default. An edit adds to it, " +
+                "against, from a gentle 🙂 $EXACT_OPEN(+0.10)$EXACT_CLOSE by default. An edit adds to it, " +
                 "starting at nothing, so an edit you don't adjust leaves it as it is.",
             "How much of it reaches you isn't part of publishing: once the post is " +
                 "out, give it an opinion on its face, like anyone's. Nothing is signed " +
@@ -124,21 +137,35 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
 
     /**
      * The reply's two-axis pad — its own topic, not
-     * [YourBackingOnYourPost].
-     *
-     * A reply's stance is toward somebody else's post, so both axes are
-     * the author's to pick; the backing pad's text speaks of one number
-     * and would be false here
-     * (`design/designs/canonical/screens/ReplyPadHelp.jsx`).
+     * [YourBackingOnYourPost]. An opinion, never "your opinion" (copy-voice,
+     * *Naming*).
      */
     TowardWhatYouAnswer(
         title = "Toward what you answer",
         paragraphs = listOf(
-            "Replying also signs where you stand on the post you answer — for or " +
-                "against, and how much of it reaches you. It starts at a gentle " +
-                "+0.10 / +0.10 and rides the same signature as your reply.",
+            "Replying also signs an opinion on what you answer — for or against, " +
+                "and how much of it reaches you. It starts at a gentle 🙂 " +
+                "$EXACT_OPEN(+0.10 / +0.10)$EXACT_CLOSE and rides the same signature as your reply.",
             "Nothing is signed until Set. Swap the input in settings if you prefer " +
                 "sliders or numbers.",
         ),
     ),
+}
+
+/** Opens a `cg-exact` span inside a [HelpTopic] paragraph. */
+const val EXACT_OPEN = "⁣["
+
+/** Closes a `cg-exact` span inside a [HelpTopic] paragraph. */
+const val EXACT_CLOSE = "]⁣"
+
+/**
+ * A paragraph as painted and as spoken: the `cg-exact` spans kept (geek
+ * mode) or dropped with the space before them (glyph-first), and the spoken
+ * twin always carrying them — "a screen-reader twin says both either way".
+ */
+fun exactSpans(paragraph: String, showExact: Boolean): Pair<String, String> {
+    val spoken = paragraph.replace(EXACT_OPEN, "").replace(EXACT_CLOSE, "")
+    if (showExact) return spoken to spoken
+    val painted = Regex(" ?${Regex.escape(EXACT_OPEN)}.*?${Regex.escape(EXACT_CLOSE)}").replace(paragraph, "")
+    return painted to spoken
 }

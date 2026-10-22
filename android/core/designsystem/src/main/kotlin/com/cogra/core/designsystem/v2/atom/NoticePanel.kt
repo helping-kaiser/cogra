@@ -43,12 +43,13 @@ fun NoticePanel(
     val ink = MaterialTheme.colorScheme.onTertiaryContainer
     Column(
         verticalArrangement = Arrangement.spacedBy(Space.x3),
+        // The tag names the panel, its ground included.
         modifier = modifier
             .fillMaxWidth()
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.tertiaryContainer)
-            .padding(Space.x4)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+            .padding(Space.x4),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
             Text(

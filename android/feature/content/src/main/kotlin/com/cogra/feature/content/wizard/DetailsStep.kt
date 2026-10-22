@@ -98,6 +98,8 @@ internal fun ColumnScope.DetailsStepBody(
                 // (CW-17, web's `details-step.tsx:235` conforms already).
                 subject = if (state.isVideoPost) DescribeSubject.Video else DescribeSubject.Pictures,
                 testTag = "wizard_describe_counter",
+                // The row is a block across the stage (`DescribeCounter.jsx`).
+                modifier = Modifier.fillMaxWidth(),
                 node = COMPOSE_DETAILS / "describeRow",
             )
         }
@@ -125,7 +127,9 @@ internal fun ColumnScope.DetailsStepBody(
         topics()
         references()
 
-        if (state.mode == BodyMode.Media) {
+        // The aside stands only while an upload runs (`ComposeUploading`);
+        // the details stage at rest draws none.
+        if (state.mode == BodyMode.Media && state.uploadsRunning) {
             Text(
                 text = "Pictures upload while you write — signing waits for them.",
                 style = MaterialTheme.typography.labelSmall,
@@ -165,7 +169,7 @@ private fun TitleField(value: String, tooLong: Boolean, onValueChange: (String) 
         optional = true,
         cap = MAX_TITLE_CHARS,
         error = if (tooLong) {
-            stringResource(R.string.content_error_title_too_long, MAX_TITLE_CHARS)
+            stringResource(R.string.content_error_title_too_long)
         } else {
             null
         },
@@ -189,7 +193,7 @@ private fun DescriptionField(value: String, tooLong: Boolean, onValueChange: (St
         minLines = 3,
         cap = MAX_DESCRIPTION_CHARS,
         error = if (tooLong) {
-            stringResource(R.string.content_error_description_too_long, MAX_DESCRIPTION_CHARS)
+            stringResource(R.string.content_error_description_too_long)
         } else {
             null
         },

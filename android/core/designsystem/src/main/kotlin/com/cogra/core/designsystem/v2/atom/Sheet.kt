@@ -29,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -40,9 +39,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
+import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
@@ -142,6 +145,12 @@ fun CograSheetSurface(
     testTag: String? = null,
     /** The handle's data-node on a registered sheet (`settings.licenseSheet.dragHandle`). */
     handleTestTag: String? = null,
+    /**
+     * The space between the sheet's children. A sheet whose body keeps its
+     * own rhythm passes less (`SheetTitle` stands 8 over the body, the
+     * master's `0 24 8`); the grip always stands 12 over what follows it.
+     */
+    gap: Dp = Space.x3,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val side = if (tallest) 0.dp else Space.x6
@@ -181,13 +190,13 @@ fun CograSheetSurface(
         // The drawn surface carries no gap of its own (`BottomSheet.jsx`,
         // `gap: 0`); the content class's spacing is the seal board's. The
         // tallest class's handle brings the board's own margin instead.
-        verticalArrangement = if (tallest) Arrangement.Top else Arrangement.spacedBy(Space.x3),
+        verticalArrangement = if (tallest) Arrangement.Top else Arrangement.spacedBy(gap),
     ) {
         if (showHandle) {
             Spacer(
                 Modifier
                     .align(Alignment.CenterHorizontally)
-                    .padding(bottom = if (tallest) Space.x3 else 0.dp)
+                    .padding(bottom = if (tallest) Space.x3 else (Space.x3 - gap).coerceAtLeast(0.dp))
                     .width(32.dp)
                     .height(4.dp)
                     .clip(CircleShape)
@@ -258,7 +267,7 @@ fun SheetTitle(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
         )
@@ -270,19 +279,22 @@ fun SheetTitle(
 }
 
 /**
- * The circled `?`, drawn as the canonical boards draw it (`HelpDialog`): a
- * 24dp outlined circle in `onSurfaceVariant`. It taps at 48dp while drawing
- * at 24dp, and its label rides `onClickLabel` so the glyph is never the only
- * thing announced.
+ * The circled `?` (`design/components/core/HelpDot.jsx`): the 48dp button IS
+ * the target, and inside it a 32dp ring in `outlineVariant` around a
+ * `labelLarge` glyph in `primary`. The pressed state layer fills the
+ * target's circle around the ring.
  *
- * **At most one per screen** (design/readme.md §13), and every one opens
- * [HelpDialog] — the house plain dialog — rather than a tooltip of its own.
+ * **Its accessible name is the dialog it opens** (copy-voice, *The "?"
+ * dialogs*: `Your key`, `License`, `Sensitive`), so the name is the node's
+ * own description and the glyph is never what a listener hears.
  *
- * [tint] is the board's `inverse` for the same dot standing on a TONAL PANEL
- * instead of the page: on the page the ring and glyph read `onSurfaceVariant`
- * (the default), and inside a panel like the key-absent notice a caller
- * passes the panel's own on-colour instead, so the dot doesn't argue with a
- * second colour family (HelpDot.jsx:10-16).
+ * **At most one per screen** (design/readme.md §13), save the stopper
+ * exception, and every one opens [HelpDialog] — the house plain dialog.
+ *
+ * [tint] is the master's `inverse`, for the same dot standing on a TONAL
+ * PANEL instead of the page: the panel's own on-colour takes the ring and
+ * the glyph alike, so the dot doesn't argue with a second colour family.
+ * Null is the page's dot.
  */
 @Composable
 fun HelpDot(
@@ -290,25 +302,33 @@ fun HelpDot(
     contentDescription: String,
     modifier: Modifier = Modifier,
     testTag: String? = null,
-    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    tint: Color? = null,
 ) {
+    val ring = tint ?: MaterialTheme.colorScheme.outlineVariant
+    val glyph = tint ?: MaterialTheme.colorScheme.primary
     Box(
         modifier = modifier
-            .minimumInteractiveComponentSize()
-            .size(24.dp)
+            .size(Layout.TouchTargetMin)
             .clip(CircleShape)
-            .border(1.dp, tint, CircleShape)
-            .clickable(role = Role.Button, onClickLabel = contentDescription, onClick = onHelp)
+            .clickable(role = Role.Button, onClick = onHelp)
+            .semantics { this.contentDescription = contentDescription }
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = "?",
-            style = MaterialTheme.typography.labelMedium,
-            color = tint,
-        )
+        Box(
+            modifier = Modifier
+                .size(HELP_RING)
+                .border(1.dp, ring, CircleShape)
+                .clearAndSetSemantics { },
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(text = "?", style = MaterialTheme.typography.labelLarge, color = glyph)
+        }
     }
 }
+
+/** The ring inside the dot's 48dp target (`HelpDot.jsx`: 32px). */
+private val HELP_RING = 32.dp
 
 @ThemePreviews
 @Composable

@@ -407,7 +407,7 @@ private fun TitleAndDescription(state: PostEditUiState, actions: PostEditActions
         optional = true,
         modifier = Modifier.fillMaxWidth(),
         cap = MAX_TITLE_CHARS,
-        error = stringResource(R.string.content_error_title_too_long, MAX_TITLE_CHARS).takeIf { state.titleTooLong },
+        error = stringResource(R.string.content_error_title_too_long).takeIf { state.titleTooLong },
         testTag = "post_edit_title",
     )
 
@@ -423,7 +423,7 @@ private fun TitleAndDescription(state: PostEditUiState, actions: PostEditActions
             minLines = 2,
             modifier = Modifier.fillMaxWidth(),
             cap = MAX_DESCRIPTION_CHARS,
-            error = stringResource(R.string.content_error_description_too_long, MAX_DESCRIPTION_CHARS)
+            error = stringResource(R.string.content_error_description_too_long)
                 .takeIf { state.descriptionTooLong },
             testTag = "post_edit_description",
         )

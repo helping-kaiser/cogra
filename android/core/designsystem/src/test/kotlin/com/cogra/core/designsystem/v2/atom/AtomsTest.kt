@@ -9,14 +9,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
-import androidx.compose.ui.test.assertTouchHeightIsEqualTo
-import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.assertTouchHeightIsEqualTo
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
@@ -181,10 +181,11 @@ class AtomsTest {
         }
 
         // Nothing actionable follows the X, so a short title must not pull
-        // it back toward the middle: the corner is what the author aims at.
+        // it back toward the middle: the corner is what the author aims at —
+        // the band's own 12dp in from its edge (`PageHeader.jsx`).
         val header = compose.onNodeWithTag("header").getUnclippedBoundsInRoot()
         val leave = compose.onNodeWithTag("header_leave").getUnclippedBoundsInRoot()
-        assertThat((header.right - leave.right).value).isWithin(TOLERANCE).of(0f)
+        assertThat((header.right - leave.right).value).isWithin(TOLERANCE).of(12f)
     }
 
     @Test

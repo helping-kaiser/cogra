@@ -8,6 +8,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.cogra.core.designsystem.LocalShowExactValues
+import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.core.designsystem.v2.compose.exactSpans
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
@@ -38,9 +43,21 @@ fun HelpDialog(
             Text(text = title, style = MaterialTheme.typography.headlineSmall)
         },
         text = {
+            val showExact = LocalShowExactValues.current
             Column(verticalArrangement = Arrangement.spacedBy(Space.x4)) {
                 paragraphs.forEach { paragraph ->
-                    Text(text = paragraph, style = MaterialTheme.typography.bodyMedium)
+                    // A `cg-exact` tail paints in geek mode only; its
+                    // screen-reader twin says it either way.
+                    val (painted, spoken) = exactSpans(paragraph, showExact)
+                    Text(
+                        text = painted,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = if (painted == spoken) {
+                            Modifier
+                        } else {
+                            Modifier.semantics { contentDescription = spoken }
+                        },
+                    )
                 }
             }
         },
@@ -59,15 +76,8 @@ fun HelpDialog(
 private fun HelpDialogPreview() {
     Cogra2PreviewTheme {
         HelpDialog(
-            title = "Signed actions",
-            paragraphs = listOf(
-                "Each piece of a post — the post itself, every topic, every " +
-                    "citation — is its own signed action, written in your name. " +
-                    "They sign together: all of them land, or none does.",
-                "You don't pay for these — a shared community pool covers " +
-                    "members' signings. The pool is real and finite, so each " +
-                    "action still counts.",
-            ),
+            title = HelpTopic.HowSigningWorks.title,
+            paragraphs = HelpTopic.HowSigningWorks.paragraphs,
             onClose = {},
         )
     }

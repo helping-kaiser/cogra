@@ -271,7 +271,8 @@ class ReplyWizardScreenTest {
         }
 
         compose.onNodeWithTag("reply_sensitive_sheet").assertExists()
-        compose.onNodeWithTag("reply_sensitive_switch").assertExists()
+        // The sheet opens ON (the `Mark` was the intent); off, the reason is dead.
+        compose.onNodeWithTag("reply_sensitive_switch").assertExists().performClick()
         compose.onNodeWithTag("reply_sensitive_reason").assertIsNotEnabled()
     }
 
@@ -561,7 +562,7 @@ class ReplyWizardScreenTest {
 
         compose.onNodeWithTag("reply_header_help").performClick()
 
-        assertThat(helps).containsExactly(HelpTopic.SignedActions)
+        assertThat(helps).containsExactly(HelpTopic.HowSigningWorks)
     }
 
     @Test

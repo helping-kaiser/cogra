@@ -280,7 +280,7 @@ data class RefusedPick(
  * `ComposeSensitive`, `ComposeCitations`). One at a time: each is a drawer the
  * reader opened over the same screen.
  */
-enum class SealSheet { None, License, Stance, Sensitive, Cited }
+enum class SealSheet { None, License, Stance, Sensitive, Cited, Tags }
 
 /**
  * How the wizard ended.
@@ -302,6 +302,9 @@ sealed interface WizardOutcome {
 
     /** The author left without publishing; the draft is kept. */
     data object DraftKept : WizardOutcome
+
+    /** `Discard it` on the seal's ask: the draft is gone and the flow is left (SealDiscardConfirm.md). */
+    data object Discarded : WizardOutcome
 }
 
 /**
@@ -446,10 +449,28 @@ data class ComposeWizardState(
     val submitting: Boolean = false,
     /** The device holds no actor key — `ComposeKeyAbsent`. */
     val keyAbsent: Boolean = false,
-    /** A refusal that named no field of its own, in the server's words. */
-    val refusal: String? = null,
-    val signingFailed: Boolean = false,
-    val transportFailed: Boolean = false,
+    /**
+     * What became of the last press, when it did not leave the seal
+     * ([SealFault]). Going a stage back or changing a fact clears it: the
+     * seal shows its plain commit again until the next press (SealSigning.md).
+     */
+    val fault: SealFault? = null,
+    /**
+     * Sign and publish was pressed while the uploads ran: the press is HELD
+     * and signs the moment the last upload lands, or drops when one fails
+     * (ComposeSealUploading.md). Nothing is signed while it is held.
+     */
+    val heldPress: Boolean = false,
+    /** `Discard this post?` stands over the seal (SealDiscardConfirm). */
+    val discardingPost: Boolean = false,
+    /**
+     * The half the body would switch to, while `Discard the words?` (or the
+     * pictures, or the video) asks first — a body holding something never
+     * switches before the ask is answered (ComposeBodyDiscard.md).
+     */
+    val askingBodySwitch: BodyMode? = null,
+    /** `Discard your draft?`, raised by a tap on the dimmed roll (ComposeDraftDiscard). */
+    val askingDraftDiscard: Boolean = false,
     val outcome: WizardOutcome? = null,
 ) {
     /** Every pick that has an id on the server. */
@@ -598,7 +619,31 @@ data class ComposeWizardState(
         }
 
     /**
-     * Whether the seal may be signed. Every pick must have landed an
+     * Whether the seal's commit answers a press. It stays ENABLED while the
+     * uploads run — a press there is held ([heldPress]) — and is disabled
+     * only while a failed upload stands, the gate line saying why
+     * (`SealFooter.jsx`; ComposeSealUploading.md).
+     */
+    val signEnabled: Boolean
+        get() = !keyAbsent &&
+            !titleTooLong &&
+            !descriptionTooLong &&
+            !bodyTooLong &&
+            !sensitiveReasonTooLong &&
+            when (mode) {
+                BodyMode.Words -> body.isNotBlank()
+                BodyMode.Media -> picked.isNotEmpty() && !uploadsFailed
+            }
+
+    /**
+     * The commit was pressed and has not answered — signing, or held on the
+     * uploads. The 200ms label swap and the 5s slow line count from it, and
+     * the ways out refuse a press while it stands (SealSigning.md).
+     */
+    val pressed: Boolean get() = submitting || heldPress
+
+    /**
+     * Whether the seal may be signed NOW. Every pick must have landed an
      * id first — attaching an asset that is still uploading would send
      * a gallery entry naming nothing.
      */
@@ -756,7 +801,8 @@ fun ComposeWizardState.retreated(): ComposeWizardState? = when {
         hasCoverStep -> copy(step = WizardStep.Cover)
         else -> copy(step = WizardStep.Body)
     }
-    else -> copy(step = WizardStep.Details)
+    // A refusal reading never stands again before the next press (SealSigning.md).
+    else -> copy(step = WizardStep.Details, fault = null)
 }
 
 /**
@@ -899,3 +945,45 @@ fun ComposeWizardState.withSourceRatio(uri: String, ratio: Float): ComposeWizard
 
 fun ComposeWizardState.withAltText(uri: String, text: String): ComposeWizardState =
     copy(picked = picked.withAltText(uri, text))
+
+/**
+ * `Discard` on the body-switch ask (ComposeBodyDiscard.md): the half being
+ * left goes and the other opens empty — a post's body is words or pictures,
+ * never both — while the rest of the draft (title, description, tags,
+ * citations) stays.
+ */
+fun ComposeWizardState.discardedHalf(next: BodyMode): ComposeWizardState = when (next) {
+    BodyMode.Media -> copy(body = "", mode = BodyMode.Media, askingBodySwitch = null)
+    BodyMode.Words -> copy(
+        picked = emptyList(),
+        crops = emptyMap(),
+        refused = emptyList(),
+        coverChoice = CoverChoice.None,
+        coverMediaId = null,
+        coverFrames = emptyList(),
+        mode = BodyMode.Words,
+        askingBodySwitch = null,
+    )
+}
+
+/**
+ * `Add pictures instead` / `Write words instead` (ComposeBodyDiscard.md): a
+ * body holding something asks first; an empty one switches silently.
+ */
+fun ComposeWizardState.switchedOrAsked(next: BodyMode): ComposeWizardState = when {
+    next == mode -> this
+    mode == BodyMode.Words && body.isNotBlank() -> copy(askingBodySwitch = next)
+    mode == BodyMode.Media && picked.isNotEmpty() -> copy(askingBodySwitch = next)
+    else -> withMode(next)
+}
+
+/**
+ * After a staged tag or citation leaves: a changed fact clears a refusal
+ * reading, and the last removal from an editing sheet closes it to the seal
+ * (ComposeTags.md, ComposeCitations.md).
+ */
+fun ComposeWizardState.afterRemoval(): ComposeWizardState {
+    val emptied = (sheet == SealSheet.Tags && tagSection.tags.isEmpty()) ||
+        (sheet == SealSheet.Cited && referenceSection.references.isEmpty())
+    return copy(fault = null, sheet = if (emptied) SealSheet.None else sheet)
+}

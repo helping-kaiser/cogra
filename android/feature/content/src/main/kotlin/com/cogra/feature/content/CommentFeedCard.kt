@@ -236,7 +236,7 @@ internal fun quietIf(quiet: Boolean): Color =
  * target's empty tile.
  */
 @Composable
-private fun NodeMark(comment: Boolean, coverUrl: String?, removed: Boolean, testTag: String) {
+internal fun NodeMark(comment: Boolean, coverUrl: String?, removed: Boolean, testTag: String) {
     Box(
         modifier = Modifier
             .size(MARK)
