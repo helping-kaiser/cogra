@@ -223,6 +223,22 @@ export function BottomSheet({
     setClosing(!open);
   }
 
+  // `onClose` IS THE READER'S WORD (Escape, the backdrop, the pull, a control
+  // inside): a close the sheet performs itself because the host already set
+  // `open` false is the host's own doing and is never reported back. The
+  // platform dispatches `close` as a task of its own, so that event can land
+  // after the host has asked to reopen and, reported, would override it. The
+  // flag marks the one close the sheet made; the dialog's close handler spends
+  // it. A ref, not state: nothing renders from it, and it must hold from the
+  // line before `close()` to an event that arrives in a later task.
+  const closedByUs = useRef(false);
+  // What the timer reads when it fires, so a sheet raised again inside the exit
+  // is never closed by the timer the earlier drop armed.
+  const openNow = useRef(open);
+  useEffect(() => {
+    openNow.current = open;
+  });
+
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
@@ -234,11 +250,25 @@ export function BottomSheet({
     }
     if (!dialog.open) return;
     const timer = setTimeout(() => {
+      if (openNow.current) return;
       setClosing(false);
+      // `close()` on a dialog that is no longer open (the reader's Escape beat
+      // the timer) dispatches nothing, so a flag set for it would never be
+      // spent and would swallow the reader's next Escape.
+      if (!dialog.open) return;
+      closedByUs.current = true;
       dialog.close();
     }, exitDuration(SHEET_OUT_MS));
     return () => clearTimeout(timer);
   }, [open, focusTitle, initialFocus]);
+
+  const onDialogClose = () => {
+    if (closedByUs.current) {
+      closedByUs.current = false;
+      return;
+    }
+    onClose();
+  };
 
   // PULLING DOWN IS HOW A DRAWER IS DROPPED (design/readme.md: "pulling down
   // already means dismiss and one gesture may not mean two things"). The
@@ -267,7 +297,7 @@ export function BottomSheet({
       ref={ref}
       {...testAttributes(node, testId)}
       aria-label={title}
-      onClose={onClose}
+      onClose={onDialogClose}
       // A press outside drops the sheet — the same gesture as the back arrow,
       // because a sheet is a drawer rather than a decision.
       onClick={(event) => {
