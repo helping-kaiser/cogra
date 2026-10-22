@@ -379,8 +379,10 @@ export function VideoTransport({
           gap: "8px",
         }}
       >
+        {/* `VideoControls.jsx` TIME: label-small's size and leading only — no
+            weight, no tracking — in tabular figures. */}
         <span
-          className="flex-none text-label-small tabular-nums"
+          className="flex-none text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] tabular-nums"
           style={{ color: INK, filter: OVER_MEDIA }}
           data-testid={`${testId}-elapsed`}
         >
@@ -395,7 +397,7 @@ export function VideoTransport({
           testId={`${testId}-timeline`}
         />
         <span
-          className="flex-none text-label-small tabular-nums"
+          className="flex-none text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] tabular-nums"
           style={{ color: INK, opacity: 0.85, filter: OVER_MEDIA }}
           data-testid={`${testId}-duration`}
         >
