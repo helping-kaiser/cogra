@@ -633,6 +633,7 @@ function LicenseSheet({
       onClose={onClose}
       title="License"
       titleTrailing={<HelpDot ariaLabel="License" onOpen={onHelp} testId="wizard-license-help" />}
+      flush
       testId="wizard-license-sheet"
     >
       <div className="flex flex-col gap-2">
