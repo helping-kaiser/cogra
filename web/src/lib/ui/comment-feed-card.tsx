@@ -394,8 +394,14 @@ export function CommentFeedCard({
               <span
                 data-testid={`${testId}-head-title`}
                 // The removal line in the system's voice: the title's size at
-                // the body's weight — the body-medium role — in the quiet ink.
-                className={`truncate ${head.removed ? "text-body-medium text-on-surface-variant" : "text-label-large"}`}
+                // the body's weight, in the quiet ink (`CommentCard.jsx`: the
+                // label-large size with weight 400 — the register `Deleted
+                // account` takes). The size alone, so no role brings its 500.
+                className={`truncate ${
+                  head.removed
+                    ? "text-[length:var(--text-label-large)]/[var(--text-label-large--line-height)] text-on-surface-variant"
+                    : "text-label-large"
+                }`}
               >
                 {head.title}
               </span>
@@ -412,7 +418,13 @@ export function CommentFeedCard({
         ownPart
       )}
       {isPending(comment) && <PendingMarker testId={`${testId}-pending`} />}
-      <div data-testid={`${testId}-affordances`} className="flex min-w-0 flex-nowrap items-center gap-2">
+      {/* One affordance row, as on the post card: the opinion leads and it
+          spreads across the card (`CommentCard.jsx`, jakob's ruling, the geek
+          round), every control on a 48px target. */}
+      <div
+        data-testid={`${testId}-affordances`}
+        className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1"
+      >
         <StanceControl
           target={{ id: comment.id, kind: "comment", label: "this comment" }}
           testIdPrefix={`${testId}-stance`}
