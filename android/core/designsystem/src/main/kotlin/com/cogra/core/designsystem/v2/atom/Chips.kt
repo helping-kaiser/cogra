@@ -10,21 +10,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
@@ -34,8 +32,8 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
 /**
  * The 2.0 chip: one pill, told apart by what it does (design/readme.md §7).
  *
- * Drawn at 32dp, tapped at 48dp — `minimumInteractiveComponentSize` expands
- * the target without moving the ink, which is how design/readme.md §4 asks
+ * Drawn at 32dp, tapped at 48dp — [hitTarget] grows the target around the
+ * ink without moving it or growing the row, which is how design/readme.md §4 asks
  * for the minimum to be met.
  *
  * **Selection is colour only, with no check glyph.** A check would reflow
@@ -61,24 +59,31 @@ fun CograChip(
     } else {
         Modifier.border(BorderStroke(1.dp, colors.outline), CircleShape)
     }
-    val ink = if (selected) colors.onSecondaryContainer else colors.onSurfaceVariant
+    // `--text-body` (on-surface) unselected, `on-secondary-container` selected (Chip.jsx:117).
+    val ink = if (selected) colors.onSecondaryContainer else colors.onSurface
 
     Row(
         modifier = modifier
-            .minimumInteractiveComponentSize()
-            .defaultMinSize(minHeight = Layout.ChipHeight)
-            .clip(CircleShape)
-            .then(container)
+            // 32 drawn, 48 tapped (`cg-hit`): the ink keeps its box in the row and
+            // the target overflows around it. A filter chip is a SWITCH
+            // (`role="switch"`, `aria-checked`), so it toggles under Role.Switch.
             .then(
                 if (onClick != null) {
-                    Modifier.clickable(role = Role.Button, onClick = onClick)
+                    Modifier.hitTarget(
+                        interactive = Modifier
+                            .clip(CircleShape)
+                            .toggleable(value = selected, role = Role.Switch, onValueChange = { onClick() }),
+                        drawnHeight = Layout.ChipHeight,
+                    )
                 } else {
                     Modifier
                 },
             )
+            .defaultMinSize(minHeight = Layout.ChipHeight)
+            .clip(CircleShape)
+            .then(container)
             .padding(horizontal = Space.x3, vertical = Space.x1)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
-            .semanticsSelected(selected, onClick != null),
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -98,18 +103,6 @@ fun CograChip(
         }
     }
 }
-
-/**
- * Marks the chip selected for assistive technology. Colour never carries
- * meaning alone (design/readme.md §10), so the selected state is announced
- * rather than only drawn.
- */
-private fun Modifier.semanticsSelected(isSelected: Boolean, selectable: Boolean) =
-    if (selectable) {
-        this.then(Modifier.semantics { selected = isSelected })
-    } else {
-        this
-    }
 
 /**
  * [ReadoutChipMinHeight] and [ReadoutChipVerticalPadding]'s source:

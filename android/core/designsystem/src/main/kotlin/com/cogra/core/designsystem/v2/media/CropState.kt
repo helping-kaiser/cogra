@@ -130,6 +130,7 @@ class CropState internal constructor(initial: CropFraming) {
      * width of a wide one.
      */
     internal fun onWindowChanged(next: CropFraming, pictureRatio: Float) {
+        this.pictureRatio = pictureRatio
         if (!seeded) return
         if (!next.matches(framedShape, pictureRatio)) return
         framing = next
@@ -188,6 +189,8 @@ class CropState internal constructor(initial: CropFraming) {
         // into a corner nobody had chosen. The opening window is the
         // honest answer there.
         val ratio = whole.width().toFloat() / whole.height().toFloat()
+        pictureRatio = ratio
+        holdCeiling(view, whole)
         if (restore != null && restore.matches(framedShape, ratio)) {
             pendingRestore = null
             seeded = true
@@ -209,6 +212,8 @@ class CropState internal constructor(initial: CropFraming) {
      */
     private fun openWindow(view: CropImageView, whole: Rect): Boolean {
         if (seeded) return false
+        pictureRatio = whole.width().toFloat() / whole.height().toFloat()
+        holdCeiling(view, whole)
         val shape = framedShape ?: return false
         seeded = true
         val opening = CropWindowMath.largestWindow(
@@ -284,11 +289,91 @@ class CropState internal constructor(initial: CropFraming) {
     /** The non-gesture equivalent design/readme.md §10 requires of a drag. */
     fun nudge(direction: NudgeDirection) = moveTo(CropWindowMath.nudged(framing, direction))
 
-    /** The non-gesture equivalent of a pinch. */
-    fun stepZoom(inward: Boolean) = moveTo(CropWindowMath.zoomed(framing, inward))
+    /** The non-gesture equivalent of a pinch, held under the ceiling. */
+    fun stepZoom(inward: Boolean) = moveTo(ceiled(CropWindowMath.zoomed(framing, inward)))
 
     /** True when zooming further in that direction would change anything. */
-    fun canZoom(inward: Boolean): Boolean = CropWindowMath.zoomed(framing, inward) != framing
+    fun canZoom(inward: Boolean): Boolean = ceiled(CropWindowMath.zoomed(framing, inward)) != framing
+
+    /**
+     * The picture's own shape (width ÷ height), once a decode has told us —
+     * what the zoom is measured against. Null until then.
+     */
+    var pictureRatio: Float? by mutableStateOf(null)
+        private set
+
+    /** The largest window the shape allows on this picture — the zoom's 1×. */
+    private fun fill(): CropFraming? {
+        val shape = framedShape ?: return null
+        val ratio = pictureRatio ?: return null
+        return CropWindowMath.largestWindow(shape.ratio, ratio)
+    }
+
+    /**
+     * How far in the framing stands, from the fill (1×) to the ceiling
+     * (`CROP_ZOOM_MAX`, about 4× — `CropViewport.jsx`): the zoom slider's
+     * value (`CropZoom`). A pinch moves the window and so moves this.
+     */
+    val zoom: Float
+        get() {
+            val fill = fill() ?: return CROP_ZOOM_MIN
+            if (framing.width <= 0f) return CROP_ZOOM_MIN
+            return (fill.width / framing.width).coerceIn(CROP_ZOOM_MIN, CROP_ZOOM_MAX)
+        }
+
+    /**
+     * The slider's move: the window at [scale] of the fill, about its own
+     * centre, slid back inside the picture — never below the fill, never
+     * past the ceiling (ComposeCrop.md).
+     */
+    fun zoomTo(scale: Float) {
+        val fill = fill() ?: return
+        val at = scale.coerceIn(CROP_ZOOM_MIN, CROP_ZOOM_MAX)
+        val width = fill.width / at
+        val height = fill.height / at
+        val cx = (framing.left + framing.right) / 2f
+        val cy = (framing.top + framing.bottom) / 2f
+        moveTo(
+            CropWindowMath.slidInside(
+                CropFraming(cx - width / 2f, cy - height / 2f, cx + width / 2f, cy + height / 2f),
+            ),
+        )
+    }
+
+    /**
+     * The arrow keys' move (ComposeCrop.md): the window slides [dx]/[dy] —
+     * fractions of the picture, 1 % a press and 10 % with Shift — and stops
+     * where its edge meets the picture's.
+     */
+    fun panBy(dx: Float, dy: Float) = moveTo(
+        CropWindowMath.slidInside(
+            CropFraming(framing.left + dx, framing.top + dy, framing.right + dx, framing.bottom + dy),
+        ),
+    )
+
+    /** A window no smaller than the ceiling allows. */
+    private fun ceiled(next: CropFraming): CropFraming {
+        val fill = fill() ?: return next
+        if (next.width <= 0f || fill.width / next.width <= CROP_ZOOM_MAX) return next
+        val width = fill.width / CROP_ZOOM_MAX
+        val height = fill.height / CROP_ZOOM_MAX
+        val cx = (next.left + next.right) / 2f
+        val cy = (next.top + next.bottom) / 2f
+        return CropWindowMath.slidInside(CropFraming(cx - width / 2f, cy - height / 2f, cx + width / 2f, cy + height / 2f))
+    }
+
+    /**
+     * Tells the library the ceiling, in the source's own pixels: its drag
+     * handles and its pinch stop at a quarter of the fill
+     * (`setMinCropResultSize`), so no gesture reaches past about 4×.
+     */
+    private fun holdCeiling(view: CropImageView, whole: Rect) {
+        val fill = fill() ?: return
+        view.setMinCropResultSize(
+            (whole.width() * fill.width / CROP_ZOOM_MAX).toInt().coerceAtLeast(1),
+            (whole.height() * fill.height / CROP_ZOOM_MAX).toInt().coerceAtLeast(1),
+        )
+    }
 
     /**
      * Puts a computed window on the screen.
@@ -358,6 +443,12 @@ internal fun MediaShape.ratioParts(): Pair<Int, Int> = when (this) {
     MediaShape.Square -> 1 to 1
     MediaShape.Wide -> 191 to 100
 }
+
+/** The zoom slider's floor: the fill, where the picture just covers the window (`CropViewport.jsx` `CROP_ZOOM_MIN`). */
+const val CROP_ZOOM_MIN = 1f
+
+/** The ceiling, "about 4×" (`CROP_ZOOM_MAX`; ComposeCrop.md). */
+const val CROP_ZOOM_MAX = 4f
 
 /** The four discrete directions the non-drag route offers. */
 enum class NudgeDirection(val x: Int, val y: Int) {

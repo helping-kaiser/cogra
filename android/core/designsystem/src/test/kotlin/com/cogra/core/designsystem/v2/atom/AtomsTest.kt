@@ -12,8 +12,8 @@ import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.assertIsNotSelected
-import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.assertTouchHeightIsEqualTo
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -53,9 +53,10 @@ class AtomsTest {
             }
         }
 
-        // Colour never carries meaning alone (design/readme.md §10).
-        compose.onNodeWithTag("tall").assertIsSelected()
-        compose.onNodeWithTag("square").assertIsNotSelected()
+        // Colour never carries meaning alone (design/readme.md §10): a filter
+        // chip is a switch, announced on or off (Chip.jsx `role="switch"`).
+        compose.onNodeWithTag("tall").assertIsOn()
+        compose.onNodeWithTag("square").assertIsOff()
     }
 
     @Test

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -12,6 +13,8 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.v2.atom.bleedHorizontally
 import com.cogra.core.designsystem.v2.media.CropFraming
 import com.cogra.core.designsystem.v2.media.CropShapeChips
 import com.cogra.core.designsystem.v2.media.CropState
@@ -37,10 +40,9 @@ import com.cogra.feature.content.R
  * JVM with no viewport anywhere near it. The committed framings are
  * handed up when the stage advances.
  *
- * **The non-drag route is not optional, and it is invisible.** D17
- * requires the stage to be completable without a gesture; `MediaCrop`
- * carries that in the semantics tree alone, because the board draws no
- * controls under the crop.
+ * **The non-drag route is not optional** (D17): `MediaCrop` draws the zoom
+ * slider under the cut, pans the focused cut by key, and keeps its TalkBack
+ * custom actions — the board's `CropZoom` and `CropViewport` name.
  */
 @Composable
 internal fun ColumnScope.CropStepBody(
@@ -104,10 +106,15 @@ internal fun ColumnScope.CropStepBody(
     // not of what the stage renders; a second `Text` here only doubled it.
 
     if (state.picked.size > 1) {
+        // The framed tile's ring stands OUTSIDE it (`outline 2px`, offset 1),
+        // so the scrolling strip reaches 3dp past the gutter and pads back in —
+        // a scroll container clips along its axis, and the ring must not be cut.
         Row(
             modifier = Modifier
+                .bleedHorizontally(RING_ROOM)
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = RING_ROOM),
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
             state.picked.forEachIndexed { index, asset ->
@@ -159,3 +166,6 @@ internal fun MediaShape.toDraftShape(): DraftShape = when (this) {
     MediaShape.Square -> DraftShape.Square
     MediaShape.Wide -> DraftShape.Wide
 }
+
+/** The selection ring's reach past its tile: 1dp offset + 2dp stroke. */
+private val RING_ROOM = 3.dp
