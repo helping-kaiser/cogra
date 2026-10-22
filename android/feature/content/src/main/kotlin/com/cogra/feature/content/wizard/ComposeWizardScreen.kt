@@ -304,11 +304,11 @@ internal fun ComposeWizardScreen(
                 // key notice instead — the key story outranks the seal story
                 // there, and a screen carries only one (design/readme.md §13).
                 onHelp = if (state.step == WizardStep.Seal && !state.keyAbsent) {
-                    { onOpenHelp(HelpTopic.SignedActions) }
+                    { onOpenHelp(HelpTopic.HowSigningWorks) }
                 } else {
                     null
                 },
-                helpContentDescription = HelpTopic.SignedActions.title,
+                helpContentDescription = HelpTopic.HowSigningWorks.title,
                 testTag = "wizard_header",
                 // Only the details stage is a registered board; the other
                 // stages' header keeps its wizard tags.

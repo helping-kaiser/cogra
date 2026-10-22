@@ -380,7 +380,7 @@ class ComposeWizardScreenTest {
     fun theSealCarriesTheOneQuestionMarkAndTheKeyAbsentSealDoesNot() {
         compose.setContent { Wizard(words.copy(step = WizardStep.Seal)) }
         compose.onNodeWithTag("wizard_header_help").performClick()
-        assertThat(helps).containsExactly(HelpTopic.SignedActions)
+        assertThat(helps).containsExactly(HelpTopic.HowSigningWorks)
     }
 
     @Test

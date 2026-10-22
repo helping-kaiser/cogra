@@ -561,7 +561,7 @@ class ReplyWizardScreenTest {
 
         compose.onNodeWithTag("reply_header_help").performClick()
 
-        assertThat(helps).containsExactly(HelpTopic.SignedActions)
+        assertThat(helps).containsExactly(HelpTopic.HowSigningWorks)
     }
 
     @Test

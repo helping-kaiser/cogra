@@ -254,11 +254,11 @@ internal fun ReplyWizardScreen(
                 leaveContentDescription = "Leave — the reply is discarded",
                 trailingNote = if (state.step == ReplyStep.Seal) "Last step" else null,
                 onHelp = if (state.step == ReplyStep.Seal && !state.keyAbsent) {
-                    { onOpenHelp(HelpTopic.SignedActions) }
+                    { onOpenHelp(HelpTopic.HowSigningWorks) }
                 } else {
                     null
                 },
-                helpContentDescription = HelpTopic.SignedActions.title,
+                helpContentDescription = HelpTopic.HowSigningWorks.title,
                 testTag = "reply_header",
             )
 
