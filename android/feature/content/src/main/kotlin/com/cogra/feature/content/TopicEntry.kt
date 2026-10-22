@@ -56,6 +56,13 @@ internal fun TopicEntry(
      */
     pairSheet: Boolean = false,
     /**
+     * The composer's own drawing (`ComposeDetailsBody`): the block headed by
+     * `FieldLabel` `Tags`, 6 apart, and each staged tag a `TopicRemovable`
+     * pill. The edit, reply and comment surfaces keep theirs until their own
+     * boards are conformed.
+     */
+    staged: Boolean = false,
+    /**
      * The section's data-node on a registered screen (`composeDetails.tags`):
      * the section, its heading (`label`), each chip (keyed by its name) and
      * the add action then wear the registered paths. The free-text field, the
@@ -65,11 +72,11 @@ internal fun TopicEntry(
     node: DataNode? = null,
 ) {
     val tagInput = section.input
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.dataNode(node)) {
+    Column(verticalArrangement = Arrangement.spacedBy(if (staged) 6.dp else 8.dp), modifier = Modifier.dataNode(node)) {
         if (showHeading) {
             Text(
-                stringResource(R.string.content_topics_heading),
-                style = MaterialTheme.typography.titleSmall,
+                if (staged) "Tags" else stringResource(R.string.content_topics_heading),
+                style = if (staged) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall,
                 modifier = Modifier.dataNode(node?.div("label")),
             )
         }
@@ -80,6 +87,16 @@ internal fun TopicEntry(
                 modifier = Modifier.testTag("${testTagPrefix}_tags"),
             ) {
                 section.tags.forEach { row ->
+                    if (staged) {
+                        TopicRemovable(
+                            name = row.name,
+                            onEdit = { onTuneTag(row.name) },
+                            onRemove = { onRemoveTag(row.name) },
+                            node = node?.div("tag")?.keyed(row.name),
+                            testTag = "${testTagPrefix}_tag_${row.name}",
+                        )
+                        return@forEach
+                    }
                     TopicChip(
                         name = row.name,
                         onClick = { onTuneTag(row.name) },

@@ -39,6 +39,8 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.ReferenceChip
 import com.cogra.core.designsystem.ReferenceParameterSliders
 import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.InlineSize
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.references.MAX_REFERENCES
@@ -77,6 +79,13 @@ internal fun ReferenceEntry(
      */
     pairSheet: Boolean = false,
     /**
+     * The composer's own drawing (`ComposeDetailsBody`): `FieldLabel`
+     * `References`, each staged citation a [StagedReferenceRow], 6 apart, and
+     * `+ Cite something` as the bare `sm` word opening the finder — this
+     * client's stand-in for the ReferencePicker board, which is not built.
+     */
+    staged: Boolean = false,
+    /**
      * The section's data-node on a registered screen
      * (`composeDetails.references`): the section, its heading (`label`), each
      * staged chip (`stagedReference`, keyed by its position counted from 1)
@@ -85,15 +94,25 @@ internal fun ReferenceEntry(
      */
     node: DataNode? = null,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.dataNode(node)) {
+    Column(verticalArrangement = Arrangement.spacedBy(if (staged) 6.dp else 8.dp), modifier = Modifier.dataNode(node)) {
         if (showHeading) {
             Text(
                 stringResource(R.string.content_references_heading),
-                style = MaterialTheme.typography.titleSmall,
+                style = if (staged) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall,
                 modifier = Modifier.dataNode(node?.div("label")),
             )
         }
-        if (section.references.isNotEmpty()) {
+        if (staged) {
+            section.references.forEachIndexed { index, row ->
+                StagedReferenceRow(
+                    row = row,
+                    onEdit = { onTuneReference(row.targetId) },
+                    onRemove = { onRemoveReference(row.targetId) },
+                    node = node?.div("stagedReference")?.keyed("${index + 1}"),
+                    testTag = "${testTagPrefix}_reference_${row.targetId}",
+                )
+            }
+        } else if (section.references.isNotEmpty()) {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -123,6 +142,13 @@ internal fun ReferenceEntry(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("${testTagPrefix}_references_cap"),
+            )
+        } else if (staged) {
+            InlineAction(
+                text = "+ Cite something",
+                onClick = onOpenFinder,
+                size = InlineSize.Small,
+                testTag = node?.div("add")?.tag ?: "${testTagPrefix}_reference_add",
             )
         } else {
             TextButton(

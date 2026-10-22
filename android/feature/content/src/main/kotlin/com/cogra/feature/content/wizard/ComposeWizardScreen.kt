@@ -420,6 +420,7 @@ internal fun ComposeWizardScreen(
                                     onTagConfidenceChange = onTagConfidenceChange,
                                     // A chip opens `TagPadCompose`'s sheet (ComposeDetails.md).
                                     pairSheet = true,
+                                    staged = true,
                                     node = COMPOSE_DETAILS / "tags",
                                 )
                             },
@@ -438,6 +439,7 @@ internal fun ComposeWizardScreen(
                                     onReferenceSupportChange = onReferenceSupportChange,
                                     // A staged citation opens `RefPair`'s sheet.
                                     pairSheet = true,
+                                    staged = true,
                                     node = COMPOSE_DETAILS / "references",
                                 )
                             },

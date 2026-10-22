@@ -35,6 +35,7 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
+import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.ThumbBadge
@@ -210,11 +211,14 @@ fun DescribeCounter(
                 text = subject.label,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
+                // `InlineAction` `sm` inside the label-small line: its 48dp
+                // target never grows the line (`cg-hit`).
                 modifier = Modifier
-                    .minimumInteractiveComponentSize()
-                    .defaultMinSize(minHeight = 0.dp)
-                    .clickable(role = Role.Button, onClick = onDescribe)
-                    .then(if (describeTag != null) Modifier.testTag(describeTag) else Modifier),
+                    .then(if (describeTag != null) Modifier.testTag(describeTag) else Modifier)
+                    .hitTarget(
+                        interactive = Modifier.clickable(role = Role.Button, onClick = onDescribe),
+                        drawnHeight = DESCRIBE_LINE,
+                    ),
             )
             Text(
                 text = "· $described of $total described",
@@ -463,3 +467,6 @@ private fun PickedSheetPreview() {
         }
     }
 }
+
+/** `DescribeCounter`'s label-small line. */
+private val DESCRIBE_LINE = 16.dp

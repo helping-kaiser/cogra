@@ -125,7 +125,9 @@ internal fun ColumnScope.DetailsStepBody(
         topics()
         references()
 
-        if (state.mode == BodyMode.Media) {
+        // The aside stands only while an upload runs (`ComposeUploading`);
+        // the details stage at rest draws none.
+        if (state.mode == BodyMode.Media && state.uploadsRunning) {
             Text(
                 text = "Pictures upload while you write — signing waits for them.",
                 style = MaterialTheme.typography.labelSmall,

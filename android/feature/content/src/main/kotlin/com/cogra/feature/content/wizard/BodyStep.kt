@@ -77,6 +77,8 @@ internal fun ColumnScope.WordsStepBody(
         // box at its 44dp minimum with empty screen under it.
         modifier = Modifier.weight(1f),
         fillHeight = true,
+        // `WordsBody`: 12 all round inside the 1px field border.
+        boxPadding = PaddingValues(13.dp),
         cap = MAX_POST_BODY_CHARS,
         error = if (state.bodyTooLong) {
             stringResource(R.string.content_error_body_too_long)
