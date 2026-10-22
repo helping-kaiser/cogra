@@ -9,8 +9,10 @@ import { renderWithProviders } from "@/test/providers";
 import { AppShell } from "./shell";
 
 let pathname = "/feed";
+let search = "";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
+  useSearchParams: () => new URLSearchParams(search),
 }));
 
 startMswServer();
@@ -24,6 +26,7 @@ function signedInStore() {
 beforeEach(() => {
   window.localStorage.clear();
   pathname = "/feed";
+  search = "";
 });
 
 describe("AppShell", () => {
@@ -117,20 +120,42 @@ describe("AppShell", () => {
     expect(prompt.open).toBe(true);
   });
 
-  it.each([
-    ["/posts/post-1", "postDetail.bottomBar.feedSlot", "postDetail.bottomBar.profileSlot"],
-    ["/u/alice", "nav-feed", "nav-profile"],
-  ])("keeps the bar on the read drill-in %s", async (path, feedSlot, profileSlot) => {
-    pathname = path;
+  it("keeps the bar on the read drill-in /u/alice", async () => {
+    pathname = "/u/alice";
     renderWithProviders(
       <AppShell>
         <p>content</p>
       </AppShell>,
       { store: signedInStore() },
     );
-    // A drill-in selects no tab.
-    expect(await screen.findByTestId(feedSlot)).not.toHaveAttribute("aria-current");
-    expect(screen.getByTestId(profileSlot)).not.toHaveAttribute("aria-current");
+    expect(await screen.findByTestId("nav-feed")).not.toHaveAttribute("aria-current");
+    expect(screen.getByTestId("nav-profile")).not.toHaveAttribute("aria-current");
+  });
+
+  // THE POST DETAIL KEEPS ITS ORIGIN'S ROOT LIT (PostDetail.md:57-59;
+  // BottomNav.prompt.md, jakob 2026-10-06): from the feed, a link or a
+  // notification the Feed; from a Saved row the Profile Saved hangs from.
+  it.each([
+    ["", "feedSlot"],
+    ["from=notifications", "feedSlot"],
+    ["from=saved", "profileSlot"],
+  ])("lights the detail's origin root (%s)", async (query, lit) => {
+    pathname = "/posts/post-1";
+    search = query;
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      { store: signedInStore() },
+    );
+    const unlit = lit === "feedSlot" ? "profileSlot" : "feedSlot";
+    expect(await screen.findByTestId(byNode(`postDetail.bottomBar.${lit}`))).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByTestId(byNode(`postDetail.bottomBar.${unlit}`))).not.toHaveAttribute(
+      "aria-current",
+    );
   });
 
   // The bar is chrome by structure: a viewport-tall column, a scrolling
