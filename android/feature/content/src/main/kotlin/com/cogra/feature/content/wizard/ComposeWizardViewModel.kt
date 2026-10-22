@@ -8,7 +8,6 @@ import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
-import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
@@ -43,13 +42,12 @@ import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.candidateRows
-import com.cogra.feature.content.referenceFieldIndex
-import com.cogra.feature.content.tagFieldIndex
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -475,7 +473,18 @@ class ComposeWizardViewModel @Inject constructor(
 
     fun onAddTag() = sections.onAddTag()
 
-    fun onRemoveTag(name: String) = sections.onRemoveTag(name)
+    /**
+     * A staged tag leaves on the spot. From the seal's Tags sheet the change
+     * applies at once, and the last removal closes the sheet to the seal
+     * (ComposeTags.md); a changed fact clears a refusal reading.
+     */
+    fun onRemoveTag(name: String) {
+        sections.onRemoveTag(name)
+        _state.update { s ->
+            val emptied = s.sheet == SealSheet.Tags && s.tagSection.tags.isEmpty()
+            s.copy(fault = null, sheet = if (emptied) SealSheet.None else s.sheet)
+        }
+    }
 
     fun onTuneTag(name: String) = sections.onTuneTag(name)
 
@@ -495,7 +504,19 @@ class ComposeWizardViewModel @Inject constructor(
 
     fun onPickReference(row: ReferenceCandidateRow) = sections.onPickReference(row)
 
-    fun onRemoveReference(targetId: String) = sections.onRemoveReference(targetId)
+    /**
+     * A staged citation leaves on the spot — from the details stage, the
+     * seal's Cited sheet (whose last removal closes it, ComposeCitations.md)
+     * or a refused row's `Remove it` (SealFaultRow.md: the seal is ready to
+     * sign again).
+     */
+    fun onRemoveReference(targetId: String) {
+        sections.onRemoveReference(targetId)
+        _state.update { s ->
+            val emptied = s.sheet == SealSheet.Cited && s.referenceSection.references.isEmpty()
+            s.copy(fault = null, sheet = if (emptied) SealSheet.None else s.sheet)
+        }
+    }
 
     fun onTuneReference(targetId: String) = sections.onTuneReference(targetId)
 
@@ -589,6 +610,13 @@ class ComposeWizardViewModel @Inject constructor(
      * (design/components/compose/PickedRow.prompt.md).
      */
     fun onBack(): Boolean {
+        // A signing in flight holds the reader: Android's Back neither leaves
+        // the seal nor abandons the signing (SealSigning.md).
+        if (_state.value.pressed) return true
+        if (_state.value.discardingPost) {
+            _state.update { it.copy(discardingPost = false) }
+            return true
+        }
         if (_state.value.sheet != SealSheet.None) {
             onCloseSheet()
             return true
@@ -612,6 +640,7 @@ class ComposeWizardViewModel @Inject constructor(
 
     /** `ComposeSeal`'s Back pill: one stage, not out of the wizard. */
     fun onSealBack() {
+        if (_state.value.pressed) return
         _state.value.retreated()?.let { _state.value = it }
     }
 
@@ -628,7 +657,11 @@ class ComposeWizardViewModel @Inject constructor(
      * would send a value that is guaranteed to be refused.
      */
     fun onSensitiveChange(marked: Boolean) = _state.update {
-        if (marked) it.copy(sensitive = true) else it.copy(sensitive = false, sensitiveReason = "")
+        if (marked) {
+            it.copy(sensitive = true, fault = null)
+        } else {
+            it.copy(sensitive = false, sensitiveReason = "", fault = null)
+        }
     }
 
     fun onSensitiveReasonChange(reason: String) =
@@ -639,7 +672,11 @@ class ComposeWizardViewModel @Inject constructor(
      * Cancel can put it back exactly.
      */
     fun onOpenSheet(sheet: SealSheet) = _state.update {
-        if (sheet == SealSheet.Stance) {
+        // Every fact row's Change, Adjust and Mark refuse a press while the
+        // signing is in flight, and never dim (SealSigning.md).
+        if (it.pressed) {
+            it
+        } else if (sheet == SealSheet.Stance) {
             it.copy(sheet = sheet, stagedPDirected = it.pDirected)
         } else {
             it.copy(sheet = sheet)
@@ -683,7 +720,7 @@ class ComposeWizardViewModel @Inject constructor(
 
     fun onLicenseChange(license: LicenseChoice) {
         licenseTouched = true
-        _state.update { it.copy(license = license) }
+        _state.update { it.copy(license = license, fault = null) }
     }
 
     /** A drag on the pad's field: staged, not set (`ComposePad`). */
@@ -702,7 +739,7 @@ class ComposeWizardViewModel @Inject constructor(
         if (picked == 0.0) {
             it.copy(stagedPDirected = picked, confirmingUnreachable = true)
         } else {
-            it.copy(pDirected = picked).closedSheets()
+            it.copy(pDirected = picked, fault = null).closedSheets()
         }
     }
 
@@ -710,7 +747,7 @@ class ComposeWizardViewModel @Inject constructor(
     fun onKeepAdjusting() = _state.update { it.copy(confirmingUnreachable = false) }
 
     /** `Set it anyway`: the dialog and the pad close, the row reads 0.00 — nothing is signed. */
-    fun onSetUnreachable() = _state.update { it.copy(pDirected = 0.0).closedSheets() }
+    fun onSetUnreachable() = _state.update { it.copy(pDirected = 0.0, fault = null).closedSheets() }
 
     // -- Uploads (D5: one call per asset, concurrent, retryable) --
 
@@ -743,6 +780,15 @@ class ComposeWizardViewModel @Inject constructor(
 
     fun onRetryUpload(uri: String) = uploader.onRetryUpload(uri)
 
+    /**
+     * The seal gate's `Retry` (`UploadStatusLine` failed): the gate runs
+     * again for every upload that failed, and nothing signs until Sign and
+     * publish is pressed again (ComposeSealUploading.md).
+     */
+    fun onRetryFailedUploads() {
+        _state.value.picked.filter { it.upload is AssetUpload.Failed }.forEach { uploader.onRetryUpload(it.uri) }
+    }
+
     // -- The seal (`ComposeSeal`) --
 
     /**
@@ -753,8 +799,8 @@ class ComposeWizardViewModel @Inject constructor(
     private suspend fun citedGraphIds(references: List<ReferenceClaim>): Map<String, String>? =
         when (val read = content.graphIds(references.map { it.targetId })) {
             is Outcome.Success -> read.value
-            is Outcome.Refused -> null.also { refuse(read.errors) }
-            is Outcome.Failed -> null.also { failTransport() }
+            is Outcome.Refused -> null.also { fail(SealFault.Bug) }
+            is Outcome.Failed -> null.also { fail(SealFault.Offline) }
         }
 
     /**
@@ -819,8 +865,8 @@ class ComposeWizardViewModel @Inject constructor(
         }.toMap()
         val ledger = when (val read = media.ledgerFor(sent.attachments, own)) {
             is Outcome.Success -> read.value
-            is Outcome.Refused -> return null.also { refuse(read.errors) }
-            is Outcome.Failed -> return null.also { failTransport() }
+            is Outcome.Refused -> return null.also { fail(SealFault.Bug) }
+            is Outcome.Failed -> return null.also { fail(SealFault.Offline) }
         }
         val payload = contentExpectation(node, sent, ContentShape.POST, ledger)
         return postExpectation(current.pDirected, current.license, payload, tags, references, graphIds)
@@ -833,19 +879,36 @@ class ComposeWizardViewModel @Inject constructor(
      */
     fun onSign() {
         val current = _state.value
-        if (!current.canSign) return
+        if (current.pressed || !current.signEnabled) return
+        // THE PRESS IS HELD WHILE THE UPLOADS RUN (ComposeSealUploading.md):
+        // nothing signs before the last upload lands, and no second press is
+        // asked once it does; a failed upload drops the held press.
+        if (current.mode == BodyMode.Media && !current.uploadsComplete) {
+            _state.update { it.copy(heldPress = true, fault = null) }
+            viewModelScope.launch {
+                val settled = _state.first { !it.heldPress || it.uploadsFailed || it.uploadsComplete }
+                when {
+                    !settled.heldPress -> Unit
+                    settled.uploadsFailed -> _state.update { it.copy(heldPress = false) }
+                    else -> sign()
+                }
+            }
+            return
+        }
+        sign()
+    }
+
+    private fun sign() {
+        val current = _state.value.copy(heldPress = false)
+        if (!current.canSign) {
+            _state.update { it.copy(heldPress = false) }
+            return
+        }
         // A landed post clears the store; a pending write must not put the
         // draft back after it.
         draftSaveJob?.cancel()
-        _state.update {
-            it.copy(
-                submitting = true,
-                refusal = null,
-                signingFailed = false,
-                keyAbsent = false,
-                transportFailed = false,
-            )
-        }
+        _state.update { it.copy(submitting = true, heldPress = false, fault = null, keyAbsent = false) }
+        val staged = current.referenceSection.references
         viewModelScope.launch {
             val tags = current.tagSection.tags.map { it.toClaim() }
             val references = current.referenceSection.references.map { it.toClaim() }
@@ -866,8 +929,8 @@ class ComposeWizardViewModel @Inject constructor(
                 )
             ) {
                 is Outcome.Success -> outcome.value
-                is Outcome.Refused -> return@launch refuse(outcome.errors)
-                is Outcome.Failed -> return@launch failTransport()
+                is Outcome.Refused -> return@launch fail(sealFaultOf(outcome.errors, staged))
+                is Outcome.Failed -> return@launch fail(SealFault.Offline)
             }
             val expected = expectation(current, prepared.node, sent, tags, references, graphIds)
                 ?: return@launch
@@ -911,7 +974,9 @@ class ComposeWizardViewModel @Inject constructor(
                 }
                 else -> {
                     keepDraft()
-                    _state.update { it.copy(submitting = false, signingFailed = true) }
+                    // A refusal reads by its codes; anything else never answered.
+                    val refused = results.filterIsInstance<WriteResult.Refused>().firstOrNull()
+                    fail(refused?.let { sealFaultOf(it.errors, staged) } ?: SealFault.Offline)
                 }
             }
         }
@@ -920,7 +985,7 @@ class ComposeWizardViewModel @Inject constructor(
     /** The author left the wizard: the draft is kept, never discarded silently. */
     fun onLeave() {
         val current = _state.value
-        if (current.outcome != null || current.draftOffer != null) return
+        if (current.outcome != null || current.draftOffer != null || current.pressed) return
         // A write already in flight would land after this one and undo it.
         draftSaveJob?.cancel()
         viewModelScope.launch {
@@ -980,54 +1045,26 @@ class ComposeWizardViewModel @Inject constructor(
 
     private fun ComposeWizardState.draftLabel(): String = title.ifBlank { sealSummary }
 
-    /**
-     * A refusal from the one write whose input carries the whole batch:
-     * the server names the offender by path, so `["tags", i, …]` lands
-     * on chip i, `["attachments", i, …]` on pick i, and everything else
-     * says its piece once.
-     */
-    private fun refuse(errors: List<UserError>) = _state.update { st ->
-        var tags = st.tagSection
-        var refs = st.referenceSection
-        var picks = st.picked
-        val unplaced = mutableListOf<String>()
-        for (error in errors) {
-            val tagIndex = tagFieldIndex(error.field)
-            val referenceIndex = referenceFieldIndex(error.field)
-            val attachmentIndex = attachmentFieldIndex(error.field)
-            when {
-                tagIndex != null -> {
-                    val (next, left) = tags.withErrorAt(tagIndex, error.message)
-                    tags = next
-                    left?.let { unplaced += it }
-                }
-                referenceIndex != null -> {
-                    val (next, left) = refs.withErrorAt(referenceIndex, error.message)
-                    refs = next
-                    left?.let { unplaced += it }
-                }
-                attachmentIndex != null && attachmentIndex in picks.indices -> {
-                    picks = picks.mapIndexed { i, asset ->
-                        if (i == attachmentIndex) {
-                            asset.copy(upload = AssetUpload.Failed(UploadFailure.REFUSED_PICTURE, error.message))
-                        } else {
-                            asset
-                        }
-                    }
-                }
-                else -> unplaced += error.message
-            }
-        }
-        st.copy(
-            submitting = false,
-            tagSection = tags,
-            referenceSection = refs,
-            picked = picks,
-            refusal = unplaced.firstOrNull(),
-        )
-    }
+    /** The press answered without leaving the seal: [fault] takes the commit's place. */
+    private fun fail(fault: SealFault) = _state.update { it.copy(submitting = false, heldPress = false, fault = fault) }
 
-    private fun failTransport() = _state.update { it.copy(submitting = false, transportFailed = true) }
+    /** `Discard the post` under the bug notice: the ask opens over the seal first (SealDiscardConfirm.md). */
+    fun onDiscardPost() = _state.update { it.copy(discardingPost = true) }
+
+    /** `Keep the draft` or the scrim: the seal stands as it was, the notice still offered. */
+    fun onKeepPost() = _state.update { it.copy(discardingPost = false) }
+
+    /**
+     * `Discard it`: the draft goes, with its pictures, tags and citations, and
+     * the flow is left for where composing began. Nothing was signed.
+     */
+    fun onDiscardConfirmed() {
+        armed = false
+        draftSaveJob?.cancel()
+        releaseSession()
+        viewModelScope.launch { drafts.clear() }
+        _state.update { it.copy(discardingPost = false, outcome = WizardOutcome.Discarded) }
+    }
 
     // Internal rather than private so the suite can assert against the
     // caps themselves instead of re-typing them.

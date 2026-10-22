@@ -11,25 +11,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.dataNodeSurface
+import com.cogra.core.designsystem.v2.atom.AskDialog
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.HelpDialog
@@ -38,7 +33,6 @@ import com.cogra.core.designsystem.v2.compose.DescribeSheet
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.PickedSheet
 import com.cogra.core.designsystem.v2.media.MediaItem
-import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.compose.DraftShape
@@ -50,6 +44,7 @@ import com.cogra.feature.content.ParkedPadWash
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
+import com.cogra.feature.content.TagsSheet
 import com.cogra.feature.content.TopicEntry
 import com.cogra.feature.content.UnreachableStartConfirm
 import com.cogra.feature.content.parkedPadPlacement
@@ -100,7 +95,7 @@ fun ComposeWizardRoute(
                 viewModel.onOutcomeConsumed()
                 onExpired(outcome.label)
             }
-            WizardOutcome.DraftKept -> {
+            WizardOutcome.DraftKept, WizardOutcome.Discarded -> {
                 viewModel.onOutcomeConsumed()
                 onLeave()
             }
@@ -181,6 +176,10 @@ fun ComposeWizardRoute(
         onOpenHelp = viewModel::onOpenHelp,
         onCloseHelp = viewModel::onCloseHelp,
         onSign = viewModel::onSign,
+        onRetryFailedUploads = viewModel::onRetryFailedUploads,
+        onDiscardPost = viewModel::onDiscardPost,
+        onKeepPost = viewModel::onKeepPost,
+        onDiscardConfirmed = viewModel::onDiscardConfirmed,
         onContinueDraft = viewModel::onContinueDraft,
         onDiscardDraft = viewModel::onDiscardDraft,
         onRestoreKey = onRestoreKey,
@@ -256,6 +255,10 @@ internal fun ComposeWizardScreen(
     onOpenHelp: (HelpTopic) -> Unit,
     onCloseHelp: () -> Unit,
     onSign: () -> Unit,
+    onRetryFailedUploads: () -> Unit,
+    onDiscardPost: () -> Unit,
+    onKeepPost: () -> Unit,
+    onDiscardConfirmed: () -> Unit,
     onContinueDraft: () -> Unit,
     onDiscardDraft: () -> Unit,
     onRestoreKey: () -> Unit,
@@ -300,10 +303,10 @@ internal fun ComposeWizardScreen(
                     WizardStep.Cover -> "Video only"
                     else -> null
                 },
-                // The seal's one `?`. On the key-absent seal it belongs to the
-                // key notice instead — the key story outranks the seal story
-                // there, and a screen carries only one (design/readme.md §13).
-                onHelp = if (state.step == WizardStep.Seal && !state.keyAbsent) {
+                // The seal's `?`, `How signing works`. It stays beside a notice
+                // that carries its own (the stopper exception, ComposeKeyAbsent),
+                // and stays live while the seal signs (SealSigning.md).
+                onHelp = if (state.step == WizardStep.Seal) {
                     { onOpenHelp(HelpTopic.HowSigningWorks) }
                 } else {
                     null
@@ -451,29 +454,22 @@ internal fun ComposeWizardScreen(
                     WizardStep.Seal -> WizardBody(gap = Space.x4) {
                         SealStepBody(
                             state = state,
-                            onOpenSheet = onOpenSheet,
-                            onSign = onSign,
-                            onBack = onSealBack,
-                            onRestoreKey = onRestoreKey,
-                            onKeepDraft = onKeepDraft,
-                            onKeyHelp = { onOpenHelp(HelpTopic.Key) },
+                            actions = SealActions(
+                                onOpenSheet = onOpenSheet,
+                                onSign = onSign,
+                                onBack = onSealBack,
+                                onRestoreKey = onRestoreKey,
+                                onKeepDraft = onKeepDraft,
+                                onHelp = onOpenHelp,
+                                onRetryUploads = onRetryFailedUploads,
+                                onRemoveRefused = onRemoveReference,
+                                // The report page Settings opens is not built
+                                // on android (HAND TO FABLE).
+                                onReport = {},
+                                onDiscardPost = onDiscardPost,
+                            ),
                         )
                     }
-                }
-
-                state.problem()?.let { message ->
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Layout.ScreenGutter, vertical = Space.x2)
-                            .testTag("wizard_problem")
-                            // A refusal has to reach a reader who is not
-                            // looking at the bottom of the screen.
-                            .semantics { liveRegion = LiveRegionMode.Assertive },
-                    )
                 }
             }
         }
@@ -549,11 +545,15 @@ internal fun ComposeWizardScreen(
                     testTag = "wizard_picked_sheet",
                 )
 
+                // Staged: Done carries the pair to the seal's row; every
+                // other way out discards (ComposeLicense.md).
                 state.sheet == SealSheet.License ->
                     LicenseSheet(
-                        state.license,
-                        onLicenseChange,
-                        onCloseSheet,
+                        license = state.license,
+                        onDone = { picked ->
+                            onLicenseChange(picked)
+                            onCloseSheet()
+                        },
                         onHelp = { onOpenHelp(HelpTopic.License) },
                     )
 
@@ -580,9 +580,36 @@ internal fun ComposeWizardScreen(
                     testTag = "wizard_cited_sheet",
                 )
 
+                // `ComposeTags` — what the seal's "N tags" row opens.
+                state.sheet == SealSheet.Tags -> TagsSheet(
+                    section = state.tagSection,
+                    onRemoveTag = onRemoveTag,
+                    onTuneTag = onTuneTag,
+                    onDoneTuningTag = onDoneTuningTag,
+                    onTagRelevanceChange = onTagRelevanceChange,
+                    onTagConfidenceChange = onTagConfidenceChange,
+                    onDone = onCloseSheet,
+                    testTag = "wizard_tags_sheet",
+                )
+
                 else -> Unit
             }
         }
+    }
+
+    // `Discard this post?` over the seal's bug notice (SealDiscardConfirm):
+    // the keep answer filled, the scrim and Back keep the draft.
+    if (state.discardingPost) {
+        AskDialog(
+            title = "Discard this post?",
+            body = "The draft goes, with its pictures, tags and citations. Nothing was signed, " +
+                "so nothing else changes.",
+            keepLabel = "Keep the draft",
+            discardLabel = "Discard it",
+            onKeep = onKeepPost,
+            onDiscard = onDiscardConfirmed,
+            testTag = "wizard_discard_post_ask",
+        )
     }
 
     // The screen's one `?`, over whatever is showing. A dialog rather than
@@ -705,15 +732,4 @@ internal fun ComposeWizardState.forwardEnabled(): Boolean = when (step) {
     WizardStep.Body -> bodyReady
     WizardStep.Details -> !titleTooLong && !descriptionTooLong
     else -> true
-}
-
-/**
- * The one problem line the stage shows, if any. A refusal that named a
- * chip already sits on the chip; this carries what nothing else could.
- */
-internal fun ComposeWizardState.problem(): String? = when {
-    refusal != null -> refusal
-    transportFailed -> "That could not reach the server. Try again."
-    signingFailed -> "The signature did not go through. Nothing was published."
-    else -> null
 }

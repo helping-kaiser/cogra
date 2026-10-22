@@ -1,30 +1,16 @@
 package com.cogra.feature.content
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.cogra.core.designsystem.EMPTY_PICK_LABEL
-import com.cogra.core.designsystem.StancePoint
-import com.cogra.core.designsystem.bundleReadout
-import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
@@ -37,28 +23,16 @@ import com.cogra.core.designsystem.v2.token.Space
  * a seal's "N cited" row. One staged citation reads back as itself on the
  * seal; two or more read back as their count, and this is where the N is.
  *
- * **It is [com.cogra.core.designsystem.v2.compose.PickedSheet]'s shape**, for
- * the reason that sheet has its shape: a collection staged by an author is
- * managed in one place rather than in as many places as it appears. Rows, then
- * the word that closes the sheet.
+ * **Its rows are the composer's own** ([StagedReferenceRow]): the details
+ * stage already draws a staged citation with its mark, kind, pair and ×, and
+ * a sheet that drew its own version would be the second drawing of one fact.
  *
  * **It adds nothing.** No "+ Cite something" here: a post's seal carries no
- * add-rows by design and a door out of it that grew one would hand the seal a
- * stage's job, exactly as `PickedSheet` manages a pick without offering
- * another. Citations are staged where they are staged — the wizard's details
- * stage, the reply's own card.
- *
- * **Each control names its own citation** — "Remove <name>", "<name> — set how
- * it relates" — or a block of three is a block of identically-named controls.
- *
- * **What the row does not draw.** The master opens each row with `NodeMark`,
- * the kind's mark. Neither client carries a NodeMark: it belongs to the
- * READING side's reference-row family, which this change is held out of, so
- * the row starts at the name rather than inventing a second mark.
- *
- * Removal and re-pairing run through [ReferenceSectionState]'s own mutators —
- * the ones the details stage already drives — so the sheet manages the staged
- * set rather than keeping a second copy of it.
+ * add-rows by design. **It is an editing sheet** (`BottomSheet.jsx`, the
+ * editing-sheet exemption; ComposeCitations.md): each removal applies at
+ * once, the last one closes the sheet to the seal (the host's job), and every
+ * way out — Done included — just closes it. A name opens the citation's pair
+ * in its own sheet over this one.
  */
 @Composable
 internal fun CitedSheet(
@@ -72,22 +46,111 @@ internal fun CitedSheet(
     modifier: Modifier = Modifier,
     testTag: String? = null,
 ) {
-    CograSheetSurface(modifier = modifier, testTag = testTag) {
-        SheetTitle(text = "Cited · ${section.references.size}")
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Space.x2),
-        ) {
+    ManagerSheet(title = "Cited · ${section.references.size}", onDone = onDone, testTag = testTag, modifier = modifier) {
+        // `CitedSheet.jsx`: the rows 6 apart.
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             section.references.forEachIndexed { index, row ->
-                CitedRow(
+                StagedReferenceRow(
                     row = row,
-                    onTune = { onTuneReference(row.targetId) },
+                    onEdit = { onTuneReference(row.targetId) },
                     onRemove = { onRemoveReference(row.targetId) },
                     testTag = testTag?.let { "${it}_row_$index" },
                 )
             }
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+    }
+
+    // The same pair sheet the details stage opens from a staged citation —
+    // one editor, driven by the section's own `tuning`.
+    section.references.firstOrNull { it.targetId == section.tuning }?.let { row ->
+        ReferencePairSheet(
+            row = row,
+            testTagPrefix = testTag ?: "cited_sheet",
+            onDone = { relevance, support ->
+                onReferenceRelevanceChange(row.targetId, relevance)
+                onReferenceSupportChange(row.targetId, support)
+                onDoneTuningReference()
+            },
+            onDismiss = onDoneTuningReference,
+        )
+    }
+}
+
+/**
+ * THE STAGED TAGS, OVER THE SEAL (`TagsSheet.jsx`; ComposeTags.md) — what the
+ * seal's "N tags" row opens. It is [CitedSheet] with tags in it, on purpose:
+ * the seal's two counting rows fold for one reason and open one kind of door.
+ * The pills are the composer's own [TopicRemovable]; it adds nothing; it is an
+ * editing sheet whose last removal closes it (the host's job).
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun TagsSheet(
+    section: TagSectionState,
+    onRemoveTag: (String) -> Unit,
+    onTuneTag: (String) -> Unit,
+    onDoneTuningTag: () -> Unit,
+    onTagRelevanceChange: (String, Double) -> Unit,
+    onTagConfidenceChange: (String, Double) -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+    testTag: String? = null,
+) {
+    ManagerSheet(title = "Tags · ${section.tags.size}", onDone = onDone, testTag = testTag, modifier = modifier) {
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Space.x2),
+            verticalArrangement = Arrangement.spacedBy(Space.x2),
+        ) {
+            section.tags.forEach { row ->
+                TopicRemovable(
+                    name = row.name,
+                    onEdit = { onTuneTag(row.name) },
+                    onRemove = { onRemoveTag(row.name) },
+                    testTag = testTag?.let { "${it}_tag_${row.name}" },
+                )
+            }
+        }
+    }
+
+    section.tags.firstOrNull { it.name == section.tuning }?.let { row ->
+        TagPairSheet(
+            row = row,
+            testTagPrefix = testTag ?: "tags_sheet",
+            onDone = { relevance, confidence ->
+                onTagRelevanceChange(row.name, relevance)
+                onTagConfidenceChange(row.name, confidence)
+                onDoneTuningTag()
+            },
+            onDismiss = onDoneTuningTag,
+        )
+    }
+}
+
+/**
+ * The managers' one anatomy (`CitedSheet.jsx` / `TagsSheet.jsx`): the title
+ * 16 over the list, then `Done` as a text button at the foot's own `8 16 8` —
+ * 16 from the screen's edge where the list keeps the sheet's 24.
+ */
+@Composable
+private fun ManagerSheet(
+    title: String,
+    onDone: () -> Unit,
+    testTag: String?,
+    modifier: Modifier,
+    list: @Composable () -> Unit,
+) {
+    CograSheetSurface(modifier = modifier, testTag = testTag, gap = 0.dp) {
+        SheetTitle(text = title)
+        // SheetTitle's own 8 under it, and the list's 8 over itself.
+        Column(Modifier.fillMaxWidth().padding(top = Space.x4)) { list() }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(x = Space.x2)
+                .padding(top = Space.x2, bottom = Space.x2),
+            horizontalArrangement = Arrangement.End,
+        ) {
             CograButton(
                 text = "Done",
                 onClick = onDone,
@@ -96,97 +159,4 @@ internal fun CitedSheet(
             )
         }
     }
-
-    // The pair editor the details stage already opens from a staged chip —
-    // one editor, driven by the section's own `tuning`, so the sheet and the
-    // chips cannot drift into two ways of moving one pair.
-    section.references.firstOrNull { it.targetId == section.tuning }?.let { row ->
-        ReferenceParametersDialog(
-            row = row,
-            testTagPrefix = testTag ?: "cited_sheet",
-            onRelevanceChange = { onReferenceRelevanceChange(row.targetId, it) },
-            onSupportChange = { onReferenceSupportChange(row.targetId, it) },
-            onDone = onDoneTuningReference,
-        )
-    }
 }
-
-/**
- * One staged citation, as the composer already draws it: what it points at,
- * the pair signed on the act, the × that takes it back out, and the name that
- * opens the pair.
- */
-@Composable
-private fun CitedRow(
-    row: ReferenceRow,
-    onTune: () -> Unit,
-    onRemove: () -> Unit,
-    testTag: String?,
-) {
-    val name = referenceLabel(row.target)
-    val supporting = referenceSupporting(row.target)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .padding(horizontal = Space.x3, vertical = Space.x2)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.x2),
-    ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .heightIn(min = 48.dp)
-                .clip(MaterialTheme.shapes.small)
-                .clickable(
-                    role = Role.Button,
-                    onClickLabel = "$name — set how it relates",
-                    onClick = onTune,
-                )
-                .then(if (testTag != null) Modifier.testTag("${testTag}_repair") else Modifier),
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            supporting?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-        Text(
-            text = citedPairReading(StancePoint(row.relevance, row.support)),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Icon(
-            imageVector = Icons.Filled.Close,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier
-                .heightIn(min = 48.dp)
-                .clip(MaterialTheme.shapes.small)
-                .clickable(role = Role.Button, onClickLabel = "Remove $name", onClick = onRemove)
-                .then(if (testTag != null) Modifier.testTag("${testTag}_remove") else Modifier),
-        )
-    }
-}
-
-/**
- * The face, then the pair — the one string a staged citation wears wherever it
- * is read back, the same reading the seal's own reference row gives.
- */
-@Composable
-private fun citedPairReading(point: StancePoint): String =
-    "${bundleReadout(point, EMPTY_PICK_LABEL).emoji} ${point.pair()}"

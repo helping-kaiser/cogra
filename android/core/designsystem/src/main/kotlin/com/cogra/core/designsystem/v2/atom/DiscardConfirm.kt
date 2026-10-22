@@ -81,6 +81,44 @@ fun DiscardConfirm(
     )
 }
 
+/**
+ * A think-twice that names both answers (`DialogSurface` with the
+ * `DiscardConfirm` weighting): the board's title and body, the KEEP answer
+ * filled in the right-hand slot the thumb goes to by habit, the destructive
+ * one quiet — and no `error` colour, because a reader discarding what they no
+ * longer want is doing what they meant to. The scrim and Back are the keep
+ * answer (`ComposeDraftDiscard`, `ComposeBodyDiscard`, `SealDiscardConfirm`).
+ */
+@Composable
+fun AskDialog(
+    title: String,
+    body: String,
+    keepLabel: String,
+    discardLabel: String,
+    onKeep: () -> Unit,
+    onDiscard: () -> Unit,
+    modifier: Modifier = Modifier,
+    testTag: String? = null,
+) {
+    AlertDialog(
+        onDismissRequest = onKeep,
+        modifier = modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+        title = { Text(text = title, style = MaterialTheme.typography.headlineSmall) },
+        text = { Text(text = body, style = MaterialTheme.typography.bodyMedium) },
+        confirmButton = {
+            CograButton(text = keepLabel, onClick = onKeep, testTag = testTag?.let { "${it}_keep" })
+        },
+        dismissButton = {
+            CograButton(
+                text = discardLabel,
+                onClick = onDiscard,
+                kind = ButtonKind.Text,
+                testTag = testTag?.let { "${it}_discard" },
+            )
+        },
+    )
+}
+
 @ThemePreviews
 @Composable
 private fun DiscardConfirmPreview() {

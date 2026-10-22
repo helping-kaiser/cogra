@@ -3,28 +3,33 @@ package com.cogra.feature.content.wizard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,61 +45,85 @@ import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.HelpDot
+import com.cogra.core.designsystem.v2.atom.HouseSwitch
+import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.InlineSize
+import com.cogra.core.designsystem.v2.atom.NoticeLine
+import com.cogra.core.designsystem.v2.atom.NoticePanel
+import com.cogra.core.designsystem.v2.atom.QuietNote
+import com.cogra.core.designsystem.v2.atom.SLOW_SIGNING_MS
 import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
-import com.cogra.core.designsystem.v2.atom.SummaryRow
+import com.cogra.core.designsystem.v2.atom.rememberParticiple
+import com.cogra.core.designsystem.v2.atom.rememberWaitedPast
 import com.cogra.core.designsystem.v2.compose.AttributionTiers
 import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.core.designsystem.v2.compose.LicenseAxis
+import com.cogra.core.designsystem.v2.compose.LicenseAxisLabel
 import com.cogra.core.designsystem.v2.compose.ProvenanceTiers
+import com.cogra.core.designsystem.v2.compose.UploadGateFailedLine
+import com.cogra.core.designsystem.v2.compose.UploadMedia
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
 import com.cogra.core.designsystem.v2.compose.licenseSummary
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
+import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.ReferenceContentKind
+import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.content.MAX_SENSITIVE_REASON_CHARS
 import com.cogra.domain.content.isSensitiveReasonTooLong
 import com.cogra.feature.content.BackingPad
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceRow
-import com.cogra.feature.content.referenceLabel
+import com.cogra.feature.content.stagedName
+
+/** What the seal's foot and fact rows answer with — one bundle, so the stage stays readable. */
+internal class SealActions(
+    val onOpenSheet: (SealSheet) -> Unit,
+    val onSign: () -> Unit,
+    val onBack: () -> Unit,
+    val onRestoreKey: () -> Unit,
+    val onKeepDraft: () -> Unit,
+    val onHelp: (HelpTopic) -> Unit,
+    val onRetryUploads: () -> Unit,
+    val onRemoveRefused: (String) -> Unit,
+    val onReport: () -> Unit,
+    val onDiscardPost: () -> Unit,
+)
 
 /**
- * `ComposeSeal` — every act with its cost, before a single signature.
+ * `ComposeSeal` — every act with its cost, before a single signature
+ * (`_shared.jsx` `ComposeSealBody`): the quiet read-back line, the acts card,
+ * the three facts the seal still lets the author change, and the foot.
  *
- * The block at the top names what the batch carries, one row per kind,
- * each with its act count; the rows below it are the settings the seal
- * still lets the author change; and the two pills at the bottom are the
- * one committing action and the way back.
+ * THE FOOT IS WHAT BECAME OF THE COMMIT (the failure pack): at rest the
+ * commit and Back (`SealFooter`), with the upload gate over them while the
+ * pictures go up; the key's notice where the key is elsewhere
+ * (`ComposeKeyAbsent`); and in the commit's place the fault a press came back
+ * with ([SealFault]).
  *
- * `ComposeKeyAbsent` is this same screen with the sign pill replaced by
- * the restore card — it is a state of the seal, not a separate stage.
+ * WHILE IT SIGNS THE SEAL HOLDS THE READER (SealSigning.md): past 200ms the
+ * commit reads `Signing and publishing…`, inert and never dimmed; past 5s the
+ * acts card's subline says the network is slow. Both clocks count from the
+ * press, a wait for uploads included.
  */
 @Composable
-internal fun ColumnScope.SealStepBody(
-    state: ComposeWizardState,
-    onOpenSheet: (SealSheet) -> Unit,
-    onSign: () -> Unit,
-    onBack: () -> Unit,
-    onRestoreKey: () -> Unit,
-    onKeepDraft: () -> Unit,
-    onKeyHelp: () -> Unit,
-) {
-    Text(
-        text = "${state.sealSummary}.",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.testTag("wizard_seal_summary"),
-    )
+internal fun ColumnScope.SealStepBody(state: ComposeWizardState, actions: SealActions) {
+    val participle = rememberParticiple(state.pressed)
+    val slow = rememberWaitedPast(state.pressed, SLOW_SIGNING_MS)
 
-    ActBlock(state = state, onOpenSheet = onOpenSheet)
+    QuietNote(text = "${state.sealSummary}.", modifier = Modifier.testTag("wizard_seal_summary"))
+
+    ActsCard(state = state, slow = slow, onOpenSheet = actions.onOpenSheet, onRemoveRefused = actions.onRemoveRefused)
 
     Column(Modifier.fillMaxWidth()) {
         SettingRow(
             label = "License",
             value = state.license.sealLabel(),
             actionText = "Change",
-            onAction = { onOpenSheet(SealSheet.License) },
+            onAction = { actions.onOpenSheet(SealSheet.License) },
             testTag = "wizard_seal_license",
         )
         // Key absent: everything the signature would commit is still read
@@ -102,29 +131,24 @@ internal fun ColumnScope.SealStepBody(
         // board draws one row (ComposeKeyAbsent.jsx:47).
         if (!state.keyAbsent) {
             // `Your backing` — ONE NUMBER, never a pair (ComposeSeal.md;
-            // jakob 2026-10-16, PR-101): the post's own record is a
-            // Publish, whose one free parameter is the author's attachment
-            // — their BACKING; the second is pinned at 1 by the census, so
-            // a pair would read back a figure nobody chose. It starts at
-            // +0.10 and rides the post's own record, adding nothing to the
-            // total. The author's OPINION on the post is another record,
-            // the one its face takes once it is out.
+            // jakob 2026-10-16, PR-101): the post's own record is a Publish
+            // whose one free parameter is the author's backing. It rides the
+            // post's own record and adds nothing to the total.
             SettingRow(
                 label = "Your backing",
                 actionText = "Adjust",
-                onAction = { onOpenSheet(SealSheet.Stance) },
+                onAction = { actions.onOpenSheet(SealSheet.Stance) },
                 testTag = "wizard_seal_stance",
             ) {
                 AttachmentReadout(pDirected = state.pDirected, testTag = "wizard_seal_stance_value")
             }
-            // The author's own mark. The row says where it stands and the
-            // sheet is where it is set — the same shape License and the
-            // stance pad take, so the seal reads as one list of choices.
+            // The author's own mark, with no control that clears it here:
+            // `Change` opens the sheet, where the switch is.
             SettingRow(
                 label = "Sensitive",
                 value = if (state.sensitive) "Marked" else "Not marked",
                 actionText = if (state.sensitive) "Change" else "Mark",
-                onAction = { onOpenSheet(SealSheet.Sensitive) },
+                onAction = { actions.onOpenSheet(SealSheet.Sensitive) },
                 testTag = "wizard_seal_sensitive",
             )
         }
@@ -133,72 +157,172 @@ internal fun ColumnScope.SealStepBody(
 
     Spacer(Modifier.weight(1f))
 
-    if (state.keyAbsent) {
-        // The keep-draft way out is a SIBLING below the panel, full width —
-        // not nested inside it (ComposeKeyAbsent.jsx:62).
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Space.x3),
-        ) {
-            KeyAbsentPanel(onRestoreKey = onRestoreKey, onKeyHelp = onKeyHelp)
-            CograButton(
-                text = "Keep the draft, restore later",
-                onClick = onKeepDraft,
-                kind = ButtonKind.Text,
-                modifier = Modifier.fillMaxWidth(),
-                testTag = "wizard_keep_draft",
-            )
+    SealFoot(state = state, participle = participle, actions = actions)
+}
+
+/** The seal's foot, by what became of the commit (`ComposeSealBody`'s `state`). */
+@Composable
+private fun SealFoot(state: ComposeWizardState, participle: Boolean, actions: SealActions) {
+    val fault = state.fault
+    when {
+        state.keyAbsent -> {
+            // `NoticePanel` with its own "?" by the stopper exception, the
+            // restore in the panel's `inverse` (ComposeKeyAbsent.jsx).
+            NoticePanel(
+                title = "Your key isn't in this app",
+                helpLabel = HelpTopic.Key.title,
+                onHelp = { actions.onHelp(HelpTopic.Key) },
+                helpTestTag = "wizard_key_help",
+                testTag = "wizard_key_absent",
+            ) {
+                CograButton(
+                    text = "Restore the key",
+                    onClick = actions.onRestoreKey,
+                    kind = ButtonKind.Inverse,
+                    modifier = Modifier.fillMaxWidth(),
+                    testTag = "wizard_restore_key",
+                )
+            }
+            WideText("Keep the draft, restore later", actions.onKeepDraft, "wizard_keep_draft")
         }
-    } else {
-        Column(
+
+        fault == SealFault.WriteRule -> {
+            // A rule working as meant, never the error colour and never Retry.
+            NoticePanel(
+                title = WRITE_RULE_TITLE,
+                helpLabel = HelpTopic.WhySigningWaits.title,
+                onHelp = { actions.onHelp(HelpTopic.WhySigningWaits) },
+                helpTestTag = "wizard_write_rule_help",
+                testTag = "wizard_write_rule",
+            ) { NoticeLine(WRITE_RULE_FACT) }
+            WideText("Keep the draft, sign later", actions.onKeepDraft, "wizard_sign_later")
+        }
+
+        fault == SealFault.Bug -> {
+            // The system telling on itself: the tertiary panel, no row marked.
+            NoticePanel(title = SEAL_BUG_TITLE, testTag = "wizard_seal_bug") {
+                NoticeLine(SEAL_BUG_FACT)
+                CograButton(
+                    text = "Try again",
+                    onClick = actions.onSign,
+                    kind = ButtonKind.Inverse,
+                    modifier = Modifier.fillMaxWidth(),
+                    testTag = "wizard_try_again",
+                )
+            }
+            Column(Modifier.fillMaxWidth()) {
+                // The report page Settings opens is not built on android
+                // (HAND TO FABLE): the word stands where the board draws it.
+                WideText("Report a problem", actions.onReport, "wizard_report")
+                WideText("Discard the post", actions.onDiscardPost, "wizard_discard_post")
+            }
+        }
+
+        fault == SealFault.Offline -> Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
-            // `ComposeSealUploading`: while this shows, the sign button is
-            // disabled — nothing signs until the content it signs exists.
-            // Strictly the in-flight gate
-            // (design/components/compose/UploadNotice.prompt.md lines 1,
-            // 11): `picked.isNotEmpty()` keeps it from ever rendering
-            // "Uploading 0 of 0" for an emptied media-mode batch — the
-            // gate `state.mode == BodyMode.Media` alone does not, since
-            // mode survives a removal that empties the tray.
-            if (state.mode == BodyMode.Media && state.picked.isNotEmpty() && !state.uploadsComplete) {
-                UploadStatusLine(
-                    done = state.uploadsDone,
-                    total = state.picked.size,
+            // `TransportError`'s line over an outlined Retry and the same way back.
+            Text(
+                text = SEAL_OFFLINE_LINE,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .testTag("wizard_seal_offline")
+                    .semantics { liveRegion = LiveRegionMode.Assertive },
+            )
+            CograButton(
+                text = "Retry",
+                onClick = actions.onSign,
+                kind = ButtonKind.Outlined,
+                modifier = Modifier.fillMaxWidth(),
+                testTag = "wizard_retry",
+            )
+            WideText("Back", actions.onBack, "wizard_seal_back")
+        }
+
+        else -> {
+            UploadGate(state, actions.onRetryUploads)
+            // `SealFooter`: the commit, filled and first, and Back under it.
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.x2)) {
+                CograButton(
+                    text = if (participle) "Signing and publishing…" else "Sign and publish",
+                    // Inert from the press and never dimmed: it refuses a
+                    // second press until the signing answers.
+                    onClick = { if (!state.pressed) actions.onSign() },
+                    enabled = state.signEnabled,
                     modifier = Modifier.fillMaxWidth(),
-                    testTag = "wizard_seal_uploading",
+                    testTag = "wizard_sign",
                 )
+                WideText("Back", actions.onBack, "wizard_seal_back")
             }
-            CograButton(
-                text = "Sign and publish",
-                onClick = onSign,
-                enabled = state.canSign,
-                modifier = Modifier.fillMaxWidth(),
-                testTag = "wizard_sign",
-            )
-            CograButton(
-                text = "Back",
-                onClick = onBack,
-                kind = ButtonKind.Text,
-                modifier = Modifier.fillMaxWidth(),
-                testTag = "wizard_seal_back",
-            )
         }
     }
 }
 
 /**
- * The act block: the post, its topics, its citations, and the total —
- * "they land together, or none does".
- *
- * A gallery adds no row: attaching media mints nothing, so a
- * ten-picture post is still one Publish (api-spec.md
- * `PrepareContentPayload`). Saying otherwise here would price a
- * gesture that costs nothing.
+ * `ComposeSealUploading`: while the uploads run, `Uploading N of M — signing
+ * waits for the pictures.` (`the video` for a clip); once one has failed, the
+ * gate's fault reading with Retry. `picked.isNotEmpty()` keeps it from ever
+ * drawing "Uploading 0 of 0" for an emptied media-mode batch.
  */
 @Composable
-private fun ActBlock(state: ComposeWizardState, onOpenSheet: (SealSheet) -> Unit) {
+private fun UploadGate(state: ComposeWizardState, onRetryUploads: () -> Unit) {
+    if (state.mode != BodyMode.Media || state.picked.isEmpty()) return
+    val media = if (state.isVideoPost) UploadMedia.Video else UploadMedia.Pictures
+    when {
+        state.uploadsFailed -> UploadGateFailedLine(
+            onRetry = onRetryUploads,
+            media = media,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "wizard_seal_upload_failed",
+        )
+        !state.uploadsComplete -> UploadStatusLine(
+            done = state.uploadsDone,
+            total = state.picked.size,
+            media = media,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "wizard_seal_uploading",
+        )
+        else -> Unit
+    }
+}
+
+/** A full-width text button — a seal's way back or way out. */
+@Composable
+private fun WideText(text: String, onClick: () -> Unit, testTag: String) {
+    CograButton(
+        text = text,
+        onClick = onClick,
+        kind = ButtonKind.Text,
+        modifier = Modifier.fillMaxWidth(),
+        testTag = testTag,
+    )
+}
+
+/** How many tag chips the seal's Tags row holds before it counts (`_shared.jsx` `TAGS_ROW_HOLDS`). */
+private const val TAGS_ROW_HOLDS = 2
+
+/**
+ * `ActsCard` — the container-highest card listing what one signature commits:
+ * one row per act kind (quiet label · value · count, a hairline under each,
+ * at least 44 tall), the total as its footer, and under the total the
+ * all-or-nothing line on a seal that signs more than one act — or, past 5s
+ * of signing, the slow line in the olive ink, announced once as a status.
+ *
+ * A gallery adds no row: attaching media mints nothing, so a ten-picture
+ * post is still one Publish.
+ */
+@Composable
+private fun ActsCard(
+    state: ComposeWizardState,
+    slow: Boolean,
+    onOpenSheet: (SealSheet) -> Unit,
+    onRemoveRefused: (String) -> Unit,
+) {
+    val tags = state.tagSection.tags
+    val references = state.referenceSection.references
+    val refused = (state.fault as? SealFault.Row)?.targetId?.let { id -> references.firstOrNull { it.targetId == id } }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -207,311 +331,237 @@ private fun ActBlock(state: ComposeWizardState, onOpenSheet: (SealSheet) -> Unit
             .padding(horizontal = Space.x4, vertical = Space.x1)
             .testTag("wizard_seal_acts"),
     ) {
-        ActRow(kind = "Post", detail = state.sealSummary, acts = 1, countNoun = "post")
-        if (state.tagSection.tags.isNotEmpty()) {
-            Hairline()
-            TagsActRow(tags = state.tagSection.tags.map { it.name })
+        ActRow(label = "Post", count = 1, noun = "post") { ActValue(state.title.ifBlank { state.sealSummary }) }
+        // THE TAGS ROW IN ITS TWO READINGS (jakob 2026-09-15): the chips while
+        // they fit, past that `N tags` and the row a door to the tags sheet.
+        if (tags.size in 1..TAGS_ROW_HOLDS) {
+            ActRow(label = "Tags", count = tags.size, noun = "tag") {
+                Row(
+                    modifier = Modifier.clipToBounds(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    tags.forEach { CograReadoutChip(label = "#${it.name}") }
+                }
+            }
+        } else if (tags.size > TAGS_ROW_HOLDS) {
+            ActRow(
+                label = "Tags",
+                count = tags.size,
+                noun = "tag",
+                door = Door("Manage the ${tags.size} tags", "wizard_seal_tags") { onOpenSheet(SealSheet.Tags) },
+            ) { ActValue("${tags.size} tags") }
         }
-        // THE REFERENCES ROW IN ITS THREE READINGS (jakob's rulings
-        // 2026-09-14, design backlog item 70): nothing staged draws no row,
-        // ONE reads back as itself, TWO OR MORE read back as their count with
-        // the whole row a door to the sheet that lists them
-        // (`_shared.jsx:864-889`).
-        val references = state.referenceSection.references
+        // THE REFERENCES ROW IN ITS READINGS (jakob 2026-09-14): one citation
+        // reads back as itself, name over its pair; two or more as `N cited`
+        // with the row a door to the citations sheet. A refused citation is
+        // said under the row in the failure voice with `Remove it`
+        // (SealFaultRow.md).
+        val fault = refused?.let { RowFault(unlandedLine(it), it) }
         if (references.size == 1) {
-            Hairline()
-            ReferenceActRow(reference = references.first())
+            val one = references.first()
+            ActRow(label = "References", count = 1, noun = "citation", fault = fault, onRemoveRefused = onRemoveRefused) {
+                Column(Modifier.padding(vertical = 6.dp)) {
+                    ActValue(stagedName(one.target))
+                    Text(
+                        text = citedReading(StancePoint(one.relevance, one.support)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         } else if (references.size > 1) {
-            Hairline()
-            CitedDoorRow(
-                count = references.size,
-                onOpen = { onOpenSheet(SealSheet.Cited) },
-                testTag = "wizard_seal_cited",
+            val n = references.size
+            ActRow(
+                label = "References",
+                count = n,
+                noun = "citation",
+                door = Door("Manage the $n citations", "wizard_seal_cited") { onOpenSheet(SealSheet.Cited) },
+                fault = fault,
+                onRemoveRefused = onRemoveRefused,
+            ) { ActValue("$n cited") }
+        }
+        ActsTotal(acts = state.signedActionCount, slow = slow)
+    }
+}
+
+/** A counting row's door: the whole row is the control, named with its count. */
+private class Door(val name: String, val testTag: String, val onOpen: () -> Unit)
+
+/** A refused citation's line under its row: the failure voice, and `Remove it` naming it. */
+private class RowFault(val message: String, val row: ReferenceRow)
+
+/** The refused-file line's sentence, by what the citation points at (copy-voice, *Faults by code*). */
+private fun unlandedLine(row: ReferenceRow): String {
+    val target = row.target
+    return if (target is ReferenceTargetView.Content && target.kind == ReferenceContentKind.COMMENT) {
+        SEAL_UNLANDED_COMMENT
+    } else {
+        SEAL_UNLANDED_POST
+    }
+}
+
+@Composable
+private fun ActRow(
+    label: String,
+    count: Int,
+    noun: String,
+    door: Door? = null,
+    fault: RowFault? = null,
+    onRemoveRefused: (String) -> Unit = {},
+    value: @Composable () -> Unit,
+) {
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (door == null) {
+                        Modifier
+                    } else {
+                        Modifier
+                            .clickable(role = Role.Button, onClick = door.onOpen)
+                            .semantics { contentDescription = door.name }
+                            .testTag(door.testTag)
+                    },
+                )
+                .defaultMinSize(minHeight = ACT_ROW_MIN),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.width(ACT_LABEL),
             )
+            Column(Modifier.weight(1f)) { value() }
+            ActsCount(count = count, noun = noun)
+        }
+        if (fault != null) {
+            Row(
+                modifier = Modifier
+                    .padding(start = ACT_LABEL + Space.x2, bottom = Space.x2)
+                    .testTag("wizard_seal_refused")
+                    .semantics { liveRegion = LiveRegionMode.Assertive },
+                horizontalArrangement = Arrangement.spacedBy(Space.x1),
+            ) {
+                Text(
+                    text = fault.message,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                InlineAction(
+                    text = "Remove it",
+                    onClick = { onRemoveRefused(fault.row.targetId) },
+                    size = InlineSize.Small,
+                    contentDescription = "Remove ${stagedName(fault.row.target)}",
+                    testTag = "wizard_seal_refused_remove",
+                )
+            }
         }
         Hairline()
-        val acts = state.signedActionCount
-        SummaryRow(
-            headline = if (acts == 1) "1 signed action" else "$acts signed actions",
-            // The all-or-nothing subline rides the total **whenever the
-            // seal commits more than one act**, and is omitted on a
-            // single-act seal, where there is nothing for it to be true of
-            // (design/readme.md §13, the healed seal drift).
-            detail = "they land together, or none does".takeIf { acts > 1 },
-            testTag = "wizard_seal_total",
+    }
+}
+
+/** A fact's value: `body-medium`, one line, an ellipsis where it runs past the card. */
+@Composable
+private fun ActValue(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+/**
+ * The total and its subline (`ActsCard.jsx`'s footer row): `N things, signed
+ * together` (`1 thing, signed` at one) in body-medium at label-large's weight,
+ * then `They land together, or none does.` on a multi-act seal — the slow
+ * line in its place past 5s, olive, a polite status.
+ */
+@Composable
+private fun ActsTotal(acts: Int, slow: Boolean) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
+            .padding(vertical = 6.dp)
+            .testTag("wizard_seal_total"),
+        verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
+    ) {
+        Text(
+            text = if (acts == 1) "1 thing, signed" else "$acts things, signed together",
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = MaterialTheme.typography.labelLarge.fontWeight),
+            color = MaterialTheme.colorScheme.onSurface,
         )
+        val note = when {
+            slow -> SEAL_SLOW_LINE
+            acts > 1 -> "They land together, or none does."
+            else -> null
+        }
+        if (note != null) {
+            Text(
+                text = note,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                color = if (slow) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .testTag(if (slow) "wizard_seal_slow" else "wizard_seal_note")
+                    .then(if (slow) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier),
+            )
+        }
     }
 }
 
 /**
  * THE COUNT IS SEEN BARE AND HEARD WHOLE (jakob's ruling 2026-09-14, design
- * backlog item 73; `ActsCard.jsx:27-39`).
- *
- * The digit is what the board draws: the word form spent the row's width on a
- * noun the label column already says, and what it spent came out of the value
- * slot. But a trailing "3" is unambiguous only to an eye that has the label on
- * the same line, and nothing at all to an ear that gets the number alone — so
- * the digit's node answers with the whole reading instead, which is this
- * platform's `SR_ONLY`.
- *
- * THE NOUN COMES FROM THE ROW, never from its label: the References row counts
- * CITATIONS, and no rule derives that word from "References". A count already
- * made of words ("1 more") keeps them and says itself.
+ * backlog item 73; `ActsCard.jsx`): the digit is what the board draws, and its
+ * node answers with the whole reading — this platform's `SR_ONLY`. The noun
+ * comes from the row, never from its label.
  */
 internal fun actsCountReading(count: Int, noun: String): String =
     if (count == 1) "$count $noun" else "$count ${noun}s"
 
 @Composable
-private fun ActRow(kind: String, detail: String, acts: Int, countNoun: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = Space.x2),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.x2),
-    ) {
-        Text(
-            text = kind,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(76.dp),
-        )
-        Text(
-            text = detail,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        ActsCount(count = acts, noun = countNoun)
-    }
-}
-
-/** The bare digit, spoken whole — see [actsCountReading]. */
-@Composable
 private fun ActsCount(count: Int, noun: String) {
     val spoken = actsCountReading(count, noun)
     Text(
         text = "$count",
-        // CW-25: both text tokens in the acts row are label-small
-        // (ActsCard.jsx:27-43, LABEL and COUNT share --text-label-small);
-        // the kind label above already reads it correctly.
-        style = MaterialTheme.typography.labelSmall,
+        // `ActsCard.jsx` COUNT: label-small's size, leading and tracking, at
+        // the ground's weight.
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.semantics { contentDescription = spoken },
     )
 }
 
-/**
- * The Tags act row: unlike [ActRow]'s plain-text value, the board
- * (`_shared.jsx:839-846`) draws each tag as a readout-tone chip — a
- * borderless `secondaryContainer` pill, not a filter — so the value slot is
- * a row of [CograReadoutChip]s rather than a joined string (CW-22).
- *
- * The board's own value wrapper is `overflow: hidden` with no `flexWrap`: a
- * single non-wrapping row that hard-clips whatever doesn't fit at the
- * container edge, not an ellipsis. [Modifier.clipToBounds] on the weighted
- * row matches that measured behaviour rather than inventing a truncation
- * rule the board doesn't draw.
- */
+/** A staged citation's reading on the seal: the face, then the pair. */
 @Composable
-private fun TagsActRow(tags: List<String>) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = Space.x2),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.x2),
-    ) {
-        Text(
-            text = "Tags",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(76.dp),
-        )
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .clipToBounds(),
-            // `_shared.jsx:841`'s wrapper: `gap: 6`.
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            tags.forEach { name -> CograReadoutChip(label = "#$name") }
-        }
-        ActsCount(count = tags.size, noun = "tag")
-    }
-}
-
-/**
- * The References act row at ONE staged citation: unlike [ActRow]'s
- * single-line value, the board (`_shared.jsx:943-955`) draws the citation's
- * name over its own stance readout — the staged citation carries the stance
- * that rides with it, so the row is two lines: what is cited, and what signing
- * it says about the citer.
- *
- * A seal is a read-back, and one thing read back is the thing. The threshold
- * is two, because two is where a name stops being the shortest true answer —
- * past it the row counts instead, and [CitedDoorRow] takes over.
- */
-@Composable
-private fun ReferenceActRow(reference: ReferenceRow) {
-    val primary = reference
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = Space.x2),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.x2),
-    ) {
-        Text(
-            text = "References",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(76.dp),
-        )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = referenceLabel(primary.target),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = stanceRowReading(StancePoint(primary.relevance, primary.support)),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        ActsCount(count = 1, noun = "citation")
-    }
-}
-
-/**
- * The References row once it COUNTS: "N cited", the bare count, and the whole
- * row as the control (`ActsCard.jsx:99-104`, `_shared.jsx:883-889`).
- *
- * It keeps the fact row's three slots and stays a fact row rather than
- * becoming an action row, because what it opens is what it already says. No
- * chevron and no trailing word — `PickedRow`'s rule for the picked pictures,
- * said here — so the label on the gesture is what tells a listener the line is
- * a door at all, count folded in ("Manage the N citations", and at one
- * "Manage the 1 citation" — copy-voice.md:409-419).
- *
- * THE TRAILING COUNT IS THE CITATIONS, BARE: the list's length and nothing
- * else. The signature's own total is the block's footer and already says in
- * words what it counts.
- */
-@Composable
-private fun CitedDoorRow(count: Int, onOpen: () -> Unit, testTag: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                role = Role.Button,
-                onClickLabel = "Manage the $count ${if (count == 1) "citation" else "citations"}",
-                onClick = onOpen,
-            )
-            .padding(vertical = Space.x2)
-            .testTag(testTag),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.x2),
-    ) {
-        Text(
-            text = "References",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(76.dp),
-        )
-        Text(
-            text = "$count cited",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        ActsCount(count = count, noun = "citation")
-    }
-}
-
-/**
- * The seal row's own reading: the face, then the pair, in the one string a
- * settings row carries — the same shape `ReplySealStep.kt`'s
- * `stanceRowReading` already reads the reply seal's own pick through.
- */
-@Composable
-private fun stanceRowReading(pick: StancePoint): String =
+private fun citedReading(pick: StancePoint): String =
     "${bundleReadout(pick, EMPTY_PICK_LABEL).emoji} ${pick.pair()}"
 
-/**
- * `ComposeKeyAbsent` — this app holds no actor key, so nothing can be
- * signed here. The panel itself; the keep-draft way out is a sibling
- * below it ([SealStepBody]), not drawn inside — the board's own layout
- * (ComposeKeyAbsent.jsx:46-62).
- *
- * The heading carries copy-voice's platform noun ("this app", not a bare
- * "device" — copy-voice.md §Platform nouns) and its own inverse `?`,
- * opening [HelpTopic.Key]; the restore action is `Inverse`, the filled
- * button turned over on the panel's own pair rather than `primary`
- * arguing with it.
- */
-@Composable
-private fun KeyAbsentPanel(onRestoreKey: () -> Unit, onKeyHelp: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.tertiaryContainer)
-            .padding(Space.x4)
-            .testTag("wizard_key_absent"),
-        verticalArrangement = Arrangement.spacedBy(Space.x3),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.x2),
-        ) {
-            Text(
-                text = "Your key isn't in this app",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onTertiaryContainer,
-                modifier = Modifier.weight(1f),
-            )
-            HelpDot(
-                onHelp = onKeyHelp,
-                contentDescription = HelpTopic.Key.title,
-                tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                testTag = "wizard_key_help",
-            )
-        }
-        CograButton(
-            text = "Restore the key",
-            onClick = onRestoreKey,
-            kind = ButtonKind.Inverse,
-            modifier = Modifier.fillMaxWidth(),
-            testTag = "wizard_restore_key",
-        )
-    }
-}
+/** `ActsCard.jsx` ROW's 44px floor. */
+private val ACT_ROW_MIN = 44.dp
+
+/** `ActsCard.jsx` LABEL's 76px column. */
+private val ACT_LABEL = 76.dp
 
 /**
- * `ComposeSensitive` — the author's own mark, and the reason that rides
- * the veil with it.
+ * `ComposeSensitive` — the author's own mark, and the reason that rides the
+ * veil with it. **One sheet for every surface that marks** (the post seal,
+ * the reply seal, both edits; ruling 42); only [testTagPrefix] varies.
  *
- * The switch sits in the title row and the heading is its label, so the
- * sheet says what it does in one line. The reason is optional and
- * public: it is shown *on* the veil, which is the only place a reader
- * meets it, so the corner says so rather than a paragraph explaining it.
+ * IT STAGES, AND `Done` COMMITS (the sheet law; ComposeSensitive.md): the
+ * switch and the reason are this sheet's own until Done hands both to the
+ * host; the scrim, a swipe down and system Back close it with nothing
+ * applied. It opens ON (jakob 2026-10-01): the `Mark` that opened it was the
+ * intent. Switched off, the reason keeps its words but disables — the
+ * contract refuses a reason without the mark.
  *
- * **One sheet for every surface that marks** — the post seal, the reply
- * seal, and both edit surfaces. Its line reads for both scales (ruling
- * 42: "a comment has no description to name, and a post's description
- * is words"), so a second copy would only be the place the two drift
- * apart. Only [testTagPrefix] varies, so a test can still say which
- * surface opened it.
+ * Over the cap, `Done` stays visible and goes inert, never hidden.
  */
 @Composable
 internal fun SensitiveSheet(
@@ -522,181 +572,65 @@ internal fun SensitiveSheet(
     onDone: () -> Unit,
     onHelp: () -> Unit,
     testTagPrefix: String = "wizard",
+    /** Whether the sheet opens with the switch on — the `Mark` that opened it was the intent. */
+    opensOn: Boolean = true,
 ) {
-    CograSheetSurface(testTag = "${testTagPrefix}_sensitive_sheet") {
+    var staged by remember { mutableStateOf(marked || opensOn) }
+    var stagedReason by remember { mutableStateOf(reason) }
+    val tooLong = staged && isSensitiveReasonTooLong(stagedReason)
+    CograSheetSurface(testTag = "${testTagPrefix}_sensitive_sheet", gap = 0.dp) {
         SheetTitle(
             text = "Mark as sensitive",
-            onHelp = onHelp,
-            helpContentDescription = "Marking as sensitive",
             trailing = {
-                Switch(
-                    checked = marked,
-                    onCheckedChange = onMarkedChange,
-                    modifier = Modifier.testTag("${testTagPrefix}_sensitive_switch"),
-                )
+                HelpDot(onHelp = onHelp, contentDescription = "Sensitive", testTag = "${testTagPrefix}_sensitive_help")
+                // `Switch` from `SettingsRow.jsx` (`HouseSwitch`), the box around it the control.
+                Box(
+                    modifier = Modifier
+                        .toggleable(value = staged, role = Role.Switch, onValueChange = { staged = it })
+                        .semantics { contentDescription = "Mark as sensitive" }
+                        .testTag("${testTagPrefix}_sensitive_switch"),
+                ) { HouseSwitch(checked = staged) }
             },
         )
-        Text(
-            text = "Veils the pictures and the words until a reader chooses to look.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        // ONE LINE TO START, AND IT GROWS (jakob 2026-09-22). A reason is a
-        // sentence, not a word, and a single-line box hid everything past the
-        // first phrase of it. It takes a line per line and stops at the room
-        // the sheet's own chrome left, from where it scrolls inside itself.
-        CograTextField(
-            value = reason,
-            onValueChange = onReasonChange,
-            label = "Why?",
-            optional = true,
-            optionalLabel = "Optional — shown on the veil",
-            singleLine = false,
-            minLines = 1,
-            growToFit = true,
-            modifier = Modifier.weight(1f, fill = false),
-            // The contract refuses a reason without the mark, so the
-            // field is only live once the switch is on: offering a box
-            // that would be refused is worse than not offering it.
-            enabled = marked,
-            cap = MAX_SENSITIVE_REASON_CHARS,
-            error = if (marked && isSensitiveReasonTooLong(reason)) {
-                stringResource(R.string.content_error_sensitive_reason_too_long)
-            } else {
-                null
-            },
-            testTag = "${testTagPrefix}_sensitive_reason",
-        )
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            // Visible but disabled over the cap, never hidden — the reason
-            // only counts against the cap while the mark is on, the same
-            // gate its own error line above uses.
-            CograButton(
-                "Done",
-                onDone,
-                enabled = !(marked && isSensitiveReasonTooLong(reason)),
-                testTag = "${testTagPrefix}_sensitive_done",
-            )
-        }
-    }
-}
-
-/**
- * `ComposeLicense` — the terms anyone reusing this is bound by, as two
- * groups of three degrees.
- *
- * The degrees are the three CoGra publishes a reading for, and nothing
- * between them: a degree with no published reading is a term no reader
- * could check.
- */
-@Composable
-internal fun LicenseSheet(
-    license: LicenseChoice,
-    onChange: (LicenseChoice) -> Unit,
-    onDone: () -> Unit,
-    onHelp: () -> Unit,
-) {
-    CograSheetSurface(testTag = "wizard_license_sheet") {
-        SheetTitle(
-            text = "License",
-            onHelp = onHelp,
-            helpContentDescription = HelpTopic.License.title,
-        )
-        Text(
-            text = "Terms for anyone who reuses this.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        DegreeGroup(
-            heading = "Credit",
-            options = CREDIT,
-            selected = license.attribution,
-            onSelect = { onChange(license.copy(attribution = it)) },
-            tagPrefix = "wizard_license_credit",
-        )
-        DegreeGroup(
-            heading = "Public record of use",
-            options = RECORD,
-            selected = license.provenance,
-            onSelect = { onChange(license.copy(provenance = it)) },
-            tagPrefix = "wizard_license_record",
-        )
-        Hairline()
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = false)
+                .padding(top = Space.x2),
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
             Text(
-                text = license.sealLabel(),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
+                text = "Veils the pictures and the words until a reader chooses to look.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            CograButton("Done", onDone, testTag = "wizard_license_done")
-        }
-    }
-}
-
-private data class Degree(val value: Double, val label: String, val reading: String)
-
-// The published tiers, read from the one shared place (`LicenseTier.kt`)
-// rather than restated here: the record axis's tier names are verbs
-// (`Not logged` · `Log commercial use` · `Log every use`, copy-voice "The
-// license block"), never the retired `No record` the graph's own word made
-// false.
-private val CREDIT = AttributionTiers.map { Degree(it.value, it.label, it.hint) }
-
-private val RECORD = ProvenanceTiers.map { Degree(it.value, it.label, it.hint) }
-
-@Composable
-private fun DegreeGroup(
-    heading: String,
-    options: List<Degree>,
-    selected: Double,
-    onSelect: (Double) -> Unit,
-    tagPrefix: String,
-) {
-    Text(
-        text = heading,
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    Column(
-        // A radio group is one control to assistive technology, not
-        // three unrelated ones — `selectableGroup` is what says so.
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectableGroup(),
-        verticalArrangement = Arrangement.spacedBy(Space.x2),
-    ) {
-        options.forEach { degree ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .selectable(
-                        selected = selected == degree.value,
-                        role = Role.RadioButton,
-                        onClick = { onSelect(degree.value) },
-                    )
-                    .testTag("${tagPrefix}_${(degree.value * 10).toInt()}"),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                // The row carries the selection semantics, so the button
-                // itself is decorative — otherwise a reader hears the
-                // same control twice.
-                RadioButton(selected = selected == degree.value, onClick = null)
-                Text(
-                    text = degree.label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = degree.reading,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+            // ONE LINE TO START, AND IT GROWS (jakob 2026-09-22), up to the
+            // room the sheet's own chrome leaves, then it scrolls inside itself.
+            CograTextField(
+                value = stagedReason,
+                onValueChange = { stagedReason = it },
+                label = "Why?",
+                optional = true,
+                optionalLabel = "Optional — shown on the veil",
+                singleLine = false,
+                minLines = 1,
+                growToFit = true,
+                modifier = Modifier.weight(1f, fill = false),
+                enabled = staged,
+                cap = MAX_SENSITIVE_REASON_CHARS,
+                error = if (tooLong) stringResource(R.string.content_error_sensitive_reason_too_long) else null,
+                testTag = "${testTagPrefix}_sensitive_reason",
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                CograButton(
+                    "Done",
+                    {
+                        onMarkedChange(staged)
+                        if (staged) onReasonChange(stagedReason)
+                        onDone()
+                    },
+                    enabled = !tooLong,
+                    testTag = "${testTagPrefix}_sensitive_done",
                 )
             }
         }
@@ -704,13 +638,73 @@ private fun DegreeGroup(
 }
 
 /**
- * `ComposePad` — the backing pad over the seal ([BackingPad], round 15).
- *
- * A new post has nothing standing yet, so the pick is the result and
- * `Your pick` reads alone. **It parks over the page; it is not a
- * drawer.** The caller owns the wash and the parking
- * (`ComposeWizardScreen`), the way the reply seal's pad already works;
- * this draws the card.
+ * `ComposeLicense` — the terms anyone reusing this is bound by, as two axes of
+ * three readings (`LicenseAxis`, the same rows the account default's sheet
+ * draws). THE RADIOS STAGE, AND `Done` COMMITS (the sheet law;
+ * ComposeLicense.md): a tap changes the sheet and nothing else; the scrim, a
+ * swipe down and system Back discard, and the post's terms are what they
+ * were. The foot reads the staged pair in the sentence the seal's row reads.
+ */
+@Composable
+internal fun LicenseSheet(
+    license: LicenseChoice,
+    onDone: (LicenseChoice) -> Unit,
+    onHelp: () -> Unit,
+) {
+    var staged by remember { mutableStateOf(license) }
+    CograSheetSurface(testTag = "wizard_license_sheet", gap = 0.dp) {
+        SheetTitle(
+            text = "License",
+            trailing = { HelpDot(onHelp = onHelp, contentDescription = "License", testTag = "wizard_license_help") },
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Space.x2),
+            verticalArrangement = Arrangement.spacedBy(Space.x2),
+        ) {
+            QuietNote(text = "Terms for anyone who reuses this.")
+            LicenseAxisLabel(text = "Credit")
+            LicenseAxis(
+                tiers = AttributionTiers,
+                chosen = staged.attribution,
+                onChoose = { staged = staged.copy(attribution = it) },
+                modifier = Modifier.testTag("wizard_license_credit"),
+            )
+            LicenseAxisLabel(text = "Public record of use")
+            LicenseAxis(
+                tiers = ProvenanceTiers,
+                chosen = staged.provenance,
+                onChoose = { staged = staged.copy(provenance = it) },
+                modifier = Modifier.testTag("wizard_license_record"),
+            )
+            Column {
+                Hairline()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Space.x2),
+                ) {
+                    Text(
+                        text = staged.sealLabel(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                    CograButton("Done", { onDone(staged) }, testTag = "wizard_license_done")
+                }
+            }
+        }
+    }
+}
+
+/**
+ * `ComposePad` — the backing pad over the seal ([BackingPad], round 15). A new
+ * post has nothing standing yet, so the pick is the result and `Your pick`
+ * reads alone. It parks over the page; the caller owns the wash and the
+ * parking.
  */
 @Composable
 internal fun ComposePad(
@@ -734,10 +728,8 @@ internal fun ComposePad(
 
 /**
  * The seal's reading of a license: the author's reading of the pair by
- * copy-voice's one joining rule (`licenseSummary`, the license block) —
- * the same sentence the license sheets' foot and the settings default
- * read. It carries no `your default`: the reading says what the post's
- * terms are, wherever they came from (FC-8b; seam 106.5).
+ * copy-voice's one joining rule (`licenseSummary`, the license block) — the
+ * same sentence the license sheets' foot and the settings default read.
  */
 internal fun LicenseChoice.sealLabel(): String = licenseSummary(attribution, provenance)
 
@@ -745,7 +737,7 @@ internal fun LicenseChoice.sealLabel(): String = licenseSummary(attribution, pro
 @Composable
 private fun LicenseSheetPreview() {
     Cogra2PreviewTheme {
-        LicenseSheet(LicenseChoice.PublicDomain, {}, {}, {})
+        LicenseSheet(LicenseChoice.PublicDomain, {}, {})
     }
 }
 

@@ -397,9 +397,11 @@ internal fun ReplyWizardScreen(
 
                 state.sheet == ReplySealSheet.License ->
                     LicenseSheet(
-                        state.license,
-                        onLicenseChange,
-                        onCloseSheet,
+                        license = state.license,
+                        onDone = { picked ->
+                            onLicenseChange(picked)
+                            onCloseSheet()
+                        },
                         onHelp = { onOpenHelp(HelpTopic.License) },
                     )
 

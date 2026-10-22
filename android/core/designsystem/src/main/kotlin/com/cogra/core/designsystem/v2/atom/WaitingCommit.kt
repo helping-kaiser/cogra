@@ -36,15 +36,28 @@ const val PARTICIPLE_DELAY_MS = 200L
  */
 @Composable
 fun rememberParticiple(inFlight: Boolean): Boolean {
+    return rememberWaitedPast(inFlight, PARTICIPLE_DELAY_MS)
+}
+
+/**
+ * How long a signing may go unanswered before the seal says the network is
+ * slow (SealSigningSlow.md: `Still signing — the network is slow right
+ * now.`). Counted from the press, never from the label swap.
+ */
+const val SLOW_SIGNING_MS = 5_000L
+
+/** True once [active] has stood for [millis] — the 200ms swap's and the 5s slow line's one clock. */
+@Composable
+fun rememberWaitedPast(active: Boolean, millis: Long): Boolean {
     var past by remember { mutableStateOf(false) }
-    LaunchedEffect(inFlight) {
+    LaunchedEffect(active) {
         past = false
-        if (inFlight) {
-            delay(PARTICIPLE_DELAY_MS)
+        if (active) {
+            delay(millis)
             past = true
         }
     }
-    return inFlight && past
+    return active && past
 }
 
 /**
