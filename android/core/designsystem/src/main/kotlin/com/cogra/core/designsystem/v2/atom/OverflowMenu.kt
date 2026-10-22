@@ -1,5 +1,6 @@
 package com.cogra.core.designsystem.v2.atom
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -37,6 +38,7 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.media.CoverKind
 import com.cogra.core.designsystem.v2.media.CoversSurface
+import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 
 /**
@@ -90,15 +92,34 @@ fun CograOverflowMenu(
      * the plain 48dp icon button the rows of controls carry.
      */
     pulled: Boolean = false,
+    /**
+     * THE ROW PLACEMENT (`OverflowMenu.jsx` `placement="row"`): the dot standing
+     * in a ROW OF CONTROLS beside the row's buttons (a profile's actions
+     * row) — 40dp of ink, answering at 48 through [hitTarget], so the row's
+     * height is its ink's.
+     */
+    inRow: Boolean = false,
+    /**
+     * The open sheet's own accessible name where the board gives it one
+     * (`BottomSheet` `ariaLabel`: `Profile actions`); null names it by the
+     * trigger's [contentDescription], as the master's own sheet does.
+     */
+    sheetLabel: String? = null,
 ) {
     if (items.isEmpty()) return
     var open by remember { mutableStateOf(false) }
     CoversSurface(open = open, kind = CoverKind.Suspend)
 
-    OverflowTrigger(pulled, contentDescription, testTag, modifier) { open = true }
+    val ink = when {
+        inRow -> ROW_INK
+        pulled -> PULLED_INK
+        else -> null
+    }
+    OverflowTrigger(ink, contentDescription, testTag, modifier) { open = true }
 
     if (open) {
         val state = rememberModalBottomSheetState()
+        val name = sheetLabel ?: contentDescription
         ModalBottomSheet(
             onDismissRequest = { open = false },
             sheetState = state,
@@ -107,14 +128,17 @@ fun CograOverflowMenu(
                 MaterialTheme.colorScheme,
                 MaterialTheme.colorScheme.surfaceContainerHigh,
             ),
-            modifier = Modifier.testTag(sheetNode?.tag ?: "${testTag}_sheet"),
-            dragHandle = {
-                BottomSheetDefaults.DragHandle(modifier = Modifier.dataNode(sheetNode?.div("dragHandle")))
-            },
+            modifier = Modifier
+                .testTag(sheetNode?.tag ?: "${testTag}_sheet")
+                .semantics { paneTitle = name },
+            // THE MASTER'S GRIP (`BottomSheet.jsx`): 8dp over a 32×4
+            // `border-hairline` handle and 12dp under it, so the first row
+            // starts 24dp down — Material's own handle pads 22dp each side.
+            dragHandle = { SheetGrip(sheetNode?.div("dragHandle")) },
         ) {
             // NO TITLE. The rows are the sheet, and the name the trigger
-            // already carries reaches a screen reader through the trigger's
-            // own content description.
+            // already carries reaches a screen reader through the sheet's
+            // pane title.
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -122,12 +146,13 @@ fun CograOverflowMenu(
                 verticalArrangement = Arrangement.spacedBy(0.dp),
             ) {
                 items.forEach { row ->
-                    Text(
-                        text = row.label,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
+                    // `SheetItem`: edge to edge, the 48dp minimum, `0 24`,
+                    // its one line centred in the row.
+                    Box(
+                        contentAlignment = Alignment.CenterStart,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .testTag(row.testTag)
                             .clickable(role = Role.Button) {
                                 // The sheet is the door, not the destination:
                                 // it drops as the row acts, so a dialog the row
@@ -136,26 +161,53 @@ fun CograOverflowMenu(
                                 open = false
                                 row.onSelect()
                             }
-                            .heightIn(min = 48.dp)
-                            .padding(horizontal = Space.x6, vertical = Space.x3)
-                            .testTag(row.testTag),
-                    )
+                            .heightIn(min = Layout.TouchTargetMin)
+                            .padding(horizontal = Space.x6),
+                    ) {
+                        Text(
+                            text = row.label,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-/** The ⋮ itself: the header placement's pulled box, or the row's plain icon button. */
+/** `BottomSheet.jsx`'s handle: `outlineVariant`, 32×4, 8dp above and 12dp below. */
+@Composable
+private fun SheetGrip(node: DataNode?) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = Space.x2, bottom = Space.x3),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier
+                .dataNode(node)
+                .size(width = GRIP_WIDTH, height = GRIP_HEIGHT)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.outlineVariant),
+        )
+    }
+}
+
+/**
+ * The ⋮ itself: a drawn box answering at 48 ([ink] — the header's pulled 24,
+ * the row's 40), or the plain icon button.
+ */
 @Composable
 private fun OverflowTrigger(
-    pulled: Boolean,
+    ink: Dp?,
     contentDescription: String,
     testTag: String,
     modifier: Modifier,
     onOpen: () -> Unit,
 ) {
-    if (pulled) {
+    if (ink != null) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = modifier
@@ -165,10 +217,10 @@ private fun OverflowTrigger(
                         .clip(CircleShape)
                         .clickable(role = Role.Button, onClick = onOpen)
                         .semantics { this.contentDescription = contentDescription },
-                    drawnWidth = PULLED_INK,
-                    drawnHeight = PULLED_INK,
+                    drawnWidth = ink,
+                    drawnHeight = ink,
                 )
-                .size(PULLED_INK),
+                .size(ink),
         ) {
             Icon(
                 Icons.Filled.MoreVert,
@@ -192,3 +244,9 @@ private fun OverflowTrigger(
 
 /** The header placement's ink: the 24dp line the pulled 48dp box keeps (`OverflowMenu.jsx`). */
 private val PULLED_INK: Dp = 24.dp
+
+/** The row placement's ink: 40dp beside the row's buttons (`OverflowMenu.jsx` `placement="row"`). */
+private val ROW_INK: Dp = 40.dp
+
+private val GRIP_WIDTH: Dp = 32.dp
+private val GRIP_HEIGHT: Dp = 4.dp
