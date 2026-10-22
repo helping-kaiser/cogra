@@ -286,6 +286,8 @@
     <string name="content_upload_post_video_too_big">That video is too big — a post\'s video can be up to 100 MB.</string>
     <string name="content_upload_comment_video_too_big">That video is too big — a comment\'s video can be up to 50 MB.</string>
     <string name="content_upload_transport">The upload could not reach the server.</string>
+    <string name="content_upload_post_picture_count">That\'s more than a post carries — up to ten pictures.</string>
+    <string name="content_upload_post_mixed_body">A post carries pictures or one video, not both.</string>
 
     <!-- The staged-clip tray caption for a VERTICAL clip: the shape whose
          cover step is skipped (`ComposeWizardState.skipsCoverStep`), so the
@@ -308,6 +310,7 @@
     <string name="content_reply_clip">The video on this reply</string>
     <string name="content_refused_file">A refused file</string>
     <string name="content_picture_at">Picture %1$d</string>
+    <string name="content_tray_video">The video</string>
     <string name="content_frame_picture_at">Frame picture %1$d</string>
     <string name="content_draft_first_picture">The draft\'s first picture</string>
     <string name="content_clip_length">Length %1$s</string>

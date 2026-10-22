@@ -14,10 +14,12 @@ import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.compose.SealedDraftStore
 import com.cogra.domain.compose.fateOf
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.PICTURE_MAX_BYTES
+import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.ContentRepository
@@ -367,54 +369,88 @@ class ComposeWizardViewModel @Inject constructor(
             uploads.remove(uri)?.cancel()
             return
         }
+        viewModelScope.launch { pick(uri, read(uri)) }
+    }
+
+    /**
+     * What the photos app handed back, as ONE batch (`ComposePick.md`: "a
+     * fresh batch of pictures and a video is picked GIVEN nothing is in the
+     * tray → the pictures are kept AND the video is refused").
+     *
+     * Each file is read first, then the pictures join before any clip is
+     * judged — so a batch is judged as a batch, never by which file the
+     * picker happened to list first. A file already in the tray is not
+     * picked twice (and never toggled off by a second pick).
+     */
+    fun onPickBatch(uris: List<String>) {
         viewModelScope.launch {
-            // The grid already knows the KIND, because `MediaStore` said
-            // which collection the row came from. The system picker hands
-            // over a bare URI, so that one is asked — a header read, not a
-            // decode.
-            val known = current.deviceMedia.firstOrNull { it.uri == uri }
-            // A CLIP'S SHAPE COMES FROM ITS OWN HEADER, grid or not. The
-            // store's WIDTH/HEIGHT are the stored dimensions, with the
-            // rotation in a separate ORIENTATION column (MediaProvider's
-            // `ModernMediaScanner`), so a phone's portrait recording rows
-            // in as landscape — and the shape decides whether the cover
-            // step stands (`hasCoverStep`). `VideoInfo` is post-rotation.
-            val header = if (known == null || known.isVideo) video.info(uri) else null
-            val isClip = known?.isVideo ?: (header != null)
-            // The shared screening (`PickScale.kt`): a file nothing can
-            // read is refused where it was offered rather than accepted
-            // and failed later (`ComposePickedErrors`). Bytes are weighed
-            // after the pass that shrinks them — a still at its upload,
-            // a clip after its transcode (see `startVideoUpload`).
-            if (!isClip) {
-                val refusal = screenPicture(uri, processor, knownReadable = known != null)
-                if (refusal != null) {
-                    _state.update { it.copy(refused = it.refused + refusal) }
-                    return@launch
-                }
+            val fresh = uris.distinct().filter { uri -> _state.value.picked.none { it.uri == uri } }
+            val reads = fresh.map { it to read(it) }
+            val (clips, pictures) = reads.partition { (_, read) -> read.isClip }
+            (pictures + clips).forEach { (uri, read) -> pick(uri, read) }
+        }
+    }
+
+    /** What a pick is, read before it is judged: its kind and its shape. */
+    private class PickRead(val known: DeviceMedia?, val header: VideoInfo?) {
+        val isClip: Boolean get() = known?.isVideo ?: (header != null)
+    }
+
+    private suspend fun read(uri: String): PickRead {
+        // The grid already knows the KIND, because `MediaStore` said which
+        // collection the row came from. The system picker hands over a bare
+        // URI, so that one is asked — a header read, not a decode.
+        val known = _state.value.deviceMedia.firstOrNull { it.uri == uri }
+        // A CLIP'S SHAPE COMES FROM ITS OWN HEADER, grid or not. The store's
+        // WIDTH/HEIGHT are the stored dimensions, with the rotation in a
+        // separate ORIENTATION column (MediaProvider's `ModernMediaScanner`),
+        // so a phone's portrait recording rows in as landscape — and the
+        // shape decides whether the cover step stands (`hasCoverStep`).
+        // `VideoInfo` is post-rotation.
+        val header = if (known == null || known.isVideo) video.info(uri) else null
+        return PickRead(known, header)
+    }
+
+    private suspend fun pick(uri: String, read: PickRead) {
+        val known = read.known
+        val header = read.header
+        val isClip = read.isClip
+        // The shared screening (`PickScale.kt`): a file nothing can read is
+        // refused where it was offered rather than accepted and failed later
+        // (`ComposePickedErrors`). Bytes are weighed after the pass that
+        // shrinks them — a still at its upload, a clip after its transcode
+        // (see `startVideoUpload`).
+        if (!isClip) {
+            val refusal = screenPicture(uri, processor, knownReadable = known != null)
+            if (refusal != null) {
+                _state.update { it.copy(refused = it.refused + refusal) }
+                return
             }
-            val before = _state.value.picked.size
-            _state.update {
-                it.togglePick(
-                    uri = uri,
-                    // A grid clip whose header will not read has no
-                    // trustworthy shape: null, which takes the cover
-                    // step — the safe default `hasCoverStep` names.
-                    sourceRatio = if (isClip) header?.aspectRatio else known?.aspectRatio,
-                    durationMs = if (isClip) known?.durationMs ?: header?.durationMs ?: 0 else null,
-                )
-            }
-            val after = _state.value.picked.size
-            if (after > before) settleOffer()
-            when {
-                // A picture's own ratio is read from its header for the
-                // crop preview; a clip already stated its shape above.
-                after > before && !isClip -> mediaReader.readSourceRatio(uri)
-                // Replaced rather than added: whatever the previous body
-                // was uploading is no longer part of this post.
-                after <= before -> cancelUploadsExcept(uri)
-                else -> Unit
-            }
+        }
+        val before = _state.value.picked
+        _state.update {
+            it.togglePick(
+                uri = uri,
+                // A grid clip whose header will not read has no trustworthy
+                // shape: null, which takes the cover step — the safe default
+                // `hasCoverStep` names.
+                sourceRatio = if (isClip) header?.aspectRatio else known?.aspectRatio,
+                durationMs = if (isClip) known?.durationMs ?: header?.durationMs ?: 0 else null,
+            )
+        }
+        val after = _state.value.picked
+        // A refused pick never joined, so nothing below is its to do.
+        val joined = after.any { it.uri == uri } && before.none { it.uri == uri }
+        if (!joined) return
+        if (after.size > before.size) settleOffer()
+        when {
+            // A picture's own ratio is read from its header for the crop
+            // preview; a clip already stated its shape above.
+            after.size > before.size && !isClip -> mediaReader.readSourceRatio(uri)
+            // Replaced rather than added: whatever the previous body was
+            // uploading is no longer part of this post.
+            after.size <= before.size -> cancelUploadsExcept(uri)
+            else -> Unit
         }
     }
 

@@ -116,7 +116,7 @@ fun ComposeWizardRoute(
     // stays stateless and previewable.
     val picker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(ComposeWizardState.MAX_POST_ASSETS),
-    ) { uris -> uris.forEach { viewModel.onTogglePick(it.toString()) } }
+    ) { uris -> viewModel.onPickBatch(uris.map { it.toString() }) }
 
     // `ComposeCover`'s "A picture" tile: one picture, images only. A
     // cover is a still by contract — "it must be an image rather than
