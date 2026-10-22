@@ -337,7 +337,8 @@ export function VideoTransport({
         style={{ gap: "24px" }}
       >
         <TransportButton
-          label={`Back ${SKIP_SECONDS} seconds`}
+          // The master's words verbatim (VideoControls.jsx: "Back ten seconds").
+          label="Back ten seconds"
           glyph="fast_rewind"
           size={26}
           box={44}
@@ -354,7 +355,7 @@ export function VideoTransport({
           testId={`${testId}-play`}
         />
         <TransportButton
-          label={`Forward ${SKIP_SECONDS} seconds`}
+          label="Forward ten seconds"
           glyph="fast_forward"
           size={26}
           box={44}
