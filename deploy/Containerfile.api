@@ -41,10 +41,17 @@ FROM docker.io/library/ubuntu:24.04
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --no-create-home --uid 10001 --user-group cogra
+    && useradd --system --no-create-home --uid 10001 --user-group cogra \
+    && mkdir -p /src/crates/api
 COPY --from=build /out/ /usr/local/bin/
 COPY migrations/ /usr/share/cogra/migrations/
 COPY deploy/health/http-health.sh /usr/local/bin/http-health
+# `bootstrap` pins the platform guidelines' digest into the Charter and
+# reads the document at run time from the path the crate was compiled at
+# (crates/api/src/bootstrap.rs, GUIDELINES_PATH: CARGO_MANIFEST_DIR is
+# /src/crates/api in the build stage), refusing to run without it. The
+# crate directory exists, empty, because that path walks through it.
+COPY docs/instances/platform-guidelines.md /src/docs/instances/platform-guidelines.md
 ARG GIT_SHA=unknown
 LABEL org.opencontainers.image.title="cogra-api" \
       org.opencontainers.image.source="https://github.com/helping-kaiser/cogra" \
