@@ -127,8 +127,6 @@ export async function fetchHeldOpinions(
   );
 }
 
-| "by";
-
 /**
  * One direction of a person's opinions page, strongest first:
  *
