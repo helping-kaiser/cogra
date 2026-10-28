@@ -147,6 +147,10 @@ an `instances/` doc is a sign the mechanism belongs in
   tables.
 - [development](implementation/development.md) — local setup,
   tools, workflows.
+- [deployment](implementation/deployment.md) — production on one
+  host: Quadlet units, Caddy as the sole ingress, secrets, the
+  backup pair and restore drill, deploy and rollback, the bring-up
+  checklist.
 - [engineering-process](implementation/engineering-process.md) —
   the six-phase process for substantial builds: concept, design
   candidate, review, implementation, audit, commissioning.

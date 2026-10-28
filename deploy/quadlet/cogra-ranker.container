@@ -16,7 +16,7 @@ Pull=never
 EnvironmentFile=/etc/cogra/ranker.env
 Network=cogra-internal.network
 # The image carries no probe of its own; the host's copy of the API image's
-# http-health is mounted in (deploy/health/http-health).
+# http-health is mounted in (deploy/health/http-health.sh).
 Volume=/usr/local/lib/cogra/http-health:/usr/local/bin/http-health:ro
 HealthCmd=/usr/local/bin/http-health 8090 /health
 HealthInterval=30s

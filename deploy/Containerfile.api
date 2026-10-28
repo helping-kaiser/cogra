@@ -44,7 +44,7 @@ RUN apt-get update \
     && useradd --system --no-create-home --uid 10001 --user-group cogra
 COPY --from=build /out/ /usr/local/bin/
 COPY migrations/ /usr/share/cogra/migrations/
-COPY deploy/health/http-health /usr/local/bin/http-health
+COPY deploy/health/http-health.sh /usr/local/bin/http-health
 ARG GIT_SHA=unknown
 LABEL org.opencontainers.image.title="cogra-api" \
       org.opencontainers.image.source="https://github.com/helping-kaiser/cogra" \

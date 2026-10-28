@@ -26,7 +26,7 @@ for script in alert backup bootstrap deploy disk-watch log-alert restore; do
   install -m 0755 "$src/scripts/$script.sh" "/usr/local/lib/cogra/$script.sh"
 done
 install -m 0755 "$src/media/provision.sh" /usr/local/lib/cogra/media-provision.sh
-install -m 0755 "$src/health/http-health" /usr/local/lib/cogra/http-health
+install -m 0755 "$src/health/http-health.sh" /usr/local/lib/cogra/http-health
 
 # The timers and the alert hook.
 install -m 0644 "$src"/systemd/*.service "$src"/systemd/*.timer /etc/systemd/system/
