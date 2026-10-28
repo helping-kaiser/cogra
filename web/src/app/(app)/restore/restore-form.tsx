@@ -15,6 +15,9 @@ import { restoreActor, type RestoreResult } from "@/lib/identity/restorer";
 import { useActiveAccountId } from "@/lib/session/provider";
 import { useAuthGuard, useDeviceLock } from "@/lib/session/runtime";
 import { useRegistrationFlow } from "@/lib/signing/provider";
+import { keptOpinions, listKeptPicks } from "@/lib/stance/kept-picks";
+import { keptPicksHref } from "@/lib/stance/kept-picks-route";
+import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 import { Button } from "@/lib/ui/button";
 
 function restoreMessage(result: RestoreResult): string | null {
@@ -85,6 +88,15 @@ export function RestoreForm({
     setResult(outcome);
     if (outcome.kind === "restored") {
       flow.ensureAdvancing();
+      // PICKS KEPT WHILE THE KEY WAS AWAY open their review, under the
+      // restore's own snackbar, and never sign on their own (Restore.md:41).
+      const waiting =
+        account === null ? [] : keptOpinions(await listKeptPicks(account).catch(() => []));
+      if (waiting.length > 0) {
+        carrySnackbar("Your key is on this browser now.");
+        router.replace(keptPicksHref("/"));
+        return;
+      }
       router.replace("/");
     }
   };

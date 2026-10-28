@@ -67,18 +67,19 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import Link from "next/link";
 import { createPortal } from "react-dom";
 
 import { hasCode } from "@/lib/api/outcome";
 import { useStanceInputMode } from "@/lib/stance/input-mode";
 import { bundleReadout, EMPTY_PICK_LABEL, RESTING_FACE_EMOJI } from "@/lib/stance/anchors";
-import { useKeptPick } from "@/lib/stance/kept-picks";
+import { keepPick, sameTarget, useKeptPicks, type KeptFamily } from "@/lib/stance/kept-picks";
+import { useOpenKeptPicks } from "@/lib/stance/kept-picks-route";
 import { localLanding } from "@/lib/stance/landing";
 import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
 import { STANCE_RANGES } from "@/lib/stance/pad-geometry";
 import { useStanceData } from "@/lib/stance/provider";
 import { announceStanceSigned } from "@/lib/stance/signed-events";
+import { clearSettling, useSettling } from "@/lib/stance/settling";
 import { useStanceTaught } from "@/lib/stance/stance-coach";
 import type { StanceBundle, StanceLanding, StanceTargetRef } from "@/lib/stance/stance-data";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
@@ -86,6 +87,7 @@ import { BUTTON_CLASS, buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
+import { KeyAbsentNotice } from "@/lib/ui/key-absent-notice";
 import {
   PAD_ABOVE_BAR_INSET_PX,
   PAD_PARK_INSET_PX,
@@ -117,7 +119,6 @@ import { PairField } from "@/lib/ui2/compose/pair-field";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
 import { HELP_TOPICS, HelpDialog, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { HelpDot } from "@/lib/ui2/help-dot";
-import { pillClassName } from "@/lib/ui2/pill-button";
 
 /**
  * How long a press has to be held before it signs the default — the
@@ -219,6 +220,14 @@ export type PadVariant = {
    4px active stroke in `primary`, no track — drawn around the face from
    twelve o'clock at the press, filling over the 500ms. Under reduced motion
    it still fills: it is a reading of the time left (readme §4). */
+/**
+ * THE RESTING FACE'S TYPE (`StanceControl.jsx`: `fontSize: var(--text-title-large),
+ * lineHeight: 1`): the title-large SIZE only, set solid, its weight the
+ * anchor's own — not the whole title-large role, whose 28px leading and 400
+ * weight the master never asks for.
+ */
+const FACE_TYPE = "text-[length:var(--text-title-large)] [line-height:1]";
+
 const HOLD_RING_PX = 40;
 const HOLD_RING_STROKE_PX = 4;
 
@@ -402,6 +411,9 @@ export function StanceControl({
   const [noticeHelp, setNoticeHelp] = useState<HelpTopic | null>(null);
   /** The signing key is not on this device — null until asked. */
   const [keyAbsent, setKeyAbsent] = useState<boolean | null>(null);
+  /** The account has a recovery backup — asked once the key is known to be elsewhere. */
+  const [backedUp, setBackedUp] = useState<boolean | null>(null);
+  const openKeptPicks = useOpenKeptPicks();
 
   const busy = inFlight !== null;
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -435,9 +447,20 @@ export function StanceControl({
     [target.id, target.kind],
   );
 
-  const [kept, keep] = useKeptPick(accountId, seamTarget);
-  // A kept pick asks once whether the key is back: the anchor wears it only
-  // while the key is still elsewhere (PadPending.md).
+  // WHAT A PICK KEPT HERE WILL SIGN AS (KeptPicksReview.md:5): a vouch-back
+  // or an approval is kept as itself, never as a plain opinion, so the
+  // review's batch never takes it in.
+  const family: KeptFamily = variant !== undefined ? "vouchBack" : vouchesIn ? "approval" : "opinion";
+  const keptPicks = useKeptPicks(phase === "signedIn" ? accountId : null);
+  const keptEntry =
+    keptPicks?.find((entry) => entry.family === family && sameTarget(entry.target, seamTarget)) ?? null;
+  const kept = keptEntry?.pick ?? null;
+  const keep = (chosen: StancePair) => {
+    if (accountId !== null) void keepPick(accountId, seamTarget, chosen, family);
+  };
+  // A kept pick asks once whether the key is back: with it elsewhere the
+  // anchor waits for the key (PadPending.md); with it here, for the review
+  // (PadPendingReview.md).
   useEffect(() => {
     if (kept === null) return undefined;
     let live = true;
@@ -448,6 +471,23 @@ export function StanceControl({
       live = false;
     };
   }, [kept, data]);
+  // WITH THE KEY ELSEWHERE, IS THERE A BACKUP TO RESTORE FROM? Asked once, the
+  // first time the key is known to be away (KeyElsewhereNoBackup.md).
+  useEffect(() => {
+    if (keyAbsent !== true || backedUp !== null) return undefined;
+    let live = true;
+    void data.keyBackedUp().then((backed) => {
+      if (live) setBackedUp(backed);
+    });
+    return () => {
+      live = false;
+    };
+  }, [keyAbsent, backedUp, data]);
+
+  // THE KEPT PICKS JUST SIGNED SETTLE UNDER THEIR FACE (PadPendingReview.md:21):
+  // `Still settling` until a read that leaves pending records out counts them
+  // all — the record is ordered.
+  const settling = useSettling(seamTarget);
 
   const readBundle = useCallback(
     (options: { fresh?: boolean } = {}) => {
@@ -481,6 +521,21 @@ export function StanceControl({
   useEffect(() => {
     readBundle();
   }, [readBundle]);
+
+  // Settling ends when the ordered read has caught up with the pending one.
+  const settledRecords = bundle === null || bundle === undefined ? null : bundle.records;
+  useEffect(() => {
+    if (!settling || settledRecords === null || phase !== "signedIn") return undefined;
+    let live = true;
+    void data.bundle(seamTarget, { includePending: false, fresh: true }).then((ordered) => {
+      if (live && ordered.kind === "success" && ordered.value.records >= settledRecords) {
+        clearSettling(seamTarget);
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [settling, settledRecords, phase, data, seamTarget]);
 
   // The pad-only host's open spends the teaching the way a tap's does.
   const taughtOnMount = useRef(false);
@@ -554,6 +609,12 @@ export function StanceControl({
     setPadFault(null);
     setCoaching(false);
     padOnly?.onClose();
+  };
+
+  /** `Keep it pending, restore later`: the one way a pick is kept (PadKeyAbsent.md:27). */
+  const keepAndClose = () => {
+    keep(pick);
+    closeAll();
   };
 
   // The Escape key's answer reads the latest state without re-subscribing
@@ -811,15 +872,28 @@ export function StanceControl({
       setJoinPrompt(true);
       return;
     }
-    // The alternate replaces the pad everywhere (§8.6), the tap that
-    // opens it included.
-    if (mode !== "pad") {
-      openConsidered("alternates");
+    // A KEPT OPINION WITH THE KEY HERE WAITS FOR ITS REVIEW: the tap opens
+    // the kept picks' review, never the key notice and never a pad
+    // (PadPendingReview.md:13). One whose key answer has not come yet asks
+    // first, and goes where the answer says.
+    if (kept !== null && family === "opinion" && keyAbsent !== true) {
+      if (keyAbsent === false) {
+        openKeptPicks();
+        return;
+      }
+      void data.keyOnDevice().then((present) => {
+        setKeyAbsent(!present);
+        if (present) openKeptPicks();
+        else openConsidered(mode === "pad" ? "pad" : "alternates", kept);
+      });
       return;
     }
     // A KEPT PICK REOPENS HOLDING ITSELF while the key is still elsewhere
-    // (PadPending.md); otherwise the pad blooms at the default.
-    openConsidered("pad", kept !== null && keyAbsent === true ? kept : TAP_DEFAULT);
+    // (PadPending.md); otherwise the considered surface blooms at the
+    // default. The alternate replaces the pad everywhere (§8.6), the tap that
+    // opens it included, and carries the same key notice.
+    const from = kept !== null && keyAbsent === true ? kept : TAP_DEFAULT;
+    openConsidered(mode === "pad" ? "pad" : "alternates", from);
     askForKey();
   };
 
@@ -859,13 +933,18 @@ export function StanceControl({
       // signs nothing (PadKeyAbsent.md) — a held finger cannot spend a
       // signature this device cannot give.
       void data.keyOnDevice().then((present) => {
+        setKeyAbsent(!present);
+        // A KEPT OPINION NEVER SIGNS FROM A HOLD: with the key here the hold
+        // opens the review, as the tap does (PadPendingReview.md:15).
+        if (present && kept !== null && family === "opinion") {
+          openKeptPicks();
+          return;
+        }
         if (present) {
           void signPick(TAP_DEFAULT, "row");
           return;
         }
-        setKeyAbsent(true);
-        if (mode === "pad") openConsidered("pad", kept ?? TAP_DEFAULT);
-        else openConsidered("alternates");
+        openConsidered(mode === "pad" ? "pad" : "alternates", kept ?? TAP_DEFAULT);
       });
     }, LONG_PRESS_MS);
   };
@@ -897,8 +976,13 @@ export function StanceControl({
   // A PICK KEPT PENDING is what the anchor wears while the key is elsewhere
   // (PadPending.md) — never the bundle's resting face, which it has not
   // joined.
+  // With the key back and the review left unsigned, the kept opinion waits on
+  // the reader instead (PadPendingReview.md) — the face is still the kept
+  // pick's, never `Still settling`: nothing is signed yet.
   const waitingForKey = kept !== null && keyAbsent === true;
-  const restingPair: StancePair | null = waitingForKey
+  const waitingForReview = kept !== null && keyAbsent === false && family === "opinion";
+  const keptShown = waitingForKey || waitingForReview;
+  const restingPair: StancePair | null = keptShown
     ? kept
     : pending !== null
       ? pending.pair
@@ -908,7 +992,7 @@ export function StanceControl({
   // A resting (0, 0) is walked back only when the bundle — or the signing
   // just taken — says so; otherwise (an empty sign's standing, a kept pick)
   // it says nothing (the master's `restingZero`; PadStanding.md:29).
-  const restingSevered = waitingForKey
+  const restingSevered = keptShown
     ? false
     : pending !== null
       ? pending.severed
@@ -964,11 +1048,14 @@ export function StanceControl({
         onKeyDown={trapTab}
         {...testAttributes(padNode, `${testIdPrefix}-pad`)}
         style={parkedPadStyle(inset, aboveBar)}
-        className="cg-dialog-in z-40 flex w-[17rem] touch-none flex-col gap-3 overflow-y-auto rounded-extra-large bg-surface-container-high p-4 text-on-surface outline-none"
+        className="cg-dialog-in z-40 box-content flex w-[17rem] touch-none flex-col gap-3 overflow-y-auto rounded-extra-large bg-surface-container-high p-4 text-on-surface outline-none"
       >
         {/* The help affordance: a circled `?` in the pad's top-right corner,
             out of the reading order of the three readouts. 48px target,
-            32px ring. Its name is the pad's own (ruling A7). */}
+            32px ring. Its name is the pad's own (ruling A7). With the key
+            elsewhere the notice's own "?" is the pad's one (PadKeyAbsent
+            draws no other — at most one "?" per screen, readme §13). */}
+        {keyAbsent !== true && (
         <button
           type="button"
           {...testAttributes(part(padNode, "help"), `${testIdPrefix}-explain`)}
@@ -984,6 +1071,7 @@ export function StanceControl({
             ?
           </span>
         </button>
+        )}
         <StanceStanding
           pick={pick}
           bundle={bundle}
@@ -991,7 +1079,7 @@ export function StanceControl({
           testIdPrefix={testIdPrefix}
           axes={axes}
           node={part(padNode, "standing")}
-          className="pr-10"
+          className={keyAbsent === true ? undefined : "pr-10"}
         />
         {/* The help and the 🤔's explanation REPLACE the field and the
             landing rather than growing below them: the pad is parked, and a
@@ -1089,44 +1177,12 @@ export function StanceControl({
             pending, restore later` keeps the pick; the wash, Back and Escape
             drop it as Cancel would. */}
         {keyAbsent === true && explaining === false && (
-          <>
-            <div
-              data-testid={`${testIdPrefix}-key-absent`}
-              className="flex flex-col gap-3 rounded-medium bg-tertiary-container p-4 text-on-tertiary-container"
-            >
-              <div className="flex items-center gap-2">
-                <h3 className="m-0 flex-1 text-title-medium">Your key isn&apos;t on this browser</h3>
-                <HelpDot
-                  ariaLabel="Your key"
-                  onOpen={() => setNoticeHelp(HELP_TOPICS.yourKey)}
-                  testId={`${testIdPrefix}-key-help`}
-                  variant="inverse"
-                />
-              </div>
-              <p className="m-0 text-body-medium">
-                Signing needs your key, which isn&apos;t in this browser — the write waits as pending.
-              </p>
-              <p className="m-0 text-body-medium">Restore the key with your recovery code to finish.</p>
-              <Link
-                href="/restore"
-                data-testid={`${testIdPrefix}-restore`}
-                className={pillClassName({ variant: "inverse", full: true })}
-              >
-                Restore the key
-              </Link>
-            </div>
-            <button
-              type="button"
-              data-testid={`${testIdPrefix}-keep-pending`}
-              onClick={() => {
-                keep(pick);
-                closeAll();
-              }}
-              className={`w-full ${buttonClassName({ variant: "text" })}`}
-            >
-              Keep it pending, restore later
-            </button>
-          </>
+          <KeyAbsentNotice
+            testIdPrefix={testIdPrefix}
+            backedUp={backedUp}
+            onHelp={() => setNoticeHelp(HELP_TOPICS.yourKey)}
+            onKeep={keepAndClose}
+          />
         )}
         {/* A SIGNING THAT DID NOT GO THROUGH says so above the commit row, in
             the failure voice, and Set's slot becomes the outlined Retry — the
@@ -1205,8 +1261,8 @@ export function StanceControl({
             aria-label={
               restingFace === null || restingPair === null
                 ? `Give your opinion on ${target.label}`
-                : waitingForKey
-                  ? `Your opinion on ${target.label}, waiting for your key: ${restingFace.label}, ${formatStancePair(restingPair)}.`
+                : keptShown
+                  ? `Your opinion on ${target.label}, waiting for your ${waitingForReview ? "review" : "key"}: ${restingFace.label}, ${formatStancePair(restingPair)}.`
                   : `Your opinion on ${target.label}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
             }
             aria-busy={inFlight === "row" || undefined}
@@ -1242,8 +1298,8 @@ export function StanceControl({
                   {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
                   className={
                     restingFace === null
-                      ? "flex-none text-title-large opacity-40 grayscale"
-                      : "flex-none text-title-large"
+                      ? `flex-none ${FACE_TYPE} opacity-40 grayscale`
+                      : `flex-none ${FACE_TYPE}`
                   }
                 >
                   {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
@@ -1280,7 +1336,16 @@ export function StanceControl({
               type="button"
               data-testid={`${testIdPrefix}-choose`}
               disabled={busy}
-              onClick={() => openConsidered("alternates")}
+              onClick={() => {
+                // The accessible route answers as the tap does: a kept opinion
+                // with the key here opens its review (PadPendingReview.md:13).
+                if (kept !== null && family === "opinion" && keyAbsent === false) {
+                  openKeptPicks();
+                  return;
+                }
+                openConsidered("alternates", kept !== null && keyAbsent === true ? kept : TAP_DEFAULT);
+                askForKey();
+              }}
               className={`sr-only focus:not-sr-only ${buttonClassName({ variant: "text", size: "sm" })}`}
             >
               Choose your opinion on {target.label}
@@ -1293,8 +1358,16 @@ export function StanceControl({
           under the face, in the slot the pending marker uses. */}
       {/* A PICK KEPT PENDING says what it waits on, under the face — never
           `Still settling`, which is a signed record's (PadPending.md). */}
-      {padOnly === undefined && waitingForKey && (
-        <PendingMarker testId={`${testIdPrefix}-kept`} label="Waiting for your key" />
+      {padOnly === undefined && keptShown && (
+        <PendingMarker
+          testId={`${testIdPrefix}-kept`}
+          label={waitingForReview ? "Waiting for your review" : "Waiting for your key"}
+        />
+      )}
+      {/* THE KEPT PICKS JUST SIGNED, until their records are ordered
+          (PadPendingReview.md:21) — never under a pick still kept. */}
+      {padOnly === undefined && !keptShown && settling && (
+        <PendingMarker testId={`${testIdPrefix}-settling`} />
       )}
       {padOnly === undefined && rowState !== null && (
         <RowLine state={rowState} testId={`${testIdPrefix}-row-line`} />
@@ -1316,6 +1389,16 @@ export function StanceControl({
           helpLabel={variant?.title ?? PAD_HELP_LABEL}
           zeroHelp={explaining === "zero" ? unreachableHelp(axes, target.label) : null}
           onZeroBack={() => setExplaining(false)}
+          keyNotice={
+            keyAbsent === true ? (
+              <KeyAbsentNotice
+                testIdPrefix={testIdPrefix}
+                backedUp={backedUp}
+                onHelp={() => setNoticeHelp(HELP_TOPICS.yourKey)}
+                onKeep={keepAndClose}
+              />
+            ) : null
+          }
           landing={
             <StanceLandingLine
               landing={landing}

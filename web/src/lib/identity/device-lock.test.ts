@@ -27,6 +27,7 @@ import { hasDraftCustody } from "@/lib/compose/draft-custody";
 import { createSealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { createCarriedExpectationStore } from "@/lib/signing/carried";
+import { createKeptPickStore } from "@/lib/stance/kept-picks";
 import { createDeviceLockEngine, type DeviceLockEngine } from "./device-lock";
 import { createIdentityStore, type IdentityStore } from "./store";
 
@@ -582,5 +583,52 @@ describe("the carried expectation rides the draft (PR-88)", () => {
     expect(keys).toContain(`draft/carried:${A}:carried-1`);
     expect((await signInAgain(w, A, true)).ready).toBe(true);
     expect(await carriedOf(w).get("carried-1")).toEqual(Uint8Array.of(7, 7, 7));
+  });
+});
+
+describe("the kept picks ride the draft (auth.md \"Sign-out\", PadKeyAbsent.md)", () => {
+  const POST = { kind: "post" as const, id: "post-1" };
+  const PICK = { pDirected: 0.55, pInterest: 0.2 };
+
+  it("a_kept_pick_is_locked_with_the_draft_and_put_back_by_the_unlock", async () => {
+    await signedInForget(w);
+    const kept = createKeptPickStore({ idb: () => w.idb });
+    await kept.keep(A, POST, PICK, "opinion");
+    expect(await w.engine.lock(A, clearTokens(w))).toBe(true);
+    const keys = (await w.identity.lockedSet(A))!.map((r) => `${r.kind}/${r.key}`);
+    expect(keys).toContain(`draft/kept:${A}:post:post-1`);
+    // Sealed: nothing of it is readable while locked.
+    expect(await kept.list(A)).toEqual([]);
+    expect((await signInAgain(w, A, true)).ready).toBe(true);
+    const back = await kept.list(A);
+    expect(back.map((k) => [k.target, k.pick, k.family])).toEqual([[POST, PICK, "opinion"]]);
+  });
+
+  it("a_backed_remote_end_purges_the_key_but_locks_the_kept_picks_never_destroying_one", async () => {
+    await signedInForget(w, { backed: true });
+    const kept = createKeptPickStore({ idb: () => w.idb });
+    await kept.keep(A, POST, PICK, "opinion");
+    expect(await w.engine.endLocalSession(A, clearTokens(w))).toBe("locked");
+    const keys = (await w.identity.lockedSet(A))!.map((r) => `${r.kind}/${r.key}`);
+    expect(keys).toContain(`draft/kept:${A}:post:post-1`);
+    expect((await signInAgain(w, A, true)).ready).toBe(true);
+    expect((await kept.list(A)).length).toBe(1);
+  });
+
+  it("a_remembered_session_end_keeps_every_kept_pick_in_place", async () => {
+    const kept = createKeptPickStore({ idb: () => w.idb });
+    await kept.keep(A, POST, PICK, "opinion");
+    expect(await w.engine.endLocalSession(A, clearTokens(w))).toBe("kept");
+    expect((await kept.list(A)).length).toBe(1);
+  });
+
+  it("one_accounts_kept_picks_never_reach_another_accounts_lock", async () => {
+    await signedInForget(w);
+    const kept = createKeptPickStore({ idb: () => w.idb });
+    await kept.keep(B, POST, PICK, "opinion");
+    expect(await w.engine.lock(A, clearTokens(w))).toBe(true);
+    const keys = (await w.identity.lockedSet(A))!.map((r) => `${r.kind}/${r.key}`);
+    expect(keys.some((k) => k.includes("kept:"))).toBe(false);
+    expect((await kept.list(B)).length).toBe(1);
   });
 });

@@ -41,3 +41,8 @@ export function useStanceData(): StanceData {
   }
   return data;
 }
+
+/** The seam where one is provided, or null — for a surface that also renders outside one. */
+export function useOptionalStanceData(): StanceData | null {
+  return useContext(StanceDataContext);
+}
