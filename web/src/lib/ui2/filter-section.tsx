@@ -33,7 +33,14 @@ export function FilterSection({
 }) {
   return (
     <div className="flex flex-col gap-2 px-6 pb-4" {...testAttributes(node)}>
-      <span className="text-label-large" {...testAttributes(part(node, "label"))}>
+      {/* The master sets the label's size and weight and leaves its leading to
+          the sheet it stands on (OrderSection.jsx `FilterSection`): the
+          sheet's body leading, 24px, not the label role's 20. */}
+      <span
+        className="text-label-large"
+        style={{ lineHeight: "var(--text-body-large--line-height)" }}
+        {...testAttributes(part(node, "label"))}
+      >
         {label}
       </span>
       {hint !== undefined && (

@@ -839,12 +839,17 @@ function FilterSheet({
       open={open}
       onClose={onClose}
       title={WHAT_THE_SEARCH_SHOWS}
-      titleTrailing={<HelpDot ariaLabel={HOW_THE_FILTER_WORKS} onOpen={onHelp} node={part(sheet, "help")} />}
       node={sheet}
       testId="explore-filter-sheet"
       rows
       foot={<FilterFoot node={part(sheet, "foot")} onReset={() => onStage(defaultFilter)} onDone={onDone} />}
     >
+      {/* THE "?" RIDES THE SHEET'S CORNER, not the title's line (ExploreFilter.jsx:
+          absolute at `--space-1` / `--space-2`): the dialog is the positioned
+          box it measures from, so the title keeps its own height. */}
+      <div className="absolute top-1 right-2">
+        <HelpDot ariaLabel={HOW_THE_FILTER_WORKS} onOpen={onHelp} node={part(sheet, "help")} />
+      </div>
       <FilterSection label="Kinds" hint={KINDS_HINT} node={part(sheet, "kinds")}>
         {SEARCH_KINDS.map((kind) => (
           <Chip

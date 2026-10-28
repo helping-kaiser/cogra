@@ -100,7 +100,9 @@ export function BottomSheet({
   /**
    * A SHEET OF ROWS (BottomSheet.jsx with `SheetItem`s, the ⋮'s menus): the
    * master's own geometry — 8px over the grip, 12 under it, rows edge to edge
-   * carrying their own 24px gutter, and 24 under the last. A sheet that holds
+   * carrying their own 24px gutter, and 24 under the last. A foot ends such a
+   * sheet instead (the search filter's `FilterFoot`): the 24 is then the
+   * foot's, under it, and never a second 24 above it. A sheet that holds
    * a title, fields or prose keeps the padded body.
    */
   rows?: boolean;
@@ -392,7 +394,7 @@ export function BottomSheet({
           // before the body starts scrolling, which is what puts the scroll
           // INSIDE the growing field rather than under the whole sheet. The
           // scroll stays as the fallback for content that cannot shrink.
-          className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${rows ? "pb-6" : `px-6 ${flush || titleHidden ? "" : "pt-2"} ${foot === undefined ? "pb-6" : "pb-3"}`}`}
+          className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${rows ? (foot === undefined ? "pb-6" : "") : `px-6 ${flush || titleHidden ? "" : "pt-2"} ${foot === undefined ? "pb-6" : "pb-3"}`}`}
         >
           {/* What the sheet holds stands ON the sheet: a stage inside it is
               covered only by a layer raised over the sheet, and its scroller
