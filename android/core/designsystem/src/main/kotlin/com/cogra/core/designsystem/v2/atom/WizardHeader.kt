@@ -1,5 +1,6 @@
 package com.cogra.core.designsystem.v2.atom
 
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -15,7 +16,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
@@ -75,6 +80,13 @@ fun WizardHeader(
      * board, so it keeps its own.
      */
     node: DataNode? = null,
+    /**
+     * Where a stage lands its opening focus on its heading (EditCompose.md,
+     * CommentEdit.md: "focus lands on the stage's heading AND NEVER the
+     * keyboard rises before a field is tapped"): the title then takes focus
+     * and reads as the heading it is.
+     */
+    titleFocus: FocusRequester? = null,
 ) {
     val tag = node?.tag ?: testTag
     Row(
@@ -122,6 +134,16 @@ fun WizardHeader(
             modifier = Modifier
                 .padding(start = Space.x2)
                 .weight(1f)
+                .then(
+                    if (titleFocus != null) {
+                        Modifier
+                            .semantics { heading() }
+                            .focusRequester(titleFocus)
+                            .focusable()
+                    } else {
+                        Modifier
+                    },
+                )
                 .dataNode(node?.div("title")),
         )
 

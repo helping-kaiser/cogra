@@ -88,11 +88,27 @@ fun UploadStatusLine(
     }
 }
 
-/** The noun the gate waits on: `the video`, `the picture` at one, `the pictures`. */
+/**
+ * The noun the gate waits on: `the video`, an edit's new `cover`, `the
+ * picture` at one, `the pictures` (UploadNotice.jsx).
+ */
 internal fun gateNoun(media: UploadMedia, total: Int): String = when {
     media == UploadMedia.Video -> "video"
+    media == UploadMedia.Cover -> "cover"
     total == 1 -> "picture"
     else -> "pictures"
+}
+
+/**
+ * The gate's fault reading in words: the fact, then what the gate waits for —
+ * `it` for one thing, `them` from two pictures up (copy-voice, ask 13 G).
+ */
+internal fun gateFaultLines(media: UploadMedia, failed: Int): Pair<String, String> = when {
+    media == UploadMedia.Video -> "The video didn't upload." to "Signing waits for it."
+    // The cover being one picture, its fault keeps the one-picture line.
+    media == UploadMedia.Cover -> failedPicturesLine(1) to "Signing waits for it."
+    failed > 1 -> failedPicturesLine(failed) to "Signing waits for them."
+    else -> failedPicturesLine(1) to "Signing waits for it."
 }
 
 /**
@@ -101,21 +117,24 @@ internal fun gateNoun(media: UploadMedia, total: Int): String = when {
  * give way to the failure's fact in the error ink, the gate's consequence
  * in the quiet voice, and `Retry` — the commit is disabled at this reading
  * only, and this line says why. No `Remove it`: the seal reads back, and
- * what the post carries is changed one stage back.
+ * what the post carries is changed one stage back. [failed] counts the
+ * pictures that failed: from two up the line is the plural, `3 pictures
+ * didn't upload. Signing waits for them.`
  */
 @Composable
 fun UploadGateFailedLine(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     media: UploadMedia = UploadMedia.Pictures,
+    failed: Int = 1,
     testTag: String? = null,
 ) {
     val retry = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary))
-    val message = if (media == UploadMedia.Video) "The video didn't upload." else "One picture didn't upload."
+    val (message, consequence) = gateFaultLines(media, failed)
     val text = buildAnnotatedString {
         withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) { append(message) }
         append(" ")
-        withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append("Signing waits for it.") }
+        withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(consequence) }
         append(" ")
         withStyle(MaterialTheme.typography.labelLarge.toSpanStyle()) {
             withLink(LinkAnnotation.Clickable("retry", retry) { onRetry() }) { append("Retry") }
@@ -142,7 +161,8 @@ fun UploadGateFailedLine(
  * [onRetry] is null where retrying is not a way out. A file the step
  * refused when it was offered — too big, or a format nothing here reads
  * — cannot be made smaller or readable by asking again, so
- * `ComposePickedErrors` draws only Remove it.
+ * `ComposePickedErrors` draws only Remove it. [removeLabel] is `Remove them`
+ * where the line counts more than one failure ([removeFailedLabel]).
  */
 @Composable
 fun UploadErrorLine(
@@ -150,6 +170,7 @@ fun UploadErrorLine(
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null,
     message: String = "One picture didn't upload.",
+    removeLabel: String = "Remove it",
     testTag: String? = null,
 ) {
     val linkStyles = TextLinkStyles(
@@ -162,7 +183,7 @@ fun UploadErrorLine(
             withLink(LinkAnnotation.Clickable("retry", linkStyles) { onRetry() }) { append("Retry") }
             withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(" · ") }
         }
-        withLink(LinkAnnotation.Clickable("remove", linkStyles) { onRemove() }) { append("Remove it") }
+        withLink(LinkAnnotation.Clickable("remove", linkStyles) { onRemove() }) { append(removeLabel) }
     }
     Text(
         text = text,

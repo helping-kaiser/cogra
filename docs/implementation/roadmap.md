@@ -610,9 +610,9 @@ from the media path and carrying their own doc write-back:
 - **Unhide topic follow** — the follow/unfollow control, backend-
   accepted since 2.3 (`prepareStance` toward the Hashtag) but
   hidden from the client until the topic feed exists to receive it.
-- **The "topics you follow" list** — a viewerTopics-style query over
-  the viewer's own Affinity bundle, surfaced alongside the unhidden
-  follow control.
+- **The held-topics list** — Your topics, read from `User.heldTopics`
+  (the viewer's own Affinity bundles across every Type), surfaced
+  alongside the unhidden follow control.
 - The score readout — [copy-voice.md](../../design/guidelines/copy-voice.md#the-two-hard-rules-about-numbers) "numbers are in
   scope": a post can show what it scored and why it sits where
   it does, opening into the actual paths behind it.

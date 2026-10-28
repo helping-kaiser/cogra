@@ -102,6 +102,21 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
     ),
 
     /**
+     * The write rule's notice on an edit, the post's or a comment's — the
+     * same dialog, its draft clause true of a surface that keeps no draft:
+     * `…and your edit is still here.` (copy-voice; blessed, jakob 2026-10-05).
+     */
+    WhySigningWaitsAtEdit(
+        title = "Why signing waits",
+        paragraphs = listOf(
+            "There's a limit to how many signed actions can go through in a short " +
+                "time — it keeps the network safe from flooding. You've hit it for now.",
+            "Nothing was signed or spent, and your edit is still here. Try again in a " +
+                "little while.",
+        ),
+    ),
+
+    /**
      * The edit surfaces — the post's, and `CommentEdit`'s own help dot.
      *
      * Transcribed verbatim: copy-voice.md carries one Editing text and the

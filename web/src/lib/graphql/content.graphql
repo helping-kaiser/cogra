@@ -55,6 +55,54 @@ mutation PrepareCommentEdit($input: PrepareCommentEditInput!) {
   }
 }
 
+# THE AUTHOR'S REMOVE (api-spec.md `removeContent`; erasure.md §1): the whole
+# chain at once — the node's genesis record named by `genesisRecordId`, and
+# `includeRevisions: true` because the confirm promises "every earlier
+# version's". Immediate and unsigned: nothing is prepared or signed, so it
+# is not a prepare. The payload names only the records that have landed — a
+# still-settling post answers `records: []` with no error and lands reduced —
+# so the surface re-reads the node to draw its mark rather than trusting
+# this list.
+mutation RemoveContent($record: RecordId!) {
+  removeContent(input: { record: $record, includeRevisions: true }) {
+    records {
+      id
+      payloadState
+      redactedAt
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# THE NODE RE-READ AFTER A REMOVE (the packet's RM-G5 build word): the mark
+# alone, off the node itself — `removal` is the one field the card's whole
+# removed state derives from. A node read rather than the surface's own
+# refetch, because the surfaces a removal happens on hold things a refetch
+# would throw away: the thread its unfolded branches and the reader's place
+# (CommentRemoved.md:15, :19), the feed its derived window. Apollo normalises
+# the answer onto the cached node, so every cached read agrees with it.
+query PostRemoval($id: UUID!) {
+  post(id: $id) {
+    id
+    removal {
+      at
+      by
+    }
+  }
+}
+
+query CommentRemoval($id: UUID!) {
+  comment(id: $id) {
+    id
+    removal {
+      at
+      by
+    }
+  }
+}
+
 # A post as the FEED CARD draws it — and, for the same reason, what the detail
 # page paints from the cache before its own read lands (`readCachedPost`).
 #
