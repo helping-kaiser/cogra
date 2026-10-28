@@ -263,10 +263,13 @@ class ProfileScreensTest {
             .assert(hasText("Nothing here yet. Your posts and opinions show up here once you're in."))
     }
 
+    // Profile.md (round 22): a tab with nothing in it reads Nothing here yet.
+    // below the tab row, the line alone, at `EmptyState`.
     @Test
-    fun aMembersEmptyChronicleKeepsTheBareLine() {
+    fun aMembersEmptyChronicleReadsNothingHereYetAlone() {
         render(loaded())
-        compose.onNodeWithTag("profile_chronicle_empty").assertExists()
+        compose.onNodeWithTag("profile.chronicle.empty").assert(hasText("Nothing here yet."))
+        compose.onNodeWithTag("profile.chronicle.empty.title").assertExists()
     }
 
     // ProfileDeleted.md: the reserved disc, `Deleted account`, no handle
