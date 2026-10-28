@@ -53,7 +53,7 @@ export function ExplainableNumber({
       // run the two together (`Feed score15.20`) in the computed name.
       aria-label={value === undefined ? label : `${label} ${value}`}
       {...testAttributes(node, testId)}
-      className="cg-state cg-focus cg-hit -mx-2 inline-flex min-h-12 flex-none items-center gap-1.5 rounded-full px-2 text-[length:var(--text-body-small)] leading-[normal] text-on-surface-variant"
+      className="cg-state cg-focus cg-hit -mx-2 inline-flex min-h-12 flex-none items-center gap-1.5 rounded-full px-2 text-[length:var(--text-body-small)] [line-height:normal] text-on-surface-variant"
     >
       <Icon name={glyph} size={18} />
       {value !== undefined && (

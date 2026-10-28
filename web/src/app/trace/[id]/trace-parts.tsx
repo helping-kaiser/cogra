@@ -165,7 +165,7 @@ export function PathRow({
         </span>
       </span>
       <span
-        className="flex-none text-[length:var(--text-body-small)] leading-[normal] [font-weight:500]"
+        className="flex-none text-[length:var(--text-body-small)] [line-height:normal] [font-weight:500]"
         {...testAttributes(part(node, "value"))}
       >
         {value}

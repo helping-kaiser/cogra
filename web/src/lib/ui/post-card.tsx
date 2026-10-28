@@ -140,7 +140,7 @@ function CommentCount({
       <Icon name="chat_bubble" size={18} />
       {count > 0 && (
         // The count takes the row's size at the normal leading (PostCard.jsx).
-        <span aria-hidden="true" className="leading-[normal]" {...testAttributes(part(node, "count"))}>
+        <span aria-hidden="true" className="[line-height:normal]" {...testAttributes(part(node, "count"))}>
           {count}
         </span>
       )}
@@ -428,7 +428,7 @@ export function PostCard({
               {...testAttributes(part(node, "timestamp"), `${testId}-timestamp`)}
               // The body-small SIZE on the header line's own 24px leading
               // (PostCard.jsx: the timestamp sets its size alone).
-              className="flex-none text-[length:var(--text-body-small)] leading-6 text-on-surface-variant"
+              className="flex-none text-[length:var(--text-body-small)] [line-height:1.5rem] text-on-surface-variant"
             >
               {stamp}
             </time>
