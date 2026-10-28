@@ -3,11 +3,11 @@
     <!-- feed.seenSeparator.label (FeedSeenTail.md: "feed.seenSeparator.label reads Already seen"). -->
     <string name="content_feed_seen_separator">Already seen</string>
     <!-- The blessed line (design/guidelines/copy-voice.md "The coming-soon
-         surfaces"; the Sky card\x27s own construction: the thing, an em dash,
+         surfaces"; the Sky card's own construction: the thing, an em dash,
          the promise, then what will be there). Verbatim — never retyped. -->
     <string name="content_chats_title">Chats</string>
     <string name="content_chats_coming_soon">Chats — coming soon. Your conversations will be here.</string>
-    <!-- The page\x27s back arrow, by where it was opened from (ChatsComingSoon.md:15-17). -->
+    <!-- The page's back arrow, by where it was opened from (ChatsComingSoon.md:15-17). -->
     <string name="content_chats_back_feed">Back to feed</string>
     <string name="content_chats_back_own_profile">Back to your profile</string>
     <string name="content_chats_back_profile">Back to the profile</string>
@@ -18,14 +18,14 @@
     <string name="content_field_title">Title</string>
     <string name="content_field_description">Description</string>
     <string name="content_field_body">What do you want to publish?</string>
-    <!-- A media post\x27s body is its gallery, so its edit shows the
+    <!-- A media post's body is its gallery, so its edit shows the
          pictures where a words post has its field (api-spec.md "The
          body XOR"). -->
     <string name="content_edit_media_heading">Pictures</string>
-    <string name="content_edit_media_body_xor">A post\\x27s body is words or media, never both.</string>
+    <string name="content_edit_media_body_xor">A post\'s body is words or media, never both.</string>
 
-    <!-- CW-46: the edit surface\x27s own Sensitive control. The words the
-         comment edit\x27s row wears, because it is the same row (ruling 42
+    <!-- CW-46: the edit surface's own Sensitive control. The words the
+         comment edit's row wears, because it is the same row (ruling 42
          puts one sheet behind every surface that marks). -->
     <string name="content_sensitive_label">Sensitive</string>
     <string name="content_sensitive_marked">Marked</string>
@@ -48,7 +48,7 @@
         <item quantity="one">%d tag</item>
         <item quantity="other">%d tags</item>
     </plurals>
-    <!-- The detail\x27s line is one control; its name replaces what is in it (TopicsLine.jsx). -->
+    <!-- The detail's line is one control; its name replaces what is in it (TopicsLine.jsx). -->
     <string name="content_topics_line_label">Tags and references</string>
     <plurals name="content_topics_line_references">
         <item quantity="one">%d reference</item>
@@ -56,13 +56,13 @@
     </plurals>
     <!-- THE TAGS-AND-REFERENCES SHEET (RefsSheet.jsx): what the counts
          open. Two groups, and one row per signed act — the leading mark
-         says the kind without a word beside it, so the kind is the row\x27s
+         says the kind without a word beside it, so the kind is the row's
          own second line and the pair rides its right edge. -->
     <string name="content_refs_sheet_title">Tags &amp; references</string>
     <string name="content_refs_section_tags">Tags</string>
     <string name="content_refs_section_references">References</string>
     <string name="content_refs_kind_tag">Tag</string>
-    <!-- A citation at a person is a MENTION: the target\x27s class is the
+    <!-- A citation at a person is a MENTION: the target's class is the
          whole distinction between quoting, embedding and mentioning. -->
     <string name="content_refs_kind_mention">Mention</string>
     <string name="content_refs_kind_post">Post</string>
@@ -70,11 +70,11 @@
     <!-- A claim this instance cannot type is a reference and nothing
          more precise; it still counts, and still names its L1 id. -->
     <string name="content_refs_kind_reference">Reference</string>
-    <!-- The row, spoken: the object\x27s or face\x27s reading is lossy, so the
-         pair is spelled out beside it. A tag\x27s word names a degree of
-         aboutness and is true of the row; a stance anchor\x27s names a
+    <!-- The row, spoken: the object's or face's reading is lossy, so the
+         pair is spelled out beside it. A tag's word names a degree of
+         aboutness and is true of the row; a stance anchor's names a
          feeling about a stance, which a citation is not — so the
-         citation\x27s reading is its two axes and nothing else. -->
+         citation's reading is its two axes and nothing else. -->
     <string name="content_refs_row_tag">#%1$s, %2$s, relevance %3$s, confidence %4$s</string>
     <string name="content_refs_row_reference">%1$s, %2$s, relevance %3$s, support %4$s</string>
 
@@ -89,11 +89,11 @@
          beside it tells a listener the verb but not the object
          (guidelines/copy-voice.md). -->
     <string name="content_share_post">Share this post</string>
-    <!-- The caption\x27s in-place opener. A text control, not a link: it
+    <!-- The caption's in-place opener. A text control, not a link: it
          opens the words where they stand and never navigates. -->
     <string name="content_more">More</string>
     <string name="content_less">Less</string>
-    <!-- What a topic name may be — L1\\x27s identifier atom (D3). -->
+    <!-- What a topic name may be — L1\'s identifier atom (D3). -->
     <!-- The references section (D18, D20). The word is always
          Reference — a reference to a profile is a mention — and never
          "cite", because every content node can be referenced. -->
@@ -101,7 +101,7 @@
     <!-- The affordance on a content node itself (D20). Every content
          node can be referenced, which is why the verb is Reference. -->
     <string name="content_reference_action">Reference</string>
-    <!-- How a target reads. A mention must resolve against the actor\x27s
+    <!-- How a target reads. A mention must resolve against the actor's
          CURRENT handle, which is why the body is never parsed for one
          (D15). -->
     <string name="reference_chip_mention">@%1$s</string>
@@ -116,7 +116,7 @@
     <string name="content_references_finder_field">Handle or id</string>
     <string name="content_references_finder_hint">Type a full handle, like @ada, or paste an id.</string>
     <string name="content_references_finder_empty">Nothing matched that yet.</string>
-    <string name="content_references_finder_failed">Couldn\\x27t look that up. Check your connection.</string>
+    <string name="content_references_finder_failed">Couldn\'t look that up. Check your connection.</string>
     <string name="content_references_finder_cancel">Cancel</string>
     <!-- A withdrawal nets the citation bundle to zero, which may take
          more than one counter-record (D11). -->
@@ -125,7 +125,7 @@
         <item quantity="other">Removing references signs %d actions.</item>
     </plurals>
 
-    <string name="content_topics_illegal_whitespace">Spaces aren\\x27t allowed in topic names.</string>
+    <string name="content_topics_illegal_whitespace">Spaces aren\'t allowed in topic names.</string>
     <string name="content_topics_illegal_charset">Only ASCII letters, digits, and . _ -</string>
     <string name="content_topics_illegal_too_long">That name is too long.</string>
 
@@ -139,7 +139,7 @@
         <item quantity="one">This signs %d action, paid for separately.</item>
         <item quantity="other">This signs %d actions, each paid for separately.</item>
     </plurals>
-    <string name="content_confirm_dont_ask">Don\\x27t ask me again</string>
+    <string name="content_confirm_dont_ask">Don\'t ask me again</string>
     <string name="content_confirm_proceed">Sign</string>
     <string name="content_confirm_cancel">Cancel</string>
 
@@ -153,10 +153,10 @@
     <string name="content_license_provenance_none">Never</string>
     <string name="content_license_provenance_commercial">Commercially</string>
     <string name="content_license_provenance_always">Always</string>
-    <!-- THE READER\x27S READINGS, not the author\x27s (design/components/forms/LicenseChooser.jsx:36-49;
-         copy-voice.md "The license block"). The chooser\x27s hints address the author declaring the
+    <!-- THE READER'S READINGS, not the author's (design/components/forms/LicenseChooser.jsx:36-49;
+         copy-voice.md "The license block"). The chooser's hints address the author declaring the
          terms, which on a read surface told a reuser they were owed the credit they in fact owe.
-         One line per axis value, in the reuser\x27s own voice. -->
+         One line per axis value, in the reuser's own voice. -->
     <string name="content_license_terms_caption">License terms</string>
     <string name="content_license_terms_public_domain">Public domain</string>
     <string name="content_license_reading_credit_none">Not required</string>
@@ -176,16 +176,16 @@
     <string name="content_comments_heading">Comments</string>
     <string name="content_comments_empty">No comments yet.</string>
     <string name="content_edit">Edit</string>
-    <!-- THE OVERFLOW MENU\x27S ROWS (design/designs/canonical/screens/_shared.jsx:173-176, 368-392).
+    <!-- THE OVERFLOW MENU'S ROWS (design/designs/canonical/screens/_shared.jsx:173-176, 368-392).
          Save leads every menu that has it so the thumb learns one position, and the license closes
          them all — the rarest read in the product sitting last. The hide row NAMES ITS PERSON: the
          handle is what a reader recognises, and the word they look for again under Hidden accounts
          (ActorChip.jsx:67). No hide row on a comment, and the absence is ruled (jakob 2026-09-12):
-         hiding is an act on an actor, reached from the commenter\x27s own profile. -->
+         hiding is an act on an actor, reached from the commenter's own profile. -->
     <string name="content_menu_post">More on this post</string>
     <string name="content_menu_comment">More on this comment</string>
-    <!-- THE NARROW PHONE\x27S MENU HOLDS THE SHARE IT TOOK (design/readme.md, jakob 2026-09-17,
-         sharpened 2026-09-22, PR #794): strictly below 360dp the reader\x27s menu leads with this
+    <!-- THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md, jakob 2026-09-17,
+         sharpened 2026-09-22, PR #794): strictly below 360dp the reader's menu leads with this
          row, ahead of Save. -->
     <string name="content_menu_share">Share</string>
     <string name="content_menu_save">Save</string>
@@ -198,12 +198,12 @@
     <string name="content_menu_license">License terms</string>
     <string name="content_menu_report">Report</string>
     <!-- The comment feed card (`_shared.jsx` CommentFeedCard; FeedCommentShapes.md): the head
-         row\x27s door names what the comment answers, and the comment glyph is the reply. -->
+         row's door names what the comment answers, and the comment glyph is the reply. -->
     <string name="content_card_on">On %1$s</string>
     <string name="content_card_reply_to">Reply to %1$s</string>
     <string name="content_share_comment">Share this comment</string>
     <!-- The profile feed card (`_shared.jsx` ProfileFeedCard; FeedProfileShapes.md): its ⋮ is the
-         profile\x27s own menu less the share the row carries. -->
+         profile's own menu less the share the row carries. -->
     <string name="content_profile_menu_other">More about %1$s</string>
     <string name="content_profile_menu_deleted">More about this account</string>
     <string name="content_menu_mention">Mention in a new post</string>
@@ -212,7 +212,7 @@
     <string name="content_deleted_account">Deleted account</string>
     <!-- Saved as a feed (Saved.md, SavedNone.md; round 12). -->
     <string name="content_saved_search">Search what you saved</string>
-    <string name="content_saved_none">Nothing you\\x27ve saved carries that name. Search reads names and titles, never bodies — fewer words reach further.</string>
+    <string name="content_saved_none">Nothing you\'ve saved carries that name. Search reads names and titles, never bodies — fewer words reach further.</string>
     <string name="content_saved_show_everything">Show everything</string>
     <!-- Back to top (BackToTop.jsx; FeedScrolled.md): plain words, no glyph. -->
     <string name="content_back_to_top">Back to top</string>
@@ -222,36 +222,36 @@
     <string name="content_report_report">Report</string>
     <string name="content_report_cancel">Cancel</string>
     <string name="content_report_sent">Reported.</string>
-    <!-- A refused or unanswered report (ReportConfirm.md:13-15; item 95\x27s shared no-answer line). -->
-    <string name="content_report_not_sent">That didn\\x27t send. Try again.</string>
+    <!-- A refused or unanswered report (ReportConfirm.md:13-15; item 95's shared no-answer line). -->
+    <string name="content_report_not_sent">That didn\'t send. Try again.</string>
     <!-- Remove — the think-twice dialog (RemoveConfirm.jsx). The SAFE action is the filled one. -->
     <string name="content_remove_title">Remove this post?</string>
-    <string name="content_remove_body">The words and pictures leave every reader\\x27s view, along with every earlier version\\x27s. A visible mark stays in their place — \"Removed by its author\" — and the post\\x27s spot in threads stays with it.</string>
+    <string name="content_remove_body">The words and pictures leave every reader\'s view, along with every earlier version\'s. A visible mark stays in their place — \"Removed by its author\" — and the post\'s spot in threads stays with it.</string>
     <string name="content_remove_permanent">This is immediate and permanent.</string>
     <string name="content_remove_confirm">Remove</string>
     <string name="content_remove_keep">Keep it</string>
     <string name="content_error_empty_body">The post needs a body.</string>
     <string name="content_error_title_too_long">A title is at most 100 characters.</string>
     <string name="content_error_description_too_long">A description is at most 500 characters.</string>
-    <string name="content_error_body_too_long">A post\\x27s words are at most 5,000 characters.</string>
+    <string name="content_error_body_too_long">A post\'s words are at most 5,000 characters.</string>
     <string name="content_error_comment_body_too_long">Too long — at most %1$d characters.</string>
     <string name="content_error_sensitive_reason_too_long">A reason is at most 140 characters.</string>
-    <string name="content_error_alt_text_too_long_picture">A picture\\x27s description is at most 1,000 characters.</string>
-    <string name="content_error_alt_text_too_long_video">A video\\x27s description is at most 1,000 characters.</string>
+    <string name="content_error_alt_text_too_long_picture">A picture\'s description is at most 1,000 characters.</string>
+    <string name="content_error_alt_text_too_long_video">A video\'s description is at most 1,000 characters.</string>
     <string name="content_error_refused">The server refused this write.</string>
     <string name="content_error_signing">Signing did not finish — the write stays pending.</string>
-    <string name="content_error_signing_no_key">Signing needs your key, which isn\\x27t on this device — the write waits as pending. Restore your key to finish it.</string>
-    <string name="content_error_transport">Can\\x27t reach the server. Check the connection and retry.</string>
-    <string name="content_feed_stale">Can\\x27t reach the server — new posts can\\x27t load right now.</string>
-    <string name="content_thread_stale">Can\\x27t reach the server — more comments can\\x27t load right now.</string>
+    <string name="content_error_signing_no_key">Signing needs your key, which isn\'t on this device — the write waits as pending. Restore your key to finish it.</string>
+    <string name="content_error_transport">Can\'t reach the server. Check the connection and retry.</string>
+    <string name="content_feed_stale">Can\'t reach the server — new posts can\'t load right now.</string>
+    <string name="content_thread_stale">Can\'t reach the server — more comments can\'t load right now.</string>
     <string name="content_error_not_found">This post no longer resolves.</string>
-    <!-- The detail\x27s newer-version line, verbatim (PostDetail.md:7;
+    <!-- The detail's newer-version line, verbatim (PostDetail.md:7;
          copy-voice.md "Honesty phrasings"): a fresh read found the post,
          its tags or its citations changed since the detail opened. -->
     <string name="content_detail_newer_version">Edited since you opened it — tap for the newest version.</string>
     <string name="content_retry">Retry</string>
     <string name="content_back">Back</string>
-    <!-- A Saved row\x27s post reads its origin (the origin-naming table). -->
+    <!-- A Saved row's post reads its origin (the origin-naming table). -->
     <string name="content_back_saved">Back to Saved</string>
     <string name="content_back_notifications">Back to Notifications</string>
     <string name="content_comment_edited">Edited</string>
@@ -268,8 +268,8 @@
         <item quantity="one">View %d reply</item>
         <item quantity="other">View %d replies</item>
     </plurals>
-    <string name="content_expired_title">Your post didn\\x27t land</string>
-    <string name="content_expired_body">"%1$s" couldn\\x27t finish settling. Nothing was spent — your draft is saved.</string>
+    <string name="content_expired_title">Your post didn\'t land</string>
+    <string name="content_expired_body">"%1$s" couldn\'t finish settling. Nothing was spent — your draft is saved.</string>
     <string name="content_expired_dismiss">Dismiss</string>
     <string name="content_expired_open">Open the draft</string>
 
@@ -282,26 +282,29 @@
          accepted into a refusal. -->
     <string name="content_upload_unreadable_picture">That file could not be read as a picture.</string>
     <string name="content_upload_unreadable_video">That file could not be read as a video.</string>
-    <string name="content_upload_unreadable_file">That file isn\\x27t a picture or a video CoGra can read.</string>
+    <string name="content_upload_unreadable_file">That file isn\'t a picture or a video CoGra can read.</string>
     <string name="content_upload_unreadable_cover">That picture could not be read as a cover.</string>
     <string name="content_upload_refused_picture">The server would not take that picture.</string>
     <string name="content_upload_refused_video">The server would not take that video.</string>
     <string name="content_upload_refused_cover">The server would not take that cover.</string>
     <string name="content_upload_picture_too_big">That picture is too big — a picture can be up to 10 MB.</string>
-    <string name="content_upload_post_video_too_big">That video is too big — a post\\x27s video can be up to 100 MB.</string>
-    <string name="content_upload_comment_video_too_big">That video is too big — a comment\\x27s video can be up to 50 MB.</string>
+    <string name="content_upload_post_video_too_big">That video is too big — a post\'s video can be up to 100 MB.</string>
+    <string name="content_upload_comment_video_too_big">That video is too big — a comment\'s video can be up to 50 MB.</string>
     <string name="content_upload_transport">The upload could not reach the server.</string>
-    <string name="content_upload_post_picture_count">That\\x27s more than a post carries — up to ten pictures.</string>
+    <string name="content_upload_post_picture_count">That\'s more than a post carries — up to ten pictures.</string>
     <string name="content_upload_post_mixed_body">A post carries pictures or one video, not both.</string>
+    <string name="content_upload_comment_picture_count">That\'s more than a comment carries — up to four pictures.</string>
+    <!-- Undrawn (a deviation candidate filed to design): the edits take no new clip yet, said as the web says it (pick.ts VIDEO_AT_EDIT). -->
+    <string name="content_upload_video_at_edit">A video can\'t be added at an edit yet — post it on its own.</string>
 
     <!-- The staged-clip tray caption for a VERTICAL clip: the shape whose
          cover step is skipped (`ComposeWizardState.skipsCoverStep`), so the
-         full caption\x27s second sentence — which previews that step — would
-         be a false promise. Blessed verbatim as the edit\x27s own trim in
+         full caption's second sentence — which previews that step — would
+         be a false promise. Blessed verbatim as the edit's own trim in
          design/guidelines/copy-voice.md "Staging a video", extended to the
          vertical pick by jakob 2026-09-24 (backlog item 104); see also
          design/components/compose/PickTray.prompt.md "The clip caption is
-         the shape\x27s." Non-vertical clips keep the full caption unchanged. -->
+         the shape's." Non-vertical clips keep the full caption unchanged. -->
     <string name="content_video_body_caption_vertical">A video is the whole post.</string>
 
     <!-- The comment an edit was opened on has since gone. -->
@@ -317,7 +320,7 @@
     <string name="content_picture_at">Picture %1$d</string>
     <string name="content_tray_video">The video</string>
     <string name="content_frame_picture_at">Frame picture %1$d</string>
-    <string name="content_draft_first_picture">The draft\\x27s first picture</string>
+    <string name="content_draft_first_picture">The draft\'s first picture</string>
     <string name="content_clip_length">Length %1$s</string>
     <string name="content_stance_on_post">Where you stand on this post</string>
 
