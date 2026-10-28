@@ -298,9 +298,18 @@ class StanceViewModel @Inject constructor(
      */
     fun onDismissPad(target: StanceTarget) {
         val entry = _state.value.targets[target] ?: return
-        if (entry.pad == PadMode.CLOSED) return
+        if (entry.pad == PadMode.CLOSED && entry.emptySign == null && entry.severance == null) return
         update(target) {
-            it.copy(pad = PadMode.CLOSED, pick = StancePair.Origin, landing = null, writeRule = false)
+            // The asks sit over the parked pad and leave with it; one whose
+            // signature is in flight is left to answer (as its own dismissal does).
+            it.copy(
+                pad = PadMode.CLOSED,
+                pick = StancePair.Origin,
+                landing = null,
+                writeRule = false,
+                emptySign = it.emptySign?.takeIf { ask -> ask.working },
+                severance = it.severance?.takeIf { ask -> ask.working },
+            )
         }
     }
 
