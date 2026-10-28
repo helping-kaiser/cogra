@@ -44,6 +44,7 @@ import { useHiddenSet } from "@/lib/hidden/provider";
 import { seenRecord } from "@/lib/history/seen-record";
 import { forgetSeen } from "@/lib/history/seen-sync";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
+import { forgetKeptPicks } from "@/lib/stance/kept-picks";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { useTokenStore } from "@/lib/session/provider";
@@ -157,6 +158,7 @@ export function SettingsView({
   drafts = composeDraftStore,
   seals = sealedDraftStore,
   carried = carriedExpectationStore,
+  forgetKept = forgetKeptPicks,
   forgetSeenRecord = (account: string) => forgetSeen(seenRecord, account),
   erase = eraseEverything,
   leave = hardNavigate,
@@ -167,6 +169,8 @@ export function SettingsView({
   drafts?: Pick<ComposeDraftStore, "clear">;
   seals?: Pick<SealedDraftStore, "forget">;
   carried?: Pick<CarriedExpectationStore, "forget">;
+  /** Drops one account's kept picks from this browser (`stance/kept-picks.ts`). */
+  forgetKept?: (account: string) => Promise<void>;
   /** Drops one account's seen record and watermark from this browser. */
   forgetSeenRecord?: (account: string) => Promise<void>;
   erase?: () => Promise<void>;
@@ -372,7 +376,7 @@ export function SettingsView({
    * The whole custody set of this account on this browser: the key and its
    * material (one IndexedDB transaction, `purgeIfEphemeral`), then the draft.
    * Both run while the account is still active, and neither ever blocks the
-   * exit. Kept picks join the set when they exist (sign-out-custody §3.2).
+   * exit. The kept picks go with the draft (Settings.md:159).
    */
   const purgeCustody = async () => {
     // Named before the key goes: the record to drop is this account's, read
@@ -401,6 +405,14 @@ export function SettingsView({
       await carried.forget();
     } catch {
       // sign-out proceeds regardless
+    }
+    // The picks kept pending are the draft's tier too (`stance/kept-picks.ts`).
+    if (accountId !== null) {
+      try {
+        await forgetKept(accountId);
+      } catch {
+        // sign-out proceeds regardless
+      }
     }
     // What this account has seen on this browser — the ids and the sync
     // watermark — is dropped with it and no other account's; the server's
