@@ -779,7 +779,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
     { n: 5, find: ">Show all</button>", tag: "button" },
-    { n: 7, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 8, find: ">Your photos app</span>", tag: "button" },
     // Every tile of the roll is the same control repeated — one edge covers
     // them, the way one edge covers a feed's repeated per-post affordances.
@@ -969,7 +969,8 @@ Object.assign(FLOW_MARKERS, {
   ComposePicked: [
     { n: 1, find: "cursor:grab", tag: "button", all: true },
     { n: 2, find: ">Describe</button>", tag: "button", all: true },
-    { n: 3, find: 'aria-label="Remove', tag: "button", all: true },
+    { n: 3, find: 'aria-label="Remove the cover"', tag: "button" },
+    { n: 3, find: 'aria-label="Remove picture ', tag: "button", all: true },
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
     { n: 6, find: ">Make it the cover</button>", tag: "button", all: true },
@@ -1153,7 +1154,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
     { n: 5, find: ">Show all</button>", tag: "button" },
-    { n: 6, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 6, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 7, find: "1px dashed var(--border-field)", tag: "div" },
     { n: 8, find: ">Choose from your files</button>", tag: "button" },
   ],

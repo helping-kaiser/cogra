@@ -36,7 +36,7 @@ export function Screen() {
       <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
       <PickTray count={10} onShowAll={() => {}} clip>
         {PICKED.map((item, index) => (
-          <MediaThumb key={index} src={item.src} alt={item.alt} onRemove={() => {}} />
+          <MediaThumb key={index} src={item.src} alt={item.alt} cover={index === 0} onRemove={() => {}} />
         ))}
       </PickTray>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 24px 0" }}>

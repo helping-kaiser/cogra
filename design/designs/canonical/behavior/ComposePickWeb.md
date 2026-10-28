@@ -12,7 +12,11 @@ WHEN a video is chosen or dropped GIVEN nothing is in the tray -> the video beco
 
 WHEN a chosen or dropped file breaks a cap or is in a format nothing here reads -> the step says why in a line on its media row AND NEVER a dialog opens AND NEVER a snackbar carries the refusal
 
+ALWAYS every tray thumbnail carries its remove control, the cover's included
+
 WHEN tap a tray thumbnail's remove control -> the picture leaves the tray
+
+WHEN tap the cover's remove control -> the cover leaves the tray AND the picture now first is the cover
 
 WHEN a picture is chosen or dropped -> NEVER the picture uploads before the crop
 

@@ -10,7 +10,11 @@ WHEN tap a picked picture tile in the grid -> the pick is undone AND the picture
 
 WHEN tap the first tile, Your photos app -> the device's own photos app opens AND what is picked there lands in the tray
 
+ALWAYS every tray thumbnail carries its remove control, the cover's included
+
 WHEN tap a tray thumbnail's remove control -> the picture leaves the tray
+
+WHEN tap the cover's remove control -> the cover leaves the tray AND the picture now first is the cover
 
 WHEN tap a video tile GIVEN nothing is in the tray -> the video becomes the whole body AND the step stops taking picks
 

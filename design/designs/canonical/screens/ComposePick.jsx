@@ -68,7 +68,7 @@ export function Screen() {
       <WizardHeader title="New post" backLabel="Back" />
       <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
       <PickTray count={2} onShowAll={() => {}} caption="The first one is the cover.">
-        <MediaThumb src="post-photo.jpg" cover />
+        <MediaThumb src="post-photo.jpg" cover onRemove={() => {}} />
         <MediaThumb src="inviter.jpg" onRemove={() => {}} />
       </PickTray>
 
