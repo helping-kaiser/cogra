@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph
 import androidx.navigation.toRoute
 import com.cogra.app.ui.NavSlot
 import kotlin.reflect.KClass
@@ -30,13 +31,6 @@ internal enum class TopLevelTab(val graph: KClass<*>, val graphRoute: Any, val s
     FEED(FeedTab::class, FeedTab, NavSlot.Feed),
     PROFILE(ProfileTab::class, ProfileTab, NavSlot.Profile),
     ;
-
-    /** The tab's root route, the one its slot pops back to. */
-    val root: Any
-        get() = when (this) {
-            FEED -> Feed
-            PROFILE -> Profile()
-        }
 
     /**
      * Whether [entry] is this tab's root. The Profile tab's root and the
@@ -71,7 +65,27 @@ internal fun NavController.selectTab(tab: TopLevelTab, onReselect: () -> Unit) {
     when {
         entry.destination.tab() != tab -> switchTo(tab)
         tab.isRoot(entry) -> onReselect()
-        else -> popBackStack(tab.root, inclusive = false)
+        else -> popToRoot(tab)
+    }
+}
+
+/**
+ * Pops [tab]'s stack to its root, at the scroll it was left.
+ *
+ * By destination, not by route value: the Profile tab's root and the
+ * profiles stacked on it share one destination, and a route-valued pop
+ * matches on the arguments' encoded form — which the root's absent handle
+ * does not survive. A pop to the destination lands on the topmost entry of
+ * it; while that is a profile stacked on the root rather than the root,
+ * the next pop goes on past it.
+ */
+private fun NavController.popToRoot(tab: TopLevelTab) {
+    val rootId = graph.findNode(tab.graphRoute)?.let { (it as? NavGraph)?.startDestinationId } ?: return
+    while (true) {
+        val top = currentBackStackEntry ?: return
+        if (tab.isRoot(top)) return
+        val popped = if (top.destination.id == rootId) popBackStack() else popBackStack(rootId, inclusive = false)
+        if (!popped) return
     }
 }
 
