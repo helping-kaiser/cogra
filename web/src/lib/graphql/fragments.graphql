@@ -373,3 +373,35 @@ fragment AccountDeletionFields on AccountDeletion {
   scheduledFor
   includesContent
 }
+
+# The person an opinions row is about (`StanceRow`): their avatar, name and
+# handle — the author on a node's or a person's incoming list, the target on
+# a person's own (`NodeOpinions`, `UserOpinionsOn`, `UserOpinionsBy`).
+fragment OpinionPersonFields on User {
+  id
+  handle
+  displayName {
+    value
+    status
+  }
+  avatar {
+    url
+    status
+  }
+}
+
+# One opinion record as the held-opinions fold reads it: the pair, which
+# (0, 0) it speaks, whether it is payload-marked, and its causal key — which
+# record in a bundle is newest.
+fragment OpinionRecordFields on Record {
+  id
+  authorId
+  targetId
+  pDirected
+  pInterest
+  severed
+  payloadMarked
+  landingEpoch
+  actTime
+  position
+}

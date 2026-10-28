@@ -1,18 +1,22 @@
-// Who holds an opinion on a post or a comment (api-spec.md `Node.
-// incomingRecords`, family OPINION), lifted into an outcome and folded into
-// the rows the opinions sheet draws (`held-opinions.ts`).
+// Who holds an opinion on a post, a comment or a person, and whom a person
+// holds one on (api-spec.md `Node.incomingRecords` / `outgoingRecords`, family
+// OPINION), lifted into an outcome and folded into the rows the opinions
+// sheet and the opinions page draw (`held-opinions.ts`).
 
 import type { ApolloClient } from "@apollo/client";
 
-import { NodeOpinionsDocument, type NodeOpinionsQuery } from "@/__generated__/graphql";
+import {
+  NodeOpinionsDocument,
+  UserOpinionsByDocument,
+  UserOpinionsOnDocument,
+  type OpinionPersonFieldsFragment,
+  type OpinionRecordFieldsFragment,
+} from "@/__generated__/graphql";
+import type { OpinionDirection } from "@/lib/profile/opinions-route";
 import { foldHeldOpinions } from "@/lib/stance/held-opinions";
 import type { StancePair } from "@/lib/stance/model";
 import { REDACTED_ACTOR_NAME } from "@/lib/ui2/content-row";
 import { fetchOutcome, success, type Outcome } from "./outcome";
-
-type OpinionRecordNode = NonNullable<
-  NodeOpinionsQuery["node"]
->["incomingRecords"]["edges"][number]["node"];
 
 /** The person a row is about, as `StanceRow` draws them. */
 export type OpinionHolder = {
@@ -25,9 +29,10 @@ export type OpinionHolder = {
   readonly redacted: boolean;
 };
 
-/** One sheet row: a person and their standing opinion. */
+/** One row: a person and the standing opinion the row is about. */
 export type HeldOpinionView = {
-  readonly authorId: string;
+  /** The person's L1 address — the bundle's key on this list. */
+  readonly holderId: string;
   readonly holder: OpinionHolder;
   readonly pair: StancePair;
   readonly severed: boolean;
@@ -39,18 +44,17 @@ export type HeldOpinionView = {
  * holds its opinion and keeps its row, named by its L1 identifier — the
  * chronicle never depends on typed coverage (`RefsSheet`'s untyped citation).
  */
-function holderOf(record: OpinionRecordNode): OpinionHolder {
-  const author = record.author;
-  if (author === null || author === undefined) {
-    return { name: record.authorId, handle: null, avatarUrl: null, redacted: false };
+function holderOf(person: OpinionPersonFieldsFragment | null | undefined, address: string): OpinionHolder {
+  if (person === null || person === undefined) {
+    return { name: address, handle: null, avatarUrl: null, redacted: false };
   }
-  if (author.displayName.status === "REDACTED") {
+  if (person.displayName.status === "REDACTED") {
     return { name: REDACTED_ACTOR_NAME, handle: null, avatarUrl: null, redacted: true };
   }
-  const avatar = author.avatar;
+  const avatar = person.avatar;
   return {
-    name: author.displayName.value?.trim() || author.handle,
-    handle: author.handle,
+    name: person.displayName.value?.trim() || person.handle,
+    handle: person.handle,
     avatarUrl: avatar === null || avatar === undefined || avatar.status === "REDACTED" ? null : avatar.url,
     redacted: false,
   };
@@ -59,41 +63,118 @@ function holderOf(record: OpinionRecordNode): OpinionHolder {
 /** How many pages the whole set may take before the read gives up (100 apiece). */
 const MAX_PAGES = 50;
 
+/** One page of a record connection, as every opinions read serves it. */
+type Page<R> = {
+  readonly edges: readonly { readonly node: R }[];
+  readonly pageInfo: { readonly hasNextPage: boolean; readonly endCursor?: string | null };
+};
+
 /**
- * Everyone holding an opinion on this node, strongest first — one row per
- * person, however many records their opinion took. The whole set is read
- * because the fold needs every record of a bundle, and the order needs every
- * bundle; the detail's count and the sheet's rows are this one answer.
+ * Reads a whole record connection, a page at a time. The whole set is read
+ * because the fold needs every record of a bundle, and the order — strongest
+ * first — needs every bundle: a row cannot be placed before the last page has
+ * said whether a later record moves it.
  */
-export async function fetchHeldOpinions(
-  client: ApolloClient,
-  nodeId: string,
-): Promise<Outcome<readonly HeldOpinionView[]>> {
-  const records: OpinionRecordNode[] = [];
+async function readAll<R>(
+  page: (after: string | null) => Promise<Outcome<Page<R> | undefined>>,
+): Promise<Outcome<R[]>> {
+  const records: R[] = [];
   let after: string | null = null;
-  for (let page = 0; page < MAX_PAGES; page += 1) {
-    const fetched = await fetchOutcome(() =>
-      client.query({
-        query: NodeOpinionsDocument,
-        variables: { id: nodeId, after },
-        fetchPolicy: "network-only",
-      }),
-    );
+  for (let index = 0; index < MAX_PAGES; index += 1) {
+    const fetched = await page(after);
     if (fetched.kind !== "success") return fetched;
-    const connection = fetched.value.node?.incomingRecords;
+    const connection = fetched.value;
     if (connection === undefined) break;
     records.push(...connection.edges.map((edge) => edge.node));
     if (!connection.pageInfo.hasNextPage) break;
     after = connection.pageInfo.endCursor ?? null;
     if (after === null) break;
   }
+  return success(records);
+}
+
+/** The fold, in the view's terms: one row per holder, strongest first. */
+function rowsOf(
+  records: readonly (OpinionRecordFieldsFragment & { readonly holderId: string; readonly holder: OpinionHolder })[],
+): HeldOpinionView[] {
+  return foldHeldOpinions(records).map((held) => ({
+    holderId: held.holderId,
+    holder: held.holder,
+    pair: held.pair,
+    severed: held.severed,
+  }));
+}
+
+/**
+ * Everyone holding an opinion on this post or comment, strongest first — one
+ * row per person, however many records their opinion took. The detail's count
+ * and the sheet's rows are this one answer.
+ */
+export async function fetchHeldOpinions(
+  client: ApolloClient,
+  nodeId: string,
+): Promise<Outcome<readonly HeldOpinionView[]>> {
+  const read = await readAll((after) =>
+    fetchOutcome(() =>
+      client.query({ query: NodeOpinionsDocument, variables: { id: nodeId, after }, fetchPolicy: "network-only" }),
+    ).then((fetched) =>
+      fetched.kind === "success" ? success(fetched.value.node?.incomingRecords) : fetched,
+    ),
+  );
+  if (read.kind !== "success") return read;
   return success(
-    foldHeldOpinions(records.map((record) => ({ ...record, author: holderOf(record) }))).map(
-      (held) => ({
-        authorId: held.authorId,
-        holder: held.author,
-        pair: held.pair,
-        severed: held.severed,
+    rowsOf(read.value.map((record) => ({ ...record, holderId: record.authorId, holder: holderOf(record.author, record.authorId) }))),
+  );
+}
+
+| "by";
+
+/**
+ * One direction of a person's opinions page, strongest first:
+ *
+ * - `on` — everyone holding an opinion on them, a row per author: the
+ *   records the `Opinions on them` figure counts.
+ * - `by` — everyone they hold an opinion on, a row per person it is about:
+ *   the records the `Opinions by them` figure counts.
+ *
+ * THE FIGURE COUNTS RECORDS; THE PAGE LISTS PEOPLE (open-questions.md Q35).
+ * A revised opinion is three records and one row, so a figure may read more
+ * than its list holds — each says what its words say.
+ */
+export async function fetchProfileOpinions(
+  client: ApolloClient,
+  userId: string,
+  direction: OpinionDirection,
+): Promise<Outcome<readonly HeldOpinionView[]>> {
+  if (direction === "on") {
+    const read = await readAll((after) =>
+      fetchOutcome(() =>
+        client.query({ query: UserOpinionsOnDocument, variables: { id: userId, after }, fetchPolicy: "network-only" }),
+      ).then((fetched) =>
+        fetched.kind === "success" ? success(fetched.value.user?.incomingRecords) : fetched,
+      ),
+    );
+    if (read.kind !== "success") return read;
+    return success(
+      rowsOf(read.value.map((record) => ({ ...record, holderId: record.authorId, holder: holderOf(record.author, record.authorId) }))),
+    );
+  }
+  const read = await readAll((after) =>
+    fetchOutcome(() =>
+      client.query({ query: UserOpinionsByDocument, variables: { id: userId, after }, fetchPolicy: "network-only" }),
+    ).then((fetched) =>
+      fetched.kind === "success" ? success(fetched.value.user?.outgoingRecords) : fetched,
+    ),
+  );
+  if (read.kind !== "success") return read;
+  return success(
+    rowsOf(
+      read.value.map((record) => {
+        // A binary family always names its far end; an unnamed one is no
+        // person this list could place, so its address stands in.
+        const address = record.targetId ?? record.id;
+        const person = record.target?.__typename === "User" ? record.target : null;
+        return { ...record, holderId: address, holder: holderOf(person, address) };
       }),
     ),
   );
