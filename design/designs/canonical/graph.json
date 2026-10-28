@@ -1726,10 +1726,10 @@
     { "from": "ComposeCited", "via": 7, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeSeal" }] },
     { "from": "ComposeCited", "via": 8, "kind": "advance", "label": "staged reference row", "to": [{ "board": "RefPair" }] },
 
-    { "from": "RemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "Removed", "case": "the visible mark — never silent" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "RemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "Removed", "case": "the visible mark — never silent" }, { "terminal": "self", "case": "the removal does not go through — the dialog stays up with its pair, the line That didn't send. Try again. in it, Remove reading Retry", "info": true }] },
     { "from": "RemoveConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes" }] },
     { "from": "RemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
-    { "from": "CommentRemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "CommentRemoved", "case": "the visible mark — the comment keeps its place in the thread, never silent" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "CommentRemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "CommentRemoved", "case": "the visible mark — the comment keeps its place in the thread, never silent" }, { "terminal": "self", "case": "the removal does not go through — the dialog stays up with its pair, its commitment reading Retry", "info": true }] },
     { "from": "CommentRemoveConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the thread as it was" }] },
     { "from": "CommentRemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
 
