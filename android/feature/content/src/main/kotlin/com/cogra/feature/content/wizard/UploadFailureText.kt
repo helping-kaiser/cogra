@@ -43,5 +43,7 @@ private fun UploadFailure.label(): Int = when (this) {
     UploadFailure.COMMENT_VIDEO_TOO_BIG -> R.string.content_upload_comment_video_too_big
     UploadFailure.POST_PICTURE_COUNT -> R.string.content_upload_post_picture_count
     UploadFailure.POST_MIXED_BODY -> R.string.content_upload_post_mixed_body
+    UploadFailure.COMMENT_PICTURE_COUNT -> R.string.content_upload_comment_picture_count
+    UploadFailure.VIDEO_AT_EDIT -> R.string.content_upload_video_at_edit
     UploadFailure.TRANSPORT -> R.string.content_upload_transport
 }
