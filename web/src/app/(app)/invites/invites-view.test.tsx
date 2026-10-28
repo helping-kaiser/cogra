@@ -27,6 +27,7 @@ import {
   NOW,
   SINGLE,
   staticInvites,
+  USED,
   userError,
   type ApplicationFixture,
   type LinkFixture,
@@ -55,7 +56,7 @@ function signedInStore() {
 /** The board's own queue: @imke (9d, not ready), three vora rows, @rafa ready. */
 function boardQueue(): ApplicationFixture[] {
   return [
-    application({ handle: "rafa", createdAt: daysAgo(3), link: SINGLE }),
+    application({ handle: "rafa", createdAt: daysAgo(3), link: USED }),
     application({ handle: "vora81", createdAt: daysAgo(1.2), link: MANY, keyAttached: false }),
     application({ handle: "imke", createdAt: daysAgo(9), link: MANY, emailVerified: false }),
     application({ handle: "vora82", createdAt: daysAgo(1.1), link: MANY, keyAttached: false }),
