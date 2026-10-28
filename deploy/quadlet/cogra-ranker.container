@@ -19,11 +19,15 @@ Network=cogra-internal.network
 # http-health is mounted in (deploy/health/http-health.sh).
 Volume=/usr/local/lib/cogra/http-health:/usr/local/bin/http-health:ro
 HealthCmd=/usr/local/bin/http-health 8090 /health
-HealthInterval=30s
+HealthInterval=10s
 HealthTimeout=5s
 HealthRetries=3
 HealthStartPeriod=30s
 HealthOnFailure=kill
+# The binary installs no SIGTERM handler, and PID 1 ignores a signal it
+# has no handler for: without an init the stop waits out the timeout and
+# ends in SIGKILL. catatonit forwards the signal to a process that obeys it.
+RunInit=true
 NoNewPrivileges=true
 DropCapability=ALL
 PidsLimit=1024
