@@ -552,9 +552,19 @@ type Comment implements Node {
 	createdAt: DateTime!
 	"""
 	The most recent fold-winning update's promotion; equals
-	`createdAt` if never changed.
+	`createdAt` if never changed. A removal is no update.
 	"""
 	updatedAt: DateTime!
+	"""
+	The act that minted this comment — what `removeContent` names to
+	remove it, pending included.
+	"""
+	genesisRecordId: RecordId!
+	"""
+	The comment's payload removal, if any — the same mark a post's
+	carries. Its replies keep their parent and stay readable.
+	"""
+	removal: Removal
 	"""
 	Where this comment stands relative to L1 finality.
 	"""
@@ -2031,6 +2041,18 @@ type Mutation {
 	"""
 	discardDeviceLock(input: DiscardDeviceLockInput!): DiscardDeviceLockPayload!
 	"""
+	Remove the payload of a record the viewer authored — the
+	per-content self-service erasure path (erasure.md §1). Immediate
+	and permanent: each act's payload is archived and reduced, its
+	display rows tombstoned and its pictures held unless another
+	placement still shows them, atomically per act; the node keeps its
+	place, its routing and its replies, and wears the author-removed
+	mark. Needs a session and authorship, no particular account state:
+	it signs nothing (erasure.md §1). Idempotent: removing a removed
+	record answers the same and archives nothing new.
+	"""
+	removeContent(input: RemoveContentInput!): RemoveContentPayload!
+	"""
 	Begins account deletion (auth.md "Self-service deletion";
 	erasure.md §5): records the content-sweep choice and mails the
 	confirmation link to the verified address; nothing is scheduled
@@ -2562,9 +2584,21 @@ type Post implements Node {
 	createdAt: DateTime!
 	"""
 	The most recent fold-winning update's promotion; equals
-	`createdAt` if never changed.
+	`createdAt` if never changed. A removal is no update: a removed
+	post keeps the instant of its last version.
 	"""
 	updatedAt: DateTime!
+	"""
+	The act that minted this post — what `removeContent` names to
+	remove it, pending included: a post in flight has no record yet,
+	and its genesis act is the record it will be.
+	"""
+	genesisRecordId: RecordId!
+	"""
+	The post's payload removal, if any — the visible mark removal
+	leaves (never erase silently); null while the payload is carried.
+	"""
+	removal: Removal
 	"""
 	Where this post stands relative to L1 finality.
 	"""
@@ -2621,6 +2655,9 @@ type Post implements Node {
 	page argument would promise a pagination this read cannot honour —
 	the same shape `topics` and `references` carry, for the same
 	reason.
+	
+	Empty on a removed post: redaction is record-granular, so the
+	pictures go with the words whichever tombstoned version is current.
 	"""
 	attachments: [MediaAttachment!]!
 	"""
@@ -3521,6 +3558,12 @@ type Record {
 	"""
 	payloadState: PayloadState!
 	"""
+	When the payload went REDUCED; null while FULL. The mark's own
+	moment — a mark that cannot say when is half a mark. Distinct from
+	a node's `updatedAt`, which a removal never moves.
+	"""
+	redactedAt: DateTime
+	"""
 	The content commitment (base64) — the payload bytes in carriage
 	verify against it.
 	"""
@@ -3894,12 +3937,65 @@ type ReleaseDeviceLockPayload {
 	userErrors: [UserError!]!
 }
 
+"""
+A content node's payload removal, read off the node itself —
+`Post.removal` and `Comment.removal`. Nodes are never deleted, so a
+removed node still resolves and wears this mark wherever it appears.
+"""
+type Removal {
+	"""
+	When the payload was removed — the removal's own instant.
+	"""
+	at: DateTime!
+	by: RemovalAgent!
+}
+
+"""
+Who removed a node's payload. AUTHOR: `removeContent`. ACCOUNT: the
+author's account deletion with the content sweep. MODERATION: a passed
+moderation verdict. AUTHOR and ACCOUNT both read `Removed by its
+author`; the data keeps them distinct.
+"""
+enum RemovalAgent {
+	AUTHOR
+	ACCOUNT
+	MODERATION
+}
+
 input RemoveBookmarkInput {
 	node: UUID!
 }
 
 type RemoveBookmarkPayload {
 	ok: Boolean
+	userErrors: [UserError!]!
+}
+
+"""
+Remove the payload of a record the viewer authored — the per-content
+self-service erasure path (erasure.md §1).
+"""
+input RemoveContentInput {
+	"""
+	A post's or comment's record — `genesisRecordId` names the node's
+	own; an edit's record names that version.
+	"""
+	record: RecordId!
+	"""
+	Also remove every record in the target's revision chain — the
+	whole post or comment history, every earlier version's words
+	included. Defaults to false (the single record only); the product's
+	Remove sends true.
+	"""
+	includeRevisions: Boolean
+}
+
+type RemoveContentPayload {
+	"""
+	The removed records that have landed, now payloadState: REDUCED. An
+	act still in flight has no record yet; it lands REDUCED.
+	"""
+	records: [Record!]!
 	userErrors: [UserError!]!
 }
 

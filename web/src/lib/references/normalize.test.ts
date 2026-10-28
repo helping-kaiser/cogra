@@ -197,3 +197,62 @@ describe("REFERENCE_BATCH_CAP", () => {
     expect(REFERENCE_BATCH_CAP).toBe(10);
   });
 });
+
+// THE CITATION PICKER'S ROW (ReferencePicker.jsx): the candidate lookup
+// selects a node's age and a post's cover, and the view carries them; every
+// other read leaves them absent.
+describe("targetView — the picker's fields", () => {
+  it("carries a post's own words, author, age and cover where they were read", () => {
+    const view = targetView(
+      {
+        __typename: "Post",
+        id: "p-1",
+        title: { value: "Salt maps of the coast road" },
+        author: { handle: "sol" },
+        createdAt: "2026-10-25T10:00:00Z",
+        attachmentsStatus: "NORMAL",
+        attachments: [{ url: "https://media/p.webp", mimeType: "image/webp" }],
+      },
+      "p-1",
+    );
+    expect(view).toMatchObject({
+      name: "Salt maps of the coast road",
+      author: "sol",
+      createdAt: "2026-10-25T10:00:00Z",
+      cover: "https://media/p.webp",
+    });
+    // The chip's label is untouched.
+    expect(view.label).toBe("@sol: Salt maps of the coast road");
+  });
+
+  it("takes a clip's cover as its mark, and nothing for a veiled gallery", () => {
+    const clip = targetView(
+      {
+        __typename: "Post",
+        id: "p-2",
+        createdAt: "2026-10-25T10:00:00Z",
+        attachmentsStatus: "NORMAL",
+        attachments: [{ url: "https://media/c.mp4", mimeType: "video/mp4", coverMedia: { url: "https://media/c.webp" } }],
+      },
+      "p-2",
+    );
+    expect(clip.cover).toBe("https://media/c.webp");
+    const veiled = targetView(
+      {
+        __typename: "Post",
+        id: "p-3",
+        createdAt: "2026-10-25T10:00:00Z",
+        attachmentsStatus: "SENSITIVE",
+        attachments: [{ url: "https://media/s.webp", mimeType: "image/webp" }],
+      },
+      "p-3",
+    );
+    expect(veiled.cover).toBeNull();
+  });
+
+  it("leaves the picker's fields absent where the lookup did not select them", () => {
+    const view = targetView({ __typename: "Post", id: "p-4", title: { value: "x" } }, "p-4");
+    expect(view).not.toHaveProperty("name");
+    expect(view).not.toHaveProperty("cover");
+  });
+});

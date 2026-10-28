@@ -939,7 +939,11 @@ paper over:
   because the two directions are different facts and the label has to
   say which one it counts; one merged "followers" figure would describe
   a different product, where a link is one-way and carries no opinion.
-  The figures are one tap target toward the
+  Each figure counts records, never a fold (open-questions Q35, closed
+  2026-10-28 under the autonomy order, jakob's confirmation pending):
+  the posts published, never their edits; the Opinion records toward
+  the person; the Opinion records they gave toward people — a revision
+  is one more. The figures are one tap target toward the
   stances page. On another's profile the stance wears the wide anchor with
   Message beside it; one's own avatar wears the change badge (the
   standalone crop-and-seal shortcut). No cover image: the largest thing on
@@ -10399,6 +10403,118 @@ stands gets its own ask, never the walk-back and never a block.
   approval and vouch-ask Sets gain it as an outcome); flows hold at
   **227**. The registry holds at **100 screens**; the new board is
   unregistered.
+
+### Round 20, master mechanics — 2026-10-28
+
+The masters drawn to what they promise (seam 245, under jakob's
+autonomy order of 2026-10-28: design builds, he adjusts after his hand
+test). Measured headless on the built boards, Figtree loaded.
+
+- **Geometry.** `Button` renders its true 40 / 32 with the 1px border
+  inside (it drew 42 / 34); `TopicRemovable` its 32 (it drew 40);
+  `StanceControl`'s always-mounted live region stands out of its flex
+  column, so every action row measures the anchor's 48 (it measured
+  52); `TopicsLine` clips sideways only, so its 48px targets reach past
+  the 34px line again.
+- **Type roles.** The `More` openers, `EmptyState`, `LoadingState` and
+  `RedactedContent` set their whole roles — size, leading, tracking,
+  weight — and `ActorChip`'s name and `ContentRow`'s rungs their
+  tracking.
+- **Read-backs.** The seal's License row takes its summary as a string
+  (`LICENSE_SUMMARY` on a board), so `FactRow` voices it; the key-absent
+  seal reads its citation name over pair through the seal's own
+  `citedOneRow`.
+- **Stance data.** `StanceRow` and `ContentRow` carry the bundle's
+  `severed` to `StanceValue`'s `zeroLabel`; `severanceCost` honours a
+  served 0; a `(0, 0)` landing where nothing stands reads `Resulting
+  opinion 🤷 Says nothing.` (*blessed in round 21*), one
+  `nothingStands` flag routing the line and the ask.
+- **`AttachmentPad`** holds the zero detent within the knob's 10px
+  radius and parks the release on its nearest hundredth — backlog 144
+  closed.
+- **The gate**: edges hold at **2127**, flows at **227**, the registry
+  at **100 screens**; no board added.
+
+### Round 21, the pad's fabric states and words — 2026-10-28
+
+The pad and empty-sign fabric's undrawn states (seam 245, asks 14–18 and
+20's words), under the same autonomy order: built, merged, reviewed by
+jakob after his hand test.
+
+- **The alternates wait as Set does.** `StanceControl` hands its
+  `signing` to the surface that sent the act — the alternates while they
+  are up, the walk-back or the empty sign while one is raised. The
+  alternates' commit reads `Signing…`; a fault keeps the dialog at the
+  pick with `Retry`, outlined, in its slot; the write rule's notice and
+  `Not now` take the landing line's and the action row's place. A typed
+  value past the bound clamps as the field does, read back in `Your
+  pick`, no refusal line; a field holding no number moves nothing, never
+  a 0. The alternates card draws all four.
+- **The write rule inside the walk-back.** `SeveranceConfirm` (and
+  `EmptySignConfirm`, the same moment) answers the write rule's no in the
+  row's quiet register — `You can't sign right now. Nothing was signed or
+  spent.` where the fault line stands — the act dimmed, no Retry, `Keep
+  it` the way back. The board's `answer` chip draws it.
+- **Cancel while Set signs.** Cancel, the press outside and Escape stay
+  live and close the pad, never the act: its wait passes to the target's
+  row, a hold's (`Signing…`, then the face and the snackbar, or `That
+  didn't sign.` with a Retry that asks the same pick again). `PadFailed`'s
+  `moment` chip draws `setting` and `cancelled`.
+- **The key-absent pad's "?"** says only what its notice does not: where
+  the key lives, and what waits for the restore.
+- **The target label's family**: `this post`, `this comment`, `@ada`,
+  `#saltmaps` — one copy-voice row; the 🤔's first line names `Your
+  topics` for a topic as it names `Your people` for a person.
+- **The empty sign's landing** `Resulting opinion 🤷 Says nothing.`
+  stands, blessed; a `(0, 0)` pick over the standing an empty sign left
+  still asks the walk-back — that record stands, and severance is a
+  `(0, 0)` landing over anything standing.
+- **Every new string above is merged under the autonomy order, review
+  pending.** Backlog 147 banks the type sites round 20 left.
+- **The gate**: edges hold at **2127**, flows at **227**, the registry
+  at **100 screens**; no board added — two boards gain a chip.
+
+### Round 22, the A-side surfaces and blessings — 2026-10-28
+
+Seam 245's asks 9–13, under the same autonomy order: built, merged,
+reviewed by jakob after his hand test. Every new string is in copy-voice,
+marked *merged under the autonomy order, review pending*.
+
+- **The profile figures stand** (Q35 closed in docs/open-questions.md,
+  jakob's confirmation pending): the header counts records, never a
+  fold — the posts published, the Opinion records toward the person,
+  the ones they gave toward people (§7, `ProfileHeader`).
+- **The chronicle's verbs**, one per family it lists: `Edited a post`,
+  `Edited a comment`, `Vouched for`, `Walked back an opinion`, `Tagged a
+  post`, `Un-tagged a post`, `Cited a post`, `Mentioned`, `Withdrew a
+  citation`, `Joined`, beside the four already blessed (copy-voice, the
+  profile).
+- **A member's empty chronicle** reads `Nothing here yet.`, the line
+  alone, drawn on `ProfileComments`' `comments` chip — a member's
+  `Everything` always holds their registration, so a filtered tab is
+  where they meet it.
+- **`ExploreComingSoon`** — `Explore — coming soon` · `Search will be
+  here.` — `WalletComingSoon`'s sibling at the end of the Explore row on
+  the Feed & Search page, a declared entry until search ships.
+- **The media gaps.** The web drop region dims while a clip is staged
+  (`ComposePickWeb`'s `body` chip); every tray tile carries its X, the
+  cover's included; the tray caption stands only while the tiles leave it
+  its line (up to three), the row clipping past that, never scrolling;
+  the pick step's arrow is `Back`; the empty pick step says nothing, its
+  Next inert; `PickedRow` badges its first picture `Cover`, so every
+  details and edit row does; `Reading the video…`, `3 pictures didn't
+  upload.` with `Remove them`, and `A post carries one video.` are
+  blessed; `ComposePickedErrors` keeps the live grid (`PickGrid`, shared
+  with `ComposePick`) under its refusals; the crop's arrow keys move the
+  window the arrow's way where the picture stays whole; the clip tiles
+  keep their 114×64 and 54×96 boxes for every shape. The tray-drag law
+  is gone — reorder lives in Show all.
+- **The gate**: edges **2127 → 2135** (`ExploreComingSoon`'s seven,
+  `ComposePickedErrors`' photos app and grid, less `ComposePick`'s tray
+  drag); flows hold at **227**, four re-blessed for the new door's
+  `New post` (`publish-a-post`, `publish-words`, `publish-a-video`,
+  `publish-a-vertical-video`: 60 → 61 origins). The registry holds at
+  **100 screens**; the new board is unregistered.
 
 ---
 

@@ -2,7 +2,7 @@ import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
 import { MonogramAvatar, REDACTED_ACTOR_NAME } from "../people/ActorChip.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
-import { StanceValue, ZERO_BUNDLE_EMOJI } from "../stance/StanceReadout.jsx";
+import { EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue, ZERO_BUNDLE_EMOJI } from "../stance/StanceReadout.jsx";
 
 /* THE IDENTITY ROW — the card-lite line every list in this product is built
    from: a 40px disc saying who or what, two lines of words saying which and
@@ -54,14 +54,20 @@ const VARIANTS = {
   chronicle: { second: "body-medium", trailing: "label-small", loud: false, disc: "container" },
 };
 
+/* Each rung sets its role's tracking with its size and leading (seam 245,
+   ask 7): a row is a <button> or a <div>, and the one resets letter-spacing
+   while the other inherits the page's 0.5px, so a rung that left it to the
+   box drew two trackings for one role. */
 const TYPE = {
   "label-small": {
     fontSize: "var(--text-label-small)",
     lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
   },
   "body-medium": {
     fontSize: "var(--text-body-medium)",
     lineHeight: "var(--text-body-medium--line-height)",
+    letterSpacing: "var(--text-body-medium--letter-spacing)",
   },
 };
 
@@ -122,7 +128,11 @@ function Disc({ redacted, image, imageShape, name, face, letter, glyph, tone }) 
           {ZERO_BUNDLE_EMOJI}
         </span>
       ) : face ? (
-        <StanceValue pDirected={face.pDirected} pInterest={face.pInterest} showPair={false} />
+        /* WHICH (0, 0) THE ROW DRAWS, FROM THE ROW'S OWN DATA (seam 245, ask
+           19): the numbers cannot tell a walked-back standing from an
+           empty-signed one, so the face carries `severed`, and only a
+           standing walked back speaks `Walked back`. */
+        <StanceValue pDirected={face.pDirected} pInterest={face.pInterest} showPair={false} zeroLabel={face.severed ? SEVERED_LABEL : EMPTY_PICK_LABEL} />
       ) : letter ? (
         <span
           aria-hidden="true"
@@ -181,6 +191,7 @@ export function ContentRow({
       style={{
         fontSize: "var(--text-label-large)",
         lineHeight: "var(--text-label-large--line-height)",
+        letterSpacing: "var(--text-label-large--letter-spacing)",
         fontWeight: "var(--text-label-large--font-weight)",
         ...(redacted ? { color: "var(--text-secondary)" } : null),
         ...ellipsis,

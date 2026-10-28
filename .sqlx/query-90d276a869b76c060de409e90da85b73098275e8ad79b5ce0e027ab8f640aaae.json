@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT t.post_id AS \"post_id!\", t.redaction_reason AS \"reason!\",\n                  t.created_at AS \"at!\",\n                  (SELECT created_at FROM post_versions\n                   WHERE post_id = t.post_id AND version_id <> t.version_id\n                   ORDER BY pending DESC,\n                            landed_epoch DESC NULLS LAST,\n                            act_time DESC NULLS LAST,\n                            position DESC NULLS LAST,\n                            created_at DESC, version_id DESC\n                   LIMIT 1) AS updated_at\n           FROM (SELECT DISTINCT ON (post_id) post_id, version_id, created_at,\n                        redaction_reason\n                 FROM post_versions\n                 WHERE post_id = ANY($1) AND redaction_reason IS NOT NULL\n                 ORDER BY post_id, created_at DESC, version_id DESC) t",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "post_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "reason!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "90d276a869b76c060de409e90da85b73098275e8ad79b5ce0e027ab8f640aaae"
+}

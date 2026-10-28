@@ -1,3 +1,5 @@
+"use client";
+
 // The 2.0 page header — the band every wizard screen wears (ComposePick,
 // ComposeCrop, ComposeDetails, ComposeSeal).
 //
@@ -16,7 +18,7 @@
 // the content column on every stage, so the top-right corner keeps one meaning
 // the whole way through a flow.
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
@@ -37,8 +39,17 @@ export function HeaderBar({
   help,
   testId,
   node,
+  focusTitle = false,
 }: {
   title: string;
+  /**
+   * Hands focus to the title the moment the band mounts — the edits' "WHEN
+   * the stage opens -> focus lands on the stage's heading AND NEVER the
+   * keyboard rises before a field is tapped" (EditCompose.md, CommentEdit.md):
+   * a reader of a screen reader hears where they are, and no field takes
+   * focus, so no keyboard rises.
+   */
+  focusTitle?: boolean;
   /** The stage's name ("Last step"), set before the help slot as the master orders them. */
   stageLabel?: string;
   // A screen with no way back — the recovery-code trap — simply passes none,
@@ -57,6 +68,10 @@ export function HeaderBar({
    */
   node?: DataNode;
 }) {
+  const heading = useRef<HTMLHeadingElement | null>(null);
+  useEffect(() => {
+    if (focusTitle) heading.current?.focus({ preventScroll: true });
+  }, [focusTitle]);
   // THE MASTER'S TWO GROUPS (`PageHeader.jsx`, `WizardHeader.jsx`): the arrow
   // and the title 8px apart on the left, the ways out and the passive
   // trailing pair 8px apart on the right, 12px between the groups.
@@ -78,7 +93,9 @@ export function HeaderBar({
           </button>
         )}
         <h1
-          className="m-0 min-w-0 truncate whitespace-nowrap text-title-large"
+          ref={heading}
+          tabIndex={focusTitle ? -1 : undefined}
+          className="m-0 min-w-0 truncate whitespace-nowrap text-title-large outline-none"
           {...testAttributes(part(node, "title"))}
         >
           {title}

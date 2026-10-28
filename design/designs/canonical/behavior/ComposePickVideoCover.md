@@ -12,6 +12,8 @@ WHEN tap the clip's remove control -> the clip leaves AND its cover goes with it
 
 WHEN press Next -> the cover step opens with the chosen cover still chosen AND NEVER the step asks for it afresh
 
+ALWAYS the header back arrow is named Back, never Back a step
+
 WHEN press the header back arrow -> the wizard leaves toward where compose began AND the draft is kept AND NEVER a dialog asks
 
 WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks

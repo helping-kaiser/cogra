@@ -4,6 +4,14 @@
 //! collected before it was signed, the three registration-and-attach
 //! refusals, and the collapsed `INTERNAL` fault. Every request goes
 //! through the real router. Requires a live Postgres (`make up`).
+//!
+//! Census, `removeContent`: its codes are provoked in
+//! `content_removal.rs` — UNAUTHENTICATED, NOT_FOUND, FORBIDDEN,
+//! BAD_INPUT (out-of-scope family, carried act, an edit on a removed
+//! node) and INTERNAL (an injected tombstone fault). RATE_LIMITED and
+//! EMAIL_NOT_VERIFIED are not provocable on it by design: the verb has no
+//! limiter scope (it is author-bounded, signs and mails nothing) and is
+//! not member-gated (it acts on nothing; api-spec.md "Authentication").
 
 use api::ratelimit::RateLimitConfig;
 use base64::Engine;

@@ -52,9 +52,6 @@ export function referenceKindWord(target: ReferenceTargetView): string | null {
 /** `NodeMark`'s kinds as a staged row draws them: a person is a circle, the rest tiles. */
 export type StagedMarkKind = "post" | "comment" | "person" | "topic";
 
-const TILE =
-  "grid size-8 flex-none place-items-center overflow-hidden rounded-small bg-surface-container-high text-on-surface-variant";
-
 function Mark({
   kind,
   name,
@@ -68,20 +65,14 @@ function Mark({
   removed: boolean;
   node?: DataNode;
 }) {
-  // A person is their face; a post or comment its 32px tile on the card tone;
-  // a removed target keeps the tile's space and fills it with nothing.
-  return (
-    <span className="flex flex-none" {...testAttributes(part(node, "mark"))}>
-      {kind === "person" ? (
-        <MonogramAvatar name={name} src={src} redacted={removed} size={32} />
-      ) : kind === "topic" ? (
-        <span aria-hidden="true" className={`${TILE} text-title-medium`}>
-          {removed ? null : "#"}
-        </span>
-      ) : (
-        <NodeMark kind={kind} src={src} redacted={removed} />
-      )}
-    </span>
+  // A person is their face; a post, comment or topic its 32px tile on the
+  // card tone, a post wearing its cover where the read found one; a removed
+  // target keeps the tile's space and fills it with nothing. The registered
+  // `mark` is the tile itself — the face it draws — never a box around it.
+  return kind === "person" ? (
+    <MonogramAvatar name={name} src={src} redacted={removed} size={32} node={part(node, "mark")} />
+  ) : (
+    <NodeMark kind={kind} src={src ?? null} redacted={removed} node={part(node, "mark")} />
   );
 }
 
@@ -232,6 +223,7 @@ export function StagedReference({
       name={target.label}
       markName={target.kind === "User" ? (target.displayName ?? target.handle ?? target.label) : undefined}
       sub={referenceKindWord(target)}
+      src={target.kind === "User" ? null : (target.cover ?? null)}
       pair={{ pDirected: relevance, pInterest: support }}
       onRemove={onRemove}
       onEdit={onEdit}

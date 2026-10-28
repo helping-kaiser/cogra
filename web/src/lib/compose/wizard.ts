@@ -154,11 +154,43 @@ export type PickedAsset = {
   readonly upload: AssetUpload;
   /** Absent on drafts written before video; read through `kindOf`, never raw. */
   readonly kind?: MediaKind;
+  /**
+   * A clip's displayed shape — width ÷ height after the container's rotation,
+   * read off its header when it is picked. It is what decides whether the
+   * cover step stands (`isVerticalClip`), so it rides the draft. Absent on a
+   * picture and on a draft written before the shape was kept; null where the
+   * decoder reported no size.
+   */
+  readonly clipRatio?: number | null;
 };
 
 /** What a picked asset is, defaulting a pre-video draft to the only kind it could hold. */
 export function kindOf(asset: PickedAsset): MediaKind {
   return asset.kind ?? "picture";
+}
+
+/**
+ * A clip TALLER THAN WIDE — the shape whose cover step is skipped.
+ *
+ * The drawn rule (design/readme.md, the video-cover round: "No-cover is
+ * first-class, and the default is shape-keyed"; ComposePickVideo.md): a
+ * vertical clip defaults to no cover, horizontal and square keep the frame
+ * picker, and SHAPE ALONE DECIDES, never length. So the test is height over
+ * width on the displayed dimensions, with no band around square — an exact
+ * 1:1 keeps the step. A shape not known (or not a usable ratio) is NOT
+ * vertical, so the step stands: the step existing is the conservative
+ * default, and the author can always leave it without a face. Android's
+ * `PickedAsset.isVerticalClip` draws the same line.
+ */
+export function isVerticalClip(asset: PickedAsset): boolean {
+  const ratio = asset.clipRatio;
+  return (
+    kindOf(asset) === "video" &&
+    typeof ratio === "number" &&
+    Number.isFinite(ratio) &&
+    ratio > 0 &&
+    ratio < 1
+  );
 }
 
 /**
@@ -280,11 +312,23 @@ export function emptyWizard(): WizardState {
 const WORD_STEPS: readonly Step[] = ["pick", "details", "seal"];
 const PICTURE_STEPS: readonly Step[] = ["pick", "crop", "details", "seal"];
 const VIDEO_STEPS: readonly Step[] = ["pick", "cover", "details", "seal"];
+const VERTICAL_VIDEO_STEPS: readonly Step[] = ["pick", "details", "seal"];
 
 /** Whether the body is the moving kind — one video, and the cover it carries. */
 export function isVideoPost(state: WizardState): boolean {
   const first = state.assets[0];
   return state.mode === "media" && first !== undefined && kindOf(first) === "video";
+}
+
+/**
+ * Whether this clip goes pick → details, the cover step skipped for its
+ * shape (`publish-a-vertical-video`). Its details stage carries the `Add a
+ * cover` door, and that door is the step's only entrance
+ * (`give-a-vertical-clip-a-cover`).
+ */
+export function skipsCoverStep(state: WizardState): boolean {
+  const first = state.assets[0];
+  return isVideoPost(state) && first !== undefined && isVerticalClip(first);
 }
 
 /**
@@ -296,24 +340,48 @@ export function isVideoPost(state: WizardState): boolean {
  * alternatives rather than a sequence, so a video post is the same four stages
  * deep as a picture post and Back never lands on a screen that has nothing to
  * show.
+ *
+ * A VERTICAL CLIP HAS NO COVER STEP IN ITS SEQUENCE AT ALL (ComposePickVideo.md:
+ * "press Next GIVEN the clip is vertical -> the details stage opens with its
+ * Add a cover door AND NEVER the cover step opens"). The step is still
+ * reachable from the details door, as a detour above details rather than a
+ * stage of the sequence — see `stepIndex`.
  */
 export function stepsFor(state: WizardState): readonly Step[] {
   if (state.mode === "words") return WORD_STEPS;
-  return isVideoPost(state) ? VIDEO_STEPS : PICTURE_STEPS;
+  if (!isVideoPost(state)) return PICTURE_STEPS;
+  return skipsCoverStep(state) ? VERTICAL_VIDEO_STEPS : VIDEO_STEPS;
 }
 
+/** Whether the cover step stands as the details door's detour rather than in the sequence. */
+function onCoverDetour(state: WizardState): boolean {
+  return state.step === "cover" && skipsCoverStep(state);
+}
+
+/**
+ * How deep the stage stands. The details door's cover step is one level
+ * ABOVE details — it was opened from there, its Next and its Back both come
+ * back there — so the browser's history marks it as the entry past details.
+ */
 export function stepIndex(state: WizardState): number {
+  if (onCoverDetour(state)) return stepsFor(state).indexOf("details") + 1;
   return Math.max(0, stepsFor(state).indexOf(state.step));
 }
 
 /** Null at the end of the sequence — the seal advances by signing, not by stepping. */
 export function nextStep(state: WizardState): Step | null {
+  // ComposeDetailsVideo.md: "tap Add a cover -> the cover step opens AND its
+  // Next comes back to this stage".
+  if (onCoverDetour(state)) return "details";
   const steps = stepsFor(state);
   return steps[stepIndex(state) + 1] ?? null;
 }
 
 /** Null on the first screen, where "back" leaves the wizard entirely. */
 export function previousStep(state: WizardState): Step | null {
+  // ComposeCover.md: "press the header back arrow GIVEN the step was opened
+  // by the details stage's Add a cover -> the details stage comes back".
+  if (onCoverDetour(state)) return "details";
   const steps = stepsFor(state);
   const index = stepIndex(state);
   return index > 0 ? (steps[index - 1] ?? null) : null;
@@ -548,8 +616,12 @@ export function shapeRatio(state: WizardState): number {
 export type WizardAction =
   | { type: "mode"; mode: BodyMode }
   | { type: "words"; words: string }
-  | { type: "pick"; assets: readonly { id: string; file: Blob; kind?: MediaKind }[] }
+  | {
+      type: "pick";
+      assets: readonly { id: string; file: Blob; kind?: MediaKind; clipRatio?: number | null }[];
+    }
   | { type: "unpick"; id: string }
+  | { type: "clipRatio"; id: string; clipRatio: number | null }
   | { type: "cover"; cover: CoverAsset | null }
   | { type: "coverUpload"; upload: AssetUpload }
   | { type: "autoCover"; cover: CoverAsset | null }
@@ -569,6 +641,7 @@ export type WizardAction =
   | { type: "sensitiveReason"; sensitiveReason: string }
   | { type: "pDirected"; pDirected: number }
   | { type: "goto"; step: Step }
+  | { type: "openCover" }
   | { type: "advance" }
   | { type: "back" };
 
@@ -618,6 +691,7 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
               altText: "",
               upload: { kind: "waiting" } as AssetUpload,
               kind: "video" as MediaKind,
+              clipRatio: picked.clipRatio,
             },
           ],
           cover: null,
@@ -654,6 +728,14 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
         focused: Math.min(state.focused, Math.max(0, assets.length - 1)),
       };
     }
+
+    case "clipRatio":
+      // The shape a later probe read, for a clip staged without one (a draft
+      // kept before the shape was). Never overwrites a shape already known:
+      // the routing it decides was made on it.
+      return withAsset(state, action.id, (asset) =>
+        asset.clipRatio === undefined ? { ...asset, clipRatio: action.clipRatio } : asset,
+      );
 
     case "cover":
       return { ...state, cover: action.cover };
@@ -758,6 +840,13 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       // a gate. Switching sides is what still uses it — the shortcut links the
       // details step once carried are gone (jakob 2026-08-31, "none").
       return stepsFor(state).includes(action.step) ? { ...state, step: action.step } : state;
+
+    case "openCover":
+      // The details door's `Add a cover`: the step a vertical clip skipped,
+      // opened on purpose (`give-a-vertical-clip-a-cover`). Nowhere else does
+      // the door stand — a clip that came through the step has it one Back
+      // away (ComposeDetailsVideo.md).
+      return state.step === "details" && skipsCoverStep(state) ? { ...state, step: "cover" } : state;
 
     case "advance": {
       if (!advanceGate(state).ok) return state;

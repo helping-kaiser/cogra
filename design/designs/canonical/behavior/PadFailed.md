@@ -29,3 +29,19 @@ WHEN tap Cancel GIVEN the fault stands -> the pad closes AND nothing is signed A
 WHEN press outside the pad, press the system's Back or press Escape GIVEN the fault stands -> the pad closes AND nothing is signed AND the standing opinion is what it was
 
 WHEN tap the pad's ? -> the pad's four help lines replace its body in place AND Retry is disabled while they show AND NEVER a dialog opens AND NEVER anything is staged
+
+WHEN the pad's signing has not answered 200ms after Set -> Set reads Setting… and refuses a second press AND the pick, the field and the landing line stay as they were AND Cancel stays live AND NEVER Set dims AND NEVER a spinner appears
+
+WHEN tap Cancel GIVEN Set is waiting on its signing -> the pad closes AND the signing goes on AND the line under the target's face reads Signing… in the pending marker's quiet register AND the anchor refuses a second hold until the signing answers AND NEVER the face moves before the signature is taken
+
+WHEN press outside the pad, press the system's Back or press Escape GIVEN Set is waiting on its signing -> the pad closes as Cancel closes it AND the signing goes on, carried by the target's row
+
+WHEN the signing is taken GIVEN the pad was cancelled while it signed -> the face on the target moves to the new opinion AND the line under it goes AND the snackbar confirms the signature
+
+WHEN the signing does not go through GIVEN the pad was cancelled while it signed -> the face stays where it was AND the line under it reads That didn't sign. in the failure voice followed by Retry AND NEVER the snackbar carries the failure
+
+WHEN tap Retry on the row line GIVEN the pad was cancelled while it signed -> the same pick is signed again AND NEVER the hold's +0.10 / +0.10 is signed in its place
+
+WHEN the alternates' signing has not answered 200ms after Sign it GIVEN the reader's input is sliders or typed values -> Sign it reads Signing… and refuses a second press AND Cancel stays live AND NEVER Sign it dims
+
+WHEN the alternates' signing does not go through GIVEN the reader's input is sliders or typed values -> the dialog stays up at the pick AND the line That didn't send. Try again. stands above its action row AND an outlined Retry takes Sign it's slot AND Cancel and Walk it back keep their places

@@ -29,6 +29,7 @@ import { useState } from "react";
 import { newTagDraft, type TagDraft } from "@/lib/topics/draft";
 import { previewTagName, TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { PairSheet, TAG_FAMILY } from "@/lib/ui2/compose/pair-sheet";
+import { InlineAction } from "@/lib/ui2/inline-action";
 import { Button } from "./button";
 import { instance, part, testAttributes, type DataNode } from "./data-node";
 import { TagParamSliders } from "./tag-param-sliders";
@@ -42,7 +43,16 @@ export function TagEntryField({
   testIdPrefix,
   node,
   pairs = "inline",
+  onOpenPicker,
 }: {
+  /**
+   * The composer's `+ Add a tag` (ComposeDetails: "composeDetails.tags.add"):
+   * given, the section adds through the tag picker (`TagPicker`) instead of
+   * the inline name field — the field, its Add and its preview give way to
+   * the one quiet door. The edit surfaces keep the inline entry until their
+   * own boards are conformed.
+   */
+  onOpenPicker?: () => void;
   /**
    * Where a chip's pair is set: `"sheet"` is the composer's `TagPadCompose`
    * (tap a chip, set the pair, Done); `"inline"` is the edit surfaces'
@@ -115,13 +125,21 @@ export function TagEntryField({
 
   return (
     <div className="flex flex-col gap-1.5" {...testAttributes(node, `${testIdPrefix}-tag-entry`)}>
-      <label
-        htmlFor={`${testIdPrefix}-tag-input`}
-        className="text-label-large"
-        {...testAttributes(part(node, "label"))}
-      >
-        Tags
-      </label>
+      {/* A label names a field; with the picker as the way in there is no
+          field here to name, so the heading is a plain span (ComposeDetails). */}
+      {onOpenPicker === undefined ? (
+        <label
+          htmlFor={`${testIdPrefix}-tag-input`}
+          className="text-label-large"
+          {...testAttributes(part(node, "label"))}
+        >
+          Tags
+        </label>
+      ) : (
+        <span className="text-label-large" {...testAttributes(part(node, "label"))}>
+          Tags
+        </span>
+      )}
       {tags.length > 0 && (
         <ul className="m-0 flex list-none flex-wrap gap-2 p-0" data-testid={`${testIdPrefix}-tag-list`}>
           {tags.map((tag, index) => (
@@ -157,63 +175,79 @@ export function TagEntryField({
           ))}
         </ul>
       )}
-      <div className="flex items-center gap-2">
-        <input
-          id={`${testIdPrefix}-tag-input`}
-          data-testid={`${testIdPrefix}-tag-input`}
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              add();
-            }
-          }}
-          placeholder="Add a topic"
-          aria-describedby={`${testIdPrefix}-tag-preview`}
-          className="rounded-extra-small border border-outline bg-transparent px-3 py-2"
-        />
-        <Button
+      {onOpenPicker !== undefined && (
+        // The composer's quiet door under the chips (ComposeDetails:
+        // `+ Add a tag`, InlineAction sm), opening the tag picker.
+        <InlineAction
           testId={`${testIdPrefix}-tag-add`}
           node={part(node, "add")}
-          variant="outline"
           size="sm"
-          onClick={add}
-          disabled={!canAdd}
+          onClick={onOpenPicker}
         >
-          Add
-        </Button>
-      </div>
-      {/* One line, always in the same slot: what the name becomes, or why
-          it cannot be added (F1). */}
-      {typed && (
-        <p
-          id={`${testIdPrefix}-tag-preview`}
-          role={preview.valid ? undefined : "alert"}
-          data-testid={`${testIdPrefix}-tag-preview`}
-          className={
-            preview.valid
-              ? "text-body-small text-on-surface-variant"
-              : "text-body-small text-error"
-          }
-        >
-          {preview.valid ? `Will add as #${preview.canonical}` : preview.reason}
-        </p>
+          + Add a tag
+        </InlineAction>
       )}
-      {/* The parameters the next tag is added with (F6) — inline hosts only;
-          the composer stages at the default and sets the pair in the sheet. */}
-      {pairs === "inline" && (
-        <TagParamSliders
-          relevance={params.relevance}
-          confidence={params.confidence}
-          onChange={setParams}
-          testIdPrefix={`${testIdPrefix}-tag-new`}
-        />
-      )}
-      {atCap && (
-        <p data-testid={`${testIdPrefix}-tag-cap`} className="text-body-small text-on-surface-variant">
-          Up to {cap} topics per post.
-        </p>
+      {onOpenPicker === undefined && (
+        <>
+          <div className="flex items-center gap-2">
+            <input
+              id={`${testIdPrefix}-tag-input`}
+              data-testid={`${testIdPrefix}-tag-input`}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  add();
+                }
+              }}
+              placeholder="Add a topic"
+              aria-describedby={`${testIdPrefix}-tag-preview`}
+              className="rounded-extra-small border border-outline bg-transparent px-3 py-2"
+            />
+            <Button
+              testId={`${testIdPrefix}-tag-add`}
+              node={part(node, "add")}
+              variant="outline"
+              size="sm"
+              onClick={add}
+              disabled={!canAdd}
+            >
+              Add
+            </Button>
+          </div>
+          {/* One line, always in the same slot: what the name becomes, or why
+              it cannot be added (F1). */}
+          {typed && (
+            <p
+              id={`${testIdPrefix}-tag-preview`}
+              role={preview.valid ? undefined : "alert"}
+              data-testid={`${testIdPrefix}-tag-preview`}
+              className={
+                preview.valid
+                  ? "text-body-small text-on-surface-variant"
+                  : "text-body-small text-error"
+              }
+            >
+              {preview.valid ? `Will add as #${preview.canonical}` : preview.reason}
+            </p>
+          )}
+          {/* The parameters the next tag is added with (F6) — inline hosts only;
+              the composer stages at the default and sets the pair in the sheet. */}
+          {pairs === "inline" && (
+            <TagParamSliders
+              relevance={params.relevance}
+              confidence={params.confidence}
+              onChange={setParams}
+              testIdPrefix={`${testIdPrefix}-tag-new`}
+            />
+          )}
+          {atCap && (
+            <p data-testid={`${testIdPrefix}-tag-cap`} className="text-body-small text-on-surface-variant">
+              Up to {cap} topics per post.
+            </p>
+          )}
+        </>
       )}
       {sheetTag !== undefined && (
         <PairSheet

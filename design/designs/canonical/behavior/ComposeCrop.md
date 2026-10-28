@@ -32,6 +32,8 @@ WHEN press an arrow key GIVEN the crop has focus -> the picture moves 1 % that w
 
 WHEN press an arrow key with Shift held GIVEN the crop has focus -> the picture moves 10 % that way AND NEVER past where its edge meets the crop's
 
+WHEN press an arrow key GIVEN the crop has focus and it shows the whole picture under a movable window -> the window moves 1 % the arrow's way, 10 % with Shift held, AND NEVER past the picture's edge
+
 ALWAYS the line under the zoom slider reads One shape for the whole post. Drag to move, pinch to zoom.
 
 ALWAYS the line's second sentence reads Drag or use the arrow keys to move, the slider to zoom. GIVEN a device with no touch to pinch

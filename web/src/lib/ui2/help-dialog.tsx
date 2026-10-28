@@ -109,6 +109,17 @@ export const HELP_TOPICS = {
       "Nothing was signed or spent, and your picks are still kept. Try again in a little while.",
     ],
   },
+  // The same dialog from an edit, which keeps no draft: the clause says what is
+  // true there (copy-voice, *Why signing waits*: "from a comment edit,
+  // `Nothing was signed or spent, and your edit is still here. Try again in a
+  // little while.`"; the post edit's mirror, blessed jakob 2026-10-16).
+  whySigningWaitsAtEdit: {
+    title: "Why signing waits",
+    paragraphs: [
+      "There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now.",
+      "Nothing was signed or spent, and your edit is still here. Try again in a little while.",
+    ],
+  },
   // The seal's own "?" — the post's and the reply's (copy-voice, *How signing
   // works*; payer-neutral by the v1.0.0 scope cut, jakob 2026-09-25).
   howSigningWorks: {
@@ -137,6 +148,24 @@ export const HELP_TOPICS = {
     paragraphs: [
       "A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own.",
       "Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.",
+    ],
+  },
+  // The tag picker's one "?" (copy-voice, *Tagging*, the K13 round): the
+  // dot is named by the dialog it opens.
+  tagging: {
+    title: "Tagging",
+    paragraphs: [
+      "A tag is a name anyone can use — nobody owns one, and using a name nobody has used before takes no extra step. Tagging is its own signed action, and it carries how much the post is about that tag.",
+      "Names are lowercased, and a name can hold letters, digits, dot, dash and underscore. Tap a tag you have added to set how it relates.",
+    ],
+  },
+  // The citation picker's one "?" (copy-voice, *Citing*; trimmed to v1.0.0's
+  // citable kinds, jakob 2026-09-25).
+  citing: {
+    title: "Citing",
+    paragraphs: [
+      "A citation is its own signed action and carries an opinion of what you cite. You can cite a post, a comment or a person.",
+      'A comment can also be cited from itself — open its menu and choose "Cite in a new post".',
     ],
   },
   editing: {

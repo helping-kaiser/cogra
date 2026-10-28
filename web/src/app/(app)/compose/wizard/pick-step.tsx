@@ -21,9 +21,8 @@ import { InlineAction } from "@/lib/ui2/inline-action";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { LABEL_SMALL_PLAIN } from "@/lib/ui2/plain-type";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
-import { UploadErrorLine } from "@/lib/ui2/compose/upload-notice";
+import { RefusedFileRow } from "@/lib/ui2/compose/refused-file";
 import { countReading, FieldCount } from "@/lib/ui2/text-field";
-import { useObjectUrl } from "@/lib/compose/previews";
 import type { PickRefusal } from "@/lib/compose/pick";
 import type { PickedAsset } from "@/lib/compose/wizard";
 import { BODY_MAX_CHARS, kindOf } from "@/lib/compose/wizard";
@@ -50,6 +49,7 @@ export function PickStep({
   error,
   blocked,
   coverSrc,
+  vertical = false,
   durationMs,
   clipFace,
   onWords,
@@ -74,6 +74,11 @@ export function PickStep({
    * a picture post, and on a video whose cover is not yet settled.
    */
   coverSrc?: string | null;
+  /**
+   * Whether the staged clip is vertical — the shape whose cover step is
+   * skipped (`isVerticalClip`), so the tray promises no cover step.
+   */
+  vertical?: boolean;
   /** The clip's length; with it the tray draws the clip's video tile. */
   durationMs?: number;
   /**
@@ -108,6 +113,7 @@ export function PickStep({
       error={error}
       blocked={blocked}
       coverSrc={coverSrc}
+      vertical={vertical}
       durationMs={durationMs}
       clipFace={clipFace}
       onMode={onMode}
@@ -232,6 +238,7 @@ function MediaBody({
   error,
   blocked,
   coverSrc,
+  vertical,
   durationMs,
   clipFace,
   onMode,
@@ -247,6 +254,7 @@ function MediaBody({
   error: string | null;
   blocked: boolean;
   coverSrc?: string | null;
+  vertical: boolean;
   durationMs?: number;
   clipFace?: string | null;
   onMode: (next: "words" | "media") => void;
@@ -343,14 +351,19 @@ function MediaBody({
                 </li>
               ))}
             </ul>
-            <span className={`flex-1 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
+            <span data-testid="wizard-tray-caption" className={`flex-1 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
               {!holdsVideo
                 ? "The first one is the cover."
                 : // THE CAPTION TAKES THE SETTLED FACT once the cover step has
                   // given the clip its face (`ComposePickVideoCover`).
                   coverSrc
                   ? "A video is the whole post. This one has its cover."
-                  : "A video is the whole post. Its cover comes next."}
+                  : // A VERTICAL CLIP MEETS NO COVER STEP (ComposePickVideo.md:
+                    // "the tray's line reads A video is the whole post. GIVEN
+                    // the clip is vertical"), so the tray promises none.
+                    vertical
+                    ? "A video is the whole post."
+                    : "A video is the whole post. Its cover comes next."}
             </span>
           </div>
         </div>
@@ -453,38 +466,5 @@ function MediaBody({
         <NextAction disabled={blocked} onNext={onNext} className="pt-4" />
       </div>
     </>
-  );
-}
-
-/**
- * One refused file, as `RefusedFile` draws it (design/components/compose):
- * the failed tile beside the words, `gap: var(--space-2)`.
- *
- * A picture's own bytes preview the tile. A video or anything else gets
- * none — the same "omit `src` for a file nothing can read: an empty tile is
- * the honest picture" rule the design system states, since a browser has no
- * cheap way to pull a poster frame from a refused clip's bytes the way an
- * `<img>` shows a picture's.
- */
-function RefusedFileRow({
-  refusal,
-  onDismiss,
-}: {
-  refusal: PickRefusal;
-  onDismiss: () => void;
-}) {
-  const previewable = refusal.file.type.startsWith("image/");
-  const src = useObjectUrl(previewable ? refusal.file : null);
-  return (
-    <div className="flex items-center gap-2">
-      <MediaThumb src={src} failed testId={`wizard-refusal-${refusal.id}-thumb`} />
-      <div className="min-w-0 flex-1">
-        <UploadErrorLine
-          message={refusal.reason}
-          onRemove={onDismiss}
-          testId={`wizard-refusal-${refusal.id}`}
-        />
-      </div>
-    </div>
   );
 }
