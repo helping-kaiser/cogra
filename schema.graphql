@@ -3281,6 +3281,18 @@ type Query {
 	"""
 	mediaAttachment(id: UUID!): MediaAttachment
 	"""
+	The viewer's earliest published post whose gallery carries any of
+	the named uploads — the composer's already-published marker. A
+	named id resolves through a merge to the asset it became, and the
+	asset matches by its id or its rendition digest; only the viewer's
+	own ids name anything, and only the viewer's own posts answer.
+	Published is landed, carried is the post's current version, and
+	earliest is the published order. Null when nothing matches, for an
+	empty list, and without a session. More ids than a post's gallery
+	holds is BAD_INPUT.
+	"""
+	ownPublishedPlacement(mediaIds: [UUID!]!): Post
+	"""
 	One post by id; null for an unknown id.
 	"""
 	post(id: UUID!): Post
@@ -3348,8 +3360,14 @@ type Query {
 	And a keyless account fronts no Profile on the graph, so it
 	resolves nowhere for the write path and must not be offered here
 	either.
+	
+	`kinds` narrows the candidates by the search law — kinds subtract.
+	Null or empty narrows nothing; otherwise only candidates of a
+	listed kind are offered, and a kind the finder never offers — a
+	topic, or a comment by its words, which it carries none of —
+	reads empty, never an error.
 	"""
-	referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
+	referenceCandidates(query: String!, kinds: [NodeKind!], limit: Int): [ReferenceCandidate!]!
 	"""
 	Global search across nodes; returns a `SearchResult` per edge.
 	Recall is lexical: plain text matches topic names by substring,

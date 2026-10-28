@@ -16,9 +16,10 @@
 # so no topic is ever offered. An empty or unresolvable query
 # answers with an empty list, never an error: a finder runs on every
 # keystroke, so most of what it is asked is a prefix of something still
-# being typed.
-query ReferenceCandidates($query: String!, $limit: Int) {
-  referenceCandidates(query: $query, limit: $limit) {
+# being typed. `kinds` is the picker filter's narrowing (kinds subtract;
+# null narrows nothing), so the filter never trims a 10-row answer locally.
+query ReferenceCandidates($query: String!, $kinds: [NodeKind!], $limit: Int) {
+  referenceCandidates(query: $query, kinds: $kinds, limit: $limit) {
     targetId
     # INLINE, not a fragment — see `fragments.graphql`, "what a citation
     # points at". A fragment whose type condition is the union itself
