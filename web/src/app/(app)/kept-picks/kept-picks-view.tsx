@@ -27,8 +27,9 @@
 //   refusal: the bug notice, `Not now` back to the review. Nothing drops a pick
 //   but the reader's ×, or the batch landing.
 //
-// THE BOARDS ARE NOT REGISTERED in nodes.json; the elements wear the boards'
-// evident paths (`keptPicks.*`, `keptPicksSeal.*`) until they are.
+// REGISTERED (nodes.json KeptPicksReview, KeptPicksSeal; round 23): a pick is
+// `keptPicks.pick` and a seal row `keptPicksSeal.acts.actRow`, each keyed by
+// its place from 1.
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -272,7 +273,7 @@ export function KeptPicksView() {
               </InlineAction>
             </p>
           )}
-          <div className="flex flex-col gap-2" {...testAttributes(part(REVIEW, "picks"))}>
+          <div className="flex flex-col gap-2">
             {opinions.map((kept, index) => {
               const preview = previewOf(kept);
               const key = keyOf(kept.target);
@@ -294,7 +295,7 @@ export function KeptPicksView() {
                     removed={preview.removed}
                     consequence={severing.has(key) ? severanceWords(axesOf(kept.target)).landing : null}
                     onRemove={() => void onRemove(kept, index)}
-                    node={{ path: "keptPicks.pick", key }}
+                    node={{ path: "keptPicks.pick", key: String(index + 1) }}
                   />
                 </div>
               );
@@ -324,13 +325,11 @@ export function KeptPicksView() {
       label: "Opinion",
       countNoun: "opinion",
       count: 1,
-      testId: `keptPicksSeal.act-${keyOf(kept.target)}`,
       key: keyOf(kept.target),
       value: (
         <span className="flex min-w-0 flex-col py-1.5">
           <span
             className={`truncate${preview.removed ? " text-on-surface-variant" : ""}`}
-            data-testid={`keptPicksSeal.act-${keyOf(kept.target)}-name`}
           >
             {preview.removed || preview.name}
           </span>
@@ -369,7 +368,7 @@ export function KeptPicksView() {
           <HelpDot
             ariaLabel="How signing works"
             onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)}
-            testId="header-help"
+            node={part(part(SEAL, "header"), "help")}
           />
         }
         node={part(SEAL, "header")}
@@ -380,7 +379,7 @@ export function KeptPicksView() {
           total={actsTotal(rows.length)}
           note={note}
           noteTone={slow ? "slow" : "quiet"}
-          testId="keptPicksSeal.acts"
+          node={part(SEAL, "acts")}
         />
         {approvalKept && (
           <p className="m-0 text-body-medium text-on-surface-variant" {...testAttributes(part(SEAL, "approval"))}>
@@ -427,13 +426,13 @@ export function KeptPicksView() {
             </div>
           </>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2" {...testAttributes(part(SEAL, "foot"))}>
             {fault === "offline" && <TransportError testId="keptPicksSeal.fault" message={OFFLINE_LINE} />}
             {/* SealFooter: the commit names what it signs; inert from the
                 press, its participle past 200ms, never dimmed, no spinner. */}
             <PillButton
               testId="keptPicksSeal.sign"
-              node={part(SEAL, "sign")}
+              node={part(SEAL, "foot.sign")}
               variant={fault === "offline" ? "outlined" : "filled"}
               full
               onClick={() => void onSign()}
@@ -442,7 +441,7 @@ export function KeptPicksView() {
             </PillButton>
             <PillButton
               testId="keptPicksSeal.back"
-              node={part(SEAL, "back")}
+              node={part(SEAL, "foot.back")}
               variant="text"
               full
               onClick={() => {
