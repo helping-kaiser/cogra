@@ -6,8 +6,9 @@
 // - History.md:5-17, HistoryEmpty.md:9 (what joins History, the first seeing
 //   only, never a record): the seen tracker — `seen-tracker.test.tsx`,
 //   `seen-record.test.ts` — and the server (`crates/api/tests/view_history.rs`).
-// - History.md:29, :61 (the card's score and its trace): the score slot waits
-//   with every card's (`post-card.tsx`), so no card here draws one.
+// - History.md:29, :61 (the card's score and its trace): the slot's own
+//   suite (`score-slot.test.tsx`: the lookup, the dash on a miss, the door
+//   whose trace reads `Back to History`) and the trace's (`trace-view.test.tsx`).
 // - History.md:33, :43, :65-75 (the row's order, the veil, the stance hold):
 //   the card masters' own suites (`post-card.test.tsx`,
 //   `stance-control.test.tsx`, `comment-feed-card.test.ts`).

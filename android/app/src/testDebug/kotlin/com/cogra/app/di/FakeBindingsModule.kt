@@ -60,6 +60,7 @@ import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.removal.RemovalRepository
 import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.search.ExploreDeviceStore
@@ -104,6 +105,7 @@ import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.cogra.domain.testing.ScriptedHeldTopicsRepository
 import com.cogra.domain.testing.ScriptedReleaseRegistry
+import com.cogra.domain.testing.ScriptedRemovalRepository
 import com.cogra.domain.testing.ScriptedSearchRepository
 import com.cogra.domain.testing.ScriptedSeenHistory
 import com.cogra.domain.testing.SealingWriteRepository
@@ -687,6 +689,14 @@ object FakeBindingsModule {
 
     @Provides
     fun reportRepository(fake: RecordingReportRepository): ReportRepository = fake
+
+    // A removal is taken unless a test scripts otherwise.
+    @Provides
+    @Singleton
+    fun scriptedRemovalRepository(): ScriptedRemovalRepository = ScriptedRemovalRepository()
+
+    @Provides
+    fun removalRepository(fake: ScriptedRemovalRepository): RemovalRepository = fake
 
     // Saving answers kept, and the Saved list reads empty unless a test
     // scripts a page.

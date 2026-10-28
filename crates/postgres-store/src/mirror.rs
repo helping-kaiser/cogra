@@ -349,6 +349,11 @@ pub struct RecordFilter {
     pub p_directed_sign: Option<Sign>,
     /// Sign of the record's authored `p_i`, read off the same leg.
     pub p_interest_sign: Option<Sign>,
+    /// Whether the record is a genesis — see [`genesis_records`] for the
+    /// reading, which this filter shares clause for clause: `Some(true)`
+    /// keeps only genesis records (a post's Publish, never its edits),
+    /// `Some(false)` only the rest.
+    pub genesis: Option<bool>,
 }
 
 /// One end of a leg, as a traversal anchors on it: `Outgoing` walks the
@@ -747,6 +752,16 @@ pub async fn records(
                                      WHEN $16 = 'negative' THEN s.p_i < 0
                                      WHEN $16 = 'zero' THEN s.p_i = 0
                                      ELSE FALSE END)))
+                     AND ($17::boolean IS NULL OR $17 = (
+                             EXISTS (SELECT 1 FROM mirror_record_legs g
+                                     WHERE g.record_id = r.record_id
+                                       AND g.leg IN ('binary', 't')
+                                       AND g.target = 'mint:' || r.record_id)
+                             OR (r.family = 'registration' AND NOT EXISTS (
+                                     SELECT 1 FROM mirror_records e
+                                     WHERE e.family = 'registration' AND e.author = r.author
+                                       AND (e.epoch, e.act_time, e.position)
+                                           < (r.epoch, r.act_time, r.position)))))
                      AND ($8::bigint IS NULL
                           OR (r.epoch, r.act_time, r.position) > ($8, $9, $10))
                    ORDER BY r.epoch ASC, r.act_time ASC, r.position ASC
@@ -769,6 +784,7 @@ pub async fn records(
             far_kind,
             p_directed_sign,
             p_interest_sign,
+            filter.genesis,
         )
         .fetch_all(pool)
         .await?
@@ -843,6 +859,16 @@ pub async fn records(
                                  WHEN $16 = 'negative' THEN s.p_i < 0
                                  WHEN $16 = 'zero' THEN s.p_i = 0
                                  ELSE FALSE END)))
+                 AND ($17::boolean IS NULL OR $17 = (
+                         EXISTS (SELECT 1 FROM mirror_record_legs g
+                                 WHERE g.record_id = r.record_id
+                                   AND g.leg IN ('binary', 't')
+                                   AND g.target = 'mint:' || r.record_id)
+                         OR (r.family = 'registration' AND NOT EXISTS (
+                                 SELECT 1 FROM mirror_records e
+                                 WHERE e.family = 'registration' AND e.author = r.author
+                                   AND (e.epoch, e.act_time, e.position)
+                                       < (r.epoch, r.act_time, r.position)))))
                  AND ($8::bigint IS NULL
                       OR (r.epoch, r.act_time, r.position) < ($8, $9, $10))
                ORDER BY r.epoch DESC, r.act_time DESC, r.position DESC
@@ -863,6 +889,7 @@ pub async fn records(
             far_kind,
             p_directed_sign,
             p_interest_sign,
+            filter.genesis,
         )
         .fetch_all(pool)
         .await?
@@ -993,7 +1020,17 @@ pub async fn count_records(pool: &PgPool, filter: &RecordFilter) -> Result<i64, 
                              WHEN $12 = 'positive' THEN s.p_i > 0
                              WHEN $12 = 'negative' THEN s.p_i < 0
                              WHEN $12 = 'zero' THEN s.p_i = 0
-                             ELSE FALSE END)))"#,
+                             ELSE FALSE END)))
+             AND ($13::boolean IS NULL OR $13 = (
+                     EXISTS (SELECT 1 FROM mirror_record_legs g
+                             WHERE g.record_id = r.record_id
+                               AND g.leg IN ('binary', 't')
+                               AND g.target = 'mint:' || r.record_id)
+                     OR (r.family = 'registration' AND NOT EXISTS (
+                             SELECT 1 FROM mirror_records e
+                             WHERE e.family = 'registration' AND e.author = r.author
+                               AND (e.epoch, e.act_time, e.position)
+                                   < (r.epoch, r.act_time, r.position)))))"#,
         filter.author.as_deref(),
         filter.family.as_deref(),
         filter.payload_marked,
@@ -1006,10 +1043,53 @@ pub async fn count_records(pool: &PgPool, filter: &RecordFilter) -> Result<i64, 
         far_kind,
         filter.p_directed_sign.map(Sign::as_str),
         filter.p_interest_sign.map(Sign::as_str),
+        filter.genesis,
     )
     .fetch_one(pool)
     .await?;
     Ok(total)
+}
+
+/// The given records that are a genesis: the record that anchors its
+/// node (api-spec.md `RecordAct.GENESIS`).
+///
+/// Two shapes, both decidable from the published records alone. A
+/// minting act — genesis is per record, not per family (nodes.md §1):
+/// an act whose terminal target, the binary leg's or the T leg's, is the
+/// mint of its own identifier minted that node, where an act of the same
+/// family toward an existing node is an update. And a person's anchoring
+/// Registration — the first Registration its author signed, in the
+/// published order; every later one is a parallel Registration updating
+/// the profile (substrate.md §9). Those are the two genesis authorship
+/// records the ranking slice already keys recency on
+/// (`slice::genesis_keys`).
+///
+/// The predicate is the `genesis` filter's of [`records`] and
+/// [`count_records`], clause for clause, so a row's mark and the count a
+/// figure reads cannot disagree.
+pub async fn genesis_records(
+    pool: &PgPool,
+    record_ids: &[String],
+) -> Result<std::collections::HashSet<String>, MirrorError> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT r.record_id AS "record_id!"
+           FROM mirror_records r
+           WHERE r.record_id = ANY($1)
+             AND (EXISTS (SELECT 1 FROM mirror_record_legs g
+                          WHERE g.record_id = r.record_id
+                            AND g.leg IN ('binary', 't')
+                            AND g.target = 'mint:' || r.record_id)
+                  OR (r.family = 'registration' AND NOT EXISTS (
+                          SELECT 1 FROM mirror_records e
+                          WHERE e.family = 'registration' AND e.author = r.author
+                            AND (e.epoch, e.act_time, e.position)
+                                < (r.epoch, r.act_time, r.position))))"#,
+        record_ids,
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .collect())
 }
 
 pub(crate) struct LegOwned {

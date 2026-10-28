@@ -19,9 +19,12 @@ export function NodeMark({
   src,
   redacted = false,
   onCard = true,
+  size = 32,
   testId,
   node,
 }: {
+  /** The tile's side in px: 32 on a row; the score's trace draws it at the trace's size. */
+  size?: number;
   kind: "post" | "comment" | "topic";
   /** A post's cover, or a clip's still; null draws the text post's letter. */
   src?: string | null;
@@ -32,13 +35,14 @@ export function NodeMark({
   node?: DataNode;
 }) {
   const ids = testAttributes(node, testId);
-  const tile = `grid size-8 flex-none place-items-center overflow-hidden rounded-small ${
+  const box = { width: size, height: size };
+  const tile = `grid flex-none place-items-center overflow-hidden rounded-small ${
     onCard ? "bg-surface-container-high" : "bg-surface-container-highest"
   } text-on-surface-variant`;
-  if (redacted) return <span aria-hidden="true" {...ids} className={tile} />;
+  if (redacted) return <span aria-hidden="true" {...ids} style={box} className={tile} />;
   if (kind === "post" && src) {
     return (
-      <span aria-hidden="true" {...ids} className={tile}>
+      <span aria-hidden="true" {...ids} style={box} className={tile}>
         {/* A decorative 32px thumbnail of a picture the row names in words. */}
         {/* eslint-disable-next-line @next/next/no-img-element -- a 32px decorative tile, never a layout image */}
         <img src={src} alt="" className="size-full object-cover" />
@@ -46,7 +50,7 @@ export function NodeMark({
     );
   }
   return (
-    <span aria-hidden="true" {...ids} className={`${tile} text-title-medium`}>
+    <span aria-hidden="true" {...ids} style={box} className={`${tile} text-title-medium`}>
       {kind === "post" ? "T" : kind === "topic" ? "#" : <Icon name="chat_bubble" size={18} />}
     </span>
   );

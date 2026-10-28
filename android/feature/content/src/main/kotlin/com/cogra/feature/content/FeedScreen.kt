@@ -91,6 +91,8 @@ import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
 import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.removal.RemovalKind
+import com.cogra.domain.removal.marked
 import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
@@ -204,59 +206,63 @@ fun FeedRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     consumeRefreshSignal(refreshSignal, onRefreshSignalConsumed, viewModel::refresh)
-    FeedScreen(
-        commentsSheet = { postId, onDismiss ->
-            val post = state.posts.firstOrNull { it.id == postId }
-            CommentsSheetRoute(
-                postId = postId,
-                viewerId = viewerId,
-                signedIn = signedIn,
-                onDismiss = onDismiss,
-                onReply = { request -> (request.comment?.asReplyTarget() ?: post?.asReplyTarget())?.let(onReply) },
-                onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
-                onOpenActor = onOpenCommentActor ?: onOpenActor,
-                onOpenTopic = onOpenTopic,
-                onReference = onCitePost,
-                onSignInOrJoin = onSignInOrJoin,
-                onDepart = onCommentsDepart,
-                commentsReturn = commentsReturn,
-                onReturnConsumed = onCommentsReturnConsumed,
-                stanceControl = { target, tag ->
-                    StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
-                },
-            )
-        },
-        reportSheet = reportDoor(onRequireAccount, FEED_REPORT_SHEET, FEED / "reportSheet"),
-        reselectSignal = reselectSignal,
-        onShare = { postId -> context.sharePost(viewModel.shareUrl(postId)) },
-        state = state,
-        expiredLabel = expiredLabel,
-        onExpiredDismissed = onExpiredDismissed,
-        onOpenDraft = onOpenDraft,
-        onRefresh = then(onPulled, viewModel::refresh),
-        onLoadMore = viewModel::loadMore,
-        onCardsSeen = viewModel::onCardsSeen,
-        onCardEdgesSeen = viewModel::onCardEdgesSeen,
-        onSeenCheckpoint = viewModel::onSeenCheckpoint,
-        onReveal = viewModel::onReveal,
-        onOpenPost = onOpenPost,
-        onOpenActor = onOpenActor,
-        onOpenTopic = onOpenTopic,
-        onChats = onChats,
-        bell = bell,
-        keyBanner = keyBanner,
-        borrowedViewBand = borrowedViewBand,
-        deletionBand = deletionBand,
-        banners = banners,
-        vouchCard = vouchCard,
-        viewerId = viewerId,
-        onEditPost = onEditPost,
-        onCitePost = onCitePost,
-        stanceControl = nodeStanceControl,
-        saved = rememberSavedWrites(),
-        onRequireAccount = onRequireAccount,
-        hidden = rememberHiddenSet(),
-    )
+    // THE FEED'S REMOVAL, for every own card's ⋮ and the thread a count raises:
+    // a card removed here stands as its mark in place (RM-G9).
+    ProvideRemoval {
+        FeedScreen(
+            commentsSheet = { postId, onDismiss ->
+                val post = state.posts.firstOrNull { it.id == postId }
+                CommentsSheetRoute(
+                    postId = postId,
+                    viewerId = viewerId,
+                    signedIn = signedIn,
+                    onDismiss = onDismiss,
+                    onReply = { request -> (request.comment?.asReplyTarget() ?: post?.asReplyTarget())?.let(onReply) },
+                    onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
+                    onOpenActor = onOpenCommentActor ?: onOpenActor,
+                    onOpenTopic = onOpenTopic,
+                    onReference = onCitePost,
+                    onSignInOrJoin = onSignInOrJoin,
+                    onDepart = onCommentsDepart,
+                    commentsReturn = commentsReturn,
+                    onReturnConsumed = onCommentsReturnConsumed,
+                    stanceControl = { target, tag ->
+                        StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
+                    },
+                )
+            },
+            reportSheet = reportDoor(onRequireAccount, FEED_REPORT_SHEET, FEED / "reportSheet"),
+            reselectSignal = reselectSignal,
+            onShare = { postId -> context.sharePost(viewModel.shareUrl(postId)) },
+            state = state,
+            expiredLabel = expiredLabel,
+            onExpiredDismissed = onExpiredDismissed,
+            onOpenDraft = onOpenDraft,
+            onRefresh = then(onPulled, viewModel::refresh),
+            onLoadMore = viewModel::loadMore,
+            onCardsSeen = viewModel::onCardsSeen,
+            onCardEdgesSeen = viewModel::onCardEdgesSeen,
+            onSeenCheckpoint = viewModel::onSeenCheckpoint,
+            onReveal = viewModel::onReveal,
+            onOpenPost = onOpenPost,
+            onOpenActor = onOpenActor,
+            onOpenTopic = onOpenTopic,
+            onChats = onChats,
+            bell = bell,
+            keyBanner = keyBanner,
+            borrowedViewBand = borrowedViewBand,
+            deletionBand = deletionBand,
+            banners = banners,
+            vouchCard = vouchCard,
+            viewerId = viewerId,
+            onEditPost = onEditPost,
+            onCitePost = onCitePost,
+            stanceControl = nodeStanceControl,
+            saved = rememberSavedWrites(),
+            onRequireAccount = onRequireAccount,
+            hidden = rememberHiddenSet(),
+        )
+    }
 }
 
 /**
@@ -270,9 +276,13 @@ fun FeedRoute(
 @Composable
 private fun rememberShownFeed(state: FeedUiState, hidden: HiddenSet?, onLoadMore: () -> Unit): FeedUiState {
     val view = hidden.viewState()
-    val shown = remember(state, view) {
-        val kept = state.posts.filterNot { view.hides(it.author?.id, it.id) }
-        if (kept.size == state.posts.size) state else state.copy(posts = kept)
+    // …and every held card as this device knows it now: a removal taken since
+    // the page was read stands as its mark in place, its clip gone from the
+    // stage with its payload (RM-G9; the remembered pages pick it up).
+    val marks = rememberRemovedMarks()
+    val shown = remember(state, view, marks) {
+        val kept = state.posts.filterNot { view.hides(it.author?.id, it.id) }.map { it.marked(marks) }
+        if (kept == state.posts) state else state.copy(posts = kept)
     }
     val emptied = shown.posts.isEmpty() && state.posts.isNotEmpty() && state.hasNextPage
     LaunchedEffect(emptied) { if (emptied) onLoadMore() }
@@ -962,13 +972,17 @@ internal fun PostCard(
     // The instance the board keys by author handle is keyed here by the
     // post's id — the same key the web's card carries, so the harness pairs
     // both platforms' cards with one live post.
+    // THE CARD AS THIS DEVICE KNOWS IT NOW: a removal taken since the post was
+    // read — on this card or anywhere — stands as its mark in place (RM-G9),
+    // remembered pages included.
+    val shown = post.marked(rememberRemovedMarks())
     val card = placement.card
     val tag = "${placement.tag}_post_${post.id}"
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .dataNode(card.keyed(post.id)),
+            .dataNode(card.keyed(shown.id)),
     ) {
         Column(
             modifier = Modifier
@@ -980,7 +994,7 @@ internal fun PostCard(
             verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
             CardMenuHeader(
-                post = post,
+                post = shown,
                 viewerId = viewerId,
                 onOpenActor = onOpenActor,
                 onEdit = onEdit,
@@ -990,13 +1004,14 @@ internal fun PostCard(
                 node = card,
                 placement = placement,
             )
-            TitledBody(post, title = { SummaryTitle(post, card / "title") }) {
+            TitledBody(shown, title = { SummaryTitle(shown, card / "title") }) {
                 PostBody(
-                    content = post.content,
-                    description = post.description,
-                    attachments = post.attachments,
-                    attachmentsStatus = post.attachmentsStatus,
-                    moderation = post.moderation,
+                    content = shown.content,
+                    description = shown.description,
+                    attachments = shown.attachments,
+                    attachmentsStatus = shown.attachmentsStatus,
+                    moderation = shown.moderation,
+                    removal = shown.removal,
                     testTagPrefix = tag,
                     node = card,
                     collapsed = true,
@@ -1012,16 +1027,16 @@ internal fun PostCard(
                     onReveal = onReveal,
                 )
             }
-            if (post.landing.isPending) PendingMarker(testTag = "${placement.tag}_post_pending_${post.id}")
+            if (shown.landing.isPending) PendingMarker(testTag = "${placement.tag}_post_pending_${shown.id}")
             CardTopicsLine(
-                post = post,
+                post = shown,
                 onOpenTopic = onOpenTopic,
                 onOpenActor = onOpenActor,
                 onOpenPost = onOpenPost,
                 node = card / "tagsLine",
                 testTagPrefix = tag,
             )
-            CardRow(post, card, tag, onOpenComments, onShare, stanceControl)
+            CardRow(shown, card, tag, onOpenComments, onShare, stanceControl)
         }
     }
 }
@@ -1087,7 +1102,7 @@ private fun CardMenuHeader(
     // A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is nothing
     // of it to edit, cite or license, so the ⋮ goes wholesale rather than a
     // row at a time. An empty list draws no trigger.
-    val removed = isRemoved(post.content, post.attachments, post.attachmentsStatus)
+    val removed = post.removed
     val own = viewerId != null && post.author?.id == viewerId
     // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
     // jakob 2026-09-17, sharpened 2026-09-22 — PR #794): only the reader's
@@ -1135,12 +1150,17 @@ private fun CardMenuHeader(
     licenseShown?.let { license ->
         LicenseSheet(license = license, onDismiss = { licenseShown = null }, node = placement.licenseSheet)
     }
-    // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
-    // slice 8's, whole, so Remove closes the dialog and changes nothing.
+    // THE OWN MENU OFF THE DETAIL (RM-G9, undrawn): the same confirm as the
+    // detail's, over the surface the menu was opened from. Taken, the card
+    // stands as its mark in place — NEVER the post leaves without a mark
+    // (RemoveConfirm.md:11) — and the menu goes with the payload.
     if (removeOpen) {
         RemoveConfirm(
-            onDismiss = { removeOpen = false },
-            onRemove = { removeOpen = false },
+            kind = RemovalKind.Post,
+            nodeId = post.id,
+            record = post.genesisRecordId,
+            onClose = { removeOpen = false },
+            testTag = "${tag}_remove_confirm",
         )
     }
 }
