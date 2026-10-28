@@ -1989,7 +1989,12 @@ const REFERENCE_CANDIDATES_OF_KINDS: &str = r#"query($query: String!, $kinds: [N
 /// What the finder offers for `query` under `kinds`: each candidate's
 /// type name and id, sorted so the comparison is order-free. A transport
 /// error fails the test — no filter may turn a miss into one.
-async fn candidates_of(rig: &Citer, token: &str, query: &str, kinds: Value) -> Vec<(String, String)> {
+async fn candidates_of(
+    rig: &Citer,
+    token: &str,
+    query: &str,
+    kinds: Value,
+) -> Vec<(String, String)> {
     let answer = rig
         .gql_raw(
             Some(token),
@@ -2007,7 +2012,10 @@ async fn candidates_of(rig: &Citer, token: &str, query: &str, kinds: Value) -> V
         .iter()
         .map(|c| {
             (
-                c["target"]["__typename"].as_str().expect("type").to_string(),
+                c["target"]["__typename"]
+                    .as_str()
+                    .expect("type")
+                    .to_string(),
                 c["targetId"].as_str().expect("id").to_string(),
             )
         })
@@ -2043,15 +2051,15 @@ async fn the_finder_narrows_its_candidates_by_kind(pool: PgPool) {
     }
     assert_eq!(
         candidates_of(&rig, &token, "alice", json!(["USER"])).await,
-        [user.clone()]
+        std::slice::from_ref(&user)
     );
     assert_eq!(
         candidates_of(&rig, &token, "alice", json!(["POST"])).await,
-        [the_post.clone()]
+        std::slice::from_ref(&the_post)
     );
     assert_eq!(
         candidates_of(&rig, &token, "alice", json!(["POST", "COMMENT"])).await,
-        [the_post.clone()],
+        std::slice::from_ref(&the_post),
         "a comment is never offered by its words"
     );
     for nothing in [json!(["COMMENT"]), json!(["HASHTAG"]), json!(["ITEM"])] {

@@ -125,7 +125,10 @@ async fn the_marker_names_the_earliest_post_carrying_any_named_media(pool: PgPoo
     let first = landed_post(&rig, &token, &key, &[picture]).await;
     landed_post(&rig, &token, &key, &[picture]).await;
 
-    assert_eq!(placement(&rig, Some(&token), &[picture]).await, json!(first));
+    assert_eq!(
+        placement(&rig, Some(&token), &[picture]).await,
+        json!(first)
+    );
     assert_eq!(
         placement(&rig, Some(&token), &[fresh, picture]).await,
         json!(first)
@@ -172,7 +175,10 @@ async fn only_a_landed_post_whose_current_version_carries_it_answers(pool: PgPoo
         "in flight is not yet published"
     );
     rig.close_and_ingest().await;
-    assert_eq!(placement(&rig, Some(&token), &[picture]).await, json!(first));
+    assert_eq!(
+        placement(&rig, Some(&token), &[picture]).await,
+        json!(first)
+    );
     let second = landed_post(&rig, &token, &key, &[picture]).await;
 
     let replacement = asset(&rig.pool, author, 2).await;
@@ -221,7 +227,10 @@ async fn the_marker_never_answers_with_another_authors_placement(pool: PgPool) {
     let bobs_same_bytes = asset(&rig.pool, bob, 1).await;
     landed_post(&rig, &alice_token, &alice_key, &[alices]).await;
 
-    assert_eq!(placement(&rig, Some(&bob_token), &[alices]).await, Value::Null);
+    assert_eq!(
+        placement(&rig, Some(&bob_token), &[alices]).await,
+        Value::Null
+    );
     assert_eq!(
         placement(&rig, Some(&bob_token), &[bobs_same_bytes]).await,
         Value::Null
@@ -259,5 +268,8 @@ async fn more_ids_than_a_gallery_holds_is_bad_input(pool: PgPool) {
             json!({ "ids": ids(api::media::MAX_POST_ATTACHMENTS + 1) }),
         )
         .await;
-    assert_eq!(past["errors"][0]["extensions"]["code"], "BAD_INPUT", "{past}");
+    assert_eq!(
+        past["errors"][0]["extensions"]["code"], "BAD_INPUT",
+        "{past}"
+    );
 }
