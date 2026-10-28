@@ -343,7 +343,7 @@ private fun ExploreTop(
 /** Explore at rest (Explore.md:3): the Sky's card, the door into Your topics, then Recent. No pull-down. */
 @Composable
 private fun AtRest(state: ExploreUiState, list: LazyListState, doors: ExploreDoors, actions: ExploreActions) {
-    LazyColumn(state = list, modifier = Modifier.fillMaxSize()) {
+    LazyColumn(state = list, modifier = Modifier.fillMaxSize().testTag("explore_rest")) {
         item(key = "sky") { SkyCard() }
         // NO DOOR FOR A GUEST (Explore.md:37): no guest can hold a topic.
         if (state.resolved && !state.guest) {

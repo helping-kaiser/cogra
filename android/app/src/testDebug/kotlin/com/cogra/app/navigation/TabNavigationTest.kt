@@ -15,11 +15,13 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.ComposeNavigator
@@ -129,7 +131,7 @@ class TabNavigationTest {
     /** One of the bar's slots, under whichever screen the bar stands (`feed.bottomBar.feedSlot`, `bar_feed`). */
     private fun barSlot(slot: String) = SemanticsMatcher("is the bar's $slot slot") { node ->
         node.config.getOrNull(SemanticsProperties.TestTag)
-            ?.let { it == "bar_$slot" || it.endsWith(".bottomBar.${slot}Slot") } == true
+            ?.let { it == "bar_${FALLBACK_TAGS[slot] ?: slot}" || it.endsWith(".bottomBar.${slot}Slot") } == true
     }
 
     private fun tapSlot(slot: String) {
@@ -458,6 +460,8 @@ class TabNavigationTest {
     fun yourTopicsOpensFromExploresDoorWithNoBarAndGoesBackToExplore() {
         memberOnTheFeed()
         openExploreTab()
+        // The door sits under the Sky's card: scroll the rest view to it first.
+        compose.onNodeWithTag("explore_rest").performScrollToNode(hasTestTag("explore.topics"))
         compose.onNodeWithTag("explore.topics_open").performClick()
         waitUntilOn { onTop<YourTopics>() }
         compose.onAllNodesWithTag("explore.bottomBar").fetchSemanticsNodes().let { assertThat(it).isEmpty() }
@@ -468,5 +472,8 @@ class TabNavigationTest {
 
     private companion object {
         const val CHRONICLE_ROW = "chronicle_row_open"
+
+        /** The bar's shell tags where a slot's key and its tag differ (`search` reads `bar_explore`). */
+        val FALLBACK_TAGS = mapOf("search" to "explore")
     }
 }
