@@ -5,6 +5,7 @@
 # crates/ranker-server/Containerfile, retagged :deployed like the others.
 [Unit]
 Description=CoGra ranker
+OnFailure=cogra-alert@%n.service
 Wants=cogra-api.service
 After=cogra-api.service
 

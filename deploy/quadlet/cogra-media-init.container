@@ -4,6 +4,7 @@
 # every boot before the API.
 [Unit]
 Description=CoGra media store provisioning (live)
+OnFailure=cogra-alert@%n.service
 Requires=cogra-media.service
 After=cogra-media.service
 

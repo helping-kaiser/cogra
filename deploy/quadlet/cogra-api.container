@@ -7,6 +7,7 @@
 # (deploy/scripts/deploy.sh), so this file never changes per release.
 [Unit]
 Description=CoGra API
+OnFailure=cogra-alert@%n.service
 Requires=cogra-postgres.service cogra-media-init.service cogra-media-held-init.service
 After=cogra-postgres.service cogra-media-init.service cogra-media-held-init.service
 

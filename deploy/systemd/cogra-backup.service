@@ -1,0 +1,12 @@
+# Nightly backup pair (deploy/scripts/backup.sh; deployment.md "Backups").
+[Unit]
+Description=CoGra backup pair (database, then media) to the off-box repository
+Requires=cogra-postgres.service cogra-media.service cogra-media-held.service
+After=cogra-postgres.service cogra-media.service cogra-media-held.service
+OnFailure=cogra-alert@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/cogra/backup.sh --tag nightly
+Nice=10
+IOSchedulingClass=idle

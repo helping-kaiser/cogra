@@ -3,6 +3,7 @@
 # restore, never a tag bump in place (deployment.md "Postgres upgrades").
 [Unit]
 Description=CoGra Postgres
+OnFailure=cogra-alert@%n.service
 Wants=network-online.target
 After=network-online.target
 

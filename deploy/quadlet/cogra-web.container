@@ -4,6 +4,7 @@
 # Caddyfile's :8081 block for why.
 [Unit]
 Description=CoGra web
+OnFailure=cogra-alert@%n.service
 Wants=cogra-api.service
 After=cogra-api.service
 

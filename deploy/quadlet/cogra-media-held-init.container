@@ -3,6 +3,7 @@
 # to it. Idempotent; it runs on every boot before the API.
 [Unit]
 Description=CoGra media store provisioning (held)
+OnFailure=cogra-alert@%n.service
 Requires=cogra-media-held.service
 After=cogra-media-held.service
 

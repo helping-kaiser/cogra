@@ -4,6 +4,7 @@
 # over TCP and UDP (HTTP/3).
 [Unit]
 Description=CoGra proxy
+OnFailure=cogra-alert@%n.service
 Wants=cogra-web.service cogra-api.service
 After=cogra-web.service cogra-api.service cogra-media.service
 

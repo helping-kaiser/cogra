@@ -5,6 +5,7 @@
 # host, by the operator (podman exec cogra-media-held mc ls local/<bucket>).
 [Unit]
 Description=CoGra media store (held)
+OnFailure=cogra-alert@%n.service
 Wants=network-online.target
 After=network-online.target
 

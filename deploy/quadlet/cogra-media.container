@@ -5,6 +5,7 @@
 # is archived (deployment.md "The media store", D-4).
 [Unit]
 Description=CoGra media store (live)
+OnFailure=cogra-alert@%n.service
 Wants=network-online.target
 After=network-online.target
 
