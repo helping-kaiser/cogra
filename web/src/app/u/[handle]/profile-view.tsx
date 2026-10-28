@@ -40,7 +40,6 @@ import {
   type ProfileView as Profile,
   type RecordRow,
 } from "@/lib/api/profile-api";
-import { EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { StatusBanners } from "@/app/status-banners";
@@ -574,7 +573,7 @@ function discOf(row: RecordRow): ContentRowDisc {
             kind: "face",
             pDirected: row.face.pDirected,
             pInterest: row.face.pInterest,
-            zeroLabel: row.face.severed ? undefined : EMPTY_PICK_LABEL,
+            severed: row.face.severed,
           };
     default:
       return { kind: "glyph", glyph: "history" };

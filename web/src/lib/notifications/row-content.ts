@@ -22,12 +22,7 @@
 
 import type { Notification } from "@/lib/api/notifications-api";
 import { mediaStandIn, postTitle, REMOVED_BY_AUTHOR } from "@/lib/saved/row-content";
-import { EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
-import { STANCE_SEVERANCE_WORDS } from "@/lib/ui/stance-format";
 import type { ContentRowDisc } from "@/lib/ui2/content-row";
-
-/** The walk-back's word beside a face (`SEVERED_LABEL`). */
-const SEVERED_LABEL = STANCE_SEVERANCE_WORDS.zero;
 
 /** The roots a bell stands on, by the slot each lights. */
 export type BellRoot = "feed" | "explore" | "wallet" | "profile";
@@ -205,7 +200,7 @@ function discOf(row: Notification, deleted: boolean, name: string): ContentRowDi
       kind: "face",
       pDirected: row.record.pDirected,
       pInterest: row.record.pInterest,
-      zeroLabel: row.record.severed === true ? SEVERED_LABEL : EMPTY_PICK_LABEL,
+      severed: row.record.severed === true,
     };
   }
   // The opinion row's sibling: 🤷 where the opinion's face would be.
