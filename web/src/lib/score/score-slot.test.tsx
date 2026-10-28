@@ -3,7 +3,7 @@
 // ComposeLanded.md:5-7; score-readout §5.4 CD-SR5, §8).
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { HttpResponse } from "msw/http";
 
@@ -64,6 +64,10 @@ startMswServer(
     return HttpResponse.json({ data: { feedRanking: null } });
   }),
 );
+
+// The token store persists the session in localStorage: a guest test must not
+// inherit the reader an earlier test signed in.
+beforeEach(() => window.localStorage.clear());
 
 afterEach(() => {
   asked.length = 0;

@@ -8,6 +8,7 @@
 
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
@@ -175,6 +176,7 @@ function render(
   return { asked, view };
 }
 
+const TITLES = ["Why this reached you", "One path", "One step", "What landed"];
 const paths = () => screen.queryAllByTestId(byNode("feedEntry.path"));
 const centsOf = (value: string) => Math.round(Number(value.replace("−", "-")) * 100);
 
@@ -288,9 +290,23 @@ describe("FeedEntry.md — level one", () => {
       { kind: "step", path: 1, step: 1 },
       { kind: "records", path: 1, step: 1 },
     ];
-    const { view, asked } = render(ownAnswer());
-    for (const level of levels) {
-      view.rerender(<TraceView address={FEED_ADDRESS} level={level} />);
+    // ONE MOUNT WALKED DOWN THE LEVELS, as the route's search params do.
+    const asked: Asked = { traces: [], nodes: [] };
+    server.use(...traceHandlers(ownAnswer(), asked));
+    beginTrace(POST_ID, POST_COVER, SOL.id);
+    function Walk() {
+      const [at, setAt] = useState(0);
+      return (
+        <>
+          <button type="button" data-testid="walk-down" onClick={() => setAt((i) => i + 1)} />
+          <TraceView address={FEED_ADDRESS} level={levels[at]!} />
+        </>
+      );
+    }
+    renderWithProviders(<Walk />, { store: asReader(SOL.id) });
+    for (const [index] of levels.entries()) {
+      if (index > 0) fireEvent.click(screen.getByTestId("walk-down"));
+      await waitFor(() => expect(screen.getByTestId(byNode("feedEntry.header.title"))).toHaveTextContent(TITLES[index]!));
       expect(await screen.findByTestId(byNode("feedEntry.origin.quote.title"))).toHaveTextContent(
         "The long way home — @ada",
       );
@@ -431,7 +447,7 @@ describe("RankPath.md — one path", () => {
   it("a step opens its own level", async () => {
     render(ownAnswer(), { level });
     const step = (await screen.findAllByTestId(byNode("feedEntry.step")))[0]!;
-    expect(step.closest("a") ?? step).toHaveAttribute("href", "/trace/p-long-way?from=feed&kind=post&path=1&step=1");
+    expect(step.querySelector("a")).toHaveAttribute("href", "/trace/p-long-way?from=feed&kind=post&path=1&step=1");
   });
 });
 

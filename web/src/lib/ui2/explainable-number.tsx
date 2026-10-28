@@ -48,11 +48,14 @@ export function ExplainableNumber({
     <Link
       href={href}
       onClick={onOpen}
+      // THE NAME SPEAKS THE FIGURE (`Feed score 15.20`): the label lives in
+      // the accessibility tree, and a sr-only span beside the digits would
+      // run the two together (`Feed score15.20`) in the computed name.
+      aria-label={value === undefined ? label : `${label} ${value}`}
       {...testAttributes(node, testId)}
       className="cg-state cg-focus cg-hit -mx-2 inline-flex min-h-12 flex-none items-center gap-1.5 rounded-full px-2 text-body-small text-on-surface-variant"
     >
       <Icon name={glyph} size={18} />
-      <span className="sr-only">{label}</span>
       {value !== undefined && (
         <span className="text-on-surface [font-weight:500]" {...testAttributes(part(node, "value"))}>
           {value}
