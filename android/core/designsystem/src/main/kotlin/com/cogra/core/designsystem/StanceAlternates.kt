@@ -61,9 +61,11 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -195,14 +197,17 @@ private fun AlternatesBody(
                 targetLabel = targetLabel,
             )
             AlternateInputs(typed, onSwap, state.pick, onPick, axes, testTagPrefix)
-            StanceLandingLine(
-                landing = state.landing,
-                testTagPrefix = testTagPrefix,
-                axes = axes,
-                zeroWords = zeroWords,
-                borrowed = state.borrowed,
-                onExplainZero = { onExplain(AlternatesExplaining.ZERO) },
-            )
+            // The write rule's notice stands where the landing line was (PadWriteRule.md).
+            if (!state.writeRule) {
+                StanceLandingLine(
+                    landing = state.landing,
+                    testTagPrefix = testTagPrefix,
+                    axes = axes,
+                    zeroWords = zeroWords,
+                    borrowed = state.borrowed,
+                    onExplainZero = { onExplain(AlternatesExplaining.ZERO) },
+                )
+            }
         }
     }
 }
@@ -228,8 +233,15 @@ private fun AlternatesHeader(title: String, helpLabel: String, onHelp: () -> Uni
 }
 
 /**
- * The fault when one stands, then one row: `Walk it back` on the left where
- * there is something to walk back, `Cancel` and `Sign it` on the right.
+ * THE COMMIT WAITS FOR ITS SIGNATURE, AS SET DOES (round 21, seam 245 ask 14;
+ * PadFailed.md, PadWriteRule.md). The fault when one stands, then one row:
+ * `Walk it back` on the left where there is something to walk back, `Cancel`
+ * and `Sign it` on the right. Past 200ms `Sign it` reads `Signing…` and
+ * refuses a second press — inert, never dimmed — with `Cancel` live; a
+ * signing that did not go through keeps the dialog at the pick with `That
+ * didn't send. Try again.` above the row and an outlined `Retry` in `Sign
+ * it`'s slot. The write rule's no puts the pad's notice and `Not now` where
+ * the landing line and the row were — no Retry, no Sign it, no Cancel.
  */
 @Composable
 private fun AlternatesActions(
@@ -240,22 +252,34 @@ private fun AlternatesActions(
     zeroWords: StanceZeroWords,
     testTagPrefix: String,
 ) {
-    if (state.failed && !state.needsKey) {
+    if (state.writeRule) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
+            modifier = Modifier.padding(top = Space.x4),
+        ) {
+            WriteRuleNotice(onNotNow = onCancel, testTagPrefix = testTagPrefix, padNode = null)
+        }
+        return
+    }
+    val failed = state.failed && !state.needsKey && !state.busy
+    if (failed) {
         Text(
             text = stringResource(R.string.stance_pad_failed),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier
                 .padding(top = Space.x4)
+                .semantics { liveRegion = LiveRegionMode.Assertive }
                 .testTag("${testTagPrefix}_stance_failed"),
         )
     }
+    val slow = rememberSlowSignature(state.busy)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = Space.x6),
+            .padding(top = if (failed) Space.x3 else Space.x6),
     ) {
         if (onOpenSeverance != null) {
             Box(Modifier.weight(1f)) {
@@ -278,10 +302,14 @@ private fun AlternatesActions(
             testTag = "${testTagPrefix}_stance_cancel",
         )
         CograButton(
-            text = stringResource(R.string.stance_alternates_commit),
-            onClick = onCommit,
+            text = when {
+                state.busy && slow -> stringResource(R.string.row_line_signing)
+                failed -> stringResource(R.string.stance_retry)
+                else -> stringResource(R.string.stance_alternates_commit)
+            },
+            onClick = { if (!state.busy) onCommit() },
+            kind = if (failed) ButtonKind.Outlined else ButtonKind.Filled,
             size = ButtonSize.Compact,
-            enabled = !state.busy,
             testTag = "${testTagPrefix}_stance_set",
         )
     }

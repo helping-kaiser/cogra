@@ -1215,7 +1215,7 @@ private fun SetButton(state: StanceControlState, explaining: Boolean, onCommit: 
  * once meets the same answer.
  */
 @Composable
-private fun WriteRuleNotice(onNotNow: () -> Unit, testTagPrefix: String, padNode: DataNode?) {
+internal fun WriteRuleNotice(onNotNow: () -> Unit, testTagPrefix: String, padNode: DataNode?) {
     var explaining by remember { mutableStateOf(false) }
     NoticePanel(
         title = stringResource(R.string.stance_write_rule_title),

@@ -1351,6 +1351,49 @@ class StancePadTest {
         assertThat(typedPick("Infinity")).isNull()
     }
 
+    // PadFailed.md (round 21): the alternates' commit waits as Set does.
+    @Test
+    fun theAlternatesCommitReadsSigningPast200msInertNeverDimmed() {
+        compose.mainClock.autoAdvance = false
+        show(alternates.copy(standing = heldStanding, busy = true))
+        compose.mainClock.advanceTimeBy(SETTING_AFTER_MS - 50)
+        compose.onNodeWithTag("${TAG}_stance_set").assertTextEquals("Sign it").assertIsEnabled()
+        compose.mainClock.advanceTimeBy(100)
+        compose.onNodeWithTag("${TAG}_stance_set").assertTextEquals("Signing…").assertIsEnabled().performClick()
+        assertThat(committed).isEqualTo(0)
+        // Cancel stays live: it closes the dialog, never the act.
+        compose.onNodeWithTag("${TAG}_stance_cancel").assertIsEnabled().performClick()
+        assertThat(dismissed).isEqualTo(1)
+    }
+
+    // PadFailed.md (round 21): a failed alternates signing stays up at the pick.
+    @Test
+    fun aFailedAlternatesSigningKeepsTheDialogWithTheFaultAndRetry() {
+        show(alternates.copy(standing = heldStanding, failed = true))
+        compose.onNodeWithTag("${TAG}_stance_failed").assertTextEquals("That didn't send. Try again.")
+        compose.onNodeWithTag("${TAG}_stance_set").assertTextEquals("Retry").performClick()
+        assertThat(committed).isEqualTo(1)
+        compose.onNodeWithTag("${TAG}_stance_cancel").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_sever").assertExists()
+    }
+
+    // PadWriteRule.md (round 21): the write rule's notice where the landing line
+    // and the action row were, with Not now; no Retry, Sign it, Cancel or Walk it back.
+    @Test
+    fun theWriteRulesNoInTheAlternatesIsTheNoticeAndNotNow() {
+        show(alternates.copy(standing = heldStanding, writeRule = true))
+        compose.onNodeWithTag("${TAG}_stance_write_rule").assertExists()
+        compose.onNodeWithText("You can't sign right now").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_write_rule_help").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_landing").assertDoesNotExist()
+        for (gone in listOf("set", "cancel", "sever")) {
+            compose.onNodeWithTag("${TAG}_stance_$gone").assertDoesNotExist()
+        }
+        compose.onNodeWithTag("${TAG}_stance_not_now").performScrollTo().performClick()
+        assertThat(dismissed).isEqualTo(1)
+        assertThat(committed).isEqualTo(0)
+    }
+
     @Test
     fun theAlternatesRowIsWalkItBackCancelAndSignIt() {
         show(alternates.copy(standing = heldStanding))
