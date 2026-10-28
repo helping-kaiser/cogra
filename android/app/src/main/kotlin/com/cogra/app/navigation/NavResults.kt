@@ -10,6 +10,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.cogra.domain.media.CropWindow
+import com.cogra.feature.content.CommentsReturn
 import com.cogra.feature.content.CommentsScroll
 
 /**
@@ -82,7 +83,7 @@ internal val commentParentKey = NavResultKey<String?>("comment_parent", null)
  */
 internal val commentsPlaceKey = NavResultKey<IntArray?>("comments_place", null)
 
-internal fun IntArray?.asCommentsScroll(): CommentsScroll? =
+private fun IntArray?.asCommentsScroll(): CommentsScroll? =
     this?.takeIf { it.size == 2 }?.let { CommentsScroll(it[0], it[1]) }
 
 
@@ -155,4 +156,40 @@ internal fun <T> NavController.reportToCurrent(key: NavResultKey<T>, value: T) {
 internal inline fun <reified R : Any, T> NavController.reportTo(key: NavResultKey<T>, value: T) {
     val entry = runCatching { getBackStackEntry<R>() }.getOrNull() ?: return
     entry.savedStateHandle[key.name] = value
+}
+
+/**
+ * The comments sheet's return as one surface reads it: what landed, the
+ * branch it landed under, and where the reader was when the sheet gave way.
+ *
+ * Every surface that raises the thread — the feed, the detail, Saved —
+ * reads the same three results and reports the same place on the way out,
+ * because the return belongs to the sheet and not to the surface under it.
+ */
+internal class ThreadReturn(
+    val value: CommentsReturn,
+    val onConsumed: () -> Unit,
+    val onDepart: (CommentsScroll) -> Unit,
+)
+
+@Composable
+internal fun NavBackStackEntry.threadReturn(navController: NavController): ThreadReturn {
+    val (commentSigned, consumeCommentSigned) = navResult(commentSignedKey)
+    val (commentParent, consumeCommentParent) = navResult(commentParentKey)
+    val (commentsPlace, consumeCommentsPlace) = navResult(commentsPlaceKey)
+    return ThreadReturn(
+        value = CommentsReturn(
+            scroll = commentsPlace.asCommentsScroll(),
+            landed = commentSigned,
+            parentCommentId = commentParent,
+        ),
+        onConsumed = {
+            consumeCommentSigned()
+            consumeCommentParent()
+            consumeCommentsPlace()
+        },
+        onDepart = { scroll ->
+            navController.reportToCurrent(commentsPlaceKey, intArrayOf(scroll.index, scroll.offset))
+        },
+    )
 }
