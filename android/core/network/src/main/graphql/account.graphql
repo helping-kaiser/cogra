@@ -262,68 +262,6 @@ query EmailChangeLinkCheck($token: String!) {
   }
 }
 
-query InviteLinks {
-  me {
-    id
-    inviteLinks(first: 50) {
-      edges {
-        node {
-          id
-          singleUse
-          createdAt
-          expiresAt
-          revokedAt
-          applications(first: 50) {
-            edges {
-              node {
-                ...ApplicationFields
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-mutation CreateInviteLink($input: CreateInviteLinkInput!) {
-  createInviteLink(input: $input) {
-    inviteLink {
-      id
-      singleUse
-      createdAt
-      expiresAt
-      revokedAt
-    }
-    userErrors {
-      ...UserErrorFields
-    }
-  }
-}
-
-mutation RevokeInviteLink($input: RevokeInviteLinkInput!) {
-  revokeInviteLink(input: $input) {
-    inviteLink {
-      id
-      revokedAt
-    }
-    userErrors {
-      ...UserErrorFields
-    }
-  }
-}
-
-mutation ApproveApplicants($input: ApproveApplicantsInput!) {
-  approveApplicants(input: $input) {
-    writes {
-      ...PreparedWriteFields
-    }
-    userErrors {
-      ...UserErrorFields
-    }
-  }
-}
-
 # Account deletion (auth.md "Self-service deletion"). The member path
 # mails a link and schedules nothing; `accountDeletion` is non-null only
 # once a deletion is confirmed — and on a request made while one already

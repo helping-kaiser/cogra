@@ -34,7 +34,6 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.HashtagView
 import com.cogra.domain.InviteCheck
-import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.Landing
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.LoginGrant
@@ -516,17 +515,6 @@ open class ThrowingAccountRepository : AccountRepository {
     override suspend fun requestPasswordReset(email: String): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun confirmPasswordReset(resetToken: String, newPassword: String): Outcome<Unit> =
         throw UnsupportedOperationException()
-    override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = throw UnsupportedOperationException()
-    override suspend fun createInviteLink(
-        expiresAt: Instant,
-        singleUse: Boolean,
-    ): Outcome<InviteLinkInfo> = throw UnsupportedOperationException()
-    override suspend fun revokeInviteLink(id: String): Outcome<Unit> = throw UnsupportedOperationException()
-    override suspend fun approveApplication(
-        applicationId: String,
-        pDirected: Double,
-        pInterest: Double,
-    ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
 }
 
 open class ThrowingSessionRepository : SessionRepository {

@@ -21,7 +21,6 @@ import com.cogra.crypto.Family
 import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
-import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.ApplicationView
 import com.cogra.domain.CograLog
 import com.cogra.domain.CommentView
@@ -198,17 +197,6 @@ internal fun ApplicationFields.toView(): ApplicationView = ApplicationView(
     keyAttached = keyAttached,
     approvedAt = approvedAt,
     landedAt = landedAt,
-)
-
-/** The same row, as the inviter's queue shows it. */
-internal fun ApplicationFields.toInfo(): ApplicationInfo = ApplicationInfo(
-    id = id,
-    handle = handle,
-    emailVerified = emailVerified,
-    keyAttached = keyAttached,
-    approvedAt = approvedAt,
-    landedAt = landedAt,
-    graphId = graphId,
 )
 
 /** An unknown status hides the value, like REDACTED. */
