@@ -479,6 +479,8 @@ private fun ProfileList(
                     }
                 },
                 under = { savedHost?.comfortLine(profile.id)?.let { RowLine(it, "profile_row_line") } },
+                figures = state.figures,
+                own = state.own,
             )
         }
         item(key = "tabs") { ChronicleTabRow(state.filter, actions.onFilterChange) }

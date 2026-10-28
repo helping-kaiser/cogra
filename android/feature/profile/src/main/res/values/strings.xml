@@ -47,6 +47,14 @@
     <string name="profile_more_failed">Couldn\'t load more</string>
     <string name="profile_more_retry">Retry</string>
 
+    <!-- The header's figures (`ProfileHeader.jsx`; copy-voice, the profile):
+         each labelled, never merged, the reader's own reading `you`. -->
+    <string name="profile_figure_posts">Posts</string>
+    <string name="profile_figure_on_them">Opinions on them</string>
+    <string name="profile_figure_on_you">Opinions on you</string>
+    <string name="profile_figure_by_them">Opinions by them</string>
+    <string name="profile_figure_by_you">Opinions by you</string>
+
     <!-- The chronicle's verbs, one per family it lists (copy-voice, the
          profile; round 22, seam 245 ask 10 — merged under the autonomy
          order, review pending). `Did something` stays unblessed. -->

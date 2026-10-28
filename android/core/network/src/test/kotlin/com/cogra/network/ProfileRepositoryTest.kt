@@ -108,4 +108,24 @@ class ProfileRepositoryTest {
         assertThat(untag.about).isEqualTo(RecordAbout.POST)
         assertThat(joined.act).isEqualTo(RecordAct.GENESIS)
     }
+
+    // ProfileHeader's figures (Q35, closed toward the drawn figures): three
+    // record counts, each a `totalCount` read with `first: 0`.
+    @Test
+    fun theFiguresAreTheThreeRecordCounts() = runTest {
+        enqueue(
+            """{"data":{"user":{"__typename":"User","id":"u1",
+               "posts":{"__typename":"RecordConnection","totalCount":5},
+               "opinionsOn":{"__typename":"RecordConnection","totalCount":9},
+               "opinionsBy":{"__typename":"RecordConnection","totalCount":null}}}}""",
+        )
+        val figures = (repo().figures("u1") as Outcome.Success).value
+        assertThat(figures.posts).isEqualTo(5)
+        assertThat(figures.opinionsOn).isEqualTo(9)
+        // A count the server did not serve stays unknown, never a false zero.
+        assertThat(figures.opinionsBy).isNull()
+        val sent = server.takeRequest().body.readUtf8()
+        assertThat(sent).containsMatch("genesis:\\s*true")
+        assertThat(sent).containsMatch("toKind:\\s*USER")
+    }
 }

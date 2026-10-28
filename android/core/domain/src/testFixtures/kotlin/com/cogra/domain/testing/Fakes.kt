@@ -48,6 +48,7 @@ import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.ReferenceCandidateView
@@ -911,6 +912,13 @@ open class ThrowingProfileRepository : ProfileRepository {
         first: Int,
         after: String?,
     ): Outcome<Page<RecordRow>> = throw UnsupportedOperationException()
+
+    /**
+     * The header reads no figures until a test scripts them: a figure the
+     * page cannot read is left out, never a crash.
+     */
+    override suspend fun figures(actorId: String): Outcome<ProfileFigures> =
+        Outcome.Failed(UnsupportedOperationException("figures not scripted"))
     override suspend fun prepareProfileUpdate(
         displayName: String,
         bio: String?,

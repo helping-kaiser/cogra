@@ -863,6 +863,18 @@ data class ProfileView(
     val deleted: Boolean get() = displayName.status == FieldStatus.REDACTED
 }
 
+/**
+ * THE PROFILE HEADER'S FIGURES (design/readme.md §7 `ProfileHeader`;
+ * open-questions Q35, closed 2026-10-28 toward the drawn figures, jakob's
+ * confirmation pending). Each counts RECORDS, never a fold: [posts] the
+ * genesis Publish records of the person's posts — never an edit; [opinionsOn]
+ * the Opinion records aimed at the person; [opinionsBy] the Opinion records
+ * they gave toward people. A revision is one more record, so it counts.
+ * A figure the server did not serve is null, and the header draws it not
+ * at all — never a false zero (the master draws each figure it is handed).
+ */
+data class ProfileFigures(val posts: Int?, val opinionsOn: Int?, val opinionsBy: Int?)
+
 /** A tappable link from a chronicle row into the content it touched. */
 sealed interface RecordLink {
     /** The row opens this post. */

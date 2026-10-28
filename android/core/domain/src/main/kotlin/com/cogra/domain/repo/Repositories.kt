@@ -24,6 +24,7 @@ import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.ReferenceCandidateView
@@ -488,6 +489,13 @@ interface ProfileRepository {
         first: Int,
         after: String?,
     ): Outcome<Page<RecordRow>>
+
+    /**
+     * The header's three figures (`ProfileFigures`; open-questions Q35,
+     * closed toward the drawn figures, jakob's confirmation pending): record
+     * counts, each labelled and never merged.
+     */
+    suspend fun figures(actorId: String): Outcome<ProfileFigures>
 
     /**
      * The full intended field set — the edit form holds every field.

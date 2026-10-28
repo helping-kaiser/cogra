@@ -25,6 +25,7 @@ import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordAbout
 import com.cogra.domain.RecordAct
@@ -81,6 +82,7 @@ import com.cogra.network.graphql.PreparePostEditMutation
 import com.cogra.network.graphql.PreparePostMutation
 import com.cogra.network.graphql.PrepareProfileUpdateMutation
 import com.cogra.network.graphql.PrepareStanceMutation
+import com.cogra.network.graphql.ProfileFiguresQuery
 import com.cogra.network.graphql.RegisterMutation
 import com.cogra.network.graphql.RequestPasswordResetMutation
 import com.cogra.network.graphql.ResendVerificationEmailMutation
@@ -989,6 +991,21 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
                 items = data.records.edges.map { it.node.toRow() },
                 endCursor = data.records.pageInfo.endCursor,
                 hasNextPage = data.records.pageInfo.hasNextPage,
+            )
+        }
+    }
+
+    // Each figure is a `RecordConnection.totalCount` read with `first: 0` —
+    // the number without a page (`ProfileFigures`, open-questions Q35).
+    override suspend fun figures(actorId: String): Outcome<ProfileFigures> = guard.run {
+        client.query(ProfileFiguresQuery(actorId)).fetch().map { data ->
+            // A count the server did not serve stays unknown — the header
+            // then draws no figure for it rather than a false zero.
+            val user = data.user
+            ProfileFigures(
+                posts = user?.posts?.totalCount,
+                opinionsOn = user?.opinionsOn?.totalCount,
+                opinionsBy = user?.opinionsBy?.totalCount,
             )
         }
     }

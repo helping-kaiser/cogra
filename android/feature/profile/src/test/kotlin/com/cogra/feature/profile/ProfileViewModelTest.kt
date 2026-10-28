@@ -6,6 +6,7 @@ import com.cogra.domain.ActorRef
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
+import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.UserProfile
@@ -41,6 +42,13 @@ class ProfileViewModelTest {
         var rows: Outcome<Page<RecordRow>> =
             Outcome.Success(Page(emptyList(), endCursor = null, hasNextPage = false))
         val rowRequests = mutableListOf<Family?>()
+        var figures: Outcome<ProfileFigures> = Outcome.Failed(IOException("not scripted"))
+        val figureRequests = mutableListOf<String>()
+
+        override suspend fun figures(actorId: String): Outcome<ProfileFigures> {
+            figureRequests += actorId
+            return figures
+        }
 
         override suspend fun myProfile(): Outcome<ProfileView?> = mine
 
@@ -81,6 +89,23 @@ class ProfileViewModelTest {
 
     @After
     fun resetDispatcher() = Dispatchers.resetMain()
+
+    // ProfileHeader (Q35, closed toward the drawn figures): the header reads the
+    // three record counts for the profile it shows, and a failed read keeps none.
+    @Test
+    fun theHeaderReadsItsFiguresForTheProfileItShows() = runTest(dispatcher) {
+        profiles.figures = Outcome.Success(ProfileFigures(posts = 5, opinionsOn = 9, opinionsBy = 4))
+        val vm = viewModel()
+        vm.start(null)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.figureRequests).containsExactly("u1")
+        assertThat(vm.state.value.figures).isEqualTo(ProfileFigures(5, 9, 4))
+
+        profiles.figures = Outcome.Failed(IOException("no route"))
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.figures).isEqualTo(ProfileFigures(5, 9, 4))
+    }
 
     @Test
     fun theOwnProfileLoadsAndLandsOnEverything() = runTest(dispatcher) {
