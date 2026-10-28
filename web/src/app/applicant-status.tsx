@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { resendVerificationEmail } from "@/lib/api/onboarding-api";
+import { ApplicationCard, type ApplicationSurface } from "./application-card";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
@@ -18,9 +19,14 @@ import { Icon } from "@/lib/ui/icons";
 import { pillClassName } from "@/lib/ui2/pill-button";
 import { useOptionalStanceData } from "@/lib/stance/provider";
 
-export function ApplicantStatus({ progress }: { progress: RegistrationProgress | null }) {
-  const [waitingHintDismissed, setWaitingHintDismissed] = useState(false);
-
+export function ApplicantStatus({
+  progress,
+  surface = "feed",
+}: {
+  progress: RegistrationProgress | null;
+  /** Which screen the stack rides: the feed, or the reader's own profile. */
+  surface?: ApplicationSurface;
+}) {
   if (progress === null) {
     return (
       <p role="status" data-testid="home_status_loading" className="text-body-medium text-on-surface-variant">
@@ -71,9 +77,13 @@ export function ApplicantStatus({ progress }: { progress: RegistrationProgress |
           {!keyAttached && keyOnDevice && <KeyElsewhereCard />}
           {/* keyAttached && !keyOnDevice: the restore ask rides the
               screen's collapsing top, not this stack. */}
-          {keyAttached && keyOnDevice && emailVerified && !waitingHintDismissed && (
-            <WaitingHint onDismiss={() => setWaitingHintDismissed(true)} />
-          )}
+          {/* THE APPLICATION CARD (ApplicantWaiting, ApplicantRejected): waiting
+              once every owed step is done, closed whatever they are. */}
+          <ApplicationCard
+            surface={surface}
+            stepsDone={keyAttached && keyOnDevice && emailVerified}
+            refreshKey={progress}
+          />
         </div>
       );
     }
@@ -228,20 +238,3 @@ export function RestoreCard() {
     </section>
   );
 }
-
-function WaitingHint({ onDismiss }: { onDismiss: () => void }) {
-  return (
-    <Card>
-      <h2 data-testid="home_waiting" className="text-title-medium">
-        All set — waiting on your inviter
-      </h2>
-      <p className="text-body-medium text-on-surface-variant">
-        Both proofs are in. Your inviter approves your application next; meanwhile, look around.
-      </p>
-      <Button testId="home_waiting_dismiss" variant="outline" size="sm" selfStart onClick={onDismiss}>
-        Got it
-      </Button>
-    </Card>
-  );
-}
-
