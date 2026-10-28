@@ -1422,6 +1422,26 @@ const citedRow = (count) => ({
   openLabel: `Manage the ${count} ${count === 1 ? "citation" : "citations"}`,
 });
 
+/* THE ONE STAGED CITATION, READ BACK. It carries its own pair, so the row is
+   two lines: what is cited, and what signing it says about the citer. ONE
+   FACTORY WRITES IT FOR BOTH SEALS THAT DRAW IT (seam 245, ask 4) — the
+   post's seal and its key-absent twin: the missing key stops the signing,
+   not the read-back, so the twin reads the row exactly as the seal does, name
+   over pair, and the two cannot drift apart again. `fault` is the seal's
+   unlanded-citation line. */
+const citedOneRow = (fault) => ({
+  label: "References",
+  countNoun: "citation",
+  value: (
+    <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The long way home — @ada</span>
+      <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
+    </span>
+  ),
+  count: "1",
+  ...(fault ? { fault } : null),
+});
+
 /* ── THE SEAL'S TAGS ROW, IN ITS TWO READINGS (jakob's ruling 2026-09-15) ────
    THE CHIPS ARE THE READING WHILE THEY FIT. Two short names are shorter than
    the sentence that would count them, and a seal is a read-back: what you
@@ -1620,21 +1640,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
                 },
             cited > 1
               ? citedRow(cited)
-              : {
-                  label: "References",
-                  countNoun: "citation",
-                  /* The staged citation carries its own pair, so the row is two
-                     lines: what is cited, and what signing it says about the
-                     citer. */
-                  value: (
-                    <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The long way home — @ada</span>
-                      <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
-                    </span>
-                  ),
-                  count: "1",
-                  ...(state === "refused" ? { fault: { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } } : null),
-                },
+              : citedOneRow(state === "refused" ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined),
           ]}
           total={`${1 + tags.length + cited} things, signed together`}
           note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}

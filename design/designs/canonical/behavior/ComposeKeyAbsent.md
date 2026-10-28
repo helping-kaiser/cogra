@@ -2,6 +2,8 @@
 
 ALWAYS every act the signature would commit is still read back in the acts card
 
+ALWAYS the References row reads the one staged citation by its name over its pair, as the seal reads it
+
 ALWAYS no Sign and publish stands on the seal GIVEN the signing key is not on this device
 
 ALWAYS the key notice wears the tertiary container, never the error colour

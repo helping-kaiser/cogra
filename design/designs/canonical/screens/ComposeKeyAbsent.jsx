@@ -1,7 +1,10 @@
 /* THE SEAL WITH NO KEY ON THIS BROWSER (legacy conversion, the conformance
    round). Everything the signature would commit is still read back — the draft
    is not the thing that is missing — and the one act the surface cannot
-   perform is replaced by the way to get it back.
+   perform is replaced by the way to get it back. The References row is the
+   seal's own (`citedOneRow`, seam 245 ask 4): the citation's name over the
+   pair signing it carries.
+
    THE NOTICE IS `NoticePanel`, the tertiary notice's master, at the seal's
    `medium` corner beside the acts card: a `tertiary-container` panel, and the
    restore button in `Button`'s `inverse` — the filled button that takes the
@@ -43,7 +46,7 @@ export function Screen() {
               count: "2",
               countNoun: "tag",
             },
-            { label: "References", value: "The long way home — @ada", count: "1", countNoun: "citation" },
+            citedOneRow(),
           ]}
           total="4 things, signed together"
           note="They land together, or none does."
