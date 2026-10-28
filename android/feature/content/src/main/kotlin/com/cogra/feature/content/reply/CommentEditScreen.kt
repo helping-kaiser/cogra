@@ -132,63 +132,81 @@ fun CommentEditRoute(
         uri?.let { viewModel.onPickCover(it.toString()) }
     }
 
-    CommentEditScreen(
-        state = state,
-        actions = CommentEditActions(
-            onBodyChange = viewModel::onBodyChange,
+    val actions = viewModel.coreActions(onLeave)
+        .withSections(viewModel)
+        .withMedia(
+            viewModel,
             onOpenPicker = {
                 picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             },
-            onRemovePickAt = viewModel::onRemovePickAt,
-            onDismissRefusal = viewModel::onDismissRefusal,
-            onRetryUploads = viewModel::onRetryUploads,
-            onRemoveFailed = viewModel::onRemoveFailed,
             onPickCover = {
                 coverPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             },
-            onRemoveCover = viewModel::onRemoveCover,
-            onCropBack = viewModel::onCropBack,
-            onCoverCropNext = viewModel::onCoverCropDone,
-            onCoverCropChanged = viewModel::onCoverCropChanged,
-            onDescribePictures = viewModel::onDescribeFirst,
-            onAltTextChange = viewModel::onAltTextChange,
-            onOpenActs = viewModel::onOpenActs,
-            onOpenSensitive = viewModel::onOpenSensitive,
-            onSensitiveChange = viewModel::onSensitiveChange,
-            onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
-            onCloseSheet = viewModel::onCloseSheet,
-            onOpenHelp = viewModel::onOpenHelp,
-            onCloseHelp = viewModel::onCloseHelp,
-            onSign = viewModel::onSign,
-            // The edit keeps no draft, so leaving discards — and an edit
-            // that changed something is asked before it goes.
-            onLeave = { if (viewModel.onLeaveRequested()) onLeave() },
-            onKeepWriting = viewModel::onKeepWriting,
-            onDiscard = onLeave,
-            onDiscardAsked = viewModel::onDiscardAsked,
-            onNotNow = viewModel::onNotNow,
-            onTagInputChange = viewModel::onTagInputChange,
-            onAddTag = viewModel::onAddTag,
-            onRemoveTag = viewModel::onRemoveTag,
-            onTuneTag = viewModel::onTuneTag,
-            onDoneTuningTag = viewModel::onDoneTuningTag,
-            onTagRelevanceChange = viewModel::onTagRelevanceChange,
-            onTagConfidenceChange = viewModel::onTagConfidenceChange,
-            onOpenFinder = viewModel::onOpenFinder,
-            onCloseFinder = viewModel::onCloseFinder,
-            onFinderQueryChange = viewModel::onFinderQueryChange,
-            onPickReference = viewModel::onPickReference,
-            onRemoveReference = viewModel::onRemoveReference,
-            onTuneReference = viewModel::onTuneReference,
-            onDoneTuningReference = viewModel::onDoneTuningReference,
-            onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
-            onReferenceSupportChange = viewModel::onReferenceSupportChange,
-            onUndoTagWithdrawal = viewModel::onUndoTagWithdrawal,
-            onUndoReferenceWithdrawal = viewModel::onUndoReferenceWithdrawal,
-        ),
-        modifier = modifier,
-    )
+        )
+    CommentEditScreen(state = state, actions = actions, modifier = modifier)
 }
+
+/** The edit's words, sheets, leaving and signing. */
+private fun CommentEditViewModel.coreActions(onLeave: () -> Unit) = CommentEditActions(
+    onBodyChange = this::onBodyChange,
+    onOpenActs = this::onOpenActs,
+    onOpenSensitive = this::onOpenSensitive,
+    onSensitiveChange = this::onSensitiveChange,
+    onSensitiveReasonChange = this::onSensitiveReasonChange,
+    onCloseSheet = this::onCloseSheet,
+    onOpenHelp = this::onOpenHelp,
+    onCloseHelp = this::onCloseHelp,
+    onSign = this::onSign,
+    // The edit keeps no draft, so leaving discards — and an edit that
+    // changed something is asked before it goes.
+    onLeave = { if (onLeaveRequested()) onLeave() },
+    onKeepWriting = this::onKeepWriting,
+    onDiscard = onLeave,
+    onDiscardAsked = this::onDiscardAsked,
+    onNotNow = this::onNotNow,
+)
+
+/** The tags and citations, their own acts beside the record. */
+private fun CommentEditActions.withSections(viewModel: CommentEditViewModel) = copy(
+    onTagInputChange = viewModel::onTagInputChange,
+    onAddTag = viewModel::onAddTag,
+    onRemoveTag = viewModel::onRemoveTag,
+    onTuneTag = viewModel::onTuneTag,
+    onDoneTuningTag = viewModel::onDoneTuningTag,
+    onTagRelevanceChange = viewModel::onTagRelevanceChange,
+    onTagConfidenceChange = viewModel::onTagConfidenceChange,
+    onOpenFinder = viewModel::onOpenFinder,
+    onCloseFinder = viewModel::onCloseFinder,
+    onFinderQueryChange = viewModel::onFinderQueryChange,
+    onPickReference = viewModel::onPickReference,
+    onRemoveReference = viewModel::onRemoveReference,
+    onTuneReference = viewModel::onTuneReference,
+    onDoneTuningReference = viewModel::onDoneTuningReference,
+    onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
+    onReferenceSupportChange = viewModel::onReferenceSupportChange,
+    onUndoTagWithdrawal = viewModel::onUndoTagWithdrawal,
+    onUndoReferenceWithdrawal = viewModel::onUndoReferenceWithdrawal,
+)
+
+/** The comment's pictures or clip: the add path, the uploads' faults, the cover and its crop. */
+private fun CommentEditActions.withMedia(
+    viewModel: CommentEditViewModel,
+    onOpenPicker: () -> Unit,
+    onPickCover: () -> Unit,
+) = copy(
+    onOpenPicker = onOpenPicker,
+    onRemovePickAt = viewModel::onRemovePickAt,
+    onDismissRefusal = viewModel::onDismissRefusal,
+    onRetryUploads = viewModel::onRetryUploads,
+    onRemoveFailed = viewModel::onRemoveFailed,
+    onPickCover = onPickCover,
+    onRemoveCover = viewModel::onRemoveCover,
+    onCropBack = viewModel::onCropBack,
+    onCoverCropNext = viewModel::onCoverCropDone,
+    onCoverCropChanged = viewModel::onCoverCropChanged,
+    onDescribePictures = viewModel::onDescribeFirst,
+    onAltTextChange = viewModel::onAltTextChange,
+)
 
 /** Everything the comment edit's surface can ask for, in one value. */
 data class CommentEditActions(

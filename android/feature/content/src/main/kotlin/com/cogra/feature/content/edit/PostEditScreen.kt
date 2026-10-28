@@ -128,50 +128,10 @@ fun PostEditRoute(
     val coverPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let { viewModel.onPickCover(it.toString()) }
     }
-    PostEditScreen(
-        state = state,
-        actions = PostEditActions(
-            onTitleChange = viewModel::onTitleChange,
-            onDescriptionChange = viewModel::onDescriptionChange,
-            onBodyChange = viewModel::onBodyChange,
-            onOpenPicked = viewModel::onOpenPicked,
-            onMovePicture = viewModel::onMovePicture,
-            onRemovePicture = viewModel::onRemovePicture,
-            onDescribePicture = viewModel::onDescribePicture,
-            onAltTextChange = viewModel::onAltTextChange,
-            onOpenSensitive = viewModel::onOpenSensitive,
-            onSensitiveChange = viewModel::onSensitiveChange,
-            onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
-            onOpenActs = viewModel::onOpenActs,
-            onCloseSheet = viewModel::onCloseSheet,
-            onSign = viewModel::onSign,
-            onLeave = { if (viewModel.onLeaveRequested()) onBack() },
-            onKeepWriting = viewModel::onKeepWriting,
-            onDiscard = onBack,
-            onWriteRuleNotNow = viewModel::onWriteRuleNotNow,
-            onTagInputChange = viewModel::onTagInputChange,
-            onAddTag = viewModel::onAddTag,
-            onRemoveTag = viewModel::onRemoveTag,
-            onTuneTag = viewModel::onTuneTag,
-            onDoneTuningTag = viewModel::onDoneTuningTag,
-            onTagRelevanceChange = viewModel::onTagRelevanceChange,
-            onTagConfidenceChange = viewModel::onTagConfidenceChange,
-            onUndoTagWithdrawal = viewModel::onUndoTagWithdrawal,
-            onOpenFinder = viewModel::onOpenFinder,
-            onCloseFinder = viewModel::onCloseFinder,
-            onFinderQueryChange = viewModel::onFinderQueryChange,
-            onPickReference = viewModel::onPickReference,
-            onRemoveReference = viewModel::onRemoveReference,
-            onTuneReference = viewModel::onTuneReference,
-            onDoneTuningReference = viewModel::onDoneTuningReference,
-            onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
-            onReferenceSupportChange = viewModel::onReferenceSupportChange,
-            onUndoReferenceWithdrawal = viewModel::onUndoReferenceWithdrawal,
-            onOpenBackingPad = viewModel::onOpenBackingPad,
-            onBackingPickChange = viewModel::onBackingPickChange,
-            onWalkBack = viewModel::onWalkBack,
-            onSetBacking = viewModel::onSetBacking,
-            onCancelBackingPad = viewModel::onCancelBackingPad,
+    val actions = viewModel.coreActions(onBack)
+        .withSections(viewModel)
+        .withMedia(
+            viewModel,
             onAddMedia = {
                 addPicker.launch(
                     PickVisualMediaRequest(
@@ -185,25 +145,82 @@ fun PostEditRoute(
                     ),
                 )
             },
-            onDismissRefusal = viewModel::onDismissRefusal,
-            onRetryUploads = viewModel::onRetryUploads,
-            onRemoveFailed = viewModel::onRemoveFailed,
             onPickCover = {
                 coverPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             },
-            onRemoveCover = viewModel::onRemoveCover,
-            onCropBack = viewModel::onCropBack,
-            onCropNext = viewModel::onCropDone,
-            onCoverCropNext = viewModel::onCoverCropDone,
-            onFrameAsset = viewModel::onFrameAsset,
-            onCropShapeChange = viewModel::onCropShapeChange,
-            onCropsChanged = viewModel::onCropsChanged,
-            onCoverCropChanged = viewModel::onCoverCropChanged,
-        ),
-        keyCard = keyCard,
-        deletionBand = deletionBand,
-    )
+        )
+    PostEditScreen(state = state, actions = actions, keyCard = keyCard, deletionBand = deletionBand)
 }
+
+/** The edit's own fields, its sheets, its leaving and its signing. */
+private fun PostEditViewModel.coreActions(onBack: () -> Unit) = PostEditActions(
+    onTitleChange = this::onTitleChange,
+    onDescriptionChange = this::onDescriptionChange,
+    onBodyChange = this::onBodyChange,
+    onOpenSensitive = this::onOpenSensitive,
+    onSensitiveChange = this::onSensitiveChange,
+    onSensitiveReasonChange = this::onSensitiveReasonChange,
+    onOpenActs = this::onOpenActs,
+    onCloseSheet = this::onCloseSheet,
+    onSign = this::onSign,
+    onLeave = { if (onLeaveRequested()) onBack() },
+    onKeepWriting = this::onKeepWriting,
+    onDiscard = onBack,
+    onWriteRuleNotNow = this::onWriteRuleNotNow,
+    onOpenBackingPad = this::onOpenBackingPad,
+    onBackingPickChange = this::onBackingPickChange,
+    onWalkBack = this::onWalkBack,
+    onSetBacking = this::onSetBacking,
+    onCancelBackingPad = this::onCancelBackingPad,
+)
+
+/** The tags and citations, their own acts beside the record. */
+private fun PostEditActions.withSections(viewModel: PostEditViewModel) = copy(
+    onTagInputChange = viewModel::onTagInputChange,
+    onAddTag = viewModel::onAddTag,
+    onRemoveTag = viewModel::onRemoveTag,
+    onTuneTag = viewModel::onTuneTag,
+    onDoneTuningTag = viewModel::onDoneTuningTag,
+    onTagRelevanceChange = viewModel::onTagRelevanceChange,
+    onTagConfidenceChange = viewModel::onTagConfidenceChange,
+    onUndoTagWithdrawal = viewModel::onUndoTagWithdrawal,
+    onOpenFinder = viewModel::onOpenFinder,
+    onCloseFinder = viewModel::onCloseFinder,
+    onFinderQueryChange = viewModel::onFinderQueryChange,
+    onPickReference = viewModel::onPickReference,
+    onRemoveReference = viewModel::onRemoveReference,
+    onTuneReference = viewModel::onTuneReference,
+    onDoneTuningReference = viewModel::onDoneTuningReference,
+    onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
+    onReferenceSupportChange = viewModel::onReferenceSupportChange,
+    onUndoReferenceWithdrawal = viewModel::onUndoReferenceWithdrawal,
+)
+
+/** The body's media: the manager, the add paths, the uploads' faults, the crops and the cover. */
+private fun PostEditActions.withMedia(
+    viewModel: PostEditViewModel,
+    onAddMedia: () -> Unit,
+    onPickCover: () -> Unit,
+) = copy(
+    onOpenPicked = viewModel::onOpenPicked,
+    onMovePicture = viewModel::onMovePicture,
+    onRemovePicture = viewModel::onRemovePicture,
+    onDescribePicture = viewModel::onDescribePicture,
+    onAltTextChange = viewModel::onAltTextChange,
+    onAddMedia = onAddMedia,
+    onDismissRefusal = viewModel::onDismissRefusal,
+    onRetryUploads = viewModel::onRetryUploads,
+    onRemoveFailed = viewModel::onRemoveFailed,
+    onPickCover = onPickCover,
+    onRemoveCover = viewModel::onRemoveCover,
+    onCropBack = viewModel::onCropBack,
+    onCropNext = viewModel::onCropDone,
+    onCoverCropNext = viewModel::onCoverCropDone,
+    onFrameAsset = viewModel::onFrameAsset,
+    onCropShapeChange = viewModel::onCropShapeChange,
+    onCropsChanged = viewModel::onCropsChanged,
+    onCoverCropChanged = viewModel::onCoverCropChanged,
+)
 
 /** Everything the edit's surface can ask for, in one value rather than fifty parameters. */
 data class PostEditActions(
