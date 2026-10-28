@@ -74,6 +74,7 @@ query TraceNodes($ids: [UUID!]!, $includePending: Boolean! = true) {
     }
     ... on Comment {
       id
+      createdAt
       content {
         value
         status
