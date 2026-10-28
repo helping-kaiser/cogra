@@ -502,6 +502,7 @@ export function CommentEditView({
                     message={failedUploadLine(faulted)}
                     onRetry={onRetryUploads}
                     onRemove={onRemoveFailed}
+                    count={faulted}
                     testId="comment-edit-upload-error"
                   />
                 )}
@@ -638,6 +639,7 @@ export function CommentEditView({
                 done={0}
                 total={0}
                 failed
+                failedCount={faulted}
                 message={failedUploadLine(faulted)}
                 onRetry={onRetryUploads}
                 testId="comment-edit-gate"

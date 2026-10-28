@@ -959,7 +959,7 @@ export function ComposeWizard({
   if (!loaded) {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
-        <HeaderBar title="New post" onBack={() => router.push("/feed")} backLabel="Back to feed" />
+        <HeaderBar title="New post" onBack={() => router.push("/feed")} backLabel="Back" />
         <p className="px-6">Loading…</p>
       </main>
     );
@@ -997,7 +997,9 @@ export function ComposeWizard({
         onBack={() => {
           if (!locked) leave();
         }}
-        backLabel={state.step === "pick" ? "Back to feed" : "Back a step"}
+        // The pick step has no stage behind it: its arrow leaves toward where
+        // compose began, and is named `Back` (ComposePick.md, round 22).
+        backLabel={state.step === "pick" ? "Back" : "Back a step"}
         onLeave={() => {
           if (!locked) leaveFlow();
         }}

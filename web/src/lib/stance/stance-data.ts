@@ -113,6 +113,13 @@ export type StanceLanding = {
   readonly inert: boolean;
   /** Both axes at zero — the pick reaches severance. */
   readonly severed: boolean;
+  /**
+   * Both axes at zero over a bundle where nothing stands — no record ever, or
+   * already walked back: the empty sign's landing, never a walk-back
+   * (`StanceReadout.jsx` `localLanding`, seam 245 ask 20). It reads
+   * `Resulting opinion 🤷 Says nothing.` and asks `EmptySignConfirm`.
+   */
+  readonly empty?: boolean;
 };
 
 /** What a completed gesture staged — one record for a pick, N for a severance. */

@@ -68,9 +68,14 @@ import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
 
+/** The `from` a History tag card opens a topic with (`Back to History`). */
+const val TOPIC_FROM_HISTORY = "history"
+
 @Composable
 fun TopicRoute(
     name: String,
+    /** Where the page was opened from; `history` names the way back `Back to History` (History.md:57). */
+    from: String? = null,
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onBack: () -> Unit,
@@ -93,6 +98,7 @@ fun TopicRoute(
         onCardEdgesSeen = viewModel::onCardEdgesSeen,
         onSeenCheckpoint = viewModel::onSeenCheckpoint,
         deletionBand = deletionBand,
+        backDescription = if (from == TOPIC_FROM_HISTORY) stringResource(R.string.topics_back_history) else null,
     )
 }
 
@@ -118,6 +124,8 @@ fun TopicScreen(
     /** The reading paused: the scroll rested, or the reader left. */
     onSeenCheckpoint: () -> Unit = {},
     deletionBand: @Composable () -> Unit = {},
+    /** The back arrow's spoken name when it names an origin; null is the plain `Back`. */
+    backDescription: String? = null,
 ) {
     // SEEN, AT THE LIST: a post or comment card fully in the viewport joins
     // the reader's History, as itself (History.md). The page's own title is
@@ -146,7 +154,7 @@ fun TopicScreen(
                         IconButton(onClick = onBack, modifier = Modifier.testTag("topic_back")) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.topics_back),
+                                contentDescription = backDescription ?: stringResource(R.string.topics_back),
                             )
                         }
                     },
