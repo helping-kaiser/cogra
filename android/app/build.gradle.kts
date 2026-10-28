@@ -148,6 +148,7 @@ dependencies {
     implementation(project(":core:media"))
     implementation(project(":feature:auth"))
     implementation(project(":feature:content"))
+    implementation(project(":feature:explore"))
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:home"))
     implementation(project(":feature:invites"))

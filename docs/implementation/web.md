@@ -223,6 +223,8 @@ The route map (Android parity per surface):
 | `/posts/<id>` | public | PostDetail |
 | `/u/<handle>` | public, SSR for unfurl | Profile(handle) |
 | `/profile` | gated | Profile (the viewer's own — the shell's profile tab) |
+| `/u/<handle>/opinions` (+`?tab=by`) | public | ProfileStances — the opinions page someone's figures row opens (not built on Android) |
+| `/profile/opinions` (+`?tab=by`) | gated | ProfileStances (the viewer's own) |
 | `/profile/edit` | gated | ProfileEdit |
 | `/compose` (+`?post=<id>` opens edit mode) | gated | ComposePost |
 | `/key` | gated; key attached → redirect `/` | KeyCeremony |

@@ -74,6 +74,7 @@ export function StanceRow({
   redacted = false,
   pair,
   severed = false,
+  from,
   onOpen,
   node,
   testId,
@@ -86,6 +87,8 @@ export function StanceRow({
   redacted?: boolean;
   pair: StancePair;
   severed?: boolean;
+  /** The list the row stands on, which the opened profile's way back names (`back-origin.ts`). */
+  from?: string;
   /** Fired as the row is followed — a sheet drops itself on the way out. */
   onOpen?: () => void;
   node?: DataNode;
@@ -127,7 +130,12 @@ export function StanceRow({
     );
   }
   return (
-    <Link href={`/u/${handle}`} onClick={onOpen} className={className} {...testAttributes(node, testId)}>
+    <Link
+      href={from === undefined ? `/u/${handle}` : `/u/${handle}?from=${encodeURIComponent(from)}`}
+      onClick={onOpen}
+      className={className}
+      {...testAttributes(node, testId)}
+    >
       {inner}
     </Link>
   );

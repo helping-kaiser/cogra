@@ -67,6 +67,7 @@ import { useHostSnack } from "@/lib/saved/save-row";
 import { RowLine } from "@/lib/ui/row-line";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { backFor, personOrigin } from "@/lib/ui/back-origin";
+import { opinionsHref } from "@/lib/profile/opinions-route";
 import { notificationsHref } from "@/lib/notifications/origin";
 import { firstArrival, useBellLit, useFreshRootBell } from "@/lib/notifications/bell";
 import { ProfileMenu } from "@/lib/ui2/profile-menu";
@@ -393,6 +394,10 @@ export function ProfileScreen({
               website={profile.websiteUrl.value}
               redacted={deleted}
               figures={figures}
+              // THE FIGURES OPEN THE OPINIONS PAGE (graph.json `the figures row`),
+              // under this profile, carrying its own origin so the page lights
+              // the root this profile did and returns to it as it was opened.
+              figuresHref={opinionsHref(handle, "on", from)}
               own={own}
               // The handle repeats only where the bar does not carry it: the
               // own root's band carries none.

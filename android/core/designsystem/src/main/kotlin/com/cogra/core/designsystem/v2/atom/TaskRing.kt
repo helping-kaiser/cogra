@@ -26,7 +26,7 @@ import kotlin.math.sin
  * [colors] are the theme's three roles, read by [taskRingColors].
  */
 fun Modifier.taskRing(colors: List<Color>, shape: Shape): Modifier =
-    border(TASK_RING_WIDTH, TaskRingBrush(colors), shape)
+    border(TASK_RING_WIDTH, AngledGradientBrush(colors, TASK_RING_STOPS), shape)
 
 /** The ring's three roles, from the theme. */
 @Composable
@@ -41,11 +41,16 @@ private val TASK_RING_WIDTH = 2.dp
  * CSS's `linear-gradient(140deg, …)` on the box it is painted on: the line
  * runs through the centre at 140° clockwise from "to top", long enough that
  * the box's corners sit on its ends — `|w·sinθ| + |h·cosθ|` (CSS Images 3,
- * the gradient line).
+ * the gradient line). The ring and the hero wash (`ComingSoonCard`) both
+ * draw at the system's one angle, 140°.
  */
-private class TaskRingBrush(private val colors: List<Color>) : ShaderBrush() {
+internal class AngledGradientBrush(
+    private val colors: List<Color>,
+    private val stops: List<Float>,
+    private val degrees: Double = GRADIENT_ANGLE,
+) : ShaderBrush() {
     override fun createShader(size: Size): Shader {
-        val angle = Math.toRadians(TASK_RING_ANGLE)
+        val angle = Math.toRadians(degrees)
         val dx = sin(angle).toFloat()
         val dy = -cos(angle).toFloat()
         val half = (abs(size.width * dx) + abs(size.height * dy)) / 2f
@@ -54,15 +59,16 @@ private class TaskRingBrush(private val colors: List<Color>) : ShaderBrush() {
             from = Offset(centre.x - dx * half, centre.y - dy * half),
             to = Offset(centre.x + dx * half, centre.y + dy * half),
             colors = colors,
-            colorStops = TASK_RING_STOPS,
+            colorStops = stops,
         )
     }
 
-    override fun equals(other: Any?): Boolean = other is TaskRingBrush && other.colors == colors
+    override fun equals(other: Any?): Boolean =
+        other is AngledGradientBrush && other.colors == colors && other.stops == stops && other.degrees == degrees
 
-    override fun hashCode(): Int = colors.hashCode()
+    override fun hashCode(): Int = (colors.hashCode() * 31 + stops.hashCode()) * 31 + degrees.hashCode()
 }
 
-private const val TASK_RING_ANGLE = 140.0
+private const val GRADIENT_ANGLE = 140.0
 
 private val TASK_RING_STOPS = listOf(0f, 0.46f, 1f)

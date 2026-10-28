@@ -5,15 +5,15 @@ import { foldHeldOpinions, type OpinionRecord } from "./held-opinions";
 
 let clock = 0;
 function record(
-  authorId: string,
+  holderId: string,
   pDirected: number,
   pInterest: number,
   extra: Partial<OpinionRecord<string>> = {},
 ): OpinionRecord<string> {
   clock += 1;
   return {
-    authorId,
-    author: authorId,
+    holderId,
+    holder: holderId,
     pDirected,
     pInterest,
     severed: false,
@@ -32,7 +32,7 @@ describe("the held-opinions fold", () => {
       record("mira", 0.4, 0.05),
       record("ada", 0.3, 0.3),
     ]);
-    expect(held.map((row) => row.authorId)).toEqual(["mira", "ada"]);
+    expect(held.map((row) => row.holderId)).toEqual(["mira", "ada"]);
     expect(held[0]!.pair).toEqual({ pDirected: 0.9, pInterest: 0.25 });
   });
 
@@ -49,7 +49,7 @@ describe("the held-opinions fold", () => {
       record("wren", -0.1, -0.1, { severed: true }),
       record("mira", 0.9, 0.25),
     ]);
-    expect(held.map((row) => row.authorId)).toEqual(["mira", "sol", "wren", "juno"]);
+    expect(held.map((row) => row.holderId)).toEqual(["mira", "sol", "wren", "juno"]);
   });
 
   it("keeps a walked-back standing as a row and says it was walked back", () => {
@@ -58,7 +58,7 @@ describe("the held-opinions fold", () => {
       record("wren", -0.1, -0.1, { severed: true }),
       record("nadia", 0, 0),
     ]);
-    const byId = new Map(held.map((row) => [row.authorId, row]));
+    const byId = new Map(held.map((row) => [row.holderId, row]));
     expect(byId.get("wren")).toMatchObject({ pair: { pDirected: 0, pInterest: 0 }, severed: true });
     expect(byId.get("nadia")).toMatchObject({ pair: { pDirected: 0, pInterest: 0 }, severed: false });
   });

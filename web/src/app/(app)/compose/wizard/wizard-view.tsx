@@ -73,7 +73,7 @@ import { fateOf, sealedDraftStore, type SealedDraftStore } from "@/lib/compose/s
 import { fetchStagedWrite } from "@/lib/api/writes-api";
 import { useStageHistory } from "@/lib/compose/stage-history";
 import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
-import { findPublishedMatch, publishedOn, type MediaKey, type PublishedMatch } from "@/lib/compose/published-match";
+import { findPublishedMatch, publishedOn, type PublishedMatch } from "@/lib/compose/published-match";
 import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { PickStep } from "./pick-step";
 import { CropStep } from "./crop-step";
@@ -100,14 +100,6 @@ const NO_REFUSALS: readonly PickRefusal[] = [];
  * only the badge is poorer for it, and the server writes the authoritative
  * number.
  */
-/** The stage's landed media back out of its signature (`id:digest,…`). */
-function keysOf(signature: string): MediaKey[] {
-  return signature.split(",").map((entry) => {
-    const [mediaId = "", digest = ""] = entry.split(":");
-    return { mediaId, digest: digest === "" ? null : digest };
-  });
-}
-
 async function readClip(file: Blob): Promise<{ durationMs: number; ratio: number | null }> {
   try {
     const probe = await probeVideo(file);
@@ -651,18 +643,15 @@ export function ComposeWizard({
   // ---- the already-published marker ---------------------------------------
 
   // WHICH OF THE STAGE'S MEDIA THE SERVER KNOWS (ComposeDetailsReused.md):
-  // only a landed upload has an id and a rendition to match against the
-  // author's published posts. The signature is what the lookup is keyed by,
-  // so a result for media the stage no longer holds is simply not read.
-  const mediaKeys: MediaKey[] =
+  // only a landed upload has an id; the server resolves it to the asset it
+  // became and matches the author's published posts. The signature is what
+  // the lookup is keyed by, so a result for media the stage no longer holds
+  // is simply not read.
+  const mediaIds: string[] =
     state.mode === "media"
-      ? state.assets.flatMap((asset) =>
-          asset.upload.kind === "done"
-            ? [{ mediaId: asset.upload.mediaId, digest: asset.upload.media?.digest ?? null }]
-            : [],
-        )
+      ? state.assets.flatMap((asset) => (asset.upload.kind === "done" ? [asset.upload.mediaId] : []))
       : [];
-  const mediaSignature = mediaKeys.map((key) => `${key.mediaId}:${key.digest ?? ""}`).join(",");
+  const mediaSignature = mediaIds.join(",");
   const [publishedFor, setPublishedFor] = useState<{
     signature: string;
     match: PublishedMatch | null;
@@ -670,7 +659,7 @@ export function ComposeWizard({
   useEffect(() => {
     if (mediaSignature === "") return;
     let cancelled = false;
-    void guard.run(() => findPublishedMatch(client, keysOf(mediaSignature))).then((outcome) => {
+    void guard.run(() => findPublishedMatch(client, mediaSignature.split(","))).then((outcome) => {
       // A failed read draws the stage at rest: the marker never blocks, and
       // its absence costs nothing but the hint.
       if (!cancelled && outcome.kind === "success") {

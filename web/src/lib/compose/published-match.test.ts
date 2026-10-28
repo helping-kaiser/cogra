@@ -4,13 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { gqlLink, startMswServer } from "@/test/msw";
 
-import {
-  earliestMatch,
-  findPublishedMatch,
-  publishedMarkerText,
-  publishedOn,
-  type PlacedPost,
-} from "./published-match";
+import { findPublishedMatch, publishedMarkerText, publishedOn } from "./published-match";
 
 const server = startMswServer();
 
@@ -20,41 +14,6 @@ function client() {
     link: new HttpLink({ uri: "http://localhost/graphql" }),
   });
 }
-
-const post = (postId: string, createdAt: string, ...assets: [string, string][]): PlacedPost => ({
-  postId,
-  createdAt,
-  assets: assets.map(([id, digest]) => ({ id, digest })),
-});
-
-describe("earliestMatch", () => {
-  // ComposeDetailsReused.md: the line names the earliest matching post, and a
-  // later post never repoints it.
-  it("names the earliest of several matching posts", () => {
-    const posts = [
-      post("p-new", "2026-10-20T00:00:00Z", ["m1", "d1"]),
-      post("p-old", "2026-09-12T00:00:00Z", ["m1", "d1"]),
-      post("p-other", "2026-01-01T00:00:00Z", ["m9", "d9"]),
-    ];
-    expect(earliestMatch(posts, [{ mediaId: "m1", digest: "d1" }])).toEqual({
-      postId: "p-old",
-      publishedAt: "2026-09-12T00:00:00Z",
-    });
-  });
-
-  it("matches a re-encoded upload by its rendition digest under another id", () => {
-    const posts = [post("p-1", "2026-09-12T00:00:00Z", ["m-held", "d-rendition"])];
-    expect(earliestMatch(posts, [{ mediaId: "m-upload", digest: "d-rendition" }])?.postId).toBe("p-1");
-  });
-
-  // ComposeDetails.md: a match only in drafts, or only in other people's
-  // posts, draws nothing — neither is in the author's own chronicle.
-  it("names nothing when no published post carries the media", () => {
-    const posts = [post("p-1", "2026-09-12T00:00:00Z", ["m9", "d9"])];
-    expect(earliestMatch(posts, [{ mediaId: "m1", digest: "d1" }])).toBeNull();
-    expect(earliestMatch(posts, [])).toBeNull();
-  });
-});
 
 describe("publishedOn", () => {
   const now = new Date("2026-10-28T12:00:00Z");
@@ -73,50 +32,43 @@ describe("publishedOn", () => {
 });
 
 describe("findPublishedMatch", () => {
-  it("pages the viewer's published posts to the end and names the earliest match", async () => {
+  // ComposeDetailsReused.md: the line names the earliest matching post — the
+  // server's answer (`ownPublishedPlacement`), asked with the stage's uploads,
+  // and the post's own date.
+  it("asks once with the stage's uploads and names the post served", async () => {
     const asked: unknown[] = [];
     server.use(
-      gqlLink.query("ViewerId", () =>
-        HttpResponse.json({ data: { me: { __typename: "User", id: "u-me" } } }),
-      ),
-      gqlLink.query("OwnPublishedMedia", ({ variables }) => {
+      gqlLink.query("OwnPublishedPlacement", ({ variables }) => {
         asked.push(variables);
-        const second = (variables as { after: string | null }).after === "c1";
-        const node = (id: string, createdAt: string, mediaId: string) => ({
-          __typename: "Record",
-          id: `r-${id}`,
-          target: {
-            __typename: "Post",
-            id,
-            createdAt,
-            attachments: [{ __typename: "MediaAttachment", id: mediaId, digest: `d-${mediaId}` }],
-          },
-        });
         return HttpResponse.json({
-          data: {
-            records: {
-              __typename: "RecordConnection",
-              edges: second
-                ? [{ __typename: "RecordEdge", node: node("p-old", "2026-09-12T00:00:00Z", "m1") }]
-                : [{ __typename: "RecordEdge", node: node("p-new", "2026-10-20T00:00:00Z", "m1") }],
-              pageInfo: { __typename: "PageInfo", hasNextPage: !second, endCursor: second ? null : "c1" },
-            },
-          },
+          data: { ownPublishedPlacement: { __typename: "Post", id: "p-old", createdAt: "2026-09-12T00:00:00Z" } },
         });
       }),
     );
-    const outcome = await findPublishedMatch(client(), [{ mediaId: "m1", digest: "d-m1" }]);
+    const outcome = await findPublishedMatch(client(), ["m1", "m2"]);
     expect(outcome).toEqual({
       kind: "success",
       value: { postId: "p-old", publishedAt: "2026-09-12T00:00:00Z" },
     });
-    expect(asked).toEqual([
-      { author: "u-me", first: 50, after: null },
-      { author: "u-me", first: 50, after: "c1" },
-    ]);
+    expect(asked).toEqual([{ mediaIds: ["m1", "m2"] }]);
+  });
+
+  // ComposeDetails.md: a match only in drafts, or only in other people's
+  // posts, draws nothing — the server answers null for both.
+  it("names nothing when no published post of the author carries the media", async () => {
+    server.use(gqlLink.query("OwnPublishedPlacement", () => HttpResponse.json({ data: { ownPublishedPlacement: null } })));
+    expect(await findPublishedMatch(client(), ["m1"])).toEqual({ kind: "success", value: null });
   });
 
   it("reads nothing for a stage with no landed media", async () => {
+    const asked: unknown[] = [];
+    server.use(
+      gqlLink.query("OwnPublishedPlacement", ({ variables }) => {
+        asked.push(variables);
+        return HttpResponse.json({ data: { ownPublishedPlacement: null } });
+      }),
+    );
     expect(await findPublishedMatch(client(), [])).toEqual({ kind: "success", value: null });
+    expect(asked).toEqual([]);
   });
 });
