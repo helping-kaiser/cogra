@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM comment_versions v\n         USING comments c\n         WHERE v.comment_id = c.id AND c.landed_epoch IS NULL\n           AND (c.id, c.created_at)\n               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "TimestamptzArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3c99a002c44063de47e515a09a7e9d4a5f0afe83252305f4cba51fb5a7cec04f"
+}

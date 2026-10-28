@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT named.id AS requested,\n               COALESCE(named.source_digest, named.digest) AS \"requested_upload_digest!\",\n               m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,\n               m.mime_type, m.size_bytes,\n               m.options AS \"options!: serde_json::Value\",\n               m.state AS \"state: AssetState\", m.failure_reason,\n               m.redaction_reason, m.redacted_at, m.created_at,\n               COALESCE(m.source_digest, m.digest) AS \"upload_digest!\"\n        FROM media_attachments named\n        JOIN media_attachments m ON m.id = COALESCE(named.merged_into, named.id)\n        WHERE named.id = ANY($1)\n        ",
+  "query": "\n        SELECT named.id AS requested,\n               COALESCE(named.source_digest, named.digest) AS \"requested_upload_digest!\",\n               m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,\n               m.mime_type, m.size_bytes,\n               m.options AS \"options!: serde_json::Value\",\n               m.state AS \"state: AssetState\", m.failure_reason,\n               m.redaction_reason, m.redacted_at, m.created_at,\n               COALESCE(m.source_digest, m.digest) AS \"upload_digest!\"\n        FROM media_attachments named\n        JOIN media_attachments m ON m.id = COALESCE(named.merged_into, named.id)\n        WHERE named.id = ANY($1) AND m.held_at IS NULL\n        ",
   "describe": {
     "columns": [
       {
@@ -108,5 +108,5 @@
       null
     ]
   },
-  "hash": "374fa3d0834a59f718ea133fe63c1d118cb992eb18ffad2d502bdccbeecc34d8"
+  "hash": "eca1e88481cc957b93a2ed6d44897117a4bc85420d3fd45b67cc9672453dd280"
 }
