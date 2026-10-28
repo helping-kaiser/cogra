@@ -2606,8 +2606,12 @@ describe("the alternate inputs", () => {
     await settle();
     const route = screen.getByTestId(`${PREFIX}-choose`);
     expect(route).toHaveTextContent("Choose your opinion on this post");
-    expect(route.className).toContain("sr-only");
-    expect(route.className).toContain("focus:not-sr-only");
+    // Hidden by a wrapper that is no `cg-state` surface: on the button itself
+    // the unlayered `position: relative` outranked `sr-only` and the route
+    // stood in flow (the harness measured it 70px beside the face).
+    expect(route.className).not.toContain("sr-only");
+    expect(route.parentElement?.className).toContain("sr-only");
+    expect(route.parentElement?.className).toContain("focus-within:not-sr-only");
   });
 
   // The card's affordance row is one line that never wraps: the face and the
