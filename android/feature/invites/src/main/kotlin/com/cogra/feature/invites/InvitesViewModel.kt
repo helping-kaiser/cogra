@@ -1,205 +1,360 @@
+// INVITES' STATE HOLDER (behavior/Invites.md and its siblings): the one queue
+// read spanning both ends of the funnel, the usable links, the create sheet
+// in its two stages, the two closing dialogs and the approval pad. Everything
+// the screen decides that is not drawing is here; the order law is
+// core:domain's (`layoutQueue`). web's twin is
+// `web/src/app/(app)/invites/invites-view.tsx`.
+
 package com.cogra.feature.invites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cogra.domain.ErrorCode
-import com.cogra.domain.InviteLinkInfo
+import com.cogra.domain.AccountState
 import com.cogra.domain.Outcome
 import com.cogra.domain.di.WebOrigin
+import com.cogra.domain.invites.ApplicationGroup
+import com.cogra.domain.invites.ApplicationInfo
+import com.cogra.domain.invites.InviteLinkInfo
+import com.cogra.domain.invites.InvitesRead
+import com.cogra.domain.invites.InvitesRepository
+import com.cogra.domain.invites.QueueLayout
+import com.cogra.domain.invites.layoutQueue
+import com.cogra.domain.invites.liveLinks
 import com.cogra.domain.repo.AccountRepository
-import com.cogra.domain.signing.Expectation
-import com.cogra.domain.signing.NoActorKeyException
-import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
-import com.cogra.domain.signing.stanceRecord
+import com.cogra.domain.stance.StancePair
+import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Duration
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
-data class InvitesUiState(
-    val loading: Boolean = true,
-    val links: List<InviteLinkInfo> = emptyList(),
-    val creating: Boolean = false,
-    /** Single-use is the server default too; multi-use is an explicit opening. */
+/** The three lengths, and no custom date (InviteExpiry.md:5). */
+enum class ExpiryChoice(val lifetime: Duration) {
+    HOURS_24(Duration.ofHours(24)),
+    DAYS_7(Duration.ofDays(7)),
+    DAYS_30(Duration.ofDays(30)),
+    ;
+
+    companion object {
+        /** The sheet opens at 7 days (InviteNew.md:9). */
+        val Default = DAYS_7
+    }
+}
+
+/** The create sheet, in its two stages, with the expiry chooser over it. */
+data class InviteSheetState(
+    /** `Only one person can use it` stands on when the sheet opens (InviteNew.md:7). */
     val singleUse: Boolean = true,
-    /** The application currently being approved, if any. */
-    val approvingId: String? = null,
-    /** The link currently being revoked, if any. */
-    val revokingId: String? = null,
-    val error: ErrorCode? = null,
-    val transportFailed: Boolean = false,
-    /** One-shot, consumed after its snackbar: the vouch landed in the
-     *  relay after on-device signing. */
-    val vouchSigned: Boolean = false,
-    /** One-shot, consumed after its snackbar: the approval landed but
-     *  the vouch's signing did not finish — silence would hide a
-     *  priced act's incomplete half. */
-    val signingFailed: Boolean = false,
-    /**
-     * False in the husk state — the actor key is not on this device, so
-     * approving (which must sign the vouch here) is gated until restore
-     * (auth.md "Multi-account device custody").
-     */
-    val seedOnDevice: Boolean = true,
+    val expiry: ExpiryChoice = ExpiryChoice.Default,
+    val choosing: Boolean = false,
+    val creating: Boolean = false,
+    val failed: Boolean = false,
+    /** The fresh link: the sheet's second stage (InviteCreated.md). */
+    val created: InviteLinkInfo? = null,
 )
 
-/**
- * The inviter surface (auth.md "Invite-link generation", "Approval and
- * landing"): links stage, approval is the priced act, and the vouch —
- * the inviter's own Opinion — is signed on this device.
- */
+/** What a closing dialog closes. */
+sealed interface CloseTarget {
+    data class One(val application: ApplicationInfo) : CloseTarget
+
+    data class All(val group: ApplicationGroup) : CloseTarget
+}
+
+/** A closing dialog up: what it closes and how its one act is going. */
+data class ClosingState(
+    val target: CloseTarget,
+    val working: Boolean = false,
+    val failed: Boolean = false,
+)
+
+/** The page's one-shot snackbars. */
+sealed interface InvitesSnack {
+    data object LinkCopied : InvitesSnack
+
+    data object Revoked : InvitesSnack
+
+    data class FinishRegistering(val handle: String) : InvitesSnack
+
+    data class AlreadyWaiting(val handle: String) : InvitesSnack
+
+    /** The vouch landed: `Signed, still settling. Current opinion …`. */
+    data class Signed(val landing: StancePair) : InvitesSnack
+}
+
+/** Where focus goes once a row or a card removes itself (Invites.md:61). */
+data class FocusAfter(val section: Section, val index: Int) {
+    enum class Section { APPLICATION, LINK }
+}
+
+data class InvitesUiState(
+    /** Null until the first read answers. */
+    val read: InvitesRead? = null,
+    /** The last read did not go through: the fault line, beside what the page shows. */
+    val fault: Boolean = false,
+    val refreshing: Boolean = false,
+    /** The reader is not a member: Invites never stands for them (ProfileApplicant.md:18). */
+    val notMember: Boolean = false,
+    val revoking: String? = null,
+    val revokeFailed: Boolean = false,
+    val sheet: InviteSheetState? = null,
+    val closing: ClosingState? = null,
+    /** The application whose approval pad is up. */
+    val approvingId: String? = null,
+    val snack: InvitesSnack? = null,
+    val focusAfter: FocusAfter? = null,
+    /** The handle (without @) an ask link's arrival stands at, once. */
+    val standAt: String? = null,
+) {
+    val layout: QueueLayout get() = layoutQueue(read?.queue.orEmpty())
+    val links: List<InviteLinkInfo> get() = liveLinks(read?.links.orEmpty())
+
+    /** InvitesEmpty: no application waits and no link is live. */
+    val empty: Boolean get() = read != null && layout.isEmpty && links.isEmpty()
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
+@Suppress("TooManyFunctions") // one handler per drawn gesture across the page's six boards
 class InvitesViewModel @Inject constructor(
+    private val invites: InvitesRepository,
     private val account: AccountRepository,
     private val signer: WriteSigner,
     private val identity: IdentityStore,
+    private val signals: StanceSignals,
     @WebOrigin private val webOrigin: String,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(InvitesUiState())
     val state = _state.asStateFlow()
 
-    private companion object {
-        /** The operational default; links are revocable any time. */
-        const val LINK_LIFETIME_DAYS = 7L
-    }
+    private val pad = MutableStateFlow<ApprovalPad?>(null)
+
+    /** The approval pad's own state, while one is up. */
+    val padState: StateFlow<ApprovalPadState?> = pad
+        .flatMapLatest { it?.state ?: flowOf(null) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** The clock captions are read against; a test pins it. */
+    var now: () -> Instant = Instant::now
 
     init {
+        viewModelScope.launch {
+            val me = account.me()
+            if (me is Outcome.Success && me.value?.accountState != AccountState.MEMBER) {
+                _state.update { it.copy(notMember = true) }
+            }
+        }
         refresh()
     }
 
-    /** The canonical shareable URL (auth.md "Link URLs"). */
-    fun shareUrl(link: InviteLinkInfo): String = "$webOrigin/join/${link.id}"
+    /** The invite link whole — the id inside it is the capability (auth.md "Link URLs"). */
+    fun joinUrl(link: InviteLinkInfo): String = "$webOrigin/join/${link.id}"
 
-    fun onVouchSignedShown() = _state.update { it.copy(vouchSigned = false) }
+    /** An ask link's arrival: its snackbar, and the row to stand at (VouchAsk.md:17, :27, :31). */
+    fun onArrival(notice: InvitesNotice) = _state.update {
+        it.copy(
+            snack = when (notice) {
+                is InvitesNotice.AlreadyWaiting -> InvitesSnack.AlreadyWaiting("@${notice.handle}")
+                is InvitesNotice.NotRegistered -> InvitesSnack.FinishRegistering("@${notice.handle}")
+                is InvitesNotice.Signed -> InvitesSnack.Signed(notice.landing)
+            },
+            standAt = notice.handle.takeIf { _ -> notice !is InvitesNotice.Signed },
+        )
+    }
 
-    fun onSigningFailedShown() = _state.update { it.copy(signingFailed = false) }
+    fun onSnackShown() = _state.update { it.copy(snack = null) }
 
-    fun onSingleUseChange(v: Boolean) = _state.update { it.copy(singleUse = v) }
+    fun onFocusMoved() = _state.update { it.copy(focusAfter = null, standAt = null) }
+
+    /** Pull down at the top: the page refreshes (Invites.md:91). */
+    fun onPull() {
+        _state.update { it.copy(refreshing = true) }
+        refresh()
+    }
 
     fun refresh() {
-        viewModelScope.launch {
-            val seedOnDevice = identity.actorSeed() != null
-            when (val outcome = account.inviteLinks()) {
-                is Outcome.Success -> _state.update {
-                    it.copy(
-                        loading = false,
-                        links = outcome.value,
-                        transportFailed = false,
-                        seedOnDevice = seedOnDevice,
-                    )
-                }
-                is Outcome.Refused -> _state.update {
-                    it.copy(loading = false, error = outcome.errors.first().code, seedOnDevice = seedOnDevice)
-                }
-                is Outcome.Failed -> _state.update {
-                    it.copy(loading = false, transportFailed = true, seedOnDevice = seedOnDevice)
-                }
-            }
+        viewModelScope.launch { read() }
+    }
+
+    private suspend fun read() {
+        when (val outcome = invites.invites()) {
+            is Outcome.Success -> _state.update { it.copy(read = outcome.value, fault = false, refreshing = false) }
+            else -> _state.update { it.copy(fault = true, refreshing = false) }
         }
     }
 
-    fun onCreate() {
-        if (_state.value.creating) return
-        _state.update { it.copy(creating = true, error = null, transportFailed = false) }
-        viewModelScope.launch {
-            val outcome = account.createInviteLink(
-                expiresAt = Instant.now().plus(LINK_LIFETIME_DAYS, ChronoUnit.DAYS),
-                singleUse = _state.value.singleUse,
-            )
-            when (outcome) {
-                is Outcome.Success -> {
-                    _state.update { it.copy(creating = false) }
-                    refresh()
-                }
-                is Outcome.Refused -> _state.update {
-                    it.copy(creating = false, error = outcome.errors.first().code)
-                }
-                is Outcome.Failed -> _state.update { it.copy(creating = false, transportFailed = true) }
-            }
-        }
-    }
-
-    fun onRevoke(linkId: String) {
-        if (_state.value.revokingId != null) return
-        _state.update { it.copy(revokingId = linkId, error = null, transportFailed = false) }
-        viewModelScope.launch {
-            val outcome = account.revokeInviteLink(linkId)
-            refresh()
-            when (outcome) {
-                is Outcome.Success -> _state.update { it.copy(revokingId = null) }
-                is Outcome.Refused ->
-                    _state.update { it.copy(revokingId = null, error = outcome.errors.first().code) }
-                is Outcome.Failed ->
-                    _state.update { it.copy(revokingId = null, transportFailed = true) }
-            }
-        }
-    }
+    // ── The rows ─────────────────────────────────────────────────────────
 
     /**
-     * The deliberate, priced act: approve, then sign the returned
-     * Opinion writes on this device — the vouch is the inviter's
-     * signature, not a server write.
+     * A row's tap: a ready row blooms the pad on that applicant, staging
+     * nothing; a row not fully registered answers with a snackbar and never
+     * opens the pad (Invites.md:39-41, ApprovePad.md:3).
      */
-    fun onApprove(applicationId: String, pDirected: Double, pInterest: Double) {
-        if (_state.value.approvingId != null) return
-        // The vouch must point at the applicant this row shows, by the L1 id
-        // the queue read served for them (Intent.kt). A row without one has
-        // no key attached, and nothing approvable.
-        val applicantGraphId = _state.value.links
-            .flatMap { it.applications }
-            .firstOrNull { it.id == applicationId }
-            ?.graphId
-        if (applicantGraphId == null) {
-            _state.update { it.copy(error = ErrorCode.BAD_INPUT) }
+    fun onOpenRow(application: ApplicationInfo) {
+        if (!application.approvable) {
+            _state.update { it.copy(snack = InvitesSnack.FinishRegistering("@${application.handle}")) }
             return
         }
-        val expected = Expectation(listOf(stanceRecord(applicantGraphId, pDirected, pInterest)))
+        if (_state.value.approvingId != null) return
+        val opened = ApprovalPad(
+            scope = viewModelScope,
+            invites = invites,
+            signer = signer,
+            identity = identity,
+            signals = signals,
+            source = ApprovalSource.Queued(application),
+            onOutcome = ::onApprovalOutcome,
+        )
+        pad.value = opened
+        _state.update { it.copy(approvingId = application.id) }
+        opened.open()
+    }
+
+    /** The approval pad itself, for the control's callbacks; null while none is up. */
+    fun approvalPad(): ApprovalPad? = pad.value
+
+    /** Cancel, the wash or Back: the pad closes onto Invites, nothing signed (ApprovePad.md:29-31). */
+    fun onApprovalDismissed() {
+        val open = pad.value ?: return
+        open.dismiss()
+        if (open.state.value.busy || open.state.value.emptySign?.working == true) return
+        pad.value = null
+        _state.update { it.copy(approvingId = null) }
+    }
+
+    private fun onApprovalOutcome(outcome: ApprovalOutcome) {
+        if (outcome !is ApprovalOutcome.Signed) return
+        val index = indexOf(outcome.application.id)
+        pad.value = null
+        // The vouch lands, the row leaves the queue and the snackbar says
+        // where the reader now stands (ApprovePad.md:37).
         _state.update {
-            it.copy(approvingId = applicationId, error = null, vouchSigned = false, signingFailed = false)
+            it.copy(
+                approvingId = null,
+                snack = InvitesSnack.Signed(outcome.landing),
+                focusAfter = FocusAfter(FocusAfter.Section.APPLICATION, index),
+            )
         }
+        refresh()
+    }
+
+    private fun indexOf(applicationId: String): Int =
+        _state.value.layout.rows.indexOfFirst { it.id == applicationId }.coerceAtLeast(0)
+
+    // ── The closing dialogs ──────────────────────────────────────────────
+
+    fun onCloseRow(application: ApplicationInfo) = _state.update {
+        it.copy(closing = ClosingState(CloseTarget.One(application)))
+    }
+
+    fun onCloseAll(group: ApplicationGroup) = _state.update { it.copy(closing = ClosingState(CloseTarget.All(group))) }
+
+    /** Keep, the scrim or Back: nothing is closed — but never while the closing is in flight. */
+    fun onKeep() = _state.update { if (it.closing?.working == true) it else it.copy(closing = null) }
+
+    /** `Close it` / `Close them`: the dialog stays up and locked until the closing answers. */
+    fun onConfirmClose() {
+        val closing = _state.value.closing ?: return
+        if (closing.working) return
+        _state.update { it.copy(closing = closing.copy(working = true, failed = false)) }
         viewModelScope.launch {
-            // The vouch is this device's signature, so the gate sits
-            // BEFORE the priced approval: without the key the approval
-            // must not land only to strand the unsigned vouch.
-            if (identity.actorSeed() == null) {
-                _state.update { it.copy(approvingId = null, seedOnDevice = false) }
-                return@launch
+            val first = when (val target = closing.target) {
+                is CloseTarget.One -> target.application
+                is CloseTarget.All -> target.group.rows.first()
             }
-            val prepared = when (val outcome = account.approveApplication(applicationId, pDirected, pInterest)) {
-                is Outcome.Success -> outcome.value
-                is Outcome.Refused -> {
-                    _state.update {
-                        it.copy(approvingId = null, error = outcome.errors.first().code)
-                    }
-                    return@launch
+            val outcome = when (val target = closing.target) {
+                is CloseTarget.One -> invites.rejectApplication(target.application.id)
+                is CloseTarget.All -> invites.rejectLinkApplications(target.group.linkId)
+            }
+            if (outcome is Outcome.Success) {
+                val index = indexOf(first.id)
+                read()
+                _state.update {
+                    it.copy(closing = null, focusAfter = FocusAfter(FocusAfter.Section.APPLICATION, index))
                 }
-                is Outcome.Failed -> {
-                    _state.update { it.copy(approvingId = null, transportFailed = true) }
-                    return@launch
-                }
+            } else {
+                // The dialog stays up with its pair, the application still waiting (RejectConfirm.md:23).
+                _state.update { it.copy(closing = closing.copy(working = false, failed = true)) }
             }
-            val results = try {
-                signer.sign(prepared, expected)
-            } catch (_: NoActorKeyException) {
-                // The seed vanished between the gate and signing (a
-                // concurrent purge): the approval landed, the vouch
-                // waits on the expiry re-stage after restore.
-                _state.update { it.copy(approvingId = null, seedOnDevice = false) }
-                return@launch
-            }
-            // A priced act must never end in silence: the approval
-            // landed either way, so an unfinished vouch is said out
-            // loud — parked material resumes from Home.
-            val signed = results.all { it is WriteResult.Done }
-            _state.update { it.copy(approvingId = null, vouchSigned = signed, signingFailed = !signed) }
-            refresh()
         }
+    }
+
+    // ── The links ────────────────────────────────────────────────────────
+
+    fun onLinkCopied() = _state.update { it.copy(snack = InvitesSnack.LinkCopied) }
+
+    /**
+     * Revoke: the card holds until the revoke answers, refuses a second press,
+     * and no dialog asks (Invites.md:49-53). A revoke that did not go through
+     * keeps the card and answers in the network fault's grammar (:59).
+     */
+    fun onRevoke(link: InviteLinkInfo) {
+        if (_state.value.revoking != null) return
+        val index = _state.value.links.indexOfFirst { it.id == link.id }.coerceAtLeast(0)
+        _state.update { it.copy(revoking = link.id, revokeFailed = false) }
+        viewModelScope.launch {
+            when (invites.revokeInviteLink(link.id)) {
+                is Outcome.Success -> {
+                    read()
+                    _state.update {
+                        it.copy(
+                            revoking = null,
+                            snack = InvitesSnack.Revoked,
+                            focusAfter = FocusAfter(FocusAfter.Section.LINK, index),
+                        )
+                    }
+                }
+                else -> _state.update { it.copy(revoking = null, revokeFailed = true) }
+            }
+        }
+    }
+
+    // ── The create sheet ─────────────────────────────────────────────────
+
+    fun onOpenSheet() = _state.update { it.copy(sheet = InviteSheetState()) }
+
+    /** The scrim, a swipe, Back: the sheet closes, nothing created — the next open starts at the defaults. */
+    fun onCloseSheet() = _state.update { if (it.sheet?.creating == true) it else it.copy(sheet = null) }
+
+    fun onSingleUseChange(on: Boolean) = updateSheet { it.copy(singleUse = on) }
+
+    fun onOpenExpiry() = updateSheet { it.copy(choosing = true) }
+
+    fun onCloseExpiry() = updateSheet { it.copy(choosing = false) }
+
+    /** A tap picks and closes, no Done (InviteExpiry.md:9). */
+    fun onPickExpiry(choice: ExpiryChoice) = updateSheet { it.copy(expiry = choice, choosing = false) }
+
+    /** `Create invite`: the link is made with the staged choices, and the sheet turns to the fresh link. */
+    fun onCreate() {
+        val sheet = _state.value.sheet ?: return
+        if (sheet.creating || sheet.created != null) return
+        updateSheet { it.copy(creating = true, failed = false) }
+        viewModelScope.launch {
+            val outcome = invites.createInviteLink(now().plus(sheet.expiry.lifetime), sheet.singleUse)
+            if (outcome is Outcome.Success) {
+                updateSheet { it.copy(creating = false, created = outcome.value) }
+                read()
+            } else {
+                // The staged choices stay as they were (InviteNew.md:23).
+                updateSheet { it.copy(creating = false, failed = true) }
+            }
+        }
+    }
+
+    private fun updateSheet(block: (InviteSheetState) -> InviteSheetState) = _state.update { state ->
+        state.sheet?.let { state.copy(sheet = block(it)) } ?: state
     }
 }

@@ -151,6 +151,8 @@ fun CograSheetSurface(
      * master's `0 24 8`); the grip always stands 12 over what follows it.
      */
     gap: Dp = Space.x3,
+    /** Over another sheet: the next rung up, so two surfaces never claim one elevation. */
+    stacked: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val side = if (tallest) 0.dp else Space.x6
@@ -174,7 +176,9 @@ fun CograSheetSurface(
                 },
             )
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .background(
+                sheetContainerColor(stacked, MaterialTheme.colorScheme, MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
             // The surface reaches the screen's edge; only its content steps
             // clear of the navigation bar. [CograSheetHost] hands the sheet no
             // insets of its own, so the drawn background is what covers them.
