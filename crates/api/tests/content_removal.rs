@@ -267,10 +267,6 @@ async fn archive_units(pool: &PgPool) -> i64 {
     count(pool, "SELECT COUNT(*) FROM retention_archive").await
 }
 
-// ---------------------------------------------------------------------
-// Error codes (api-spec.md `removeContent`): each one provoked.
-// ---------------------------------------------------------------------
-
 /// Removal needs a session: without one the request is refused at the
 /// transport, before anything is read.
 ///
@@ -481,10 +477,6 @@ async fn editing_a_removed_comment_is_refused(pool: PgPool) {
     assert_eq!(error["code"], "BAD_INPUT", "{refused}");
     assert_eq!(error["field"], json!(["id"]));
 }
-
-// ---------------------------------------------------------------------
-// The chain, the mark, and what stays.
-// ---------------------------------------------------------------------
 
 /// Removing "the post" sweeps its whole chain: the genesis act and both
 /// edits are each archived as one unit, reduced, and their staged copies
@@ -1196,6 +1188,9 @@ async fn an_account_sweep_over_a_removed_post_keeps_by_author(pool: PgPool) {
 /// a pool of one, the engine's reads run on its own transaction — the
 /// reads that went to the pool waited on the connection the transaction
 /// held until the pool timed out — and two removals at once both finish.
+/// The stand-in is a separate system behind the seam with its own
+/// connections; the rider is about CoGra's engine, so only the engine runs
+/// on the pool of one.
 ///
 /// A redaction holds one pooled connection per act.
 /// ´claim:removal:one-connection-per-act´
@@ -1242,9 +1237,6 @@ async fn redaction_holds_one_connection_per_act(options: PgPoolOptions, connect:
     .await
     .expect("the engine finishes on one connection");
 
-    // The stand-in is a separate system behind the seam with its own
-    // connections; the rider is about CoGra's engine, so only the engine
-    // runs on the pool of one.
     let boundary = StandInBoundary(rig.standin.clone());
     let areas = MediaAreas::in_memory();
     let (left, right) = tokio::join!(

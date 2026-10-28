@@ -2655,6 +2655,9 @@ type Post implements Node {
 	page argument would promise a pagination this read cannot honour —
 	the same shape `topics` and `references` carry, for the same
 	reason.
+	
+	Empty on a removed post: redaction is record-granular, so the
+	pictures go with the words whichever tombstoned version is current.
 	"""
 	attachments: [MediaAttachment!]!
 	"""

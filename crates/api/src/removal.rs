@@ -29,6 +29,11 @@
 //! scope was read rolls that transaction back into a wider scope. After
 //! the node reads removed, an edit is refused at prepare and at its
 //! pre-sign, which takes the same lock.
+//!
+//! **Lock order.** In each act's transaction the act's own rows are
+//! locked first (carriage, staged copy) and the node's entity row second —
+//! the order a landing takes them in — so a removal and a landing never
+//! wait on each other in a cycle.
 
 use std::collections::HashSet;
 
@@ -219,9 +224,6 @@ pub async fn remove_content<B: L1Boundary>(
             reason: store::AUTHOR_REMOVAL,
             redacted_by: &redacted_by,
         };
-        // The act's own rows are locked first, the node's second — the
-        // order a landing takes them in, so the two never wait on each
-        // other in a cycle.
         let mut tx = pool.begin().await?;
         let reduced = redaction::reduce_in(&mut tx, &r).await?;
         let head = match node {

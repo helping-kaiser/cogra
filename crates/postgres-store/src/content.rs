@@ -511,6 +511,10 @@ pub async fn discard_pending(
 /// `instants` are parallel: each index is one write's node and the
 /// authoring instant its rows carry, and the pair is what every
 /// statement matches on.
+///
+/// A pending node a removal took down carries one row that is not pending
+/// — its head tombstone — and it goes with the node: on the graph nothing
+/// ever existed, so there is nothing left to mark.
 pub async fn discard_pending_many(
     tx: &mut Transaction<'_, Postgres>,
     nodes: &[Uuid],
@@ -549,9 +553,6 @@ pub async fn discard_pending_many(
     )
     .execute(&mut **tx)
     .await?;
-    // A pending node a removal took down carries one row that is not
-    // pending — its head tombstone — and it goes with the node: on the
-    // graph nothing ever existed, so there is nothing left to mark.
     sqlx::query!(
         "DELETE FROM post_versions v
          USING posts p

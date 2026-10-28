@@ -3971,7 +3971,7 @@ input PreparePostInput {
  under one signature, one act count, all or none. A removed post
  takes no edit: the edit would become its newest version and put
  words back where its author took them away, so it is refused
- BAD_INPUT at ["id"] — at prepare, and again at the pre-sign leg
+ BAD_INPUT at `id` — at prepare, and again at the pre-sign leg
  for an edit prepared while the removal ran."
 input PreparePostEditInput {
   id: UUID!
@@ -4016,7 +4016,7 @@ input PrepareCommentInput {
 
 "Edit a Comment — the same complete-state edit a post's is, and the
  same refusal: a removed comment takes no edit (BAD_INPUT at
- ["id"])."
+ `id`)."
 input PrepareCommentEditInput {
   id: UUID!
   content: String!
@@ -5616,8 +5616,8 @@ enum EmailChangeLinkState { PENDING APPLIED CANCELED EXPIRED }
  stores — so any account that authored the record may remove it.
  Removable content is a post's or a comment's record (Publish,
  Review); any other family, and an act carried with an
- application, answers BAD_INPUT at ["record"]. An unknown record
- answers NOT_FOUND at ["record"]. No RATE_LIMITED: the verb is
+ application, answers BAD_INPUT at `record`. An unknown record
+ answers NOT_FOUND at `record`. No RATE_LIMITED: the verb is
  bounded by the author's own content, and mails and signs nothing.
 
  Each act is removed in one transaction — archived, reduced, its

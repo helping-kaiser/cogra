@@ -1182,6 +1182,12 @@ async fn parent_node(pool: &PgPool, target: Uuid) -> Result<nodes::ResolvedNode,
 /// `relay::submit_pre_signed`'s own doc says must not happen: the
 /// pre-commitment is recorded, the seal proceeds, and no display row is
 /// ever created.
+///
+/// An edit's pending row goes onto a node a removal may be taking down at
+/// this moment, so it is written under the node's share lock: either the
+/// removal already holds the node and the edit is refused as removed
+/// content takes none, or this row lands first and the removal's own look
+/// under its lock sweeps it.
 pub async fn stage_pending(
     pool: &PgPool,
     write: &staged::StagedWrite,
@@ -1228,10 +1234,6 @@ pub async fn stage_pending(
         .begin()
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
-    // An edit's pending row goes onto a node a removal may be taking down
-    // at this moment: under the node's share lock, either the removal
-    // already holds the node and this edit is refused, or this row lands
-    // first and the removal's own look under its lock sweeps it.
     let edited = match shape {
         ContentShape::EditPost(id) => Some(postgres_store::removal::ContentNode::Post(id)),
         ContentShape::EditComment(id) => Some(postgres_store::removal::ContentNode::Comment(id)),

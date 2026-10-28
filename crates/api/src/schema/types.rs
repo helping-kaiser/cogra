@@ -3135,13 +3135,14 @@ impl PostType {
     /// page argument would promise a pagination this read cannot honour —
     /// the same shape `topics` and `references` carry, for the same
     /// reason.
+    ///
+    /// Empty on a removed post: redaction is record-granular, so the
+    /// pictures go with the words whichever tombstoned version is current.
     #[graphql(complexity = "gallery_cost(crate::media::MAX_POST_ATTACHMENTS, child_complexity)")]
     async fn attachments(
         &self,
         ctx: &Context<'_>,
     ) -> async_graphql::Result<Vec<MediaAttachmentType>> {
-        // Redaction is record-granular: the pictures go with the words,
-        // whichever tombstoned version is current.
         if self.0.redaction_reason.is_some() {
             return Ok(Vec::new());
         }
