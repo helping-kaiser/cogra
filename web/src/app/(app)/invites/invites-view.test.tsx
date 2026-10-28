@@ -250,7 +250,7 @@ describe("Invites (behavior/Invites.md)", () => {
       }),
     );
     fireEvent.click(await screen.findByTestId("invites.link.action"));
-    expect(await screen.findByTestId("invites-empty")).toBeInTheDocument();
+    expect(await screen.findByTestId("invites.empty")).toBeInTheDocument();
   });
 
   it(":59 a revoke that does not go through keeps the card and answers in the network fault's grammar", async () => {
@@ -340,11 +340,11 @@ describe("Invites (behavior/Invites.md)", () => {
 describe("the empty Invites (behavior/InvitesEmpty.md)", () => {
   it(":3-:13 the line, Create invite under it at full width, no error colour; Create opens the sheet", async () => {
     show({ queue: [], links: [] });
-    const empty = await screen.findByTestId("invites-empty");
+    const empty = await screen.findByTestId("invites.empty");
     expect(empty).toHaveTextContent(
       "No invites out yet. A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in.",
     );
-    const create = screen.getByTestId("invites-empty-create");
+    const create = screen.getByTestId("invites.empty.create");
     expect(create).toHaveTextContent("Create invite");
     expect(create.className).toContain("w-full");
     expect(empty.innerHTML).not.toContain("text-error");
@@ -368,7 +368,7 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
       "true",
     );
     expect(within(sheet).getByRole("button", { name: /Expires after/ })).toHaveTextContent("7 days");
-    expect(within(sheet).getByTestId("invites-sheet-footnote")).toHaveTextContent(
+    expect(within(sheet).getByTestId("invites.createSheet.options.footnote")).toHaveTextContent(
       "With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time.",
     );
     // :5 no opinion control.
@@ -383,6 +383,12 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
     const chooser = await screen.findByRole("dialog", { name: "Expires after" });
     const radios = within(chooser).getAllByRole("radio");
     expect(radios.map((r) => r.closest("label")?.textContent)).toEqual(["24 hours", "7 days", "30 days"]);
+    // Each length wears its registered key (nodes.json InviteExpiry).
+    expect(
+      within(chooser)
+        .getAllByTestId("invites.expirySheet.expiryOption")
+        .map((option) => option.getAttribute("data-testid-key")),
+    ).toEqual(["24-hours", "7-days", "30-days"]);
     expect(radios.filter((r) => (r as HTMLInputElement).checked)).toHaveLength(1);
     expect(within(chooser).queryByText("Done")).not.toBeInTheDocument();
     fireEvent.click(radios[2]);
@@ -411,12 +417,12 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
     );
     const sheet = await openSheet();
     fireEvent.click(within(sheet).getByRole("switch"));
-    fireEvent.click(within(sheet).getByTestId("invites-sheet-create"));
-    await waitFor(() => expect(within(sheet).getByTestId("invites-sheet-create")).toHaveTextContent("Creating invite…"));
+    fireEvent.click(within(sheet).getByTestId("invites.createSheet.create"));
+    await waitFor(() => expect(within(sheet).getByTestId("invites.createSheet.create")).toHaveTextContent("Creating invite…"));
     const created = await screen.findByRole("dialog", { name: "Your invite link" });
     expect(input).toEqual({ singleUse: false, expiresAt: new Date(NOW + 7 * 864e5).toISOString() });
-    expect(within(created).getByTestId("invites-sheet-link")).toHaveTextContent(`${window.location.origin}/join/fresh`);
-    expect(within(created).getByTestId("invites-sheet-share")).toHaveTextContent("Share link");
+    expect(within(created).getByTestId("invites.linkSheet.link")).toHaveTextContent(`${window.location.origin}/join/fresh`);
+    expect(within(created).getByTestId("invites.linkSheet.share")).toHaveTextContent("Share link");
     expect(created.textContent).not.toMatch(/token/i);
   });
 
@@ -425,7 +431,7 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
     server.use(gqlLink.mutation("CreateInviteLink", () => HttpResponse.error()));
     const sheet = await openSheet();
     fireEvent.click(within(sheet).getByRole("switch"));
-    fireEvent.click(within(sheet).getByTestId("invites-sheet-create"));
+    fireEvent.click(within(sheet).getByTestId("invites.createSheet.create"));
     expect(await within(sheet).findByTestId("invites-sheet-failed")).toHaveTextContent("Can't reach the server");
     expect(within(sheet).getByRole("switch")).toHaveAttribute("aria-checked", "false");
   });
@@ -448,8 +454,8 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
       ),
     );
     const sheet = await openSheet();
-    fireEvent.click(within(sheet).getByTestId("invites-sheet-create"));
-    fireEvent.click(await screen.findByTestId("invites-sheet-share"));
+    fireEvent.click(within(sheet).getByTestId("invites.createSheet.create"));
+    fireEvent.click(await screen.findByTestId("invites.linkSheet.share"));
     expect(await screen.findByTestId("invites-snackbar")).toHaveTextContent("Link copied");
     expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/join/fresh`);
   });

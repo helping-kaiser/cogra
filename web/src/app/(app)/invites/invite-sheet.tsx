@@ -40,6 +40,7 @@ import {
   SHARE_LINK,
   YOUR_INVITE_LINK,
   copyLink,
+  expiryKey,
   joinUrl,
   linkCaption,
   linkLabel,
@@ -47,6 +48,7 @@ import {
 } from "@/lib/invites/queue";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { buttonClassName } from "@/lib/ui/button";
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { shareLink } from "@/lib/ui/share";
 import { TransportError } from "@/lib/ui/transport-error";
 import { AddressCard } from "@/lib/ui2/address-card";
@@ -55,6 +57,13 @@ import { SettingsGroup, SettingsRow } from "@/lib/ui2/settings-row";
 
 /** How long the create may stay unanswered before it says it is working. */
 export const CREATING_AFTER_MS = 200;
+
+// The registered sheets (nodes.json InviteNew, InviteCreated, InviteExpiry): one
+// web sheet serves both stages, so its node follows the stage it shows.
+const CREATE_SHEET: DataNode = { path: "invites.createSheet" };
+const OPTIONS = part(CREATE_SHEET, "options");
+const LINK_SHEET: DataNode = { path: "invites.linkSheet" };
+const EXPIRY_SHEET: DataNode = { path: "invites.expirySheet" };
 
 export function InviteSheet({
   open,
@@ -127,22 +136,29 @@ export function InviteSheet({
         onClose={close}
         title={created === null ? NEW_INVITE : YOUR_INVITE_LINK}
         testId="invites-sheet"
+        node={created === null ? CREATE_SHEET : LINK_SHEET}
       >
         {created === null ? (
           <div className="flex flex-col gap-4">
-            <SettingsGroup footnote={CREATE_FOOTNOTE} footnoteTestId="invites-sheet-footnote">
+            <SettingsGroup footnote={CREATE_FOOTNOTE} node={OPTIONS}>
               <SettingsRow
                 label={ONLY_ONE_PERSON}
                 checked={singleUse}
                 onOpen={() => setSingleUse((on) => !on)}
+                node={part(OPTIONS, "singleUse")}
               />
-              <SettingsRow label={EXPIRES_AFTER} value={expiry.label} onOpen={() => setChoosing(true)} />
+              <SettingsRow
+                label={EXPIRES_AFTER}
+                value={expiry.label}
+                onOpen={() => setChoosing(true)}
+                node={part(OPTIONS, "expiry")}
+              />
             </SettingsGroup>
             {failed && <TransportError testId="invites-sheet-failed" />}
             <div className="flex justify-end">
               <button
                 type="button"
-                data-testid="invites-sheet-create"
+                {...testAttributes(part(CREATE_SHEET, "create"))}
                 onClick={inFlight ? undefined : () => void create()}
                 aria-busy={inFlight || undefined}
                 aria-disabled={inFlight || undefined}
@@ -160,11 +176,11 @@ export function InviteSheet({
               copyLabel={COPY_THE_LINK}
               onCopy={() => void copyLink(url).then((copied) => copied && notify(LINK_COPIED))}
               caption={linkCaption(created, now())}
-              testId="invites-sheet-link"
+              node={part(LINK_SHEET, "link")}
             />
             <button
               type="button"
-              data-testid="invites-sheet-share"
+              {...testAttributes(part(LINK_SHEET, "share"))}
               onClick={() =>
                 void shareLink(url).then((outcome) => outcome === "copied" && notify(LINK_COPIED))
               }
@@ -181,6 +197,7 @@ export function InviteSheet({
         title={EXPIRES_AFTER}
         stacked
         testId="invites-expiry"
+        node={EXPIRY_SHEET}
       >
         <div className="flex flex-col px-2" role="radiogroup" aria-label={EXPIRES_AFTER}>
           {EXPIRY_CHOICES.map((choice) => (
@@ -189,6 +206,7 @@ export function InviteSheet({
               name="invite-expiry"
               label={choice.label}
               selected={choice.label === expiry.label}
+              node={instance(EXPIRY_SHEET, "expiryOption", expiryKey(choice))}
               onOpen={() => {
                 setExpiry(choice);
                 setChoosing(false);
