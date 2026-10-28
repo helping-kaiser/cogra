@@ -1620,7 +1620,8 @@ describe("the details stage's pickers", () => {
     fireEvent.click(screen.getByTestId(byNode("composeDetails.references.add")));
     const field = await screen.findByRole("searchbox", { name: "Cite something" });
     fireEvent.change(field, { target: { value: "sal" } });
-    fireEvent.click(await screen.findByTestId(byNode("referencePicker.result", "u-sal")));
+    // The one result, keyed by its place (nodes.json `referencePicker.result`).
+    fireEvent.click(await screen.findByTestId(byNode("referencePicker.result", "1")));
     fireEvent.click(screen.getByTestId(byNode("referencePicker.done")));
 
     // ComposeDetails.md: a citation staged here starts at the pair +0.10 / +0.10.

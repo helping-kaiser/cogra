@@ -24,8 +24,9 @@
 // `Done` AND THE HEADER BACK ARE ONE LEAVE: both return to the composer with
 // every staged tag kept, and neither stages the typed name.
 //
-// THE SCREEN IS UNREGISTERED (nodes.json has no `TagPicker`): its parts carry
-// the board's evident paths under `tagPicker`, pending design's registration.
+// REGISTERED (nodes.json TagPicker, TagPickerTyping, TagPickerRefused; round
+// 23): a result row is `tagPicker.tag` and a staged one `tagPicker.staged.tag`,
+// each keyed by the tag's name without #.
 
 import { useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
@@ -208,7 +209,7 @@ export function TagPicker({
                 sub={signsAs(first)}
                 onPick={() => stage(first)}
                 disabled={atCap}
-                node={instance(NODE, "row", first)}
+                node={instance(NODE, "tag", first)}
               />
             )}
             {indexed.map((name) => (
@@ -218,7 +219,7 @@ export function TagPicker({
                 name={name}
                 onPick={() => stage(name)}
                 disabled={atCap}
-                node={instance(NODE, "row", name)}
+                node={instance(NODE, "tag", name)}
               />
             ))}
             <div className="flex-1" />

@@ -59,7 +59,18 @@ function PickerMark({
   );
 }
 
-function RowText({ name, sub, node }: { name: string; sub?: string; node?: DataNode }) {
+function RowText({
+  name,
+  sub,
+  node,
+  subPart = "sub",
+}: {
+  name: string;
+  sub?: string;
+  node?: DataNode;
+  /** The second line's part: a result's `sub`, a staged reference's `kind` (the composer's StagedRow). */
+  subPart?: "sub" | "kind";
+}) {
   return (
     <span className="flex min-w-0 flex-1 flex-col">
       <span className="truncate text-body-medium" {...testAttributes(part(node, "name"))}>
@@ -68,7 +79,7 @@ function RowText({ name, sub, node }: { name: string; sub?: string; node?: DataN
       {sub !== undefined && (
         <span
           className="truncate text-body-small text-on-surface-variant"
-          {...testAttributes(part(node, "sub"))}
+          {...testAttributes(part(node, subPart))}
         >
           {sub}
         </span>
@@ -106,7 +117,11 @@ export function PickerRow({
     >
       <PickerMark kind={kind} name={name} src={src} onCard={false} node={part(node, "mark")} />
       <RowText name={name} sub={sub} node={node} />
-      <span aria-hidden="true" className="inline-flex flex-none text-on-surface-variant">
+      <span
+        aria-hidden="true"
+        className="inline-flex flex-none text-on-surface-variant"
+        {...testAttributes(part(node, "trailing"))}
+      >
         <Icon name="add" size={20} />
       </span>
     </button>
@@ -135,7 +150,7 @@ export function PickerStagedRow({
       className="box-border flex min-h-12 items-center gap-2 rounded-small bg-surface-container-highest px-3 py-2"
     >
       <PickerMark kind={kind} name={name} src={src} onCard node={part(node, "mark")} />
-      <RowText name={name} sub={sub} node={node} />
+      <RowText name={name} sub={sub} node={node} subPart="kind" />
       <button
         type="button"
         aria-label={`Remove ${name}`}

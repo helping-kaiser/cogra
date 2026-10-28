@@ -81,11 +81,17 @@ function Host({
 const field = () => screen.getByRole("searchbox", { name: "Cite something" });
 const type = (value: string) => fireEvent.change(field(), { target: { value } });
 const status = () => screen.getByTestId(byNode("referencePicker.announcement"));
+// A result is keyed by its place (nodes.json `referencePicker.result`), so the
+// rows are told apart by the name they read.
+const resultRows = () => screen.queryAllByTestId(byNode("referencePicker.result"));
+const NAMES: Record<string, string> = { "u-sal": "Sal Torres", "p-salt": "Salt maps of the coast road" };
 const results = () =>
-  screen
-    .queryAllByTestId(byNode("referencePicker.result"))
-    .map((row) => row.getAttribute("data-testid-key"));
-const staged = () => screen.queryAllByTestId(byNode("referencePicker.staged.reference"));
+  resultRows().map((row) => {
+    const name = row.querySelector('[data-testid="referencePicker.result.name"]')?.textContent;
+    return Object.keys(NAMES).find((id) => NAMES[id] === name) ?? name;
+  });
+const result = (id: string) => resultRows()[results().indexOf(id)]!;
+const staged = () => screen.queryAllByTestId(byNode("referencePicker.staged.stagedReference"));
 
 async function settle() {
   await act(async () => {
@@ -105,8 +111,9 @@ describe("ReferencePicker", () => {
     type("salt");
     await settle();
     expect(results()).toEqual(["u-sal", "p-salt"]);
+    expect(resultRows().map((row) => row.getAttribute("data-testid-key"))).toEqual(["1", "2"]);
 
-    fireEvent.click(screen.getByTestId(byNode("referencePicker.result", "p-salt")));
+    fireEvent.click(result("p-salt"));
     expect(spy).toHaveBeenLastCalledWith([expect.objectContaining({ targetId: "p-salt", relevance: 0.1, support: 0.1 })]);
     expect(results()).toEqual(["u-sal"]);
     expect(staged()).toHaveLength(1);

@@ -21,8 +21,10 @@
 // looks like on THIS surface is not drawn; it is built from `ExploreFilter`'s
 // kinds section and foot, and reported as a design gap.
 //
-// THE SCREEN IS UNREGISTERED (nodes.json has no `ReferencePicker`): its parts
-// carry the board's evident paths under `referencePicker`.
+// REGISTERED (nodes.json ReferencePicker, round 23): a result is
+// `referencePicker.result` and a staged row `referencePicker.staged.stagedReference`,
+// each keyed by its place from 1. The open filter sheet is not drawn on this
+// surface, so its parts keep the evident `referencePicker.filterSheet` paths.
 
 import { useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
@@ -244,7 +246,7 @@ export function ReferencePicker({
                     key={reference.targetId}
                     {...row}
                     onRemove={() => unstage(reference.targetId)}
-                    node={instance(part(NODE, "staged"), "reference", String(index + 1))}
+                    node={instance(part(NODE, "staged"), "stagedReference", String(index + 1))}
                   />
                 );
               })}
@@ -253,13 +255,13 @@ export function ReferencePicker({
         }
         list={
           <>
-            {results.map((candidate) => (
+            {results.map((candidate, index) => (
               <PickerRow
                 key={candidate.targetId}
                 {...pickerRowOf(candidate.target)}
                 onPick={() => stage(candidate)}
                 disabled={atCap}
-                node={instance(NODE, "result", candidate.targetId)}
+                node={instance(NODE, "result", String(index + 1))}
               />
             ))}
             {atCap && (
