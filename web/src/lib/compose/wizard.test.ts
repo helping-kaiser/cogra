@@ -18,12 +18,15 @@ import {
   detailsGate,
   effectiveCover,
   emptyWizard,
+  isVerticalClip,
   nextStep,
   POST_ATTACHMENT_CAP,
   previousStep,
   sealGate,
   SENSITIVE_REASON_MAX_CHARS,
   signedActions,
+  skipsCoverStep,
+  stepIndex,
   stepsFor,
   TITLE_MAX_CHARS,
   uploadsFailed,
@@ -780,5 +783,113 @@ describe("the silent auto-cover", () => {
   it("takes the silent face with the clip when the clip is removed", () => {
     const state = run(emptyWizard(), picksVideo(), autoChosen(), { type: "unpick", id: "v0" });
     expect(state.autoCover).toBeNull();
+  });
+});
+
+// THE SHAPE-KEYED VIDEO STEPS (design/readme.md, the video-cover round: "No-
+// cover is first-class, and the default is shape-keyed"; ComposePickVideo.md,
+// ComposeDetailsVideo.md, ComposeCover.md). A vertical clip runs pick →
+// details → seal, and the cover step is the details door's detour.
+describe("the shape-keyed video steps", () => {
+  function picksClip(clipRatio: number | null | undefined, id = "v0"): WizardAction {
+    return { type: "pick", assets: [{ id, file: bytes(64), kind: "video", clipRatio }] };
+  }
+
+  it("keeps the clip's shape on the staged asset", () => {
+    const state = run(emptyWizard(), picksClip(9 / 16));
+    expect(state.assets[0]!.clipRatio).toBe(9 / 16);
+  });
+
+  it("calls a clip taller than wide vertical, and nothing else", () => {
+    const shaped = (ratio: number | null | undefined) =>
+      run(emptyWizard(), picksClip(ratio)).assets[0]!;
+    expect(isVerticalClip(shaped(9 / 16))).toBe(true);
+    // An exact square keeps the step: no band around 1:1.
+    expect(isVerticalClip(shaped(1))).toBe(false);
+    expect(isVerticalClip(shaped(16 / 9))).toBe(false);
+    // A shape not known is not vertical — the step existing is the default.
+    expect(isVerticalClip(shaped(null))).toBe(false);
+    expect(isVerticalClip(shaped(undefined))).toBe(false);
+    expect(isVerticalClip(shaped(Number.NaN))).toBe(false);
+    expect(isVerticalClip(shaped(0))).toBe(false);
+  });
+
+  it("opens details with no cover step for a vertical clip", () => {
+    // ComposePickVideo.md: press Next GIVEN the clip is vertical -> the
+    // details stage opens AND NEVER the cover step opens.
+    const state = run(emptyWizard(), picksClip(9 / 16), { type: "advance" });
+    expect(state.step).toBe("details");
+    expect(stepsFor(state)).toEqual(["pick", "details", "seal"]);
+    expect(skipsCoverStep(state)).toBe(true);
+  });
+
+  it("opens the cover step for a horizontal, square or unknown clip", () => {
+    for (const ratio of [16 / 9, 1, null]) {
+      const state = run(emptyWizard(), picksClip(ratio), { type: "advance" });
+      expect(state.step).toBe("cover");
+      expect(skipsCoverStep(state)).toBe(false);
+    }
+  });
+
+  it("goes back from a vertical clip's details to the pick", () => {
+    // ComposeDetailsVideo.md: back GIVEN the clip skipped the cover step ->
+    // the pick step comes back with the clip staged.
+    const details = run(emptyWizard(), picksClip(9 / 16), { type: "advance" });
+    const back = run(details, { type: "back" });
+    expect(back.step).toBe("pick");
+    expect(back.assets).toHaveLength(1);
+  });
+
+  it("goes back from a horizontal clip's details to the cover step", () => {
+    const details = run(emptyWizard(), picksClip(16 / 9), { type: "advance" }, { type: "advance" });
+    expect(details.step).toBe("details");
+    expect(run(details, { type: "back" }).step).toBe("cover");
+  });
+
+  it("opens the cover step from the details door, and comes back to details", () => {
+    // ComposeDetailsVideo.md: tap Add a cover -> the cover step opens AND its
+    // Next comes back to this stage; ComposeCover.md: back GIVEN the step
+    // was opened by Add a cover -> the details stage comes back.
+    const details = run(emptyWizard(), picksClip(9 / 16), { type: "advance" });
+    const atCover = run(details, { type: "openCover" });
+    expect(atCover.step).toBe("cover");
+    expect(nextStep(atCover)).toBe("details");
+    expect(previousStep(atCover)).toBe("details");
+    expect(run(atCover, { type: "advance" }).step).toBe("details");
+    expect(run(atCover, { type: "back" }).step).toBe("details");
+    // One level past details in the history: Back from it is a step down.
+    expect(stepIndex(atCover)).toBe(stepIndex(details) + 1);
+  });
+
+  it("keeps a face chosen through the door across the way back to details", () => {
+    const atCover = run(
+      emptyWizard(),
+      picksClip(9 / 16),
+      { type: "advance" },
+      { type: "openCover" },
+      chosen(2),
+      { type: "advance" },
+    );
+    expect(atCover.step).toBe("details");
+    expect(atCover.cover?.frame).toBe(2);
+  });
+
+  it("offers the door nowhere but a vertical clip's details", () => {
+    // A clip that came through the cover step shows no door — its step is
+    // one Back away.
+    const horizontal = run(emptyWizard(), picksClip(16 / 9), { type: "advance" }, { type: "advance" });
+    expect(run(horizontal, { type: "openCover" })).toBe(horizontal);
+    const pictures = run(emptyWizard(), picks(1), { type: "advance" }, { type: "advance" });
+    expect(run(pictures, { type: "openCover" })).toBe(pictures);
+    const atPick = run(emptyWizard(), picksClip(9 / 16));
+    expect(run(atPick, { type: "openCover" })).toBe(atPick);
+  });
+
+  it("fills a shape a probe read late, but never rewrites one already known", () => {
+    const unknown = run(emptyWizard(), picksClip(undefined));
+    const filled = run(unknown, { type: "clipRatio", id: "v0", clipRatio: 9 / 16 });
+    expect(filled.assets[0]!.clipRatio).toBe(9 / 16);
+    const again = run(filled, { type: "clipRatio", id: "v0", clipRatio: 16 / 9 });
+    expect(again.assets[0]!.clipRatio).toBe(9 / 16);
   });
 });
