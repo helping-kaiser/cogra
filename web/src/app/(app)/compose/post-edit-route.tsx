@@ -61,7 +61,7 @@ import type { PostShape } from "@/lib/ui2/media/aspect";
 import { signedValues } from "@/lib/topics/draft";
 import { usePreviewUrls } from "@/lib/compose/previews";
 import { newComposeId } from "@/lib/compose/ids";
-import { POST_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
+import { POST_SCALE, screenPick, VIDEO_AT_EDIT, type PickRefusal } from "@/lib/compose/pick";
 import { runUpload } from "@/lib/compose/uploads";
 import type { PickedAsset } from "@/lib/compose/wizard";
 import {
@@ -511,7 +511,7 @@ export function PostEditRoute({
         ...outcome.accepted.map((file) => ({
           id: newComposeId(),
           name: file.name,
-          reason: VIDEO_AT_EDIT_UNBUILT,
+          reason: VIDEO_AT_EDIT,
           file,
         })),
       ]);
@@ -728,12 +728,3 @@ export function PostEditRoute({
     </>
   );
 }
-
-/**
- * A video picked into a words post at the edit — the one add path this lane
- * leaves unbuilt (EditWords.md: the cover step comes before the edit takes
- * it). Undrawn copy, written to the refused-file pattern and reported, never
- * presented as board-backed.
- */
-export const VIDEO_AT_EDIT_UNBUILT =
-  "A video can't be added at an edit yet — post it on its own, or add pictures.";
