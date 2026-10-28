@@ -114,6 +114,11 @@ data class TargetStance(
      * not a fault — nothing staged, signed or spent.
      */
     val writeRule: Boolean = false,
+    /**
+     * The last pick sent to be signed, so the row's Retry asks that act again
+     * (the master's `sent`; round 21, ask 16).
+     */
+    val sent: StancePair? = null,
 )
 
 /**
@@ -238,18 +243,30 @@ class StanceViewModel @Inject constructor(
      * without opening anything (design/guidelines/stance-control.md "The
      * gesture" — the shortcut that signs takes a held finger).
      */
-    fun onHoldDefault(target: StanceTarget) {
+    fun onHoldDefault(target: StanceTarget) = signFromRow(target, StancePair.TapDefault)
+
+    /**
+     * THE ROW'S RETRY ASKS THE ACT THAT WAS SENT (round 21, seam 245 ask 16;
+     * PadFailed.md): the hold's default after a hold, the pick after a Set
+     * whose pad was cancelled while it signed — never the hold's +0.10 /
+     * +0.10 in a cancelled pick's place.
+     */
+    fun onRetrySigning(target: StanceTarget) =
+        signFromRow(target, _state.value.targets[target]?.sent ?: StancePair.TapDefault)
+
+    /** A signing the target's row sends — the hold, or its Retry — checked like Set. */
+    private fun signFromRow(target: StanceTarget, pick: StancePair) {
         // With the key elsewhere a hold opens the pad carrying the key
         // notice, as a tap does, and signs nothing (PadKeyAbsent.md:5).
         if (_state.value.keyAbsent) return onOpenPad(target)
         // THE HOLD IS CHECKED LIKE SET (the master's `commitChecked(TAP_DEFAULT)`):
         // a default that nets the bundle to (0, 0) asks before it signs.
-        val landed = _state.value.targets[target]?.landingFor(StancePair.TapDefault)
+        val landed = _state.value.targets[target]?.landingFor(pick)
         if (landed?.severance == true) {
-            update(target) { it.copy(pick = StancePair.TapDefault, landing = landed) }
+            update(target) { it.copy(pick = pick, landing = landed) }
             return askAtZero(target)
         }
-        commit(target, StancePair.TapDefault)
+        commit(target, pick)
     }
 
     /**
@@ -533,7 +550,8 @@ class StanceViewModel @Inject constructor(
     private fun commit(target: StanceTarget, pick: StancePair) {
         val entry = _state.value.targets[target]
         if (entry?.busy == true) return
-        update(target) { it.copy(busy = true, failed = false, needsKey = false) }
+        // The act sent, kept for the row's Retry once its pad is gone.
+        update(target) { it.copy(busy = true, failed = false, needsKey = false, sent = pick) }
         viewModelScope.launch {
             when (val signed = sign(target, pick)) {
                 Signed.Done -> taken(target, pick)

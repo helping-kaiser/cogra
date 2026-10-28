@@ -1062,6 +1062,61 @@ class StanceViewModelTest {
         assertThat(stances.severanceCalls).isEqualTo(1)
     }
 
+    // PadFailed.md (round 21): Cancel while Set signs closes the pad, never the
+    // act; the wait passes to the row, and the row's Retry signs the same pick.
+    @Test
+    fun cancelWhileSetSignsLeavesTheSigningToTheRowWhoseRetrySignsTheSentPick() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        stances.net = StancePair(0.4, 0.4)
+        stances.records = 1
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenPad(TARGET)
+        val picked = StancePair(0.3, 0.2)
+        vm.onPick(TARGET, picked)
+        stances.gate = CompletableDeferred()
+        stances.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.INTERNAL, "not now")))
+        vm.onCommit(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onDismissPad(TARGET)
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+        assertThat(entry(vm).busy).isTrue()
+        // The anchor refuses a second hold while the sent act signs.
+        vm.onHoldDefault(TARGET)
+
+        stances.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(entry(vm).failed).isTrue()
+        assertThat(entry(vm).standing).isEqualTo(StancePair(0.4, 0.4))
+
+        stances.gate = null
+        stances.prepareOutcome = null
+        vm.onRetrySigning(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(stances.staged).containsExactly(picked, picked).inOrder()
+        assertThat(entry(vm).failed).isFalse()
+    }
+
+    @Test
+    fun aHoldsRetrySignsTheHoldsDefault() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        stances.net = StancePair(0.4, 0.4)
+        stances.records = 1
+        stances.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.INTERNAL, "not now")))
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onHoldDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        stances.prepareOutcome = null
+        vm.onRetrySigning(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(stances.staged).containsExactly(StancePair.TapDefault, StancePair.TapDefault).inOrder()
+    }
+
     // SeveranceConfirm.md: Keep it, the scrim and Back wait while Walk it back signs.
     @Test
     fun theWalkBacksWaysOutWaitWhileItSigns() = runTest(dispatcher) {

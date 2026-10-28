@@ -157,6 +157,7 @@ fun StanceControlRoute(
         onConfirmEmptySign = { viewModel.onConfirmEmptySign(target) },
         onDismissEmptySign = { viewModel.onDismissEmptySign(target) },
         vouchesIn = vouchesIn,
+        onRetrySigning = { viewModel.onRetrySigning(target) },
     )
 }
 
