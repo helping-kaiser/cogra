@@ -10,7 +10,9 @@
 // ITS KEYBOARD IS THE SEARCH KEYBOARD: the `search` return key, no capitals
 // guessed and nothing corrected — a query carries handles and tag names,
 // which correction would break. What the action key does is each surface's
-// own (`onAction`): the tag picker's stages its first row.
+// own (`onAction`): the tag picker's stages its first row. The platform's own
+// clear (the search input's ×) is not drawn: the master's pill carries none,
+// and a pill that grew a second control on typing would not be the drawn one.
 //
 // `error` IS THE FIELD-ERROR STATE IN THE PILL'S IDIOM (the caps-affordance
 // round; `TagPickerRefused`): a 1px `--error` ring drawn INSIDE the pill's own
@@ -84,7 +86,7 @@ export function SearchBar({
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           {...testAttributes(part(node, "input"))}
-          className="cg-focus min-w-0 flex-1 border-0 bg-transparent p-0 text-body-large text-inherit outline-none placeholder:text-on-surface-variant"
+          className="cg-focus min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-body-large text-inherit outline-none placeholder:text-on-surface-variant [&::-webkit-search-cancel-button]:appearance-none"
         />
       </div>
     </div>

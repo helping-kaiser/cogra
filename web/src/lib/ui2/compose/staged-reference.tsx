@@ -39,15 +39,21 @@ export function referenceKindWord(target: ReferenceTargetView): string | null {
 }
 
 function Mark({ target, node }: { target: ReferenceTargetView; node?: DataNode }) {
-  // A person is their face; a post or comment its 32px tile on the card tone.
-  return (
-    <span className="flex flex-none" {...testAttributes(part(node, "mark"))}>
-      {target.kind === "User" ? (
-        <MonogramAvatar name={target.displayName ?? target.handle ?? target.label} size={32} />
-      ) : (
-        <NodeMark kind={target.kind === "Comment" ? "comment" : "post"} />
-      )}
-    </span>
+  // A person is their face; a post or comment its 32px tile on the card tone,
+  // a post wearing its cover where the lookup read one. The registered `mark`
+  // is the tile itself — the face it draws — never a box around it.
+  return target.kind === "User" ? (
+    <MonogramAvatar
+      name={target.displayName ?? target.handle ?? target.label}
+      size={32}
+      node={part(node, "mark")}
+    />
+  ) : (
+    <NodeMark
+      kind={target.kind === "Comment" ? "comment" : "post"}
+      src={target.cover ?? null}
+      node={part(node, "mark")}
+    />
   );
 }
 

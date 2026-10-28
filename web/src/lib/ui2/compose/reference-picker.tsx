@@ -219,7 +219,7 @@ export function ReferencePicker({
                 aria-label={triggerName(reading)}
                 onClick={() => setStaging(kinds)}
                 {...testAttributes(part(NODE, "filterTrigger"))}
-                className="cg-state cg-focus cg-hit relative inline-flex h-8 min-w-0 max-w-56 cursor-pointer items-center truncate whitespace-nowrap rounded-full border border-outline bg-transparent px-3 text-label-large text-on-surface"
+                className="cg-state cg-focus cg-hit relative inline-flex h-8 min-w-0 max-w-56 cursor-pointer items-center truncate whitespace-nowrap rounded-full border border-outline bg-transparent px-3 text-label-large [line-height:normal] text-on-surface"
               >
                 {reading}
               </button>
