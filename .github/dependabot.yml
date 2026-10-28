@@ -93,6 +93,11 @@ updates:
         versions: ["[2.4,)"]
       - dependency-name: "com.google.devtools.ksp*"
         versions: ["[2.4,)"]
+      # kotlinx-serialization 1.12 is compiled with Kotlin 2.4 metadata,
+      # which Hilt 2.58's processor refuses ("maximum supported version
+      # is 2.3.0") — it rides the same Kotlin/KSP/Hilt move.
+      - dependency-name: "org.jetbrains.kotlinx:kotlinx-serialization*"
+        versions: ["[1.12,)"]
       # Compose BOM 2025+ breaks Compose APIs and rides compileSdk
       # bumps — part of the same coordinated move.
       - dependency-name: "androidx.compose:compose-bom"
