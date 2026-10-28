@@ -32,6 +32,8 @@ WHEN an eleventh picture is picked -> it is refused with That's more than a post
 
 WHEN a picture is picked -> NEVER the picture uploads before the crop
 
+WHEN press Next GIVEN nothing is picked -> Next stays inert AND NEVER the crop opens AND NEVER a line asks for a pick
+
 WHEN press Next GIVEN the body is one video -> NEVER the clip's length decides whether the cover step comes next
 
 ALWAYS the header back arrow is named Back, never Back a step

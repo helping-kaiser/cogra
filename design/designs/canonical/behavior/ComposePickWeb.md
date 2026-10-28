@@ -22,6 +22,8 @@ WHEN tap the cover's remove control -> the cover leaves the tray AND the picture
 
 WHEN a picture is chosen or dropped -> NEVER the picture uploads before the crop
 
+WHEN press Next GIVEN nothing is picked -> Next stays inert AND NEVER the crop opens AND NEVER a line asks for a pick
+
 WHEN press Next GIVEN the body is one video -> NEVER the clip's length decides whether the cover step comes next
 
 ALWAYS the header back arrow is named Back, never Back a step

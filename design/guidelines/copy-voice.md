@@ -568,6 +568,12 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
 - `That's more than a post carries — up to ten pictures.`
 - `That's more than a comment carries — up to four pictures.`
 
+**The empty pick step says nothing.** With nothing picked, Next stays
+inert and no line asks for a pick: a refusal answers a file, never the
+absence of one, and the words path is silent the same way
+(`ComposeWords`). Never `Pick at least one picture.` (seam 245, ask 13 E;
+*merged under the autonomy order, 2026-10-28; review pending*).
+
 **Screens say MB; the caps are MiB** — MB on every user-facing surface,
 never MiB (jakob 2026-10-02). The limit enforced is the binary
 one — 50 MiB is 52.4 MB — so the number on screen under-promises and
