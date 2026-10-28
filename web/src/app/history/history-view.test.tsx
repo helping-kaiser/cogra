@@ -91,6 +91,10 @@ function postNode(id: string, title: string | null, writtenDaysAgo = 1, by = aut
     updatedAt: daysAgo(writtenDaysAgo),
     landing: { __typename: "Landing", state: "LANDED" },
     moderationStatus: "NORMAL",
+    // The node's own mark (api-spec.md `Post.removal`) — what the card's
+    // RedactedContent reads its wording and its moment off.
+    removal: removed ? { __typename: "Removal", at: hoursAgo(0.3), by: "AUTHOR" } : null,
+    genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
     references: [],
@@ -111,6 +115,8 @@ function commentNode(id: string, by = author("u2", "tobias", "Tobias")) {
     updatedAt: hoursAgo(1),
     landing: { __typename: "Landing", state: "LANDED" },
     moderationStatus: "NORMAL",
+    removal: null,
+    genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
     references: [],
@@ -123,6 +129,7 @@ function commentNode(id: string, by = author("u2", "tobias", "Tobias")) {
       attachments: [],
       author: { __typename: "User", id: "u1", handle: "ada" },
       moderationStatus: "NORMAL",
+      removal: null,
     },
     post: { __typename: "Post", id: "p1" },
   };
@@ -345,7 +352,10 @@ describe("History — the seen-list as a feed (History.md)", () => {
     render();
     await screen.findByTestId("history-list");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p9", "history.card:p1"]);
-    expect(screen.getByTestId("history-post-p9-removed")).toBeInTheDocument();
+    // The mark is the card's own part, `<card>.removed` with its line and its
+    // moment (the evident path while Removed is unregistered).
+    expect(screen.getByTestId(byNode("history.card.removed", "p9"))).toHaveTextContent("Removed by its author");
+    expect(screen.getByTestId(byNode("history.card.removed.when", "p9"))).toHaveTextContent("18m");
   });
 
   it("a_hidden_accounts_posts_and_comments_stay_out_and_its_profile_card_stays", async () => {
