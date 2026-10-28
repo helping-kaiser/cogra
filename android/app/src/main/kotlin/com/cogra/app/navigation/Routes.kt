@@ -91,9 +91,9 @@ data class ReplyWizard(
 @Serializable
 data class EditComment(val commentId: String, val parentTitle: String)
 
-/** A topic by its canonical name — reachable from a chip anywhere (D20). */
+/** A topic by its canonical name — reachable from a chip anywhere (D20). [from] names the back arrow's origin. */
 @Serializable
-data class Topic(val name: String)
+data class Topic(val name: String, val from: String? = null)
 
 /** An actor's profile; a null handle is the viewer's own (the tab). [from] names the back arrow's origin. */
 @Serializable
@@ -102,6 +102,10 @@ data class Profile(val handle: String? = null, val from: String? = null)
 /** The reader's Saved list, reached from their own profile's ⋮ (Saved.md). */
 @Serializable
 data object Saved
+
+/** The reader's History, reached from their own profile's ⋮ (History.md), Saved's sibling. */
+@Serializable
+data object History
 
 /**
  * The reader's notification list, reached from the bell on a root band

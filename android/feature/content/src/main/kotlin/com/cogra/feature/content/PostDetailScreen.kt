@@ -217,6 +217,7 @@ fun PostDetailRoute(
 @Composable
 private fun originBack(from: String?): String? = when (from) {
     "saved" -> stringResource(R.string.content_back_saved)
+    "history" -> stringResource(R.string.content_back_history)
     "notifications" -> stringResource(R.string.content_back_notifications)
     else -> null
 }

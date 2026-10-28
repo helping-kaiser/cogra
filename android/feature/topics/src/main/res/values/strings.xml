@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="topics_back">Back</string>
+    <!-- The way back names its origin where one is known (History.md:57). -->
+    <string name="topics_back_history">Back to History</string>
     <string name="topics_not_found">This name can\'t be a topic.</string>
     <string name="topics_error_transport">Couldn\'t load this topic.</string>
     <string name="topics_retry">Try again</string>

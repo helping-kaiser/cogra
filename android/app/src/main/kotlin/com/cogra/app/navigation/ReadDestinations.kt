@@ -22,10 +22,12 @@ import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.CHATS_FROM_FEED
 import com.cogra.feature.content.CHATS_FROM_MESSAGE
 import com.cogra.feature.content.CHATS_FROM_OWN_PROFILE
+import com.cogra.feature.content.CardDoors
 import com.cogra.feature.content.ChatsComingSoonRoute
 import com.cogra.feature.content.FeedRoute
+import com.cogra.feature.content.HistoryDoors
+import com.cogra.feature.content.HistoryRoute
 import com.cogra.feature.content.PostDetailRoute
-import com.cogra.feature.content.CardDoors
 import com.cogra.feature.content.SavedRoute
 import com.cogra.feature.home.NewerVersionAnnouncement
 import com.cogra.feature.home.VouchedInScreen
@@ -33,12 +35,14 @@ import com.cogra.feature.notifications.NotificationsRoute
 import com.cogra.feature.notifications.RootBellViewModel
 import com.cogra.feature.profile.COMMENTS_ORIGIN
 import com.cogra.feature.profile.FEED_ORIGIN
+import com.cogra.feature.profile.HISTORY_ORIGIN
 import com.cogra.feature.profile.NOTIFICATIONS_ORIGIN
 import com.cogra.feature.profile.POST_ORIGIN
 import com.cogra.feature.profile.ProfileRoute
 import com.cogra.feature.profile.SAVED_ORIGIN
 import com.cogra.feature.profile.topicOrigin
 import com.cogra.feature.stance.StanceControlRoute
+import com.cogra.feature.topics.TOPIC_FROM_HISTORY
 import com.cogra.feature.topics.TopicRoute
 
 /** The Feed tab's root. */
@@ -80,6 +84,10 @@ internal fun NavGraphBuilder.readDrillIns(shell: ShellScope) {
     // comment count raises the thread over Saved, as over the feed, so
     // the thread's return is read here the same way.
     composable<Saved> { entry -> shell.SavedDestination(entry) }
+    // HISTORY (History.md): reached from the own profile's ⋮, Saved's sibling,
+    // a feed of every seen thing as its kind's own card; every door opens
+    // its thing with a back arrow reading `Back to History`.
+    composable<History> { entry -> shell.HistoryDestination(entry) }
     composable<ChatsComingSoon> { entry ->
         ChatsComingSoonRoute(
             from = entry.toRoute<ChatsComingSoon>().from,
@@ -218,9 +226,11 @@ private fun ShellScope.PostDetailDestination(entry: NavBackStackEntry) {
 
 @Composable
 private fun ShellScope.TopicDestination(entry: NavBackStackEntry) {
-    val topic = entry.toRoute<Topic>().name
+    val route = entry.toRoute<Topic>()
+    val topic = route.name
     TopicRoute(
         name = topic,
+        from = route.from,
         onOpenPost = { id -> navController.navigate(PostDetail(id)) },
         onOpenActor = { handle -> navController.navigate(Profile(handle, from = topicOrigin(topic))) },
         onBack = { navController.navigateUp() },
@@ -298,6 +308,8 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
         },
         // The own ⋮'s Saved row (ProfileOwnMenu.md).
         onOpenSaved = { navController.navigate(Saved) },
+        // The own ⋮'s History row (ProfileOwnMenu.md).
+        onOpenHistory = { navController.navigate(History) },
         onRequireAccount = { requireJoin() }.takeIf { signedIn == false },
         from = route.from,
         // The band's chats on the own root (Profile.md:39), and Message on
@@ -358,6 +370,42 @@ private fun ShellScope.SavedDestination(entry: NavBackStackEntry) {
             },
             onOpenActor = { handle -> navController.navigate(Profile(handle, from = SAVED_ORIGIN)) },
             onOpenTopic = { name -> navController.navigate(Topic(name)) },
+        ),
+        viewerId = accountId,
+        signedIn = signedIn,
+        onEditPost = { id -> navController.navigate(ComposePost(id)) },
+        onCitePost = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
+        onReply = { target -> navController.openReplyWizard(target) },
+        onEditComment = { commentId, parentTitle ->
+            navController.navigate(EditComment(commentId, parentTitle))
+        },
+        onSignInOrJoin = { navController.navigate(Login) },
+        commentsReturn = thread.value,
+        onCommentsReturnConsumed = thread.onConsumed,
+        onCommentsDepart = thread.onDepart,
+    )
+}
+
+@Composable
+private fun ShellScope.HistoryDestination(entry: NavBackStackEntry) {
+    val thread = entry.threadReturn(navController)
+    val accountId by authState.accountId.collectAsStateWithLifecycle()
+    HistoryRoute(
+        onBack = { navController.navigateUp() },
+        doors = HistoryDoors(
+            cards = CardDoors(
+                onOpenPost = { id -> navController.navigate(PostDetail(id, from = HISTORY_ORIGIN)) },
+                onOpenComment = { postId, commentId, aimReply ->
+                    navController.navigate(
+                        PostDetail(postId, from = HISTORY_ORIGIN, commentId = commentId, aimReply = aimReply),
+                    )
+                },
+                onOpenActor = { handle -> navController.navigate(Profile(handle, from = HISTORY_ORIGIN)) },
+                onOpenTopic = { name -> navController.navigate(Topic(name, from = TOPIC_FROM_HISTORY)) },
+            ),
+            // `Tag a new post with it` (History.md:63): the composer at its
+            // first stage, the tag riding staged.
+            onComposeWithTag = { name -> navController.navigate(ComposePost(tag = name)) },
         ),
         viewerId = accountId,
         signedIn = signedIn,
