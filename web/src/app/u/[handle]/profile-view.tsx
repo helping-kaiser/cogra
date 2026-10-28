@@ -344,7 +344,7 @@ export function ProfileScreen({
           an empty section takes no room. */}
       {own && (
         <div className="flex flex-col px-4 [&:has(>section:not(:empty))]:py-2">
-          <StatusBanners />
+          <StatusBanners surface="profile" />
         </div>
       )}
       {loading && (
