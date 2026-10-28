@@ -6,7 +6,13 @@ ALWAYS the line Pictures upload while you write — signing waits for them. stan
 
 ALWAYS the picked row carries no crop or edit shortcut of its own
 
+ALWAYS the picked row's first picture wears the Cover badge
+
 WHEN a picture's upload fails -> its thumbnail is marked AND the line One picture didn't upload. stands under the row with Retry and Remove it
+
+WHEN more than one picture's upload fails -> each failed thumbnail is marked AND the line N pictures didn't upload., as 2 pictures didn't upload., stands under the row with Retry and Remove them
+
+WHEN press Remove them -> every failed picture leaves the batch
 
 WHEN press Retry -> the failed upload tries again
 

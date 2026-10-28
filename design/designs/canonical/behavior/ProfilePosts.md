@@ -2,6 +2,8 @@
 
 ALWAYS the posts view lists the person's posts as post cards, never as chronicle entries
 
+ALWAYS the list below the tab row reads Nothing here yet., the line alone, GIVEN the person has published no post
+
 ALWAYS at most one clip plays in the posts view, by the feed's stage law
 
 WHEN scroll settles at the posts view's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in the posts view's order

@@ -1,6 +1,6 @@
 import React from "react";
 import { MonogramAvatar } from "./ActorChip.jsx";
-import { StanceValue } from "../stance/StanceReadout.jsx";
+import { EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue } from "../stance/StanceReadout.jsx";
 
 /* A person on an opinions list (item 17, the conformance round): their face,
    their name, and THE STANCE THE ROW IS ABOUT (jakob 2026-09-01) — the
@@ -35,7 +35,14 @@ import { StanceValue } from "../stance/StanceReadout.jsx";
    is the same promise in the words the pad's label wears. */
 export const HISTORY_DOOR_LABEL = "See how this opinion built";
 
-export function StanceRow({ name, handle, src, pDirected, pInterest, onOpen, onOpenHistory }) {
+/* WHICH (0, 0) THE ROW DRAWS IS THE ROW'S DATA (seam 245, ask 19). A stance
+   at exactly (0, 0) wears 🤷 either way, but its numbers cannot tell a
+   standing walked back to nothing from one an empty sign joined, and the
+   spoken word differs — `Walked back` is false of the second. So the row
+   carries the bundle's own `severed`: walked back speaks `Walked back`;
+   absent or false, the (0, 0) `Says nothing`. */
+export function StanceRow({ name, handle, src, pDirected, pInterest, severed = false, onOpen, onOpenHistory }) {
+  const zeroLabel = severed ? SEVERED_LABEL : EMPTY_PICK_LABEL;
   const box = { display: "flex", alignItems: "center", gap: 12, width: "100%", boxSizing: "border-box", minHeight: 56, border: 0, background: "none", padding: "6px 16px", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left" };
   const person = (
     <button
@@ -49,7 +56,7 @@ export function StanceRow({ name, handle, src, pDirected, pInterest, onOpen, onO
         <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>{name}</span>
         <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>
       </span>
-      {!onOpenHistory && <StanceValue pDirected={pDirected} pInterest={pInterest} />}
+      {!onOpenHistory && <StanceValue pDirected={pDirected} pInterest={pInterest} zeroLabel={zeroLabel} />}
     </button>
   );
   if (!onOpenHistory) return person;
@@ -63,7 +70,7 @@ export function StanceRow({ name, handle, src, pDirected, pInterest, onOpen, onO
         className="cg-state cg-focus cg-hit"
         style={{ flex: "none", display: "inline-flex", alignItems: "center", border: 0, background: "none", padding: "0 0 0 12px", borderRadius: "var(--radius-medium)", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)" }}
       >
-        <StanceValue pDirected={pDirected} pInterest={pInterest} />
+        <StanceValue pDirected={pDirected} pInterest={pInterest} zeroLabel={zeroLabel} />
       </button>
     </div>
   );

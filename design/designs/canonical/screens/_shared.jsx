@@ -108,6 +108,7 @@ const {
   ATTRIBUTION_TIERS,
   PROVENANCE_TIERS,
   LicenseSummary,
+  LICENSE_SUMMARY,
   NodeMark,
   TopicRemovable,
   StagedReference,
@@ -1307,7 +1308,7 @@ const DRAFT_SHADES = [
 function ComposeDraftBody() {
   return (
     <>
-      <WizardHeader title="New post" />
+      <WizardHeader title="New post" backLabel="Back" />
 
       <Card
         style={{
@@ -1419,6 +1420,26 @@ const citedRow = (count) => ({
   countNoun: "citation",
   onOpen: () => {},
   openLabel: `Manage the ${count} ${count === 1 ? "citation" : "citations"}`,
+});
+
+/* THE ONE STAGED CITATION, READ BACK. It carries its own pair, so the row is
+   two lines: what is cited, and what signing it says about the citer. ONE
+   FACTORY WRITES IT FOR BOTH SEALS THAT DRAW IT (seam 245, ask 4) — the
+   post's seal and its key-absent twin: the missing key stops the signing,
+   not the read-back, so the twin reads the row exactly as the seal does, name
+   over pair, and the two cannot drift apart again. `fault` is the seal's
+   unlanded-citation line. */
+const citedOneRow = (fault) => ({
+  label: "References",
+  countNoun: "citation",
+  value: (
+    <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The long way home — @ada</span>
+      <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
+    </span>
+  ),
+  count: "1",
+  ...(fault ? { fault } : null),
 });
 
 /* ── THE SEAL'S TAGS ROW, IN ITS TWO READINGS (jakob's ruling 2026-09-15) ────
@@ -1619,21 +1640,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
                 },
             cited > 1
               ? citedRow(cited)
-              : {
-                  label: "References",
-                  countNoun: "citation",
-                  /* The staged citation carries its own pair, so the row is two
-                     lines: what is cited, and what signing it says about the
-                     citer. */
-                  value: (
-                    <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The long way home — @ada</span>
-                      <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
-                    </span>
-                  ),
-                  count: "1",
-                  ...(state === "refused" ? { fault: { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } } : null),
-                },
+              : citedOneRow(state === "refused" ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined),
           ]}
           total={`${1 + tags.length + cited} things, signed together`}
           note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}
@@ -1641,7 +1648,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value={<LicenseSummary />} action="Change" />
+          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" />
           {/* One number: the post's own record is a Publish, whose one free
               parameter is the author's attachment — their backing; the second
               is pinned by the census (jakob 2026-10-16, PR-101). It starts at
@@ -1842,7 +1849,7 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
             value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
             action="Adjust"
           />
-          <FactRow label="License" value={<LicenseSummary />} action="Change" />
+          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" />
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
         </div>
 
@@ -5406,6 +5413,134 @@ function IntroPostCard({ title, timestamp = "2h", author = ADA, src = "post-phot
       <div style={{ padding: "0 var(--space-3) 10px", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{title}</div>
       <img src={src} alt="" style={{ display: "block", width: "100%", height, objectFit: "cover" }} />
       {tail}
+    </div>
+  );
+}
+
+/* ── THE PICK STEP'S LIVE GALLERY (seam 245, ask 13 I) ──────────────────────
+   The device-gallery grid that takes picks — the photos-app door in the first
+   cell, the roll after it, each tile's ring carrying its place in the post.
+   `ComposePick` draws it under the tray, and `ComposePickedErrors` keeps it
+   under the refusals: the step still takes picks once a refusal is removed, so
+   the grid never hides while refusals stand. `rings` is the place of each of
+   the roll's ten picture tiles, in order; the clip tile is never picked here.
+   Drawn once so the two boards cannot disagree about the roll. */
+/* The picked pair carry their position in the post; the rest wait with an
+   empty ring. A ring is drawn white because what it sits on is a photograph. */
+function PickRing({ index }) {
+  const chosen = typeof index === "number";
+  return (
+    <span
+      style={{
+        position: "absolute",
+        right: 6,
+        top: 6,
+        width: 20,
+        height: 20,
+        boxSizing: "border-box",
+        borderRadius: "var(--radius-full)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: chosen ? undefined : "1px solid #ffffff",
+        background: chosen ? "var(--primary)" : undefined,
+        color: chosen ? "var(--on-primary)" : undefined,
+        fontSize: "var(--text-label-small)",
+        lineHeight: "var(--text-label-small--line-height)",
+        fontWeight: "var(--text-label-small--font-weight)",
+      }}
+    >
+      {chosen ? index : null}
+    </span>
+  );
+}
+
+const PICK_TILE = { position: "relative", width: 125, height: 125 };
+const PICK_FILL = { width: "100%", height: "100%", objectFit: "cover", display: "block" };
+/* Four rungs of the container ramp, in the roll's own order — a stand-in for
+   photographs the board does not have, monotonic so the grid reads as varied
+   rather than patterned. */
+const PICK_SHADES = [
+  "var(--surface-container)",
+  "var(--surface-container-high)",
+  "var(--surface-container-highest)",
+  "var(--surface-container)",
+  "var(--surface-container-highest)",
+  "var(--surface-container-low)",
+  "var(--surface-container-high)",
+  "var(--surface-container-low)",
+];
+
+function PickGrid({ rings = [] }) {
+  return (
+    <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: 3, padding: "4px 4px 0", overflow: "hidden", alignContent: "flex-start" }}>
+      <button
+        type="button"
+        className="cg-state cg-focus"
+        style={{
+          width: 125,
+          height: 125,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 4,
+          border: "1px dashed var(--border-field)",
+          background: "none",
+          boxSizing: "border-box",
+          cursor: "pointer",
+          padding: 0,
+          fontFamily: "var(--font-sans)",
+          fontSize: "var(--text-label-small)",
+          lineHeight: "var(--text-label-small--line-height)",
+          fontWeight: "var(--text-label-small--font-weight)",
+          letterSpacing: "var(--text-label-small--letter-spacing)",
+          color: "var(--primary)",
+        }}
+      >
+        <Icon name="image" />
+        <span style={{ textAlign: "center" }}>Your photos app</span>
+      </button>
+
+      <div style={{ ...PICK_TILE, overflow: "hidden" }}>
+        <img src="post-photo.jpg" alt="" style={PICK_FILL} />
+        <PickRing index={rings[0]} />
+      </div>
+      <div style={{ ...PICK_TILE, overflow: "hidden" }}>
+        <img src="inviter.jpg" alt="" style={PICK_FILL} />
+        <PickRing index={rings[1]} />
+      </div>
+
+      <div style={{ ...PICK_TILE, background: "var(--surface-container-low)" }}>
+        <PickRing />
+        <span
+          style={{
+            position: "absolute",
+            left: 6,
+            bottom: 6,
+            padding: "1px 6px",
+            borderRadius: "var(--radius-extra-small)",
+            background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+            color: "var(--on-surface-snackbar, #ffffff)",
+            fontSize: "var(--text-label-small)",
+            lineHeight: "var(--text-label-small--line-height)",
+            fontWeight: "var(--text-label-small--font-weight)",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 3,
+          }}
+        >
+          <Icon name="play_arrow" size={10} />
+          0:42
+        </span>
+      </div>
+
+      {PICK_SHADES.map((background, index) => (
+        <div key={index} style={{ ...PICK_TILE, background }}>
+          <PickRing index={rings[index + 2]} />
+        </div>
+      ))}
     </div>
   );
 }
