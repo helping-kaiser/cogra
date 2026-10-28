@@ -146,6 +146,18 @@ fragment PostFields on Post {
     state
   }
   moderationStatus
+  # THE NODE'S MARK (api-spec.md `Post.removal`): when and by whom the
+  # payload went. The card's RedactedContent reads it — `by` picks the mark,
+  # `at` is its `when` — and the feed's device-side Removed filter keys on
+  # it (FeedSheet.md:43). Null on a node whose payload stands.
+  removal {
+    at
+    by
+  }
+  # What the author's Remove names (`removeContent`'s `record`): the act
+  # that minted this post, pending included. On every card because the own
+  # menu rides every host — the feed, the profile, the detail (RM-G9).
+  genesisRecordId
   license {
     attribution
     provenance
@@ -208,6 +220,14 @@ fragment CommentFields on Comment {
     state
   }
   moderationStatus
+  # The comment's mark, as the post's (`Comment.removal`): its replies keep
+  # their parent and stay readable beneath it.
+  removal {
+    at
+    by
+  }
+  # What the author's Remove names on their own comment.
+  genesisRecordId
   license {
     attribution
     provenance

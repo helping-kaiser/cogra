@@ -146,6 +146,8 @@ query CitedBy($id: UUID!, $first: Int!, $after: String) {
         pInterest
         # The middle node of the hyper act: the artifact the citation was
         # built into, which is what the row names.
+        # A removed citing artifact keeps its row; `removal` is what its mark
+        # reads, carried here for the row that draws it.
         target {
           __typename
           ... on Post {
@@ -153,11 +155,19 @@ query CitedBy($id: UUID!, $first: Int!, $after: String) {
             title {
               value
             }
+            removal {
+              at
+              by
+            }
           }
           ... on Comment {
             id
             content {
               value
+            }
+            removal {
+              at
+              by
             }
             target {
               __typename

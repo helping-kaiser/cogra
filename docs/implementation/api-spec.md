@@ -1161,6 +1161,21 @@ type User implements Node & Actor {
    anyone else's feed. Most recently hidden first; keyset on
    `(hiddenAt, actor id)`. Field-level: viewer-only."
   hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
+  "The topics the viewer holds — every Type toward which their netted
+   Affinity bundle is not (0, 0): the read-side bundle fold (The
+   generic stance) taken across every Type at once, and nothing else.
+   A bundle walked back to (0, 0) leaves the list; one at zero on a
+   single axis stays, and one held against — negative association —
+   stands in it like any other. Strongest first by association: the
+   folded pDirected descending, then the name ascending, so the order
+   is total; keyset on `(pDirected, name)`. A page is a snapshot: a
+   stance the viewer changes while the list is open moves its row at
+   the next read. `includePending` carries the meaning and default it
+   has on `viewerStance` — the L2 view also folds the viewer's own acts
+   in flight, so a follow joins and a walk-back leaves at once. An
+   invalid cursor is BAD_INPUT. Your topics reads the list, and
+   Explore's door its `totalCount`. Field-level: viewer-only."
+  heldTopics(includePending: Boolean! = true, first: Int, after: String, last: Int, before: String): HeldTopicConnection
   "Acts other actors made that reached this user's content, profile or
    application — newest first, one row per act (notifications.md). A
    hidden actor's rows stay out while the actor is hidden. Keyset on
@@ -1921,6 +1936,27 @@ type HiddenActorEdge {
   cursor: String!
   node: Actor!
   hiddenAt: DateTime!
+}
+
+"The held-topics page (`User.heldTopics`). `totalCount` is how many
+ topics the viewer holds, across every page — the list's length."
+type HeldTopicConnection {
+  edges: [HeldTopicEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+"One held topic, and the viewer's bundle toward it as it stands — the
+ row's pair and its pending marker."
+type HeldTopicEdge {
+  cursor: String!
+  node: Hashtag!
+  "Association — the folded pDirected, sum-then-clip; the list's order."
+  pDirected: Dimension!
+  "Attraction — the folded pInterest, sum-then-clip."
+  pInterest: Dimension!
+  "True while any record in the bundle is still in flight; always false
+   in the L1 view."
+  pending: Boolean!
 }
 
 "Something another actor did that reached the viewer's content,

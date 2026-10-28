@@ -39,6 +39,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { isPending, type PostView } from "@/lib/api/content-api";
+import { withRemoval, type Removal } from "@/lib/api/removal-api";
 import type { License } from "@/lib/license";
 import { useActiveAccountId } from "@/lib/session/provider";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
@@ -64,6 +65,7 @@ import {
   hasMedia,
   payloadIsRedacted,
   removalReason,
+  removalWhen,
   sensitiveSignature,
 } from "./post-media";
 import { ShareButton, useShareCapable } from "./share-button";
@@ -155,7 +157,7 @@ function CommentCount({
 }
 
 export function PostCard({
-  post,
+  post: given,
   variant = "summary",
   href,
   shareHref = href,
@@ -269,6 +271,13 @@ export function PostCard({
   const [licenseShown, setLicenseShown] = useState<License | null>(null);
   const [licenseOpen, setLicenseOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
+  // A CARD THAT IS ITS OWN MENU'S HOST (the topic page) has no surface above
+  // it holding the post, so a removal taken from its menu is kept here: the
+  // card stands as its mark in place the moment the removal is taken (RM-G9's
+  // build word), and the cache it was patched into carries it to every later
+  // read.
+  const [taken, setTaken] = useState<Removal | null>(null);
+  const post = taken === null ? given : withRemoval(given, taken);
   // THE NARROW-SHARE FOLD (design/readme.md, jakob 2026-09-17, sharpened
   // 2026-09-22 — PR #794): strictly below 360px the row sheds Share and the
   // menu leads with it instead; at 360 the wide layout stands. Capability
@@ -431,6 +440,7 @@ export function PostCard({
             <OverflowMenu
               items={menuItems}
               ariaLabel="More on this post"
+              sheetLabel="Post actions"
               testId={`${testId}-menu`}
               node={part(node, "menu")}
               trailing={
@@ -443,13 +453,16 @@ export function PostCard({
                       testId={`${testId}-license-sheet`}
                     />
                   )}
-                  {/* THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob
-                      2026-09-14): erasure is slice 8's, whole. */}
-                  <RemoveConfirm
-                    open={removeOpen}
-                    onClose={() => setRemoveOpen(false)}
-                    onRemove={() => setRemoveOpen(false)}
-                  />
+                  {removeOpen && (
+                    <RemoveConfirm
+                      kind="post"
+                      nodeId={post.id}
+                      record={post.genesisRecordId}
+                      onClose={() => setRemoveOpen(false)}
+                      onRemoved={setTaken}
+                      testId={`${testId}-remove-confirm`}
+                    />
+                  )}
                 </>
               }
             />
@@ -464,7 +477,16 @@ export function PostCard({
         // The skeleton, not a field: author, timestamp, thread position and the
         // stance a reader can still take are what survive, because no record
         // leaves the graph and no removal is silent.
-        <RemovedPlaceholder reason={removalReason(post)} testId={`${testId}-removed`} />
+        // THE MARK DATES ITSELF (`Removed.jsx`: `redacted={{ reason, when }}`):
+        // `when` is the removal's own moment, read off the node's mark. Its
+        // node is the board's evident path — `<card>.removed`, with the mark's
+        // own `line`, `detail` and `when` — until the Removed board registers.
+        <RemovedPlaceholder
+          reason={removalReason(post)}
+          when={removalWhen(post)}
+          node={part(node, "removed")}
+          testId={`${testId}-removed`}
+        />
       ) : (
         <BodyRegion
           veiled={veiled}

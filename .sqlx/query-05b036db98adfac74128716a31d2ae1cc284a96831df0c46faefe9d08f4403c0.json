@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH legs AS (\n               SELECT l.target, l.p_d::text::numeric AS p_d,\n                      l.p_i::text::numeric AS p_i, FALSE AS pending\n               FROM mirror_record_legs l\n               JOIN mirror_records r ON r.record_id = l.record_id\n               WHERE l.leg = 'binary' AND l.family = 'affinity'\n                 AND l.source = $1\n                 AND NOT r.payload_marked\n                 AND NOT l.census_unknown\n               UNION ALL\n               SELECT target, p_d::text::numeric, p_i::text::numeric, TRUE\n               FROM staged_writes\n               WHERE $2 AND family = 'affinity' AND author = $3\n                 AND middle IS NULL\n                 AND octet_length(payload) = 0\n                 AND (pre_signed_at IS NOT NULL OR carried)\n                 AND state NOT IN ('landed', 'expired')\n           ), held AS (\n               SELECT target COLLATE \"C\" AS target,\n                      SUM(p_d) AS sum_d, SUM(p_i) AS sum_i,\n                      COUNT(*) AS records, BOOL_OR(pending) AS pending,\n                      LEAST(GREATEST(SUM(p_d), -1), 1) AS association\n               FROM legs\n               GROUP BY target\n               HAVING NOT (SUM(p_d) = 0 AND SUM(p_i) = 0)\n           )\n           SELECT target AS \"target!\", sum_d::text AS \"sum_d!\",\n                  sum_i::text AS \"sum_i!\", records AS \"records!\",\n                  pending AS \"pending!\", association::text AS \"association!\"\n           FROM held\n           WHERE $4::text IS NULL\n              OR (NOT $6 AND (association < $4::text::numeric\n                              OR (association = $4::text::numeric\n                                  AND target > ('name:' || $5::text) COLLATE \"C\")))\n              OR ($6 AND (association > $4::text::numeric\n                          OR (association = $4::text::numeric\n                              AND target < ('name:' || $5::text) COLLATE \"C\")))\n           ORDER BY CASE WHEN $6 THEN association END ASC,\n                    CASE WHEN $6 THEN target END DESC,\n                    CASE WHEN NOT $6 THEN association END DESC,\n                    CASE WHEN NOT $6 THEN target END ASC\n           LIMIT $7",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "target!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "sum_d!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "sum_i!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "records!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "pending!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "association!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "05b036db98adfac74128716a31d2ae1cc284a96831df0c46faefe9d08f4403c0"
+}

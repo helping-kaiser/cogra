@@ -110,3 +110,46 @@ query TagNames($query: String!, $first: Int) {
     }
   }
 }
+
+# Your topics (YourTopics.dc.html; api-spec.md `User.heldTopics`): every
+# topic the reader holds, strongest first by association, each row the
+# topic's mark and name with the pair the reader signed and the pending
+# marker while an act is in flight. The page size is a literal so the
+# client-operation guard prices the call the client actually makes.
+query HeldTopics($after: String, $includePending: Boolean! = true) {
+  me {
+    id
+    heldTopics(first: 50, after: $after, includePending: $includePending) {
+      totalCount
+      edges {
+        cursor
+        pDirected
+        pInterest
+        pending
+        node {
+          id
+          name {
+            value
+            status
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# Explore's Your topics door (Explore.md: the second line counts the topics
+# the reader holds, the length of the list it opens) — the count alone, no
+# edges.
+query HeldTopicsCount($includePending: Boolean! = true) {
+  me {
+    id
+    heldTopics(first: 0, includePending: $includePending) {
+      totalCount
+    }
+  }
+}
