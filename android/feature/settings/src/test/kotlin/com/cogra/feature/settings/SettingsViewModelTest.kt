@@ -11,6 +11,12 @@ import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.deletion.AccountDeletion
 import com.cogra.domain.deletion.AccountDeletionState
 import com.cogra.domain.deletion.DeletionStanding
+import com.cogra.domain.feed.FeedFilter
+import com.cogra.domain.feed.FeedKind
+import com.cogra.domain.feed.FeedOrder
+import com.cogra.domain.feed.PeopleScope
+import com.cogra.domain.feed.PeopleSign
+import com.cogra.domain.feed.ReaderDefaults
 import com.cogra.domain.identity.BackupManager
 import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.cogra.domain.identity.DeviceLock
@@ -24,6 +30,7 @@ import com.cogra.domain.testing.FakeDevicePreferences
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +63,7 @@ class SettingsViewModelTest {
     private val custody = FakeLockCustodyStore()
     private val locks = FakeDeviceLockRepository().apply { sessionAccount = "u1" }
     private val deviceLock = DeviceLock(custody, tokens, locks)
+    private val readerDefaults = InMemoryReaderDefaultStore()
 
     @Before
     fun setUp() {
@@ -78,12 +86,90 @@ class SettingsViewModelTest {
         sensitive,
         deletionState,
         deviceLock,
+        ReaderDefaults(readerDefaults, tokens),
     ).also {
         it.clock = { NOW }
         it.refresh()
     }
 
     private fun idle() = dispatcher.scheduler.advanceUntilIdle()
+
+    // ------------------------------------------------------------ reading
+    // SettingsReading.md, compiled line by line: the sheet opens on the
+    // reader's own default or CoGra's, stages, Reset stages CoGra's, Done
+    // saves on this device, and every other way out leaves it as it was.
+
+    @Test
+    fun whatYourFeedShowsOpensOnCoGrasDefaultWhereTheReaderSetNone() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        vm.onOpenReading()
+        assertThat(vm.state.value.readingSheet).isEqualTo(FeedFilter.DEFAULT)
+    }
+
+    @Test
+    fun theSheetOpensOnTheReadersOwnDefault() = runTest(dispatcher) {
+        signedIn()
+        val own = FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST, showSeen = true)
+        readerDefaults.save("u1", own)
+        val vm = viewModel()
+        idle()
+        vm.onOpenReading()
+        assertThat(vm.state.value.readingSheet).isEqualTo(own)
+    }
+
+    @Test
+    fun aTapStagesAndNeverChangesTheDefaultBeforeDone() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        vm.onOpenReading()
+        vm.onStageReading(FeedFilter.DEFAULT.copy(people = PeopleScope.YOUR_PEOPLE, peopleSign = PeopleSign.FOR))
+        idle()
+        assertThat(vm.state.value.readerDefault).isEqualTo(FeedFilter.DEFAULT)
+        assertThat(readerDefaults.saved.value).isEmpty()
+    }
+
+    @Test
+    fun doneSavesTheStagedFilterAsTheReadersOwnDefaultOnThisDevice() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        vm.onOpenReading()
+        val staged = FeedFilter.DEFAULT.copy(kinds = setOf(FeedKind.POST, FeedKind.TAG), stillSettling = false)
+        vm.onStageReading(staged)
+        vm.onReadingDone()
+        idle()
+        assertThat(vm.state.value.readingSheet).isNull()
+        assertThat(vm.state.value.readerDefault).isEqualTo(staged)
+        assertThat(readerDefaults.saved.value).containsExactly("u1", staged)
+    }
+
+    @Test
+    fun resetStagesCoGrasOwnDefaultNeverTheReaders() = runTest(dispatcher) {
+        signedIn()
+        readerDefaults.save("u1", FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST))
+        val vm = viewModel()
+        idle()
+        vm.onOpenReading()
+        vm.onResetReading()
+        assertThat(vm.state.value.readingSheet).isEqualTo(FeedFilter.DEFAULT)
+    }
+
+    @Test
+    fun aDismissLeavesTheDefaultAsItWas() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        vm.onOpenReading()
+        vm.onStageReading(FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST))
+        vm.onDismissReading()
+        idle()
+        assertThat(vm.state.value.readingSheet).isNull()
+        assertThat(vm.state.value.readerDefault).isEqualTo(FeedFilter.DEFAULT)
+        assertThat(readerDefaults.saved.value).isEmpty()
+    }
 
     // ------------------------------------------------------------ device
 

@@ -12,6 +12,8 @@ import com.cogra.domain.SessionInfo
 import com.cogra.domain.deletion.AccountDeletion
 import com.cogra.domain.deletion.AccountDeletionState
 import com.cogra.domain.deletion.DeletionStanding
+import com.cogra.domain.feed.FeedFilter
+import com.cogra.domain.feed.ReaderDefaults
 import com.cogra.domain.identity.DeviceLock
 import com.cogra.domain.identity.SignOut
 import com.cogra.domain.repo.SessionRepository
@@ -65,6 +67,13 @@ data class SettingsUiState(
     val signOutConfirmOpen: Boolean = false,
     /** `EraseConfirm` stands over the page; nothing is erased before an answer. */
     val eraseConfirmOpen: Boolean = false,
+    /**
+     * THE READER'S FEED DEFAULT (SettingsReading.md): the filter every feed
+     * opens with, kept on this device — CoGra's own until the reader sets one.
+     */
+    val readerDefault: FeedFilter = FeedFilter.DEFAULT,
+    /** What your feed shows' staged filter; null when its sheet is closed. */
+    val readingSheet: FeedFilter? = null,
     /** The default license sheet's staged pair; null when the sheet is closed. */
     val licenseSheet: LicenseChoice? = null,
     /** The optimistic default while its save is in flight (K4.1). */
@@ -157,6 +166,7 @@ class SettingsViewModel @Inject constructor(
     private val sensitive: SensitiveContentChoice,
     private val deletionState: AccountDeletionState,
     private val deviceLock: DeviceLock,
+    private val readerDefaults: ReaderDefaults,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsUiState())
@@ -176,6 +186,9 @@ class SettingsViewModel @Inject constructor(
             identity.confirmMultiActionSubmits.collect { on ->
                 _state.update { it.copy(confirmMultiActionSubmits = on) }
             }
+        }
+        viewModelScope.launch {
+            readerDefaults.current.collect { default -> _state.update { it.copy(readerDefault = default) } }
         }
         viewModelScope.launch {
             device.theme.collect { theme -> _state.update { it.copy(theme = theme) } }
@@ -251,6 +264,29 @@ class SettingsViewModel @Inject constructor(
     }
 
     // --------------------------------------------------- default license
+
+    /**
+     * WHAT YOUR FEED SHOWS (SettingsReading.md): the sheet opens on the
+     * reader's own default, or CoGra's where they set none; every tap stages.
+     */
+    fun onOpenReading() = _state.update { it.copy(readingSheet = it.readerDefault) }
+
+    fun onStageReading(filter: FeedFilter) = _state.update {
+        if (it.readingSheet == null) it else it.copy(readingSheet = filter)
+    }
+
+    /** HERE `Reset` STAGES COGRA'S DEFAULT (SettingsReading.md:21) — the one place a reader gets back to it. */
+    fun onResetReading() = onStageReading(FeedFilter.DEFAULT)
+
+    /** Scrim, swipe, Back: the default is what it was and nothing staged applies. */
+    fun onDismissReading() = _state.update { it.copy(readingSheet = null) }
+
+    /** Done: the sheet closes and the staged filter is saved as the reader's own default, on this device. */
+    fun onReadingDone() {
+        val staged = _state.value.readingSheet ?: return
+        _state.update { it.copy(readingSheet = null, readerDefault = staged.copy(topic = null)) }
+        viewModelScope.launch { readerDefaults.save(staged) }
+    }
 
     fun onOpenLicense() = _state.update { it.copy(licenseSheet = it.defaultLicense) }
 
