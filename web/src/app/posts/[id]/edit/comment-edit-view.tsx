@@ -336,6 +336,7 @@ export function CommentEditView({
             onLeave={leave}
             leaveLabel={COMMENT_EDIT_LEAVE_LABEL}
             help={<HelpButton label="Editing" onOpen={onHelp} />}
+            focusTitle
           />
 
           <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto px-6 pb-4 pt-3">

@@ -1325,3 +1325,14 @@ describe("PostEditRoute — + Add pictures or a video (EditWords)", () => {
     expect(sent).toMatchObject({ content: "", attachments: [expect.objectContaining({ mediaId: "up-0" })] });
   });
 });
+
+// EditCompose.md: "WHEN the stage opens -> focus lands on the stage's heading
+// AND NEVER the keyboard rises before a field is tapped".
+describe("PostEditRoute — opening", () => {
+  it("lands focus on the heading, never on a field", async () => {
+    serve(editablePost());
+    draw();
+    const heading = await screen.findByRole("heading", { name: "Edit post" });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+  });
+});

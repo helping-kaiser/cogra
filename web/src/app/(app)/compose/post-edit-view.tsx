@@ -259,6 +259,7 @@ export function PostEditView({
         leaveLabel={EDIT_LEAVE_LABEL}
         help={<HelpButton label="Editing" onOpen={onHelp} />}
         testId="post-edit-header"
+        focusTitle
       />
 
       <div className="flex flex-1 flex-col gap-3.5 px-6 pb-4 pt-3">

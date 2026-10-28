@@ -500,3 +500,12 @@ describe("CommentEditVideo", () => {
     expect(props.onRemoveCover).toHaveBeenCalled();
   });
 });
+
+// CommentEdit.md: "WHEN the stage opens -> focus lands on the stage's heading
+// AND NEVER the keyboard rises before a field is tapped".
+describe("CommentEdit opening", () => {
+  it("lands focus on its heading, never on a field", () => {
+    draw();
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Edit comment" }));
+  });
+});
