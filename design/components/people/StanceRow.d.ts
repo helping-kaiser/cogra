@@ -25,6 +25,10 @@ export interface StanceRowProps {
    * `action`. Without it the row stays one element and renders as it always has.
    */
   onOpenHistory?: () => void;
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `avatar`, `name`, `handle`, `value` (with the readout's `face` and `exact`) and, where it stands, the history door `history`. */
+  node?: string;
+  /** The row's key: the holder's handle, without @. */
+  nodeKey?: string;
 }
 
 /** The spoken name of the value's history door. */

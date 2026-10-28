@@ -6,7 +6,7 @@ ALWAYS a staged tag stands only in the staged section above the list
 
 WHEN press the keyboard's action key GIVEN the typed name is a legal tag name -> the first row's name is staged in the composer's tags AND the first row moves into the staged section AND the status message announces the stage AND NEVER the picker closes
 
-WHEN press the keyboard's action key GIVEN the name field refuses the typed name -> NEVER a tag is staged AND the refusal stays under the name field
+WHEN press the keyboard's action key GIVEN tagPicker.nameField refuses the typed name -> NEVER a tag is staged AND the refusal stays under tagPicker.nameField
 
 WHEN tap a row in the list -> the row's name is staged in the composer's tags AND the row moves into the staged section AND the status message announces the stage AND NEVER the picker closes
 
@@ -22,4 +22,4 @@ WHEN press the keyboard's action key GIVEN the typed name is withdrawn in the ed
 
 ALWAYS the back arrow reads Back to the post from a post's composer or its edit, and Back to the comment from a reply's composer or a comment's edit
 
-WHEN the picker opens -> the name field takes focus AND the keyboard rises
+WHEN the picker opens -> tagPicker.nameField takes focus AND the keyboard rises

@@ -822,14 +822,14 @@
         "invites.create": [],
         "invites.group": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
-          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15"
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
         ],
         "invites.group.close": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
         ],
         "invites.group.label": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
-          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15"
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
         ],
         "invites.header": [],
         "invites.header.back": [],
@@ -1037,6 +1037,279 @@
         "changePassword.password.reveal": [],
         "changePassword.password.support": [],
         "changePassword.title": []
+      }
+    },
+    "CitedBy": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.citedBySheet.citation": "the citation's position in the list, newest first, counted from 1 (the cited-by sheet)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "mira"
+        ],
+        "postDetail.card.actionRow": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.score": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.share": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "postDetail.card.authorChip": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.name": [
+          "mira"
+        ],
+        "postDetail.card.citedBy": [
+          "mira"
+        ],
+        "postDetail.card.description": [
+          "mira"
+        ],
+        "postDetail.card.media": [
+          "mira"
+        ],
+        "postDetail.card.media.dots": [
+          "mira"
+        ],
+        "postDetail.card.media.frame": [
+          "mira/1",
+          "mira/2",
+          "mira/3",
+          "mira/4"
+        ],
+        "postDetail.card.opinions": [
+          "mira"
+        ],
+        "postDetail.card.tagsLine": [
+          "mira"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "mira/tidemarket",
+          "mira/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "mira"
+        ],
+        "postDetail.card.title": [
+          "mira"
+        ],
+        "postDetail.citedBySheet": [],
+        "postDetail.citedBySheet.citation": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.citedBySheet.citation.mark": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.citedBySheet.citation.name": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.citedBySheet.citation.value": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.citedBySheet.dragHandle": [],
+        "postDetail.citedBySheet.title": [],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": []
+      }
+    },
+    "CommentEdit": {
+      "prefix": "commentEdit",
+      "keys": {
+        "commentEdit.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "commentEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "commentEdit.acts": [],
+        "commentEdit.acts.line": [],
+        "commentEdit.facts": [],
+        "commentEdit.facts.license": [],
+        "commentEdit.facts.license.label": [],
+        "commentEdit.facts.license.lock": [],
+        "commentEdit.facts.license.value": [],
+        "commentEdit.facts.sensitive": [],
+        "commentEdit.facts.sensitive.action": [],
+        "commentEdit.facts.sensitive.label": [],
+        "commentEdit.facts.sensitive.value": [],
+        "commentEdit.gate": [],
+        "commentEdit.gate.line": [],
+        "commentEdit.header": [],
+        "commentEdit.header.back": [],
+        "commentEdit.header.help": [],
+        "commentEdit.header.leave": [],
+        "commentEdit.header.title": [],
+        "commentEdit.pictures": [],
+        "commentEdit.pictures.add": [],
+        "commentEdit.pictures.describeRow": [],
+        "commentEdit.pictures.describeRow.count": [],
+        "commentEdit.pictures.describeRow.describe": [],
+        "commentEdit.pictures.describeRow.reason": [],
+        "commentEdit.pictures.label": [],
+        "commentEdit.pictures.thumb": [
+          "1"
+        ],
+        "commentEdit.pictures.thumb.remove": [
+          "1"
+        ],
+        "commentEdit.references": [],
+        "commentEdit.references.add": [],
+        "commentEdit.references.label": [],
+        "commentEdit.references.stagedReference": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.kind": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.mark": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.name": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.pair": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "commentEdit.references.stagedReference.remove": [
+          "1"
+        ],
+        "commentEdit.references.withdrawn": [],
+        "commentEdit.references.withdrawn.undo": [],
+        "commentEdit.sign": [],
+        "commentEdit.tags": [],
+        "commentEdit.tags.add": [],
+        "commentEdit.tags.label": [],
+        "commentEdit.tags.tag": [
+          "glovebox"
+        ],
+        "commentEdit.tags.tag.remove": [
+          "glovebox"
+        ],
+        "commentEdit.tags.withdrawn": [],
+        "commentEdit.tags.withdrawn.undo": [],
+        "commentEdit.target": [],
+        "commentEdit.words": [],
+        "commentEdit.words.input": [],
+        "commentEdit.words.label": []
+      }
+    },
+    "CommentEditVideo": {
+      "prefix": "commentEdit",
+      "keys": {
+        "commentEdit.acts": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "commentEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "commentEdit.acts": [
+          "none",
+          "uploading"
+        ],
+        "commentEdit.acts.line": [
+          "none",
+          "uploading"
+        ],
+        "commentEdit.cover": [],
+        "commentEdit.cover.change": [],
+        "commentEdit.cover.label": [],
+        "commentEdit.cover.thumb": [],
+        "commentEdit.facts": [],
+        "commentEdit.facts.license": [],
+        "commentEdit.facts.license.label": [],
+        "commentEdit.facts.license.lock": [],
+        "commentEdit.facts.license.value": [],
+        "commentEdit.facts.sensitive": [],
+        "commentEdit.facts.sensitive.action": [],
+        "commentEdit.facts.sensitive.label": [],
+        "commentEdit.facts.sensitive.value": [],
+        "commentEdit.gate": [],
+        "commentEdit.gate.line": [],
+        "commentEdit.header": [],
+        "commentEdit.header.back": [],
+        "commentEdit.header.help": [],
+        "commentEdit.header.leave": [],
+        "commentEdit.header.title": [],
+        "commentEdit.references": [],
+        "commentEdit.references.add": [],
+        "commentEdit.references.label": [],
+        "commentEdit.sign": [],
+        "commentEdit.tags": [],
+        "commentEdit.tags.add": [],
+        "commentEdit.tags.label": [],
+        "commentEdit.tags.tag": [
+          "glovebox"
+        ],
+        "commentEdit.tags.tag.remove": [
+          "glovebox"
+        ],
+        "commentEdit.tags.withdrawn": [],
+        "commentEdit.tags.withdrawn.undo": [],
+        "commentEdit.target": [],
+        "commentEdit.video": [],
+        "commentEdit.video.describeRow": [],
+        "commentEdit.video.describeRow.count": [],
+        "commentEdit.video.describeRow.describe": [],
+        "commentEdit.video.describeRow.reason": [],
+        "commentEdit.video.label": [],
+        "commentEdit.video.thumb": [],
+        "commentEdit.video.thumb.remove": [],
+        "commentEdit.words": [],
+        "commentEdit.words.input": [],
+        "commentEdit.words.label": []
       }
     },
     "CommentLicense": {
@@ -1339,6 +1612,32 @@
         "postDetail.menuSheet.save": []
       }
     },
+    "ComposeCrop": {
+      "prefix": "composeCrop",
+      "keys": {
+        "composeCrop.pictures.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)"
+      },
+      "nodes": {
+        "composeCrop.header": [],
+        "composeCrop.header.back": [],
+        "composeCrop.header.leave": [],
+        "composeCrop.header.title": [],
+        "composeCrop.howTo": [],
+        "composeCrop.next": [],
+        "composeCrop.pictures": [],
+        "composeCrop.pictures.thumb": [
+          "1",
+          "2"
+        ],
+        "composeCrop.shapes": [],
+        "composeCrop.shapes.squareChip": [],
+        "composeCrop.shapes.tallChip": [],
+        "composeCrop.shapes.wideChip": [],
+        "composeCrop.viewport": [],
+        "composeCrop.zoom": [],
+        "composeCrop.zoom.input": []
+      }
+    },
     "ComposeDetails": {
       "prefix": "composeDetails",
       "keys": {
@@ -1408,6 +1707,94 @@
         "composeDetails.title.corner": [],
         "composeDetails.title.input": [],
         "composeDetails.title.label": []
+      }
+    },
+    "ComposeDetailsReused": {
+      "prefix": "composeDetails",
+      "keys": {
+        "composeDetails.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "composeDetails.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "composeDetails.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "composeDetails.describeRow": [],
+        "composeDetails.describeRow.count": [],
+        "composeDetails.describeRow.describe": [],
+        "composeDetails.describeRow.reason": [],
+        "composeDetails.description": [],
+        "composeDetails.description.corner": [],
+        "composeDetails.description.input": [],
+        "composeDetails.description.label": [],
+        "composeDetails.header": [],
+        "composeDetails.header.back": [],
+        "composeDetails.header.leave": [],
+        "composeDetails.header.title": [],
+        "composeDetails.mediaRow": [],
+        "composeDetails.mediaRow.caption": [],
+        "composeDetails.mediaRow.thumb": [
+          "1",
+          "2"
+        ],
+        "composeDetails.next": [],
+        "composeDetails.published": [],
+        "composeDetails.references": [],
+        "composeDetails.references.add": [],
+        "composeDetails.references.label": [],
+        "composeDetails.references.stagedReference": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.kind": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.mark": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.name": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.remove": [
+          "1"
+        ],
+        "composeDetails.tags": [],
+        "composeDetails.tags.add": [],
+        "composeDetails.tags.label": [],
+        "composeDetails.tags.tag": [
+          "fieldnotes",
+          "coastroad"
+        ],
+        "composeDetails.tags.tag.remove": [
+          "fieldnotes",
+          "coastroad"
+        ],
+        "composeDetails.title": [],
+        "composeDetails.title.corner": [],
+        "composeDetails.title.input": [],
+        "composeDetails.title.label": []
+      }
+    },
+    "CoverCrop": {
+      "prefix": "coverCrop",
+      "keys": {},
+      "nodes": {
+        "coverCrop.header": [],
+        "coverCrop.header.back": [],
+        "coverCrop.header.leave": [],
+        "coverCrop.header.title": [],
+        "coverCrop.howTo": [],
+        "coverCrop.next": [],
+        "coverCrop.shapeNote": [],
+        "coverCrop.viewport": [],
+        "coverCrop.zoom": [],
+        "coverCrop.zoom.input": []
       }
     },
     "DeleteAccount": {
@@ -1599,6 +1986,408 @@
         "deleteAccount.body": [],
         "deleteAccount.onward": [],
         "deleteAccount.title": []
+      }
+    },
+    "EditCompose": {
+      "prefix": "postEdit",
+      "keys": {
+        "postEdit.acts": "the signing chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "postEdit.body.mediaRow": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "postEdit.body.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "postEdit.gate": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "postEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "postEdit.sign": "the signing or upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postEdit.acts": [
+          "none",
+          "slow"
+        ],
+        "postEdit.acts.line": [
+          "none",
+          "slow"
+        ],
+        "postEdit.acts.slow": [
+          "slow"
+        ],
+        "postEdit.body": [],
+        "postEdit.body.add": [],
+        "postEdit.body.mediaRow": [
+          "none",
+          "uploading",
+          "failed"
+        ],
+        "postEdit.body.mediaRow.caption": [
+          "none",
+          "uploading",
+          "failed"
+        ],
+        "postEdit.body.mediaRow.thumb": [
+          "none/1",
+          "none/2",
+          "uploading/1",
+          "uploading/2",
+          "failed/1",
+          "failed/2"
+        ],
+        "postEdit.body.rule": [],
+        "postEdit.body.uploadError": [],
+        "postEdit.body.uploadError.message": [],
+        "postEdit.body.uploadError.remove": [],
+        "postEdit.body.uploadError.retry": [],
+        "postEdit.description": [],
+        "postEdit.description.corner": [],
+        "postEdit.description.input": [],
+        "postEdit.description.label": [],
+        "postEdit.facts": [],
+        "postEdit.facts.backing": [],
+        "postEdit.facts.backing.action": [],
+        "postEdit.facts.backing.label": [],
+        "postEdit.facts.backing.value": [],
+        "postEdit.facts.backing.value.exact": [],
+        "postEdit.facts.backing.value.face": [],
+        "postEdit.facts.license": [],
+        "postEdit.facts.license.label": [],
+        "postEdit.facts.license.lock": [],
+        "postEdit.facts.license.value": [],
+        "postEdit.facts.sensitive": [],
+        "postEdit.facts.sensitive.action": [],
+        "postEdit.facts.sensitive.label": [],
+        "postEdit.facts.sensitive.value": [],
+        "postEdit.gate": [
+          "uploading",
+          "failed"
+        ],
+        "postEdit.gate.line": [
+          "uploading"
+        ],
+        "postEdit.gate.message": [
+          "failed"
+        ],
+        "postEdit.gate.retry": [
+          "failed"
+        ],
+        "postEdit.gate.wait": [
+          "failed"
+        ],
+        "postEdit.header": [],
+        "postEdit.header.back": [],
+        "postEdit.header.help": [],
+        "postEdit.header.leave": [],
+        "postEdit.header.title": [],
+        "postEdit.references": [],
+        "postEdit.references.add": [],
+        "postEdit.references.label": [],
+        "postEdit.references.stagedReference": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.kind": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.mark": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.name": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.remove": [
+          "1"
+        ],
+        "postEdit.references.withdrawn": [],
+        "postEdit.references.withdrawn.undo": [],
+        "postEdit.sign": [
+          "none",
+          "slow",
+          "failed"
+        ],
+        "postEdit.tags": [],
+        "postEdit.tags.add": [],
+        "postEdit.tags.label": [],
+        "postEdit.tags.tag": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.tag.remove": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.withdrawn": [],
+        "postEdit.tags.withdrawn.undo": [],
+        "postEdit.title": [],
+        "postEdit.title.corner": [],
+        "postEdit.title.input": [],
+        "postEdit.title.label": []
+      }
+    },
+    "EditComposeVideo": {
+      "prefix": "postEdit",
+      "keys": {
+        "postEdit.acts": "the upload chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postEdit.acts": [
+          "none",
+          "uploading"
+        ],
+        "postEdit.acts.line": [
+          "none",
+          "uploading"
+        ],
+        "postEdit.cover": [],
+        "postEdit.cover.add": [],
+        "postEdit.cover.change": [],
+        "postEdit.cover.label": [],
+        "postEdit.cover.note": [],
+        "postEdit.cover.thumb": [],
+        "postEdit.description": [],
+        "postEdit.description.corner": [],
+        "postEdit.description.input": [],
+        "postEdit.description.label": [],
+        "postEdit.facts": [],
+        "postEdit.facts.backing": [],
+        "postEdit.facts.backing.action": [],
+        "postEdit.facts.backing.label": [],
+        "postEdit.facts.backing.value": [],
+        "postEdit.facts.backing.value.exact": [],
+        "postEdit.facts.backing.value.face": [],
+        "postEdit.facts.license": [],
+        "postEdit.facts.license.label": [],
+        "postEdit.facts.license.lock": [],
+        "postEdit.facts.license.value": [],
+        "postEdit.facts.sensitive": [],
+        "postEdit.facts.sensitive.action": [],
+        "postEdit.facts.sensitive.label": [],
+        "postEdit.facts.sensitive.value": [],
+        "postEdit.gate": [],
+        "postEdit.gate.line": [],
+        "postEdit.header": [],
+        "postEdit.header.back": [],
+        "postEdit.header.help": [],
+        "postEdit.header.leave": [],
+        "postEdit.header.title": [],
+        "postEdit.sign": [],
+        "postEdit.tags": [],
+        "postEdit.tags.add": [],
+        "postEdit.tags.label": [],
+        "postEdit.tags.tag": [
+          "coastroad"
+        ],
+        "postEdit.tags.tag.remove": [
+          "coastroad"
+        ],
+        "postEdit.tags.withdrawn": [],
+        "postEdit.tags.withdrawn.undo": [],
+        "postEdit.title": [],
+        "postEdit.title.corner": [],
+        "postEdit.title.input": [],
+        "postEdit.title.label": [],
+        "postEdit.video": [],
+        "postEdit.video.describeRow": [],
+        "postEdit.video.describeRow.count": [],
+        "postEdit.video.describeRow.describe": [],
+        "postEdit.video.describeRow.reason": [],
+        "postEdit.video.label": [],
+        "postEdit.video.rule": [],
+        "postEdit.video.thumb": [],
+        "postEdit.video.thumb.remove": []
+      }
+    },
+    "EditPicked": {
+      "prefix": "postEdit",
+      "keys": {
+        "postEdit.body.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "postEdit.pickedSheet.picture": "the picture's position in the post's media, counted from 1 (PickedSheet)",
+        "postEdit.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postEdit.acts": [],
+        "postEdit.acts.line": [],
+        "postEdit.body": [],
+        "postEdit.body.add": [],
+        "postEdit.body.mediaRow": [],
+        "postEdit.body.mediaRow.caption": [],
+        "postEdit.body.mediaRow.thumb": [
+          "1",
+          "2"
+        ],
+        "postEdit.body.rule": [],
+        "postEdit.description": [],
+        "postEdit.description.corner": [],
+        "postEdit.description.input": [],
+        "postEdit.description.label": [],
+        "postEdit.facts": [],
+        "postEdit.facts.backing": [],
+        "postEdit.facts.backing.action": [],
+        "postEdit.facts.backing.label": [],
+        "postEdit.facts.backing.value": [],
+        "postEdit.facts.backing.value.exact": [],
+        "postEdit.facts.backing.value.face": [],
+        "postEdit.facts.license": [],
+        "postEdit.facts.license.label": [],
+        "postEdit.facts.license.lock": [],
+        "postEdit.facts.license.value": [],
+        "postEdit.facts.sensitive": [],
+        "postEdit.facts.sensitive.action": [],
+        "postEdit.facts.sensitive.label": [],
+        "postEdit.facts.sensitive.value": [],
+        "postEdit.header": [],
+        "postEdit.header.back": [],
+        "postEdit.header.help": [],
+        "postEdit.header.leave": [],
+        "postEdit.header.title": [],
+        "postEdit.pickedSheet": [],
+        "postEdit.pickedSheet.done": [],
+        "postEdit.pickedSheet.dragHandle": [],
+        "postEdit.pickedSheet.note": [],
+        "postEdit.pickedSheet.picture": [
+          "1",
+          "2"
+        ],
+        "postEdit.pickedSheet.picture.describe": [
+          "2"
+        ],
+        "postEdit.pickedSheet.picture.described": [
+          "1"
+        ],
+        "postEdit.pickedSheet.picture.label": [
+          "1",
+          "2"
+        ],
+        "postEdit.pickedSheet.picture.makeCover": [
+          "2"
+        ],
+        "postEdit.pickedSheet.picture.moveDown": [
+          "1"
+        ],
+        "postEdit.pickedSheet.picture.moveUp": [
+          "2"
+        ],
+        "postEdit.pickedSheet.picture.remove": [
+          "1",
+          "2"
+        ],
+        "postEdit.pickedSheet.picture.reorder": [
+          "1",
+          "2"
+        ],
+        "postEdit.pickedSheet.picture.thumb": [
+          "1",
+          "2"
+        ],
+        "postEdit.pickedSheet.title": [],
+        "postEdit.references": [],
+        "postEdit.references.add": [],
+        "postEdit.references.label": [],
+        "postEdit.references.stagedReference": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.kind": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.mark": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.name": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "postEdit.references.stagedReference.remove": [
+          "1"
+        ],
+        "postEdit.references.withdrawn": [],
+        "postEdit.references.withdrawn.undo": [],
+        "postEdit.sign": [],
+        "postEdit.tags": [],
+        "postEdit.tags.add": [],
+        "postEdit.tags.label": [],
+        "postEdit.tags.tag": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.tag.remove": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.withdrawn": [],
+        "postEdit.tags.withdrawn.undo": [],
+        "postEdit.title": [],
+        "postEdit.title.corner": [],
+        "postEdit.title.input": [],
+        "postEdit.title.label": []
+      }
+    },
+    "EditWords": {
+      "prefix": "postEdit",
+      "keys": {
+        "postEdit.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postEdit.acts": [],
+        "postEdit.acts.line": [],
+        "postEdit.body": [],
+        "postEdit.body.add": [],
+        "postEdit.body.label": [],
+        "postEdit.body.rule": [],
+        "postEdit.body.words": [],
+        "postEdit.body.words.input": [],
+        "postEdit.facts": [],
+        "postEdit.facts.backing": [],
+        "postEdit.facts.backing.action": [],
+        "postEdit.facts.backing.label": [],
+        "postEdit.facts.backing.value": [],
+        "postEdit.facts.backing.value.exact": [],
+        "postEdit.facts.backing.value.face": [],
+        "postEdit.facts.license": [],
+        "postEdit.facts.license.label": [],
+        "postEdit.facts.license.lock": [],
+        "postEdit.facts.license.value": [],
+        "postEdit.facts.sensitive": [],
+        "postEdit.facts.sensitive.action": [],
+        "postEdit.facts.sensitive.label": [],
+        "postEdit.facts.sensitive.value": [],
+        "postEdit.header": [],
+        "postEdit.header.back": [],
+        "postEdit.header.help": [],
+        "postEdit.header.leave": [],
+        "postEdit.header.title": [],
+        "postEdit.sign": [],
+        "postEdit.tags": [],
+        "postEdit.tags.add": [],
+        "postEdit.tags.label": [],
+        "postEdit.tags.tag": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.tag.remove": [
+          "fieldnotes",
+          "saltmaps"
+        ],
+        "postEdit.tags.withdrawn": [],
+        "postEdit.tags.withdrawn.undo": [],
+        "postEdit.title": [],
+        "postEdit.title.corner": [],
+        "postEdit.title.input": [],
+        "postEdit.title.label": []
       }
     },
     "EraseConfirm": {
@@ -2161,6 +2950,38 @@
           "tobias",
           "sol"
         ],
+        "feed.commentCard.actionRow": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.reply": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.score": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.score.value": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.share": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.stance": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.stance.anchor": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.stance.anchor.face": [
+          "tobias",
+          "sol"
+        ],
         "feed.commentCard.media": [
           "tobias",
           "sol"
@@ -2710,6 +3531,222 @@
         "feed.snackbar.message": []
       }
     },
+    "FeedKinds": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "feed.commentCard": "the comment author's handle, without @ (CommentCard)",
+        "feed.profileCard": "the person's handle, without @ (the profile feed card)",
+        "feed.tagCard": "the tag's name, without # (the tag feed card)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "sol"
+        ],
+        "feed.card.actionRow": [
+          "sol"
+        ],
+        "feed.card.actionRow.comments": [
+          "sol"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "sol"
+        ],
+        "feed.card.actionRow.score": [
+          "sol"
+        ],
+        "feed.card.actionRow.score.value": [
+          "sol"
+        ],
+        "feed.card.actionRow.share": [
+          "sol"
+        ],
+        "feed.card.actionRow.stance": [
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "sol"
+        ],
+        "feed.card.authorChip": [
+          "sol"
+        ],
+        "feed.card.authorChip.avatar": [
+          "sol"
+        ],
+        "feed.card.authorChip.handle": [
+          "sol"
+        ],
+        "feed.card.authorChip.name": [
+          "sol"
+        ],
+        "feed.card.description": [
+          "sol"
+        ],
+        "feed.card.media": [
+          "sol"
+        ],
+        "feed.card.media.dots": [
+          "sol"
+        ],
+        "feed.card.media.frame": [
+          "sol/1",
+          "sol/2"
+        ],
+        "feed.card.menu": [
+          "sol"
+        ],
+        "feed.card.opener": [
+          "sol"
+        ],
+        "feed.card.tagsLine": [
+          "sol"
+        ],
+        "feed.card.tagsLine.tag": [
+          "sol/fieldnotes",
+          "sol/saltmaps"
+        ],
+        "feed.card.timestamp": [
+          "sol"
+        ],
+        "feed.card.title": [
+          "sol"
+        ],
+        "feed.commentCard": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.stance.anchor.face": [
+          "tobias"
+        ],
+        "feed.profileCard": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.score": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.score.value": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.share": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.stance": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "feed.profileCard.avatar": [
+          "mira"
+        ],
+        "feed.profileCard.bio": [
+          "mira"
+        ],
+        "feed.profileCard.handle": [
+          "mira"
+        ],
+        "feed.profileCard.menu": [
+          "mira"
+        ],
+        "feed.profileCard.name": [
+          "mira"
+        ],
+        "feed.tagCard": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.compose": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.score": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.score.value": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.share": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.stance": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.stance.anchor": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.stance.anchor.face": [
+          "saltmaps"
+        ],
+        "feed.tagCard.glimpse": [
+          "saltmaps"
+        ],
+        "feed.tagCard.glimpse.by": [
+          "saltmaps"
+        ],
+        "feed.tagCard.glimpse.newest": [
+          "saltmaps"
+        ],
+        "feed.tagCard.mark": [
+          "saltmaps"
+        ],
+        "feed.tagCard.name": [
+          "saltmaps"
+        ],
+        "feed.tagCard.through": [
+          "saltmaps"
+        ],
+        "feed.tagCard.timestamp": [
+          "saltmaps"
+        ]
+      }
+    },
     "FeedNewerVersion": {
       "prefix": "feed",
       "keys": {
@@ -2830,6 +3867,27 @@
         "feed.snackbar": [],
         "feed.snackbar.action": [],
         "feed.snackbar.message": []
+      }
+    },
+    "FeedNothing": {
+      "prefix": "feed",
+      "keys": {},
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.nothing": [],
+        "feed.nothing.action": [],
+        "feed.nothing.title": []
       }
     },
     "FeedPostLicense": {
@@ -3365,6 +4423,219 @@
         "feed.seenSeparator.label": []
       }
     },
+    "FeedSheet": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "feed.filterSheet.people.everyone": "the people chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "feed.filterSheet.people.sign": "the people chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "feed.filterSheet.people.yourPeople": "the people chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "feed.filterSheet.topic.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.share": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.name": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.body": [
+          "tobias"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.filterSheet": [],
+        "feed.filterSheet.also": [],
+        "feed.filterSheet.also.hint": [],
+        "feed.filterSheet.also.label": [],
+        "feed.filterSheet.also.removedChip": [],
+        "feed.filterSheet.also.sensitiveChip": [],
+        "feed.filterSheet.also.settlingChip": [],
+        "feed.filterSheet.dragHandle": [],
+        "feed.filterSheet.foot": [],
+        "feed.filterSheet.foot.done": [],
+        "feed.filterSheet.foot.reset": [],
+        "feed.filterSheet.forms": [],
+        "feed.filterSheet.forms.hint": [],
+        "feed.filterSheet.forms.label": [],
+        "feed.filterSheet.forms.photosChip": [],
+        "feed.filterSheet.forms.textChip": [],
+        "feed.filterSheet.forms.videoChip": [],
+        "feed.filterSheet.help": [],
+        "feed.filterSheet.kinds": [],
+        "feed.filterSheet.kinds.commentsChip": [],
+        "feed.filterSheet.kinds.hint": [],
+        "feed.filterSheet.kinds.label": [],
+        "feed.filterSheet.kinds.postsChip": [],
+        "feed.filterSheet.kinds.profilesChip": [],
+        "feed.filterSheet.kinds.topicsChip": [],
+        "feed.filterSheet.order": [],
+        "feed.filterSheet.order.hint": [],
+        "feed.filterSheet.order.label": [],
+        "feed.filterSheet.order.picker": [],
+        "feed.filterSheet.order.picker.newestOption": [],
+        "feed.filterSheet.order.picker.rankedOption": [],
+        "feed.filterSheet.order.seen": [],
+        "feed.filterSheet.order.seen.box": [],
+        "feed.filterSheet.order.seen.label": [],
+        "feed.filterSheet.people": [],
+        "feed.filterSheet.people.everyone": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.everyone.dot": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.everyone.hint": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.everyone.label": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.hint": [],
+        "feed.filterSheet.people.label": [],
+        "feed.filterSheet.people.sign": [
+          "your-people"
+        ],
+        "feed.filterSheet.people.sign.against": [
+          "your-people"
+        ],
+        "feed.filterSheet.people.sign.either": [
+          "your-people"
+        ],
+        "feed.filterSheet.people.sign.for": [
+          "your-people"
+        ],
+        "feed.filterSheet.people.yourPeople": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.yourPeople.dot": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.yourPeople.hint": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.yourPeople.label": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.topic": [],
+        "feed.filterSheet.topic.allTopics": [],
+        "feed.filterSheet.topic.hint": [],
+        "feed.filterSheet.topic.label": [],
+        "feed.filterSheet.topic.tag": [
+          "saltmaps",
+          "coastroad",
+          "fieldnotes",
+          "tidetables"
+        ]
+      }
+    },
     "FeedUnread": {
       "prefix": "feed",
       "keys": {
@@ -3601,6 +4872,30 @@
         "history.commentCard": [
           "tobias"
         ],
+        "history.commentCard.actionRow": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor.face": [
+          "tobias"
+        ],
         "history.day": [
           "today",
           "yesterday",
@@ -3813,6 +5108,30 @@
         "history.commentCard": [
           "tobias"
         ],
+        "history.commentCard.actionRow": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor.face": [
+          "tobias"
+        ],
         "history.filterSheet": [],
         "history.filterSheet.dragHandle": [],
         "history.filterSheet.foot": [],
@@ -3928,6 +5247,30 @@
           "ada"
         ],
         "history.commentCard": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor.face": [
           "tobias"
         ],
         "history.day": [
@@ -4218,6 +5561,339 @@
         "history.tagsLabel": []
       }
     },
+    "InviteCreated": {
+      "prefix": "invites",
+      "keys": {
+        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
+      },
+      "nodes": {
+        "invites.application": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.close": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.disc": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.second": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.title": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.trailing": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.applicationsLabel": [],
+        "invites.create": [],
+        "invites.group": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.group.close": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.group.label": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.header": [],
+        "invites.header.back": [],
+        "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.linkSheet": [],
+        "invites.linkSheet.dragHandle": [],
+        "invites.linkSheet.link": [],
+        "invites.linkSheet.link.address": [],
+        "invites.linkSheet.link.caption": [],
+        "invites.linkSheet.link.copy": [],
+        "invites.linkSheet.link.label": [],
+        "invites.linkSheet.share": [],
+        "invites.linkSheet.title": [],
+        "invites.linksLabel": []
+      }
+    },
+    "InviteExpiry": {
+      "prefix": "invites",
+      "keys": {
+        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
+        "invites.expirySheet.expiryOption": "the expiry's length as its row prints it, lowercased, each run of other characters one - (the invite's expiry chooser)",
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
+      },
+      "nodes": {
+        "invites.application": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.close": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.disc": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.second": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.title": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.trailing": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.applicationsLabel": [],
+        "invites.create": [],
+        "invites.createSheet": [],
+        "invites.createSheet.create": [],
+        "invites.createSheet.dragHandle": [],
+        "invites.createSheet.options": [],
+        "invites.createSheet.options.expiry": [],
+        "invites.createSheet.options.expiry.chevron": [],
+        "invites.createSheet.options.expiry.label": [],
+        "invites.createSheet.options.expiry.value": [],
+        "invites.createSheet.options.footnote": [],
+        "invites.createSheet.options.singleUse": [],
+        "invites.createSheet.options.singleUse.label": [],
+        "invites.createSheet.options.singleUse.switch": [],
+        "invites.createSheet.title": [],
+        "invites.expirySheet": [],
+        "invites.expirySheet.dragHandle": [],
+        "invites.expirySheet.expiryOption": [
+          "24-hours",
+          "7-days",
+          "30-days"
+        ],
+        "invites.expirySheet.expiryOption.choice": [
+          "24-hours",
+          "7-days",
+          "30-days"
+        ],
+        "invites.expirySheet.expiryOption.label": [
+          "24-hours",
+          "7-days",
+          "30-days"
+        ],
+        "invites.expirySheet.title": [],
+        "invites.group": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.group.close": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.group.label": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.header": [],
+        "invites.header.back": [],
+        "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.linksLabel": []
+      }
+    },
+    "InviteNew": {
+      "prefix": "invites",
+      "keys": {
+        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
+      },
+      "nodes": {
+        "invites.application": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.close": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.disc": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.second": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.title": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.trailing": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.applicationsLabel": [],
+        "invites.create": [],
+        "invites.createSheet": [],
+        "invites.createSheet.create": [],
+        "invites.createSheet.dragHandle": [],
+        "invites.createSheet.options": [],
+        "invites.createSheet.options.expiry": [],
+        "invites.createSheet.options.expiry.chevron": [],
+        "invites.createSheet.options.expiry.label": [],
+        "invites.createSheet.options.expiry.value": [],
+        "invites.createSheet.options.footnote": [],
+        "invites.createSheet.options.singleUse": [],
+        "invites.createSheet.options.singleUse.label": [],
+        "invites.createSheet.options.singleUse.switch": [],
+        "invites.createSheet.title": [],
+        "invites.group": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.group.close": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.group.label": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.header": [],
+        "invites.header.back": [],
+        "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.linksLabel": []
+      }
+    },
     "Invites": {
       "prefix": "invites",
       "keys": {
@@ -4278,14 +5954,14 @@
         "invites.create": [],
         "invites.group": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
-          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15"
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
         ],
         "invites.group.close": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
         ],
         "invites.group.label": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
-          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15"
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
         ],
         "invites.header": [],
         "invites.header.back": [],
@@ -4317,6 +5993,118 @@
         "invites.linksLabel": []
       }
     },
+    "InvitesEmpty": {
+      "prefix": "invites",
+      "keys": {},
+      "nodes": {
+        "invites.empty": [],
+        "invites.empty.create": [],
+        "invites.empty.title": [],
+        "invites.header": [],
+        "invites.header.back": [],
+        "invites.header.title": []
+      }
+    },
+    "KeptPicksReview": {
+      "prefix": "keptPicks",
+      "keys": {
+        "keptPicks.pick": "the kept pick's position in the kept picks' review, counted from 1 (KeptPicksReview)"
+      },
+      "nodes": {
+        "keptPicks.approval": [],
+        "keptPicks.approval.open": [],
+        "keptPicks.header": [],
+        "keptPicks.header.back": [],
+        "keptPicks.header.title": [],
+        "keptPicks.intro": [],
+        "keptPicks.pick": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.consequence": [
+          "2"
+        ],
+        "keptPicks.pick.kind": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.mark": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.name": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.pair": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.pair.exact": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.pair.face": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.remove": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.sign": []
+      }
+    },
+    "KeptPicksSeal": {
+      "prefix": "keptPicksSeal",
+      "keys": {
+        "keptPicksSeal.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)"
+      },
+      "nodes": {
+        "keptPicksSeal.acts": [],
+        "keptPicksSeal.acts.actRow": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicksSeal.acts.actRow.count": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicksSeal.acts.actRow.label": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicksSeal.acts.actRow.value": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicksSeal.acts.note": [],
+        "keptPicksSeal.acts.total": [],
+        "keptPicksSeal.approval": [],
+        "keptPicksSeal.approval.open": [],
+        "keptPicksSeal.foot": [],
+        "keptPicksSeal.foot.back": [],
+        "keptPicksSeal.foot.sign": [],
+        "keptPicksSeal.header": [],
+        "keptPicksSeal.header.back": [],
+        "keptPicksSeal.header.help": [],
+        "keptPicksSeal.header.leave": [],
+        "keptPicksSeal.header.stage": [],
+        "keptPicksSeal.header.title": []
+      }
+    },
     "KeyCeremony": {
       "prefix": "keyCeremony",
       "keys": {},
@@ -4328,6 +6116,209 @@
         "keyCeremony.later": [],
         "keyCeremony.note": [],
         "keyCeremony.title": []
+      }
+    },
+    "KeyElsewhere": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "ada"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.keyCard": [],
+        "feed.keyCard.body": [],
+        "feed.keyCard.restore": [],
+        "feed.keyCard.title": []
+      }
+    },
+    "KeyElsewhereNoBackup": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "ada"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.keyCard": [],
+        "feed.keyCard.body": [],
+        "feed.keyCard.title": []
       }
     },
     "Notifications": {
@@ -4440,6 +6431,212 @@
         "onboarding.stage.youCaption": [],
         "onboarding.stage.youRing": [],
         "onboarding.title": []
+      }
+    },
+    "PadPending": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.pending": [
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "ada"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.keyCard": [],
+        "feed.keyCard.body": [],
+        "feed.keyCard.restore": [],
+        "feed.keyCard.title": []
+      }
+    },
+    "PadPendingReview": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.pending": [
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "ada"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada"
+        ],
+        "feed.card.title": [
+          "ada"
+        ]
       }
     },
     "PostDetail": {
@@ -4733,6 +6930,172 @@
           "credit",
           "public-record-of-use"
         ]
+      }
+    },
+    "PostOpinions": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.opinionsSheet.opinion": "the opinion holder's handle, without @ (the opinions sheet)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "mira"
+        ],
+        "postDetail.card.actionRow": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.score": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.share": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "postDetail.card.authorChip": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.name": [
+          "mira"
+        ],
+        "postDetail.card.description": [
+          "mira"
+        ],
+        "postDetail.card.media": [
+          "mira"
+        ],
+        "postDetail.card.media.dots": [
+          "mira"
+        ],
+        "postDetail.card.media.frame": [
+          "mira/1",
+          "mira/2",
+          "mira/3",
+          "mira/4"
+        ],
+        "postDetail.card.opinions": [
+          "mira"
+        ],
+        "postDetail.card.tagsLine": [
+          "mira"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "mira/tidemarket",
+          "mira/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "mira"
+        ],
+        "postDetail.card.title": [
+          "mira"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.opinionsSheet": [],
+        "postDetail.opinionsSheet.dragHandle": [],
+        "postDetail.opinionsSheet.opinion": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.avatar": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.handle": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.name": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.value": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.value.exact": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.value.face": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.title": []
       }
     },
     "Profile": {
@@ -5629,6 +7992,56 @@
         "postDetail.menuSheet.save": []
       }
     },
+    "ReferencePicker": {
+      "prefix": "referencePicker",
+      "keys": {
+        "referencePicker.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
+        "referencePicker.staged.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)"
+      },
+      "nodes": {
+        "referencePicker.announcement": [],
+        "referencePicker.done": [],
+        "referencePicker.filterTrigger": [],
+        "referencePicker.header": [],
+        "referencePicker.header.back": [],
+        "referencePicker.header.help": [],
+        "referencePicker.header.title": [],
+        "referencePicker.result": [
+          "1"
+        ],
+        "referencePicker.result.mark": [
+          "1"
+        ],
+        "referencePicker.result.name": [
+          "1"
+        ],
+        "referencePicker.result.sub": [
+          "1"
+        ],
+        "referencePicker.result.trailing": [
+          "1"
+        ],
+        "referencePicker.searchField": [],
+        "referencePicker.searchField.glyph": [],
+        "referencePicker.searchField.input": [],
+        "referencePicker.staged": [],
+        "referencePicker.staged.stagedReference": [
+          "1"
+        ],
+        "referencePicker.staged.stagedReference.kind": [
+          "1"
+        ],
+        "referencePicker.staged.stagedReference.mark": [
+          "1"
+        ],
+        "referencePicker.staged.stagedReference.name": [
+          "1"
+        ],
+        "referencePicker.staged.stagedReference.remove": [
+          "1"
+        ]
+      }
+    },
     "RejectAllConfirm": {
       "prefix": "invites",
       "keys": {
@@ -5688,14 +8101,14 @@
         "invites.dialog.title": [],
         "invites.group": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
-          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15"
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
         ],
         "invites.group.close": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
         ],
         "invites.group.label": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
-          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15"
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
         ],
         "invites.header": [],
         "invites.header.back": [],
@@ -5786,14 +8199,14 @@
         "invites.dialog.title": [],
         "invites.group": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
-          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15"
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
         ],
         "invites.group.close": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
         ],
         "invites.group.label": [
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
-          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15"
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
         ],
         "invites.header": [],
         "invites.header.back": [],
@@ -5823,6 +8236,98 @@
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
         ],
         "invites.linksLabel": []
+      }
+    },
+    "RemoveConfirm": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postDetail.card": [
+          "sol"
+        ],
+        "postDetail.card.actionRow": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.score": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.share": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor.exact": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "sol"
+        ],
+        "postDetail.card.authorChip": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.name": [
+          "sol"
+        ],
+        "postDetail.card.description": [
+          "sol"
+        ],
+        "postDetail.card.media": [
+          "sol"
+        ],
+        "postDetail.card.media.dots": [
+          "sol"
+        ],
+        "postDetail.card.media.frame": [
+          "sol/1",
+          "sol/2"
+        ],
+        "postDetail.card.opinions": [
+          "sol"
+        ],
+        "postDetail.card.tagsLine": [
+          "sol"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "sol/fieldnotes",
+          "sol/saltmaps"
+        ],
+        "postDetail.card.timestamp": [
+          "sol"
+        ],
+        "postDetail.card.title": [
+          "sol"
+        ],
+        "postDetail.dialog": [],
+        "postDetail.dialog.body": [],
+        "postDetail.dialog.keep": [],
+        "postDetail.dialog.remove": [],
+        "postDetail.dialog.title": [],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": []
       }
     },
     "RemoveMenu": {
@@ -5918,6 +8423,79 @@
         "postDetail.menuSheet.markSensitive": [],
         "postDetail.menuSheet.remove": [],
         "postDetail.menuSheet.save": []
+      }
+    },
+    "Removed": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "sol"
+        ],
+        "postDetail.card.actionRow": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.score": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.share": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "sol"
+        ],
+        "postDetail.card.authorChip": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.name": [
+          "sol"
+        ],
+        "postDetail.card.removalMark": [
+          "sol"
+        ],
+        "postDetail.card.removalMark.detail": [
+          "sol"
+        ],
+        "postDetail.card.removalMark.line": [
+          "sol"
+        ],
+        "postDetail.card.removalMark.when": [
+          "sol"
+        ],
+        "postDetail.card.timestamp": [
+          "sol"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": []
       }
     },
     "ReportConfirm": {
@@ -6128,6 +8706,30 @@
           "ada"
         ],
         "saved.commentCard": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance.anchor.face": [
           "tobias"
         ],
         "saved.header": [],
@@ -6426,6 +9028,30 @@
           "tobias"
         ],
         "saved.commentCard": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance.anchor.face": [
           "tobias"
         ],
         "saved.header": [],
@@ -8015,6 +10641,117 @@
         "tagPage.snackbar.message": []
       }
     },
+    "TagPicker": {
+      "prefix": "tagPicker",
+      "keys": {
+        "tagPicker.staged.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "tagPicker.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "tagPicker.announcement": [],
+        "tagPicker.done": [],
+        "tagPicker.footnote": [],
+        "tagPicker.header": [],
+        "tagPicker.header.back": [],
+        "tagPicker.header.help": [],
+        "tagPicker.header.title": [],
+        "tagPicker.nameField": [],
+        "tagPicker.nameField.glyph": [],
+        "tagPicker.nameField.input": [],
+        "tagPicker.rule": [],
+        "tagPicker.staged": [],
+        "tagPicker.staged.tag": [
+          "saltmarsh",
+          "saltflats"
+        ],
+        "tagPicker.staged.tag.mark": [
+          "saltmarsh",
+          "saltflats"
+        ],
+        "tagPicker.staged.tag.name": [
+          "saltmarsh",
+          "saltflats"
+        ],
+        "tagPicker.staged.tag.remove": [
+          "saltmarsh",
+          "saltflats"
+        ],
+        "tagPicker.tag": [
+          "salt",
+          "saltmaps",
+          "saltcrust"
+        ],
+        "tagPicker.tag.mark": [
+          "salt",
+          "saltmaps",
+          "saltcrust"
+        ],
+        "tagPicker.tag.name": [
+          "salt",
+          "saltmaps",
+          "saltcrust"
+        ],
+        "tagPicker.tag.sub": [
+          "salt"
+        ],
+        "tagPicker.tag.trailing": [
+          "salt",
+          "saltmaps",
+          "saltcrust"
+        ]
+      }
+    },
+    "TagPickerRefused": {
+      "prefix": "tagPicker",
+      "keys": {},
+      "nodes": {
+        "tagPicker.announcement": [],
+        "tagPicker.done": [],
+        "tagPicker.footnote": [],
+        "tagPicker.header": [],
+        "tagPicker.header.back": [],
+        "tagPicker.header.help": [],
+        "tagPicker.header.title": [],
+        "tagPicker.nameField": [],
+        "tagPicker.nameField.glyph": [],
+        "tagPicker.nameField.input": [],
+        "tagPicker.refusal": []
+      }
+    },
+    "TagPickerTyping": {
+      "prefix": "tagPicker",
+      "keys": {
+        "tagPicker.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "tagPicker.announcement": [],
+        "tagPicker.done": [],
+        "tagPicker.footnote": [],
+        "tagPicker.header": [],
+        "tagPicker.header.back": [],
+        "tagPicker.header.help": [],
+        "tagPicker.header.title": [],
+        "tagPicker.nameField": [],
+        "tagPicker.nameField.glyph": [],
+        "tagPicker.nameField.input": [],
+        "tagPicker.rule": [],
+        "tagPicker.tag": [
+          "saltmaps"
+        ],
+        "tagPicker.tag.mark": [
+          "saltmaps"
+        ],
+        "tagPicker.tag.name": [
+          "saltmaps"
+        ],
+        "tagPicker.tag.sub": [
+          "saltmaps"
+        ],
+        "tagPicker.tag.trailing": [
+          "saltmaps"
+        ]
+      }
+    },
     "VerifyExpired": {
       "prefix": "verify",
       "keys": {},
@@ -8275,6 +11012,26 @@
         "vouchedIn.title": []
       }
     },
+    "WalletComingSoon": {
+      "prefix": "wallet",
+      "keys": {},
+      "nodes": {
+        "wallet.band": [],
+        "wallet.band.bell": [],
+        "wallet.band.chats": [],
+        "wallet.band.mark": [],
+        "wallet.band.wordmark": [],
+        "wallet.bottomBar": [],
+        "wallet.bottomBar.composeSlot": [],
+        "wallet.bottomBar.feedSlot": [],
+        "wallet.bottomBar.profileSlot": [],
+        "wallet.bottomBar.searchSlot": [],
+        "wallet.bottomBar.walletSlot": [],
+        "wallet.comingSoonCard": [],
+        "wallet.comingSoonCard.line": [],
+        "wallet.comingSoonCard.title": []
+      }
+    },
     "WhatsNew": {
       "prefix": "whatsNew",
       "keys": {
@@ -8333,6 +11090,45 @@
           "0-1-2",
           "0-1-1",
           "0-1-0"
+        ]
+      }
+    },
+    "YourTopics": {
+      "prefix": "yourTopics",
+      "keys": {
+        "yourTopics.heldTopic": "the held topic's name, without # (Your topics)"
+      },
+      "nodes": {
+        "yourTopics.header": [],
+        "yourTopics.header.back": [],
+        "yourTopics.header.title": [],
+        "yourTopics.heldTopic": [
+          "saltmaps",
+          "coastroad",
+          "fieldnotes",
+          "tidetables",
+          "wellness"
+        ],
+        "yourTopics.heldTopic.mark": [
+          "saltmaps",
+          "coastroad",
+          "fieldnotes",
+          "tidetables",
+          "wellness"
+        ],
+        "yourTopics.heldTopic.name": [
+          "saltmaps",
+          "coastroad",
+          "fieldnotes",
+          "tidetables",
+          "wellness"
+        ],
+        "yourTopics.heldTopic.value": [
+          "saltmaps",
+          "coastroad",
+          "fieldnotes",
+          "tidetables",
+          "wellness"
         ]
       }
     }

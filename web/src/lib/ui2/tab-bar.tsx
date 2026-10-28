@@ -10,7 +10,9 @@
 //
 // A CELL'S KIND IS ITS CONTENT. A tab with an `icon` is a glyph cell named by
 // its `label`; a tab without one shows the label as its words and takes no
-// second name.
+// second name. The words take label-large's size, weight and tracking alone,
+// as the master sets them — the leading is the font's own (`normal`), never
+// the role's 20px.
 //
 // A GROUP OF TOGGLES, NOT A TABLIST: nothing here controls a `tabpanel` — the
 // row filters the list beneath it — so the cells are `aria-pressed` buttons in
@@ -63,7 +65,7 @@ export function TabBar<Id extends string>({
             {...testAttributes(part(node, `${tab.id}Tab`), `${testId}-${tab.id}`)}
             className={`cg-state cg-focus grid min-h-12 flex-1 cursor-pointer place-items-center border-0 bg-transparent p-0 ${
               selected ? "text-primary shadow-[inset_0_-2px_0_var(--primary)]" : "text-on-surface-variant"
-            } ${tab.icon !== undefined ? "" : "font-sans text-label-large"}`}
+            } ${tab.icon !== undefined ? "" : "font-sans text-label-large [line-height:normal]"}`}
           >
             {tab.icon !== undefined ? <Icon name={tab.icon} size={iconSize} /> : tab.label}
           </button>

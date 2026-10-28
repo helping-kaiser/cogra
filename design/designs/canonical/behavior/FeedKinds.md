@@ -16,10 +16,10 @@ ALWAYS a feed card's score slot stands bare only for a thing still settling and 
 
 ALWAYS a reply is a comment targeting a comment: as standalone content a reply card may appear in any feed, and the under-card reply expansion never appears in a feed
 
-ALWAYS a comment card carries no view-replies line
+ALWAYS feed.commentCard carries no view-replies line
 
-WHEN the comment card is tapped outside its head row and its own controls -> the post's comment section opens scrolled to that comment
+WHEN feed.commentCard is tapped outside its head row and its own controls -> the post's comment section opens scrolled to that comment
 
-WHEN the comment glyph on a comment card is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
+WHEN feed.commentCard.actionRow.reply is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
 
-WHEN Tag a new post with it on a tag card is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags
+WHEN feed.tagCard.actionRow.compose, Tag a new post with it, is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags

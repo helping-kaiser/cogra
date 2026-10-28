@@ -13,7 +13,10 @@
    for. The opinion is picked once, on the pad, when the person exists.
 
    WHAT A SHEET COVERS IS INERT, NOT SHORTENED — the whole list stands beneath
-   it, which is what the board's `scanExempt` line says. */
+   it, which is what the board's `scanExempt` line says.
+
+   REGISTERED under the `invites` prefix (seam 248), the sheet `createSheet`. */
+export const NODE = "invites";
 export function Screen() {
   return (
     <>

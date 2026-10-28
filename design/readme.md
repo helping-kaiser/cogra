@@ -2287,7 +2287,9 @@ entry first". What stands:
   (path, key), never DOM order. A copy a board's tweak chip draws once
   per value is one element in several states: it keeps one path and
   carries the chip's value as its key (`history.searchField` under
-  `search` and under `kinds`; jakob 2026-10-06, seam 069). Every
+  `search` and under `kinds`; jakob 2026-10-06, seam 069); an element
+  two chips draw keys each copy by its own chip's value, and its rule
+  names both chips (`postEdit.sign`; seam 248). Every
   other board renders the annotations stripped, so a name reaches a built board only once it
   is registered in `designs/canonical/nodes.json`, which the render
   writes. **Registered paths are append-only**: a collision fails the
@@ -10150,7 +10152,7 @@ Saved and History:
 - **Saved and History search everything kept or seen**, never only the
   cards already loaded — the one place the server-side matcher shows.
 - **The results are sectioned.** The people stand first under
-  `SectionLabel`'s `People` (the caption Explore's `Recent` wears),
+  `SectionLabel`'s `Profiles` (the caption Explore's `Recent` wears),
   capped at **three**; `See all profiles`, a text button on its own line,
   closes the section when more match, and the content follows by the
   surface's own order with no caption of its own. The door opens the
@@ -10515,6 +10517,50 @@ marked *merged under the autonomy order, review pending*.
   `New post` (`publish-a-post`, `publish-words`, `publish-a-video`,
   `publish-a-vertical-video`: 60 → 61 origins). The registry holds at
   **100 screens**; the new board is unregistered.
+
+### Round 23, the registration sweep — 2026-10-28
+
+Seam 248's registrations and mechanical fixes, under the same autonomy
+order. Explore shipped on both clients, so `ExploreComingSoon` is gone
+from the tree and the bar's Explore slot opens `Explore`.
+
+- **The registry's new prefixes** are one per surface, as before:
+  `postEdit`, `commentEdit`, `composeCrop`, `coverCrop`, `tagPicker`,
+  `referencePicker`, `keptPicks`, `keptPicksSeal`, `wallet`, `yourTopics`.
+  The removal pair, the opinions and cited-by sheets join `postDetail`;
+  Invites' empty, create, link and expiry boards join `invites`; the
+  key-away plates, `FeedSheet`, `FeedNothing` and `FeedKinds` join
+  `feed`; `ComposeDetailsReused` joins `composeDetails`.
+- **A repeated row keys by its content where it has one**: the opinions
+  sheet's `opinion` by the holder's handle, Your topics' `heldTopic`
+  and the tag picker's rows by the name. Where content cannot tell two
+  rows apart, by place: `citation` (newest first), `pick`, `actRow`,
+  `picture`, the picker's `result`.
+- **A master keeps one name across surfaces**: the post card's removal
+  mark is `removalMark`, as the profile's is; the reference picker's
+  staged row is `stagedReference`, as the composer's is.
+- **A path follows the drawing.** The already-published marker stands
+  under the media row, so it is `composeDetails.published`, beside
+  `mediaRow`. The feed's filter sheet is drawn beside the band on
+  `FeedSheet`, so it is `feed.filterSheet`.
+- **A name never forbids its own words**: the wallet's door is
+  `comingSoonCard`, because a node named `comingSoon` would bar its
+  blessed `Wallet — coming soon` from the sidecar.
+- **An element two chips draw** keeps one path, each copy keyed by the
+  value of the chip that draws it, and its rule names both chips
+  (`postEdit.sign`: the `signing` chip's `none` and `slow`, the `upload`
+  chip's `failed`; `_build/node-paths.mjs`).
+- **The dialog shell draws what the clients build**: border-box, so the
+  20rem clamp is the surface's whole width (320 on a 412 frame, 296 on a
+  360 one, measured), and the title sets headline-small's tracking.
+- **Fixed to the sidecars**: a failed removal keeps its dialog, Retry in
+  it; `FeedNothing`'s trigger reads `Nothing`; @rafa's application group
+  comes through a used single-use link, never the live one; `Removed`'s
+  arrow returns to where the post was opened from.
+- **The gate**: edges **2135 → 2128** (`ExploreComingSoon`'s seven);
+  flows hold at **227**, four re-blessed back to 60 `New post` origins.
+  The registry grows **100 → 132 screens**, **3983 → 5142** board paths,
+  **1081 → 1538** distinct.
 
 ---
 

@@ -139,6 +139,7 @@ export function InlineAction({
   className,
   style,
   node,
+  nodeKey,
 }) {
   const rung = INLINE_SIZES[size] ?? INLINE_SIZES.lg;
   return (
@@ -167,6 +168,7 @@ export function InlineAction({
         ...style,
       }}
       data-node={node}
+      data-node-key={node && nodeKey}
     >
       {busy && busyLabel ? busyLabel : children}
     </button>

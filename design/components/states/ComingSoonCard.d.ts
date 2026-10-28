@@ -9,6 +9,8 @@ export interface ComingSoonCardProps {
   thing: string;
   /** One sentence of what will be there: "Your conversations will be here." */
   line: string;
+  /** The data-node name its placer gives this card (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `title` and `line`. */
+  node?: string;
 }
 
 export declare function ComingSoonCard(props: ComingSoonCardProps): JSX.Element;

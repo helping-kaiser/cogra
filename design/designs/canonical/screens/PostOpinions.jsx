@@ -22,21 +22,26 @@
    rows a different way would teach a reader the order means nothing.
 
    THE SHEET SITS OVER THE POST DETAIL, drawn whole beneath it, because that is
-   the surface the reader asked from. */
+   the surface the reader asked from.
+
+   REGISTERED under the `postDetail` prefix (seam 248): the sheet is
+   `opinionsSheet`, each row an `opinion` keyed by its holder's handle — a
+   person is content, so the row keys by who, never by position. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
-      <DetailHeader items={READER_POST_MENU} />
+      <DetailHeader items={READER_POST_MENU} node="header" />
       <DetailColumn>
-        <PostCard {...MIRA_GALLERY_POST} variant="detail" opinions={8} onOpenOpinions={() => {}} />
+        <PostCard {...MIRA_GALLERY_POST} variant="detail" opinions={8} onOpenOpinions={() => {}} node="card" />
       </DetailColumn>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
-      <BottomSheet open ariaLabel="Opinions on this post" maxHeight="88%">
-        <SheetTitle>Opinions on this post</SheetTitle>
+      <BottomSheet open ariaLabel="Opinions on this post" maxHeight="88%" node="opinionsSheet">
+        <SheetTitle node="title">Opinions on this post</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {POST_OPINION_HOLDERS.map((holder) => (
-            <StanceRow key={holder.handle} {...holder} onOpen={() => {}} />
+            <StanceRow key={holder.handle} {...holder} onOpen={() => {}} node="opinion" nodeKey={holder.handle} />
           ))}
         </div>
       </BottomSheet>

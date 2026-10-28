@@ -4,6 +4,7 @@
 // notification — and the feed otherwise. One table, so the post and the
 // profile cannot name the same origin two ways.
 
+import { opinionsHref, parseOpinionsOrigin } from "@/lib/profile/opinions-route";
 import { FROM_YOUR_TOPICS, YOUR_TOPICS_HREF } from "@/lib/topics/your-topics";
 
 export type BackTarget = { readonly href: string; readonly label: string };
@@ -43,6 +44,13 @@ const FEED: BackTarget = { href: "/feed", label: "Back to feed" };
 /** Where the back arrow goes and what it reads, by the `from` the page was opened with. */
 export function backFor(from: string | null | undefined): BackTarget {
   if (from === null || from === undefined) return FEED;
+  // A row on a profile's opinions page reads `Back to the opinions`
+  // (ProfileStances.md:19; copy-voice, the list named by what it holds) and
+  // returns to the page on the tab it was left on.
+  const opinions = parseOpinionsOrigin(from);
+  if (opinions !== null) {
+    return { href: opinionsHref(opinions.handle, opinions.direction), label: "Back to the opinions" };
+  }
   // Someone else's profile reads `Back to the profile` (ProfileOther.md:63;
   // ChatsComingSoon.md:17, a profile's Message).
   if (from.startsWith(PERSON_ORIGIN) && from.length > PERSON_ORIGIN.length) {
