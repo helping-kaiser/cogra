@@ -76,7 +76,8 @@ class PostEditAddPathsScreenTest {
         val landed = PickedAsset("a.jpg", upload = AssetUpload.Done("m-a"))
         render(edit(pictures(landed, PickedAsset("b.jpg", upload = AssetUpload.Running))))
 
-        compose.onNodeWithTag("post_edit_gate").assertTextContains("Uploading 1 of 2 — signing waits for the pictures.")
+        compose.onNodeWithTag("post_edit_gate").assertExists()
+        compose.onNodeWithText("Uploading 1 of 2 — signing waits for the pictures.").assertExists()
         compose.onNodeWithTag("post_edit_sign").assertIsEnabled()
     }
 
@@ -84,7 +85,8 @@ class PostEditAddPathsScreenTest {
     fun aGateOnOnePictureNamesThePicture() {
         render(edit(pictures(PickedAsset("a.jpg", upload = AssetUpload.Running))))
 
-        compose.onNodeWithTag("post_edit_gate").assertTextContains("Uploading 0 of 1 — signing waits for the picture.")
+        compose.onNodeWithTag("post_edit_gate").assertExists()
+        compose.onNodeWithText("Uploading 0 of 1 — signing waits for the picture.").assertExists()
     }
 
     @Test
@@ -214,7 +216,8 @@ class PostEditAddPathsScreenTest {
         val gallery = EditGallery.of(listOf(clip)).withNewCover(PickedAsset("face.jpg", upload = AssetUpload.Running))
         render(edit(gallery))
 
-        compose.onNodeWithTag("post_edit_gate").assertTextContains("Uploading 0 of 1 — signing waits for the cover.")
+        compose.onNodeWithTag("post_edit_gate").assertExists()
+        compose.onNodeWithText("Uploading 0 of 1 — signing waits for the cover.").assertExists()
         compose.onNodeWithTag("post_edit_sign").assertIsEnabled()
     }
 

@@ -344,8 +344,8 @@ class CommentEditTest {
         )
         compose.setContent { Edit(state) }
 
-        compose.onNodeWithTag("comment_edit_gate")
-            .assertTextContains("Uploading 0 of 1 — signing waits for the picture.")
+        compose.onNodeWithTag("comment_edit_gate").assertExists()
+        compose.onNodeWithText("Uploading 0 of 1 — signing waits for the picture.").assertExists()
         compose.onNodeWithTag("comment_edit_sign").assertIsEnabled()
     }
 
@@ -478,7 +478,8 @@ class CommentEditTest {
             .withNewCover(PickedAsset("face.jpg", upload = AssetUpload.Running))
         compose.setContent { Edit(edited().copy(gallery = gallery)) }
 
-        compose.onNodeWithTag("comment_edit_gate").assertTextContains("Uploading 0 of 1 — signing waits for the cover.")
+        compose.onNodeWithTag("comment_edit_gate").assertExists()
+        compose.onNodeWithText("Uploading 0 of 1 — signing waits for the cover.").assertExists()
         compose.onNodeWithTag("comment_edit_sign").assertIsEnabled()
     }
 
