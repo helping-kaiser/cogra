@@ -197,8 +197,7 @@ fn smtp_config(lookup: &impl Fn(&str) -> Option<String>) -> Result<SmtpConfig, M
     let from = lookup("MAIL_FROM")
         .filter(|f| !f.trim().is_empty())
         .ok_or(MailerConfigError::Missing("MAIL_FROM"))?;
-    let from: Mailbox = from
-        .trim()
+    let from: Mailbox = unquoted(from.trim())
         .parse()
         .map_err(|e: lettre::address::AddressError| MailerConfigError::InvalidMailFrom(e.to_string()))?;
     let timeout_secs = match lookup("SMTP_TIMEOUT_SECS") {
@@ -270,6 +269,21 @@ fn smtp_config(lookup: &impl Fn(&str) -> Option<String>) -> Result<SmtpConfig, M
         from,
         timeout: Duration::from_secs(timeout_secs),
     })
+}
+
+/// The value without one pair of double quotes around the whole of it.
+///
+/// A display name puts a space in `MAIL_FROM`, and dotenvy refuses an
+/// unquoted value with a space, so `.env` quotes it; the Makefile's
+/// `include .env` then exports the quotes along with the value, and the
+/// exported variable wins over dotenvy's read. No mailbox both begins and
+/// ends with a double quote (it ends in the address or its closing `>`), so
+/// removing the pair never changes a valid value.
+fn unquoted(value: &str) -> &str {
+    value
+        .strip_prefix('"')
+        .and_then(|v| v.strip_suffix('"'))
+        .unwrap_or(value)
 }
 
 #[cfg(test)]
@@ -570,5 +584,29 @@ mod tests {
             panic!("a valid timeout is accepted");
         };
         assert_eq!(smtp.timeout(), Duration::from_secs(12));
+    }
+
+    /// A sender quoted whole, as make exports a quoted .env value, reads
+    /// as the same mailbox as the unquoted one, and a quoted display name
+    /// keeps its quotes' meaning.
+    ///
+    /// A MAIL_FROM wrapped whole in double quotes reads as the mailbox inside them.
+    /// ´claim:mail:a-sender-quoted-whole-reads-as-the-mailbox-inside´
+    #[test]
+    fn a_sender_quoted_whole_reads_as_the_mailbox_inside() {
+        let url = ("SMTP_URL", "smtps://user:pw@smtp.example.org");
+        for from in [
+            "\"CoGra <no-reply@example.org>\"",
+            "CoGra <no-reply@example.org>",
+            "\"CoGra\" <no-reply@example.org>",
+        ] {
+            let Ok(MailerConfig::Smtp(smtp)) =
+                config(&[("MAILER", "smtp"), url, ("MAIL_FROM", from)])
+            else {
+                panic!("MAIL_FROM={from} is accepted");
+            };
+            assert_eq!(smtp.from().name.as_deref(), Some("CoGra"), "{from}");
+            assert_eq!(smtp.from().email.to_string(), "no-reply@example.org");
+        }
     }
 }
