@@ -1316,7 +1316,7 @@ class StanceViewModelTest {
         stances.net = StancePair(0.5, 0.5)
         stances.records = 2
         val vm = viewModel()
-        pressSetAt(vm, StancePair.Origin)
+        pressSetAt(vm, StancePair(-0.5, -0.5))
         assertThat(entry(vm).severance).isNotNull()
 
         vm.onDismissPad(TARGET)
