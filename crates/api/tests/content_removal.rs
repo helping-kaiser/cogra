@@ -735,7 +735,16 @@ async fn after_removal_no_copy_of_the_words_remains_anywhere(pool: PgPool) {
     let rig = rig(pool);
     let ada = member(&rig, "ada").await;
     let id = post(&rig, &ada, "Plumtitle", "Plumbody first.", &[]).await;
-    signed_edit(&rig, &ada, &id, "Plumbody second.").await;
+    let edit = rig
+        .gql(
+            Some(&ada.token),
+            PREPARE_POST_EDIT,
+            json!({ "input": { "id": id, "title": "Plumtitle again", "content": "Plumbody second." }}),
+        )
+        .await;
+    no_errors(&edit["preparePostEdit"]);
+    rig.sign_prepared(&ada.token, &ada.key, &edit["preparePostEdit"]["writes"])
+        .await;
     rig.close_and_ingest().await;
     let node: Uuid = id.parse().expect("uuid");
     assert!(
