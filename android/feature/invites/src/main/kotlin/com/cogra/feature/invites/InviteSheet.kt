@@ -62,7 +62,7 @@ internal fun ExpiryChoice.words(): String = stringResource(
 )
 
 /** Callbacks the sheet raises. */
-internal data class SheetActions(
+data class SheetActions(
     val onClose: () -> Unit,
     val onSingleUseChange: (Boolean) -> Unit,
     val onOpenExpiry: () -> Unit,

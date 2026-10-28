@@ -215,7 +215,7 @@ data class InvitesActions(
     val onRevoke: (InviteLinkInfo) -> Unit = {},
     val onSnackShown: () -> Unit = {},
     val onFocusMoved: () -> Unit = {},
-    internal val sheet: SheetActions = SheetActions({}, {}, {}, {}, {}, {}, {}, {}),
+    val sheet: SheetActions = SheetActions({}, {}, {}, {}, {}, {}, {}, {}),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
