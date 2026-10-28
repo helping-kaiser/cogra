@@ -210,7 +210,18 @@ export function ContentRow({
         )}
         {second !== undefined && second !== null && second !== "" && (
           <span
-            className={`${ELLIPSIS} ${variant === "door" ? "text-label-small" : "text-body-medium"} text-on-surface-variant`}
+            // A door's second line takes label-small's size, leading and
+            // tracking, the weight the ground's (ContentRow.jsx `TYPE`), as the
+            // trailing word below does; the chronicle's is body-medium whole.
+            className={`${ELLIPSIS} ${variant === "door" ? "text-[length:var(--text-label-small)]" : "text-body-medium"} text-on-surface-variant`}
+            style={
+              variant === "door"
+                ? {
+                    lineHeight: "var(--text-label-small--line-height)",
+                    letterSpacing: "var(--text-label-small--letter-spacing)",
+                  }
+                : undefined
+            }
             {...testAttributes(part(node, "second"), `${testId}-second`)}
           >
             {second}
