@@ -60,6 +60,9 @@ type Bearer = {
   removal?: { readonly at: string; readonly by: string } | null;
 };
 
+/** What the mark's wording and date read: the node's mark and its verdict. */
+type Marked = Pick<Bearer, "moderationStatus" | "removal">;
+
 /** A bearer plus the authored text fields, which carry their own statuses. */
 type Payload = Bearer & {
   title?: { status: string } | null;
@@ -112,7 +115,7 @@ export function bodyIsSensitive(node: Bearer): boolean {
  * (api-spec.md `RemovalAgent` — "AUTHOR and ACCOUNT both read `Removed by its
  * author`; the data keeps them distinct"). No other branch is taken on `by`.
  */
-export function removalReason(node: Bearer): RemovalReason {
+export function removalReason(node: Marked): RemovalReason {
   if (node.removal !== null && node.removal !== undefined) {
     return node.removal.by === "MODERATION" ? "platform" : "author";
   }
@@ -124,7 +127,7 @@ export function removalReason(node: Bearer): RemovalReason {
  * (copy-voice *Ages*; backlog item 45), never the content's age. Undefined
  * where the node carries no mark to date.
  */
-export function removalWhen(node: Bearer, now: number = Date.now()): string | undefined {
+export function removalWhen(node: Marked, now: number = Date.now()): string | undefined {
   return node.removal === null || node.removal === undefined
     ? undefined
     : ladderAge(node.removal.at, now);

@@ -29,18 +29,25 @@ import { useApolloClient } from "@apollo/client/react";
 
 import type { CommentFieldsFragment } from "@/__generated__/graphql";
 import { isPending } from "@/lib/api/content-api";
+import { withRemoval, type Removal } from "@/lib/api/removal-api";
 import { appendDeduped } from "@/lib/api/pagination";
 import { fetchCitedBy, type CitingRecordView } from "@/lib/api/references-api";
 import type { License } from "@/lib/license";
 import { useComfortLine } from "@/lib/saved/comfort-line";
 import { REMOVED_BY_AUTHOR, postTitle } from "@/lib/saved/row-content";
 import { useSavedWrites } from "@/lib/saved/provider";
+import { useActiveAccountId } from "@/lib/session/provider";
 import type { Notify } from "@/lib/saved/save-row";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
 import { commentMenuItems } from "@/lib/ui2/comment-menu";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
-import { RemovedPlaceholder, type RemovalReason } from "@/lib/ui2/media/removed-placeholder";
+import {
+  REMOVED_COMMENT_NOTE,
+  RemovedPlaceholder,
+  type RemovalReason,
+} from "@/lib/ui2/media/removed-placeholder";
 import { OverflowMenu } from "@/lib/ui2/overflow-menu";
+import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
 import type { DataNode } from "./data-node";
@@ -54,6 +61,7 @@ import {
   hasMedia,
   payloadIsRedacted,
   removalReason,
+  removalWhen,
   sensitiveSignature,
 } from "./post-media";
 import { RowLine } from "./row-line";
@@ -92,6 +100,8 @@ export type CommentTargetView =
       }[];
       readonly author?: { readonly handle: string } | null;
       readonly moderationStatus: string;
+      /** The target's own mark (`Post.removal` / `Comment.removal`). */
+      readonly removal?: { readonly at: string; readonly by: string } | null;
     }
   | {
       readonly __typename: "Comment";
@@ -99,6 +109,8 @@ export type CommentTargetView =
       readonly content: Moderated;
       readonly author?: { readonly handle: string } | null;
       readonly moderationStatus: string;
+      /** The target's own mark (`Post.removal` / `Comment.removal`). */
+      readonly removal?: { readonly at: string; readonly by: string } | null;
     };
 
 /** A comment as its feed card reads it: the thread's own fields, what it answers, its thread's post. */
@@ -140,12 +152,15 @@ export function headRowOf(target: CommentTargetView): HeadRow {
       label: handle === null ? "a comment" : `@${handle}'s comment`,
     };
   }
+  // The target's own mark first — the node says it was removed, and by whom —
+  // then any field the payload lost (`payloadIsRedacted`'s reading).
   const removed =
+    (target.removal !== null && target.removal !== undefined) ||
     target.title?.status === "REDACTED" ||
     target.content?.status === "REDACTED" ||
     target.attachments.some((attachment) => attachment.status === "REDACTED");
   if (removed) {
-    const reason: RemovalReason = target.moderationStatus === "ILLEGAL" ? "platform" : "author";
+    const reason: RemovalReason = removalReason(target);
     return {
       kind: "post",
       title: REMOVED_LINE[reason],
@@ -171,7 +186,7 @@ export function headRowOf(target: CommentTargetView): HeadRow {
 }
 
 export function CommentFeedCard({
-  comment,
+  comment: given,
   from,
   testId,
   node,
@@ -191,6 +206,14 @@ export function CommentFeedCard({
   const router = useRouter();
   const client = useApolloClient();
   const writes = useSavedWrites();
+  const viewerId = useActiveAccountId();
+  // THE OWN COMMENT'S REMOVAL, OFF THE THREAD (RM-G9's build word: the
+  // `OWN_COMMENT_MENU` rows, and the card standing as its mark in place). The
+  // card is its own menu's host, so it keeps a taken removal itself.
+  const [removing, setRemoving] = useState(false);
+  const [taken, setTaken] = useState<Removal | null>(null);
+  const comment = taken === null ? given : withRemoval(given, taken);
+  const own = viewerId !== null && comment.author?.id === viewerId;
   const comfort = useComfortLine(comment.id);
   const [unfolded, setUnfolded] = useState(false);
   const [licenseShown, setLicenseShown] = useState<License | null>(null);
@@ -253,6 +276,7 @@ export function CommentFeedCard({
           setLicenseShown(license);
           setLicenseOpen(true);
         },
+        openRemove: own ? () => setRemoving(true) : undefined,
         testIdPrefix: `${testId}-menu`,
       });
 
@@ -334,13 +358,30 @@ export function CommentFeedCard({
                     testId={`${testId}-cited-by-sheet`}
                   />
                 )}
+                {removing && (
+                  <RemoveConfirm
+                    kind="comment"
+                    nodeId={comment.id}
+                    record={comment.genesisRecordId}
+                    onClose={() => setRemoving(false)}
+                    onRemoved={setTaken}
+                    testId={`${testId}-remove-confirm`}
+                  />
+                )}
               </>
             }
           />
         </div>
       </div>
       {redacted ? (
-        <RemovedPlaceholder reason={removalReason(comment)} testId={`${testId}-removed`} />
+        // The comment-scale mark (`REMOVED_COMMENT_NOTE`), dated by the
+        // removal's own moment, as in the thread.
+        <RemovedPlaceholder
+          reason={removalReason(comment)}
+          when={removalWhen(comment)}
+          note={removalReason(comment) === "author" ? REMOVED_COMMENT_NOTE : undefined}
+          testId={`${testId}-removed`}
+        />
       ) : (
         // THE COMPACT VEIL TAKES THE WORDS; the head row stays readable.
         <BodyRegion

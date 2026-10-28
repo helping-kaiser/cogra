@@ -63,8 +63,14 @@ import {
   PostMedia,
   bodyIsSensitive,
   hasMedia,
+  payloadIsRedacted,
+  removalReason,
+  removalWhen,
   sensitiveSignature,
 } from "@/lib/ui/post-media";
+import { withRemoval, type Removal } from "@/lib/api/removal-api";
+import { REMOVED_COMMENT_NOTE, RemovedPlaceholder } from "@/lib/ui2/media/removed-placeholder";
+import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { shortTimestamp } from "@/lib/ui/timestamp";
 import { TopicsLine } from "@/lib/ui/topics-line";
 import type { ReplyTarget } from "@/lib/compose/reply-wizard";
@@ -243,6 +249,9 @@ export function CommentsSheet({
   const [citedByCursor, setCitedByCursor] = useState<string | null>(null);
   const [citedByHasMore, setCitedByHasMore] = useState(false);
   const [citedByLoadingMore, setCitedByLoadingMore] = useState(false);
+  // THE OWN COMMENT'S THINK-TWICE DIALOG (CommentRemoveConfirm), raised by its
+  // menu's Remove over the thread, the thread still where the menu was opened.
+  const [removing, setRemoving] = useState<ThreadComment | null>(null);
   // Stable, so the snackbar's own timer is not restarted by every render of
   // the thread underneath it.
   const dismissCommentSigned = useCallback(() => setCommentSigned(false), []);
@@ -653,7 +662,7 @@ export function CommentsSheet({
    * license terms rise from inside the thread, a sheet over a sheet
    * (`CommentLicense.jsx`, design/readme.md:2364).
    */
-  const menuRowsOf = (comment: ThreadComment): MenuItem[] =>
+  const menuRowsOf = (comment: ThreadComment, own: boolean): MenuItem[] =>
     commentMenuItems({
       comment,
       writes,
@@ -662,8 +671,32 @@ export function CommentsSheet({
       navigate: (route) => router.push(route),
       openCitedBy,
       openLicense,
+      // THE READER'S OWN COMMENT'S MENU (CommentMenuOwn.md:3): Remove joins it.
+      openRemove: own ? () => setRemoving(comment) : undefined,
       testIdPrefix: "comment-menu",
     });
+
+  /**
+   * A REMOVAL TAKEN IN THE THREAD (CommentRemoveConfirm.md:11): the comment's
+   * words and pictures give way to the mark in the comment's own place. Only
+   * that node changes — the page, the unfolded branches and the reader's place
+   * stay exactly as they stand (CommentRemoved.md:15, :19), which is why the
+   * thread swaps the one node for its marked self rather than reading again:
+   * a re-read starts every branch over.
+   */
+  const markRemoved = (id: string, removal: Removal) => {
+    const mark = <C extends ThreadComment>(comment: C): C =>
+      comment.id === id ? withRemoval(comment, removal) : comment;
+    setComments((current) => current.map(mark));
+    setReplyThreads((current) =>
+      Object.fromEntries(
+        Object.entries(current).map(([parent, thread]) => [
+          parent,
+          { ...thread, items: thread.items.map(mark) },
+        ]),
+      ),
+    );
+  };
 
   const openEditor = (comment: ThreadComment, parentId: string | null) => {
     // The editor opens on what the comment actually carries — text and
@@ -695,6 +728,11 @@ export function CommentsSheet({
     const unopened = thread === undefined && branch > 0;
     const isOwn = viewerId !== null && comment.author?.id === viewerId;
     const edited = comment.updatedAt > comment.createdAt;
+    // A REMOVED COMMENT (CommentRemoved.md): it keeps its author, its time and
+    // its place in the order, the mark where its words were; it has no menu
+    // left and no Edit — nothing of it is left to save, cite, license or edit —
+    // while Reply and the face stay, and its replies stay under it.
+    const removed = payloadIsRedacted(comment);
     return (
       <li
         key={comment.id}
@@ -719,33 +757,53 @@ export function CommentsSheet({
                 testId={`comment-author-${comment.id}`}
               />
             )}
-            {shortTimestamp(comment.createdAt) !== "" && (
-              <time
-                dateTime={comment.createdAt}
-                data-testid={`comment-${comment.id}-timestamp`}
-                className="flex-none text-body-small text-on-surface-variant"
-              >
-                {shortTimestamp(comment.createdAt)}
-              </time>
-            )}
-            {/* A COMMENT WEARS THE SAME OVERFLOW A POST DOES (`CommentMenu.jsx`),
-                pointed at the comment — beside the age, where the master draws
-                it. NO HIDE ROW, and the absence is ruled (jakob 2026-09-12):
-                hiding is an act on an ACTOR, and the route to it is the
-                commenter's own profile, one tap away through their chip.
-                IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the
-                thread already lives in a sheet, so this menu is a sheet on a
-                sheet (design/readme.md:2364). */}
-            <OverflowMenu
-              items={menuRowsOf(comment)}
-              ariaLabel="More on this comment"
-              testId={`comment-menu-${comment.id}`}
-              stacked
-            />
+            {/* THE AGE AND THE ⋮ STAND TOGETHER at the line's end, 12px apart
+                (`CommentCard.jsx`'s header: one `space-3` group), as the post
+                card's do — three loose children of a spread line put the age
+                in the middle of it. */}
+            <div className="flex flex-none items-center gap-3">
+              {shortTimestamp(comment.createdAt) !== "" && (
+                <time
+                  dateTime={comment.createdAt}
+                  data-testid={`comment-${comment.id}-timestamp`}
+                  className="flex-none text-body-small text-on-surface-variant"
+                >
+                  {shortTimestamp(comment.createdAt)}
+                </time>
+              )}
+              {/* A COMMENT WEARS THE SAME OVERFLOW A POST DOES (`CommentMenu.jsx`),
+                  pointed at the comment — beside the age, where the master draws
+                  it. NO HIDE ROW, and the absence is ruled (jakob 2026-09-12):
+                  hiding is an act on an ACTOR, and the route to it is the
+                  commenter's own profile, one tap away through their chip.
+                  IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the
+                  thread already lives in a sheet, so this menu is a sheet on a
+                  sheet (design/readme.md:2364). A REMOVED COMMENT HAS NO MENU
+                  LEFT (`_shared.jsx`, `menuItems={removed ? [] : …}`). */}
+              {!removed && (
+                <OverflowMenu
+                  items={menuRowsOf(comment, isOwn)}
+                  ariaLabel="More on this comment"
+                  testId={`comment-menu-${comment.id}`}
+                  stacked
+                />
+              )}
+            </div>
           </div>
-          {/* A comment is text PLUS optional media — the XOR is the post's
+          {/* THE MARK IN THE WORDS' PLACE (`CommentsThreadSheet removed`): the
+              author's mark, its second line naming the comment, dated by the
+              removal's own moment. */}
+          {removed ? (
+            <RemovedPlaceholder
+              reason={removalReason(comment)}
+              when={removalWhen(comment)}
+              note={removalReason(comment) === "author" ? REMOVED_COMMENT_NOTE : undefined}
+              testId={`comment-${comment.id}-removed`}
+            />
+          ) : (
+          /* A comment is text PLUS optional media — the XOR is the post's
               rule alone (D16) — so both render, and both are veiled as one
-              body when the comment is marked. */}
+              body when the comment is marked. */
           <BodyRegion
             veiled={bodyIsSensitive(comment)}
             testId={`comment-${comment.id}`}
@@ -782,6 +840,7 @@ export function CommentsSheet({
               />
             )}
           </BodyRegion>
+          )}
           {/* The soft marker, friendly not forensic (design.md §9). */}
           {edited && (
             <p
@@ -800,14 +859,18 @@ export function CommentsSheet({
               chips then the counts, never two wrapping rows. The full set —
               and the values a reader can ask for — live in the
               topics-and-references sheet, which is not drawn here yet. */}
-          <TopicsLine
-            topics={comment.topics.map((claim) => ({
-              name: claim.hashtag.name.value ?? "",
-              pending: claim.pending,
-            }))}
-            references={comment.references.length}
-            testIdPrefix={`comment-${comment.id}`}
-          />
+          {/* The topics and citations rode the payload; a removed comment has
+              none left to show (`CommentCard.jsx`, `!redacted`). */}
+          {!removed && (
+            <TopicsLine
+              topics={comment.topics.map((claim) => ({
+                name: claim.hashtag.name.value ?? "",
+                pending: claim.pending,
+              }))}
+              references={comment.references.length}
+              testIdPrefix={`comment-${comment.id}`}
+            />
+          )}
           {/* The comment carries its own stance control (design.md §6). */}
           <StanceControl
             target={{ id: comment.id, kind: "comment", label: "this comment" }}
@@ -840,7 +903,9 @@ export function CommentsSheet({
                 Reply
               </Button>
             )}
-            {isOwn && (
+            {/* The removed comment keeps `own` but loses Edit with its payload
+                (`_shared.jsx`: `onEdit={removed ? undefined : …}`). */}
+            {isOwn && !removed && (
               <Button
                 testId={`comment-edit-${comment.id}`}
                 variant="text"
@@ -1070,6 +1135,24 @@ export function CommentsSheet({
           onLoadMore={() => void onLoadMoreCitedBy()}
           stacked
           testId="cited-by-sheet"
+        />
+      )}
+      {/* REMOVE THIS COMMENT? — the post's confirm with the nouns swapped
+          (`RemoveDialog kind="comment"`), up over the thread: a modal raised
+          after the sheet stands above it in the top layer, the way the board
+          lifts it (`overSheet`). The thread beneath is untouched, still where
+          the menu was opened (CommentRemoveConfirm.md:3). The comment's
+          confirm carries the post's fault line too (RM-G7's build word).
+          UNREGISTERED: the thread sheet is deliberately unnamed (seam 094), so
+          the dialog keeps its test ids. */}
+      {removing !== null && (
+        <RemoveConfirm
+          kind="comment"
+          nodeId={removing.id}
+          record={removing.genesisRecordId}
+          onClose={() => setRemoving(null)}
+          onRemoved={(removal) => markRemoved(removing.id, removal)}
+          testId="comment-remove-confirm"
         />
       )}
       {/* The wizard is a surface OVER the thread, and every way out of it
