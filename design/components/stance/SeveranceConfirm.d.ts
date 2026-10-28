@@ -4,7 +4,7 @@ import type { AxisNames, StanceBundle, StancePair } from "./StanceReadout";
 export interface SeveranceConfirmProps {
   /** The pick that reached this dialog; null on the explicit gesture. */
   pick?: StancePair | null;
-  /** Already in the reader's words — "this post", "@ada". */
+  /** Already in the reader's words, one per kind — "this post", "this comment", "@ada", "#saltmaps". */
   targetLabel: string;
   bundle: StanceBundle | null | undefined;
   /** How many things reaching zero takes — the legible cost. */

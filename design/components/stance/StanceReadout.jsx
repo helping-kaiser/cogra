@@ -1034,12 +1034,21 @@ export function alternatesHelp(names) {
    reader doubts them: the opinion is still held (a person stays under `Your
    people` — `FeedSheet`'s set, whichever way the opinion points); nothing
    passes through it; and it is not the family's way out, which is an act of
-   its own. The target is the pad's, and the way out is the family's word. */
+   its own. The target is the pad's, and the way out is the family's word.
+
+   THE FIRST LINE NAMES THE LIST THE TARGET STAYS ON, by the label's kind
+   (seam 245, ask 18): a person (`@ada`) stays under `Your people`, a topic
+   (`#saltmaps`) on `Your topics` — held is a netted Affinity other than
+   (0, 0), so one zero keeps it there. A post or a comment sits on no list
+   of the reader's, so its line stops at the opinion. */
 export function unreachableHelp(names, targetLabel) {
+  const stays = targetLabel.startsWith("@")
+    ? `${targetLabel} stays under Your people`
+    : targetLabel.startsWith("#")
+      ? `${targetLabel} stays on Your topics`
+      : null;
   return [
-    targetLabel.startsWith("@")
-      ? `It still counts among your opinions — ${targetLabel} stays under Your people.`
-      : "It still counts among your opinions.",
+    stays === null ? "It still counts among your opinions." : `It still counts among your opinions — ${stays}.`,
     "It shapes no one's feed, earns nothing, and nothing passes on through you.",
     `${severanceWords(names).control} is different: its own act, confirmed and paid for, that leaves a clean slate.`,
   ];

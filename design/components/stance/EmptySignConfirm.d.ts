@@ -1,6 +1,6 @@
 /** The empty-sign ask: a pick landing exactly (0, 0) while nothing stands. */
 export interface EmptySignConfirmProps {
-  /** Already in the reader's words — "this post", "@ada", "#saltmaps". */
+  /** Already in the reader's words, one per kind — "this post", "this comment", "@ada", "#saltmaps". */
   targetLabel: string;
   /** The opinion vouches its target in (approving, a vouch asked for): the first line warns that they start cut off. */
   vouchIn?: boolean;

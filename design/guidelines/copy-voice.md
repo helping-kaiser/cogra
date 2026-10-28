@@ -2603,7 +2603,9 @@ interest either way — …`, the same tail. The 🤔 is a button named by
 the state's head (`Interested, no side taken`); its explanation replaces
 the pad's body in place: `It still counts among your opinions.` (on a
 person, `It still counts among your opinions — @ada stays under Your
-people.`) / `It shapes no one's feed, earns nothing, and nothing passes
+people.`; on a topic, `It still counts among your opinions — #saltmaps
+stays on Your topics.` — *merged under the autonomy order, 2026-10-28;
+review pending*) / `It shapes no one's feed, earns nothing, and nothing passes
 on through you.` / `Walk it back is different: its own act, confirmed
 and paid for, that leaves a clean slate.` (a topic's, `Disconnect is
 different: …`), then `Back to the pad`. While the reader still borrows a
@@ -2706,6 +2708,15 @@ the registry is whole:
   +0.10.` (`PadPending`) and `…waiting for your review: …`
   (`PadPendingReview`). The target is the card's: `this post`, `this
   comment`, `this account`, `@ada`, `#saltmaps`.
+- **The target, named one way per kind** (seam 245, ask 18). Every line
+  the stance family builds around its target — the face's names, the
+  pad's, the standing line, the walk-back's and the empty sign's words,
+  the 🤔's explanation, the snackbar — takes the one label the host hands
+  it: a post `this post`, a comment `this comment`, a person their handle
+  `@ada` (`this account` once no name is left), a topic its tag
+  `#saltmaps`. The label always stands mid-sentence, lowercase; the one
+  line that opens on it, the vouch-in warning, only ever names a person.
+  (*Merged under the autonomy order, 2026-10-28; review pending.*)
 - **The non-drag door** — `Choose your opinion on this post`, the
   hidden-until-focused control beside every face, its target the face's
   own.
