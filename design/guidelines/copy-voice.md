@@ -425,8 +425,17 @@ noun):
   settings screens): Signing needs your key, and it isn't on this
   browser — nothing is signed without it. / A recovery code brings the
   key to any device. Until it's here, anything waiting on it stays on
-  this device. *(One text for all four key-absent surfaces, the key-loss
-  round: nothing in it assumes a write in progress.)*
+  this device. *(One text for the seal and the two settings screens, the
+  key-loss round: nothing in it assumes a write in progress. On the stance
+  pad (`PadKeyAbsent`) the notice already says that signing needs the key
+  and that the recovery code restores it, so the dialog says only what the
+  notice does not — where the key is, why nothing signs, and what waits
+  for the restore: `Your key lives where you made it or last restored it,
+  never held by CoGra — nothing is signed in your name without it.` /
+  `Your recovery code brings it here. A pick you keep waits on this
+  browser until then, and you review every kept pick before it's
+  signed.` — in the app, `…waits in this app until then…` (seam 245, ask
+  17; merged under the autonomy order, 2026-10-28; review pending).)*
 - **Why signing waits** (the write rule's notice — the seal
   and the stance pad): There's a limit to how many signed actions can
   go through in a short time — it keeps the network safe from flooding.
@@ -1290,7 +1299,9 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
 **No answer at all** (offline; not a code):
 
 - Seal, pad or dialog: `That didn't send. Try again.` **Drawn** on
-  `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it. A form
+  `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it, and the
+  alternates' dialog, its commit reading `Retry` (the alternates card;
+  seam 245, ask 14). Its commit's wait reads `Signing…`. A form
   says the same line in SignInError's slot above its submit, the fields
   keeping what was typed and the submit being the retry (jakob
   2026-10-05).
@@ -1402,9 +1413,17 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no
   draft — with the same "?" and `Not now` under it; the pick is not
-  kept. **Drawn** on `PadWriteRule`. On a hold's row the quiet line
+  kept. **Drawn** on `PadWriteRule`; the alternates' dialog carries the
+  same panel and `Not now` where its landing line and action row were (the
+  alternates card). On a hold's row the quiet line
   reads `You can't sign right now.` in the pending marker's register,
-  never the failure voice, with no Retry. **Drawn** on `RowWriteRule`.
+  never the failure voice, with no Retry. **Drawn** on `RowWriteRule`. In
+  a dialog raised over the pad — the walk-back, the empty sign — the row's
+  words take the fault line's place with the fact the cost line above
+  raises, `You can't sign right now. Nothing was signed or spent.`, in the
+  same quiet register; the act dims and no Retry is offered (seam 245, ask
+  15). **Drawn** on `SeveranceConfirm`'s `answer` chip. *(Merged under the
+  autonomy order, 2026-10-28; review pending.)*
 - **One staged act refused** (the field-level refusal on
   `references.<index>.target`; jakob 2026-10-01). A target that landed
   never stops answering, so two cases exist, and they read nothing
@@ -2593,7 +2612,9 @@ interest either way — …`, the same tail. The 🤔 is a button named by
 the state's head (`Interested, no side taken`); its explanation replaces
 the pad's body in place: `It still counts among your opinions.` (on a
 person, `It still counts among your opinions — @ada stays under Your
-people.`) / `It shapes no one's feed, earns nothing, and nothing passes
+people.`; on a topic, `It still counts among your opinions — #saltmaps
+stays on Your topics.` — *merged under the autonomy order, 2026-10-28;
+review pending*) / `It shapes no one's feed, earns nothing, and nothing passes
 on through you.` / `Walk it back is different: its own act, confirmed
 and paid for, that leaves a clean slate.` (a topic's, `Disconnect is
 different: …`), then `Back to the pad`. While the reader still borrows a
@@ -2628,9 +2649,11 @@ shipped, the vouch-in line drafted from his facts, the ordinary
 snackbar his ruling.*) The pad's landing under that pick reads in the
 landing's own shape, `Resulting opinion 🤷 Says nothing.` — never the
 walk-back's `This takes you back to zero.`, which is false where nothing
-stands. (*Proposed, not yet blessed — drafted 2026-10-28 from the
-blessed `Says nothing` (seam 245, ask 20); the formal blessing is round
-21's.*)
+stands. (*Drafted 2026-10-28 from the blessed `Says nothing` (seam 245,
+ask 20); merged under the autonomy order, 2026-10-28; review pending.*)
+Over the standing an empty sign left, a `(0, 0)` landing is the
+walk-back's again: that record stands, so `This takes you back to zero.`
+is true there and `Walk it all back?` asks.
 
 **The backing pad's own words** (`ComposePad`, `EditPad`, round 15):
 the readouts `Current backing` · `Your pick` · `Backing after`, the
@@ -2696,6 +2719,15 @@ the registry is whole:
   +0.10.` (`PadPending`) and `…waiting for your review: …`
   (`PadPendingReview`). The target is the card's: `this post`, `this
   comment`, `this account`, `@ada`, `#saltmaps`.
+- **The target, named one way per kind** (seam 245, ask 18). Every line
+  the stance family builds around its target — the face's names, the
+  pad's, the standing line, the walk-back's and the empty sign's words,
+  the 🤔's explanation, the snackbar — takes the one label the host hands
+  it: a post `this post`, a comment `this comment`, a person their handle
+  `@ada` (`this account` once no name is left), a topic its tag
+  `#saltmaps`. The label always stands mid-sentence, lowercase; the one
+  line that opens on it, the vouch-in warning, only ever names a person.
+  (*Merged under the autonomy order, 2026-10-28; review pending.*)
 - **The non-drag door** — `Choose your opinion on this post`, the
   hidden-until-focused control beside every face, its target the face's
   own.

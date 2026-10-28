@@ -27,7 +27,7 @@
     "NoScreenLock": "the no-screen-lock warning covers the backup screen — the arrow and the commitment beneath the scrim are inactive in this state, and wired on `SettingsBackup`; only the dialog (and its scrim) is live",
     "VouchBackPad": "the scrim wash covers the shell — its semantic elements (band, nav, the vouch card's own controls) are inactive in this state; only the parked pad is live",
     "PadStanding": "the scrim wash covers the shell — the band, the post card's own controls and the nav are inactive in this state; only the parked pad is live",
-    "PadFailed": "the scrim wash covers the shell — the band, the post card's own controls and the nav are inactive in this state; only the parked pad is live",
+    "PadFailed": "the scrim wash covers the shell — the band, the post card's own controls and the nav are inactive in this state; only the parked pad is live. The `cancelled` moment draws the feed after the pad closed as a reference plate for the row's wait, `RowSigning`'s way, wired nowhere",
     "PadWriteRule": "the scrim wash covers the shell — the band, the post card's own controls and the nav are inactive in this state; only the parked pad is live",
     "TagPageHeldPad": "the scrim wash covers the tag page — the back arrow, the two posts' and the comment's own controls, and the topic row's own anchor beneath it are inactive in this state; only the parked pad is live, and every one of those controls is wired on `TagPageHeld`",
     "FeedSheet": "the filter sheet covers the feed — the trigger, post cards, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",

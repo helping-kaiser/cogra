@@ -2403,11 +2403,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   // The pad's one irreversible gesture. scanExempt like every dialog board, so
-  // only the dialog's own pair and the scrim it sits on carry numbers.
+  // only the dialog's own pair and the scrim it sits on carry numbers. The
+  // `answer` chip draws the dialog twice: both copies' `Keep it` and scrim take
+  // their numbers, and `Walk it back` only the asking copy's — the write
+  // rule's copy dims it, and a dimmed control leads nowhere.
   SeveranceConfirm: [
     { n: 1, find: ">Walk it back</button>", tag: "button" },
-    { n: 2, find: ">Keep it</button>", tag: "button" },
-    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+    { n: 2, find: ">Keep it</button>", tag: "button", all: true },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div", all: true },
   ],
   // The empty sign, the walk-back's neighbour: scanExempt the same way, so only
   // the dialog's own pair and the scrim it sits on carry numbers. The

@@ -14,6 +14,15 @@
    panel's own `currentColor` draws — and the restore button in `Button`'s
    `inverse`, the filled button that takes the panel's pair turned over.
 
+   ITS "?" SAYS ONLY WHAT THE NOTICE DOES NOT (seam 245, ask 17; copy-voice,
+   *The "?" dialogs*, `Your key`). The notice's two lines already say that
+   signing needs the key and that the recovery code restores it, so the
+   pad's `Your key` dialog keeps to the three things left: where the key
+   lives — where it was made or last restored, never held by CoGra — why
+   nothing signs without it, and what waits for the restore: a pick kept
+   here, reviewed before it signs. The seal and the settings screens keep
+   the dialog's shared text.
+
    THE FEED BENEATH IS `KeyElsewhere`'s, the same shell with the same task card:
    this is that screen, one tap in. Its post carries no opinion, because the
    pad above it says in so many words that there is none yet.

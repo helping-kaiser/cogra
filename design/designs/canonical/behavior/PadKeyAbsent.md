@@ -16,7 +16,9 @@ ALWAYS nothing is staged on the server and nothing is signed GIVEN the signing k
 
 WHEN drag on the pad field -> the pick moves AND its face and pair follow AND NEVER anything is signed
 
-WHEN tap the notice's ? -> the Your key text opens
+WHEN tap the notice's ? -> the dialog Your key opens with Your key lives where you made it or last restored it, never held by CoGra — nothing is signed in your name without it. and Your recovery code brings it here. A pick you keep waits on this browser until then, and you review every kept pick before it's signed.
+
+ALWAYS the pad's Your key dialog says only what the notice does not, and never repeats that signing needs the key or that the recovery code restores it
 
 WHEN press Restore the key -> the key's restore opens
 
