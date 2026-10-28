@@ -195,6 +195,7 @@ function OtherCard({
           comment={item}
           from={FROM}
           node={{ path: "feed.commentCard", key: item.id }}
+          scoreOrigin={FEED_ORIGIN}
           testId={`feed-comment-${item.id}`}
           onNotify={notify}
           onLinkCopied={copied}
@@ -206,6 +207,7 @@ function OtherCard({
           person={item}
           href={`/u/${item.handle}?from=${FROM}`}
           node={{ path: "feed.profileCard", key: item.id }}
+          scoreOrigin={FEED_ORIGIN}
           testId={`feed-person-${item.id}`}
           onNotify={notify}
           onLinkCopied={copied}
@@ -217,6 +219,7 @@ function OtherCard({
           topic={item}
           from={FROM}
           node={{ path: "feed.tagCard", key: item.id }}
+          scoreOrigin={FEED_ORIGIN}
           testId={`feed-tag-${item.id}`}
           onLinkCopied={copied}
         />
