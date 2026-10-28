@@ -114,9 +114,7 @@ private fun ShellScope.DeleteAccountConfirmedDestination(entry: NavBackStackEntr
             token = token,
             signedIn = signed,
             // The feed, under the deletion band (DeleteAccountConfirmed.md:39).
-            onGoToFeed = {
-                navController.navigate(Feed) { popUpTo(0) { inclusive = true } }
-            },
+            onGoToFeed = { navController.startOnFeedRoot() },
             // The deletion stays confirmed; the sign-in is ordinary (:41).
             // A dead link's sign-in holds no link (DeleteLinkExpired.md:19).
             onSignIn = {
@@ -127,11 +125,7 @@ private fun ShellScope.DeleteAccountConfirmedDestination(entry: NavBackStackEntr
             },
             // A dead link with a session: settings, where the
             // deletion's state reads as it stands (DeleteLinkExpired.md:17).
-            onBackToSettings = {
-                navController.navigate(Settings) {
-                    popUpTo<DeleteAccountConfirmed> { inclusive = true }
-                }
-            },
+            onBackToSettings = { openFromLanding(Settings) },
         )
     }
 }
@@ -144,16 +138,8 @@ private fun ShellScope.ChangeEmailLinkedDestination(entry: NavBackStackEntry) {
         ChangeEmailLinkedRoute(
             token = token,
             signedIn = signed,
-            onEnterTheCode = {
-                navController.navigate(ChangeEmailConfirm) {
-                    popUpTo<ChangeEmailLinked> { inclusive = true }
-                }
-            },
-            onBackToSettings = {
-                navController.navigate(Settings) {
-                    popUpTo<ChangeEmailLinked> { inclusive = true }
-                }
-            },
+            onEnterTheCode = { openFromLanding(ChangeEmailConfirm) },
+            onBackToSettings = { openFromLanding(Settings) },
             onSignIn = { holdsLink ->
                 // Only a live link's sign-in holds it; a dead or
                 // unknown one holds nothing, not even a link held
@@ -167,4 +153,24 @@ private fun ShellScope.ChangeEmailLinkedDestination(entry: NavBackStackEntry) {
             },
         )
     }
+}
+
+/**
+ * A landing's way on into a settings page, the landing leaving the stack.
+ *
+ * Over a tab, the page joins that tab's stack: a link opens over the state
+ * the app was in (design/readme.md §4, *Navigation* — the layer law). With
+ * no tab beneath — the app opened cold by the link, or the platform's deep
+ * link handling having cleared what stood — the page opens over the
+ * reader's own profile, the gear's home, with Feed's root under that: back
+ * lands on the owning tab's root, then Feed's, then leaves.
+ */
+private fun ShellScope.openFromLanding(route: Any) {
+    if (navController.previousBackStackEntry?.destination.tab() != null) {
+        navController.popBackStack()
+    } else {
+        navController.startOnFeedRoot()
+        navController.selectTab(TopLevelTab.PROFILE, onReselect = {})
+    }
+    navController.navigate(route)
 }

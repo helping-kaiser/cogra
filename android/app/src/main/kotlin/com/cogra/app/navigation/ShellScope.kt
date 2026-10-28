@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.navigation.NavHostController
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.atom.BandBell
@@ -48,8 +49,8 @@ internal interface ShellScope {
      */
     val signedIn: Boolean?
 
-    /** The bar's Feed slot re-tapped over the feed's own root, counted. */
-    val feedReselects: Int
+    /** The bar's slot of [tab] re-tapped over the tab's own root, counted: the root answers each one. */
+    fun reselects(tab: TopLevelTab): Int
 
     /** The key card under the header, signed in only. */
     val keyBanner: @Composable () -> Unit
@@ -80,9 +81,6 @@ internal interface ShellScope {
 
     /** The deletion band, wearing [node] where a board registers it. */
     fun deletionBand(node: DataNode?): @Composable () -> Unit
-
-    /** The bar's tab switch: the target tab in the state it was left. */
-    fun toTab(route: Any)
 }
 
 /**
@@ -92,12 +90,16 @@ internal interface ShellScope {
  * transient, and a transient never comes back (design/readme.md §13).
  */
 @Stable
-internal class ShellState(feedPulls: Int = 0, feedReselects: Int = 0, heldEmailLink: String? = null) {
+internal class ShellState(
+    feedPulls: Int = 0,
+    reselects: IntArray = IntArray(TopLevelTab.entries.size),
+    heldEmailLink: String? = null,
+) {
     /** The feed's own pulls, counted: the readers riding the feed (the band, the vouch card) read again with each. */
     var feedPulls by mutableIntStateOf(feedPulls)
 
-    /** The bar's Feed slot re-tapped over the feed's own root, counted: the feed answers each one not yet answered. */
-    var feedReselects by mutableIntStateOf(feedReselects)
+    /** Each tab's re-taps over its own root, by the tab's ordinal: the root answers each one not yet answered. */
+    private val reselects = reselects.toList().toMutableStateList()
 
     /**
      * The new address's link opened signed out, held through the sign-in it
@@ -109,10 +111,17 @@ internal class ShellState(feedPulls: Int = 0, feedReselects: Int = 0, heldEmailL
     /** The guest prompt is up (design.md §6): ask, never bounce. */
     var joinPrompt by mutableStateOf(false)
 
+    fun reselects(tab: TopLevelTab): Int = reselects[tab.ordinal]
+
+    /** The slot of [tab] tapped over the tab's own root. */
+    fun reselect(tab: TopLevelTab) {
+        reselects[tab.ordinal] += 1
+    }
+
     companion object {
         val Saver: Saver<ShellState, Any> = listSaver(
-            save = { listOf(it.feedPulls, it.feedReselects, it.heldEmailLink) },
-            restore = { ShellState(it[0] as Int, it[1] as Int, it[2] as String?) },
+            save = { listOf(it.feedPulls, it.reselects.toIntArray(), it.heldEmailLink) },
+            restore = { ShellState(it[0] as Int, it[1] as IntArray, it[2] as String?) },
         )
     }
 }
@@ -129,7 +138,7 @@ internal class Shell(
     private val bellLit: Boolean,
     private val snackbar: SnackbarHostState,
 ) : ShellScope {
-    override val feedReselects: Int get() = state.feedReselects
+    override fun reselects(tab: TopLevelTab): Int = state.reselects(tab)
 
     // The slots every destination that has them draws the same way, written
     // once here, where the session and the controller are in hand, rather
@@ -211,10 +220,11 @@ internal class Shell(
 
     // THE CEREMONY OPENS OVER THE FEED ROOT ALONE (VouchedIn.md:35): the
     // pad, the card or the profile it was signed from never come back on
-    // Back, so the entry is pushed with everything above the feed popped.
+    // Back, so the entry is pushed over Feed's root with the tab it was
+    // signed in closed — whichever tab that was.
     override fun openCeremony(handle: String, name: String?, avatarUrl: String?) {
+        navController.landOnFeedRoot(keepLeaving = false)
         navController.navigate(VouchedIn(handle, name?.takeIf { it.isNotBlank() } ?: handle, avatarUrl)) {
-            popUpTo(Feed)
             launchSingleTop = true
         }
     }
@@ -226,16 +236,6 @@ internal class Shell(
     override fun deletionBand(node: DataNode?): @Composable () -> Unit = {
         if (signedIn == true) {
             DeletionBandRoute(signedIn = true, refreshSignal = state.feedPulls, node = node)
-        }
-    }
-
-    // The documented tab pattern: pop to the signed-in root saving
-    // state, single-top, restoring the target tab's state.
-    override fun toTab(route: Any) {
-        navController.navigate(route) {
-            popUpTo(Feed) { saveState = true }
-            launchSingleTop = true
-            restoreState = true
         }
     }
 }

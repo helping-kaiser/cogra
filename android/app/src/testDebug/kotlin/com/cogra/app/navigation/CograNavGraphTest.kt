@@ -242,8 +242,9 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
 
         // A read drill-in keeps the frame and carries its own back arrow
-        // (design.md §6); no tab is selected. The bar wears the detail's
-        // own registered name there, not the feed's.
+        // (design.md §6), the feed it was opened from still lit
+        // (TabNavigationTest). The bar wears the detail's own registered
+        // name there, not the feed's.
         assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
         assertThat(compose.onAllNodesWithTag("postDetail.bottomBar").fetchSemanticsNodes()).isNotEmpty()
         assertThat(compose.onAllNodesWithTag("feed.bottomBar").fetchSemanticsNodes()).isEmpty()
@@ -329,8 +330,8 @@ class CograNavGraphTest {
         )
         compose.onNodeWithTag("chats_back").assertContentDescriptionEquals("Back")
 
-        // A read drill-in keeps the shell frame with no tab selected
-        // (design.md §6), same as a post detail's own drill-in.
+        // A read drill-in keeps the shell frame (design.md §6), same as a
+        // post detail's own drill-in.
         assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
 
         compose.onNodeWithTag("chats_back").performClick()
@@ -600,7 +601,7 @@ class CograNavGraphTest {
         // It names the door it came through (ProfileOther.md:73).
         assertThat(entry?.toRoute<Profile>()?.from).isEqualTo(FEED_ORIGIN)
         // Another actor's profile is a read drill-in: back arrow, no
-        // edit, and the frame stays with no tab selected.
+        // edit, and the frame stays.
         assertThat(compose.onAllNodesWithTag("profile.header.back").fetchSemanticsNodes()).isNotEmpty()
         assertThat(compose.onAllNodesWithTag("profile.identity.actionRow.edit").fetchSemanticsNodes()).isEmpty()
         assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()

@@ -1,6 +1,7 @@
 // The single NavHost with type-safe routes, inside the shell scaffold
-// (android/CLAUDE.md "Navigation"; design.md §6): the bottom bar frames
-// the read surfaces — the tabs and the read drill-ins — and the
+// (android/CLAUDE.md "Navigation"; design.md §6): one nested graph per
+// bottom-bar tab, each with its own back stack (TopLevelTab.kt); the bottom
+// bar frames the read surfaces — the tabs and the read drill-ins — and the
 // account-status banners ride above whichever tab is active.
 // Registration returns an ordinary session, so an applicant is simply
 // signed in: the applicant/member distinction lives in the shell
@@ -38,12 +39,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.cogra.app.R
 import com.cogra.app.ui.CograBottomBar
 import com.cogra.app.ui.DeviceLockKeeper
@@ -195,8 +198,14 @@ private fun CograNavGraphContent(
             from == AuthPhase.LOADING -> return@LaunchedEffect
             else -> Login
         }
-        navController.navigate(root) {
-            popUpTo(0) { inclusive = true }
+        // A new phase starts every tab fresh: the stack goes, and each tab's
+        // left stack with it — none may come back carrying the last
+        // session's screens.
+        if (root == Feed) {
+            navController.startOnFeedRoot()
+        } else {
+            navController.navigate(root) { popUpTo(0) { inclusive = true } }
+            navController.forgetLeftStacks()
         }
         if (accountDeleted) {
             authState.deletion.consumeAccountDeleted()
@@ -285,79 +294,24 @@ private fun CograNavGraphContent(
         )
     }
 
-    // The shell: one scaffold owning the bottom bar and the shell-level
-    // snackbar host (design.md §6) — one frame for every viewer: the
-    // bar rides the read surfaces signed in or out, and a slot that
-    // needs an account opens the join prompt on a signed-out tap —
-    // ask, never bounce. A read drill-in keeps the frame but selects
-    // no tab; the task flows drop it for their back arrow.
-    val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
-    val onProfile = backStackEntry?.destination?.hasRoute(Profile::class) == true
-    // SAVED KEEPS PROFILE LIT (Saved.md, design digest item 51: the
-    // originating root stays lit on a drill-in) — its one door is the
-    // reader's own profile.
-    val onSaved = backStackEntry?.destination?.hasRoute(Saved::class) == true
-    // NOTIFICATIONS KEEPS LIT THE ROOT THE BELL WAS TAPPED ON (Notifications.md:27).
-    val onNotifications = backStackEntry?.destination?.hasRoute(Notifications::class) == true
-    val notificationsFrom = if (onNotifications) backStackEntry?.toRoute<Notifications>()?.from else null
-    val onOwnProfileTab = onSaved ||
-        notificationsFrom == "profile" ||
-        (onProfile && backStackEntry?.toRoute<Profile>()?.handle == null)
-    val onPostDetail = backStackEntry?.destination?.hasRoute(PostDetail::class) == true
-    val onChatsComingSoon = backStackEntry?.destination?.hasRoute(ChatsComingSoon::class) == true
-    val onReadSurface = onFeedTab || onProfile || onPostDetail || onChatsComingSoon || onSaved || onNotifications
     val bellModel: BellViewModel = hiltViewModel()
     val bellLit by bellModel.lit.collectAsStateWithLifecycle()
     val shell = Shell(navController, authState, signedIn, shellState, bellLit, shellSnackbar)
 
-    val barShown = signedIn != null && onReadSurface
+    // The shell: one scaffold owning the bottom bar and the shell-level
+    // snackbar host (design.md §6) — one frame for every viewer: the bar
+    // rides the read surfaces signed in or out, and a slot that needs an
+    // account opens the join prompt on a signed-out tap — ask, never
+    // bounce. The task flows drop it for their back arrow.
+    val destination = backStackEntry?.destination
+    val barShown = signedIn != null && destination.isReadSurface()
     SideEffect { onBarShown(barShown) }
     Scaffold(
         snackbarHost = {
             CograSnackbarHost(shellSnackbar, testTag = "shell_snackbar")
         },
         bottomBar = {
-            if (barShown) {
-                CograBottomBar(
-                    // The bar is the shell's, but each registered board names
-                    // it under its own screen (`feed.bottomBar`,
-                    // `postDetail.bottomBar`), so it wears the name of the
-                    // screen it is standing under.
-                    node = when {
-                        onFeedTab -> DataNode("feed") / "bottomBar"
-                        onPostDetail -> DataNode("postDetail") / "bottomBar"
-                        onNotifications -> DataNode("notifications") / "bottomBar"
-                        onProfile -> DataNode("profile") / "bottomBar"
-                        else -> null
-                    },
-                    feedSelected = onFeedTab || notificationsFrom == "feed",
-                    profileSelected = onOwnProfileTab,
-                    // Over the feed's own root the slot is a re-tap the feed
-                    // answers (Feed.md:85-91); from anywhere else it is the
-                    // way back to the root, at the scroll it was left.
-                    onFeed = {
-                        if (onFeedTab) {
-                            shellState.feedReselects += 1
-                        } else {
-                            shell.toTab(Feed)
-                        }
-                    },
-                    onCompose = {
-                        if (signedIn == true) {
-                            navController.navigate(ComposePost())
-                        } else {
-                            shell.requireJoin()
-                        }
-                    },
-                    onProfile = {
-                        if (signedIn == true) {
-                            shell.toTab(Profile())
-                        } else {
-                            shell.requireJoin()
-                        }
-                    },
-                )
-            }
+            if (barShown) ShellBottomBar(shell, shellState, destination)
         },
     ) { padding ->
         NavHost(
@@ -379,13 +333,88 @@ private fun CograNavGraphContent(
             // padded, doubling the space above each top bar.
             modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         ) {
+            // The entry funnel and the mailed links' landings belong to no
+            // tab: they are reached from outside, with nothing beneath.
             funnel(shell)
             linkLandings(shell)
-            feedRoot(shell)
-            vouchedIn(shell)
-            readDrillIns(shell)
-            taskFlows(shell)
-            settingsFlows(shell)
+            // ONE NESTED GRAPH PER DESTINATION SLOT (design/readme.md §13):
+            // each tab's stack is its own, and a screen stands in the graph
+            // of the tab it was opened from, whatever it is about — so every
+            // tab carries every drill-in, and the slot a screen lights is
+            // read off its graph ([tab]), never remembered.
+            navigation<FeedTab>(startDestination = Feed) {
+                feedRoot(shell)
+                // The ceremony opens over the feed root alone (VouchedIn.md:35).
+                vouchedIn(shell)
+                tabDestinations(shell)
+            }
+            navigation<ProfileTab>(startDestination = Profile::class) {
+                // The tab's root is the reader's own profile — the
+                // `Profile` with no handle — and the profiles stacked on
+                // it are the same destination, so the one registration
+                // serves both.
+                tabDestinations(shell)
+            }
         }
     }
 }
+
+/** What every tab's stack can hold above its root: the read drill-ins and the task flows. */
+private fun NavGraphBuilder.tabDestinations(shell: ShellScope) {
+    readDrillIns(shell)
+    taskFlows(shell)
+    settingsFlows(shell)
+}
+
+/** The read surfaces: the tab roots and the read drill-ins, which the bar frames. */
+private fun NavDestination?.isReadSurface(): Boolean =
+    this != null && READ_SURFACES.any { hasRoute(it) }
+
+private val READ_SURFACES = listOf(
+    Feed::class,
+    Profile::class,
+    PostDetail::class,
+    ChatsComingSoon::class,
+    Saved::class,
+    Notifications::class,
+)
+
+/**
+ * The bar as the shell draws it over a read surface: the slot lit is the
+ * tab the screen's stack belongs to — the originating root stays lit on a
+ * drill-in (BottomNav.prompt.md; PostDetail.md:57, ProfileOther.md:17,
+ * Notifications.md:31, Saved.md:119, ChatsComingSoon.md:13) — and each slot
+ * climbs its ladder ([selectTab]).
+ */
+@Composable
+private fun ShellBottomBar(shell: ShellScope, state: ShellState, destination: NavDestination?) {
+    val tab = destination.tab()
+    val navController = shell.navController
+    fun select(target: TopLevelTab) {
+        navController.selectTab(target, onReselect = { state.reselect(target) })
+    }
+    CograBottomBar(
+        // The bar is the shell's, but each registered board names it under
+        // its own screen (`feed.bottomBar`, `postDetail.bottomBar`), so it
+        // wears the name of the screen it is standing under.
+        node = destination?.let { BAR_NODES.firstOrNull { (route, _) -> it.hasRoute(route) }?.second },
+        feedSelected = tab == TopLevelTab.FEED,
+        profileSelected = tab == TopLevelTab.PROFILE,
+        onFeed = { select(TopLevelTab.FEED) },
+        onCompose = {
+            if (shell.signedIn == true) navController.navigate(ComposePost()) else shell.requireJoin()
+        },
+        onProfile = {
+            if (shell.signedIn == true) select(TopLevelTab.PROFILE) else shell.requireJoin()
+        },
+    )
+}
+
+/** The registered names the bar wears, by the screen it stands under (nodes.json `*.bottomBar`). */
+private val BAR_NODES = listOf(
+    Feed::class to DataNode("feed") / "bottomBar",
+    PostDetail::class to DataNode("postDetail") / "bottomBar",
+    Notifications::class to DataNode("notifications") / "bottomBar",
+    Profile::class to DataNode("profile") / "bottomBar",
+    Saved::class to DataNode("saved") / "bottomBar",
+)

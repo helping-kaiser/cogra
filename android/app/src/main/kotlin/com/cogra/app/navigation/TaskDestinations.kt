@@ -83,9 +83,12 @@ private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
             // they just made, and a feed landing answers a
             // different one. The wizard leaves the stack
             // first, so back from the post reaches the feed
-            // rather than the composer that made it.
+            // (ComposeLanded.md:11) rather than the composer
+            // that made it — the feed's root, whichever tab the
+            // wizard was opened over; that tab keeps its stack.
             onSigned = { nodeId ->
-                navController.popBackStack<Feed>(inclusive = false)
+                navController.popBackStack()
+                navController.landOnFeedRoot(keepLeaving = true)
                 navController.reportToCurrent(contentSignedKey, true)
                 navController.navigate(PostDetail(nodeId, published = true))
             },
@@ -93,7 +96,8 @@ private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
             // notice belongs on the feed, which is where the
             // canonical `ComposeExpired` board draws it.
             onExpired = { label ->
-                navController.popBackStack<Feed>(inclusive = false)
+                navController.popBackStack()
+                navController.landOnFeedRoot(keepLeaving = true)
                 navController.reportToCurrent(contentExpiredKey, label)
             },
             onLeave = { navController.navigateUp() },

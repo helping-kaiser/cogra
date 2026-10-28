@@ -4,6 +4,7 @@
 
 package com.cogra.app.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
@@ -96,7 +97,7 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
     val rootBell: RootBellViewModel? = if (signedIn == true) hiltViewModel(entry) else null
     FeedRoute(
         signedIn = signedIn,
-        reselectSignal = feedReselects,
+        reselectSignal = reselects(TopLevelTab.FEED),
         // A guest's Report asks them to join instead of raising
         // the confirm (ReportConfirm.md:21).
         onRequireAccount = { requireJoin() }.takeIf { signedIn == false },
@@ -259,8 +260,12 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
     // (Profile.md:41; FeedUnread.md:5). Another actor's is a drill-in.
     val ownRoot = route.handle == null && signedIn == true
     if (ownRoot) hiltViewModel<RootBellViewModel>(entry)
+    val tabRoot = TopLevelTab.PROFILE.isRoot(entry)
+    if (tabRoot) AnotherTabsRootBack()
     ProfileRoute(
         handle = route.handle,
+        // The bar's Profile slot re-tapped over this root (Profile.md:61-63).
+        reselectSignal = if (tabRoot) reselects(TopLevelTab.PROFILE) else 0,
         bell = if (ownRoot) bellFor("profile") else null,
         handleChangedResult = handleChanged,
         onHandleChangedResultConsumed = consumeHandleChanged,
@@ -297,6 +302,17 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
     )
 }
 
+/**
+ * SYSTEM BACK ON ANOTHER TAB'S ROOT LANDS ON FEED'S ROOT (roadmap.md "The
+ * MVP milestone", ruled 2026-09-10): the tab closes, and the feed shows its
+ * root rather than the drill-in it was left at — which is also spent, so a
+ * later tap on the Feed slot cannot bring it back ([landOnFeedRoot]).
+ */
+@Composable
+private fun ShellScope.AnotherTabsRootBack() {
+    BackHandler { navController.landOnFeedRoot(keepLeaving = false) }
+}
+
 @Composable
 private fun ShellScope.NotificationsDestination(entry: NavBackStackEntry) {
     val route = entry.toRoute<Notifications>()
@@ -315,7 +331,7 @@ private fun ShellScope.NotificationsDestination(entry: NavBackStackEntry) {
                     Profile(target.handle, from = NOTIFICATIONS_ORIGIN),
                 )
                 NotificationTarget.Invites -> navController.navigate(Invites)
-                NotificationTarget.OwnFeed -> toTab(Feed)
+                NotificationTarget.OwnFeed -> navController.landOnFeedRoot(keepLeaving = true)
             }
         },
     )

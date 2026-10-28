@@ -5,6 +5,18 @@ package com.cogra.app.navigation
 
 import kotlinx.serialization.Serializable
 
+/**
+ * The Feed tab's nested graph: the feed's root and every screen opened from
+ * it, whatever that screen is about (design/readme.md §13 — "a stack is
+ * where a screen was opened FROM").
+ */
+@Serializable
+data object FeedTab
+
+/** The Profile tab's nested graph: the reader's own profile and every screen opened from it. */
+@Serializable
+data object ProfileTab
+
 // The destinations (type-safe routes, Navigation 2.8+).
 @Serializable
 data class InviteEntry(val inviteId: String? = null)
