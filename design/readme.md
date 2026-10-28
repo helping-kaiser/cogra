@@ -10431,6 +10431,45 @@ test). Measured headless on the built boards, Figtree loaded.
 - **The gate**: edges hold at **2127**, flows at **227**, the registry
   at **100 screens**; no board added.
 
+### Round 21, the pad's fabric states and words — 2026-10-28
+
+The pad and empty-sign fabric's undrawn states (seam 245, asks 14–18 and
+20's words), under the same autonomy order: built, merged, reviewed by
+jakob after his hand test.
+
+- **The alternates wait as Set does.** `StanceControl` hands its
+  `signing` to the surface that sent the act — the alternates while they
+  are up, the walk-back or the empty sign while one is raised. The
+  alternates' commit reads `Signing…`; a fault keeps the dialog at the
+  pick with `Retry`, outlined, in its slot; the write rule's notice and
+  `Not now` take the landing line's and the action row's place. A typed
+  value past the bound clamps as the field does, read back in `Your
+  pick`, no refusal line; a field holding no number moves nothing, never
+  a 0. The alternates card draws all four.
+- **The write rule inside the walk-back.** `SeveranceConfirm` (and
+  `EmptySignConfirm`, the same moment) answers the write rule's no in the
+  row's quiet register — `You can't sign right now. Nothing was signed or
+  spent.` where the fault line stands — the act dimmed, no Retry, `Keep
+  it` the way back. The board's `answer` chip draws it.
+- **Cancel while Set signs.** Cancel, the press outside and Escape stay
+  live and close the pad, never the act: its wait passes to the target's
+  row, a hold's (`Signing…`, then the face and the snackbar, or `That
+  didn't sign.` with a Retry that asks the same pick again). `PadFailed`'s
+  `moment` chip draws `setting` and `cancelled`.
+- **The key-absent pad's "?"** says only what its notice does not: where
+  the key lives, and what waits for the restore.
+- **The target label's family**: `this post`, `this comment`, `@ada`,
+  `#saltmaps` — one copy-voice row; the 🤔's first line names `Your
+  topics` for a topic as it names `Your people` for a person.
+- **The empty sign's landing** `Resulting opinion 🤷 Says nothing.`
+  stands, blessed; a `(0, 0)` pick over the standing an empty sign left
+  still asks the walk-back — that record stands, and severance is a
+  `(0, 0)` landing over anything standing.
+- **Every new string above is merged under the autonomy order, review
+  pending.** Backlog 147 banks the type sites round 20 left.
+- **The gate**: edges hold at **2127**, flows at **227**, the registry
+  at **100 screens**; no board added — two boards gain a chip.
+
 ---
 
 ## 14. The canvases
