@@ -16,10 +16,14 @@
 
 import Link from "next/link";
 
+import { bundleReadout } from "@/lib/stance/anchors";
+import type { StancePair } from "@/lib/stance/model";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 import { NodeMark } from "@/lib/ui/node-mark";
+import { formatStancePair, STANCE_SEVERANCE_WORDS } from "@/lib/ui/stance-format";
 import { MonogramAvatar } from "./monogram-avatar";
+import { PairReadout } from "./pair-readout";
 
 export type ReferenceKind = "post" | "comment" | "person" | "topic";
 
@@ -29,6 +33,39 @@ function Mark({ kind, name, src, node }: { kind: ReferenceKind; name: string; sr
   return <NodeMark kind={kind} src={src} onCard={false} node={node} />;
 }
 
+/**
+ * AN AFFINITY'S EDGE (ReferenceRow.jsx, "THE FAMILY IS THE ACT'S, NOT THE
+ * KIND'S"): the face through the one choke point (`bundleReadout`), the digits
+ * as the geek reading, and — because an Affinity IS a stance, the reader's own
+ * — the anchor's word spoken with the pair: `Like this, +0.60 / +0.35`
+ * (copy-voice, *The readouts, spoken*). A held topic is never (0, 0); the zero
+ * word is the stance family's should the fold ever serve one.
+ */
+function StanceEdge({
+  pair,
+  pending,
+  node,
+  testId,
+}: {
+  pair: StancePair;
+  pending: boolean;
+  node?: DataNode;
+  testId?: string;
+}) {
+  const anchor = bundleReadout(pair, STANCE_SEVERANCE_WORDS.zero);
+  const exact = formatStancePair(pair);
+  return (
+    <PairReadout
+      emoji={anchor.emoji}
+      exact={exact}
+      spoken={`${anchor.label}, ${exact}`}
+      pending={pending}
+      node={node}
+      testId={`${testId ?? "reference-row"}-pair`}
+    />
+  );
+}
+
 export function ReferenceRow({
   kind,
   name,
@@ -36,6 +73,9 @@ export function ReferenceRow({
   src = null,
   rank = null,
   value = null,
+  pair = null,
+  pairFamily,
+  pending = false,
   href,
   onOpen,
   node,
@@ -47,6 +87,17 @@ export function ReferenceRow({
   src?: string | null;
   rank?: string | null;
   value?: string | null;
+  /**
+   * The pair signed on this act, as numbers; the row formats it. Only the
+   * family a list on this client draws is here: `stance`, the reader's own
+   * AFFINITY on Your topics (`ReferenceRow.d.ts` `pairFamily`), read through
+   * the twenty faces with the anchor's word spoken. The tag and citation
+   * families join with the list that first draws them through this row.
+   */
+  pair?: StancePair | null;
+  pairFamily?: "stance";
+  /** The act is signed but not yet ordered: the settling mark under the pair. */
+  pending?: boolean;
   /** Where the row opens; null draws a row that opens nothing. */
   href: string | null;
   onOpen?: () => void;
@@ -84,6 +135,8 @@ export function ReferenceRow({
           </span>
           <span className="sr-only">{rank}</span>
         </>
+      ) : pair !== null && pairFamily === "stance" ? (
+        <StanceEdge pair={pair} pending={pending} node={part(node, "value")} testId={testId} />
       ) : (
         value !== null && (
           <span
