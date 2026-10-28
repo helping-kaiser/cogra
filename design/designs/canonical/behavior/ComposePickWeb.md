@@ -10,6 +10,14 @@ WHEN press Choose from your files -> the browser's own file dialog opens AND wha
 
 WHEN files are dropped on the region -> the dropped files land in the tray
 
+ALWAYS the region stands dimmed, with no Choose from your files and no drop line, GIVEN a clip is staged
+
+ALWAYS the tray carries the clip's tile and its line, and no Show all, GIVEN a clip is staged
+
+WHEN a file is dropped on the region GIVEN a clip is staged -> a picture is refused with A post carries pictures or one video, not both. AND a clip is refused with A post carries one video. AND NEVER the file joins the tray AND NEVER the browser opens the file
+
+WHEN tap the clip's remove control GIVEN a clip is staged -> the clip leaves AND the region comes back with Choose from your files and the drop line AND the step takes picks again
+
 WHEN a video is chosen or dropped GIVEN nothing is in the tray -> the video becomes the whole body AND the step stops taking picks
 
 WHEN more than one video is chosen or dropped at once GIVEN nothing is in the tray and no picture comes with them -> the first video becomes the whole body AND each other video is refused with A post carries one video.

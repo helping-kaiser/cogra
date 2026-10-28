@@ -1157,7 +1157,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Write words instead</button>", tag: "button" },
     { n: 5, find: ">Show all</button>", tag: "button" },
     { n: 6, find: 'aria-label="Remove this picture"', tag: "button", all: true },
-    { n: 7, find: "1px dashed var(--border-field)", tag: "div" },
+    { n: 6, find: 'aria-label="Remove this video"', tag: "button" },
+    { n: 7, find: "1px dashed var(--border-field)", tag: "div", all: true },
     { n: 8, find: ">Choose from your files</button>", tag: "button" },
   ],
   AvatarCrop: [
