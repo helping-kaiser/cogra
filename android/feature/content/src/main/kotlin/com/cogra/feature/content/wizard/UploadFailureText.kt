@@ -30,6 +30,7 @@ fun describeTooLong(video: Boolean): String = stringResource(
 @Composable
 fun UploadFailure.text(): String = stringResource(label())
 
+/** The faults: what did not decode, what the server refused, what never arrived. */
 private fun UploadFailure.label(): Int = when (this) {
     UploadFailure.UNREADABLE_PICTURE -> R.string.content_upload_unreadable_picture
     UploadFailure.UNREADABLE_VIDEO -> R.string.content_upload_unreadable_video
@@ -38,10 +39,18 @@ private fun UploadFailure.label(): Int = when (this) {
     UploadFailure.REFUSED_PICTURE -> R.string.content_upload_refused_picture
     UploadFailure.REFUSED_VIDEO -> R.string.content_upload_refused_video
     UploadFailure.REFUSED_COVER -> R.string.content_upload_refused_cover
+    UploadFailure.TRANSPORT -> R.string.content_upload_transport
+    else -> limitLabel()
+}
+
+/** The refusals that name a cap or the body's grammar (copy-voice, *Refused files*). */
+private fun UploadFailure.limitLabel(): Int = when (this) {
     UploadFailure.PICTURE_TOO_BIG -> R.string.content_upload_picture_too_big
     UploadFailure.POST_VIDEO_TOO_BIG -> R.string.content_upload_post_video_too_big
     UploadFailure.COMMENT_VIDEO_TOO_BIG -> R.string.content_upload_comment_video_too_big
     UploadFailure.POST_PICTURE_COUNT -> R.string.content_upload_post_picture_count
     UploadFailure.POST_MIXED_BODY -> R.string.content_upload_post_mixed_body
-    UploadFailure.TRANSPORT -> R.string.content_upload_transport
+    UploadFailure.COMMENT_PICTURE_COUNT -> R.string.content_upload_comment_picture_count
+    UploadFailure.VIDEO_AT_EDIT -> R.string.content_upload_video_at_edit
+    else -> error("$this is a fault, worded by label()")
 }

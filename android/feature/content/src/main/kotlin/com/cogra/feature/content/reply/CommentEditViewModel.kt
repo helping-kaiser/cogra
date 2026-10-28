@@ -3,13 +3,14 @@ package com.cogra.feature.content.reply
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.v2.compose.HelpTopic
-import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
+import com.cogra.domain.map
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
@@ -30,46 +31,56 @@ import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
+import com.cogra.feature.content.edit.EditCrop
+import com.cogra.feature.content.edit.EditGallery
+import com.cogra.feature.content.edit.EditMediaEditor
+import com.cogra.feature.content.edit.EditPicture
 import com.cogra.feature.content.edit.undoWithdrawal
 import com.cogra.feature.content.editableRow
-import com.cogra.feature.content.referenceFieldIndex
-import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.SealFault
 import com.cogra.feature.content.wizard.UploadFailure
-import com.cogra.feature.content.wizard.attachmentFieldIndex
-import com.cogra.feature.content.wizard.uploadPicture
+import com.cogra.feature.content.wizard.sealFaultOf
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * `CommentEdit`.
+ * `CommentEdit` and `CommentEditVideo`.
  *
  * The one thing this holds that the screen never shows is the comment's
- * **standing sensitive mark**: `PrepareCommentEditInput` is
- * complete-state, so an edit that does not re-state the mark clears it.
- * The mark is read when the edit opens and sent back unchanged.
+ * **standing sensitive mark**: `PrepareCommentEditInput` is complete-state,
+ * so an edit that does not re-state the mark clears it. The mark is read
+ * when the edit opens and sent back unchanged.
+ *
+ * NOTHING SIGNS BEFORE THE BYTES EXIST (CommentEdit.md, CommentEditVideo.md):
+ * the pictures the edit adds and a clip's new face upload the moment they
+ * are taken; a press of Sign the edit while they run is HELD and signs when
+ * the last lands, and a failed upload drops it.
  */
 @HiltViewModel
 class CommentEditViewModel @Inject constructor(
     private val content: ContentRepository,
     private val references: ReferenceRepository,
     private val media: MediaRepository,
-    private val processor: MediaProcessor,
+    processor: MediaProcessor,
     private val signer: WriteSigner,
     private val topics: TopicRepository,
+    video: VideoProcessor,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CommentEditState())
     val state: StateFlow<CommentEditState> = _state.asStateFlow()
 
-    private val uploads = mutableMapOf<String, Job>()
+    private var slowTimer: Job? = null
 
     private val sections = SectionsEditor(
         scope = viewModelScope,
@@ -79,6 +90,16 @@ class CommentEditViewModel @Inject constructor(
         withTags = { state, tags -> state.copy(tagSection = tags) },
         referencesOf = { it.referenceSection },
         withReferences = { state, refs -> state.copy(referenceSection = refs) },
+    )
+
+    private val uploads = EditMediaEditor(
+        scope = viewModelScope,
+        state = _state,
+        processor = processor,
+        media = media,
+        video = video,
+        galleryOf = { it.gallery },
+        withGallery = { state, gallery -> state.copy(gallery = gallery) },
     )
 
     private var started = false
@@ -99,18 +120,6 @@ class CommentEditViewModel @Inject constructor(
         viewModelScope.launch {
             when (val outcome = content.commentForEdit(commentId)) {
                 is Outcome.Success -> outcome.value?.let { loaded ->
-                    // The gallery arrives already landed, so nothing
-                    // re-uploads: these are the entries the edit keeps.
-                    val landed = loaded.comment.attachments.map { asset ->
-                        PickedAsset(
-                            uri = asset.url,
-                            sourceRatio = asset.aspectRatio,
-                            altText = asset.altText.orEmpty(),
-                            upload = AssetUpload.Done(asset.id),
-                            coverMediaId = asset.cover?.id,
-                            coverTaken = asset.coverTaken,
-                        )
-                    }
                     val body = loaded.comment.content.value.orEmpty()
                     // The editor opens on what the comment actually
                     // carries — real stored parameters, not the defaults
@@ -133,8 +142,9 @@ class CommentEditViewModel @Inject constructor(
                             loading = false,
                             body = body,
                             loadedBody = body,
-                            picked = landed,
-                            loadedAttachmentIds = landed.mapNotNull { p -> p.mediaId },
+                            // The gallery arrives already landed, so nothing
+                            // re-uploads: these are the entries the edit keeps.
+                            gallery = EditGallery.of(loaded.comment.attachments),
                             tagSection = TagSectionState(tags = tags, loaded = tags),
                             referenceSection = ReferenceSectionState(
                                 references = refs,
@@ -159,39 +169,112 @@ class CommentEditViewModel @Inject constructor(
 
     fun onBodyChange(value: String) = _state.update { it.copy(body = value, recordStaged = true) }
 
-    fun onPicked(uri: String) {
-        val before = _state.value
-        if (before.picked.any { it.uri == uri } || !before.canAddPicture) return
-        _state.update { it.addPick(uri) }
+    /**
+     * What the platform's own picker handed back (`+ Add pictures`) — NEVER a
+     * pick stage. A comment's pictures never crop: each goes up whole the
+     * moment it is taken. Past the fourth, the file is refused in words under
+     * the pictures (copy-voice, *Refused files*), never dropped in silence.
+     */
+    fun onPicked(uris: List<String>) {
+        if (uris.isEmpty() || !_state.value.canAddPicture) return
         viewModelScope.launch {
-            val ratio = processor.aspectRatio(uri)
-            if (ratio != null) _state.update { it.withSourceRatio(uri, ratio) }
-            upload(uri, ratio)
+            val screened = uploads.screen(
+                uris = uris,
+                cap = CommentEditState.MAX_PICTURES,
+                overCap = UploadFailure.COMMENT_PICTURE_COUNT,
+                mayHoldVideo = false,
+            )
+            _state.update {
+                it.copy(
+                    gallery = it.gallery.adding(screened.accepted, CommentEditState.MAX_PICTURES),
+                    refused = it.refused + screened.refused,
+                    recordStaged = it.recordStaged || screened.accepted.isNotEmpty(),
+                )
+            }
+            screened.accepted.forEach { uploads.upload(it.uri) }
         }
     }
 
+    /**
+     * A picture leaves the batch, its upload with it — or the clip leaves
+     * whole, taking the comment's media with it, and the comment is its words
+     * (CommentEditVideo.md).
+     */
     fun onRemovePickAt(index: Int) {
-        val uri = _state.value.picked.getOrNull(index)?.uri ?: return
-        uploads.remove(uri)?.cancel()
-        _state.update { it.removePick(uri) }
+        val gallery = _state.value.gallery
+        val picture = gallery.pictures.getOrNull(index) ?: return
+        uploads.cancel(picture.key)
+        if (gallery.clip?.key == picture.key) gallery.newCover?.let { uploads.cancel(it.uri) }
+        _state.update {
+            it.copy(gallery = it.gallery.removing(picture.key), describingIndex = null, recordStaged = true)
+        }
     }
 
-    /** One asset, whole: a target equal to the source frames nothing away. */
-    private fun upload(uri: String, ratio: Float?) {
-        uploads.remove(uri)?.cancel()
-        _state.update { it.withUpload(uri, AssetUpload.Running) }
-        uploads[uri] = viewModelScope.launch {
-            val result = uploadPicture(uri, CropSpec(targetRatio = ratio ?: 1f), processor, media)
-            _state.update { it.withUpload(uri, result) }
+    /** `Remove it` on a refused file: its line leaves. */
+    fun onDismissRefusal(index: Int) = _state.update {
+        it.copy(refused = it.refused.filterIndexed { i, _ -> i != index })
+    }
+
+    /** `Retry`, under the pictures or in the gate: every failed upload tries again — and never signs on its own. */
+    fun onRetryUploads() = uploads.retryFailed()
+
+    /** `Remove it` / `Remove them` under the pictures: every failed picture leaves the batch. */
+    fun onRemoveFailed() {
+        _state.value.gallery.pictures
+            .filter { it is EditPicture.Added && it.asset.upload is AssetUpload.Failed }
+            .forEach { failed ->
+                val index = _state.value.gallery.pictures.indexOfFirst { it.key == failed.key }
+                if (index >= 0) onRemovePickAt(index)
+            }
+    }
+
+    // -- The clip's cover (`CommentEditVideo`, `CoverCrop`) --
+
+    /**
+     * `Change the cover` / `Add a cover`: the platform's own picker handed
+     * back a picture — NEVER the clip's frames — and it passes the cover's
+     * crop, locked to the comment's square, before it lands on the edit.
+     */
+    fun onPickCover(uri: String) = _state.update { st ->
+        if (st.gallery.clip == null) return@update st
+        st.copy(cropping = EditCrop.Cover(PickedAsset(uri), ratio = COMMENT_SQUARE))
+    }
+
+    fun onCoverCropChanged(crop: CropSpec) = _state.update { st ->
+        st.copy(cropping = st.cropping?.copy(crop = crop))
+    }
+
+    /** The cover's crop's back arrow: the edit comes back, the picture unused. */
+    fun onCropBack() = _state.update { it.copy(cropping = null) }
+
+    /**
+     * The cover's crop's Next: the cover row comes back with the new face,
+     * and only its cropped export leaves the device. A face set is a change
+     * to the record — the clip's attachment points at it from the signing.
+     */
+    fun onCoverCropDone() {
+        val crop = _state.value.cropping ?: return
+        _state.value.gallery.newCover?.let { uploads.cancel(it.uri) }
+        val spec = crop.crop ?: CropSpec(targetRatio = crop.ratio)
+        _state.update {
+            it.copy(gallery = it.gallery.withNewCover(crop.asset, spec), cropping = null, recordStaged = true)
         }
+        uploads.upload(crop.asset.uri)
+    }
+
+    /** `Remove it` under the cover row: the new face leaves, and the row reads as it stood before the edit. */
+    fun onRemoveCover() {
+        _state.value.gallery.newCover?.let { uploads.cancel(it.uri) }
+        _state.update { it.copy(gallery = it.gallery.withNewCover(null)) }
     }
 
     fun onDescribeFirst() = _state.update {
-        val next = it.picked.indexOfFirst { asset -> asset.altText.isBlank() }
+        val next = it.gallery.pictures.indexOfFirst { picture -> picture.altText.isBlank() }
         it.copy(describingIndex = if (next >= 0) next else 0)
     }
 
-    fun onAltTextChange(uri: String, text: String) = _state.update { it.withAltText(uri, text) }
+    fun onAltTextChange(key: String, text: String) =
+        _state.update { it.copy(gallery = it.gallery.withAltText(key, text), recordStaged = true) }
 
     fun onOpenActs() = _state.update { it.copy(actsOpen = true) }
 
@@ -212,23 +295,33 @@ class CommentEditViewModel @Inject constructor(
     fun onCloseSheet() = _state.update { it.closedSheets() }
 
     /**
-     * The way out the author asked for.
+     * The way out the author asked for — the edit's back arrow or X, or the
+     * cover crop's X, which is the edit's own (CoverCrop.md).
      *
      * The comment edit keeps no draft, so leaving it discards — and an
      * edit that changed something is asked first (`DiscardConfirm`,
      * design/readme.md §13). One opened and closed untouched leaves at
-     * once: a confirm with nothing to lose is noise.
+     * once: a confirm with nothing to lose is noise. Refused while the
+     * signing holds the reader.
      *
      * Answers whether the caller may leave now.
      */
     fun onLeaveRequested(): Boolean {
-        if (!_state.value.hasSomethingToLose) return true
+        val s = _state.value
+        if (s.pressed) return false
+        if (!s.hasSomethingToLose) return true
         _state.update { it.copy(confirmingDiscard = true) }
         return false
     }
 
     /** "Keep writing" — the dialog closes over the edit it covered. */
     fun onKeepWriting() = _state.update { it.copy(confirmingDiscard = false) }
+
+    /** `Discard the edit` under the bug notice: asks first (`Discard the changes?`). */
+    fun onDiscardAsked() = _state.update { it.copy(confirmingDiscard = true) }
+
+    /** `Not now` under the write rule's notice: the notice goes, the edit stands with the changes as they were. */
+    fun onNotNow() = _state.update { it.copy(fault = null) }
 
     fun onOpenHelp(topic: HelpTopic) = _state.update { it.copy(help = topic) }
 
@@ -250,8 +343,6 @@ class CommentEditViewModel @Inject constructor(
 
     fun onTagConfidenceChange(name: String, value: Double) = sections.onTagConfidenceChange(name, value)
 
-    private fun updateTags(block: (TagSectionState) -> TagSectionState) = sections.updateTags(block)
-
     fun onOpenFinder() = sections.onOpenFinder()
 
     fun onCloseFinder() = sections.onCloseFinder()
@@ -260,7 +351,16 @@ class CommentEditViewModel @Inject constructor(
 
     fun onPickReference(row: ReferenceCandidateRow) = sections.onPickReference(row)
 
-    fun onRemoveReference(targetId: String) = sections.onRemoveReference(targetId)
+    /**
+     * A citation's ×, or `Remove it` under the line that says it never
+     * landed: the refused row's fault goes with it.
+     */
+    fun onRemoveReference(targetId: String) {
+        sections.onRemoveReference(targetId)
+        _state.update { st ->
+            if ((st.fault as? SealFault.Row)?.targetId == targetId) st.copy(fault = null) else st
+        }
+    }
 
     fun onTuneReference(targetId: String) = sections.onTuneReference(targetId)
 
@@ -272,115 +372,115 @@ class CommentEditViewModel @Inject constructor(
     fun onReferenceSupportChange(targetId: String, value: Double) =
         sections.onReferenceSupportChange(targetId, value)
 
-    private fun updateReferences(block: (ReferenceSectionState) -> ReferenceSectionState) =
-        sections.updateReferences(block)
-
     /** Undo on a tag's `Withdrawn:` line: it returns as it stood, and the withdrawal unstages. */
-    fun onUndoTagWithdrawal(name: String) = updateTags { it.undoWithdrawal(name) }
+    fun onUndoTagWithdrawal(name: String) = sections.updateTags { it.undoWithdrawal(name) }
 
     /** Undo on a citation's `Withdrawn:` line, the same way. */
-    fun onUndoReferenceWithdrawal(targetId: String) = updateReferences { it.undoWithdrawal(targetId) }
+    fun onUndoReferenceWithdrawal(targetId: String) = sections.updateReferences { it.undoWithdrawal(targetId) }
+
+    // -- Signing --
 
     /**
      * Signs the edit, then each tag and citation change — every act the
-     * footer counts, the record included once it is staged.
+     * footer counts, the record included once it is staged. A press while
+     * the uploads run is held, and signs when the last lands (CommentEdit.md).
      */
     fun onSign() {
-        val current = _state.value
-        if (!current.canSign) return
+        if (!_state.value.canSign) return
+        beginPress()
+        viewModelScope.launch {
+            val settled = _state.first { it.gallery.uploadsFailed > 0 || it.gallery.claims != null }
+            // A failure drops the held press: the gate takes its fault
+            // reading and nothing signs until Sign the edit is pressed again.
+            if (settled.gallery.uploadsFailed > 0) return@launch end { it }
+            _state.update { it.copy(heldPress = false, submitting = true) }
+            val current = _state.value
+            val expected = expectation(current) ?: return@launch
+            val writes = prepareBatch(current) ?: return@launch
+            // THE COUNT THE SIGNING PREPARED IS THE ONE THE FOOT READ, or
+            // nothing is signed: the held press drops (CommentEdit.md).
+            if (writes.size != current.signedActionCount) return@launch end { it.copy(countChanged = true) }
+
+            val results = try {
+                signer.sign(writes, expected)
+            } catch (_: NoActorKeyException) {
+                return@launch end { it.copy(keyAbsent = true) }
+            }
+            if (results.all { it is WriteResult.Done }) {
+                end { it.copy(saved = true) }
+            } else {
+                end { it.copy(signingFailed = true) }
+            }
+        }
+    }
+
+    /** The press: what the last one left clears, the press holds, and past 5s the slow line stands. */
+    private fun beginPress() {
         _state.update {
             it.copy(
-                submitting = true,
+                heldPress = true,
+                slow = false,
+                countChanged = false,
+                fault = null,
                 refusal = null,
                 signingFailed = false,
                 keyAbsent = false,
                 transportFailed = false,
             )
         }
-        viewModelScope.launch {
-            val expected = expectation(current) ?: return@launch
-            val writes = mutableListOf<PreparedWriteView>()
-
-            // The edit record only when its payload moved: an edit that
-            // changed nothing but a topic stages no Edit act (F10).
-            if (current.contentChanged) {
-                when (
-                    val outcome = content.prepareCommentEdit(
-                        id = current.commentId,
-                        content = current.body,
-                        attachments = sentContent(current).attachments,
-                        // Complete state: whatever the Mark row leaves
-                        // standing, touched or not. An edit that omitted
-                        // it would unveil a comment its author marked.
-                        sensitive = current.sensitive,
-                        sensitiveReason = current.sensitiveReason,
-                    )
-                ) {
-                    is Outcome.Success -> writes += outcome.value.writes
-                    is Outcome.Refused -> return@launch refuse(outcome.errors)
-                    is Outcome.Failed -> return@launch failTransport()
-                }
-            }
-
-            // Topics and citations are never edit fields: each change is
-            // its own priced act, staged beside the edit (post.md §3).
-            for (row in current.tagSection.adds) {
-                when (
-                    val outcome =
-                        topics.prepareTag(current.commentId, row.name, row.relevance, row.confidence)
-                ) {
-                    is Outcome.Success -> writes += outcome.value
-                    is Outcome.Refused -> return@launch refuse(outcome.errors)
-                    is Outcome.Failed -> return@launch failTransport()
-                }
-            }
-            for (row in current.tagSection.removes) {
-                when (
-                    val outcome = topics.prepareTag(current.commentId, row.name, WITHDRAWN, WITHDRAWN)
-                ) {
-                    is Outcome.Success -> writes += outcome.value
-                    is Outcome.Refused -> return@launch refuse(outcome.errors)
-                    is Outcome.Failed -> return@launch failTransport()
-                }
-            }
-            for (row in current.referenceSection.adds) {
-                when (
-                    val outcome = references.prepareReference(
-                        current.commentId,
-                        row.targetId,
-                        row.relevance,
-                        row.support,
-                    )
-                ) {
-                    is Outcome.Success -> writes += outcome.value
-                    is Outcome.Refused -> return@launch refuse(outcome.errors)
-                    is Outcome.Failed -> return@launch failTransport()
-                }
-            }
-            for (row in current.referenceSection.removes) {
-                when (
-                    val outcome =
-                        references.prepareReferenceWithdrawal(current.commentId, row.targetId)
-                ) {
-                    is Outcome.Success -> writes += outcome.value
-                    is Outcome.Refused -> return@launch refuse(outcome.errors)
-                    is Outcome.Failed -> return@launch failTransport()
-                }
-            }
-
-            val results = try {
-                signer.sign(writes, expected)
-            } catch (_: NoActorKeyException) {
-                _state.update { it.copy(submitting = false, keyAbsent = true) }
-                return@launch
-            }
-
-            if (results.all { it is WriteResult.Done }) {
-                _state.update { it.copy(submitting = false, saved = true) }
-            } else {
-                _state.update { it.copy(submitting = false, signingFailed = true) }
-            }
+        slowTimer?.cancel()
+        slowTimer = viewModelScope.launch {
+            delay(SLOW_SIGNING_MS)
+            _state.update { it.copy(slow = it.pressed) }
         }
+    }
+
+    /**
+     * Prepares EVERY act before signing any: the edit record only when its
+     * payload moved — an edit that changed nothing but a topic stages no Edit
+     * act (F10) — then each topic and citation change, its own priced act
+     * (post.md §3). Null once a prepare refused or failed — already reported.
+     */
+    private suspend fun prepareBatch(current: CommentEditState): List<PreparedWriteView>? {
+        val writes = mutableListOf<PreparedWriteView>()
+        if (current.contentChanged) {
+            val sent = sentContent(current)
+            writes += staged(
+                content.prepareCommentEdit(
+                    id = current.commentId,
+                    content = current.body,
+                    attachments = sent.attachments,
+                    // Complete state: whatever the Mark row leaves standing,
+                    // touched or not. An edit that omitted it would unveil a
+                    // comment its author marked.
+                    sensitive = current.sensitive,
+                    sensitiveReason = current.sensitiveReason,
+                ).map { it.writes },
+            ) ?: return null
+        }
+        for (row in current.tagSection.adds) {
+            writes += staged(topics.prepareTag(current.commentId, row.name, row.relevance, row.confidence))
+                ?: return null
+        }
+        for (row in current.tagSection.removes) {
+            writes += staged(topics.prepareTag(current.commentId, row.name, WITHDRAWN, WITHDRAWN)) ?: return null
+        }
+        for (row in current.referenceSection.adds) {
+            writes += staged(
+                references.prepareReference(current.commentId, row.targetId, row.relevance, row.support),
+            ) ?: return null
+        }
+        for (row in current.referenceSection.removes) {
+            writes += staged(references.prepareReferenceWithdrawal(current.commentId, row.targetId))
+                ?: return null
+        }
+        return writes
+    }
+
+    private fun staged(outcome: Outcome<List<PreparedWriteView>>): List<PreparedWriteView>? = when (outcome) {
+        is Outcome.Success -> outcome.value
+        is Outcome.Refused -> null.also { refuse(outcome.errors) }
+        is Outcome.Failed -> null.also { failTransport() }
     }
 
     /**
@@ -424,18 +524,14 @@ class CommentEditViewModel @Inject constructor(
     }
 
     /**
-     * The record's payload as complete state: the pictures added here are
-     * held to the digests this device computed, the kept ones to the
-     * digests of the asset each names, read back by id
-     * (PayloadExpectation.kt). Null once the read-back failed — already
-     * reported.
+     * The record's payload as complete state: the bytes uploaded here are
+     * held to the digests this device computed, the kept ones to the digests
+     * of the asset each names, read back by id (PayloadExpectation.kt). Null
+     * once the read-back failed — already reported.
      */
     private suspend fun contentExpected(current: CommentEditState): ExpectedContent? {
         val sent = sentContent(current)
-        val own = current.picked.mapNotNull { asset ->
-            (asset.upload as? AssetUpload.Done)?.let { done -> done.known?.let { done.mediaId to it } }
-        }.toMap()
-        val ledger = when (val read = media.ledgerFor(sent.attachments, own)) {
+        val ledger = when (val read = media.ledgerFor(sent.attachments, current.gallery.ownKnown)) {
             is Outcome.Success -> read.value
             is Outcome.Refused -> return null.also { refuse(read.errors) }
             is Outcome.Failed -> return null.also { failTransport() }
@@ -446,74 +542,50 @@ class CommentEditViewModel @Inject constructor(
     /**
      * The edit record's request, read by the prepare and by the payload
      * expectation alike: the words, the whole gallery the edit leaves
-     * standing, and the mark as the transport sends it for an edit — the
+     * standing — each placement naming the cover it keeps or the face the
+     * edit set — and the mark as the transport sends it for an edit, the
      * reason untouched (RepositoryImpls `prepareCommentEdit`).
      */
     private fun sentContent(current: CommentEditState): SentContent = SentContent(
         content = current.body,
-        attachments = current.picked.mapNotNull { asset ->
-            asset.mediaId?.let {
-                AttachmentClaim(it, asset.altText.ifBlank { null }, asset.coverMediaId, asset.coverTaken)
-            }
-        },
+        attachments = current.gallery.claims.orEmpty(),
         sensitive = current.sensitive,
         sensitiveReason = current.sensitiveReason,
     )
 
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 
-    private fun refuse(errors: List<UserError>) = _state.update { st ->
-        var tags = st.tagSection
-        var refs = st.referenceSection
-        var picks = st.picked
-        val unplaced = mutableListOf<String>()
-        for (error in errors) {
-            val tagIndex = tagFieldIndex(error.field)
-            val referenceIndex = referenceFieldIndex(error.field)
-            val attachmentIndex = attachmentFieldIndex(error.field)
-            when {
-                tagIndex != null -> {
-                    val (next, left) = tags.withErrorAt(tagIndex, error.message)
-                    tags = next
-                    left?.let { unplaced += it }
-                }
-                referenceIndex != null -> {
-                    val (next, left) = refs.withErrorAt(referenceIndex, error.message)
-                    refs = next
-                    left?.let { unplaced += it }
-                }
-                attachmentIndex != null && attachmentIndex in picks.indices -> {
-                    picks = picks.mapIndexed { i, asset ->
-                        if (i == attachmentIndex) {
-                            asset.copy(upload = AssetUpload.Failed(UploadFailure.REFUSED_PICTURE, error.message))
-                        } else {
-                            asset
-                        }
-                    }
-                }
-                else -> unplaced += error.message
-            }
-        }
-        st.copy(
-            submitting = false,
-            tagSection = tags,
-            referenceSection = refs,
-            picked = picks,
-            refusal = unplaced.firstOrNull(),
-        )
+    /** The press answered, or dropped: it is released, and the slow line goes. */
+    private fun end(block: (CommentEditState) -> CommentEditState) {
+        slowTimer?.cancel()
+        _state.update { block(it.copy(submitting = false, heldPress = false, slow = false)) }
     }
 
-    private fun failTransport() = _state.update { it.copy(submitting = false, transportFailed = true) }
+    /**
+     * A refusal, read the way the edit draws it (`SealFault`): the write
+     * rule's notice, the one citation whose target never landed — said on its
+     * row — or the bug notice for any other refused act (CommentEdit.md).
+     */
+    private fun refuse(errors: List<UserError>) = end { st ->
+        st.copy(fault = sealFaultOf(errors, st.referenceSection.references))
+    }
 
-    private companion object {
+    private fun failTransport() = end { it.copy(transportFailed = true) }
 
+    companion object {
         /** A Tag at (0,0) — both parameters at this value — is how a topic is taken off (hashtag.md §4). */
-        const val WITHDRAWN = 0.0
+        private const val WITHDRAWN = 0.0
+
+        /** The comment pager's square: a comment clip's face is cut to it (CoverCrop.md). */
+        private const val COMMENT_SQUARE = 1f
+
+        /** How long a signing may go unanswered before the foot says the network is slow. */
+        const val SLOW_SIGNING_MS = 5_000L
 
         // The one message still carried as prose: `refusal` is also the
         // channel the server's own words arrive on, so moving this to a
         // resource means reshaping `problem()` on three screens and the
         // JVM tests that read it — a sweep of its own (AND-04 note).
-        const val GONE = "That comment is no longer there."
+        private const val GONE = "That comment is no longer there."
     }
 }

@@ -86,12 +86,46 @@ fun MediaCrop(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        CropViewport(item, shape, state, mask, bleed, testTag)
+        CropViewport(item, shape.ratio, shape.cropAspect, state, mask, bleed, testTag)
 
         CropZoom(state = state, testTag = testTag?.let { "${it}_zoom" })
 
         // `QuietNote` (ComposeCrop.jsx:63): what the crop decides and how it moves.
         QuietNote(text = caption)
+    }
+}
+
+/**
+ * A crop whose shape is LOCKED to how the result will be seen
+ * (`CropViewport.prompt.md`; `CoverCrop`): a clip's cover is cut at the
+ * clip's own ratio in a post and at the comment pager's square in a comment,
+ * so there are no shape chips — choosing a shape here would let the cover
+ * disagree with the thing it is the face of (CoverCrop.md).
+ *
+ * The frame is the square the board draws (`size` 390, full bleed), the
+ * picture fitted whole inside it and the [window] the cut; the zoom slider
+ * stands under it and [notes] under that, one `QuietNote` each — `Drag to
+ * move, pinch to zoom.` and what the crop is for (CoverCrop.jsx).
+ */
+@Composable
+fun LockedCrop(
+    item: MediaItem,
+    window: CropAspect,
+    state: CropState,
+    notes: List<String>,
+    modifier: Modifier = Modifier,
+    bleed: Dp = Layout.ScreenGutter,
+    testTag: String? = null,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Space.x3),
+    ) {
+        CropViewport(item, frameRatio = 1f, window = window, state, CropMask.Thirds, bleed, testTag)
+
+        CropZoom(state = state, testTag = testTag?.let { "${it}_zoom" })
+
+        notes.forEach { QuietNote(text = it) }
     }
 }
 
@@ -109,7 +143,10 @@ enum class CropMask { Thirds, Circle }
 @Composable
 private fun CropViewport(
     item: MediaItem,
-    shape: MediaShape,
+    /** The frame the picture is laid out in — the post's shape, or a locked crop's square. */
+    frameRatio: Float,
+    /** The cut's own shape. */
+    window: CropAspect,
     state: CropState,
     mask: CropMask,
     bleed: Dp,
@@ -143,7 +180,7 @@ private fun CropViewport(
             // The frame the picture is *laid out* in stays the post's
             // shape, so the stage looks the way the board draws it; the
             // picture inside it is fitted whole rather than filling it.
-            .aspectRatio(shape.ratio)
+            .aspectRatio(frameRatio)
             .onPreviewKeyEvent { event -> panByKey(event, state) }
             .focusable()
             .semantics {
@@ -192,7 +229,7 @@ private fun CropViewport(
                     CropMask.Circle -> CropImageView.Guidelines.OFF
                 }
                 binding.show(view, item.url)
-                state.frameTo(view, shape)
+                state.frameTo(view, window)
             },
             onRelease = { view ->
                 view.setOnCropWindowChangedListener(null)

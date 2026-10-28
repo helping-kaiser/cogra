@@ -3,10 +3,12 @@ package com.cogra.core.designsystem.v2.compose
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -240,6 +242,43 @@ class DescribeComponentsTest {
 
         compose.onNodeWithTag("counter").assertExists()
         compose.onNodeWithText("Read aloud to people who can't see it.").assertExists()
+    }
+
+    // ---- PickedRow --------------------------------------------------------
+
+    @Test
+    fun theRowBadgesItsFirstPictureTheCover() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                PickedRow(
+                    pictures = List(2) { PickedPicture(MediaItem(null, 1f)) },
+                    caption = "2 pictures — the body",
+                    onManage = {},
+                    testTag = "row",
+                )
+            }
+        }
+
+        // PickedRow.jsx `cover={index === 0}` (round 22, seam 245 ask 13 F):
+        // one badge, on the first tile.
+        compose.onAllNodesWithTag("media_thumb_cover_badge", useUnmergedTree = true).assertCountEquals(1)
+    }
+
+    @Test
+    fun aClipsRowIsNoSetAndWearsNoCover() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                PickedRow(
+                    pictures = listOf(PickedPicture(MediaItem(null, 1f), duration = "0:12")),
+                    caption = "Video",
+                    onManage = null,
+                    onRemove = {},
+                    testTag = "row",
+                )
+            }
+        }
+
+        compose.onAllNodesWithTag("media_thumb_cover_badge", useUnmergedTree = true).assertCountEquals(0)
     }
 
     private companion object {

@@ -47,6 +47,9 @@ function post(id: string, authorId = "u1") {
     updatedAt: "2026-08-12T10:00:00Z",
     landing: { __typename: "Landing", state: "LANDED" },
     moderationStatus: "NORMAL",
+    // No removal: the node stands (api-spec.md `Post.removal`).
+    removal: null,
+    genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
     references: [],
@@ -405,5 +408,46 @@ describe("the feed's post menu", () => {
     expect(push).not.toHaveBeenCalled();
     expect(report.targets).toEqual([]);
     expect(snackbar()).not.toBeInTheDocument();
+  });
+
+  // RM-G9's build word (the own menu off the detail is undrawn): Remove from
+  // a feed card raises the same think-twice dialog over the feed, and a taken
+  // removal leaves the card standing as its mark in place — RemoveConfirm.md:11,
+  // "NEVER the post leaves without a mark".
+  it("the_authors_remove_leaves_the_card_standing_as_its_mark_in_place", async () => {
+    const at = new Date(Date.now() - 60_000).toISOString();
+    const removals: string[] = [];
+    server.use(
+      ...rankedFeed([post("p1", "acct-1"), post("p2")]),
+      gqlLink.mutation("RemoveContent", ({ variables }) => {
+        removals.push(variables.record as string);
+        return HttpResponse.json({
+          data: {
+            removeContent: { __typename: "RemoveContentPayload", records: [], userErrors: [] },
+          },
+        });
+      }),
+      gqlLink.query("PostRemoval", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            post: { __typename: "Post", id: variables.id, removal: { __typename: "Removal", at, by: "AUTHOR" } },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    await openMenu();
+    fireEvent.click(screen.getByTestId("feed-menu-remove"));
+    fireEvent.click(await screen.findByTestId("feed-menu-remove-confirm-remove"));
+    const mark = await screen.findByTestId(byNode("feed.card.removed", "p1"));
+    expect(mark).toHaveTextContent("Removed by its author");
+    expect(screen.getByTestId(byNode("feed.card.removed.when", "p1"))).toHaveTextContent("1m");
+    expect(removals).toEqual(["rec-genesis"]);
+    // In place: the card stands where it stood, its neighbour untouched.
+    const cards = screen.getAllByTestId(byNode("feed.card"));
+    expect(cards[0]).toHaveAttribute("data-testid-key", "p1");
+    expect(screen.getByTestId(byNode("feed.card", "p2"))).toHaveTextContent("body of p2");
+    // A removed post has no menu left.
+    expect(screen.queryByTestId(byNode("feed.card.menu", "p1"))).not.toBeInTheDocument();
   });
 });

@@ -50,8 +50,35 @@ internal fun ColumnScope.CropStepBody(
     onShapeChange: (DraftShape) -> Unit,
     onFrameAsset: (Int) -> Unit,
     onCropsChanged: (Map<String, CropSpec>) -> Unit,
+) = CropFrames(
+    picked = state.picked,
+    crops = state.crops,
+    shape = state.shape,
+    framingIndex = state.framingIndex,
+    onShapeChange = onShapeChange,
+    onFrameAsset = onFrameAsset,
+    onCropsChanged = onCropsChanged,
+)
+
+/**
+ * The crop's body for any set of picks: the shape chips — or none where the
+ * post's one shape already stands ([locked]: an edit's added pictures are cut
+ * to the shape the post was published at, ComposeCrop.md "locked to the
+ * post's one shape") — the framed pick's cut, and the filmstrip.
+ */
+@Composable
+internal fun ColumnScope.CropFrames(
+    picked: List<PickedAsset>,
+    crops: Map<String, CropSpec>,
+    shape: DraftShape,
+    framingIndex: Int,
+    onShapeChange: (DraftShape) -> Unit,
+    onFrameAsset: (Int) -> Unit,
+    onCropsChanged: (Map<String, CropSpec>) -> Unit,
+    locked: Boolean = false,
+    testTagPrefix: String = "wizard",
 ) {
-    val shape = state.shape.toMediaShape()
+    val mediaShape = shape.toMediaShape()
 
     // One framing per pick, keyed by the asset so re-ordering or
     // dropping a pick cannot hand its framing to a different picture.
@@ -62,9 +89,9 @@ internal fun ColumnScope.CropStepBody(
     // author who stepped on to the details stage and came back — or who
     // walked forward into the stage a second time — would find their
     // crop reset (jakob 2026-09-01).
-    val framings: Map<String, CropState> = state.picked.associate { asset ->
+    val framings: Map<String, CropState> = picked.associate { asset ->
         asset.uri to key(asset.uri) {
-            rememberCropState(initial = state.crops[asset.uri].toFraming())
+            rememberCropState(initial = crops[asset.uri].toFraming())
         }
     }
 
@@ -73,24 +100,27 @@ internal fun ColumnScope.CropStepBody(
     // otherwise upload a framing the author never saw. It rides a
     // `SideEffect` because writing outside composition is exactly what
     // that exists for — a bare call would run during composition.
-    val specs = framings.mapValues { (_, crop) -> crop.toSpec(shape.ratio) }
+    val specs = framings.mapValues { (_, crop) -> crop.toSpec(mediaShape.ratio) }
     SideEffect { onCropsChanged(specs) }
 
-    CropShapeChips(
-        selected = shape,
-        onSelect = { onShapeChange(it.toDraftShape()) },
-        modifier = Modifier.testTag("wizard_crop_shapes"),
-    )
+    // A locked crop offers no chips: the shape is the post's, already chosen.
+    if (!locked) {
+        CropShapeChips(
+            selected = mediaShape,
+            onSelect = { onShapeChange(it.toDraftShape()) },
+            modifier = Modifier.testTag("${testTagPrefix}_crop_shapes"),
+        )
+    }
 
-    val framed = state.picked.getOrNull(state.framingIndex) ?: return
+    val framed = picked.getOrNull(framingIndex) ?: return
     MediaCrop(
         // The ratio is carried for the alt text's sake and for whatever
         // the frame reserves before the decode; the cropper reads the
         // picture's real shape itself, so nothing here has to guess it.
         item = MediaItem(framed.uri, framed.sourceRatio ?: 0f, framed.altText.ifBlank { null }),
-        shape = shape,
+        shape = mediaShape,
         state = framings.getValue(framed.uri),
-        testTag = "wizard_crop",
+        testTag = "${testTagPrefix}_crop",
     )
 
     // No description field here: **never from the crop step** — a geometry
@@ -105,7 +135,7 @@ internal fun ColumnScope.CropStepBody(
     // such note anywhere in the file" was true of CropStep.kt's own text,
     // not of what the stage renders; a second `Text` here only doubled it.
 
-    if (state.picked.size > 1) {
+    if (picked.size > 1) {
         // The framed tile's ring stands OUTSIDE it (`outline 2px`, offset 1),
         // so the scrolling strip reaches 3dp past the gutter and pads back in —
         // a scroll container clips along its axis, and the ring must not be cut.
@@ -117,7 +147,7 @@ internal fun ColumnScope.CropStepBody(
                 .padding(horizontal = RING_ROOM),
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
-            state.picked.forEachIndexed { index, asset ->
+            picked.forEachIndexed { index, asset ->
                 MediaThumb(
                     // The filmstrip shows each pick as it currently
                     // stands, so the one being framed is the only one
@@ -128,11 +158,11 @@ internal fun ColumnScope.CropStepBody(
                         null,
                         framings[asset.uri]?.framing ?: CropFraming.Whole,
                     ),
-                    selected = index == state.framingIndex,
-                    dimmed = index != state.framingIndex,
+                    selected = index == framingIndex,
+                    dimmed = index != framingIndex,
                     onClick = { onFrameAsset(index) },
                     contentDescription = stringResource(R.string.content_frame_picture_at, index + 1),
-                    testTag = "wizard_filmstrip_$index",
+                    testTag = "${testTagPrefix}_filmstrip_$index",
                 )
             }
         }

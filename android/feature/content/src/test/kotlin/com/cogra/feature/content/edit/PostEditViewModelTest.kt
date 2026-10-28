@@ -31,7 +31,6 @@ import com.cogra.domain.signing.node
 import com.cogra.domain.signing.postEdit
 import com.cogra.domain.signing.referenceWithdrawal
 import com.cogra.domain.signing.tagClaim
-import com.cogra.domain.testing.FaithfulMediaRepository
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.TEST_POST_ID
@@ -208,6 +207,9 @@ class PostEditViewModelTest {
         mimeType = "image/webp",
     )
 
+    private val media = GatedMedia()
+    private val pictures = ScriptedPictures(media)
+
     private fun opened(): PostEditViewModel {
         val vm =
             PostEditViewModel(
@@ -216,7 +218,9 @@ class PostEditViewModelTest {
                 references,
                 WriteSigner(sealer, identity),
                 identity,
-                FaithfulMediaRepository(),
+                media,
+                pictures,
+                ScriptedClips(),
             )
         vm.start(TEST_POST_ID)
         dispatcher.scheduler.advanceUntilIdle()

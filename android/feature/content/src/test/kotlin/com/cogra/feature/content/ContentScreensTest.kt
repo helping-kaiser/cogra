@@ -62,6 +62,8 @@ import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
 import com.cogra.feature.content.edit.EDIT_COUNT_CHANGED_LINE
 import com.cogra.feature.content.edit.EDIT_SLOW_LINE
+import com.cogra.feature.content.edit.EDIT_WRITE_RULE_FACT
+import com.cogra.feature.content.edit.EditGallery
 import com.cogra.feature.content.edit.PostEditActions
 import com.cogra.feature.content.edit.PostEditScreen
 import com.cogra.feature.content.edit.PostEditUiState
@@ -760,14 +762,16 @@ class ContentScreensTest {
         renderComposer(
             PostEditUiState(
                 postId = "p1",
-                attachments = listOf(
-                    MediaAssetView(
-                        id = "m1",
-                        url = "https://media/m1",
-                        altText = "A salt crust",
-                        status = FieldStatus.NORMAL,
-                        aspectRatio = 4f / 5f,
-                        mimeType = "image/webp",
+                gallery = EditGallery.of(
+                    listOf(
+                        MediaAssetView(
+                            id = "m1",
+                            url = "https://media/m1",
+                            altText = "A salt crust",
+                            status = FieldStatus.NORMAL,
+                            aspectRatio = 4f / 5f,
+                            mimeType = "image/webp",
+                        ),
                     ),
                 ),
             ),
@@ -852,11 +856,21 @@ class ContentScreensTest {
             .assertTextContains("`x y` is not a legal topic name")
     }
 
-    /** EditCompose.md: the write rule's notice takes the commit's place, and no Retry appears. */
+    /**
+     * EditCompose.md: the notice You can't sign right now takes the commit's
+     * place AND the notice's fact ends Nothing was signed or spent — your edit
+     * is still here. AND the way out reads Not now AND NEVER the notice says a
+     * draft is kept AND NEVER Retry appears.
+     */
     @Test
     fun theWriteRuleNoticeTakesTheCommitsPlace() {
         renderComposer(PostEditUiState(postId = "p1", body = "b", recordStaged = true, writeRuleRefused = true))
-        compose.onNodeWithTag("post_edit_write_rule").assertTextContains("You can't sign right now.")
+        compose.onNodeWithTag("post_edit_write_rule").assertExists()
+        compose.onNodeWithText("You can't sign right now").assertExists()
+        compose.onNodeWithText(EDIT_WRITE_RULE_FACT).assertExists()
+        assertThat(EDIT_WRITE_RULE_FACT).endsWith("Nothing was signed or spent — your edit is still here.")
+        compose.onNodeWithTag("post_edit_not_now").assertTextContains("Not now")
+        compose.onNodeWithText("draft", substring = true).assertDoesNotExist()
         compose.onNodeWithTag("post_edit_sign").assertDoesNotExist()
         compose.onNodeWithText("Retry").assertDoesNotExist()
     }

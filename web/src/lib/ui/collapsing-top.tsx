@@ -50,7 +50,7 @@ export function CollapsingTop({
   flush = false,
 }: {
   /**
-   * No 8px under the region. The feed, Saved and Notifications draw their
+   * No 8px under the region. The feed and Saved draw their
    * list's 8px top padding here; the profile's header stands directly under
    * its bar (`ProfileOwnBody`, `ProfileOtherBody`).
    */

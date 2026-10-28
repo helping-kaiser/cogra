@@ -416,7 +416,7 @@ private class Door(val name: String, val testTag: String, val onOpen: () -> Unit
 private class RowFault(val message: String, val row: ReferenceRow)
 
 /** The refused-file line's sentence, by what the citation points at (copy-voice, *Faults by code*). */
-private fun unlandedLine(row: ReferenceRow): String {
+internal fun unlandedLine(row: ReferenceRow): String {
     val target = row.target
     return if (target is ReferenceTargetView.Content && target.kind == ReferenceContentKind.COMMENT) {
         SEAL_UNLANDED_COMMENT
