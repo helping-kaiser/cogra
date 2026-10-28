@@ -100,6 +100,17 @@ export const HELP_TOPICS = {
       "Nothing was signed or spent, and your draft is kept. Try again in a little while.",
     ],
   },
+  // The same dialog from an edit, which keeps no draft: the clause says what is
+  // true there (copy-voice, *Why signing waits*: "from a comment edit,
+  // `Nothing was signed or spent, and your edit is still here. Try again in a
+  // little while.`"; the post edit's mirror, blessed jakob 2026-10-16).
+  whySigningWaitsAtEdit: {
+    title: "Why signing waits",
+    paragraphs: [
+      "There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now.",
+      "Nothing was signed or spent, and your edit is still here. Try again in a little while.",
+    ],
+  },
   // The seal's own "?" — the post's and the reply's (copy-voice, *How signing
   // works*; payer-neutral by the v1.0.0 scope cut, jakob 2026-09-25).
   howSigningWorks: {

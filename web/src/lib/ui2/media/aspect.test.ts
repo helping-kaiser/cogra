@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   cssRatio,
   fitFor,
+  nearestPostShape,
   parseAspectRatio,
   PORTRAIT_CAP,
   POST_SHAPES,
@@ -82,5 +83,20 @@ describe("parseAspectRatio", () => {
 
   it("feeds tileRatio the fallback it already knows how to handle", () => {
     expect(tileRatio(parseAspectRatio("bogus"))).toBe(1);
+  });
+});
+
+describe("nearestPostShape", () => {
+  // The edit's crop is locked to the shape the post was published in
+  // (ComposeCrop.md), and the pictures' ratio is the only record of it.
+  it("reads each of the three back off the ratio the server states", () => {
+    expect(nearestPostShape(parseAspectRatio("4:5"))).toBe("tall");
+    expect(nearestPostShape(parseAspectRatio("1:1"))).toBe("square");
+    expect(nearestPostShape(parseAspectRatio("540:283"))).toBe("wide");
+  });
+
+  it("answers null where there is no ratio to read", () => {
+    expect(nearestPostShape(null)).toBeNull();
+    expect(nearestPostShape(0)).toBeNull();
   });
 });
