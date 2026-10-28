@@ -220,7 +220,8 @@ fun ContentRow(
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 TitleLine(shownTitle, quiet, aside, part)
                 second?.let { line ->
-                    Box(Modifier.dataNode(part("second"))) { line() }
+                    // A block in the column, as the master's second line is.
+                    Box(Modifier.fillMaxWidth().dataNode(part("second"))) { line() }
                 }
             }
             TrailingEdge(trailing, unread, part, testTag)

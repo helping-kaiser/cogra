@@ -60,8 +60,11 @@ fun WalletComingSoonScreen(
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
             CograBandIdentity(Modifier.weight(1f), node = band)
-            CograBandChats(onChats, node = band)
-            bell?.let { CograBandBell(it, node = band) }
+            // The cluster's icons stand shoulder to shoulder (`CograBand.jsx`).
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CograBandChats(onChats, node = band)
+                bell?.let { CograBandBell(it, node = band) }
+            }
         }
         LazyColumn(state = list, modifier = Modifier.fillMaxSize().padding(top = Space.x2)) {
             item(key = "door") {

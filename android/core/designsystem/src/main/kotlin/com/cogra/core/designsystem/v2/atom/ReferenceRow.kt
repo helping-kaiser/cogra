@@ -164,7 +164,8 @@ fun ReferenceRow(
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.dataNode(part("name")),
+                // A block in its column, as the master's span is.
+                modifier = Modifier.fillMaxWidth().dataNode(part("name")),
             )
             if (sub != null) {
                 Text(
@@ -173,7 +174,7 @@ fun ReferenceRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.dataNode(part("sub")),
+                    modifier = Modifier.fillMaxWidth().dataNode(part("sub")),
                 )
             }
         }

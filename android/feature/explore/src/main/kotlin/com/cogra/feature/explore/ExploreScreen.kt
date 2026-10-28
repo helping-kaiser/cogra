@@ -288,20 +288,25 @@ private fun ExploreTop(
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val field = stringResource(R.string.explore_field_name)
-    Column(if (state.searching) Modifier else Modifier.dataNode(band)) {
+    Column {
         if (state.searching) {
             Spacer(Modifier.height(Space.x3))
         } else {
+            // The band is the 48dp row (`CograBand`); the field rides under it.
             Row(
                 modifier = Modifier
+                    .dataNode(band)
                     .defaultMinSize(minHeight = Layout.TopBarHeight)
                     .padding(horizontal = Space.x4),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Space.x2),
             ) {
                 CograBandIdentity(Modifier.weight(1f), node = band)
-                onChats?.let { CograBandChats(it, node = band) }
-                bell?.let { CograBandBell(it, node = band) }
+                // The cluster's icons stand shoulder to shoulder (`CograBand.jsx`).
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    onChats?.let { CograBandChats(it, node = band) }
+                    bell?.let { CograBandBell(it, node = band) }
+                }
             }
         }
         SearchBar(
@@ -401,13 +406,13 @@ private fun SkyCard() {
                 text = stringResource(R.string.explore_sky_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.semantics { heading() }.dataNode(sky / "title"),
+                modifier = Modifier.fillMaxWidth().semantics { heading() }.dataNode(sky / "title"),
             )
             Text(
                 text = stringResource(R.string.explore_sky_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.dataNode(sky / "description"),
+                modifier = Modifier.fillMaxWidth().dataNode(sky / "description"),
             )
         }
     }
@@ -737,11 +742,21 @@ private fun ExploreFilterSheet(
     var staged by remember { mutableStateOf(committed) }
     val sheet = EXPLORE / "filterSheet"
     CograSheetHost(onDismissRequest = onDismiss) {
-        Box {
-            CograSheetSurface(testTag = sheet.tag, handleTestTag = (sheet / "dragHandle").tag, gap = 0.dp) {
+        // The registered sheet wraps the surface and its corner "?" both, so the
+        // "?" stands inside the sheet's box as the board draws it.
+        Box(Modifier.dataNode(sheet)) {
+            CograSheetSurface(
+                handleTestTag = (sheet / "dragHandle").tag,
+                edgeToEdge = true,
+                gap = 0.dp,
+            ) {
+                // Every part carries its own 24dp gutter, edge to edge (`BottomSheet`
+                // `rows`): the title's `0 24 8` is part of its registered box.
                 SheetTitle(
                     text = stringResource(R.string.explore_filter_purpose),
-                    modifier = Modifier.padding(bottom = Space.x2).dataNode(sheet / "title"),
+                    modifier = Modifier
+                        .dataNode(sheet / "title")
+                        .padding(start = Space.x6, end = Space.x6, bottom = Space.x2),
                 )
                 FilterSection(
                     label = stringResource(R.string.explore_kinds),
