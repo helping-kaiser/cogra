@@ -606,6 +606,31 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Report</button>", tag: "button" },
   ],
+  // The own menu off the detail (seam 248, RM-G9): `RemoveMenu`'s sheet on the
+  // feed, scanExempt like it, numbered as it numbers its rows; the confirm on
+  // the same host numbered as `RemoveConfirm`. The removed card is an
+  // exemplar of the feed's shell: only its own controls carry numbers.
+  FeedPostMenuOwn: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Edit</button>", tag: "button" },
+    { n: 3, find: ">Mark as sensitive</button>", tag: "button" },
+    { n: 4, find: ">Remove</button>", tag: "button" },
+    { n: 5, find: ">License terms</button>", tag: "button" },
+    { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+  ],
+  FeedRemoveConfirm: [
+    { n: 1, find: ">Remove</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  FeedRemoved: [
+    { n: 1, find: '<a href="/u/sol', tag: "a" },
+    { n: 2, find: 'aria-label="Your opinion on this post', tag: "button" },
+    { n: 3, find: ">Feed score</span>", tag: "button" },
+    { n: 4, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 5, find: 'aria-label="Share ', tag: "button" },
+  ],
   // The feed-hosted report confirm and license sheet (FC-G10): scanExempt
   // like the detail's, numbered as ReportConfirm and PostLicense number them.
   FeedReportConfirm: [

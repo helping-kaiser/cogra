@@ -415,6 +415,33 @@
       "page": "feed"
     },
     {
+      "file": "FeedPostMenuOwn.dc.html",
+      "title": "Feed · your own post's menu",
+      "x": 10560,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedRemoveConfirm.dc.html",
+      "title": "Feed · remove, think twice",
+      "x": 11040,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedRemoved.dc.html",
+      "title": "Feed · your post removed in place",
+      "x": 11520,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedWordsSensitive.dc.html",
       "title": "Feed · a words-only post, veiled",
       "x": 8160,
@@ -533,9 +560,9 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -6800,
+      "x": -7670,
       "y": 0,
-      "w": 6380,
+      "w": 7250,
       "h": 5368,
       "page": "feed",
       "title": "Feed & Search · flow map"
