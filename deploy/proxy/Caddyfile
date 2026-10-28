@@ -36,16 +36,23 @@
 	# listing and its sub-resources (?acl, ?response-content-type=…) are not
 	# on the public network. The two headers keep an uploaded file from ever
 	# executing as a document on the app's own origin.
+	#
+	# One rewrite, from the matcher's capture: Caddy orders `rewrite` before
+	# `uri` inside a block, so a strip_prefix beside it would never apply.
 	@media_read {
 		method GET HEAD
-		path_regexp ^/media/[^/]
+		path_regexp media ^/media/([^/].*)$
 		expression `{query} == ""`
 	}
 	handle @media_read {
-		uri strip_prefix /media
-		rewrite * /{$MEDIA_BUCKET}{path}
-		header X-Content-Type-Options nosniff
-		header Content-Security-Policy "default-src 'none'; sandbox"
+		rewrite * /{$MEDIA_BUCKET}/{re.media.1}
+		# Deferred, so they replace what the store sends rather than
+		# doubling it.
+		header {
+			X-Content-Type-Options nosniff
+			Content-Security-Policy "default-src 'none'; sandbox"
+			defer
+		}
 		reverse_proxy cogra-media:9000
 	}
 	handle /media/* {
