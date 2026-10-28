@@ -396,36 +396,40 @@ export function HistoryScreen({
       {/* THE HEADER, THE FIELD AND THE TRIGGER COLLAPSE ON THE WAY DOWN AND
           RETURN ON THE WAY UP (History.md:119), and a reader three screens
           down summons Back to top with them; its tap goes up, animated, and
-          never re-reads (History.md:113-117). */}
-      <CollapsingTop onBackToTop={() => scrollHostToTopAnimated(host)}>
-        <PageHeader
-          title="History"
-          backHref="/profile"
-          backLabel="Back to your profile"
-          backScroll={false}
-          backTestId="history-back"
-          node={{ path: "history.header" }}
-        />
-        {fielded && (
-          <div className="flex-none">
-            <SearchBar
-              query={query}
-              onChange={setQuery}
-              placeholder={SEARCH_YOUR_HISTORY}
-              ariaLabel={SEARCH_YOUR_HISTORY}
-              node={{ path: "history.searchField" }}
-            />
-            <div className="flex items-center px-4 pb-2">
-              <FilterTrigger
-                reading={reading}
-                purpose={WHAT_YOUR_HISTORY_SHOWS}
-                expanded={sheetOpen}
-                onOpen={openSheet}
-                node={{ path: "history.filterTrigger" }}
+          never re-reads (History.md:113-117). ONE BLOCK, FLUSH: the board
+          stacks the header, the field and the trigger with no gap of their
+          own and ends on the trigger row's 8px, so the region adds neither. */}
+      <CollapsingTop flush onBackToTop={() => scrollHostToTopAnimated(host)}>
+        <div className="flex flex-col">
+          <PageHeader
+            title="History"
+            backHref="/profile"
+            backLabel="Back to your profile"
+            backScroll={false}
+            backTestId="history-back"
+            node={{ path: "history.header" }}
+          />
+          {fielded && (
+            <div className="flex-none">
+              <SearchBar
+                query={query}
+                onChange={setQuery}
+                placeholder={SEARCH_YOUR_HISTORY}
+                ariaLabel={SEARCH_YOUR_HISTORY}
+                node={{ path: "history.searchField" }}
               />
+              <div className="flex items-center px-4 pb-2">
+                <FilterTrigger
+                  reading={reading}
+                  purpose={WHAT_YOUR_HISTORY_SHOWS}
+                  expanded={sheetOpen}
+                  onOpen={openSheet}
+                  node={{ path: "history.filterTrigger" }}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </CollapsingTop>
       {loading && entries.length === 0 && (
         <p role="status" aria-live="polite" data-testid="history-loading" className="px-4 pt-2">
@@ -578,20 +582,17 @@ export function HistoryScreen({
       />
       {/* THE HISTORY'S FILTER SHEET (HistoryFilter.md): kinds and only kinds,
           no "?", Reset in the corner and Done at the end. It stages; the
-          scrim, a swipe down, Back and Escape drop what it staged. */}
+          scrim, a swipe down, Back and Escape drop what it staged. The sheet
+          is short enough that its content sizes it (HistoryFilter.jsx), so the
+          foot follows the section in the body, and every part carries its
+          own gutter, edge to edge, as a sheet of rows does. */}
       <BottomSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         title={WHAT_YOUR_HISTORY_SHOWS}
         testId="history-filter-sheet"
         node={{ path: "history.filterSheet" }}
-        foot={
-          <FilterFoot
-            onReset={() => setStaged([])}
-            onDone={commit}
-            node={{ path: "history.filterSheet.foot" }}
-          />
-        }
+        rows
       >
         <FilterSection label="Kinds" hint={KINDS_HINT} node={{ path: "history.filterSheet.kinds" }}>
           {HISTORY_KINDS.map((kind) => (
@@ -612,6 +613,11 @@ export function HistoryScreen({
             </Chip>
           ))}
         </FilterSection>
+        <FilterFoot
+          onReset={() => setStaged([])}
+          onDone={commit}
+          node={{ path: "history.filterSheet.foot" }}
+        />
       </BottomSheet>
       {/* A POST CARD'S MENU, OVER HISTORY: the reader's menu every post card
           opens, its Hide's aftermath on this page's snackbar (HistoryHidden.md:3). */}

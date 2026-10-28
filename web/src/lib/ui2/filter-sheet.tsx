@@ -54,6 +54,10 @@ export function FilterTrigger({
       aria-label={triggerName(reading, purpose)}
       onClick={onOpen}
       {...testAttributes(node, testId)}
+      // The master's pill sets the label's size and weight but no leading, so
+      // its words sit at the face's own `normal` line height inside the 32px
+      // (carried in style, as type.test asks of a role departure).
+      style={{ lineHeight: "normal" }}
       className="cg-state cg-focus cg-hit relative inline-flex h-8 min-w-0 max-w-56 items-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full border border-outline bg-transparent px-3 text-label-large text-on-surface"
     >
       {reading}
@@ -73,11 +77,18 @@ export function FilterSection({
   children: ReactNode;
   node?: DataNode;
 }) {
-  // The sheet's body already carries the 24px gutter the master's section
-  // draws for itself, so only the section's own foot space stays here.
+  // THE SECTION CARRIES THE 24px GUTTER ITSELF (`FilterSection`'s `0 24px
+  // 16px`): it stands in a sheet of rows, edge to edge, beside the foot that
+  // carries its own. Its label sets the label's size and weight and no leading
+  // of its own, so it reads at the sheet's body line height — carried in
+  // style, as type.test asks of a role departure.
   return (
-    <div {...testAttributes(node)} role="group" aria-label={label} className="flex flex-col gap-2 pb-4">
-      <span {...testAttributes(part(node, "label"))} className="text-label-large">
+    <div {...testAttributes(node)} role="group" aria-label={label} className="flex flex-col gap-2 px-6 pb-4">
+      <span
+        {...testAttributes(part(node, "label"))}
+        style={{ lineHeight: "var(--text-body-large--line-height)" }}
+        className="text-label-large"
+      >
         {label}
       </span>
       {hint !== undefined && (
