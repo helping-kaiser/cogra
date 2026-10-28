@@ -44,9 +44,11 @@ ALWAYS the knob never leaves the field, whose corners are the bounds of both axe
 
 WHEN tap Walk it back -> the dialog Walk it all back? opens over the pad, which stays parked beneath it AND NEVER the dialog carries a pick line
 
-WHEN tap Cancel -> the pad closes AND nothing is staged AND the standing opinion is what it was
+WHEN tap Cancel GIVEN Set is not waiting on its signing -> the pad closes AND nothing is staged AND the standing opinion is what it was
 
-WHEN press outside the pad, press the system's Back or press Escape -> the pad closes AND nothing is staged AND the standing opinion is what it was
+WHEN press outside the pad, press the system's Back or press Escape GIVEN Set is not waiting on its signing -> the pad closes AND nothing is staged AND the standing opinion is what it was
+
+WHEN tap Cancel GIVEN Set is waiting on its signing -> the pad closes AND the signing goes on, its wait carried by the line under the target's face, as PadFailed's setting and cancelled moments draw it
 
 WHEN tap the pad's ? -> the pad's four help lines replace its body in place AND Set is disabled while they show AND NEVER a dialog opens AND NEVER anything is staged
 
@@ -69,7 +71,6 @@ WHEN tap Set GIVEN the pick lands one number at zero -> the opinion is signed li
 WHEN tap Set GIVEN the pick nets the standing bundle to (0, 0) -> the dialog Walk it all back? opens over the pad, which stays parked beneath it, with the pick line and its cost of 1 thing AND NEVER the pick is refused
 
 WHEN tap Set GIVEN the pick lands at exactly (0, 0) and nothing stands toward the target, no record ever signed or a bundle walked back to nothing -> the dialog Sign an empty opinion? opens over the pad, which stays parked beneath it AND NEVER the dialog Walk it all back? opens AND NEVER the pick is refused
-
 WHEN tap Set GIVEN the signing key is not on this device -> the pad's notice Your key isn't on this browser stands where the landing line and the actions were AND NEVER anything is signed
 
 WHEN the signing does not go through -> the pad stays open at the pick AND the line That didn't send. Try again. stands above the commit row AND an outlined Retry takes Set's slot
@@ -77,6 +78,12 @@ WHEN the signing does not go through -> the pad stays open at the pick AND the l
 WHEN the write rule refuses the signing -> the pad stays open at the pick AND the notice You can't sign right now stands where the landing line and the commit row were, with Not now AND nothing is staged or spent
 
 ALWAYS the non-drag route Choose your opinion on this post stands beside the face, hidden until focused, and leads to the same pick by sliders or typed values
+
+ALWAYS a typed value past a field's bound picks the nearest value the bound allows, read back in Your pick before anything is signed, and never a refusal line
+
+WHEN a typed field is emptied or holds no number -> NEVER the pick moves AND NEVER the pick reads 0
+
+WHEN focus leaves a typed field -> the field reads the value the pick holds
 
 WHEN a pointer goes down on the pad field -> the knob wears a 40px pressed layer in its own colour at 10% for as long as the pointer stays down AND NEVER the knob scales
 

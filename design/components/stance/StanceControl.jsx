@@ -27,6 +27,7 @@ import {
   StanceStanding,
   TAP_DEFAULT,
   unreachableHelp,
+  WRITE_RULE_WORDS,
 } from "./StanceReadout.jsx";
 
 /* CoGra's SIGNATURE INTERACTION (readme §8; guidelines/stance-control.md).
@@ -70,6 +71,14 @@ import {
    that fails leaves the pad where it was, at the pick, with the fault line
    above the commit row and `Retry`, outlined, in Set's slot — a failed signed
    act re-raises its own surface, and here the surface never went away.
+   CANCEL STAYS LIVE WHILE SET SIGNS, and it closes the pad, never the act
+   (seam 245, ask 16): what was sent cannot be called back, so the wait moves
+   to the target's row as a hold's does — `Signing…` under the face, then the
+   face and the snackbar, or `That didn't sign.` with a Retry that asks the
+   same pick again. The press outside and Escape do the same. THE ALTERNATES
+   WAIT THE SAME WAY (ask 14): their commit reads `Signing…`, a fault keeps
+   them up with `Retry` in its slot, and the write rule's notice takes the
+   landing line's and the action row's place, as on the pad.
 
    THE PAD IS THE TEACHER (the check round's Q6, jakob 2026-10-06). The
    account's first-ever pad open carries the two coaching lines in the shell's
@@ -154,13 +163,13 @@ function HoldRing({ progress = 0, live = false }) {
 }
 
 /* The write rule's words at the pad's and the row's scale (copy-voice,
-   *Faults by code*). The seal's panel says the draft is kept; a pad has no
-   draft, so its fact stops at what was not signed or spent. The "?" is the
-   seal panel's own dialog, named by its title. */
-const WRITE_RULE_TITLE = "You can't sign right now";
-const WRITE_RULE_PAD_FACT = "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.";
-const WRITE_RULE_HELP = "Why signing waits";
-const WRITE_RULE_ROW = "You can't sign right now.";
+   *Faults by code*) — `WRITE_RULE_WORDS`, shared with the alternates and the
+   two dialogs raised over the pad. The "?" is the seal panel's own dialog,
+   named by its title. */
+const WRITE_RULE_TITLE = WRITE_RULE_WORDS.title;
+const WRITE_RULE_PAD_FACT = WRITE_RULE_WORDS.padFact;
+const WRITE_RULE_HELP = WRITE_RULE_WORDS.help;
+const WRITE_RULE_ROW = WRITE_RULE_WORDS.row;
 /* A comfort's revert, said on the row (copy-voice, *Faults by code*). */
 const COMFORT_FAILED_ROW = "That didn't go through.";
 
@@ -303,7 +312,9 @@ export function StanceControl({
      pack). `"busy"` is the wait past 200ms, `"failed"` the signing that did
      not complete. With the pad closed it is the hold's, and the target's row
      carries it under the face; with the pad open it is Set's, and the pad's
-     commit row carries it. `"writeRule"` (jakob 2026-10-01, backlog item
+     commit row carries it; with the alternates up it is theirs, and with the
+     walk-back or the empty sign raised it is that dialog's (seam 245, asks
+     14 and 15). `"writeRule"` (jakob 2026-10-01, backlog item
      117) is the write rule's refusal, which is a notice and not a fault: on
      the row a quiet line with no Retry, and in the pad the notice panel
      standing where the landing line and the commit row would, in
@@ -373,6 +384,8 @@ export function StanceControl({
   const holdTimer = React.useRef(null);
   const suppressClick = React.useRef(false);
   const fieldRef = React.useRef(null);
+  /* The last pick sent to be signed, so a row's Retry asks that act again. */
+  const sent = React.useRef(null);
 
   const considered = open || alternates;
   /* Nothing stands when no record ever has, or the bundle is walked back:
@@ -397,16 +410,19 @@ export function StanceControl({
   React.useEffect(() => {
     if (!open) return undefined;
     /* Over the walk-back's dialog, Escape is the dialog's `Keep it`: the pad
-       beneath stays parked. */
+       beneath stays parked — and, like `Keep it`, it waits while the
+       dialog's act signs. */
     const onKey = (event) => {
       if (event.key !== "Escape") return;
-      if (confirming !== null) setConfirming(null);
-      else if (emptyAsk !== null) setEmptyAsk(null);
-      else closeAll();
+      if (confirming !== null || emptyAsk !== null) {
+        if (signing === "busy") return;
+        if (confirming !== null) setConfirming(null);
+        else setEmptyAsk(null);
+      } else closeAll();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, confirming, emptyAsk]);
+  }, [open, confirming, emptyAsk, signing]);
 
   const apply = (chosen, landed, records = 1) => {
     const rawSum = { pDirected: bundle.rawSum.pDirected + chosen.pDirected, pInterest: bundle.rawSum.pInterest + chosen.pInterest };
@@ -431,6 +447,7 @@ export function StanceControl({
      parked beneath, and signs one record; `Keep it` returns to the pick.
      With nothing standing the ask is the empty sign's, never the walk-back's. */
   const commitChecked = (chosen) => {
+    sent.current = chosen;
     const landed = localLanding(bundle.rawSum, chosen, nothingStands);
     if (landed.empty) {
       setEmptyAsk({ pick: chosen, landed });
@@ -494,10 +511,22 @@ export function StanceControl({
      an empty sign's standing, or a kept pick — it says nothing. */
   const restingZero = !pendingPick && bundle.severed ? severanceWords(axes).zero : EMPTY_PICK_LABEL;
   const restingFace = restingPair === null ? null : bundleReadout(restingPair, restingZero);
-  /* Whose state `signing` is: the pad's while it is open, the row's while it
-     is not. An anchor whose hold is still signing refuses a second hold. */
-  const rowSigning = open ? undefined : signing;
-  const padSigning = open ? signing : undefined;
+  /* Whose state `signing` is: the surface that sent the act. A dialog raised
+     over the pad — the walk-back, the empty sign — sends its own, so the
+     signing is the dialog's while one is up; the pad's while it is open
+     beneath none; the alternates' while they stand in its place (seam 245,
+     ask 14); the row's while nothing is open. CANCEL MID-SIGNING CLOSES THE
+     SURFACE, NEVER THE SIGNING (ask 16): the act was sent and cannot be
+     called back, so its wait passes to the target's row — `Signing…` under
+     the face, the anchor refusing a second hold — and it ends there as a
+     hold's would: the face moves and the snackbar confirms, or the row says
+     it did not sign, with Retry. An anchor whose hold is still signing
+     refuses a second hold. */
+  const dialogUp = confirming !== null || emptyAsk !== null;
+  const rowSigning = open || alternates ? undefined : signing;
+  const padSigning = open && !dialogUp ? signing : undefined;
+  const altSigning = alternates && !dialogUp ? signing : undefined;
+  const dialogSigning = dialogUp ? signing : undefined;
   const anchorBusy = rowSigning === "busy";
   /* The face, ringed while a hold is under way — the ring centred on it, the
      face's own box unchanged, so nothing beside it moves. */
@@ -655,12 +684,14 @@ export function StanceControl({
       {/* THE ROW LINE (vehicle (b)): the hold's wait, quiet, and its failure,
           in the failure voice with the way to ask again. */}
       {rowSigning === "busy" && <PendingMarker label="Signing…" />}
+      {/* Retry asks the act that was sent: the hold's default after a hold,
+          the pick after a Set its pad was cancelled under. */}
       {rowSigning === "failed" && (
         <SigningPending
           row
           onRetry={() => {
             setSigned(null);
-            commitChecked(TAP_DEFAULT);
+            commitChecked(sent.current ?? TAP_DEFAULT);
           }}
         />
       )}
@@ -874,6 +905,7 @@ export function StanceControl({
           onCommit={() => commitChecked(pick)}
           onCancel={closeAll}
           onSever={openSeverance}
+          signing={altSigning}
           landing={
             <StanceLandingLine
               landing={landing}
@@ -899,6 +931,9 @@ export function StanceControl({
           bundle={bundle}
           records={Math.max(1, confirming.records)}
           alreadySevered={confirming.alreadySevered === true}
+          busy={dialogSigning === "busy"}
+          failed={dialogSigning === "failed"}
+          writeRule={dialogSigning === "writeRule"}
           names={axes}
           onCancel={() => setConfirming(null)}
           onConfirm={() => {
@@ -913,6 +948,9 @@ export function StanceControl({
         <EmptySignConfirm
           targetLabel={targetLabel}
           vouchIn={vouchesIn}
+          busy={dialogSigning === "busy"}
+          failed={dialogSigning === "failed"}
+          writeRule={dialogSigning === "writeRule"}
           onCancel={() => setEmptyAsk(null)}
           onConfirm={() => {
             applyEmpty(emptyAsk.pick, emptyAsk.landed);

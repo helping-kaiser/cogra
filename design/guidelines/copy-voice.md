@@ -1290,7 +1290,9 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
 **No answer at all** (offline; not a code):
 
 - Seal, pad or dialog: `That didn't send. Try again.` **Drawn** on
-  `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it. A form
+  `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it, and the
+  alternates' dialog, its commit reading `Retry` (the alternates card;
+  seam 245, ask 14). Its commit's wait reads `Signing…`. A form
   says the same line in SignInError's slot above its submit, the fields
   keeping what was typed and the submit being the retry (jakob
   2026-10-05).
@@ -1402,9 +1404,17 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no
   draft — with the same "?" and `Not now` under it; the pick is not
-  kept. **Drawn** on `PadWriteRule`. On a hold's row the quiet line
+  kept. **Drawn** on `PadWriteRule`; the alternates' dialog carries the
+  same panel and `Not now` where its landing line and action row were (the
+  alternates card). On a hold's row the quiet line
   reads `You can't sign right now.` in the pending marker's register,
-  never the failure voice, with no Retry. **Drawn** on `RowWriteRule`.
+  never the failure voice, with no Retry. **Drawn** on `RowWriteRule`. In
+  a dialog raised over the pad — the walk-back, the empty sign — the row's
+  words take the fault line's place with the fact the cost line above
+  raises, `You can't sign right now. Nothing was signed or spent.`, in the
+  same quiet register; the act dims and no Retry is offered (seam 245, ask
+  15). **Drawn** on `SeveranceConfirm`'s `answer` chip. *(Merged under the
+  autonomy order, 2026-10-28; review pending.)*
 - **One staged act refused** (the field-level refusal on
   `references.<index>.target`; jakob 2026-10-01). A target that landed
   never stops answering, so two cases exist, and they read nothing
