@@ -38,7 +38,9 @@ import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
 import com.cogra.domain.feed.FeedRepository
+import com.cogra.domain.feed.FeedTopicsRepository
 import com.cogra.domain.feed.RankedEntry
+import com.cogra.domain.feed.ReaderDefaultStore
 import com.cogra.domain.feed.SettlingRow
 import com.cogra.domain.hidden.HiddenRepository
 import com.cogra.domain.history.HistoryRepository
@@ -94,6 +96,7 @@ import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.InMemoryAnnouncedReleaseStore
 import com.cogra.domain.testing.InMemoryComposeDraftStore
+import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.InMemorySealedDraftStore
 import com.cogra.domain.testing.RecordingHiddenRepository
 import com.cogra.domain.testing.RecordingNotificationsRepository
@@ -101,6 +104,7 @@ import com.cogra.domain.testing.RecordingReportRepository
 import com.cogra.domain.testing.RecordingSavedRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ScriptedAccountDeletionRepository
+import com.cogra.domain.testing.ScriptedFeedTopics
 import com.cogra.domain.testing.ScriptedHistoryRepository
 import com.cogra.domain.testing.ScriptedReleaseRegistry
 import com.cogra.domain.testing.ScriptedRemovalRepository
@@ -753,6 +757,20 @@ object FakeBindingsModule {
 
     @Provides
     fun feedRepository(fake: ListingFeedRepository): FeedRepository = fake
+
+    @Provides
+    @Singleton
+    fun inMemoryReaderDefaultStore(): InMemoryReaderDefaultStore = InMemoryReaderDefaultStore()
+
+    @Provides
+    fun readerDefaultStore(fake: InMemoryReaderDefaultStore): ReaderDefaultStore = fake
+
+    @Provides
+    @Singleton
+    fun scriptedFeedTopics(): ScriptedFeedTopics = ScriptedFeedTopics()
+
+    @Provides
+    fun feedTopicsRepository(fake: ScriptedFeedTopics): FeedTopicsRepository = fake
 
     // A member with nothing standing, by default: no band, and the row opens
     // the request screen. Tests script the grace or the applicant's path.

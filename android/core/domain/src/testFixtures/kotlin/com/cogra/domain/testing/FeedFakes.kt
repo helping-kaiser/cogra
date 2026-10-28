@@ -2,13 +2,21 @@ package com.cogra.domain.testing
 
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
+import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
 import com.cogra.domain.feed.FeedRepository
+import com.cogra.domain.feed.FeedTopic
+import com.cogra.domain.feed.FeedTopicsRepository
 import com.cogra.domain.feed.PeopleMark
 import com.cogra.domain.feed.RankedEntry
+import com.cogra.domain.feed.ReaderDefaultStore
 import com.cogra.domain.feed.SettlingRow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 
 /**
  * The ranked feed over a scriptable pod: [answer] is what every
@@ -73,3 +81,25 @@ fun rankingOf(ids: List<String>, asOfEpoch: Int = 7): FeedRanking = FeedRanking(
     entries = ids.mapIndexed { i, id -> entry(id, newestIndex = ids.size - 1 - i) },
     settling = emptyList(),
 )
+
+/** The reader defaults on this device, in memory: one value per account. */
+class InMemoryReaderDefaultStore : ReaderDefaultStore {
+    val saved = MutableStateFlow<Map<String, FeedFilter>>(emptyMap())
+
+    override fun watch(account: String): Flow<FeedFilter?> = saved.map { it[account] }
+
+    override suspend fun save(account: String, filter: FeedFilter) {
+        saved.update { it + (account to filter) }
+    }
+}
+
+/** The held-for topics, scripted; every read is counted. */
+class ScriptedFeedTopics : FeedTopicsRepository {
+    var answer: Outcome<List<FeedTopic>> = Outcome.Success(emptyList())
+    var reads = 0
+
+    override suspend fun heldFor(): Outcome<List<FeedTopic>> {
+        reads += 1
+        return answer
+    }
+}
