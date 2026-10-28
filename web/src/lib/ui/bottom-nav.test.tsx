@@ -1,25 +1,32 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { ALL_SLOTS, BottomNav, SHIPPED_SLOTS } from "./bottom-nav";
+import { ALL_SLOTS, BottomNav } from "./bottom-nav";
 
 describe("BottomNav", () => {
-  // Every canonical board draws five slots. The bar ships the ones whose
-  // surfaces exist — a slot arrives WITH its surface — so the target is
-  // declared here and the shipped set is what renders.
+  // Every canonical board draws five slots, and V1.0 carries all five
+  // (BottomNav.jsx; readme §13, the V1.0 scope cut): the search slot opens
+  // Explore, the wallet slot its coming-soon door.
   it("names the five slots the boards are drawn against", () => {
     expect(ALL_SLOTS).toEqual(["feed", "search", "compose", "wallet", "profile"]);
   });
 
-  it("renders only the slots whose surfaces exist", () => {
-    expect(SHIPPED_SLOTS).toEqual(["feed", "compose", "profile"]);
-    render(<BottomNav active="feed" signedIn slots={ALL_SLOTS} />);
-    expect(screen.getByTestId("nav-feed")).toBeInTheDocument();
-    expect(screen.getByTestId("nav-compose")).toBeInTheDocument();
-    expect(screen.getByTestId("nav-profile")).toBeInTheDocument();
-    // Explore waits for slice 2.7's search backend, the wallet for its screens.
-    expect(screen.queryByTestId("nav-search")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("nav-wallet")).not.toBeInTheDocument();
+  it("the_v1_bar_carries_all_five_slots_by_default", () => {
+    render(<BottomNav active="feed" signedIn />);
+    const slots = screen.getAllByRole("link").map((link) => link.getAttribute("data-testid"));
+    expect(slots).toEqual(["nav-feed", "nav-search", "nav-compose", "nav-wallet", "nav-profile"]);
+    expect(screen.getByTestId("nav-search")).toHaveAttribute("href", "/explore");
+    expect(screen.getByTestId("nav-search")).toHaveTextContent("Explore");
+    expect(screen.getByTestId("nav-wallet")).toHaveAttribute("href", "/wallet");
+    expect(screen.getByTestId("nav-wallet")).toHaveTextContent("Wallet");
+  });
+
+  // WalletComingSoon.md:3 — the wallet slot's tap opens the door and lights
+  // the slot, never does nothing.
+  it("lights_the_wallet_slot_on_its_door", () => {
+    render(<BottomNav active="wallet" signedIn />);
+    expect(screen.getByTestId("nav-wallet")).toHaveAttribute("aria-current", "page");
+    expect(screen.getByTestId("nav-search")).not.toHaveAttribute("aria-current");
   });
 
   // A label is never shortened to an ellipsis: above 1.3× it wraps and the bar
@@ -70,18 +77,22 @@ describe("BottomNav", () => {
 
   it("wears the state layer and the focus ring on every slot", () => {
     render(<BottomNav active="feed" signedIn />);
-    for (const slot of SHIPPED_SLOTS) {
+    for (const slot of ALL_SLOTS) {
       const item = screen.getByTestId(`nav-${slot}`);
       expect(item.className, slot).toContain("cg-state");
       expect(item.className, slot).toContain("cg-focus");
     }
   });
 
-  // Ask, never bounce: the feed reads without an account, and the two slots
-  // that need one prompt instead of navigating.
+  // Ask, never bounce: the feed and Explore read without an account and the
+  // wallet's door serves every reader (Explore.md:35-37; WalletComingSoon.md:5),
+  // and the two slots that need one prompt instead of navigating
+  // (WalletComingSoon.md:15).
   it("asks the anonymous reader rather than yanking the read away", () => {
     render(<BottomNav active="feed" signedIn={false} />);
     expect(screen.getByTestId("nav-feed")).toHaveAttribute("href", "/feed");
+    expect(screen.getByTestId("nav-search")).toHaveAttribute("href", "/explore");
+    expect(screen.getByTestId("nav-wallet")).toHaveAttribute("href", "/wallet");
     expect(screen.getByTestId("nav-compose")).not.toHaveAttribute("href");
     expect(screen.getByTestId("nav-profile")).not.toHaveAttribute("href");
   });
@@ -99,6 +110,17 @@ describe("BottomNav", () => {
     const tap = new MouseEvent("click", { bubbles: true, cancelable: true });
     fireEvent(screen.getByTestId("nav-feed"), tap);
     expect(onReselectFeed).toHaveBeenCalledTimes(1);
+    expect(tap.defaultPrevented).toBe(true);
+  });
+
+  // The ladder for the other roots (Explore.md:43; WalletComingSoon.md:19-21):
+  // the active tab tapped at its own root is the root's to answer.
+  it.each(["search", "wallet", "profile"] as const)("the_%s_slot_at_its_own_root_is_a_re_tap_the_root_answers", (slot) => {
+    const onReselect = vi.fn();
+    render(<BottomNav active={slot} signedIn reselect={{ [slot]: onReselect }} />);
+    const tap = new MouseEvent("click", { bubbles: true, cancelable: true });
+    fireEvent(screen.getByTestId(`nav-${slot}`), tap);
+    expect(onReselect).toHaveBeenCalledTimes(1);
     expect(tap.defaultPrevented).toBe(true);
   });
 
