@@ -28,6 +28,8 @@ WHEN a video is picked GIVEN pictures are in the tray -> the video is refused wi
 
 WHEN a fresh batch of pictures and a video is picked GIVEN nothing is in the tray -> the pictures are kept AND the video is refused with A post carries pictures or one video, not both.
 
+WHEN a photos-app batch holds more than one video GIVEN nothing is in the tray and the batch holds no picture -> the batch's first video becomes the whole body AND each other video is refused with A post carries one video.
+
 WHEN an eleventh picture is picked -> it is refused with That's more than a post carries — up to ten pictures. AND NEVER a picture is dropped in silence
 
 WHEN a picture is picked -> NEVER the picture uploads before the crop

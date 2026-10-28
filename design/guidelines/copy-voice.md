@@ -567,6 +567,10 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
   is fine.`
 - `That's more than a post carries — up to ten pictures.`
 - `That's more than a comment carries — up to four pictures.`
+- `A post carries one video.` — a second clip in one photos-app batch, or
+  one dropped while a clip is staged; the batch's first clip is the body.
+  `A comment carries one video.` is its comment-scale twin. (Seam 245,
+  ask 13 H; *merged under the autonomy order, 2026-10-28; review pending*.)
 
 **The empty pick step says nothing.** With nothing picked, Next stays
 inert and no line asks for a pick: a refusal answers a file, never the
@@ -636,6 +640,11 @@ gains the post scale's count (the comment scale already draws its
 Retry (`UploadErrorLine` with both ways out):
 
 - `That video didn't upload.`
+- `3 pictures didn't upload.` — the plural of `One picture didn't upload.`,
+  one line for every failure, with `Retry` (each failed one tries again)
+  and `Remove them` (each failed one leaves); at the gate it reads `3
+  pictures didn't upload. Signing waits for them.` (Seam 245, ask 13 G;
+  *merged under the autonomy order, 2026-10-28; review pending*.)
 
   The transport voice would write it *That didn't upload. Try again.*;
   the line is drawn short because Retry stands beside it and the pair
@@ -665,6 +674,11 @@ and the way back to it from an edit:
   from the clip (`ComposeCoverNoFrames`).
 - `No frame` — the neutral tile's label in that state
   (`ComposeCoverNoFrames`).
+- `Reading the video…` — the frame strip's caption while the device cuts
+  the clip's frames, standing only once they are 200 ms late (readme §4,
+  *Loading*), never a spinner; the in-flight grammar, saying what is
+  happening (seam 245, ask 13 G; *merged under the autonomy order,
+  2026-10-28; review pending*).
 
 ## The crops' how-to line
 

@@ -12,6 +12,8 @@ WHEN files are dropped on the region -> the dropped files land in the tray
 
 WHEN a video is chosen or dropped GIVEN nothing is in the tray -> the video becomes the whole body AND the step stops taking picks
 
+WHEN more than one video is chosen or dropped at once GIVEN nothing is in the tray and no picture comes with them -> the first video becomes the whole body AND each other video is refused with A post carries one video.
+
 WHEN a chosen or dropped file breaks a cap or is in a format nothing here reads -> the step says why in a line on its media row AND NEVER a dialog opens AND NEVER a snackbar carries the refusal
 
 ALWAYS every tray thumbnail carries its remove control, the cover's included
