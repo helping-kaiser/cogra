@@ -471,7 +471,8 @@ export function ExploreView({
   const rowCount = items.filter((item) => item.type === "row").length;
   const tailRef = useApproachingTail({
     root: host,
-    onReach: () => void loadMore(),
+    // The watch is rebuilt only when `loadMore` changes — a page landed (`infinite-list.ts`).
+    onReach: loadMore,
     enabled: searching && results !== null && results.hasNextPage && !moreFailed,
   });
   const tailIndex = tailIndexOf(rowCount);
@@ -497,33 +498,26 @@ export function ExploreView({
           ? { lit: bellIsLit, onOpen: () => router.push(notificationsHref("explore")) }
           : undefined
       }
-    >
-      <SearchBar
-        query={query}
-        onChange={onChange}
-        placeholder={EXPLORE_PLACEHOLDER}
-        ariaLabel={EXPLORE_FIELD_NAME}
-        node={node("searchField")}
-        onClear={toRest}
-        onAction={() => remember(asked)}
-      />
-    </CograBand>
+    />
   );
 
   return (
     <main className="flex w-full flex-col">
-      {searching ? (
-        // THE BAND GIVES WAY TO THE FIELD (ExploreSearch.jsx).
-        <div className="flex-none pt-3">
-          <SearchBar
-            query={query}
-            onChange={onChange}
-            placeholder={EXPLORE_PLACEHOLDER}
-            ariaLabel={EXPLORE_FIELD_NAME}
-            node={node("searchField")}
-            onClear={toRest}
-            onAction={() => remember(asked)}
-          />
+      {/* THE BAND GIVES WAY TO THE FIELD (ExploreSearch.jsx). The field keeps one
+          place in the tree in both states, so the typing that takes the screen
+          never unmounts the input it is typed into. */}
+      {!searching && band}
+      <div className={searching ? "flex-none pt-3" : "flex-none"}>
+        <SearchBar
+          query={query}
+          onChange={onChange}
+          placeholder={EXPLORE_PLACEHOLDER}
+          ariaLabel={EXPLORE_FIELD_NAME}
+          node={node("searchField")}
+          onClear={toRest}
+          onAction={() => remember(asked)}
+        />
+        {searching && (
           <div className="flex items-center justify-between gap-1 px-4 pb-2">
             <FilterTrigger
               reading={reading}
@@ -537,10 +531,8 @@ export function ExploreView({
             />
             <HelpDot ariaLabel={HOW_SEARCHING_WORKS} onOpen={() => setSearchHelp(true)} node={node("help")} />
           </div>
-        </div>
-      ) : (
-        band
-      )}
+        )}
+      </div>
 
       {!searching && (
         <AtRest
