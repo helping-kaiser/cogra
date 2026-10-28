@@ -28,6 +28,7 @@ export function commentMenuItems({
   onGuest,
   navigate,
   openCitedBy,
+  openOpinions,
   openLicense,
   openRemove,
   testIdPrefix,
@@ -44,6 +45,8 @@ export function commentMenuItems({
   onGuest: (() => void) | null;
   navigate: (route: string) => void;
   openCitedBy: (id: string) => void;
+  /** The comment's opinions sheet (CommentOpinionsEmpty.md), stacked over the host. */
+  openOpinions: (id: string) => void;
   openLicense: (license: License) => void;
   /**
    * The reader's OWN comment: its think-twice dialog (CommentMenuOwn.md:13).
@@ -91,7 +94,7 @@ export function commentMenuItems({
     },
     {
       label: "Opinions on this",
-      onSelect: () => {},
+      onSelect: () => openOpinions(comment.id),
       testId: `${testIdPrefix}-opinions-${comment.id}`,
     },
   );

@@ -21,6 +21,7 @@ import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
 import { byNode } from "@/test/data-node";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
+import { citingRecord, citingRecords } from "@/test/inbound";
 
 // The menu rows that go somewhere navigate rather than link, because a sheet
 // row is a button — so the router is what a citing or editing row is measured
@@ -47,12 +48,6 @@ vi.mock("next/navigation", async (importOriginal) => ({
 // unmarked by default, and a test that cares says so with its own handler.
 const server = startMswServer(
   ...stanceHandlers(),
-  // The detail card asks what cites the post on every open. Nothing cites it
-  // by default — which is the state that draws no line at all — so a test that
-  // cares says so with its own handler.
-  gqlLink.query("CitedByCount", () =>
-    HttpResponse.json({ data: { records: { __typename: "RecordConnection", totalCount: 0 } } }),
-  ),
   gqlLink.query("CommentSelfMark", ({ variables }) =>
     HttpResponse.json({
       data: {
@@ -768,18 +763,6 @@ describe("PostView", () => {
   it("opens the cited-by sheet from a comment's menu, stacked over the thread", async () => {
     server.use(
       ...thread("u1", [{ id: "c1", body: "First!" }]),
-      gqlLink.query("CitedBy", () =>
-        HttpResponse.json({
-          data: {
-            records: {
-              __typename: "RecordConnection",
-              totalCount: 0,
-              edges: [],
-              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
-            },
-          },
-        }),
-      ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -794,14 +777,32 @@ describe("PostView", () => {
     );
   });
 
+  // CommentOpinionsEmpty.md: the comment's `Opinions on this` row raises the
+  // opinions sheet stacked over the thread, titled for a comment, and with
+  // nobody holding one it reads the calm empty line.
+  it("opens the comment's opinions sheet from its menu, stacked over the thread", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
+    await screen.findByTestId(byNode("postDetail.card.body"));
+    fireEvent.click(screen.getByTestId("comment-menu-c1"));
+    fireEvent.click(screen.getByTestId("comment-menu-opinions-c1"));
+    expect(await screen.findByTestId("opinions-sheet-empty")).toHaveTextContent(
+      "No opinions yet — yours would be the first.",
+    );
+    expect(screen.getByRole("dialog", { name: "Opinions on this comment" })).toBeInTheDocument();
+    expect(screen.getByTestId("opinions-sheet").className).toContain("bg-surface-container-highest");
+    expect(screen.getByTestId("comments-sheet")).toBeInTheDocument();
+  });
+
   // AT ZERO THERE IS NO ROW, and above it the line opens what it counts.
   it("draws the post's cited-by line only above zero", async () => {
     server.use(
       ...thread("u1", []),
-      gqlLink.query("CitedByCount", () =>
-        HttpResponse.json({
-          data: { records: { __typename: "RecordConnection", totalCount: 4 } },
-        }),
+      citingRecords(
+        ["sol", "ada", "kel", "mira"].map((author, at) =>
+          citingRecord(author, { kind: "post", id: `p-cite-${at}`, title: `Citing ${at}` }, 0.4, 0.2),
+        ),
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
@@ -1069,8 +1070,10 @@ describe("PostView", () => {
             : detail("acct-1", [{ id: "c1", body: "First!" }]),
         ),
         ...removalHandlers("post"),
-        gqlLink.query("CitedByCount", () =>
-          HttpResponse.json({ data: { records: { __typename: "RecordConnection", totalCount: 3 } } }),
+        citingRecords(
+          ["sol", "ada", "kel"].map((author, at) =>
+            citingRecord(author, { kind: "post", id: `p-cite-${at}`, title: `Citing ${at}` }, 0.4, 0.2),
+          ),
         ),
       );
       renderWithProviders(<PostView postId="p1" />, {
@@ -3078,11 +3081,8 @@ describe("PostView — references", () => {
         let counted = false;
         server.use(
           ...withBody({ content: null, attachments: [clip("m1")] }),
-          gqlLink.query("CitedByCount", () => {
+          citingRecords([], () => {
             counted = true;
-            return HttpResponse.json({
-              data: { records: { __typename: "RecordConnection", totalCount: 0 } },
-            });
           }),
         );
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
