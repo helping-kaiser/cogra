@@ -264,9 +264,12 @@
     <string name="stance_key_absent_restore_line">Restore the key with your recovery code to finish.</string>
     <string name="stance_key_absent_restore">Restore the key</string>
     <string name="stance_key_absent_help">Your key</string>
-    <!-- The notice's "?" — the key elsewhere's blessed body (copy-voice *The
-         key elsewhere*: KeyElsewhere, PadKeyAbsent, PadPending). -->
-    <string name="stance_key_absent_help_body">Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending.</string>
+    <!-- The pad's "?" says only what its notice does not (PadKeyAbsent.md,
+         round 21; copy-voice *The "?" dialogs*, `Your key`, the app's
+         "…waits in this app until then…"): where the key lives, and what
+         waits for the restore. -->
+    <string name="stance_key_absent_help_where">Your key lives where you made it or last restored it, never held by CoGra — nothing is signed in your name without it.</string>
+    <string name="stance_key_absent_help_waits">Your recovery code brings it here. A pick you keep waits in this app until then, and you review every kept pick before it\'s signed.</string>
 
     <!-- The walk-back, the PERSON family's words (copy-voice *The
          walk-back*; StanceReadout.jsx `STANCE_SEVERANCE_WORDS`). A topic

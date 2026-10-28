@@ -1276,7 +1276,10 @@ private fun KeyAbsentNotice(testTagPrefix: String) {
     if (explaining) {
         HelpDialog(
             title = stringResource(R.string.stance_key_absent_help),
-            paragraphs = listOf(stringResource(R.string.stance_key_absent_help_body)),
+            paragraphs = listOf(
+                stringResource(R.string.stance_key_absent_help_where),
+                stringResource(R.string.stance_key_absent_help_waits),
+            ),
             onClose = { explaining = false },
             testTag = "${testTagPrefix}_stance_key_dialog",
         )

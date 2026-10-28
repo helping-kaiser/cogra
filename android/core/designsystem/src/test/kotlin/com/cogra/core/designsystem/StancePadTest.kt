@@ -1224,6 +1224,24 @@ class StancePadTest {
         assertThat(committed).isEqualTo(0)
     }
 
+    // PadKeyAbsent.md (round 21): the pad's Your key dialog says only what the
+    // notice does not — never that signing needs the key, nor that the code restores it.
+    @Test
+    fun theKeyNoticesQuestionMarkSaysOnlyWhatTheNoticeDoesNot() {
+        show(open.copy(keyAbsent = true, standing = heldStanding))
+        compose.onNodeWithTag("${TAG}_stance_key_help").performScrollTo().performClick()
+        compose.onNodeWithTag("${TAG}_stance_key_dialog").assertExists()
+        compose.onNodeWithText(
+            "Your key lives where you made it or last restored it, never held by CoGra — " +
+                "nothing is signed in your name without it.",
+        ).assertExists()
+        compose.onNodeWithText(
+            "Your recovery code brings it here. A pick you keep waits in this app until then, " +
+                "and you review every kept pick before it's signed.",
+        ).assertExists()
+        compose.onNodeWithText("Restore it with your recovery code", substring = true).assertDoesNotExist()
+    }
+
     // -- The alternates (StanceAlternates.jsx; stance-control.md *Alternate and accessible inputs*) --
 
     private val alternates = StanceControlState(pad = StancePadMode.ALTERNATES, pick = StancePoint(0.1, 0.1))
