@@ -95,28 +95,35 @@ fun FilterTrigger(
                         }
                     },
                 drawnHeight = Layout.ChipHeight,
-            )
-            .dataNode(node)
-            .height(Layout.ChipHeight)
-            .widthIn(max = TRIGGER_MAX_WIDTH)
-            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline), CircleShape)
-            .padding(horizontal = Space.x3),
-        contentAlignment = Alignment.CenterStart,
+            ),
     ) {
-        Text(
-            text = reading,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        // THE REGISTERED NODE IS THE DRAWN PILL: its own layout node, so the tag
+        // measures the 32dp ink rather than the 48dp target the control answers at.
+        Box(
+            modifier = Modifier
+                .dataNode(node)
+                .height(Layout.ChipHeight)
+                .widthIn(max = TRIGGER_MAX_WIDTH)
+                .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline), CircleShape)
+                .padding(horizontal = Space.x3),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Text(
+                text = reading,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
 /**
  * A filter sheet's section (`FilterSection`): its label, the hint under it in
  * the quiet colour, and its chips wrapping 8dp apart; 16dp under the last.
- * The sheet's gutter is the surface's own ([CograSheetSurface]).
+ * It carries the sheet's 24dp gutter itself, as the master does, so it stands
+ * on an edge-to-edge sheet ([CograSheetSurface]'s `edgeToEdge`).
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -128,21 +135,28 @@ fun FilterSection(
     chips: @Composable () -> Unit,
 ) {
     Column(
-        modifier = modifier.fillMaxWidth().padding(bottom = Space.x4).dataNode(node),
+        modifier = modifier
+            .fillMaxWidth()
+            .dataNode(node)
+            .padding(start = Space.x6, end = Space.x6, bottom = Space.x4),
         verticalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelLarge,
+            // The label sets label-large's size and weight on the sheet's own
+            // body leading, as the master's span does (it sets no line height).
+            style = MaterialTheme.typography.labelLarge.copy(
+                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
+            ),
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.dataNode(node?.let { it / "label" }),
+            modifier = Modifier.fillMaxWidth().dataNode(node?.let { it / "label" }),
         )
         if (hint != null) {
             Text(
                 text = hint,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.dataNode(node?.let { it / "hint" }),
+                modifier = Modifier.fillMaxWidth().dataNode(node?.let { it / "hint" }),
             )
         }
         FlowRow(
@@ -166,7 +180,9 @@ fun FilterFoot(
     modifier: Modifier = Modifier,
     node: DataNode? = null,
 ) {
-    Column(modifier.fillMaxWidth().dataNode(node)) {
+    // The foot carries its own 24dp gutter; the registered node is the ruled
+    // row inside it (`FilterFoot`'s inner `data-node`).
+    Column(modifier.fillMaxWidth().padding(horizontal = Space.x6).dataNode(node)) {
         Hairline()
         Spacer(Modifier.height(FOOT_TOP))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
@@ -194,10 +210,12 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier, node: DataNode? = 
         text = text,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
+        // The registered caption is the padded span (`SectionLabel.jsx`), so the
+        // tag rides outside its padding.
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = Space.x6, end = Space.x6, top = Space.x3, bottom = Space.x1)
-            .dataNode(node),
+            .dataNode(node)
+            .padding(start = Space.x6, end = Space.x6, top = Space.x3, bottom = Space.x1),
     )
 }
 
