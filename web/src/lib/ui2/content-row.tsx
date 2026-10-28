@@ -140,7 +140,14 @@ export function ContentRow({
   unread = false,
   sentence = false,
   titleId,
+  chevron = variant === "door",
 }: {
+  /**
+   * The chevron that says the row opens another surface (ContentRow.jsx
+   * `chevron`, default on). A door draws it; a chronicle row that opens a
+   * level of its own asks for it — the score trace's steps (RankPath.jsx).
+   */
+  chevron?: boolean;
   /** The title's element id, for a control that is described by it. */
   titleId?: string;
   variant?: ContentRowVariant;
@@ -245,7 +252,7 @@ export function ContentRow({
       )}
       {/* A DOOR LEADS SOMEWHERE, and says so with the chevron (ContentRow.jsx
           `chevron`), unless the row carries a control of its own. */}
-      {variant === "door" && action === undefined && (
+      {chevron && action === undefined && (
         <span
           aria-hidden="true"
           className="inline-flex flex-none text-on-surface-variant"

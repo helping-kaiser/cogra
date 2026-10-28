@@ -67,9 +67,22 @@ export function ScoreOrigin({ cover, figure, node }: { cover: TraceCover | null;
 }
 
 /** The reached thing in its own mark: a post's tile, a comment's glyph, a person's circle, a tag's `#`. */
-function EndMark({ kind, src, name, size }: { kind: TraceThingKind; src: string | null; name: string; size: number }) {
+function EndMark({
+  kind,
+  src,
+  name,
+  size,
+  onCard,
+}: {
+  kind: TraceThingKind;
+  src: string | null;
+  name: string;
+  size: number;
+  onCard: boolean;
+}) {
   if (kind === "person") return <MonogramAvatar name={name} src={src} size={size} />;
-  return <NodeMark kind={kind === "topic" ? "topic" : kind === "comment" ? "comment" : "post"} src={src} size={size} onCard />;
+  const mark = kind === "topic" ? "topic" : kind === "comment" ? "comment" : "post";
+  return <NodeMark kind={mark} src={src} size={size} onCard={onCard} />;
 }
 
 function Hairline() {
@@ -86,8 +99,11 @@ export function PathTrace({
   end,
   spoken,
   size = 24,
+  onCard = false,
   node,
 }: {
+  /** On a path row's card ground the end tile takes the darker tone (`NodeMark`'s `onCard`). */
+  onCard?: boolean;
   people: readonly (TracePerson | null)[];
   end: { kind: TraceThingKind; src: string | null; name: string };
   spoken: string;
@@ -108,7 +124,7 @@ export function PathTrace({
       ))}
       <span aria-hidden="true" className="inline-flex items-center">
         <Hairline />
-        <EndMark {...end} size={size} />
+        <EndMark {...end} size={size} onCard={onCard} />
       </span>
       <span className="sr-only">{spoken}</span>
     </span>

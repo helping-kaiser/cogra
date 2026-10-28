@@ -326,6 +326,7 @@ function EntryLevel({
                   people={pathPeople(path, context)}
                   end={end}
                   spoken={spokenTrace(path, context)}
+                  onCard
                   node={part(row, "trace")}
                 />
               }
@@ -405,6 +406,7 @@ function PathLevel({
               second={stepSecondLine(path, step, context)}
               trailing={stepAge(path, step, context)}
               href={href({ kind: "step", path: index, step: place + 1 })}
+              chevron
               node={{ path: "feedEntry.step", key: String(place + 1) }}
               testId={`feedEntry-step-${place + 1}`}
             />
