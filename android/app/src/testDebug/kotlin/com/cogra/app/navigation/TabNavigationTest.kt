@@ -219,6 +219,27 @@ class TabNavigationTest {
         waitForTag("saved.bottomBar")
     }
 
+    // ProfileOwnMenu.md: the own ⋮'s History row opens History in the Profile
+    // tab's stack. History.md:125 keeps the Profile slot lit, the bar wears the
+    // registered `history.bottomBar`, and the back arrow brings the reader's
+    // own profile back (History.md:121).
+    @Test
+    fun historyOpensFromTheOwnMenuKeepsProfileLitAndGoesBackToTheProfile() {
+        memberOnTheFeed()
+        openProfileTab()
+        compose.onNodeWithTag("profile.identity.actionRow.menu").performScrollTo().performClick()
+        waitForTag("profile.menuSheet.history")
+        compose.onNodeWithTag("profile.menuSheet.history").performClick()
+        waitUntilOn { onTop<History>() }
+
+        assertLit("profile")
+        waitForTag("history.bottomBar")
+        waitForTag("history.header")
+
+        compose.onNodeWithTag("history.header.back").performClick()
+        waitUntilOn { onOwnProfileRoot() }
+    }
+
     // -- Each tab keeps its own stack --
 
     @Test

@@ -69,6 +69,8 @@ data object YourTopics
 data class ComposePost(
     val postId: String? = null,
     val referenceTargetId: String? = null,
+    /** A tag card's act: the composer opens with this tag already staged (History.md:63). */
+    val tag: String? = null,
 )
 
 /**
@@ -120,6 +122,10 @@ data class Profile(val handle: String? = null, val from: String? = null)
 /** The reader's Saved list, reached from their own profile's ⋮ (Saved.md). */
 @Serializable
 data object Saved
+
+/** The reader's History, reached from their own profile's ⋮ (History.md), Saved's sibling. */
+@Serializable
+data object History
 
 /**
  * The reader's notification list, reached from the bell on a root band

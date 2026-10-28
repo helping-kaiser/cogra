@@ -1493,7 +1493,17 @@ describe("the pad with the signing key elsewhere", () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId(`${PREFIX}-key-help`));
     });
-    expect(screen.getByTestId(`${PREFIX}-notice-help`)).toHaveTextContent("Your key");
+    const help = screen.getByTestId(`${PREFIX}-notice-help`);
+    expect(help).toHaveTextContent("Your key");
+    // PadKeyAbsent.md (round 21): the pad's dialog says only what the notice
+    // does not — never again that signing needs the key.
+    expect(help).toHaveTextContent(
+      "Your key lives where you made it or last restored it, never held by CoGra — nothing is signed in your name without it.",
+    );
+    expect(help).toHaveTextContent(
+      "Your recovery code brings it here. A pick you keep waits on this browser until then, and you review every kept pick before it's signed.",
+    );
+    expect(help).not.toHaveTextContent("Signing needs your key");
   });
 
   it("replaces a pick kept on the same target, and keeps several targets at once", async () => {
@@ -2846,5 +2856,289 @@ describe("the pad as a covering layer", () => {
       fireEvent.click(screen.getByTestId(`${PREFIX}-choose`));
     });
     expect(raisedLayersForTests()).toEqual(["pause"]);
+  });
+});
+
+// ROUND 21, THE PAD'S FABRIC (seam 247 riders 3 and 5): the alternates wait as
+// Set does, both dialogs answer the write rule in its quiet register, Cancel
+// during Set closes the pad and never the act, a row's Retry asks the SENT
+// pick, and a typed value that does not parse moves nothing.
+describe("round 21's waits, write rule and typed input", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  /** Holds every commit until `answer` is called with how it ends. */
+  function holdCommits(data: ReturnType<typeof mount>) {
+    const commit = data.commit;
+    const gate: {
+      answer?: (ok: boolean) => void;
+      picks: { pDirected: number; pInterest: number }[];
+    } = { picks: [] };
+    data.commit = (target, pick) =>
+      new Promise((resolve) => {
+        gate.picks.push(pick);
+        gate.answer = (ok) =>
+          resolve(ok ? commit(target, pick) : createStubStanceData({ offline: true }).commit(target, pick));
+      });
+    return gate;
+  }
+
+  async function openAlternates() {
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-choose`));
+    });
+  }
+
+  async function typeExact() {
+    await openAlternates();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("stance-alt-swap"));
+    });
+  }
+
+  // PadStanding.md: "WHEN a typed field is emptied or holds no number ->
+  // NEVER the pick moves AND NEVER the pick reads 0".
+  it("moves nothing when a typed field is emptied, and reads the pick back on blur", async () => {
+    mount();
+    await settle();
+    await typeExact();
+    const field = screen.getByTestId<HTMLInputElement>("stance-entry-directed");
+    fireEvent.change(field, { target: { value: "0.4" } });
+    // The readouts speak once the value rests (`useSettled`, 500ms).
+    await settle(600);
+    expect(screen.getByTestId(`${PREFIX}-pick`)).toHaveTextContent("For or against +0.40");
+    fireEvent.change(field, { target: { value: "" } });
+    await settle(600);
+    expect(screen.getByTestId(`${PREFIX}-pick`)).toHaveTextContent("For or against +0.40");
+    expect(screen.getByTestId(`${PREFIX}-pick`)).not.toHaveTextContent("For or against +0.00");
+    expect(field.value).toBe("");
+    fireEvent.blur(field);
+    expect(field.value).toBe("0.4");
+  });
+
+  // PadStanding.md: "ALWAYS a typed value past a field's bound picks the
+  // nearest value the bound allows, read back in Your pick before anything
+  // is signed, and never a refusal line".
+  it("clamps a typed value past the bound and reads it back before signing", async () => {
+    const data = mount();
+    await settle();
+    await typeExact();
+    const field = screen.getByTestId<HTMLInputElement>("stance-entry-directed");
+    fireEvent.change(field, { target: { value: "1.5" } });
+    expect(field.value).toBe("1.5");
+    await settle(600);
+    expect(screen.getByTestId(`${PREFIX}-pick`)).toHaveTextContent("For or against +1.00");
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(data.sent).toEqual([]);
+  });
+
+  // PadFailed.md: the alternates' commit reads Signing… past 200ms, refuses a
+  // second press, never dims; Cancel stays live and closes the dialog, never
+  // the act — the row carries the wait.
+  it("lets the alternates' commit wait as Set does, Cancel passing the wait to the row", async () => {
+    const data = mount();
+    await settle();
+    await openAlternates();
+    const gate = holdCommits(data);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("stance-alt-commit"));
+    });
+    const commit = screen.getByTestId("stance-alt-commit");
+    expect(commit).toHaveAttribute("aria-disabled", "true");
+    expect(commit).toBeEnabled();
+    expect(commit).toHaveTextContent("Sign it");
+    await settle(SETTING_AFTER_MS);
+    expect(commit).toHaveTextContent("Signing…");
+    await act(async () => {
+      fireEvent.click(commit);
+    });
+    expect(gate.picks).toHaveLength(1);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("stance-alt-cancel"));
+    });
+    expect(screen.queryByTestId("stance-alternates")).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("Signing…");
+    await act(async () => {
+      gate.answer?.(true);
+    });
+    await settle();
+    expect(data.sent).toHaveLength(1);
+    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toBeInTheDocument();
+  });
+
+  // PadFailed.md: "the dialog stays up at the pick AND the line That didn't
+  // send. Try again. stands above its action row AND an outlined Retry takes
+  // Sign it's slot AND Cancel and Walk it back keep their places".
+  it("keeps the alternates at the pick with the fault and an outlined Retry", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } });
+    await settle();
+    await openAlternates();
+    const commit = data.commit;
+    data.commit = createStubStanceData({ offline: true }).commit;
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("stance-alt-commit"));
+    });
+    await settle();
+    expect(screen.getByTestId("stance-alternates")).toBeInTheDocument();
+    expect(screen.getByTestId("stance-alt-failed")).toHaveTextContent("That didn't send. Try again.");
+    const retry = screen.getByTestId("stance-alt-commit");
+    expect(retry).toHaveTextContent("Retry");
+    expect(retry.className).toContain("border-outline");
+    expect(screen.getByTestId("stance-alt-cancel")).toBeInTheDocument();
+    expect(screen.getByTestId("stance-alt-sever")).toBeInTheDocument();
+    data.commit = commit;
+    await act(async () => {
+      fireEvent.click(retry);
+    });
+    await settle();
+    expect(data.sent).toEqual([{ target: "post-1", pick: TAP_DEFAULT }]);
+  });
+
+  // PadWriteRule.md: "the same notice stands where the landing line and the
+  // action row were, with its own ? AND Not now stands under it AND NEVER a
+  // Retry, Sign it, Cancel or Walk it back stands".
+  it("stands the write rule's notice and Not now in the alternates' action row", async () => {
+    mount({
+      seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } },
+      refuse: "WRITE_RULE_FAILED",
+    });
+    await settle();
+    await openAlternates();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("stance-alt-commit"));
+    });
+    await settle();
+    const notice = screen.getByTestId("stance-alt-write-rule");
+    expect(notice).toHaveTextContent("You can't sign right now");
+    expect(notice).toHaveTextContent("Nothing was signed or spent.");
+    expect(notice.className).toContain("bg-tertiary-container");
+    expect(screen.getByTestId("stance-alt-write-rule-help")).toHaveAccessibleName("Why signing waits");
+    for (const gone of ["stance-alt-commit", "stance-alt-cancel", "stance-alt-sever", `${PREFIX}-landing`]) {
+      expect(screen.queryByTestId(gone)).toBeNull();
+    }
+    // The readouts and the tracks stay where they were.
+    expect(screen.getByTestId("stance-alt-directed")).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("stance-alt-not-now"));
+    });
+    expect(screen.queryByTestId("stance-alternates")).toBeNull();
+  });
+
+  // PadFailed.md, the cancelled moment: "WHEN tap Cancel GIVEN Set is waiting
+  // on its signing -> the pad closes AND the signing goes on AND the line
+  // under the target's face reads Signing…"; "WHEN tap Retry on the row line
+  // GIVEN the pad was cancelled while it signed -> the same pick is signed
+  // again AND NEVER the hold's +0.10 / +0.10 is signed in its place".
+  it("closes the pad on Cancel while Set signs, and the row's Retry re-signs the sent pick", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    layOutPad();
+    moveKnob(0.3 * HALF, -0.2 * HALF);
+    await settle();
+    await release();
+    const gate = holdCommits(data);
+    await pressSet();
+    await settle(SETTING_AFTER_MS);
+    expect(screen.getByTestId(`${PREFIX}-set`)).toHaveTextContent("Setting…");
+    // Cancel stays live while Set signs.
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-cancel`));
+    });
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("Signing…");
+    expect(control()).toHaveAttribute("aria-busy", "true");
+    const sentPick = gate.picks[0];
+    expect(sentPick).not.toEqual(TAP_DEFAULT);
+    await act(async () => {
+      gate.answer?.(false);
+    });
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-row-line`)).toHaveTextContent("That didn't sign.");
+    expect(screen.queryByTestId(`${PREFIX}-signed`)).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    await settle();
+    expect(gate.picks[1]).toEqual(sentPick);
+    await act(async () => {
+      gate.answer?.(true);
+    });
+    await settle();
+    expect(data.sent).toEqual([{ target: "post-1", pick: sentPick }]);
+  });
+
+  // EmptySignConfirm.md: the pad's landing under a (0, 0) pick with nothing
+  // standing reads Resulting opinion 🤷 Says nothing., never the walk-back's.
+  it("reads the empty sign's landing on the pad where nothing stands", async () => {
+    mount();
+    await settle();
+    await openPad();
+    layOutPad();
+    moveKnob(-0.1 * HALF, 0.1 * HALF);
+    await settle();
+    const line = screen.getByTestId(`${PREFIX}-landing`);
+    expect(line).toHaveTextContent("Resulting opinion");
+    expect(line).toHaveTextContent("Says nothing.");
+    expect(line).not.toHaveTextContent("This takes you back to zero.");
+    expect(screen.queryByTestId(`${PREFIX}-landing-zero`)).toBeNull();
+  });
+
+  // SeveranceConfirm.md: "WHEN the write rule refuses the walk-back -> the
+  // dialog stays up with its pair AND the line You can't sign right now.
+  // Nothing was signed or spent. stands where the fault line would AND Walk
+  // it back dims AND NEVER a Retry stands".
+  it("answers the write rule inside the walk-back in the quiet register, the act dimmed", async () => {
+    mount({
+      seed: { "post-1": { records: [{ pDirected: 1, pInterest: 1 }] } },
+      refuse: "WRITE_RULE_FAILED",
+    });
+    await settle();
+    await openPad();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    await settle();
+    const line = screen.getByTestId("severance-write-rule");
+    expect(line).toHaveTextContent("You can't sign right now. Nothing was signed or spent.");
+    expect(line).toHaveAttribute("role", "status");
+    expect(line.className).toContain("text-on-surface-variant");
+    expect(line.className).not.toContain("text-error");
+    const proceed = screen.getByTestId("severance-proceed");
+    expect(proceed).toBeDisabled();
+    expect(proceed).not.toHaveTextContent("Retry");
+    expect(screen.queryByTestId("severance-failed")).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-cancel"));
+    });
+    expect(screen.queryByTestId("severance-confirm")).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+  });
+
+  // EmptySignConfirm.md: "WHEN the write rule refuses the empty sign -> the
+  // dialog stays up AND the line You can't sign right now. Nothing was signed
+  // or spent. stands where the fault line would ... AND Set it anyway dims
+  // AND NEVER a Retry stands".
+  it("answers the write rule inside the empty sign the same way", async () => {
+    mount({ refuse: "WRITE_RULE_FAILED" });
+    await settle();
+    await openPad();
+    await dragAndSet(-0.1 * HALF, 0.1 * HALF);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-proceed"));
+    });
+    await settle();
+    expect(screen.getByTestId("empty-sign-write-rule")).toHaveTextContent(
+      "You can't sign right now. Nothing was signed or spent.",
+    );
+    const proceed = screen.getByTestId("empty-sign-proceed");
+    expect(proceed).toBeDisabled();
+    expect(proceed).toHaveTextContent("Set it anyway");
+    expect(screen.queryByTestId("empty-sign-failed")).toBeNull();
   });
 });

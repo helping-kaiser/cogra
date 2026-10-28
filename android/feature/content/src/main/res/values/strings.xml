@@ -339,4 +339,39 @@
     <string name="content_draft_first_picture">The draft\'s first picture</string>
     <string name="content_clip_length">Length %1$s</string>
     <string name="content_stance_on_post">Where you stand on this post</string>
+
+    <!-- The tag feed card (`_shared.jsx` TagFeedCard; FeedTagShapes.md). -->
+    <string name="content_tag_act">Tag a new post with it</string>
+    <string name="content_tag_nothing">Nothing carries this tag right now.</string>
+    <plurals name="content_tag_glimpse_more">
+        <item quantity="one">%1$s · and %2$d more</item>
+        <item quantity="other">%1$s · and %2$d more</item>
+    </plurals>
+
+    <!-- History (History.md, HistoryEmpty.md, HistoryFilter.md, HistoryNone.md,
+         HistorySearch.md; copy-voice "Saved, History and hiding"). -->
+    <string name="content_history_title">History</string>
+    <string name="content_history_back">Back to your profile</string>
+    <string name="content_history_search">Search your history</string>
+    <string name="content_history_filter_purpose">What your history shows</string>
+    <string name="content_history_filter_kinds">Kinds</string>
+    <string name="content_history_filter_hint">Combine as many as you like. All, until you narrow it.</string>
+    <string name="content_history_kind_posts">Posts</string>
+    <string name="content_history_kind_comments">Comments</string>
+    <string name="content_history_kind_profiles">Profiles</string>
+    <string name="content_history_kind_tags">Tags</string>
+    <string name="content_history_everything">Everything</string>
+    <string name="content_history_all_kinds">All kinds</string>
+    <plurals name="content_history_some_kinds">
+        <item quantity="one">%1$d kind</item>
+        <item quantity="other">%1$d kinds</item>
+    </plurals>
+    <string name="content_history_reset">Reset</string>
+    <string name="content_history_done">Done</string>
+    <string name="content_history_empty">Nothing here yet. Everything you see shows up here on its own, newest first.</string>
+    <string name="content_history_none_search">Nothing you\'ve seen carries that name. Search reads names and titles, never bodies — fewer words reach further.</string>
+    <string name="content_history_none_kinds">Nothing you\'ve seen is of that kind.</string>
+    <string name="content_history_see_all_profiles">See all profiles</string>
+    <string name="content_history_see_all_tags">See all tags</string>
+    <string name="content_back_history">Back to History</string>
 </resources>

@@ -40,7 +40,8 @@ import {
   type ReplyView,
 } from "@/lib/api/content-api";
 import { appendDeduped } from "@/lib/api/pagination";
-import { fetchCitedBy, type CitingRecordView } from "@/lib/api/references-api";
+import { fetchHeldOpinions, type HeldOpinionView } from "@/lib/api/opinions-api";
+import { fetchCitingArtifacts, type CitingArtifactView } from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
@@ -76,6 +77,7 @@ import { TopicsLine } from "@/lib/ui/topics-line";
 import type { ReplyTarget } from "@/lib/compose/reply-wizard";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
+import { OpinionsSheet } from "@/lib/ui2/opinions-sheet";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
 import { StageHost } from "@/lib/ui2/media/stage-host";
@@ -244,11 +246,18 @@ export function CommentsSheet({
   const [licenseShown, setLicenseShown] = useState<License | null>(null);
   const [licenseOpen, setLicenseOpen] = useState(false);
   // The comment's ⋮ row, same rule: over the thread, so always stacked.
-  const [citedByNode, setCitedByNode] = useState<string | null>(null);
-  const [citedByRecords, setCitedByRecords] = useState<readonly CitingRecordView[]>([]);
-  const [citedByCursor, setCitedByCursor] = useState<string | null>(null);
-  const [citedByHasMore, setCitedByHasMore] = useState(false);
-  const [citedByLoadingMore, setCitedByLoadingMore] = useState(false);
+  // Which comment's list is up, and its rows once the read lands (null while
+  // it is out, so the empty line never shows before the answer does).
+  const [citedBy, setCitedBy] = useState<{
+    readonly node: string;
+    readonly artifacts: readonly CitingArtifactView[] | null;
+  } | null>(null);
+  // The comment's other ⋮ door, `Opinions on this` (CommentOpinionsEmpty.md):
+  // the same sheet the post's line raises, titled for a comment, stacked.
+  const [opinionsOn, setOpinionsOn] = useState<{
+    readonly node: string;
+    readonly opinions: readonly HeldOpinionView[] | null;
+  } | null>(null);
   // THE OWN COMMENT'S THINK-TWICE DIALOG (CommentRemoveConfirm), raised by its
   // menu's Remove over the thread, the thread still where the menu was opened.
   const [removing, setRemoving] = useState<ThreadComment | null>(null);
@@ -574,27 +583,25 @@ export function CommentsSheet({
    * row. It is raised from inside the thread, so it always stacks.
    */
   const openCitedBy = (nodeId: string) => {
-    setCitedByNode(nodeId);
-    setCitedByRecords([]);
-    setCitedByCursor(null);
-    setCitedByHasMore(false);
-    void fetchCitedBy(client, nodeId).then((outcome) => {
+    setCitedBy({ node: nodeId, artifacts: null });
+    void fetchCitingArtifacts(client, nodeId).then((outcome) => {
       if (outcome.kind !== "success") return;
-      setCitedByRecords(outcome.value.items);
-      setCitedByCursor(outcome.value.endCursor);
-      setCitedByHasMore(outcome.value.hasNextPage);
+      // A later door may have raised another comment's list meanwhile.
+      setCitedBy((current) =>
+        current?.node === nodeId ? { node: nodeId, artifacts: outcome.value } : current,
+      );
     });
   };
 
-  const onLoadMoreCitedBy = async () => {
-    if (citedByNode === null || citedByLoadingMore || !citedByHasMore) return;
-    setCitedByLoadingMore(true);
-    const outcome = await fetchCitedBy(client, citedByNode, citedByCursor);
-    setCitedByLoadingMore(false);
-    if (outcome.kind !== "success") return;
-    setCitedByRecords((current) => appendDeduped(current, outcome.value.items));
-    setCitedByCursor(outcome.value.endCursor);
-    setCitedByHasMore(outcome.value.hasNextPage);
+  /** The comment's `Opinions on this` row: raised from inside the thread, so it stacks. */
+  const openOpinions = (nodeId: string) => {
+    setOpinionsOn({ node: nodeId, opinions: null });
+    void fetchHeldOpinions(client, nodeId).then((outcome) => {
+      if (outcome.kind !== "success") return;
+      setOpinionsOn((current) =>
+        current?.node === nodeId ? { node: nodeId, opinions: outcome.value } : current,
+      );
+    });
   };
 
   const openLicense = (license: License) => {
@@ -670,6 +677,7 @@ export function CommentsSheet({
       onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
       navigate: (route) => router.push(route),
       openCitedBy,
+      openOpinions,
       openLicense,
       // THE READER'S OWN COMMENT'S MENU (CommentMenuOwn.md:3): Remove joins it.
       openRemove: own ? () => setRemoving(comment) : undefined,
@@ -1126,16 +1134,23 @@ export function CommentsSheet({
         />
       )}
       {/* The comment's ⋮ row, over the thread — stacked for the same reason. */}
-      {citedByNode !== null && (
+      {citedBy !== null && (
         <CitedBySheet
           open
-          onClose={() => setCitedByNode(null)}
-          records={citedByRecords}
-          hasMore={citedByHasMore}
-          loadingMore={citedByLoadingMore}
-          onLoadMore={() => void onLoadMoreCitedBy()}
+          onClose={() => setCitedBy(null)}
+          artifacts={citedBy.artifacts}
           stacked
           testId="cited-by-sheet"
+        />
+      )}
+      {opinionsOn !== null && (
+        <OpinionsSheet
+          open
+          onClose={() => setOpinionsOn(null)}
+          on="comment"
+          opinions={opinionsOn.opinions}
+          stacked
+          testId="opinions-sheet"
         />
       )}
       {/* REMOVE THIS COMMENT? — the post's confirm with the nouns swapped

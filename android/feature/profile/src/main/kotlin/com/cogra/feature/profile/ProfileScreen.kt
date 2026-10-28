@@ -116,6 +116,8 @@ fun ProfileRoute(
     onVouchedBack: (ProfileView) -> Unit = {},
     /** The own menu's Saved row opens the Saved list. */
     onOpenSaved: () -> Unit = {},
+    /** The own menu's History row opens History (ProfileOwnMenu.md). */
+    onOpenHistory: () -> Unit = {},
     /** The guest gate a signed-out reader's rows open; null when signed in. */
     onRequireAccount: (() -> Unit)? = null,
     /** Where the reader came from, which the back arrow names (ProfileOther.md:73). */
@@ -174,6 +176,7 @@ fun ProfileRoute(
         hidden = rememberHiddenSet(),
         onRequireAccount = onRequireAccount,
         onOpenSaved = onOpenSaved,
+        onOpenHistory = onOpenHistory,
         onShareProfile = { profileHandle -> context.shareProfile(shareModel.urlFor(profileHandle)) },
         backDescription = backLabel(from),
         bell = bell,
@@ -184,6 +187,9 @@ fun ProfileRoute(
 
 /** The `from` a Saved row's person is opened with. */
 const val SAVED_ORIGIN = "saved"
+
+/** The `from` a History card's person is opened with (`Back to History`). */
+const val HISTORY_ORIGIN = "history"
 
 /** The `from` a notification's person or post is opened with (`Back to Notifications`). */
 const val NOTIFICATIONS_ORIGIN = "notifications"
@@ -211,6 +217,7 @@ fun topicOrigin(name: String): String = "#$name"
 @Composable
 internal fun backLabel(from: String?): String = when {
     from == SAVED_ORIGIN -> stringResource(R.string.profile_back_saved)
+    from == HISTORY_ORIGIN -> stringResource(R.string.profile_back_history)
     from == NOTIFICATIONS_ORIGIN -> stringResource(R.string.profile_back_notifications)
     from == POST_ORIGIN -> stringResource(R.string.profile_back_post)
     from == COMMENTS_ORIGIN -> stringResource(R.string.profile_back_comments)
@@ -249,6 +256,8 @@ fun ProfileScreen(
     onRequireAccount: (() -> Unit)? = null,
     /** The own menu's Saved row. */
     onOpenSaved: () -> Unit = {},
+    /** The own menu's History row. */
+    onOpenHistory: () -> Unit = {},
     /** Hands this profile to the platform's own share sheet. */
     onShareProfile: (String) -> Unit = {},
     /** The back arrow's spoken name, by where the reader came from; null reads `Back to feed`. */
@@ -267,18 +276,7 @@ fun ProfileScreen(
     // THE ⋮'S AFTERMATH READS ON THE PAGE'S OWN SNACKBAR (`profile.snackbar`):
     // `Saved.`, `Removed from Saved.` and a hide's words, each with `Undo`.
     val savedHost = rememberSavedHost(saved, snackbarHostState, PROFILE / "snackbar", onRequireAccount, hidden)
-    val savedMessage = stringResource(R.string.profile_saved)
-    // Consumed only after the snackbar is done: clearing first would flip
-    // the LaunchedEffect key and cancel the showing coroutine, so the
-    // confirmation was torn down in the frame it was posted and the
-    // reader saw nothing. The refetch does not ride this effect — the
-    // route fires it the moment the result arrives.
-    LaunchedEffect(profileSavedResult) {
-        if (profileSavedResult) {
-            snackbarHostState.showSnackbar(NodeSnackbarVisuals(savedMessage, PROFILE / "snackbar"))
-            onProfileSavedResultConsumed()
-        }
-    }
+    ProfileSavedConfirm(profileSavedResult, snackbarHostState, onProfileSavedResultConsumed)
     // The list is the screen's, not the body's: the bar's re-tap scrolls it
     // whatever the body is showing when the tap lands.
     val list = rememberLazyListState()
@@ -325,6 +323,7 @@ fun ProfileScreen(
                         onOpenInvites = onOpenInvites,
                         onOpenPost = onOpenPost,
                         onOpenSaved = onOpenSaved,
+                        onOpenHistory = onOpenHistory,
                         onShareProfile = onShareProfile,
                         onRequireAccount = onRequireAccount,
                         onMessage = onMessage,
@@ -348,6 +347,7 @@ internal class ProfileActions(
     val onOpenInvites: () -> Unit,
     val onOpenPost: (String) -> Unit,
     val onOpenSaved: () -> Unit,
+    val onOpenHistory: () -> Unit,
     val onShareProfile: (String) -> Unit,
     val onRequireAccount: (() -> Unit)?,
     val onMessage: () -> Unit,
@@ -578,6 +578,7 @@ private fun RowScope.OwnActions(
         profile = profile,
         saved = savedHost,
         onOpenSaved = actions.onOpenSaved,
+        onOpenHistory = actions.onOpenHistory,
         onShare = { actions.onShareProfile(profile.handle) },
         onRequireAccount = null,
     )
@@ -612,6 +613,7 @@ private fun RowScope.OtherActions(
         profile = profile,
         saved = savedHost,
         onOpenSaved = actions.onOpenSaved,
+        onOpenHistory = actions.onOpenHistory,
         onShare = { actions.onShareProfile(profile.handle) },
         onRequireAccount = actions.onRequireAccount,
     )
@@ -687,4 +689,22 @@ private fun ChronicleTabRow(filter: ChronicleFilter, onFilterChange: (ChronicleF
         label = stringResource(R.string.profile_tabs),
         node = PROFILE / "tabRow",
     )
+}
+
+/**
+ * A saved edit's confirmation on the page's own snackbar. Consumed only after
+ * the snackbar is done: clearing first would flip the LaunchedEffect key and
+ * cancel the showing coroutine, so the confirmation was torn down in the
+ * frame it was posted and the reader saw nothing. The refetch does not ride
+ * this effect — the route fires it the moment the result arrives.
+ */
+@Composable
+private fun ProfileSavedConfirm(result: Boolean, host: SnackbarHostState, onConsumed: () -> Unit) {
+    val savedMessage = stringResource(R.string.profile_saved)
+    LaunchedEffect(result) {
+        if (result) {
+            host.showSnackbar(NodeSnackbarVisuals(savedMessage, PROFILE / "snackbar"))
+            onConsumed()
+        }
+    }
 }

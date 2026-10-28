@@ -387,6 +387,7 @@ private val READ_SURFACES = listOf(
     PostDetail::class,
     ChatsComingSoon::class,
     Saved::class,
+    History::class,
     Notifications::class,
 )
 
@@ -437,4 +438,5 @@ private val BAR_NODES = listOf(
     Notifications::class to DataNode("notifications") / "bottomBar",
     Profile::class to DataNode("profile") / "bottomBar",
     Saved::class to DataNode("saved") / "bottomBar",
+    History::class to DataNode("history") / "bottomBar",
 )

@@ -12,11 +12,10 @@
 //   account, Report — no Mention row and no handle anywhere.
 //
 // BUILT WHOLE, WIRED IN PART (saved-surface SS-1; the introduced-but-inert
-// law, jakob 2026-09-14): History waits on the History surface, Mention on
-// the wizard's profile reference, and — on
-// this platform — Report on the report confirm reaching the profile (it lives
-// in the content feature). Those rows stand at full strength and do nothing
-// yet; the hand-test notes name each.
+// law, jakob 2026-09-14): Mention waits on the wizard's profile reference,
+// and — on this platform — Report on the report confirm reaching the
+// profile (it lives in the content feature). Those rows stand at full
+// strength and do nothing yet; the hand-test notes name each.
 
 package com.cogra.feature.profile
 
@@ -41,6 +40,7 @@ internal fun ProfileMenu(
     profile: ProfileView,
     saved: SavedHost?,
     onOpenSaved: () -> Unit,
+    onOpenHistory: () -> Unit,
     onShare: () -> Unit,
     /** The guest gate a signed-out reader's rows open; null when signed in. */
     onRequireAccount: (() -> Unit)?,
@@ -65,8 +65,7 @@ internal fun ProfileMenu(
     val items = when (kind) {
         ProfileMenuKind.OWN -> listOf(
             MenuRow(stringResource(R.string.profile_menu_saved), (SHEET / "saved").tag, onOpenSaved),
-            // INERT until History is built (saved-surface D4 / History's H3).
-            MenuRow(stringResource(R.string.profile_menu_history), (SHEET / "history").tag, inert),
+            MenuRow(stringResource(R.string.profile_menu_history), (SHEET / "history").tag, onOpenHistory),
             MenuRow(stringResource(R.string.profile_menu_share_yours), (SHEET / "share").tag, onShare),
         )
 

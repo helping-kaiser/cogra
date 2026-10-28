@@ -30,8 +30,8 @@ import { useApolloClient } from "@apollo/client/react";
 import type { CommentFieldsFragment } from "@/__generated__/graphql";
 import { isPending } from "@/lib/api/content-api";
 import { withRemoval, type Removal } from "@/lib/api/removal-api";
-import { appendDeduped } from "@/lib/api/pagination";
-import { fetchCitedBy, type CitingRecordView } from "@/lib/api/references-api";
+import { fetchHeldOpinions, type HeldOpinionView } from "@/lib/api/opinions-api";
+import { fetchCitingArtifacts, type CitingArtifactView } from "@/lib/api/references-api";
 import type { License } from "@/lib/license";
 import { useComfortLine } from "@/lib/saved/comfort-line";
 import { REMOVED_BY_AUTHOR, postTitle } from "@/lib/saved/row-content";
@@ -39,6 +39,7 @@ import { useSavedWrites } from "@/lib/saved/provider";
 import { useActiveAccountId } from "@/lib/session/provider";
 import type { Notify } from "@/lib/saved/save-row";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
+import { OpinionsSheet } from "@/lib/ui2/opinions-sheet";
 import { commentMenuItems } from "@/lib/ui2/comment-menu";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import {
@@ -224,10 +225,13 @@ export function CommentFeedCard({
   const [unfolded, setUnfolded] = useState(false);
   const [licenseShown, setLicenseShown] = useState<License | null>(null);
   const [licenseOpen, setLicenseOpen] = useState(false);
+  // The ⋮'s two readings, each null until raised, and its rows null while the
+  // read is out — so the empty line never shows before the answer does.
   const [citedBy, setCitedBy] = useState<{
-    readonly records: readonly CitingRecordView[];
-    readonly cursor: string | null;
-    readonly more: boolean;
+    readonly artifacts: readonly CitingArtifactView[] | null;
+  } | null>(null);
+  const [opinions, setOpinions] = useState<{
+    readonly opinions: readonly HeldOpinionView[] | null;
   } | null>(null);
 
   const threadPost = comment.post?.id ?? null;
@@ -251,21 +255,17 @@ export function CommentFeedCard({
   const handle = comment.author?.handle ?? null;
 
   const openCitedBy = (id: string) => {
-    setCitedBy({ records: [], cursor: null, more: false });
-    void fetchCitedBy(client, id).then((outcome) => {
+    setCitedBy({ artifacts: null });
+    void fetchCitingArtifacts(client, id).then((outcome) => {
       if (outcome.kind !== "success") return;
-      setCitedBy({ records: outcome.value.items, cursor: outcome.value.endCursor, more: outcome.value.hasNextPage });
+      setCitedBy((current) => (current === null ? current : { artifacts: outcome.value }));
     });
   };
-  const moreCitedBy = () => {
-    if (citedBy === null || !citedBy.more) return;
-    void fetchCitedBy(client, comment.id, citedBy.cursor).then((outcome) => {
+  const openOpinions = (id: string) => {
+    setOpinions({ opinions: null });
+    void fetchHeldOpinions(client, id).then((outcome) => {
       if (outcome.kind !== "success") return;
-      setCitedBy((current) => ({
-        records: appendDeduped(current?.records ?? [], outcome.value.items),
-        cursor: outcome.value.endCursor,
-        more: outcome.value.hasNextPage,
-      }));
+      setOpinions((current) => (current === null ? current : { opinions: outcome.value }));
     });
   };
 
@@ -278,6 +278,7 @@ export function CommentFeedCard({
         onGuest: null,
         navigate: (route) => router.push(route),
         openCitedBy,
+        openOpinions,
         openLicense: (license) => {
           setLicenseShown(license);
           setLicenseOpen(true);
@@ -359,10 +360,17 @@ export function CommentFeedCard({
                   <CitedBySheet
                     open
                     onClose={() => setCitedBy(null)}
-                    records={citedBy.records}
-                    hasMore={citedBy.more}
-                    onLoadMore={moreCitedBy}
+                    artifacts={citedBy.artifacts}
                     testId={`${testId}-cited-by-sheet`}
+                  />
+                )}
+                {opinions !== null && (
+                  <OpinionsSheet
+                    open
+                    onClose={() => setOpinions(null)}
+                    on="comment"
+                    opinions={opinions.opinions}
+                    testId={`${testId}-opinions-sheet`}
                   />
                 )}
                 {removing && (
@@ -406,7 +414,7 @@ export function CommentFeedCard({
           aria-expanded={unfolded}
           data-testid={`${testId}-opener`}
           onClick={() => setUnfolded((shown) => !shown)}
-          className="cg-state cg-focus self-start border-0 bg-transparent px-0 py-1 text-label-medium text-on-surface-variant"
+          className="cg-state cg-focus cg-hit self-start border-0 bg-transparent px-0 py-1 text-label-medium text-on-surface-variant"
         >
           {unfolded ? "Less" : "More"}
         </button>

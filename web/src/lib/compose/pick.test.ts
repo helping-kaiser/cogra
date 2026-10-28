@@ -28,6 +28,7 @@ import {
   ANIMATED_GIF,
   COMMENT_SCALE,
   MIXED_BODY,
+  ONE_VIDEO,
   POST_SCALE,
   screenPick,
   TOO_BIG_PICTURE,
@@ -246,16 +247,33 @@ describe("screenPick", () => {
     const ontoVideo = await screenPick([picture()], { hasVideo: true, count: 1 });
     expect(ontoVideo.accepted).toHaveLength(0);
     expect(ontoVideo.refusals[0]!.reason).toBe(MIXED_BODY);
+  });
 
-    const bothAtOnce = await screenPick([mp4(), picture()], EMPTY);
-    expect(bothAtOnce.accepted).toHaveLength(0);
-    expect(bothAtOnce.refusals).toHaveLength(2);
+  // ComposePick.md: "WHEN a fresh batch of pictures and a video is picked
+  // GIVEN nothing is in the tray -> the pictures are kept AND the video is
+  // refused with A post carries pictures or one video, not both."
+  it("keeps the pictures of a mixed batch and refuses only its video", async () => {
+    const shot = picture();
+    const bothAtOnce = await screenPick([mp4(), shot], EMPTY);
+    expect(bothAtOnce.accepted).toEqual([shot]);
+    expect(bothAtOnce.kind).toBe("picture");
+    expect(bothAtOnce.refusals.map((r) => r.reason)).toEqual([MIXED_BODY]);
+  });
+
+  // ComposePickWeb.md (round 22): onto a staged clip a picture reads the
+  // mixing line and a clip the one-video line.
+  it("refuses a clip dropped on a staged clip with A post carries one video.", async () => {
+    const outcome = await screenPick([mp4(), picture()], { hasVideo: true, count: 1 });
+    expect(outcome.accepted).toHaveLength(0);
+    expect(outcome.refusals.map((r) => r.reason)).toEqual([ONE_VIDEO, MIXED_BODY]);
   });
 
   it("takes one video of several offered and says why the rest did not get in", async () => {
     const outcome = await screenPick([mp4(), mp4(), mp4()], EMPTY);
     expect(outcome.accepted).toHaveLength(1);
-    expect(outcome.refusals.map((r) => r.reason)).toEqual([MIXED_BODY, MIXED_BODY]);
+    // ComposePick.md (round 22): each other clip reads A post carries one video.
+    expect(outcome.refusals.map((r) => r.reason)).toEqual([ONE_VIDEO, ONE_VIDEO]);
+    expect(ONE_VIDEO).toBe("A post carries one video.");
   });
 });
 
@@ -302,6 +320,11 @@ describe("screenPick at comment scale", () => {
   it("says 'a comment' when the kinds would mix", async () => {
     const outcome = await screenPick([mp4()], { hasVideo: false, count: 2 }, COMMENT_SCALE);
     expect(outcome.refusals[0]!.reason).toBe("A comment carries pictures or one video, not both.");
+  });
+
+  it("says 'a comment' when a second clip is offered", async () => {
+    const outcome = await screenPick([mp4(), mp4()], EMPTY, COMMENT_SCALE);
+    expect(outcome.refusals.map((r) => r.reason)).toEqual(["A comment carries one video."]);
   });
 
   it("lets a big picture through here too, and keeps the unreadable line", async () => {
