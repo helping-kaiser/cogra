@@ -1532,3 +1532,84 @@ describe("a press held on the upload gate", () => {
     expect(prepared).toBe(1);
   });
 });
+
+// THE PICKERS IN THE WIZARD (TagPicker.md, ReferencePicker.md; ComposeDetails
+// board: `+ Add a tag`, `+ Cite something`). Each opens in the details stage's
+// place; a pick is the draft's at once, and Done returns to details.
+describe("the details stage's pickers", () => {
+  async function reachDetailsOnWords() {
+    render();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+  }
+
+  it("stages a named tag through the tag picker, and Done brings it back to details", async () => {
+    server.use(
+      gqlLink.query("TagNames", () =>
+        HttpResponse.json({ data: { search: { __typename: "SearchConnection", edges: [] } } }),
+      ),
+    );
+    await reachDetailsOnWords();
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.tags.add")));
+
+    const field = await screen.findByRole("searchbox", { name: "Name a tag" });
+    expect(screen.getByRole("heading", { name: "Add a tag" })).toBeInTheDocument();
+    fireEvent.change(field, { target: { value: "#Rust" } });
+    fireEvent.keyDown(field, { key: "Enter" });
+    expect(screen.getByTestId(byNode("tagPicker.staged.tag", "rust"))).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId(byNode("tagPicker.done")));
+    expect(await screen.findByTestId(byNode("composeDetails.tags.tag", "rust"))).toHaveTextContent("#rust");
+  });
+
+  it("keeps a pick when the picker is left by its arrow", async () => {
+    server.use(
+      gqlLink.query("TagNames", () =>
+        HttpResponse.json({ data: { search: { __typename: "SearchConnection", edges: [] } } }),
+      ),
+    );
+    await reachDetailsOnWords();
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.tags.add")));
+    const field = await screen.findByRole("searchbox", { name: "Name a tag" });
+    fireEvent.change(field, { target: { value: "salt" } });
+    fireEvent.keyDown(field, { key: "Enter" });
+    fireEvent.click(screen.getByRole("button", { name: "Back to the post" }));
+    expect(await screen.findByTestId(byNode("composeDetails.tags.tag", "salt"))).toBeInTheDocument();
+  });
+
+  it("stages a citation through the citation picker", async () => {
+    server.use(
+      gqlLink.query("ReferenceCandidates", () =>
+        HttpResponse.json({
+          data: {
+            referenceCandidates: [
+              {
+                __typename: "ReferenceCandidate",
+                targetId: "u-sal",
+                target: {
+                  __typename: "User",
+                  id: "u-sal",
+                  handle: "saltorres",
+                  displayName: { __typename: "ModeratedText", value: "Sal Torres" },
+                },
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    await reachDetailsOnWords();
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.references.add")));
+    const field = await screen.findByRole("searchbox", { name: "Cite something" });
+    fireEvent.change(field, { target: { value: "sal" } });
+    fireEvent.click(await screen.findByTestId(byNode("referencePicker.result", "u-sal")));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.done")));
+
+    // ComposeDetails.md: a citation staged here starts at the pair +0.10 / +0.10.
+    const row = await screen.findByTestId(byNode("composeDetails.references.stagedReference", "1"));
+    expect(row).toHaveTextContent("@saltorres");
+    expect(row).toHaveTextContent("+0.10 / +0.10");
+  });
+});

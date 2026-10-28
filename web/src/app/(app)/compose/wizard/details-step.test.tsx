@@ -36,6 +36,8 @@ function renderStep(overrides: Partial<Parameters<typeof DetailsStep>[0]> = {}) 
     onDescription: vi.fn(),
     onTags: vi.fn(),
     onReferences: vi.fn(),
+    onOpenTagPicker: vi.fn(),
+    onOpenReferencePicker: vi.fn(),
     onManage: vi.fn(),
     onDescribe: vi.fn(),
     onRetry: vi.fn(),
@@ -231,12 +233,30 @@ describe("DetailsStep — the staged pairs", () => {
   const rust: TagDraft = { name: "rust", relevance: 0.1, confidence: 1 };
   const ada = newReferenceDraft("u-ada", { kind: "User", label: "@ada", href: "/u/ada" });
 
-  it("stages a typed tag at +0.1 / 1 and draws no loose pair beside the entry", () => {
-    const { onTags } = renderStep();
+  // ComposeDetails board: the tags section is its label, its chips and the
+  // quiet `+ Add a tag` — no inline name field, no Add pill, no loose pair.
+  it("adds a tag through the tag picker, never an inline field", () => {
+    const { onOpenTagPicker, onTags } = renderStep({ tags: [rust] });
+    expect(screen.queryByTestId("wizard-tag-input")).not.toBeInTheDocument();
     expect(screen.queryByRole("slider")).not.toBeInTheDocument();
-    fireEvent.change(screen.getByTestId("wizard-tag-input"), { target: { value: "rust" } });
-    fireEvent.click(screen.getByTestId(byNode("composeDetails.tags.add")));
-    expect(onTags).toHaveBeenCalledWith([rust]);
+    const add = screen.getByTestId(byNode("composeDetails.tags.add"));
+    expect(add).toHaveTextContent("+ Add a tag");
+    fireEvent.click(add);
+    expect(onOpenTagPicker).toHaveBeenCalledTimes(1);
+    expect(onTags).not.toHaveBeenCalled();
+    expect(screen.getByTestId(byNode("composeDetails.tags.label")).tagName).toBe("SPAN");
+  });
+
+  // ComposeDetails.md: tap composeDetails.references.add GIVEN a citation is
+  // staged -> the citation picker opens AND the staged citation stays.
+  it("opens the citation picker from + Cite something, and the staged citation stays", () => {
+    const { onOpenReferencePicker, onReferences } = renderStep({ references: [ada] });
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.references.add")));
+    expect(onOpenReferencePicker).toHaveBeenCalledTimes(1);
+    expect(onReferences).not.toHaveBeenCalled();
+    expect(screen.getByTestId(byNode("composeDetails.references.stagedReference", "1"))).toBeInTheDocument();
+    // No finder dialog of its own any more: the picker is the way in.
+    expect(screen.queryByTestId("wizard-finder")).not.toBeInTheDocument();
   });
 
   it("opens a tag chip's pair in a sheet over the stage, and dispatches only on Done", () => {

@@ -3,10 +3,11 @@
 // ComposeDetails — the optional half of the post, and the two sections the
 // author already knows from 2.3 and 2.4.
 //
-// The topic and citation sections are the SHIPPED ones, embedded unchanged.
-// They carry their own caps, their own field errors and their own finder; a
-// second copy restyled for this screen would be two implementations of one
-// gesture, and the batch caps are the same caps either way. Here they set a
+// The topic and citation sections are the SHARED ones, carrying their own
+// field errors and staged rows; a second copy restyled for this screen would
+// be two implementations of one gesture. Their way IN is the stage's own:
+// `+ Add a tag` and `+ Cite something` open the two pickers (TagPicker,
+// ReferencePicker) the wizard draws in the stage's place. Here they set a
 // staged pair in its sheet (`pairs="sheet"`: TagPadCompose, RefPair), and the
 // wizard's state moves only when that sheet's Done hands the pair out.
 //
@@ -58,6 +59,8 @@ export function DetailsStep({
   onDescription,
   onTags,
   onReferences,
+  onOpenTagPicker,
+  onOpenReferencePicker,
   onManage,
   onDescribe,
   onRetry,
@@ -93,6 +96,10 @@ export function DetailsStep({
   onDescription: (next: string) => void;
   onTags: (next: readonly TagDraft[]) => void;
   onReferences: (next: readonly ReferenceDraft[]) => void;
+  /** `+ Add a tag`: the tag picker (ComposeDetails: "composeDetails.tags.add"). */
+  onOpenTagPicker: () => void;
+  /** `+ Cite something`: the citation picker (ComposeDetails.md: "the citation picker opens"). */
+  onOpenReferencePicker: () => void;
   onManage: () => void;
   onDescribe: () => void;
   onRetry: (id: string) => void;
@@ -160,6 +167,7 @@ export function DetailsStep({
         testIdPrefix="wizard"
         node={{ path: "composeDetails.tags" }}
         pairs="sheet"
+        onOpenPicker={onOpenTagPicker}
       />
       <ReferenceEntryField
         references={references}
@@ -169,6 +177,7 @@ export function DetailsStep({
         testIdPrefix="wizard"
         node={{ path: "composeDetails.references" }}
         pairs="sheet"
+        onOpenPicker={onOpenReferencePicker}
       />
 
       <div className="flex-1" />

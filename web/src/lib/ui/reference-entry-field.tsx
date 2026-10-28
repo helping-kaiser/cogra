@@ -43,7 +43,15 @@ export function ReferenceEntryField({
   finderDebounceMs,
   node,
   pairs = "inline",
+  onOpenPicker,
 }: {
+  /**
+   * The composer's `+ Cite something` (ComposeDetails:
+   * "composeDetails.references.add"): given, the door opens the citation
+   * picker (`ReferencePicker`) the host draws, instead of the finder dialog.
+   * The edit surfaces keep the finder until their own boards are conformed.
+   */
+  onOpenPicker?: () => void;
   /**
    * The registered section node on a registered screen
    * (`composeDetails.references`): its `label`, each staged chip as its
@@ -160,12 +168,13 @@ export function ReferenceEntryField({
         testId={`${testIdPrefix}-reference-add`}
         node={part(node, "add")}
         size="sm"
-        onClick={() => setFinding(true)}
-        disabled={atCap}
+        onClick={onOpenPicker ?? (() => setFinding(true))}
+        // The picker carries the cap itself, so its door stays open.
+        disabled={onOpenPicker === undefined && atCap}
       >
         + Cite something
       </InlineAction>
-      {atCap && (
+      {atCap && onOpenPicker === undefined && (
         <p
           data-testid={`${testIdPrefix}-reference-cap`}
           className="text-body-small text-on-surface-variant"

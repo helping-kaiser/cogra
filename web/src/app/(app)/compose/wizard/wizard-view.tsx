@@ -80,6 +80,8 @@ import { DetailsStep } from "./details-step";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { PickedSheet } from "@/lib/ui2/compose/picked-sheet";
+import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
+import { TagPicker } from "@/lib/ui2/compose/tag-picker";
 import { SealStep, type SealSheet } from "./seal-step";
 
 /** A stable empty list, so the preview effect does not re-run on every render. */
@@ -179,6 +181,10 @@ export function ComposeWizard({
   // Which explanation is open, if any — the `?`s share one dialog because only
   // one can be open at a time and each names its own topic.
   const [help, setHelp] = useState<HelpTopic | null>(null);
+  // Which picker stands in the details stage's place, if any — `+ Add a tag`
+  // and `+ Cite something` open them; Done and the arrow close them, every
+  // staged pick already applied (TagPicker.md, ReferencePicker.md).
+  const [picker, setPicker] = useState<"tags" | "references" | null>(null);
   const [busy, setBusy] = useState(false);
   // A press made while uploads still run is HELD and signs the moment the
   // last one lands (ComposeSealUploading.md); the commit is inert from the
@@ -822,6 +828,11 @@ export function ComposeWizard({
     if (previous === "pick") router.push("/feed");
   };
 
+  // A picker belongs to the details stage that opened it; a stage change (a
+  // draft adopted, a body emptied) leaves it unshown rather than standing it
+  // over a stage it was never opened on.
+  const pickerOpen = picker !== null && state.step === "details";
+
   // The browser's Back is the same arrow (design/readme.md: "the platform
   // back gesture does the same"). Each stage past the pick rides its own
   // history entry, so a Back press never reaches the page behind the wizard
@@ -829,8 +840,13 @@ export function ComposeWizard({
   // the browser leaves exactly as it always did.
   useStageHistory({
     surface: "compose",
-    level: stepIndex(state),
-    onBack: leave,
+    // A picker rides an entry above its stage, so the browser's Back closes it
+    // the way its own arrow does.
+    level: stepIndex(state) + (pickerOpen ? 1 : 0),
+    onBack: () => {
+      if (pickerOpen) setPicker(null);
+      else leave();
+    },
     onForward: () => dispatch({ type: "advance" }),
   });
 
@@ -907,6 +923,31 @@ export function ComposeWizard({
       <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
         <HeaderBar title="New post" onBack={() => router.push("/feed")} backLabel="Back to feed" />
         <p className="px-6">Loading…</p>
+      </main>
+    );
+  }
+
+  // THE PICKERS ARE TASK PAGES, standing in the details stage's place with
+  // their own header and foot (TagPicker.jsx, ReferencePicker.jsx: "NO SKY
+  // ENTRY AND NO BOTTOM NAV — picking is a task"). Every pick lands in the
+  // draft the moment it is made, so leaving — Done, the arrow, the browser's
+  // Back — has nothing left to apply.
+  if (pickerOpen) {
+    return (
+      <main className="mx-auto flex h-dvh w-full max-w-2xl flex-col">
+        {picker === "tags" ? (
+          <TagPicker
+            tags={state.tags}
+            onTags={(tags) => dispatch({ type: "tags", tags })}
+            onDone={() => setPicker(null)}
+          />
+        ) : (
+          <ReferencePicker
+            references={state.references}
+            onReferences={(references) => dispatch({ type: "references", references })}
+            onDone={() => setPicker(null)}
+          />
+        )}
       </main>
     );
   }
@@ -1108,6 +1149,8 @@ export function ComposeWizard({
           onDescription={(description) => dispatch({ type: "description", description })}
           onTags={(tags) => dispatch({ type: "tags", tags })}
           onReferences={(references) => dispatch({ type: "references", references })}
+          onOpenTagPicker={() => setPicker("tags")}
+          onOpenReferencePicker={() => setPicker("references")}
           onManage={() => setManaging(true)}
           onDescribe={() => setDescribing(state.assets[0]?.id ?? null)}
           onRetry={retry}
