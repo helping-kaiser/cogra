@@ -158,7 +158,9 @@ describe("the kept picks' review", () => {
       fireEvent.click(remove);
     });
     await waitFor(() => expect(screen.getAllByTestId("keptPicks.pick")).toHaveLength(2));
-    expect(screen.getByTestId("keptPicks.announcement")).toHaveTextContent("Removed — 2 picks left.");
+    await waitFor(() =>
+      expect(screen.getByTestId("keptPicks.announcement")).toHaveTextContent("Removed — 2 picks left."),
+    );
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.queryByText("Undo")).toBeNull();
     expect((await listKeptPicks("u1")).map((k) => k.target.id)).toEqual(["user-mira", "post-juno"]);

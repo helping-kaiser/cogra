@@ -135,7 +135,7 @@ export function StagedRow({
       <Mark kind={kind} name={markName ?? name} src={src} removed={Boolean(removed)} node={node} />
       <span className="flex min-w-0 flex-1 flex-col">
         <span
-          className={`truncate text-body-medium${removed ? " font-normal text-on-surface-variant" : ""}`}
+          className={`truncate text-body-medium${removed ? " text-on-surface-variant" : ""}`}
           {...testAttributes(part(node, "name"), testId === undefined ? undefined : `${testId}-name`)}
         >
           {removed || name}

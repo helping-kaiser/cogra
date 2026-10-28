@@ -151,18 +151,32 @@ export function createKeptPickStore(deps: { idb: () => IDBFactory }): KeptPickSt
 
     async keep(account, target, pick, family) {
       await transact(factory(), "readwrite", (store) => {
-        store.put(
-          {
-            v: KEPT_SCHEMA,
-            kind: target.kind,
-            id: target.id,
-            pDirected: pick.pDirected,
-            pInterest: pick.pInterest,
-            family,
-            keptAt: Date.now(),
-          } satisfies KeptRecord,
-          keptKey(account, target),
-        );
+        // THE ORDER THEY WERE KEPT IN, strictly: a pick kept in the same
+        // millisecond as the last still comes after it. Read and written in
+        // one transaction, so two keeps never take the same place.
+        let latest = 0;
+        const cursor = store.openCursor(keptRange(account));
+        cursor.onsuccess = () => {
+          const at = cursor.result;
+          if (at !== null) {
+            const kept = recordOf(at.value);
+            if (kept !== null && !sameTarget(kept.target, target)) latest = Math.max(latest, kept.keptAt);
+            at.continue();
+            return;
+          }
+          store.put(
+            {
+              v: KEPT_SCHEMA,
+              kind: target.kind,
+              id: target.id,
+              pDirected: pick.pDirected,
+              pInterest: pick.pInterest,
+              family,
+              keptAt: Math.max(Date.now(), latest + 1),
+            } satisfies KeptRecord,
+            keptKey(account, target),
+          );
+        };
         return () => undefined;
       });
     },

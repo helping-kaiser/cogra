@@ -104,9 +104,16 @@ function Host() {
   );
 }
 
+/**
+ * The clock moves `ms`, and the custody the kept picks live in (IndexedDB,
+ * which answers on the REAL `setImmediate` — see the fake-timer set below) is
+ * given a few real turns to answer.
+ */
 async function settle(ms = 0) {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(ms);
+    for (let turn = 0; turn < 10; turn += 1) await new Promise((resolve) => setImmediate(resolve));
+    await vi.advanceTimersByTimeAsync(0);
   });
 }
 
@@ -237,7 +244,9 @@ beforeEach(() => {
   setViewport(1024, 768);
   stubBox(PREFIX, { left: 400, top: 500, ...BUTTON_BOX });
   stubBox(FIELD_ID, { width: FIELD, height: FIELD });
-  vi.useFakeTimers();
+  // Every clock but `setImmediate`: fake-indexeddb answers on it, and a faked
+  // one leaves the kept picks' custody waiting forever.
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "Date"] });
 });
 
 afterEach(() => {

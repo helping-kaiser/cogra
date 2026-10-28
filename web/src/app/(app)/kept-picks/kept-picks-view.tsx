@@ -323,7 +323,7 @@ export function KeptPicksView() {
       value: (
         <span className="flex min-w-0 flex-col py-1.5">
           <span
-            className={`truncate${preview.removed ? " font-normal text-on-surface-variant" : ""}`}
+            className={`truncate${preview.removed ? " text-on-surface-variant" : ""}`}
             data-testid={`keptPicksSeal.act-${keyOf(kept.target)}-name`}
           >
             {preview.removed || preview.name}

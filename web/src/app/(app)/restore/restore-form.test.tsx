@@ -88,6 +88,8 @@ describe("RestoreForm", () => {
     renderWithProviders(<RestoreForm store={identity} />, { store: signedInStore() });
     submit();
     await waitFor(() => expect(setEphemeral).toHaveBeenCalledWith(false));
+    // The restore runs on to its navigation; waited for, so it never lands in the next test.
+    await waitFor(() => expect(replace).toHaveBeenCalled());
   });
 
   it("records no choice when the restore fails", async () => {
