@@ -2,7 +2,6 @@
    round). Everything the signature would commit is still read back — the draft
    is not the thing that is missing — and the one act the surface cannot
    perform is replaced by the way to get it back.
-
    THE NOTICE IS `NoticePanel`, the tertiary notice's master, at the seal's
    `medium` corner beside the acts card: a `tertiary-container` panel, and the
    restore button in `Button`'s `inverse` — the filled button that takes the
@@ -51,7 +50,7 @@ export function Screen() {
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value={<LicenseSummary />} action="Change" last />
+          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" last />
         </div>
 
         <div style={{ flex: 1 }} />

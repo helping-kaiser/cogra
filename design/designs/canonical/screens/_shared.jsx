@@ -108,6 +108,7 @@ const {
   ATTRIBUTION_TIERS,
   PROVENANCE_TIERS,
   LicenseSummary,
+  LICENSE_SUMMARY,
   NodeMark,
   TopicRemovable,
   StagedReference,
@@ -1641,7 +1642,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value={<LicenseSummary />} action="Change" />
+          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" />
           {/* One number: the post's own record is a Publish, whose one free
               parameter is the author's attachment — their backing; the second
               is pinned by the census (jakob 2026-10-16, PR-101). It starts at
@@ -1842,7 +1843,7 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
             value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
             action="Adjust"
           />
-          <FactRow label="License" value={<LicenseSummary />} action="Change" />
+          <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" />
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
         </div>
 

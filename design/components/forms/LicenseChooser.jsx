@@ -66,8 +66,17 @@ export function licenseSummary(license = PUBLIC_DOMAIN) {
   return `${name} — ${clause(credit.hint)}, and ${clause(record.hint)}.`;
 }
 
-/* The same reading as an element, for a slot that takes one (a `FactRow`
-   value, a sheet's foot). */
+/* THE SEAL'S ROW TAKES THE SENTENCE AS A STRING (seam 245, ask 3). `FactRow`
+   gives a string value its variant's voice and hands a node through as given
+   — a stance readout draws its own line — so this sentence, handed over as an
+   element, drew in the page's body-large and on-surface instead of the
+   seal's quiet value. A sentence is a string; the row is passed one. The
+   bundle hands boards only capitalised names, so the rule rides this one too
+   — `HIDE_ACTOR_LABEL`'s shape, a composed label under a constant's name. */
+export const LICENSE_SUMMARY = licenseSummary;
+
+/* The same reading as an element, for a slot that takes one and gives it no
+   voice of its own (a sheet's foot, the settings default). */
 export function LicenseSummary({ license = PUBLIC_DOMAIN }) {
   return licenseSummary(license);
 }
