@@ -27,6 +27,16 @@ describe("backFor", () => {
     expect(backFor("wallet")).toEqual({ href: "/wallet", label: "Back to Wallet" });
   });
 
+  // A row on a profile's opinions page (ProfileStances.md:19; copy-voice: `Back
+  // to the opinions`, the list named by what it holds) — back to the page, on
+  // the tab it was left on.
+  it("names the opinions page, returning to the tab it was left on", () => {
+    expect(backFor("opinions")).toEqual({ href: "/profile/opinions", label: "Back to the opinions" });
+    expect(backFor("opinions.by")).toEqual({ href: "/profile/opinions?tab=by", label: "Back to the opinions" });
+    expect(backFor("opinions:ada")).toEqual({ href: "/u/ada/opinions", label: "Back to the opinions" });
+    expect(backFor("opinions.by:ada")).toEqual({ href: "/u/ada/opinions?tab=by", label: "Back to the opinions" });
+  });
+
   it("never builds a profile link from an empty handle", () => {
     expect(backFor("u:")).toEqual({ href: "/feed", label: "Back to feed" });
   });
