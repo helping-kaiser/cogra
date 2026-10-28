@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH bundles AS (\n               SELECT DISTINCT l.family, l.source, l.target\n               FROM mirror_record_legs l\n               JOIN mirror_records r ON r.record_id = l.record_id\n               WHERE l.record_id = ANY($1)\n                 AND l.leg = 'binary' AND l.family IN ('opinion', 'affinity')\n                 AND NOT r.payload_marked\n                 AND NOT l.census_unknown\n           )\n           SELECT b.record_id AS \"record_id!\", b.family AS \"family!\",\n                  b.source AS \"source!\", b.target AS \"target!\",\n                  b.p_d AS \"p_d!\", b.p_i AS \"p_i!\"\n           FROM bundles k\n           JOIN mirror_record_legs b\n             ON b.leg = 'binary' AND b.family = k.family\n            AND b.source = k.source AND b.target = k.target\n           JOIN mirror_records br ON br.record_id = b.record_id\n           WHERE NOT br.payload_marked\n             AND NOT b.census_unknown\n           ORDER BY b.family, b.source, b.target,\n                    br.epoch, br.act_time, br.position",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "family!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "source!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "target!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "p_d!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "p_i!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "18ee3c84879080b0c5384df127a97eedac2fb355b8bbfac91a4b5c15032d3808"
+}

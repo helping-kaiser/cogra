@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.record_id AS \"record_id!\"\n           FROM mirror_records r\n           WHERE r.record_id = ANY($1)\n             AND (EXISTS (SELECT 1 FROM mirror_record_legs g\n                          WHERE g.record_id = r.record_id\n                            AND g.leg IN ('binary', 't')\n                            AND g.target = 'mint:' || r.record_id)\n                  OR (r.family = 'registration' AND NOT EXISTS (\n                          SELECT 1 FROM mirror_records e\n                          WHERE e.family = 'registration' AND e.author = r.author\n                            AND (e.epoch, e.act_time, e.position)\n                                < (r.epoch, r.act_time, r.position))))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d2e1ba69020c604e53863b098a524c07600354287b2b028a98cbd20ba802c1bd"
+}
