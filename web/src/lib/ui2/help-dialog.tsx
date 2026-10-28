@@ -216,4 +216,22 @@ export const HELP_TOPICS = {
       "A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.",
     ],
   },
+  // Explore's results' "?" (copy-voice, *Searching*; re-voiced for the
+  // unified sigil law, blessed jakob 2026-10-16).
+  searching: {
+    title: "How searching works",
+    paragraphs: [
+      "Search reads names, handles and titles, never bodies. Start with @ to find people by their handle — what they made follows them. Start with # to find tags and what carries them.",
+      "Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.",
+    ],
+  },
+  // The search filter sheet's "?" (copy-voice, *The filter*: the search's own
+  // seen sentence; the Reset sentence jakob's own, blessed 2026-10-02).
+  theSearchFilter: {
+    title: "How the filter works",
+    paragraphs: [
+      "What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Nothing changes until you press Done, and nothing here is signed or shared.",
+      "It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings.",
+    ],
+  },
 } as const satisfies Record<string, HelpTopic>;

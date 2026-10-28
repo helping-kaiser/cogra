@@ -19,8 +19,9 @@
 // order). With an action the row splits into the pressable part and the
 // control beside it, so a button never nests in a button.
 //
-// Only the variant this product draws today is here; the others join with the
-// list that first draws them.
+// Only the variants this product draws today are here — the chronicle, and
+// the door (Explore's Your topics); the others join with the list that
+// first draws them.
 
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -38,7 +39,7 @@ export const REDACTED_ACTOR_NAME = "Deleted account";
  * `chronicle`: the second line is the thing's own words, so it takes body
  * type; the trailing edge is a TIME, a quiet fact, so it is not loud.
  */
-export type ContentRowVariant = "chronicle";
+export type ContentRowVariant = "chronicle" | "door";
 
 export type ContentRowDisc =
   | { readonly kind: "picture"; readonly src: string; readonly name: string }
@@ -57,6 +58,11 @@ export type ContentRowDisc =
   /** 🤷 where a picture would go, for a stance walked back (the withdrawal notification). */
   | { readonly kind: "walkedBack" }
   | { readonly kind: "glyph"; readonly glyph: GlyphName }
+  /**
+   * A kind with no glyph wears its letter (ContentRow.jsx `letter`): the `#`
+   * every topic wears, in the door's filled `primary` disc.
+   */
+  | { readonly kind: "letter"; readonly letter: string }
   | { readonly kind: "redacted" };
 
 /** `StanceValue`'s default zero word, the walk-back's (`SEVERED_LABEL`). */
@@ -106,10 +112,20 @@ function Disc({ disc }: { disc: ContentRowDisc }) {
           <Icon name={disc.glyph} size={20} />
         </span>
       );
+    case "letter":
+      return (
+        <span
+          aria-hidden="true"
+          className="grid size-10 place-items-center rounded-full bg-primary text-title-medium text-on-primary"
+        >
+          {disc.letter}
+        </span>
+      );
   }
 }
 
 export function ContentRow({
+  variant = "chronicle",
   title: titleGiven,
   titleAside: asideGiven,
   titleQuiet = false,
@@ -194,7 +210,7 @@ export function ContentRow({
         )}
         {second !== undefined && second !== null && second !== "" && (
           <span
-            className={`${ELLIPSIS} text-body-medium text-on-surface-variant`}
+            className={`${ELLIPSIS} ${variant === "door" ? "text-label-small" : "text-body-medium"} text-on-surface-variant`}
             {...testAttributes(part(node, "second"), `${testId}-second`)}
           >
             {second}
@@ -225,6 +241,17 @@ export function ContentRow({
               {...testAttributes(part(node, "dot"), `${testId}-dot`)}
             />
           )}
+        </span>
+      )}
+      {/* A DOOR LEADS SOMEWHERE, and says so with the chevron (ContentRow.jsx
+          `chevron`), unless the row carries a control of its own. */}
+      {variant === "door" && action === undefined && (
+        <span
+          aria-hidden="true"
+          className="inline-flex flex-none text-on-surface-variant"
+          {...testAttributes(part(node, "chevron"))}
+        >
+          <Icon name="chevron_right" size={18} />
         </span>
       )}
     </>

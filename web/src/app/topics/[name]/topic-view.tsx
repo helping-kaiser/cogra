@@ -95,7 +95,8 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
   useSeenTracker({ root: host, list: listRef, ids: seenIds });
 
   // THE BACK ARROW NAMES THE LIST THE PAGE WAS OPENED FROM (the origin-naming
-  // table; History.md:57: `Back to History`), the feed otherwise.
+  // table; History.md:57: `Back to History`; Explore mid-query, `Back to the
+  // search`), the feed otherwise.
   const back = backFor(from);
   const header = (
     <PageHeader backHref={back.href} backScroll={false} backLabel={back.label} backTestId="topic-back" inGutter />

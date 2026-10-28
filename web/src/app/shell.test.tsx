@@ -158,6 +158,10 @@ describe("AppShell", () => {
     // A History card's doors hang off Profile, as Saved's do.
     ["/posts/post-1", "from=history", "profileSlot"],
     ["/u/alice", "from=history", "profileSlot"],
+    // A search result keeps Explore lit (BottomNav.prompt.md: "opened from
+    // Explore lights Explore"; ExplorePerson.md:23).
+    ["/posts/post-1", "from=search", "searchSlot"],
+    ["/u/alice", "from=search", "searchSlot"],
   ])("lights the drill-in's origin root (%s %s)", async (path, query, lit) => {
     pathname = path;
     search = query;
@@ -174,6 +178,52 @@ describe("AppShell", () => {
       "page",
     );
     expect(screen.getByTestId(byNode(`${bar}.${unlit}`))).not.toHaveAttribute("aria-current");
+  });
+
+  // EXPLORE AND THE WALLET'S DOOR ARE TAB ROOTS, read by every viewer
+  // (Explore.md:35-39; WalletComingSoon.md:3, :5, :9): the bar stands with
+  // their own slot lit, the registered Explore bar wearing its node.
+  it.each([
+    ["/explore", "searchSlot", true],
+    ["/explore", "searchSlot", false],
+    ["/wallet", "walletSlot", true],
+    ["/wallet", "walletSlot", false],
+  ] as const)("frames the %s root with its %s lit (signed in: %s)", async (path, slot, signedIn) => {
+    pathname = path;
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      signedIn ? { store: signedInStore() } : {},
+    );
+    const lit =
+      path === "/explore"
+        ? await screen.findByTestId(byNode(`explore.bottomBar.${slot}`))
+        : await screen.findByTestId(`nav-wallet`);
+    expect(lit).toHaveAttribute("aria-current", "page");
+  });
+
+  // THE LADDER AT A ROOT (Explore.md:43; WalletComingSoon.md:19-21): scrolled,
+  // the slot's tap brings the root to its top; at the top it changes nothing.
+  it("the_explore_slot_at_its_root_goes_to_the_top_and_at_the_top_does_nothing", async () => {
+    pathname = "/explore";
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      { store: signedInStore() },
+    );
+    const scroller = await screen.findByTestId("app-scroller");
+    const scrollTo = vi.fn();
+    scroller.scrollTo = scrollTo as typeof scroller.scrollTo;
+    const slot = screen.getByTestId(byNode("explore.bottomBar.searchSlot"));
+    fireEvent.click(slot);
+    expect(scrollTo).not.toHaveBeenCalled();
+    scroller.scrollTop = 400;
+    const tap = new MouseEvent("click", { bubbles: true, cancelable: true });
+    fireEvent(slot, tap);
+    expect(tap.defaultPrevented).toBe(true);
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }));
   });
 
   // The bar is chrome by structure: a viewport-tall column, a scrolling

@@ -59,6 +59,9 @@
   --on-success: #ffffff;
   --success-container: #98f5ce;
   --on-success-container: #002116;
+  /* The brand wash a page spends on its ONE moment (design/tokens/colors.css
+     `--surface-hero`): the coming-soon door's card. */
+  --surface-hero: linear-gradient(140deg, #feaa81 0%, #ffddc9 46%, #fff8f6 100%);
 }
 
 /*
@@ -116,6 +119,7 @@
     --on-success: #003828;
     --success-container: #00513b;
     --on-success-container: #98f5ce;
+    --surface-hero: linear-gradient(140deg, #743918 0%, #3a2417 52%, #151312 100%);
   }
 }
 
@@ -160,6 +164,7 @@
   --on-success: #003828;
   --success-container: #00513b;
   --on-success-container: #98f5ce;
+  --surface-hero: linear-gradient(140deg, #743918 0%, #3a2417 52%, #151312 100%);
 }
 
 @theme inline {
