@@ -89,7 +89,7 @@ import { setMuted, useMuted } from "./mute";
 import { startPlayback } from "./playback";
 import { OnStage, useStage } from "./stage-host";
 import { formatDuration } from "./video";
-import { VideoTransport } from "./video-transport";
+import { Timeline, VideoTransport } from "./video-transport";
 import { claim, holds, releaseElement, takeElement } from "./video-stage";
 
 /**
@@ -112,8 +112,15 @@ import { claim, holds, releaseElement, takeElement } from "./video-stage";
  * the transport is real: play/pause, the skips, and a timeline that takes a tap
  * anywhere or a drag along it. The sound moves INTO the bar there, which is why
  * the disc is not drawn beside it.
+ *
+ * `stream` is the stream's rung (`Reel.jsx`; `VideoControls.jsx` `SeekLine`):
+ * the sound disc — or, under suppressed autoplay, the play disc in its corner
+ * (Reel.md:49-53) — in the frame's TOP-RIGHT corner, and a thin seek line
+ * dragged under the finger (Reel.md:55), "and never a pause or the full
+ * transport" (Reel.md:11). The frame there is the stream's whole screen, so
+ * the line rides its foot, 4px above the bottom bar (Reel.jsx:143, Reel.md:13).
  */
-export type PlayerSurface = "full" | "reading" | "transport";
+export type PlayerSurface = "full" | "reading" | "transport" | "stream";
 
 /** How long the chrome stays up after the reader last touched it. The board
  * draws the revealed state because "a board of the hidden state is a board of a
@@ -148,6 +155,7 @@ function Player({
   safeArea = false,
   soundNode,
   playNode,
+  seekNode,
   mediaId,
   carry = false,
   handedOver = false,
@@ -179,6 +187,8 @@ function Player({
   soundNode?: DataNode;
   /** The registered node the play disc is (`….frame.playDisc`), likewise. */
   playNode?: DataNode;
+  /** The stream's seek line (`surface="stream"`), likewise. */
+  seekNode?: DataNode;
   /** The video's face. Null when there is none, or when it was redacted. */
   poster?: string | null;
   altText?: string | null;
@@ -260,6 +270,7 @@ function Player({
   // the stage changes hands" (Feed.md:47).
   const veiled = useVeiled();
   const transport = surface === "transport";
+  const stream = surface === "stream";
   // The clip's own clock, read off the element rather than held beside it: the
   // element is the truth about where playback is, and a second copy ticking on
   // its own would disagree with it the moment a seek or a stall happened.
@@ -734,7 +745,7 @@ function Player({
             startByHand();
           }}
           className={DISC_CLASS}
-          style={DISC_STYLE}
+          style={stream ? STREAM_DISC_STYLE : DISC_STYLE}
         >
           <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
             <path d="M8 5v14l11-7z" />
@@ -778,7 +789,7 @@ function Player({
           // answers are the same answer. Same file, same mechanism, same
           // shape as the snackbar colours below.
           className={DISC_CLASS}
-          style={DISC_STYLE}
+          style={stream ? STREAM_DISC_STYLE : DISC_STYLE}
         >
           <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
             {muted ? (
@@ -788,6 +799,28 @@ function Player({
             )}
           </svg>
         </button>
+      )}
+      {/* THE STREAM'S SEEK LINE (`SeekLine` = `Timeline thin hitAbove`,
+          Reel.jsx:143-145): full width, 4px above the bottom bar, its 48px
+          target rising from the track (Reel.md:13-15). The times are spoken,
+          never printed. Veiled, it goes with the sound control: "the stream
+          carries no sound control and no seek line GIVEN the clip is veiled"
+          (ReelSensitive.md:9). */}
+      {stream && !veiled && (
+        <div
+          {...testAttributes(seekNode, `${testId}-seek`)}
+          style={{ position: "absolute", left: 0, right: 0, bottom: "4px", zIndex: 3, display: "flex" }}
+        >
+          <Timeline
+            thin
+            hitAbove
+            progress={progress}
+            elapsed={formatDuration(Math.floor(elapsedSec) * 1000)}
+            duration={formatDuration((totalSec ?? 0) * 1000)}
+            onSeek={(fraction) => seekTo(fraction * (totalSec ?? 0))}
+            testId={`${testId}-timeline`}
+          />
+        </div>
       )}
     </span>
   );
@@ -877,6 +910,18 @@ const DISC_STYLE: CSSProperties = {
   zIndex: 2,
   background: "var(--surface-snackbar)",
   color: "var(--on-surface-snackbar)",
+};
+
+/**
+ * The stream's corner: the sound disc and the play disc stand top-right, 8px
+ * in (`Reel.jsx:77-82`, `MediaDisc corner="top-right"`), above the stage's
+ * other chrome — the washes and the rail.
+ */
+const STREAM_DISC_STYLE: CSSProperties = {
+  ...DISC_STYLE,
+  bottom: undefined,
+  top: "8px",
+  zIndex: 4,
 };
 
 /**

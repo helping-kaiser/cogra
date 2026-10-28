@@ -186,6 +186,10 @@ dialog.cg-sheet-out::backdrop {
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
 
+  /* An opinion's face over media — the stream rail's stance anchor
+     (design/tokens/semantic.css `--size-face-over-media`). */
+  --size-face-over-media: 26px;
+
   /* The ring the SYSTEM wears on a card it put in front of a reader (jakob
      2026-09-15; design/tokens/semantic.css): the ground stays the card's own
      and the brand travels on the EDGE, in roles, so both themes are this one

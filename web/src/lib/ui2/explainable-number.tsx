@@ -29,9 +29,16 @@ export function ExplainableNumber({
   glyph,
   href,
   onOpen,
+  overMedia = false,
   node,
   testId,
 }: {
+  /**
+   * THE MEDIA DRESS (`ExplainableNumber.jsx` `overMedia`; the stream's rail):
+   * white glyph and figure under a soft shadow, because a token colour on
+   * photography is not a quiet control but an invisible one.
+   */
+  overMedia?: boolean;
   /** The spoken name; with a glyph it lives only in the accessibility tree. */
   label: string;
   /** Already formatted. Omitted, the glyph stands bare — a figure still settling. */
@@ -54,10 +61,17 @@ export function ExplainableNumber({
       aria-label={value === undefined ? label : `${label} ${value}`}
       {...testAttributes(node, testId)}
       className="cg-state cg-focus cg-hit -mx-2 inline-flex min-h-12 flex-none items-center gap-1.5 rounded-full px-2 text-[length:var(--text-body-small)] [line-height:normal] text-on-surface-variant"
+      // A literal, as the master's: the media dress reads over any frame in
+      // both themes (`ExplainableNumber.jsx:65-67`).
+      style={overMedia ? { color: "#fff", filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))" } : undefined}
     >
       <Icon name={glyph} size={18} />
       {value !== undefined && (
-        <span className="text-on-surface [font-weight:500]" {...testAttributes(part(node, "value"))}>
+        <span
+          className="text-on-surface [font-weight:500]"
+          style={overMedia ? { color: "#fff" } : undefined}
+          {...testAttributes(part(node, "value"))}
+        >
           {value}
         </span>
       )}
