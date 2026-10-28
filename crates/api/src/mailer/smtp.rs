@@ -342,7 +342,11 @@ mod tests {
             assert_eq!(recipients, vec![mail.to.clone()], "{kind}");
 
             let (headers, body) = read(raw);
-            assert_eq!(header(&headers, "from"), "CoGra <no-reply@cogra.example>", "{kind}");
+            assert_eq!(
+                header(&headers, "from"),
+                "CoGra <no-reply@cogra.example>",
+                "{kind}"
+            );
             assert_eq!(header(&headers, "to"), mail.to, "{kind}");
             assert_eq!(header(&headers, "subject"), mail.subject, "{kind}");
             assert_eq!(

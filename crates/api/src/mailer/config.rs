@@ -153,7 +153,9 @@ pub enum MailerConfigError {
     SmtpUrlWithoutSmtpMailer,
     #[error("SMTP_URL is invalid: {0}")]
     InvalidSmtpUrl(&'static str),
-    #[error("MAIL_FROM must be an address, optionally with a display name (`CoGra <no-reply@example.org>`): {0}")]
+    #[error(
+        "MAIL_FROM must be an address, optionally with a display name (`CoGra <no-reply@example.org>`): {0}"
+    )]
     InvalidMailFrom(String),
     #[error("SMTP_TIMEOUT_SECS must be a whole number of seconds, at least 1")]
     InvalidTimeout,
@@ -197,9 +199,12 @@ fn smtp_config(lookup: &impl Fn(&str) -> Option<String>) -> Result<SmtpConfig, M
     let from = lookup("MAIL_FROM")
         .filter(|f| !f.trim().is_empty())
         .ok_or(MailerConfigError::Missing("MAIL_FROM"))?;
-    let from: Mailbox = unquoted(from.trim())
-        .parse()
-        .map_err(|e: lettre::address::AddressError| MailerConfigError::InvalidMailFrom(e.to_string()))?;
+    let from: Mailbox =
+        unquoted(from.trim())
+            .parse()
+            .map_err(|e: lettre::address::AddressError| {
+                MailerConfigError::InvalidMailFrom(e.to_string())
+            })?;
     let timeout_secs = match lookup("SMTP_TIMEOUT_SECS") {
         None => MailerConfig::DEFAULT_TIMEOUT_SECS,
         Some(raw) => raw
@@ -210,8 +215,8 @@ fn smtp_config(lookup: &impl Fn(&str) -> Option<String>) -> Result<SmtpConfig, M
             .ok_or(MailerConfigError::InvalidTimeout)?,
     };
 
-    let parsed = url::Url::parse(url.trim())
-        .map_err(|_| MailerConfigError::InvalidSmtpUrl("not a URL"))?;
+    let parsed =
+        url::Url::parse(url.trim()).map_err(|_| MailerConfigError::InvalidSmtpUrl("not a URL"))?;
     let tls = parsed
         .query_pairs()
         .find(|(key, _)| key == "tls")
@@ -328,10 +333,9 @@ mod tests {
             config(&[]),
             Ok(MailerConfig::Dev { log_file: None })
         ));
-        let Ok(MailerConfig::Dev { log_file }) = config(&[
-            ("MAILER", "dev"),
-            ("DEV_MAILER_LOG", "tmp_dev/mailer.log"),
-        ]) else {
+        let Ok(MailerConfig::Dev { log_file }) =
+            config(&[("MAILER", "dev"), ("DEV_MAILER_LOG", "tmp_dev/mailer.log")])
+        else {
             panic!("MAILER=dev is the dev mailer");
         };
         assert_eq!(log_file, Some(PathBuf::from("tmp_dev/mailer.log")));
@@ -535,8 +539,8 @@ mod tests {
             assert!(!error.to_string().contains(PASSWORD), "{error}");
             assert!(!format!("{error:?}").contains(PASSWORD), "{error:?}");
         }
-        let accepted = smtp(&format!("smtps://user:{PASSWORD}@smtp.example.org"))
-            .expect("accepted");
+        let accepted =
+            smtp(&format!("smtps://user:{PASSWORD}@smtp.example.org")).expect("accepted");
         let debug = format!("{accepted:?}");
         assert!(!debug.contains(PASSWORD), "{debug}");
         assert!(debug.contains("smtp.example.org"), "{debug}");
@@ -575,12 +579,9 @@ mod tests {
                 "SMTP_TIMEOUT_SECS={timeout}"
             );
         }
-        let Ok(MailerConfig::Smtp(smtp)) = config(&[
-            ("MAILER", "smtp"),
-            url,
-            from,
-            ("SMTP_TIMEOUT_SECS", "12"),
-        ]) else {
+        let Ok(MailerConfig::Smtp(smtp)) =
+            config(&[("MAILER", "smtp"), url, from, ("SMTP_TIMEOUT_SECS", "12")])
+        else {
             panic!("a valid timeout is accepted");
         };
         assert_eq!(smtp.timeout(), Duration::from_secs(12));

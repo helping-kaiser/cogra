@@ -66,7 +66,11 @@ async fn converse(
         Behaviour::Accept | Behaviour::RefuseRecipient => {}
     }
     let reply = |text: &str| format!("{text}\r\n");
-    if write.write_all(reply("220 sink ESMTP").as_bytes()).await.is_err() {
+    if write
+        .write_all(reply("220 sink ESMTP").as_bytes())
+        .await
+        .is_err()
+    {
         return;
     }
     let (mut mail_from, mut rcpt_to) = (String::new(), Vec::new());
@@ -94,7 +98,11 @@ async fn converse(
                 "250 OK".to_string()
             }
         } else if upper == "DATA" {
-            if write.write_all(reply("354 go ahead").as_bytes()).await.is_err() {
+            if write
+                .write_all(reply("354 go ahead").as_bytes())
+                .await
+                .is_err()
+            {
                 return;
             }
             let mut data = String::new();
@@ -185,10 +193,19 @@ async fn the_smtp_mailer_delivers_through_a_server() {
     assert_eq!(received.mail_from, "<no-reply@cogra.example>");
     assert_eq!(received.rcpt_to, vec!["<reader@example.org>".to_string()]);
     let data = received.data;
-    assert!(data.contains("From: CoGra <no-reply@cogra.example>\r\n"), "{data}");
+    assert!(
+        data.contains("From: CoGra <no-reply@cogra.example>\r\n"),
+        "{data}"
+    );
     assert!(data.contains("To: reader@example.org\r\n"), "{data}");
-    assert!(data.contains("Subject: Verify your CoGra email\r\n"), "{data}");
-    assert!(data.contains("Content-Type: text/plain; charset=utf-8\r\n"), "{data}");
+    assert!(
+        data.contains("Subject: Verify your CoGra email\r\n"),
+        "{data}"
+    );
+    assert!(
+        data.contains("Content-Type: text/plain; charset=utf-8\r\n"),
+        "{data}"
+    );
     assert!(
         data.contains("\r\n\r\nVerify your email: https://cogra.example/verify?token=abc123"),
         "{data}"
