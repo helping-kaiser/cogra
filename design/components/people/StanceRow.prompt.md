@@ -10,3 +10,9 @@ A person on an opinions list, with the stance the row is about.
 **Read-only, and the whole row opens the person.** There is no adjust control here — acting on an opinion means going to the profile it is about, where the pad and its context are. A slider in a list row lets someone change a public record while scrolling past it.
 
 The two directions stay separated, never merged into one list; `TabBar` is what chooses between them.
+
+**A (0, 0) row says which (0, 0) it is from its data.** The numbers cannot tell a standing walked back to nothing from one an empty sign joined, so the row carries the bundle's `severed`: `severed` speaks `Walked back`, and absent or false the (0, 0) speaks `Says nothing`. Both wear 🤷.
+
+```jsx
+<StanceRow name="Kel Moreau" handle="kel" pDirected={0} pInterest={0} severed onOpen={openProfile}/>
+```
