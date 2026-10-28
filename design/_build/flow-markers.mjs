@@ -172,6 +172,7 @@ export const FLOW_MARKERS = {
 // chats and bell in the sweeps further down (the active tab's edge is `self`).
 Object.assign(FLOW_MARKERS, {
   WalletComingSoon: [...nav(1)],
+  ExploreComingSoon: [...nav(1)],
 });
 
 // The Feed & Search page. Signed-in post cards carry standings, so the stance
@@ -2657,7 +2658,7 @@ const BAND_CHATS = {
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
   FeedGallery: 15, FeedCover: 17, FeedWordsSensitive: 16,
-  WalletComingSoon: 6,
+  WalletComingSoon: 6, ExploreComingSoon: 6,
 };
 for (const [board, n] of Object.entries(BAND_CHATS)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Chats"', tag: "button" });
@@ -2676,7 +2677,7 @@ const BAND_BELL = {
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
   FeedCover: 19, FeedWordsSensitive: 18,
-  WalletComingSoon: 7,
+  WalletComingSoon: 7, ExploreComingSoon: 7,
   Profile: 15, ProfileApplicant: 15,
 };
 for (const [board, n] of Object.entries(BAND_BELL)) {
