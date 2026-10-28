@@ -83,6 +83,9 @@ describe("icons", () => {
       "history",
       // The bar's Wallet slot (BottomNav.jsx `GLYPHS`), opening its coming-soon door.
       "wallet",
+      // The long-opaque-string card's copy control (PayoutAddress.jsx), first
+      // needed by Invites' link cards and the applicant's ask link.
+      "content_copy",
     ];
     expect([...shippedNames()].sort()).toEqual([...needed].sort());
   });
