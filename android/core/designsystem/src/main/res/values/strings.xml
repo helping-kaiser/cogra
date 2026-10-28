@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- The search field's trailing ×, undrawn: the house's plain verb for what it does (web's `CLEAR_SEARCH`). -->
+    <string name="search_bar_clear">Clear search</string>
     <string name="password_show">Show password</string>
     <string name="password_hide">Hide password</string>
     <string name="recovery_code_copy">Copy</string>

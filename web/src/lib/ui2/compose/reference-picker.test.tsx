@@ -38,10 +38,16 @@ const SALT_MAPS = {
   },
 };
 
-function candidates(...served: readonly unknown[]) {
-  return gqlLink.query("ReferenceCandidates", () =>
-    HttpResponse.json({ data: { referenceCandidates: served } }),
-  );
+/** The wire kind each fixture's target is (`NodeKind`). */
+const WIRE: Record<string, string> = { User: "USER", Post: "POST", Comment: "COMMENT" };
+
+/** The candidates served, narrowed the way the server narrows: by the asked `kinds`. */
+function candidates(...served: readonly { target: { __typename: string } }[]) {
+  return gqlLink.query("ReferenceCandidates", ({ variables }) => {
+    const kinds = (variables as { kinds?: string[] | null }).kinds ?? null;
+    const answer = kinds === null ? served : served.filter((c) => kinds.includes(WIRE[c.target.__typename] ?? ""));
+    return HttpResponse.json({ data: { referenceCandidates: answer } });
+  });
 }
 
 const server = startMswServer(candidates());
@@ -207,8 +213,32 @@ describe("ReferencePicker — the filter", () => {
     // Staged, not applied: the results do not move under the sheet.
     expect(results()).toEqual(["u-sal", "p-salt"]);
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.done")));
+    // The server narrows: the picker asks again with the committed kinds.
+    await settle();
     expect(results()).toEqual(["u-sal"]);
     expect(screen.getByTestId(byNode("referencePicker.filterTrigger"))).toHaveTextContent("Profiles");
+  });
+
+  it("narrows on the server: the committed kinds ride the lookup, nothing narrowed asks for every kind", async () => {
+    const asked: unknown[] = [];
+    server.use(
+      gqlLink.query("ReferenceCandidates", ({ variables }) => {
+        asked.push(variables);
+        return HttpResponse.json({ data: { referenceCandidates: [] } });
+      }),
+    );
+    renderWithProviders(<Host />);
+    type("salt");
+    await settle();
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterTrigger")));
+    fireEvent.click(screen.getByTestId("reference-picker-filter-posts"));
+    fireEvent.click(screen.getByTestId("reference-picker-filter-profiles"));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.done")));
+    await settle();
+    expect(asked).toEqual([
+      { query: "salt", limit: 10 },
+      { query: "salt", limit: 10, kinds: ["POST", "USER"] },
+    ]);
   });
 
   it("drops the staged kinds when the sheet is dismissed", async () => {

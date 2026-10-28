@@ -130,8 +130,8 @@ describe("notificationRow", () => {
           record: { id: "act:z", pDirected: 0, pInterest: 0, severed },
         } as Partial<Notification>),
       ).disc;
-    expect(at(true)).toEqual({ kind: "face", pDirected: 0, pInterest: 0, zeroLabel: "Walked back" });
-    expect(at(false)).toEqual({ kind: "face", pDirected: 0, pInterest: 0, zeroLabel: "Says nothing" });
+    expect(at(true)).toEqual({ kind: "face", pDirected: 0, pInterest: 0, severed: true });
+    expect(at(false)).toEqual({ kind: "face", pDirected: 0, pInterest: 0, severed: false });
   });
 
   // Notifications.md:21: 🤷 where a picture would go, no digits, no second

@@ -165,6 +165,29 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
                 "sliders or numbers.",
         ),
     ),
+
+    /** Explore's results (copy-voice *Searching*, re-voiced for the unified sigil law 2026-10-16). */
+    Searching(
+        title = "How searching works",
+        paragraphs = listOf(
+            "Search reads names, handles and titles, never bodies. Start with @ to find people by their " +
+                "handle — what they made follows them. Start with # to find tags and what carries them.",
+            "Results put what's closest to you first — the numbers are your view, no one else's. Below " +
+                "the line, what's still beyond your reach, newest first. Your searches stay on this device.",
+        ),
+    ),
+
+    /** The search filter sheet (copy-voice *The filter*, search's seen sentence). */
+    TheSearchFilter(
+        title = "How the filter works",
+        paragraphs = listOf(
+            "What you let in, and in what order — the kinds combine freely, ranked or newest is one " +
+                "choice, and what you've already seen stays out unless you ask for it back. Nothing " +
+                "changes until you press Done, and nothing here is signed or shared.",
+            "It lasts until you change it, on this device only. Reset brings back your defaults, to " +
+                "change them go to settings.",
+        ),
+    ),
 }
 
 /** Opens a `cg-exact` span inside a [HelpTopic] paragraph. */

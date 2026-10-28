@@ -15,6 +15,7 @@ import com.cogra.domain.deletion.AccountDeletionRepository
 import com.cogra.domain.feed.FeedRepository
 import com.cogra.domain.history.SeenHistorySource
 import com.cogra.domain.history.SeenRecordStore
+import com.cogra.domain.history.HistoryRepository
 import com.cogra.domain.history.ViewHistoryRepository
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.AccountRepository
@@ -34,6 +35,8 @@ import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.hidden.HiddenRepository
 import com.cogra.domain.notifications.NotificationsRepository
 import com.cogra.domain.saved.SavedRepository
+import com.cogra.domain.search.ExploreDeviceStore
+import com.cogra.domain.search.SearchRepository
 import com.cogra.domain.settings.SettingsRepository
 import com.cogra.domain.signing.CarriedLandingGate
 import com.cogra.domain.store.DeviceData
@@ -42,6 +45,7 @@ import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.LockCustodyStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
+import com.cogra.domain.topics.HeldTopicsRepository
 import com.cogra.network.auth.BearerInterceptor
 import com.cogra.network.auth.SessionGate
 import com.cogra.network.repo.AccountDeletionRepositoryImpl
@@ -61,10 +65,14 @@ import com.cogra.network.repo.RemovalRepositoryImpl
 import com.cogra.network.repo.ReportRepositoryImpl
 import com.cogra.network.repo.HiddenRepositoryImpl
 import com.cogra.network.repo.NotificationsRepositoryImpl
+import com.cogra.network.repo.HeldTopicsRepositoryImpl
 import com.cogra.network.repo.SavedRepositoryImpl
+import com.cogra.network.repo.SearchRepositoryImpl
 import com.cogra.network.repo.TopicRepositoryImpl
+import com.cogra.network.repo.HistoryRepositoryImpl
 import com.cogra.network.repo.ViewHistoryRepositoryImpl
 import com.cogra.network.repo.FeedRepositoryImpl
+import com.cogra.network.store.ExploreDeviceStoreImpl
 import com.cogra.network.store.SeenRecordStoreImpl
 import com.cogra.network.repo.WriteRepositoryImpl
 import com.cogra.network.store.ComposeDraftStoreImpl
@@ -218,6 +226,9 @@ abstract class NetworkBindsModule {
     abstract fun seenHistorySource(impl: ViewHistoryRepositoryImpl): SeenHistorySource
 
     @Binds
+    abstract fun historyRepository(impl: HistoryRepositoryImpl): HistoryRepository
+
+    @Binds
     abstract fun reportRepository(impl: ReportRepositoryImpl): ReportRepository
 
     @Binds
@@ -246,4 +257,13 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun announcedReleaseStore(impl: AnnouncedReleaseStoreImpl): AnnouncedReleaseStore
+
+    @Binds
+    abstract fun searchRepository(impl: SearchRepositoryImpl): SearchRepository
+
+    @Binds
+    abstract fun heldTopicsRepository(impl: HeldTopicsRepositoryImpl): HeldTopicsRepository
+
+    @Binds
+    abstract fun exploreDeviceStore(impl: ExploreDeviceStoreImpl): ExploreDeviceStore
 }

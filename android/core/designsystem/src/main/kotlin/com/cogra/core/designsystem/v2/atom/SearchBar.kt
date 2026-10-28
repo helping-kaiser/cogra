@@ -8,22 +8,31 @@
 //
 // ITS KEYBOARD IS THE SEARCH KEYBOARD: the search action key, no capitals
 // guessed and nothing corrected — a query carries handles and tag names, which
-// correction would break.
+// correction would break. What the action key does is each surface's own
+// ([onAction]).
+//
+// A TRAILING × WHILE TEXT IS PRESENT, where a surface's sidecar asks for one
+// ([onClear]; Explore.md:11-13): it empties the field. The master draws no ×
+// yet, so its node is the field's evident part, `clear` (web's twin's).
 
 package com.cogra.core.designsystem.v2.atom
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +42,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -40,6 +52,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Space
 
@@ -48,6 +61,9 @@ private val SEARCH_BAR_HEIGHT = 48.dp
 
 /** The leading glyph (`SearchBar.jsx`: `Icon name="search" size={20}`). */
 private val SEARCH_GLYPH = 20.dp
+
+/** The ×'s target: 40dp of box inside the pill, as web's twin (`size-10`), pulled 8 into the pill's end padding. */
+private val CLEAR_TARGET = 40.dp
 
 @Composable
 fun SearchBar(
@@ -59,6 +75,10 @@ fun SearchBar(
     modifier: Modifier = Modifier,
     /** The registered field; its `glyph` and `input` are its parts. */
     node: DataNode? = null,
+    /** The trailing ×, shown while [query] holds text; null draws none. */
+    onClear: (() -> Unit)? = null,
+    /** The keyboard's action key; null leaves the platform's default. */
+    onAction: (() -> Unit)? = null,
 ) {
     Box(modifier.fillMaxWidth().padding(start = Space.x4, end = Space.x4, top = Space.x1, bottom = Space.x3)) {
         Row(
@@ -67,8 +87,10 @@ fun SearchBar(
                 .height(SEARCH_BAR_HEIGHT)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .padding(horizontal = Space.x4)
-                .dataNode(node),
+                // The registered field is the drawn pill (`SearchBar.jsx` `data-node`
+                // on the pill), so its tag rides outside the pill's own inset.
+                .dataNode(node)
+                .padding(horizontal = Space.x4),
             horizontalArrangement = Arrangement.spacedBy(Space.x3),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -99,12 +121,41 @@ fun SearchBar(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Search,
                     ),
+                    keyboardActions = onAction?.let { act -> KeyboardActions(onSearch = { act() }) }
+                        ?: KeyboardActions.Default,
                     modifier = Modifier
                         .fillMaxWidth()
                         .semantics { contentDescription = label }
                         .dataNode(node?.div("input")),
                 )
             }
+            if (onClear != null && query.isNotEmpty()) ClearControl(onClear, node)
         }
+    }
+}
+
+/**
+ * The trailing ×: 40dp of target pulled 8 into the pill's end padding, the
+ * 20dp close glyph, named for what it does.
+ */
+@Composable
+private fun ClearControl(onClear: () -> Unit, node: DataNode?) {
+    val clear = stringResource(R.string.search_bar_clear)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .offset(x = Space.x2)
+            .size(CLEAR_TARGET)
+            .clip(CircleShape)
+            .clickable(role = Role.Button, onClick = onClear)
+            .semantics { contentDescription = clear }
+            .testTag(node?.div("clear")?.tag ?: "search_bar_clear"),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Close,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(SEARCH_GLYPH),
+        )
     }
 }

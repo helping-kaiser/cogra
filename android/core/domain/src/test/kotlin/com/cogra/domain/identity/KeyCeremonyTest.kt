@@ -9,10 +9,13 @@ import com.cogra.crypto.sha256Tagged
 import com.cogra.crypto.verify
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
+import com.cogra.domain.repo.SessionRepository
+import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.ThemeChoice
 import com.cogra.domain.testing.FakeDeviceData
 import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.cogra.domain.testing.FakeDevicePreferences
+import com.cogra.domain.testing.FakeExploreDeviceStore
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
@@ -20,10 +23,10 @@ import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.cogra.domain.testing.ThrowingSessionRepository
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
-import java.util.Base64
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.io.IOException
+import java.util.Base64
 
 private class StubAccount : ThrowingAccountRepository() {
     val challenge = ByteArray(32) { 0x71 }
@@ -249,6 +252,13 @@ class KeyCeremonyTest {
         assertThat(identity.forgetOnSignOut).isTrue()
     }
 
+    private fun signOutOf(
+        sessions: SessionRepository,
+        tokens: FakeTokenStore,
+        device: DeviceData,
+        explore: FakeExploreDeviceStore = FakeExploreDeviceStore(),
+    ) = SignOut(sessions, identity, tokens, device, DeviceLock(custody, tokens, locks), explore)
+
     private fun offlineSessions() = object : ThrowingSessionRepository() {
         override suspend fun revokeSession(id: String?): Outcome<Unit> =
             Outcome.Failed(IOException("offline"))
@@ -258,7 +268,7 @@ class KeyCeremonyTest {
     fun signOutClearsTokensEvenWhenRevocationFails() = runTest {
         val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
         identity.seed = ActorKey.generate().seed()
-        SignOut(offlineSessions(), identity, tokens, FakeDeviceData(), DeviceLock(custody, tokens, locks)).signOut()
+        signOutOf(offlineSessions(), tokens, FakeDeviceData()).signOut()
         assertThat(tokens.current()).isNull()
         // Not opted out: the actor stays in its slot.
         assertThat(identity.seed).isNotNull()
@@ -279,7 +289,7 @@ class KeyCeremonyTest {
                 return Outcome.Success(Unit)
             }
         }
-        SignOut(sessions, identity, tokens, device, DeviceLock(custody, tokens, locks)).eraseEverything()
+        signOutOf(sessions, tokens, device).eraseEverything()
         assertThat(revokedWithSession).isTrue()
         assertThat(device.erases).isEqualTo(1)
         assertThat(tokens.current()).isNull()
@@ -291,9 +301,24 @@ class KeyCeremonyTest {
     fun eraseEverythingEndsTheSessionEvenOffline() = runTest {
         val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
         val device = FakeDeviceData()
-        SignOut(offlineSessions(), identity, tokens, device, DeviceLock(custody, tokens, locks)).eraseEverything()
+        signOutOf(offlineSessions(), tokens, device).eraseEverything()
         assertThat(device.erases).isEqualTo(1)
         assertThat(tokens.current()).isNull()
+    }
+
+    /** Explore.md:31 — the recent searches are per account and cleared at sign-out. */
+    @Test
+    fun signOutForgetsTheLeavingAccountsRecentSearchesAndNoOneElses() = runTest {
+        val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
+        val explore = FakeExploreDeviceStore().apply {
+            rememberSearch("u1", "salt")
+            rememberSearch("u2", "coast")
+            rememberSearch(null, "tide")
+        }
+        signOutOf(offlineSessions(), tokens, FakeDeviceData(), explore).signOut()
+        assertThat(explore.recentsNow("u1")).isEmpty()
+        assertThat(explore.recentsNow("u2")).containsExactly("coast")
+        assertThat(explore.recentsNow(null)).containsExactly("tide")
     }
 
     @Test
@@ -303,7 +328,7 @@ class KeyCeremonyTest {
         identity.pendingBlob = byteArrayOf(7)
         identity.stancePadTaught = true
         identity.forgetOnSignOut = true
-        SignOut(offlineSessions(), identity, tokens, FakeDeviceData(), DeviceLock(custody, tokens, locks)).signOut()
+        signOutOf(offlineSessions(), tokens, FakeDeviceData()).signOut()
         assertThat(tokens.current()).isNull()
         assertThat(identity.seed).isNull()
         assertThat(identity.pendingBlob).isNull()
@@ -320,7 +345,7 @@ class KeyCeremonyTest {
         identity.forgetOnSignOut = true
         DeviceLock(custody, tokens, locks).ensureHeld("u1")
         val id = custody.lockId("u1")!!
-        SignOut(offlineSessions(), identity, tokens, FakeDeviceData(), DeviceLock(custody, tokens, locks)).signOut()
+        signOutOf(offlineSessions(), tokens, FakeDeviceData()).signOut()
         assertThat(locks.rows).doesNotContainKey(id)
         assertThat(custody.lockId("u1")).isNull()
     }
@@ -331,8 +356,7 @@ class KeyCeremonyTest {
         locks.sessionAccount = "u1"
         DeviceLock(custody, tokens, locks).ensureHeld("u1")
         val id = custody.lockId("u1")!!
-        SignOut(offlineSessions(), identity, tokens, FakeDeviceData(), DeviceLock(custody, tokens, locks))
-            .eraseEverything()
+        signOutOf(offlineSessions(), tokens, FakeDeviceData()).eraseEverything()
         assertThat(locks.rows).doesNotContainKey(id)
     }
 

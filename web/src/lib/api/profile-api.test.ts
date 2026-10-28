@@ -1,6 +1,9 @@
 // The profile surface: the chronicle's row decisions, the three-valued avatar
 // field, and the reads that carry them.
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
@@ -9,6 +12,7 @@ import {
   fetchAuthorRecords,
   fetchMyProfile,
   fetchProfileByHandle,
+  fetchProfileFigures,
   mediaField,
   prepareProfileUpdate,
   PROFILE_PAGE_SIZE,
@@ -39,35 +43,107 @@ function node(family: string, over: Partial<RecordNode> = {}): RecordNode {
   } as unknown as RecordNode;
 }
 
+// THE CHRONICLE'S VERBS, ONE PER FAMILY (copy-voice, *The chronicle's verbs*,
+// round 22): the verb reads the server's `act` (#324), never a genesis the
+// client derives from the target's shape.
 describe("rowLabel", () => {
-  // The genesis mark is what separates writing from editing; the family alone
-  // cannot tell them apart.
-  it("separates a genesis from an edit within a family", () => {
-    expect(rowLabel(node("PUBLISH"), true)).toBe("Published a post");
-    expect(rowLabel(node("PUBLISH"), false)).toBe("Edited a post");
-    expect(rowLabel(node("REVIEW"), true)).toBe("Commented");
-    expect(rowLabel(node("REVIEW"), false)).toBe("Edited a comment");
+  it("separates a post's or a comment's genesis from its edits by the act", () => {
+    expect(rowLabel(node("PUBLISH", { act: "GENESIS" }))).toBe("Published a post");
+    expect(rowLabel(node("PUBLISH", { act: "ORDINARY" }))).toBe("Edited a post");
+    expect(rowLabel(node("REVIEW", { act: "GENESIS" }))).toBe("Commented");
+    expect(rowLabel(node("REVIEW", { act: "ORDINARY" }))).toBe("Edited a comment");
   });
 
-  // The anchoring record and its updates share one label — the chain shape
-  // is not visible per row — in whose words the page is (copy-voice.md, the
-  // profile's carried-over rows).
-  it("gives the registration chain one label either way, yours or theirs", () => {
-    expect(rowLabel(node("REGISTRATION"), true)).toBe("Updated their profile");
-    expect(rowLabel(node("REGISTRATION"), false)).toBe("Updated their profile");
-    expect(rowLabel(node("REGISTRATION"), true, true)).toBe("Updated your profile");
+  // The genesis is the server's word: a record whose target LOOKS minted but
+  // which the server reads as ORDINARY is an edit (the shape no longer decides).
+  it("never derives the genesis from the target's shape", () => {
+    expect(rowLabel(node("PUBLISH", { act: "ORDINARY", targetId: "mint:r-1" }))).toBe("Edited a post");
   });
 
-  // The reader's word is opinion; "stance" never reaches a screen.
-  it("reads both stance families as one gesture, in the reader's word", () => {
-    expect(rowLabel(node("OPINION"), true)).toBe("Gave an opinion");
-    expect(rowLabel(node("AFFINITY"), false)).toBe("Gave an opinion");
+  // The first registration record is the joining; every later one updates.
+  it("reads the account's first registration as Joined, the rest as updates", () => {
+    expect(rowLabel(node("REGISTRATION", { act: "GENESIS" }))).toBe("Joined");
+    expect(rowLabel(node("REGISTRATION", { act: "GENESIS" }), true)).toBe("Joined");
+    expect(rowLabel(node("REGISTRATION", { act: "ORDINARY" }))).toBe("Updated their profile");
+    expect(rowLabel(node("REGISTRATION", { act: "ORDINARY" }), true)).toBe("Updated your profile");
   });
 
-  // A family this build does not know still gets a row rather than an empty
-  // one — the chronicle is the honest history, so it says something happened.
+  // The reader's word is opinion; "stance" never reaches a screen. A
+  // walk-back's records and the vouch that landed someone read their own.
+  it("reads the opinion families as given, walked back or vouched", () => {
+    expect(rowLabel(node("OPINION", { act: "ORDINARY" }))).toBe("Gave an opinion");
+    expect(rowLabel(node("AFFINITY", { act: "ORDINARY" }))).toBe("Gave an opinion");
+    expect(rowLabel(node("OPINION", { act: "WALK_BACK" }))).toBe("Walked back an opinion");
+    expect(rowLabel(node("AFFINITY", { act: "WALK_BACK" }))).toBe("Walked back an opinion");
+    expect(rowLabel(node("OPINION", { act: "VOUCH" }))).toBe("Vouched for");
+  });
+
+  // A tag at (0, 0) is its withdrawal (api-spec.md: "(0, 0) is the un-tag").
+  it("reads a tag and its withdrawal on a post or a comment", () => {
+    const post = { __typename: "Post", id: "p" } as unknown as RecordNode["target"];
+    const comment = { __typename: "Comment", id: "c" } as unknown as RecordNode["target"];
+    expect(rowLabel(node("TAG", { act: "ORDINARY", target: post, pDirected: 0.5, pInterest: 1 }))).toBe(
+      "Tagged a post",
+    );
+    expect(rowLabel(node("TAG", { act: "ORDINARY", target: comment, pDirected: 0.5, pInterest: 1 }))).toBe(
+      "Tagged a comment",
+    );
+    expect(rowLabel(node("TAG", { act: "ORDINARY", target: post, pDirected: 0, pInterest: 0 }))).toBe(
+      "Un-tagged a post",
+    );
+  });
+
+  // The cited node's class is the whole distinction (edges.md): a person cited
+  // is a mention.
+  it("reads a citation by what it cites", () => {
+    const cites = (__typename: string) =>
+      rowLabel(node("REFERENCE", { act: "ORDINARY", terminal: { __typename } as unknown as RecordNode["terminal"] }));
+    expect(cites("Post")).toBe("Cited a post");
+    expect(cites("Comment")).toBe("Cited a comment");
+    expect(cites("User")).toBe("Mentioned");
+  });
+
+  // A family this build has no blessed verb for still gets a row (seam 247:
+  // the fallback stays, unblessed).
   it("labels a family this build does not know", () => {
-    expect(rowLabel(node("SOMETHING_NEWER"), true)).toBe("Did something");
+    expect(rowLabel(node("SOMETHING_NEWER", { act: "ORDINARY" }))).toBe("Did something");
+  });
+});
+
+// THE HEADER'S FIGURES (open-questions.md Q35, closed 2026-10-28, jakob's
+// confirmation pending): three record counts, each its own `totalCount`.
+describe("fetchProfileFigures", () => {
+  it("reads the three counts off the one read", async () => {
+    let asked: unknown;
+    server.use(
+      gqlLink.query("ProfileFigures", ({ variables }) => {
+        asked = variables;
+        return HttpResponse.json({
+          data: {
+            user: {
+              __typename: "User",
+              id: "u-1",
+              posts: { __typename: "RecordConnection", totalCount: 5 },
+              opinionsOn: { __typename: "RecordConnection", totalCount: 1204 },
+              opinionsBy: { __typename: "RecordConnection", totalCount: null },
+            },
+          },
+        });
+      }),
+    );
+    const outcome = await fetchProfileFigures(client(), "u-1");
+    expect(asked).toEqual({ id: "u-1" });
+    expect(outcome).toEqual({ kind: "success", value: { posts: 5, opinionsOn: 1204, opinionsBy: null } });
+  });
+
+  // The query's own recipes, read from the document the client sends, so a
+  // count quietly changing its filter fails here.
+  it("asks for genesis Publish records, Opinions toward the person, and theirs toward people", () => {
+    const document = readFileSync(join(process.cwd(), "src", "lib", "graphql", "profile.graphql"), "utf-8");
+    const figures = document.slice(document.indexOf("query ProfileFigures"));
+    expect(figures).toContain("posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 0)");
+    expect(figures).toContain("opinionsOn: incomingRecords(family: OPINION, first: 0)");
+    expect(figures).toContain("opinionsBy: outgoingRecords(family: OPINION, toKind: USER, first: 0)");
   });
 });
 
@@ -182,6 +258,8 @@ describe("fetchAuthorRecords", () => {
         postId: "p-1",
         landedAt: "2026-10-20T10:00:00Z",
         face: null,
+        cited: null,
+        mentioned: null,
       },
     ]);
     expect(outcome.value.endCursor).toBe("cursor-1");

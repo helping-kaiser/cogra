@@ -218,11 +218,17 @@ fun PostDetailRoute(
     }
 }
 
+/** The `from` a search result opens a post with (`Back to the search`). */
+const val POST_FROM_SEARCH = "search"
+
 /** The origin-naming table (`Back to Saved`, `Back to Notifications`); null for the plain arrow. */
 @Composable
 private fun originBack(from: String?): String? = when (from) {
     "saved" -> stringResource(R.string.content_back_saved)
+    "history" -> stringResource(R.string.content_back_history)
     "notifications" -> stringResource(R.string.content_back_notifications)
+    // A result opened from a standing search (PostDetail's origin nouns; Explore.md:19).
+    POST_FROM_SEARCH -> stringResource(R.string.content_back_search)
     else -> null
 }
 

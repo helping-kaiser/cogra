@@ -70,6 +70,24 @@ describe("fetchReferenceCandidates", () => {
     expect(variables).toEqual({ query: "@ada", limit: CANDIDATE_LIMIT });
   });
 
+  // The picker filter narrows on the server (references.graphql: kinds
+  // subtract, null narrows nothing).
+  it("carries the filter's kinds to the server, and none when nothing is narrowed", async () => {
+    const asked: unknown[] = [];
+    server.use(
+      gqlLink.query("ReferenceCandidates", (info) => {
+        asked.push(info.variables);
+        return HttpResponse.json({ data: { referenceCandidates: [] } });
+      }),
+    );
+    await fetchReferenceCandidates(client(), "salt", CANDIDATE_LIMIT, ["USER", "POST"]);
+    await fetchReferenceCandidates(client(), "salt");
+    expect(asked).toEqual([
+      { query: "salt", limit: CANDIDATE_LIMIT, kinds: ["USER", "POST"] },
+      { query: "salt", limit: CANDIDATE_LIMIT },
+    ]);
+  });
+
   // D20: a reference whose target is a person is a MENTION, and the chip is
   // built ready to draft.
   it("projects a person candidate into a mention draft", async () => {

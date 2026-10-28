@@ -1,24 +1,30 @@
 # Search (api-spec.md "Search"; slice 2.7): the Explore surface's one
-# read. Recall is names and titles only — a handle, a display name, a
-# topic's name, a post's title — exact matches first, then newest.
+# read, under the one search law. Recall is names and titles only — a
+# handle, a display name, a topic's name, a post's title; a leading
+# `@prefix` or `#prefix` is a cue. The answer is SECTIONED — people,
+# then topics, then content, each exact match first, then newest — and
+# Explore draws it in the order served, never re-sorted.
 #
 # The node is the `SearchResult` UNION; each member's selection is an
 # inline fragment, so Apollo Kotlin generates one `on<Member>` accessor
 # per kind and the mapping layer switches on `__typename`. The document
-# is web's twin (web/src/lib/graphql/search.graphql).
+# is web's twin (web/src/lib/graphql/search.graphql), selection for
+# selection, so the client-operation guard prices both alike.
 #
 # `includeSeen` is the reader's `Show what you've already seen`; the
 # exclusion runs server-side, so a page keeps its size. Nothing here is
 # marked seen: search results never become seen by being on screen —
 # only opening one counts, on the surface it opens.
 #
-# The Explore surface that sends this is not built yet (search-surface
-# S1); the document lands with the contract so both clients generate
-# against it.
+# `order` is the filter's Ranked or Newest; RANKED names the reader as
+# `viewer`, and each ranked edge carries its `score` — null past a
+# section's seam. `hasMorePeople` is the See all profiles door.
 query Search(
   $query: String!
   $kinds: [NodeKind!]
   $includeSeen: Boolean
+  $order: ReadOrder
+  $viewer: UUID
   $first: Int
   $after: String
 ) {
@@ -26,11 +32,14 @@ query Search(
     query: $query
     kinds: $kinds
     includeSeen: $includeSeen
+    order: $order
+    viewer: $viewer
     first: $first
     after: $after
   ) {
     edges {
       cursor
+      score
       node {
         __typename
         ... on Post {
@@ -71,24 +80,13 @@ query Search(
           landing {
             state
           }
-          # The found-through line, `on <title>`: derived from the target,
-          # never a field of its own.
-          target {
-            __typename
-            ... on Post {
-              id
-              title {
-                value
-              }
-            }
-            ... on Comment {
-              id
-              author {
-                handle
-              }
-              content {
-                value
-              }
+          # The found-through line, `on <root title>`: the post the thread
+          # hangs under, derived, never a field of its own — a reply is
+          # found through its thread's root post.
+          post {
+            id
+            title {
+              value
             }
           }
         }
@@ -115,5 +113,6 @@ query Search(
       hasNextPage
       endCursor
     }
+    hasMorePeople
   }
 }
