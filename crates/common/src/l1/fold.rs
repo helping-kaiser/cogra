@@ -327,11 +327,15 @@ fn walk_back(total: &Decimal, n: usize) -> Vec<f64> {
 /// The batch is recognised by its shape, which is fully determined by the
 /// bundle it walks back: [`Standing::severance_batch`] of the sum standing
 /// before it. So the records ending at a severing record are a batch
-/// exactly when they equal the batch the sum before them stages — the
+/// exactly when they are the records the sum before them stages — the
 /// widest such run is taken, and a run never reaches back past the last
-/// point the bundle stood at `(0, 0)`, where no walk-back can start. A
-/// counter-pick that lands at `(0, 0)` is the one-record case of the same
-/// test, which every severing record passes.
+/// point the bundle stood at `(0, 0)`, where no walk-back can start. The
+/// run is compared as a multiset, never as a sequence: a batch's records
+/// declare no dependency on one another, so the host may order them as it
+/// likes (layer1-interface.md, host ordering discretion), and the sum
+/// before the run does not depend on the order inside it. A counter-pick
+/// that lands at `(0, 0)` is the one-record case of the same test, which
+/// every severing record passes.
 ///
 /// An empty sign is never a walk-back: a `(0, 0)` record says nothing,
 /// whatever it lands on (open-questions.md Q60 reads a `(0, 0)` landing
@@ -366,7 +370,7 @@ pub fn walk_back_records(records: &[(f64, f64)]) -> Result<Vec<bool>, NotFinite>
                         u32::try_from(j).unwrap_or(u32::MAX),
                     );
                     before.severance_cost() == k - j + 1
-                        && before.severance_batch() == records[j..=k]
+                        && same_records(before.severance_batch(), &records[j..=k])
                 })
                 .unwrap_or(k);
             marks[start..=k].fill(true);
@@ -374,6 +378,22 @@ pub fn walk_back_records(records: &[(f64, f64)]) -> Result<Vec<bool>, NotFinite>
         floor = k + 1;
     }
     Ok(marks)
+}
+
+/// Whether two runs hold the same records, whatever their order. Zero is
+/// compared as one value — `-0.0` and `0.0` are the same parameter.
+fn same_records(mut staged: Vec<(f64, f64)>, landed: &[(f64, f64)]) -> bool {
+    fn canonical(pairs: &mut [(f64, f64)]) {
+        for (d, i) in pairs.iter_mut() {
+            *d += 0.0;
+            *i += 0.0;
+        }
+        pairs.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.total_cmp(&b.1)));
+    }
+    let mut landed = landed.to_vec();
+    canonical(&mut staged);
+    canonical(&mut landed);
+    staged == landed
 }
 
 #[cfg(test)]
@@ -831,6 +851,24 @@ mod tests {
         let given = [(0.8, 0.5), (0.8, 0.5), (0.8, 0.5)];
         let batch = standing(&given).severance_batch();
         assert_eq!(batch.len(), 3, "⌈2.4⌉");
+        let bundle: Vec<(f64, f64)> = given.iter().copied().chain(batch).collect();
+        assert_eq!(
+            walk_back_records(&bundle).expect("finite"),
+            vec![false, false, false, true, true, true]
+        );
+    }
+
+    /// The host may publish a batch's records in any order — they declare
+    /// no dependency on one another — and the batch is still the walk-back,
+    /// every record of it.
+    ///
+    /// A severance batch reads as the walk-back in whatever order the host published its records.
+    /// ´claim:fold:a-batch-is-the-walk-back-in-any-published-order´
+    #[test]
+    fn a_batch_is_the_walk_back_in_any_published_order() {
+        let given = [(0.8, 0.5), (0.8, 0.5), (0.8, 0.5)];
+        let mut batch = standing(&given).severance_batch();
+        batch.reverse();
         let bundle: Vec<(f64, f64)> = given.iter().copied().chain(batch).collect();
         assert_eq!(
             walk_back_records(&bundle).expect("finite"),
