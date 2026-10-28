@@ -68,9 +68,20 @@ import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
 
+/** The `from` a History tag card opens a topic with (`Back to History`). */
+const val TOPIC_FROM_HISTORY = "history"
+
+/** The `from` a search result opens a topic with (`Back to the search`, TagPage.md:35). */
+const val TOPIC_FROM_SEARCH = "search"
+
+/** The `from` a Your-topics row opens a topic with (`Back to Your topics`, TagPage.md:35). */
+const val TOPIC_FROM_YOUR_TOPICS = "yourTopics"
+
 @Composable
 fun TopicRoute(
     name: String,
+    /** Where the page was opened from; it names the way back (TagPage.md:35). */
+    from: String? = null,
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onBack: () -> Unit,
@@ -93,7 +104,17 @@ fun TopicRoute(
         onCardEdgesSeen = viewModel::onCardEdgesSeen,
         onSeenCheckpoint = viewModel::onSeenCheckpoint,
         deletionBand = deletionBand,
+        backDescription = topicBack(from),
     )
+}
+
+/** The back arrow's origin noun (TagPage.md:35); null is the plain `Back`. */
+@Composable
+private fun topicBack(from: String?): String? = when (from) {
+    TOPIC_FROM_HISTORY -> stringResource(R.string.topics_back_history)
+    TOPIC_FROM_SEARCH -> stringResource(R.string.topics_back_search)
+    TOPIC_FROM_YOUR_TOPICS -> stringResource(R.string.topics_back_your_topics)
+    else -> null
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,6 +139,8 @@ fun TopicScreen(
     /** The reading paused: the scroll rested, or the reader left. */
     onSeenCheckpoint: () -> Unit = {},
     deletionBand: @Composable () -> Unit = {},
+    /** The back arrow's spoken name when it names an origin; null is the plain `Back`. */
+    backDescription: String? = null,
 ) {
     // SEEN, AT THE LIST: a post or comment card fully in the viewport joins
     // the reader's History, as itself (History.md). The page's own title is
@@ -146,7 +169,7 @@ fun TopicScreen(
                         IconButton(onClick = onBack, modifier = Modifier.testTag("topic_back")) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.topics_back),
+                                contentDescription = backDescription ?: stringResource(R.string.topics_back),
                             )
                         }
                     },

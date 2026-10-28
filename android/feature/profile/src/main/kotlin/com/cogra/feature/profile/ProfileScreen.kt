@@ -197,6 +197,9 @@ const val POST_ORIGIN = "post"
 /** The `from` the comments sheet opens a profile with (`Back to the comments`). */
 const val COMMENTS_ORIGIN = "comments"
 
+/** The `from` a search result opens a profile with (`Back to the search`, ProfileOther.md:73). */
+const val SEARCH_ORIGIN = "search"
+
 /** The `from` a tag's page opens a profile with (`Back to #coastroad`). */
 fun topicOrigin(name: String): String = "#$name"
 
@@ -211,6 +214,7 @@ internal fun backLabel(from: String?): String = when {
     from == NOTIFICATIONS_ORIGIN -> stringResource(R.string.profile_back_notifications)
     from == POST_ORIGIN -> stringResource(R.string.profile_back_post)
     from == COMMENTS_ORIGIN -> stringResource(R.string.profile_back_comments)
+    from == SEARCH_ORIGIN -> stringResource(R.string.profile_back_search)
     from != null && from.startsWith("#") -> stringResource(R.string.profile_back_topic, from.removePrefix("#"))
     else -> stringResource(R.string.profile_back_feed)
 }
