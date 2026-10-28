@@ -958,3 +958,259 @@ async fn the_cited_side_reads_its_citations(pool: PgPool) {
     );
     let _ = citing_comment;
 }
+
+impl Chronicle {
+    async fn edit_post(&self, actor: Uuid, key: &ActorKey, post: Uuid, title: &str) {
+        let prepared = content::prepare_post_edit(
+            &self.pool,
+            &self.boundary,
+            STAGING,
+            actor,
+            content::PostEditDraft {
+                id: post,
+                title: Some(title.into()),
+                description: None,
+                content: Some("body".into()),
+                attachments: vec![],
+                sensitive: Default::default(),
+                p_directed: 0.0,
+            },
+        )
+        .await
+        .expect("prepares post edit");
+        self.land(prepared.writes[0].id, key).await;
+    }
+
+    async fn edit_comment(&self, actor: Uuid, key: &ActorKey, comment: Uuid, words: &str) {
+        let prepared = content::prepare_comment_edit(
+            &self.pool,
+            &self.boundary,
+            STAGING,
+            actor,
+            content::CommentEditDraft {
+                id: comment,
+                content: words.into(),
+                attachments: vec![],
+                sensitive: Default::default(),
+            },
+        )
+        .await
+        .expect("prepares comment edit");
+        self.land(prepared.writes[0].id, key).await;
+    }
+
+    /// The walk-back gesture: the whole batch signed, then one epoch.
+    async fn sever(&self, actor: Uuid, key: &ActorKey, target: Uuid) -> usize {
+        let batch = stance::prepare_severance(
+            &self.pool,
+            &self.boundary,
+            STAGING,
+            actor,
+            &TargetRef::Node(target),
+        )
+        .await
+        .expect("prepares severance");
+        for write in &batch {
+            self.sign_and_relay(write.id, key).await;
+        }
+        self.close_and_ingest().await;
+        batch.len()
+    }
+}
+
+/// One author's chronicle, newest first, read as the clients read it:
+/// each record's act beside the count of the same filter.
+const ACTS_QUERY: &str = r#"
+query Acts($author: UUID!, $family: RecordFamily, $genesis: Boolean,
+           $first: Int, $after: String) {
+  records(author: $author, family: $family, genesis: $genesis,
+          first: $first, after: $after) {
+    totalCount
+    edges { node { id family act severed } }
+    pageInfo { hasNextPage endCursor }
+  }
+}
+"#;
+
+fn acts(connection: &Value) -> Vec<String> {
+    connection["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|e| e["node"]["act"].as_str().expect("act").to_string())
+        .collect()
+}
+
+/// The profile's Posts figure counts the records that minted a person's
+/// posts, never the edits toward them: `genesis: true` keeps the post's
+/// own Publish and drops every edit, `genesis: false` keeps exactly the
+/// edits, and a read that names neither serves them all, as before. The
+/// count is the filter's, independent of the page, and the filter pages
+/// on the same keyset. The same split holds for a comment's Review, and
+/// each record says which it is (`act`).
+///
+/// The genesis filter counts and pages a person's posts' own records, never their edits, and leaves the unfiltered read as it was.
+/// ´claim:chronicle:the-genesis-filter-counts-posts-never-edits´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_genesis_filter_counts_posts_never_edits(pool: PgPool) {
+    let rig = Chronicle::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let (bob, bob_key) = rig.funded_actor("bob").await;
+    let first = rig.post(alice, &alice_key, "First").await;
+    rig.post(alice, &alice_key, "Second").await;
+    rig.edit_post(alice, &alice_key, first, "First, edited").await;
+    rig.edit_post(alice, &alice_key, first, "First, edited again")
+        .await;
+    let comment = rig.comment(bob, &bob_key, first).await;
+    rig.edit_comment(bob, &bob_key, comment, "c, edited").await;
+
+    let posts = rig
+        .gql(
+            ACTS_QUERY,
+            json!({ "author": alice, "family": "PUBLISH", "genesis": true }),
+        )
+        .await;
+    assert_eq!(posts["records"]["totalCount"], json!(2), "{posts}");
+    assert_eq!(acts(&posts["records"]), vec!["GENESIS", "GENESIS"]);
+
+    let edits = rig
+        .gql(
+            ACTS_QUERY,
+            json!({ "author": alice, "family": "PUBLISH", "genesis": false }),
+        )
+        .await;
+    assert_eq!(edits["records"]["totalCount"], json!(2), "{edits}");
+    assert_eq!(acts(&edits["records"]), vec!["ORDINARY", "ORDINARY"]);
+
+    let all = rig
+        .gql(ACTS_QUERY, json!({ "author": alice, "family": "PUBLISH" }))
+        .await;
+    assert_eq!(
+        all["records"]["totalCount"],
+        json!(4),
+        "a read naming no genesis serves every record, as before"
+    );
+    assert_eq!(
+        acts(&all["records"]),
+        vec!["ORDINARY", "ORDINARY", "GENESIS", "GENESIS"],
+        "newest first: the two edits, then the second post, then the first"
+    );
+
+    let page = rig
+        .gql(
+            ACTS_QUERY,
+            json!({ "author": alice, "family": "PUBLISH", "genesis": true, "first": 1 }),
+        )
+        .await;
+    assert_eq!(
+        page["records"]["totalCount"],
+        json!(2),
+        "the count ignores the page"
+    );
+    assert_eq!(page["records"]["pageInfo"]["hasNextPage"], json!(true));
+    let rest = rig
+        .gql(
+            ACTS_QUERY,
+            json!({
+                "author": alice, "family": "PUBLISH", "genesis": true, "first": 1,
+                "after": page["records"]["pageInfo"]["endCursor"],
+            }),
+        )
+        .await;
+    assert_eq!(acts(&rest["records"]), vec!["GENESIS"]);
+    assert_eq!(rest["records"]["pageInfo"]["hasNextPage"], json!(false));
+
+    let anchored = rig
+        .gql(
+            r#"query($id: UUID!) { user(id: $id) {
+                 outgoingRecords(family: PUBLISH, toKind: POST, genesis: true) { totalCount }
+                 edits: outgoingRecords(family: PUBLISH, genesis: false) { totalCount }
+               } }"#,
+            json!({ "id": alice }),
+        )
+        .await;
+    assert_eq!(
+        anchored["user"]["outgoingRecords"]["totalCount"],
+        json!(2),
+        "the node-anchored read carries the same filter"
+    );
+    assert_eq!(anchored["user"]["edits"]["totalCount"], json!(2));
+
+    let reviews = rig
+        .gql(ACTS_QUERY, json!({ "author": bob, "family": "REVIEW" }))
+        .await;
+    assert_eq!(
+        acts(&reviews["records"]),
+        vec!["ORDINARY", "GENESIS"],
+        "a comment's edit is ordinary and its minting Review the genesis"
+    );
+    let minted = rig
+        .gql(
+            ACTS_QUERY,
+            json!({ "author": bob, "family": "REVIEW", "genesis": true }),
+        )
+        .await;
+    assert_eq!(minted["records"]["totalCount"], json!(1));
+}
+
+/// A walk-back reads as one on every record it signed. The severance
+/// batch that walks a bundle of 2.4 back stages three counter-records and
+/// all three read WALK_BACK — the last alone carries `severed` — while the
+/// records it walked back stay ORDINARY. A counter-pick that lands at
+/// `(0, 0)` is a one-record walk-back, and an empty sign after it is
+/// ordinary: it says nothing.
+///
+/// Every record a walk-back signed reads as the walk-back, and nothing else does.
+/// ´claim:chronicle:every-record-a-walk-back-signed-reads-walk-back´
+#[sqlx::test(migrations = "../../migrations")]
+async fn every_record_a_walk_back_signed_reads_walk_back(pool: PgPool) {
+    let rig = Chronicle::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let (carol, carol_key) = rig.funded_actor("carol").await;
+    let held = rig.post(alice, &alice_key, "Held").await;
+    let picked = rig.post(alice, &alice_key, "Picked").await;
+
+    for _ in 0..3 {
+        rig.stance(carol, &carol_key, held, 0.8, 0.5).await;
+    }
+    assert_eq!(rig.sever(carol, &carol_key, held).await, 3, "⌈2.4⌉");
+    let chronicle = rig
+        .gql(ACTS_QUERY, json!({ "author": carol, "first": 10 }))
+        .await;
+    assert_eq!(
+        acts(&chronicle["records"]),
+        vec![
+            "WALK_BACK",
+            "WALK_BACK",
+            "WALK_BACK",
+            "ORDINARY",
+            "ORDINARY",
+            "ORDINARY"
+        ],
+        "{chronicle}"
+    );
+    let severed: Vec<bool> = chronicle["records"]["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|e| e["node"]["severed"].as_bool().expect("a stance record"))
+        .collect();
+    assert_eq!(
+        severed,
+        vec![true, false, false, false, false, false],
+        "only the record that lands the bundle at zero is severed"
+    );
+
+    rig.stance(carol, &carol_key, picked, 0.3, 0.3).await;
+    rig.stance(carol, &carol_key, picked, -0.3, -0.3).await;
+    rig.stance(carol, &carol_key, picked, 0.0, 0.0).await;
+    let newest = rig
+        .gql(ACTS_QUERY, json!({ "author": carol, "first": 3 }))
+        .await;
+    assert_eq!(
+        acts(&newest["records"]),
+        vec!["ORDINARY", "WALK_BACK", "ORDINARY"],
+        "the empty sign says nothing; the counter-pick to zero walked back; \
+         the pick it took back stays an opinion given"
+    );
+}
