@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -53,6 +54,7 @@ import com.cogra.core.designsystem.CollapsingTopBand
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.NodeSnackbarVisuals
+import com.cogra.core.designsystem.RootReselectEffect
 import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.dataNode
@@ -91,6 +93,8 @@ private val PROFILE = DataNode("profile")
 @Composable
 fun ProfileRoute(
     handle: String?,
+    /** The bar's Profile slot re-tapped over this root, counted (Profile.md:61-63); 0 on a drill-in. */
+    reselectSignal: Int = 0,
     handleChangedResult: Boolean,
     onHandleChangedResultConsumed: () -> Unit,
     profileSavedResult: Boolean,
@@ -149,6 +153,7 @@ fun ProfileRoute(
     }
     ProfileScreen(
         state = state,
+        reselectSignal = reselectSignal,
         profileSavedResult = profileSavedResult,
         onProfileSavedResultConsumed = onProfileSavedResultConsumed,
         onFilterChange = viewModel::onFilterChange,
@@ -213,6 +218,8 @@ internal fun backLabel(from: String?): String = when {
 @Composable
 fun ProfileScreen(
     state: ProfileUiState,
+    /** The bar's Profile slot re-tapped over this root, counted ([RootReselectEffect]). */
+    reselectSignal: Int = 0,
     profileSavedResult: Boolean,
     onProfileSavedResultConsumed: () -> Unit,
     onFilterChange: (ChronicleFilter) -> Unit,
@@ -268,6 +275,10 @@ fun ProfileScreen(
             onProfileSavedResultConsumed()
         }
     }
+    // The list is the screen's, not the body's: the bar's re-tap scrolls it
+    // whatever the body is showing when the tap lands.
+    val list = rememberLazyListState()
+    RootReselectEffect(signal = reselectSignal, list = list)
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
         modifier = Modifier.dataNodeSurface(),
@@ -299,6 +310,7 @@ fun ProfileScreen(
             Box(Modifier.fillMaxSize().collapsingTop(collapsingTop)) {
                 ProfileBody(
                     state = state,
+                    list = list,
                     savedHost = savedHost,
                     snackbarHostState = snackbarHostState,
                     actions = ProfileActions(
@@ -376,6 +388,7 @@ private fun ProfileBand(
 @Composable
 private fun ProfileBody(
     state: ProfileUiState,
+    list: LazyListState,
     savedHost: SavedHost?,
     snackbarHostState: SnackbarHostState,
     actions: ProfileActions,
@@ -408,7 +421,18 @@ private fun ProfileBody(
                 }
             }
         else -> state.profile?.let { profile ->
-            ProfileList(state, profile, savedHost, snackbarHostState, actions, banners, drillIn, stanceControl, now)
+            ProfileList(
+                state,
+                list,
+                profile,
+                savedHost,
+                snackbarHostState,
+                actions,
+                banners,
+                drillIn,
+                stanceControl,
+                now,
+            )
         }
     }
 }
@@ -416,6 +440,7 @@ private fun ProfileBody(
 @Composable
 private fun ProfileList(
     state: ProfileUiState,
+    list: LazyListState,
     profile: ProfileView,
     savedHost: SavedHost?,
     snackbarHostState: SnackbarHostState,
@@ -425,7 +450,6 @@ private fun ProfileList(
     stanceControl: @Composable (String, String, DataNode) -> Unit,
     now: Instant,
 ) {
-    val list = rememberLazyListState()
     LoadNextAtTheTail(
         list = list,
         rows = state.rows.size,
