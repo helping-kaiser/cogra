@@ -71,16 +71,21 @@ const UNDER_OWN_FIGURES = "@max-[calc(96px+14.5rem)]:mt-3";
 /** Figures are grouped the way every figure in the product groups them (copy-voice: `5,000`). */
 const FIGURE_FORMAT = new Intl.NumberFormat("en-US");
 
-/** One figure: its number in title-medium, its label quiet beneath it, never wrapping. */
+/**
+ * One figure: its number in title-medium, its label quiet beneath it, never
+ * wrapping. The master sets each role's size, leading and weight and no
+ * tracking, so the roles' letter-spacing is cleared: it would widen the three
+ * labels by 8px apiece and move the row past the column it is measured for.
+ */
 function Figure({ value, label, node }: { value: number; label: string; node?: DataNode }) {
   return (
     <div {...testAttributes(node)} className="flex min-w-0 flex-col">
-      <span {...testAttributes(part(node, "value"))} className="text-title-medium">
+      <span {...testAttributes(part(node, "value"))} className="text-title-medium [letter-spacing:normal]">
         {FIGURE_FORMAT.format(value)}
       </span>
       <span
         {...testAttributes(part(node, "label"))}
-        className="whitespace-nowrap text-label-small text-on-surface-variant"
+        className="whitespace-nowrap text-label-small [letter-spacing:normal] text-on-surface-variant"
       >
         {label}
       </span>
