@@ -494,6 +494,7 @@ function SavedCard({
           comment={node}
           from={FROM}
           node={{ path: "saved.commentCard", key: node.id }}
+          scoreOrigin={SAVED_ORIGIN}
           testId={`saved-comment-${node.id}`}
           onNotify={notify}
           onLinkCopied={copied}
@@ -505,6 +506,7 @@ function SavedCard({
           person={node}
           href={`/u/${node.handle}?from=${FROM}`}
           node={{ path: "saved.profileCard", key: node.id }}
+          scoreOrigin={SAVED_ORIGIN}
           testId={`saved-person-${node.id}`}
           onNotify={notify}
           onLinkCopied={copied}

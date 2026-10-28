@@ -700,6 +700,7 @@ function HistoryCard({
           comment={node}
           from={FROM}
           node={{ path: "history.commentCard", key: node.id }}
+          scoreOrigin={HISTORY_ORIGIN}
           testId={`history-comment-${node.id}`}
           onNotify={notify}
           onLinkCopied={copied}
@@ -711,6 +712,7 @@ function HistoryCard({
           person={node}
           href={`/u/${node.handle}?from=${FROM}`}
           node={{ path: "history.profileCard", key: node.id }}
+          scoreOrigin={HISTORY_ORIGIN}
           testId={`history-person-${node.id}`}
           onNotify={notify}
           onLinkCopied={copied}
@@ -722,6 +724,7 @@ function HistoryCard({
           topic={node}
           from={FROM}
           node={{ path: "history.tagCard", key: node.id }}
+          scoreOrigin={HISTORY_ORIGIN}
           testId={`history-tag-${node.id}`}
           onLinkCopied={copied}
         />
