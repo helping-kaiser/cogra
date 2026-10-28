@@ -24,6 +24,12 @@ use postgres_store::PgPool;
 
 pub use mutation::Mutation;
 pub use query::Query;
+/// Every transactional mail the resolvers compose, for the mailer's
+/// per-kind tests.
+#[cfg(test)]
+pub(crate) use mutation::{
+    code_mail, deletion_mail, link_mail, recovery_code_replaced_mail, reset_mail,
+};
 
 use crate::auth::AuthConfig;
 use crate::breach::BreachCorpus;
