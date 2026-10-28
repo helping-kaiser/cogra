@@ -56,6 +56,7 @@ import { notificationsHref } from "@/lib/notifications/origin";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { PostCard } from "@/lib/ui/post-card";
+import type { TraceOrigin } from "@/lib/score/trace-session";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { scrollHostToTopAnimated, scrollOffsetOf, useScrollHost } from "@/lib/ui/scroll-host";
@@ -95,6 +96,8 @@ function feedMenuRow(row: PostMenuRow): DataNode | undefined {
 
 /** No row under the separator: the list before its first derive. */
 const NO_SEEN_TAIL: ReadonlySet<string> = new Set();
+/** Where a feed card's score opens its trace from (`Back to feed`). */
+const FEED_ORIGIN: TraceOrigin = { kind: "feed" };
 
 const SEEN_SEPARATOR: DataNode = { path: "feed.seenSeparator" };
 
@@ -740,6 +743,8 @@ export function FeedView({
                   // the record's own identity, where the board keys its sample
                   // cards by author (`design/designs/canonical/nodes.json`).
                   node={{ path: "feed.card", key: post.id }}
+                  // THE SCORE OPENS ITS TRACE, whose back arrow reads `Back to feed`.
+                  scoreOrigin={FEED_ORIGIN}
                   href={`/posts/${post.id}`}
                   testId={`feed-post-${post.id}`}
                   authorTestId={`feed-author-${post.id}`}
