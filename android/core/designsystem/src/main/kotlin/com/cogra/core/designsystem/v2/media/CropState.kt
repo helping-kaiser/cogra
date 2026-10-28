@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import com.canhub.cropper.CropImageView
 import com.cogra.core.designsystem.v2.token.MediaShape
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /**
  * The window one picture is framed to, as fractions of the picture.
@@ -79,8 +80,8 @@ class CropState internal constructor(initial: CropFraming) {
      */
     internal var view: CropImageView? = null
 
-    /** The shape the attached view has already been pointed at. */
-    private var framedShape: MediaShape? = null
+    /** The window's shape the attached view has already been pointed at. */
+    private var framedAspect: CropAspect? = null
 
     /**
      * A framing that outlived its view and is waiting for the picture to
@@ -132,7 +133,7 @@ class CropState internal constructor(initial: CropFraming) {
     internal fun onWindowChanged(next: CropFraming, pictureRatio: Float) {
         this.pictureRatio = pictureRatio
         if (!seeded) return
-        if (!next.matches(framedShape, pictureRatio)) return
+        if (!next.matches(framedAspect, pictureRatio)) return
         framing = next
     }
 
@@ -153,11 +154,11 @@ class CropState internal constructor(initial: CropFraming) {
     /**
      * Whether [window] is a framing of this picture's shape.
      *
-     * Null shape means nothing has pointed the view at a shape yet, and
+     * Null aspect means nothing has pointed the view at a shape yet, and
      * there is therefore nothing a window could be measured against.
      */
-    private fun CropFraming.matches(shape: MediaShape?, pictureRatio: Float): Boolean =
-        shape != null && CropWindowMath.isAtRatio(this, pictureRatio, shape.ratio)
+    private fun CropFraming.matches(aspect: CropAspect?, pictureRatio: Float): Boolean =
+        aspect != null && CropWindowMath.isAtRatio(this, pictureRatio, aspect.ratio)
 
     /**
      * Places the window this picture wants, now that it is decoded —
@@ -191,7 +192,7 @@ class CropState internal constructor(initial: CropFraming) {
         val ratio = whole.width().toFloat() / whole.height().toFloat()
         pictureRatio = ratio
         holdCeiling(view, whole)
-        if (restore != null && restore.matches(framedShape, ratio)) {
+        if (restore != null && restore.matches(framedAspect, ratio)) {
             pendingRestore = null
             seeded = true
             view.cropRect = CropWindowMath.rectOf(restore, whole)
@@ -214,10 +215,10 @@ class CropState internal constructor(initial: CropFraming) {
         if (seeded) return false
         pictureRatio = whole.width().toFloat() / whole.height().toFloat()
         holdCeiling(view, whole)
-        val shape = framedShape ?: return false
+        val aspect = framedAspect ?: return false
         seeded = true
         val opening = CropWindowMath.largestWindow(
-            targetRatio = shape.ratio,
+            targetRatio = aspect.ratio,
             pictureRatio = whole.width().toFloat() / whole.height().toFloat(),
         )
         framing = opening
@@ -249,12 +250,11 @@ class CropState internal constructor(initial: CropFraming) {
      * author somewhere they never chose and no way back to the rest of
      * the picture (jakob 2026-08-31).
      */
-    internal fun frameTo(view: CropImageView, shape: MediaShape) {
-        val previous = framedShape
-        if (previous == shape) return
-        framedShape = shape
-        val (x, y) = shape.ratioParts()
-        view.setAspectRatio(x, y)
+    internal fun frameTo(view: CropImageView, aspect: CropAspect) {
+        val previous = framedAspect
+        if (previous == aspect) return
+        framedAspect = aspect
+        view.setAspectRatio(aspect.x, aspect.y)
         // Only a real switch re-frames. The first application is just
         // this view learning the shape it was always going to have, and
         // resetting there would throw away a framing that survived a
@@ -304,9 +304,9 @@ class CropState internal constructor(initial: CropFraming) {
 
     /** The largest window the shape allows on this picture — the zoom's 1×. */
     private fun fill(): CropFraming? {
-        val shape = framedShape ?: return null
+        val aspect = framedAspect ?: return null
         val ratio = pictureRatio ?: return null
-        return CropWindowMath.largestWindow(shape.ratio, ratio)
+        return CropWindowMath.largestWindow(aspect.ratio, ratio)
     }
 
     /**
@@ -430,17 +430,51 @@ class CropState internal constructor(initial: CropFraming) {
 }
 
 /**
- * The shape as the pair of whole numbers the library takes.
+ * The window's shape as the pair of whole numbers the library takes
+ * (`CropImageView.setAspectRatio`): width [x] to height [y].
  *
- * Written out rather than derived from the float ratio because 1.91:1
- * has no small integer pair, and rounding a float would silently frame
- * the wide shape at something that is not the wide shape.
+ * A post's three shapes are written out ([cropAspect]); a locked crop takes
+ * any other shape its result will be seen at — a clip's own ratio for its
+ * cover (`CoverCrop`; CropViewport.prompt.md) — through [of].
  */
-internal fun MediaShape.ratioParts(): Pair<Int, Int> = when (this) {
-    MediaShape.Tall -> 4 to 5
-    MediaShape.Square -> 1 to 1
-    MediaShape.Wide -> 191 to 100
+data class CropAspect(val x: Int, val y: Int) {
+    init {
+        require(x > 0 && y > 0) { "a crop window has a positive width and height" }
+    }
+
+    /** Width over height. */
+    val ratio: Float get() = x.toFloat() / y.toFloat()
+
+    companion object {
+        /**
+         * A whole-number pair for [ratio], to a thousandth — finer than any
+         * clip's own shape needs. A ratio nothing could measure reserves the
+         * square, the neutral reservation a shape unknown takes everywhere.
+         */
+        fun of(ratio: Float): CropAspect {
+            if (!ratio.isFinite() || ratio <= 0f) return CropAspect(1, 1)
+            val x = (ratio * RATIO_DENOMINATOR).roundToInt().coerceAtLeast(1)
+            val divisor = gcd(x, RATIO_DENOMINATOR)
+            return CropAspect(x / divisor, RATIO_DENOMINATOR / divisor)
+        }
+
+        private const val RATIO_DENOMINATOR = 1000
+
+        private tailrec fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
+    }
 }
+
+/**
+ * A post shape's window. Written out rather than derived from the float
+ * ratio because 1.91:1 has no small integer pair, and rounding a float would
+ * silently frame the wide shape at something that is not the wide shape.
+ */
+val MediaShape.cropAspect: CropAspect
+    get() = when (this) {
+        MediaShape.Tall -> CropAspect(4, 5)
+        MediaShape.Square -> CropAspect(1, 1)
+        MediaShape.Wide -> CropAspect(191, 100)
+    }
 
 /** The zoom slider's floor: the fill, where the picture just covers the window (`CropViewport.jsx` `CROP_ZOOM_MIN`). */
 const val CROP_ZOOM_MIN = 1f
