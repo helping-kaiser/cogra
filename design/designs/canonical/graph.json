@@ -1965,6 +1965,8 @@
     { "from": "ComposePickedErrors", "via": 5, "kind": "advance", "label": "Show all", "to": [{ "board": "ComposePicked", "case": "the accepted batch — a refused file was never in it" }] },
     { "from": "ComposePickedErrors", "via": 6, "kind": "advance", "label": "tray remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
     { "from": "ComposePickedErrors", "via": 7, "kind": "advance", "label": "Remove it (a refused file)", "to": [{ "terminal": "self", "case": "the refusal leaves the list — the file never joined the batch" }] },
+    { "from": "ComposePickedErrors", "via": 8, "kind": "advance", "label": "Your photos app", "to": [{ "terminal": "os", "case": "the device's own photos app — what it returns is judged like any pick, an eleventh picture refused in words" }] },
+    { "from": "ComposePickedErrors", "via": 9, "kind": "advance", "label": "grid tiles", "to": [{ "terminal": "self", "case": "toggles the pick — a picked tile leaves the tray; at ten in the tray a fresh pick is refused in words, one more line in the list" }] },
 
     { "from": "ComposePicked", "via": 1, "kind": "advance", "label": "drag handles", "to": [{ "terminal": "self", "case": "drag to reorder, or ↑ / ↓ on the focused handle — the first is the cover" }] },
     { "from": "ComposePicked", "via": 6, "kind": "advance", "label": "Make it the cover", "to": [{ "terminal": "self", "case": "the picture moves to the head of the list and takes the cover badge; every picture above it moves down one" }] },

@@ -2,6 +2,8 @@
 
 ALWAYS what was accepted stands in the tray and what was refused is listed under it, one line per refused file
 
+ALWAYS the device grid stands under the refusals and still takes picks
+
 ALWAYS a refused file never joins the batch
 
 ALWAYS a refused file's only way out is Remove it, never Retry

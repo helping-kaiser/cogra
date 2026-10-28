@@ -985,6 +985,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Show all</button>", tag: "button" },
     { n: 6, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 7, find: ">Remove it</button>", tag: "button", all: true },
+    { n: 8, find: ">Your photos app</span>", tag: "button" },
+    { n: 9, find: "position:relative;width:125px", tag: "div", all: true },
   ],
   ComposeDescribe: [
     { n: 1, find: 'aria-label="Describing pictures"', tag: "button" },
