@@ -400,7 +400,7 @@ export function CommentFeedCard({
           aria-expanded={unfolded}
           data-testid={`${testId}-opener`}
           onClick={() => setUnfolded((shown) => !shown)}
-          className="cg-state cg-focus self-start border-0 bg-transparent px-0 py-1 text-label-medium text-on-surface-variant"
+          className="cg-state cg-focus cg-hit self-start border-0 bg-transparent px-0 py-1 text-label-medium text-on-surface-variant"
         >
           {unfolded ? "Less" : "More"}
         </button>
