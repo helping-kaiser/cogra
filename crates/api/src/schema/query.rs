@@ -308,6 +308,46 @@ impl Query {
             .map(MediaAttachmentType::asset))
     }
 
+    /// The viewer's earliest published post whose gallery carries any of
+    /// the named uploads — the composer's already-published marker. A
+    /// named id resolves through a merge to the asset it became, and the
+    /// asset matches by its id or its rendition digest; only the viewer's
+    /// own ids name anything, and only the viewer's own posts answer.
+    /// Published is landed, carried is the post's current version, and
+    /// earliest is the published order. Null when nothing matches, for an
+    /// empty list, and without a session. More ids than a post's gallery
+    /// holds is BAD_INPUT.
+    async fn own_published_placement(
+        &self,
+        ctx: &Context<'_>,
+        media_ids: Vec<Uuid>,
+    ) -> async_graphql::Result<Option<PostType>> {
+        if media_ids.len() > crate::media::MAX_POST_ATTACHMENTS {
+            return Err(bad_input(format!(
+                "at most {} media ids per lookup",
+                crate::media::MAX_POST_ATTACHMENTS
+            )));
+        }
+        let Some(viewer) = ctx.data::<Option<Viewer>>()?.as_ref().copied() else {
+            return Ok(None);
+        };
+        if media_ids.is_empty() {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        let Some(post) =
+            postgres_store::media::first_own_placement(pool, viewer.user_id, &media_ids)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        else {
+            return Ok(None);
+        };
+        Ok(content_store::post(pool, post)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .map(PostType))
+    }
+
     /// One post by id; null for an unknown id.
     async fn post(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<PostType>> {
         let pool = ctx.data::<PgPool>()?;
@@ -397,6 +437,9 @@ impl Query {
     /// landing order. `target` matches a record's target (the middle
     /// node on hyper families); `terminal` matches the terminal leg —
     /// a comment's revision chain is `records(terminal: <comment>)`.
+    /// `genesis: true` keeps only the records that anchor their node (a
+    /// post's own Publish, never its edits; a person's first
+    /// Registration), `false` only the rest — `Record.act`'s GENESIS.
     /// The UUID filters translate to the mirror's own identifiers, so an
     /// id that resolves to no known node yields an empty page rather than
     /// an error — the same contract a null slot in `nodes` carries.
@@ -413,6 +456,7 @@ impl Query {
         terminal: Option<Uuid>,
         family: Option<RecordFamily>,
         payload_marked: Option<bool>,
+        genesis: Option<bool>,
         since_epoch: Option<i64>,
         until_epoch: Option<i64>,
         after: Option<String>,
@@ -425,6 +469,7 @@ impl Query {
         let mut filter = mirror::RecordFilter {
             family: family.map(|f| f.as_family().as_str().to_string()),
             payload_marked,
+            genesis,
             since_epoch,
             until_epoch,
             ..Default::default()
@@ -487,11 +532,18 @@ impl Query {
     /// And a keyless account fronts no Profile on the graph, so it
     /// resolves nowhere for the write path and must not be offered here
     /// either.
+    ///
+    /// `kinds` narrows the candidates by the search law — kinds subtract.
+    /// Null or empty narrows nothing; otherwise only candidates of a
+    /// listed kind are offered, and a kind the finder never offers — a
+    /// topic, or a comment by its words, which it carries none of —
+    /// reads empty, never an error.
     #[graphql(complexity = "list_cost(limit, child_complexity)")]
     async fn reference_candidates(
         &self,
         ctx: &Context<'_>,
         query: String,
+        kinds: Option<Vec<NodeKind>>,
         limit: Option<i32>,
     ) -> async_graphql::Result<Vec<ReferenceCandidate>> {
         let pool = ctx.data::<PgPool>()?;
@@ -500,6 +552,11 @@ impl Query {
         if query.is_empty() || limit == 0 || query.starts_with('#') {
             return Ok(Vec::new());
         }
+        let wanted = |kind: NodeKind| {
+            kinds
+                .as_deref()
+                .is_none_or(|kinds| kinds.is_empty() || kinds.contains(&kind))
+        };
 
         if let Ok(id) = Uuid::parse_str(query) {
             let mut out = Vec::new();
@@ -507,6 +564,7 @@ impl Query {
                 .await
                 .map_err(|e| async_graphql::Error::new(e.to_string()))?
                 && let Some(target) = resolve_reference_target(ctx, &node.to_string()).await?
+                && wanted(target.kind())
             {
                 out.push(ReferenceCandidate {
                     target,
@@ -516,14 +574,28 @@ impl Query {
             return Ok(out);
         }
 
-        let (text, kinds): (&str, &[IndexKind]) = match query.strip_prefix('@') {
+        let (text, offered): (&str, &[IndexKind]) = match query.strip_prefix('@') {
             Some(handle) => (handle, &[IndexKind::User]),
             None => (query, &[IndexKind::User, IndexKind::Post]),
         };
+        let kinds: Vec<IndexKind> = offered
+            .iter()
+            .copied()
+            .filter(|kind| {
+                wanted(match kind {
+                    IndexKind::User => NodeKind::User,
+                    IndexKind::Post => NodeKind::Post,
+                    IndexKind::Hashtag => NodeKind::Hashtag,
+                })
+            })
+            .collect();
+        if kinds.is_empty() {
+            return Ok(Vec::new());
+        }
         let Ok(search::Parsed::Unscoped(text)) = search::parse(text) else {
             return Ok(Vec::new());
         };
-        let request = search::unscoped(text, kinds, None, true);
+        let request = search::unscoped(text, &kinds, None, true);
         let hits = search_store::find(pool, &request, None, false, i64::from(limit))
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
