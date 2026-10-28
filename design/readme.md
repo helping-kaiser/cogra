@@ -10400,6 +10400,37 @@ stands gets its own ask, never the walk-back and never a block.
   **227**. The registry holds at **100 screens**; the new board is
   unregistered.
 
+### Round 20, master mechanics — 2026-10-28
+
+The masters drawn to what they promise (seam 245, under jakob's
+autonomy order of 2026-10-28: design builds, he adjusts after his hand
+test). Measured headless on the built boards, Figtree loaded.
+
+- **Geometry.** `Button` renders its true 40 / 32 with the 1px border
+  inside (it drew 42 / 34); `TopicRemovable` its 32 (it drew 40);
+  `StanceControl`'s always-mounted live region stands out of its flex
+  column, so every action row measures the anchor's 48 (it measured
+  52); `TopicsLine` clips sideways only, so its 48px targets reach past
+  the 34px line again.
+- **Type roles.** The `More` openers, `EmptyState`, `LoadingState` and
+  `RedactedContent` set their whole roles — size, leading, tracking,
+  weight — and `ActorChip`'s name and `ContentRow`'s rungs their
+  tracking.
+- **Read-backs.** The seal's License row takes its summary as a string
+  (`LICENSE_SUMMARY` on a board), so `FactRow` voices it; the key-absent
+  seal reads its citation name over pair through the seal's own
+  `citedOneRow`.
+- **Stance data.** `StanceRow` and `ContentRow` carry the bundle's
+  `severed` to `StanceValue`'s `zeroLabel`; `severanceCost` honours a
+  served 0; a `(0, 0)` landing where nothing stands reads `Resulting
+  opinion 🤷 Says nothing.` (*proposed; round 21 blesses it*), one
+  `nothingStands` flag routing the line and the ask.
+- **`AttachmentPad`** holds the zero detent within the knob's 10px
+  radius and parks the release on its nearest hundredth — backlog 144
+  closed.
+- **The gate**: edges hold at **2127**, flows at **227**, the registry
+  at **100 screens**; no board added.
+
 ---
 
 ## 14. The canvases
