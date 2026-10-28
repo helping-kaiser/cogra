@@ -4,6 +4,8 @@
 // notification — and the feed otherwise. One table, so the post and the
 // profile cannot name the same origin two ways.
 
+import { FROM_YOUR_TOPICS, YOUR_TOPICS_HREF } from "@/lib/topics/your-topics";
+
 export type BackTarget = { readonly href: string; readonly label: string };
 
 const ORIGINS: Record<string, BackTarget> = {
@@ -25,7 +27,7 @@ const ORIGINS: Record<string, BackTarget> = {
   search: { href: "/explore", label: "Back to the search" },
   // Your topics, Explore's subpage (TagPage.md:35: `Back to Your topics` from
   // Your topics) — its rows open the topic's page.
-  yourTopics: { href: "/explore/topics", label: "Back to Your topics" },
+  [FROM_YOUR_TOPICS]: { href: YOUR_TOPICS_HREF, label: "Back to Your topics" },
 };
 
 /** Someone else's profile as an origin: `from=u:<handle>`. */

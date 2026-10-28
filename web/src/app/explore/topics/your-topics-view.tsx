@@ -33,8 +33,8 @@ import { useApolloClient } from "@apollo/client/react";
 
 import { fetchHeldTopicsPage, type HeldTopic } from "@/lib/api/held-topics-api";
 import { appendDeduped } from "@/lib/api/pagination";
+import { topicHref, yourTopicsBack } from "@/lib/topics/your-topics";
 import { useAuthGuard } from "@/lib/session/runtime";
-import type { BackTarget } from "@/lib/ui/back-origin";
 import { Button } from "@/lib/ui/button";
 import type { DataNode } from "@/lib/ui/data-node";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
@@ -52,29 +52,7 @@ export const NO_TOPICS_YET = "No topics yet — say how you feel about one from 
 /** The load-more fault (design digest item 57). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
 
-/** The `from` the feed filter's door carries. */
-export const FROM_FEED = "feed";
-
-/** The `from` a row's topic page carries: its arrow reads `Back to Your topics`. */
-export const FROM_YOUR_TOPICS = "yourTopics";
-
 const NODE: DataNode = { path: "yourTopics" };
-
-/**
- * Where the arrow goes and what it reads (design readme, the tag pages'
- * origin table, which this page's arrow takes): the feed's door says `feed`;
- * Explore's door and a cold entry read `Back to Explore`.
- */
-export function yourTopicsBack(from: string | null): BackTarget {
-  return from === FROM_FEED
-    ? { href: "/feed", label: "Back to feed" }
-    : { href: "/explore", label: "Back to Explore" };
-}
-
-/** The topic page a row opens, carrying this page as its origin. */
-export function topicHref(name: string): string {
-  return `/topics/${encodeURIComponent(name)}?from=${FROM_YOUR_TOPICS}`;
-}
 
 type Row = HeldTopic & { readonly name: string };
 

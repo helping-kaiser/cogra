@@ -39,6 +39,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { FeedKindValue } from "@/lib/feed/feed-filter";
 import { fetchHeldTopicsCount } from "@/lib/api/held-topics-api";
 import { fetchSearchPage, type SearchHit } from "@/lib/api/search-api";
+import { YOUR_TOPICS_HREF } from "@/lib/topics/your-topics";
 import { appendDeduped } from "@/lib/api/pagination";
 import { firstArrival, useBellLit, useFreshRootBell } from "@/lib/notifications/bell";
 import { notificationsHref } from "@/lib/notifications/origin";
@@ -113,9 +114,6 @@ export const KINDS_HINT = "Combine as many as you like. All, until you narrow it
 
 /** The load-more fault (copy-voice; design digest item 27). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
-
-/** Where the Your topics door leads: Explore's subpage (its cold arrow reads `Back to Explore`). */
-export const YOUR_TOPICS_HREF = "/explore/topics";
 
 /** The door's second line (Explore.jsx `5 held`; copy-voice, *The list is `Your topics`*). */
 export function heldLine(count: number): string {
