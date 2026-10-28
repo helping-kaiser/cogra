@@ -139,7 +139,7 @@ export function NotificationsScreen({ from }: { from: string | null }) {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col">
-      <CollapsingTop>
+      <CollapsingTop flush>
         <PageHeader
           title="Notifications"
           backHref={root.href}
