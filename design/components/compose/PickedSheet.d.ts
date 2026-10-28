@@ -24,6 +24,8 @@ export interface PickedSheetProps {
   items?: readonly PickedSheetItem[];
   onDone?: () => void;
   inline?: boolean;
+  /** The data-node name its placer gives the sheet (design ⇄ impl seam 002; renders as attributes only). Given one, it also names `title`, one `picture` per row keyed by its place (with `reorder`, `thumb`, `label`, `described` or `describe`, `makeCover`, `moveUp`, `moveDown`, `remove`), `note` and `done`. */
+  node?: string;
 }
 
 export declare function PickedSheet(props: PickedSheetProps): JSX.Element;

@@ -84,7 +84,12 @@
    (`EditBackingRow`). `EditWords` and `EditComposeVideo` draw the same row.
 
    THE BODY IS `_shared.jsx`'s `EditComposeBody`, because the acts sheet stands
-   on this edit and draws it whole. */
+   on this edit and draws it whole.
+
+   REGISTERED under the `postEdit` prefix (seam 248): the names are
+   `EditComposeBody`'s, and each chip-drawn copy keeps its element's path,
+   keyed by the chip value that draws it (`chipCopy`). */
+export const NODE = "postEdit";
 export const PROPS = {
   target: { editor: "enum", options: ["live", "removed"], default: "live" },
   upload: { editor: "enum", options: ["none", "uploading", "failed"], default: "none" },

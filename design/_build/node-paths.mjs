@@ -100,6 +100,7 @@ export const KEY_RULES = {
   link: "the invite link's id, the link's last path segment (Invites' live links)",
   notification: "the notification's position in the list, newest first, counted from 1 (Notifications)",
   opinion: "the opinion holder's handle, without @ (the opinions sheet)",
+  picture: "the picture's position in the post's media, counted from 1 (PickedSheet)",
   pick: "the kept pick's position in the kept picks' review, counted from 1 (KeptPicksReview)",
   path: "the path's position in the list, strongest first, counted from 1 (the score's trace)",
   profileCard: "the person's handle, without @ (the profile feed card)",
@@ -233,14 +234,35 @@ export function joinNodePaths(markup, prefix, board, chips = null) {
  * each once — a chip copy of a keyed instance renders its key once per value;
  * empty for a node outside any keyed instance).
  */
+//
+// AN ELEMENT TWO CHIPS DRAW (seam 248): where one element's copies stand under
+// two chips — `EditCompose`'s `Sign the edit`, drawn at rest and in flight by
+// the `signing` chip and disabled by the `upload` chip's `failed` — each copy
+// keeps its own chip's value as its key, and the path's rule names both chips.
+// The keys must still differ, which the join's (path, key) check enforces.
+const CHIP_RULE = /^the (\S+) chip's value — (.*)$/;
+function joinRules(path, set) {
+  const list = [...set];
+  if (list.length === 1) return list[0];
+  const chips = list.map((rule) => rule.match(CHIP_RULE));
+  if (chips.some((m) => m === null) || new Set(chips.map((m) => m[2])).size !== 1) {
+    throw new Error(`data-node join: ${path} carries two key rules that are not both chip rules — ${list.join(" | ")}`);
+  }
+  return `the ${chips.map((m) => m[1]).join(" or ")} chip's value — ${chips[0][2]}`;
+}
+
 export function boardEntry(prefix, nodes) {
   const byPath = new Map();
   const rules = new Map();
   for (const { path, key, rule } of nodes) {
     if (!byPath.has(path)) byPath.set(path, []);
     if (key !== null && !byPath.get(path).includes(key)) byPath.get(path).push(key);
-    if (rule !== null) rules.set(path, rule);
+    if (rule !== null) {
+      if (!rules.has(path)) rules.set(path, new Set());
+      rules.get(path).add(rule);
+    }
   }
+  for (const [path, set] of rules) rules.set(path, joinRules(path, set));
   const sorted = (map) => Object.fromEntries([...map.keys()].sort().map((p) => [p, map.get(p)]));
   return { prefix, keys: sorted(rules), nodes: sorted(byPath) };
 }

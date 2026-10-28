@@ -28,6 +28,8 @@ export interface UploadStatusLineProps {
   /** The failure's fact — "One picture didn't upload." by default. */
   message?: string;
   onRetry?: () => void;
+  /** The data-node name its placer gives the line (design ⇄ impl seam 002; renders as attributes only). Given one, it also names `line` (uploading), or `message`, `wait` and `retry` (failed). */
+  node?: string;
 }
 
 export declare function UploadStatusLine(props: UploadStatusLineProps): JSX.Element;
@@ -37,6 +39,8 @@ export interface UploadErrorLineProps {
   /** Omit for a refused file — the Retry link is dropped, not disabled. */
   onRetry?: () => void;
   onRemove?: () => void;
+  /** The data-node name its placer gives the line (design ⇄ impl seam 002; renders as attributes only). Given one, it also names `message`, `retry` and `remove`. */
+  node?: string;
 }
 
 export declare function UploadErrorLine(props: UploadErrorLineProps): JSX.Element;

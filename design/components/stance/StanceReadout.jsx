@@ -646,14 +646,17 @@ export function signedLine(standing, records, severed, targetLabel, names = STAN
    twin. A one-axis readout draws a shorter number, not a different shape — so
    the markup is written once and the two readouts differ only in what they
    hand it. */
-function ReadoutLine({ emoji, exact, spoken, style }) {
+/* `node` is the data-node name its placer gives the readout (seam 248): the
+   line takes it, the face `face` and the digits `exact`, as `StanceValue`
+   names its own. Given none, it renders exactly as before. */
+function ReadoutLine({ emoji, exact, spoken, style, node }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)", flex: "none", ...style }}>
-      <span aria-hidden="true">{emoji}</span>
+    <span style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)", flex: "none", ...style }} data-node={node}>
+      <span aria-hidden="true" data-node={node && "face"}>{emoji}</span>
       {/* NEVER WRAPS. This sits in the post card's affordance row, which is one
           line by rule — a pair broken across two text lines reads as a two-line
           block even when the row height has not changed. */}
-      <span className="cg-exact" aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+      <span className="cg-exact" aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }} data-node={node && "exact"}>
         {exact}
       </span>
       {/* The spoken reading is the same in both modes: geek mode is a drawing
@@ -664,7 +667,7 @@ function ReadoutLine({ emoji, exact, spoken, style }) {
 }
 
 /** Face and pair, and the words for a reader who cannot see the face (readme §10). */
-export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, names = STANCE_AXIS_NAMES, style }) {
+export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, names = STANCE_AXIS_NAMES, style, node }) {
   const readout = bundleReadout(pair, kind === "standing" ? zeroLabel : EMPTY_PICK_LABEL);
   return (
     <ReadoutLine
@@ -672,6 +675,7 @@ export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, 
       exact={formatStancePair(pair)}
       spoken={`${readout.label}, ${formatStanceWords(pair, names)}`}
       style={style}
+      node={node}
     />
   );
 }
@@ -685,10 +689,10 @@ export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, 
    author's OPINION on their own content is a different record — an ordinary
    Opinion through the content's face, read by `StanceReadout` like any
    other. Backing is the authoring bundle; opinion is the face's. */
-export function AttachmentReadout({ pDirected, style }) {
+export function AttachmentReadout({ pDirected, style, node }) {
   const band = nearestValenceAnchor(pDirected);
   const exact = formatDimension(pDirected);
-  return <ReadoutLine emoji={band.emoji} exact={exact} spoken={`${band.label}, ${DIRECTED_LABEL} ${exact}`} style={style} />;
+  return <ReadoutLine emoji={band.emoji} exact={exact} spoken={`${band.label}, ${DIRECTED_LABEL} ${exact}`} style={style} node={node} />;
 }
 
 /** The bundle, split for rendering: either a sentence, or a readout to lay out. */

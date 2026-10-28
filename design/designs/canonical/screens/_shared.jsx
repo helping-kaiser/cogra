@@ -1928,13 +1928,16 @@ function KeyAbsentNotice({ line }) {
    the writing — `TextField`'s own `rows` rule — which is the reply composer's
    words, written above what they answer and the pictures that join them. The
    board draws the minimum, as every field does. */
-function WordsBody({ paragraphs, cap, used, error, rows }) {
+/* `node` names the body where a registered board places it (seam 248), in
+   `TextField`'s words: the box `input`, the counter `support`. */
+function WordsBody({ paragraphs, cap, used, error, rows, node }) {
   const spent = used ?? [...paragraphs.join("\n\n")].length;
   const over = cap != null && spent > cap;
   const sized = rows != null;
   return (
-    <div style={sized ? { flex: "none", display: "flex", flexDirection: "column", gap: "var(--space-1)" } : { flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-1)", minHeight: 0 }}>
+    <div style={sized ? { flex: "none", display: "flex", flexDirection: "column", gap: "var(--space-1)" } : { flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-1)", minHeight: 0 }} data-node={node}>
       <div
+        data-node={node && "input"}
         style={{
           flex: sized ? "none" : 1,
           minHeight: sized ? `calc(${rows} * var(--text-body-large--line-height) + 26px)` : undefined,
@@ -1958,7 +1961,7 @@ function WordsBody({ paragraphs, cap, used, error, rows }) {
           </p>
         ))}
       </div>
-      <FieldSupport error={error} cap={cap} used={spent} />
+      <FieldSupport error={error} cap={cap} used={spent} node={node && "support"} />
     </div>
   );
 }
@@ -2116,11 +2119,11 @@ function ComposeDetailsBody({
    the tag picker, or the same post in the reference picker, unstages its
    withdrawal rather than staging a second, cancelling record: one staged act
    per name (behavior/TagPicker.md, behavior/ReferencePicker.md). */
-function WithdrawnLine({ name }) {
+function WithdrawnLine({ name, node }) {
   return (
-    <QuietNote>
+    <QuietNote node={node}>
       Withdrawn: {name}{" "}
-      <InlineAction size="sm" ariaLabel={`Undo withdrawing ${name}`}>
+      <InlineAction size="sm" ariaLabel={`Undo withdrawing ${name}`} node={node && "undo"}>
         Undo
       </InlineAction>
     </QuietNote>
@@ -2157,15 +2160,25 @@ const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
      under the count, and `Sign the edit` reading `Signing the edit…`.
    `RefPairEdit` passes `targetHoles` alone: the standing citation's two
    faces, the sheet over it naming the same one. */
+/* THE EDITS' NAMES (seam 248): `postEdit` and `commentEdit` register these
+   bodies, and every other board they stand on renders them stripped. Where a
+   board's chip draws an element once per value, each copy is marked with its
+   chip and value (`chipCopy`), so the element keeps one path, keyed by the
+   value — `Sign the edit` under the `signing` chip's `none` and `slow` and the
+   `upload` chip's `failed`. The marks ride only with `holes`, the boards that
+   draw the chips; a copy is never marked on a board that draws one state. */
+const chipCopy = (chip, value) => ({ "data-node-chip": chip, "data-node-key": value });
+
 function EditCitationRow({ holes, removedProps, ...props }) {
-  if (!holes) return <StagedReference {...props} />;
+  const row = { ...props, node: "stagedReference", nodeKey: "1" };
+  if (!holes) return <StagedReference {...row} />;
   return (
     <>
-      <div style={{ display: "{{liveShown}}" }}>
-        <StagedReference {...props} />
+      <div style={{ display: "{{liveShown}}" }} {...chipCopy("target", "live")}>
+        <StagedReference {...row} />
       </div>
-      <div style={{ display: "{{removedShown}}" }}>
-        <StagedReference {...props} {...removedProps} removed="Removed by its author" />
+      <div style={{ display: "{{removedShown}}" }} {...chipCopy("target", "removed")}>
+        <StagedReference {...row} {...removedProps} removed="Removed by its author" />
       </div>
     </>
   );
@@ -2173,16 +2186,21 @@ function EditCitationRow({ holes, removedProps, ...props }) {
 
 function EditGate({ holes, faultHoles, done, total }) {
   if (!holes) return null;
+  if (!faultHoles) {
+    return (
+      <div style={{ display: "{{gateShown}}" }}>
+        <UploadStatusLine done={done} total={total} node="gate" />
+      </div>
+    );
+  }
   return (
     <>
-      <div style={{ display: "{{gateShown}}" }}>
-        <UploadStatusLine done={done} total={total} />
+      <div style={{ display: "{{gateShown}}" }} {...chipCopy("upload", "uploading")}>
+        <UploadStatusLine done={done} total={total} node="gate" />
       </div>
-      {faultHoles && (
-        <div style={{ display: "{{gateFailedShown}}" }}>
-          <UploadStatusLine failed onRetry={() => {}} />
-        </div>
-      )}
+      <div style={{ display: "{{gateFailedShown}}" }} {...chipCopy("upload", "failed")}>
+        <UploadStatusLine failed onRetry={() => {}} node="gate" />
+      </div>
     </>
   );
 }
@@ -2195,15 +2213,15 @@ function EditGate({ holes, faultHoles, done, total }) {
 const EDIT_PICTURES = [{ src: "post-photo.jpg" }, { src: "inviter.jpg" }];
 
 function EditPickedRow({ faultHoles }) {
-  const row = (items) => <PickedRow items={items} caption="2 pictures — the body" onManage={() => {}} />;
+  const row = (items) => <PickedRow items={items} caption="2 pictures — the body" onManage={() => {}} node="mediaRow" />;
   if (!faultHoles) return row(EDIT_PICTURES);
   return (
     <>
-      <div style={{ display: "{{rowShown}}" }}>{row(EDIT_PICTURES)}</div>
-      <div style={{ display: "{{rowUploadingShown}}" }}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], progress: 0.55 }])}</div>
-      <div style={{ display: "{{rowFailedShown}}" }}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], failed: true }])}</div>
+      <div style={{ display: "{{rowShown}}" }} {...chipCopy("upload", "none")}>{row(EDIT_PICTURES)}</div>
+      <div style={{ display: "{{rowUploadingShown}}" }} {...chipCopy("upload", "uploading")}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], progress: 0.55 }])}</div>
+      <div style={{ display: "{{rowFailedShown}}" }} {...chipCopy("upload", "failed")}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], failed: true }])}</div>
       <div style={{ display: "{{errorShown}}" }}>
-        <UploadErrorLine onRetry={() => {}} onRemove={() => {}} />
+        <UploadErrorLine onRetry={() => {}} onRemove={() => {}} node="uploadError" />
       </div>
     </>
   );
@@ -2213,33 +2231,36 @@ function EditPickedRow({ faultHoles }) {
    draw no chip render exactly as before: the count, and `Sign the edit`. With
    `faultHoles` the count also draws the slow subline under it, and the commit
    its in-flight and failed readings. The footer's wrappers are flex columns,
-   so the line's button stretches as it does standing alone. */
+   so the line's button stretches as it does standing alone. The count's two
+   copies are the `signing` chip's; `Sign the edit`'s rest and in-flight
+   copies are the `signing` chip's too, its disabled copy the `upload` chip's
+   `failed`, which overrides a slow signing (the board's VALS). */
 function editFootCount({ unchanged, faultHoles }) {
-  if (!faultHoles) return <ActsFooter count={unchanged ? 0 : 5} />;
+  if (!faultHoles) return <ActsFooter count={unchanged ? 0 : 5} node="acts" />;
   return (
     <>
-      <div style={{ display: "{{footQuietShown}}", flexDirection: "column" }}>
-        <ActsFooter count={5} />
+      <div style={{ display: "{{footQuietShown}}", flexDirection: "column" }} {...chipCopy("signing", "none")}>
+        <ActsFooter count={5} node="acts" />
       </div>
-      <div style={{ display: "{{footSlowShown}}", flexDirection: "column" }}>
-        <ActsFooter count={5} subline={SEAL_SLOW_LINE} />
+      <div style={{ display: "{{footSlowShown}}", flexDirection: "column" }} {...chipCopy("signing", "slow")}>
+        <ActsFooter count={5} subline={SEAL_SLOW_LINE} node="acts" />
       </div>
     </>
   );
 }
 
 function editFootSign({ unchanged, faultHoles }) {
-  if (!faultHoles) return <Button style={{ width: "100%" }} disabled={unchanged}>Sign the edit</Button>;
+  if (!faultHoles) return <Button style={{ width: "100%" }} disabled={unchanged} node="sign">Sign the edit</Button>;
   return (
     <>
-      <div style={{ display: "{{signRestShown}}" }}>
-        <Button style={{ width: "100%" }}>Sign the edit</Button>
+      <div style={{ display: "{{signRestShown}}" }} {...chipCopy("signing", "none")}>
+        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
       </div>
-      <div style={{ display: "{{signBusyShown}}" }}>
-        <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
+      <div style={{ display: "{{signBusyShown}}" }} {...chipCopy("signing", "slow")}>
+        <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…" node="sign">Sign the edit</Button>
       </div>
-      <div style={{ display: "{{signFailedShown}}" }}>
-        <Button style={{ width: "100%" }} disabled>Sign the edit</Button>
+      <div style={{ display: "{{signFailedShown}}" }} {...chipCopy("upload", "failed")}>
+        <Button style={{ width: "100%" }} disabled node="sign">Sign the edit</Button>
       </div>
     </>
   );
@@ -2258,25 +2279,41 @@ function editFootSign({ unchanged, faultHoles }) {
 const EDIT_BACKING = 0.1;
 
 function EditBackingRow() {
-  return <FactRow label="Your backing" value={<AttachmentReadout pDirected={EDIT_BACKING} />} action="Adjust" />;
+  return <FactRow label="Your backing" value={<AttachmentReadout pDirected={EDIT_BACKING} node="value" />} action="Adjust" node="backing" />;
+}
+
+/* The license row's lock, named `lock` where the row is named. */
+function LockedLicenseRow() {
+  return (
+    <FactRow
+      label="License"
+      value="Public domain"
+      action={
+        <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes" data-node="lock">
+          <Icon name="lock" size={16} />
+        </span>
+      }
+      node="license"
+    />
+  );
 }
 
 function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" />
+      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         {/* The fields scroll under the pinned foot, the wizard reading: a
             form taller than the phone runs on under it, and the foot stays
             whole. */}
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="body">
             <EditPickedRow faultHoles={holes} />
-            <InlineAction size="sm" selfStart>+ Add pictures · 2 of 10</InlineAction>
-            <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
+            <InlineAction size="sm" selfStart node="add">+ Add pictures · 2 of 10</InlineAction>
+            <QuietNote node="rule">A post&apos;s body is words or media, never both.</QuietNote>
           </div>
 
-          <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" />
+          <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" node="title" />
 
           <TextField
             label="Description"
@@ -2284,20 +2321,21 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
             rows={2}
             cap={500}
             value="Rubbings from three weekends at low tide — paper against the salt crust."
+            node="description"
           />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>Tags</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
+            <FieldLabel node="label">Tags</FieldLabel>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <TopicRemovable topic="fieldnotes" onEdit={() => {}} />
-              <TopicRemovable topic="saltmaps" onEdit={() => {}} />
+              <TopicRemovable topic="fieldnotes" onEdit={() => {}} node="tag" />
+              <TopicRemovable topic="saltmaps" onEdit={() => {}} node="tag" />
             </div>
-            <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-            {!unchanged && <WithdrawnLine name="#coastroad" />}
+            <InlineAction size="sm" selfStart node="add">+ Add a tag</InlineAction>
+            {!unchanged && <WithdrawnLine name="#coastroad" node="withdrawn" />}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>References</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="references">
+            <FieldLabel node="label">References</FieldLabel>
             {/* The composer's whole staged form, as `ComposeDetails` draws it:
                 the kind under the name, and the pair the citation signs. An edit
                 stages the same citation a first draft does, so it shows back the
@@ -2313,22 +2351,14 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
               pair={{ pDirected: 0.1, pInterest: 0.1 }}
               onEdit={() => {}}
             />
-            <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
-            {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />}
+            <InlineAction size="sm" selfStart node="add">+ Cite something</InlineAction>
+            {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} node="withdrawn" />}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <FactRow
-              label="License"
-              value="Public domain"
-              action={
-                <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-                  <Icon name="lock" size={16} />
-                </span>
-              }
-            />
+          <div style={{ display: "flex", flexDirection: "column" }} data-node="facts">
+            <LockedLicenseRow />
             <EditBackingRow />
-            <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+            <FactRow label="Sensitive" value="Not marked" action="Mark" last node="sensitive" />
           </div>
         </div>
 
@@ -2361,33 +2391,33 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
 function CommentEditBody({ holes = false } = {}) {
   return (
     <>
-      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" />
+      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
-          <QuietNote>Your comment on "The long way home".</QuietNote>
+          <QuietNote node="target">Your comment on "The long way home".</QuietNote>
 
-          <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." />
+          <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." node="words" />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>Pictures</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="pictures">
+            <FieldLabel node="label">Pictures</FieldLabel>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} />
-              <InlineAction size="sm">+ Add pictures · 1 of 4</InlineAction>
+              <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} node="thumb" nodeKey="1" />
+              <InlineAction size="sm" node="add">+ Add pictures · 1 of 4</InlineAction>
             </div>
-            <DescribeCounter described={1} total={1} onDescribe={() => {}} />
+            <DescribeCounter described={1} total={1} onDescribe={() => {}} node="describeRow" />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>Tags</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
+            <FieldLabel node="label">Tags</FieldLabel>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <TopicRemovable topic="glovebox" onEdit={() => {}} />
+              <TopicRemovable topic="glovebox" onEdit={() => {}} node="tag" />
             </div>
-            <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-            <WithdrawnLine name="#coastroad" />
+            <InlineAction size="sm" selfStart node="add">+ Add a tag</InlineAction>
+            <WithdrawnLine name="#coastroad" node="withdrawn" />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>References</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="references">
+            <FieldLabel node="label">References</FieldLabel>
             <EditCitationRow
               holes={holes}
               removedProps={{ src: undefined }}
@@ -2398,29 +2428,21 @@ function CommentEditBody({ holes = false } = {}) {
               pair={{ pDirected: 0.1, pInterest: 0.1 }}
               onEdit={() => {}}
             />
-            <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
-            <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />
+            <InlineAction size="sm" selfStart node="add">+ Cite something</InlineAction>
+            <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} node="withdrawn" />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <FactRow
-              label="License"
-              value="Public domain"
-              action={
-                <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-                  <Icon name="lock" size={16} />
-                </span>
-              }
-            />
-            <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+          <div style={{ display: "flex", flexDirection: "column" }} data-node="facts">
+            <LockedLicenseRow />
+            <FactRow label="Sensitive" value="Not marked" action="Mark" last node="sensitive" />
           </div>
         </div>
 
         {/* Five things: the edit, #glovebox added, #coastroad withdrawn, and the
             citation's withdrawal at its two counter-records (`CommentEditActs`). */}
         <EditGate holes={holes} done={0} total={1} />
-        <ActsFooter count={5} />
-        <Button style={{ width: "100%" }}>Sign the edit</Button>
+        <ActsFooter count={5} node="acts" />
+        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
       </div>
     </>
   );

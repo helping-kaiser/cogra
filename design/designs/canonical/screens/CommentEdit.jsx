@@ -30,7 +30,11 @@
    fault reading and the disabled Sign; `Remove it` un-gates Sign.
 
    THE BODY IS `_shared.jsx`'s `CommentEditBody`, because the acts sheet stands
-   on this edit and draws it whole. */
+   on this edit and draws it whole.
+
+   REGISTERED under the `commentEdit` prefix (seam 248), `CommentEditBody`'s
+   names. */
+export const NODE = "commentEdit";
 export const PROPS = {
   target: { editor: "enum", options: ["live", "removed"], default: "live" },
   upload: { editor: "enum", options: ["none", "uploading"], default: "none" },

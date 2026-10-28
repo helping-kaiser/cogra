@@ -52,7 +52,49 @@ import { BUTTON_CLASS } from "../core/Button.jsx";
    name of what the button opens. Without a `subline` the footer is the line
    alone, exactly as drawn before. */
 
-export function ActsFooter({ count, onOpen, subline }) {
+/* `node` is the data-node name its placer gives the footer (seam 248). Given
+   one, the footer always stands in its column wrapper, which takes the name —
+   with or without the slow subline, so no state moves a path — and names its
+   parts: the count line `line` and the subline `slow`. Given none, it renders
+   exactly as before. */
+export function ActsFooter({ count, onOpen, subline, node }) {
+  if (node) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }} data-node={node}>
+        <ActsFooterLine count={count} onOpen={onOpen} node="line" />
+        {subline && <ActsFooterSlow subline={subline} node="slow" />}
+      </div>
+    );
+  }
+  const foot = <ActsFooterLine count={count} onOpen={onOpen} />;
+  if (!subline) return foot;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+      {foot}
+      <ActsFooterSlow subline={subline} />
+    </div>
+  );
+}
+
+function ActsFooterSlow({ subline, node }) {
+  return (
+    <span
+      role="status"
+      style={{
+        textAlign: "center",
+        fontSize: "var(--text-label-small)",
+        lineHeight: "var(--text-label-small--line-height)",
+        letterSpacing: "var(--text-label-small--letter-spacing)",
+        color: "var(--tertiary)",
+      }}
+      data-node={node}
+    >
+      {subline}
+    </span>
+  );
+}
+
+function ActsFooterLine({ count, onOpen, node }) {
   const line =
     count === 0 ? "Nothing to sign yet" : count === 1 ? "You're signing 1 thing" : `You're signing ${count} things`;
   const style = {
@@ -70,35 +112,14 @@ export function ActsFooter({ count, onOpen, subline }) {
     color: "var(--text-secondary)",
   };
 
-  const foot =
-    count === 0 ? (
-      <span style={style}>{line}</span>
-    ) : (
-      <button type="button" onClick={onOpen} className={BUTTON_CLASS} style={{ ...style, cursor: "pointer" }}>
-        {line}
-        <span style={{ display: "inline-flex" }}>
-          <Icon name="expand_more" size={16} />
-        </span>
-      </button>
-    );
-
-  if (!subline) return foot;
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-      {foot}
-      <span
-        role="status"
-        style={{
-          textAlign: "center",
-          fontSize: "var(--text-label-small)",
-          lineHeight: "var(--text-label-small--line-height)",
-          letterSpacing: "var(--text-label-small--letter-spacing)",
-          color: "var(--tertiary)",
-        }}
-      >
-        {subline}
+  return count === 0 ? (
+    <span style={style} data-node={node}>{line}</span>
+  ) : (
+    <button type="button" onClick={onOpen} className={BUTTON_CLASS} style={{ ...style, cursor: "pointer" }} data-node={node}>
+      {line}
+      <span style={{ display: "inline-flex" }}>
+        <Icon name="expand_more" size={16} />
       </span>
-    </div>
+    </button>
   );
 }
