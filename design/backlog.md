@@ -5118,7 +5118,14 @@ by default:
   in` once-each paragraph, and `ProfileApplicant`'s `What you post now
   arrives with you.`
 
-### 144 · The `AttachmentPad` master does not yet snap on release · *system* · **filed 2026-10-16**
+### 144 · The `AttachmentPad` master does not yet snap on release · *system* · **filed 2026-10-16** · **closed 2026-10-28**
+
+Closed 2026-10-28 (round 20, seam 245's ask 22): the master now builds
+both. `attachmentFrom` holds the zero detent — the pick reads exactly
+`0.00` while the knob's centre would stand within `ATTACHMENT_DETENT_PX`,
+the knob's own 10px radius, of the hairline — and release, or a
+cancelled pointer, hands `onChange` the last pick parked on its nearest
+hundredth (`snapAttachment`). The square stays continuous.
 
 Round 17 ruled (jakob 2026-10-16) that the one-axis backing pads park
 their pick on hundredths at release — the board line on `ComposePad` and

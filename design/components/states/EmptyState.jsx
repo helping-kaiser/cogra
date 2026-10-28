@@ -16,12 +16,24 @@ import { Button } from "../core/Button.jsx";
    The loading state is TEXT, not a spinner or a shimmer: motion clarifies where
    something came from and never performs (§4), and a skeleton that pretends to be
    content is the opposite of §9's honesty. Space for media is reserved by the
-   media component when it arrives, which is a different job. */
+   media component when it arrives, which is a different job.
+
+   BOTH LINES SET THE WHOLE body-medium ROLE (seam 245, ask 6): size, leading,
+   tracking and weight together (§7). The size alone left the page's
+   body-large 24px leading and 0.5px tracking on a 14px line. */
+const LINE = {
+  margin: 0,
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  fontWeight: "var(--text-body-medium--font-weight)",
+  color: "var(--text-secondary)",
+};
 
 export function EmptyState({ title, action, actionLabel, onAction, node }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)", padding: "var(--space-2) 0" }} data-node={node}>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", color: "var(--text-secondary)" }} data-node={node && "title"}>
+      <p style={LINE} data-node={node && "title"}>
         {title}
       </p>
       {action ??
@@ -36,7 +48,7 @@ export function EmptyState({ title, action, actionLabel, onAction, node }) {
 
 export function LoadingState({ label = "Loading…" }) {
   return (
-    <p role="status" aria-live="polite" style={{ margin: 0, fontSize: "var(--text-body-medium)", color: "var(--text-secondary)" }}>
+    <p role="status" aria-live="polite" style={LINE}>
       {label}
     </p>
   );

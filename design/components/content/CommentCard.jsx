@@ -203,7 +203,10 @@ export function CommentCard({
         margin: 0,
         cursor: "pointer",
         fontFamily: "var(--font-sans)",
+        // The whole label-medium role, `PostCard`'s opener's (seam 245, ask 6).
         fontSize: "var(--text-label-medium)",
+        lineHeight: "var(--text-label-medium--line-height)",
+        letterSpacing: "var(--text-label-medium--letter-spacing)",
         fontWeight: "var(--text-label-medium--font-weight)",
         color: "var(--text-secondary)",
       }}

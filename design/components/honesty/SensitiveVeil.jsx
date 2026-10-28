@@ -315,6 +315,28 @@ const REASONS = {
   },
 };
 
+/* The mark's three lines, each in its whole type role. */
+const REDACTED_TYPE = {
+  "body-medium": {
+    fontSize: "var(--text-body-medium)",
+    lineHeight: "var(--text-body-medium--line-height)",
+    letterSpacing: "var(--text-body-medium--letter-spacing)",
+    fontWeight: "var(--text-body-medium--font-weight)",
+  },
+  "body-small": {
+    fontSize: "var(--text-body-small)",
+    lineHeight: "var(--text-body-small--line-height)",
+    letterSpacing: "var(--text-body-small--letter-spacing)",
+    fontWeight: "var(--text-body-small--font-weight)",
+  },
+  "label-small": {
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
+    fontWeight: "var(--text-label-small--font-weight)",
+  },
+};
+
 /**
  * Replaces a node's ENTIRE content region: title, body, description, media, all
  * at once. There is no field-level or inline cut, because redaction is
@@ -345,14 +367,17 @@ export function RedactedContent({ reason = "illegal", when, note, node }) {
       }}
       data-node={node}
     >
-      <span style={{ fontSize: "var(--text-body-medium)", color: "var(--text-body)" }} data-node={node && "line"}>
+      {/* Each line sets its whole role (seam 245, ask 6) — size, leading,
+          tracking and weight (§7) — so none of them borrows the page's
+          body-large 24px leading and 0.5px tracking. */}
+      <span style={{ ...REDACTED_TYPE["body-medium"], color: "var(--text-body)" }} data-node={node && "line"}>
         {copy.line}
       </span>
-      <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", textWrap: "pretty" }} data-node={node && "detail"}>
+      <span style={{ ...REDACTED_TYPE["body-small"], color: "var(--text-secondary)", textWrap: "pretty" }} data-node={node && "detail"}>
         {note ?? copy.detail}
       </span>
       {when && (
-        <span style={{ fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }} data-node={node && "when"}>
+        <span style={{ ...REDACTED_TYPE["label-small"], color: "var(--text-secondary)" }} data-node={node && "when"}>
           {when}
         </span>
       )}
