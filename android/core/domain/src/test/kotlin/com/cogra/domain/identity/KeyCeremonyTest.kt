@@ -356,8 +356,7 @@ class KeyCeremonyTest {
         locks.sessionAccount = "u1"
         DeviceLock(custody, tokens, locks).ensureHeld("u1")
         val id = custody.lockId("u1")!!
-        SignOut(offlineSessions(), identity, tokens, FakeDeviceData(), DeviceLock(custody, tokens, locks))
-            .eraseEverything()
+        signOutOf(offlineSessions(), tokens, FakeDeviceData()).eraseEverything()
         assertThat(locks.rows).doesNotContainKey(id)
     }
 

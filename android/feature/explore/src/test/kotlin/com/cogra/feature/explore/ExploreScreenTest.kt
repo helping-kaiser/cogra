@@ -29,9 +29,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.time.Instant
 
+// The harness's phone (411dp wide) at a tall height, so the rest view's
+// lazy column composes every row the board draws.
 @RunWith(RobolectricTestRunner::class)
+@Config(qualifiers = "w411dp-h914dp")
 class ExploreScreenTest {
 
     @get:Rule
@@ -138,7 +142,7 @@ class ExploreScreenTest {
     // -- ExploreSearch.md --
 
     @Test
-    fun `typing takes the screen: the band and the Sky's card leave, the trigger reads Everything`() {
+    fun `typing takes the screen, the band and the Sky's card leave, the trigger reads Everything`() {
         render(member.copy(query = "salt"))
         compose.onNodeWithTag("explore.band.wordmark", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("explore.skyCard", useUnmergedTree = true).assertDoesNotExist()
