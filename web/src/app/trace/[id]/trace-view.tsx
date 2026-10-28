@@ -18,6 +18,7 @@
 // with an opinion they gave; under a borrowed view every first person is the
 // lender's handle, in the third person (FeedEntry.md:7-9; SR-G3).
 
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { useApolloClient } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -142,7 +143,13 @@ async function readTrace(
   adoptTrace(open.targetId, answer.score);
   const ids = new Set<string>([viewer]);
   if (open.cover === null) ids.add(open.targetId);
-  for (const path of answer.paths) for (const node of path.nodes) if (node.id !== null) ids.add(node.id);
+  // The held thing is "held, not re-read" (score-readout §7): only a cold
+  // arrival, with no cover handed, hydrates it.
+  for (const path of answer.paths) {
+    for (const node of path.nodes) {
+      if (node.id !== null && (node.id !== open.targetId || open.cover === null)) ids.add(node.id);
+    }
+  }
   const nodes = await fetchTraceNodes(client, [...ids]);
   if (nodes.kind !== "success") return nodes;
   return success({ kind: "answered", viewer, answer, nodes: nodes.value });
@@ -166,7 +173,13 @@ export function TraceView({ address, level }: { address: TraceAddress; level: Tr
       open.read =
         outcome.kind === "success"
           ? (outcome.value ?? { kind: "failed", offline: false })
-          : { kind: "failed", offline: outcome.kind === "failed" };
+          : // NO ANSWER reads the connection line; an answer that is an error
+            // (the relay's INTERNAL — the ranker down) reads the house's
+            // "didn't go through" (copy-voice; score-readout §5.6).
+            {
+              kind: "failed",
+              offline: outcome.kind === "failed" && !CombinedGraphQLErrors.is(outcome.cause),
+            };
       setRead(open.read);
     });
   }, [client, open, reader]);
