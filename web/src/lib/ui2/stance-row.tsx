@@ -44,11 +44,13 @@ export function StanceValue({
 }) {
   const readout = bundleReadout(pair, zeroLabel);
   const exact = formatStancePair(pair);
+  // Sizes alone, as the master sets them; the leading is the font's own
+  // (`normal`), never the page's body leading inherited.
   return (
     <span
       role="img"
       aria-label={`${readout.label}, ${exact}`}
-      className="inline-flex flex-none items-center gap-1.5"
+      className="inline-flex flex-none items-center gap-1.5 [line-height:normal]"
       {...testAttributes(node, testId)}
     >
       <span aria-hidden="true" className="text-[length:var(--text-title-medium)]" {...testAttributes(part(node, "face"))}>
@@ -96,9 +98,11 @@ export function StanceRow({
         <span className="truncate text-label-large" {...testAttributes(part(node, "name"))}>
           {name}
         </span>
+        {/* The master sets the handle's size and leading alone: the
+            label-small ROLE would bring its 500 weight, which is the name's. */}
         {handle !== null && (
           <span
-            className="truncate text-label-small text-on-surface-variant"
+            className="truncate text-[length:var(--text-label-small)] [line-height:var(--text-label-small--line-height)] text-on-surface-variant"
             {...testAttributes(part(node, "handle"))}
           >
             @{handle}
