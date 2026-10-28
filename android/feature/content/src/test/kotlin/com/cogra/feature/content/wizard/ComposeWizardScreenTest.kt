@@ -16,7 +16,9 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -427,6 +429,24 @@ class ComposeWizardScreenTest {
         // The tray shows; the sheet manages.
         compose.onNodeWithTag("wizard_show_all").performClick()
         assertThat(manages).isEqualTo(1)
+    }
+
+    // ComposePick.md (round 22): the caption stands only while the tiles leave
+    // it its line; past that the tiles stand alone, clipped and never scrolled.
+    @Test
+    fun aFullTrayDropsItsCaptionAndClipsWithoutScrolling() {
+        val ten = (1..10).map { PickedAsset("p$it", 1f) }
+        compose.setContent { Wizard(withPicks.copy(picked = ten)) }
+        compose.onNodeWithTag("wizard_tray_caption").assertDoesNotExist()
+        compose.onAllNodes(hasScrollAction() and hasAnyAncestor(hasTestTag("wizard_tray"))).assertCountEquals(0)
+        // Every tile still carries its ×, the cover's included.
+        compose.onNodeWithTag("wizard_tray_0_remove", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun aTrayWithRoomCarriesTheCoverLine() {
+        compose.setContent { Wizard(withPicks) }
+        compose.onNodeWithTag("wizard_tray_caption").assertTextEquals("The first one is the cover.")
     }
 
     @Test
