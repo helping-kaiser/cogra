@@ -6,7 +6,7 @@
 // one foot every filter sheet ends with. Search is their first consumer on the
 // web; the feed's sheet and History's take the same three.
 //
-// ONE SECTION CHROME: a label at `label-large` 500, an optional hint in the
+// ONE SECTION CHROME: a label at `label-large` (its role weighs 500), an optional hint in the
 // secondary colour, then the controls, wrapping, `--space-2` apart. Each
 // section carries the sheet's 24px gutter itself, the master's own padding.
 //
@@ -33,7 +33,7 @@ export function FilterSection({
 }) {
   return (
     <div className="flex flex-col gap-2 px-6 pb-4" {...testAttributes(node)}>
-      <span className="text-label-large font-medium" {...testAttributes(part(node, "label"))}>
+      <span className="text-label-large" {...testAttributes(part(node, "label"))}>
         {label}
       </span>
       {hint !== undefined && (
