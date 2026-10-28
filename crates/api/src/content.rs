@@ -652,6 +652,17 @@ fn self_mark(draft: SelfMarkDraft) -> Result<Option<SensitiveMark>, ContentError
     }
 }
 
+/// The refusal of an edit on a removed post or comment (api-spec.md
+/// `preparePostEdit`): the edit would become the node's newest version and
+/// put words back where the author took them away — the removed node
+/// shows no Edit and no menu (bhv/Removed.md, bhv/CommentRemoved.md).
+fn removed_takes_no_edit() -> ContentError {
+    ContentError::BadInput {
+        field: "id",
+        message: "removed content takes no edit".into(),
+    }
+}
+
 async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ContentError> {
     nodes::required_address(pool, viewer)
         .await
@@ -867,6 +878,9 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     if post.author_id != viewer {
         return Err(ContentError::NotCreator);
     }
+    if post.redaction_reason.is_some() {
+        return Err(removed_takes_no_edit());
+    }
     let title = checked_title(draft.title)?;
     let description = checked_description(draft.description)?;
     let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
@@ -1036,6 +1050,9 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
         .ok_or(ContentError::NotFound)?;
     if comment.author_id != viewer {
         return Err(ContentError::NotCreator);
+    }
+    if comment.redaction_reason.is_some() {
+        return Err(removed_takes_no_edit());
     }
     let content = checked_comment_body(draft.content)?;
     let gallery =
@@ -1211,6 +1228,22 @@ pub async fn stage_pending(
         .begin()
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
+    // An edit's pending row goes onto a node a removal may be taking down
+    // at this moment: under the node's share lock, either the removal
+    // already holds the node and this edit is refused, or this row lands
+    // first and the removal's own look under its lock sweeps it.
+    let edited = match shape {
+        ContentShape::EditPost(id) => Some(postgres_store::removal::ContentNode::Post(id)),
+        ContentShape::EditComment(id) => Some(postgres_store::removal::ContentNode::Comment(id)),
+        _ => None,
+    };
+    if let Some(node) = edited
+        && !postgres_store::removal::lock_unremoved(&mut tx, node)
+            .await
+            .map_err(|e| ContentError::Internal(e.to_string()))?
+    {
+        return Err(removed_takes_no_edit());
+    }
     write_display_rows(
         &mut tx,
         pool,
@@ -1530,9 +1563,10 @@ async fn land_one(
         .map_err(|e| ContentError::Internal(e.to_string()))?;
     content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
         .await?;
-    if content_store::lock_act_payload(&mut tx, &write.act_id)
+    if let Some(reduced_at) = content_store::lock_act_payload(&mut tx, &write.act_id)
         .await?
-        .is_some_and(|carriage| carriage.reduced)
+        .filter(|carriage| carriage.reduced)
+        .and_then(|carriage| carriage.reduced_at)
     {
         drop(tx);
         let reaped = staged::ReapedWrite {
@@ -1541,6 +1575,7 @@ async fn land_one(
             body: staged_row.proposal.body.clone(),
             node_id: staged_row.node_id,
             pre_signed_at: staged_row.pre_signed_at,
+            reaped_at: reduced_at,
         };
         return land_reduced(pool, write, family, &reaped).await;
     }
@@ -1646,7 +1681,7 @@ async fn land_reduced(
         .begin()
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
-    content_store::insert_reduced_act_payload(&mut tx, &write.act_id).await?;
+    content_store::insert_reduced_act_payload(&mut tx, &write.act_id, reaped.reaped_at).await?;
     if let Some(created_at) = reaped.pre_signed_at {
         match (family, is_genesis, reaped.node_id, edited) {
             (ContentFamily::Post, true, Some(node), _) => {
