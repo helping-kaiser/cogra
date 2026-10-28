@@ -6,15 +6,17 @@
 # snapshot taken when the pick was kept. One small read per root, as the
 # stance reads are: no interface gathers Post, Comment and User.
 #
-# THE REMOVAL MARK: `Post.removal` / `Comment.removal` (api-spec.md "Removal")
-# are not served yet, so these reads do not select them; the review's mark
-# branch is built against that shape and stays inert until the field lands.
+# THE REMOVAL MARK: `Post.removal` / `Comment.removal` (api-spec.md "Removal"):
+# a target removed while its pick waited keeps its row, wearing the mark.
 # A deleted ACCOUNT is already readable — its display name is REDACTED — and
 # reads `Deleted account` on its row.
 
 query KeptPickPost($id: UUID!) {
   post(id: $id) {
     id
+    removal {
+      by
+    }
     title {
       value
       status
@@ -45,6 +47,9 @@ query KeptPickPost($id: UUID!) {
 query KeptPickComment($id: UUID!) {
   comment(id: $id) {
     id
+    removal {
+      by
+    }
     content {
       value
       status

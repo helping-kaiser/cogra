@@ -28,11 +28,7 @@ export type KeptTargetPreview = {
   readonly removed: string | null;
 };
 
-/**
- * Who removed a payload — `RemovalAgent` (api-spec.md "Removal"). Not served
- * yet: the branch below is built against its shape and stays inert until the
- * field lands on the reads.
- */
+/** Who removed a payload — `RemovalAgent` (api-spec.md "Removal"). */
 export type RemovalAgent = "AUTHOR" | "ACCOUNT" | "MODERATION";
 
 /** The mark a moderation verdict's removal reads (copy-voice, *The kept picks' review*). */
