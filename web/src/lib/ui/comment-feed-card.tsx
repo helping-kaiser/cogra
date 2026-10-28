@@ -30,8 +30,8 @@ import { useApolloClient } from "@apollo/client/react";
 import type { CommentFieldsFragment } from "@/__generated__/graphql";
 import { isPending } from "@/lib/api/content-api";
 import { withRemoval, type Removal } from "@/lib/api/removal-api";
-import { appendDeduped } from "@/lib/api/pagination";
-import { fetchCitedBy, type CitingRecordView } from "@/lib/api/references-api";
+import { fetchHeldOpinions, type HeldOpinionView } from "@/lib/api/opinions-api";
+import { fetchCitingArtifacts, type CitingArtifactView } from "@/lib/api/references-api";
 import type { License } from "@/lib/license";
 import { useComfortLine } from "@/lib/saved/comfort-line";
 import { REMOVED_BY_AUTHOR, postTitle } from "@/lib/saved/row-content";
@@ -39,6 +39,7 @@ import { useSavedWrites } from "@/lib/saved/provider";
 import { useActiveAccountId } from "@/lib/session/provider";
 import type { Notify } from "@/lib/saved/save-row";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
+import { OpinionsSheet } from "@/lib/ui2/opinions-sheet";
 import { commentMenuItems } from "@/lib/ui2/comment-menu";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import {
@@ -50,7 +51,7 @@ import { OverflowMenu } from "@/lib/ui2/overflow-menu";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
-import type { DataNode } from "./data-node";
+import { part, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { NodeMark } from "./node-mark";
 import { PendingMarker } from "./pending-marker";
@@ -65,6 +66,9 @@ import {
   sensitiveSignature,
 } from "./post-media";
 import { RowLine } from "./row-line";
+import { ScoreSlot } from "@/lib/score/score-slot";
+import type { TraceOrigin } from "@/lib/score/trace-session";
+import { commentCover } from "@/lib/score/cover";
 import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
@@ -192,8 +196,11 @@ export function CommentFeedCard({
   node,
   onNotify,
   onLinkCopied,
+  scoreOrigin,
 }: {
   comment: CommentFeedView;
+  /** Where the card stands, for its score slot's trace; absent, no score is drawn. */
+  scoreOrigin?: TraceOrigin;
   /** The surface the doors' destinations name on their back arrows (`saved`). */
   from: string;
   testId: string;
@@ -218,10 +225,13 @@ export function CommentFeedCard({
   const [unfolded, setUnfolded] = useState(false);
   const [licenseShown, setLicenseShown] = useState<License | null>(null);
   const [licenseOpen, setLicenseOpen] = useState(false);
+  // The ⋮'s two readings, each null until raised, and its rows null while the
+  // read is out — so the empty line never shows before the answer does.
   const [citedBy, setCitedBy] = useState<{
-    readonly records: readonly CitingRecordView[];
-    readonly cursor: string | null;
-    readonly more: boolean;
+    readonly artifacts: readonly CitingArtifactView[] | null;
+  } | null>(null);
+  const [opinions, setOpinions] = useState<{
+    readonly opinions: readonly HeldOpinionView[] | null;
   } | null>(null);
 
   const threadPost = comment.post?.id ?? null;
@@ -245,21 +255,17 @@ export function CommentFeedCard({
   const handle = comment.author?.handle ?? null;
 
   const openCitedBy = (id: string) => {
-    setCitedBy({ records: [], cursor: null, more: false });
-    void fetchCitedBy(client, id).then((outcome) => {
+    setCitedBy({ artifacts: null });
+    void fetchCitingArtifacts(client, id).then((outcome) => {
       if (outcome.kind !== "success") return;
-      setCitedBy({ records: outcome.value.items, cursor: outcome.value.endCursor, more: outcome.value.hasNextPage });
+      setCitedBy((current) => (current === null ? current : { artifacts: outcome.value }));
     });
   };
-  const moreCitedBy = () => {
-    if (citedBy === null || !citedBy.more) return;
-    void fetchCitedBy(client, comment.id, citedBy.cursor).then((outcome) => {
+  const openOpinions = (id: string) => {
+    setOpinions({ opinions: null });
+    void fetchHeldOpinions(client, id).then((outcome) => {
       if (outcome.kind !== "success") return;
-      setCitedBy((current) => ({
-        records: appendDeduped(current?.records ?? [], outcome.value.items),
-        cursor: outcome.value.endCursor,
-        more: outcome.value.hasNextPage,
-      }));
+      setOpinions((current) => (current === null ? current : { opinions: outcome.value }));
     });
   };
 
@@ -272,6 +278,7 @@ export function CommentFeedCard({
         onGuest: null,
         navigate: (route) => router.push(route),
         openCitedBy,
+        openOpinions,
         openLicense: (license) => {
           setLicenseShown(license);
           setLicenseOpen(true);
@@ -353,10 +360,17 @@ export function CommentFeedCard({
                   <CitedBySheet
                     open
                     onClose={() => setCitedBy(null)}
-                    records={citedBy.records}
-                    hasMore={citedBy.more}
-                    onLoadMore={moreCitedBy}
+                    artifacts={citedBy.artifacts}
                     testId={`${testId}-cited-by-sheet`}
+                  />
+                )}
+                {opinions !== null && (
+                  <OpinionsSheet
+                    open
+                    onClose={() => setOpinions(null)}
+                    on="comment"
+                    opinions={opinions.opinions}
+                    testId={`${testId}-opinions-sheet`}
                   />
                 )}
                 {removing && (
@@ -471,6 +485,20 @@ export function CommentFeedCard({
           target={{ id: comment.id, kind: "comment", label: "this comment" }}
           testIdPrefix={`${testId}-stance`}
         />
+        {/* OPINION, THEN THE SCORE, THEN THE REPLY GLYPH (FeedKinds.md:3). The
+            slot is tagged by the board's evident path: the comment card's
+            row is not registered (reported). */}
+        {scoreOrigin !== undefined && (
+          <ScoreSlot
+            targetId={comment.id}
+            kind="comment"
+            pending={isPending(comment)}
+            cover={() => commentCover(comment)}
+            origin={scoreOrigin}
+            node={part(node, "actionRow.score")}
+            testId={`${testId}-score`}
+          />
+        )}
         {place !== null && !redacted && (
           <Link
             href={`${place}&reply=1`}

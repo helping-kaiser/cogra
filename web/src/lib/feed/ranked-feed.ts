@@ -19,6 +19,7 @@
 // nothing here outlives the client it was built with.
 
 import { failed, success, type Outcome } from "@/lib/api/outcome";
+import { holdRanking } from "@/lib/score/standing";
 import type { NodeKind } from "@/__generated__/graphql";
 import type { FeedItemView } from "@/lib/api/feed-api";
 import {
@@ -112,6 +113,10 @@ function isCard(item: FeedItemView | null | undefined): item is FeedItemView {
 export class RankedFeed {
   private applied: FeedFilterValue;
   private held: HeldAnswer | null = null;
+  // Whose view `held` ranked: the borrowed vantage, else the reader (CD-5).
+  // The score's trace keeps it, so a figure it adopts is the same view's
+  // (score-readout CD-SR1).
+  private rankedFor: string | null = null;
   private split: DerivedFeed = NOTHING_DERIVED;
   // Head then tail: the one list hydration windows over.
   private rows: readonly FeedRow[] = [];
@@ -135,6 +140,11 @@ export class RankedFeed {
   /** The held answer, uncut — null before the first ranking or for no viewer. */
   get answer(): HeldAnswer | null {
     return this.held;
+  }
+
+  /** Whose view the held answer ranked; null before the first ranking or for no viewer. */
+  get viewer(): string | null {
+    return this.rankedFor;
   }
 
   /** The derived list, as of the last derive: above the seen line, then under it. */
@@ -170,6 +180,7 @@ export class RankedFeed {
   async refresh(io: FeedIo): Promise<Outcome<void>> {
     const args = rankArgumentsOf(this.applied);
     let answer: HeldAnswer | null;
+    let rankedFor: string | null = null;
     if (args.kinds.length === 0) {
       answer = NOTHING_RANKED;
     } else {
@@ -181,11 +192,17 @@ export class RankedFeed {
         const ranked = await io.rank(viewer.value, args);
         if (ranked.kind !== "success") return ranked;
         answer = ranked.value;
+        rankedFor = viewer.value;
       }
     }
     const seen = await io.seen();
     if (io.wanted?.() === false) return failed(new Error("the ranking landed after its screen left"));
     this.held = answer;
+    this.rankedFor = rankedFor;
+    // THE ANSWER IS THE OFF-FEED LOOKUP SOURCE (CD-9, PR-40), and a fetch is
+    // the one thing that replaces it and drops every figure a trace adopted
+    // since (score-readout CD-SR5). A local re-derive never comes here.
+    holdRanking(this.reader, answer, rankedFor);
     this.hydrated = new Map();
     this.adopt(answer === null ? NOTHING_DERIVED : derive(answer, deviceCutsOf(this.applied), seen));
     return success(undefined);

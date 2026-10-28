@@ -28,17 +28,20 @@
 // sheet (`post-menu.ts`). AT 360 the wide row stands — 360dp is mainstream
 // android, so the narrow treatment is for the genuinely small.
 //
-// ONE SLOT IS EMPTY, DELIBERATELY: the Feed score. The ranking carries the
-// figure, but the figure is a door (`ExplainableNumber`: "every number is
-// explainable"), and the four screens it opens (`FeedEntry` and below) are not
-// built yet. A slot arrives WITH its surface — the `BottomNav` precedent — and
-// a control that goes nowhere is worse than one that is not there.
+// THE FEED SCORE stands second (`ScoreSlot`): the figure the latest fetch of
+// the post found, and the door to its trace — every number is explainable
+// (`ExplainableNumber`). A surface hands the card its `scoreOrigin`, which
+// names the trace's back arrow; a card mounted where no score is drawn (a
+// composer's preview) is handed none and draws no slot.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { isPending, type PostView } from "@/lib/api/content-api";
+import { postCover } from "@/lib/score/cover";
+import { ScoreSlot } from "@/lib/score/score-slot";
+import type { TraceOrigin } from "@/lib/score/trace-session";
 import { withRemoval, type Removal } from "@/lib/api/removal-api";
 import type { License } from "@/lib/license";
 import { useActiveAccountId } from "@/lib/session/provider";
@@ -136,7 +139,8 @@ function CommentCount({
     <>
       <Icon name="chat_bubble" size={18} />
       {count > 0 && (
-        <span aria-hidden="true" {...testAttributes(part(node, "count"))}>
+        // The count takes the row's size at the normal leading (PostCard.jsx).
+        <span aria-hidden="true" className="[line-height:normal]" {...testAttributes(part(node, "count"))}>
           {count}
         </span>
       )}
@@ -168,6 +172,8 @@ export function PostCard({
   commentsHref,
   onOpenComments,
   onLinkCopied,
+  opinions = 0,
+  onOpenOpinions,
   citedBy = 0,
   onOpenCitedBy,
   mediaAbove = false,
@@ -176,8 +182,15 @@ export function PostCard({
   menuOpen = false,
   node,
   onNotify,
+  scoreOrigin,
 }: {
   post: PostView;
+  /**
+   * Where this card stands, for its score slot: the slot opens the trace and
+   * this names the trace's back arrow (`Back to feed`, `Back to the post`,
+   * `Back to History`…). Absent, the card draws no score.
+   */
+  scoreOrigin?: TraceOrigin;
   /**
    * The host's snackbar, for the card's own menu (`Saved.`, `Removed from
    * Saved.` with `Undo`). A surface hosting the menu itself never needs it.
@@ -221,6 +234,14 @@ export function PostCard({
   onOpenComments?: () => void;
   /** Says `Link copied` where the browser has no platform share sheet. */
   onLinkCopied: () => void;
+  /**
+   * How many PEOPLE hold an opinion on this post — the rows of the opinions
+   * sheet the line opens, never a count of their records. DETAIL VARIANT
+   * ONLY, and only above zero.
+   */
+  opinions?: number;
+  /** Opens the opinions sheet. */
+  onOpenOpinions?: () => void;
   /**
    * How many artifacts cite this one — the INBOUND mirror of `references`,
    * which counts what this post points at. DETAIL VARIANT ONLY, and only above
@@ -415,7 +436,9 @@ export function PostCard({
             <time
               dateTime={post.createdAt}
               {...testAttributes(part(node, "timestamp"), `${testId}-timestamp`)}
-              className="flex-none text-body-small text-on-surface-variant"
+              // The body-small SIZE on the header line's own 24px leading
+              // (PostCard.jsx: the timestamp sets its size alone).
+              className="flex-none text-[length:var(--text-body-small)] [line-height:1.5rem] text-on-surface-variant"
             >
               {stamp}
             </time>
@@ -571,8 +594,27 @@ export function PostCard({
           />
         </>
       )}
+      {/* WHO HOLDS AN OPINION ON THIS, on the detail surface only
+          (`PostCard.jsx`; readme item 55): a quiet count line under the tags
+          line, in `TopicsLine`'s register — the affordance row is closed and
+          nothing joins it. IT CARRIES NO FACE: a face on a post card already
+          means "your opinion" (PostDetail.md). The count is the sheet's
+          length — people, not records — and at zero there is no line. The
+          count rides inside the name, `8 opinions on this post`, as the line
+          under it does. */}
+      {!redacted && detail && opinions > 0 && (
+        <button
+          type="button"
+          className="cg-state cg-focus cg-hit flex w-full items-center border-0 bg-transparent p-0 text-left text-body-small text-on-surface-variant"
+          {...testAttributes(part(node, "opinions"), `${testId}-opinions`)}
+          onClick={onOpenOpinions}
+        >
+          <span>{opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`}</span>
+        </button>
+      )}
       {/* WHAT CITES THIS, as a count that opens the list holding them
-          (`screens/CitedBy.jsx`; readme item 55).
+          (`screens/CitedBy.jsx`; readme item 55), directly under the opinions
+          line and in its register.
 
           IT IS NOT THE REFERENCES LINE GROWN A SECOND NUMBER. That line's count
           is the tags-and-references sheet's length — a law this leaves where it
@@ -618,6 +660,18 @@ export function PostCard({
           testIdPrefix={stanceTestId}
           node={part(node, "actionRow.stance")}
         />
+        {scoreOrigin !== undefined && (
+          <ScoreSlot
+            targetId={post.id}
+            kind="post"
+            pending={isPending(post)}
+            cover={() => postCover(post)}
+            origin={scoreOrigin}
+            dashWhileSettling={detail}
+            node={part(node, "actionRow.score")}
+            testId={`${testId}-score`}
+          />
+        )}
         <CommentCount
           count={comments}
           // THE SHEET WINS WHEREVER IT IS OFFERED. A card handed a door to the

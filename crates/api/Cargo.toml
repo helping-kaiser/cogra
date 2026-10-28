@@ -73,6 +73,8 @@ image              = { workspace = true }
 mp4                = { workspace = true }
 h264-reader        = { workspace = true }
 tempfile           = { workspace = true }
+lettre             = { workspace = true }
+url                = { workspace = true }
 
 [dev-dependencies]
 # Fixture-only: Mp4Sample carries its payload as a Bytes, so building a
@@ -83,3 +85,7 @@ tower          = { version = "0.5", features = ["util"] }
 # tests compare the decoded bytes with the identity answer. Already in the
 # tree through tower-http's gzip encoder.
 flate2         = { version = "1" }
+# Decodes the quoted-printable bodies lettre writes, so the mailer tests
+# compare the body a reader sees with the one the flow composed. Already in
+# the tree through lettre's message builder.
+quoted_printable = { version = "0.5" }

@@ -103,6 +103,8 @@ internal fun CommentFeedCard(
     onCite: () -> Unit,
     onLicense: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
+    /** The own comment's Remove row (`FEED_OWN_COMMENT_MENU`); null on someone else's. */
+    onRemove: (() -> Unit)? = null,
 ) {
     val card = node.keyed(comment.id)
     Card(
@@ -117,6 +119,19 @@ internal fun CommentFeedCard(
                 .padding(Space.x4),
             verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
+            val ownPart: @Composable () -> Unit = {
+                OwnPart(
+                    comment = comment,
+                    testTagPrefix = testTagPrefix,
+                    revealed = revealed,
+                    onReveal = onReveal,
+                    onOpenActor = onOpenActor,
+                    onOpenTopic = onOpenTopic,
+                    onCite = onCite,
+                    onLicense = onLicense,
+                    onRemove = onRemove,
+                )
+            }
             if (target != null) {
                 HeadRow(target, testTagPrefix, onOpenTarget)
                 // THE CONNECTOR: a hairline rule down from the head's mark —
@@ -135,37 +150,49 @@ internal fun CommentFeedCard(
                         .padding(start = CONNECTOR + HUNG_INSET),
                     verticalArrangement = Arrangement.spacedBy(Space.x3),
                 ) {
-                    OwnPart(comment, testTagPrefix, revealed, onReveal, onOpenActor, onOpenTopic, onCite, onLicense)
+                    ownPart()
                 }
             } else {
-                OwnPart(comment, testTagPrefix, revealed, onReveal, onOpenActor, onOpenTopic, onCite, onLicense)
+                ownPart()
             }
             if (comment.landing.isPending) PendingMarker(testTag = "${testTagPrefix}_pending")
-            Row(
-                modifier = Modifier.fillMaxWidth().testTag("${testTagPrefix}_affordances"),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                CommentStanceTarget { stanceControl(comment.id, testTagPrefix, null) }
-                val handle = comment.author?.handle
-                GlyphAffordance(
-                    icon = Icons.Filled.ChatBubble,
-                    description = handle?.let { stringResource(R.string.content_card_reply_to, "@$it") }
-                        ?: stringResource(R.string.content_comment_reply),
-                    testTag = "${testTagPrefix}_reply",
-                    onClick = onReply,
-                )
-                GlyphAffordance(
-                    icon = Icons.Filled.Share,
-                    description = stringResource(R.string.content_share_comment),
-                    testTag = "${testTagPrefix}_share",
-                    onClick = onShare,
-                )
-            }
+            FeedCommentRow(comment, testTagPrefix, onReply, onShare, stanceControl)
             // THE ROW LINE under the face (RowSigning.md): a save or unsave of
             // this comment that did not go through.
             ComfortLine(comment.id, "${testTagPrefix}_row_line")
         }
+    }
+}
+
+/** OPINION · THE COMMENT GLYPH · SHARE — the card's one row (FeedKinds.md). */
+@Composable
+private fun FeedCommentRow(
+    comment: CommentView,
+    testTagPrefix: String,
+    onReply: () -> Unit,
+    onShare: () -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().testTag("${testTagPrefix}_affordances"),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CommentStanceTarget { stanceControl(comment.id, testTagPrefix, null) }
+        val handle = comment.author?.handle
+        GlyphAffordance(
+            icon = Icons.Filled.ChatBubble,
+            description = handle?.let { stringResource(R.string.content_card_reply_to, "@$it") }
+                ?: stringResource(R.string.content_comment_reply),
+            testTag = "${testTagPrefix}_reply",
+            onClick = onReply,
+        )
+        GlyphAffordance(
+            icon = Icons.Filled.Share,
+            description = stringResource(R.string.content_share_comment),
+            testTag = "${testTagPrefix}_share",
+            onClick = onShare,
+        )
     }
 }
 
@@ -279,16 +306,19 @@ private fun OwnPart(
     onOpenTopic: (String) -> Unit,
     onCite: () -> Unit,
     onLicense: () -> Unit,
+    onRemove: (() -> Unit)?,
 ) {
     ContentCardHeader(
         author = comment.author,
         at = comment.createdAt,
         onOpenActor = onOpenActor,
         testTagPrefix = testTagPrefix,
-        menu = if (isRemoved(comment.content, comment.attachments, comment.attachmentsStatus)) {
+        // A REMOVED COMMENT HAS NO MENU LEFT (CommentRemoved.md:9): its ⋮ goes
+        // with the payload.
+        menu = if (comment.removed) {
             emptyList()
         } else {
-            commentMenuRows(comment = comment, onCite = onCite, onLicense = onLicense)
+            commentMenuRows(comment = comment, onCite = onCite, onLicense = onLicense, onRemove = onRemove)
         },
         menuContentDescription = stringResource(R.string.content_menu_comment),
     )
@@ -300,6 +330,7 @@ private fun OwnPart(
         attachments = comment.attachments,
         attachmentsStatus = comment.attachmentsStatus,
         moderation = comment.moderation,
+        removal = comment.removal,
         testTagPrefix = testTagPrefix,
         collapsed = true,
         wordsClampLines = FEED_COMMENT_CLAMP_LINES,

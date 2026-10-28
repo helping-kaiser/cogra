@@ -9,7 +9,7 @@ use api::auth::AuthConfig;
 use api::breach::{BreachCorpus, DisabledCorpus, HibpCorpus};
 use api::env_or;
 use api::l1::StandInBoundary;
-use api::mailer::{DevMailer, WebOrigin};
+use api::mailer::{MailerConfig, WebOrigin};
 use api::onboarding::OnboardingConfig;
 use api::ratelimit::RateLimitConfig;
 use api::schema::ApiContext;
@@ -210,6 +210,8 @@ async fn main() -> anyhow::Result<()> {
         "feedRanking relays to the ranker pod"
     );
 
+    let mailer = api::mailer::build(MailerConfig::from_env()?)
+        .context("building the SMTP transport from SMTP_URL")?;
     let auth = auth_config()?;
     let uploads = api::UploadRouting {
         pool: pool.clone(),
@@ -220,9 +222,7 @@ async fn main() -> anyhow::Result<()> {
         pool,
         boundary,
         auth: auth.clone(),
-        mailer: Arc::new(DevMailer::new(
-            std::env::var_os("DEV_MAILER_LOG").map(std::path::PathBuf::from),
-        )),
+        mailer,
         web_origin: WebOrigin(env_or("WEB_ORIGIN", "http://localhost:3000")),
         onboarding: OnboardingConfig {
             admission_burn_micro,

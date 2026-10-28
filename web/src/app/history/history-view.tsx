@@ -66,6 +66,7 @@ import { EmptyState } from "@/lib/ui/empty-state";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
+import type { TraceOrigin } from "@/lib/score/trace-session";
 import { ProfileFeedCard } from "@/lib/ui/profile-feed-card";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { scrollHostToTopAnimated, useScrollHost } from "@/lib/ui/scroll-host";
@@ -119,6 +120,8 @@ export const HISTORY_SEARCH_DEBOUNCE_MS = 250;
 
 /** Where a card's doors say the reader came from: `Back to History`. */
 const FROM = "history";
+/** A card's score opens its trace, whose back arrow reads `Back to History` (History.md:61). */
+const HISTORY_ORIGIN: TraceOrigin = { kind: "history" };
 
 type Entry = HistoryEntry & { readonly id: string };
 
@@ -678,6 +681,7 @@ function HistoryCard({
           // Each card keeps its kind's own name on the page (History.jsx),
           // keyed by the record's own identity, as the feed keys its cards.
           node={{ path: "history.card", key: node.id }}
+          scoreOrigin={HISTORY_ORIGIN}
           href={`/posts/${node.id}?from=${FROM}`}
           shareHref={`/posts/${node.id}`}
           testId={`history-post-${node.id}`}
@@ -696,6 +700,7 @@ function HistoryCard({
           comment={node}
           from={FROM}
           node={{ path: "history.commentCard", key: node.id }}
+          scoreOrigin={HISTORY_ORIGIN}
           testId={`history-comment-${node.id}`}
           onNotify={notify}
           onLinkCopied={copied}
@@ -707,6 +712,7 @@ function HistoryCard({
           person={node}
           href={`/u/${node.handle}?from=${FROM}`}
           node={{ path: "history.profileCard", key: node.id }}
+          scoreOrigin={HISTORY_ORIGIN}
           testId={`history-person-${node.id}`}
           onNotify={notify}
           onLinkCopied={copied}
@@ -718,6 +724,7 @@ function HistoryCard({
           topic={node}
           from={FROM}
           node={{ path: "history.tagCard", key: node.id }}
+          scoreOrigin={HISTORY_ORIGIN}
           testId={`history-tag-${node.id}`}
           onLinkCopied={copied}
         />
