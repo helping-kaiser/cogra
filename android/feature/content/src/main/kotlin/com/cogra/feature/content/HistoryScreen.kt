@@ -84,8 +84,8 @@ import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.ButtonSize
-import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograChip
+import com.cogra.core.designsystem.v2.atom.CograRowButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.EmptyState
@@ -540,10 +540,19 @@ private fun HistoryFilterSheet(committed: Set<FeedKind>, onDone: (Set<FeedKind>)
     var staged by remember { mutableStateOf(committed) }
     val sheet = HISTORY / "filterSheet"
     CograSheetHost(onDismissRequest = onDismiss) {
-        CograSheetSurface(testTag = sheet.tag, handleTestTag = (sheet / "dragHandle").tag, gap = 0.dp) {
+        CograSheetSurface(
+            testTag = sheet.tag,
+            handleTestTag = (sheet / "dragHandle").tag,
+            edgeToEdge = true,
+            gap = 0.dp,
+        ) {
+            // Every part carries its own 24dp gutter, edge to edge (`BottomSheet`
+            // `rows`): the title's `0 24 8` is part of its registered box.
             SheetTitle(
                 text = stringResource(R.string.content_history_filter_purpose),
-                modifier = Modifier.padding(bottom = Space.x2).dataNode(sheet / "title"),
+                modifier = Modifier
+                    .dataNode(sheet / "title")
+                    .padding(start = Space.x6, end = Space.x6, bottom = Space.x2),
             )
             FilterSection(
                 label = stringResource(R.string.content_history_filter_kinds),
@@ -647,7 +656,8 @@ private fun sectionWords(section: HistorySection): String =
 private fun SectionDoor(section: HistorySection, onNarrowTo: (FeedKind) -> Unit) {
     val people = section == HistorySection.PEOPLE
     Row(Modifier.padding(horizontal = Space.x2)) {
-        CograButton(
+        // Drawn at the `sm` 32dp and answering at 48 without growing the row.
+        CograRowButton(
             text = stringResource(
                 if (people) R.string.content_history_see_all_profiles else R.string.content_history_see_all_tags,
             ),
@@ -672,9 +682,10 @@ private fun DayDivider(label: String) {
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .padding(vertical = Space.x1)
+                // The registered divider is the padded line (`HistoryDayDivider`).
+                .dataNode((HISTORY / "day").keyed(historyDayKey(label)))
                 .semantics { heading() }
-                .dataNode((HISTORY / "day").keyed(historyDayKey(label))),
+                .padding(vertical = Space.x1),
         )
     }
 }
@@ -771,7 +782,7 @@ private fun HistoryNone(cause: NoneCause, onShowEverything: () -> Unit) {
             ),
             registered = true,
             action = {
-                CograButton(
+                CograRowButton(
                     text = stringResource(R.string.content_saved_show_everything),
                     onClick = onShowEverything,
                     kind = ButtonKind.Outlined,
