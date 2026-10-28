@@ -83,8 +83,7 @@ import { TransportError } from "@/lib/ui/transport-error";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { Chip } from "@/lib/ui2/chip";
 import { ContentRow } from "@/lib/ui2/content-row";
-import { FilterFoot, FilterSection, OrderSection } from "@/lib/ui2/filter-section";
-import { FilterTrigger, triggerName } from "@/lib/ui2/filter-trigger";
+import { FilterFoot, FilterSection, FilterTrigger, OrderSection, triggerName } from "@/lib/ui2/filter-sheet";
 import { HelpDialog, HELP_TOPICS } from "@/lib/ui2/help-dialog";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { ReferenceRow } from "@/lib/ui2/reference-row";
@@ -842,7 +841,6 @@ function FilterSheet({
       node={sheet}
       testId="explore-filter-sheet"
       rows
-      foot={<FilterFoot node={part(sheet, "foot")} onReset={() => onStage(defaultFilter)} onDone={onDone} />}
     >
       {/* THE "?" RIDES THE SHEET'S CORNER, not the title's line (ExploreFilter.jsx:
           absolute at `--space-1` / `--space-2`): the dialog is the positioned
@@ -854,7 +852,8 @@ function FilterSheet({
         {SEARCH_KINDS.map((kind) => (
           <Chip
             key={kind.value}
-            testId={`${NODE}.filterSheet.kinds.${kind.value}Chip`}
+            testId={`explore-filter-${kind.value}`}
+            node={part(sheet, `kinds.${kind.value}Chip`)}
             selected={staged.kinds.includes(kind.value)}
             onClick={() => onStage({ ...staged, kinds: toggleKind(staged.kinds, kind.value as FeedKindValue) })}
           >
@@ -874,6 +873,9 @@ function FilterSheet({
           node={part(sheet, "order")}
         />
       )}
+      {/* The sheet sizes to its content, so the foot ends the content rather
+          than being pinned under a scroll (ExploreFilter.jsx; History's sheet). */}
+      <FilterFoot node={part(sheet, "foot")} onReset={() => onStage(defaultFilter)} onDone={onDone} />
     </BottomSheet>
   );
 }

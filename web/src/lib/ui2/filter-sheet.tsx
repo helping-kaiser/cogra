@@ -18,6 +18,8 @@ import type { ReactNode } from "react";
 
 import { Button } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { Checkbox } from "./checkbox";
+import { SegmentedFilter } from "./segmented-filter";
 
 /**
  * THE TRIGGER'S NAME IS THE READING, THEN THE PURPOSE (the K13 round; WCAG
@@ -132,5 +134,46 @@ export function FilterFoot({
         </Button>
       </div>
     </div>
+  );
+}
+
+/** OrderSection.jsx's hint, verbatim. */
+export const ORDER_HINT =
+  "Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.";
+
+/** The seen toggle's words (copy-voice.md, the filter's order section). */
+export const SHOW_WHAT_YOU_VE_SEEN = "Show what you've already seen";
+
+/**
+ * THE ONE ORDER SECTION (`OrderSection.jsx`, ruled identical on the feed and
+ * on search, backlog item 19): Ranked or Newest — the one choice that does not
+ * combine — with the seen toggle under it, both answering "how is this list
+ * arranged". Search is its first web consumer.
+ */
+export function OrderSection<T extends string>({
+  options,
+  order,
+  onOrder,
+  seen,
+  onSeen,
+  node,
+}: {
+  options: readonly { value: T; label: string }[];
+  order: T;
+  onOrder: (next: T) => void;
+  /** The seen toggle; omitted where it cannot stand (a guest's search, ExploreFilter.md:41). */
+  seen?: boolean;
+  onSeen?: (next: boolean) => void;
+  node?: DataNode;
+}) {
+  return (
+    <FilterSection label="Order" hint={ORDER_HINT} node={node}>
+      <SegmentedFilter ariaLabel="Order" options={options} value={order} onChange={onOrder} node={part(node, "picker")} />
+      {seen !== undefined && onSeen !== undefined && (
+        <div className="basis-full">
+          <Checkbox label={SHOW_WHAT_YOU_VE_SEEN} checked={seen} onChange={onSeen} node={part(node, "seen")} />
+        </div>
+      )}
+    </FilterSection>
   );
 }
