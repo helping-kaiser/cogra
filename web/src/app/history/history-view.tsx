@@ -216,9 +216,16 @@ export function HistoryScreen({
     (ask: Ask) => {
       const mine = (request.current += 1);
       void (async () => {
-        const outcome = await guard.run(() =>
-          fetchHistoryPage(client, null, ask.query, nodeKindsOf(ask.kinds)),
-        );
+        // EVERY OPEN AND EVERY PULL READS THE HIDDEN SET AGAIN, beside the
+        // page (the feed's rule, hidden-actors packet §5.1): a hide made on
+        // another device reaches this one, and a fresh load is the moment a
+        // card's failed-hide line goes (HistoryHidden.md:11). The server
+        // already keeps a hidden account's things out, so a set that could
+        // not be read leaves the page as served rather than failing it.
+        const [outcome] = await Promise.all([
+          guard.run(() => fetchHistoryPage(client, null, ask.query, nodeKindsOf(ask.kinds))),
+          hidden.refetch(),
+        ]);
         if (mine !== request.current) return;
         setLoading(false);
         if (outcome.kind !== "success") {
