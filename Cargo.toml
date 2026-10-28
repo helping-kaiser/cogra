@@ -106,6 +106,19 @@ axum-client-ip = { version = "1" }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 sha1 = { version = "0.10" }
 
+# Outbound mail in production (production-deploy O-1): lettre's async SMTP
+# transport on tokio. Defaults off, because they bring native-tls (an
+# OpenSSL link) next to the workspace's rustls. `aws-lc-rs` is the
+# provider object_store's reqwest already pins and `rustls-platform-verifier`
+# the verifier it already uses, so mail adds no second crypto stack. lettre's
+# `tracing` feature stays off: it logs every byte written to the server at
+# debug, which is the message body with its token and the AUTH exchange.
+# `url` parses SMTP_URL so the config can
+# refuse credentials over an unencrypted link before lettre would send them
+# that way. It is already in the tree through lettre and reqwest.
+lettre = { version = "0.11", default-features = false, features = ["builder", "smtp-transport", "pool", "hostname", "tokio1", "tokio1-rustls", "aws-lc-rs", "rustls-platform-verifier"] }
+url = { version = "2" }
+
 # The ranking relay's client to the server ranker pod (ranked-feed-api
 # §4.2 step 4): typed code generated at compile time from the pod's
 # checked-in `ranker-schema.graphql`, so a pod schema change that breaks
