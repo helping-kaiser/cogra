@@ -1,5 +1,8 @@
 package com.cogra.feature.invites
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
@@ -156,6 +159,25 @@ class InvitesScreenTest {
         compose.onNodeWithTag("invites.empty.create").assertTextEquals("Create invite").performClick()
         assertThat(opened).isEqualTo(1)
         compose.onNodeWithTag("invites.create").assertDoesNotExist()
+    }
+
+    @Test
+    fun aSnackbarSaysItsLineEvenAsItIsConsumed() {
+        // Invites.md:39 — the line the page owes, shown although the one-shot is
+        // spent at once (the holder clears it the moment it is shown).
+        var state by mutableStateOf(read().copy(snack = InvitesSnack.FinishRegistering("@imke")))
+        compose.setContent {
+            InvitesScreen(
+                state = state,
+                door = InvitesDoor.PROFILE,
+                actions = InvitesActions(onSnackShown = { state = state.copy(snack = null) }),
+                now = now,
+            )
+        }
+        compose.waitUntil(timeoutMillis = 5_000) {
+            compose.onAllNodesWithText("@imke has to finish registering before you can approve")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
     }
 
     @Test

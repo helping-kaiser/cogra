@@ -113,7 +113,6 @@ import com.cogra.network.graphql.type.VerifyEmailInput
 import com.cogra.network.payload
 import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
-import com.cogra.network.toInfo
 import com.cogra.network.toInput
 import com.cogra.network.toView
 import com.cogra.network.unauthenticatedRefusal
