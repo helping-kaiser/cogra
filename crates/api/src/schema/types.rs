@@ -1678,6 +1678,96 @@ impl User {
         Ok(Some(connection))
     }
 
+    /// The topics the viewer holds — every Type toward which their netted
+    /// Affinity bundle is not `(0, 0)`, the read-side bundle fold taken
+    /// across every Type at once, and nothing else: a bundle walked back
+    /// to `(0, 0)` leaves the list, and one held against stands in it like
+    /// any other. Strongest first by association — the folded `pDirected`
+    /// descending, then the name ascending; keyset on `(pDirected,
+    /// name)`. `includePending` carries the meaning and default it has on
+    /// `viewerStance`. An invalid cursor is BAD_INPUT. Field-level:
+    /// viewer-only.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn held_topics(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<Option<HeldTopicConnection>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())
+            .map_err(|e| super::query::bad_input(e.message))?;
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => Some(
+                crate::stance::decode_held_cursor(raw)
+                    .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
+            ),
+            None => None,
+        };
+        let view = BundleView::from_include_pending(include_pending);
+        // A keyless account has signed nothing, so it holds nothing: the
+        // list is there and empty, as it is for any viewer with no follow.
+        let Some(author) = self.identity.realization_address.clone() else {
+            return Ok(Some(HeldTopicConnection::with_additional_fields(
+                false,
+                false,
+                HeldTopicConnectionFields { author: None, view },
+            )));
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let mut held = stance_store::held_topics(
+            pool,
+            &author,
+            view,
+            cursor.as_ref(),
+            backward,
+            limit + 1,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let has_more = held.len() as i64 > limit;
+        if has_more {
+            if backward {
+                held.remove(0);
+            } else {
+                held.pop();
+            }
+        }
+        let (has_previous, has_next) = if backward {
+            (has_more, cursor.is_some())
+        } else {
+            (cursor.is_some(), has_more)
+        };
+        let mut connection = HeldTopicConnection::with_additional_fields(
+            has_previous,
+            has_next,
+            HeldTopicConnectionFields {
+                author: Some(author),
+                view,
+            },
+        );
+        connection.edges.extend(held.into_iter().map(|topic| {
+            let net = topic.sum.fold();
+            Edge::with_additional_fields(
+                crate::stance::encode_held_cursor(&topic.cursor()),
+                HashtagType { name: topic.name },
+                HeldTopicEdgeFields {
+                    p_directed: Dimension(net.p_d),
+                    p_interest: Dimension(net.p_i),
+                    pending: topic.pending,
+                },
+            )
+        }));
+        Ok(Some(connection))
+    }
+
     /// When the viewer saved this person; null when not kept, or with no
     /// session. What the profile menus' Save / Unsave row reads.
     async fn viewer_bookmarked_at(
@@ -4958,6 +5048,80 @@ pub type HiddenActorConnection = Connection<
     HiddenActorEdgeName,
     async_graphql::connection::DisableNodesField,
 >;
+
+/// Names the held-topics connection `HeldTopicConnection`, as the contract
+/// does, rather than after its node type (`HashtagConnection`).
+pub struct HeldTopicConnectionName;
+
+impl async_graphql::connection::ConnectionNameType for HeldTopicConnectionName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "HeldTopicConnection".to_string()
+    }
+}
+
+/// Names the held-topics edge `HeldTopicEdge`.
+pub struct HeldTopicEdgeName;
+
+impl async_graphql::connection::EdgeNameType for HeldTopicEdgeName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "HeldTopicEdge".to_string()
+    }
+}
+
+/// `HeldTopicEdge`'s own fields: the viewer's bundle toward the topic as it
+/// stands — what the row's pair and its pending marker read.
+#[derive(SimpleObject)]
+pub struct HeldTopicEdgeFields {
+    /// Association — the folded `pDirected`, sum-then-clip. The list's
+    /// order, strongest first.
+    pub p_directed: Dimension,
+    /// Attraction — the folded `pInterest`, sum-then-clip.
+    pub p_interest: Dimension,
+    /// True while any record in the bundle is still in flight; always
+    /// false in the L1 view.
+    pub pending: bool,
+}
+
+/// One held topic.
+pub type HeldTopicEdge = Edge<String, HashtagType, HeldTopicEdgeFields, HeldTopicEdgeName>;
+
+/// A page of the topics the viewer holds.
+pub type HeldTopicConnection = Connection<
+    String,
+    HashtagType,
+    HeldTopicConnectionFields,
+    HeldTopicEdgeFields,
+    HeldTopicConnectionName,
+    HeldTopicEdgeName,
+    async_graphql::connection::DisableNodesField,
+>;
+
+/// `HeldTopicConnection`'s connection-level fields: whose bundles the list
+/// folded and in which view, so the count runs only when asked. No author
+/// is a keyless account, which holds nothing.
+pub struct HeldTopicConnectionFields {
+    author: Option<String>,
+    view: BundleView,
+}
+
+#[Object]
+impl HeldTopicConnectionFields {
+    /// How many topics the viewer holds, across every page — the count
+    /// Explore's Your topics door reads, which is this list's length.
+    /// Priced at zero like every connection count; saturates at
+    /// [`i32::MAX`].
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let Some(author) = &self.author else {
+            return Ok(Some(0));
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let total = stance_store::count_held_topics(pool, author, self.view)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+}
 
 /// `HiddenActorConnection`'s connection-level fields: the viewer whose list
 /// served the edges, so the count runs only when asked.

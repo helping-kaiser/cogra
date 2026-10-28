@@ -1724,3 +1724,302 @@ async fn the_un_tag_is_admitted_on_an_artifact_at_the_standing_topic_cap(pool: P
     let writes = prepared["prepareTag"]["writes"].as_array().expect("writes");
     assert_eq!(writes.len(), 1, "{prepared}");
 }
+
+// ── The held-topics read (api-spec.md `User.heldTopics`) ────────────────
+
+const HELD_TOPICS: &str = r#"query($ip: Boolean!, $first: Int, $after: String, $last: Int, $before: String) {
+  me {
+    heldTopics(includePending: $ip, first: $first, after: $after, last: $last, before: $before) {
+      totalCount
+      edges { cursor pDirected pInterest pending node { id name { value } } }
+      pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
+    }
+  }
+}"#;
+
+impl Rig {
+    /// Several follows staged and landed as one batch — one epoch rather
+    /// than one per topic.
+    async fn follow_topics(&self, token: &str, key: &ActorKey, follows: &[(&str, f64, f64)]) {
+        let mut writes = Vec::new();
+        for (name, p_d, p_i) in follows {
+            let prepared = self
+                .prepare_stance(token, json!({ "topicName": name }), *p_d, *p_i)
+                .await;
+            writes.extend(
+                prepared["prepareStance"]["writes"]
+                    .as_array()
+                    .unwrap_or_else(|| panic!("follow refused: {prepared}"))
+                    .iter()
+                    .cloned(),
+            );
+        }
+        self.land(token, key, &Value::Array(writes)).await;
+    }
+
+    /// The viewer's held-topics page, raw — errors included.
+    async fn held_raw(&self, token: Option<&str>, variables: Value) -> Value {
+        let mut vars = json!({ "ip": true });
+        merge(&mut vars, variables);
+        self.gql_raw(token, HELD_TOPICS, vars).await
+    }
+
+    /// The viewer's held-topics page.
+    async fn held(&self, token: &str, variables: Value) -> Value {
+        let json = self.held_raw(Some(token), variables).await;
+        assert!(json.get("errors").is_none(), "unexpected errors: {json}");
+        json["data"]["me"]["heldTopics"].clone()
+    }
+}
+
+/// The names a held-topics page lists, in its order.
+fn held_names(page: &Value) -> Vec<String> {
+    page["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|e| e["node"]["name"]["value"].as_str().expect("name").to_string())
+        .collect()
+}
+
+/// Your topics lists every topic held, strongest first by association,
+/// down past nothing into the topics held against — and the count is the
+/// list's length, which is what Explore's door reads.
+///
+/// The held topics stand strongest first by association, a topic held against among them, and the count is the list's length.
+/// ´claim:topics:held-topics-stand-strongest-first´
+#[sqlx::test(migrations = "../../migrations")]
+async fn held_topics_stand_strongest_first_with_the_ones_held_against_last(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("reader", "reader@example.com").await;
+    let token = rig.log_in("reader@example.com").await;
+    rig.follow_topics(
+        &token,
+        &ak,
+        &[
+            ("tidetables", 0.15, 0.5),
+            ("wellness", -0.65, -0.3),
+            ("saltmaps", 0.6, 0.35),
+            ("coastroad", 0.45, 0.7),
+        ],
+    )
+    .await;
+
+    let page = rig.held(&token, json!({})).await;
+    assert_eq!(
+        held_names(&page),
+        ["saltmaps", "coastroad", "tidetables", "wellness"],
+        "{page}"
+    );
+    assert_eq!(page["totalCount"], 4);
+    let wellness = &page["edges"][3];
+    assert_eq!(wellness["pDirected"], -0.65, "{wellness}");
+    assert_eq!(wellness["pInterest"], -0.3);
+    assert_eq!(wellness["pending"], false);
+    assert_eq!(
+        wellness["node"]["id"],
+        common::hashtag_uuid("wellness").to_string()
+    );
+
+    let count = rig.held(&token, json!({ "first": 0 })).await;
+    assert_eq!(count["totalCount"], 4, "the door's read: {count}");
+    assert_eq!(count["edges"], json!([]));
+}
+
+/// The pair is the netted bundle, not its newest record: two follows of
+/// one topic sum, and the sum is clipped the way the stance read clips it.
+///
+/// A held topic's pair is its records summed and clipped, never the newest record alone.
+/// ´claim:topics:a-held-pair-is-the-netted-bundle´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_held_topics_pair_is_the_netted_bundle_not_the_newest_record(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("reader", "reader@example.com").await;
+    let token = rig.log_in("reader@example.com").await;
+    rig.follow_topics(&token, &ak, &[("rust", 0.3, 0.2), ("go", 0.8, 0.1)])
+        .await;
+    rig.follow_topics(&token, &ak, &[("rust", 0.3, 0.2), ("go", 0.8, 0.1)])
+        .await;
+
+    let page = rig.held(&token, json!({})).await;
+    assert_eq!(held_names(&page), ["go", "rust"], "{page}");
+    assert_eq!(page["edges"][0]["pDirected"], 1.0, "1.6 clips to 1: {page}");
+    assert_eq!(page["edges"][0]["pInterest"], 0.2);
+    assert_eq!(page["edges"][1]["pDirected"], 0.6);
+    assert_eq!(page["edges"][1]["pInterest"], 0.4);
+    let stance = rig.hashtag(Some(&token), "rust").await;
+    assert_eq!(
+        (
+            stance["viewerStance"]["pDirected"].clone(),
+            stance["viewerStance"]["pInterest"].clone()
+        ),
+        (
+            page["edges"][1]["pDirected"].clone(),
+            page["edges"][1]["pInterest"].clone()
+        ),
+        "the list reads the same fold the topic page's control reads"
+    );
+}
+
+/// A walk-back that nets a topic to `(0, 0)` takes it off the list once it
+/// lands; a bundle at zero on one axis only is still held.
+///
+/// A topic walked back to (0, 0) leaves the held list, while one at zero on a single axis stays.
+/// ´claim:topics:a-walked-back-topic-leaves-the-held-list´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_topic_walked_back_to_zero_leaves_the_held_list(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("reader", "reader@example.com").await;
+    let token = rig.log_in("reader@example.com").await;
+    rig.follow_topics(&token, &ak, &[("rust", 0.4, 0.3), ("inert", 0.5, 0.0)])
+        .await;
+    assert_eq!(
+        held_names(&rig.held(&token, json!({})).await),
+        ["inert", "rust"]
+    );
+
+    let severed = rig
+        .prepare_severance(&token, json!({ "topicName": "rust" }))
+        .await;
+    rig.land(&token, &ak, &severed["prepareSeverance"]["writes"])
+        .await;
+
+    let page = rig.held(&token, json!({})).await;
+    assert_eq!(held_names(&page), ["inert"], "{page}");
+    assert_eq!(page["totalCount"], 1);
+    assert_eq!(page["edges"][0]["pInterest"], 0.0);
+}
+
+/// The L2 view counts the viewer's own follow in flight and marks it
+/// pending; the L1 view counts only what has landed.
+///
+/// A follow in flight is held, marked pending, in the L2 view and absent from the L1 view.
+/// ´claim:topics:a-pending-follow-is-held-in-the-l2-view´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_follow_in_flight_is_held_and_pending_only_in_the_l2_view(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("reader", "reader@example.com").await;
+    let token = rig.log_in("reader@example.com").await;
+    rig.follow_topics(&token, &ak, &[("rust", 0.4, 0.3)]).await;
+    let prepared = rig
+        .prepare_stance(&token, json!({ "topicName": "fieldnotes" }), 0.3, 0.15)
+        .await;
+    rig.pre_sign(&token, &ak, &prepared["prepareStance"]["writes"])
+        .await;
+
+    let l2 = rig.held(&token, json!({})).await;
+    assert_eq!(held_names(&l2), ["rust", "fieldnotes"], "{l2}");
+    assert_eq!(l2["edges"][0]["pending"], false);
+    assert_eq!(l2["edges"][1]["pending"], true);
+    assert_eq!(l2["totalCount"], 2);
+
+    let l1 = rig.held(&token, json!({ "ip": false })).await;
+    assert_eq!(held_names(&l1), ["rust"], "{l1}");
+    assert_eq!(l1["totalCount"], 1);
+}
+
+/// Pages walk the whole list forward and back without a skip or a repeat;
+/// equal associations — two clipped to the same bound among them — fall
+/// to the name, so the order is total and a cursor is a position.
+///
+/// Held-topic pages cover the list exactly once in either direction, ties broken by name.
+/// ´claim:topics:held-pages-walk-the-list-exactly-once´
+#[sqlx::test(migrations = "../../migrations")]
+async fn held_topic_pages_walk_the_list_exactly_once_either_way(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("reader", "reader@example.com").await;
+    let token = rig.log_in("reader@example.com").await;
+    rig.follow_topics(
+        &token,
+        &ak,
+        &[
+            ("delta", 0.8, 0.1),
+            ("alpha", 1.0, 0.1),
+            ("echo", 0.2, 0.1),
+            ("charlie", 0.2, 0.1),
+            ("bravo", -0.5, 0.1),
+        ],
+    )
+    .await;
+    rig.follow_topics(&token, &ak, &[("delta", 0.8, 0.1)]).await;
+    let whole = ["alpha", "delta", "charlie", "echo", "bravo"];
+    assert_eq!(held_names(&rig.held(&token, json!({})).await), whole);
+
+    let mut forward = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let page = rig.held(&token, json!({ "first": 2, "after": after })).await;
+        forward.extend(held_names(&page));
+        if page["pageInfo"]["hasNextPage"] != true {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    assert_eq!(forward, whole);
+
+    let mut backward: Vec<String> = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let page = rig
+            .held(&token, json!({ "last": 2, "before": before }))
+            .await;
+        let mut names = held_names(&page);
+        names.append(&mut backward);
+        backward = names;
+        if page["pageInfo"]["hasPreviousPage"] != true {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    assert_eq!(backward, whole);
+}
+
+/// The list is the viewer's own: anyone else — another member, or a
+/// reader with no session — reads null, never the topics.
+///
+/// Another reader's held topics resolve to null, signed in or anonymous.
+/// ´claim:topics:held-topics-are-the-viewers-own´
+#[sqlx::test(migrations = "../../migrations")]
+async fn another_readers_held_topics_are_null(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("reader", "reader@example.com").await;
+    rig.seed_member("other", "other@example.com").await;
+    let token = rig.log_in("reader@example.com").await;
+    let other = rig.log_in("other@example.com").await;
+    rig.follow_topics(&token, &ak, &[("rust", 0.4, 0.3)]).await;
+
+    let query =
+        r#"query { user(handle: "reader") { heldTopics { totalCount edges { cursor } } } }"#;
+    for session in [Some(other.as_str()), None] {
+        let data = rig.gql(session, query, json!({})).await;
+        assert!(data["user"]["heldTopics"].is_null(), "{data}");
+    }
+    let own = rig.gql(Some(&token), query, json!({})).await;
+    assert_eq!(own["user"]["heldTopics"]["totalCount"], 1, "{own}");
+}
+
+/// A cursor this list did not issue, and paging arguments past the
+/// budget, refuse as BAD_INPUT.
+///
+/// A foreign cursor or a page past the budget refuses the held-topics read as bad input.
+/// ´claim:topics:a-foreign-held-cursor-is-bad-input´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_foreign_cursor_or_an_oversized_page_is_bad_input(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    rig.seed_member("reader", "reader@example.com").await;
+    let token = rig.log_in("reader@example.com").await;
+    let foreign = B64.encode("hidden:0:00000000-0000-0000-0000-000000000000");
+
+    for variables in [
+        json!({ "after": foreign }),
+        json!({ "last": 2, "before": "garbage" }),
+        json!({ "first": 101 }),
+        json!({ "first": 2, "last": 2 }),
+    ] {
+        let json = rig.held_raw(Some(&token), variables.clone()).await;
+        assert_eq!(
+            json["errors"][0]["extensions"]["code"], "BAD_INPUT",
+            "for {variables}: {json}"
+        );
+    }
+}
