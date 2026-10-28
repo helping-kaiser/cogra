@@ -18,15 +18,26 @@ import { snapDimension } from "@/lib/stance/model";
 import { referenceDrafts } from "@/lib/references/claims";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { TagDraft } from "@/lib/topics/draft";
+import { nearestPostShape, POST_SHAPES, type PostShape } from "@/lib/ui2/media/aspect";
 import {
+  addAssets,
+  clipOf,
   editClaims,
   galleryOf,
-  pictureId,
   removeFrom,
   withAltText,
+  withNewCover,
+  withUpload,
   type EditGallery,
 } from "./comment-edit";
-import { bodyProblem, descriptionProblem, sensitiveReasonProblem, titleProblem } from "./wizard";
+import {
+  bodyProblem,
+  descriptionProblem,
+  POST_ATTACHMENT_CAP,
+  sensitiveReasonProblem,
+  titleProblem,
+  type PickedAsset,
+} from "./wizard";
 
 export type PostEditState = {
   readonly id: string;
@@ -37,6 +48,14 @@ export type PostEditState = {
   readonly gallery: EditGallery;
   /** The pictures' durations, by media id — a clip's tile is drawn as one. */
   readonly durations: Readonly<Record<string, number>>;
+  /**
+   * THE POST'S ONE SHAPE (D17), which every picture the edit adds is cut to:
+   * read off the pictures the post was published with, so the crop the edit
+   * opens is locked to it (ComposeCrop.md: "locked to the post's one shape").
+   * Null while the body holds no picture to read it from — a words post or a
+   * clip — and then the crop offers its chips and the first framing sets it.
+   */
+  readonly shape: PostShape | null;
   readonly tags: readonly TagDraft[];
   readonly references: readonly ReferenceDraft[];
   readonly sensitive: boolean;
@@ -72,7 +91,13 @@ export type PostEditAction =
   | { type: "movePicture"; from: number; to: number }
   | { type: "describe"; id: string; altText: string }
   /** The backing pad's Set: the edit's own pick. */
-  | { type: "pick"; pick: number };
+  | { type: "pick"; pick: number }
+  /** Pictures back from the crop, framed at `shape` — the post's own, or the one the chips chose. */
+  | { type: "addPictures"; assets: readonly PickedAsset[]; shape: PostShape }
+  /** One upload's next step: an added picture's, or the clip's new face's. */
+  | { type: "upload"; id: string; upload: PickedAsset["upload"] }
+  /** A face for the clip, back from the cover's crop — or null, `Remove it` under the cover row. */
+  | { type: "cover"; cover: PickedAsset | null };
 
 /** The post as the read served it, ready to edit. */
 export function postEditOf(post: PostDetailView): PostEditState {
@@ -84,6 +109,8 @@ export function postEditOf(post: PostDetailView): PostEditState {
   // A claim CoGra cannot type is dropped: it has no L2 id to name it back by,
   // so it renders on the detail but is never staged — nor read as withdrawn.
   const references = referenceDrafts(post.references);
+  const gallery = galleryOf(post.attachments);
+  const firstPicture = gallery.find((picture) => picture.kind === "kept" && !picture.video);
   const durations: Record<string, number> = {};
   for (const attachment of post.attachments) {
     const ms = attachment.options?.durationMs;
@@ -95,8 +122,9 @@ export function postEditOf(post: PostDetailView): PostEditState {
     title: post.title.value ?? "",
     description: post.description.value ?? "",
     words: post.content.value ?? "",
-    gallery: galleryOf(post.attachments),
+    gallery,
     durations,
+    shape: firstPicture?.kind === "kept" ? nearestPostShape(firstPicture.ratio) : null,
     tags,
     references,
     // THE AUTHOR'S OWN mark (round 4): what a reader sees is the OR of the
@@ -118,8 +146,7 @@ export function isMediaBody(state: PostEditState): boolean {
 
 /** Whether the body is one clip — `EditComposeVideo`'s anatomy. */
 export function isClipBody(state: PostEditState): boolean {
-  const first = state.gallery[0];
-  return state.gallery.length === 1 && first !== undefined && pictureId(first) in state.durations;
+  return clipOf(state.gallery) !== undefined;
 }
 
 function move<T>(items: readonly T[], from: number, to: number): readonly T[] {
@@ -159,7 +186,7 @@ export function postEditReducer(state: PostEditState, action: PostEditAction): P
       if (gallery.length > 0) return { ...state, gallery, recordStaged: true };
       // The last picture or the clip left: the body becomes words, the field
       // arrives empty, and the description goes with the pictures (K8.1).
-      return { ...state, gallery, words: "", description: "", recordStaged: true };
+      return { ...state, gallery, words: "", description: "", shape: null, recordStaged: true };
     }
     case "movePicture": {
       const gallery = move(state.gallery, action.from, action.to);
@@ -177,6 +204,34 @@ export function postEditReducer(state: PostEditState, action: PostEditAction): P
       // stages no record — a float's 0.004 never slips one in.
       const pick = snapDimension(action.pick);
       return { ...state, pick, recordStaged: state.recordStaged || pick !== 0 };
+    }
+    case "addPictures": {
+      if (action.assets.length === 0) return state;
+      // Pictures replace a words body: the words they replace are gone from
+      // the body (EditWords.md: "they pass the crop AND the words they replace
+      // are gone from the body").
+      return {
+        ...state,
+        gallery: addAssets(state.gallery, action.assets, POST_ATTACHMENT_CAP),
+        words: state.gallery.length === 0 ? "" : state.words,
+        shape: state.shape ?? action.shape,
+        recordStaged: true,
+      };
+    }
+    case "upload":
+      // An upload's progress is no change of the author's: it stages nothing.
+      return { ...state, gallery: withUpload(state.gallery, action.id, action.upload) };
+    case "cover": {
+      const clip = clipOf(state.gallery);
+      if (clip === undefined) return state;
+      // A face set is a change to the record (the cover pointer swaps at the
+      // signing); taking it back leaves the record as staged as it was — the
+      // guard is the batch, never a byte comparison (EditComposeUnchanged.md).
+      return {
+        ...state,
+        gallery: withNewCover(state.gallery, clip.mediaId, action.cover),
+        recordStaged: state.recordStaged || action.cover !== null,
+      };
     }
   }
 }
@@ -234,4 +289,25 @@ export function recordName(state: PostEditState): string {
   if (title !== "") return title;
   const words = state.words.trim();
   return words === "" ? "The post" : words.slice(0, 60);
+}
+
+/**
+ * The ratio an upload the edit took is cut to: a picture at the post's one
+ * shape, the clip's new face at the clip's own ratio — the window the cover's
+ * crop was locked to (CoverCrop.md). The crop's own area already carries it;
+ * this is the encoder's frame where no area was measured.
+ */
+export function uploadRatio(state: PostEditState, assetId: string): number | undefined {
+  const clip = clipOf(state.gallery);
+  if (clip !== undefined && clip.newCover?.id === assetId) return coverRatio(clip.ratio);
+  return state.shape === null ? undefined : POST_SHAPES[state.shape].ratio;
+}
+
+/**
+ * The window a clip's new face is cut to: the clip's own ratio in a post
+ * (CoverCrop.md). A clip the server never probed reserves the square, the
+ * neutral reservation `tileRatio` makes for a shape unknown.
+ */
+export function coverRatio(clipRatio: number | null): number {
+  return clipRatio !== null && Number.isFinite(clipRatio) && clipRatio > 0 ? clipRatio : 1;
 }
