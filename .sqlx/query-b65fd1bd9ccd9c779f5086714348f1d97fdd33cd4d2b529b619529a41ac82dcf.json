@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH named AS (\n               SELECT m.id, m.digest\n               FROM media_attachments n\n               JOIN media_attachments m ON m.id = COALESCE(n.merged_into, n.id)\n               WHERE n.id = ANY($2) AND n.author_id = $1\n           ), carried AS (\n               SELECT id FROM named\n               UNION\n               SELECT a.id\n               FROM named\n               JOIN media_attachments a\n                 ON a.author_id = $1 AND a.digest = named.digest\n                AND a.state <> 'failed' AND a.held_at IS NULL\n           )\n           SELECT p.id AS \"id!\"\n           FROM post_attachments j\n           JOIN post_versions v ON v.version_id = j.post_version_id\n           JOIN posts p ON p.id = v.post_id\n           WHERE j.attachment_id IN (SELECT id FROM carried)\n             AND p.author_id = $1\n             AND p.landed_epoch IS NOT NULL\n             AND v.redaction_reason IS NULL\n             AND v.version_id = (\n                 SELECT version_id FROM post_versions\n                 WHERE post_id = p.id\n                 ORDER BY pending DESC,\n                          landed_epoch DESC NULLS LAST,\n                          act_time DESC NULLS LAST,\n                          position DESC NULLS LAST,\n                          created_at DESC, version_id DESC\n                 LIMIT 1\n             )\n           ORDER BY p.landed_epoch, p.act_time, p.position, p.id\n           LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b65fd1bd9ccd9c779f5086714348f1d97fdd33cd4d2b529b619529a41ac82dcf"
+}

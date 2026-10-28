@@ -273,3 +273,47 @@ async fn more_ids_than_a_gallery_holds_is_bad_input(pool: PgPool) {
         "{past}"
     );
 }
+
+/// A removed post answers for nothing: its current version is a
+/// tombstone that shows no picture, so the marker falls through to the
+/// next post still carrying it.
+///
+/// A removed post never answers the already-published marker.
+/// ´claim:media:a-removed-post-never-answers-the-marker´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_removed_post_never_answers_the_marker(pool: PgPool) {
+    let rig = WireRig::new(pool, RateLimitConfig::unlimited());
+    let (author, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let picture = asset(&rig.pool, author, 1).await;
+    let first = landed_post(&rig, &token, &key, &[picture]).await;
+    let second = landed_post(&rig, &token, &key, &[picture]).await;
+
+    let record = rig
+        .gql(
+            Some(&token),
+            "query($id: UUID!) { post(id: $id) { genesisRecordId } }",
+            json!({ "id": first }),
+        )
+        .await["post"]["genesisRecordId"]
+        .clone();
+    let removed = rig
+        .gql(
+            Some(&token),
+            "mutation($input: RemoveContentInput!) {
+               removeContent(input: $input) { userErrors { code message } }
+             }",
+            json!({ "input": { "record": record, "includeRevisions": true } }),
+        )
+        .await;
+    assert_eq!(
+        removed["removeContent"]["userErrors"],
+        json!([]),
+        "{removed}"
+    );
+
+    assert_eq!(
+        placement(&rig, Some(&token), &[picture]).await,
+        json!(second)
+    );
+}

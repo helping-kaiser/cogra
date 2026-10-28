@@ -241,6 +241,7 @@ label.
 | `test:integration:a-removed-kept-post-stays-and-reads-its-removal`                                             | a_removed_kept_post_stays_and_reads_its_removal                                             |
 | `test:integration:a-removed-post-keeps-its-place-in-history`                                                   | a_removed_post_keeps_its_place_in_history                                                   |
 | `test:integration:a-removed-post-leaves-search`                                                                | a_removed_post_leaves_search                                                                |
+| `test:integration:a-removed-post-never-answers-the-marker`                                                     | a_removed_post_never_answers_the_marker                                                     |
 | `test:integration:a-removed-post-reads-removal-by-author-with-its-moment`                                      | a_removed_post_reads_removal_by_author_with_its_moment                                      |
 | `test:integration:a-removed-post-serves-every-field-redacted-and-no-gallery`                                   | a_removed_post_serves_every_field_redacted_and_no_gallery                                   |
 | `test:integration:a-removed-posts-pictures-are-held-unless-another-placement-shows-them`                       | a_removed_posts_pictures_are_held_unless_another_placement_shows_them                       |

@@ -1079,14 +1079,16 @@ pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, s
 /// merged row to the asset it became, and only the author's own ids name
 /// anything. The asset matches by its id or by its rendition digest: an
 /// author's live digest names at most one asset
-/// (`media_attachments_author_digest_key`), so the digest arm is that
-/// rule restated at the read, and what it catches is the merge — an
-/// upload that re-encoded to bytes the author already held is placed
-/// under the held asset's id.
+/// (`media_attachments_author_digest_key`, which a held asset no longer
+/// answers for), so the digest arm is that rule restated at the read,
+/// and what it catches is the merge — an upload that re-encoded to bytes
+/// the author already had is placed under that existing asset's id.
 ///
 /// "Published" is landed: the post's genesis record has an L1 position.
 /// "Carries" is the post's current version, the one its read renders, so
-/// an edit that took the picture out takes the post off the answer.
+/// an edit that took the picture out takes the post off the answer, and
+/// a removed post — whose current version is a tombstone, or a blanked
+/// row while its pending head is in flight — answers for nothing.
 /// "Earliest" is the published order — the landing coordinates, never
 /// wall clock (graph-model.md §2).
 ///
@@ -1111,7 +1113,7 @@ pub async fn first_own_placement(
                FROM named
                JOIN media_attachments a
                  ON a.author_id = $1 AND a.digest = named.digest
-                AND a.state <> 'failed'
+                AND a.state <> 'failed' AND a.held_at IS NULL
            )
            SELECT p.id AS "id!"
            FROM post_attachments j
@@ -1120,6 +1122,7 @@ pub async fn first_own_placement(
            WHERE j.attachment_id IN (SELECT id FROM carried)
              AND p.author_id = $1
              AND p.landed_epoch IS NOT NULL
+             AND v.redaction_reason IS NULL
              AND v.version_id = (
                  SELECT version_id FROM post_versions
                  WHERE post_id = p.id
