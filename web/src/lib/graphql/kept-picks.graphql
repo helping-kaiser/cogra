@@ -1,0 +1,88 @@
+# The kept picks' reads (KeptPicksReview.md, KeptPicksSeal.md, PadKeyAbsent.md).
+#
+# A pick kept while the key was elsewhere holds only its target's kind and id
+# (`stance/kept-picks.ts`), so the review reads each target's LIVE PREVIEW at
+# the moment it opens — the name a row shows, its kind's mark — rather than a
+# snapshot taken when the pick was kept. One small read per root, as the
+# stance reads are: no interface gathers Post, Comment and User.
+#
+# THE REMOVAL MARK: `Post.removal` / `Comment.removal` (api-spec.md "Removal"):
+# a target removed while its pick waited keeps its row, wearing the mark.
+# A deleted ACCOUNT is already readable — its display name is REDACTED — and
+# reads `Deleted account` on its row.
+
+query KeptPickPost($id: UUID!) {
+  post(id: $id) {
+    id
+    removal {
+      by
+    }
+    title {
+      value
+      status
+    }
+    content {
+      value
+      status
+    }
+    # The cover the row's tile shows: the first entry, or a clip's poster.
+    attachments {
+      id
+      url
+      status
+      mimeType
+      coverMedia {
+        id
+        url
+        status
+      }
+    }
+    author {
+      id
+      handle
+    }
+  }
+}
+
+query KeptPickComment($id: UUID!) {
+  comment(id: $id) {
+    id
+    removal {
+      by
+    }
+    content {
+      value
+      status
+    }
+    author {
+      id
+      handle
+    }
+  }
+}
+
+query KeptPickProfile($id: UUID!) {
+  user(id: $id) {
+    id
+    handle
+    displayName {
+      value
+      status
+    }
+    avatar {
+      id
+      url
+      status
+    }
+  }
+}
+
+# Whether the account has a recovery backup — what decides if a key-absent
+# notice offers `Restore the key` or says the key can't be brought here yet
+# (KeyElsewhereNoBackup.md). Viewer-only.
+query KeyBackupState {
+  me {
+    id
+    keyBackupCreatedAt
+  }
+}

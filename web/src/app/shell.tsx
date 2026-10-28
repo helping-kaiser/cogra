@@ -23,14 +23,16 @@
 // (`design/designs/canonical/screens/_shared.jsx`: a `flex: 1` scroller with
 // the nav as a static sibling) and what the ruling asks for.
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useRef, type ReactNode } from "react";
 
 import { announceFeedReselect } from "@/lib/feed/feed-reselect";
 import { notificationsOrigin } from "@/lib/notifications/origin";
 import type { BellRoot } from "@/lib/notifications/row-content";
 import { useAuthPhase } from "@/lib/session/provider";
+import { KeptPicksNavigation } from "@/lib/stance/kept-picks-route";
 import { BottomNav, type NavSlot } from "@/lib/ui/bottom-nav";
+import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
 
 /** The bar slot each bell root lights. */
 const ROOT_SLOT: Record<BellRoot, NavSlot> = {
@@ -111,6 +113,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // the URL and keeps that root lit.
   const drillIn = screen === "postDetail" || (screen === "profile" && pathname !== "/profile");
   const scroller = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const bar = (lit: NavSlot | null) => (
     <BottomNav
       active={lit}
@@ -124,6 +127,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
   return (
     <div className="flex h-full flex-col">
+      {/* A kept pick's anchor opens its review through the router; acts that
+          end by leaving confirm on the surface they land on (`carried-snackbar`). */}
+      <KeptPicksNavigation navigate={router.push}>
       <ScrollHostProvider value={scroller}>
         <PadParkingProvider value={showBar}>
         <div
@@ -143,6 +149,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </PadParkingProvider>
       </ScrollHostProvider>
+      </KeptPicksNavigation>
+      <CarriedSnackbar />
     </div>
   );
 }

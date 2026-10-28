@@ -8,12 +8,16 @@
 // with the draft by a don't-remember sign-out (Settings.md:145) — so what that
 // sign-out clears, a lock locks. A carried write's prepare-time expectation
 // (`signing/carried.ts`) is the same tier by ruling (content-integrity §9:
-// "locked or purged with the draft"), so it rides the same reads.
+// "locked or purged with the draft"), so it rides the same reads. So do the
+// kept picks (`stance/kept-picks.ts`; auth.md "Sign-out": a backed account's
+// "draft and kept picks are locked, since they are the only copies of
+// unpublished content").
 //
 // Every call names its account: a lock runs after the tokens were cleared,
 // an unlock before the fresh session is committed.
 
 import { carriedRange } from "@/lib/signing/carried";
+import { keptRange } from "@/lib/stance/kept-picks";
 import { accountRange } from "./sealed-draft";
 import { open, STORE } from "./draft-store";
 
@@ -55,7 +59,7 @@ export function readDraftCustody(idb: IDBFactory, account: string): Promise<Draf
     draft.onsuccess = () => {
       if (draft.result !== undefined) rows.unshift({ key: account, value: draft.result });
     };
-    for (const range of [accountRange(account), carriedRange(account)]) {
+    for (const range of [accountRange(account), carriedRange(account), keptRange(account)]) {
       const cursor = store.openCursor(range);
       cursor.onsuccess = () => {
         const at = cursor.result;
@@ -79,6 +83,7 @@ export function removeDraftCustody(idb: IDBFactory, account: string): Promise<vo
     store.delete(account);
     store.delete(accountRange(account));
     store.delete(carriedRange(account));
+    store.delete(keptRange(account));
     return () => undefined;
   });
 }
@@ -94,7 +99,7 @@ export function restoreDraftCustody(
   account: string,
   rows: readonly DraftRow[],
 ): Promise<void> {
-  const ranges = [accountRange(account), carriedRange(account)];
+  const ranges = [accountRange(account), carriedRange(account), keptRange(account)];
   return transact(idb, "readwrite", (store) => {
     for (const row of rows) {
       const owned = row.key === account || ranges.some((range) => range.includes(row.key));

@@ -80,6 +80,7 @@ export function StanceAlternates({
   onZeroBack,
   children,
   landing,
+  keyNotice = null,
 }: {
   mode: StanceInputMode;
   pick: StancePair;
@@ -106,6 +107,13 @@ export function StanceAlternates({
   children?: ReactNode;
   /** The landing, below the inputs as below the field. */
   landing?: ReactNode;
+  /**
+   * THE KEY IS ELSEWHERE (PadKeyAbsent.md, carried to the alternates that
+   * replace the pad, §8.6): the pad's key notice and its `Keep it pending,
+   * restore later` stand where the landing, the faults and the actions would,
+   * and the notice's "?" is the dialog's one. The inputs still move the pick.
+   */
+  keyNotice?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   // THE PAD IN ITS ALTERNATE FORM, so it announces itself as the pad does — a
@@ -137,6 +145,7 @@ export function StanceAlternates({
       className="cg-dialog-in m-auto w-[min(calc(100vw_-_4rem),20rem)] overflow-visible rounded-extra-large border-0 bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
       <div className="relative">
+        {keyNotice === null && (
         <button
           type="button"
           data-testid="stance-alt-help"
@@ -152,6 +161,7 @@ export function StanceAlternates({
             ?
           </span>
         </button>
+        )}
         <h2 className="m-0 pr-10 text-title-large">Choose your opinion</h2>
       </div>
       {/* The help and the 🤔's explanation take the body's place AND its
@@ -209,7 +219,7 @@ export function StanceAlternates({
           >
             {showing === "sliders" ? "Type exact values" : "Use sliders"}
           </button>
-          {landing}
+          {keyNotice === null && landing}
         </div>
         {replaced !== null && (
           <div data-testid="stance-alt-explanation" className="flex flex-col gap-2 [grid-area:1/1]">
@@ -229,16 +239,18 @@ export function StanceAlternates({
           </div>
         )}
       </div>
-      {fault === "failed" && (
+      {keyNotice !== null && <div className="mt-4 flex flex-col gap-3">{keyNotice}</div>}
+      {keyNotice === null && fault === "failed" && (
         <div className="mt-4">
           <TransportError testId="stance-alt-failed" message="That didn't send. Try again." />
         </div>
       )}
-      {fault === "writeRule" && (
+      {keyNotice === null && fault === "writeRule" && (
         <p role="status" data-testid="stance-alt-write-rule" className="m-0 mt-4 text-body-medium text-on-surface-variant">
           You can&apos;t sign right now.
         </p>
       )}
+      {keyNotice === null && (
       <div className="mt-6 flex items-center justify-end gap-2">
         {onSever !== undefined && (
           <button
@@ -268,6 +280,7 @@ export function StanceAlternates({
           Sign it
         </button>
       </div>
+      )}
     </dialog>
   );
 }

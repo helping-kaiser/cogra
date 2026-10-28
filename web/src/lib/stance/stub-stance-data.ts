@@ -9,6 +9,7 @@
 // its own — is unaffected either way.
 
 import { failed, refused, success, type Outcome, type UserError } from "@/lib/api/outcome";
+import { fallbackPreview, type KeptTargetPreview } from "./kept-preview";
 import { clampPair, ORIGIN, type StancePair } from "./model";
 import type {
   StanceBundle,
@@ -89,6 +90,15 @@ export type StubStanceOptions = {
   readonly refuse?: UserError["code"];
   /** The signing key is not on this device (PadKeyAbsent). */
   readonly keyAbsent?: boolean;
+  /**
+   * How many of each target's newest records are signed but not yet ordered:
+   * a read that leaves pending out counts that many fewer.
+   */
+  readonly unorderedRecords?: number;
+  /** The account has no recovery backup (KeyElsewhereNoBackup). */
+  readonly noBackup?: boolean;
+  /** The live previews a kept pick's row reads, by target id; others fall back to the kind. */
+  readonly previews?: Readonly<Record<string, KeptTargetPreview>>;
   /** Fail every call, for the transport-fault branches. */
   readonly offline?: boolean;
 };
@@ -103,6 +113,10 @@ export type StubStanceData = StanceData & {
   /** `fresh` as each STANDING read received it — the post-write witness. */
   readonly freshFlags: readonly boolean[];
   recordsOf(target: string): readonly StancePair[];
+  /** The key arrives on, or leaves, this device. */
+  setKeyAbsent(absent: boolean): void;
+  /** Each batch `commitBatch` signed, in order. */
+  readonly batches: readonly (readonly { target: string; pick: StancePair }[])[];
 };
 
 const OFFLINE = () => failed(new Error("stub stance data is offline"));
@@ -118,6 +132,8 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
   const severed: string[] = [];
   const pendingFlags: boolean[] = [];
   const freshFlags: boolean[] = [];
+  const batches: { target: string; pick: StancePair }[][] = [];
+  let keyAbsent = options.keyAbsent === true;
 
   const recordsOf = (target: string): StancePair[] => state.get(target) ?? [];
 
@@ -147,12 +163,21 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
     pendingFlags,
     freshFlags,
     recordsOf,
+    batches,
+
+    setKeyAbsent(absent: boolean) {
+      keyAbsent = absent;
+    },
 
     async bundle(target: StanceTarget, readOptions): Promise<Outcome<StanceBundle>> {
       if (options.offline === true) return OFFLINE();
       noteRead(readOptions);
       freshFlags.push(readOptions?.fresh === true);
-      return success(standingOf(target));
+      const standing = standingOf(target);
+      if (readOptions?.includePending === false && options.unorderedRecords !== undefined) {
+        return success({ ...standing, records: Math.max(0, standing.records - options.unorderedRecords) });
+      }
+      return success(standing);
     },
 
     async project(target: StanceTarget, pick, readOptions): Promise<Outcome<StanceProjection>> {
@@ -177,7 +202,28 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
     },
 
     async keyOnDevice(): Promise<boolean> {
-      return options.keyAbsent !== true;
+      return !keyAbsent;
+    },
+
+    async keyBackedUp(): Promise<boolean | null> {
+      return options.noBackup !== true;
+    },
+
+    async commitBatch(entries): Promise<Outcome<StanceCommit>> {
+      if (options.offline === true) return OFFLINE();
+      if (options.refuse !== undefined) return REFUSED(options.refuse);
+      // All or nothing: every pick lands, or none does.
+      batches.push(entries.map(({ target, pick }) => ({ target: target.id, pick })));
+      for (const { target, pick } of entries) {
+        sent.push({ target: target.id, pick });
+        state.set(target.id, [...recordsOf(target.id), pick]);
+      }
+      return success({ records: entries.length });
+    },
+
+    async preview(target): Promise<Outcome<KeptTargetPreview>> {
+      if (options.offline === true) return OFFLINE();
+      return success(options.previews?.[target.id] ?? fallbackPreview(target));
     },
 
     async sever(target: StanceTarget): Promise<Outcome<StanceCommit>> {

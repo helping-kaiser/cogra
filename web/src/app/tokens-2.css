@@ -204,6 +204,16 @@ dialog.cg-sheet-out::backdrop {
     var(--ring-task) border-box;
 }
 
+/* The task ring on the ACCOUNT-NOTICE ground (`TaskCard`'s `tone="notice"`,
+   the olive split, jakob 2026-10-02): a feed card that needs the reader's
+   action — the key card — wears the tertiary container inside the same ring. */
+.cg-task-ring-notice {
+  border: var(--ring-task-width) solid transparent;
+  background:
+    linear-gradient(var(--tertiary-container), var(--tertiary-container)) padding-box,
+    var(--ring-task) border-box;
+}
+
 /* ----------------------------------------------------------------- states --
  * design.md is silent on hover, press, and focus, which left every surface to
  * invent one. Filled with Material's own documented state-layer opacities,

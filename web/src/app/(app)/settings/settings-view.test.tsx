@@ -4,6 +4,7 @@ import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
+import { keepPick, listKeptPicks } from "@/lib/stance/kept-picks";
 import { RUNNING_VERSION } from "@/lib/release/running-version";
 import { createTokenStore } from "@/lib/session/token-store";
 import { accountFilterLevel, setAccountFilterLevel } from "@/lib/settings/sensitive-content";
@@ -1200,5 +1201,72 @@ describe("hidden accounts (SettingsHidden.md; hidden-actors packet §5.4, §6)",
     expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
       "This account is unhidden — its posts can reach your feed again.",
     );
+  });
+});
+
+// Settings.md:73-81, PadKeyAbsent.md:37-41 — the kept picks in the Key backup
+// group, and in the sign-out's custody step.
+describe("the kept picks in settings", () => {
+  const POST = { kind: "post" as const, id: "post-1" };
+  const PICK = { pDirected: 0.1, pInterest: 0.1 };
+
+  it("stands the kept-picks row last in Key backup while the key is here, and opens the review", async () => {
+    await keepPick("acct-1", POST, PICK);
+    await keepPick("acct-1", { kind: "post", id: "post-2" }, PICK);
+    renderSettings();
+    const row = await screen.findByTestId("settings.backup.keptPicks");
+    expect(row).toHaveTextContent("2 kept picks waiting");
+    const group = screen.getByTestId("settings.backup");
+    const rows = within(group).getAllByRole("button");
+    expect(rows[rows.length - 1]).toBe(row);
+    fireEvent.click(row);
+    expect(push).toHaveBeenCalledWith("/kept-picks?from=%2Fsettings");
+  });
+
+  it("reads 1 kept pick waiting in the singular", async () => {
+    await keepPick("acct-1", POST, PICK);
+    renderSettings();
+    expect(await screen.findByTestId("settings.backup.keptPicks")).toHaveTextContent("1 kept pick waiting");
+  });
+
+  it("stands no kept-picks row while the key is elsewhere, nor when none waits", async () => {
+    await keepPick("acct-1", POST, PICK);
+    renderSettings({ keyOnDevice: false });
+    await screen.findByTestId("settings.backup.recovery.status");
+    expect(screen.queryByTestId("settings.backup.keptPicks")).toBeNull();
+  });
+
+  it("keeps every kept pick on a remembered sign-out", async () => {
+    server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
+    await keepPick("acct-1", POST, PICK);
+    const { tokens } = renderSettings();
+    await screen.findByTestId("settings.credentials.password.status");
+    fireEvent.click(screen.getByTestId("settings.leaving.leave"));
+    await waitFor(() => expect(tokens.accessToken()).toBeNull());
+    expect(await listKeptPicks("acct-1")).toHaveLength(1);
+  });
+
+  it("clears the kept picks with the draft on a don't-remember sign-out with a backup", async () => {
+    server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
+    await keepPick("acct-1", POST, PICK);
+    await keepPick("other-account", POST, PICK);
+    const { tokens, drafts } = renderSettings({ ephemeral: true });
+    await screen.findByTestId("settings.credentials.password.status");
+    fireEvent.click(screen.getByTestId("settings.leaving.leave"));
+    await waitFor(() => expect(tokens.accessToken()).toBeNull());
+    expect(drafts.clear).toHaveBeenCalled();
+    expect(await listKeptPicks("acct-1")).toEqual([]);
+    // Another account's picks are never touched.
+    expect(await listKeptPicks("other-account")).toHaveLength(1);
+  });
+
+  it("asks first, never clearing the kept picks, when the device holds the only key", async () => {
+    server.use(accountHandler({ keyBackupCreatedAt: null }));
+    await keepPick("acct-1", POST, PICK);
+    renderSettings({ ephemeral: true });
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.leaving.leave"));
+    await screen.findByTestId("settings.dialog");
+    expect(await listKeptPicks("acct-1")).toHaveLength(1);
   });
 });
