@@ -20,7 +20,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -74,6 +73,7 @@ import com.cogra.core.designsystem.v2.atom.CograBandChats
 import com.cogra.core.designsystem.v2.atom.CograBandIdentity
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograMark
+import com.cogra.core.designsystem.v2.atom.Seam
 import com.cogra.core.designsystem.v2.atom.taskRing
 import com.cogra.core.designsystem.v2.atom.taskRingColors
 import com.cogra.core.designsystem.v2.media.CoverKind
@@ -802,30 +802,11 @@ internal fun seenSplit(posts: List<PostView>, seenTail: Set<String>): Int {
 /**
  * `feed.seenSeparator` (FeedSeenTail.md, the `FeedSeenTail` board): a
  * hairline with "Already seen" centred on it, quiet, and no control — the
- * board's 12dp gap and 8dp/24dp padding, the hairline `--border-hairline`
- * (`outlineVariant`), the words label-small in `--text-secondary`
- * (`onSurfaceVariant`).
+ * system's one seam ([Seam]) with the feed's own words.
  */
 @Composable
 private fun SeenSeparator() {
-    val node = FEED / "seenSeparator"
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .dataNode(node)
-            .padding(horizontal = Space.x6, vertical = Space.x2),
-        horizontalArrangement = Arrangement.spacedBy(Space.x3),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
-        Text(
-            text = stringResource(R.string.content_feed_seen_separator),
-            modifier = Modifier.dataNode(node / "label"),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
-    }
+    Seam(stringResource(R.string.content_feed_seen_separator), node = FEED / "seenSeparator")
 }
 
 /**
