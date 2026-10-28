@@ -17,6 +17,10 @@ export interface SeveranceConfirmProps {
   /** The signing did not go through; the dialog stays open, says so above
    *  the pair, and the confirm's slot reads `Retry`. */
   failed?: boolean;
+  /** The write rule refused the walk-back: a notice, not a fault. The quiet
+   *  line `WRITE_RULE_WORDS.dialog` stands where the fault line would, the
+   *  confirm dims, and no Retry is offered; `Keep it` returns to the pad. */
+  writeRule?: boolean;
   onConfirm?: () => void;
   onCancel?: () => void;
   inline?: boolean;

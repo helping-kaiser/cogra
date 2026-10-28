@@ -147,6 +147,29 @@ export const STANCE_SEVERANCE_WORDS = {
   helpAlternates: "Walk it back takes everything to nothing, and each thing you've said is walked back by its own signature.",
 };
 
+/* THE WRITE RULE'S WORDS, AT THE STANCE FAMILY'S SCALES (copy-voice, *Faults
+   by code*). The seal's panel says the draft is kept; nothing in this family
+   keeps a draft, so its fact stops at what was not signed or spent. One
+   object, because the pad, the alternates, the row and the two dialogs
+   raised over the pad all say the same refusal, and a sentence kept in two
+   files is a sentence that drifts:
+
+   · `title`, `padFact` and `help` — the notice panel standing where the
+     landing line and the commit row were (the pad, the alternates), its "?"
+     the seal panel's own dialog.
+   · `row` — the quiet line under a target's face, after a hold.
+   · `dialog` — the quiet line in a dialog raised over the pad (the walk-back,
+     the empty sign), where the fault line would stand: the row's words, and
+     the fact the cost line just above it makes the reader ask (seam 245,
+     ask 15). */
+export const WRITE_RULE_WORDS = {
+  title: "You can't sign right now",
+  padFact: "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.",
+  help: "Why signing waits",
+  row: "You can't sign right now.",
+  dialog: "You can't sign right now. Nothing was signed or spent.",
+};
+
 /** A family's severance words, or the default family's. */
 export function severanceWords(names) {
   return (names && names.severance) || STANCE_SEVERANCE_WORDS;

@@ -8,6 +8,8 @@ export interface EmptySignConfirmProps {
   busy?: boolean;
   /** The signing did not go through; the dialog stays open, says so, and the act's slot reads `Retry`. */
   failed?: boolean;
+  /** The write rule refused the sign: the quiet line `WRITE_RULE_WORDS.dialog`, `Set it anyway` dimmed, no Retry — `SeveranceConfirm`'s state. */
+  writeRule?: boolean;
   /** `Set it anyway` — signs the one empty record. */
   onConfirm?: () => void;
   /** `Keep it`, the scrim, Escape and Back — the pad beneath keeps its pick. */

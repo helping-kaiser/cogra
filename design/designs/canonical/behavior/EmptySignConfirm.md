@@ -34,6 +34,8 @@ ALWAYS Walk it back stands on the pad over the standing an empty sign leaves, it
 
 WHEN the signing does not go through -> the dialog stays up AND the line That didn't send. Try again. stands above the pair AND Set it anyway reads Retry AND nothing is signed
 
+WHEN the write rule refuses the empty sign -> the dialog stays up AND the line You can't sign right now. Nothing was signed or spent. stands where the fault line would, in the pending marker's quiet register AND Set it anyway dims AND NEVER a Retry stands AND NEVER anything is staged, signed or spent
+
 WHEN press Keep it GIVEN Set it anyway is not waiting on its signing -> the dialog closes AND nothing is signed AND the pick is still parked on the pad beneath
 
 WHEN tap the scrim, press the system's Back or press Escape GIVEN Set it anyway is not waiting on its signing -> the dialog closes as Keep it closes it AND nothing is signed AND the pick is still parked on the pad beneath

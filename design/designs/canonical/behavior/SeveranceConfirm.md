@@ -32,6 +32,12 @@ WHEN the signing is taken -> the dialog closes AND the pad beneath it closes AND
 
 WHEN the signing does not go through -> the dialog stays up with its pair AND the line That didn't send. Try again. stands above the pair AND Walk it back reads Retry AND nothing is walked back
 
+WHEN the write rule refuses the walk-back -> the dialog stays up with its pair AND the line You can't sign right now. Nothing was signed or spent. stands where the fault line would AND Walk it back dims AND NEVER a Retry stands AND NEVER anything is staged, signed or spent
+
+ALWAYS the write rule's line wears the secondary ink of the pending marker's register and is announced politely, never the error colour and never as an alert
+
+WHEN press Keep it GIVEN the write rule refused the walk-back -> the dialog closes AND nothing is signed AND the pick is still parked on the pad beneath
+
 WHEN press Keep it GIVEN Walk it back is not waiting on its signing -> the dialog closes AND nothing is signed AND the pick is still parked on the pad beneath
 
 WHEN tap the scrim, press the system's Back or press Escape GIVEN Walk it back is not waiting on its signing -> the dialog closes as Keep it closes it AND nothing is signed AND the pick is still parked on the pad beneath

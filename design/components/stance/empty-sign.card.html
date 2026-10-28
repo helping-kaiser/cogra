@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="800x940" name="Empty sign" subtitle="A (0, 0) with nothing standing: asked, never refused, never the walk-back." -->
+<!-- @dsCard group="Components" viewport="800x1260" name="Empty sign" subtitle="A (0, 0) with nothing standing: asked, never refused, never the walk-back." -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -37,6 +37,12 @@ function Demo(){return (
     <div className="col">
       <span className="lbl">Didn't go through — the fault line, and Retry in the act's slot</span>
       <EmptySignConfirm inline targetLabel="@ada" failed/>
+    </div>
+  </div>
+  <div className="row">
+    <div className="col">
+      <span className="lbl">The write rule says not now — the walk-back's quiet line, the act dimmed, no Retry</span>
+      <EmptySignConfirm inline targetLabel="@ada" writeRule/>
     </div>
   </div>
 </div>)}
