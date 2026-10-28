@@ -211,7 +211,7 @@ data class EditGallery(
      */
     fun adding(assets: List<PickedAsset>, cap: Int, framings: Map<String, CropSpec> = emptyMap()): EditGallery {
         val room = (cap - pictures.size).coerceAtLeast(0)
-        val taken = assets.filterNot { asset -> pictures.any { it.key == asset.uri } }.take(room)
+        val taken = assets.distinctBy { it.uri }.filterNot { asset -> pictures.any { it.key == asset.uri } }.take(room)
         return copy(
             pictures = pictures + taken.map { EditPicture.Added(it) },
             crops = crops + framings.filterKeys { uri -> taken.any { it.uri == uri } },

@@ -447,7 +447,7 @@ data class CropAspect(val x: Int, val y: Int) {
 
     companion object {
         /**
-         * A whole-number pair for [ratio], to a thousandth — finer than any
+         * A whole-number pair for [ratio], to a ten-thousandth — finer than any
          * clip's own shape needs. A ratio nothing could measure reserves the
          * square, the neutral reservation a shape unknown takes everywhere.
          */
@@ -458,7 +458,7 @@ data class CropAspect(val x: Int, val y: Int) {
             return CropAspect(x / divisor, RATIO_DENOMINATOR / divisor)
         }
 
-        private const val RATIO_DENOMINATOR = 1000
+        private const val RATIO_DENOMINATOR = 10_000
 
         private tailrec fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
     }
