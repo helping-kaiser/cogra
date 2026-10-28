@@ -19,12 +19,20 @@ import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
 /**
- * A calm placeholder where a removed body was — never a silent gap
- * (design/readme.md §9, D15).
+ * The removal mark — `RedactedContent` (design/components/honesty/
+ * SensitiveVeil.jsx): a calm statement of fact where a removed body was, never
+ * a silent gap (design/readme.md §9, D15).
  *
  * **The two reasons must never read alike.** Collapsing them lets a verdict
  * hide behind an author's decision, so [RemovalReason] is a type and each arm
- * carries its own sentence. The wording is design/readme.md §13's, verbatim.
+ * carries its own two lines — the master's `REASONS`, verbatim (copy-voice).
+ * An author's own removal and the sweep their account deletion chose are ONE
+ * wording, [RemovalReason.Author] (copy-voice, ER-G3: "the author chose the
+ * sweep"); the data keeps them apart, the reader does not.
+ *
+ * EACH LINE SETS ITS WHOLE TYPE ROLE (round 20, seam 245 ask 6): the line in
+ * `body-medium`, the detail in `body-small`, the `when` in `label-small` —
+ * size, leading, tracking and weight together, none borrowed from the page.
  *
  * **No `error` colouring.** A removal is a statement of fact, not a failure,
  * so this sits on `surfaceContainerHigh` in `onSurfaceVariant` — the same
@@ -43,6 +51,11 @@ fun RemovedPlaceholder(
     shape: Shape = MaterialTheme.shapes.medium,
     testTag: String? = null,
     /**
+     * Replaces the second line where a case needs its own wording — a
+     * comment's (`REMOVED_COMMENT_NOTE`: the noun swaps, the mark does not).
+     */
+    note: String? = null,
+    /**
      * The mark's data-node on a registered screen
      * (`profile.identity.removalMark`): it and its `line`, `detail` and
      * `when` then wear the registered paths in place of [testTag].
@@ -54,15 +67,15 @@ fun RemovedPlaceholder(
         RemovalReason.Platform -> "Removed under the platform's rules"
         RemovalReason.Account -> "Deleted by the person whose account it was"
     }
-    // The second line is the same fact for a post's two reasons — what
-    // survives is the skeleton either way — so those two are told apart by
-    // the headline, which is the distinction design/readme.md §9 actually
-    // requires. The wording is the canonical `Removed` board's, verbatim. A
-    // deleted account's is its own (`REASONS.account`, SensitiveVeil.jsx).
-    val detail = when (reason) {
+    // Each reason's own second line (`REASONS`, SensitiveVeil.jsx): the
+    // author's says what went and what stays, the verdict's that it was
+    // decided in public, the deleted account's what still credits them.
+    val detail = note ?: when (reason) {
+        RemovalReason.Author ->
+            "The words and pictures are gone. The post's place in the thread, and every response, remain."
+        RemovalReason.Platform -> "A passed proposal removed it. The decision is public."
         RemovalReason.Account ->
             "Their name and profile are gone. What they signed stays on the graph and still credits them."
-        else -> "The post's place in the thread, and every response, remain."
     }
 
     Column(
@@ -89,7 +102,8 @@ fun RemovedPlaceholder(
             modifier = Modifier.fillMaxWidth().dataNode(node?.div("detail")),
         )
         // Part of the surviving skeleton: a removal never hides when it
-        // happened.
+        // happened. The removal's own moment in the one age ladder
+        // (`ageLadder` of `Removal.at`), never the content's age.
         if (timestamp != null) {
             Text(
                 text = timestamp,
@@ -106,8 +120,8 @@ fun RemovedPlaceholder(
 private fun RemovedPlaceholderReasons() {
     Cogra2PreviewTheme {
         PreviewMediaColumn {
-            RemovedPlaceholder(RemovalReason.Author, timestamp = "today")
-            RemovedPlaceholder(RemovalReason.Platform, timestamp = "today")
+            RemovedPlaceholder(RemovalReason.Author, timestamp = "2h")
+            RemovedPlaceholder(RemovalReason.Platform, timestamp = "20d")
             RemovedPlaceholder(RemovalReason.Account)
         }
     }
