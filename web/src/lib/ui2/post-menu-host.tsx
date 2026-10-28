@@ -191,7 +191,7 @@ export function PostMenuHost({
         open={open}
         onClose={onClose}
         items={items}
-        ariaLabel="More on this post"
+        ariaLabel="Post actions"
         testId={`${testId}-sheet`}
         node={nodes.sheet}
       />

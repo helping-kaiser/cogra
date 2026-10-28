@@ -337,6 +337,7 @@ export function CommentFeedCard({
           <OverflowMenu
             items={items}
             ariaLabel="More on this comment"
+            sheetLabel="Comment actions"
             testId={`${testId}-menu`}
             trailing={
               <>

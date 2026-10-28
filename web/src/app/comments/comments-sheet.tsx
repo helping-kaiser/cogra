@@ -784,6 +784,7 @@ export function CommentsSheet({
                 <OverflowMenu
                   items={menuRowsOf(comment, isOwn)}
                   ariaLabel="More on this comment"
+                  sheetLabel="Comment actions"
                   testId={`comment-menu-${comment.id}`}
                   stacked
                 />

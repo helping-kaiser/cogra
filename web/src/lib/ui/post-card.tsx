@@ -440,6 +440,7 @@ export function PostCard({
             <OverflowMenu
               items={menuItems}
               ariaLabel="More on this post"
+              sheetLabel="Post actions"
               testId={`${testId}-menu`}
               node={part(node, "menu")}
               trailing={

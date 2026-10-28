@@ -146,10 +146,17 @@ export function OverflowMenu({
   stacked = false,
   node,
   sheetNode,
+  sheetLabel = ariaLabel,
 }: {
   items: readonly MenuItem[];
-  /** What the trigger and the sheet are both called, e.g. "More on this post". */
+  /** What the trigger is called, e.g. "More on this post". */
   ariaLabel: string;
+  /**
+   * What the sheet is called, where its board names it apart from the trigger
+   * (`Post actions`, `Comment actions` — the menu boards' `BottomSheet`).
+   * Defaults to the trigger's name.
+   */
+  sheetLabel?: string;
   /** Names the trigger, and is what the sheet's own id derives from. */
   testId: string;
   /** The registered node the TRIGGER is; it then names the trigger instead of `testId`. */
@@ -186,7 +193,7 @@ export function OverflowMenu({
         open={open}
         onClose={() => setOpen(false)}
         items={items}
-        ariaLabel={ariaLabel}
+        ariaLabel={sheetLabel}
         testId={`${testId}-sheet`}
         node={sheetNode}
         stacked={stacked}
