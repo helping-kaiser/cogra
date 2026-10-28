@@ -62,6 +62,7 @@ import {
   type TraceThingKind,
 } from "@/lib/score/trace-model";
 import {
+  holdTraceRead,
   openTrace,
   traceBack,
   traceHref,
@@ -124,7 +125,7 @@ function lenderOf(read: Answered): string | null {
  */
 async function readTrace(
   client: ReturnType<typeof useApolloClient>,
-  open: TraceOpen,
+  open: Pick<TraceOpen, "targetId" | "cover" | "viewer">,
   reader: string | null,
 ): Promise<Outcome<Answered | null>> {
   let viewer = open.viewer ?? heldViewer(reader);
@@ -161,16 +162,18 @@ export function TraceView({ address, level }: { address: TraceAddress; level: Tr
   const reader = useScoreReader();
   // The open the tap began, or a fresh one for a cold arrival — read once:
   // the levels are one mount, and the held answer outlives it (`trace-session.ts`).
-  const [open] = useState(() => openTrace(address.targetId));
-  const [read, setRead] = useState<TraceRead>(open.read);
+  const [open] = useState(() => {
+    const { targetId, cover, viewer } = openTrace(address.targetId);
+    return { targetId, cover, viewer };
+  });
+  const [read, setRead] = useState<TraceRead>(() => openTrace(address.targetId).read);
   const [unfolded, setUnfolded] = useState(false);
   const [now] = useState(() => Date.now());
 
   const run = useCallback(() => {
-    open.read = { kind: "loading" };
-    setRead(open.read);
+    holdTraceRead(open.targetId, { kind: "loading" });
     void readTrace(client, open, reader).then((outcome) => {
-      open.read =
+      const done: TraceRead =
         outcome.kind === "success"
           ? (outcome.value ?? { kind: "failed", offline: false })
           : // NO ANSWER reads the connection line; an answer that is an error
@@ -180,14 +183,20 @@ export function TraceView({ address, level }: { address: TraceAddress; level: Tr
               kind: "failed",
               offline: outcome.kind === "failed" && !CombinedGraphQLErrors.is(outcome.cause),
             };
-      setRead(open.read);
+      holdTraceRead(open.targetId, done);
+      setRead(done);
     });
   }, [client, open, reader]);
+
+  const retry = () => {
+    setRead({ kind: "loading" });
+    run();
+  };
 
   useEffect(() => {
     // NO FETCH FOR A THING STILL SETTLING (FeedEntryMoved.md:9), and none for
     // a level the held answer already serves (CD-SR2).
-    if (address.settling || open.read.kind !== "idle") return;
+    if (address.settling || openTrace(open.targetId).read.kind !== "idle") return;
     run();
   }, [address.settling, open, run]);
 
@@ -235,7 +244,7 @@ export function TraceView({ address, level }: { address: TraceAddress; level: Tr
             <p role="alert" data-testid="feedEntry-fault" className="text-body-medium text-error">
               {read.offline ? OFFLINE : FAULT}
             </p>
-            <Button testId="feedEntry-retry" variant="outline" size="sm" onClick={run}>
+            <Button testId="feedEntry-retry" variant="outline" size="sm" onClick={retry}>
               Retry
             </Button>
           </div>

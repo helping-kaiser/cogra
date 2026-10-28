@@ -131,7 +131,7 @@ export type TraceOpen = {
   readonly cover: TraceCover | null;
   /** The view the tapped figure was computed in (CD-SR1); null when none was held. */
   readonly viewer: string | null;
-  read: TraceRead;
+  readonly read: TraceRead;
 };
 
 let current: TraceOpen | null = null;
@@ -145,6 +145,11 @@ export function beginTrace(targetId: string, cover: TraceCover | null, viewer: s
 export function openTrace(targetId: string): TraceOpen {
   if (current === null || current.targetId !== targetId) beginTrace(targetId, null, null);
   return current!;
+}
+
+/** Hold what the open's one fetch came to, for every level that reads it. */
+export function holdTraceRead(targetId: string, read: TraceRead): void {
+  if (current !== null && current.targetId === targetId) current = { ...current, read };
 }
 
 /** Forget the open — a cold start, for a test. */
