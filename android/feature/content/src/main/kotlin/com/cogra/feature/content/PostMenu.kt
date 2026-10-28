@@ -25,7 +25,7 @@ import com.cogra.domain.LicenseChoice
  * ROWS WHOSE DESTINATION IS NOT BUILT YET STAND ANYWAY and do nothing
  * (jakob 2026-09-14, the introduced-but-inert law): a menu that grew a
  * row per slice would be a different menu every release, and the row
- * order is ruled. `Remove` waits on slice 8's erasure.
+ * order is ruled.
  *
  * @param onShare THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK
  *   (design/readme.md, jakob 2026-09-17, sharpened 2026-09-22 — PR #794):

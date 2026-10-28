@@ -100,7 +100,10 @@ private fun SavedPageQuery.Target.toTarget(): CommentTarget? {
             coverUrl = cover,
             authorHandle = post.author?.handle,
             moderation = post.moderationStatus.toDomain(),
-            removed = title.status == FieldStatus.REDACTED ||
+            // The node's own mark first (`Post.removal`); the fields answer for
+            // a removal read before the mark was served.
+            removed = post.removal != null ||
+                title.status == FieldStatus.REDACTED ||
                 content.status == FieldStatus.REDACTED ||
                 post.attachments.any { it.status.rawValue == REDACTED },
         )

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import type { FeedItemView } from "@/lib/api/feed-api";
 import { failed, success, type Outcome } from "@/lib/api/outcome";
+import { adoptTrace, forgetStandings, heldViewer, standingOf } from "@/lib/score/standing";
 import type { HeldAnswer, SeenLookup } from "./derive";
 import { FEED_FILTER_DEFAULT, type RankArguments } from "./feed-filter";
 import { FEED_WINDOW, RankedFeed, type FeedIo } from "./ranked-feed";
@@ -336,5 +337,25 @@ describe("the held ranking", () => {
       await feed.window(0, fake.reads);
       expect(fake.kinds).toEqual([["POST", "COMMENT"]]);
     });
+  });
+});
+
+describe("the held ranking as the score's lookup source (score-readout CD-SR5)", () => {
+  it("a fetch holds its answer and its viewer; a local re-derive keeps every adoption", async () => {
+    forgetStandings();
+    const fake = io([answerOf(["a", "b"]), answerOf(["a"])]);
+    const feed = new RankedFeed("reader-1");
+    await feed.refresh(fake.reads);
+    expect(feed.viewer).toBe("viewer-1");
+    expect(heldViewer("reader-1")).toBe("viewer-1");
+    expect(standingOf("reader-1", "a", false)).toEqual({ kind: "figure", score: 1 });
+
+    adoptTrace("a", null);
+    await feed.done({ ...FEED_FILTER_DEFAULT, order: "newest" }, fake.reads);
+    expect(standingOf("reader-1", "a", false)).toEqual({ kind: "dash" });
+
+    await feed.refresh(fake.reads);
+    expect(standingOf("reader-1", "a", false)).toEqual({ kind: "figure", score: 1 });
+    forgetStandings();
   });
 });

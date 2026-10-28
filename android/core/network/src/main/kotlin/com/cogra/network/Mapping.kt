@@ -43,6 +43,8 @@ import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
+import com.cogra.domain.Removal
+import com.cogra.domain.RemovalAgent
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
@@ -218,6 +220,14 @@ internal fun com.cogra.network.graphql.type.FieldModerationStatus.toDomain(): Fi
 /** A state this build cannot name is never read as a verdict. */
 internal fun com.cogra.network.graphql.type.ModerationStatus.toDomain(): ModerationState =
     runCatching { ModerationState.valueOf(rawValue) }.getOrDefault(ModerationState.UNKNOWN)
+
+/** An agent this build cannot name is never read as a verdict. */
+internal fun com.cogra.network.graphql.type.RemovalAgent.toDomain(): RemovalAgent =
+    runCatching { RemovalAgent.valueOf(rawValue) }.getOrDefault(RemovalAgent.UNKNOWN)
+
+/** A node's mark, from whichever selection read it. */
+internal fun removalOf(at: java.time.Instant, by: com.cogra.network.graphql.type.RemovalAgent): Removal =
+    Removal(at = at, by = by.toDomain())
 
 /** A state this client version does not know is never read as READY. */
 internal fun com.cogra.network.graphql.type.MediaAttachmentState.toDomain(): MediaAssetState =
@@ -441,6 +451,8 @@ internal fun PostFields.toDomain(): PostView = PostView(
     attachments = attachments.map { it.mediaFields.toDomain() },
     attachmentsStatus = attachmentsStatus.toDomain(),
     moderation = moderationStatus.toDomain(),
+    removal = removal?.let { removalOf(it.at, it.by) },
+    genesisRecordId = genesisRecordId,
     viewerBookmarkedAt = viewerBookmarkedAt,
 )
 
@@ -459,6 +471,8 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     attachments = attachments.map { it.mediaFields.toDomain() },
     attachmentsStatus = attachmentsStatus.toDomain(),
     moderation = moderationStatus.toDomain(),
+    removal = removal?.let { removalOf(it.at, it.by) },
+    genesisRecordId = genesisRecordId,
     sensitiveSelfMark = sensitiveSelfMark,
     sensitiveReason = sensitiveReason,
     viewerBookmarkedAt = viewerBookmarkedAt,
