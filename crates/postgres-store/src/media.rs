@@ -1028,6 +1028,74 @@ pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, s
     .await
 }
 
+/// The author's earliest published post whose gallery carries any of the
+/// named assets — the composer's already-published marker (api-spec.md
+/// `Query.ownPublishedPlacement`).
+///
+/// A named id is resolved the way every client-named id is, through a
+/// merged row to the asset it became, and only the author's own ids name
+/// anything. The asset matches by its id or by its rendition digest: an
+/// author's live digest names at most one asset
+/// (`media_attachments_author_digest_key`), so the digest arm is that
+/// rule restated at the read, and what it catches is the merge — an
+/// upload that re-encoded to bytes the author already held is placed
+/// under the held asset's id.
+///
+/// "Published" is landed: the post's genesis record has an L1 position.
+/// "Carries" is the post's current version, the one its read renders, so
+/// an edit that took the picture out takes the post off the answer.
+/// "Earliest" is the published order — the landing coordinates, never
+/// wall clock (graph-model.md §2).
+///
+/// Only the author's own posts are searched, so another author's
+/// placement of identical bytes — their own asset under the
+/// anti-hijack rule — never answers.
+pub async fn first_own_placement(
+    pool: &PgPool,
+    author_id: Uuid,
+    named: &[Uuid],
+) -> Result<Option<Uuid>, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"WITH named AS (
+               SELECT m.id, m.digest
+               FROM media_attachments n
+               JOIN media_attachments m ON m.id = COALESCE(n.merged_into, n.id)
+               WHERE n.id = ANY($2) AND n.author_id = $1
+           ), carried AS (
+               SELECT id FROM named
+               UNION
+               SELECT a.id
+               FROM named
+               JOIN media_attachments a
+                 ON a.author_id = $1 AND a.digest = named.digest
+                AND a.state <> 'failed'
+           )
+           SELECT p.id AS "id!"
+           FROM post_attachments j
+           JOIN post_versions v ON v.version_id = j.post_version_id
+           JOIN posts p ON p.id = v.post_id
+           WHERE j.attachment_id IN (SELECT id FROM carried)
+             AND p.author_id = $1
+             AND p.landed_epoch IS NOT NULL
+             AND v.version_id = (
+                 SELECT cv.version_id FROM post_versions cv
+                 WHERE cv.post_id = p.id
+                 ORDER BY cv.pending DESC,
+                          cv.landed_epoch DESC NULLS LAST,
+                          cv.act_time DESC NULLS LAST,
+                          cv.position DESC NULLS LAST,
+                          cv.created_at DESC, cv.version_id DESC
+                 LIMIT 1
+             )
+           ORDER BY p.landed_epoch, p.act_time, p.position, p.id
+           LIMIT 1"#,
+        author_id,
+        named,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
 /// An upload in progress: what the server must remember to finish it
 /// after the connection that started it is gone.
 #[derive(Debug, Clone)]

@@ -308,6 +308,46 @@ impl Query {
             .map(MediaAttachmentType::asset))
     }
 
+    /// The viewer's earliest published post whose gallery carries any of
+    /// the named uploads — the composer's already-published marker. A
+    /// named id resolves through a merge to the asset it became, and the
+    /// asset matches by its id or its rendition digest; only the viewer's
+    /// own ids name anything, and only the viewer's own posts answer.
+    /// Published is landed, carried is the post's current version, and
+    /// earliest is the published order. Null when nothing matches, for an
+    /// empty list, and without a session. More ids than a post's gallery
+    /// holds is BAD_INPUT.
+    async fn own_published_placement(
+        &self,
+        ctx: &Context<'_>,
+        media_ids: Vec<Uuid>,
+    ) -> async_graphql::Result<Option<PostType>> {
+        if media_ids.len() > crate::media::MAX_POST_ATTACHMENTS {
+            return Err(bad_input(format!(
+                "at most {} media ids per lookup",
+                crate::media::MAX_POST_ATTACHMENTS
+            )));
+        }
+        let Some(viewer) = ctx.data::<Option<Viewer>>()?.as_ref().copied() else {
+            return Ok(None);
+        };
+        if media_ids.is_empty() {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        let Some(post) =
+            postgres_store::media::first_own_placement(pool, viewer.user_id, &media_ids)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        else {
+            return Ok(None);
+        };
+        Ok(content_store::post(pool, post)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .map(PostType))
+    }
+
     /// One post by id; null for an unknown id.
     async fn post(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<PostType>> {
         let pool = ctx.data::<PgPool>()?;
