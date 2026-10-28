@@ -321,8 +321,9 @@ describe("the compose wizard", () => {
     const half = valenceTravelHalfExtent({ left: 0, top: 0, width: WIDTH, height: 56 }, KNOB_TRAVEL_INSET_PX);
     fireEvent.pointerDown(strip, { pointerId: 1, clientX: 0, clientY: 0 });
     fireEvent.pointerMove(strip, { pointerId: 1, clientX: (0.0031 - DEFAULT_P_DIRECTED) * half, clientY: 0 });
-    // Under the thumb it is a float that prints +0.00 and smiles.
-    expect(screen.getByTestId("wizard-stance-pick-face").textContent).not.toBe("🤔");
+    // Within the knob's radius of zero the detent already holds it at
+    // exactly 0 under the thumb (round 20, `attachmentFrom`).
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     fireEvent.pointerUp(strip, { pointerId: 1 });
     expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     fireEvent.click(screen.getByTestId("wizard-stance-set"));
@@ -1732,8 +1733,11 @@ describe("the pick step's round-22 laws", () => {
   it("gives every tray tile its remove control, the cover's included", async () => {
     render();
     await pick(["a.jpg", "b.jpg"]);
-    expect(screen.getByLabelText("Remove picture 1")).toBeInTheDocument();
-    expect(screen.getByLabelText("Remove picture 2")).toBeInTheDocument();
+    // The tray's own tiles (the Show all sheet carries X's of its own).
+    const removes = [
+      ...document.querySelectorAll('[data-testid^="wizard-unpick-"][data-testid$="-remove"]'),
+    ].map((button) => button.getAttribute("aria-label"));
+    expect(removes).toEqual(["Remove picture 1", "Remove picture 2"]);
   });
 
   it("keeps the caption while three tiles leave it room, and drops it past that", async () => {

@@ -169,13 +169,14 @@ describe("EditPad", () => {
       fireEvent.pointerMove(strip(), { pointerId: 1, clientX: (to - from) * half, clientY: 0 });
     }
 
-    it("follows the finger off the grid mid-drag, then lands on exactly 0 at release", () => {
+    // THE ZERO HAIRLINE IS A DETENT (round 20, the master's `attachmentFrom`):
+    // within the knob's own radius of zero the pick is exactly 0 mid-drag
+    // already — No side taken is a place a drag rests on purpose.
+    it("holds the knob on zero within its radius mid-drag, and lands on exactly 0 at release", () => {
       const { onSet } = renderPad({ pick: 0.2, rawSum: 0.1 });
       dragTo(0.2, 0.0031);
-      // Mid-drag the pick is the float under the thumb: it prints +0.00
-      // and is not the zero that wears 🤔 "No side taken".
       expect(text("pad-pick-exact")).toBe("+0.00");
-      expect(text("pad-pick-face")).not.toBe("🤔");
+      expect(text("pad-pick-face")).toBe("🤔");
       fireEvent.pointerUp(strip(), { pointerId: 1 });
       expect(text("pad-pick-face")).toBe("🤔");
       expect(strip()).toHaveAttribute("aria-valuenow", "0");

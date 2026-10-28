@@ -30,6 +30,9 @@ vi.mock("next/navigation", () => ({
 let marked: string[][] = [];
 const server = startMswServer(
   ...stanceHandlers(),
+  // The header's figures are read beside every profile; a test that does not
+  // ask about them gets an answer rather than an unhandled request.
+  gqlLink.query("ProfileFigures", () => HttpResponse.json({ data: { user: null } })),
   gqlLink.mutation("MarkSeen", ({ variables }) => {
     marked.push(variables.nodes as string[]);
     return HttpResponse.json({
@@ -727,7 +730,7 @@ describe("ProfileScreen", () => {
     expect(await screen.findByTestId(byNode("profile.identity.actionRow.edit"))).toHaveAttribute("href", "/profile/edit");
     expect(screen.getByTestId(byNode("profile.band.gear"))).toHaveAttribute("href", "/settings");
     expect(screen.getByTestId(byNode("profile.identity.actionRow.invites"))).toHaveAttribute("href", "/invites");
-    expect(screen.getByTestId("profile-chronicle-empty")).toBeInTheDocument();
+    expect(await screen.findByTestId("profile-chronicle-empty")).toBeInTheDocument();
     // The root wears the band (`ProfileBand`): gear, then chats, then the bell.
     expect(screen.getByTestId(byNode("profile.band.gear"))).toHaveAccessibleName("Settings");
     expect(screen.getByTestId(byNode("profile.band.wordmark"))).toHaveTextContent("cogra");

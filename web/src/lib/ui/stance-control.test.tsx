@@ -2905,8 +2905,11 @@ describe("round 21's waits, write rule and typed input", () => {
     await typeExact();
     const field = screen.getByTestId<HTMLInputElement>("stance-entry-directed");
     fireEvent.change(field, { target: { value: "0.4" } });
+    // The readouts speak once the value rests (`useSettled`, 500ms).
+    await settle(600);
     expect(screen.getByTestId(`${PREFIX}-pick`)).toHaveTextContent("For or against +0.40");
     fireEvent.change(field, { target: { value: "" } });
+    await settle(600);
     expect(screen.getByTestId(`${PREFIX}-pick`)).toHaveTextContent("For or against +0.40");
     expect(screen.getByTestId(`${PREFIX}-pick`)).not.toHaveTextContent("For or against +0.00");
     expect(field.value).toBe("");
@@ -2924,6 +2927,7 @@ describe("round 21's waits, write rule and typed input", () => {
     const field = screen.getByTestId<HTMLInputElement>("stance-entry-directed");
     fireEvent.change(field, { target: { value: "1.5" } });
     expect(field.value).toBe("1.5");
+    await settle(600);
     expect(screen.getByTestId(`${PREFIX}-pick`)).toHaveTextContent("For or against +1.00");
     expect(screen.queryByRole("alert")).toBeNull();
     expect(data.sent).toEqual([]);
