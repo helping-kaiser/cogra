@@ -397,6 +397,9 @@ impl Query {
     /// landing order. `target` matches a record's target (the middle
     /// node on hyper families); `terminal` matches the terminal leg —
     /// a comment's revision chain is `records(terminal: <comment>)`.
+    /// `genesis: true` keeps only the records that anchor their node (a
+    /// post's own Publish, never its edits; a person's first
+    /// Registration), `false` only the rest — `Record.act`'s GENESIS.
     /// The UUID filters translate to the mirror's own identifiers, so an
     /// id that resolves to no known node yields an empty page rather than
     /// an error — the same contract a null slot in `nodes` carries.
@@ -413,6 +416,7 @@ impl Query {
         terminal: Option<Uuid>,
         family: Option<RecordFamily>,
         payload_marked: Option<bool>,
+        genesis: Option<bool>,
         since_epoch: Option<i64>,
         until_epoch: Option<i64>,
         after: Option<String>,
@@ -425,6 +429,7 @@ impl Query {
         let mut filter = mirror::RecordFilter {
             family: family.map(|f| f.as_family().as_str().to_string()),
             payload_marked,
+            genesis,
             since_epoch,
             until_epoch,
             ..Default::default()

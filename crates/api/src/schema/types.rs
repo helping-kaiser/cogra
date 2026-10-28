@@ -766,6 +766,16 @@ impl Record {
         RecordFamily::from_str_lossy(&self.0.family)
     }
 
+    /// What the record did beyond its family (`RecordAct`): a genesis, a
+    /// walk-back, the vouch that landed an account, or ordinary.
+    async fn act(&self, ctx: &Context<'_>) -> async_graphql::Result<RecordAct> {
+        Ok(ctx
+            .data::<DataLoader<crate::loaders::RecordActLoader>>()?
+            .load_one(self.0.record_id.clone())
+            .await?
+            .unwrap_or(RecordAct::Ordinary))
+    }
+
     /// The authoring account. Null when no account fronts the author's
     /// address — system actors, until the actor surface grows.
     async fn author(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<User>> {
@@ -913,6 +923,35 @@ impl Record {
     async fn legs(&self) -> Vec<RecordLegType> {
         self.0.legs.iter().cloned().map(RecordLegType).collect()
     }
+}
+
+/// What one record did beyond its family — the distinction a chronicle row
+/// speaks that the family alone does not carry, read server-side so no
+/// client re-derives it from identifiers or pairs. Every record is exactly
+/// one; a record that could read as two reads as the first that applies,
+/// in the order listed.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum RecordAct {
+    /// The record that anchors its node: a minting act — the act whose
+    /// terminal target, the binary leg's or the T leg's, is the mint of its
+    /// own identifier (a post's Publish, a comment's Review) — or a
+    /// person's anchoring Registration, the first their author signed.
+    /// Never an edit and never a later Registration, which are ORDINARY.
+    Genesis,
+    /// A record a walk-back signed: the Opinion or Affinity that brought
+    /// its author's bundle toward the target back to `(0, 0)` from a
+    /// standing that said something, and every record of a severance batch
+    /// that did — the batch the sum before it stages. An empty sign is
+    /// never one.
+    WalkBack,
+    /// The Opinion that vouched someone in: of an account's approval
+    /// vouches, the first to land, which landed the account — the record
+    /// behind `User.invitedBy`. Any later vouch-Opinion is ORDINARY.
+    Vouch,
+    /// Everything else: an edit, a later Registration, an opinion given, a
+    /// tag, a citation.
+    Ordinary,
 }
 
 /// A leg's role in its record (layer1-interface.md §9): the one leg of a
@@ -1359,8 +1398,10 @@ impl User {
     /// chronicle; the generic way to read any relationship before named
     /// convenience views exist. Filter by family, by the kind of node
     /// on the far end, by parameter sign (e.g. only vouch-positive
-    /// Opinions, or (0,0) update records), payload-marked state, and/or
-    /// a landing-epoch window.
+    /// Opinions, or (0,0) update records), payload-marked state, genesis
+    /// (`true`: only the records that anchor their node — a person's
+    /// posts' own Publish records, never the edits), and/or a
+    /// landing-epoch window.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     #[expect(
         clippy::too_many_arguments,
@@ -1374,6 +1415,7 @@ impl User {
         p_directed_sign: Option<Sign>,
         p_interest_sign: Option<Sign>,
         payload_marked: Option<bool>,
+        genesis: Option<bool>,
         since_epoch: Option<i64>,
         until_epoch: Option<i64>,
         first: Option<i32>,
@@ -1391,6 +1433,7 @@ impl User {
                 p_directed_sign,
                 p_interest_sign,
                 payload_marked,
+                genesis,
                 since_epoch,
                 until_epoch,
                 first,
@@ -1419,6 +1462,7 @@ impl User {
         p_directed_sign: Option<Sign>,
         p_interest_sign: Option<Sign>,
         payload_marked: Option<bool>,
+        genesis: Option<bool>,
         since_epoch: Option<i64>,
         until_epoch: Option<i64>,
         first: Option<i32>,
@@ -1436,6 +1480,7 @@ impl User {
                 p_directed_sign,
                 p_interest_sign,
                 payload_marked,
+                genesis,
                 since_epoch,
                 until_epoch,
                 first,
@@ -3073,8 +3118,10 @@ impl PostType {
     /// chronicle; the generic way to read any relationship before named
     /// convenience views exist. Filter by family, by the kind of node
     /// on the far end, by parameter sign (e.g. only vouch-positive
-    /// Opinions, or (0,0) update records), payload-marked state, and/or
-    /// a landing-epoch window.
+    /// Opinions, or (0,0) update records), payload-marked state, genesis
+    /// (`true`: only the records that anchor their node — a person's
+    /// posts' own Publish records, never the edits), and/or a
+    /// landing-epoch window.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     #[expect(
         clippy::too_many_arguments,
@@ -3088,6 +3135,7 @@ impl PostType {
         p_directed_sign: Option<Sign>,
         p_interest_sign: Option<Sign>,
         payload_marked: Option<bool>,
+        genesis: Option<bool>,
         since_epoch: Option<i64>,
         until_epoch: Option<i64>,
         first: Option<i32>,
@@ -3105,6 +3153,7 @@ impl PostType {
                 p_directed_sign,
                 p_interest_sign,
                 payload_marked,
+                genesis,
                 since_epoch,
                 until_epoch,
                 first,
@@ -3133,6 +3182,7 @@ impl PostType {
         p_directed_sign: Option<Sign>,
         p_interest_sign: Option<Sign>,
         payload_marked: Option<bool>,
+        genesis: Option<bool>,
         since_epoch: Option<i64>,
         until_epoch: Option<i64>,
         first: Option<i32>,
@@ -3150,6 +3200,7 @@ impl PostType {
                 p_directed_sign,
                 p_interest_sign,
                 payload_marked,
+                genesis,
                 since_epoch,
                 until_epoch,
                 first,
@@ -3431,8 +3482,10 @@ impl CommentType {
     /// chronicle; the generic way to read any relationship before named
     /// convenience views exist. Filter by family, by the kind of node
     /// on the far end, by parameter sign (e.g. only vouch-positive
-    /// Opinions, or (0,0) update records), payload-marked state, and/or
-    /// a landing-epoch window.
+    /// Opinions, or (0,0) update records), payload-marked state, genesis
+    /// (`true`: only the records that anchor their node — a person's
+    /// posts' own Publish records, never the edits), and/or a
+    /// landing-epoch window.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     #[expect(
         clippy::too_many_arguments,
@@ -3446,6 +3499,7 @@ impl CommentType {
         p_directed_sign: Option<Sign>,
         p_interest_sign: Option<Sign>,
         payload_marked: Option<bool>,
+        genesis: Option<bool>,
         since_epoch: Option<i64>,
         until_epoch: Option<i64>,
         first: Option<i32>,
@@ -3463,6 +3517,7 @@ impl CommentType {
                 p_directed_sign,
                 p_interest_sign,
                 payload_marked,
+                genesis,
                 since_epoch,
                 until_epoch,
                 first,
@@ -3491,6 +3546,7 @@ impl CommentType {
         p_directed_sign: Option<Sign>,
         p_interest_sign: Option<Sign>,
         payload_marked: Option<bool>,
+        genesis: Option<bool>,
         since_epoch: Option<i64>,
         until_epoch: Option<i64>,
         first: Option<i32>,
@@ -3508,6 +3564,7 @@ impl CommentType {
                 p_directed_sign,
                 p_interest_sign,
                 payload_marked,
+                genesis,
                 since_epoch,
                 until_epoch,
                 first,
@@ -4315,12 +4372,13 @@ pub(super) async fn resolve_reference_target(
     field(
         name = "outgoing_records",
         ty = "RecordConnection",
-        desc = "Records authored from this node — for an actor, their outgoing chronicle; the generic way to read any relationship before named convenience views exist. Filter by family, by the kind of node on the far end, by parameter sign (e.g. only vouch-positive Opinions, or (0,0) update records), payload-marked state, and/or a landing-epoch window.",
+        desc = "Records authored from this node — for an actor, their outgoing chronicle; the generic way to read any relationship before named convenience views exist. Filter by family, by the kind of node on the far end, by parameter sign (e.g. only vouch-positive Opinions, or (0,0) update records), payload-marked state, genesis (`true`: only the records that anchor their node — a person's posts' own Publish records, never the edits), and/or a landing-epoch window.",
         arg(name = "family", ty = "Option<RecordFamily>"),
         arg(name = "to_kind", ty = "Option<NodeKind>"),
         arg(name = "p_directed_sign", ty = "Option<Sign>"),
         arg(name = "p_interest_sign", ty = "Option<Sign>"),
         arg(name = "payload_marked", ty = "Option<bool>"),
+        arg(name = "genesis", ty = "Option<bool>"),
         arg(name = "since_epoch", ty = "Option<i64>"),
         arg(name = "until_epoch", ty = "Option<i64>"),
         arg(name = "first", ty = "Option<i32>"),
@@ -4337,6 +4395,7 @@ pub(super) async fn resolve_reference_target(
         arg(name = "p_directed_sign", ty = "Option<Sign>"),
         arg(name = "p_interest_sign", ty = "Option<Sign>"),
         arg(name = "payload_marked", ty = "Option<bool>"),
+        arg(name = "genesis", ty = "Option<bool>"),
         arg(name = "since_epoch", ty = "Option<i64>"),
         arg(name = "until_epoch", ty = "Option<i64>"),
         arg(name = "first", ty = "Option<i32>"),
@@ -4368,6 +4427,8 @@ pub(crate) struct NodeRecordsArgs {
     pub p_directed_sign: Option<Sign>,
     pub p_interest_sign: Option<Sign>,
     pub payload_marked: Option<bool>,
+    /// Only genesis records (`true`), only the rest (`false`), or both.
+    pub genesis: Option<bool>,
     pub since_epoch: Option<i64>,
     pub until_epoch: Option<i64>,
     pub first: Option<i32>,
@@ -4410,6 +4471,7 @@ pub(crate) async fn node_records(
         }),
         p_directed_sign: args.p_directed_sign.map(Sign::as_store),
         p_interest_sign: args.p_interest_sign.map(Sign::as_store),
+        genesis: args.genesis,
         ..Default::default()
     };
     let rows = mirror::records(
