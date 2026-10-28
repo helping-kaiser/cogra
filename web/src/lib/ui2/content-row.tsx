@@ -56,11 +56,6 @@ export type ContentRowDisc =
       readonly pDirected: number;
       readonly pInterest: number;
       readonly severed?: boolean;
-    }| {
-      readonly kind: "face";
-      readonly pDirected: number;
-      readonly pInterest: number;
-      readonly zeroLabel?: string;
     }
   /** 🤷 where a picture would go, for a stance walked back (the withdrawal notification). */
   | { readonly kind: "walkedBack" }
