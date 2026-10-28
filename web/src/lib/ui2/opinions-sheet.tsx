@@ -24,7 +24,7 @@
 import type { HeldOpinionView } from "@/lib/api/opinions-api";
 import { instance, part, type DataNode } from "@/lib/ui/data-node";
 import { EmptyState } from "@/lib/ui/empty-state";
-import { BottomSheet } from "./bottom-sheet";
+import { BottomSheet, SHEET_DEFAULT, SHEET_RAISED } from "./bottom-sheet";
 import { StanceRow } from "./stance-row";
 
 /**
@@ -75,6 +75,9 @@ export function OpinionsSheet({
       title={OPINIONS_TITLE[on]}
       stacked={stacked}
       rows
+      // The post's list is drawn at the raised class (PostOpinions, 88%); the
+      // comment's, stacked over the thread, at the default (CommentOpinionsEmpty, 62%).
+      maxHeight={stacked ? SHEET_DEFAULT : SHEET_RAISED}
       node={node}
       testId={testId}
     >

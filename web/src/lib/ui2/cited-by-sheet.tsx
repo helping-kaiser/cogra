@@ -36,7 +36,7 @@ import { postTitle } from "@/lib/saved/row-content";
 import { postPreview, removalMark } from "@/lib/stance/kept-preview";
 import { instance, part, type DataNode } from "@/lib/ui/data-node";
 import { EmptyState } from "@/lib/ui/empty-state";
-import { BottomSheet } from "./bottom-sheet";
+import { BottomSheet, SHEET_DEFAULT, SHEET_RAISED } from "./bottom-sheet";
 import { ReferenceRow, type ReferenceKind } from "./reference-row";
 
 /**
@@ -121,7 +121,18 @@ export function CitedBySheet({
   testId?: string;
 }) {
   return (
-    <BottomSheet open={open} onClose={onClose} title={TITLE} stacked={stacked} rows node={node} testId={testId}>
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title={TITLE}
+      stacked={stacked}
+      rows
+      // The post's list is drawn at the raised class (CitedBy, 88%); the
+      // comment's, stacked over the thread, at the default (CommentCitedByEmpty, 62%).
+      maxHeight={stacked ? SHEET_DEFAULT : SHEET_RAISED}
+      node={node}
+      testId={testId}
+    >
       {artifacts !== null && artifacts.length === 0 && (
         <div className="px-6 pb-2">
           <EmptyState title={EMPTY} testId={`${testId}-empty`} node={part(node, "empty")} />

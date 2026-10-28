@@ -474,7 +474,10 @@ export function PostView({
       />
       {/* The post's own count lines' sheets, reading the lists the lines
           count. A comment's ⋮ raises the thread's own copies, stacked over the
-          sheet, which are the sheet's to mount. */}
+          sheet, which are the sheet's to mount. UNREGISTERED: the
+          PostOpinions and CitedBy boards name no node, so each sheet wears
+          the path it evidently takes under the detail (`opinionsSheet`,
+          `citedBySheet`, rows by position), reported to design. */}
       <OpinionsSheet
         open={opinionsOpen}
         onClose={() => setOpinionsOpen(false)}

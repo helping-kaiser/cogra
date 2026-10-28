@@ -115,6 +115,15 @@ describe("OpinionsSheet", () => {
     expect(screen.getByTestId("opinions-sheet-row-1").className).toMatch(/\bmin-h-14\b/);
   });
 
+  // PostOpinions draws the post's list at the raised class (88%); the
+  // comment's, stacked, at the master's default (CommentOpinionsEmpty, 62%).
+  it("takes the board's height class: raised on the detail, the default stacked over a thread", () => {
+    const { rerender } = render(<OpinionsSheet open onClose={() => {}} on="post" opinions={HOLDERS} />);
+    expect(screen.getByTestId("opinions-sheet").style.maxHeight).toContain("88dvh");
+    rerender(<OpinionsSheet open onClose={() => {}} on="comment" opinions={HOLDERS} stacked />);
+    expect(screen.getByTestId("opinions-sheet").style.maxHeight).toContain("62dvh");
+  });
+
   // CommentOpinionsEmpty.md: the empty line, calm, never the error colour.
   it("says the empty line, and only once the read has answered", () => {
     const { rerender } = render(<OpinionsSheet open onClose={() => {}} on="comment" opinions={null} />);
