@@ -1,0 +1,60 @@
+# The cogra-api image (deployment.md "Images"). Build from the repository
+# root, the workspace being the context:
+#
+#   podman build -f deploy/Containerfile.api --build-arg GIT_SHA=$(git rev-parse HEAD) \
+#     -t cogra-api:$(git rev-parse --short=12 HEAD) .
+#
+# Two stages. The pinned toolchain builds the server and the two operator
+# binaries it ships with: `bootstrap` (run once, interactively) and
+# `release` (the registry CLI the deploy runs last). `l1-dev` stays out —
+# its dev money and clock surfaces have no place on a production host.
+#
+# The runtime is Ubuntu 24.04, the host's own release, for its ffmpeg: the
+# ingest worker drives it, and Ubuntu's build carries the H.264 and AAC
+# encoders and the zscale/tonemap filters the startup probe asks for
+# (development.md "Prerequisites"). ca-certificates is not optional: the
+# SMTP transport and the breach check verify TLS against the OS trust store.
+#
+# Migrations are embedded in the binary (`sqlx::migrate!`) and applied at
+# start, before the server listens. The directory also rides along, read
+# only, so the deploy can count what the image carries against
+# `_sqlx_migrations` (deploy/scripts/deploy.sh).
+
+FROM docker.io/library/rust:1.98.0-bookworm AS build
+WORKDIR /src
+# The queries check against the committed .sqlx/ metadata: a build never
+# dials a database.
+ENV SQLX_OFFLINE=true
+# Bounded so a build beside other work cannot exhaust memory; raise it on a
+# dedicated build machine.
+ARG CARGO_BUILD_JOBS=4
+COPY . .
+# The registry and target caches persist between builds of this file
+# (buildah cache mounts), so an image rebuild recompiles only what changed.
+RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,target=/src/target,sharing=locked \
+    CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS} \
+    cargo build --release --locked -p api --bin api --bin bootstrap --bin release \
+    && install -D -m 0755 -t /out target/release/api target/release/bootstrap target/release/release
+
+FROM docker.io/library/ubuntu:24.04
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates ffmpeg \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --no-create-home --uid 10001 --user-group cogra
+COPY --from=build /out/ /usr/local/bin/
+COPY migrations/ /usr/share/cogra/migrations/
+COPY deploy/health/http-health /usr/local/bin/http-health
+ARG GIT_SHA=unknown
+LABEL org.opencontainers.image.title="cogra-api" \
+      org.opencontainers.image.source="https://github.com/helping-kaiser/cogra" \
+      org.opencontainers.image.licenses="AGPL-3.0-only" \
+      org.opencontainers.image.revision="${GIT_SHA}"
+ENV API_HOST=0.0.0.0 \
+    API_PORT=8080 \
+    RUST_LOG=info
+USER cogra
+EXPOSE 8080
+# No HEALTHCHECK: the OCI image format has none, and the Quadlet unit owns
+# the probe (deploy/quadlet/cogra-api.container, HealthCmd=http-health).
+ENTRYPOINT ["/usr/local/bin/api"]

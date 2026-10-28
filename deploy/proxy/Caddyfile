@@ -1,0 +1,96 @@
+# The production reverse proxy (deployment.md "Routing"): the one ingress,
+# TLS by Caddy's automatic HTTPS, and the routing table the dev front
+# (web/scripts/prod.mjs, isDirectApiPath) and next.config.ts's rewrites
+# already settled. The hostname and the ACME contact come from the unit's
+# env file (/etc/cogra/proxy.env), so this file carries no deployment's
+# values.
+#
+# NO `encode` ANYWHERE. The API compresses /graphql itself, and never a
+# mutation's answer (the BREACH posture, PD-1); Next compresses its own
+# responses. A proxy-side encoder would compress twice or undo that rule.
+
+{
+	email {$ACME_EMAIL}
+	servers {
+		# Caddy's own defaults, written down: no body or write timeout, so a
+		# 100 MiB upload over a slow link is never cut (next.config.ts pins
+		# 15 minutes on the dev path for the same body); a minute for the
+		# headers and five idle minutes per keep-alive connection.
+		timeouts {
+			read_header 1m
+			idle 5m
+		}
+	}
+}
+
+{$COGRA_DOMAIN} {
+	# Uploads go to the API and must be matched before /media/*, the
+	# ordering next.config.ts records: below the narrower rule a part PUT
+	# reaches the store and comes back as its AccessDenied.
+	@api path /graphql /media/uploads /media/uploads/*
+	handle @api {
+		reverse_proxy cogra-api:8080
+	}
+
+	# Media reads, straight from the live bucket. GET and HEAD only, with an
+	# object key and no query string: the store's write API, its bucket
+	# listing and its sub-resources (?acl, ?response-content-type=…) are not
+	# on the public network. The two headers keep an uploaded file from ever
+	# executing as a document on the app's own origin.
+	@media_read {
+		method GET HEAD
+		path_regexp ^/media/[^/]
+		expression `{query} == ""`
+	}
+	handle @media_read {
+		uri strip_prefix /media
+		rewrite * /{$MEDIA_BUCKET}{path}
+		header X-Content-Type-Options nosniff
+		header Content-Security-Policy "default-src 'none'; sandbox"
+		reverse_proxy cogra-media:9000
+	}
+	handle /media/* {
+		respond 404
+	}
+
+	# The Digital Asset Links statement Android App Links verify against
+	# (O-14). Its content — the release app-signing fingerprints — is
+	# supplied at bring-up; until then the path answers 404.
+	handle /.well-known/assetlinks.json {
+		root * /srv/well-known
+		rewrite * /assetlinks.json
+		header Content-Type application/json
+		file_server
+	}
+
+	handle {
+		# A statically prerendered page carries an s-maxage a browser may
+		# read as licence to reuse it without asking; the document must
+		# always revalidate so a reload after a deploy sees the new build
+		# (release-registry R5). Dynamic pages already send no-store and are
+		# left alone, as is everything under /_next/static (immutable).
+		header Cache-Control "no-cache" {
+			match {
+				header Content-Type text/html*
+				header Cache-Control *s-maxage*
+			}
+		}
+		reverse_proxy cogra-web:3000
+	}
+}
+
+# The in-cluster GraphQL route, for callers inside the host: the web
+# server's server-side renders and the ranker's slice reads. The API runs
+# CLIENT_IP_SOURCE=RightmostXForwardedFor (the proxy is the sole ingress),
+# and a request that reaches it with no X-Forwarded-For is refused — so
+# in-cluster callers go through here, where Caddy sets the header to the
+# caller's own address. Plain http on a port no unit publishes: only the
+# containers on the proxy's networks reach it.
+http://:8081 {
+	handle /graphql {
+		reverse_proxy cogra-api:8080
+	}
+	handle {
+		respond 404
+	}
+}

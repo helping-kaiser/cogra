@@ -1,0 +1,37 @@
+# The ranker pod (deployment.md "Topology"; ranker-core §4): its own
+# container on the internal network, never inside the API process. The API
+# relays feedRanking to it (RANKER_URL); it reads the slice back through
+# the proxy's in-cluster listener (API_URL in ranker.env). The image is
+# crates/ranker-server/Containerfile, retagged :deployed like the others.
+[Unit]
+Description=CoGra ranker
+Wants=cogra-api.service
+After=cogra-api.service
+
+[Container]
+ContainerName=cogra-ranker
+Image=localhost/cogra-ranker:deployed
+Pull=never
+EnvironmentFile=/etc/cogra/ranker.env
+Network=cogra-internal.network
+# The image carries no probe of its own; the host's copy of the API image's
+# http-health is mounted in (deploy/health/http-health).
+Volume=/usr/local/lib/cogra/http-health:/usr/local/bin/http-health:ro
+HealthCmd=/usr/local/bin/http-health 8090 /health
+HealthInterval=30s
+HealthTimeout=5s
+HealthRetries=3
+HealthStartPeriod=30s
+HealthOnFailure=kill
+NoNewPrivileges=true
+DropCapability=ALL
+PidsLimit=1024
+PodmanArgs=--memory=2g --stop-timeout=10
+
+[Service]
+Restart=always
+RestartSec=5
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

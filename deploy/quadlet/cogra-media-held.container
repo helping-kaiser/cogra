@@ -1,0 +1,37 @@
+# The held media store (deployment.md "The held store"): a second store
+# instance of its own, where a deleted asset's bytes leave the live store
+# for. No published port, no proxy route, the internal network only, its
+# own volume and its own credentials — reached by the API and, from the
+# host, by the operator (podman exec cogra-media-held mc ls local/<bucket>).
+[Unit]
+Description=CoGra media store (held)
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+ContainerName=cogra-media-held
+Image=docker.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+Pull=never
+Exec=server /data
+EnvironmentFile=/etc/cogra/media.env
+Secret=cogra-held-root-user,type=env,target=MINIO_ROOT_USER
+Secret=cogra-held-root-password,type=env,target=MINIO_ROOT_PASSWORD
+Volume=cogra-media-held.volume:/data
+Network=cogra-internal.network
+HealthCmd=mc ready local
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=5
+HealthStartPeriod=30s
+NoNewPrivileges=true
+PidsLimit=2048
+PodmanArgs=--memory=512m --stop-timeout=30
+
+[Service]
+Restart=always
+RestartSec=5
+TimeoutStartSec=300
+ExecStartPost=/usr/bin/podman wait --condition=healthy cogra-media-held
+
+[Install]
+WantedBy=multi-user.target

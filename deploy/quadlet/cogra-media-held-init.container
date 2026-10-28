@@ -1,0 +1,31 @@
+# One-shot provisioning of the held store (deploy/media/provision.sh held):
+# the held bucket with no anonymous policy, and the API's own key, scoped
+# to it. Idempotent; it runs on every boot before the API.
+[Unit]
+Description=CoGra media store provisioning (held)
+Requires=cogra-media-held.service
+After=cogra-media-held.service
+
+[Container]
+ContainerName=cogra-media-held-init
+Image=docker.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+Pull=never
+PodmanArgs=--entrypoint=/bin/sh
+Exec=/provision.sh held
+Volume=/usr/local/lib/cogra/media-provision.sh:/provision.sh:ro
+EnvironmentFile=/etc/cogra/buckets.env
+Environment=STORE_URL=http://cogra-media-held:9000
+Secret=cogra-held-root-user,type=env,target=MINIO_ROOT_USER
+Secret=cogra-held-root-password,type=env,target=MINIO_ROOT_PASSWORD
+Secret=cogra-held-api-key,type=env,target=API_ACCESS_KEY
+Secret=cogra-held-api-secret,type=env,target=API_SECRET_KEY
+Network=cogra-internal.network
+NoNewPrivileges=true
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

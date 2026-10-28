@@ -1,0 +1,3 @@
+# Caddy's data: the ACME account and the issued certificates (re-issuable).
+[Volume]
+VolumeName=cogra-caddy-data
