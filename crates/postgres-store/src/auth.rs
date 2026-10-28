@@ -1601,6 +1601,48 @@ pub async fn admitting_voucher_of(
     .await
 }
 
+/// The given records that are the vouch which landed an account — the
+/// Opinion behind that account's [`admitting_voucher_of`], chosen by the
+/// same rule (api-spec.md `RecordAct.VOUCH`).
+///
+/// An approval prepares its vouch-Opinion as an ordinary Opinion toward
+/// the applicant's Profile; what makes it the vouch is the ceremony's own
+/// book, `auth_application_vouches`, keyed by the act id it prepared — the
+/// graph carries the record, CoGra's application ledger carries which
+/// record it was. Of an account's vouches, the first to land is the one
+/// that vouched it in (auth.md "Approval and landing"); every other
+/// vouch-Opinion confirms as an ordinary Opinion (EC-R3), and so does any
+/// vouch of an account that has not landed.
+pub async fn admitting_vouch_records(
+    pool: &PgPool,
+    record_ids: &[String],
+) -> Result<std::collections::HashSet<String>, sqlx::Error> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT first.act_id AS "act_id!"
+           FROM (
+               SELECT DISTINCT ON (ap.account_id) v.act_id
+               FROM auth_application_vouches v
+               JOIN auth_applications ap ON ap.id = v.application_id
+               JOIN mirror_records m ON m.record_id = v.act_id
+               WHERE ap.account_id IN (
+                         SELECT asked.account_id
+                         FROM auth_application_vouches given
+                         JOIN auth_applications asked ON asked.id = given.application_id
+                         WHERE given.act_id = ANY($1))
+                 AND EXISTS (SELECT 1 FROM auth_applications landed
+                             WHERE landed.account_id = ap.account_id
+                               AND landed.landed_at IS NOT NULL)
+               ORDER BY ap.account_id, m.act_time, m.position, m.record_id
+           ) first
+           WHERE first.act_id = ANY($1)"#,
+        record_ids,
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .collect())
+}
+
 /// The live vouch of one path, if any: the voucher and the act id.
 pub async fn live_vouch(
     pool: &PgPool,

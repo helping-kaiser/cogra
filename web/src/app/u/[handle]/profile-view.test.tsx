@@ -100,6 +100,7 @@ function recordsHandler(
               __typename: "Record",
               id: row.id,
               family: row.family,
+              act: row.targetId === undefined ? "GENESIS" : "ORDINARY",
               targetId: row.targetId ?? `mint:${row.id}`,
               terminalId: null,
               landedAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
