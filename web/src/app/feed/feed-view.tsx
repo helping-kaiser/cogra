@@ -84,8 +84,16 @@ import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
-import { recallFeed, rememberFeed, rememberFeedPlace } from "./feed-memory";
+import {
+  forgetFeedSheet,
+  recallFeed,
+  recallFeedSheet,
+  rememberFeed,
+  rememberFeedPlace,
+  rememberFeedSheet,
+} from "./feed-memory";
 import { VouchCard } from "./vouch-card";
+import { FROM_FEED, YOUR_TOPICS_HREF } from "@/lib/topics/your-topics";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 /**
@@ -636,8 +644,8 @@ export function FeedView({
   // elsewhere is there; a borrowed view's are the borrowed account's, which no
   // read serves (`heldTopics` is the viewer's own), so that section stands
   // only on the reader's own feed.
-  const openSheet = useCallback(() => {
-    setStaged(filter);
+  const openSheet = useCallback((from: FeedFilterValue = filter) => {
+    setStaged(from);
     setSheetOpen(true);
     if (reader === null || borrowedHandle !== null) {
       setHeldTopics([]);
@@ -647,6 +655,37 @@ export function FeedView({
       if (alive.current) setHeldTopics(read.kind === "success" ? read.value : []);
     });
   }, [borrowedHandle, client, filter, guard, reader]);
+
+  // `ALL YOUR TOPICS` LEADS TO YOUR TOPICS, AND BACK RETURNS THE FEED WITH THIS
+  // SHEET UP, AS IT WAS LEFT (flows.json FeedSheet → YourTopics; design readme,
+  // *A sheet that launched a forward navigation comes back*): what it had
+  // staged and where its body stood go into the feed's memory as the door
+  // navigates, and the next mount for this reader raises the sheet from them —
+  // its held topics read afresh, so a topic walked back over there is gone.
+  const sheetBody = useRef<HTMLDivElement | null>(null);
+  const [sheetBack] = useState(() => recallFeedSheet(reader));
+  const sheetOffset = useRef<number | null>(sheetBack?.offset ?? null);
+  const openTopics = useCallback(() => {
+    rememberFeedSheet({ reader, staged, offset: sheetBody.current?.scrollTop ?? 0 });
+    router.push(`${YOUR_TOPICS_HREF}?from=${FROM_FEED}`);
+  }, [reader, router, staged]);
+  // Raised once, on the mount that found it.
+  const raised = useRef(false);
+  useEffect(() => {
+    if (sheetBack === null || raised.current) return;
+    raised.current = true;
+    forgetFeedSheet();
+    openSheet(sheetBack.staged);
+  }, [openSheet, sheetBack]);
+  // The offset waits for the sheet's body and its topic section — the read
+  // the opening asked for — so it lands where the reader left it.
+  useEffect(() => {
+    const offset = sheetOffset.current;
+    if (offset === null || !sheetOpen || sheetBody.current === null) return;
+    if (heldTopics.length === 0 && offset > 0) return;
+    sheetBody.current.scrollTop = offset;
+    sheetOffset.current = null;
+  }, [heldTopics, sheetOpen]);
 
   // DONE (FeedSheet.md:81-85): the sheet closes; with changes, the feed takes
   // them — one ranking where Kinds or the topic changed, a local re-derive
@@ -838,7 +877,7 @@ export function FeedView({
                   reading={feedFilterSummary(filter, readerDefault, borrowedHandle)}
                   purpose={WHAT_YOUR_FEED_SHOWS}
                   expanded={sheetOpen}
-                  onOpen={openSheet}
+                  onOpen={() => openSheet()}
                   node={FILTER_TRIGGER}
                 />
               </span>
@@ -1071,6 +1110,8 @@ export function FeedView({
         onClose={() => setSheetOpen(false)}
         onHelp={() => setFilterHelp(true)}
         topics={heldTopics}
+        onOpenTopics={openTopics}
+        bodyRef={sheetBody}
         borrowedHandle={borrowedHandle}
         node={FILTER_SHEET}
         testId="feed-filter-sheet"
