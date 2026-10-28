@@ -191,18 +191,35 @@ type Fault = "failed" | "writeRule";
  * gesture").
  */
 export type PadVariant = {
-  /** The pad's title and its ?'s name (VouchBackPad.md:9). */
-  readonly title: string;
+  /**
+   * The pad's title and its ?'s name (VouchBackPad.md:9). A variant that
+   * names only its ? (`helpLabel`) keeps the ordinary pad's own name.
+   */
+  readonly title?: string;
+  /**
+   * The ?'s name where it differs from the pad's (the approval pads'
+   * `How vouching works`, ApprovePad.md:19 — the master's `helpLabel`).
+   */
+  readonly helpLabel?: string;
   /** The help that replaces the pad's body in place (:21). */
   readonly help: readonly string[];
-  /** The line above the field's foot on every open of this variant (:13). */
-  readonly note: string;
   /**
-   * A signing was taken — by Set or by the hold. The host routes on (the
-   * ceremony, :33; ProfileOther.md:37), so the master's own snackbar does
-   * not also answer: the ceremony replaces it.
+   * The line — or lines — above the field's foot on every open of this
+   * variant (:13; the approval pads' two lines, ApprovePad.md:17).
    */
-  readonly onTaken: () => void;
+  readonly note: string | readonly string[];
+  /**
+   * A signing was taken — by Set or by the hold — landing at `landing`. The
+   * host routes on (the ceremony, :33; ProfileOther.md:37), so the master's
+   * own snackbar does not also answer: the host's replaces it.
+   */
+  readonly onTaken: (landing: StancePair) => void;
+  /**
+   * What `Keep it pending, restore later` does, where the host keeps the pick
+   * itself (the ask link's pad stages the asker before keeping their vouch,
+   * VouchAskPad.md:29). Left out, the pick is kept toward the target.
+   */
+  readonly keep?: (pick: StancePair) => void;
   /**
    * The registered pad (`<host>.stance.pad`, ruling 40): the pad and the
    * parts this control draws itself wear its paths.
@@ -326,7 +343,15 @@ export function StanceControl({
    * resting anchor of its own, and hears the close: a pad closed with
    * nothing taken closes back onto that host (VouchBackPad.md:45).
    */
-  padOnly?: { readonly onClose: () => void };
+  padOnly?: {
+    readonly onClose: () => void;
+    /**
+     * The pad blooms FROM an anchor the host shows in its place — the
+     * approval pad's, standing in the row's close slot while the pad is up
+     * (ApprovePad.md:15) — so the resting anchor stays drawn.
+     */
+    readonly keepAnchor?: boolean;
+  };
   /**
    * THE VOUCH CARD'S EMPTY FACE IS A LINE FACE IN THE CARD'S INK
    * (stance-control.md, jakob 2026-10-14; the master's `lineFaceInk`). Only
@@ -450,7 +475,7 @@ export function StanceControl({
   // WHAT A PICK KEPT HERE WILL SIGN AS (KeptPicksReview.md:5): a vouch-back
   // or an approval is kept as itself, never as a plain opinion, so the
   // review's batch never takes it in.
-  const family: KeptFamily = variant !== undefined ? "vouchBack" : vouchesIn ? "approval" : "opinion";
+  const family: KeptFamily = vouchesIn ? "approval" : variant !== undefined ? "vouchBack" : "opinion";
   const keptPicks = useKeptPicks(phase === "signedIn" ? accountId : null);
   const keptEntry =
     keptPicks?.find((entry) => entry.family === family && sameTarget(entry.target, seamTarget)) ?? null;
@@ -613,7 +638,8 @@ export function StanceControl({
 
   /** `Keep it pending, restore later`: the one way a pick is kept (PadKeyAbsent.md:27). */
   const keepAndClose = () => {
-    keep(pick);
+    if (variant?.keep !== undefined) variant.keep(pick);
+    else keep(pick);
     closeAll();
   };
 
@@ -694,7 +720,7 @@ export function StanceControl({
     announceStanceSigned();
     readBundle({ fresh: true });
     if (variant !== undefined) {
-      variant.onTaken();
+      variant.onTaken(landed.landing);
       return;
     }
     setPending({ pair: landed.landing, severed: landed.severed });
@@ -831,7 +857,7 @@ export function StanceControl({
       announceStanceSigned();
       readBundle({ fresh: true });
       if (variant !== undefined) {
-        variant.onTaken();
+        variant.onTaken(SEVERED.landing);
         return;
       }
       closeSurfaces();
@@ -981,6 +1007,8 @@ export function StanceControl({
   // pick's, never `Still settling`: nothing is signed yet.
   const waitingForKey = kept !== null && keyAbsent === true;
   const waitingForReview = kept !== null && keyAbsent === false && family === "opinion";
+  // The resting anchor stands unless a pad-only host is the opening itself.
+  const anchored = padOnly === undefined || padOnly.keepAnchor === true;
   const keptShown = waitingForKey || waitingForReview;
   const restingPair: StancePair | null = keptShown
     ? kept
@@ -1060,7 +1088,7 @@ export function StanceControl({
           type="button"
           {...testAttributes(part(padNode, "help"), `${testIdPrefix}-explain`)}
           aria-expanded={explaining === "help"}
-          aria-label={variant?.title ?? PAD_HELP_LABEL}
+          aria-label={variant?.helpLabel ?? variant?.title ?? PAD_HELP_LABEL}
           onClick={() => setExplaining((shown) => (shown === "help" ? false : "help"))}
           className={`${BUTTON_CLASS} absolute right-1 top-1 grid size-12 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0`}
         >
@@ -1120,7 +1148,11 @@ export function StanceControl({
                 {...testAttributes(part(padNode, "note"), `${testIdPrefix}-note`)}
                 className="flex flex-col gap-1"
               >
-                <p className="m-0 text-body-small text-on-surface-variant">{variant.note}</p>
+                {(typeof variant.note === "string" ? [variant.note] : variant.note).map((line) => (
+                  <p key={line} className="m-0 text-body-small text-on-surface-variant">
+                    {line}
+                  </p>
+                ))}
                 {coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />}
               </div>
             ) : (
@@ -1250,7 +1282,7 @@ export function StanceControl({
       onPointerDown={(event) => event.stopPropagation()}
       onPointerUp={(event) => event.stopPropagation()}
     >
-      {padOnly === undefined && (
+      {anchored && (
         <div className={`flex min-w-0 items-center gap-2${wide ? " w-full" : ""}`}>
           {/* 48px minimum, including at rest (design.md §4); the wide anchor
               draws 40 and answers to 48 through `cg-hit`. */}
@@ -1358,7 +1390,7 @@ export function StanceControl({
           under the face, in the slot the pending marker uses. */}
       {/* A PICK KEPT PENDING says what it waits on, under the face — never
           `Still settling`, which is a signed record's (PadPending.md). */}
-      {padOnly === undefined && keptShown && (
+      {anchored && keptShown && (
         <PendingMarker
           testId={`${testIdPrefix}-kept`}
           label={waitingForReview ? "Waiting for your review" : "Waiting for your key"}
@@ -1366,10 +1398,10 @@ export function StanceControl({
       )}
       {/* THE KEPT PICKS JUST SIGNED, until their records are ordered
           (PadPendingReview.md:21) — never under a pick still kept. */}
-      {padOnly === undefined && !keptShown && settling && (
+      {anchored && !keptShown && settling && (
         <PendingMarker testId={`${testIdPrefix}-settling`} />
       )}
-      {padOnly === undefined && rowState !== null && (
+      {anchored && rowState !== null && (
         <RowLine state={rowState} testId={`${testIdPrefix}-row-line`} />
       )}
 
@@ -1386,7 +1418,7 @@ export function StanceControl({
           onCancel={closeAll}
           onSever={severable ? openSeverance : undefined}
           axes={axes}
-          helpLabel={variant?.title ?? PAD_HELP_LABEL}
+          helpLabel={variant?.helpLabel ?? variant?.title ?? PAD_HELP_LABEL}
           zeroHelp={explaining === "zero" ? unreachableHelp(axes, target.label) : null}
           onZeroBack={() => setExplaining(false)}
           keyNotice={
