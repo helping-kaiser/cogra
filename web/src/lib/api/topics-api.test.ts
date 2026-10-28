@@ -2,7 +2,7 @@ import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
-import { fetchHashtagDetail, prepareTag } from "./topics-api";
+import { fetchHashtagDetail, fetchTagNames, prepareTag } from "./topics-api";
 import { DEFAULT_CONFIDENCE, DEFAULT_RELEVANCE } from "@/lib/topics/draft";
 import { gqlLink, startMswServer } from "@/test/msw";
 
@@ -161,5 +161,41 @@ describe("prepareTag", () => {
     expect(outcome.kind).toBe("refused");
     if (outcome.kind !== "refused") return;
     expect(outcome.errors[0].field).toEqual(["name"]);
+  });
+});
+
+describe("fetchTagNames", () => {
+  it("asks the topic cue for the typed name and reads the names in use", async () => {
+    let asked: unknown = null;
+    server.use(
+      gqlLink.query("TagNames", ({ variables }) => {
+        asked = variables;
+        return HttpResponse.json({
+          data: {
+            search: {
+              __typename: "SearchConnection",
+              edges: [
+                { __typename: "SearchEdge", node: { __typename: "Hashtag", id: "h1", name: moderated("salt") } },
+                { __typename: "SearchEdge", node: { __typename: "Hashtag", id: "h2", name: moderated("saltmaps") } },
+                // A redacted name has nothing to offer.
+                { __typename: "SearchEdge", node: { __typename: "Hashtag", id: "h3", name: moderated(null) } },
+              ],
+            },
+          },
+        });
+      }),
+    );
+    const outcome = await fetchTagNames(client(), "salt");
+    expect(asked).toEqual({ query: "#salt", first: 8 });
+    expect(outcome).toEqual({ kind: "success", value: ["salt", "saltmaps"] });
+  });
+
+  it("asks nothing for an empty name", async () => {
+    expect(await fetchTagNames(client(), "")).toEqual({ kind: "success", value: [] });
+  });
+
+  it("fails on a transport fault", async () => {
+    server.use(gqlLink.query("TagNames", () => HttpResponse.error()));
+    expect((await fetchTagNames(client(), "salt")).kind).toBe("failed");
   });
 });
