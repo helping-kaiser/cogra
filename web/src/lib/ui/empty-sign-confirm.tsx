@@ -24,6 +24,7 @@
 // fault line, and the act's slot reads `Retry`.
 
 import { buttonClassName } from "@/lib/ui/button";
+import { WRITE_RULE_WORDS } from "@/lib/ui/stance-readout";
 import { DialogSurface } from "@/lib/ui2/dialog-surface";
 
 /** The dialog's words, verbatim from the master (`EMPTY_SIGN_WORDS`). */
@@ -45,6 +46,7 @@ export function EmptySignConfirm({
   busy = false,
   slow = false,
   failed = false,
+  writeRule = false,
   onConfirm,
   onCancel,
 }: {
@@ -58,6 +60,13 @@ export function EmptySignConfirm({
   slow?: boolean;
   /** The signing did not complete; the dialog stays open and says so. */
   failed?: boolean;
+  /**
+   * THE WRITE RULE'S NO IS `SeveranceConfirm`'S (EmptySignConfirm.md, round
+   * 21): the same moment over the same pad, so the same answer — the quiet
+   * line where the fault line would stand, `Set it anyway` dimmed, no Retry,
+   * and `Keep it` the way back to the pick.
+   */
+  writeRule?: boolean;
   /** `Set it anyway` — signs the one empty record. */
   onConfirm: () => void;
   /** `Keep it`, the scrim, Escape and Back — the pad beneath keeps its pick. */
@@ -84,12 +93,20 @@ export function EmptySignConfirm({
               </p>,
             ]
           : []),
+        ...(writeRule
+          ? [
+              <p key="writeRule" role="status" data-testid="empty-sign-write-rule" className="m-0 text-on-surface-variant">
+                {WRITE_RULE_WORDS.dialog}
+              </p>,
+            ]
+          : []),
       ]}
       actions={
         <>
           <button
             type="button"
             data-testid="empty-sign-proceed"
+            disabled={writeRule}
             aria-disabled={busy || undefined}
             aria-busy={slow || undefined}
             onClick={() => {

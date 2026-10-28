@@ -35,7 +35,7 @@ import {
   STANCE_AXES,
   type StanceAxes,
 } from "@/lib/ui/stance-format";
-import { severanceParts, type BundleState } from "@/lib/ui/stance-readout";
+import { severanceParts, WRITE_RULE_WORDS, type BundleState } from "@/lib/ui/stance-readout";
 import { DialogSurface } from "@/lib/ui2/dialog-surface";
 
 export function SeveranceConfirm({
@@ -47,6 +47,7 @@ export function SeveranceConfirm({
   busy = false,
   slow = false,
   failed = false,
+  writeRule = false,
   axes = STANCE_AXES,
   onConfirm,
   onCancel,
@@ -67,6 +68,14 @@ export function SeveranceConfirm({
   slow?: boolean;
   /** The signing did not complete; the dialog stays open and says so. */
   failed?: boolean;
+  /**
+   * THE WRITE RULE REFUSED THE WALK-BACK (SeveranceConfirm.md, round 21): a
+   * notice, not a fault. Its pre-check staged and spent nothing, so the quiet
+   * line stands where the fault line would, in the pending marker's ink and
+   * announced politely; the act dims, and no Retry is offered — asking again
+   * at once meets the same answer. `Keep it` returns to the pick.
+   */
+  writeRule?: boolean;
   /** The record family's words, its way out included. */
   axes?: StanceAxes;
   onConfirm: () => void;
@@ -129,17 +138,24 @@ export function SeveranceConfirm({
               </p>,
             ]
           : []),
+        ...(writeRule
+          ? [
+              <p key="writeRule" role="status" data-testid="severance-write-rule" className="m-0 text-on-surface-variant">
+                {WRITE_RULE_WORDS.dialog}
+              </p>,
+            ]
+          : []),
       ]}
       actions={
         <>
           {/* IN FLIGHT THE LABEL SAYS WHAT IS HAPPENING — the family's own
               present participle — and the control is inert, never dimmed.
-              Dimming is kept for the one true refusal, a bundle already at
-              nothing. */}
+              Dimming is kept for the true refusals: a bundle already at
+              nothing, and the write rule's no. */}
           <button
             type="button"
             data-testid="severance-proceed"
-            disabled={alreadySevered}
+            disabled={alreadySevered || writeRule}
             aria-disabled={busy || undefined}
             aria-busy={slow || undefined}
             onClick={() => {
