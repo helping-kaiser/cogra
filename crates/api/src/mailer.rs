@@ -3,15 +3,59 @@
 //! Outbound mail (auth.md: verification, reset, and email-change
 //! messages).
 //!
-//! The trait is the seam. The dev implementation logs the full message —
-//! which is also how links and codes surface during hand testing — and,
-//! when a log file is configured, appends it there too (`DEV_MAILER_LOG`,
-//! development.md). A real SMTP transport is chosen when deployment nears
-//! (development.md).
+//! The trait is the seam, and `MAILER` picks its implementation at boot
+//! (development.md "Environment Variables"):
+//!
+//! - `dev`, the default, is [`DevMailer`]. It logs the full message, which is
+//!   also how links and codes surface during hand testing, and appends it to
+//!   `DEV_MAILER_LOG` when that is set.
+//! - `smtp` is [`SmtpMailer`]: delivery through `SMTP_URL` from `MAIL_FROM`,
+//!   with no body in the log ([`smtp`]).
+//!
+//! [`config`] reads the choice and refuses the configurations that would mail
+//! the wrong way.
+
+pub mod config;
+pub mod smtp;
 
 use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
+use std::sync::Arc;
+
+pub use config::{MailerConfig, MailerConfigError, SmtpConfig, SmtpSecurity};
+pub use smtp::SmtpMailer;
+
+/// The mailer the configuration names, logged at boot without credentials.
+/// The SMTP mailer also checks its server in the background, so an
+/// unreachable or refusing server shows as an `error` line at boot instead of
+/// at the first signup; the check never holds the boot.
+pub fn build(config: MailerConfig) -> Result<Arc<dyn Mailer>, lettre::transport::smtp::Error> {
+    match config {
+        MailerConfig::Dev { log_file } => {
+            tracing::info!(
+                log_file = log_file.as_ref().map(|p| p.display().to_string()),
+                "outbound mail: the dev mailer logs every message and sends none"
+            );
+            Ok(Arc::new(DevMailer::new(log_file)))
+        }
+        MailerConfig::Smtp(smtp) => {
+            let mailer = SmtpMailer::from_config(&smtp)?;
+            tracing::info!(
+                host = smtp.host(),
+                port = smtp.port(),
+                security = smtp.security().as_str(),
+                authenticated = smtp.authenticated(),
+                from = %smtp.from(),
+                timeout_secs = smtp.timeout().as_secs(),
+                "outbound mail: SMTP"
+            );
+            let probe = mailer.clone();
+            tokio::spawn(async move { probe.check_connection().await });
+            Ok(Arc::new(mailer))
+        }
+    }
+}
 
 /// One outbound message. Bodies are plain text carrying the flow's link
 /// or code.

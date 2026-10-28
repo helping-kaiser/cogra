@@ -66,12 +66,25 @@ export const SHEET_CEILING =
 /** The height class a content sheet keeps, held under the ceiling. */
 const CONTENT_MAX = "92dvh";
 
+/**
+ * THE RAISED CLASS (`BottomSheet.jsx`: "the raised 88% class stays what a sheet
+ * asks for when its content needs the room") — the boards that ask for it by
+ * name (`maxHeight="88%"`: the opinions and cited-by lists among them).
+ */
+export const SHEET_RAISED = "88dvh";
+
+/**
+ * THE MASTER'S OWN DEFAULT CLASS (`BottomSheet.jsx`: "`maxHeight` keeps its 62%
+ * default") — what a board that names no class, or names 62%, draws.
+ */
+export const SHEET_DEFAULT = "62dvh";
+
 /** What a sheet's surface — and the column inside it — is bounded by. */
-function sheetHeight(tallest: boolean, height?: string): CSSProperties {
+function sheetHeight(tallest: boolean, height?: string, max: string = CONTENT_MAX): CSSProperties {
   if (height !== undefined) return { height: `min(${height}, ${SHEET_CEILING})` };
   return tallest
     ? { height: SHEET_CEILING }
-    : { maxHeight: `min(${CONTENT_MAX}, ${SHEET_CEILING})` };
+    : { maxHeight: `min(${max}, ${SHEET_CEILING})` };
 }
 
 export function BottomSheet({
@@ -93,7 +106,14 @@ export function BottomSheet({
   initialFocus,
   rows = false,
   flush = false,
+  maxHeight,
 }: {
+  /**
+   * The height class the board asks for (`BottomSheet.jsx` `maxHeight`), held
+   * under the ceiling like every class — {@link SHEET_RAISED} for the boards
+   * drawn at 88%. Absent, the content sheet's own class.
+   */
+  maxHeight?: string;
   /**
    * The content starts right under the title, as the license and sensitive
    * sheets draw it (`0 24px`): no 8px of body padding of its own.
@@ -327,7 +347,7 @@ export function BottomSheet({
       onPointerUp={endPull}
       onPointerCancel={endPull}
       style={
-        { "--cg-sheet-drag": `${pull}px`, ...sheetHeight(tallest, height) } as CSSProperties
+        { "--cg-sheet-drag": `${pull}px`, ...sheetHeight(tallest, height, maxHeight) } as CSSProperties
       }
       // `mt-auto` is what puts it at the bottom edge: a dialog is centred by
       // default, and this one rises from the edge it will go back to. It
@@ -355,7 +375,7 @@ export function BottomSheet({
         // The same bound as the surface: a percentage of an indefinite height
         // resolves to nothing, so the column cannot simply ask for `100%` of
         // a sheet that is only capped.
-        style={tallest || height !== undefined ? { height: "100%" } : sheetHeight(false)}
+        style={tallest || height !== undefined ? { height: "100%" } : sheetHeight(false, undefined, maxHeight)}
       >
         {/* The handle says the sheet can be pulled down, and it can. The
             gesture is read across the whole surface, so the grip marks where
