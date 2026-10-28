@@ -917,7 +917,15 @@ export function StanceControl({
         />
       )}
 
-      <Snackbar message={signed} onDismiss={() => setSigned(null)} />
+      {/* THE LIVE REGION STANDS OUTSIDE THE COLUMN (seam 245, ask 5). It is
+          mounted whether or not it has anything to say (`Snackbar`'s rule),
+          and as an in-flow child of this column its empty box still took the
+          column's gap: the target's row measured 52 for a 48 anchor. Out of
+          flow it keeps its watch and spends no layout — the message itself
+          is fixed to the viewport either way. */}
+      <div style={{ position: "absolute", width: 0, height: 0 }}>
+        <Snackbar message={signed} onDismiss={() => setSigned(null)} />
+      </div>
       {joinPrompt && <JoinPrompt open onClose={() => setJoinPrompt(false)} />}
     </div>
   );
