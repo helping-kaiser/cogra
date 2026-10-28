@@ -345,7 +345,8 @@ class FeedViewModel @Inject constructor(
         val filter = _state.value.filter
         val derived = ranking.derive(filter, seenRecord.seenIds())
         val rows = derived.rows
-        when (val first = feed.hydrate(rows, from = 0, hydrated, cutBy(filter))) {
+        val cut = windowCut(filter, removedMarks, ::visible)
+        when (val first = feed.hydrate(rows, from = 0, hydrated, cut)) {
             is Outcome.Success -> {
                 val (cards, next) = first.value
                 cursor = next
@@ -368,13 +369,6 @@ class FeedViewModel @Inject constructor(
         }
     }
 
-    /** What a window hands the screen: the card as this device knows it now, the filter's to admit. */
-    private fun cutBy(filter: FeedFilter) = WindowCut(
-        current = { card -> card.marked(removedMarks.marks.value) },
-        admits = { card -> filter.admits(card) },
-        visible = ::visible,
-    )
-
     /** The next window of the frozen derived list — the tail watch's ask. */
     fun loadMore() {
         val s = _state.value
@@ -382,7 +376,7 @@ class FeedViewModel @Inject constructor(
         _state.update { it.copy(loadingMore = true) }
         val rows = s.rows
         val from = cursor
-        val cut = cutBy(s.filter)
+        val cut = windowCut(s.filter, removedMarks, ::visible)
         viewModelScope.launch {
             val outcome = feed.hydrate(rows, from, hydrated, cut)
             // A derive that replaced the list meanwhile owns the cards now.
@@ -439,6 +433,13 @@ private suspend fun FeedRepository.rank(viewer: FeedViewer, filter: FeedFilter):
         is Outcome.Failed -> who
     }
 }
+
+/** What a window hands the screen under [filter]: the card as this device knows it now, the filter's to admit. */
+private fun windowCut(filter: FeedFilter, marks: RemovedMarks, visible: (FeedCard) -> Boolean) = WindowCut(
+    current = { card -> card.marked(marks.marks.value) },
+    admits = { card -> filter.admits(card) },
+    visible = visible,
+)
 
 /**
  * How a window hands its cards over: [current] the card as this device knows
