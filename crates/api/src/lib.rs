@@ -26,6 +26,7 @@ pub mod redaction;
 pub mod references;
 pub mod registry;
 pub mod relay;
+pub mod removal;
 pub mod report;
 pub mod schema;
 pub mod search;

@@ -24,6 +24,7 @@ function renderStep(overrides: Partial<Parameters<typeof DetailsStep>[0]> = {}) 
     clipFace: null,
     coverPreview: null,
     durationMs: 0,
+    coverDoor: false,
     onCover: vi.fn(),
     title: "",
     description: "",
@@ -35,6 +36,8 @@ function renderStep(overrides: Partial<Parameters<typeof DetailsStep>[0]> = {}) 
     onDescription: vi.fn(),
     onTags: vi.fn(),
     onReferences: vi.fn(),
+    onOpenTagPicker: vi.fn(),
+    onOpenReferencePicker: vi.fn(),
     onManage: vi.fn(),
     onDescribe: vi.fn(),
     onRetry: vi.fn(),
@@ -123,9 +126,9 @@ describe("DetailsStep", () => {
   // own tile above as its inset corner mark instead of a second field —
   // ONE TILE, NEVER TWO.
   describe("the Cover field", () => {
-    it("shows the door when the clip has no chosen cover", () => {
+    it("shows the door when the clip skipped the cover step and has no face", () => {
       const onCover = vi.fn();
-      renderStep({ mode: "media", assets: [VIDEO_ASSET], coverPreview: null, onCover });
+      renderStep({ mode: "media", assets: [VIDEO_ASSET], coverPreview: null, coverDoor: true, onCover });
 
       screen.getByTestId("wizard-cover-door").click();
       expect(onCover).toHaveBeenCalledTimes(1);
@@ -142,6 +145,15 @@ describe("DetailsStep", () => {
       // The old two-state face row is gone entirely — the cover rides the
       // tile's own inset mark instead (asserted in "the video body strip"
       // below), never a second field under it.
+      expect(screen.queryByText("Cover")).not.toBeInTheDocument();
+    });
+
+    // ComposeDetailsVideo.md: "ALWAYS the stage carries no cover section
+    // GIVEN the clip came through the cover step" — a face declined there is
+    // one Back away, never a second door.
+    it("draws no door for a clip that came through the cover step without a face", () => {
+      renderStep({ mode: "media", assets: [VIDEO_ASSET], coverPreview: null, coverDoor: false });
+      expect(screen.queryByTestId("wizard-cover-door")).not.toBeInTheDocument();
       expect(screen.queryByText("Cover")).not.toBeInTheDocument();
     });
 
@@ -221,12 +233,30 @@ describe("DetailsStep — the staged pairs", () => {
   const rust: TagDraft = { name: "rust", relevance: 0.1, confidence: 1 };
   const ada = newReferenceDraft("u-ada", { kind: "User", label: "@ada", href: "/u/ada" });
 
-  it("stages a typed tag at +0.1 / 1 and draws no loose pair beside the entry", () => {
-    const { onTags } = renderStep();
+  // ComposeDetails board: the tags section is its label, its chips and the
+  // quiet `+ Add a tag` — no inline name field, no Add pill, no loose pair.
+  it("adds a tag through the tag picker, never an inline field", () => {
+    const { onOpenTagPicker, onTags } = renderStep({ tags: [rust] });
+    expect(screen.queryByTestId("wizard-tag-input")).not.toBeInTheDocument();
     expect(screen.queryByRole("slider")).not.toBeInTheDocument();
-    fireEvent.change(screen.getByTestId("wizard-tag-input"), { target: { value: "rust" } });
-    fireEvent.click(screen.getByTestId(byNode("composeDetails.tags.add")));
-    expect(onTags).toHaveBeenCalledWith([rust]);
+    const add = screen.getByTestId(byNode("composeDetails.tags.add"));
+    expect(add).toHaveTextContent("+ Add a tag");
+    fireEvent.click(add);
+    expect(onOpenTagPicker).toHaveBeenCalledTimes(1);
+    expect(onTags).not.toHaveBeenCalled();
+    expect(screen.getByTestId(byNode("composeDetails.tags.label")).tagName).toBe("SPAN");
+  });
+
+  // ComposeDetails.md: tap composeDetails.references.add GIVEN a citation is
+  // staged -> the citation picker opens AND the staged citation stays.
+  it("opens the citation picker from + Cite something, and the staged citation stays", () => {
+    const { onOpenReferencePicker, onReferences } = renderStep({ references: [ada] });
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.references.add")));
+    expect(onOpenReferencePicker).toHaveBeenCalledTimes(1);
+    expect(onReferences).not.toHaveBeenCalled();
+    expect(screen.getByTestId(byNode("composeDetails.references.stagedReference", "1"))).toBeInTheDocument();
+    // No finder dialog of its own any more: the picker is the way in.
+    expect(screen.queryByTestId("wizard-finder")).not.toBeInTheDocument();
   });
 
   it("opens a tag chip's pair in a sheet over the stage, and dispatches only on Done", () => {
@@ -312,5 +342,65 @@ describe("DetailsStep — the staged pairs", () => {
   it("draws no upload aside once every picture has landed", () => {
     renderStep({ mode: "media", assets: [{ ...VIDEO_ASSET, id: "p0", kind: "picture" }] });
     expect(screen.queryByTestId("wizard-upload-aside")).toBeNull();
+  });
+});
+
+// THE ALREADY-PUBLISHED MARKER (ComposeDetailsReused.md, ComposeDetails.md).
+describe("DetailsStep — the already-published marker", () => {
+  const PICTURE: PickedAsset = { ...VIDEO_ASSET, id: "p0", kind: "picture" };
+
+  it("stands under the media row, named by its own words, and opens the post it names", () => {
+    const onOpenPublished = vi.fn();
+    renderStep({
+      mode: "media",
+      assets: [PICTURE],
+      published: { postId: "p-old", date: "12 September" },
+      onOpenPublished,
+    });
+    const door = screen.getByRole("button", { name: "Already in your post from 12 September." });
+    expect(door).toHaveAttribute("data-testid", "composeDetails.mediaRow.published");
+    fireEvent.click(door);
+    expect(onOpenPublished).toHaveBeenCalledWith("p-old");
+    // It never blocks: Next is as live as at rest, and no dialog asks.
+    expect(screen.getByTestId(byNode("composeDetails.next"))).not.toBeDisabled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("follows the media row and leads the describe row", () => {
+    renderStep({ mode: "media", assets: [PICTURE], published: { postId: "p-old", date: "12 September" } });
+    const row = screen.getByTestId(byNode("composeDetails.mediaRow"));
+    const door = screen.getByTestId("composeDetails.mediaRow.published");
+    const describe = screen.getByTestId(byNode("composeDetails.describeRow"));
+    expect(row.compareDocumentPosition(door) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(door.compareDocumentPosition(describe) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("draws nothing when no published post of the author's matches", () => {
+    renderStep({ mode: "media", assets: [PICTURE], published: null });
+    expect(screen.queryByText(/^Already in your post/)).not.toBeInTheDocument();
+  });
+});
+
+// ComposeDetailsVideo.jsx: FieldLabel `Video` over the clip's 54 × 96 tile,
+// then its describe row, 6 apart — the clip's own block, never the gallery's
+// captioned row — and its description two rows deep.
+describe("DetailsStep — the clip's own block", () => {
+  it("labels the clip Video above its 54 × 96 tile, with the describe row under it", () => {
+    renderStep({ mode: "media", assets: [VIDEO_ASSET], clipFace: "blob:frame-0", durationMs: 42_000 });
+    const block = screen.getByTestId(byNode("composeDetails.mediaRow"));
+    expect(block.firstElementChild).toHaveTextContent(/^Video$/);
+    const tile = within(block).getByTestId(byNode("composeDetails.mediaRow.thumb", "1"));
+    expect(tile.style.width).toBe("54px");
+    expect(tile.style.height).toBe("96px");
+    expect(within(block).getByTestId(byNode("composeDetails.describeRow"))).toHaveTextContent(
+      "Describe the video",
+    );
+    // No gallery caption on the clip.
+    expect(screen.queryByTestId(byNode("composeDetails.mediaRow.caption"))).not.toBeInTheDocument();
+  });
+
+  it("gives the clip's description two rows, the gallery's three", () => {
+    renderStep({ mode: "media", assets: [VIDEO_ASSET] });
+    expect(screen.getByTestId(byNode("composeDetails.description.input"))).toHaveAttribute("rows", "2");
   });
 });

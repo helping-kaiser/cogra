@@ -278,16 +278,16 @@ settled graph through a profile.
 [erasure.md §1](instances/erasure.md#1-per-content-removal),
 [layers.md §5](primitive/layers.md#5-deletion-policy),
 [data-model.md "Why parents point at attachments"](implementation/data-model.md#why-parents-point-at-attachments)
-**Status:** open (deferred — the erasure slice is unbuilt; the direction below is ruled)
+**Status:** open (deferred — whole-record removal is built and needs no per-usage mark; the direction below is ruled)
 
 ### Context
 
-The read side is built and the write side is not. `redaction_reason`
-and `redacted_at` sit on every version table and on
-`media_attachments`, and the API branches on them at every content
-and media read surface, but no code path sets either column: the
-state the readers handle is one nothing can produce. The gap is the
-erasure slice, which is not scheduled.
+Whole-record removal is built: `removeContent` tombstones every
+version of a removed post or comment through the version rows'
+`redaction_reason` ([data-model.md "Display-content versioning"](implementation/data-model.md#display-content-versioning)),
+and a picture only that record showed is held for the archive, not
+marked. `media_attachments` carries the only `redacted_at` column,
+for asset-level redaction, and nothing sets it yet.
 
 The direction is ruled: **a redaction marks the usage, not the
 asset**. The mark belongs on the post or comment version and its

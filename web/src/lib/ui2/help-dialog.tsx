@@ -141,6 +141,24 @@ export const HELP_TOPICS = {
       "Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.",
     ],
   },
+  // The tag picker's one "?" (copy-voice, *Tagging*, the K13 round): the
+  // dot is named by the dialog it opens.
+  tagging: {
+    title: "Tagging",
+    paragraphs: [
+      "A tag is a name anyone can use — nobody owns one, and using a name nobody has used before takes no extra step. Tagging is its own signed action, and it carries how much the post is about that tag.",
+      "Names are lowercased, and a name can hold letters, digits, dot, dash and underscore. Tap a tag you have added to set how it relates.",
+    ],
+  },
+  // The citation picker's one "?" (copy-voice, *Citing*; trimmed to v1.0.0's
+  // citable kinds, jakob 2026-09-25).
+  citing: {
+    title: "Citing",
+    paragraphs: [
+      "A citation is its own signed action and carries an opinion of what you cite. You can cite a post, a comment or a person.",
+      'A comment can also be cited from itself — open its menu and choose "Cite in a new post".',
+    ],
+  },
   editing: {
     title: "Editing",
     paragraphs: [

@@ -472,6 +472,62 @@ pub async fn record_full(
     }))
 }
 
+/// The published witness of one record, read on the caller's connection;
+/// None when the mirror does not hold it. A redaction reads it inside its
+/// own transaction, so it never holds a second pooled connection while
+/// its first one waits.
+pub async fn payload_witness(
+    conn: &mut sqlx::PgConnection,
+    record_id: &str,
+) -> Result<Option<Vec<u8>>, MirrorError> {
+    Ok(sqlx::query_scalar!(
+        "SELECT payload_witness FROM mirror_records WHERE record_id = $1",
+        record_id,
+    )
+    .fetch_optional(conn)
+    .await?)
+}
+
+/// One accepted act of a revision chain, with the landing coordinates
+/// its version row carries.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ChainRecord {
+    pub record_id: String,
+    pub epoch: i64,
+    pub act_time: i64,
+    pub position: i64,
+}
+
+/// Every accepted act of one author's revision chain on one node, oldest
+/// first: the genesis act that minted it and each edit after it.
+///
+/// A chain act is an act of the node's own family whose own leg targets
+/// the node — the genesis act's target *is* the node's identifier, and an
+/// edit names it (post.md §4) — the same selection [`chain_head`] takes
+/// the newest of. A reply is not part of its parent's chain: its own leg
+/// targets the reply's mint, and the parent is its middle.
+pub async fn chain_records(
+    conn: &mut sqlx::PgConnection,
+    author: &str,
+    family: Family,
+    node: &str,
+) -> Result<Vec<ChainRecord>, MirrorError> {
+    Ok(sqlx::query_as!(
+        ChainRecord,
+        "SELECT r.record_id, r.epoch, r.act_time, r.position
+         FROM mirror_records r
+         JOIN mirror_record_legs l ON l.record_id = r.record_id
+         WHERE r.author = $1 AND r.family = $2
+           AND l.leg IN ('binary', 't') AND l.target = $3
+         ORDER BY r.epoch, r.act_time, r.position",
+        author,
+        family.as_str(),
+        node,
+    )
+    .fetch_all(conn)
+    .await?)
+}
+
 /// The records with the given identifiers, with legs, keyed by
 /// identifier. An identifier the mirror does not hold is absent.
 pub async fn records_by_ids(
