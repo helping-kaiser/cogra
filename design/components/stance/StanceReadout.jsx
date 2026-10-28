@@ -147,6 +147,29 @@ export const STANCE_SEVERANCE_WORDS = {
   helpAlternates: "Walk it back takes everything to nothing, and each thing you've said is walked back by its own signature.",
 };
 
+/* THE WRITE RULE'S WORDS, AT THE STANCE FAMILY'S SCALES (copy-voice, *Faults
+   by code*). The seal's panel says the draft is kept; nothing in this family
+   keeps a draft, so its fact stops at what was not signed or spent. One
+   object, because the pad, the alternates, the row and the two dialogs
+   raised over the pad all say the same refusal, and a sentence kept in two
+   files is a sentence that drifts:
+
+   · `title`, `padFact` and `help` — the notice panel standing where the
+     landing line and the commit row were (the pad, the alternates), its "?"
+     the seal panel's own dialog.
+   · `row` — the quiet line under a target's face, after a hold.
+   · `dialog` — the quiet line in a dialog raised over the pad (the walk-back,
+     the empty sign), where the fault line would stand: the row's words, and
+     the fact the cost line just above it makes the reader ask (seam 245,
+     ask 15). */
+export const WRITE_RULE_WORDS = {
+  title: "You can't sign right now",
+  padFact: "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.",
+  help: "Why signing waits",
+  row: "You can't sign right now.",
+  dialog: "You can't sign right now. Nothing was signed or spent.",
+};
+
 /** A family's severance words, or the default family's. */
 export function severanceWords(names) {
   return (names && names.severance) || STANCE_SEVERANCE_WORDS;
@@ -1011,12 +1034,21 @@ export function alternatesHelp(names) {
    reader doubts them: the opinion is still held (a person stays under `Your
    people` — `FeedSheet`'s set, whichever way the opinion points); nothing
    passes through it; and it is not the family's way out, which is an act of
-   its own. The target is the pad's, and the way out is the family's word. */
+   its own. The target is the pad's, and the way out is the family's word.
+
+   THE FIRST LINE NAMES THE LIST THE TARGET STAYS ON, by the label's kind
+   (seam 245, ask 18): a person (`@ada`) stays under `Your people`, a topic
+   (`#saltmaps`) on `Your topics` — held is a netted Affinity other than
+   (0, 0), so one zero keeps it there. A post or a comment sits on no list
+   of the reader's, so its line stops at the opinion. */
 export function unreachableHelp(names, targetLabel) {
+  const stays = targetLabel.startsWith("@")
+    ? `${targetLabel} stays under Your people`
+    : targetLabel.startsWith("#")
+      ? `${targetLabel} stays on Your topics`
+      : null;
   return [
-    targetLabel.startsWith("@")
-      ? `It still counts among your opinions — ${targetLabel} stays under Your people.`
-      : "It still counts among your opinions.",
+    stays === null ? "It still counts among your opinions." : `It still counts among your opinions — ${stays}.`,
     "It shapes no one's feed, earns nothing, and nothing passes on through you.",
     `${severanceWords(names).control} is different: its own act, confirmed and paid for, that leaves a clean slate.`,
   ];

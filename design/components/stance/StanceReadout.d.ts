@@ -122,7 +122,7 @@ export interface StanceStandingProps {
   pick: StancePair;
   /** `undefined` while the bundle is being read, `null` where it could not be. */
   bundle: StanceBundle | null | undefined;
-  /** Already in the reader's words — "this post", "@ada". */
+  /** Already in the reader's words, one per kind — "this post", "this comment", "@ada", "#saltmaps". */
   targetLabel: string;
   /** The record family's axis questions, for the two spoken readings. */
   names?: AxisNames;
