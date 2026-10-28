@@ -946,6 +946,30 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_sign").assertIsNotEnabled()
     }
 
+    // ComposeUploading.md (round 22): from two up the gate reads the plural.
+    @Test
+    fun twoFailedUploadsReadThePluralAtTheGate() {
+        val failed = withPicks.copy(step = WizardStep.Seal)
+            .withUpload("a", AssetUpload.Failed(UploadFailure.TRANSPORT))
+            .withUpload("b", AssetUpload.Failed(UploadFailure.TRANSPORT))
+        compose.setContent { Wizard(failed) }
+        compose.onNodeWithText("2 pictures didn't upload. Signing waits for them.", substring = true).assertExists()
+    }
+
+    // ComposeUploading.md (round 22): one line counts every failed picture,
+    // with Retry and Remove them; Remove them takes every failed one out.
+    @Test
+    fun twoFailedUploadsUnderTheRowReadOneLineAndRemoveThemTakesBoth() {
+        val failed = withPicks.copy(step = WizardStep.Details)
+            .withUpload("a", AssetUpload.Failed(UploadFailure.TRANSPORT))
+            .withUpload("b", AssetUpload.Failed(UploadFailure.TRANSPORT))
+        compose.setContent { Wizard(failed) }
+        compose.onNodeWithTag("wizard_upload_failed").performScrollTo()
+            .assertTextEquals("2 pictures didn't upload. Retry · Remove them")
+        compose.onNodeWithTag("wizard_upload_failed_0").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_upload_failed_1").assertDoesNotExist()
+    }
+
     @Test
     fun aPressedCommitRefusesASecondPressAndSaysSoPast200ms() {
         compose.mainClock.autoAdvance = false
