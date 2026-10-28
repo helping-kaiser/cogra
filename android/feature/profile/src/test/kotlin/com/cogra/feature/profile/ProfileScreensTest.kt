@@ -54,6 +54,7 @@ class ProfileScreensTest {
         onMessage: () -> Unit = {},
         onRequireAccount: (() -> Unit)? = null,
         backDescription: String? = null,
+        onOpenHistory: () -> Unit = {},
     ) {
         compose.setContent {
             ProfileScreen(
@@ -73,6 +74,7 @@ class ProfileScreensTest {
                 onMessage = onMessage,
                 onRequireAccount = onRequireAccount,
                 backDescription = backDescription,
+                onOpenHistory = onOpenHistory,
                 now = now,
             )
         }
@@ -104,6 +106,17 @@ class ProfileScreensTest {
 
     private val id = DataNode("profile") / "identity"
     private val row = id / "actionRow"
+
+    // ProfileOwnMenu.md: the own ⋮'s History row opens History — no longer
+    // inert once History is built (H3).
+    @Test
+    fun theOwnMenusHistoryRowOpensHistory() {
+        var opened = 0
+        render(loaded(own = true), onOpenHistory = { opened++ })
+        compose.onNodeWithTag((row / "menu").tag).performScrollTo().performClick()
+        compose.onNodeWithTag("profile.menuSheet.history").performClick()
+        assertThat(opened).isEqualTo(1)
+    }
 
     @Test
     fun aSavedEditConfirmsOnTheProfilesOwnSnackbar() {

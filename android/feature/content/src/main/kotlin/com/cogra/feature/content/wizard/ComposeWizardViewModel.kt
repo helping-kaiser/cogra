@@ -169,7 +169,7 @@ class ComposeWizardViewModel @Inject constructor(
      * because an author who opened the composer to write something else
      * should not find last week's post in it.
      */
-    fun start(referenceTargetId: String? = null) {
+    fun start(referenceTargetId: String? = null, stagedTag: String? = null) {
         if (started) return
         started = true
         viewModelScope.launch {
@@ -186,6 +186,7 @@ class ComposeWizardViewModel @Inject constructor(
         // two taps loses nothing (fix-round-2 ruling).
         viewModelScope.launch { _state.collect { rememberDraft() } }
         prefillReference(referenceTargetId)
+        prefillTag(stagedTag)
         seedLicense()
     }
 
@@ -242,6 +243,9 @@ class ComposeWizardViewModel @Inject constructor(
             referenceSection = current.referenceSection,
             license = if (licenseTouched) current.license else startingLicense,
         )
+        // THE STAGED TAG CROSSES THE RESTORE for the citation's reason: the
+        // tag card's act opened this composer, and the draft must not undo it.
+        prefillTag(prefilledTag)
         armed = true
         // A restored media draft re-reads every asset's shape: the crop
         // preview needs it, and the URIs may no longer resolve.
@@ -539,6 +543,21 @@ class ComposeWizardViewModel @Inject constructor(
 
     private fun updateReferences(block: (ReferenceSectionState) -> ReferenceSectionState) =
         sections.updateReferences(block)
+
+    /** The tag a tag card's act opened the composer with, kept so a restored draft carries it too. */
+    private var prefilledTag: String? = null
+
+    /**
+     * `Tag a new post with it` (History.md:63; FeedKinds.md): the composer
+     * opens at its first stage with the tag riding staged among the new
+     * post's tags — added the way the details stage adds one, so it is
+     * canonical and never doubled.
+     */
+    private fun prefillTag(name: String?) {
+        if (name.isNullOrBlank()) return
+        prefilledTag = name
+        updateTags { section -> section.withInput(name).added().withInput(section.input) }
+    }
 
     private fun prefillReference(targetId: String?) {
         if (targetId == null) return
