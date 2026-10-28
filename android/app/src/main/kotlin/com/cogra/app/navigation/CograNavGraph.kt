@@ -41,7 +41,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
@@ -67,7 +66,6 @@ import com.cogra.core.designsystem.v2.atom.BandBell
 import com.cogra.core.designsystem.v2.media.LocalAlwaysUnveil
 import com.cogra.core.designsystem.v2.token.NavTransitions
 import com.cogra.domain.deletion.AccountDeletionState
-import com.cogra.domain.media.CropWindow
 import com.cogra.domain.notifications.NotificationTarget
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.TokenStore
@@ -76,7 +74,6 @@ import com.cogra.feature.auth.PasswordResetRoute
 import com.cogra.feature.auth.RestoreRoute
 import com.cogra.feature.content.ChatsComingSoonRoute
 import com.cogra.feature.content.CommentsReturn
-import com.cogra.feature.content.CommentsScroll
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.PostDetailRoute
 import com.cogra.feature.content.SavedDoors
@@ -138,275 +135,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import java.time.Instant
 import javax.inject.Inject
 
-// The destinations (type-safe routes, Navigation 2.8+).
-@Serializable
-data class InviteEntry(val inviteId: String? = null)
-
-@Serializable
-data class Apply(val inviteId: String)
-
-@Serializable
-data object Login
-
-@Serializable
-data object PasswordReset
-
-@Serializable
-data object Restore
-
-@Serializable
-data object KeyCeremony
-
-@Serializable
-data object Feed
-
-/**
- * The composer. [postId] names an edit target; [referenceTargetId]
- * arrives from a node's Reference affordance and opens a fresh post
- * with that node already staged as a chip (D20).
- */
-@Serializable
-data class ComposePost(
-    val postId: String? = null,
-    val referenceTargetId: String? = null,
-)
-
-/**
- * A post's detail. [from] names where the reader came from, which the back
- * arrow reads (`saved` → `Back to Saved`); [commentId] lands the thread on
- * that comment, opened over the post (Saved.md), and [aimReply] — a comment
- * card's comment glyph — opens the reply composer aimed at it.
- */
-@Serializable
-data class PostDetail(
-    val postId: String,
-    val from: String? = null,
-    val commentId: String? = null,
-    val aimReply: Boolean = false,
-    /** Just signed here — `ComposeLanded`'s snackbar, said once. */
-    val published: Boolean = false,
-)
-
-/**
- * The reply wizard, pinned to what it answers (graph.json `ReplyEntry`
- * 5 and 7): [isComment] false is the post, true the comment.
- *
- * The card's words ride the route rather than a second read — a
- * composer that had to fetch its own target would open empty, and the
- * thread already holds every one of these.
- */
-@Serializable
-data class ReplyWizard(
-    val targetId: String,
-    val isComment: Boolean,
-    val title: String,
-    val snippet: String,
-    val authorHandle: String,
-    val avatarUrl: String? = null,
-)
-
-/** `CommentEdit` on an own comment (graph.json `ReplyMedia` 6). */
-@Serializable
-data class EditComment(val commentId: String, val parentTitle: String)
-
-/** A topic by its canonical name — reachable from a chip anywhere (D20). */
-@Serializable
-data class Topic(val name: String)
-
-/** An actor's profile; a null handle is the viewer's own (the tab). [from] names the back arrow's origin. */
-@Serializable
-data class Profile(val handle: String? = null, val from: String? = null)
-
-/** The reader's Saved list, reached from their own profile's ⋮ (Saved.md). */
-@Serializable
-data object Saved
-
-/**
- * The reader's notification list, reached from the bell on a root band
- * (Notifications.md). [from] names the root the bell was tapped on — the slot
- * the bar keeps lit and the root the back arrow names.
- */
-@Serializable
-data class Notifications(val from: String = "feed")
-
-@Serializable
-data object ProfileEdit
-
-/**
- * The profile-picture flow (`AvatarCrop`, then `AvatarSeal` or back).
- *
- * The crop's Next has two outcomes (AvatarCrop.md). Off the avatar's change
- * badge it opens the picture's own seal. Opened from Change picture on the
- * edit form ([fromEdit]) it brings the picture back to that form, whose one
- * seal signs it with the fields — and the picture's own seal never opens
- * (design/readme.md §13).
- */
-@Serializable
-data class AvatarFlow(val uri: String, val fromEdit: Boolean)
-
-@Serializable
-data object Invites
-
-@Serializable
-data object Settings
-
-@Serializable
-data object KeyExport
-
-/** The release chronicle behind Settings' `What's new` row (WhatsNew.md). */
-@Serializable
-data object WhatsNew
-
-/** The interim recovery-code route (DRIFT: the SettingsBackup* boards are the backup-replacement packet's). */
-@Serializable
-data object SettingsBackup
-
-@Serializable
-data object ChangePassword
-
-@Serializable
-data object ChangeHandle
-
-/**
- * The email change's request. [applicant] is the unverified applicant's
- * carve-out (`ApplicantEmail`), opened from Settings by G1/G2.
- */
-@Serializable
-data class ChangeEmail(val applicant: Boolean = false)
-
-@Serializable
-data object ChangeEmailConfirm
-
-/** The new address's link — the App Link on `/email-change?token=`. */
-@Serializable
-data class ChangeEmailLinked(val token: String)
-
-@Serializable
-data object About
-
-/** The deletion's request screen (`DeleteAccount`), opened from the Settings row. */
-@Serializable
-data object DeleteAccount
-
-/**
- * Where the request lands (`DeleteAccountMail`). [includeContent] is the
- * request screen's recorded choice, which Resend carries again.
- */
-@Serializable
-data class DeleteAccountMail(val includeContent: Boolean)
-
-/** The grace page (`DeleteAccountPending`), opened from the row while the deletion is confirmed. */
-@Serializable
-data object DeleteAccountPending
-
-/** The mailed link's landing — the App Link on `/delete-account?token=`. */
-@Serializable
-data class DeleteAccountConfirmed(val token: String)
-
-/**
- * Chats — coming soon (backlog item 68, ruled 2026-09-14). Reachable from
- * every root band's chats affordance; no state of its own, so one route
- * serves every caller.
- */
-@Serializable
-data object ChatsComingSoon
-
-/**
- * The vouch-back's ceremony (`VouchedIn`; VouchedIn.md). It carries the
- * voucher it names — handle, name, face — from the surface the signing was
- * taken on, so it needs no read of its own.
- */
-@Serializable
-data class VouchedIn(val handle: String, val name: String, val avatarUrl: String? = null)
-
-/** The new address's link path (auth.md "Link URLs"), claimed beside `/join`. */
-private const val EMAIL_CHANGE_PATH = "/email-change"
-
-/** The account deletion's link path (auth.md "Link URLs"), claimed beside `/join`. */
-private const val DELETE_ACCOUNT_PATH = "/delete-account"
-
-/** What `ManageSpaceActivity` relays the system storage screen's "Manage space" as. */
-const val ACTION_MANAGE_SPACE = "com.cogra.app.action.MANAGE_SPACE"
-
 /** The app's coarse auth phase; each value owns a navigation graph root. */
 enum class AuthPhase { LOADING, SIGNED_OUT, SIGNED_IN }
-
-/**
- * A navigation result: the name it rides under, bound to the value that
- * means "nothing to report".
- *
- * The two belong together. A key read with the wrong default, or cleared
- * with a value of the wrong type, compiles perfectly well and fails at
- * runtime — binding them into one thing is what makes that unsayable.
- */
-private class NavResultKey<T>(val name: String, val absent: T)
-
-/**
- * The Restore result key. It rides the back-stack ENTRY's
- * savedStateHandle — a different object from the one injected into the
- * entry's ViewModels, so it must be read here, where the entry is in
- * hand (android/CLAUDE.md "Navigation").
- */
-private val actorRestoredKey = NavResultKey("actor_restored", false)
-
-/** The (ChangeHandle)→Profile result key: the handle changed, re-read. */
-private val handleChangedKey = NavResultKey("handle_changed", false)
-
-/**
- * The subpage→Settings result key: what to say over the page on return
- * (`Password changed — other devices are signed out.`, `Your handle is now
- * @x.`, …). The page re-reads on every arrival; this carries the words.
- */
-private val settingsNoticeKey = NavResultKey<String?>("settings_notice", null)
-
-/** The manage-space door's ask: settings opens with Clearing data in view (Settings.md). */
-private val settingsClearingKey = NavResultKey("settings_clearing", false)
-
-/** The Compose→(Feed|PostDetail) result key: a write signed, re-read. */
-private val contentSignedKey = NavResultKey("content_signed", false)
-
-/**
- * The (ReplyWizard|CommentEdit)→thread result key: a comment or an edit
- * signed, so the thread re-reads and says so once.
- *
- * Distinct from [contentSignedKey] because the surfaces answer them
- * differently — a signed comment earns the thread's snackbar, a
- * returning post edit only the refetch.
- */
-private val commentSignedKey = NavResultKey("comment_signed", false)
-
-/**
- * THE OTHER HALF OF THE SHEET'S RETURN (jakob 2026-09-15): which comment
- * the reply that just landed hangs under, so its branch unfolds and the
- * author sees what they wrote. Null is a comment on the post itself.
- *
- * "A comment landed" alone cannot draw the return — a reply arrives one
- * level down, behind a count that was collapsed when the reader left —
- * which is why this rides beside [commentSignedKey] rather than being
- * folded into it.
- */
-private val commentParentKey = NavResultKey<String?>("comment_parent", null)
-
-/**
- * …and where the reader was in the thread when it gave way.
- *
- * Reported by the surface to ITSELF on the way out, not by the composer
- * on the way back: the place is the sheet's own fact, and the composer
- * never knew it. It rides the same savedStateHandle the results do, so
- * it survives process death exactly as they do.
- *
- * A LazyColumn's place is two ints and an `IntArray` is what a Bundle
- * carries without a Parcelable of its own; [CommentsScroll] is the shape
- * everything above this layer speaks.
- */
-private val commentsPlaceKey = NavResultKey<IntArray?>("comments_place", null)
-
-private fun IntArray?.asCommentsScroll(): CommentsScroll? =
-    this?.takeIf { it.size == 2 }?.let { CommentsScroll(it[0], it[1]) }
 
 /**
  * `ReplyEntry` 5 and 7 — the composer, pinned to whatever the thread
@@ -427,77 +160,6 @@ private fun NavController.openReplyWizard(target: ReplyTarget) {
             avatarUrl = target.avatarUrl,
         ),
     )
-}
-
-/**
- * The Wizard→Feed result key: a staged act was collected before it
- * landed. The value is the post's own label, so the feed's calm notice
- * can name what did not land (`ComposeExpired`).
- */
-private val contentExpiredKey = NavResultKey<String?>("content_expired", null)
-
-/** The ProfileEdit→Profile result key: the update signed, re-read. */
-private val profileSavedKey = NavResultKey("profile_saved", false)
-
-/**
- * The AvatarCrop→ProfileEdit result keys: the picture the crop brings back
- * to the edit form, and the framing it was left at — `[left, top, right,
- * bottom]` as fractions of the picture, absent for one never framed.
- */
-private val framedPictureUriKey = NavResultKey<String?>("framed_picture_uri", null)
-private val framedPictureWindowKey = NavResultKey<FloatArray?>("framed_picture_window", null)
-
-/** A framing as the saved-state handle carries it. */
-private fun CropWindow.toFractions(): FloatArray = floatArrayOf(left, top, right, bottom)
-
-/** The framing back from the handle; anything not four fractions is no framing. */
-private fun FloatArray.toCropWindow(): CropWindow? =
-    if (size == CROP_WINDOW_SIDES) CropWindow(first(), this[1], this[2], last()) else null
-
-private const val CROP_WINDOW_SIDES = 4
-
-/**
- * A destination's own view of one result: what it says, and the lambda
- * that marks it read.
- *
- * Consuming is half of the pattern — a result left in the handle re-fires
- * on the next recomposition — so the read hands back the way to consume
- * it rather than leaving each site to remember the key and its default a
- * second time.
- */
-@Composable
-private fun <T> NavBackStackEntry.navResult(key: NavResultKey<T>): Pair<T, () -> Unit> {
-    val value by savedStateHandle
-        .getStateFlow(key.name, key.absent)
-        .collectAsStateWithLifecycle()
-    return value to { savedStateHandle[key.name] = key.absent }
-}
-
-/** Reports [value] to the destination this one returns to. */
-private fun <T> NavController.report(key: NavResultKey<T>, value: T) {
-    previousBackStackEntry?.savedStateHandle?.set(key.name, value)
-}
-
-/**
- * Reports [value] to the destination now on top — the shape a pop uses,
- * where the destination being answered is the one popped back to rather
- * than the one behind this.
- */
-private fun <T> NavController.reportToCurrent(key: NavResultKey<T>, value: T) {
-    currentBackStackEntry?.savedStateHandle?.set(key.name, value)
-}
-
-/**
- * Reports [value] to the named destination further down the stack.
- *
- * The avatar flow's own seal answers the profile by name rather than
- * whatever entry sits under the flow: a signed picture's news belongs to
- * the profile, and [report] would hand it to whichever screen pushed the
- * flow, which may read no such result at all.
- */
-private inline fun <reified R : Any, T> NavController.reportTo(key: NavResultKey<T>, value: T) {
-    val entry = runCatching { getBackStackEntry<R>() }.getOrNull() ?: return
-    entry.savedStateHandle[key.name] = value
 }
 
 /**
