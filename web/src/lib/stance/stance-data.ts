@@ -28,6 +28,7 @@
 //     prepare may stage a batch").
 
 import type { Outcome } from "@/lib/api/outcome";
+import type { KeptTargetPreview } from "./kept-preview";
 import type { StancePair } from "./model";
 
 /**
@@ -175,4 +176,30 @@ export interface StanceData {
    * (PadKeyAbsent.md) rather than fail a signature it could never give.
    */
   keyOnDevice(): Promise<boolean>;
+
+  /**
+   * Whether the account has a recovery backup — null when that cannot be
+   * read. Asked only once the key is known to be elsewhere: with no backup
+   * there is nothing to restore from, so the key notice drops `Restore the
+   * key` and says so (KeyElsewhereNoBackup.md, PadKeyAbsent.md).
+   */
+  keyBackedUp(): Promise<boolean | null>;
+
+  /**
+   * The kept picks, signed together (KeptPicksSeal.md): each pick prepared
+   * toward its own target, then the whole staged set checked against the
+   * picks as the seal read them back and signed in one pass — never a pick
+   * signed on its own. A refusal keeps its codes (the write rule is a notice,
+   * not a fault).
+   */
+  commitBatch(entries: readonly KeptEntry[]): Promise<Outcome<StanceCommit>>;
+
+  /** What a kept pick's row names its target by, read live (KeptPicksReview.md). */
+  preview(target: StanceTarget): Promise<Outcome<KeptTargetPreview>>;
 }
+
+/** One kept pick on its way to the seal: the target and exactly the pair kept. */
+export type KeptEntry = {
+  readonly target: StanceTarget;
+  readonly pick: StancePair;
+};
