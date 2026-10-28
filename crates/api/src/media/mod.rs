@@ -2190,7 +2190,10 @@ mod held_store_tests {
         assert_eq!(held.bucket, "held");
         assert_eq!(held.access_key_id, "held-key");
         assert_eq!(held.secret_access_key, "held-secret");
-        assert_eq!(held.region, "us-east-1", "the region is the live store's unless set");
+        assert_eq!(
+            held.region, "us-east-1",
+            "the region is the live store's unless set"
+        );
     }
 
     /// A config printed for a log line carries no secret key.
@@ -2198,7 +2201,10 @@ mod held_store_tests {
     fn a_store_config_debug_prints_no_secret_key() {
         let printed = format!("{:?}", live());
         assert!(!printed.contains("live-secret"), "{printed}");
-        assert!(printed.contains("live-key"), "the key id is not a secret: {printed}");
+        assert!(
+            printed.contains("live-key"),
+            "the key id is not a secret: {printed}"
+        );
     }
 
     /// An endpoint without both keys would dial the held service with the
