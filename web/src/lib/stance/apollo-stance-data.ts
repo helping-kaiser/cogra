@@ -35,10 +35,14 @@ import type { ApolloClient } from "@apollo/client";
 import {
   CommentStanceDocument,
   HashtagStanceDocument,
+  KeptPickCommentDocument,
+  KeptPickPostDocument,
+  KeptPickProfileDocument,
+  KeyBackupStateDocument,
   PostStanceDocument,
   ProfileStanceDocument,
 } from "@/__generated__/graphql";
-import { failed, refused, success, viewerField, type Outcome } from "@/lib/api/outcome";
+import { failed, fetchOutcome, refused, success, viewerField, type Outcome } from "@/lib/api/outcome";
 import {
   prepareSeverance,
   prepareStance,
@@ -46,8 +50,21 @@ import {
   type StanceSelector,
 } from "@/lib/api/writes-api";
 import type { AuthGuard } from "@/lib/session/guard";
-import { expectation, severance, stanceRecord, type Expectation } from "@/lib/signing/intent";
+import {
+  expectation,
+  joinExpectations,
+  severance,
+  stanceRecord,
+  type Expectation,
+} from "@/lib/signing/intent";
 import type { WriteSigner } from "@/lib/signing/write-signer";
+import {
+  commentPreview,
+  postPreview,
+  profilePreview,
+  topicPreview,
+  type KeptTargetPreview,
+} from "./kept-preview";
 import type { StancePair } from "./model";
 import {
   INCLUDE_PENDING_DEFAULT,
@@ -251,6 +268,79 @@ export function createApolloStanceData(deps: {
       // A signer that cannot say is read as holding one: the signature
       // itself remains the check.
       return signer.hasKey?.() ?? Promise.resolve(true);
+    },
+
+    async keyBackedUp(): Promise<boolean | null> {
+      const outcome = await guard.run(() =>
+        viewerField(
+          () => client.query({ query: KeyBackupStateDocument, fetchPolicy: READ_POLICY }),
+          (data) => data.me,
+        ),
+      );
+      // Unknown is not "no backup": a read that did not answer keeps the
+      // restore on offer, the way the notice reads when a backup exists.
+      return outcome.kind === "success" ? outcome.value.keyBackupCreatedAt != null : null;
+    },
+
+    async commitBatch(entries): Promise<Outcome<StanceCommit>> {
+      // EACH PICK IS ITS OWN PREPARE (there is no prepare that stages
+      // stances toward several targets at once), and NOTHING IS SIGNED
+      // UNTIL EVERY ONE IS STAGED: a refused prepare stops the batch before
+      // its first pre-signature, so no pick signs without the others.
+      const staged: StagedWriteView[] = [];
+      const expected: Expectation[] = [];
+      for (const { target, pick } of entries) {
+        const node = await graphIdOf(target);
+        if (node.kind !== "success") return node;
+        const prepared = await guard.run(() =>
+          prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
+        );
+        if (prepared.kind !== "success") return prepared;
+        staged.push(...prepared.value);
+        expected.push(expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]));
+      }
+      // One pass over the whole set, checked whole against the picks the
+      // seal read back (write-signer.ts `sign`).
+      return signAll(staged, joinExpectations(expected));
+    },
+
+    async preview(target): Promise<Outcome<KeptTargetPreview>> {
+      switch (target.kind) {
+        case "post": {
+          const read = await guard.run(() =>
+            fetchOutcome(() =>
+              client.query({ query: KeptPickPostDocument, variables: { id: target.id }, fetchPolicy: READ_POLICY }),
+            ),
+          );
+          if (read.kind !== "success") return read;
+          const post = read.value.post;
+          return post ? success(postPreview(post)) : failed(new Error("the kept pick's post did not resolve"));
+        }
+        case "comment": {
+          const read = await guard.run(() =>
+            fetchOutcome(() =>
+              client.query({ query: KeptPickCommentDocument, variables: { id: target.id }, fetchPolicy: READ_POLICY }),
+            ),
+          );
+          if (read.kind !== "success") return read;
+          const comment = read.value.comment;
+          return comment
+            ? success(commentPreview(comment))
+            : failed(new Error("the kept pick's comment did not resolve"));
+        }
+        case "profile": {
+          const read = await guard.run(() =>
+            fetchOutcome(() =>
+              client.query({ query: KeptPickProfileDocument, variables: { id: target.id }, fetchPolicy: READ_POLICY }),
+            ),
+          );
+          if (read.kind !== "success") return read;
+          const user = read.value.user;
+          return user ? success(profilePreview(user)) : failed(new Error("the kept pick's person did not resolve"));
+        }
+        case "topic":
+          return success(topicPreview(target));
+      }
     },
 
     async sever(target, shown): Promise<Outcome<StanceCommit>> {

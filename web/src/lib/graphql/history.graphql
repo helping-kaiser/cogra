@@ -46,3 +46,165 @@ mutation MarkSeen($nodes: [UUID!]!) {
     }
   }
 }
+
+# HISTORY'S OWN READ (History.md, HistoryFilter.md, HistorySearch.md): the
+# seen-list as a feed, newest first by first seeing, a page of TEN at a
+# time — Saved's size, for Saved's reason: every edge carries whole card
+# selections (a post's, a comment's, a person's and a topic's), and the
+# page size is written as a literal so the client-operation guard prices
+# the call the device actually makes.
+#
+# EVERY KIND AS ITS OWN FEED CARD: a post as the feed's `FeedPost`, a
+# comment as the thread's `CommentFields` plus its head row's target and
+# its thread's post (Saved's selection), a person as the profile card
+# draws them, and a topic as the tag card draws it — its name and a
+# glimpse of the newest three things carrying it.
+#
+# `kinds` NARROWS (null = every kind History serves) and `query` NARROWS
+# BY THE ONE SEARCH LAW over the seen set alone, on the server; a narrowed
+# list is sectioned — people, then topics, then content — pages on its
+# own cursors, and caps its people and topics at three behind
+# `hasMorePeople` / `hasMoreTags`, the sections' doors.
+query HistoryPage(
+  $after: String
+  $query: String
+  $kinds: [NodeKind!]
+  $includePending: Boolean! = true
+) {
+  me {
+    id
+    viewHistory(kinds: $kinds, query: $query, first: 10, after: $after) {
+      edges {
+        cursor
+        firstSeenAt
+        node {
+          __typename
+          ... on Post {
+            ...FeedPost
+          }
+          ... on Comment {
+            ...CommentFields
+            # The comment card's head row: what the comment answers.
+            target {
+              __typename
+              ... on Post {
+                id
+                title {
+                  value
+                  status
+                }
+                content {
+                  value
+                  status
+                }
+                attachments {
+                  url
+                  status
+                  mimeType
+                  coverMedia {
+                    url
+                    status
+                  }
+                }
+                author {
+                  id
+                  handle
+                }
+                moderationStatus
+              }
+              ... on Comment {
+                id
+                content {
+                  value
+                  status
+                }
+                author {
+                  id
+                  handle
+                }
+                moderationStatus
+              }
+            }
+            # The thread's root post: where the card's doors land.
+            post {
+              id
+            }
+          }
+          ... on User {
+            id
+            handle
+            displayName {
+              value
+              status
+            }
+            bio {
+              value
+              status
+            }
+            avatar {
+              url
+              status
+            }
+            viewerBookmarkedAt
+          }
+          ... on Hashtag {
+            id
+            name {
+              value
+              status
+            }
+            # The tag card's glimpse: the newest three things carrying it.
+            taggedContent(limit: 3, includePending: $includePending) {
+              node {
+                __typename
+                ... on Post {
+                  id
+                  title {
+                    value
+                    status
+                  }
+                  content {
+                    value
+                    status
+                  }
+                  attachments {
+                    url
+                    status
+                    mimeType
+                    coverMedia {
+                      url
+                      status
+                    }
+                  }
+                  author {
+                    id
+                    handle
+                  }
+                  createdAt
+                }
+                ... on Comment {
+                  id
+                  content {
+                    value
+                    status
+                  }
+                  author {
+                    id
+                    handle
+                  }
+                  createdAt
+                }
+              }
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      hasMorePeople
+      hasMoreTags
+    }
+  }
+}

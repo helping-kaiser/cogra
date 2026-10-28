@@ -12,6 +12,7 @@ let pathname = "/feed";
 let search = "";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
+  useRouter: () => ({ push: () => {} }),
   useSearchParams: () => new URLSearchParams(search),
 }));
 
@@ -55,6 +56,8 @@ describe("AppShell", () => {
     ["/posts/post-1", "postDetail.bottomBar"],
     ["/profile", "profile.bottomBar"],
     ["/u/alice", "profile.bottomBar"],
+    // History.md:121: the bar keeps lit the root History was opened from.
+    ["/history", "history.bottomBar"],
   ])("names the bar on the registered screen %s after it", async (path, bar) => {
     pathname = path;
     renderWithProviders(
@@ -84,6 +87,20 @@ describe("AppShell", () => {
       expect(screen.getByTestId("nav-feed")).toBeInTheDocument();
     },
   );
+
+  it("keeps the profile slot lit on /history (History.md:121)", async () => {
+    pathname = "/history";
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      { store: signedInStore() },
+    );
+    expect(await screen.findByTestId(byNode("history.bottomBar.profileSlot"))).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
 
   it("marks the profile tab on /profile", async () => {
     pathname = "/profile";
@@ -138,6 +155,9 @@ describe("AppShell", () => {
     ["/posts/post-1", "from=u:alice", "feedSlot"],
     ["/u/alice", "", "feedSlot"],
     ["/u/alice", "from=saved", "profileSlot"],
+    // A History card's doors hang off Profile, as Saved's do.
+    ["/posts/post-1", "from=history", "profileSlot"],
+    ["/u/alice", "from=history", "profileSlot"],
   ])("lights the drill-in's origin root (%s %s)", async (path, query, lit) => {
     pathname = path;
     search = query;

@@ -8,8 +8,8 @@
 // a card — and a staged row — stands on `surface-container-highest`, the
 // tile's own tone, so the tile there wears `surface-container-high`. Off a
 // card, as in a picker's result list, it keeps `surface-container-highest`.
-// The comment feed card's head row is a card, which is why `onCard` is the
-// default.
+// The comment feed card's head row and the tag feed card's lead and glimpse
+// are cards, which is why `onCard` is the default.
 
 import { Icon } from "./icons";
 import { testAttributes, type DataNode } from "./data-node";
@@ -28,7 +28,7 @@ export function NodeMark({
   redacted?: boolean;
   onCard?: boolean;
   testId?: string;
-  /** The registered node the tile is (`composeDetails.references.stagedReference.mark`). */
+  /** The registered node the tile is (`composeDetails.references.stagedReference.mark`, `history.tagCard.mark`). */
   node?: DataNode;
 }) {
   const ids = testAttributes(node, testId);
