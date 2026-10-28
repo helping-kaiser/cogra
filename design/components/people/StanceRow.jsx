@@ -41,27 +41,34 @@ export const HISTORY_DOOR_LABEL = "See how this opinion built";
    spoken word differs — `Walked back` is false of the second. So the row
    carries the bundle's own `severed`: walked back speaks `Walked back`;
    absent or false, the (0, 0) `Says nothing`. */
-export function StanceRow({ name, handle, src, pDirected, pInterest, severed = false, onOpen, onOpenHistory }) {
+/* `node` / `nodeKey` are the data-node name and key its placer gives the row
+   (seam 248) — keyed by the holder's handle. The row takes them, and names
+   its parts `avatar`, `name`, `handle` and `value` (the readout's `face` and
+   `exact` inside it); the history door, where it stands, is `history`. Given
+   none, the row renders exactly as before. */
+export function StanceRow({ name, handle, src, pDirected, pInterest, severed = false, onOpen, onOpenHistory, node, nodeKey }) {
   const zeroLabel = severed ? SEVERED_LABEL : EMPTY_PICK_LABEL;
   const box = { display: "flex", alignItems: "center", gap: 12, width: "100%", boxSizing: "border-box", minHeight: 56, border: 0, background: "none", padding: "6px 16px", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left" };
+  const named = (own) => (own ? { "data-node": node, "data-node-key": node && nodeKey } : null);
   const person = (
     <button
       type="button"
       onClick={onOpen}
       className="cg-state cg-focus"
       style={onOpenHistory ? { ...box, width: "auto", flex: 1, minWidth: 0, paddingRight: 0 } : box}
+      {...named(!onOpenHistory)}
     >
-      <MonogramAvatar name={name} size={40} src={src} />
+      <MonogramAvatar name={name} size={40} src={src} node={node && "avatar"} />
       <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>{name}</span>
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>
+        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }} data-node={node && "name"}>{name}</span>
+        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>@{handle}</span>
       </span>
-      {!onOpenHistory && <StanceValue pDirected={pDirected} pInterest={pInterest} zeroLabel={zeroLabel} />}
+      {!onOpenHistory && <StanceValue pDirected={pDirected} pInterest={pInterest} zeroLabel={zeroLabel} node={node && "value"} />}
     </button>
   );
   if (!onOpenHistory) return person;
   return (
-    <div style={{ ...box, padding: "0 16px 0 0", cursor: "default" }}>
+    <div style={{ ...box, padding: "0 16px 0 0", cursor: "default" }} {...named(true)}>
       {person}
       <button
         type="button"
@@ -69,8 +76,9 @@ export function StanceRow({ name, handle, src, pDirected, pInterest, severed = f
         aria-label={HISTORY_DOOR_LABEL}
         className="cg-state cg-focus cg-hit"
         style={{ flex: "none", display: "inline-flex", alignItems: "center", border: 0, background: "none", padding: "0 0 0 12px", borderRadius: "var(--radius-medium)", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)" }}
+        data-node={node && "history"}
       >
-        <StanceValue pDirected={pDirected} pInterest={pInterest} zeroLabel={zeroLabel} />
+        <StanceValue pDirected={pDirected} pInterest={pInterest} zeroLabel={zeroLabel} node={node && "value"} />
       </button>
     </div>
   );

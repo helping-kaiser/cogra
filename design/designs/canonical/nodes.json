@@ -1039,6 +1039,129 @@
         "changePassword.title": []
       }
     },
+    "CitedBy": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.citedBySheet.citation": "the citation's position in the list, newest first, counted from 1 (the cited-by sheet)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "mira"
+        ],
+        "postDetail.card.actionRow": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.score": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.share": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "postDetail.card.authorChip": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.name": [
+          "mira"
+        ],
+        "postDetail.card.citedBy": [
+          "mira"
+        ],
+        "postDetail.card.description": [
+          "mira"
+        ],
+        "postDetail.card.media": [
+          "mira"
+        ],
+        "postDetail.card.media.dots": [
+          "mira"
+        ],
+        "postDetail.card.media.frame": [
+          "mira/1",
+          "mira/2",
+          "mira/3",
+          "mira/4"
+        ],
+        "postDetail.card.opinions": [
+          "mira"
+        ],
+        "postDetail.card.tagsLine": [
+          "mira"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "mira/tidemarket",
+          "mira/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "mira"
+        ],
+        "postDetail.card.title": [
+          "mira"
+        ],
+        "postDetail.citedBySheet": [],
+        "postDetail.citedBySheet.citation": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.citedBySheet.citation.mark": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.citedBySheet.citation.name": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.citedBySheet.citation.value": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "postDetail.citedBySheet.dragHandle": [],
+        "postDetail.citedBySheet.title": [],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": []
+      }
+    },
     "CommentLicense": {
       "prefix": "postDetail",
       "keys": {
@@ -5632,6 +5755,172 @@
           "credit",
           "public-record-of-use"
         ]
+      }
+    },
+    "PostOpinions": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.opinionsSheet.opinion": "the opinion holder's handle, without @ (the opinions sheet)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "mira"
+        ],
+        "postDetail.card.actionRow": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.score": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.share": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "postDetail.card.authorChip": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "mira"
+        ],
+        "postDetail.card.authorChip.name": [
+          "mira"
+        ],
+        "postDetail.card.description": [
+          "mira"
+        ],
+        "postDetail.card.media": [
+          "mira"
+        ],
+        "postDetail.card.media.dots": [
+          "mira"
+        ],
+        "postDetail.card.media.frame": [
+          "mira/1",
+          "mira/2",
+          "mira/3",
+          "mira/4"
+        ],
+        "postDetail.card.opinions": [
+          "mira"
+        ],
+        "postDetail.card.tagsLine": [
+          "mira"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "mira/tidemarket",
+          "mira/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "mira"
+        ],
+        "postDetail.card.title": [
+          "mira"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.opinionsSheet": [],
+        "postDetail.opinionsSheet.dragHandle": [],
+        "postDetail.opinionsSheet.opinion": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.avatar": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.handle": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.name": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.value": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.value.exact": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.opinion.value.face": [
+          "mira",
+          "ada",
+          "tobias",
+          "sol",
+          "kel",
+          "nadia",
+          "wren",
+          "juno"
+        ],
+        "postDetail.opinionsSheet.title": []
       }
     },
     "Profile": {

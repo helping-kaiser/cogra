@@ -1,14 +1,14 @@
 # CitedBy · `spec:design:behavior-cited-by`
 
-ALWAYS the Cited by sheet opens over the post detail, the post still open beneath it
+ALWAYS postDetail.citedBySheet opens over the post detail, the post still open beneath it
 
-ALWAYS the Cited by sheet lists what cites the post, newest first
+ALWAYS postDetail.citedBySheet lists what cites the post, newest first
 
-ALWAYS the Cited by sheet holds as many rows as the detail's Cited by line counts
+ALWAYS postDetail.citedBySheet holds as many postDetail.citedBySheet.citation rows as postDetail.card.citedBy counts
 
-ALWAYS the Cited by sheet stands apart from the tags-and-references sheet, and neither count folds into the other
+ALWAYS postDetail.citedBySheet stands apart from the tags-and-references sheet, and neither count folds into the other
 
-ALWAYS a row carries the citing artifact's kind mark, its name and the pair its author signed, in the reader's reading mode
+ALWAYS postDetail.citedBySheet.citation carries the citing artifact's kind mark, postDetail.citedBySheet.citation.mark, its name, postDetail.citedBySheet.citation.name, and the pair its author signed, postDetail.citedBySheet.citation.value, in the reader's reading mode
 
 ALWAYS a citing row still settling says so
 
