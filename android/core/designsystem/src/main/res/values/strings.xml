@@ -343,6 +343,8 @@
          unreachable landing*; `unreachableHelp`). -->
     <string name="stance_zero_help_held">It still counts among your opinions.</string>
     <string name="stance_zero_help_held_person">It still counts among your opinions — %1$s stays under Your people.</string>
+    <!-- A topic stays on its list too (round 21, seam 245 ask 18). -->
+    <string name="stance_zero_help_held_topic">It still counts among your opinions — %1$s stays on Your topics.</string>
     <string name="stance_zero_help_feed">It shapes no one\'s feed, earns nothing, and nothing passes on through you.</string>
     <string name="stance_zero_help_way_out">%1$s is different: its own act, confirmed and paid for, that leaves a clean slate.</string>
 

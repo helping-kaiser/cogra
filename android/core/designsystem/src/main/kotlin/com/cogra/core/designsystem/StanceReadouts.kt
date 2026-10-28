@@ -444,15 +444,17 @@ internal fun padHelp(zeroWords: StanceZeroWords): List<String> = listOf(
 
 /**
  * What the 🤔 opens on an unreachable landing (`unreachableHelp`): still
- * held (a person stays under `Your people`), shaping no feed, and not the
- * family's way out.
+ * held, shaping no feed, and not the family's way out. The first line names
+ * the list the target stays on, by the label's kind (round 21, ask 18): a
+ * person under `Your people`, a topic on `Your topics`; a post or a comment
+ * sits on no list of the reader's, so its line stops at the opinion.
  */
 @Composable
 internal fun unreachableHelp(zeroWords: StanceZeroWords, targetLabel: String?): List<String> = listOf(
-    if (targetLabel?.startsWith("@") == true) {
-        stringResource(R.string.stance_zero_help_held_person, targetLabel)
-    } else {
-        stringResource(R.string.stance_zero_help_held)
+    when {
+        targetLabel?.startsWith("@") == true -> stringResource(R.string.stance_zero_help_held_person, targetLabel)
+        targetLabel?.startsWith("#") == true -> stringResource(R.string.stance_zero_help_held_topic, targetLabel)
+        else -> stringResource(R.string.stance_zero_help_held)
     },
     stringResource(R.string.stance_zero_help_feed),
     stringResource(R.string.stance_zero_help_way_out, stringResource(zeroWords.open)),

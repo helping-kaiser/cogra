@@ -721,6 +721,18 @@ class StancePadTest {
         compose.field().assertExists()
     }
 
+    // copy-voice *The unreachable landing* (round 21, ask 18): a topic stays on Your topics.
+    @Test
+    fun aTopicsUnreachableLandingSaysItStaysOnYourTopics() {
+        show(
+            open.copy(landing = StanceLanding(StancePoint(0.0, 0.4), true, false, false)),
+            targetLabel = "#saltmaps",
+            zeroWords = StanceZeroWords.Disconnected,
+        )
+        compose.onNodeWithTag("${TAG}_stance_landing_zero", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("It still counts among your opinions — #saltmaps stays on Your topics.").assertExists()
+    }
+
     @Test
     fun theUnreachableHeadFollowsTheSignOfTheNumberThatStands() {
         val heads = listOf(
