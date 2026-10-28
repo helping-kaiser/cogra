@@ -49,7 +49,7 @@ function edge(topic: Held) {
 }
 
 function page(topics: readonly Held[], next: string | null = null) {
-  return HttpResponse.json({
+  return {
     data: {
       me: {
         __typename: "User",
@@ -62,7 +62,7 @@ function page(topics: readonly Held[], next: string | null = null) {
         },
       },
     },
-  });
+  };
 }
 
 function serve(topics: readonly Held[]) {
@@ -70,7 +70,7 @@ function serve(topics: readonly Held[]) {
   server.use(
     gqlLink.query("HeldTopics", ({ variables }) => {
       asked.push(variables);
-      return page(topics);
+      return HttpResponse.json(page(topics));
     }),
   );
   return asked;
