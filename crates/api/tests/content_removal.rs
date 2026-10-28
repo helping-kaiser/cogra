@@ -12,7 +12,6 @@ use api::media::MediaAreas;
 use api::ratelimit::RateLimitConfig;
 use api::redaction::{self, Redaction};
 use common::l1::client::ActorKey;
-use l1_standin::{StandIn, StandInConfig};
 use postgres_store::PgPool;
 use serde_json::{Value, json};
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
@@ -1214,7 +1213,10 @@ async fn redaction_holds_one_connection_per_act(
     .await
     .expect("the engine finishes on one connection");
 
-    let boundary = StandInBoundary(StandIn::new(one.clone(), StandInConfig::default()));
+    // The stand-in is a separate system behind the seam with its own
+    // connections; the rider is about CoGra's engine, so only the engine
+    // runs on the pool of one.
+    let boundary = StandInBoundary(rig.standin.clone());
     let areas = MediaAreas::in_memory();
     let (left, right) = tokio::join!(
         api::removal::remove_content(&boundary, &one, &areas, ada.id, &second, true),

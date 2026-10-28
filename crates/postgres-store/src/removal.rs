@@ -262,7 +262,7 @@ pub async fn tombstone_act(
                  sensitive = FALSE, sensitive_reason = NULL,
                  redaction_reason = $2
              WHERE post_id = $1 AND redaction_reason IS NULL
-               AND ((landed_epoch, act_time, position) = ($3, $4, $5)
+               AND ((landed_epoch = $3 AND act_time = $4 AND position = $5)
                     OR created_at = $6)",
             id,
             reason,
@@ -279,7 +279,7 @@ pub async fn tombstone_act(
              SET content = '', sensitive = FALSE, sensitive_reason = NULL,
                  redaction_reason = $2
              WHERE comment_id = $1 AND redaction_reason IS NULL
-               AND ((landed_epoch, act_time, position) = ($3, $4, $5)
+               AND ((landed_epoch = $3 AND act_time = $4 AND position = $5)
                     OR created_at = $6)",
             id,
             reason,
@@ -377,7 +377,8 @@ pub async fn post_removals(
     ids: &[Uuid],
 ) -> Result<HashMap<Uuid, Removal>, sqlx::Error> {
     let rows = sqlx::query!(
-        r#"SELECT t.post_id, t.redaction_reason AS "reason!", t.created_at AS at,
+        r#"SELECT t.post_id AS "post_id!", t.redaction_reason AS "reason!",
+                  t.created_at AS "at!",
                   (SELECT created_at FROM post_versions
                    WHERE post_id = t.post_id AND version_id <> t.version_id
                    ORDER BY pending DESC,
@@ -416,7 +417,8 @@ pub async fn comment_removals(
     ids: &[Uuid],
 ) -> Result<HashMap<Uuid, Removal>, sqlx::Error> {
     let rows = sqlx::query!(
-        r#"SELECT t.comment_id, t.redaction_reason AS "reason!", t.created_at AS at,
+        r#"SELECT t.comment_id AS "comment_id!", t.redaction_reason AS "reason!",
+                  t.created_at AS "at!",
                   (SELECT created_at FROM comment_versions
                    WHERE comment_id = t.comment_id AND version_id <> t.version_id
                    ORDER BY pending DESC,
