@@ -49,6 +49,7 @@ export function PickStep({
   error,
   blocked,
   coverSrc,
+  vertical = false,
   durationMs,
   clipFace,
   onWords,
@@ -73,6 +74,11 @@ export function PickStep({
    * a picture post, and on a video whose cover is not yet settled.
    */
   coverSrc?: string | null;
+  /**
+   * Whether the staged clip is vertical — the shape whose cover step is
+   * skipped (`isVerticalClip`), so the tray promises no cover step.
+   */
+  vertical?: boolean;
   /** The clip's length; with it the tray draws the clip's video tile. */
   durationMs?: number;
   /**
@@ -107,6 +113,7 @@ export function PickStep({
       error={error}
       blocked={blocked}
       coverSrc={coverSrc}
+      vertical={vertical}
       durationMs={durationMs}
       clipFace={clipFace}
       onMode={onMode}
@@ -231,6 +238,7 @@ function MediaBody({
   error,
   blocked,
   coverSrc,
+  vertical,
   durationMs,
   clipFace,
   onMode,
@@ -246,6 +254,7 @@ function MediaBody({
   error: string | null;
   blocked: boolean;
   coverSrc?: string | null;
+  vertical: boolean;
   durationMs?: number;
   clipFace?: string | null;
   onMode: (next: "words" | "media") => void;
@@ -342,14 +351,19 @@ function MediaBody({
                 </li>
               ))}
             </ul>
-            <span className={`flex-1 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
+            <span data-testid="wizard-tray-caption" className={`flex-1 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
               {!holdsVideo
                 ? "The first one is the cover."
                 : // THE CAPTION TAKES THE SETTLED FACT once the cover step has
                   // given the clip its face (`ComposePickVideoCover`).
                   coverSrc
                   ? "A video is the whole post. This one has its cover."
-                  : "A video is the whole post. Its cover comes next."}
+                  : // A VERTICAL CLIP MEETS NO COVER STEP (ComposePickVideo.md:
+                    // "the tray's line reads A video is the whole post. GIVEN
+                    // the clip is vertical"), so the tray promises none.
+                    vertical
+                    ? "A video is the whole post."
+                    : "A video is the whole post. Its cover comes next."}
             </span>
           </div>
         </div>

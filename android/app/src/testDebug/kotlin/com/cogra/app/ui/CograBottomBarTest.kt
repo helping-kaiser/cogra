@@ -9,6 +9,10 @@
 
 package com.cogra.app.ui
 
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationItemColors
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -112,5 +116,27 @@ class CograBottomBarTest {
         }
         compose.onNodeWithTag("bottom_bar").assertDoesNotExist()
         compose.onNodeWithTag("bar_feed").assertDoesNotExist()
+    }
+
+    @Test
+    fun selectionIsColourAloneNeverAnIndicatorPill() {
+        // BottomNav.jsx: `tone(selected)` reads `--on-surface` over
+        // `--text-secondary`, and "never an indicator pill" — where M3's
+        // defaults tint `secondary` over a `secondaryContainer` pill.
+        lateinit var colors: NavigationItemColors
+        lateinit var scheme: ColorScheme
+        compose.setContent {
+            CograTheme {
+                colors = barItemColors()
+                scheme = MaterialTheme.colorScheme
+            }
+        }
+        compose.waitForIdle()
+
+        assertThat(colors.selectedIndicatorColor).isEqualTo(Color.Transparent)
+        assertThat(colors.selectedIconColor).isEqualTo(scheme.onSurface)
+        assertThat(colors.selectedTextColor).isEqualTo(scheme.onSurface)
+        assertThat(colors.unselectedIconColor).isEqualTo(scheme.onSurfaceVariant)
+        assertThat(colors.unselectedTextColor).isEqualTo(scheme.onSurfaceVariant)
     }
 }

@@ -4,6 +4,8 @@ WHEN tap Set GIVEN the pick lands at exactly (0, 0) and nothing stands toward th
 
 ALWAYS Set stays enabled on a pick that lands at exactly (0, 0), and the dialog asks rather than blocks
 
+ALWAYS the pad's landing under the pick reads Resulting opinion with 🤷 and Says nothing., never This takes you back to zero. GIVEN the pick lands at exactly (0, 0) and nothing stands toward the target
+
 ALWAYS the dialog reads, in order, its title Sign an empty opinion?, This says nothing about @ada, shapes no feed, and leaves you where you are., It signs 1 thing, paid on its own., and the fault line when one stands GIVEN the opinion vouches no one in
 
 ALWAYS the dialog reads, in order, its title Sign an empty opinion?, @rafa would be vouched in but start out cut off: no feed can carry them, and community funds stay closed to them, until someone gives them an opinion that says something., It signs 1 thing, paid on its own., and the fault line when one stands GIVEN the pad approves an applicant or answers a vouch asked for
@@ -31,6 +33,8 @@ ALWAYS the standing an empty sign leaves wears 🤷 and is spoken Says nothing, 
 ALWAYS Walk it back stands on the pad over the standing an empty sign leaves, its cost 1 thing
 
 WHEN the signing does not go through -> the dialog stays up AND the line That didn't send. Try again. stands above the pair AND Set it anyway reads Retry AND nothing is signed
+
+WHEN the write rule refuses the empty sign -> the dialog stays up AND the line You can't sign right now. Nothing was signed or spent. stands where the fault line would, in the pending marker's quiet register AND Set it anyway dims AND NEVER a Retry stands AND NEVER anything is staged, signed or spent
 
 WHEN press Keep it GIVEN Set it anyway is not waiting on its signing -> the dialog closes AND nothing is signed AND the pick is still parked on the pad beneath
 

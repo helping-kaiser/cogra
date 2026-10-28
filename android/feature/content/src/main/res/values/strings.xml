@@ -7,6 +7,10 @@
          the promise, then what will be there). Verbatim — never retyped. -->
     <string name="content_chats_title">Chats</string>
     <string name="content_chats_coming_soon">Chats — coming soon. Your conversations will be here.</string>
+    <!-- The page's back arrow, by where it was opened from (ChatsComingSoon.md:15-17). -->
+    <string name="content_chats_back_feed">Back to feed</string>
+    <string name="content_chats_back_own_profile">Back to your profile</string>
+    <string name="content_chats_back_profile">Back to the profile</string>
     <string name="content_feed_compose">Write a post</string>
     <string name="content_feed_load_more">Load more</string>
     <string name="content_compose_title">New post</string>

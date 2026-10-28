@@ -3,7 +3,7 @@ Use `ContentRow` for every list line in the product: a 40px disc, two lines of w
 ```jsx
 <ContentRow variant="campaign" title="Sunday at the tide market" second="Open · ends 8 Sep" image={cover} trailing="12,500" onOpen={openCampaign} />
 <ContentRow variant="door" title="Campaigns" second="1 open · start a new one" glyph="campaign" onOpen={openCampaigns} />
-<ContentRow variant="chronicle" title="Signed a post" titleAside="2 acts" second="Sunday at the tide market — four pictures…" glyph="history" trailing="4d" chevron={false} inert />
+<ContentRow variant="chronicle" title="Published a post" second="Sunday at the tide market — four pictures…" glyph="dynamic_feed" trailing="4d" chevron={false} inert />
 ```
 
 The wallet's history has its own name for this row — use [`LedgerRow`](../wallet/LedgerRow.prompt.md), which speaks money (`words`, `context`, `amount`, `pending`) over this master.
@@ -11,6 +11,7 @@ The wallet's history has its own name for this row — use [`LedgerRow`](../wall
 What holds:
 
 - **The disc leads, by precedence** — a picture, else a monogram for a name, else a stance face, else the kind's glyph. It always sits in a 40px box that can carry a direction badge, whether or not this row wants one: a badge that moved the words when it appeared would give one list two rhythms.
+- **A stance face at (0, 0) speaks from the row's data.** The numbers cannot tell walked back from empty-signed, so `face` carries the bundle's `severed`: `{ pDirected: 0, pInterest: 0, severed: true }` speaks `Walked back`, and without `severed` the 🤷 `Says nothing`.
 - **The second line is ONE line, ellipsized, in every variant.** A row in a list is scanned, not read; the moment one row can be two lines tall the reader loses the rhythm that lets them skim past nine to find the tenth. Where the whole snippet matters, the row's destination is where it belongs.
 - **A row is a control unless it is declared `inert`** — a record of something that happened has no destination, and it draws the same card with nothing to press.
 - **`action` is one control of the row's own**, in the trailing-most slot — the chevron's, which it replaces (an application's close on Invites). It does not take the trailing edge: the edge keeps its content and sits inboard. Given an `action` the row splits into a pressable part and the control, so nothing nests a button in a button.

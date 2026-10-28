@@ -52,7 +52,13 @@ export declare function licenseReadings(license: License): readonly LicenseReadi
  *  License row, the license sheets' foot and the settings default all read. */
 export declare function licenseSummary(license?: License): string;
 
-/** `licenseSummary` as an element, for a slot that takes one. */
+/** `licenseSummary` under a name boards can reach — what a `FactRow` value
+ *  takes, as a string, so the row's own value voice applies. */
+export declare const LICENSE_SUMMARY: (license?: License) => string;
+
+/** `licenseSummary` as an element, for a slot that takes one and gives it no
+ *  voice of its own (a sheet's foot, the settings default). Never a `FactRow`
+ *  value: the row voices strings only. */
 export declare function LicenseSummary(props: { license?: License }): string;
 
 /** The words of the menu row that opens the terms — assigned once, spelled by

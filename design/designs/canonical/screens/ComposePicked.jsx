@@ -20,11 +20,11 @@ const PICKED = [
 export function Screen() {
   return (
     <>
-      <WizardHeader title="New post" />
+      <WizardHeader title="New post" backLabel="Back" />
       <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
-      <PickTray count={3} onShowAll={() => {}}>
+      <PickTray count={3} onShowAll={() => {}} caption="The first one is the cover.">
         {PICKED.map((item) => (
-          <MediaThumb key={item.src} src={item.src} alt={item.alt} />
+          <MediaThumb key={item.src} src={item.src} alt={item.alt} cover={item === PICKED[0]} onRemove={() => {}} />
         ))}
       </PickTray>
       <div style={{ flex: 1 }} />

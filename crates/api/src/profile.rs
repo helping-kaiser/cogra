@@ -382,7 +382,8 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
                 .begin()
                 .await
                 .map_err(|e| ProfileError::Internal(e.to_string()))?;
-            content_store::insert_reduced_act_payload(&mut tx, &write.act_id).await?;
+            content_store::insert_reduced_act_payload(&mut tx, &write.act_id, reaped.reaped_at)
+                .await?;
             if !reaped.body.asserted_parents.is_empty()
                 && let Some(created_at) = reaped.pre_signed_at
             {

@@ -18,7 +18,12 @@
    A FILE IS JUDGED ON ITS OWN BEFORE IT IS JUDGED AGAINST THE BODY (jakob
    2026-09-03): size and format answer first, the grammar second. That is why
    the oversized clip is refused by its cap and the good clip by the
-   mixed-kind line — one file, one line, the nearest reason. */
+   mixed-kind line — one file, one line, the nearest reason.
+
+   THE GRID STAYS UNDER THE REFUSALS (seam 245, ask 13 I, under the autonomy
+   order of 2026-10-28). The step still takes picks — a removed refusal or a
+   removed tile frees a place — so the roll stands where `ComposePick` draws
+   it, its ten picked tiles ringed in their order. */
 const PICKED = [
   { src: "post-photo.jpg", alt: "The coast road" },
   { src: "gallery-market.jpg", alt: "" },
@@ -32,11 +37,11 @@ const PICKED = [
 export function Screen() {
   return (
     <>
-      <WizardHeader title="New post" />
+      <WizardHeader title="New post" backLabel="Back" />
       <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
       <PickTray count={10} onShowAll={() => {}} clip>
         {PICKED.map((item, index) => (
-          <MediaThumb key={index} src={item.src} alt={item.alt} onRemove={() => {}} />
+          <MediaThumb key={index} src={item.src} alt={item.alt} cover={index === 0} onRemove={() => {}} />
         ))}
       </PickTray>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 24px 0" }}>
@@ -64,7 +69,7 @@ export function Screen() {
           message="That's more than a post carries — up to ten pictures."
         />
       </div>
-      <div style={{ flex: 1 }} />
+      <PickGrid rings={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} />
       <WizardFooter />
     </>
   );

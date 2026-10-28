@@ -1,21 +1,24 @@
 // A kind's mark — `design/components/content/ReferenceRow.jsx` `NodeMark` —
-// in the placements the cards draw it: the comment feed card's head row,
-// naming what the comment answers, and the tag card's lead and glimpse. A
-// post's mark is its cover where it has one, else the text post's `T`; a
-// comment's is its glyph; a topic's is `#`. A REMOVED target keeps the tile's
-// space and fills it with nothing (FeedCommentShapes.md: "an empty tile"), the
-// way a redacted disc does.
+// a post's cover where it has one, else the text post's `T`; a comment's
+// glyph; a topic's `#`, the same `#` its chip wears. A REMOVED target keeps
+// the tile's space and fills it with nothing (FeedCommentShapes.md: "an empty
+// tile"), the way a redacted disc does.
 //
-// THE MARK SITS ON THE CARD (`onCard`), so it takes the darker tile tone a
-// card's own surface needs to read against.
+// ON A CARD THE TILE TAKES THE DARKER TONE (`onCard`, the master's own prop):
+// a card — and a staged row — stands on `surface-container-highest`, the
+// tile's own tone, so the tile there wears `surface-container-high`. Off a
+// card, as in a picker's result list, it keeps `surface-container-highest`.
+// The comment feed card's head row and the tag feed card's lead and glimpse
+// are cards, which is why `onCard` is the default.
 
-import { testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
+import { testAttributes, type DataNode } from "./data-node";
 
 export function NodeMark({
   kind,
   src,
   redacted = false,
+  onCard = true,
   testId,
   node,
 }: {
@@ -23,13 +26,15 @@ export function NodeMark({
   /** A post's cover, or a clip's still; null draws the text post's letter. */
   src?: string | null;
   redacted?: boolean;
+  onCard?: boolean;
   testId?: string;
-  /** The registered mark (`history.tagCard.mark`). */
+  /** The registered node the tile is (`composeDetails.references.stagedReference.mark`, `history.tagCard.mark`). */
   node?: DataNode;
 }) {
   const ids = testAttributes(node, testId);
-  const tile =
-    "grid size-8 flex-none place-items-center overflow-hidden rounded-small bg-surface-container-high text-on-surface-variant";
+  const tile = `grid size-8 flex-none place-items-center overflow-hidden rounded-small ${
+    onCard ? "bg-surface-container-high" : "bg-surface-container-highest"
+  } text-on-surface-variant`;
   if (redacted) return <span aria-hidden="true" {...ids} className={tile} />;
   if (kind === "post" && src) {
     return (
@@ -42,7 +47,7 @@ export function NodeMark({
   }
   return (
     <span aria-hidden="true" {...ids} className={`${tile} text-title-medium`}>
-      {kind === "comment" ? <Icon name="chat_bubble" size={18} /> : kind === "topic" ? "#" : "T"}
+      {kind === "post" ? "T" : kind === "topic" ? "#" : <Icon name="chat_bubble" size={18} />}
     </span>
   );
 }

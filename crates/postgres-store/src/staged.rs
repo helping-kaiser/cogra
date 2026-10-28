@@ -286,6 +286,9 @@ pub struct ReapedWrite {
     pub body: StructuralBody,
     pub node_id: Option<Uuid>,
     pub pre_signed_at: Option<chrono::DateTime<chrono::Utc>>,
+    /// When the redaction reaped the payload — the moment it left, which
+    /// the reduced carriage the landing writes records.
+    pub reaped_at: chrono::DateTime<chrono::Utc>,
 }
 
 /// Loads one staged write for its landing, which is the one reader a
@@ -339,13 +342,14 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
     };
     let payload = match (row.payload, row.payload_reaped_at) {
         (Some(payload), None) => payload,
-        (None, Some(_)) => {
+        (None, Some(reaped_at)) => {
             return Ok(Promotable::Reaped(Box::new(ReapedWrite {
                 id: row.id,
                 actor_id: row.actor_id,
                 body,
                 node_id: row.node_id,
                 pre_signed_at: row.pre_signed_at,
+                reaped_at,
             })));
         }
         _ => return Err(corrupt("payload")),
@@ -917,6 +921,66 @@ pub struct StagedCopy {
     pub nonce: Option<Vec<u8>>,
     pub content_salt: Option<Vec<u8>>,
     pub content_commitment: Option<Vec<u8>>,
+}
+
+/// One staged act of a revision chain: the act, where its handshake
+/// stands, and the authoring instant its display rows carry once signed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StagedChainAct {
+    pub act_id: String,
+    pub state: String,
+    pub pre_signed_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+/// Every staged act of one author's revision chain on one node, in every
+/// state: the in-flight half of the chain the mirror's
+/// `chain_records` holds the landed half of. The selection is the same
+/// one — the node's family, the act's own target the node — so a landed
+/// act appears in both and an act still in flight in this one only.
+/// Oldest first by authoring sequence.
+pub async fn chain_acts(
+    conn: &mut PgConnection,
+    actor_id: Uuid,
+    family: Family,
+    node: &str,
+) -> Result<Vec<StagedChainAct>, StagedError> {
+    Ok(sqlx::query_as!(
+        StagedChainAct,
+        "SELECT act_id, state, pre_signed_at
+         FROM staged_writes
+         WHERE actor_id = $1 AND family = $2 AND target = $3
+         ORDER BY seq",
+        actor_id,
+        family.as_str(),
+        node,
+    )
+    .fetch_all(conn)
+    .await?)
+}
+
+/// One act's staged row, as removal scopes it: the act's family, author
+/// and target, and where its handshake stands. None when no row stages
+/// the act.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StagedAct {
+    pub act_id: String,
+    pub author: String,
+    pub family: String,
+    pub target: String,
+    pub state: String,
+    pub pre_signed_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+/// Reads one act's staged row by its act identifier.
+pub async fn staged_act(pool: &PgPool, act_id: &str) -> Result<Option<StagedAct>, StagedError> {
+    Ok(sqlx::query_as!(
+        StagedAct,
+        "SELECT act_id, author, family, target, state, pre_signed_at
+         FROM staged_writes WHERE act_id = $1",
+        act_id,
+    )
+    .fetch_optional(pool)
+    .await?)
 }
 
 /// Locks and reads the staged write of one act, if any row stages it.

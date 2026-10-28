@@ -10,6 +10,13 @@ export interface StanceRowProps {
   src?: string;
   pDirected?: number;
   pInterest?: number;
+  /**
+   * The bundle's own `severed`: which (0, 0) the row draws, since the numbers
+   * cannot tell. True — a standing walked back to nothing — speaks `Walked
+   * back`; absent or false, a (0, 0) standing speaks `Says nothing` (an empty
+   * sign's). Both wear 🤷; only the spoken word differs.
+   */
+  severed?: boolean;
   onOpen?: () => void;
   /**
    * Makes the VALUE its own target, opening the timeline this stance was summed

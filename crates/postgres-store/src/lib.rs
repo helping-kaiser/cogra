@@ -20,6 +20,7 @@ pub mod profile;
 pub mod rate_limit;
 pub mod references;
 pub mod registry;
+pub mod removal;
 pub mod report;
 pub mod retention;
 pub mod search;

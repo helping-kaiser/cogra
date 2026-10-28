@@ -26,7 +26,7 @@ within a phase, order is flexible.
 | 0. Now — blocks the empty-sign client follow-up | 1 | **Q60** | A walk-back of an empty sign — whether a `(0, 0)` record landing over a standing that already says nothing reads as severed. The API reads it as saying nothing; the clients' readout words and the walk-back's cost follow the answer. |
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
-| 2a. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
+| 2a. Profile surface (with slice 2.2) | 2 | **Q36, Q41** | The owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without both. |
 | 2b. Erasure slice | 1 | **Q53** | What a redaction marks — the usage or the asset row. The direction is ruled; what stays open is the carrier for a per-usage mark, the junction tables having no redaction columns today, and what the bytes-are-the-problem case does to an asset's other parents. |
 | 2c. Client hardening | 1 | **Q54** | Semantic verification of the payload envelope — whether a client decodes what it signs instead of comparing served bytes. Interim-crypto-scoped (Q30): the substrate swap may move who composes a payload. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
@@ -42,6 +42,7 @@ questions are closed.
 
 **Resolved:**
 
+- Q35 — closed 2026-10-28 toward the drawn figures, under the 2026-10-28 autonomy order (seam 245 ask 9); jakob's confirmation pending. See [design/readme.md §7](../design/readme.md#7-components) (`ProfileHeader`). **The header counts records, not connections**, so no connection fold is needed: three figures, each labelled and never merged — `Posts`, `Opinions on them` and `Opinions by them` (`Opinions on you` · `Opinions by you` on one's own) — as every profile board draws them and copy-voice blesses them, each served as a `RecordConnection.totalCount`. `Posts` counts the actor's published posts, their genesis Publish records, never an edit; `Opinions on them` the Opinion records whose target is the actor's profile (`incomingRecords(family: OPINION)`); `Opinions by them` the Opinion records the actor authored toward a person (`outgoingRecords(family: OPINION, toKind: USER)`), the people the opinions page's `By them` tab lists. A revision is a record of its own, so a person who revised an opinion twice counts three opinions — what the label says. `outgoingRecords` has no genesis filter today, so `Posts` needs one (or the author's posts listing's own count) to leave edits out. Display-only, like every inbound read: the figures never shape anyone's feed.
 - Q52 — ruled 2026-09-02: "Q52 do the strip", refined the same day to the posture the picture path already carries — "oh of course the metadata strip should be done in device first (just like with images) and the backend mearly checks and re-strips if the strip was faulty". So the **box-level strip** ships as the *repair* half of check-then-repair, not as the primary path: clients strip on the device, the server looks again, a file carrying nothing is stored byte for byte, and one whose strip was faulty is repaired rather than refused. The strip removes `udta`, `meta` and `uuid` wherever they sit (ISO/IEC 14496-12; QuickTime's `©xyz` location atom rides in `udta`), copies media through untouched, and corrects every `stco`/`co64` chunk offset by the bytes removed ahead of it — those offsets being absolute from the start of the file, a strip that left them alone would leave a file that parses and plays garbage. Carrier: [api-spec.md "Upload and gallery limits"](implementation/api-spec.md). The same round ruled that **comments carry video** — "comments videos but with a limit of 50mib (+10mib cover)" — at half a post's byte budget, applied at the upload, which names its destination, and again where the parent is known.
 - Q51 — ruled 2026-09-02, all four parts. **One accepted moving format: MP4 / H.264 + AAC** ("yes mp4 as recommended"), the WebP posture extended to video — clients compress on device, and, refined 2026-09-23 ("media stored and served in insta-ish quality, of course not in original"), **the server probes every upload and re-encodes what exceeds the Android composer's target before it can be signed**: an asset is `PROCESSING` until its rendition exists and prepare refuses it until `READY`, because "the truth must always be in the L1 envelope" — nothing may change media bytes after the envelope commits their digests, and already-witnessed media is never re-encoded. **A video post is one video plus its cover.** **The video cap is 100 MiB** and there is **no duration cap**: "i dont really see a need for a time cap.. if someone genuinly want to upload ultra low res video that is 10h long than he can do so", with the byte cap set at parity with the picture body ("as we have 1 post max 10 images with 10MiB = 100MiB i guess the video should be allowed 100MiB"), the 110 MiB worst case with a cover accepted because "100MiB is just more userfriendly than 90MiB", and frontends expected to compress to industry-standard resolution as the norm. **Animated stills convert client-side** — animated WebP is accepted as the picture it is, a still GIF converts on the device, and the server never grows a picture encoder; an **animated GIF is refused on the device with words** (ruled 2026-09-03, once both platforms reported no documented animated-WebP encoder — converting one would silently keep a single frame). **The cover is uploaded by the frontend as its own asset**: "the media (cover) is uploaded by the user (the frontend). it is either a frame from the video or a chose image" — no server-side frame extraction. It is named on the **attachment placement**, not the upload (ruled 2026-09-03 with the cover made changeable at an edit), so the cover pointer swaps at edit-sign like a description does. Carriers: [api-spec.md "Upload and gallery limits"](implementation/api-spec.md) and `AttachmentInput.coverMediaId`, with the poster's junction-side foreign key in [data-model.md](implementation/data-model.md). Server-side stripping of a video's own metadata is not settled by these rulings and is carried forward as Q52.
 - Q42 — ruled 2026-09-02: **the resting face is 🫥** — the dotted-line face reads as "nothing here yet", which is exactly what an unauthored target is. It stays outside §8.4's anchor table, so an empty control cannot read as a standing the viewer already holds, and it stays distinct from 🤷, which means severed or netted to zero; the muted, translucent treatment is unchanged. Carriers: [design.md §8.3](implementation/design.md#8-the-stance-control) (the resting target) and §8.4 (beside the zero-bundle carve-out) — a named value both clients read, exactly as the anchor table is.
@@ -214,42 +215,6 @@ before real value rides the handshake rather than now.
 
 ---
 
-## Q35 — The profile connection count: which fold counts
-
-**Where it shows up:**
-[design/readme.md §7](../design/readme.md#7-components) (profile
-header), [api-spec.md "Actors"](implementation/api-spec.md)
-**Status:** open (deferred — the profile header ships without the
-count in slice 2.1)
-
-### Context
-
-design.md's profile-header inventory names a **connection
-count**, and the profile screen will eventually show direct
-connections both ways (who this actor connects to, who connects
-to them). No doc defines the fold behind the number: what counts
-as a "connection" (any non-`(0,0)` Opinion bundle? reciprocated
-only? a threshold on the bundle's sum?), whether a severed bundle
-subtracts, and whether the two directions are one number or two.
-A math-shaped claim with no math is not implementable
-([CLAUDE.md](../CLAUDE.md) — trace claims to the docs).
-
-The count reads Opinion bundles. Affinity is Actor → Type,
-enforced by the census
-([edges.md §2](primitive/edges.md#2-binary-families-cogra-authors)),
-so no actor ever holds an Affinity toward a Profile.
-
-### The question
-
-What is the declared fold for an actor's connection count (and
-the connection *lists* behind it)? The trigger has fired: slice
-2.3 made a Type a stance target, so Affinity bundles are real and
-every passive class now rides one control and one fold.
-Display-only either way: inbound connections never shape the
-holder's feed.
-
----
-
 ## Q36 — Owner-chosen default filter for the profile chronicle
 
 **Where it shows up:**
@@ -313,16 +278,16 @@ settled graph through a profile.
 [erasure.md §1](instances/erasure.md#1-per-content-removal),
 [layers.md §5](primitive/layers.md#5-deletion-policy),
 [data-model.md "Why parents point at attachments"](implementation/data-model.md#why-parents-point-at-attachments)
-**Status:** open (deferred — the erasure slice is unbuilt; the direction below is ruled)
+**Status:** open (deferred — whole-record removal is built and needs no per-usage mark; the direction below is ruled)
 
 ### Context
 
-The read side is built and the write side is not. `redaction_reason`
-and `redacted_at` sit on every version table and on
-`media_attachments`, and the API branches on them at every content
-and media read surface, but no code path sets either column: the
-state the readers handle is one nothing can produce. The gap is the
-erasure slice, which is not scheduled.
+Whole-record removal is built: `removeContent` tombstones every
+version of a removed post or comment through the version rows'
+`redaction_reason` ([data-model.md "Display-content versioning"](implementation/data-model.md#display-content-versioning)),
+and a picture only that record showed is held for the archive, not
+marked. `media_attachments` carries the only `redacted_at` column,
+for asset-level redaction, and nothing sets it yet.
 
 The direction is ruled: **a redaction marks the usage, not the
 asset**. The mark belongs on the post or comment version and its
