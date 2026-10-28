@@ -67,6 +67,7 @@ import com.cogra.feature.content.edit.EDIT_SLOW_LINE
 import com.cogra.feature.content.edit.EditCropActions
 import com.cogra.feature.content.edit.EditCropStage
 import com.cogra.feature.content.edit.EditFieldGroup
+import com.cogra.feature.content.edit.EditPicture
 import com.cogra.feature.content.edit.EditUploadErrorLine
 import com.cogra.feature.content.edit.EditUploadGate
 import com.cogra.feature.content.edit.EditWriteRuleNotice
@@ -356,7 +357,8 @@ internal fun CommentEditScreen(
                 onValueChange = actions.onBodyChange,
                 label = "Words",
                 singleLine = false,
-                minLines = 3,
+                // `CommentEdit` draws the words at three lines, `CommentEditVideo` at two.
+                minLines = if (state.gallery.clip != null) 2 else 3,
                 modifier = Modifier.fillMaxWidth(),
                 cap = MAX_COMMENT_BODY_CHARS,
                 error = if (state.bodyTooLong) {
@@ -372,7 +374,7 @@ internal fun CommentEditScreen(
             Terms(state, actions)
         }
 
-        WizardFooter { Foot(state, actions, slowAnswer) }
+        WizardFooter(gap = FIELD_GAP) { Foot(state, actions, slowAnswer) }
     }
 
     CommentEditSheets(state, actions)
@@ -395,25 +397,33 @@ internal fun CommentEditScreen(
 @Composable
 private fun Media(state: CommentEditState, actions: CommentEditActions) {
     val clip = state.gallery.clip
-    if (clip != null) {
-        ClipField(
-            clip = clip,
-            onRemove = { actions.onRemovePickAt(0) },
-            onDescribe = actions.onDescribePictures,
-            testTagPrefix = "comment_edit",
-            squareTile = COMMENT_TILE,
-        )
-        CoverField(
-            gallery = state.gallery,
-            onPick = actions.onPickCover,
-            onRetry = actions.onRetryUploads,
-            onRemoveCover = actions.onRemoveCover,
-            testTagPrefix = "comment_edit",
-            doorNote = false,
-            squareTile = COMMENT_TILE,
-        )
-        return
-    }
+    if (clip != null) ClipMedia(clip, state, actions) else PictureMedia(state, actions)
+}
+
+/** `CommentEditVideo`: the clip, which stays or leaves whole, and its cover row at the comment's square. */
+@Composable
+private fun ClipMedia(clip: EditPicture.Kept, state: CommentEditState, actions: CommentEditActions) {
+    ClipField(
+        clip = clip,
+        onRemove = { actions.onRemovePickAt(0) },
+        onDescribe = actions.onDescribePictures,
+        testTagPrefix = "comment_edit",
+        squareTile = COMMENT_TILE,
+    )
+    CoverField(
+        gallery = state.gallery,
+        onPick = actions.onPickCover,
+        onRetry = actions.onRetryUploads,
+        onRemoveCover = actions.onRemoveCover,
+        testTagPrefix = "comment_edit",
+        doorNote = false,
+        squareTile = COMMENT_TILE,
+    )
+}
+
+/** `CommentEdit`'s pictures: each the 56 square with its own ×, the add control beside them. */
+@Composable
+private fun PictureMedia(state: CommentEditState, actions: CommentEditActions) {
     EditFieldGroup(label = "Pictures") {
         Row(
             verticalAlignment = Alignment.CenterVertically,

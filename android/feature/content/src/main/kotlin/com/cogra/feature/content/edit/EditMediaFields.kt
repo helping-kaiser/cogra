@@ -56,9 +56,9 @@ import com.cogra.feature.content.toItem
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.CropFrames
 import com.cogra.feature.content.wizard.RefusedPick
+import com.cogra.feature.content.wizard.WRITE_RULE_TITLE
 import com.cogra.feature.content.wizard.WizardBody
 import com.cogra.feature.content.wizard.WizardFooter
-import com.cogra.feature.content.wizard.WRITE_RULE_TITLE
 import com.cogra.feature.content.wizard.formatDuration
 import com.cogra.feature.content.wizard.pickedPictures
 import com.cogra.feature.content.wizard.text

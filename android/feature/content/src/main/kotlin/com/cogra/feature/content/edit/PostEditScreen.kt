@@ -325,19 +325,7 @@ fun PostEditScreen(
 
     val cropping = state.cropping
     if (cropping != null) {
-        EditCropStage(
-            crop = cropping,
-            actions = EditCropActions(
-                onBack = actions.onCropBack,
-                onLeave = leave,
-                onNext = if (cropping is EditCrop.Cover) actions.onCoverCropNext else actions.onCropNext,
-                onFrameAsset = actions.onFrameAsset,
-                onShapeChange = actions.onCropShapeChange,
-                onCropsChanged = actions.onCropsChanged,
-                onCoverCropChanged = actions.onCoverCropChanged,
-            ),
-            testTagPrefix = "post_edit",
-        )
+        PostEditCrop(cropping, actions, leave)
         return
     }
 
@@ -436,7 +424,7 @@ private fun PostEditColumn(
             }
         }
 
-        WizardFooter { EditFoot(state, actions, slowAnswer, keyCard, onHelp) }
+        WizardFooter(gap = FIELD_GAP) { EditFoot(state, actions, slowAnswer, keyCard, onHelp) }
     }
 }
 
@@ -785,3 +773,21 @@ internal fun PostEditUiState.problem(): String? = when {
 
 /** The edit's fields stand 14 apart (`EditComposeBody`, `CommentEditBody`: `gap: 14`). */
 internal val FIELD_GAP = 14.dp
+
+/** A crop raised over the post edit — ComposeCrop for pictures on their way in, CoverCrop for the clip's face. */
+@Composable
+private fun PostEditCrop(cropping: EditCrop, actions: PostEditActions, leave: () -> Unit) {
+    EditCropStage(
+        crop = cropping,
+        actions = EditCropActions(
+            onBack = actions.onCropBack,
+            onLeave = leave,
+            onNext = if (cropping is EditCrop.Cover) actions.onCoverCropNext else actions.onCropNext,
+            onFrameAsset = actions.onFrameAsset,
+            onShapeChange = actions.onCropShapeChange,
+            onCropsChanged = actions.onCropsChanged,
+            onCoverCropChanged = actions.onCoverCropChanged,
+        ),
+        testTagPrefix = "post_edit",
+    )
+}
