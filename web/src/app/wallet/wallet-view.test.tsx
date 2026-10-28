@@ -25,8 +25,13 @@ function signedIn() {
 }
 
 beforeEach(() => {
+  window.localStorage.clear();
   push.mockReset();
-  server.use(gqlLink.query("NotificationBell", () => HttpResponse.json({ data: { me: null } })));
+  server.use(
+    gqlLink.query("NotificationBell", () =>
+      HttpResponse.json({ data: { me: { __typename: "User", id: "me", hasUnreadNotifications: false } } }),
+    ),
+  );
 });
 
 describe("WalletComingSoon", () => {

@@ -161,7 +161,11 @@ beforeEach(() => {
   window.localStorage.clear();
   window.history.replaceState(null, "", "/explore");
   resetExploreMemory();
-  server.use(gqlLink.query("NotificationBell", () => HttpResponse.json({ data: { me: null } })));
+  server.use(
+    gqlLink.query("NotificationBell", () =>
+      HttpResponse.json({ data: { me: { __typename: "User", id: "me", hasUnreadNotifications: false } } }),
+    ),
+  );
 });
 
 describe("Explore at rest", () => {
@@ -565,9 +569,9 @@ describe("the search filter sheet", () => {
     await waitFor(() => expect(asks).toHaveLength(1));
     const posts = within(sheet).getByTestId("explore.filterSheet.kinds.postsChip");
     fireEvent.click(posts);
-    expect(posts).toHaveAttribute("aria-pressed", "true");
+    expect(posts).toHaveAttribute("aria-checked", "true");
     fireEvent.click(within(sheet).getByTestId(byNode("explore.filterSheet.foot.reset")));
-    expect(posts).toHaveAttribute("aria-pressed", "false");
+    expect(posts).toHaveAttribute("aria-checked", "false");
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(asks).toHaveLength(1);
   });
