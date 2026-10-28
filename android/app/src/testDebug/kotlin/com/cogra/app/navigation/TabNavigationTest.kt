@@ -150,6 +150,14 @@ class TabNavigationTest {
         waitForTag("profile.identity.name")
     }
 
+    /** The own chronicle's one act, the post p1 (ProfileOther.md: a chronicle card opens the post). */
+    private fun openTheChroniclesPost() {
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodesWithTag(CHRONICLE_ROW, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag(CHRONICLE_ROW, useUnmergedTree = true).performScrollTo().performClick()
+    }
+
     // -- The lit slot is the stack's root, whatever the screen is about --
 
     @Test
@@ -166,8 +174,7 @@ class TabNavigationTest {
     fun theSamePostOpenedFromTheProfileChronicleKeepsProfileLit() {
         memberOnTheFeed()
         openProfileTab()
-        waitForTag("chronicle_row")
-        compose.onNodeWithTag("chronicle_row").performScrollTo().performClick()
+        openTheChroniclesPost()
         waitUntilOn { onTop<PostDetail>() }
 
         // The same screen in another tab's stack lights that tab
@@ -253,8 +260,7 @@ class TabNavigationTest {
     fun theProfileSlotDeepInTheProfileTabPopsToTheProfilesRoot() {
         memberOnTheFeed()
         openProfileTab()
-        waitForTag("chronicle_row")
-        compose.onNodeWithTag("chronicle_row").performScrollTo().performClick()
+        openTheChroniclesPost()
         waitUntilOn { onTop<PostDetail>() }
 
         // Profile.md:65.
@@ -280,8 +286,7 @@ class TabNavigationTest {
     fun backPopsWithinTheTabThenFromItsRootToFeedsRootThenLeaves() {
         memberOnTheFeed()
         openProfileTab()
-        waitForTag("chronicle_row")
-        compose.onNodeWithTag("chronicle_row").performScrollTo().performClick()
+        openTheChroniclesPost()
         waitUntilOn { onTop<PostDetail>() }
 
         pressBack()
@@ -332,5 +337,9 @@ class TabNavigationTest {
         pressBack()
         waitForTag("wizard_body")
         assertThat(onTop<ComposePost>()).isTrue()
+    }
+
+    private companion object {
+        const val CHRONICLE_ROW = "chronicle_row_open"
     }
 }
