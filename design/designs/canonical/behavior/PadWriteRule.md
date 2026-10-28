@@ -21,3 +21,7 @@ WHEN drag on the pad field GIVEN the notice stands -> the pick moves AND the not
 WHEN tap Not now -> the pad closes AND nothing is signed or spent AND the pick is not kept AND the standing opinion is what it was
 
 WHEN press outside the pad, press the system's Back or press Escape GIVEN the notice stands -> the pad closes AND nothing is signed or spent AND the pick is not kept
+
+WHEN the write rule refuses the alternates' signing GIVEN the reader's input is sliders or typed values -> the dialog stays up at the pick AND the readouts and the tracks stay where they were AND the same notice stands where the landing line and the action row were, with its own ? AND Not now stands under it AND NEVER a Retry, Sign it, Cancel or Walk it back stands
+
+WHEN tap Not now in the alternates -> the dialog closes AND nothing is signed or spent AND the pick is not kept

@@ -61,6 +61,9 @@ export function TopicRemovable({ topic, pair, onRemove, onEdit, node }) {
         display: "inline-flex",
         alignItems: "center",
         gap: 6,
+        /* A true height, padding inside it (seam 245, ask 2): without
+           border-box the 32 measured the content alone and drew 40. */
+        boxSizing: "border-box",
         minHeight: 32,
         padding: "4px 12px",
         borderRadius: "var(--radius-full)",

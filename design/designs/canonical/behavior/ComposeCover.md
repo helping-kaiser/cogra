@@ -6,6 +6,8 @@ ALWAYS the frames offered are the clip's own at 1s, 10%, 50% and 90%
 
 WHEN the clip is short enough that two offered frames land on one frame -> that frame is offered once
 
+WHEN the step opens GIVEN the device has not finished cutting the clip's frames -> the strip's caption reads Reading the video… once the frames are 200ms late AND NEVER a spinner appears
+
 WHEN the step opens GIVEN the author has picked no face -> NEVER a frame stands chosen
 
 WHEN tap a frame -> that frame is the clip's cover AND NEVER a crop opens

@@ -134,11 +134,16 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
       data-node={node}
     >
       <MonogramAvatar name={name} src={avatarSrc} redacted={redacted} node={node && "avatar"} />
+      {/* The name sets label-large whole (seam 245, ask 7): left to the page
+          it took body-large's 24px leading and 0.5px tracking, where the
+          role's are 20px and 0.1px. */}
       <span
         style={{
           ...clip,
           flexShrink: 999,
           fontSize: "var(--text-label-large)",
+          lineHeight: "var(--text-label-large--line-height)",
+          letterSpacing: "var(--text-label-large--letter-spacing)",
           fontWeight: "var(--text-label-large--font-weight)",
           color: redacted ? "var(--text-secondary)" : undefined,
         }}

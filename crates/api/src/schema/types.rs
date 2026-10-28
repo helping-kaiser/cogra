@@ -33,7 +33,8 @@ use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
 use crate::loaders::{
     ActorByAddressLoader, ActorByIdLoader, CommentByNodeLoader, CommentGalleryLoader,
-    MediaByIdLoader, PayloadStateLoader, PostByNodeLoader, PostGalleryLoader, SeveringRecordLoader,
+    CommentRemovalLoader, MediaByIdLoader, PayloadStateLoader, PostByNodeLoader, PostGalleryLoader,
+    PostRemovalLoader, SeveringRecordLoader,
 };
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
@@ -876,16 +877,21 @@ impl Record {
     /// FULL until the payload controller removes; a reduced record
     /// keeps its structure and witness forever (layers.md §5).
     async fn payload_state(&self, ctx: &Context<'_>) -> async_graphql::Result<PayloadState> {
-        let reduced = ctx
-            .data::<DataLoader<PayloadStateLoader>>()?
-            .load_one(self.0.record_id.clone())
-            .await?
-            .unwrap_or(false);
-        Ok(if reduced {
+        Ok(if self.redacted_at(ctx).await?.is_some() {
             PayloadState::Reduced
         } else {
             PayloadState::Full
         })
+    }
+
+    /// When the payload went REDUCED; null while FULL. The mark's own
+    /// moment — a mark that cannot say when is half a mark. Distinct from
+    /// a node's `updatedAt`, which a removal never moves.
+    async fn redacted_at(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<DateTime<Utc>>> {
+        Ok(ctx
+            .data::<DataLoader<PayloadStateLoader>>()?
+            .load_one(self.0.record_id.clone())
+            .await?)
     }
 
     /// The content commitment (base64) — the payload bytes in carriage
@@ -2747,6 +2753,17 @@ where
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RecordId(pub String);
 
+/// The act a minted node's identifier names: `mint:<act>` is the node the
+/// act minted (layer1-interface.md §8.1), so the genesis record of a post
+/// or comment is its graph id with the prefix taken off — known before
+/// the record lands, since the act identifier is allocated at prepare.
+fn genesis_record(l1_node_id: &str) -> String {
+    l1_node_id
+        .strip_prefix("mint:")
+        .unwrap_or(l1_node_id)
+        .to_string()
+}
+
 #[Scalar]
 impl ScalarType for RecordId {
     fn parse(value: Value) -> InputValueResult<Self> {
@@ -2793,6 +2810,84 @@ pub enum ModerationStatus {
 pub enum PayloadState {
     Full,
     Reduced,
+}
+
+/// Who removed a node's payload. AUTHOR: `removeContent`. ACCOUNT: the
+/// author's account deletion with the content sweep. MODERATION: a passed
+/// moderation verdict. AUTHOR and ACCOUNT both read `Removed by its
+/// author`; the data keeps them distinct.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum RemovalAgent {
+    Author,
+    Account,
+    Moderation,
+}
+
+impl RemovalAgent {
+    /// The agent a tombstone's reason names (retention-archive.md §1):
+    /// the two self-service reasons by name, every other reason a
+    /// moderation or legal trigger.
+    fn of(reason: &str) -> Self {
+        match reason {
+            postgres_store::removal::AUTHOR_REMOVAL => Self::Author,
+            postgres_store::removal::ACCOUNT_REMOVAL => Self::Account,
+            _ => Self::Moderation,
+        }
+    }
+}
+
+/// A content node's payload removal, read off the node itself —
+/// `Post.removal` and `Comment.removal`. Nodes are never deleted, so a
+/// removed node still resolves and wears this mark wherever it appears.
+#[derive(SimpleObject, Debug, Clone)]
+pub struct Removal {
+    /// When the payload was removed — the removal's own instant.
+    pub at: DateTime<Utc>,
+    pub by: RemovalAgent,
+}
+
+/// A node's removal mark and the `updatedAt` it keeps, read once per
+/// removed node through its loader. None for a node whose current version
+/// is not tombstoned.
+async fn node_removal<L>(
+    ctx: &Context<'_>,
+    redacted: bool,
+    id: Uuid,
+) -> async_graphql::Result<Option<postgres_store::removal::Removal>>
+where
+    L: async_graphql::dataloader::Loader<
+            Uuid,
+            Value = postgres_store::removal::Removal,
+            Error = crate::loaders::LoadError,
+        >,
+{
+    if !redacted {
+        return Ok(None);
+    }
+    Ok(ctx.data::<DataLoader<L>>()?.load_one(id).await?)
+}
+
+/// The mark a removed node wears: its tombstone's instant and agent.
+fn removal_mark(removal: Option<postgres_store::removal::Removal>) -> Option<Removal> {
+    removal.map(|r| Removal {
+        at: r.at,
+        by: RemovalAgent::of(&r.reason),
+    })
+}
+
+/// The `updatedAt` of a node: its current version's instant — or, on a
+/// removed node, the instant of the newest version before its tombstone,
+/// since a removal is no edit and never moves it.
+fn updated_at(
+    created_at: DateTime<Utc>,
+    version_created_at: DateTime<Utc>,
+    removal: Option<&postgres_store::removal::Removal>,
+) -> DateTime<Utc> {
+    removal
+        .and_then(|r| r.updated_at)
+        .unwrap_or(version_created_at)
+        .max(created_at)
 }
 
 /// The license qualifiers a content node was minted with (§5 of
@@ -2940,9 +3035,33 @@ impl PostType {
     }
 
     /// The most recent fold-winning update's promotion; equals
-    /// `createdAt` if never changed.
-    async fn updated_at(&self) -> DateTime<Utc> {
-        self.0.version_created_at.max(self.0.created_at)
+    /// `createdAt` if never changed. A removal is no update: a removed
+    /// post keeps the instant of its last version.
+    async fn updated_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
+        let removal =
+            node_removal::<PostRemovalLoader>(ctx, self.0.redaction_reason.is_some(), self.0.id)
+                .await?;
+        Ok(updated_at(
+            self.0.created_at,
+            self.0.version_created_at,
+            removal.as_ref(),
+        ))
+    }
+
+    /// The act that minted this post — what `removeContent` names to
+    /// remove it, pending included: a post in flight has no record yet,
+    /// and its genesis act is the record it will be.
+    async fn genesis_record_id(&self) -> RecordId {
+        RecordId(genesis_record(&self.0.l1_node_id))
+    }
+
+    /// The post's payload removal, if any — the visible mark removal
+    /// leaves (never erase silently); null while the payload is carried.
+    async fn removal(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Removal>> {
+        Ok(removal_mark(
+            node_removal::<PostRemovalLoader>(ctx, self.0.redaction_reason.is_some(), self.0.id)
+                .await?,
+        ))
     }
 
     /// Where this post stands relative to L1 finality.
@@ -3098,11 +3217,17 @@ impl PostType {
     /// page argument would promise a pagination this read cannot honour —
     /// the same shape `topics` and `references` carry, for the same
     /// reason.
+    ///
+    /// Empty on a removed post: redaction is record-granular, so the
+    /// pictures go with the words whichever tombstoned version is current.
     #[graphql(complexity = "gallery_cost(crate::media::MAX_POST_ATTACHMENTS, child_complexity)")]
     async fn attachments(
         &self,
         ctx: &Context<'_>,
     ) -> async_graphql::Result<Vec<MediaAttachmentType>> {
+        if self.0.redaction_reason.is_some() {
+            return Ok(Vec::new());
+        }
         post_gallery(ctx, self.0.version_id).await
     }
 
@@ -3270,9 +3395,31 @@ impl CommentType {
     }
 
     /// The most recent fold-winning update's promotion; equals
-    /// `createdAt` if never changed.
-    async fn updated_at(&self) -> DateTime<Utc> {
-        self.0.version_created_at.max(self.0.created_at)
+    /// `createdAt` if never changed. A removal is no update.
+    async fn updated_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
+        let removal =
+            node_removal::<CommentRemovalLoader>(ctx, self.0.redaction_reason.is_some(), self.0.id)
+                .await?;
+        Ok(updated_at(
+            self.0.created_at,
+            self.0.version_created_at,
+            removal.as_ref(),
+        ))
+    }
+
+    /// The act that minted this comment — what `removeContent` names to
+    /// remove it, pending included.
+    async fn genesis_record_id(&self) -> RecordId {
+        RecordId(genesis_record(&self.0.l1_node_id))
+    }
+
+    /// The comment's payload removal, if any — the same mark a post's
+    /// carries. Its replies keep their parent and stay readable.
+    async fn removal(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Removal>> {
+        Ok(removal_mark(
+            node_removal::<CommentRemovalLoader>(ctx, self.0.redaction_reason.is_some(), self.0.id)
+                .await?,
+        ))
     }
 
     /// Where this comment stands relative to L1 finality.
@@ -3404,6 +3551,9 @@ impl CommentType {
         &self,
         ctx: &Context<'_>,
     ) -> async_graphql::Result<Vec<MediaAttachmentType>> {
+        if self.0.redaction_reason.is_some() {
+            return Ok(Vec::new());
+        }
         comment_gallery(ctx, self.0.version_id).await
     }
 

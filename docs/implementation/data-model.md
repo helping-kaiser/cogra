@@ -362,6 +362,14 @@ leaves that residue for the retry, and every step is idempotent. A
 carried act is never redacted: it never reached Layer 1 or a
 reader, and is deleted with its account.
 
+An engine that writes more for the same act — per-content
+removal's display tombstones ("Display-content versioning") — writes
+it in the same transaction, between the reap and the hold, so the
+hold sees the tombstones and no committed state shows a reduced
+act's words. Every read the redaction makes runs on that
+transaction's own connection, so an act holds one pooled connection,
+never a second one while the first waits.
+
 ### The retention archive
 
 The store a redacted act's content outlives its carriage in
@@ -656,12 +664,28 @@ schema encodes this as a split per content kind:
   the version whose record landed last; the entity's `updated_at`
   is derived as that version's `created_at` — no stored column.
 
-A **redaction tombstone** is just another version row: its
-`redaction_reason` is non-null, its content fields carry the
-visible marker, and the prior values move to the retention
-archive ([retention-archive.md](../primitive/retention-archive.md),
-[erasure.md](../instances/erasure.md)). The
-tombstone's `created_at` is the removed-at instant. An author's
+A **redaction tombstone** marks a version row: its
+`redaction_reason` is non-null, its content fields are empty, and
+the prior values move to the retention archive
+([retention-archive.md](../primitive/retention-archive.md),
+[erasure.md](../instances/erasure.md)). A removal tombstones in
+two motions, both in the transaction that reduces the act:
+
+- **Every version row of a removed act is blanked in place** —
+  content, title, description and the sensitive mark emptied, the
+  reason set. The row keeps its landing coordinates and its pending
+  mark, so a record that lands after the removal finds its own row
+  and lands onto one that shows nothing.
+- **The head act appends one tombstone row** whose `created_at` is
+  the removed-at instant — the mark's moment, which no blanked row
+  can carry. It copies the head version's landing coordinates, so
+  over a landed head it is the current version, with an empty
+  gallery.
+
+A node is removed when its current version is tombstoned. Its
+`updated_at` stays the instant of the newest version before the
+head tombstone: a removal is no edit. The rows, their junction rows
+and the asset rows all stay; nothing is deleted. An author's
 own sensitive mark is part of the content state and rides the
 version row; a *moderator's* per-field flags and the verdict
 vocabulary are operational metadata rows, and the
@@ -800,12 +824,17 @@ CREATE TABLE media_attachments (
 -- digest a re-encoded asset arrived with. A re-encode whose rendition
 -- collides here merges into the asset it collides with; the merged
 -- row keeps the digest it arrived with, so a retry of that file
--- finds it and is handed the asset it resolves to.
+-- finds it and is handed the asset it resolves to. A held asset
+-- holds its digest no longer either: its bytes left the live store
+-- with the content that showed them, so the same file uploaded again
+-- mints a fresh live asset beside it, and a merged row pointing at a
+-- held asset is marked held with it.
 CREATE UNIQUE INDEX media_attachments_author_digest_key
-    ON media_attachments (author_id, digest) WHERE state <> 'failed';
+    ON media_attachments (author_id, digest)
+    WHERE state <> 'failed' AND held_at IS NULL;
 CREATE UNIQUE INDEX media_attachments_author_source_digest_key
     ON media_attachments (author_id, source_digest)
-    WHERE source_digest IS NOT NULL AND state <> 'failed';
+    WHERE source_digest IS NOT NULL AND state <> 'failed' AND held_at IS NULL;
 
 -- The ingest queue reads the oldest processing row; at rest the index
 -- is empty.

@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE post_versions\n             SET title = NULL, description = NULL, content = '',\n                 sensitive = FALSE, sensitive_reason = NULL,\n                 redaction_reason = $2\n             WHERE post_id = $1 AND redaction_reason IS NULL\n               AND ((landed_epoch = $3 AND act_time = $4 AND position = $5)\n                    OR created_at = $6)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a65a99ac0d90482cc20a75dd165b327fca5f9129f1fb747cdad10e6247986a17"
+}

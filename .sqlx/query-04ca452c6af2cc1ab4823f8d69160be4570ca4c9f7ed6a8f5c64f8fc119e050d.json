@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO act_payloads (act_id, payload, content_salt, payload_state, reduced_at)\n         VALUES ($1, NULL, NULL, 'reduced', $2)\n         ON CONFLICT (act_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "04ca452c6af2cc1ab4823f8d69160be4570ca4c9f7ed6a8f5c64f8fc119e050d"
+}

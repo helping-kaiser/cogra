@@ -161,19 +161,37 @@ pub async fn units_of(
 /// This marks the hold; the bytes follow after the transaction commits,
 /// into the operator-only area (`media_attachments.area`), once the move
 /// re-checks that no live placement shows the asset by then.
+///
+/// **A held asset frees its digest.** `(author, digest)` names at most one
+/// *live* asset, so an upload of the same file afterwards mints a fresh
+/// one rather than resolving to bytes that left the live store. The rows
+/// merged into a held asset are pointers to it and carry the digest their
+/// upload arrived with, so they are marked with it — or a re-upload of
+/// that original would still resolve, through the pointer, to the archive.
 pub async fn hold_unplaced(
     conn: &mut PgConnection,
     media: &[Uuid],
 ) -> Result<Vec<Uuid>, sqlx::Error> {
-    sqlx::query_scalar!(
+    let held = sqlx::query_scalar!(
         r#"UPDATE media_attachments
            SET held_at = NOW()
            WHERE id = ANY($1) AND held_at IS NULL AND NOT media_live_placed(id)
            RETURNING id"#,
         media,
     )
-    .fetch_all(conn)
-    .await
+    .fetch_all(&mut *conn)
+    .await?;
+    if !held.is_empty() {
+        sqlx::query!(
+            "UPDATE media_attachments
+             SET held_at = NOW()
+             WHERE merged_into = ANY($1) AND held_at IS NULL",
+            &held,
+        )
+        .execute(&mut *conn)
+        .await?;
+    }
+    Ok(held)
 }
 
 /// Whether a live placement still shows the asset (`media_live_placed`).

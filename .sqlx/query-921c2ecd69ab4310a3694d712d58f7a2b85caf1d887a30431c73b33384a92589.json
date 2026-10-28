@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT act_id, reduced_at AS \"reduced_at!\"\n           FROM act_payloads\n           WHERE act_id = ANY($1) AND payload_state = 'reduced'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "act_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "reduced_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "921c2ecd69ab4310a3694d712d58f7a2b85caf1d887a30431c73b33384a92589"
+}

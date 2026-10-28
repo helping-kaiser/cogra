@@ -5118,7 +5118,14 @@ by default:
   in` once-each paragraph, and `ProfileApplicant`'s `What you post now
   arrives with you.`
 
-### 144 · The `AttachmentPad` master does not yet snap on release · *system* · **filed 2026-10-16**
+### 144 · The `AttachmentPad` master does not yet snap on release · *system* · **filed 2026-10-16** · **closed 2026-10-28**
+
+Closed 2026-10-28 (round 20, seam 245's ask 22): the master now builds
+both. `attachmentFrom` holds the zero detent — the pick reads exactly
+`0.00` while the knob's centre would stand within `ATTACHMENT_DETENT_PX`,
+the knob's own 10px radius, of the hairline — and release, or a
+cancelled pointer, hands `onChange` the last pick parked on its nearest
+hundredth (`snapAttachment`). The square stays continuous.
 
 Round 17 ruled (jakob 2026-10-16) that the one-axis backing pads park
 their pick on hundredths at release — the board line on `ComposePad` and
@@ -5157,3 +5164,27 @@ pads' help lines and every helper, caption and note line on the boards;
 list each sentence that tells a reader what they already expect, with a
 proposed cut, for jakob to rule. It rides his flagged pass that removes
 words from crowded screens.
+
+### 147 · Type sites that set part of a role · *system* · **filed 2026-10-28**
+
+Round 20 (seam 245, asks 6 and 7) set the whole type role — size,
+leading, tracking, weight — on the sites the asks named: the `More`
+openers, `EmptyState`, `LoadingState`, `RedactedContent`, `ActorChip`'s
+name and `ContentRow`'s rungs. Its sweep found the same defect at sites
+no ask named, left as they were so the round stayed inside its asks. Each
+sets one part of its role and inherits the rest, so a client conforming
+to the master measures off the token:
+
+- **Tracking inherited, not the role's**: `CommentCard`'s `View N
+  replies`, `PendingMarker`'s `Signing…` (and the marker's other lines),
+  `StanceControl`'s help lines, `StanceRow`'s name and handle, `FactRow`'s
+  type.
+- **`label-medium` set without its line height**: `MediaThumb`,
+  `MediaAttachment`, `ReelCaption`, `ReelRail`, `BottomNav`,
+  `StanceAlternates` (the swap), `PayoutAddress`, `WalletBalance`,
+  `SensitiveVeil` (the veil's label, line 159), `MonogramAvatar`
+  (`ActorChip.jsx`).
+
+The fix is round 20's: each site sets its role whole, measured headless
+on the built boards with Figtree loaded, and the boards' geometry diffed
+before and after.

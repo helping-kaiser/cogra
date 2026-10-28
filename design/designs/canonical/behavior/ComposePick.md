@@ -4,15 +4,19 @@ ALWAYS the device grid stands newest first
 
 ALWAYS the first picture in the tray is the cover
 
+ALWAYS the tray's line The first one is the cover. stands beside the tiles only while they leave it its one line, and past that the tiles stand alone, clipped at the band's edge and never scrolled
+
 WHEN tap an unpicked picture tile in the grid GIVEN the tray holds fewer than ten pictures and no video -> the picture is picked AND its tile's ring shows its place in the post
 
 WHEN tap a picked picture tile in the grid -> the pick is undone AND the picture leaves the tray
 
 WHEN tap the first tile, Your photos app -> the device's own photos app opens AND what is picked there lands in the tray
 
-WHEN drag a tray thumbnail to a new place -> the tray takes the new order AND the picture now first in the tray is the cover
+ALWAYS every tray thumbnail carries its remove control, the cover's included
 
 WHEN tap a tray thumbnail's remove control -> the picture leaves the tray
+
+WHEN tap the cover's remove control -> the cover leaves the tray AND the picture now first is the cover
 
 WHEN tap a video tile GIVEN nothing is in the tray -> the video becomes the whole body AND the step stops taking picks
 
@@ -24,11 +28,17 @@ WHEN a video is picked GIVEN pictures are in the tray -> the video is refused wi
 
 WHEN a fresh batch of pictures and a video is picked GIVEN nothing is in the tray -> the pictures are kept AND the video is refused with A post carries pictures or one video, not both.
 
+WHEN a photos-app batch holds more than one video GIVEN nothing is in the tray and the batch holds no picture -> the batch's first video becomes the whole body AND each other video is refused with A post carries one video.
+
 WHEN an eleventh picture is picked -> it is refused with That's more than a post carries — up to ten pictures. AND NEVER a picture is dropped in silence
 
 WHEN a picture is picked -> NEVER the picture uploads before the crop
 
+WHEN press Next GIVEN nothing is picked -> Next stays inert AND NEVER the crop opens AND NEVER a line asks for a pick
+
 WHEN press Next GIVEN the body is one video -> NEVER the clip's length decides whether the cover step comes next
+
+ALWAYS the header back arrow is named Back, never Back a step
 
 WHEN press the header back arrow -> the wizard leaves toward where compose began AND the draft is kept AND NEVER a dialog asks
 

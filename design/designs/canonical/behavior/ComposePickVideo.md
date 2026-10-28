@@ -18,6 +18,8 @@ WHEN press Next GIVEN the clip is vertical -> the details stage opens with its A
 
 WHEN press Next -> NEVER the clip's length decides whether the cover step comes next
 
+ALWAYS the header back arrow is named Back, never Back a step
+
 WHEN press the header back arrow -> the wizard leaves toward where compose began AND the draft is kept AND NEVER a dialog asks
 
 WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks

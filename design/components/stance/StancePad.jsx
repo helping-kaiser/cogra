@@ -314,11 +314,35 @@ export function attachmentPercentOf(value) {
   return percent(fractionOf(clampDimension(value), STANCE_RANGES.pDirected));
 }
 
-/** The attachment this much horizontal travel picks, starting from `base`. Clamped once, on the sum. */
+/* THE ZERO HAIRLINE IS A DETENT (jakob 2026-10-20, round 18): `No side yet`
+   is a place a drag rests on purpose, never one it only passes. While the
+   finger's travel would put the knob's centre within the knob's own radius
+   of the hairline, the knob holds ON it and the pick reads exactly 0.00 —
+   past that radius the knob follows the finger again. The radius is the
+   knob's, so the hold is as wide as the thing being held.
+
+   THE PICK PARKS ON A HUNDREDTH (jakob 2026-10-16, round 17): the knob
+   follows the drag wherever the finger is, and release lands the pick on the
+   nearest hundredth — `snapAttachment` — so the number a readout prints is
+   the pick itself, never a rounding of it. The square's value stays
+   continuous; only the strip parks. The master builds both (backlog 144):
+   it is the reference the clients conform to. */
+export const ATTACHMENT_DETENT_PX = KNOB_DIAMETER_PX / 2;
+
+/** The attachment this much horizontal travel picks, starting from `base`.
+ *  Clamped once, on the sum; held at exactly 0 inside the hairline's detent. */
 export function attachmentFrom(base, rect, dx, inset = KNOB_TRAVEL_INSET_PX) {
   const halfExtent = Math.max(0, rect.width / 2 - inset);
   if (halfExtent === 0) return clampDimension(base);
-  return clampDimension(base + dx * perPixel(STANCE_RANGES.pDirected, halfExtent));
+  const raw = clampDimension(base + dx * perPixel(STANCE_RANGES.pDirected, halfExtent));
+  /* One unit of the axis is `halfExtent` pixels of travel, so the knob's
+     centre stands |raw| × halfExtent px from the hairline. */
+  return Math.abs(raw) * halfExtent <= ATTACHMENT_DETENT_PX ? 0 : raw;
+}
+
+/** Where a released pick parks: the nearest hundredth — and a plain 0, never -0. */
+export function snapAttachment(value) {
+  return Math.round(clampDimension(value) * 100) / 100 || 0;
 }
 
 /* NAMED ONLY WHERE ITS PLACER NAMES IT, the square's rule: the whole field
@@ -336,7 +360,7 @@ export function AttachmentPad({ value = 0, onChange, fieldRef, showAxes = true, 
 
   const onPointerDown = (event) => {
     if (!onChange) return;
-    drag.current = { x: event.clientX, base: value };
+    drag.current = { x: event.clientX, base: value, last: value };
     setDragging(true);
     event.currentTarget.setPointerCapture?.(event.pointerId);
   };
@@ -344,11 +368,15 @@ export function AttachmentPad({ value = 0, onChange, fieldRef, showAxes = true, 
     const from = drag.current;
     const field = ref.current;
     if (!from || !field || !onChange) return;
-    onChange(attachmentFrom(from.base, field.getBoundingClientRect(), event.clientX - from.x));
+    from.last = attachmentFrom(from.base, field.getBoundingClientRect(), event.clientX - from.x);
+    onChange(from.last);
   };
+  /* Release — or a cancelled pointer — parks the pick on its hundredth. */
   const endDrag = () => {
+    const from = drag.current;
     drag.current = null;
     setDragging(false);
+    if (from && onChange) onChange(snapAttachment(from.last));
   };
 
   return (

@@ -44,6 +44,20 @@ query ReferenceCandidates($query: String!, $limit: Int) {
         author {
           handle
         }
+        # The citation picker's row (ReferencePicker.jsx): its age, and the
+        # cover its mark wears — a veiled or removed gallery reads the text
+        # tile instead.
+        createdAt
+        attachmentsStatus
+        attachments {
+          id
+          url
+          mimeType
+          coverMedia {
+            id
+            url
+          }
+        }
       }
       ... on Comment {
         id
@@ -53,6 +67,7 @@ query ReferenceCandidates($query: String!, $limit: Int) {
         author {
           handle
         }
+        createdAt
         target {
           __typename
           ... on Post {

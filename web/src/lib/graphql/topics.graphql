@@ -88,6 +88,29 @@ mutation PrepareTag($input: PrepareTagInput!) {
   }
 }
 
+# The tag picker's index rows (TagPicker.jsx: "THE ROWS UNDER IT ARE THE
+# INDEX'S"): the names in use that start with what was typed, through the
+# one search matcher's topic cue — `#prefix` names every Hashtag whose name
+# starts with it, the exact name leading (api-spec.md "Search", *Cues*).
+# `kinds: [HASHTAG]` keeps the topic section alone: a bare cue would also
+# list everything the matched topics reach, which a picker of names has no
+# use for. No count rides a row — the picker draws none (§3).
+query TagNames($query: String!, $first: Int) {
+  search(query: $query, kinds: [HASHTAG], first: $first) {
+    edges {
+      node {
+        __typename
+        ... on Hashtag {
+          id
+          name {
+            value
+          }
+        }
+      }
+    }
+  }
+}
+
 # Your topics (YourTopics.dc.html; api-spec.md `User.heldTopics`): every
 # topic the reader holds, strongest first by association, each row the
 # topic's mark and name with the pair the reader signed and the pending

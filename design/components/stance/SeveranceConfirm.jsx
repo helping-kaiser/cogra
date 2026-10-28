@@ -10,6 +10,7 @@ import {
   formatStanceWords,
   STANCE_AXIS_NAMES,
   SR_ONLY,
+  WRITE_RULE_WORDS,
 } from "./StanceReadout.jsx";
 
 // The severance confirmation (guidelines/stance-control.md, *Severance*). It serves both routes to (0, 0):
@@ -60,6 +61,17 @@ export function SeveranceConfirm({
   alreadySevered = false,
   busy = false,
   failed = false,
+  /* THE WRITE RULE REFUSED THE WALK-BACK (seam 245, ask 15). Its pre-check
+     staged nothing and spent nothing, so it is a notice, not a fault, and it
+     answers in the write rule's register: where the fault line would stand,
+     the row's quiet words in the pending marker's ink, `role="status"`, with
+     the one fact the cost line above makes a reader ask — nothing was signed
+     or spent (`WRITE_RULE_WORDS.dialog`). NO RETRY: asking again at once
+     meets the same answer, so the act dims — the second true refusal this
+     dialog has, beside a bundle already at nothing — and `Keep it` is the
+     way out, back to the pick still parked on the pad. Additive — absent,
+     the dialog renders exactly as before. */
+  writeRule = false,
   onConfirm,
   onCancel,
   inline = false,
@@ -119,21 +131,27 @@ export function SeveranceConfirm({
             That didn&apos;t send. Try again.
           </p>
         ),
+        writeRule && (
+          <p role="status" style={{ margin: 0, color: "var(--text-secondary)" }}>
+            {WRITE_RULE_WORDS.dialog}
+          </p>
+        ),
       ].filter(Boolean)}
       actions={
         <>
           {/* IN FLIGHT THE LABEL SAYS WHAT IS HAPPENING (jakob, the failure
               pack): the family's own present participle — "Walking it back…",
               "Disconnecting…" — and the control inert, never dimmed. Dimming is
-              kept for the one true refusal, a bundle already at nothing. */}
+              kept for the true refusals: a bundle already at nothing, and the
+              write rule's no. */}
           <button
             type="button"
-            disabled={alreadySevered}
+            disabled={alreadySevered || writeRule}
             onClick={busy ? undefined : onConfirm}
             aria-busy={busy || undefined}
             aria-disabled={busy || undefined}
             className={BUTTON_CLASS}
-            style={buttonStyle({ variant: "text", disabled: alreadySevered, busy })}
+            style={buttonStyle({ variant: "text", disabled: alreadySevered || writeRule, busy })}
           >
             {busy ? sever.busy ?? "Signing…" : failed ? "Retry" : sever.control}
           </button>

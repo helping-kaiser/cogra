@@ -30,16 +30,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.RootReselectEffect
 import com.cogra.core.designsystem.v2.token.Space
 import kotlinx.coroutines.launch
 
@@ -127,14 +126,5 @@ internal const val BACK_TO_TOP_TAG = "feed_back_to_top"
  */
 @Composable
 internal fun FeedReselectEffect(signal: Int, listState: LazyListState, onRefresh: () -> Unit) {
-    var answered by rememberSaveable { mutableIntStateOf(signal) }
-    LaunchedEffect(signal) {
-        if (signal == answered) return@LaunchedEffect
-        answered = signal
-        if (listState.atHardTop()) {
-            onRefresh()
-        } else {
-            listState.animateScrollToItem(0)
-        }
-    }
+    RootReselectEffect(signal = signal, list = listState, onAtTop = onRefresh)
 }

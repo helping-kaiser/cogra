@@ -2129,7 +2129,6 @@ names      = [
   "prepareModeratorRoleChange", "prepareParameterChange",
   "prepareProposal", "prepareRatify", "prepareReport", "prepareRescind",
   "prepareSettlement", "prepareTip", "prepareWithdraw",
-  "removeContent",
 ]
 
 # A prose paragraph on the profile field caps sits inside a graphql

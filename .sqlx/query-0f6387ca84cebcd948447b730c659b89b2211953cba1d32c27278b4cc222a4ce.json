@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE media_attachments\n             SET held_at = NOW()\n             WHERE merged_into = ANY($1) AND held_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0f6387ca84cebcd948447b730c659b89b2211953cba1d32c27278b4cc222a4ce"
+}

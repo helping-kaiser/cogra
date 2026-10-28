@@ -562,7 +562,8 @@ interface Node {
   createdAt: DateTime!
   "When this node last changed — its most recent fold-winning
    update record or display-content version; equals createdAt if
-   never changed."
+   never changed. A payload removal is no change: it never moves
+   updatedAt (the mark's own moment is `removal.at`)."
   updatedAt: DateTime!
   "Where this node stands relative to L1 finality — landing is a
    substrate fact about every minted node, so it lives here rather
@@ -1299,6 +1300,11 @@ type Post implements Node {
   "The post's raw L1 identifier — the mint its genesis record
    minted. A device binds the acts it signs about this post to it."
   graphId: String!
+  "The act that minted this post, pending included — what
+   `removeContent` names. Known from the moment the post is
+   prepared: a post still in flight has no Record yet, and its
+   genesis act is the record it will be."
+  genesisRecordId: RecordId!
   "Optional title / headline."
   title: ModeratedText!
   "Optional short summary or subtitle."
@@ -1359,6 +1365,9 @@ type Comment implements Node {
    minted. A device binds the acts it signs about this comment to
    it."
   graphId: String!
+  "The act that minted this comment, pending included — what
+   `removeContent` names."
+  genesisRecordId: RecordId!
   "The body."
   content: ModeratedText!
   "The author's own sensitive mark, alone — the state an edit
@@ -1409,7 +1418,12 @@ enum ReplyOrder { OLDEST_FIRST NEWEST_FIRST }
  `Post.removal` and `Comment.removal`. Nodes are never deleted, so
  a removed node still resolves and wears this mark wherever it
  appears: as a citation's target, a History entry, a feed card, a
- kept pick. `at` is when the payload went REDUCED."
+ kept pick. `at` is the removal's own moment — when the node's
+ current version went REDUCED, the instant its head tombstone
+ carries; never `updatedAt`, which a removal does not move. `by`
+ is read off the tombstone's reason: user-content-removal is
+ AUTHOR, user-account-deletion ACCOUNT, any other trigger
+ MODERATION."
 type Removal {
   at: DateTime!
   by: RemovalAgent!
@@ -3330,7 +3344,10 @@ These bind every mutation below.
   `markNotificationRead`, `setBookmark`, `removeBookmark`, `hideActor`
   and `unhideActor` need a session and no particular account state. They write the viewer's own
   L2 rows and act on nothing, so an applicant's private state — an
-  unverified one's included — moves like a member's.
+  unverified one's included — moves like a member's. `removeContent`
+  is not acting either: it needs a session and authorship, no
+  account state, because it signs nothing and removes the viewer's
+  own payloads.
 - **Errors follow the tiered model** (governing principles). A
   `userErrors: [UserError!]!` field is **implied on every payload type
   below and omitted from its body**, exactly as the interface fields
@@ -3987,7 +4004,11 @@ input PreparePostInput {
  is its own record rather than a field of this input — which is a
  statement about the records, not about the screen: the edit
  surface stages them beside the edit and seals the whole batch
- under one signature, one act count, all or none."
+ under one signature, one act count, all or none. A removed post
+ takes no edit: the edit would become its newest version and put
+ words back where its author took them away, so it is refused
+ BAD_INPUT at `id` — at prepare, and again at the pre-sign leg
+ for an edit prepared while the removal ran."
 input PreparePostEditInput {
   id: UUID!
   title: String
@@ -4029,6 +4050,9 @@ input PrepareCommentInput {
   actAs: UUID
 }
 
+"Edit a Comment — the same complete-state edit a post's is, and the
+ same refusal: a removed comment takes no edit (BAD_INPUT at
+ `id`)."
 input PrepareCommentEditInput {
   id: UUID!
   content: String!
@@ -5620,15 +5644,42 @@ enum EmailChangeLinkState { PENDING APPLIED CANCELED EXPIRED }
  and permanent: the record drops to its reduced projection with
  the author-removed mark, the original moves to the retention
  archive under its legal hold. The client owns the explicit
- permanence confirmation."
+ permanence confirmation.
+
+ Needs a session, and the viewer must be the record's author
+ (FORBIDDEN otherwise). Not MEMBER-gated: it signs nothing and acts
+ on nothing — it removes the viewer's own payloads from CoGra's
+ stores — so any account that authored the record may remove it.
+ Removable content is a post's or a comment's record (Publish,
+ Review); any other family, and an act carried with an
+ application, answers BAD_INPUT at `record`. An unknown record
+ answers NOT_FOUND at `record`. No RATE_LIMITED: the verb is
+ bounded by the author's own content, and mails and signs nothing.
+
+ Each act is removed in one transaction — archived, reduced, its
+ staged copy reaped, its display versions tombstoned and its
+ pictures held unless another placement still shows them — so a
+ failure part-way leaves every earlier act removed and the rest
+ untouched, and a retry completes it. Idempotent: removing a
+ removed record answers the same records, still REDUCED, and
+ archives nothing new."
 input RemoveContentInput {
+  "The record to remove — `Post.genesisRecordId` or
+   `Comment.genesisRecordId` names the node's own."
   record: RecordId!
-  "Also remove every record in the target's revision chain — the
-   whole post/comment/profile history. Defaults to false (the
-   single record only)."
+  "Also remove every record in the target's revision chain: the
+   node's genesis act and every edit its author made toward it,
+   landed and in flight alike — an edit still in flight lands
+   REDUCED behind the removal. Defaults to false (the single
+   record only). Removing \"the post\" is the whole chain
+   (erasure.md §1), and the confirm promises every earlier
+   version's words, so the product's Remove sends true."
   includeRevisions: Boolean
 }
-"The removed record(s), now payloadState: REDUCED."
+"The removed records that have landed, oldest first, now
+ payloadState: REDUCED. An act still in flight has no record yet
+ and is not listed; it lands REDUCED. A client re-reads the node
+ after success to render its mark."
 type RemoveContentPayload { records: [Record!]! }
 
 "Begin account deletion (identity-only by default; opt into

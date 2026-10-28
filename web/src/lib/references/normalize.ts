@@ -72,6 +72,15 @@ export type ReferenceTargetNode = {
   /** `Post`, `Comment`. */
   readonly content?: { readonly value?: string | null } | null;
   readonly author?: { readonly handle: string } | null;
+  /** `Post`, `Comment` — the picker's age; selected by the candidate lookup only. */
+  readonly createdAt?: string;
+  /** `Post` — the picker's cover still; selected by the candidate lookup only. */
+  readonly attachmentsStatus?: string;
+  readonly attachments?: readonly {
+    readonly url: string;
+    readonly mimeType?: string;
+    readonly coverMedia?: { readonly url: string } | null;
+  }[];
   /** `Comment` — where it hangs, walked up to find the post it reads on. */
   readonly target?: CommentTargetNode;
 };
@@ -99,6 +108,32 @@ function carryingPost(target: CommentTargetNode): string | null {
 /** An author's handle as a label prefix — "@ada: " — when one is known. */
 function attribution(handle: string | null | undefined): string {
   return handle === null || handle === undefined ? "" : `@${handle}: `;
+}
+
+/** The picker row's fields, where the lookup selected them (`createdAt` says it did). */
+function pickerFields(
+  node: ReferenceTargetNode,
+  name: string,
+): Pick<ReferenceTargetView, "name" | "author" | "createdAt"> {
+  if (node.createdAt === undefined) return {};
+  return {
+    name,
+    createdAt: node.createdAt,
+    ...(node.author?.handle === undefined ? {} : { author: node.author.handle }),
+  };
+}
+
+/**
+ * A post's mark: its lead attachment's still — a picture's own bytes, a
+ * clip's cover — and null for a text post or one whose gallery is veiled
+ * or removed, which draws the text tile rather than what the veil hides.
+ */
+function coverOf(node: ReferenceTargetNode): string | null {
+  if (node.attachmentsStatus !== undefined && node.attachmentsStatus !== "NORMAL") return null;
+  const lead = node.attachments?.[0];
+  if (lead === undefined) return null;
+  if (lead.mimeType?.startsWith("video/")) return lead.coverMedia?.url ?? null;
+  return lead.url;
 }
 
 /**
@@ -130,6 +165,8 @@ export function targetView(
         kind: "Post",
         label: `${attribution(node.author?.handle)}${text}`,
         href: node.id === undefined ? null : `/posts/${node.id}`,
+        ...pickerFields(node, text),
+        ...(node.attachments === undefined ? {} : { cover: coverOf(node) }),
       };
     }
     case "Comment": {
@@ -138,6 +175,7 @@ export function targetView(
         kind: "Comment",
         label: `${attribution(node.author?.handle)}${snippet(node.content?.value)}`,
         href: post === null ? null : `/posts/${post}`,
+        ...pickerFields(node, snippet(node.content?.value)),
       };
     }
   }

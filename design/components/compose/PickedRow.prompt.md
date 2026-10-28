@@ -2,13 +2,15 @@ Use `PickedRow` wherever a composer surface summarizes the picked pictures — t
 
 ```jsx
 <PickedRow
-  items={[{ src: a, cover: true }, { src: b, progress: 0.65 }, { src: c, failed: true }]}
+  items={[{ src: a }, { src: b, progress: 0.65 }, { src: c, failed: true }]}
   caption="3 pictures — the body"
   onManage={openShowAll}
 />
 <DescribeCounter described={1} total={3} onDescribe={openShowAll} />
 <DescribeCounter subject="video" described={0} total={1} onDescribe={openDescribe} />
 ```
+
+**The first picture wears `Cover`**, as it does in the tray and in Show all — the row badges it by default; pass `cover: false` only where a set has no cover (seam 245, ask 13 F).
 
 **The row carries no "Crop" or "Edit" links** (2026-08-31: "none"). Managing the set is the Show all sheet's job, reached by tapping the row; re-cropping is the crop step's job, reached with Back — the wizard is linear, and a second entrance to the same step is the two-menus pattern the system refuses. Do not add shortcut links back.
 
