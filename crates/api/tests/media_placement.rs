@@ -175,11 +175,16 @@ async fn only_a_landed_post_whose_current_version_carries_it_answers(pool: PgPoo
     assert_eq!(placement(&rig, Some(&token), &[picture]).await, json!(first));
     let second = landed_post(&rig, &token, &key, &[picture]).await;
 
+    let replacement = asset(&rig.pool, author, 2).await;
     let edit = rig
         .gql(
             Some(&token),
             PREPARE_POST_EDIT,
-            json!({ "input": { "id": first, "title": "Look", "content": "words now" } }),
+            json!({ "input": {
+                "id": first,
+                "title": "Look",
+                "attachments": [{ "mediaId": replacement, "displayOrder": 0 }],
+            }}),
         )
         .await;
     assert_eq!(edit["preparePostEdit"]["userErrors"], json!([]), "{edit}");
@@ -191,6 +196,11 @@ async fn only_a_landed_post_whose_current_version_carries_it_answers(pool: PgPoo
         placement(&rig, Some(&token), &[picture]).await,
         json!(second),
         "the edit took the picture out of the first post"
+    );
+    assert_eq!(
+        placement(&rig, Some(&token), &[replacement]).await,
+        json!(first),
+        "and the picture it put in answers with it"
     );
 }
 

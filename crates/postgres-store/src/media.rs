@@ -1078,13 +1078,13 @@ pub async fn first_own_placement(
              AND p.author_id = $1
              AND p.landed_epoch IS NOT NULL
              AND v.version_id = (
-                 SELECT cv.version_id FROM post_versions cv
-                 WHERE cv.post_id = p.id
-                 ORDER BY cv.pending DESC,
-                          cv.landed_epoch DESC NULLS LAST,
-                          cv.act_time DESC NULLS LAST,
-                          cv.position DESC NULLS LAST,
-                          cv.created_at DESC, cv.version_id DESC
+                 SELECT version_id FROM post_versions
+                 WHERE post_id = p.id
+                 ORDER BY pending DESC,
+                          landed_epoch DESC NULLS LAST,
+                          act_time DESC NULLS LAST,
+                          position DESC NULLS LAST,
+                          created_at DESC, version_id DESC
                  LIMIT 1
              )
            ORDER BY p.landed_epoch, p.act_time, p.position, p.id
