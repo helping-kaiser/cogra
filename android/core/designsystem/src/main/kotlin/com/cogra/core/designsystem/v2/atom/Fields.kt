@@ -18,9 +18,16 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
@@ -29,7 +36,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
@@ -186,6 +195,14 @@ fun CograTextField(
      * 12). Null is the field's own: one line or an area.
      */
     boxPadding: PaddingValues? = null,
+    /**
+     * Where a surface hands the field its opening focus (EditWords.md: "the
+     * body takes focus with its caret at the end AND the keyboard rises").
+     * A field given one keeps its caret at the END of whatever value arrives
+     * from outside — a read that lands after the field was drawn included —
+     * rather than at the start, where the text overload would leave it.
+     */
+    focusRequester: FocusRequester? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val reading = fieldCountReading(value, cap, used)
@@ -212,6 +229,7 @@ fun CograTextField(
                 monospace = monospace,
                 inputTag = inputTag,
                 boxPadding = boxPadding,
+                focusRequester = focusRequester,
                 modifier = boxModifier,
             )
         }
@@ -258,15 +276,34 @@ private fun FieldInput(
     monospace: Boolean,
     inputTag: String?,
     boxPadding: PaddingValues?,
+    focusRequester: FocusRequester?,
     modifier: Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
     val baseStyle = MaterialTheme.typography.bodyLarge.copy(
         color = if (enabled) colors.onSurface else colors.onSurface.copy(alpha = DISABLED),
     )
+    // THE SELECTION IS HELD HERE, exactly as Compose's own text overload of
+    // `BasicTextField` holds it internally (remembered, the text copied in
+    // from the caller, a change handed out only when the text moved) — with
+    // one difference: a field opens with its caret at the END of what it
+    // holds, not at the start, so a prefilled field focused on open lands
+    // where writing continues (EditWords.md: "the body takes focus with its
+    // caret at the end").
+    var held by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    val shown = held.copy(text = value)
+    SideEffect {
+        if (shown.selection != held.selection || shown.composition != held.composition) held = shown
+    }
+    var lastText by remember(value) { mutableStateOf(value) }
     BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
+        value = shown,
+        onValueChange = { next ->
+            held = next
+            val moved = lastText != next.text
+            lastText = next.text
+            if (moved) onValueChange(next.text)
+        },
         enabled = enabled,
         singleLine = singleLine,
         minLines = minLines,
@@ -281,6 +318,7 @@ private fun FieldInput(
         // `data-node="input"` is the input element, border included), so
         // the semantics and the tag lead the chain.
         modifier = modifier
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
             .semantics {
                 this.contentDescription = spoken
                 if (error != null) markError(error)

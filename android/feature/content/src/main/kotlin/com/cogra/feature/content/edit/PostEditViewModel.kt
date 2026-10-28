@@ -6,19 +6,21 @@ import com.cogra.core.designsystem.BackingValue
 import com.cogra.core.designsystem.attachmentLanding
 import com.cogra.core.designsystem.hundredth
 import com.cogra.core.designsystem.walkBackPick
-import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
-import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostBacking
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
+import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.content.isDescriptionTooLong
 import com.cogra.domain.content.isPostBodyTooLong
 import com.cogra.domain.content.isSensitiveReasonTooLong
 import com.cogra.domain.content.isTitleTooLong
+import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
@@ -41,11 +43,18 @@ import com.cogra.feature.content.SectionsEditor
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.editableRow
+import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.ComposeWizardState
+import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.RefusedPick
+import com.cogra.feature.content.wizard.UploadFailure
+import com.cogra.feature.content.wizard.ratio
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -60,7 +69,8 @@ import javax.inject.Inject
  * touched. THE GUARD IS THE ACTS BATCH ([recordStaged]), never a byte
  * comparison. THE BODY IS WORDS OR MEDIA: the last picture or the clip
  * leaving flips it to words, the field empty and the standing description
- * dropped with the pictures (K8.1/D4; design/readme.md:8179-8181).
+ * dropped with the pictures (K8.1/D4; design/readme.md:8179-8181); pictures
+ * taken into a words body replace its words (EditWords.md).
  */
 data class PostEditUiState(
     val postId: String? = null,
@@ -71,8 +81,20 @@ data class PostEditUiState(
     val body: String = "",
     /** The license as signed — shown, locked; an edit has nothing to change it to. */
     val license: LicenseChoice = LicenseChoice.PublicDomain,
-    /** The gallery the edit leaves standing, in its order; the first is the cover. */
-    val attachments: List<MediaAssetView> = emptyList(),
+    /** The gallery the edit leaves standing, in its order — the first is the cover — and its clip's new face. */
+    val gallery: EditGallery = EditGallery(),
+    /**
+     * THE POST'S ONE SHAPE (D17), which every picture the edit adds is cut
+     * to: read off the pictures the post was published with, so the crop the
+     * edit opens is locked to it (ComposeCrop.md). Null while the body holds
+     * no picture to read it from — a words post or a clip — and then the crop
+     * offers its chips and the first framing sets it.
+     */
+    val shape: DraftShape? = null,
+    /** Files the add control turned away, standing on the media row until dismissed (EditCompose.md). */
+    val refused: List<RefusedPick> = emptyList(),
+    /** A crop raised over the edit — pictures on their way in, or a face for the clip. */
+    val cropping: EditCrop? = null,
     val tagSection: TagSectionState = TagSectionState(),
     val referenceSection: ReferenceSectionState = ReferenceSectionState(),
     /** The author's own mark — never the OR a reader sees (round 4). */
@@ -107,8 +129,14 @@ data class PostEditUiState(
     val sensitiveOpen: Boolean = false,
     val actsOpen: Boolean = false,
     val pickedOpen: Boolean = false,
-    /** The picture whose describe sheet is up, by its place in [attachments]. */
+    /** The picture whose describe sheet is up, by its place in the gallery. */
     val describingIndex: Int? = null,
+    /**
+     * Sign the edit was pressed while the edit's uploads ran: the press is
+     * HELD, and signs the moment the last lands with no second press; a
+     * failed upload drops it (EditCompose.md; ComposeSealUploading.md).
+     */
+    val heldPress: Boolean = false,
     val submitting: Boolean = false,
     /** The signing has gone 5s unanswered — the slow line stands under the count. */
     val slow: Boolean = false,
@@ -125,10 +153,10 @@ data class PostEditUiState(
     val saved: Boolean = false,
 ) {
     /** Whether the body is media: the gallery holds anything. */
-    val mediaBody: Boolean get() = attachments.isNotEmpty()
+    val mediaBody: Boolean get() = !gallery.isEmpty
 
     /** Whether the body is one clip — `EditComposeVideo`'s anatomy. */
-    val clipBody: Boolean get() = attachments.size == 1 && attachments.first().isVideo
+    val clipBody: Boolean get() = gallery.clip != null
 
     /** The batch, every kind a row counted in the records it signs (`EditActs`). */
     val actRows: List<EditActRow>
@@ -164,9 +192,21 @@ data class PostEditUiState(
     val overCap: Boolean
         get() = titleTooLong || descriptionTooLong || bodyTooLong || sensitiveReasonTooLong
 
-    /** Inert, never hidden, at an empty batch (EditComposeUnchanged.md:5). */
+    /**
+     * The commit was pressed and has not answered — signing, or held at the
+     * upload gate. The 200ms label swap and the 5s slow line count from it,
+     * and the ways out refuse a press while it stands (EditCompose.md).
+     */
+    val pressed: Boolean get() = submitting || heldPress
+
+    /**
+     * Whether Sign the edit answers a press. Inert, never hidden, at an
+     * empty batch (EditComposeUnchanged.md:5); ENABLED while an upload runs —
+     * a press there is held — and disabled only while the gate shows its
+     * fault reading (EditCompose.md).
+     */
     val canSign: Boolean
-        get() = !loading && !submitting && signedActionCount > 0 && !overCap
+        get() = !loading && !pressed && signedActionCount > 0 && !overCap && gallery.uploadsFailed == 0
 
     val anySheetOpen: Boolean get() = sensitiveOpen || actsOpen || pickedOpen || describingIndex != null
 
@@ -195,6 +235,9 @@ data class PostEditUiState(
     companion object {
         /** How much of the words the acts card's Edit row names when there is no title. */
         const val RECORD_NAME_CHARS = 60
+
+        /** A post carries up to ten pictures (copy-voice, `+ Add pictures · 2 of 10`). */
+        const val MAX_PICTURES = ComposeWizardState.MAX_POST_ASSETS
     }
 }
 
@@ -206,6 +249,8 @@ class PostEditViewModel @Inject constructor(
     private val signer: WriteSigner,
     private val identity: IdentityStore,
     private val media: MediaRepository,
+    processor: MediaProcessor,
+    video: VideoProcessor,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PostEditUiState())
@@ -221,6 +266,16 @@ class PostEditViewModel @Inject constructor(
         withTags = { state, tags -> state.copy(tagSection = tags) },
         referencesOf = { it.referenceSection },
         withReferences = { state, refs -> state.copy(referenceSection = refs) },
+    )
+
+    private val uploads = EditMediaEditor(
+        scope = viewModelScope,
+        state = _state,
+        processor = processor,
+        media = media,
+        video = video,
+        galleryOf = { it.gallery },
+        withGallery = { state, gallery -> state.copy(gallery = gallery) },
     )
 
     /** Route entry: reads the post the edit opens on. */
@@ -269,7 +324,8 @@ class PostEditViewModel @Inject constructor(
                             description = post.description.value.orEmpty(),
                             body = post.content.value.orEmpty(),
                             license = post.license,
-                            attachments = post.attachments,
+                            gallery = EditGallery.of(post.attachments),
+                            shape = nearestDraftShape(post.attachments.firstOrNull { a -> !a.isVideo }?.aspectRatio),
                             sensitive = mark?.sensitive ?: false,
                             sensitiveReason = mark?.reason,
                             tagSection = TagSectionState(tags = tags, loaded = tags),
@@ -292,13 +348,17 @@ class PostEditViewModel @Inject constructor(
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 
     /**
-     * The back arrow or the X. True when the caller may leave now: the batch
-     * is empty, and nothing is kept or discarded. A batch holding an act
-     * raises `Discard the changes?` instead, and nothing is discarded
-     * unasked (EditCompose.md, DiscardConfirm.md).
+     * The back arrow or the X — the edit's, or a crop's raised over it. True
+     * when the caller may leave now: the batch is empty, and nothing is kept
+     * or discarded. A batch holding an act raises `Discard the changes?`
+     * instead, and nothing is discarded unasked (EditCompose.md,
+     * DiscardConfirm.md, CoverCrop.md). Refused while the signing holds the
+     * reader.
      */
     fun onLeaveRequested(): Boolean {
-        if (!_state.value.holdsAnAct) return true
+        val s = _state.value
+        if (s.pressed) return false
+        if (!s.holdsAnAct) return true
         _state.update { it.copy(confirmingDiscard = true) }
         return false
     }
@@ -325,6 +385,9 @@ class PostEditViewModel @Inject constructor(
     fun onSensitiveReasonChange(reason: String) = _state.update {
         it.copy(sensitiveReason = reason.ifBlank { null }, recordStaged = it.recordStaged || it.sensitive)
     }
+
+    /** `Not now` under the write rule's notice: the notice goes, the edit stands with the changes as they were. */
+    fun onWriteRuleNotNow() = _state.update { it.copy(writeRuleRefused = false) }
 
     // -- The backing (`EditPad`) --
 
@@ -368,40 +431,186 @@ class PostEditViewModel @Inject constructor(
 
     /** Moves the picture at [from] to [to]; the one now first is the cover. */
     fun onMovePicture(from: Int, to: Int) = _state.update {
-        val list = it.attachments
-        if (from == to || from !in list.indices || to !in list.indices) return@update it
-        val moved = list.toMutableList().apply { add(to, removeAt(from)) }
-        it.copy(attachments = moved, recordStaged = true)
+        val moved = it.gallery.moving(from, to)
+        if (moved == it.gallery) it else it.copy(gallery = moved, recordStaged = true)
     }
 
     /**
-     * A picture or the clip leaves the edit's batch. The LAST one leaving
-     * flips the body to words: the sheet closes onto the words edit, the
-     * field arrives empty, and the description goes with the pictures it
-     * stood beside — never refused (EditPicked.md, EditWords.md; K8.1/D4).
+     * A picture or the clip leaves the edit's batch, its upload with it. The
+     * LAST one leaving flips the body to words: the sheet closes onto the
+     * words edit, the field arrives empty, the description goes with the
+     * pictures it stood beside, and the post's shape with them — never
+     * refused (EditPicked.md, EditWords.md; K8.1/D4).
      */
-    fun onRemovePicture(index: Int) = _state.update {
-        if (index !in it.attachments.indices) return@update it
-        val left = it.attachments.filterIndexed { i, _ -> i != index }
-        val flipped = left.isEmpty()
-        it.copy(
-            attachments = left,
-            body = if (flipped) "" else it.body,
-            description = if (flipped) "" else it.description,
-            pickedOpen = it.pickedOpen && !flipped,
-            describingIndex = null,
-            recordStaged = true,
-        )
+    fun onRemovePicture(index: Int) {
+        val picture = _state.value.gallery.pictures.getOrNull(index) ?: return
+        uploads.cancel(picture.key)
+        _state.value.gallery.newCover?.takeIf { _state.value.gallery.clip?.key == picture.key }?.let {
+            uploads.cancel(it.uri)
+        }
+        _state.update {
+            val left = it.gallery.removing(picture.key)
+            val flipped = left.isEmpty
+            it.copy(
+                gallery = left,
+                body = if (flipped) "" else it.body,
+                description = if (flipped) "" else it.description,
+                shape = if (flipped) null else it.shape,
+                pickedOpen = it.pickedOpen && !flipped,
+                describingIndex = null,
+                recordStaged = true,
+            )
+        }
     }
 
     fun onDescribePicture(index: Int) = _state.update { it.copy(describingIndex = index) }
 
     fun onAltTextChange(index: Int, text: String) = _state.update {
-        if (index !in it.attachments.indices) return@update it
-        val described = it.attachments.mapIndexed { i, asset ->
-            if (i == index) asset.copy(altText = text.ifBlank { null }) else asset
+        val key = it.gallery.pictures.getOrNull(index)?.key ?: return@update it
+        it.copy(gallery = it.gallery.withAltText(key, text), recordStaged = true)
+    }
+
+    // -- The add paths (`+ Add pictures · N of 10`, `+ Add pictures or a video`) --
+
+    /**
+     * What the device's own picker handed back — NEVER a pick stage
+     * (EditCompose.md). The batch is screened file by file against the body
+     * it would join — the cap of ten, the formats nothing here reads, a clip
+     * the edit cannot take yet — and what is refused says why on the media
+     * row. What is taken passes the crop: locked to the post's one shape, or,
+     * on a words post, with the chips, the first framing setting the shape.
+     */
+    fun onAddPictures(uris: List<String>) {
+        if (uris.isEmpty()) return
+        viewModelScope.launch {
+            val screened = uploads.screen(
+                uris = uris,
+                cap = PostEditUiState.MAX_PICTURES,
+                overCap = UploadFailure.POST_PICTURE_COUNT,
+                // Only the words edit's `+ Add pictures or a video` can bring a clip back.
+                mayHoldVideo = !_state.value.mediaBody,
+            )
+            _state.update { st ->
+                st.copy(
+                    refused = st.refused + screened.refused,
+                    cropping = screened.accepted.takeIf { it.isNotEmpty() }?.let { picked ->
+                        EditCrop.Pictures(
+                            picked = picked,
+                            shape = st.shape ?: DraftShape.Tall,
+                            locked = st.shape != null,
+                        )
+                    } ?: st.cropping,
+                )
+            }
         }
-        it.copy(attachments = described, recordStaged = true)
+    }
+
+    /** `Remove it` on a refused file: its line leaves the row. */
+    fun onDismissRefusal(index: Int) = _state.update {
+        it.copy(refused = it.refused.filterIndexed { i, _ -> i != index })
+    }
+
+    /** The filmstrip: the crop moves to another of the pictures on their way in. */
+    fun onFrameAsset(index: Int) = onPicturesCrop { it.copy(framingIndex = index) }
+
+    /** A words post's crop sets the post's shape with its chips. */
+    fun onCropShapeChange(shape: DraftShape) = onPicturesCrop {
+        if (it.locked) it else it.copy(shape = shape, crops = emptyMap())
+    }
+
+    /** The framings, handed up as they move, so Next commits what the author last saw. */
+    fun onCropsChanged(crops: Map<String, CropSpec>) = onPicturesCrop { it.copy(crops = crops) }
+
+    private fun onPicturesCrop(block: (EditCrop.Pictures) -> EditCrop.Pictures) = _state.update { st ->
+        val crop = st.cropping as? EditCrop.Pictures ?: return@update st
+        st.copy(cropping = block(crop))
+    }
+
+    /** The crop's back arrow (and the system's Back): the edit comes back as it was left, the picture unused. */
+    fun onCropBack() = _state.update { it.copy(cropping = null) }
+
+    /**
+     * The crop's Next: the edit comes back with the pictures on its row, cut
+     * to the post's shape, and their cropped exports start uploading at once
+     * (ComposeCrop.md). Pictures taken into a words body replace its words
+     * (EditWords.md: "the words they replace are gone from the body").
+     */
+    fun onCropDone() {
+        val crop = _state.value.cropping as? EditCrop.Pictures ?: return
+        val framings = crop.picked.associate { asset ->
+            asset.uri to (crop.crops[asset.uri] ?: CropSpec(targetRatio = crop.shape.ratio()))
+        }
+        _state.update { st ->
+            val wasWords = !st.mediaBody
+            st.copy(
+                gallery = st.gallery.adding(crop.picked, PostEditUiState.MAX_PICTURES, framings),
+                body = if (wasWords) "" else st.body,
+                shape = st.shape ?: crop.shape,
+                cropping = null,
+                recordStaged = true,
+            )
+        }
+        crop.picked.forEach { uploads.upload(it.uri) }
+    }
+
+    // -- The clip's cover (`EditComposeVideo`, `CoverCrop`) --
+
+    /**
+     * `Add a cover` / `Change the cover`: the device's own picker handed back
+     * a picture — NEVER the clip's frames — and it passes the cover's crop,
+     * locked to the clip's own shape, before it lands (EditComposeVideo.md).
+     */
+    fun onPickCover(uri: String) = _state.update { st ->
+        val clip = st.gallery.clip ?: return@update st
+        st.copy(cropping = EditCrop.Cover(PickedAsset(uri), ratio = clip.asset.aspectRatio))
+    }
+
+    fun onCoverCropChanged(crop: CropSpec) = _state.update { st ->
+        val cover = st.cropping as? EditCrop.Cover ?: return@update st
+        st.copy(cropping = cover.copy(crop = crop))
+    }
+
+    /**
+     * The cover's crop Next: the cover is set, the cover row that asked for
+     * it comes back, and only the cropped export leaves the device
+     * (CoverCrop.md). A face set is a change to the record — the clip's
+     * placement names it at the signing.
+     */
+    fun onCoverCropDone() {
+        val crop = _state.value.cropping as? EditCrop.Cover ?: return
+        _state.value.gallery.newCover?.let { uploads.cancel(it.uri) }
+        val spec = crop.crop ?: CropSpec(targetRatio = crop.ratio)
+        _state.update {
+            it.copy(gallery = it.gallery.withNewCover(crop.asset, spec), cropping = null, recordStaged = true)
+        }
+        uploads.upload(crop.asset.uri)
+    }
+
+    /**
+     * `Remove it` under the cover row: the new face leaves the batch and the
+     * field reads as it stood before the edit. Taking the face back leaves
+     * the record as staged as it was — the guard is the batch, never a byte
+     * comparison.
+     */
+    fun onRemoveCover() {
+        _state.value.gallery.newCover?.let { uploads.cancel(it.uri) }
+        _state.update { it.copy(gallery = it.gallery.withNewCover(null)) }
+    }
+
+    // -- The uploads' faults --
+
+    /** `Retry`, under the row or in the gate: every failed upload tries again — and never signs on its own. */
+    fun onRetryUploads() = uploads.retryFailed()
+
+    /** `Remove it` / `Remove them` under the picked row: every failed picture leaves the batch. */
+    fun onRemoveFailed() {
+        val failed = _state.value.gallery.pictures.filter {
+            it is EditPicture.Added && it.asset.upload is AssetUpload.Failed
+        }
+        failed.forEach { picture ->
+            val index = _state.value.gallery.pictures.indexOfFirst { it.key == picture.key }
+            if (index >= 0) onRemovePicture(index)
+        }
     }
 
     // -- Tags and citations: their own acts, beside the record --
@@ -451,16 +660,26 @@ class PostEditViewModel @Inject constructor(
     /**
      * Sign the edit. Sign is the confirmation: the count is said on the foot
      * and in the acts sheet, and no dialog asks again (EditActs.jsx). A press
-     * while the signing is out is refused.
+     * while the signing is out — or held — is refused.
+     *
+     * NOTHING SIGNS BEFORE THE LAST BYTE LANDS (EditCompose.md): a press
+     * while the edit's uploads run is HELD, and signs the moment the last
+     * one lands with no second press; an upload that fails drops it, and
+     * nothing signs until Sign the edit is pressed again.
      */
     fun onSign() {
-        val s = _state.value
-        if (!s.canSign) return
-        val postId = s.postId ?: return
-        beginSigning()
+        if (!_state.value.canSign) return
+        beginPress()
         viewModelScope.launch {
             // THE KEY-ABSENT SEAL: nothing is staged or signed without the key.
             if (identity.actorSeed() == null) return@launch end { it.copy(keyAbsent = true) }
+            val settled = _state.first { it.gallery.uploadsFailed > 0 || it.gallery.claims != null }
+            // A failure drops the held press: the gate takes its fault
+            // reading, the commit reads itself again, the ways out answer.
+            if (settled.gallery.uploadsFailed > 0) return@launch end { it }
+            _state.update { it.copy(heldPress = false, submitting = true) }
+            val s = _state.value
+            val postId = s.postId ?: return@launch end { it }
             val expected = expectation(s, postId) ?: return@launch
             val writes = prepareBatch(s, postId) ?: return@launch
             // THE COUNT THE SIGNING PREPARED IS THE ONE THE FOOT READ, or
@@ -487,10 +706,11 @@ class PostEditViewModel @Inject constructor(
         val postGraphId = graphIds.getValue(postId)
         // The record's payload is complete state: every placement it keeps
         // is held to the digests of the asset it names, read back by id,
-        // since no gallery read selects them (PayloadExpectation.kt).
+        // since no gallery read selects them; the bytes this edit uploaded
+        // are held to the digests this device computed (PayloadExpectation.kt).
         val record = if (s.recordStaged) {
             val sent = sentContent(s)
-            val ledger = when (val read = media.ledgerFor(sent.attachments, emptyMap())) {
+            val ledger = when (val read = media.ledgerFor(sent.attachments, s.gallery.ownKnown)) {
                 is Outcome.Success -> read.value
                 is Outcome.Refused -> return null.also { refuse(read.errors) }
                 is Outcome.Failed -> return null.also { failTransport() }
@@ -510,11 +730,11 @@ class PostEditViewModel @Inject constructor(
         )
     }
 
-    /** The press is held: errors clear, and past 5s the slow line stands. */
-    private fun beginSigning() {
+    /** The press: errors clear, the press holds, and past 5s the slow line stands. */
+    private fun beginPress() {
         _state.update {
             it.copy(
-                submitting = true,
+                heldPress = true,
                 slow = false,
                 countChanged = false,
                 refusal = null,
@@ -527,7 +747,7 @@ class PostEditViewModel @Inject constructor(
         slowTimer?.cancel()
         slowTimer = viewModelScope.launch {
             delay(SLOW_SIGNING_MS)
-            _state.update { it.copy(slow = it.submitting) }
+            _state.update { it.copy(slow = it.pressed) }
         }
     }
 
@@ -579,8 +799,9 @@ class PostEditViewModel @Inject constructor(
         // Words XOR media: a media post sends no words at all.
         content = s.body.takeIf { !s.mediaBody },
         // The whole gallery the edit leaves standing, in its order, each
-        // placement re-stating the cover it names.
-        attachments = s.attachments.map { AttachmentClaim(it.id, it.altText, it.cover?.id, it.coverTaken) },
+        // placement naming the cover it keeps or the face the edit set. The
+        // press is held until every upload landed, so every id exists.
+        attachments = s.gallery.claims.orEmpty(),
         sensitive = s.sensitive,
         sensitiveReason = wireReason(s.sensitive, s.sensitiveReason),
     )
@@ -628,10 +849,10 @@ class PostEditViewModel @Inject constructor(
         }
     }
 
-    /** The signing answered: the press is released and the slow line goes. */
+    /** The press answered, or dropped: it is released, and the slow line goes. */
     private fun end(block: (PostEditUiState) -> PostEditUiState) {
         slowTimer?.cancel()
-        _state.update { block(it.copy(submitting = false, slow = false)) }
+        _state.update { block(it.copy(submitting = false, heldPress = false, slow = false)) }
     }
 
     /**

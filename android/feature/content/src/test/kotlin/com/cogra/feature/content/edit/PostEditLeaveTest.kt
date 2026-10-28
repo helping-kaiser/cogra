@@ -66,6 +66,8 @@ class PostEditLeaveTest {
         WriteSigner(SealingWriteRepository(actor), identity),
         identity,
         FaithfulMediaRepository(),
+        ScriptedPictures(),
+        ScriptedClips(),
     )
 
     private var leaves = 0

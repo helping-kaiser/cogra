@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.ButtonSize
@@ -132,6 +133,8 @@ internal fun ColumnScope.WizardBody(
 @Composable
 internal fun WizardFooter(
     modifier: Modifier = Modifier,
+    /** The foot's rhythm: 8 on the wizard's stages, the edits' 14 (`EditComposeBody` `gap: 14`). */
+    gap: Dp = Space.x2,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
@@ -143,7 +146,7 @@ internal fun WizardFooter(
                 top = Space.x3,
                 bottom = Space.x4,
             ),
-        verticalArrangement = Arrangement.spacedBy(Space.x2),
+        verticalArrangement = Arrangement.spacedBy(gap),
         content = content,
     )
 }

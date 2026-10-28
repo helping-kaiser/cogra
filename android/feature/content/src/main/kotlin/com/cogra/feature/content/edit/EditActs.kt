@@ -53,6 +53,7 @@ import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.atom.SheetTitle
+import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.feature.content.R
 import kotlinx.coroutines.delay
@@ -78,6 +79,9 @@ fun rememberSlowAnswer(busy: Boolean): Boolean {
 
 /** The commit's label: `Sign the edit`, or `Signing the edit…` once the answer is slow. */
 fun signLabel(slow: Boolean): String = if (slow) "Signing the edit…" else "Sign the edit"
+
+/** The foot line's drawn height: one `label-small` line (`ActsFooter.jsx`). */
+private val FOOT_LINE = 16.dp
 
 /** Shown under the count once the signing has gone 5s unanswered. */
 const val EDIT_SLOW_LINE = "Still signing — the network is slow right now."
@@ -108,9 +112,15 @@ fun ActsFooter(count: Int, onOpen: () -> Unit, testTag: String, subline: String?
         } else {
             Row(
                 modifier = Modifier
-                    .defaultMinSize(minHeight = 48.dp)
-                    .clickable(role = Role.Button, onClick = onOpen)
-                    .testTag(testTag),
+                    // `ActsFooter.jsx`: the line keeps its drawn label-small height
+                    // and answers at 48dp past it (`cg-hit`), so the foot stands
+                    // 14 over the commit as drawn rather than 48dp tall.
+                    .hitTarget(
+                        interactive = Modifier
+                            .testTag(testTag)
+                            .clickable(role = Role.Button, onClick = onOpen),
+                        drawnHeight = FOOT_LINE,
+                    ),
                 horizontalArrangement = Arrangement.spacedBy(Space.x1, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
