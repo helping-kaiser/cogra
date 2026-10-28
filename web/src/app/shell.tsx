@@ -129,8 +129,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               : null;
   // The bar is drawn once, here, but its node belongs to the SCREEN it rides
   // (`design/designs/canonical/nodes.json` registers `feed.bottomBar`,
-  // `postDetail.bottomBar`, `profile.bottomBar`, `saved.bottomBar` and
-  // `history.bottomBar`), so the registered screens name it by route. Your
+  // `postDetail.bottomBar`, `profile.bottomBar`, `saved.bottomBar`,
+  // `history.bottomBar` and `wallet.bottomBar`), so the registered screens name it by route. Your
   // own profile and someone else's are one surface (`Profile`, `ProfileOther`: the `profile` prefix).
   const screen =
     pathname === "/feed"
@@ -150,7 +150,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 ? "history"
                 : pathname === "/notifications"
                   ? "notifications"
-                  : null;
+                  : pathname === "/wallet"
+                    ? "wallet"
+                    : null;
   // A drill-in — a post's detail or someone's profile — reads its origin off
   // the URL and keeps that root lit.
   // The score's trace is one too: it keeps lit the root its score was
