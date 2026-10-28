@@ -132,7 +132,10 @@ fun SearchBar(
     }
 }
 
-/** The trailing ×: 40dp of target pulled 8 into the pill's end padding, the 20dp close glyph, named for what it does. */
+/**
+ * The trailing ×: 40dp of target pulled 8 into the pill's end padding, the
+ * 20dp close glyph, named for what it does.
+ */
 @Composable
 private fun ClearControl(onClear: () -> Unit, node: DataNode?) {
     val clear = stringResource(R.string.search_bar_clear)
