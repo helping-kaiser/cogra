@@ -49,6 +49,8 @@ data object Feed
 data class ComposePost(
     val postId: String? = null,
     val referenceTargetId: String? = null,
+    /** A tag card's act: the composer opens with this tag already staged (History.md:63). */
+    val tag: String? = null,
 )
 
 /**
