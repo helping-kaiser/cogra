@@ -20,19 +20,23 @@
    is the rung this stacked sheet already stands on: a container inside a
    container of the same colour is two containers saying one thing. The rows
    carry their own 16px inset and the wrapper makes up the 8px to the sheet's
-   own 24px column, so the words line up with the title above them. */
+   own 24px column, so the words line up with the title above them.
+
+   REGISTERED under the `invites` prefix (seam 248): the chooser is
+   `expirySheet`, each row an `expiryOption` keyed by the length it prints. */
+export const NODE = "invites";
 export function Screen() {
   return (
     <>
       <InvitesBody />
       <NewInviteSheet />
 
-      <BottomSheet open stacked ariaLabel="Expires after">
-        <SheetTitle>Expires after</SheetTitle>
+      <BottomSheet open stacked ariaLabel="Expires after" node="expirySheet">
+        <SheetTitle node="title">Expires after</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", padding: "0 8px" }}>
-          <SettingsRow name="invite-expiry" selected={false} label="24 hours" />
-          <SettingsRow name="invite-expiry" selected label="7 days" />
-          <SettingsRow name="invite-expiry" selected={false} label="30 days" />
+          <SettingsRow name="invite-expiry" selected={false} label="24 hours" node="expiryOption" nodeKey="24-hours" />
+          <SettingsRow name="invite-expiry" selected label="7 days" node="expiryOption" nodeKey="7-days" />
+          <SettingsRow name="invite-expiry" selected={false} label="30 days" node="expiryOption" nodeKey="30-days" />
         </div>
       </BottomSheet>
     </>

@@ -48,12 +48,15 @@
    strongest is the one the reader is most likely to be looking for.
 
    THE COUNT ON EXPLORE'S DOOR IS THIS LIST'S LENGTH, five here and five rows
-   below: the subpage is the only place that number can be checked. */
+   below: the subpage is the only place that number can be checked.
 
+   REGISTERED under its own `yourTopics` prefix (seam 248), a subpage as the
+   tag page is: `header`, and one `heldTopic` per row, keyed by its name. */
+export const NODE = "yourTopics";
 export function Screen() {
   return (
     <>
-      <PageHeader title="Your topics" backHref="#" backLabel="Back to Explore" />
+      <PageHeader title="Your topics" backHref="#" backLabel="Back to Explore" node="header" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "4px 0 0" }}>
         {HELD_TOPICS.map((topic) => (
           <ReferenceRow
@@ -64,6 +67,8 @@ export function Screen() {
             pair={topic.pair}
             pending={topic.pending}
             onOpen={() => {}}
+            node="heldTopic"
+            nodeKey={topic.name.replace(/^#/, "")}
           />
         ))}
       </div>

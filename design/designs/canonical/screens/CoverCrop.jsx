@@ -25,18 +25,23 @@
    ends*). The board draws the post's entrance, `Leave — your draft is kept`;
    entered from a reply's video it reads `Leave — the reply is discarded`, and
    from a comment edit's or a post edit's `Leave — the edit is discarded` — the X of the flow
-   that opened the crop, asking first where that flow's X asks. */
+   that opened the crop, asking first where that flow's X asks.
+
+   REGISTERED under its own `coverCrop` prefix (seam 248): `header`, the
+   `viewport`, the `zoom` slider, the `howTo` line, the `shapeNote` and
+   `next` — the step every flow that crops a cover shares. */
+export const NODE = "coverCrop";
 export function Screen() {
   return (
     <>
-      <WizardHeader title="The cover" leaveLabel="Leave — your draft is kept" />
+      <WizardHeader title="The cover" leaveLabel="Leave — your draft is kept" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
-        <CropViewport src="gallery-market.jpg" shape="rect" height={192} scale={1.15} origin="50% 45%" />
-        <CropZoom scale={1.15} />
-        <QuietNote>Drag to move, pinch to zoom.</QuietNote>
-        <QuietNote>The cover takes the video's shape.</QuietNote>
+        <CropViewport src="gallery-market.jpg" shape="rect" height={192} scale={1.15} origin="50% 45%" node="viewport" />
+        <CropZoom scale={1.15} node="zoom" />
+        <QuietNote node="howTo">Drag to move, pinch to zoom.</QuietNote>
+        <QuietNote node="shapeNote">The cover takes the video's shape.</QuietNote>
         <div style={{ flex: 1 }} />
-        <Button style={{ width: "100%" }}>Next</Button>
+        <Button style={{ width: "100%" }} node="next">Next</Button>
       </div>
     </>
   );

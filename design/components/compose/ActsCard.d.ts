@@ -65,6 +65,8 @@ export interface ActsCardProps {
    * Pass the slow line as `note` with it.
    */
   noteTone?: "quiet" | "slow";
+  /** The data-node name its placer gives the card (design ⇄ impl seam 002; renders as attributes only). Given one, every row is an `actRow` keyed by its place, counted from 1, with `label`, `value` (an action row's `action`) and `count`, and the closing line `total` with its `note`. */
+  node?: string;
 }
 
 export declare function ActsCard(props: ActsCardProps): JSX.Element;

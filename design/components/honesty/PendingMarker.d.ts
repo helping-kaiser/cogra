@@ -22,6 +22,8 @@ export interface EditedMarkerProps {
    * first; nothing in this product stores or draws a diff.
    */
   onInspect?: () => void;
+  /** The data-node name its placer gives this marker (design ⇄ impl seam 002; renders as an attribute only). */
+  node?: string;
 }
 
 export declare function EditedMarker(props: EditedMarkerProps): JSX.Element;

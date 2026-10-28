@@ -16,15 +16,18 @@
    every kept pick still in it, never the key notice and never a pad: a kept
    pick signs only from the review's own seal, together with the rest (the
    feed's stance-face edge in `graph.json` carries the case). If the key goes
-   again, `PadPending` owns the anchor once more. */
+   again, `PadPending` owns the anchor once more.
+
+   REGISTERED under the `feed` prefix (seam 248), `PadPending`'s names. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
-        <PostCard {...ADA_POST} stancePendingPick={{ pDirected: 0.1, pInterest: 0.1 }} stancePendingReview />
+        <PostCard {...ADA_POST} stancePendingPick={{ pDirected: 0.1, pInterest: 0.1 }} stancePendingReview node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

@@ -262,6 +262,7 @@ export function MediaThumb({
           type="button"
           aria-label={removeLabel}
           onClick={onRemove}
+          data-node={node && "remove"}
           className="cg-state cg-focus cg-hit"
           style={{
             position: "absolute",
