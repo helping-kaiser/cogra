@@ -1289,6 +1289,15 @@ class ComposeWizardScreenTest {
         assertThat(law).contains("reads $UNREACHABLE_BODY with Keep adjusting filled and Set it anyway quiet")
     }
 
+    // ComposePick.md (round 22, ask 13 H): the one-video refusal is the law's words.
+    @Test
+    fun theOneVideoRefusalIsTheLaws() {
+        val law = java.io.File("../../../design/designs/canonical/behavior/ComposePick.md").readText()
+        val strings = java.io.File("src/main/res/values/strings.xml").readText()
+        assertThat(law).contains("each other video is refused with A post carries one video.")
+        assertThat(strings).contains("<string name=\"content_upload_post_one_video\">A post carries one video.</string>")
+    }
+
     // CW-27: the license sheet's "?" opens the same house explanation the
     // sensitive sheet's own "?" already opens through.
     //

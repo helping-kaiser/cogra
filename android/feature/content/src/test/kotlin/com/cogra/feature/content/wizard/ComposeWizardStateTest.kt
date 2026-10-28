@@ -558,6 +558,17 @@ class ComposeWizardStateTest {
         assertThat(refused.refused).containsExactly(RefusedPick("c", UploadFailure.POST_MIXED_BODY, isVideo = false))
     }
 
+    // ComposePick.md (round 22): a photos-app batch's first video is the body,
+    // and each other video is refused with `A post carries one video.`
+    @Test
+    fun aSecondClipIsRefusedAsOneVideoAndTheFirstStays() {
+        val batch = ComposeWizardState(mode = BodyMode.Media)
+            .togglePick("first", durationMs = 4_000)
+            .togglePick("second", durationMs = 5_000)
+        assertThat(batch.picked.map { it.uri }).containsExactly("first")
+        assertThat(batch.refused).containsExactly(RefusedPick("second", UploadFailure.POST_ONE_VIDEO, isVideo = true))
+    }
+
     @Test
     fun aClipIntoAnEmptyTrayIsTheWholeBody() {
         val staged = ComposeWizardState(mode = BodyMode.Media).togglePick("clip", durationMs = 4_000)

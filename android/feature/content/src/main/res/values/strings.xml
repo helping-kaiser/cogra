@@ -293,6 +293,7 @@
     <string name="content_upload_transport">The upload could not reach the server.</string>
     <string name="content_upload_post_picture_count">That\'s more than a post carries — up to ten pictures.</string>
     <string name="content_upload_post_mixed_body">A post carries pictures or one video, not both.</string>
+    <string name="content_upload_post_one_video">A post carries one video.</string>
     <string name="content_upload_comment_picture_count">That\'s more than a comment carries — up to four pictures.</string>
     <!-- Undrawn (a deviation candidate filed to design): the edits take no new clip yet, said as the web says it (pick.ts VIDEO_AT_EDIT). -->
     <string name="content_upload_video_at_edit">A video can\'t be added at an edit yet — post it on its own.</string>
