@@ -1976,3 +1976,114 @@ async fn a_withdrawal_of_an_already_netted_bundle_refuses_at_target(pool: PgPool
     assert_eq!(errors[0]["code"], json!("BAD_INPUT"));
     assert_eq!(errors[0]["field"], json!(["target"]));
 }
+
+/// The finder with the picker's filter bound: the same candidate shape,
+/// narrowed by `kinds`.
+const REFERENCE_CANDIDATES_OF_KINDS: &str = r#"query($query: String!, $kinds: [NodeKind!]) {
+  referenceCandidates(query: $query, kinds: $kinds) {
+    targetId
+    target { __typename }
+  }
+}"#;
+
+/// What the finder offers for `query` under `kinds`: each candidate's
+/// type name and id, sorted so the comparison is order-free. A transport
+/// error fails the test — no filter may turn a miss into one.
+async fn candidates_of(
+    rig: &Citer,
+    token: &str,
+    query: &str,
+    kinds: Value,
+) -> Vec<(String, String)> {
+    let answer = rig
+        .gql_raw(
+            Some(token),
+            REFERENCE_CANDIDATES_OF_KINDS,
+            json!({ "query": query, "kinds": kinds }),
+        )
+        .await;
+    assert!(
+        answer.get("errors").is_none(),
+        "for {query} {kinds}: {answer}"
+    );
+    let mut found: Vec<(String, String)> = answer["data"]["referenceCandidates"]
+        .as_array()
+        .expect("candidates")
+        .iter()
+        .map(|c| {
+            (
+                c["target"]["__typename"]
+                    .as_str()
+                    .expect("type")
+                    .to_string(),
+                c["targetId"].as_str().expect("id").to_string(),
+            )
+        })
+        .collect();
+    found.sort();
+    found
+}
+
+/// `kinds` narrows the finder by the search law — kinds subtract: the
+/// picker's filter drops the kinds it leaves out and keeps the rest's
+/// matching, by words and by id alike; null or empty narrows nothing; and
+/// a kind the finder never offers by words reads empty, never an error.
+///
+/// The finder's kinds argument subtracts kinds by the search law, by words and by id, and a kind it never offers reads empty.
+/// ´claim:references:the-finder-narrows-by-kind´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_finder_narrows_its_candidates_by_kind(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (alice, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let post = rig.plain_post(&token, &key, "alice notes").await;
+    let alice = alice.to_string();
+    let user = ("User".to_string(), alice.clone());
+    let the_post = ("Post".to_string(), post.clone());
+    let none: Vec<(String, String)> = Vec::new();
+
+    for unnarrowed in [Value::Null, json!([])] {
+        assert_eq!(
+            candidates_of(&rig, &token, "alice", unnarrowed.clone()).await,
+            [the_post.clone(), user.clone()],
+            "for {unnarrowed}"
+        );
+    }
+    assert_eq!(
+        candidates_of(&rig, &token, "alice", json!(["USER"])).await,
+        std::slice::from_ref(&user)
+    );
+    assert_eq!(
+        candidates_of(&rig, &token, "alice", json!(["POST"])).await,
+        std::slice::from_ref(&the_post)
+    );
+    assert_eq!(
+        candidates_of(&rig, &token, "alice", json!(["POST", "COMMENT"])).await,
+        std::slice::from_ref(&the_post),
+        "a comment is never offered by its words"
+    );
+    for nothing in [json!(["COMMENT"]), json!(["HASHTAG"]), json!(["ITEM"])] {
+        assert_eq!(
+            candidates_of(&rig, &token, "alice", nothing.clone()).await,
+            none,
+            "for {nothing}"
+        );
+    }
+    assert_eq!(
+        candidates_of(&rig, &token, "@alice", json!(["POST"])).await,
+        none,
+        "the person cue offers people alone, and the filter drops them"
+    );
+    assert_eq!(
+        candidates_of(&rig, &token, &post, json!(["USER"])).await,
+        none
+    );
+    assert_eq!(
+        candidates_of(&rig, &token, &post, json!(["POST"])).await,
+        [the_post]
+    );
+    assert_eq!(
+        candidates_of(&rig, &token, &alice, json!(["USER", "POST"])).await,
+        [user]
+    );
+}

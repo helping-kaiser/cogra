@@ -2568,8 +2568,15 @@ type Query {
    #-typed query finds nothing and a UUID naming a Type yields no
    candidate. And a keyless account fronts no Profile on the graph,
    so it resolves nowhere for the write path and must not be
-   offered here either."
-  referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
+   offered here either.
+
+   `kinds` narrows the candidates by the search law — kinds
+   subtract (Search): null or empty narrows nothing; otherwise only
+   candidates of a listed kind are offered, by words and by id
+   alike, and a kind the finder never offers — a topic, or a comment
+   by its words, which it carries none of — reads empty, never an
+   error. The citation picker's filter rides it."
+  referenceCandidates(query: String!, kinds: [NodeKind!], limit: Int): [ReferenceCandidate!]!
 
   "One staged write by id — the confirm-side observation point of
    the write path. Field-level: resolves only for the staging
@@ -2584,6 +2591,22 @@ type Query {
    manifest witnesses the upload digest of the id attached. Null for
    an unknown id, another account's asset, and without a session."
   mediaAttachment(id: UUID!): MediaAttachment
+
+  "The viewer's earliest published post whose gallery carries any of
+   the named uploads — the composer's already-published marker,
+   which names the origin, so a later repost never repoints it. A
+   named id resolves the way an attachment does, through a merge to
+   the asset it became, and the asset matches by its id or its
+   rendition digest: a re-picked clip whose re-encode merged into a
+   held asset finds the post carrying that asset. Only the viewer's
+   own ids name anything and only the viewer's own posts answer, so
+   another author's placement of identical bytes never does.
+   Published is landed; carried is the post's current version, so an
+   edit that took the picture out takes the post off the answer;
+   earliest is the published order. Null when nothing matches, for
+   an empty list, and without a session. More ids than a post's
+   gallery holds is BAD_INPUT."
+  ownPublishedPlacement(mediaIds: [UUID!]!): Post
 
   "The host key the device verifies seals against before approving
    (base64) — realization transparency: every host-added field of a

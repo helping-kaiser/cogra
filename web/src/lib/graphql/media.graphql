@@ -119,10 +119,8 @@ mutation AbortMediaUpload($uploadId: UUID!) {
 # holds. A draft never reaches the mirror and another author's post is never
 # in this chronicle, so both draw nothing by construction.
 #
-# A CONTRACT GAP, NAMED: no read answers "media → the author's own published
-# post" directly, so this pages the chronicle. The minimal read that would
-# replace it is a placement field on the asset (the PR's deviation
-# candidates spell it out).
+# OwnPublishedPlacement below answers the same question in one read; this
+# walk stands until the composer adopts it.
 query OwnPublishedMedia($author: UUID!, $first: Int!, $after: String) {
   records(author: $author, family: PUBLISH, first: $first, after: $after) {
     edges {
@@ -152,5 +150,18 @@ query OwnPublishedMedia($author: UUID!, $first: Int!, $after: String) {
 query ViewerId {
   me {
     id
+  }
+}
+
+# The composer's already-published marker (copy-voice *The already-published
+# marker*; api-spec.md `Query.ownPublishedPlacement`): the earliest of the
+# viewer's own published posts whose gallery carries any of the stage's
+# media — matched by the asset each upload resolved to, so a re-picked clip
+# whose re-encode merged into a held asset still finds its post. The line
+# names the post's date and opens it.
+query OwnPublishedPlacement($mediaIds: [UUID!]!) {
+  ownPublishedPlacement(mediaIds: $mediaIds) {
+    id
+    createdAt
   }
 }
