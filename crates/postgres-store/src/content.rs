@@ -549,6 +549,31 @@ pub async fn discard_pending_many(
     )
     .execute(&mut **tx)
     .await?;
+    // A pending node a removal took down carries one row that is not
+    // pending — its head tombstone — and it goes with the node: on the
+    // graph nothing ever existed, so there is nothing left to mark.
+    sqlx::query!(
+        "DELETE FROM post_versions v
+         USING posts p
+         WHERE v.post_id = p.id AND p.landed_epoch IS NULL
+           AND (p.id, p.created_at)
+               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))",
+        nodes,
+        instants,
+    )
+    .execute(&mut **tx)
+    .await?;
+    sqlx::query!(
+        "DELETE FROM comment_versions v
+         USING comments c
+         WHERE v.comment_id = c.id AND c.landed_epoch IS NULL
+           AND (c.id, c.created_at)
+               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))",
+        nodes,
+        instants,
+    )
+    .execute(&mut **tx)
+    .await?;
     let mut removed = sqlx::query_scalar!(
         "DELETE FROM posts
          WHERE (id, created_at)
