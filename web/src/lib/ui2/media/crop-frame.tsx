@@ -61,6 +61,19 @@ import { AVATAR_RATIO, cssRatio, POST_SHAPES, type PostShape } from "./aspect";
 // profile's avatar is its own fixed frame and is not a post shape (D13).
 export type CropFrameShape = PostShape | "avatar";
 
+/**
+ * A shape no chip offers: a cover's, locked to the clip it fronts — the clip's
+ * own ratio in a post, the comment pager's square in a comment (CoverCrop.md).
+ * Given as the ratio itself, since a clip's is any ratio. Its frame is
+ * `CropViewport`'s square, the cut a window inside it with the rest darkened —
+ * the avatar's construction, which the cover's crop is (CoverCrop.jsx).
+ */
+export type LockedRatio = { readonly ratio: number };
+
+function ratioOf(shape: CropFrameShape | LockedRatio): number {
+  return typeof shape === "string" ? SHAPE_RATIO[shape] : shape.ratio;
+}
+
 const SHAPE_RATIO: Record<CropFrameShape, number> = {
   tall: POST_SHAPES.tall.ratio,
   square: POST_SHAPES.square.ratio,
@@ -88,7 +101,7 @@ export function CropFrame({
   testId = "crop-frame",
 }: {
   src: string;
-  shape: CropFrameShape;
+  shape: CropFrameShape | LockedRatio;
   crop?: Crop;
   onChange: (next: Crop) => void;
   alt?: string;
@@ -190,14 +203,14 @@ export function CropFrame({
           is what AvatarCrop boards. */}
       <div
         data-testid={testId}
-        style={{ aspectRatio: cssRatio(SHAPE_RATIO[shape]) }}
+        style={{ aspectRatio: cssRatio(typeof shape === "string" ? SHAPE_RATIO[shape] : 1) }}
         className="relative -mx-6 overflow-hidden bg-surface-container-high"
         onKeyDown={onKeyDown}
         onKeyDownCapture={onArrow}
       >
         <Cropper
           image={src}
-          aspect={SHAPE_RATIO[shape]}
+          aspect={ratioOf(shape)}
           crop={{ x: crop.x, y: crop.y }}
           zoom={clampZoom(crop.zoom)}
           minZoom={MIN_ZOOM}
@@ -206,8 +219,10 @@ export function CropFrame({
           // The whole picture, always. This one prop is the first of the two
           // reported defects; it is not a taste setting.
           objectFit="contain"
-          // The rule-of-thirds guides the canvas draws are the library's own.
-          showGrid
+          // The rule-of-thirds guides the canvas draws are the library's own. A
+          // locked window draws none: `CropViewport` is a window and a mask, the
+          // guides being a composition aid for the shape an author chooses.
+          showGrid={typeof shape === "string"}
           keyboardStep={KEYBOARD_STEP}
           onCropChange={onCropChange}
           onZoomChange={onZoomChange}

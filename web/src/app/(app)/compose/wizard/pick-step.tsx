@@ -21,9 +21,8 @@ import { InlineAction } from "@/lib/ui2/inline-action";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { LABEL_SMALL_PLAIN } from "@/lib/ui2/plain-type";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
-import { UploadErrorLine } from "@/lib/ui2/compose/upload-notice";
+import { RefusedFileRow } from "@/lib/ui2/compose/refused-file";
 import { countReading, FieldCount } from "@/lib/ui2/text-field";
-import { useObjectUrl } from "@/lib/compose/previews";
 import type { PickRefusal } from "@/lib/compose/pick";
 import type { PickedAsset } from "@/lib/compose/wizard";
 import { BODY_MAX_CHARS, kindOf } from "@/lib/compose/wizard";
@@ -453,38 +452,5 @@ function MediaBody({
         <NextAction disabled={blocked} onNext={onNext} className="pt-4" />
       </div>
     </>
-  );
-}
-
-/**
- * One refused file, as `RefusedFile` draws it (design/components/compose):
- * the failed tile beside the words, `gap: var(--space-2)`.
- *
- * A picture's own bytes preview the tile. A video or anything else gets
- * none — the same "omit `src` for a file nothing can read: an empty tile is
- * the honest picture" rule the design system states, since a browser has no
- * cheap way to pull a poster frame from a refused clip's bytes the way an
- * `<img>` shows a picture's.
- */
-function RefusedFileRow({
-  refusal,
-  onDismiss,
-}: {
-  refusal: PickRefusal;
-  onDismiss: () => void;
-}) {
-  const previewable = refusal.file.type.startsWith("image/");
-  const src = useObjectUrl(previewable ? refusal.file : null);
-  return (
-    <div className="flex items-center gap-2">
-      <MediaThumb src={src} failed testId={`wizard-refusal-${refusal.id}-thumb`} />
-      <div className="min-w-0 flex-1">
-        <UploadErrorLine
-          message={refusal.reason}
-          onRemove={onDismiss}
-          testId={`wizard-refusal-${refusal.id}`}
-        />
-      </div>
-    </div>
   );
 }

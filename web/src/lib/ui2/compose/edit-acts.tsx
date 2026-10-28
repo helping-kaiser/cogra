@@ -44,7 +44,7 @@ export function ActsFooter({
     count === 0 ? (
       <span
         data-testid={testId}
-        className="flex items-center justify-center text-label-small text-on-surface-variant"
+        className="flex items-center justify-center text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)] text-on-surface-variant"
       >
         {line}
       </span>
@@ -53,7 +53,7 @@ export function ActsFooter({
         type="button"
         data-testid={testId}
         onClick={onOpen}
-        className="cg-state cg-focus cg-hit flex items-center justify-center gap-1 border-0 bg-transparent p-0 text-label-small text-on-surface-variant"
+        className="cg-state cg-focus cg-hit flex items-center justify-center gap-1 border-0 bg-transparent p-0 text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)] text-on-surface-variant"
       >
         {line}
         <ChevronGlyph />
@@ -66,7 +66,7 @@ export function ActsFooter({
         <span
           role="status"
           data-testid={`${testId}-subline`}
-          className="text-center text-label-small text-tertiary"
+          className="text-center text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)] text-tertiary"
         >
           {subline}
         </span>

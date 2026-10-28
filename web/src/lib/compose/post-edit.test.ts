@@ -3,18 +3,20 @@
 
 import { describe, expect, it } from "vitest";
 
-import type { EditGallery } from "./comment-edit";
+import type { EditGallery, KeptPicture } from "./comment-edit";
+import type { PickedAsset } from "./wizard";
 import {
   isClipBody,
   isMediaBody,
   postEditInput,
   postEditReducer,
   postEditProblem,
+  uploadRatio,
   type PostEditAction,
   type PostEditState,
 } from "./post-edit";
 
-function kept(id: string, altText = ""): EditGallery[number] {
+function kept(id: string, altText = "", extra: Partial<KeptPicture> = {}): EditGallery[number] {
   return {
     kind: "kept",
     mediaId: id,
@@ -22,6 +24,11 @@ function kept(id: string, altText = ""): EditGallery[number] {
     altText,
     coverMediaId: null,
     coverTaken: null,
+    video: false,
+    ratio: 0.8,
+    coverUrl: null,
+    newCover: null,
+    ...extra,
   };
 }
 
@@ -34,6 +41,7 @@ function base(overrides: Partial<PostEditState> = {}): PostEditState {
     words: "Three weekends at low tide.",
     gallery: [],
     durations: {},
+    shape: null,
     tags: [],
     references: [],
     sensitive: false,
@@ -51,6 +59,7 @@ const media = () =>
     words: "",
     description: "Rubbings against the salt crust.",
     gallery: [kept("m1"), kept("m2")],
+    shape: "tall",
   });
 
 const run = (state: PostEditState, ...actions: PostEditAction[]) =>
@@ -123,7 +132,7 @@ describe("the post edit", () => {
   });
 
   it("reads one clip as the video body", () => {
-    expect(isClipBody(base({ words: "", gallery: [kept("v1")], durations: { v1: 4000 } }))).toBe(true);
+    expect(isClipBody(base({ words: "", gallery: [kept("v1", "", { video: true })], durations: { v1: 4000 } }))).toBe(true);
     expect(isClipBody(media())).toBe(false);
   });
 
@@ -178,5 +187,100 @@ describe("the post edit", () => {
   it("holds the sign on a words body past its cap", () => {
     expect(postEditProblem(base({ words: "x".repeat(5001) }))).not.toBeNull();
     expect(postEditProblem(base())).toBeNull();
+  });
+});
+
+/** A picture back from the crop, framed, its upload not yet started. */
+function framed(id: string, upload: PickedAsset["upload"] = { kind: "waiting" }): PickedAsset {
+  return {
+    id,
+    file: new Blob(["x"], { type: "image/jpeg" }),
+    crop: { x: 0, y: 0, zoom: 1, area: null, areaPercent: null },
+    altText: "",
+    upload,
+  };
+}
+
+const clipPost = (extra: Partial<KeptPicture> = {}) =>
+  base({
+    words: "",
+    gallery: [kept("v1", "", { video: true, ratio: 9 / 16, coverMediaId: "c1", coverTaken: false, ...extra })],
+    durations: { v1: 18_000 },
+  });
+
+// EditCompose.md: "+ Add pictures · 2 of 10 … they pass the crop locked to the
+// post's one shape AND the picked row grows by them".
+describe("the edit's add paths", () => {
+  it("grows the picked row by what the crop hands back, staging the record", () => {
+    const grown = run(media(), { type: "addPictures", assets: [framed("a1")], shape: "tall" });
+    expect(grown.gallery).toHaveLength(3);
+    expect(grown.recordStaged).toBe(true);
+    // The shape stays the post's: the crop was locked to it.
+    expect(grown.shape).toBe("tall");
+  });
+
+  it("never grows the body past ten pictures", () => {
+    const nine = base({ words: "", shape: "square", gallery: Array.from({ length: 9 }, (_, i) => kept(`m${i}`)) });
+    const grown = run(nine, { type: "addPictures", assets: [framed("a1"), framed("a2")], shape: "square" });
+    expect(grown.gallery).toHaveLength(10);
+  });
+
+  // EditWords.md: "they pass the crop AND the words they replace are gone from the body".
+  it("lets pictures replace a words body, the shape the chips chose", () => {
+    const pictures = run(base(), { type: "addPictures", assets: [framed("a1")], shape: "wide" });
+    expect(isMediaBody(pictures)).toBe(true);
+    expect(pictures.words).toBe("");
+    expect(pictures.shape).toBe("wide");
+  });
+
+  it("forgets the shape when the last picture leaves, so words can choose again", () => {
+    const words = run(media(), { type: "removePicture", id: "m1" }, { type: "removePicture", id: "m2" });
+    expect(words.shape).toBeNull();
+  });
+
+  it("holds the gallery back until an added picture has landed", () => {
+    const grown = run(media(), { type: "addPictures", assets: [framed("a1")], shape: "tall" });
+    const landed = run(grown, { type: "upload", id: "a1", upload: { kind: "done", mediaId: "m9" } });
+    expect(postEditInput(landed).attachments.map((entry) => entry.mediaId)).toEqual(["m1", "m2", "m9"]);
+  });
+
+  it("an upload's progress stages nothing of its own", () => {
+    const grown = { ...run(media(), { type: "addPictures", assets: [framed("a1")], shape: "tall" }), recordStaged: false };
+    expect(run(grown, { type: "upload", id: "a1", upload: { kind: "uploading" } }).recordStaged).toBe(false);
+  });
+
+  it("cuts an added picture at the post's shape", () => {
+    expect(uploadRatio(media(), "a1")).toBeCloseTo(0.8);
+  });
+});
+
+// EditComposeVideo.md: "a picture is picked for the cover -> it passes the crop
+// locked to the clip's shape AND the new cover joins the edit's batch".
+describe("a clip's new face", () => {
+  it("joins the batch and points the clip at it once it lands", () => {
+    const set = run(clipPost(), { type: "cover", cover: framed("face") });
+    expect(set.recordStaged).toBe(true);
+    const landed = run(set, { type: "upload", id: "face", upload: { kind: "done", mediaId: "c9" } });
+    expect(postEditInput(landed).attachments).toEqual([
+      { mediaId: "v1", altText: null, coverMediaId: "c9", coverTaken: null },
+    ]);
+  });
+
+  it("is cut at the clip's own ratio", () => {
+    const set = run(clipPost(), { type: "cover", cover: framed("face") });
+    expect(uploadRatio(set, "face")).toBeCloseTo(9 / 16);
+  });
+
+  // EditComposeVideo.md: "Remove it under the cover row -> the new cover
+  // leaves the batch AND the cover field reads as it stood before the edit".
+  it("taken back, leaves the clip's face as it stood", () => {
+    const back = run(clipPost(), { type: "cover", cover: framed("face") }, { type: "cover", cover: null });
+    expect(postEditInput(back).attachments).toEqual([
+      { mediaId: "v1", altText: null, coverMediaId: "c1", coverTaken: false },
+    ]);
+  });
+
+  it("is never set on a body that holds no clip", () => {
+    expect(run(media(), { type: "cover", cover: framed("face") })).toEqual(media());
   });
 });

@@ -33,12 +33,12 @@
 // at 1, never a choice, so never drawn as one. `ComposePad` draws the master
 // `AttachmentPad` strip, parked over a wash, the pick reading alone above it.
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { DialogSurface } from "@/lib/ui2/dialog-surface";
 import { PillButton } from "@/lib/ui2/pill-button";
-import { InlineAction } from "@/lib/ui2/inline-action";
+import { FactRow } from "@/lib/ui2/fact-row";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { ReadoutChip } from "@/lib/ui2/chip";
 import { QuietNote } from "@/lib/ui2/quiet-note";
@@ -557,45 +557,6 @@ export function SealStep({
           }
         />
       )}
-    </div>
-  );
-}
-
-/**
- * A fact row, the seal's emphasis (design/components/core/FactRow.jsx): the
- * label at body-medium taking the row, the value in the secondary ink, the
- * action an `InlineAction`; a hairline above every row and under the last.
- */
-function FactRow({
-  label,
-  value,
-  action,
-  testId,
-  onAction,
-  last = false,
-}: {
-  label: string;
-  value: ReactNode;
-  action: string;
-  testId: string;
-  onAction: () => void;
-  last?: boolean;
-}) {
-  return (
-    <div
-      className={`flex min-h-11 items-center gap-2 border-0 border-t border-solid border-outline-variant ${
-        last ? "border-b" : ""
-      }`}
-    >
-      <span className="flex-1 whitespace-nowrap text-body-medium">{label}</span>
-      {typeof value === "string" ? (
-        <span className="text-body-medium text-on-surface-variant">{value}</span>
-      ) : (
-        value
-      )}
-      <InlineAction testId={testId} onClick={onAction}>
-        {action}
-      </InlineAction>
     </div>
   );
 }
