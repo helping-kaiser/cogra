@@ -514,9 +514,9 @@ class CommentEditViewModelTest {
         assertThat(content.lastAttachments).containsExactly(AttachmentClaim("m1", null))
     }
 
-    @Test
     // CommentEdit.md: the signing refused for one staged act whose target landed
     // stands the notice This shouldn't have happened, no row marked (SealFaultBug).
+    @Test
     fun aRefusedStagedActStandsTheBugNotice() = runTest(dispatcher) {
         val vm = opened()
         vm.onBodyChange("Reworded")
