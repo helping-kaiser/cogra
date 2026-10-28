@@ -211,17 +211,18 @@ internal class Shell(
         }
     }
 
-    override val statusBanners: @Composable (Boolean, () -> Unit, ApplicationSurface) -> Unit = { restored, onConsumed, surface ->
-        if (signedIn == true) {
-            StatusBannersRoute(
-                actorRestoredResult = restored,
-                onActorRestoredResultConsumed = onConsumed,
-                onStartKeyCeremony = { navController.navigate(KeyCeremony) },
-                snackbarHostState = snackbar,
-                surface = surface,
-            )
+    override val statusBanners: @Composable (Boolean, () -> Unit, ApplicationSurface) -> Unit =
+        { restored, onConsumed, surface ->
+            if (signedIn == true) {
+                StatusBannersRoute(
+                    actorRestoredResult = restored,
+                    onActorRestoredResultConsumed = onConsumed,
+                    onStartKeyCeremony = { navController.navigate(KeyCeremony) },
+                    snackbarHostState = snackbar,
+                    surface = surface,
+                )
+            }
         }
-    }
 
     override fun requireJoin() {
         state.joinPrompt = true

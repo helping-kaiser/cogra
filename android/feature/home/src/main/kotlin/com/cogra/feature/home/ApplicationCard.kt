@@ -82,13 +82,15 @@ fun ApplicationCard(
     modifier: Modifier = Modifier,
 ) {
     val approver = "@${card.approver}"
+    val feed = surface == ApplicationSurface.FEED
     val base = DataNode("${surface.path}.application")
     // The profile's card is a chip-drawn duplicate on its board, keyed by state.
     val node = if (surface == ApplicationSurface.PROFILE) base.keyed(if (card.closed) "closed" else "waiting") else base
     // `TaskCard` (ApplicantWaiting.jsx, ApplicantRejected.jsx): the task ring
     // around the card's ground — the feed card's tone while waiting, the
     // account-notice olive once closed, every ink then the panel's own.
-    val ground = if (card.closed) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest
+    val colors = MaterialTheme.colorScheme
+    val ground = if (card.closed) colors.tertiaryContainer else colors.surfaceContainerHighest
     val ink = if (card.closed) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurface
     val quiet = if (card.closed) ink else MaterialTheme.colorScheme.onSurfaceVariant
     Column(
@@ -106,7 +108,7 @@ fun ApplicationCard(
             Text(
                 text = when {
                     card.closed -> stringResource(R.string.application_closed_title, approver)
-                    surface == ApplicationSurface.FEED -> stringResource(R.string.application_waiting_feed_title, approver)
+                    feed -> stringResource(R.string.application_waiting_feed_title, approver)
                     else -> stringResource(R.string.application_waiting_profile_title, approver)
                 },
                 style = MaterialTheme.typography.titleMedium,
@@ -123,7 +125,7 @@ fun ApplicationCard(
         Text(
             text = when {
                 card.closed -> stringResource(R.string.application_closed_body, approver)
-                surface == ApplicationSurface.FEED -> stringResource(R.string.application_waiting_feed_body)
+                feed -> stringResource(R.string.application_waiting_feed_body)
                 else -> stringResource(R.string.application_waiting_profile_body)
             },
             style = MaterialTheme.typography.bodyMedium,
@@ -132,19 +134,21 @@ fun ApplicationCard(
         )
         AddressCard(
             address = askUrl,
-            label = stringResource(if (card.closed) R.string.application_ask_someone else R.string.application_your_ask_link),
+            label = stringResource(
+                if (card.closed) R.string.application_ask_someone else R.string.application_your_ask_link,
+            ),
             copyLabel = stringResource(R.string.application_copy_ask_link),
             onCopy = onCopy,
             caption = when {
                 card.closed -> stringResource(R.string.application_ask_someone_caption)
-                surface == ApplicationSurface.FEED -> stringResource(R.string.application_waiting_feed_caption)
+                feed -> stringResource(R.string.application_waiting_feed_caption)
                 else -> stringResource(R.string.application_waiting_profile_caption)
             },
             bare = true,
             ink = if (card.closed) ink else null,
             node = base / "link",
         )
-        if (!card.closed && surface == ApplicationSurface.FEED) {
+        if (!card.closed && feed) {
             CograButton(
                 text = stringResource(R.string.application_got_it),
                 onClick = onPutAway,

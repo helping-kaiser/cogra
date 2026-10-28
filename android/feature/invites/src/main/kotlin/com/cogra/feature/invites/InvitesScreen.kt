@@ -93,6 +93,7 @@ import com.cogra.core.designsystem.v2.atom.AddressCard
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.ButtonSize
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.CograRowButton
 import com.cogra.core.designsystem.v2.atom.ContentRow
 import com.cogra.core.designsystem.v2.atom.ContentRowDisc
 import com.cogra.core.designsystem.v2.atom.ContentRowSecond
@@ -330,7 +331,9 @@ private fun InvitesBody(
     FocusFollowsRemoval(state, list, rowFocus, createFocus, actions.onFocusMoved)
     LazyColumn(
         state = list,
-        contentPadding = PaddingValues(top = Space.x2, bottom = Space.x8),
+        // 8 under the header to New invite's ink: the pill answers at 48, so its
+        // 40 of ink already stands 4 inside its own layout.
+        contentPadding = PaddingValues(top = Space.x1, bottom = Space.x8),
         modifier = Modifier.fillMaxSize(),
     ) {
         when {
@@ -437,8 +440,8 @@ private fun itemPosition(state: InvitesUiState, key: String): Int {
 private fun Empty(onCreate: () -> Unit, focus: FocusRequester) {
     // INVITESEMPTY (InvitesEmpty.md): the calm line, and the page's one
     // committing control under it at the column's full width — no error
-    // colour, no bar. Unregistered: it wears `invites.empty` until design
-    // registers the board.
+    // colour, no bar. Registered (round 23): `invites.empty`, its `.title`
+    // and `.create`.
     EmptyState(
         testTag = "invites.empty",
         title = stringResource(R.string.invites_empty),
@@ -501,13 +504,15 @@ private fun LazyListScope.applications(
 /** A quiet section caption (`SectionLabel.jsx`): label-small, secondary ink, `12 24 4`. */
 @Composable
 private fun SectionLabel(text: String, node: DataNode) {
+    // A block at the column's width, its own `12 24 4` inside it.
     Text(
         text = text,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
-            .padding(start = Space.x6, end = Space.x6, top = Space.x3, bottom = Space.x1)
-            .dataNode(node),
+            .fillMaxWidth()
+            .dataNode(node)
+            .padding(start = Space.x6, end = Space.x6, top = Space.x3, bottom = Space.x1),
     )
 }
 
@@ -523,10 +528,10 @@ private fun GroupHeader(group: ApplicationGroup, onCloseAll: (ApplicationGroup) 
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
-            .fillMaxWidth()
             .padding(horizontal = Space.x4)
-            .padding(start = Space.x1, end = Space.x1, top = Space.x1)
-            .dataNode(node),
+            .fillMaxWidth()
+            .dataNode(node)
+            .padding(start = Space.x1, end = Space.x1, top = Space.x1),
     ) {
         Text(
             text = stringResource(
@@ -538,13 +543,14 @@ private fun GroupHeader(group: ApplicationGroup, onCloseAll: (ApplicationGroup) 
             modifier = Modifier.dataNode(INVITES / "group" / "label"),
         )
         if (group.closesAll) {
-            CograButton(
+            // 32 of ink in the row, answering at 48 without growing it.
+            CograRowButton(
                 text = stringResource(R.string.invites_close_all),
                 onClick = { onCloseAll(group) },
                 kind = ButtonKind.Text,
                 size = ButtonSize.Compact,
                 // Named in full for the accessibility tree (RejectAllConfirm.md:9).
-                modifier = Modifier.semantics { contentDescription = closeAllName },
+                contentDescription = closeAllName,
                 testTag = (INVITES / "group" / "close").tag,
             )
         }
@@ -608,7 +614,6 @@ private fun CloseGlyph(handle: String, onClose: () -> Unit) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .dataNode(INVITES / "application" / "close")
             .hitTarget(
                 interactive = Modifier
                     .clip(CircleShape)
@@ -617,6 +622,8 @@ private fun CloseGlyph(handle: String, onClose: () -> Unit) {
                 drawnWidth = CLOSE_SIZE,
                 drawnHeight = CLOSE_SIZE,
             )
+            // The tag names the drawn 40, not the 48 it answers at.
+            .dataNode(INVITES / "application" / "close")
             .size(CLOSE_SIZE),
     ) {
         Icon(

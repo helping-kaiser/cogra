@@ -134,7 +134,8 @@ fun VouchAskScreen(
                         text = stringResource(R.string.vouch_ask_profile_door, "@${landing.handle}"),
                         onClick = { onOpenProfile(landing.handle) },
                         kind = ButtonKind.Text,
-                        modifier = Modifier.padding(top = Space.x6).fillMaxWidth(),
+                        // 24 to the pill's ink: it answers at 48, so 4 already stand inside it.
+                        modifier = Modifier.padding(top = Space.x5).fillMaxWidth(),
                         testTag = (VOUCH_ASK / "profileDoor").tag,
                     )
                 }
@@ -152,7 +153,10 @@ private fun Statement(title: String, body: String, way: (@Composable () -> Unit)
             text = title,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.dataNode(VOUCH_ASK / "title"),
+            // The heading is a block at the column's width (an `h1`).
+            modifier = Modifier
+                .fillMaxWidth()
+                .dataNode(VOUCH_ASK / "title"),
         )
         Text(
             text = body,
@@ -191,7 +195,10 @@ private fun AskCard(
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                 .padding(Space.x4),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x3)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.x3),
+            ) {
                 CograAvatar(name = handle, size = 64.dp, testTag = (ASK / "avatar").tag)
                 Text(
                     text = stringResource(R.string.vouch_ask_asking, asker),

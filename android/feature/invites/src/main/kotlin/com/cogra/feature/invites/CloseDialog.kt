@@ -16,9 +16,6 @@
 
 package com.cogra.feature.invites
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,11 +27,10 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import com.cogra.core.designsystem.DataNode
-import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.DialogSurface
 import com.cogra.core.designsystem.v2.atom.rememberParticiple
-import com.cogra.core.designsystem.v2.token.Space
 
 private val DIALOG = DataNode("invites.dialog")
 
@@ -86,47 +82,28 @@ internal fun CloseDialog(closing: ClosingState, onConfirm: () -> Unit, onKeep: (
     val words = wordsFor(closing.target)
     val slow = rememberParticiple(closing.working)
     val keep = { if (!closing.working) onKeep() }
-    AlertDialog(
-        onDismissRequest = keep,
-        modifier = Modifier.dataNode(DIALOG),
-        title = {
-            Text(
-                text = words.title,
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.dataNode(DIALOG / "title"),
-            )
-        },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(Space.x4),
-                modifier = Modifier.dataNode(DIALOG / "body"),
-            ) {
-                words.body.forEach { paragraph ->
-                    Text(
-                        text = paragraph,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                if (closing.failed) {
-                    // The failure voice inside the dialog, never a snackbar (:23).
-                    Text(
-                        text = stringResource(R.string.reject_didnt_send),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .semantics { liveRegion = LiveRegionMode.Assertive }
-                            .testTag("invites_dialog_failed"),
-                    )
-                }
+    // The house shell (`DialogSurface`): one width, the title, the body's
+    // paragraphs, the fault line above the pair, the pair end-aligned.
+    DialogSurface(
+        title = words.title,
+        paragraphs = words.body,
+        onScrimPress = keep,
+        node = DIALOG,
+        extra = {
+            if (closing.failed && !closing.working) {
+                // The failure voice inside the dialog, never a snackbar (:23).
+                Text(
+                    text = stringResource(R.string.reject_didnt_send),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .semantics { liveRegion = LiveRegionMode.Assertive }
+                        .testTag("invites_dialog_failed"),
+                )
             }
         },
-        // Material's `confirmButton` slot draws last — the right-hand one —
-        // so the keep answer sits there, filled.
-        confirmButton = {
-            CograButton(text = words.keep, onClick = keep, testTag = (DIALOG / "keep").tag)
-        },
-        dismissButton = {
+        actions = {
+            // The quiet commit on the left, the filled keep in the right-hand slot (:9).
             CograButton(
                 text = when {
                     slow -> words.busy
@@ -137,6 +114,7 @@ internal fun CloseDialog(closing: ClosingState, onConfirm: () -> Unit, onKeep: (
                 kind = ButtonKind.Text,
                 testTag = (DIALOG / "close").tag,
             )
+            CograButton(text = words.keep, onClick = keep, testTag = (DIALOG / "keep").tag)
         },
     )
 }

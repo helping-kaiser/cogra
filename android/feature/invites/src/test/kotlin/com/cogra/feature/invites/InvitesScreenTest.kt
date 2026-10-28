@@ -245,7 +245,13 @@ class InvitesScreenTest {
             "With it off, anyone holding the link can apply until it expires. Either way each person still " +
                 "needs your approval, one at a time.",
         ).assertExists()
-        compose.onNodeWithTag("invites.sheet.create").assertTextEquals("Create invite")
+        compose.onNodeWithTag("invites.createSheet.create").assertTextEquals("Create invite")
+        // The registered paths (design round 23).
+        compose.onNodeWithTag("invites.createSheet.options.expiry.value", useUnmergedTree = true)
+            .assertTextEquals("7 days")
+        compose.onNodeWithTag("invites.createSheet.options.singleUse.label", useUnmergedTree = true)
+            .assertTextEquals("Only one person can use it")
+        compose.onNodeWithTag("invites.createSheet.title").assertExists()
     }
 
     @Test
@@ -254,7 +260,7 @@ class InvitesScreenTest {
         render(read().copy(sheet = InviteSheetState(created = liveLink)))
         compose.onNodeWithText("Your invite link").assertExists()
         compose.onNodeWithText("https://cogra.social/join/${liveLink.id}").assertExists()
-        compose.onNodeWithTag("invites.sheet.share").assertTextEquals("Share link")
+        compose.onNodeWithTag("invites.linkSheet.share").assertTextEquals("Share link")
     }
 
     @Test
@@ -264,5 +270,7 @@ class InvitesScreenTest {
         compose.onNodeWithText("24 hours").assertExists()
         compose.onNodeWithText("30 days").assertExists()
         compose.onAllNodesWithText("7 days").assertCountEquals(2)
+        compose.onNodeWithTag("invites.expirySheet.expiryOption:7-days").assertExists()
+        compose.onNodeWithTag("invites.expirySheet.title").assertExists()
     }
 }

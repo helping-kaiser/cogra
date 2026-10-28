@@ -338,7 +338,9 @@ class StatusBannersTest {
         render(applicant(awaiting(), putAway = true), surface = ApplicationSurface.PROFILE)
         compose.onNodeWithTag("profile.application.title").assertTextEquals("Waiting on @mira")
         compose.onNodeWithTag("profile.application.link.caption")
-            .assertTextEquals("It does not expire. Anyone who holds your ask can let you in — the first vouch lands it.")
+            .assertTextEquals(
+                "It does not expire. Anyone who holds your ask can let you in — the first vouch lands it.",
+            )
         compose.onNodeWithTag("profile.application.dismiss").assertDoesNotExist()
     }
 

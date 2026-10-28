@@ -105,13 +105,6 @@ fun AddressCard(
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .then(
-                            if (node != null) {
-                                Modifier.dataNode(node / "copy")
-                            } else {
-                                Modifier.optionalTag(testTag?.let { "${it}_copy" })
-                            },
-                        )
                         .hitTarget(
                             interactive = Modifier
                                 .clip(CircleShape)
@@ -119,6 +112,14 @@ fun AddressCard(
                                 .semantics { contentDescription = copyLabel },
                             drawnWidth = COPY_SIZE,
                             drawnHeight = COPY_SIZE,
+                        )
+                        // The tag names the drawn 32, not the 48 it answers at.
+                        .then(
+                            if (node != null) {
+                                Modifier.dataNode(node / "copy")
+                            } else {
+                                Modifier.optionalTag(testTag?.let { "${it}_copy" })
+                            },
                         )
                         .size(COPY_SIZE),
                 ) {
@@ -154,7 +155,10 @@ fun AddressCard(
                 text = caption,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Normal),
                 color = quiet,
-                modifier = Modifier.dataNode(node?.div("caption")),
+                // A block at the card's width, as the master's span stands in its column.
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .dataNode(node?.div("caption")),
             )
         }
     }

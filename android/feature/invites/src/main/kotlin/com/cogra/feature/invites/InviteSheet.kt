@@ -20,9 +20,9 @@
 // one selected, a tap picks and closes with no Done; the scrim, a swipe or
 // Back close it with the length it had.
 //
-// UNREGISTERED BOARDS: InviteNew, InviteCreated and InviteExpiry are not in
-// nodes.json; the sheet wears the evident paths under `invites.sheet` /
-// `invites.expiry` until design registers them.
+// THE REGISTERED SHEETS (design round 23): the create stage wears
+// `invites.createSheet`, the fresh link `invites.linkSheet`, the chooser
+// `invites.expirySheet`, its rows keyed by the length as printed, lowercased.
 
 package com.cogra.feature.invites
 
@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.AddressCard
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
@@ -49,8 +50,17 @@ import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.invites.InviteLinkInfo
 import java.time.Instant
 
-internal val SHEET = DataNode("invites.sheet")
-internal val EXPIRY = DataNode("invites.expiry")
+internal val CREATE_SHEET = DataNode("invites.createSheet")
+internal val LINK_SHEET = DataNode("invites.linkSheet")
+internal val EXPIRY_SHEET = DataNode("invites.expirySheet")
+
+/** The chooser row's registered key: the length as its row prints it, lowercased, runs of other characters one `-`. */
+internal val ExpiryChoice.key: String
+    get() = when (this) {
+        ExpiryChoice.HOURS_24 -> "24-hours"
+        ExpiryChoice.DAYS_7 -> "7-days"
+        ExpiryChoice.DAYS_30 -> "30-days"
+    }
 
 @Composable
 internal fun ExpiryChoice.words(): String = stringResource(
@@ -82,8 +92,9 @@ internal fun InviteSheet(
     actions: SheetActions,
 ) {
     CograSheetHost(onDismissRequest = actions.onClose) {
-        CograSheetSurface(testTag = SHEET.tag, gap = Space.x4) {
-            val created = sheet.created
+        val created = sheet.created
+        val surface = if (created == null) CREATE_SHEET else LINK_SHEET
+        CograSheetSurface(testTag = surface.tag, handleTestTag = (surface / "dragHandle").tag, gap = Space.x4) {
             if (created == null) {
                 CreateStage(sheet, actions)
             } else {
@@ -93,15 +104,22 @@ internal fun InviteSheet(
     }
     if (sheet.choosing) {
         CograSheetHost(onDismissRequest = actions.onCloseExpiry) {
-            CograSheetSurface(testTag = EXPIRY.tag, stacked = true) {
-                SheetTitle(text = stringResource(R.string.invites_expires_after))
+            CograSheetSurface(
+                testTag = EXPIRY_SHEET.tag,
+                handleTestTag = (EXPIRY_SHEET / "dragHandle").tag,
+                stacked = true,
+            ) {
+                SheetTitle(
+                    text = stringResource(R.string.invites_expires_after),
+                    modifier = Modifier.dataNode(EXPIRY_SHEET / "title"),
+                )
                 Column {
                     ExpiryChoice.entries.forEach { choice ->
                         SettingsRow(
                             label = choice.words(),
                             kind = SettingsRowKind.Choice(selected = choice == sheet.expiry),
                             onClick = { actions.onPickExpiry(choice) },
-                            node = (EXPIRY / "choice").keyed(choice.name),
+                            node = (EXPIRY_SHEET / "expiryOption").keyed(choice.key),
                         )
                     }
                 }
@@ -112,7 +130,10 @@ internal fun InviteSheet(
 
 @Composable
 private fun CreateStage(sheet: InviteSheetState, actions: SheetActions) {
-    SheetTitle(text = stringResource(R.string.invites_new), modifier = Modifier.fillMaxWidth())
+    SheetTitle(
+        text = stringResource(R.string.invites_new),
+        modifier = Modifier.fillMaxWidth().dataNode(CREATE_SHEET / "title"),
+    )
     SettingsGroup(
         rows = listOf(
             {
@@ -120,7 +141,7 @@ private fun CreateStage(sheet: InviteSheetState, actions: SheetActions) {
                     label = stringResource(R.string.invites_only_one),
                     kind = SettingsRowKind.Switch(sheet.singleUse),
                     onClick = { actions.onSingleUseChange(!sheet.singleUse) },
-                    node = SHEET / "singleUse",
+                    node = CREATE_SHEET / "options" / "singleUse",
                 )
             },
             {
@@ -129,12 +150,12 @@ private fun CreateStage(sheet: InviteSheetState, actions: SheetActions) {
                     kind = SettingsRowKind.Opens,
                     value = sheet.expiry.words(),
                     onClick = actions.onOpenExpiry,
-                    node = SHEET / "expiry",
+                    node = CREATE_SHEET / "options" / "expiry",
                 )
             },
         ),
         footnote = stringResource(R.string.invites_footnote),
-        bare = false,
+        node = CREATE_SHEET / "options",
     )
     if (sheet.failed) {
         ErrorLine(R.string.invites_transport, testTag = "invites_sheet_failed")
@@ -145,14 +166,17 @@ private fun CreateStage(sheet: InviteSheetState, actions: SheetActions) {
             text = stringResource(if (slow) R.string.invites_creating else R.string.invites_create),
             // Inert from the press, never dimmed (InviteNew.md:21).
             onClick = { if (!sheet.creating) actions.onCreate() },
-            testTag = (SHEET / "create").tag,
+            testTag = (CREATE_SHEET / "create").tag,
         )
     }
 }
 
 @Composable
 private fun CreatedStage(created: InviteLinkInfo, url: String, now: Instant, actions: SheetActions) {
-    SheetTitle(text = stringResource(R.string.invites_your_link), modifier = Modifier.fillMaxWidth())
+    SheetTitle(
+        text = stringResource(R.string.invites_your_link),
+        modifier = Modifier.fillMaxWidth().dataNode(LINK_SHEET / "title"),
+    )
     Column(verticalArrangement = Arrangement.spacedBy(Space.x3)) {
         AddressCard(
             address = url,
@@ -160,13 +184,13 @@ private fun CreatedStage(created: InviteLinkInfo, url: String, now: Instant, act
             copyLabel = stringResource(R.string.invites_copy_link),
             onCopy = { actions.onCopy(url) },
             caption = linkCaption(created, now),
-            node = SHEET / "link",
+            node = LINK_SHEET / "link",
         )
         CograButton(
             text = stringResource(R.string.invites_share_link),
             onClick = { actions.onShare(url) },
             modifier = Modifier.fillMaxWidth(),
-            testTag = (SHEET / "share").tag,
+            testTag = (LINK_SHEET / "share").tag,
         )
     }
 }
