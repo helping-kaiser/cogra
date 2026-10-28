@@ -69,6 +69,13 @@ const DIALOG_BODY_STYLE = {
   letterSpacing: "var(--text-body-medium--letter-spacing)",
   color: "var(--text-secondary)",
 };
+const DIALOG_LINE_STYLE = {
+  margin: 0,
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  color: "var(--text-failure)",
+};
 const asParagraphs = (body) =>
   (Array.isArray(body) ? body : [body]).map((part, index) =>
     typeof part === "string" ? (
@@ -80,10 +87,15 @@ const asParagraphs = (body) =>
     ),
   );
 
-export function DialogSurface({ children, ariaLabel, inline = false, onScrimPress, width = "var(--dialog-max-width)", title, body, actions, node }) {
+/* `line` IS THE FAULT THAT KEEPS A DIALOG UP (the failure pack's grammar, at
+   dialog scale; seam 248): one line in the failure register between the body
+   and the actions — `That didn't send. Try again.` — while the commitment's
+   own slot reads `Retry`. Its own slot rather than a body paragraph, so a
+   registered dialog names it `line` beside `title` and `body`. */
+export function DialogSurface({ children, ariaLabel, inline = false, onScrimPress, width = "var(--dialog-max-width)", title, body, line, actions, node }) {
   const surfaceRef = React.useRef(null);
   useModalFocus(surfaceRef, !inline, onScrimPress);
-  const slotted = title !== undefined || body !== undefined || actions !== undefined;
+  const slotted = title !== undefined || body !== undefined || line !== undefined || actions !== undefined;
   const surface = (
     <div
       ref={surfaceRef}
@@ -111,6 +123,11 @@ export function DialogSurface({ children, ariaLabel, inline = false, onScrimPres
         <>
           {title !== undefined && <h2 style={DIALOG_TITLE_STYLE} data-node={node && "title"}>{title}</h2>}
           {body !== undefined && <div style={{ ...DIALOG_BODY_STYLE, marginTop: title !== undefined ? "var(--space-4)" : 0 }} data-node={node && "body"}>{asParagraphs(body)}</div>}
+          {line !== undefined && (
+            <p role="alert" style={{ ...DIALOG_LINE_STYLE, marginTop: title !== undefined || body !== undefined ? "var(--space-4)" : 0 }} data-node={node && "line"}>
+              {line}
+            </p>
+          )}
           {actions !== undefined && (
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center", gap: "var(--space-2)", marginTop: "var(--space-6)" }}>{actions}</div>
           )}

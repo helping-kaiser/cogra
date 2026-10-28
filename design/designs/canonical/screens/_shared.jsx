@@ -673,17 +673,26 @@ const REMOVE_CONFIRM_COPY = {
 /* `overSheet` lifts the dialog above a sheet it is raised over — the comments
    thread — by `ReplyKeyAbsent`'s one layer of board glue: `DialogSurface` sits
    on the base wash layer and the sheet one above it, so the dialog is the
-   thing raised last. Over the post detail there is no sheet to clear. */
-function RemoveDialog({ kind, overSheet = false, node }) {
+   thing raised last. Over the post detail there is no sheet to clear.
+
+   `failed` IS THE REMOVAL THAT DID NOT GO THROUGH (seam 248, RM-G7; the
+   failure pack's grammar at dialog scale, `SeveranceConfirm`'s): the dialog
+   never closed — the act waits for its answer — so it stays up with its
+   pair, `That didn't send. Try again.` stands above it in the dialog's
+   `line` slot, and `Remove`'s own slot reads `Retry`, still a text button in
+   no colour. `Keep it` keeps its place: the way out is the way out it was.
+   One anatomy for both kinds, so the post and the comment fail alike. */
+function RemoveDialog({ kind, overSheet = false, failed = false, node }) {
   const { title, body } = REMOVE_CONFIRM_COPY[kind];
   const dialog = (
     <DialogSurface
       onScrimPress={() => {}}
       title={title}
       body={[body, "This is immediate and permanent."]}
+      line={failed ? "That didn't send. Try again." : undefined}
       actions={
         <>
-          <Button variant="text" node={node && "remove"}>Remove</Button>
+          <Button variant="text" node={node && "remove"}>{failed ? "Retry" : "Remove"}</Button>
           <Button node={node && "keep"}>Keep it</Button>
         </>
       }
@@ -2540,10 +2549,10 @@ function CommentComposerFoot({ fieldOpacity, shown }) {
    margin. */
 const COMMENTS_GAP = 12;
 
-function CommentsSheet({ children, scrolledBy = 0, footOpacity, shown }) {
+function CommentsSheet({ children, scrolledBy = 0, footOpacity, shown, node }) {
   return (
-    <BottomSheet open tallest ariaLabel="Comments">
-      <SheetTitle>Comments</SheetTitle>
+    <BottomSheet open tallest ariaLabel="Comments" node={node}>
+      <SheetTitle node={node && "title"}>Comments</SheetTitle>
       <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: COMMENTS_GAP, margin: 0, padding: "0 16px", listStyle: "none" }}>
         {scrolledBy > 0 && <li aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -(scrolledBy + COMMENTS_GAP) }} />}
         {children}
@@ -2666,8 +2675,22 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    own (jakob 2026-10-02), so in the applicant's reading the foot's face is
    @juno's and @sol's comment is someone else's: no `Edit`, the reader's ⋮.
    Each reading's copy of that comment stands in its own list item, the other
-   one hidden. */
-function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown }) {
+   one hidden.
+
+   `node` NAMES THE THREAD (seam 248, the debt seam 094 left: the sheet stood
+   unnamed until a board needed what is inside it). The sheet is the post
+   detail's thread, so a registered board places it as `threadSheet` under
+   `postDetail` — the surface that hosts every comment menu, confirm and mark
+   the thread raises. Its title is `title`, and each top-level comment
+   `commentCard`, keyed by its author's handle as every comment card is; a
+   branch's replies stay unnamed until a board needs them, named then as pure
+   addition. The comment menus and the removal confirm are raised OVER the
+   sheet, never inside it, so they keep their own names beside it
+   (`postDetail.menuSheet` — jakob's item 64: one path for every menu on the
+   detail, told apart by board — and `postDetail.dialog`). A board that names
+   the sheet draws one reader, so the `shown` pair stays unnamed. */
+function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, node }) {
+  const card = node && "commentCard";
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
       <CommentCard
@@ -2693,11 +2716,13 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
       onEdit={removed ? undefined : () => {}}
       menuItems={removed ? [] : OWN_THREAD_MENU}
       redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
+      node={shown ? undefined : card}
     />
   );
   return (
-    <CommentsSheet scrolledBy={scrolledBy} footOpacity={footOpacity} shown={shown}>
+    <CommentsSheet scrolledBy={scrolledBy} footOpacity={footOpacity} shown={shown} node={node}>
       <CommentCard
+        node={card}
         author={TOBIAS}
         content={TOBIAS_COMMENT}
         timestamp="1h"
@@ -2721,6 +2746,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
           comment-scale block, while the author, the timestamp and the
           opinion stay readable. */}
       <CommentCard
+        node={card}
         author={MIRA}
         content="The gulls had been at it before the tide came back. Two frames, both grim."
         timestamp="2h"
