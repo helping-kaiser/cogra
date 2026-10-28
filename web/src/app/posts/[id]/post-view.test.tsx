@@ -2017,11 +2017,11 @@ describe("PostView", () => {
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       expect(screen.getByTestId("comment-edit-tag-0")).toHaveTextContent("#rust");
-      // The chip opens on the values the claim actually carries — real
-      // ones, never the entry defaults.
+      // The chip opens its pair in a sheet over the edit (CommentEdit.md), on
+      // the values the claim actually carries — real ones, never the entry
+      // defaults.
       fireEvent.click(screen.getByTestId("comment-edit-tag-0-select"));
-      expect(screen.getByTestId("comment-edit-tag-0-relevance")).toHaveValue("0.4");
-      expect(screen.getByTestId("comment-edit-tag-0-confidence")).toHaveValue("0.8");
+      expect(screen.getByTestId("comment-edit-tag-pair-exact")).toHaveTextContent("+0.40 / 0.80");
       // No creation batch here, so no batch cap.
       expect(screen.queryByTestId("comment-edit-tag-cap")).not.toBeInTheDocument();
     });
@@ -2280,9 +2280,11 @@ describe("PostView", () => {
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.click(screen.getByTestId("comment-edit-tag-0-select"));
-      fireEvent.change(screen.getByTestId("comment-edit-tag-0-relevance"), {
+      fireEvent.click(screen.getByTestId("comment-edit-tag-pair-exact-route"));
+      fireEvent.change(screen.getByTestId("comment-edit-tag-pair-tracks-directed"), {
         target: { value: "0.75" },
       });
+      fireEvent.click(screen.getByTestId("comment-edit-tag-pair-done"));
       fireEvent.click(screen.getByTestId("comment-edit-save"));
 
       await waitFor(() =>

@@ -75,3 +75,24 @@ export function parseAspectRatio(text: string | null | undefined): number | null
 export function fitFor(): "contain" | "cover" {
   return "cover";
 }
+
+/**
+ * The post shape a published picture was cut to, read back off its ratio.
+ *
+ * THE ASSETS' SHARED RATIO IS THE RECORD OF THE CHOICE (D17, above), so a post
+ * opened for editing states its shape through its pictures. The nearest of
+ * the three is taken — measured as a ratio, so 4:5 and 1.91:1 sit equally far
+ * either side of the square — because the server states a ratio in lowest
+ * terms and a 1080-wide wide crop is 540:283, never exactly 1.91. Null where
+ * there is no ratio to read.
+ */
+export function nearestPostShape(ratio: number | null | undefined): PostShape | null {
+  if (typeof ratio !== "number" || !Number.isFinite(ratio) || ratio <= 0) return null;
+  let best: PostShape = "square";
+  for (const shape of POST_SHAPE_ORDER) {
+    if (Math.abs(Math.log(ratio / POST_SHAPES[shape].ratio)) < Math.abs(Math.log(ratio / POST_SHAPES[best].ratio))) {
+      best = shape;
+    }
+  }
+  return best;
+}
