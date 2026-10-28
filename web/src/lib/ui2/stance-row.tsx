@@ -51,12 +51,12 @@ export function StanceValue({
       className="inline-flex flex-none items-center gap-1.5"
       {...testAttributes(node, testId)}
     >
-      <span aria-hidden="true" className="text-title-medium" {...testAttributes(part(node, "face"))}>
+      <span aria-hidden="true" className="text-[length:var(--text-title-medium)]" {...testAttributes(part(node, "face"))}>
         {readout.emoji}
       </span>
       <span
         aria-hidden="true"
-        className="cg-exact whitespace-nowrap text-body-small text-on-surface-variant"
+        className="cg-exact whitespace-nowrap text-[length:var(--text-body-small)] text-on-surface-variant"
         {...testAttributes(part(node, "exact"))}
       >
         {exact}

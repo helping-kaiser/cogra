@@ -66,7 +66,7 @@ function PairValue({ pair, pending, node }: { pair: StancePair; pending: boolean
       {...testAttributes(node)}
     >
       <span aria-hidden="true" className="inline-flex items-center gap-1">
-        <span className="text-body-medium leading-none" {...testAttributes(part(node, "face"))}>
+        <span className="text-[length:var(--text-body-medium)] [line-height:1]" {...testAttributes(part(node, "face"))}>
           {anchor.emoji}
         </span>
         <span className="cg-exact" {...testAttributes(part(node, "exact"))}>
