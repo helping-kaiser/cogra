@@ -10150,7 +10150,7 @@ Saved and History:
 - **Saved and History search everything kept or seen**, never only the
   cards already loaded — the one place the server-side matcher shows.
 - **The results are sectioned.** The people stand first under
-  `SectionLabel`'s `People` (the caption Explore's `Recent` wears),
+  `SectionLabel`'s `Profiles` (the caption Explore's `Recent` wears),
   capped at **three**; `See all profiles`, a text button on its own line,
   closes the section when more match, and the content follows by the
   surface's own order with no caption of its own. The door opens the
