@@ -44,6 +44,18 @@ fragment PostFields on Post {
     epoch
   }
   moderationStatus
+  # THE NODE'S MARK (api-spec.md `Post.removal`): when and by whom the
+  # payload went. The card's RedactedContent reads it — `by` picks the
+  # mark, `at` is its `when` — and the feed's device-side Removed filter
+  # keys on it (FeedSheet.md:43). Null on a node whose payload stands.
+  removal {
+    at
+    by
+  }
+  # What the author's Remove names (`removeContent`'s `record`): the act
+  # that minted this post, pending included. On every card because the
+  # own menu rides every host — the feed, the profile, the detail (RM-G9).
+  genesisRecordId
   license {
     attribution
     provenance
@@ -119,6 +131,14 @@ fragment CommentFields on Comment {
     epoch
   }
   moderationStatus
+  # The comment's mark, as the post's (`Comment.removal`): its replies
+  # keep their parent and stay readable beneath it.
+  removal {
+    at
+    by
+  }
+  # What the author's Remove names on their own comment.
+  genesisRecordId
   license {
     attribution
     provenance
@@ -184,6 +204,52 @@ mutation PrepareCommentEdit($input: PrepareCommentEditInput!) {
     }
     userErrors {
       ...UserErrorFields
+    }
+  }
+}
+
+# THE AUTHOR'S REMOVE (api-spec.md `removeContent`; erasure.md §1): the
+# whole chain at once — the node's genesis record named by
+# `genesisRecordId`, and `includeRevisions: true` because the confirm
+# promises "every earlier version's". Immediate and unsigned: nothing is
+# prepared or signed. The payload names only the records that have landed
+# — a still-settling node answers `records: []` with no error and lands
+# reduced — so the surface re-reads the node to draw its mark rather than
+# trusting this list. web's twin is web/src/lib/graphql/content.graphql.
+mutation RemoveContent($record: RecordId!) {
+  removeContent(input: { record: $record, includeRevisions: true }) {
+    records {
+      id
+      payloadState
+      redactedAt
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# THE NODE RE-READ AFTER A REMOVE (the packet's RM-G5 build word): the
+# mark alone, off the node itself. A node read rather than the surface's
+# own refetch, because the surfaces a removal happens on hold things a
+# refetch would throw away: the thread its unfolded branches and the
+# reader's place (CommentRemoved.md:15, :19), the feed its frozen window.
+query PostRemoval($id: UUID!) {
+  post(id: $id) {
+    id
+    removal {
+      at
+      by
+    }
+  }
+}
+
+query CommentRemoval($id: UUID!) {
+  comment(id: $id) {
+    id
+    removal {
+      at
+      by
     }
   }
 }

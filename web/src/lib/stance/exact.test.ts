@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 
-import { decimalOf, netsToZero } from "./exact";
+import { decimalOf, exactSum, netsToZero } from "./exact";
 
 describe("exact decimal netting", () => {
   it("nets the known-dirty pattern to zero in every order", () => {
@@ -38,5 +38,28 @@ describe("exact decimal netting", () => {
     expect(decimalOf(1e-7)).toEqual({ units: 1n, scale: 7 });
     expect(decimalOf(1e21)).toEqual({ units: 10n ** 21n, scale: 0 });
     expect(() => decimalOf(Number.NaN)).toThrow(RangeError);
+  });
+});
+
+describe("the exact sum", () => {
+  it("sums the decimals, not the doubles, in every order", () => {
+    expect(0.1 + 0.2).not.toBe(0.3);
+    for (const order of [
+      [0.1, 0.2],
+      [0.2, 0.1],
+    ]) {
+      expect(exactSum(order)).toBe(0.3);
+    }
+  });
+
+  it("is zero, and positive zero, exactly when the decimals net", () => {
+    expect(Object.is(exactSum([1.1, -1, -0.1]), 0)).toBe(true);
+    expect(Object.is(exactSum([-0, -0]), 0)).toBe(true);
+    expect(exactSum([])).toBe(0);
+  });
+
+  it("keeps the sum past the clip, signed", () => {
+    expect(exactSum([0.9, 0.9, 0.6])).toBe(2.4);
+    expect(exactSum([-0.55, -0.25])).toBe(-0.8);
   });
 });

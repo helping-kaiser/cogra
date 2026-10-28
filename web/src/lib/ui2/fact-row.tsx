@@ -4,6 +4,9 @@
 // secondary ink, and the rules ENCLOSE — a hairline above every row and one
 // under the last — so the block reads as a bounded list on the page's ground.
 //
+// THE 44px MINIMUM IS THE CONTENT'S, the hairlines outside it (FactRow.jsx
+// draws content-box: a row stands 45px, the last 46px on the built boards).
+//
 // THE ROW HOLDS ONE LINE, which is why a worded action is an `InlineAction`
 // and never a pill: the pill's 64px minimum is exactly what wraps a row ruled
 // to stay on one. An action given as a node — the edit's license lock — is
@@ -14,6 +17,7 @@
 
 import type { ReactNode } from "react";
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { InlineAction } from "./inline-action";
 
 export function FactRow({
@@ -23,7 +27,14 @@ export function FactRow({
   onAction,
   testId,
   last = false,
+  node,
 }: {
+  /**
+   * The registered row (`feedEntry.adds`): it names its `label`, a string
+   * value `value`, and a worded action `action` (FactRow.jsx, seam 002); a
+   * value handed as a node is named by whoever placed it.
+   */
+  node?: DataNode;
   label: string;
   /** A string takes the row's quiet voice; a node (a stance readout) draws its own line. */
   value: ReactNode;
@@ -36,18 +47,23 @@ export function FactRow({
 }) {
   return (
     <div
-      className={`flex min-h-11 items-center gap-2 border-0 border-t border-solid border-outline-variant ${
+      {...testAttributes(node)}
+      className={`box-content flex min-h-11 items-center gap-2 border-0 border-t border-solid border-outline-variant ${
         last ? "border-b" : ""
       }`}
     >
-      <span className="flex-1 whitespace-nowrap text-body-medium">{label}</span>
+      <span className="flex-1 whitespace-nowrap text-body-medium" {...testAttributes(part(node, "label"))}>
+        {label}
+      </span>
       {typeof value === "string" ? (
-        <span className="text-body-medium text-on-surface-variant">{value}</span>
+        <span className="text-body-medium text-on-surface-variant" {...testAttributes(part(node, "value"))}>
+          {value}
+        </span>
       ) : (
         value
       )}
       {typeof action === "string" ? (
-        <InlineAction testId={testId} onClick={onAction}>
+        <InlineAction testId={testId} node={part(node, "action")} onClick={onAction}>
           {action}
         </InlineAction>
       ) : (
