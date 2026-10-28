@@ -272,18 +272,7 @@ fun ProfileScreen(
     // THE ⋮'S AFTERMATH READS ON THE PAGE'S OWN SNACKBAR (`profile.snackbar`):
     // `Saved.`, `Removed from Saved.` and a hide's words, each with `Undo`.
     val savedHost = rememberSavedHost(saved, snackbarHostState, PROFILE / "snackbar", onRequireAccount, hidden)
-    val savedMessage = stringResource(R.string.profile_saved)
-    // Consumed only after the snackbar is done: clearing first would flip
-    // the LaunchedEffect key and cancel the showing coroutine, so the
-    // confirmation was torn down in the frame it was posted and the
-    // reader saw nothing. The refetch does not ride this effect — the
-    // route fires it the moment the result arrives.
-    LaunchedEffect(profileSavedResult) {
-        if (profileSavedResult) {
-            snackbarHostState.showSnackbar(NodeSnackbarVisuals(savedMessage, PROFILE / "snackbar"))
-            onProfileSavedResultConsumed()
-        }
-    }
+    ProfileSavedConfirm(profileSavedResult, snackbarHostState, onProfileSavedResultConsumed)
     // The list is the screen's, not the body's: the bar's re-tap scrolls it
     // whatever the body is showing when the tap lands.
     val list = rememberLazyListState()
@@ -696,4 +685,22 @@ private fun ChronicleTabRow(filter: ChronicleFilter, onFilterChange: (ChronicleF
         label = stringResource(R.string.profile_tabs),
         node = PROFILE / "tabRow",
     )
+}
+
+/**
+ * A saved edit's confirmation on the page's own snackbar. Consumed only after
+ * the snackbar is done: clearing first would flip the LaunchedEffect key and
+ * cancel the showing coroutine, so the confirmation was torn down in the
+ * frame it was posted and the reader saw nothing. The refetch does not ride
+ * this effect — the route fires it the moment the result arrives.
+ */
+@Composable
+private fun ProfileSavedConfirm(result: Boolean, host: SnackbarHostState, onConsumed: () -> Unit) {
+    val savedMessage = stringResource(R.string.profile_saved)
+    LaunchedEffect(result) {
+        if (result) {
+            host.showSnackbar(NodeSnackbarVisuals(savedMessage, PROFILE / "snackbar"))
+            onConsumed()
+        }
+    }
 }
