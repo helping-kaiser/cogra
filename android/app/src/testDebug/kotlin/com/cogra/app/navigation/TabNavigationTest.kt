@@ -33,12 +33,17 @@ import com.cogra.crypto.ActorKey
 import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
 import com.cogra.domain.UserProfile
+import com.cogra.domain.search.SearchHit
+import com.cogra.domain.search.SearchNode
+import com.cogra.domain.search.SearchPage
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.ScriptedSearchRepository
 import com.cogra.domain.testing.testPost
 import com.cogra.domain.testing.testProfile
 import com.google.common.truth.Truth.assertThat
@@ -50,6 +55,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.time.Instant
 import javax.inject.Inject
 
 @HiltAndroidTest
@@ -71,6 +77,8 @@ class TabNavigationTest {
     @Inject lateinit var content: ScriptedContentRepository
 
     @Inject lateinit var profiles: ScriptedProfileRepository
+
+    @Inject lateinit var search: ScriptedSearchRepository
 
     private lateinit var navController: TestNavHostController
 
@@ -131,7 +139,9 @@ class TabNavigationTest {
 
     private fun assertLit(slot: String) {
         compose.onNode(barSlot(slot)).assertIsSelected()
-        listOf("feed", "profile").filter { it != slot }.forEach { compose.onNode(barSlot(it)).assertIsNotSelected() }
+        listOf("feed", "search", "wallet", "profile").filter { it != slot }.forEach {
+            compose.onNode(barSlot(it)).assertIsNotSelected()
+        }
     }
 
     private inline fun <reified T : Any> onTop(): Boolean =
@@ -363,6 +373,97 @@ class TabNavigationTest {
         // ChatsComingSoon.md:17 — and the page stands in the feed's stack.
         compose.onNodeWithTag("chats_back").assertContentDescriptionEquals("Back to the profile")
         assertLit("feed")
+    }
+
+    // -- Explore and the Wallet: V1.0's five slots (BottomNav.jsx) --
+
+    private fun openExploreTab() {
+        tapSlot("search")
+        waitUntilOn { onTop<Explore>() }
+        waitForTag("explore.searchField.input")
+    }
+
+    @Test
+    fun theExploreSlotOpensExploreItsSlotLitAndBackLandsOnFeedsRoot() {
+        memberOnTheFeed()
+        openExploreTab()
+        assertLit("search")
+        waitForTag("explore.bottomBar")
+
+        // Explore is another tab's root: Back lands on Feed's root.
+        pressBack()
+        waitUntilOn { onTop<Feed>() }
+        assertLit("feed")
+    }
+
+    @Test
+    fun aResultOpenedFromASearchKeepsExploreLitAndBackFindsTheSearchAsItWasLeft() {
+        search.respond = { _, _ ->
+            Outcome.Success(
+                SearchPage(
+                    hits = listOf(SearchHit(SearchNode.Post("p1", "Salt maps", Instant.EPOCH, null), score = null)),
+                    endCursor = null,
+                    hasNextPage = false,
+                    hasMorePeople = false,
+                ),
+            )
+        }
+        memberOnTheFeed()
+        openExploreTab()
+        compose.onNodeWithTag("explore.searchField.input", useUnmergedTree = true).performTextInput("salt")
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodesWithTag("explore.result:1", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("explore.result:1", useUnmergedTree = true).performClick()
+        waitUntilOn { onTop<PostDetail>() }
+
+        // PostDetail.md:57 — opened from Explore, Explore stays lit; the way
+        // back names the search (ExploreSearch, the origin table).
+        assertLit("search")
+        assertThat(navController.currentBackStackEntry?.toRoute<PostDetail>()?.from).isEqualTo("search")
+
+        pressBack()
+        waitUntilOn { onTop<Explore>() }
+        // Back from a standing search empties it and never leaves Explore (Explore.md:15).
+        waitForTag("explore.result:1")
+        pressBack()
+        waitForTag("explore.skyCard")
+        assertThat(onTop<Explore>()).isTrue()
+    }
+
+    @Test
+    fun theExploreSlotAtExploresTopStaysPut() {
+        memberOnTheFeed()
+        openExploreTab()
+        val root = navController.currentBackStackEntry?.id
+        tapSlot("search")
+        assertThat(navController.currentBackStackEntry?.id).isEqualTo(root)
+        assertLit("search")
+    }
+
+    @Test
+    fun theWalletSlotOpensItsComingSoonRootLitAndNeverDoesNothing() {
+        memberOnTheFeed()
+        tapSlot("wallet")
+        waitUntilOn { onTop<Wallet>() }
+        assertLit("wallet")
+        waitForTag("wallet.comingSoon")
+        waitForTag("wallet.bottomBar")
+
+        pressBack()
+        waitUntilOn { onTop<Feed>() }
+    }
+
+    @Test
+    fun yourTopicsOpensFromExploresDoorWithNoBarAndGoesBackToExplore() {
+        memberOnTheFeed()
+        openExploreTab()
+        compose.onNodeWithTag("explore.topics_open").performClick()
+        waitUntilOn { onTop<YourTopics>() }
+        compose.onAllNodesWithTag("explore.bottomBar").fetchSemanticsNodes().let { assertThat(it).isEmpty() }
+        compose.onNodeWithTag("yourTopics.header.back").performClick()
+        waitUntilOn { onTop<Explore>() }
+        assertLit("search")
     }
 
     private companion object {
