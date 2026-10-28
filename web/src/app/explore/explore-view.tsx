@@ -515,7 +515,12 @@ export function ExploreView({
           ariaLabel={EXPLORE_FIELD_NAME}
           node={node("searchField")}
           onClear={toRest}
-          onAction={() => remember(asked)}
+          // THE ACTION KEY ONLY DISMISSES THE KEYBOARD (Explore.md:25): the field
+          // lets go of focus, and the query joins the recents.
+          onAction={() => {
+            if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+            remember(asked);
+          }}
         />
         {searching && (
           <div className="flex items-center justify-between gap-1 px-4 pb-2">

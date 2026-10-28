@@ -18,28 +18,15 @@ import Link from "next/link";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
+import { NodeMark } from "@/lib/ui/node-mark";
 import { MonogramAvatar } from "./monogram-avatar";
 
 export type ReferenceKind = "post" | "comment" | "person" | "topic";
 
-const TILE =
-  "grid size-8 flex-none place-items-center overflow-hidden rounded-small bg-surface-container-highest text-on-surface-variant";
-
 function Mark({ kind, name, src, node }: { kind: ReferenceKind; name: string; src: string | null; node?: DataNode }) {
   if (kind === "person") return <MonogramAvatar name={name} src={src} size={32} node={node} />;
-  if (kind === "post" && src !== null) {
-    return (
-      <span aria-hidden="true" className={TILE} {...testAttributes(node)}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- a 32px decorative tile, never a layout image */}
-        <img src={src} alt="" className="size-full object-cover" />
-      </span>
-    );
-  }
-  return (
-    <span aria-hidden="true" className={`${TILE} text-title-medium`} {...testAttributes(node)}>
-      {kind === "comment" ? <Icon name="chat_bubble" size={18} /> : kind === "topic" ? "#" : "T"}
-    </span>
-  );
+  // A result list stands off any card, so the tile keeps its own tone (`onCard`).
+  return <NodeMark kind={kind} src={src} onCard={false} node={node} />;
 }
 
 export function ReferenceRow({
