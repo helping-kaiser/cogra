@@ -39,7 +39,8 @@
 import { useRef, type ReactNode } from "react";
 
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
-import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
+import { HeaderBar } from "@/lib/ui2/header-bar";
+import { HelpDot } from "@/lib/ui2/help-dot";
 import { FactRow } from "@/lib/ui2/fact-row";
 import { InlineAction } from "@/lib/ui2/inline-action";
 import { PillButton } from "@/lib/ui2/pill-button";
@@ -335,7 +336,7 @@ export function CommentEditView({
             onBack={leave}
             onLeave={leave}
             leaveLabel={COMMENT_EDIT_LEAVE_LABEL}
-            help={<HelpButton label="Editing" onOpen={onHelp} />}
+            help={<HelpDot ariaLabel="Editing" onOpen={onHelp} testId="header-help" />}
             focusTitle
           />
 

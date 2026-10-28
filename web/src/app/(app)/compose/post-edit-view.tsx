@@ -40,7 +40,8 @@ import { useRef, type ReactNode } from "react";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { TransportError } from "@/lib/ui/transport-error";
-import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
+import { HeaderBar } from "@/lib/ui2/header-bar";
+import { HelpDot } from "@/lib/ui2/help-dot";
 import { FactRow } from "@/lib/ui2/fact-row";
 import { InlineAction } from "@/lib/ui2/inline-action";
 import { PillButton } from "@/lib/ui2/pill-button";
@@ -257,7 +258,7 @@ export function PostEditView({
         onBack={leave}
         onLeave={leave}
         leaveLabel={EDIT_LEAVE_LABEL}
-        help={<HelpButton label="Editing" onOpen={onHelp} />}
+        help={<HelpDot ariaLabel="Editing" onOpen={onHelp} testId="header-help" />}
         testId="post-edit-header"
         focusTitle
       />
