@@ -127,9 +127,12 @@ function PeopleRows({
   ];
   const keyed = (tail: string): DataNode | undefined =>
     node === undefined ? undefined : { path: `${node.path}.${tail}`, key: state };
+  // ONE BLOCK, AS THE BOARD DRAWS IT (`_shared.jsx` PeopleCopies wraps the
+  // rows and the sign row in one box): the sign row stands 6px under the rows,
+  // never the section's 8px chip gap plus its own 6.
   return (
-    <>
-      <div role="radiogroup" aria-label="People" className="flex basis-full flex-col gap-1.5">
+    <div className="basis-full">
+      <div role="radiogroup" aria-label="People" className="flex flex-col gap-1.5">
         {rows.map((row) => {
           const chosen = people === row.value;
           const rowNode = keyed(row.tail);
@@ -206,7 +209,7 @@ function PeopleRows({
           })}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -264,7 +267,12 @@ export function FeedFilterSheet({
       titleHidden={!titled}
       titleTrailing={titled ? help : undefined}
       focusTitle={titled}
-      height="88dvh"
+      // 88% OF THE SCREEN, AS THE BUILT BOARD MEASURES IT (FeedSheet.md:3): the
+      // master's surface takes `height: 88%` and lays its 8px top and 24px
+      // bottom padding OUTSIDE it, so the drawn sheet stands 32px taller than
+      // 88% (837 of 915 at the harness's viewport). This sheet's grip margin
+      // and foot padding sit inside its height, so they are added back here.
+      height="calc(88dvh + 32px)"
       rows
       node={node}
       testId={testId}
