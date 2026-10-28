@@ -445,8 +445,8 @@ describe("ProfileScreen", () => {
   });
 
   // THE PROFILE'S ⋮ (ProfileOwnMenu.md, ProfileMenu.md, ProfileDeletedMenu.md;
-  // saved-surface SS-1): three sheets, built whole; History and Mention stand
-  // inert until their packets wire them.
+  // saved-surface SS-1): three sheets, built whole; Mention stands inert until
+  // its packet wires it.
   describe("the profile menu", () => {
     function rows() {
       return Array.from(
@@ -476,6 +476,20 @@ describe("ProfileScreen", () => {
       ]);
       fireEvent.click(screen.getByTestId("profile.menuSheet.saved"));
       expect(push).toHaveBeenCalledWith("/saved");
+    });
+
+    // ProfileOwnMenu.md:13/15 — History opens; which state it opens on is the
+    // page's own read (`history-view.test.tsx`).
+    it("the_own_menus_history_row_opens_history", async () => {
+      server.use(
+        meHandler(),
+        gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+        recordsHandler([]),
+      );
+      renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.history"));
+      expect(push).toHaveBeenCalledWith("/history");
     });
 
     it("another_persons_menu_reads_save_mention_share_hide_report", async () => {
