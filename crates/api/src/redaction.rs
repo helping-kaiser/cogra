@@ -27,8 +27,8 @@
 use common::envelope::{CograContent, CograProfile, MediaAsset};
 use postgres_store::retention::{self, NewUnit};
 use postgres_store::{PgPool, content as content_store, media as media_store, mirror, staged};
-use sqlx::{PgConnection, Postgres, Transaction};
 use serde_json::json;
+use sqlx::{PgConnection, Postgres, Transaction};
 use uuid::Uuid;
 
 use crate::l1::{BoundaryError, L1Boundary};

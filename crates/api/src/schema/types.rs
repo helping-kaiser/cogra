@@ -33,8 +33,8 @@ use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
 use crate::loaders::{
     ActorByAddressLoader, ActorByIdLoader, CommentByNodeLoader, CommentGalleryLoader,
-    CommentRemovalLoader, MediaByIdLoader, PayloadStateLoader, PostByNodeLoader,
-    PostGalleryLoader, PostRemovalLoader, SeveringRecordLoader,
+    CommentRemovalLoader, MediaByIdLoader, PayloadStateLoader, PostByNodeLoader, PostGalleryLoader,
+    PostRemovalLoader, SeveringRecordLoader,
 };
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
@@ -2956,12 +2956,9 @@ impl PostType {
     /// `createdAt` if never changed. A removal is no update: a removed
     /// post keeps the instant of its last version.
     async fn updated_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
-        let removal = node_removal::<PostRemovalLoader>(
-            ctx,
-            self.0.redaction_reason.is_some(),
-            self.0.id,
-        )
-        .await?;
+        let removal =
+            node_removal::<PostRemovalLoader>(ctx, self.0.redaction_reason.is_some(), self.0.id)
+                .await?;
         Ok(updated_at(
             self.0.created_at,
             self.0.version_created_at,
@@ -3317,12 +3314,9 @@ impl CommentType {
     /// The most recent fold-winning update's promotion; equals
     /// `createdAt` if never changed. A removal is no update.
     async fn updated_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
-        let removal = node_removal::<CommentRemovalLoader>(
-            ctx,
-            self.0.redaction_reason.is_some(),
-            self.0.id,
-        )
-        .await?;
+        let removal =
+            node_removal::<CommentRemovalLoader>(ctx, self.0.redaction_reason.is_some(), self.0.id)
+                .await?;
         Ok(updated_at(
             self.0.created_at,
             self.0.version_created_at,
@@ -3340,12 +3334,8 @@ impl CommentType {
     /// carries. Its replies keep their parent and stay readable.
     async fn removal(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Removal>> {
         Ok(removal_mark(
-            node_removal::<CommentRemovalLoader>(
-                ctx,
-                self.0.redaction_reason.is_some(),
-                self.0.id,
-            )
-            .await?,
+            node_removal::<CommentRemovalLoader>(ctx, self.0.redaction_reason.is_some(), self.0.id)
+                .await?,
         ))
     }
 

@@ -153,7 +153,8 @@ async fn signed_post(rig: &WireRig, m: &Member, title: &str, body: &str, media: 
         .await;
     let payload = &prepared["preparePost"];
     no_errors(payload);
-    rig.sign_prepared(&m.token, &m.key, &payload["writes"]).await;
+    rig.sign_prepared(&m.token, &m.key, &payload["writes"])
+        .await;
     payload["node"].as_str().expect("node").to_string()
 }
 
@@ -181,7 +182,8 @@ async fn comment(rig: &WireRig, m: &Member, target: &str, body: &str) -> String 
         .await;
     let payload = &prepared["prepareComment"];
     no_errors(payload);
-    rig.sign_prepared(&m.token, &m.key, &payload["writes"]).await;
+    rig.sign_prepared(&m.token, &m.key, &payload["writes"])
+        .await;
     rig.close_and_ingest().await;
     payload["node"].as_str().expect("node").to_string()
 }
@@ -200,7 +202,8 @@ async fn prepare_post_edit(rig: &WireRig, m: &Member, id: &str, body: &str) -> V
 async fn signed_edit(rig: &WireRig, m: &Member, id: &str, body: &str) {
     let payload = prepare_post_edit(rig, m, id, body).await;
     no_errors(&payload);
-    rig.sign_prepared(&m.token, &m.key, &payload["writes"]).await;
+    rig.sign_prepared(&m.token, &m.key, &payload["writes"])
+        .await;
 }
 
 async fn read_post(rig: &WireRig, id: &str) -> Value {
@@ -253,13 +256,11 @@ async fn count(pool: &PgPool, sql: &str) -> i64 {
 
 /// Every act id of the author's, oldest first.
 async fn acts_of(pool: &PgPool, author: Uuid) -> Vec<String> {
-    sqlx::query_scalar(
-        "SELECT act_id FROM staged_writes WHERE actor_id = $1 ORDER BY seq",
-    )
-    .bind(author)
-    .fetch_all(pool)
-    .await
-    .expect("acts")
+    sqlx::query_scalar("SELECT act_id FROM staged_writes WHERE actor_id = $1 ORDER BY seq")
+        .bind(author)
+        .fetch_all(pool)
+        .await
+        .expect("acts")
 }
 
 async fn archive_units(pool: &PgPool) -> i64 {
@@ -289,7 +290,10 @@ async fn removing_without_a_session_is_unauthenticated(pool: PgPool) {
             json!({ "input": { "record": record, "includeRevisions": true }}),
         )
         .await;
-    assert_eq!(json["errors"][0]["extensions"]["code"], "UNAUTHENTICATED", "{json}");
+    assert_eq!(
+        json["errors"][0]["extensions"]["code"], "UNAUTHENTICATED",
+        "{json}"
+    );
     assert_eq!(read_post(&rig, &id).await["removal"], Value::Null);
 }
 
@@ -333,7 +337,11 @@ async fn removing_someone_elses_post_is_forbidden(pool: PgPool) {
     assert_eq!(error["field"], json!(["record"]));
     assert_eq!(archive_units(&rig.pool).await, 0, "nothing archived");
     assert_eq!(
-        count(&rig.pool, "SELECT COUNT(*) FROM act_payloads WHERE payload_state = 'reduced'").await,
+        count(
+            &rig.pool,
+            "SELECT COUNT(*) FROM act_payloads WHERE payload_state = 'reduced'"
+        )
+        .await,
         0,
         "nothing reduced"
     );
@@ -622,16 +630,12 @@ async fn record_redacted_at_is_set_on_reduction(pool: PgPool) {
     const READ_RECORD: &str = r#"query($id: RecordId!) {
       record(id: $id) { id payloadState redactedAt }
     }"#;
-    let full = rig
-        .gql(None, READ_RECORD, json!({ "id": record }))
-        .await;
+    let full = rig.gql(None, READ_RECORD, json!({ "id": record })).await;
     assert_eq!(full["record"]["payloadState"], "FULL", "{full}");
     assert_eq!(full["record"]["redactedAt"], Value::Null);
 
     remove_post(&rig, &ada, &id).await;
-    let reduced = rig
-        .gql(None, READ_RECORD, json!({ "id": record }))
-        .await;
+    let reduced = rig.gql(None, READ_RECORD, json!({ "id": record })).await;
     assert_eq!(reduced["record"]["payloadState"], "REDUCED");
     let stored: chrono::DateTime<chrono::Utc> =
         sqlx::query_scalar("SELECT reduced_at FROM act_payloads WHERE act_id = $1")
@@ -711,7 +715,11 @@ async fn removal_deletes_no_node_no_entity_and_no_version_row(pool: PgPool) {
     remove_post(&rig, &ada, &id).await;
     for (sql, was) in TABLES.iter().zip(before) {
         let now = count(&rig.pool, sql).await;
-        let expected = if sql.ends_with("post_versions") { was + 1 } else { was };
+        let expected = if sql.ends_with("post_versions") {
+            was + 1
+        } else {
+            was
+        };
         assert_eq!(now, expected, "{sql}");
     }
 }
@@ -800,7 +808,11 @@ async fn a_crash_between_reduction_and_tombstone_is_impossible(pool: PgPool) {
 
     let refused = remove(&rig, &ada.token, &record, true).await;
     assert_eq!(first_error(&refused)["code"], "INTERNAL", "{refused}");
-    assert_eq!(archive_units(&rig.pool).await, 0, "no unit without its tombstone");
+    assert_eq!(
+        archive_units(&rig.pool).await,
+        0,
+        "no unit without its tombstone"
+    );
     let state: String =
         sqlx::query_scalar("SELECT payload_state FROM act_payloads WHERE act_id = $1")
             .bind(&record)
@@ -910,7 +922,10 @@ async fn a_removal_never_moves_updated_at(pool: PgPool) {
     signed_edit(&rig, &ada, &id, "Twice.").await;
     rig.close_and_ingest().await;
     let before = read_post(&rig, &id).await;
-    assert_ne!(before["updatedAt"], before["createdAt"], "the edit moved it");
+    assert_ne!(
+        before["updatedAt"], before["createdAt"],
+        "the edit moved it"
+    );
 
     remove_post(&rig, &ada, &id).await;
     assert_eq!(read_post(&rig, &id).await["updatedAt"], before["updatedAt"]);
@@ -1067,11 +1082,15 @@ async fn a_removed_post_leaves_search(pool: PgPool) {
             .map(|e| e["node"]["id"].clone())
             .collect::<Vec<_>>()
     };
-    let before = rig.gql(None, SEARCH, json!({ "query": "quincefield" })).await;
+    let before = rig
+        .gql(None, SEARCH, json!({ "query": "quincefield" }))
+        .await;
     assert_eq!(hits(before), vec![json!(id)]);
 
     remove_post(&rig, &ada, &id).await;
-    let after = rig.gql(None, SEARCH, json!({ "query": "quincefield" })).await;
+    let after = rig
+        .gql(None, SEARCH, json!({ "query": "quincefield" }))
+        .await;
     assert_eq!(hits(after), Vec::<Value>::new());
 }
 
@@ -1172,10 +1191,7 @@ async fn an_account_sweep_over_a_removed_post_keeps_by_author(pool: PgPool) {
 /// A redaction holds one pooled connection per act.
 /// ´claim:removal:one-connection-per-act´
 #[sqlx::test(migrations = "../../migrations")]
-async fn redaction_holds_one_connection_per_act(
-    options: PgPoolOptions,
-    connect: PgConnectOptions,
-) {
+async fn redaction_holds_one_connection_per_act(options: PgPoolOptions, connect: PgConnectOptions) {
     let pool = options.connect_with(connect.clone()).await.expect("pool");
     let rig = rig(pool);
     let ada = member(&rig, "ada").await;
@@ -1192,7 +1208,11 @@ async fn redaction_holds_one_connection_per_act(
                 .to_string()
         }
     };
-    let (first, second, third) = (genesis(first).await, genesis(second).await, genesis(third).await);
+    let (first, second, third) = (
+        genesis(first).await,
+        genesis(second).await,
+        genesis(third).await,
+    );
 
     let one = PgPoolOptions::new()
         .max_connections(1)

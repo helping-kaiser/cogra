@@ -122,7 +122,13 @@ impl ScopeAct {
     /// acts with no display row first, then landed acts in their order,
     /// then pending ones by authoring instant — the order the current
     /// version rule ranks their rows in.
-    fn rank(&self) -> (u8, Option<content_store::LandingOrder>, Option<chrono::DateTime<chrono::Utc>>) {
+    fn rank(
+        &self,
+    ) -> (
+        u8,
+        Option<content_store::LandingOrder>,
+        Option<chrono::DateTime<chrono::Utc>>,
+    ) {
         match (self.rows.order, self.rows.instant) {
             (Some(order), _) => (1, Some(order), None),
             (None, Some(instant)) => (2, None, Some(instant)),
@@ -162,7 +168,9 @@ pub async fn remove_content<B: L1Boundary>(
         return Err(RemovalError::NotAuthor);
     }
     if !removable(located.family) {
-        return Err(RemovalError::OutOfScope(located.family.as_str().to_string()));
+        return Err(RemovalError::OutOfScope(
+            located.family.as_str().to_string(),
+        ));
     }
     if located.carried {
         return Err(RemovalError::Carried(record.to_string()));
@@ -195,8 +203,16 @@ pub async fn remove_content<B: L1Boundary>(
     let mut done: Vec<(String, Redacted)> = Vec::with_capacity(scope.len());
     let mut finished: HashSet<String> = HashSet::new();
     let mut widenings = 0;
-    while let Some(act) = scope.iter().find(|a| !finished.contains(&a.act_id)).cloned() {
-        let last = scope.iter().filter(|a| !finished.contains(&a.act_id)).count() == 1;
+    while let Some(act) = scope
+        .iter()
+        .find(|a| !finished.contains(&a.act_id))
+        .cloned()
+    {
+        let last = scope
+            .iter()
+            .filter(|a| !finished.contains(&a.act_id))
+            .count()
+            == 1;
         let r = Redaction {
             actor_id: viewer,
             act_id: &act.act_id,
