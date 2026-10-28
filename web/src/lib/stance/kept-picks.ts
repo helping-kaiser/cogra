@@ -242,6 +242,11 @@ async function adoptLegacy(account: string): Promise<void> {
   }
 }
 
+/** The account's kept picks as custody holds them now (every family, oldest first). */
+export function listKeptPicks(account: string): Promise<KeptPick[]> {
+  return store.list(account);
+}
+
 /** Re-reads the account's picks; overlapping calls share one read. */
 export function refreshKeptPicks(account: string): Promise<void> {
   const running = inFlight.get(account);

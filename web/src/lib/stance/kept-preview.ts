@@ -35,15 +35,18 @@ export type KeptTargetPreview = {
  */
 export type RemovalAgent = "AUTHOR" | "ACCOUNT" | "MODERATION";
 
+/** The mark a moderation verdict's removal reads (copy-voice, *The kept picks' review*). */
+export const REMOVED_UNDER_RULES = "Removed under the platform's rules";
+
 /**
- * A removal's mark in the system's voice. AUTHOR and ACCOUNT both read
- * `Removed by its author` (api-spec.md: "the data keeps them distinct"); a
- * moderation verdict is the post-MVP half and has no blessed words yet, so it
- * reads as the author's until it does.
+ * A removal's mark in the system's voice (copy-voice, *The kept picks'
+ * review*): AUTHOR and ACCOUNT both read `Removed by its author` (api-spec.md:
+ * "the data keeps them distinct"), a moderation verdict `Removed under the
+ * platform's rules`.
  */
 export function removalMark(removal: { readonly by: RemovalAgent } | null | undefined): string | null {
   if (removal === null || removal === undefined) return null;
-  return REMOVED_BY_AUTHOR;
+  return removal.by === "MODERATION" ? REMOVED_UNDER_RULES : REMOVED_BY_AUTHOR;
 }
 
 type Moderated = { readonly value?: string | null; readonly status: string } | null | undefined;

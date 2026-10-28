@@ -38,6 +38,8 @@ export type ActsRow = {
   /** A refused act, said on its own row (`SealFaultRow`). */
   fault?: { message: string; onRemove: () => void; removeLabel?: string };
   testId?: string;
+  /** The row's identity, where rows share a label (the kept picks' seal: one `Opinion` per pick). */
+  key?: string;
 };
 
 const ROW = "flex min-h-11 items-center gap-2";
@@ -117,7 +119,7 @@ export function ActsCard({
   return (
     <div data-testid={testId} className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1">
       {rows.map((row) => (
-        <Row key={row.label} row={row} />
+        <Row key={row.key ?? row.label} row={row} />
       ))}
       <div className="flex min-h-12 flex-col justify-center gap-0.5 py-1.5">
         <span
