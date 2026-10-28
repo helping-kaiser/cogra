@@ -50,11 +50,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -377,17 +379,26 @@ private fun AlternateInputs(
 private fun entryText(value: Double): String = String.format(Locale.ROOT, "%.2f", value)
 
 /**
- * Direct entry (`DirectEntry`): the axis's question beside a 6rem field. A
- * typed value is reported only once it parses inside the closed range — the
- * typed text is its own state, since reformatting on every keystroke would
- * make a leading minus sign impossible to type — and lands on the hundredths
- * grid, as a released drag does.
+ * Direct entry (`DirectEntry`): the axis's question beside a 6rem field.
+ *
+ * A TYPED VALUE CLAMPS AS THE PAD CLAMPS (round 21, seam 245 ask 14;
+ * PadStanding.md): the field keeps what the reader typed while they type,
+ * and the pick takes the nearest value the bound allows on the hundredths
+ * grid — `1.5` picks +1.00, the way a knob dragged past the edge stops on it
+ * — so `Your pick` reads it before anything is signed, and no refusal line is
+ * drawn. What does not parse — an emptied field, a lone minus sign — MOVES
+ * NOTHING: the pick keeps its last value, because reading it as 0 would land
+ * a pick on the one number that means something of its own. Leaving the
+ * field rewrites it to the value the pick holds.
  */
 @Composable
 private fun StanceEntry(label: String, value: Double, onChange: (Double) -> Unit, testTag: String) {
     var typed by rememberSaveable { mutableStateOf(entryText(value)) }
-    LaunchedEffect(value) {
-        if (typed.toDoubleOrNull() != value) typed = entryText(value)
+    var focused by remember { mutableStateOf(false) }
+    // A pick moved from elsewhere (the swap back from the sliders) rewrites a
+    // field the reader is not typing in; one they are typing in keeps its text.
+    LaunchedEffect(value, focused) {
+        if (!focused) typed = entryText(value)
     }
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -398,21 +409,24 @@ private fun StanceEntry(label: String, value: Double, onChange: (Double) -> Unit
         OutlinedTextField(
             value = typed,
             onValueChange = { text ->
-                val parsed = text.toDoubleOrNull()?.takeIf { it in -1.0..1.0 }
-                if (parsed == null) {
-                    typed = text
-                } else {
-                    val landed = hundredth(parsed)
-                    typed = if (landed == parsed) text else entryText(landed)
-                    onChange(landed)
-                }
+                typed = text
+                typedPick(text)?.let(onChange)
             },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier
                 .width(ENTRY_WIDTH)
+                .onFocusChanged { focused = it.isFocused }
                 .semantics { contentDescription = label }
                 .testTag(testTag),
         )
     }
 }
+
+/**
+ * What a typed field's [text] picks: the parsed value clamped to the closed
+ * range and landed on the hundredths grid — or null, moving nothing, where
+ * it holds no number.
+ */
+internal fun typedPick(text: String): Double? =
+    text.trim().toDoubleOrNull()?.takeIf { it.isFinite() }?.let(::hundredth)

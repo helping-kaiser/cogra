@@ -34,6 +34,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
@@ -1288,6 +1289,66 @@ class StancePadTest {
         show(alternates.copy(inputMode = StanceInputSurface.ENTRY))
         compose.onNodeWithTag("${TAG}_stance_entry_directed").assertExists()
         compose.onNodeWithTag("${TAG}_stance_slider_directed").assertDoesNotExist()
+    }
+
+    /** The alternates on typed values, the pick kept by a live holder as the route keeps it. */
+    private fun showTyping() {
+        compose.setContent {
+            var state by remember { mutableStateOf(alternates.copy(inputMode = StanceInputSurface.ENTRY)) }
+            StanceControl(
+                state = state,
+                onHoldDefault = {}, onOpenPad = {},
+                onPick = {
+                    picks += it
+                    state = state.copy(pick = it)
+                },
+                onCommit = {}, onDismissPad = {}, onOpenAlternates = {},
+                onOpenSeverance = {}, onConfirmSeverance = {}, onDismissSeverance = {},
+                onConfirmationShown = {},
+                testTagPrefix = TAG,
+            )
+        }
+    }
+
+    // PadStanding.md (round 21): a typed value past a field's bound picks the
+    // nearest value the bound allows, read back in Your pick, never a refusal line.
+    @Test
+    fun aTypedValuePastTheBoundClampsAndTheFieldKeepsWhatWasTyped() {
+        showTyping()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").performTextReplacement("1.5")
+        assertThat(picks.last()).isEqualTo(StancePoint(1.0, 0.1))
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").assertTextContains("1.5")
+        compose.onNodeWithTag("${TAG}_stance_entry_interest").performTextReplacement("-3")
+        assertThat(picks.last()).isEqualTo(StancePoint(1.0, -1.0))
+    }
+
+    // PadStanding.md (round 21): an emptied or numberless field moves nothing, never a 0.
+    @Test
+    fun anEmptiedOrNumberlessFieldMovesNothing() {
+        showTyping()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").performTextReplacement("")
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").performTextReplacement("-")
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").performTextReplacement("x")
+        assertThat(picks).isEmpty()
+    }
+
+    // PadStanding.md (round 21): when focus leaves a typed field, it reads the value the pick holds.
+    @Test
+    fun leavingATypedFieldRewritesItToThePick() {
+        showTyping()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").performClick().performTextReplacement("1.5")
+        compose.onNodeWithTag("${TAG}_stance_entry_interest").performClick()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").assertTextContains("1.00")
+    }
+
+    @Test
+    fun typedTextPicksTheClampedHundredthOrNothing() {
+        assertThat(typedPick("0.123")).isEqualTo(0.12)
+        assertThat(typedPick(" 2 ")).isEqualTo(1.0)
+        assertThat(typedPick("-1.5")).isEqualTo(-1.0)
+        assertThat(typedPick("")).isNull()
+        assertThat(typedPick("-")).isNull()
+        assertThat(typedPick("Infinity")).isNull()
     }
 
     @Test
