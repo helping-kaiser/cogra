@@ -46,7 +46,15 @@ export function NodeMark({
     );
   }
   return (
-    <span aria-hidden="true" {...ids} className={`${tile} text-title-medium`}>
+    // The letter takes title-medium's SIZE and WEIGHT and nothing else
+    // (ReferenceRow.jsx `NodeMark`): the tile centres it, so the role's
+    // leading would only be a line box the master never draws.
+    <span
+      aria-hidden="true"
+      {...ids}
+      className={`${tile} text-[length:var(--text-title-medium)]`}
+      style={{ fontWeight: "var(--text-title-medium--font-weight)", lineHeight: "normal" }}
+    >
       {kind === "post" ? "T" : kind === "topic" ? "#" : <Icon name="chat_bubble" size={18} />}
     </span>
   );
