@@ -1654,39 +1654,23 @@ describe("the already-published marker", () => {
     ],
   });
 
-  function chronicle(...posts: readonly { id: string; createdAt: string; mediaId: string }[]) {
+  // The server names the earliest of the author's published posts carrying
+  // the stage's uploads (`ownPublishedPlacement`); the composer asks with them.
+  function placement(post: { id: string; createdAt: string } | null) {
+    const asked: unknown[] = [];
     server.use(
-      gqlLink.query("OwnPublishedMedia", () =>
-        HttpResponse.json({
-          data: {
-            records: {
-              __typename: "RecordConnection",
-              edges: posts.map((post) => ({
-                __typename: "RecordEdge",
-                node: {
-                  __typename: "Record",
-                  id: `r-${post.id}`,
-                  target: {
-                    __typename: "Post",
-                    id: post.id,
-                    createdAt: post.createdAt,
-                    attachments: [{ __typename: "MediaAttachment", id: post.mediaId, digest: `d-${post.mediaId.slice(2)}` }],
-                  },
-                },
-              })),
-              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
-            },
-          },
-        }),
-      ),
+      gqlLink.query("OwnPublishedPlacement", ({ variables }) => {
+        asked.push(variables);
+        return HttpResponse.json({
+          data: { ownPublishedPlacement: post === null ? null : { __typename: "Post", ...post } },
+        });
+      }),
     );
+    return asked;
   }
 
   it("names the earliest of the author's posts carrying the picture, and opens it", async () => {
-    chronicle(
-      { id: "p-new", createdAt: "2026-10-20T10:00:00Z", mediaId: "m-held" },
-      { id: "p-old", createdAt: "2026-09-12T10:00:00Z", mediaId: "m-held" },
-    );
+    const asked = placement({ id: "p-old", createdAt: "2026-09-12T10:00:00Z" });
     render(fakeDrafts(landed()));
     fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
 
@@ -1695,10 +1679,11 @@ describe("the already-published marker", () => {
     expect(screen.getByTestId(byNode("composeDetails.next"))).not.toBeDisabled();
     fireEvent.click(door);
     expect(push).toHaveBeenCalledWith("/posts/p-old");
+    expect(asked).toContainEqual({ mediaIds: ["m-held"] });
   });
 
   it("draws nothing when no published post carries it", async () => {
-    chronicle({ id: "p-other", createdAt: "2026-09-12T10:00:00Z", mediaId: "m-other" });
+    placement(null);
     render(fakeDrafts(landed()));
     fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
     await screen.findByTestId(byNode("composeDetails.title.input"));
