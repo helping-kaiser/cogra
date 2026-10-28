@@ -134,9 +134,12 @@ pub struct MediaConfig {
     /// The bucket an applicant's carried media waits in — no public
     /// policy; served to its author alone (data-model.md "Media areas").
     pub carried_bucket: String,
-    /// The operator-only bucket a deleted asset's bytes leave the live
-    /// store for — no public policy and no serving route.
-    pub held_bucket: String,
+    /// The operator-only store a deleted asset's bytes leave the live
+    /// store for — no public policy and no serving route. Production runs
+    /// it as its own service on no published port (deployment.md "The
+    /// held store"); development keeps it a bucket of the live service,
+    /// which is what every connection setting falls back to.
+    pub held: S3Config,
     /// The origin every `MediaAttachment.url` is minted against — the
     /// media service's own, never the API's. Bytes leave through the
     /// store, so a CDN can sit in front of it without the contract
@@ -241,18 +244,52 @@ where
     }
 }
 
+/// The held store's connection: its own service where the deployment
+/// runs one, the live service otherwise.
+///
+/// A held service of its own needs keys of its own. Inheriting the live
+/// store's would either fail every held move at runtime or mean the two
+/// services share one credential, which defeats running them apart — so
+/// an endpoint set without both keys refuses to start instead.
+fn held_store(
+    live: &S3Config,
+    held_bucket: &str,
+    var: impl Fn(&str) -> Option<String>,
+) -> anyhow::Result<S3Config> {
+    let endpoint = var("MEDIA_HELD_S3_ENDPOINT");
+    let access_key_id = var("MEDIA_HELD_ACCESS_KEY_ID");
+    let secret_access_key = var("MEDIA_HELD_SECRET_ACCESS_KEY");
+    if endpoint.is_some() && (access_key_id.is_none() || secret_access_key.is_none()) {
+        anyhow::bail!(
+            "MEDIA_HELD_S3_ENDPOINT names a held store of its own, which needs its own \
+             MEDIA_HELD_ACCESS_KEY_ID and MEDIA_HELD_SECRET_ACCESS_KEY"
+        );
+    }
+    Ok(S3Config {
+        endpoint: endpoint.unwrap_or_else(|| live.endpoint.clone()),
+        bucket: var("MEDIA_HELD_BUCKET").unwrap_or_else(|| held_bucket.to_string()),
+        access_key_id: access_key_id.unwrap_or_else(|| live.access_key_id.clone()),
+        secret_access_key: secret_access_key.unwrap_or_else(|| live.secret_access_key.clone()),
+        region: var("MEDIA_HELD_REGION").unwrap_or_else(|| live.region.clone()),
+    })
+}
+
 impl Default for MediaConfig {
     fn default() -> Self {
+        let s3 = S3Config {
+            endpoint: "http://localhost:9000".into(),
+            bucket: "cogra-media".into(),
+            access_key_id: "cogra_media".into(),
+            secret_access_key: "cogra_media_secret".into(),
+            region: "us-east-1".into(),
+        };
         Self {
-            s3: S3Config {
-                endpoint: "http://localhost:9000".into(),
-                bucket: "cogra-media".into(),
-                access_key_id: "cogra_media".into(),
-                secret_access_key: "cogra_media_secret".into(),
-                region: "us-east-1".into(),
+            held: S3Config {
+                bucket: "cogra-media-held".into(),
+                ..s3.clone()
             },
+            s3,
             carried_bucket: "cogra-media-carried".into(),
-            held_bucket: "cogra-media-held".into(),
             base_url: "http://localhost:3000/media".into(),
             max_upload_bytes: DEFAULT_MAX_UPLOAD_BYTES,
             max_video_upload_bytes: DEFAULT_MAX_VIDEO_UPLOAD_BYTES,
@@ -274,16 +311,17 @@ impl MediaConfig {
     /// "Environment Variables").
     pub fn from_env() -> anyhow::Result<Self> {
         let base = Self::default();
+        let s3 = S3Config {
+            endpoint: env_or("MEDIA_S3_ENDPOINT", &base.s3.endpoint),
+            bucket: env_or("MEDIA_BUCKET", &base.s3.bucket),
+            access_key_id: env_or("MEDIA_ACCESS_KEY_ID", &base.s3.access_key_id),
+            secret_access_key: env_or("MEDIA_SECRET_ACCESS_KEY", &base.s3.secret_access_key),
+            region: env_or("MEDIA_REGION", &base.s3.region),
+        };
         Ok(Self {
-            s3: S3Config {
-                endpoint: env_or("MEDIA_S3_ENDPOINT", &base.s3.endpoint),
-                bucket: env_or("MEDIA_BUCKET", &base.s3.bucket),
-                access_key_id: env_or("MEDIA_ACCESS_KEY_ID", &base.s3.access_key_id),
-                secret_access_key: env_or("MEDIA_SECRET_ACCESS_KEY", &base.s3.secret_access_key),
-                region: env_or("MEDIA_REGION", &base.s3.region),
-            },
+            held: held_store(&s3, &base.held.bucket, |var| std::env::var(var).ok())?,
+            s3,
             carried_bucket: env_or("MEDIA_CARRIED_BUCKET", &base.carried_bucket),
-            held_bucket: env_or("MEDIA_HELD_BUCKET", &base.held_bucket),
             base_url: env_or("MEDIA_BASE_URL", &base.base_url)
                 .trim_end_matches('/')
                 .to_string(),
@@ -2096,6 +2134,88 @@ mod planning_tests {
             ),
             slot
         );
+    }
+}
+
+#[cfg(test)]
+mod held_store_tests {
+    use std::collections::HashMap;
+
+    use super::*;
+
+    fn live() -> S3Config {
+        S3Config {
+            endpoint: "http://media:9000".into(),
+            bucket: "cogra-media".into(),
+            access_key_id: "live-key".into(),
+            secret_access_key: "live-secret".into(),
+            region: "us-east-1".into(),
+        }
+    }
+
+    fn lookup(vars: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+        let vars: HashMap<String, String> = vars
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect();
+        move |name| vars.get(name).cloned()
+    }
+
+    /// Unset, the held bucket sits on the live service — development's shape.
+    #[test]
+    fn the_held_store_defaults_to_a_bucket_of_the_live_service() {
+        let held = held_store(&live(), "cogra-media-held", lookup(&[])).expect("defaults");
+        assert_eq!(held.endpoint, "http://media:9000");
+        assert_eq!(held.bucket, "cogra-media-held");
+        assert_eq!(held.access_key_id, "live-key");
+        assert_eq!(held.secret_access_key, "live-secret");
+        assert_eq!(held.region, "us-east-1");
+    }
+
+    /// Production's shape: a service of its own, reached with its own keys.
+    #[test]
+    fn a_held_service_of_its_own_takes_its_own_endpoint_and_keys() {
+        let held = held_store(
+            &live(),
+            "cogra-media-held",
+            lookup(&[
+                ("MEDIA_HELD_S3_ENDPOINT", "http://media-held:9000"),
+                ("MEDIA_HELD_ACCESS_KEY_ID", "held-key"),
+                ("MEDIA_HELD_SECRET_ACCESS_KEY", "held-secret"),
+                ("MEDIA_HELD_BUCKET", "held"),
+            ]),
+        )
+        .expect("a complete held store");
+        assert_eq!(held.endpoint, "http://media-held:9000");
+        assert_eq!(held.bucket, "held");
+        assert_eq!(held.access_key_id, "held-key");
+        assert_eq!(held.secret_access_key, "held-secret");
+        assert_eq!(held.region, "us-east-1", "the region is the live store's unless set");
+    }
+
+    /// A config printed for a log line carries no secret key.
+    #[test]
+    fn a_store_config_debug_prints_no_secret_key() {
+        let printed = format!("{:?}", live());
+        assert!(!printed.contains("live-secret"), "{printed}");
+        assert!(printed.contains("live-key"), "the key id is not a secret: {printed}");
+    }
+
+    /// An endpoint without both keys would dial the held service with the
+    /// live store's credential, so it refuses to start.
+    #[test]
+    fn a_held_endpoint_without_its_own_keys_refuses_to_start() {
+        for vars in [
+            &[("MEDIA_HELD_S3_ENDPOINT", "http://media-held:9000")][..],
+            &[
+                ("MEDIA_HELD_S3_ENDPOINT", "http://media-held:9000"),
+                ("MEDIA_HELD_ACCESS_KEY_ID", "held-key"),
+            ][..],
+        ] {
+            let err = held_store(&live(), "cogra-media-held", lookup(vars))
+                .expect_err("a held endpoint needs its own keys");
+            assert!(err.to_string().contains("MEDIA_HELD_SECRET_ACCESS_KEY"));
+        }
     }
 }
 
