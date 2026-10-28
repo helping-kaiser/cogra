@@ -54,14 +54,20 @@ const VARIANTS = {
   chronicle: { second: "body-medium", trailing: "label-small", loud: false, disc: "container" },
 };
 
+/* Each rung sets its role's tracking with its size and leading (seam 245,
+   ask 7): a row is a <button> or a <div>, and the one resets letter-spacing
+   while the other inherits the page's 0.5px, so a rung that left it to the
+   box drew two trackings for one role. */
 const TYPE = {
   "label-small": {
     fontSize: "var(--text-label-small)",
     lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
   },
   "body-medium": {
     fontSize: "var(--text-body-medium)",
     lineHeight: "var(--text-body-medium--line-height)",
+    letterSpacing: "var(--text-body-medium--letter-spacing)",
   },
 };
 
@@ -181,6 +187,7 @@ export function ContentRow({
       style={{
         fontSize: "var(--text-label-large)",
         lineHeight: "var(--text-label-large--line-height)",
+        letterSpacing: "var(--text-label-large--letter-spacing)",
         fontWeight: "var(--text-label-large--font-weight)",
         ...(redacted ? { color: "var(--text-secondary)" } : null),
         ...ellipsis,
