@@ -1,439 +1,603 @@
 "use client";
 
-// The inviter's surface (Android's InvitesScreen): issue and revoke
-// links, work the approval queue — approving drives the full write
-// handshake on this device (auth.md "Approval and landing"; the in-page
-// applicant lock: web.md "Routes").
+// INVITES (the `Invites` board family: Invites, InvitesEmpty, InviteNew,
+// InviteCreated, InviteExpiry, ApprovePad, RejectConfirm, RejectAllConfirm;
+// behavior/<board>.md; copy-voice *The invites round*). Six boards, one page:
+// the create sheet, the expiry chooser, the fresh link, the approval pad and
+// the two closing dialogs are all drawn over this same page.
+//
+// APPLICATIONS LEAD, LIVE LINKS FOLLOW (Invites.md:7). The queue is the one
+// read spanning both ends of the funnel (`approvalQueue`): rows taken up
+// through the reader's ask-link door head the list, every other row stands
+// grouped by the link it came through, by age and never by readiness
+// (`layoutQueue`). Each row carries its own close; a group carries `Close
+// all` past one waiting.
+//
+// APPROVING IS VOUCHING (ApprovePad.md:5): a ready row's tap blooms the
+// ordinary opinion pad from an anchor that takes the close's slot, over the
+// approval seam (`approval-stance-data.ts`) — `vouchesIn`, so a (0, 0) Set
+// raises the empty sign's vouch-in ask and `Set it anyway` IS the act. A
+// not-ready row answers with a snackbar and never opens the pad (:39).
+//
+// NO BOTTOM BAR (Invites.md:3): a task flow takes the back arrow, which names
+// the door it came through (:95-97).
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useApolloClient } from "@apollo/client/react";
+import { useRouter } from "next/navigation";
 
-import type { ErrorCode } from "@/__generated__/graphql";
-import { fallbackMessage } from "@/lib/ui/error-messages";
-import { fetchMe, type MeUser } from "@/lib/api/auth-api";
+import { fetchMe } from "@/lib/api/auth-api";
 import {
-  approveApplicant,
-  createInviteLink,
-  fetchInviteLinks,
+  fetchInvites,
+  rejectApplication,
+  rejectLinkApplications,
   revokeInviteLink,
-  LINK_LIFETIME_MS,
   type ApplicationView,
   type InviteLinkView,
+  type InvitesRead,
 } from "@/lib/api/invites-api";
+import { createApprovalStanceData } from "@/lib/invites/approval-stance-data";
+import {
+  peekInvitesNotice,
+  takeInvitesNotice,
+  type InvitesNotice,
+} from "@/lib/invites/invites-notice";
+import {
+  approvalTarget,
+  dropKeptApproval,
+  useKeptApproval,
+} from "@/lib/invites/kept-approvals";
+import {
+  APPLICATIONS_LABEL,
+  CLOSE_ALL,
+  CLOSE_IT,
+  CLOSE_THEM,
+  CLOSING_IT,
+  CLOSING_THEM,
+  COPY_THE_LINK,
+  CREATE_INVITE,
+  HOW_VOUCHING_WORKS,
+  HOW_VOUCHING_WORKS_HELP,
+  INVITES_EMPTY,
+  INVITES_TITLE,
+  INVITE_REVOKED,
+  KEEP_IT,
+  KEEP_THEM,
+  LINK_COPIED,
+  LIVE_LINKS_LABEL,
+  NEW_INVITE,
+  REVOKE,
+  REVOKING,
+  alreadyWaiting,
+  approvable,
+  approvePadNote,
+  closeAllLabel,
+  closeApplicationLabel,
+  copyLink,
+  finishRegistering,
+  groupClosesAll,
+  groupLabel,
+  handleOf,
+  invitesOrigin,
+  joinUrl,
+  layoutQueue,
+  linkCaption,
+  linkLabel,
+  liveLinks,
+  rejectAllBody,
+  rejectAllTitle,
+  rejectBody,
+  rejectTitle,
+  secondLine,
+  type ApplicationGroup,
+} from "@/lib/invites/queue";
+import { useActiveAccountId } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
-import { expectation, stanceRecord } from "@/lib/signing/intent";
 import { useWriteSigner } from "@/lib/signing/provider";
-import { Button } from "@/lib/ui/button";
-import { Card } from "@/lib/ui/card";
+import { StanceDataProvider } from "@/lib/stance/provider";
+import { buttonClassName } from "@/lib/ui/button";
+import { CollapsingTop } from "@/lib/ui/collapsing-top";
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { EmptyState } from "@/lib/ui/empty-state";
+import { Icon } from "@/lib/ui/icons";
 import { PageHeader } from "@/lib/ui/page-header";
+import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
+import { useScrollHost } from "@/lib/ui/scroll-host";
 import { Snackbar } from "@/lib/ui/snackbar";
-import { DIRECTED_LABEL, INTEREST_LABEL } from "@/lib/ui/stance-format";
-import { StanceSlider } from "@/lib/ui/stance-slider";
+import { StanceControl } from "@/lib/ui/stance-control";
+import { signedLine } from "@/lib/ui/stance-readout";
+import { ladderAge } from "@/lib/ui/timestamp";
 import { TransportError } from "@/lib/ui/transport-error";
+import { AddressCard } from "@/lib/ui2/address-card";
+import { ContentRow } from "@/lib/ui2/content-row";
 
-/** Where an approval's stance sliders start: a mild positive vouch. */
-const APPROVAL_START = 0.1;
+import { CloseDialog } from "./close-dialog";
+import { InviteSheet } from "./invite-sheet";
 
-function invitesMessage(code: ErrorCode): string {
-  switch (code) {
-    case "WRITE_RULE_FAILED":
-      return "Your account can't fund this approval right now.";
-    case "BAD_INPUT":
-      return "That didn't go through — the link may have expired, or the application was already handled.";
-    case "NOT_FOUND":
-      return "That link is already gone.";
-    default:
-      return fallbackMessage(code);
+const ROOT: DataNode = { path: "invites" };
+
+/** How long a revoke may stay unanswered before it says it is still working (Invites.md:51). */
+export const REVOKING_AFTER_MS = 200;
+
+/** Which closing dialog stands, and over what. */
+type Closing =
+  | { readonly kind: "one"; readonly application: ApplicationView }
+  | { readonly kind: "all"; readonly group: ApplicationGroup };
+
+/** Where focus goes once a row or a card removes itself (Invites.md:61). */
+type FocusAfter = { readonly section: "application" | "link"; readonly index: number };
+
+function noticeMessage(notice: InvitesNotice): ReactNode {
+  const handle = `@${notice.handle}`;
+  switch (notice.kind) {
+    case "alreadyWaiting":
+      return alreadyWaiting(handle);
+    case "notRegistered":
+      return finishRegistering(handle);
+    case "signed":
+      return signedLine(notice.landing, 1, false, handle);
   }
 }
 
-export function InvitesView() {
+export function InvitesView({
+  from,
+  now = Date.now,
+}: {
+  /** The door Invites was opened from (`?from=`), for the back arrow's words. */
+  from: string | null;
+  /** Test injection: the clock captions and ages are read against. */
+  now?: () => number;
+}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
-  const signer = useWriteSigner();
+  const router = useRouter();
+  const account = useActiveAccountId();
+  const host = useScrollHost();
+  const origin = invitesOrigin(from);
 
-  const [me, setMe] = useState<MeUser | null>(null);
-  const [links, setLinks] = useState<readonly InviteLinkView[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  // Single-use is the server default too (api-spec CreateInviteLinkInput):
-  // multi-use is the inviter's explicit opening.
-  const [singleUse, setSingleUse] = useState(true);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
-  const [revokingId, setRevokingId] = useState<string | null>(null);
-  const [error, setError] = useState<ErrorCode | null>(null);
-  const [transportFailed, setTransportFailed] = useState(false);
-  const [signIncomplete, setSignIncomplete] = useState(false);
-  const [vouchSigned, setVouchSigned] = useState(false);
-  // Stable, so the snackbar's timer is not restarted by every render under it.
-  const dismissVouchSigned = useCallback(() => setVouchSigned(false), []);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [copyFailedId, setCopyFailedId] = useState<string | null>(null);
+  const [read, setRead] = useState<InvitesRead | null>(null);
+  const [fault, setFault] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [approving, setApproving] = useState<string | null>(null);
+  const [closing, setClosing] = useState<Closing | null>(null);
+  const [revoking, setRevoking] = useState<{ id: string; slow: boolean } | null>(null);
+  const [revokeFailed, setRevokeFailed] = useState(false);
+  // What an ask link handed over on the way here: its snackbar, and the row
+  // to stand at (VouchAsk.md:17, :27, :31). Read in the first render, taken
+  // once the page stands.
+  const [arrival] = useState(peekInvitesNotice);
+  const [snack, setSnack] = useState<{ message: ReactNode; token: number } | null>(() =>
+    arrival === null ? null : { message: noticeMessage(arrival), token: 0 },
+  );
+  const tokens = useRef(0);
+  const focusAfter = useRef<FocusAfter | null>(null);
+  const standAt = useRef<string | null>(
+    arrival !== null && arrival.kind !== "signed" ? arrival.handle : null,
+  );
+  useEffect(() => {
+    takeInvitesNotice();
+  }, []);
+  const opener = useRef<HTMLElement | null>(null);
 
-  const refresh = useCallback(() => {
-    return guard
-      .run(() => fetchMe(client))
-      .then((meOutcome): Promise<void> | undefined => {
-        if (meOutcome.kind !== "success") {
-          setLoading(false);
-          // A refused viewer read used to set nothing at all, so the screen
-          // rendered as loaded with no member and no reason given.
-          if (meOutcome.kind === "refused") setError(meOutcome.errors[0].code);
-          else setTransportFailed(true);
-          return;
-        }
-        setMe(meOutcome.value);
-        if (meOutcome.value.accountState !== "MEMBER") {
-          setLoading(false);
-          return;
-        }
-        return guard
-          .run(() => fetchInviteLinks(client))
-          .then((linksOutcome) => {
-            setLoading(false);
-            // Each arm states BOTH banners, so a read cannot leave an earlier
-            // fault standing beside its own answer.
-            switch (linksOutcome.kind) {
-              case "success":
-                setLinks(linksOutcome.value);
-                setError(null);
-                setTransportFailed(false);
-                break;
-              case "refused":
-                setError(linksOutcome.errors[0].code);
-                setTransportFailed(false);
-                break;
-              case "failed":
-                setError(null);
-                setTransportFailed(true);
-                break;
-            }
-          });
-      });
+  const notify = useCallback((message: ReactNode) => {
+    tokens.current += 1;
+    setSnack({ message, token: tokens.current });
+  }, []);
+  const dismissSnack = useCallback(() => setSnack(null), []);
+
+  const refresh = useCallback(async () => {
+    const outcome = await guard.run(() => fetchInvites(client));
+    if (outcome.kind === "success") {
+      setRead(outcome.value);
+      setFault(false);
+    } else {
+      setFault(true);
+    }
   }, [client, guard]);
 
-  /**
-   * ONE PLACE TO BE RIGHT about what a new operation clears.
-   *
-   * Four flags describe one outcome of one operation and no type stops two of
-   * them being true together, so the reset discipline was whatever each
-   * handler remembered: creating a link cleared two of the four, which left an
-   * earlier approval's "your vouch did not finish" standing beside a link that
-   * had just been created successfully.
-   */
-  const beginOperation = () => {
-    setError(null);
-    setTransportFailed(false);
-    setSignIncomplete(false);
-    setVouchSigned(false);
-  };
+  // AN APPLICANT NEVER STANDS HERE (ProfileApplicant.md:18: their Invites
+  // answers with a snackbar and never opens). A reader who is not a member
+  // and reaches the address anyway lands where app-open lands for them.
+  useEffect(() => {
+    let live = true;
+    void guard.run(() => fetchMe(client)).then((me) => {
+      if (live && me.kind === "success" && me.value.accountState !== "MEMBER") router.replace("/");
+    });
+    return () => {
+      live = false;
+    };
+  }, [client, guard, router]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  const onCreate = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (creating) return;
-    setCreating(true);
-    beginOperation();
-    const outcome = await guard.run(() =>
-      createInviteLink(client, {
-        expiresAt: new Date(Date.now() + LINK_LIFETIME_MS).toISOString(),
-        singleUse,
-      }),
-    );
-    setCreating(false);
-    switch (outcome.kind) {
-      case "success":
-        await refresh();
-        break;
-      case "refused":
-        setError(outcome.errors[0].code);
-        break;
-      case "failed":
-        setTransportFailed(true);
-        break;
+  const onPull = useCallback(() => void refresh(), [refresh]);
+  usePullToRefresh({ host, onPull, enabled: !sheetOpen && closing === null && approving === null });
+
+  const layout = useMemo(() => layoutQueue(read?.queue ?? []), [read]);
+  const links = useMemo(() => liveLinks(read?.links ?? []), [read]);
+  const empty =
+    read !== null && layout.head.length === 0 && layout.groups.length === 0 && links.length === 0;
+
+  // FOCUS FOLLOWS A REMOVAL (Invites.md:61): the next row, else the previous,
+  // else the empty state. And an ask link's arrival stands at its row.
+  useEffect(() => {
+    if (read === null) return;
+    const wanted = focusAfter.current;
+    focusAfter.current = null;
+    if (wanted !== null) {
+      const path = wanted.section === "application" ? "invites.application" : "invites.link";
+      const items = [...document.querySelectorAll<HTMLElement>(`[data-testid="${path}"]`)];
+      const target = items[Math.min(wanted.index, items.length - 1)];
+      const focusable =
+        target?.querySelector<HTMLElement>("button, a") ??
+        document.querySelector<HTMLElement>('[data-testid="invites-empty-create"], [data-testid="invites.create"]');
+      focusable?.focus();
     }
+    const at = standAt.current;
+    if (at !== null) {
+      standAt.current = null;
+      document
+        .querySelector<HTMLElement>(`[data-testid="invites.application"][data-testid-key="${at}"]`)
+        ?.scrollIntoView?.({ block: "center" });
+    }
+  }, [read]);
+
+  const indexOfApplication = (id: string): number => {
+    const order = [...layout.head, ...layout.groups.flatMap((g) => g.rows)];
+    return Math.max(0, order.findIndex((a) => a.id === id));
   };
 
-  const onRevoke = async (linkId: string) => {
-    if (revokingId !== null) return;
-    setRevokingId(linkId);
-    beginOperation();
-    const outcome = await guard.run(() => revokeInviteLink(client, linkId));
-    await refresh();
-    setRevokingId(null);
-    if (outcome.kind === "refused") setError(outcome.errors[0].code);
-    if (outcome.kind === "failed") setTransportFailed(true);
+  const openSheet = (event: React.MouseEvent<HTMLElement>) => {
+    opener.current = event.currentTarget;
+    setSheetOpen(true);
   };
 
-  const onShare = async (linkId: string) => {
-    // writeText rejects on denied permission or a non-secure context —
-    // silence would leave the Share button looking dead.
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/join/${linkId}`);
-      setCopiedId(linkId);
-      setCopyFailedId(null);
-    } catch {
-      setCopiedId(null);
-      setCopyFailedId(linkId);
-    }
+  const closeSheet = () => {
+    setSheetOpen(false);
+    // Focus returns to the control that opened it (InviteNew.md:27).
+    opener.current?.focus();
   };
 
-  const onApprove = async (applicationId: string, pDirected: number, pInterest: number) => {
-    if (approvingId !== null) return;
-    // The vouch must point at the applicant this row shows, by the L1 id
-    // the queue read served for them (intent.ts). A row without one has no
-    // key attached, and nothing approvable.
-    const applicantGraphId =
-      links
-        .flatMap((link) => link.applications.edges)
-        .find((edge) => edge.node.id === applicationId)?.node.graphId ?? null;
-    if (applicantGraphId === null) {
-      setError("BAD_INPUT");
-      return;
-    }
-    setApprovingId(applicationId);
-    beginOperation();
-    const prepared = await guard.run(() =>
-      approveApplicant(client, applicationId, pDirected, pInterest),
+  const onRevoke = async (link: InviteLinkView, index: number) => {
+    if (revoking !== null) return;
+    setRevokeFailed(false);
+    setRevoking({ id: link.id, slow: false });
+    const timer = setTimeout(
+      () => setRevoking((current) => (current?.id === link.id ? { id: link.id, slow: true } : current)),
+      REVOKING_AFTER_MS,
     );
-    if (prepared.kind === "refused") {
-      setApprovingId(null);
-      setError(prepared.errors[0].code);
-      return;
-    }
-    if (prepared.kind === "failed") {
-      setApprovingId(null);
-      setTransportFailed(true);
-      return;
-    }
-    const results = await signer.sign(
-      prepared.value,
-      expectation([stanceRecord(applicantGraphId, pDirected, pInterest)]),
-    );
-    if (results.every((result) => result.kind === "done")) {
-      setVouchSigned(true);
+    const outcome = await guard.run(() => revokeInviteLink(client, link.id));
+    clearTimeout(timer);
+    if (outcome.kind === "success") {
+      focusAfter.current = { section: "link", index };
+      await refresh();
+      setRevoking(null);
+      notify(INVITE_REVOKED);
     } else {
-      // The approval itself went through; the parked material resumes
-      // from Home — say so instead of failing silently.
-      setSignIncomplete(true);
+      // The card stays (:59).
+      setRevoking(null);
+      setRevokeFailed(true);
     }
-    setApprovingId(null);
-    await refresh();
   };
+
+  const commitClose = async (asked: Closing): Promise<boolean> => {
+    const outcome =
+      asked.kind === "one"
+        ? await guard.run(() => rejectApplication(client, asked.application.id))
+        : await guard.run(() => rejectLinkApplications(client, asked.group.linkId));
+    if (outcome.kind !== "success") return false;
+    // A kept approval's close drops the kept vouch; nothing is signed
+    // (RejectConfirm.md:7, Invites.md:89).
+    const closed = asked.kind === "one" ? [asked.application] : asked.group.rows;
+    for (const application of closed) dropKeptApproval(account, application.id);
+    const first = asked.kind === "one" ? asked.application : asked.group.rows[0];
+    focusAfter.current = { section: "application", index: indexOfApplication(first.id) };
+    setClosing(null);
+    await refresh();
+    return true;
+  };
+
+  const rowFor = (application: ApplicationView) => (
+    <ApplicationRow
+      key={application.id}
+      application={application}
+      now={now()}
+      approving={approving === application.id}
+      onApprove={() => setApproving(application.id)}
+      onApproveEnd={() => setApproving(null)}
+      onTaken={(landing) => {
+        setApproving(null);
+        focusAfter.current = { section: "application", index: indexOfApplication(application.id) };
+        notify(signedLine(landing, 1, false, handleOf(application)));
+        void refresh();
+      }}
+      onNotReady={() => notify(finishRegistering(handleOf(application)))}
+      onClose={() => setClosing({ kind: "one", application })}
+    />
+  );
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 pb-12 pt-3">
-      <PageHeader
-        inGutter
-        title="Invites"
-        backHref="/profile"
-        backLabel="Back to profile"
-        backTestId="invites_back"
-      />
+    <main className="mx-auto flex w-full max-w-2xl flex-col pb-8">
+      <CollapsingTop>
+        <PageHeader
+          title={INVITES_TITLE}
+          backHref={origin.href}
+          backLabel={origin.label}
+          backScroll={false}
+          node={part(ROOT, "header")}
+        />
+      </CollapsingTop>
 
-      {loading && (
-        <p role="status" data-testid="invites_loading" className="text-body-medium text-on-surface-variant">
+      {read === null && !fault && (
+        <p role="status" aria-live="polite" data-testid="invites-loading" className="px-6 pt-2 text-body-medium text-on-surface-variant">
           Loading…
         </p>
       )}
+      {fault && <div className="px-6 pt-2"><TransportError testId="invites-error" /></div>}
 
-      {me !== null && me.accountState !== "MEMBER" && (
-        <Card testId="invites_locked">
-          <h2 className="text-title-medium">Locked until your inviter approves you</h2>
-          <p className="text-body-medium text-on-surface-variant">
-            Inviting unlocks once your inviter approves you.
-          </p>
-        </Card>
+      {empty && (
+        // INVITESEMPTY (InvitesEmpty.md): the calm line, and the page's one
+        // committing control under it at the column's full width — no error
+        // colour, no bar.
+        <div className="flex flex-col px-6 pb-8 pt-4" data-testid="invites-empty">
+          <EmptyState
+            title={INVITES_EMPTY}
+            testId="invites-empty-state"
+            action={
+              <button
+                type="button"
+                data-testid="invites-empty-create"
+                onClick={openSheet}
+                className={`w-full ${buttonClassName({ variant: "primary" })}`}
+              >
+                {CREATE_INVITE}
+              </button>
+            }
+          />
+        </div>
       )}
 
-      {transportFailed && <TransportError testId="invites_error" />}
-      {!transportFailed && error !== null && (
-        <p role="alert" data-testid="invites_error" className="text-body-medium text-error">
-          {invitesMessage(error)}
-        </p>
+      {read !== null && !empty && (
+        <div className="flex flex-col pt-2">
+          <div className="px-4">
+            <button
+              type="button"
+              onClick={openSheet}
+              {...testAttributes(part(ROOT, "create"))}
+              className={`w-full ${buttonClassName({ variant: "primary" })}`}
+            >
+              {NEW_INVITE}
+            </button>
+          </div>
+
+          {(layout.head.length > 0 || layout.groups.length > 0) && (
+            <>
+              <SectionLabel node={part(ROOT, "applicationsLabel")}>{APPLICATIONS_LABEL}</SectionLabel>
+              {layout.head.length > 0 && (
+                <div className="flex flex-col gap-2 px-4 pb-2">{layout.head.map(rowFor)}</div>
+              )}
+              <div className="flex flex-col gap-2 px-4">
+                {layout.groups.map((group) => (
+                  <GroupBlock
+                    key={group.linkId}
+                    group={group}
+                    onCloseAll={() => setClosing({ kind: "all", group })}
+                  >
+                    {group.rows.map(rowFor)}
+                  </GroupBlock>
+                ))}
+              </div>
+            </>
+          )}
+
+          {links.length > 0 && (
+            <>
+              <SectionLabel node={part(ROOT, "linksLabel")}>{LIVE_LINKS_LABEL}</SectionLabel>
+              <div className="flex flex-col gap-2 px-4">
+                {links.map((link, index) => {
+                  const url = joinUrl(window.location.origin, link.id);
+                  return (
+                    <AddressCard
+                      key={link.id}
+                      address={url}
+                      label={linkLabel(link)}
+                      copyLabel={COPY_THE_LINK}
+                      onCopy={() => void copyLink(url).then((copied) => copied && notify(LINK_COPIED))}
+                      action={{
+                        label: REVOKE,
+                        busyLabel: REVOKING,
+                        // Inert from the press, `Revoking…` past 200ms,
+                        // never dimmed and never a spinner (:49-51).
+                        busy: revoking?.id === link.id && revoking.slow,
+                        onClick: () => void onRevoke(link, index),
+                      }}
+                      caption={linkCaption(link, now())}
+                      node={instance(ROOT, "link", link.id)}
+                    />
+                  );
+                })}
+              </div>
+              {revokeFailed && (
+                <div className="px-6 pt-2">
+                  <TransportError testId="invites-revoke-failed" />
+                </div>
+              )}
+            </>
+          )}
+        </div>
       )}
-      {/* The inviter's half of the same rule: a completed action is confirmed
-          by a snackbar, never by a line that stays (design/readme.md §3). */}
-      <Snackbar
-        testId="invites_vouch_signed"
-        message={vouchSigned ? "Approved — your vouch is signed and on its way." : null}
-        onDismiss={dismissVouchSigned}
+
+      <InviteSheet
+        open={sheetOpen}
+        onClose={closeSheet}
+        onCreated={() => void refresh()}
+        notify={notify}
+        now={now}
       />
-      {signIncomplete && (
-        <p role="alert" data-testid="invites_sign_incomplete" className="text-body-medium text-error">
-          The approval went through, but the vouch didn&apos;t finish signing. It&apos;s saved on
-          this device — resume it from Home.
-        </p>
-      )}
 
-      {me?.accountState === "MEMBER" && (
-        <>
-          <Card>
-            <h2 className="text-title-medium">Invite someone you know</h2>
-            <p className="text-body-medium text-on-surface-variant">
-              The link carries no stance — you choose it when you approve, and approving is your
-              priced vouch.
-            </p>
-            <form onSubmit={onCreate} className="flex flex-col gap-3" noValidate>
-              <label className="flex items-center gap-2 text-label-large">
-                <input
-                  type="checkbox"
-                  data-testid="invites_single_use"
-                  className="accent-primary"
-                  checked={singleUse}
-                  onChange={(event) => setSingleUse(event.target.checked)}
-                />
-                Single-use
-              </label>
-              <Button type="submit" testId="invites_create" size="sm" selfStart disabled={creating}>
-                Create link
-              </Button>
-            </form>
-          </Card>
+      {closing !== null &&
+        (closing.kind === "one" ? (
+          <CloseDialog
+            title={rejectTitle(handleOf(closing.application))}
+            body={rejectBody(handleOf(closing.application))}
+            commitLabel={CLOSE_IT}
+            busyLabel={CLOSING_IT}
+            keepLabel={KEEP_IT}
+            onCommit={() => commitClose(closing)}
+            onDismiss={() => setClosing(null)}
+          />
+        ) : (
+          <CloseDialog
+            title={rejectAllTitle(closing.group.rows.length)}
+            body={rejectAllBody(closing.group.rows.length)}
+            commitLabel={CLOSE_THEM}
+            busyLabel={CLOSING_THEM}
+            keepLabel={KEEP_THEM}
+            onCommit={() => commitClose(closing)}
+            onDismiss={() => setClosing(null)}
+          />
+        ))}
 
-          {links.map((link) => (
-            <LinkCard
-              key={link.id}
-              link={link}
-              approvingId={approvingId}
-              revoking={revokingId !== null}
-              copied={copiedId === link.id}
-              copyFailed={copyFailedId === link.id}
-              onShare={onShare}
-              onRevoke={onRevoke}
-              onApprove={onApprove}
-            />
-          ))}
-        </>
-      )}
+      <Snackbar
+        testId="invites-snackbar"
+        message={snack?.message ?? null}
+        token={snack?.token}
+        onDismiss={dismissSnack}
+      />
     </main>
   );
 }
 
-function LinkCard({
-  link,
-  approvingId,
-  revoking,
-  copied,
-  copyFailed,
-  onShare,
-  onRevoke,
-  onApprove,
-}: {
-  link: InviteLinkView;
-  approvingId: string | null;
-  revoking: boolean;
-  copied: boolean;
-  copyFailed: boolean;
-  onShare: (linkId: string) => void;
-  onRevoke: (linkId: string) => void;
-  onApprove: (applicationId: string, pDirected: number, pInterest: number) => void;
-}) {
-  const revoked = link.revokedAt !== null;
+/** A quiet section caption (`SectionLabel.jsx`): label-small, secondary ink. */
+function SectionLabel({ children, node }: { children: string; node: DataNode }) {
   return (
-    <Card testId={`link_${link.id}`}>
-      <p className="font-mono text-body-small text-on-surface-variant">{link.id}</p>
-      <p className="text-body-medium">{revoked ? "Revoked" : link.singleUse ? "Single-use" : "Multi-use"}</p>
-      {!revoked && (
-        <div className="flex items-center gap-3">
-          <Button testId={`share_${link.id}`} variant="outline" size="sm" onClick={() => onShare(link.id)}>
-            Share
-          </Button>
-          <Button
-            testId={`revoke_${link.id}`}
-            variant="text"
-            size="sm"
-            disabled={revoking}
-            onClick={() => onRevoke(link.id)}
-          >
-            Revoke
-          </Button>
-          {copied && (
-            <p role="status" data-testid={`copied_${link.id}`} className="text-body-medium text-on-surface-variant">
-              Copied
-            </p>
-          )}
-          {copyFailed && (
-            <p role="alert" data-testid={`copy_failed_${link.id}`} className="text-body-medium text-error">
-              Couldn&apos;t copy — copy the page address instead.
-            </p>
-          )}
-        </div>
-      )}
-      {link.applications.edges.map(({ node: application }) => (
-        <ApplicationRow
-          key={application.id}
-          application={application}
-          approvingId={approvingId}
-          onApprove={onApprove}
-        />
-      ))}
-    </Card>
+    <span
+      {...testAttributes(node)}
+      className="block px-6 pb-1 pt-3 text-label-small text-on-surface-variant"
+    >
+      {children}
+    </span>
   );
 }
 
-function applicantStatus(application: ApplicationView): string {
-  const handle = `@${application.handle}`;
-  if (application.landedAt !== null) return `${handle} is a member.`;
-  if (application.approvedAt !== null) {
-    return `${handle} approved — waiting for their signature and landing.`;
-  }
-  if (!application.emailVerified && !application.keyAttached) {
-    return `${handle} applied; waiting on their email verification and device key.`;
-  }
-  if (!application.emailVerified) return `${handle} applied; waiting on their email verification.`;
-  if (!application.keyAttached) return `${handle} applied; waiting on their device key.`;
-  return `${handle} applied and proved their email and key — ready for your approval.`;
+/**
+ * A link's group (the board's `ApplicationGroup`): its label and waiting
+ * count, `Close all` past one waiting, then its rows by age.
+ */
+function GroupBlock({
+  group,
+  onCloseAll,
+  children,
+}: {
+  group: ApplicationGroup;
+  onCloseAll: () => void;
+  children: ReactNode;
+}) {
+  const node = instance(ROOT, "group", group.linkId);
+  return (
+    <>
+      <div {...testAttributes(node)} className="flex items-center justify-between gap-3 px-1 pt-1">
+        <span {...testAttributes(part(node, "label"))} className="text-label-medium text-on-surface-variant">
+          {groupLabel(group)}
+        </span>
+        {groupClosesAll(group) && (
+          <button
+            type="button"
+            aria-label={closeAllLabel(group.rows.length)}
+            onClick={onCloseAll}
+            {...testAttributes(part(node, "close"))}
+            className={buttonClassName({ variant: "text", size: "sm" })}
+          >
+            {CLOSE_ALL}
+          </button>
+        )}
+      </div>
+      {children}
+    </>
+  );
 }
 
+/**
+ * One application (the board's `ContentRow` in its chronicle variant): the
+ * monogram from the handle, the handle alone, the reader's fact, the age, and
+ * the row's own close — or, while its pad is up, the stance anchor the pad
+ * bloomed from in the close's slot (ApprovePad.md:15).
+ */
 function ApplicationRow({
   application,
-  approvingId,
+  now,
+  approving,
   onApprove,
+  onApproveEnd,
+  onTaken,
+  onNotReady,
+  onClose,
 }: {
   application: ApplicationView;
-  approvingId: string | null;
-  onApprove: (applicationId: string, pDirected: number, pInterest: number) => void;
+  now: number;
+  approving: boolean;
+  onApprove: () => void;
+  onApproveEnd: () => void;
+  onTaken: (landing: { pDirected: number; pInterest: number }) => void;
+  onNotReady: () => void;
+  onClose: () => void;
 }) {
-  // The stance is chosen here and commits at approval (schema:
-  // ApplicationApprovalInput); the link carries none to seed it from.
-  const [pDirected, setPDirected] = useState(APPROVAL_START);
-  const [pInterest, setPInterest] = useState(APPROVAL_START);
+  const client = useApolloClient();
+  const guard = useAuthGuard();
+  const signer = useWriteSigner();
+  const kept = useKeptApproval(application.id);
+  const data = useMemo(
+    () => createApprovalStanceData({ client, guard, signer }, application),
+    [client, guard, signer, application],
+  );
+  const handle = handleOf(application);
+  const node = instance(ROOT, "application", application.handle);
+  const ready = approvable(application);
 
-  const approvable = application.emailVerified && application.keyAttached;
   return (
-    <div className="flex flex-col gap-2 border-t border-outline-variant pt-3">
-      <p data-testid={`application_${application.id}`} className="text-body-medium">
-        {applicantStatus(application)}
-      </p>
-      {application.approvedAt === null && approvable && (
-        <>
-          <StanceSlider
-            label={DIRECTED_LABEL}
-            value={pDirected}
-            onChange={setPDirected}
-            testId={`approve_p_directed_${application.id}`}
-          />
-          <StanceSlider
-            label={INTEREST_LABEL}
-            value={pInterest}
-            onChange={setPInterest}
-            testId={`approve_p_interest_${application.id}`}
-          />
-          <Button
-            testId={`approve_${application.id}`}
-            size="sm"
-            selfStart
-            onClick={() => onApprove(application.id, pDirected, pInterest)}
-            disabled={approvingId !== null}
+    <ContentRow
+      variant="chronicle"
+      title={handle}
+      second={secondLine(application, kept.keyElsewhere)}
+      trailing={ladderAge(application.createdAt, now)}
+      disc={{ kind: "monogram", name: application.handle }}
+      // A kept approval whose key is elsewhere meets the key notice, as a
+      // kept pick's face does (:79) — the pad carries it in its place.
+      onOpen={ready || kept.keyElsewhere ? onApprove : onNotReady}
+      node={node}
+      testId={`invites-application-${application.id}`}
+      action={
+        approving ? (
+          <StanceDataProvider data={data}>
+            <StanceControl
+              target={{ ...approvalTarget(application.id), label: handle }}
+              testIdPrefix={`invites-approve-${application.id}`}
+              node={part(node, "stance")}
+              vouchesIn
+              padOnly={{ onClose: onApproveEnd, keepAnchor: true }}
+              variant={{
+                helpLabel: HOW_VOUCHING_WORKS,
+                help: HOW_VOUCHING_WORKS_HELP,
+                note: approvePadNote(handle),
+                onTaken,
+                padNode: part(node, "stance.pad"),
+              }}
+            />
+          </StanceDataProvider>
+        ) : (
+          <button
+            type="button"
+            aria-label={closeApplicationLabel(handle)}
+            onClick={onClose}
+            {...testAttributes(part(node, "close"))}
+            className="cg-state cg-focus cg-hit grid size-10 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-on-surface-variant"
           >
-            Approve and vouch
-          </Button>
-        </>
-      )}
-    </div>
+            <Icon name="close" size={20} />
+          </button>
+        )
+      }
+    />
   );
 }

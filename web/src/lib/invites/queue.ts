@@ -21,7 +21,7 @@ export const CLOSE_ALL = "Close all";
 export const COPY_THE_LINK = "Copy the link";
 export const REVOKE = "Revoke";
 export const REVOKING = "Revoking…";
-export const LINK_COPIED = "Link copied";
+export { LINK_COPIED } from "@/lib/ui/share";
 export const INVITE_REVOKED = "Invite revoked";
 export const INVITES_EMPTY =
   "No invites out yet. A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in.";
@@ -269,5 +269,21 @@ export function invitesOrigin(from: string | null): InvitesOrigin {
       return { href: "/kept-picks", label: "Back to Kept picks" };
     default:
       return { href: "/profile", label: "Back to your profile" };
+  }
+}
+
+/**
+ * Puts a link on the clipboard; whether it landed. A copy that did not land
+ * says nothing (no board draws a copy refusal), so `Link copied` is only ever
+ * said of a copy that happened.
+ */
+export async function copyLink(url: string): Promise<boolean> {
+  const clipboard = typeof navigator === "undefined" ? undefined : navigator.clipboard;
+  if (typeof clipboard?.writeText !== "function") return false;
+  try {
+    await clipboard.writeText(url);
+    return true;
+  } catch {
+    return false;
   }
 }
