@@ -199,22 +199,26 @@ export function OpinionsScreen({
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col pb-2">
       <CollapsingTop flush>
-        <PageHeader
-          node={part(PAGE, "header")}
-          title={title}
-          backHref={back.href}
-          backScroll={false}
-          backLabel={back.label}
-          backTestId="opinions-back"
-        />
-        <TabBar
-          tabs={DIRECTION_TABS}
-          value={direction}
-          ariaLabel={DIRECTION_TABS_LABEL}
-          onSelect={onDirection}
-          node={part(PAGE, "tabRow")}
-          testId="opinions-tabs"
-        />
+        {/* THE TAB ROW STANDS DIRECTLY UNDER THE BAR (ProfileStances.jsx): one
+            block, so the collapsing region's own gap never opens between them. */}
+        <div>
+          <PageHeader
+            node={part(PAGE, "header")}
+            title={title}
+            backHref={back.href}
+            backScroll={false}
+            backLabel={back.label}
+            backTestId="opinions-back"
+          />
+          <TabBar
+            tabs={DIRECTION_TABS}
+            value={direction}
+            ariaLabel={DIRECTION_TABS_LABEL}
+            onSelect={onDirection}
+            node={part(PAGE, "tabRow")}
+            testId="opinions-tabs"
+          />
+        </div>
       </CollapsingTop>
       {notFound && (
         <p data-testid="opinions-not-found" className="px-4 py-2">
