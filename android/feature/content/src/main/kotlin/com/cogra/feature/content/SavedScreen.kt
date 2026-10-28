@@ -96,6 +96,8 @@ import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
 import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.removal.RemovalKind
+import com.cogra.domain.removal.marked
 import com.cogra.domain.saved.ComfortKind
 import com.cogra.domain.saved.CommentTarget
 import com.cogra.domain.saved.SavedCard
@@ -155,44 +157,52 @@ fun SavedRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    SavedScreen(
-        state = state,
-        writes = viewModel.writes,
-        hidden = rememberHiddenSet(),
-        onRefresh = viewModel::refresh,
-        onLoadMore = viewModel::loadMore,
-        onRetryMore = viewModel::retryMore,
-        onSearch = viewModel::search,
-        onBack = onBack,
-        doors = doors,
-        hooks = SavedCardHooks(
-            viewerId = viewerId,
-            onShare = { url -> context.sharePost(url) },
-            shareUrls = SavedShareUrls(viewModel::postShareUrl, viewModel::commentShareUrl, viewModel::profileShareUrl),
-            onEditPost = onEditPost,
-            onCitePost = onCitePost,
-            onReveal = viewModel::onReveal,
-            stanceControl = nodeStanceControl,
-        ),
-        commentsSheet = { postId, onDismiss ->
-            SavedThread(
-                postId = postId,
-                post = state.postOf(postId),
+    // SAVED'S REMOVAL, for the own cards' ⋮ and the thread a count raises: a
+    // card removed here stands as its mark in place (RM-G9).
+    ProvideRemoval {
+        SavedScreen(
+            state = state,
+            writes = viewModel.writes,
+            hidden = rememberHiddenSet(),
+            onRefresh = viewModel::refresh,
+            onLoadMore = viewModel::loadMore,
+            onRetryMore = viewModel::retryMore,
+            onSearch = viewModel::search,
+            onBack = onBack,
+            doors = doors,
+            hooks = SavedCardHooks(
                 viewerId = viewerId,
-                signedIn = signedIn,
-                onDismiss = onDismiss,
-                doors = doors,
+                onShare = { url -> context.sharePost(url) },
+                shareUrls = SavedShareUrls(
+                    viewModel::postShareUrl,
+                    viewModel::commentShareUrl,
+                    viewModel::profileShareUrl,
+                ),
+                onEditPost = onEditPost,
                 onCitePost = onCitePost,
-                onReply = onReply,
-                onEditComment = onEditComment,
-                onSignInOrJoin = onSignInOrJoin,
-                commentsReturn = commentsReturn,
-                onCommentsReturnConsumed = onCommentsReturnConsumed,
-                onCommentsDepart = onCommentsDepart,
-            )
-        },
-        reportSheet = reportDoor(null, SAVED_REPORT_SHEET),
-    )
+                onReveal = viewModel::onReveal,
+                stanceControl = nodeStanceControl,
+            ),
+            commentsSheet = { postId, onDismiss ->
+                SavedThread(
+                    postId = postId,
+                    post = state.postOf(postId),
+                    viewerId = viewerId,
+                    signedIn = signedIn,
+                    onDismiss = onDismiss,
+                    doors = doors,
+                    onCitePost = onCitePost,
+                    onReply = onReply,
+                    onEditComment = onEditComment,
+                    onSignInOrJoin = onSignInOrJoin,
+                    commentsReturn = commentsReturn,
+                    onCommentsReturnConsumed = onCommentsReturnConsumed,
+                    onCommentsDepart = onCommentsDepart,
+                )
+            },
+            reportSheet = reportDoor(null, SAVED_REPORT_SHEET),
+        )
+    }
 }
 
 /** THE THREAD, OVER SAVED: a post card's comment count raises it, as over the feed. */
@@ -533,11 +543,20 @@ private fun SavedCardFor(entry: SavedEntry, actions: SavedCardActions) {
 @Composable
 private fun SavedCommentCard(card: SavedCard.Comment, actions: SavedCardActions) {
     val doors = actions.doors
-    val comment = card.comment
+    // THE CARD AS THIS DEVICE KNOWS IT NOW: removed here or anywhere since the
+    // page was read, it stands as its mark in place (RM-G9).
+    val comment = card.comment.marked(rememberRemovedMarks())
     val post = card.threadPostId
     var licenseOpen by remember(comment.id) { mutableStateOf(false) }
+    var removeOpen by remember(comment.id) { mutableStateOf(false) }
+    val own = actions.viewerId != null && comment.author?.id == actions.viewerId
     CommentFeedCard(
         comment = comment,
+        onRemove = if (own) {
+            { removeOpen = true }
+        } else {
+            null
+        },
         target = card.target,
         node = SAVED / "commentCard",
         testTagPrefix = "saved_comment_${comment.id}",
@@ -561,6 +580,17 @@ private fun SavedCommentCard(card: SavedCard.Comment, actions: SavedCardActions)
     )
     if (licenseOpen) {
         LicenseSheet(license = comment.license, onDismiss = { licenseOpen = false })
+    }
+    // The own comment's menu off its thread (RM-G9): the comment's confirm,
+    // over Saved; taken, the card stands as its mark in place.
+    if (removeOpen) {
+        RemoveConfirm(
+            kind = RemovalKind.Comment,
+            nodeId = comment.id,
+            record = comment.genesisRecordId,
+            onClose = { removeOpen = false },
+            testTag = "saved_comment_${comment.id}_remove_confirm",
+        )
     }
 }
 

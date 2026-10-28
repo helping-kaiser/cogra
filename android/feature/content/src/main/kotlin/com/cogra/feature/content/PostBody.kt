@@ -45,8 +45,12 @@ import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.ModerationState
 import com.cogra.domain.PostView
+import com.cogra.domain.Removal
+import com.cogra.domain.RemovalAgent
+import com.cogra.domain.ageLadder
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.feature.content.R
+import java.time.Instant
 
 /**
  * Which surface the body is drawn on, and therefore how its pictures sit.
@@ -101,6 +105,12 @@ internal fun PostBody(
     moderation: ModerationState,
     testTagPrefix: String,
     modifier: Modifier = Modifier,
+    /**
+     * The node's own mark (`Post.removal` / `Comment.removal`). Given one, the
+     * body is the mark whatever the fields say — a surface patches it in the
+     * moment a removal is taken — and the mark reads its agent and its moment.
+     */
+    removal: Removal? = null,
     collapsed: Boolean = false,
     /**
      * The card padding a post's gallery cancels so it runs to the
@@ -153,10 +163,20 @@ internal fun PostBody(
      */
     wordsClampLines: Int = TEXT_BODY_CLAMP_LINES,
 ) {
-    if (isRemoved(content, attachments, attachmentsStatus)) {
+    if (removal != null || isRemoved(content, attachments, attachmentsStatus)) {
+        val reason = removalReason(removal, moderation)
         RemovedPlaceholder(
-            reason = removalReason(moderation),
+            reason = reason,
             modifier = modifier,
+            // The removal's own moment in the one age ladder (backlog item 45).
+            timestamp = removal?.let { ageLadder(it.at, Instant.now()) },
+            // A comment's mark swaps the noun in the author's second line
+            // (CommentRemoved.md:5); a verdict's line is the verdict's.
+            note = if (surface == BodySurface.Comment && reason == RemovalReason.Author) {
+                stringResource(R.string.content_removed_comment_note)
+            } else {
+                null
+            },
             testTag = "${testTagPrefix}_removed",
         )
         return
@@ -431,12 +451,27 @@ internal fun MediaAssetView.toItem(): MediaItem {
  * Which of the two removals a reader is looking at.
  *
  * The docs require the two to stay distinguishable, since collapsing
- * them lets a verdict hide behind an author's decision. `ILLEGAL` is the
- * passed proposal; every other state — an unnamed one included — leaves
- * the author's own removal as the only reading the evidence supports.
+ * them lets a verdict hide behind an author's decision. The node's own
+ * mark is the data (`removal.by`, api-spec.md `RemovalAgent`): MODERATION is
+ * the platform's verdict, and AUTHOR and ACCOUNT both read as the author's
+ * ("AUTHOR and ACCOUNT both read `Removed by its author`") — no other branch
+ * is taken on `by`, and an agent this build cannot name is never a verdict.
+ * Where a node carries no mark, its `ILLEGAL` verdict is the only reading
+ * left, and every other state leaves the author's own removal.
  */
-internal fun removalReason(moderation: ModerationState): RemovalReason =
-    if (moderation == ModerationState.ILLEGAL) RemovalReason.Platform else RemovalReason.Author
+internal fun removalReason(removal: Removal?, moderation: ModerationState): RemovalReason = when {
+    removal != null -> if (removal.by == RemovalAgent.MODERATION) RemovalReason.Platform else RemovalReason.Author
+    moderation == ModerationState.ILLEGAL -> RemovalReason.Platform
+    else -> RemovalReason.Author
+}
+
+/** Whether the post's whole payload is gone: its own mark, or every field it answers. */
+internal val PostView.removed: Boolean
+    get() = removal != null || isRemoved(content, attachments, attachmentsStatus)
+
+/** Whether the comment's whole payload is gone, as [PostView.removed]. */
+internal val CommentView.removed: Boolean
+    get() = removal != null || isRemoved(content, attachments, attachmentsStatus)
 
 /**
  * Whether the whole body is gone.
