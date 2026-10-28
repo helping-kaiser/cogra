@@ -894,15 +894,17 @@ mod tests {
     /// The run a batch is recognised by never reaches past an earlier point
     /// at `(0, 0)`, and a pick that merely shares a value with a batch step
     /// does not join it: only the records the sum before them would stage
-    /// are the batch.
+    /// are the batch. The first bundle walks 1.0 back by one record, then
+    /// 1.5 by its batch `(−1, −0.5)`; the opening `−1.0` counter-pick
+    /// matches a batch step's value and still is not part of the second
+    /// walk-back. The second walks a 1.5 down by hand with `−0.6` then
+    /// `−0.9` — no batch — so only the pick that lands at zero is the
+    /// walk-back.
     ///
     /// A walk-back is read off the records since the bundle last stood at zero, and only the batch shape joins it.
     /// ´claim:fold:a-walk-back-never-reaches-past-the-last-zero´
     #[test]
     fn a_walk_back_never_reaches_past_the_last_zero() {
-        // 1.0 walked back by one record, then 1.5 by its batch (−1, −0.5);
-        // the opening −1.0 counter-pick before it matched a batch step's
-        // value and still is not part of the second walk-back.
         let bundle = [
             (1.0, 1.0),
             (-1.0, -1.0),
@@ -915,8 +917,6 @@ mod tests {
             walk_back_records(&bundle).expect("finite"),
             vec![false, true, false, false, true, true]
         );
-        // A user who walks a 1.5 down by hand with −0.6 then −0.9 signed
-        // no batch: only the pick that lands at zero is the walk-back.
         let by_hand = [(1.0, 1.0), (0.5, 0.5), (-0.6, -0.6), (-0.9, -0.9)];
         assert_eq!(
             walk_back_records(&by_hand).expect("finite"),
