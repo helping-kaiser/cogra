@@ -67,8 +67,10 @@ fun SearchBar(
                 .height(SEARCH_BAR_HEIGHT)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .padding(horizontal = Space.x4)
-                .dataNode(node),
+                // The registered field is the drawn pill (`SearchBar.jsx` `data-node`
+                // on the pill), so its tag rides outside the pill's own inset.
+                .dataNode(node)
+                .padding(horizontal = Space.x4),
             horizontalArrangement = Arrangement.spacedBy(Space.x3),
             verticalAlignment = Alignment.CenterVertically,
         ) {

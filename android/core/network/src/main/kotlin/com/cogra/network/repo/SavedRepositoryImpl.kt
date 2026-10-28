@@ -20,6 +20,7 @@ import com.cogra.network.fetch
 import com.cogra.network.graphql.RemoveBookmarkMutation
 import com.cogra.network.graphql.SavedPageQuery
 import com.cogra.network.graphql.SetBookmarkMutation
+import com.cogra.network.graphql.fragment.CommentHeadFields
 import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
 import java.time.Instant
@@ -70,7 +71,7 @@ private fun SavedPageQuery.Node.toSaved(): SavedCard? {
     onComment?.let { comment ->
         return SavedCard.Comment(
             comment = comment.commentFields.toDomain(),
-            target = comment.target?.toTarget(),
+            target = comment.target?.commentHeadFields?.toTarget(),
             threadPostId = comment.post?.id,
             threadPostTitle = comment.post?.let { ModeratedField(it.title.value, it.title.status.toDomain()) },
         )
@@ -81,7 +82,8 @@ private fun SavedPageQuery.Node.toSaved(): SavedCard? {
 
 private const val REDACTED = "REDACTED"
 
-private fun SavedPageQuery.Target.toTarget(): CommentTarget? {
+/** What a comment answers, as its card's head row names it — shared by Saved and History. */
+internal fun CommentHeadFields.toTarget(): CommentTarget? {
     onPost?.let { post ->
         val title = ModeratedField(post.title.value, post.title.status.toDomain())
         val content = ModeratedField(post.content.value, post.content.status.toDomain())

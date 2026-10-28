@@ -41,6 +41,7 @@ import com.cogra.domain.feed.FeedRepository
 import com.cogra.domain.feed.RankedEntry
 import com.cogra.domain.feed.SettlingRow
 import com.cogra.domain.hidden.HiddenRepository
+import com.cogra.domain.history.HistoryRepository
 import com.cogra.domain.history.SeenHistorySource
 import com.cogra.domain.history.SeenRecordStore
 import com.cogra.domain.history.ViewHistoryRepository
@@ -100,6 +101,7 @@ import com.cogra.domain.testing.RecordingReportRepository
 import com.cogra.domain.testing.RecordingSavedRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ScriptedAccountDeletionRepository
+import com.cogra.domain.testing.ScriptedHistoryRepository
 import com.cogra.domain.testing.ScriptedReleaseRegistry
 import com.cogra.domain.testing.ScriptedRemovalRepository
 import com.cogra.domain.testing.ScriptedSeenHistory
@@ -700,6 +702,14 @@ object FakeBindingsModule {
 
     @Provides
     fun savedRepository(fake: RecordingSavedRepository): SavedRepository = fake
+
+    // History reads empty unless a test scripts a page.
+    @Provides
+    @Singleton
+    fun scriptedHistoryRepository(): ScriptedHistoryRepository = ScriptedHistoryRepository()
+
+    @Provides
+    fun historyRepository(fake: ScriptedHistoryRepository): HistoryRepository = fake
 
     // The notification list reads empty and the bell quiet unless a test
     // scripts them.
