@@ -167,45 +167,49 @@ fun HistoryRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    HistoryScreen(
-        state = state,
-        writes = viewModel.writes,
-        hidden = rememberHiddenSet(),
-        callbacks = HistoryCallbacks(
-            onRefresh = viewModel::refresh,
-            onLoadMore = viewModel::loadMore,
-            onRetryMore = viewModel::loadMore,
-            onSearch = viewModel::search,
-            onApplyKinds = viewModel::applyKinds,
-            onNarrowTo = viewModel::narrowTo,
-            onShowEverything = viewModel::showEverything,
-            onBack = onBack,
-        ),
-        doors = doors,
-        hooks = viewModel.cardHooks(viewerId, onEditPost, onCitePost) { url -> context.sharePost(url) },
-        tagCards = TagCardHooks(
-            onShare = { name -> context.sharePost(viewModel.topicShareUrl(name)) },
-            stance = topicStanceControl,
-        ),
-        commentsSheet = { postId, onDismiss ->
-            ListThread(
-                postId = postId,
-                post = state.postOf(postId),
-                viewerId = viewerId,
-                signedIn = signedIn,
-                onDismiss = onDismiss,
-                doors = doors.cards,
-                onCitePost = onCitePost,
-                onReply = onReply,
-                onEditComment = onEditComment,
-                onSignInOrJoin = onSignInOrJoin,
-                commentsReturn = commentsReturn,
-                onCommentsReturnConsumed = onCommentsReturnConsumed,
-                onCommentsDepart = onCommentsDepart,
-            )
-        },
-        reportSheet = reportDoor(null, HISTORY_REPORT_SHEET),
-    )
+    // HISTORY'S REMOVAL, for the own cards' ⋮ and the thread a count raises: a
+    // card removed here stands as its mark in place (RM-G9), as over Saved.
+    ProvideRemoval {
+        HistoryScreen(
+            state = state,
+            writes = viewModel.writes,
+            hidden = rememberHiddenSet(),
+            callbacks = HistoryCallbacks(
+                onRefresh = viewModel::refresh,
+                onLoadMore = viewModel::loadMore,
+                onRetryMore = viewModel::loadMore,
+                onSearch = viewModel::search,
+                onApplyKinds = viewModel::applyKinds,
+                onNarrowTo = viewModel::narrowTo,
+                onShowEverything = viewModel::showEverything,
+                onBack = onBack,
+            ),
+            doors = doors,
+            hooks = viewModel.cardHooks(viewerId, onEditPost, onCitePost) { url -> context.sharePost(url) },
+            tagCards = TagCardHooks(
+                onShare = { name -> context.sharePost(viewModel.topicShareUrl(name)) },
+                stance = topicStanceControl,
+            ),
+            commentsSheet = { postId, onDismiss ->
+                ListThread(
+                    postId = postId,
+                    post = state.postOf(postId),
+                    viewerId = viewerId,
+                    signedIn = signedIn,
+                    onDismiss = onDismiss,
+                    doors = doors.cards,
+                    onCitePost = onCitePost,
+                    onReply = onReply,
+                    onEditComment = onEditComment,
+                    onSignInOrJoin = onSignInOrJoin,
+                    commentsReturn = commentsReturn,
+                    onCommentsReturnConsumed = onCommentsReturnConsumed,
+                    onCommentsDepart = onCommentsDepart,
+                )
+            },
+            reportSheet = reportDoor(null, HISTORY_REPORT_SHEET),
+        )
+    }
 }
 
 /** What History's cards are handed: the viewer, the shares, the menus' routes, the reveal and the stance control. */
@@ -716,7 +720,7 @@ private fun HistoryCardFor(entry: HistoryEntry, actions: CardActions, tags: TagC
         // A HISTORY COMMENT CARD CARRIES NO VIEW-REPLIES LINE (History.md:37):
         // the comment feed card never draws one.
         is HistoryCard.Comment -> ListCommentCard(
-            comment = card.comment,
+            listed = card.comment,
             target = card.target,
             threadPostId = card.threadPostId,
             node = HISTORY / "commentCard",

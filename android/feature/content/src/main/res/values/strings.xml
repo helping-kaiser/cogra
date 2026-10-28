@@ -194,6 +194,7 @@
     <string name="content_menu_hide_account">Hide this account</string>
     <string name="content_menu_sensitive">Mark as sensitive</string>
     <string name="content_menu_remove">Remove</string>
+    <string name="content_menu_cited_by">Cited by</string>
     <string name="content_menu_opinions">Opinions on this</string>
     <string name="content_menu_license">License terms</string>
     <string name="content_menu_report">Report</string>
@@ -230,6 +231,15 @@
     <string name="content_remove_permanent">This is immediate and permanent.</string>
     <string name="content_remove_confirm">Remove</string>
     <string name="content_remove_keep">Keep it</string>
+    <!-- The comment's confirm: the nouns swap and nothing else moves (REMOVE_CONFIRM_COPY.comment). -->
+    <string name="content_remove_comment_title">Remove this comment?</string>
+    <string name="content_remove_comment_body">The words and pictures leave every reader\'s view, along with every earlier version\'s. A visible mark stays in their place — \"Removed by its author\" — and the comment\'s spot in its thread stays with it.</string>
+    <!-- In flight past 200ms (K4.2: the label swap, never a spinner). -->
+    <string name="content_remove_removing">Removing…</string>
+    <!-- Not through (RemoveConfirm.md:13): above the pair; Remove reads Retry. -->
+    <string name="content_remove_not_sent">That didn\'t send. Try again.</string>
+    <!-- A removed comment's second line (CommentRemoved.md:5; REMOVED_COMMENT_NOTE). -->
+    <string name="content_removed_comment_note">The comment\'s place in the thread, and every response, remain.</string>
     <string name="content_error_empty_body">The post needs a body.</string>
     <string name="content_error_title_too_long">A title is at most 100 characters.</string>
     <string name="content_error_description_too_long">A description is at most 500 characters.</string>

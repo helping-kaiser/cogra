@@ -573,14 +573,17 @@ interface Node {
    chronicle; the generic way to read any relationship before named
    convenience views exist. Filter by family, by the kind of node
    on the far end, by parameter sign (e.g. only vouch-positive
-   Opinions, or (0,0) update records), payload-marked state, and/or
-   a landing-epoch window."
+   Opinions, or (0,0) update records), payload-marked state, genesis
+   (`true`: only the records that anchor their node — a person's
+   posts' own Publish records, never the edits — `false`: only the
+   rest; `Record.act` GENESIS), and/or a landing-epoch window."
   outgoingRecords(
     family: RecordFamily
     toKind: NodeKind
     pDirectedSign: Sign
     pInterestSign: Sign
     payloadMarked: Boolean
+    genesis: Boolean
     sinceEpoch: Int
     untilEpoch: Int
     first: Int, after: String, last: Int, before: String
@@ -595,6 +598,7 @@ interface Node {
     pDirectedSign: Sign
     pInterestSign: Sign
     payloadMarked: Boolean
+    genesis: Boolean
     sinceEpoch: Int
     untilEpoch: Int
     first: Int, after: String, last: Int, before: String
@@ -693,6 +697,10 @@ type Record {
   "L1's own identifier for this record, verbatim."
   id: RecordId!
   family: RecordFamily!
+  "What the record did beyond its family — the distinction a
+   chronicle row speaks that the family alone does not carry, read
+   server-side so no client re-derives it from identifiers or pairs."
+  act: RecordAct!
   "The authoring actor — intrinsic to the signed record, never a
    separate edge (authorship.md). Null when no account fronts the
    author's address (system actors), until the actor surface
@@ -791,6 +799,30 @@ type RecordLeg {
  binary family, or the actor (A) or terminal (T) leg of a hyper-edge."
 enum RecordLegRole { BINARY A T }
 
+"What one record did beyond its family. Every record is exactly one;
+ a record that could read as two reads as the first that applies, in
+ the order listed."
+enum RecordAct {
+  "The record that anchors its node: a minting act — the act whose
+   terminal target, the binary leg's or the T leg's, is the mint of
+   its own identifier (a post's Publish, a comment's Review) — or a
+   person's anchoring Registration, the first their author signed.
+   Never an edit and never a later Registration."
+  GENESIS
+  "A record a walk-back signed: the Opinion or Affinity that brought
+   its author's bundle toward the target back to (0, 0) from a
+   standing that said something, and every record of a severance
+   batch that did. An empty sign is never one."
+  WALK_BACK
+  "The Opinion that vouched someone in: of an account's approval
+   vouches, the first to land, which landed the account — the record
+   behind User.invitedBy. Any later vouch-Opinion is ORDINARY."
+  VOUCH
+  "Everything else: an edit, a later Registration, an opinion given,
+   a tag, a citation."
+  ORDINARY
+}
+
 "Payload carriage state — moves one way, full to reduced."
 enum PayloadState { FULL REDUCED }
 
@@ -838,6 +870,26 @@ that carries the payload bytes. `Record` is also the type the
 ranking surface consumes — the miner's `RankHop.records` and
 bundle audits speak this vocabulary
 ([miner-api.md](miner-api.md)).
+
+**What a record did** (`Record.act`) is read from the published
+records wherever the records decide it. Genesis is per record
+([nodes.md §1](../primitive/nodes.md)): a minting act is decidable
+from its own two fields, and a person's anchoring Registration is the
+first their author signed in the published order — the same genesis
+authorship records the ranking slice keys recency on (`SliceNode.genesis`).
+A walk-back is the act that lands a bundle that says something at
+`(0, 0)` ("The read-side bundle fold" below): a counter-pick landing
+there, or a severance batch, every record of it. The batch is
+recognised by its shape — the counter-records the sum standing before
+it stages — compared whatever order the host published them in,
+since a batch's records declare no dependency on one another. Which
+vouch landed an account is the application ledger's: the first of
+the account's approval vouches to land, the one `User.invitedBy`
+names. The `genesis` filter on the record reads keeps exactly the
+GENESIS records (`true`) or the rest (`false`), so a count and the
+rows it counts never disagree; the profile's `Posts` figure is
+`outgoingRecords(family: PUBLISH, toKind: POST, genesis: true)`'s
+`totalCount` ([open-questions.md Q35](../open-questions.md)).
 
 ### Per-field moderation
 
@@ -2523,7 +2575,8 @@ type Query {
   "Generic record lookup over the mirror — the public chronicle,
    filterable along the mirror's own indexes: by author, by target,
    by terminal leg (a comment's revision chain), by family,
-   payload-marked state, and/or a landing-epoch window
+   payload-marked state, genesis (as on outgoingRecords), and/or a
+   landing-epoch window
    (data-model.md \"The record mirror\"). Served newest-first in
    landing order — the authoritative causal key (epoch, act time,
    position) — with keyset cursors; target matches the binary/actor
@@ -2536,6 +2589,7 @@ type Query {
     terminal: UUID
     family: RecordFamily
     payloadMarked: Boolean
+    genesis: Boolean
     sinceEpoch: Int
     untilEpoch: Int
     first: Int, after: String, last: Int, before: String

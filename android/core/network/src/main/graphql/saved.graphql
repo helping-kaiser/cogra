@@ -115,6 +115,12 @@ fragment CommentHeadFields on CommentTarget {
       handle
     }
     moderationStatus
+    # The target's own mark: the head row reads `Removed by its author` off
+    # it (FeedCommentShapes.md:21-23).
+    removal {
+      at
+      by
+    }
   }
   ... on Comment {
     id
@@ -127,5 +133,10 @@ fragment CommentHeadFields on CommentTarget {
       handle
     }
     moderationStatus
+    # The target's own mark, as the post's above.
+    removal {
+      at
+      by
+    }
   }
 }

@@ -141,44 +141,52 @@ fun SavedRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    SavedScreen(
-        state = state,
-        writes = viewModel.writes,
-        hidden = rememberHiddenSet(),
-        onRefresh = viewModel::refresh,
-        onLoadMore = viewModel::loadMore,
-        onRetryMore = viewModel::retryMore,
-        onSearch = viewModel::search,
-        onBack = onBack,
-        doors = doors,
-        hooks = CardHooks(
-            viewerId = viewerId,
-            onShare = { url -> context.sharePost(url) },
-            shareUrls = CardShareUrls(viewModel::postShareUrl, viewModel::commentShareUrl, viewModel::profileShareUrl),
-            onEditPost = onEditPost,
-            onCitePost = onCitePost,
-            onReveal = viewModel::onReveal,
-            stanceControl = nodeStanceControl,
-        ),
-        commentsSheet = { postId, onDismiss ->
-            ListThread(
-                postId = postId,
-                post = state.postOf(postId),
+    // SAVED'S REMOVAL, for the own cards' ⋮ and the thread a count raises: a
+    // card removed here stands as its mark in place (RM-G9).
+    ProvideRemoval {
+        SavedScreen(
+            state = state,
+            writes = viewModel.writes,
+            hidden = rememberHiddenSet(),
+            onRefresh = viewModel::refresh,
+            onLoadMore = viewModel::loadMore,
+            onRetryMore = viewModel::retryMore,
+            onSearch = viewModel::search,
+            onBack = onBack,
+            doors = doors,
+            hooks = CardHooks(
                 viewerId = viewerId,
-                signedIn = signedIn,
-                onDismiss = onDismiss,
-                doors = doors,
+                onShare = { url -> context.sharePost(url) },
+                shareUrls = CardShareUrls(
+                    viewModel::postShareUrl,
+                    viewModel::commentShareUrl,
+                    viewModel::profileShareUrl,
+                ),
+                onEditPost = onEditPost,
                 onCitePost = onCitePost,
-                onReply = onReply,
-                onEditComment = onEditComment,
-                onSignInOrJoin = onSignInOrJoin,
-                commentsReturn = commentsReturn,
-                onCommentsReturnConsumed = onCommentsReturnConsumed,
-                onCommentsDepart = onCommentsDepart,
-            )
-        },
-        reportSheet = reportDoor(null, SAVED_REPORT_SHEET),
-    )
+                onReveal = viewModel::onReveal,
+                stanceControl = nodeStanceControl,
+            ),
+            commentsSheet = { postId, onDismiss ->
+                ListThread(
+                    postId = postId,
+                    post = state.postOf(postId),
+                    viewerId = viewerId,
+                    signedIn = signedIn,
+                    onDismiss = onDismiss,
+                    doors = doors,
+                    onCitePost = onCitePost,
+                    onReply = onReply,
+                    onEditComment = onEditComment,
+                    onSignInOrJoin = onSignInOrJoin,
+                    commentsReturn = commentsReturn,
+                    onCommentsReturnConsumed = onCommentsReturnConsumed,
+                    onCommentsDepart = onCommentsDepart,
+                )
+            },
+            reportSheet = reportDoor(null, SAVED_REPORT_SHEET),
+        )
+    }
 }
 
 /** The report confirm over Saved — no Saved board draws one, so it keeps its tag. */
@@ -424,7 +432,7 @@ private fun SavedCardFor(entry: SavedEntry, actions: CardActions) {
         )
 
         is SavedCard.Comment -> ListCommentCard(
-            comment = card.comment,
+            listed = card.comment,
             target = card.target,
             threadPostId = card.threadPostId,
             node = SAVED / "commentCard",

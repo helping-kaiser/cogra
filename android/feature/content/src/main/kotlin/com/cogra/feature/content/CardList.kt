@@ -19,6 +19,8 @@ import com.cogra.domain.CommentView
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.removal.RemovalKind
+import com.cogra.domain.removal.marked
 import com.cogra.domain.saved.CommentTarget
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.reply.ReplyTarget
@@ -114,7 +116,8 @@ internal fun ListThread(
 /** A listed comment as the comment feed card, its doors landing on its thread. */
 @Composable
 internal fun ListCommentCard(
-    comment: CommentView,
+    /** The comment as the list read it; a removal since stands as its mark. */
+    listed: CommentView,
     target: CommentTarget?,
     threadPostId: String?,
     /** The registered card (`saved.commentCard`, `history.commentCard`). */
@@ -123,9 +126,19 @@ internal fun ListCommentCard(
     actions: CardActions,
 ) {
     val doors = actions.doors
+    // THE CARD AS THIS DEVICE KNOWS IT NOW: removed here or anywhere since the
+    // page was read, it stands as its mark in place (RM-G9).
+    val comment = listed.marked(rememberRemovedMarks())
     var licenseOpen by remember(comment.id) { mutableStateOf(false) }
+    var removeOpen by remember(comment.id) { mutableStateOf(false) }
+    val own = actions.viewerId != null && comment.author?.id == actions.viewerId
     CommentFeedCard(
         comment = comment,
+        onRemove = if (own) {
+            { removeOpen = true }
+        } else {
+            null
+        },
         target = target,
         node = node,
         testTagPrefix = testTagPrefix,
@@ -149,6 +162,17 @@ internal fun ListCommentCard(
     )
     if (licenseOpen) {
         LicenseSheet(license = comment.license, onDismiss = { licenseOpen = false })
+    }
+    // The own comment's menu off its thread (RM-G9): the comment's confirm,
+    // over the list; taken, the card stands as its mark in place.
+    if (removeOpen) {
+        RemoveConfirm(
+            kind = RemovalKind.Comment,
+            nodeId = comment.id,
+            record = comment.genesisRecordId,
+            onClose = { removeOpen = false },
+            testTag = "${testTagPrefix}_remove_confirm",
+        )
     }
 }
 

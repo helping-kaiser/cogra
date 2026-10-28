@@ -71,6 +71,7 @@ import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
 import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.removal.RemovalKind
 import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
@@ -163,54 +164,58 @@ fun PostDetailRoute(
     // The reader asked for a reply, not for the post's newest version: the
     // count read holds another version behind the line like any other read.
     LaunchedEffect(commentsReturn.landed) { if (commentsReturn.landed) viewModel.recount() }
-    PostDetailScreen(
-        state = state,
-        viewerId = viewerId,
-        published = published,
-        deletionBand = deletionBand,
-        onRefresh = {
-            threadToken++
-            viewModel.refresh()
-        },
-        onSwapToNewer = viewModel::swapToNewer,
-        onReveal = viewModel::onReveal,
-        onEdit = onEdit,
-        onOpenActor = onOpenActor,
-        onOpenPost = onOpenPost,
-        onOpenTopic = onOpenTopic,
-        onReference = onReference,
-        onShare = { id -> context.sharePost(viewModel.shareUrl(id)) },
-        onBack = onBack,
-        reportSheet = reportDoor(onRequireAccount, "detail_report_sheet", POST_DETAIL / "reportSheet"),
-        stanceControl = nodeStanceControl,
-        commentsSheet = { onDismiss ->
-            DetailThread(
-                postId = postId,
-                post = state.post,
-                viewerId = viewerId,
-                signedIn = signedIn,
-                onDismiss = onDismiss,
-                onReply = onReply,
-                onEditComment = onEditComment,
-                onOpenActor = onOpenCommentActor ?: onOpenActor,
-                onOpenTopic = onOpenTopic,
-                onReference = onReference,
-                onSignInOrJoin = onSignInOrJoin,
-                onDepart = onCommentsDepart,
-                commentsReturn = commentsReturn,
-                onReturnConsumed = onCommentsReturnConsumed,
-                refreshToken = threadToken,
-                landOn = landOn,
-                aimReply = aimReply,
-                onRequireAccount = onRequireAccount,
-            )
-        },
-        saved = rememberSavedWrites(),
-        hidden = rememberHiddenSet(),
-        onRequireAccount = onRequireAccount,
-        backDescription = originBack(from),
-        landOn = landOn,
-    )
+    // THE PAGE'S REMOVAL, for the post's ⋮ and every comment's in the thread
+    // over it: one in flight at a time, and every node drawn through its marks.
+    ProvideRemoval {
+        PostDetailScreen(
+            state = state,
+            viewerId = viewerId,
+            published = published,
+            deletionBand = deletionBand,
+            onRefresh = {
+                threadToken++
+                viewModel.refresh()
+            },
+            onSwapToNewer = viewModel::swapToNewer,
+            onReveal = viewModel::onReveal,
+            onEdit = onEdit,
+            onOpenActor = onOpenActor,
+            onOpenPost = onOpenPost,
+            onOpenTopic = onOpenTopic,
+            onReference = onReference,
+            onShare = { id -> context.sharePost(viewModel.shareUrl(id)) },
+            onBack = onBack,
+            reportSheet = reportDoor(onRequireAccount, "detail_report_sheet", POST_DETAIL / "reportSheet"),
+            stanceControl = nodeStanceControl,
+            commentsSheet = { onDismiss ->
+                DetailThread(
+                    postId = postId,
+                    post = state.post,
+                    viewerId = viewerId,
+                    signedIn = signedIn,
+                    onDismiss = onDismiss,
+                    onReply = onReply,
+                    onEditComment = onEditComment,
+                    onOpenActor = onOpenCommentActor ?: onOpenActor,
+                    onOpenTopic = onOpenTopic,
+                    onReference = onReference,
+                    onSignInOrJoin = onSignInOrJoin,
+                    onDepart = onCommentsDepart,
+                    commentsReturn = commentsReturn,
+                    onReturnConsumed = onCommentsReturnConsumed,
+                    refreshToken = threadToken,
+                    landOn = landOn,
+                    aimReply = aimReply,
+                    onRequireAccount = onRequireAccount,
+                )
+            },
+            saved = rememberSavedWrites(),
+            hidden = rememberHiddenSet(),
+            onRequireAccount = onRequireAccount,
+            backDescription = originBack(from),
+            landOn = landOn,
+        )
+    }
 }
 
 /** The origin-naming table (`Back to Saved`, `Back to Notifications`); null for the plain arrow. */
@@ -366,6 +371,9 @@ fun PostDetailScreen(
      */
     published: Boolean = false,
 ) {
+    // THE POST AS THIS DEVICE KNOWS IT NOW: a removal taken here — or on any
+    // surface since this page was read — stands as its mark in place.
+    val post = rememberMarked(state.post)
     val snackbar = remember { SnackbarHostState() }
     // THE PAGE'S SNACKBAR (`postDetail.snackbar`): the scope is the screen's,
     // so a confirmation outlives the sheet that raised it.
@@ -434,7 +442,7 @@ fun PostDetailScreen(
                         node = header,
                         action = {
                             DetailMenu(
-                                post = state.post,
+                                post = post,
                                 viewerId = viewerId,
                                 onEdit = onEdit,
                                 onCite = onReference,
@@ -523,7 +531,7 @@ fun PostDetailScreen(
                             testTag = "detail_loading",
                             modifier = Modifier.padding(24.dp),
                         )
-                        state.post != null -> Column(modifier = Modifier.fillMaxSize()) {
+                        post != null -> Column(modifier = Modifier.fillMaxSize()) {
                             // A transport fault never blanks content already
                             // on screen, and it surfaces where the failed
                             // fetch was requested: a failed refresh on this
@@ -551,7 +559,7 @@ fun PostDetailScreen(
                             }
                             PostDetailBody(
                                 state = state,
-                                post = state.post,
+                                post = post,
                                 listState = listState,
                                 onSwapToNewer = onSwapToNewer,
                                 onReveal = onReveal,
@@ -588,21 +596,30 @@ fun PostDetailScreen(
                 node = POST_DETAIL / "licenseSheet",
             )
         }
-        // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
-        // slice 8's, whole — "we need to do erasure right so it should be one
-        // task" — so Remove closes the dialog and changes nothing.
-        if (removeOpen) {
-            RemoveConfirm(
-                onDismiss = { removeOpen = false },
-                onRemove = { removeOpen = false },
-            )
-        }
+        // THE THINK-TWICE DIALOG over this page (RemoveMenu.md:19). Taken, the
+        // post stands as Removed here: back is the whole header, the mark in
+        // the words' and pictures' place (Removed.md).
+        if (removeOpen) DetailRemoveConfirm(post, onClose = { removeOpen = false })
         // The confirm rises where the menu stood, over this page; it says it
         // is up itself, so the detail clip stops beneath it.
         reportFor?.let { id ->
             reportSheet(id, { reportFor = null }, notify)
         }
     }
+}
+
+/** The post's think-twice dialog over the detail, once the post is read. */
+@Composable
+private fun DetailRemoveConfirm(post: PostView?, onClose: () -> Unit) {
+    if (post == null) return
+    RemoveConfirm(
+        kind = RemovalKind.Post,
+        nodeId = post.id,
+        record = post.genesisRecordId,
+        onClose = onClose,
+        testTag = "post_remove_confirm",
+        node = POST_DETAIL / "dialog",
+    )
 }
 
 /**
@@ -630,7 +647,7 @@ private fun DetailMenu(
     saved: SavedHost?,
 ) {
     if (post == null) return
-    if (isRemoved(post.content, post.attachments, post.attachmentsStatus)) return
+    if (post.removed) return
     val own = viewerId != null && post.author?.id == viewerId
     // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
     // jakob 2026-09-17, sharpened 2026-09-22 — PR #794): the detail's own
@@ -691,7 +708,7 @@ private fun PostDetailBody(
 ) {
     // A removed post keeps its skeleton and loses everything the payload
     // carried: the license, the topics and the citations rode it away.
-    val removed = isRemoved(post.content, post.attachments, post.attachmentsStatus)
+    val removed = post.removed
     // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
     // the clip leaves the card body, heads the column above it, and wears the
     // full transport. A post of pictures is untouched — its gallery is still
@@ -910,6 +927,7 @@ private fun DetailCard(
                     attachments = post.attachments,
                     attachmentsStatus = post.attachmentsStatus,
                     moderation = post.moderation,
+                    removal = post.removal,
                     testTagPrefix = "detail",
                     node = card,
                     modifier = Modifier.testTag("detail_body"),

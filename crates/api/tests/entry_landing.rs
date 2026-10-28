@@ -1731,3 +1731,97 @@ async fn an_applicant_who_staged_nothing_lands_with_an_empty_batch(pool: PgPool)
             .expect("count");
     assert_eq!(carried, 0);
 }
+
+/// The chronicle tells the vouch that vouched an account in from any
+/// other, and the account's joining from its profile updates. Of noa's
+/// two vouches, kel's lands first and landed the account: its record
+/// reads VOUCH, the record `invitedBy` names. Mira's lands after it as an
+/// ordinary Opinion (EC-R3) and reads ORDINARY. Noa's own admission
+/// Registration — the first they signed — reads GENESIS, the clients'
+/// "Joined"; the parallel Registration a profile update signs reads
+/// ORDINARY, and the genesis filter counts the same split.
+///
+/// The landing vouch and the account's anchoring Registration read as such on the record; a later vouch and a profile update read ordinary.
+/// ´claim:onboarding:the-record-names-the-landing-vouch-and-the-join´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_record_names_the_landing_vouch_and_the_join(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let mira = rig.member("mira").await;
+    let kel = rig.member("kel").await;
+    let noa = rig.applicant(mira.id, "noa").await;
+    let first = rig.registration_path(noa.account).await;
+    let second = rig.path(noa.account, kel.id).await;
+    let mira_vouch = rig.vouch(&mira, first).await;
+    let kel_vouch = rig.vouch(&kel, second).await;
+    rig.sign(&kel.key, kel_vouch.id).await;
+    let registration = rig.sign_registration(&noa).await;
+    rig.close().await;
+    assert_eq!(rig.landed_paths(noa.account).await, vec![second]);
+    rig.sign(&mira.key, mira_vouch.id).await;
+    rig.close().await;
+
+    let update = api::profile::prepare_profile_update(
+        &rig.pool,
+        &rig.boundary,
+        api::prepare::Staging::unbudgeted(rig.cfg.gc_after_epochs),
+        noa.account,
+        api::profile::ProfileUpdateDraft {
+            display_name: Some("Noa".into()),
+            bio: None,
+            website_url: None,
+            avatar_media_id: None,
+        },
+    )
+    .await
+    .expect("prepares the profile update");
+    rig.sign(&noa.key, update.id).await;
+    rig.close().await;
+
+    let act_of = |id: String| {
+        let rig = &rig;
+        async move {
+            let read = rig
+                .exec(
+                    None,
+                    "query($id: RecordId!) { record(id: $id) { act } }",
+                    serde_json::json!({ "id": id }),
+                )
+                .await;
+            read["data"]["record"]["act"]
+                .as_str()
+                .unwrap_or_else(|| panic!("a landed record: {read}"))
+                .to_string()
+        }
+    };
+    assert_eq!(act_of(act(&kel_vouch)).await, "VOUCH", "the landing vouch");
+    assert_eq!(
+        act_of(act(&mira_vouch)).await,
+        "ORDINARY",
+        "a vouch landing after the account did is an opinion given"
+    );
+    assert_eq!(
+        act_of(registration.proposal.body.act_id().to_string()).await,
+        "GENESIS",
+        "the account's own first Registration is its joining"
+    );
+    assert_eq!(
+        act_of(act(&update)).await,
+        "ORDINARY",
+        "a later, parallel Registration updates the profile"
+    );
+
+    let counts = rig
+        .exec(
+            None,
+            "query($a: UUID!) {
+               joined: records(author: $a, family: REGISTRATION, genesis: true) { totalCount }
+               updated: records(author: $a, family: REGISTRATION, genesis: false) { totalCount }
+               every: records(author: $a, family: REGISTRATION) { totalCount }
+             }",
+            serde_json::json!({ "a": noa.account }),
+        )
+        .await;
+    assert_eq!(counts["data"]["joined"]["totalCount"], 1, "{counts}");
+    assert_eq!(counts["data"]["updated"]["totalCount"], 1, "{counts}");
+    assert_eq!(counts["data"]["every"]["totalCount"], 2, "{counts}");
+}
