@@ -2,8 +2,22 @@
 
 // EditCompose / EditComposeVideo / EditWords / EditComposeUnchanged — the
 // post edit, one screen and one batch (design/designs/canonical/screens/
-// _shared.jsx `EditComposeBody`, EditWords.jsx). Everything the edit changes
-// signs together, and the foot says how much before the button does it.
+// _shared.jsx `EditComposeBody`, EditComposeVideo.jsx, EditWords.jsx).
+// Everything the edit changes signs together, and the foot says how much
+// before the button does it.
+//
+// THE BODY EDITS LIKE A COMPOSER'S, because an edit carries complete state.
+// Pictures: the row opens Show all (reorder, re-cover, describe, remove) and
+// `+ Add pictures · N of 10` takes more through the device's own picker and
+// the crop, locked to the post's one shape — never a pick stage. A clip: it
+// stays or leaves whole, and its face changes through the cover's crop.
+// Words: `+ Add pictures or a video` is the way back to a media body.
+//
+// AN EDIT THAT TOOK NEW BYTES GATES ITS SIGN ON THEIR UPLOAD, in the seal's
+// grammar (ComposeSealUploading; EditCompose.md): the gate line stands over
+// the foot, Sign stays enabled, and a press is HELD until the bytes land. A
+// failed upload drops the press, the gate takes its fault reading, and Sign
+// is disabled until Retry re-gates.
 //
 // THE LICENSE IS LOCKED, and the lock is a mark rather than an action: a
 // license is published with the post and never changes, so the row shows what
@@ -17,67 +31,78 @@
 // leaves at once — so the X says what leaving does, `Leave — the edit is
 // discarded` (EditCompose.md, EditWords.md, DiscardConfirm.md).
 //
-// DRIFT (registration-gated, feed-card-rework §16): no Edit* board is in
-// nodes.json yet, so this surface carries test ids, not node paths — the
-// structural diff waits on registration; the behavior tests pin the sidecars.
-//
-// DRIFT (FC-8 remainder, named in the PR): the edit's own add paths — `+ Add
-// pictures · N of 10` through the device picker and the locked crop, the
-// upload gate's lines, and a clip's `Change the cover` — are not built here;
-// the media this edit can author is the post's own pictures, reordered,
-// re-covered, described or removed. When the crops land, their X raises the
-// same ask the edit's own X does (ComposeCrop.md, CoverCrop.md).
+// UNREGISTERED (feed-card-rework §16): no Edit* board is in nodes.json yet, so
+// this surface carries test ids, not node paths — the structural diff waits on
+// registration; the behavior tests pin the sidecars.
 
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { TransportError } from "@/lib/ui/transport-error";
-import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
-import { PillButton, TextAction } from "@/lib/ui2/pill-button";
+import { HeaderBar } from "@/lib/ui2/header-bar";
+import { HelpDot } from "@/lib/ui2/help-dot";
+import { FactRow } from "@/lib/ui2/fact-row";
+import { InlineAction } from "@/lib/ui2/inline-action";
+import { PillButton } from "@/lib/ui2/pill-button";
+import { QuietNote } from "@/lib/ui2/quiet-note";
 import { TextField } from "@/lib/ui2/text-field";
-import { PickedRow, type PickedThumb } from "@/lib/ui2/compose/picked-row";
+import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
+import { DescribeCounter, PickedRow, type PickedThumb } from "@/lib/ui2/compose/picked-row";
+import { RefusedFileRow } from "@/lib/ui2/compose/refused-file";
+import { UploadErrorLine, UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
 import { ActsFooter, WithdrawnLine } from "@/lib/ui2/compose/edit-acts";
+import { EditWriteRuleNotice } from "@/lib/ui2/compose/edit-notices";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
+import { PICKABLE_VIDEO_TYPES } from "@/lib/ui2/media/video";
 import { licenseName } from "@/lib/license";
 import {
   DESCRIPTION_MAX_CHARS,
   BODY_MAX_CHARS,
+  POST_ATTACHMENT_CAP,
   TITLE_MAX_CHARS,
   descriptionProblem,
   titleProblem,
+  type PickedAsset,
 } from "@/lib/compose/wizard";
+import { isMediaBody, wordsProblem, type PostEditState } from "@/lib/compose/post-edit";
 import {
-  isClipBody,
-  isMediaBody,
-  wordsProblem,
-  type PostEditState,
-} from "@/lib/compose/post-edit";
-import { pictureAltText, pictureId } from "@/lib/compose/comment-edit";
+  clipOf,
+  coverChosen,
+  describedCount,
+  editUploads,
+  failedUploadLine,
+  pictureAltText,
+  pictureId,
+  uploadsDone,
+  uploadsFailed,
+  uploadsPending,
+} from "@/lib/compose/comment-edit";
+import type { PickRefusal } from "@/lib/compose/pick";
 import { withdrawnReferences, withdrawnTags } from "@/lib/compose/edit-batch";
 import { attachmentLanding } from "@/lib/stance/backing";
 import { AttachmentReadout, BACKING_UNREAD } from "@/lib/ui/attachment-readout";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
+import { thumbState } from "./wizard/details-step";
 
-function FieldLabel({ children, id }: { children: string; id?: string }) {
-  return (
-    <span id={id} className="text-label-large">
-      {children}
-    </span>
-  );
+function FieldLabel({ children }: { children: string }) {
+  return <span className="text-label-large">{children}</span>;
 }
 
 /** The header X's accessible name: the edit keeps no draft (EditCompose, EditWords boards). */
 export const EDIT_LEAVE_LABEL = "Leave — the edit is discarded";
 
-function BodyRule() {
-  return (
-    <p className="m-0 text-body-small text-on-surface-variant">
-      A post&rsquo;s body is words or media, never both.
-    </p>
-  );
-}
+/** The body rule, under the add control (copy-voice; EditCompose.md, EditWords.md). */
+export const BODY_RULE = "A post’s body is words or media, never both.";
+
+/** What the edit's `+ Add pictures` takes: pictures. A video picked anyway is refused in words. */
+const ACCEPT_PICTURES = "image/*";
+/** What the words edit's `+ Add pictures or a video` takes. */
+const ACCEPT_MEDIA = `image/*,${PICKABLE_VIDEO_TYPES}`;
+
+/** A clip's tile and its face's, the height `EditComposeVideo` draws them at. */
+const CLIP_TILE_HEIGHT = 96;
 
 export function PostEditView({
   state,
@@ -86,12 +111,14 @@ export function PostEditView({
   tagErrors,
   referenceErrors,
   busy,
+  held,
   slow,
   countChanged,
   writeRuleRefused,
   keyAbsent,
   refusal,
   failed,
+  refusals,
   onTitle,
   onDescription,
   onWords,
@@ -100,13 +127,21 @@ export function PostEditView({
   onUndoTag,
   onUndoReference,
   onManagePictures,
+  onAddMedia,
+  onDismissRefusal,
+  onRetryUploads,
+  onRemoveFailed,
   onRemoveClip,
   onDescribeClip,
+  onPickCover,
+  onRemoveCover,
   onOpenSensitive,
   onOpenBacking,
   backingRawSum,
   onOpenActs,
   onHelp,
+  onWriteRuleHelp,
+  onWriteRuleNotNow,
   onSign,
   onLeave,
   keyCard,
@@ -120,13 +155,17 @@ export function PostEditView({
   backingRawSum: number | null;
   /** `Adjust` on the Your backing row: the one-axis pad over the edit. */
   onOpenBacking: () => void;
+  /** Media id or asset id → something to draw: a served URL, or a local object URL. */
   previews: Readonly<Record<string, string>>;
   /** What the batch signs, in records — the guard reads this and nothing else. */
   count: number;
   tagErrors: Readonly<Record<number, string>>;
   referenceErrors: Readonly<Record<number, string>>;
+  /** The signing is out. */
   busy: boolean;
-  /** The signing has gone 5s unanswered. */
+  /** A press is held at the upload gate, waiting on the bytes. */
+  held: boolean;
+  /** The press has gone 5s unanswered. */
   slow: boolean;
   /** The prepared batch was not the one the foot read; the held press dropped. */
   countChanged: boolean;
@@ -134,6 +173,8 @@ export function PostEditView({
   keyAbsent: boolean;
   refusal: string | null;
   failed: boolean;
+  /** Files the add control turned away, each standing on the media row until dismissed. */
+  refusals: readonly PickRefusal[];
   onTitle: (title: string) => void;
   onDescription: (description: string) => void;
   onWords: (words: string) => void;
@@ -142,11 +183,26 @@ export function PostEditView({
   onUndoTag: (name: string) => void;
   onUndoReference: (targetId: string) => void;
   onManagePictures: () => void;
+  /** Files back from the device's own picker, for the route to screen and crop. */
+  onAddMedia: (files: readonly File[]) => void;
+  onDismissRefusal: (id: string) => void;
+  /** Retry, under the row and on the gate: every failed upload tries again. */
+  onRetryUploads: () => void;
+  /** `Remove it` under the row: the failed pictures leave the batch. */
+  onRemoveFailed: () => void;
   onRemoveClip: () => void;
   onDescribeClip: () => void;
+  /** A picture back from the picker for the clip's face, for the route to crop. */
+  onPickCover: (file: File) => void;
+  /** `Remove it` under the cover row: the new face leaves the batch. */
+  onRemoveCover: () => void;
   onOpenSensitive: () => void;
   onOpenActs: () => void;
   onHelp: () => void;
+  /** The write rule's own "?": `Why signing waits`. */
+  onWriteRuleHelp: () => void;
+  /** `Not now` under the write rule's notice: the edit stands again as it was. */
+  onWriteRuleNotNow: () => void;
   onSign: () => void;
   /** The back arrow and the X alike: the route decides whether leaving asks. */
   onLeave: () => void;
@@ -154,14 +210,21 @@ export function PostEditView({
   keyCard: ReactNode;
 }) {
   const media = isMediaBody(state);
-  const clip = isClipBody(state);
-  const slowAnswer = useSlowAnswer(busy);
+  const clip = clipOf(state.gallery);
+  const signing = busy || held;
+  // Past 200ms the commit reads its in-flight label and the ways out refuse —
+  // held at the gate or not (EditCompose.md).
+  const slowAnswer = useSlowAnswer(signing);
   const problem =
     titleProblem(state.title) ??
     (media ? descriptionProblem(state.description) : wordsProblem(state.words));
+  const pending = uploadsPending(state.gallery);
+  const faulted = uploadsFailed(state.gallery);
+  const took = editUploads(state.gallery).length;
   // Inert, never hidden, at an empty batch (EditComposeUnchanged.md:5): the
-  // control stays where it is and the foot says why it goes nowhere.
-  const inert = count === 0 || problem !== null;
+  // control stays where it is and the foot says why it goes nowhere. A failed
+  // upload shuts it too, the gate saying why; a running one never does.
+  const inert = count === 0 || problem !== null || faulted > 0;
   const withdrawnTagList = withdrawnTags(state.loadedTags, state.tags);
   const withdrawnRefList = withdrawnReferences(state.loadedReferences, state.references);
   const leave = () => {
@@ -177,7 +240,8 @@ export function PostEditView({
     id: pictureId(picture),
     src: previews[pictureId(picture)] ?? null,
     altText: pictureAltText(picture),
-    durationMs: state.durations[pictureId(picture)] ?? null,
+    crop: picture.kind === "added" ? picture.asset.crop : null,
+    ...(picture.kind === "added" ? thumbState(picture.asset) : {}),
   }));
 
   return (
@@ -194,46 +258,53 @@ export function PostEditView({
         onBack={leave}
         onLeave={leave}
         leaveLabel={EDIT_LEAVE_LABEL}
-        help={<HelpButton label="Editing" onOpen={onHelp} />}
+        help={<HelpDot ariaLabel="Editing" onOpen={onHelp} testId="header-help" />}
         testId="post-edit-header"
+        focusTitle
       />
 
       <div className="flex flex-1 flex-col gap-3.5 px-6 pb-4 pt-3">
-        {media ? (
+        {clip !== undefined ? (
+          <ClipFields
+            clip={clip}
+            previews={previews}
+            durationMs={state.durations[clip.mediaId] ?? null}
+            onRemoveClip={onRemoveClip}
+            onDescribeClip={onDescribeClip}
+            onPickCover={onPickCover}
+            onRetryUploads={onRetryUploads}
+            onRemoveCover={onRemoveCover}
+          />
+        ) : media ? (
           <div className="flex flex-col gap-1.5">
-            {clip ? (
-              // A video is the whole post: its tile, its own description and its
-              // remove control; the clip itself never changes at an edit.
-              <div className="flex flex-col gap-1.5">
-                <PickedRow
-                  items={thumbs}
-                  caption="1 video — the body"
-                  onManage={null}
-                  onRemove={() => onRemoveClip()}
-                  removeLabel="Remove this video"
-                  testId="post-edit-clip"
-                />
-                <TextAction testId="post-edit-describe-clip" onClick={onDescribeClip}>
-                  {pictureAltText(state.gallery[0]!) === "" ? "Describe the video" : "Described"}
-                </TextAction>
-                <p className="m-0 text-body-small text-on-surface-variant">
-                  A video is the whole post.
-                </p>
-              </div>
-            ) : (
-              <>
-                <PickedRow
-                  items={thumbs}
-                  caption={
-                    thumbs.length === 1 ? "1 picture — the body" : `${thumbs.length} pictures — the body`
-                  }
-                  onManage={onManagePictures}
-                  manageLabel={`Manage the ${thumbs.length === 1 ? "picture" : `${thumbs.length} pictures`}`}
-                  testId="post-edit-picked"
-                />
-                <BodyRule />
-              </>
+            <PickedRow
+              items={thumbs}
+              caption={
+                thumbs.length === 1 ? "1 picture — the body" : `${thumbs.length} pictures — the body`
+              }
+              onManage={onManagePictures}
+              manageLabel={`Manage the ${thumbs.length === 1 ? "picture" : `${thumbs.length} pictures`}`}
+              testId="post-edit-picked"
+            />
+            {/* The edit's row is the compose row, and it fails the compose
+                way: the tile marked, one line under the row with its two ways
+                out (EditCompose.md; `ComposeUploading`). */}
+            {faulted > 0 && (
+              <UploadErrorLine
+                message={failedUploadLine(faulted)}
+                onRetry={onRetryUploads}
+                onRemove={onRemoveFailed}
+                testId="post-edit-upload-error"
+              />
             )}
+            <Refusals refusals={refusals} onDismiss={onDismissRefusal} />
+            <AddControl
+              label={`+ Add pictures · ${state.gallery.length} of ${POST_ATTACHMENT_CAP}`}
+              accept={ACCEPT_PICTURES}
+              onFiles={onAddMedia}
+              testId="post-edit-add-pictures"
+            />
+            <QuietNote testId="post-edit-body-rule">{BODY_RULE}</QuietNote>
           </div>
         ) : (
           <div className="flex flex-col gap-1.5">
@@ -247,7 +318,14 @@ export function PostEditView({
               error={wordsProblem(state.words) ?? undefined}
               testId="post-edit-words"
             />
-            <BodyRule />
+            <Refusals refusals={refusals} onDismiss={onDismissRefusal} />
+            <AddControl
+              label="+ Add pictures or a video"
+              accept={ACCEPT_MEDIA}
+              onFiles={onAddMedia}
+              testId="post-edit-add-media"
+            />
+            <QuietNote testId="post-edit-body-rule">{BODY_RULE}</QuietNote>
           </div>
         )}
 
@@ -277,14 +355,16 @@ export function PostEditView({
           />
         )}
 
+        {/* The fields carry their own `Tags` and `References` labels. A staged
+            chip or row opens its pair in a sheet over the edit (EditCompose.md). */}
         <div className="flex flex-col gap-1.5">
-          <FieldLabel>Tags</FieldLabel>
           <TagEntryField
             tags={state.tags}
             onChange={onTags}
             fieldErrors={tagErrors}
             cap={null}
             testIdPrefix="post-edit"
+            pairs="sheet"
           />
           {withdrawnTagList.map((tag) => (
             <WithdrawnLine
@@ -297,13 +377,13 @@ export function PostEditView({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <FieldLabel>References</FieldLabel>
           <ReferenceEntryField
             references={state.references}
             onChange={onReferences}
             fieldErrors={referenceErrors}
             cap={null}
             testIdPrefix="post-edit"
+            pairs="sheet"
           />
           {withdrawnRefList.map((reference) => (
             <WithdrawnLine
@@ -315,30 +395,31 @@ export function PostEditView({
           ))}
         </div>
 
+        {/* FactRow's seal emphasis, the seal's order (`_shared.jsx`): the
+            License row locked, Your backing under it, then Sensitive. */}
         <div className="flex flex-col">
-          <div className="flex min-h-11 items-center gap-2 border-t border-outline-variant">
-            <span className="flex-1 text-body-medium">License</span>
-            <span className="text-body-medium text-on-surface-variant" data-testid="post-edit-license">
-              {licenseName(state.license)}
-            </span>
-            <span
-              className="inline-flex text-on-surface-variant"
-              aria-label="The license never changes"
-              data-testid="post-edit-license-locked"
-            >
-              <LockGlyph />
-            </span>
-          </div>
+          <FactRow
+            label="License"
+            value={<LicenseValue>{licenseName(state.license)}</LicenseValue>}
+            action={
+              <span
+                className="inline-flex text-on-surface-variant"
+                aria-label="The license never changes"
+                data-testid="post-edit-license-locked"
+              >
+                <LockGlyph />
+              </span>
+            }
+          />
           {/* YOUR BACKING (EditCompose.md, `_shared.jsx`'s `EditBackingRow`):
-              under the License row, the seal's order, reading the post's
-              backing as it stands with the edit — the raw sum plus the edit's
-              own pick, clipped — one number. Unmoved, that is the backing as
-              it stands. Its record rides the edit, so it adds no act. */}
-          <div className="flex min-h-11 items-center gap-2 border-t border-outline-variant">
-            <span className="flex-1 text-body-medium">Your backing</span>
-            <span className="text-body-medium text-on-surface-variant">
-              {backingRawSum === null ? (
-                <span data-testid="post-edit-backing-unread" className="text-body-small">
+              the post's backing as it stands with the edit — the raw sum plus
+              the edit's own pick, clipped — one number. Unmoved, that is the
+              backing as it stands. Its record rides the edit, so it adds no act. */}
+          <FactRow
+            label="Your backing"
+            value={
+              backingRawSum === null ? (
+                <span data-testid="post-edit-backing-unread" className="text-body-small text-on-surface-variant">
                   {BACKING_UNREAD}
                 </span>
               ) : (
@@ -346,21 +427,24 @@ export function PostEditView({
                   pDirected={attachmentLanding(backingRawSum, state.pick).landing}
                   testId="post-edit-backing-value"
                 />
-              )}
-            </span>
-            <TextAction testId="post-edit-open-backing" onClick={onOpenBacking}>
-              Adjust
-            </TextAction>
-          </div>
-          <div className="flex min-h-11 items-center gap-2 border-y border-outline-variant">
-            <span className="flex-1 text-body-medium">Sensitive</span>
-            <span className="text-body-medium text-on-surface-variant" data-testid="post-edit-sensitive-value">
-              {state.sensitive ? "Marked" : "Not marked"}
-            </span>
-            <TextAction testId="post-edit-open-sensitive" onClick={onOpenSensitive}>
-              {state.sensitive ? "Change" : "Mark"}
-            </TextAction>
-          </div>
+              )
+            }
+            action="Adjust"
+            onAction={onOpenBacking}
+            testId="post-edit-open-backing"
+          />
+          <FactRow
+            label="Sensitive"
+            value={
+              <span className="text-body-medium text-on-surface-variant" data-testid="post-edit-sensitive-value">
+                {state.sensitive ? "Marked" : "Not marked"}
+              </span>
+            }
+            action={state.sensitive ? "Change" : "Mark"}
+            onAction={onOpenSensitive}
+            testId="post-edit-open-sensitive"
+            last
+          />
         </div>
 
         <div className="flex-1" />
@@ -372,23 +456,47 @@ export function PostEditView({
         )}
         {failed && <TransportError testId="post-edit-failed" />}
 
+        {/* THE GATE (EditCompose.md, EditComposeVideo.md): while the bytes
+            the edit took are going up, the seal's line stands over the foot,
+            naming the cover where the edit set one; failed, it takes its fault
+            reading with Retry. */}
+        {faulted > 0 ? (
+          <UploadStatusLine
+            done={0}
+            total={0}
+            failed
+            message={failedUploadLine(faulted)}
+            onRetry={onRetryUploads}
+            testId="post-edit-gate"
+          />
+        ) : (
+          pending > 0 && (
+            <UploadStatusLine
+              done={uploadsDone(state.gallery)}
+              total={took}
+              media={clip !== undefined ? "cover" : "pictures"}
+              testId="post-edit-gate"
+            />
+          )
+        )}
+
         <ActsFooter count={count} onOpen={onOpenActs} subline={subline} testId="post-edit-acts-footer" />
         {keyAbsent ? (
           keyCard
         ) : writeRuleRefused ? (
-          // The write rule's notice takes the commit's place, and no Retry
-          // comes with it (EditCompose.md: `You can't sign right now`).
-          <p role="alert" data-testid="post-edit-write-rule" className="m-0 text-center text-body-medium">
-            You can&rsquo;t sign right now.
-          </p>
+          // The write rule's notice takes the commit's place, its fact ending
+          // on what is true for an edit, `Not now` its way out and no Retry
+          // (EditCompose.md).
+          <EditWriteRuleNotice onHelp={onWriteRuleHelp} onNotNow={onWriteRuleNotNow} testIdPrefix="post-edit" />
         ) : (
           <PillButton
             testId="post-edit-sign"
             full
             disabled={inert}
             onClick={() => {
-              // Refuses a second press while the signing is out, and never dims.
-              if (!busy) onSign();
+              // Refuses a second press while the signing is out or held, and
+              // never dims.
+              if (!signing) onSign();
             }}
           >
             {slowAnswer ? "Signing the edit…" : "Sign the edit"}
@@ -396,6 +504,196 @@ export function PostEditView({
         )}
       </div>
     </main>
+  );
+}
+
+/** A license name in the row's quiet voice, named for the tests. */
+function LicenseValue({ children }: { children: string }) {
+  return (
+    <span className="text-body-medium text-on-surface-variant" data-testid="post-edit-license">
+      {children}
+    </span>
+  );
+}
+
+/**
+ * The add word and the device's own picker behind it — never a pick stage
+ * (EditCompose.md: "the device's own picker opens AND NEVER a pick stage
+ * opens"). NEVER SHUT AT THE CAP: a picture past ten is refused in words on
+ * the row, which a closed picker would only hide.
+ */
+function AddControl({
+  label,
+  accept,
+  onFiles,
+  testId,
+}: {
+  label: string;
+  accept: string;
+  onFiles: (files: readonly File[]) => void;
+  testId: string;
+}) {
+  const input = useRef<HTMLInputElement | null>(null);
+  return (
+    <>
+      <InlineAction size="sm" testId={testId} onClick={() => input.current?.click()}>
+        {label}
+      </InlineAction>
+      <input
+        ref={input}
+        type="file"
+        accept={accept}
+        multiple
+        data-testid={`${testId}-input`}
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={(event) => {
+          const files = event.target.files;
+          if (files !== null && files.length > 0) onFiles([...files]);
+          // Cleared so picking the same file twice in a row still fires.
+          event.target.value = "";
+        }}
+        className="sr-only"
+      />
+    </>
+  );
+}
+
+/** The refused files, each a `RefusedFile` under the row, until dismissed. */
+function Refusals({
+  refusals,
+  onDismiss,
+}: {
+  refusals: readonly PickRefusal[];
+  onDismiss: (id: string) => void;
+}) {
+  if (refusals.length === 0) return null;
+  return (
+    <ul data-testid="post-edit-refusals" className="m-0 flex list-none flex-col gap-2.5 p-0">
+      {refusals.map((one) => (
+        <li key={one.id}>
+          <RefusedFileRow refusal={one} onDismiss={() => onDismiss(one.id)} testIdPrefix="post-edit" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * EditComposeVideo's two fields: the clip, which stays or leaves whole, and
+ * its cover — the door (`Add a cover`) where no face was ever chosen, the face
+ * and `Change the cover` where one was. A taken frame is not a choice, so it
+ * opens the door too (EditComposeVideo.md). Frames are never re-offered: the
+ * device's own picker is the one way in, through the cover's crop.
+ */
+function ClipFields({
+  clip,
+  previews,
+  durationMs,
+  onRemoveClip,
+  onDescribeClip,
+  onPickCover,
+  onRetryUploads,
+  onRemoveCover,
+}: {
+  clip: NonNullable<ReturnType<typeof clipOf>>;
+  previews: Readonly<Record<string, string>>;
+  durationMs: number | null;
+  onRemoveClip: () => void;
+  onDescribeClip: () => void;
+  onPickCover: (file: File) => void;
+  onRetryUploads: () => void;
+  onRemoveCover: () => void;
+}) {
+  const input = useRef<HTMLInputElement | null>(null);
+  const width = Math.round(CLIP_TILE_HEIGHT * (clip.ratio ?? 1));
+  const face: PickedAsset | null = clip.newCover;
+  const faceSrc = face !== null ? (previews[face.id] ?? null) : clip.coverUrl;
+  const faceFailed = face !== null && face.upload.kind === "failed";
+  const openPicker = () => input.current?.click();
+  return (
+    <>
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel>Video</FieldLabel>
+        <div className="flex items-center gap-2">
+          <MediaThumb
+            src={clip.coverUrl}
+            altText={clip.altText}
+            width={width}
+            height={CLIP_TILE_HEIGHT}
+            fit="cover"
+            durationMs={durationMs ?? 0}
+            onRemove={onRemoveClip}
+            removeLabel="Remove this video"
+            testId="post-edit-clip"
+          />
+        </div>
+        {/* One description for the clip, none for its cover (EditComposeVideo.md). */}
+        <DescribeCounter
+          subject="the video"
+          described={describedCount([clip])}
+          total={1}
+          onDescribe={onDescribeClip}
+          testId="post-edit-describe-clip"
+        />
+        {/* Where the picture edit's add control stands, the quiet line
+            (copy-voice, *Staging a video*: the edit's trim). */}
+        <QuietNote testId="post-edit-clip-note">A video is the whole post.</QuietNote>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel>Cover</FieldLabel>
+        {coverChosen(clip) ? (
+          <div className="flex items-center gap-2">
+            <MediaThumb
+              src={faceSrc}
+              width={width}
+              height={CLIP_TILE_HEIGHT}
+              fit="cover"
+              crop={face?.crop ?? null}
+              {...(face !== null ? thumbState(face) : {})}
+              testId="post-edit-cover"
+            />
+            <PillButton variant="text" size="sm" testId="post-edit-change-cover" onClick={openPicker}>
+              Change the cover
+            </PillButton>
+          </div>
+        ) : (
+          <>
+            <InlineAction size="sm" testId="post-edit-add-cover" onClick={openPicker}>
+              Add a cover
+            </InlineAction>
+            <QuietNote testId="post-edit-cover-note">
+              It plays the moment it is on screen, so it starts on its own first frame.
+            </QuietNote>
+          </>
+        )}
+        {faceFailed && (
+          // The cover is one picture, so its line is the one-picture line
+          // (EditComposeVideo.md), under the cover row with its two ways out.
+          <UploadErrorLine
+            message={failedUploadLine(1)}
+            onRetry={onRetryUploads}
+            onRemove={onRemoveCover}
+            testId="post-edit-cover-error"
+          />
+        )}
+        <input
+          ref={input}
+          type="file"
+          accept={ACCEPT_PICTURES}
+          data-testid="post-edit-cover-input"
+          tabIndex={-1}
+          aria-hidden="true"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file !== undefined) onPickCover(file);
+            event.target.value = "";
+          }}
+          className="sr-only"
+        />
+      </div>
+    </>
   );
 }
 

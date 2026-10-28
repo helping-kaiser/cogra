@@ -1238,4 +1238,106 @@ class StanceViewModelTest {
         assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
         assertThat(vm.state.value.coachingTarget).isNull()
     }
+
+    // -- The Set pressed before the standing has loaded (seam 244 item 9) --
+
+    /** Opens the pad on a control whose standing has NOT been read, picks, presses Set. */
+    private fun pressSetBeforeTheStandingLoads(vm: StanceViewModel, pick: StancePair) {
+        vm.onOpenPad(TARGET)
+        vm.onPick(TARGET, pick)
+        vm.onCommit(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+    }
+
+    @Test
+    fun aSetBeforeTheStandingLoadsStillAsksTheEmptySignOverNothing() = runTest(dispatcher) {
+        stances.records = 0
+        val vm = viewModel()
+
+        pressSetBeforeTheStandingLoads(vm, StancePair.Origin)
+
+        assertThat(entry(vm).emptySign).isEqualTo(EmptySignState())
+        assertThat(stances.staged).isEmpty()
+    }
+
+    @Test
+    fun aSetBeforeTheStandingLoadsStillAsksTheWalkBackOverAStanding() = runTest(dispatcher) {
+        stances.net = StancePair(0.5, 0.5)
+        stances.records = 2
+        val vm = viewModel()
+
+        pressSetBeforeTheStandingLoads(vm, StancePair(-0.5, -0.5))
+
+        assertThat(entry(vm).severance?.fromPick).isTrue()
+        assertThat(entry(vm).emptySign).isNull()
+        assertThat(stances.staged).isEmpty()
+    }
+
+    @Test
+    fun aSetBeforeTheStandingLoadsSignsAnOrdinaryPickOnceItHas() = runTest(dispatcher) {
+        stances.net = StancePair(0.5, 0.5)
+        stances.records = 2
+        val vm = viewModel()
+
+        pressSetBeforeTheStandingLoads(vm, StancePair(0.1, 0.1))
+
+        assertThat(stances.staged).containsExactly(StancePair(0.1, 0.1))
+    }
+
+    @Test
+    fun aSetWhoseStandingCannotBeReadSignsNothingAndSaysItDidNotSend() = runTest(dispatcher) {
+        stances.standingFails = true
+        val vm = viewModel()
+
+        pressSetBeforeTheStandingLoads(vm, StancePair.Origin)
+
+        assertThat(stances.staged).isEmpty()
+        assertThat(entry(vm).failed).isTrue()
+        assertThat(entry(vm).busy).isFalse()
+    }
+
+    // -- Leaving the screen takes the asks with the pad (design.md §8.3) --
+
+    @Test
+    fun leavingTheScreenDismissesTheEmptySignsAskWithThePad() = runTest(dispatcher) {
+        stances.records = 0
+        val vm = viewModel()
+        pressSetAt(vm, StancePair.Origin)
+        assertThat(entry(vm).emptySign).isNotNull()
+
+        vm.onDismissPad(TARGET)
+
+        assertThat(entry(vm).emptySign).isNull()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+    }
+
+    @Test
+    fun leavingTheScreenDismissesTheWalkBacksAskWithThePad() = runTest(dispatcher) {
+        stances.net = StancePair(0.5, 0.5)
+        stances.records = 2
+        val vm = viewModel()
+        pressSetAt(vm, StancePair(-0.5, -0.5))
+        assertThat(entry(vm).severance).isNotNull()
+
+        vm.onDismissPad(TARGET)
+
+        assertThat(entry(vm).severance).isNull()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+    }
+
+    @Test
+    fun leavingTheScreenDismissesTheRoutesWalkBackAskThoughNoPadIsOpen() = runTest(dispatcher) {
+        stances.net = StancePair(0.5, 0.5)
+        stances.records = 2
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenSeverance(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(entry(vm).severance).isNotNull()
+
+        vm.onDismissPad(TARGET)
+
+        assertThat(entry(vm).severance).isNull()
+    }
 }
