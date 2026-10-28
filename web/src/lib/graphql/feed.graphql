@@ -32,7 +32,7 @@ query FeedRanking($viewer: UUID!, $kinds: [NodeKind!], $topic: UUID) {
 # a page of ids per call, so it is priced like the listing it replaces. The
 # node is the `FeedItem` UNION, so every selection is inline (see
 # `fragments.graphql`); a Post row is the feed card's own `FeedPost`, the
-# other kinds are named by id until their cards are built.
+# other kinds are named by id here and drawn through `FeedCards` below.
 query Feed($orderedIds: [UUID!]!, $first: Int!, $includePending: Boolean! = true) {
   feed(orderedIds: $orderedIds, first: $first) {
     edges {
@@ -49,6 +49,152 @@ query Feed($orderedIds: [UUID!]!, $first: Int!, $includePending: Boolean! = true
         }
         ... on Hashtag {
           id
+        }
+      }
+    }
+  }
+}
+
+# A WINDOW'S OTHER KINDS (FeedKinds.md; FeedCommentShapes, FeedProfileShapes,
+# FeedTagShapes): the comments, people and topics a derived list carries once
+# the reader lets their kinds in, each as its own feed card draws it — the
+# same selections History's cards read (`history.graphql` `HistoryPage`), so
+# one card renders the same thing on both surfaces.
+#
+# A READ OF ITS OWN, AT TEN. Every edge here carries whole card selections —
+# a comment's with its head row's target, a topic's with a glimpse of three
+# — so it is priced at History's page of ten rather than the post window's
+# twenty, and the page size is a literal so the client-operation guard
+# prices the call the device actually makes. The post rows keep riding
+# `Feed` above; the device splits a window's ids by the kind the ranking
+# already named and asks each read for its own (`feed-api.ts`).
+query FeedCards($orderedIds: [UUID!]!, $includePending: Boolean! = true) {
+  feed(orderedIds: $orderedIds, first: 10) {
+    edges {
+      node {
+        __typename
+        ... on Comment {
+          ...CommentFields
+          # The comment card's head row: what the comment answers.
+          target {
+            __typename
+            ... on Post {
+              id
+              title {
+                value
+                status
+              }
+              content {
+                value
+                status
+              }
+              attachments {
+                url
+                status
+                mimeType
+                coverMedia {
+                  url
+                  status
+                }
+              }
+              author {
+                id
+                handle
+              }
+              moderationStatus
+              removal {
+                at
+                by
+              }
+            }
+            ... on Comment {
+              id
+              content {
+                value
+                status
+              }
+              author {
+                id
+                handle
+              }
+              moderationStatus
+              removal {
+                at
+                by
+              }
+            }
+          }
+          # The thread's root post: where the card's doors land.
+          post {
+            id
+          }
+        }
+        ... on User {
+          id
+          handle
+          displayName {
+            value
+            status
+          }
+          bio {
+            value
+            status
+          }
+          avatar {
+            url
+            status
+          }
+          viewerBookmarkedAt
+        }
+        ... on Hashtag {
+          id
+          name {
+            value
+            status
+          }
+          # The tag card's glimpse: the newest three things carrying it.
+          taggedContent(limit: 3, includePending: $includePending) {
+            node {
+              __typename
+              ... on Post {
+                id
+                title {
+                  value
+                  status
+                }
+                content {
+                  value
+                  status
+                }
+                attachments {
+                  url
+                  status
+                  mimeType
+                  coverMedia {
+                    url
+                    status
+                  }
+                }
+                author {
+                  id
+                  handle
+                }
+                createdAt
+              }
+              ... on Comment {
+                id
+                content {
+                  value
+                  status
+                }
+                author {
+                  id
+                  handle
+                }
+                createdAt
+              }
+            }
+          }
         }
       }
     }
