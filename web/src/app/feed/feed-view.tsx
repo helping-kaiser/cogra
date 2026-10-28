@@ -84,6 +84,9 @@ import type { PostMenuRow } from "@/lib/ui2/post-menu";
 import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
+import { feedOrigin } from "@/lib/reel/origins";
+import { openStream } from "@/lib/reel/stream-session";
+import { streamHref } from "@/lib/reel/stream-origin";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
 import {
   forgetFeedSheet,
@@ -827,6 +830,34 @@ export function FeedView({
   // tail card drawn — and with nothing unseen, the feed opens at it.
   const seenFrom = useMemo(() => shown.findIndex((post) => seenTail.has(post.id)), [shown, seenTail]);
 
+  // A PORTRAIT CLIP'S TAP OPENS THE STREAM ON THE FEED IT NARROWS (Reel.md:3;
+  // ranked-feed-api §4.12): the derived list as drawn — the hidden people's
+  // rows already out — and its next windows past the edge the feed reached,
+  // hydrated by a read that ranks nothing. The reads are built here without
+  // the feed's `alive` gate, since the feed leaves the screen as the stream
+  // arrives.
+  const openFeedStream = useCallback(
+    (startId: string) => {
+      const feed = feedRef.current;
+      const rows = shown.filter((item): item is PostView & FeedItemView => item.__typename === "Post");
+      openStream({
+        origin: { kind: "feed" },
+        rows,
+        startId,
+        more:
+          feed === null || endCursor === null
+            ? null
+            : feedOrigin(feed, Number(endCursor), {
+                hydrate: (ids, kinds) => fetchFeedWindow(client, ids, kinds),
+                hides,
+                current: (item) => currentOf(client, item),
+              }),
+        hasMore: hasNextPage,
+      });
+    },
+    [client, endCursor, hasNextPage, hides, shown],
+  );
+
   return (
     // The band is chrome and full-bleed, so the gutter belongs to the content
     // below it rather than to the column that holds both.
@@ -1025,6 +1056,7 @@ export function FeedView({
                   // THE SCORE OPENS ITS TRACE, whose back arrow reads `Back to feed`.
                   scoreOrigin={FEED_ORIGIN}
                   href={`/posts/${post.id}`}
+                  stream={{ href: streamHref(post.id), onOpen: () => openFeedStream(post.id) }}
                   testId={`feed-post-${post.id}`}
                   authorTestId={`feed-author-${post.id}`}
                   stanceTestId={`feed-stance-${post.id}`}

@@ -36,10 +36,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, ViewTransition } from "react";
 
 import { isPending, type PostView } from "@/lib/api/content-api";
 import { postCover } from "@/lib/score/cover";
+import { isStreamClip } from "@/lib/reel/stream-clip";
+import { reelClipName } from "@/lib/reel/squish";
 import { ScoreSlot } from "@/lib/score/score-slot";
 import type { TraceOrigin } from "@/lib/score/trace-session";
 import { withRemoval, type Removal } from "@/lib/api/removal-api";
@@ -178,6 +180,7 @@ export function PostCard({
   onOpenCitedBy,
   mediaAbove = false,
   onOpenMedia,
+  stream,
   onOpenMenu,
   menuOpen = false,
   node,
@@ -275,6 +278,14 @@ export function PostCard({
    * (`ViewerPicture.jsx:2-3`). So a summary card is handed none.
    */
   onOpenMedia?: (index: number) => void;
+  /**
+   * THE STREAM THIS CARD'S SURFACE OPENS (Reel.md:3): where the card stands in
+   * a list the stream narrows — the feed, History — a portrait clip's tap
+   * opens the stream on it, `onOpen` handing the session the surface's list
+   * first. Absent, every media tap opens the post, as on surfaces that draw
+   * no stream case (Saved's, TagPage's; graph.json).
+   */
+  stream?: { readonly href: string; readonly onOpen: () => void };
 }) {
   const detail = variant === "detail";
   const router = useRouter();
@@ -313,6 +324,10 @@ export function PostCard({
   const media = !redacted && hasMedia(post);
   // What the card DRAWS, as distinct from what the post bears.
   const drawsMedia = media && !mediaAbove;
+  // The one predicate the stream narrows by (`stream-clip.ts`), so a clip
+  // whose tap opens the stream is always a clip the stream carries.
+  const streamsOnTap = !detail && drawsMedia && stream !== undefined && isStreamClip(post);
+  const streamClipId = post.attachments[0]?.id ?? post.id;
   const veiled = !redacted && bodyIsSensitive(post);
   const title = redacted ? null : (post.title.value ?? null);
   // WORDS XOR MEDIA: the picture is the body, so a media post draws no
@@ -538,16 +553,45 @@ export function PostCard({
                the affordance row, the opener) stands outside it. It is the
                card's DOOR (`cg-door`): hovered or pressed, the whole card takes
                the layer (`Card.jsx`, the K13 round). */
-            <Link
-              href={href}
-              data-testid={`${testId}-link`}
-              className="cg-focus cg-door flex flex-col gap-3"
-            >
-              {drawsMedia && (
-                <PostMedia node={post} testId={`${testId}-media`} dataNode={part(node, "media")} />
-              )}
-              {textBlock}
-            </Link>
+            streamsOnTap ? (
+              /* A PORTRAIT CLIP'S TAP OPENS THE STREAM; any other media's tap
+                 opens the post (graph.json «post media»: "a portrait clip — the
+                 stream opens"; readme §13, the reel round). So the clip is its
+                 own door, to the stream, and the words below it keep the
+                 card's door to the post — two destinations, two tab stops.
+                 The clip is the shape the stream's entrance carries over
+                 (`squish.ts`; the packet's RL-G15 reading). */
+              <div className="flex flex-col gap-3">
+                <Link
+                  href={stream.href}
+                  onClick={stream.onOpen}
+                  data-testid={`${testId}-stream-link`}
+                  className="cg-focus cg-door block"
+                >
+                  <ViewTransition name={reelClipName(streamClipId)} share="cg-squish" default="none">
+                    <div>
+                      <PostMedia node={post} testId={`${testId}-media`} dataNode={part(node, "media")} />
+                    </div>
+                  </ViewTransition>
+                </Link>
+                {textBlock !== null && (
+                  <Link href={href} data-testid={`${testId}-link`} className="cg-focus cg-door flex flex-col gap-3">
+                    {textBlock}
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <Link
+                href={href}
+                data-testid={`${testId}-link`}
+                className="cg-focus cg-door flex flex-col gap-3"
+              >
+                {drawsMedia && (
+                  <PostMedia node={post} testId={`${testId}-media`} dataNode={part(node, "media")} />
+                )}
+                {textBlock}
+              </Link>
+            )
           )}
         </BodyRegion>
       )}

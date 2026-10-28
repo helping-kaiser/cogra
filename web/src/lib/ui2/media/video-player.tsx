@@ -160,6 +160,7 @@ function Player({
   carry = false,
   handedOver = false,
   openOnLandscape = false,
+  onClipTap,
 }: {
   src: string;
   /**
@@ -247,6 +248,13 @@ function Player({
    * (https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/change_event).
    */
   openOnLandscape?: boolean;
+  /**
+   * Where the CLIP'S OWN TAP goes, where it is not the viewer: "WHEN tap the
+   * clip GIVEN the reader came from the stream … with the web's transport
+   * chrome up -> the clip expands back into the stream" (PostDetailVideo.md
+   * :33). The fullscreen toggle still opens the viewer (:37).
+   */
+  onClipTap?: () => void;
   /**
    * Whether this player reaches the edges of the SCREEN rather than sitting in
    * a frame on the page.
@@ -451,7 +459,8 @@ function Player({
         // that owns it, and reaching the controls must not depend on it.
         case "click":
           if (!transport) return;
-          if (chromeShown && openViewer) openViewer();
+          if (chromeShown && onClipTap) onClipTap();
+          else if (chromeShown && openViewer) openViewer();
           else setChromeShown((shown) => !shown);
           return;
       }
@@ -809,7 +818,7 @@ function Player({
       {stream && !veiled && (
         <div
           {...testAttributes(seekNode, `${testId}-seek`)}
-          style={{ position: "absolute", left: 0, right: 0, bottom: "4px", zIndex: 3, display: "flex" }}
+          style={{ position: "absolute", left: 0, right: 0, bottom: STREAM_SEEK_BOTTOM, zIndex: 3, display: "flex" }}
         >
           <Timeline
             thin
@@ -923,6 +932,14 @@ const STREAM_DISC_STYLE: CSSProperties = {
   top: "8px",
   zIndex: 4,
 };
+
+/**
+ * The stream's seek line rides DIRECTLY ABOVE THE BOTTOM BAR (Reel.md:13;
+ * `bottom: BAND_HEIGHT + 4`, Reel.jsx:143): the stream's frame reaches the
+ * screen's foot under the bar, so the lift is the bar's own height and the
+ * phone's bottom inset, never the screen's edge where the gesture zone is.
+ */
+const STREAM_SEEK_BOTTOM = "calc(var(--bottom-bar-height) + env(safe-area-inset-bottom, 0px) + 4px)";
 
 /**
  * A disc's press is the disc's alone, as the master's `MediaDisc` keeps it
