@@ -205,10 +205,13 @@ class FeedDeriveTest {
         assertThat(held.changeTo(held.copy(order = FeedOrder.NEWEST))).isEqualTo(FilterChange.DERIVE)
         assertThat(held.changeTo(held.copy(showSeen = true, stillSettling = false))).isEqualTo(FilterChange.DERIVE)
         assertThat(held.changeTo(held.copy(people = PeopleScope.YOUR_PEOPLE))).isEqualTo(FilterChange.DERIVE)
+        assertThat(held.changeTo(held.copy(forms = setOf(FeedForm.PHOTOS)))).isEqualTo(FilterChange.DERIVE)
+        assertThat(held.changeTo(held.copy(showSensitive = true, showRemoved = true))).isEqualTo(FilterChange.DERIVE)
         assertThat(held.changeTo(held.copy(kinds = setOf(FeedKind.COMMENT)))).isEqualTo(FilterChange.FETCH)
-        assertThat(held.changeTo(held.copy(topic = "t1"))).isEqualTo(FilterChange.FETCH)
+        assertThat(held.changeTo(held.copy(topic = FeedTopic("t1", "maps")))).isEqualTo(FilterChange.FETCH)
         // Mixed: one fetch, then the derive.
-        assertThat(held.changeTo(held.copy(topic = "t1", order = FeedOrder.NEWEST))).isEqualTo(FilterChange.FETCH)
+        val mixed = held.copy(topic = FeedTopic("t1", "maps"), order = FeedOrder.NEWEST)
+        assertThat(held.changeTo(mixed)).isEqualTo(FilterChange.FETCH)
     }
 
     /**

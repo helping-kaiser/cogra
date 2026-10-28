@@ -236,7 +236,7 @@ class FeedViewModelTest {
 
         vm.applyFilter(FeedFilter(kinds = setOf(FeedKind.POST, FeedKind.COMMENT)))
         settle()
-        vm.applyFilter(vm.state.value.filter.copy(topic = "h1"))
+        vm.applyFilter(vm.state.value.filter.copy(topic = FeedTopic("h1", "saltmaps")))
         settle()
 
         assertThat(feed.rankings.map { it.second }).containsExactly(
@@ -266,7 +266,7 @@ class FeedViewModelTest {
         settle()
 
         feed.answer = Outcome.Success(rankingOf("t1", "t2", "t3"))
-        vm.applyFilter(FeedFilter(topic = "h1", order = FeedOrder.NEWEST))
+        vm.applyFilter(FeedFilter(topic = FeedTopic("h1", "saltmaps"), order = FeedOrder.NEWEST))
         settle()
 
         assertThat(feed.rankings).hasSize(2)
