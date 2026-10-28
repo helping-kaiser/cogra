@@ -156,31 +156,43 @@ internal fun CommentFeedCard(
                 ownPart()
             }
             if (comment.landing.isPending) PendingMarker(testTag = "${testTagPrefix}_pending")
-            Row(
-                modifier = Modifier.fillMaxWidth().testTag("${testTagPrefix}_affordances"),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                CommentStanceTarget { stanceControl(comment.id, testTagPrefix, null) }
-                val handle = comment.author?.handle
-                GlyphAffordance(
-                    icon = Icons.Filled.ChatBubble,
-                    description = handle?.let { stringResource(R.string.content_card_reply_to, "@$it") }
-                        ?: stringResource(R.string.content_comment_reply),
-                    testTag = "${testTagPrefix}_reply",
-                    onClick = onReply,
-                )
-                GlyphAffordance(
-                    icon = Icons.Filled.Share,
-                    description = stringResource(R.string.content_share_comment),
-                    testTag = "${testTagPrefix}_share",
-                    onClick = onShare,
-                )
-            }
+            FeedCommentRow(comment, testTagPrefix, onReply, onShare, stanceControl)
             // THE ROW LINE under the face (RowSigning.md): a save or unsave of
             // this comment that did not go through.
             ComfortLine(comment.id, "${testTagPrefix}_row_line")
         }
+    }
+}
+
+/** OPINION · THE COMMENT GLYPH · SHARE — the card's one row (FeedKinds.md). */
+@Composable
+private fun FeedCommentRow(
+    comment: CommentView,
+    testTagPrefix: String,
+    onReply: () -> Unit,
+    onShare: () -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().testTag("${testTagPrefix}_affordances"),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CommentStanceTarget { stanceControl(comment.id, testTagPrefix, null) }
+        val handle = comment.author?.handle
+        GlyphAffordance(
+            icon = Icons.Filled.ChatBubble,
+            description = handle?.let { stringResource(R.string.content_card_reply_to, "@$it") }
+                ?: stringResource(R.string.content_comment_reply),
+            testTag = "${testTagPrefix}_reply",
+            onClick = onReply,
+        )
+        GlyphAffordance(
+            icon = Icons.Filled.Share,
+            description = stringResource(R.string.content_share_comment),
+            testTag = "${testTagPrefix}_share",
+            onClick = onShare,
+        )
     }
 }
 

@@ -57,10 +57,12 @@ import com.cogra.core.designsystem.v2.atom.rememberParticiple
 import com.cogra.core.designsystem.v2.media.CoverKind
 import com.cogra.core.designsystem.v2.media.CoversSurface
 import com.cogra.domain.Outcome
+import com.cogra.domain.PostView
 import com.cogra.domain.Removal
 import com.cogra.domain.removal.RemovalKind
 import com.cogra.domain.removal.RemoveContent
 import com.cogra.domain.removal.RemovedMarks
+import com.cogra.domain.removal.marked
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -280,4 +282,11 @@ internal fun RemoveConfirm(
         testTag = testTag,
         node = node,
     )
+}
+
+/** [post] as this device knows it now: wearing a mark taken since it was read, or as it was. */
+@Composable
+internal fun rememberMarked(post: PostView?): PostView? {
+    val marks = rememberRemovedMarks()
+    return post?.marked(marks)
 }

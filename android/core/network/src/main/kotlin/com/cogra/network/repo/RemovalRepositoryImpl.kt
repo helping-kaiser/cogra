@@ -55,4 +55,3 @@ class RemovalRepositoryImpl @Inject constructor(
     /** The removal's own moment, wrapped so a still-settling node's null is a value. */
     private data class Stamped(val at: Instant?)
 }
-

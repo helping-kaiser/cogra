@@ -70,9 +70,8 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
-import com.cogra.domain.removal.RemovalKind
-import com.cogra.domain.removal.marked
 import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.removal.RemovalKind
 import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
@@ -373,7 +372,7 @@ fun PostDetailScreen(
 ) {
     // THE POST AS THIS DEVICE KNOWS IT NOW: a removal taken here — or on any
     // surface since this page was read — stands as its mark in place.
-    val post = state.post?.marked(rememberRemovedMarks())
+    val post = rememberMarked(state.post)
     val snackbar = remember { SnackbarHostState() }
     // THE PAGE'S SNACKBAR (`postDetail.snackbar`): the scope is the screen's,
     // so a confirmation outlives the sheet that raised it.
@@ -599,22 +598,27 @@ fun PostDetailScreen(
         // THE THINK-TWICE DIALOG over this page (RemoveMenu.md:19). Taken, the
         // post stands as Removed here: back is the whole header, the mark in
         // the words' and pictures' place (Removed.md).
-        if (removeOpen && post != null) {
-            RemoveConfirm(
-                kind = RemovalKind.Post,
-                nodeId = post.id,
-                record = post.genesisRecordId,
-                onClose = { removeOpen = false },
-                testTag = "post_remove_confirm",
-                node = POST_DETAIL / "dialog",
-            )
-        }
+        if (removeOpen) DetailRemoveConfirm(post, onClose = { removeOpen = false })
         // The confirm rises where the menu stood, over this page; it says it
         // is up itself, so the detail clip stops beneath it.
         reportFor?.let { id ->
             reportSheet(id, { reportFor = null }, notify)
         }
     }
+}
+
+/** The post's think-twice dialog over the detail, once the post is read. */
+@Composable
+private fun DetailRemoveConfirm(post: PostView?, onClose: () -> Unit) {
+    if (post == null) return
+    RemoveConfirm(
+        kind = RemovalKind.Post,
+        nodeId = post.id,
+        record = post.genesisRecordId,
+        onClose = onClose,
+        testTag = "post_remove_confirm",
+        node = POST_DETAIL / "dialog",
+    )
 }
 
 /**

@@ -164,21 +164,7 @@ internal fun PostBody(
     wordsClampLines: Int = TEXT_BODY_CLAMP_LINES,
 ) {
     if (removal != null || isRemoved(content, attachments, attachmentsStatus)) {
-        val reason = removalReason(removal, moderation)
-        RemovedPlaceholder(
-            reason = reason,
-            modifier = modifier,
-            // The removal's own moment in the one age ladder (backlog item 45).
-            timestamp = removal?.let { ageLadder(it.at, Instant.now()) },
-            // A comment's mark swaps the noun in the author's second line
-            // (CommentRemoved.md:5); a verdict's line is the verdict's.
-            note = if (surface == BodySurface.Comment && reason == RemovalReason.Author) {
-                stringResource(R.string.content_removed_comment_note)
-            } else {
-                null
-            },
-            testTag = "${testTagPrefix}_removed",
-        )
+        RemovedBody(removal, moderation, surface, testTagPrefix, modifier)
         return
     }
 
@@ -444,6 +430,32 @@ internal fun MediaAssetView.toItem(): MediaItem {
         altText = altText,
         videoUrl = url,
         durationMs = durationMs,
+    )
+}
+
+/**
+ * The mark where a removed body was (`RedactedContent`): its reason read off
+ * the node's own mark, its `when` the removal's own moment in the one age
+ * ladder (backlog item 45), never the content's age.
+ */
+@Composable
+private fun RemovedBody(
+    removal: Removal?,
+    moderation: ModerationState,
+    surface: BodySurface,
+    testTagPrefix: String,
+    modifier: Modifier,
+) {
+    val reason = removalReason(removal, moderation)
+    // A comment's mark swaps the noun in the author's second line
+    // (CommentRemoved.md:5); a verdict's line is the verdict's.
+    val commentNote = surface == BodySurface.Comment && reason == RemovalReason.Author
+    RemovedPlaceholder(
+        reason = reason,
+        modifier = modifier,
+        timestamp = removal?.let { ageLadder(it.at, Instant.now()) },
+        note = if (commentNote) stringResource(R.string.content_removed_comment_note) else null,
+        testTag = "${testTagPrefix}_removed",
     )
 }
 

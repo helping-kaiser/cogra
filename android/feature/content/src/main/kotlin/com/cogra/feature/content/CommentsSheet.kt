@@ -337,16 +337,20 @@ fun CommentsSheet(
     // the dialog is its own window, raised after the sheet's. Taken, only the
     // one comment gives way to its mark — the list is not re-read, so the
     // reader's place and every unfolded branch hold (CommentRemoved.md:19).
-    removeFor?.let { comment ->
-        RemoveConfirm(
-            kind = RemovalKind.Comment,
-            nodeId = comment.id,
-            record = comment.genesisRecordId,
-            onClose = { removeFor = null },
-            testTag = "comment_remove_confirm",
-            node = POST_DETAIL / "dialog",
-        )
-    }
+    removeFor?.let { comment -> CommentRemoveConfirm(comment, onClose = { removeFor = null }) }
+}
+
+/** The comment's think-twice dialog (CommentRemoveConfirm): the post's anatomy, the comment's nouns. */
+@Composable
+private fun CommentRemoveConfirm(comment: CommentView, onClose: () -> Unit) {
+    RemoveConfirm(
+        kind = RemovalKind.Comment,
+        nodeId = comment.id,
+        record = comment.genesisRecordId,
+        onClose = onClose,
+        testTag = "comment_remove_confirm",
+        node = POST_DETAIL / "dialog",
+    )
 }
 
 /** Where the thread's list stands when it opens: the reader's old place, or a landing. */
