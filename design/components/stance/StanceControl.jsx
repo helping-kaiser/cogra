@@ -194,9 +194,11 @@ const EMPTY_BUNDLE = { current: ORIGIN, rawSum: ORIGIN, records: 0, severed: fal
 /* `severanceCost` (api-spec.md): how many counter-records the explicit
    walk-back stages — each one clipped to ±1, so the larger raw sum, rounded
    up. Served on the bundle as `severance.records`; derived here where a board
-   hands only the sums. */
+   hands only the sums. A SERVED 0 IS AN ANSWER (seam 245, ask 21): only a
+   count that is absent is derived, never one that is zero. */
 function severanceCost(bundle) {
-  if (bundle.severance?.records) return bundle.severance.records;
+  const served = bundle.severance?.records;
+  if (served !== undefined && served !== null) return served;
   const reach = Math.max(Math.abs(bundle.rawSum.pDirected), Math.abs(bundle.rawSum.pInterest));
   return Math.max(1, Math.ceil(Math.round(reach * 100) / 100));
 }
@@ -373,7 +375,10 @@ export function StanceControl({
   const fieldRef = React.useRef(null);
 
   const considered = open || alternates;
-  const landing = considered ? localLanding(bundle.rawSum, pick) : null;
+  /* Nothing stands when no record ever has, or the bundle is walked back:
+     a (0, 0) landing there is the empty sign's, read and asked as one. */
+  const nothingStands = bundle.records === 0 || bundle.severed === true;
+  const landing = considered ? localLanding(bundle.rawSum, pick, nothingStands) : null;
 
   const clearHold = () => {
     if (holdTimer.current !== null) {
@@ -426,8 +431,8 @@ export function StanceControl({
      parked beneath, and signs one record; `Keep it` returns to the pick.
      With nothing standing the ask is the empty sign's, never the walk-back's. */
   const commitChecked = (chosen) => {
-    const landed = localLanding(bundle.rawSum, chosen);
-    if (landed.severed && (bundle.records === 0 || bundle.severed === true)) {
+    const landed = localLanding(bundle.rawSum, chosen, nothingStands);
+    if (landed.empty) {
       setEmptyAsk({ pick: chosen, landed });
       return;
     }
@@ -917,7 +922,15 @@ export function StanceControl({
         />
       )}
 
-      <Snackbar message={signed} onDismiss={() => setSigned(null)} />
+      {/* THE LIVE REGION STANDS OUTSIDE THE COLUMN (seam 245, ask 5). It is
+          mounted whether or not it has anything to say (`Snackbar`'s rule),
+          and as an in-flow child of this column its empty box still took the
+          column's gap: the target's row measured 52 for a 48 anchor. Out of
+          flow it keeps its watch and spends no layout — the message itself
+          is fixed to the viewport either way. */}
+      <div style={{ position: "absolute", width: 0, height: 0 }}>
+        <Snackbar message={signed} onDismiss={() => setSigned(null)} />
+      </div>
       {joinPrompt && <JoinPrompt open onClose={() => setJoinPrompt(false)} />}
     </div>
   );

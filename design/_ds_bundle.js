@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"fc4b6cba1d23","components/compose/ActsFooter.jsx":"e61cf3a09d3b","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"7a44b02ca249","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"ae8d93d994e5","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"92f8711c1dd7","components/compose/StagedReference.jsx":"ecbf0ea4a732","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"183be9f6882c","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"6aa8be5f1614","components/content/CommentCard.jsx":"c9e7874a5611","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"03398f19f306","components/content/PostCard.jsx":"8a4a8ebc914f","components/content/ReferenceRow.jsx":"a574dc59b721","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"c79cb9fa78f7","components/content/TopicsLine.jsx":"808a7ff4dd2d","components/core/BottomSheet.jsx":"fb331d05687d","components/core/Button.jsx":"c1639e977d88","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"bc8d42f30ec4","components/core/ContentRow.jsx":"ef5f339d3165","components/core/FactRow.jsx":"e7e899b33d57","components/core/HelpDot.jsx":"0cc2d5d3fcaf","components/core/JoinPrompt.jsx":"4aff76ab6646","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6a5b54419cab","components/core/QuotedRow.jsx":"37e6dc79dbbb","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"e4c5a20b69d2","components/core/Snackbar.jsx":"c36839b728ef","components/forms/Checkbox.jsx":"058742547c9f","components/forms/LicenseChooser.jsx":"ca6f54717d44","components/forms/PasswordField.jsx":"caaf3deb600d","components/forms/RecoveryCode.jsx":"807de4c04d05","components/forms/SearchBar.jsx":"ef9a9dc56c68","components/forms/TextField.jsx":"95a0bb442204","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"6d2b95913097","components/honesty/SensitiveVeil.jsx":"c17f9bf67cd8","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/DetailClip.jsx":"604997e28cad","components/media/MediaAttachment.jsx":"4e954bd8dc14","components/media/MediaViewer.jsx":"2872a69c9ca5","components/media/ReelCaption.jsx":"5a78543cef0e","components/media/ReelRail.jsx":"ea1d8eb6e4a2","components/media/VideoControls.jsx":"e112d1eb1f77","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"403adfe920e8","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"def628da34f1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"a343fb0a5638","components/navigation/FeedFilter.jsx":"1119ebc2ed05","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"22433a18dd55","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"d7fcc2d71e96","components/people/ActorChip.jsx":"a5e5d0daba90","components/people/ProfileHeader.jsx":"e96d65ecd2fb","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"851eaf2760cf","components/stance/EmptySignConfirm.jsx":"b69109b4137f","components/stance/SeveranceConfirm.jsx":"e1a70805164d","components/stance/StanceAlternates.jsx":"c6d5e6c48cf6","components/stance/StanceControl.jsx":"7a86dbc8d8dd","components/stance/StancePad.jsx":"1935c44fb16d","components/stance/StanceReadout.jsx":"ea405c52af15","components/stance/StanceSlider.jsx":"b7e1d2f10fc6","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"5677af403ef2","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"eac455a8e445","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_SUMMARY","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_DETENT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_LANDING_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"fc4b6cba1d23","components/compose/ActsFooter.jsx":"e61cf3a09d3b","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"7a44b02ca249","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"ae8d93d994e5","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"92f8711c1dd7","components/compose/StagedReference.jsx":"ecbf0ea4a732","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"fbb646ecfc48","components/compose/UploadNotice.jsx":"183be9f6882c","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"6aa8be5f1614","components/content/CommentCard.jsx":"ba6c2b294956","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"03398f19f306","components/content/PostCard.jsx":"e1fae194e841","components/content/ReferenceRow.jsx":"a574dc59b721","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"c79cb9fa78f7","components/content/TopicsLine.jsx":"6d8718e249f2","components/core/BottomSheet.jsx":"fb331d05687d","components/core/Button.jsx":"7b79b1f87f0a","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"bc8d42f30ec4","components/core/ContentRow.jsx":"cf105ca3125d","components/core/FactRow.jsx":"595bc54eadf6","components/core/HelpDot.jsx":"0cc2d5d3fcaf","components/core/JoinPrompt.jsx":"4aff76ab6646","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6a5b54419cab","components/core/QuotedRow.jsx":"37e6dc79dbbb","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"e4c5a20b69d2","components/core/Snackbar.jsx":"c36839b728ef","components/forms/Checkbox.jsx":"058742547c9f","components/forms/LicenseChooser.jsx":"3bc4228de7ad","components/forms/PasswordField.jsx":"caaf3deb600d","components/forms/RecoveryCode.jsx":"807de4c04d05","components/forms/SearchBar.jsx":"ef9a9dc56c68","components/forms/TextField.jsx":"95a0bb442204","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"6d2b95913097","components/honesty/SensitiveVeil.jsx":"6ed9dd71e3fe","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/DetailClip.jsx":"604997e28cad","components/media/MediaAttachment.jsx":"4e954bd8dc14","components/media/MediaViewer.jsx":"2872a69c9ca5","components/media/ReelCaption.jsx":"5a78543cef0e","components/media/ReelRail.jsx":"ea1d8eb6e4a2","components/media/VideoControls.jsx":"e112d1eb1f77","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"403adfe920e8","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"def628da34f1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"a343fb0a5638","components/navigation/FeedFilter.jsx":"1119ebc2ed05","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"22433a18dd55","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"d7fcc2d71e96","components/people/ActorChip.jsx":"6e65598c2801","components/people/ProfileHeader.jsx":"e96d65ecd2fb","components/people/StanceRow.jsx":"464878b5e295","components/proposed/ExplainableNumber.jsx":"851eaf2760cf","components/stance/EmptySignConfirm.jsx":"b69109b4137f","components/stance/SeveranceConfirm.jsx":"e1a70805164d","components/stance/StanceAlternates.jsx":"c6d5e6c48cf6","components/stance/StanceControl.jsx":"5140f396129b","components/stance/StancePad.jsx":"317581838256","components/stance/StanceReadout.jsx":"ed8dbdd70392","components/stance/StanceSlider.jsx":"b7e1d2f10fc6","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ee17e47230be","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"eac455a8e445","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"snapAttachment","sourcePath":"components/stance/StancePad.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
 
 (() => {
 
@@ -31,7 +31,14 @@ try { (() => {
    The pill at every size (Material's button shape, not a rung of the shape
    scale); both sizes carry `label-large`. Heights are TRUE heights (border-box):
    40px `lg`, 32px `sm` — and every pill holds a 64px minimum width so short
-   labels (Next, Set, Done) keep their weight (readme §13, 2026-08-27). */
+   labels (Next, Set, Done) keep their weight (readme §13, 2026-08-27).
+
+   THE BORDER IS INSIDE THE HEIGHT (seam 245, ask 1). Every variant wears a
+   1px border — transparent where it is not drawn, so the four never differ in
+   size — and the label's 20px line plus the vertical padding plus that border
+   is the height: 1 + 9 + 20 + 9 + 1 = 40, 1 + 5 + 20 + 5 + 1 = 32. A padding
+   that ignored the border drew 42 and 34, past the `minHeight` that was
+   meant to be the height. */
 
 const VARIANTS = {
   primary: {
@@ -57,10 +64,10 @@ const VARIANTS = {
 };
 const SIZES = {
   sm: {
-    padding: "6px 16px"
+    padding: "5px 16px"
   },
   lg: {
-    padding: "10px 24px"
+    padding: "9px 24px"
   }
 };
 function buttonStyle({
@@ -94,7 +101,7 @@ function buttonStyle({
 }
 
 /* Every pressable control wears these: the state layer of tokens/states.css, the
-   focus ring, and the 48px hit expansion — a small button is 33px of ink and 48px
+   focus ring, and the 48px hit expansion — a small button is 32px of ink and 48px
    of target, which is how the unconditional 48px promise survives a dense row.
    Pass it wherever `buttonStyle` is used on a raw <button>. */
 const BUTTON_CLASS = "cg-state cg-focus cg-hit";
@@ -926,16 +933,21 @@ function formatStanceWords(pair, names = STANCE_AXIS_NAMES) {
   return `${names.directed} ${formatDimension(pair.pDirected)}, ${names.interest} ${formatDimension(pair.pInterest)}`;
 }
 
-/** Where a pick lands the bundle: `clip` of RAW SUM plus pick, folded locally. */
-function localLanding(rawSum, pick) {
+/** Where a pick lands the bundle: `clip` of RAW SUM plus pick, folded locally.
+ *  `nothingStands` is the bundle's own word — no record ever, or already
+ *  walked back to nothing — and a (0, 0) landing over it is the EMPTY SIGN's
+ *  (`empty`), never a walk-back: there is nothing to go back from. */
+function localLanding(rawSum, pick, nothingStands = false) {
   const landing = clampPair({
     pDirected: rawSum.pDirected + pick.pDirected,
     pInterest: rawSum.pInterest + pick.pInterest
   });
+  const severed = landing.pDirected === 0 && landing.pInterest === 0;
   return {
     landing,
     inert: landing.pDirected === 0 || landing.pInterest === 0,
-    severed: landing.pDirected === 0 && landing.pInterest === 0
+    severed,
+    empty: severed && nothingStands
   };
 }
 function standingLine(bundle, targetLabel) {
@@ -1022,8 +1034,17 @@ function unreachableHead(pair) {
   if (pair.pDirected === 0) return pair.pInterest > 0 ? "Interested, no side taken" : "Rather not see it, no side taken";
   return pair.pDirected > 0 ? "For it, no interest either way" : "Against it, no interest either way";
 }
+
+/* A (0, 0) LANDING WITH NOTHING STANDING SAYS NOTHING (seam 245, ask 20).
+   Over a bundle that holds no record, or one already walked back, a pick
+   landing (0, 0) is the empty sign (`EmptySignConfirm`), and the severance
+   family's `This takes you back to zero.` is false of it — there is nothing
+   to go back from. It reads as a landing reads: `Resulting opinion`, the
+   shrug, and the empty sign's own word. */
+const EMPTY_LANDING_WORDS = `${EMPTY_PICK_LABEL}.`;
 function landingLine(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return "Adding it up…";
+  if (landing.empty) return `${readoutWords(names).resulting} ${ZERO_BUNDLE_EMOJI} ${EMPTY_LANDING_WORDS}`;
   if (landing.severed) return severanceWords(names).landing;
   const {
     resulting
@@ -1159,10 +1180,19 @@ function landingParts(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return {
     sentence: "Adding it up…"
   };
+  const words = readoutWords(names);
+  if (landing.empty) {
+    return {
+      label: words.resulting,
+      emoji: ZERO_BUNDLE_EMOJI,
+      head: EMPTY_PICK_LABEL,
+      words: EMPTY_LANDING_WORDS,
+      spoken: `${words.resulting}: ${EMPTY_LANDING_WORDS}`
+    };
+  }
   if (landing.severed) return {
     sentence: landingLine(landing, names)
   };
-  const words = readoutWords(names);
   if (landing.inert) {
     const head = unreachableHead(landing.landing);
     return {
@@ -1283,8 +1313,9 @@ function ReadoutBlock({
     "data-node": node && "label"
   }, label), words !== undefined ?
   /*#__PURE__*/
-  /* THE UNREACHABLE LANDING: the zero face and the state in words, where
-     the pair would stand. Handed `onExplainZero`, the face is a door —
+  /* THE UNREACHABLE LANDING, and the empty sign's: the zero face and
+     the state in words, where the pair would stand. Handed
+     `onExplainZero` (the unreachable state only), the face is a door —
      its explanation replaces the pad's body in place, the "?"'s
      grammar — named by the state it explains. */
   React.createElement("span", {
@@ -1507,7 +1538,7 @@ function StanceLandingLine({
       ...style
     } : style
   }, /*#__PURE__*/React.createElement(ReadoutBlock, _extends({}, landingParts(landing, names), {
-    onExplainZero: onExplainZero,
+    onExplainZero: landing && landing.empty ? undefined : onExplainZero,
     zeroShown: zeroShown,
     node: node
   })), keepsBorrowed && /*#__PURE__*/React.createElement("p", {
@@ -1642,6 +1673,7 @@ __ds_scope.standingLine = standingLine;
 __ds_scope.severanceParts = severanceParts;
 __ds_scope.UNREACHABLE_TAIL = UNREACHABLE_TAIL;
 __ds_scope.unreachableHead = unreachableHead;
+__ds_scope.EMPTY_LANDING_WORDS = EMPTY_LANDING_WORDS;
 __ds_scope.landingLine = landingLine;
 __ds_scope.signedLine = signedLine;
 __ds_scope.StanceReadout = StanceReadout;
@@ -2920,6 +2952,8 @@ function ActorChip({
       ...clip,
       flexShrink: 999,
       fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      letterSpacing: "var(--text-label-large--letter-spacing)",
       fontWeight: "var(--text-label-large--font-weight)",
       color: redacted ? "var(--text-secondary)" : undefined
     },
@@ -5447,6 +5481,9 @@ function TopicRemovable({
       display: "inline-flex",
       alignItems: "center",
       gap: 6,
+      /* A true height, padding inside it (seam 245, ask 2): without
+         border-box the 32 measured the content alone and drew 40. */
+      boxSizing: "border-box",
       minHeight: 32,
       padding: "4px 12px",
       borderRadius: "var(--radius-full)",
@@ -5947,8 +5984,17 @@ function licenseSummary(license = PUBLIC_DOMAIN) {
   return `${name} — ${clause(credit.hint)}, and ${clause(record.hint)}.`;
 }
 
-/* The same reading as an element, for a slot that takes one (a `FactRow`
-   value, a sheet's foot). */
+/* THE SEAL'S ROW TAKES THE SENTENCE AS A STRING (seam 245, ask 3). `FactRow`
+   gives a string value its variant's voice and hands a node through as given
+   — a stance readout draws its own line — so this sentence, handed over as an
+   element, drew in the page's body-large and on-surface instead of the
+   seal's quiet value. A sentence is a string; the row is passed one. The
+   bundle hands boards only capitalised names, so the rule rides this one too
+   — `HIDE_ACTOR_LABEL`'s shape, a composed label under a constant's name. */
+const LICENSE_SUMMARY = licenseSummary;
+
+/* The same reading as an element, for a slot that takes one and gives it no
+   voice of its own (a sheet's foot, the settings default). */
 function LicenseSummary({
   license = PUBLIC_DOMAIN
 }) {
@@ -6144,6 +6190,7 @@ __ds_scope.PUBLIC_DOMAIN = PUBLIC_DOMAIN;
 __ds_scope.LICENSE_MENU_LABEL = LICENSE_MENU_LABEL;
 __ds_scope.licenseReadings = licenseReadings;
 __ds_scope.licenseSummary = licenseSummary;
+__ds_scope.LICENSE_SUMMARY = LICENSE_SUMMARY;
 __ds_scope.LicenseSummary = LicenseSummary;
 __ds_scope.LicenseChooser = LicenseChooser;
 __ds_scope.LicenseTerms = LicenseTerms;
@@ -6785,11 +6832,35 @@ function attachmentPercentOf(value) {
   return percent(fractionOf(clampDimension(value), STANCE_RANGES.pDirected));
 }
 
-/** The attachment this much horizontal travel picks, starting from `base`. Clamped once, on the sum. */
+/* THE ZERO HAIRLINE IS A DETENT (jakob 2026-10-20, round 18): `No side yet`
+   is a place a drag rests on purpose, never one it only passes. While the
+   finger's travel would put the knob's centre within the knob's own radius
+   of the hairline, the knob holds ON it and the pick reads exactly 0.00 —
+   past that radius the knob follows the finger again. The radius is the
+   knob's, so the hold is as wide as the thing being held.
+
+   THE PICK PARKS ON A HUNDREDTH (jakob 2026-10-16, round 17): the knob
+   follows the drag wherever the finger is, and release lands the pick on the
+   nearest hundredth — `snapAttachment` — so the number a readout prints is
+   the pick itself, never a rounding of it. The square's value stays
+   continuous; only the strip parks. The master builds both (backlog 144):
+   it is the reference the clients conform to. */
+const ATTACHMENT_DETENT_PX = KNOB_DIAMETER_PX / 2;
+
+/** The attachment this much horizontal travel picks, starting from `base`.
+ *  Clamped once, on the sum; held at exactly 0 inside the hairline's detent. */
 function attachmentFrom(base, rect, dx, inset = KNOB_TRAVEL_INSET_PX) {
   const halfExtent = Math.max(0, rect.width / 2 - inset);
   if (halfExtent === 0) return clampDimension(base);
-  return clampDimension(base + dx * perPixel(STANCE_RANGES.pDirected, halfExtent));
+  const raw = clampDimension(base + dx * perPixel(STANCE_RANGES.pDirected, halfExtent));
+  /* One unit of the axis is `halfExtent` pixels of travel, so the knob's
+     centre stands |raw| × halfExtent px from the hairline. */
+  return Math.abs(raw) * halfExtent <= ATTACHMENT_DETENT_PX ? 0 : raw;
+}
+
+/** Where a released pick parks: the nearest hundredth — and a plain 0, never -0. */
+function snapAttachment(value) {
+  return Math.round(clampDimension(value) * 100) / 100 || 0;
 }
 
 /* NAMED ONLY WHERE ITS PLACER NAMES IT, the square's rule: the whole field
@@ -6816,7 +6887,8 @@ function AttachmentPad({
     if (!onChange) return;
     drag.current = {
       x: event.clientX,
-      base: value
+      base: value,
+      last: value
     };
     setDragging(true);
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -6825,11 +6897,15 @@ function AttachmentPad({
     const from = drag.current;
     const field = ref.current;
     if (!from || !field || !onChange) return;
-    onChange(attachmentFrom(from.base, field.getBoundingClientRect(), event.clientX - from.x));
+    from.last = attachmentFrom(from.base, field.getBoundingClientRect(), event.clientX - from.x);
+    onChange(from.last);
   };
+  /* Release — or a cancelled pointer — parks the pick on its hundredth. */
   const endDrag = () => {
+    const from = drag.current;
     drag.current = null;
     setDragging(false);
+    if (from && onChange) onChange(snapAttachment(from.last));
   };
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6946,7 +7022,9 @@ __ds_scope.padPercentOf = padPercentOf;
 __ds_scope.StancePad = StancePad;
 __ds_scope.ATTACHMENT_FIELD_HEIGHT_PX = ATTACHMENT_FIELD_HEIGHT_PX;
 __ds_scope.attachmentPercentOf = attachmentPercentOf;
+__ds_scope.ATTACHMENT_DETENT_PX = ATTACHMENT_DETENT_PX;
 __ds_scope.attachmentFrom = attachmentFrom;
+__ds_scope.snapAttachment = snapAttachment;
 __ds_scope.AttachmentPad = AttachmentPad;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StancePad.jsx", error: String((e && e.message) || e) }); }
 
@@ -8086,9 +8164,11 @@ const EMPTY_BUNDLE = {
 /* `severanceCost` (api-spec.md): how many counter-records the explicit
    walk-back stages — each one clipped to ±1, so the larger raw sum, rounded
    up. Served on the bundle as `severance.records`; derived here where a board
-   hands only the sums. */
+   hands only the sums. A SERVED 0 IS AN ANSWER (seam 245, ask 21): only a
+   count that is absent is derived, never one that is zero. */
 function severanceCost(bundle) {
-  if (bundle.severance?.records) return bundle.severance.records;
+  const served = bundle.severance?.records;
+  if (served !== undefined && served !== null) return served;
   const reach = Math.max(Math.abs(bundle.rawSum.pDirected), Math.abs(bundle.rawSum.pInterest));
   return Math.max(1, Math.ceil(Math.round(reach * 100) / 100));
 }
@@ -8260,7 +8340,10 @@ function StanceControl({
   const suppressClick = React.useRef(false);
   const fieldRef = React.useRef(null);
   const considered = open || alternates;
-  const landing = considered ? localLanding(bundle.rawSum, pick) : null;
+  /* Nothing stands when no record ever has, or the bundle is walked back:
+     a (0, 0) landing there is the empty sign's, read and asked as one. */
+  const nothingStands = bundle.records === 0 || bundle.severed === true;
+  const landing = considered ? localLanding(bundle.rawSum, pick, nothingStands) : null;
   const clearHold = () => {
     if (holdTimer.current !== null) {
       clearTimeout(holdTimer.current);
@@ -8318,8 +8401,8 @@ function StanceControl({
      parked beneath, and signs one record; `Keep it` returns to the pick.
      With nothing standing the ask is the empty sign's, never the walk-back's. */
   const commitChecked = chosen => {
-    const landed = localLanding(bundle.rawSum, chosen);
-    if (landed.severed && (bundle.records === 0 || bundle.severed === true)) {
+    const landed = localLanding(bundle.rawSum, chosen, nothingStands);
+    if (landed.empty) {
       setEmptyAsk({
         pick: chosen,
         landed
@@ -8771,10 +8854,16 @@ function StanceControl({
       setEmptyAsk(null);
       closeAll();
     }
-  }), /*#__PURE__*/React.createElement(Snackbar, {
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      width: 0,
+      height: 0
+    }
+  }, /*#__PURE__*/React.createElement(Snackbar, {
     message: signed,
     onDismiss: () => setSigned(null)
-  }), joinPrompt && /*#__PURE__*/React.createElement(JoinPrompt, {
+  })), joinPrompt && /*#__PURE__*/React.createElement(JoinPrompt, {
     open: true,
     onClose: () => setJoinPrompt(false)
   }));
@@ -9336,12 +9425,19 @@ function countsText(hiddenTopics, references) {
   if (parts.length === 0) return null;
   return `· ${parts.join(" · ")}`;
 }
+
+/* THE LINE CLIPS SIDEWAYS ONLY (seam 245, ask 8). `overflow: hidden` clipped
+   both axes, and the 48px targets `cg-hit` grows above and below the 34px
+   line — the detail's whole-line door and the card's count — are exactly what
+   stands outside it vertically, so the line cut its own promise off. A line
+   that never wraps can only overflow sideways, and `overflow-x: clip` holds
+   that axis alone, the other left visible, without becoming a scroll box. */
 const LINE = {
   display: "flex",
   alignItems: "center",
   gap: "var(--space-2)",
   flexWrap: "nowrap",
-  overflow: "hidden",
+  overflowX: "clip",
   minWidth: 0
 };
 function visibleChips(topics, references) {
@@ -10695,6 +10791,28 @@ const REASONS = {
   }
 };
 
+/* The mark's three lines, each in its whole type role. */
+const REDACTED_TYPE = {
+  "body-medium": {
+    fontSize: "var(--text-body-medium)",
+    lineHeight: "var(--text-body-medium--line-height)",
+    letterSpacing: "var(--text-body-medium--letter-spacing)",
+    fontWeight: "var(--text-body-medium--font-weight)"
+  },
+  "body-small": {
+    fontSize: "var(--text-body-small)",
+    lineHeight: "var(--text-body-small--line-height)",
+    letterSpacing: "var(--text-body-small--letter-spacing)",
+    fontWeight: "var(--text-body-small--font-weight)"
+  },
+  "label-small": {
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
+    fontWeight: "var(--text-label-small--font-weight)"
+  }
+};
+
 /**
  * Replaces a node's ENTIRE content region: title, body, description, media, all
  * at once. There is no field-level or inline cut, because redaction is
@@ -10730,20 +10848,20 @@ function RedactedContent({
     "data-node": node
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: "var(--text-body-medium)",
+      ...REDACTED_TYPE["body-medium"],
       color: "var(--text-body)"
     },
     "data-node": node && "line"
   }, copy.line), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: "var(--text-body-small)",
+      ...REDACTED_TYPE["body-small"],
       color: "var(--text-secondary)",
       textWrap: "pretty"
     },
     "data-node": node && "detail"
   }, note ?? copy.detail), when && /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: "var(--text-label-small)",
+      ...REDACTED_TYPE["label-small"],
       color: "var(--text-secondary)"
     },
     "data-node": node && "when"
@@ -11044,7 +11162,10 @@ function CommentCard({
       margin: 0,
       cursor: "pointer",
       fontFamily: "var(--font-sans)",
+      // The whole label-medium role, `PostCard`'s opener's (seam 245, ask 6).
       fontSize: "var(--text-label-medium)",
+      lineHeight: "var(--text-label-medium--line-height)",
+      letterSpacing: "var(--text-label-medium--letter-spacing)",
       fontWeight: "var(--text-label-medium--font-weight)",
       color: "var(--text-secondary)"
     }
@@ -11802,7 +11923,12 @@ function PostCard({
       margin: 0,
       cursor: "pointer",
       fontFamily: "var(--font-sans)",
+      /* The whole label-medium role (seam 245, ask 6): a <button> does
+         not inherit the page's leading, so the size alone drew a 22px
+         opener where the role's 16px line makes it 24. */
       fontSize: "var(--text-label-medium)",
+      lineHeight: "var(--text-label-medium--line-height)",
+      letterSpacing: "var(--text-label-medium--letter-spacing)",
       fontWeight: "var(--text-label-medium--font-weight)",
       color: "var(--text-secondary)"
     },
@@ -12138,7 +12264,7 @@ __ds_scope.TaggedRow = TaggedRow;
 
 // components/core/ContentRow.jsx
 try { (() => {
-const { Icon, MonogramAvatar, REDACTED_ACTOR_NAME, PendingMarker, StanceValue, ZERO_BUNDLE_EMOJI } = __ds_scope;
+const { Icon, MonogramAvatar, REDACTED_ACTOR_NAME, PendingMarker, EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue, ZERO_BUNDLE_EMOJI } = __ds_scope;
 /* THE IDENTITY ROW — the card-lite line every list in this product is built
    from: a 40px disc saying who or what, two lines of words saying which and
    when, and whatever the list keeps on its trailing edge.
@@ -12209,14 +12335,21 @@ const VARIANTS = {
     disc: "container"
   }
 };
+
+/* Each rung sets its role's tracking with its size and leading (seam 245,
+   ask 7): a row is a <button> or a <div>, and the one resets letter-spacing
+   while the other inherits the page's 0.5px, so a rung that left it to the
+   box drew two trackings for one role. */
 const TYPE = {
   "label-small": {
     fontSize: "var(--text-label-small)",
-    lineHeight: "var(--text-label-small--line-height)"
+    lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)"
   },
   "body-medium": {
     fontSize: "var(--text-body-medium)",
-    lineHeight: "var(--text-body-medium--line-height)"
+    lineHeight: "var(--text-body-medium--line-height)",
+    letterSpacing: "var(--text-body-medium--letter-spacing)"
   }
 };
 const TONES = {
@@ -12290,10 +12423,17 @@ function Disc({
       fontSize: "var(--text-title-medium)",
       lineHeight: 1
     }
-  }, ZERO_BUNDLE_EMOJI) : face ? /*#__PURE__*/React.createElement(StanceValue, {
+  }, ZERO_BUNDLE_EMOJI) : face ?
+  /*#__PURE__*/
+  /* WHICH (0, 0) THE ROW DRAWS, FROM THE ROW'S OWN DATA (seam 245, ask
+     19): the numbers cannot tell a walked-back standing from an
+     empty-signed one, so the face carries `severed`, and only a
+     standing walked back speaks `Walked back`. */
+  React.createElement(StanceValue, {
     pDirected: face.pDirected,
     pInterest: face.pInterest,
-    showPair: false
+    showPair: false,
+    zeroLabel: face.severed ? SEVERED_LABEL : EMPTY_PICK_LABEL
   }) : letter ? /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true",
     style: {
@@ -12349,6 +12489,7 @@ function ContentRow({
     style: {
       fontSize: "var(--text-label-large)",
       lineHeight: "var(--text-label-large--line-height)",
+      letterSpacing: "var(--text-label-large--letter-spacing)",
       fontWeight: "var(--text-label-large--font-weight)",
       ...(redacted ? {
         color: "var(--text-secondary)"
@@ -12553,7 +12694,9 @@ const EMPHASIS = {
       color: "var(--text-secondary)"
     },
     /* A node in the seal's value slot draws its own line — the stance readout
-       is a face and a pair, not a sentence — so only a string gets the voice. */
+       is a face and a pair, not a sentence — so only a string gets the voice,
+       and a sentence is handed over as one: the License row takes
+       `licenseSummary(license)`, never the element (seam 245, ask 3). */
     wrapNodes: false,
     border: last => ({
       borderTop: "1px solid var(--border-hairline)",
@@ -16252,7 +16395,7 @@ __ds_scope.ProfileHeader = ProfileHeader;
 
 // components/people/StanceRow.jsx
 try { (() => {
-const { MonogramAvatar, StanceValue } = __ds_scope;
+const { MonogramAvatar, EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue } = __ds_scope;
 /* A person on an opinions list (item 17, the conformance round): their face,
    their name, and THE STANCE THE ROW IS ABOUT (jakob 2026-09-01) — the
    record's own value, read-only.
@@ -16285,15 +16428,24 @@ const { MonogramAvatar, StanceValue } = __ds_scope;
    destination, so the door needs a spoken name of its own; `HISTORY_DOOR_TAIL`
    is the same promise in the words the pad's label wears. */
 const HISTORY_DOOR_LABEL = "See how this opinion built";
+
+/* WHICH (0, 0) THE ROW DRAWS IS THE ROW'S DATA (seam 245, ask 19). A stance
+   at exactly (0, 0) wears 🤷 either way, but its numbers cannot tell a
+   standing walked back to nothing from one an empty sign joined, and the
+   spoken word differs — `Walked back` is false of the second. So the row
+   carries the bundle's own `severed`: walked back speaks `Walked back`;
+   absent or false, the (0, 0) `Says nothing`. */
 function StanceRow({
   name,
   handle,
   src,
   pDirected,
   pInterest,
+  severed = false,
   onOpen,
   onOpenHistory
 }) {
+  const zeroLabel = severed ? SEVERED_LABEL : EMPTY_PICK_LABEL;
   const box = {
     display: "flex",
     alignItems: "center",
@@ -16345,7 +16497,8 @@ function StanceRow({
     }
   }, "@", handle)), !onOpenHistory && /*#__PURE__*/React.createElement(StanceValue, {
     pDirected: pDirected,
-    pInterest: pInterest
+    pInterest: pInterest,
+    zeroLabel: zeroLabel
   }));
   if (!onOpenHistory) return person;
   return /*#__PURE__*/React.createElement("div", {
@@ -16373,7 +16526,8 @@ function StanceRow({
     }
   }, /*#__PURE__*/React.createElement(StanceValue, {
     pDirected: pDirected,
-    pInterest: pInterest
+    pInterest: pInterest,
+    zeroLabel: zeroLabel
   })));
 }
 __ds_scope.HISTORY_DOOR_LABEL = HISTORY_DOOR_LABEL;
@@ -16512,8 +16666,19 @@ const { Button } = __ds_scope;
    The loading state is TEXT, not a spinner or a shimmer: motion clarifies where
    something came from and never performs (§4), and a skeleton that pretends to be
    content is the opposite of §9's honesty. Space for media is reserved by the
-   media component when it arrives, which is a different job. */
+   media component when it arrives, which is a different job.
 
+   BOTH LINES SET THE WHOLE body-medium ROLE (seam 245, ask 6): size, leading,
+   tracking and weight together (§7). The size alone left the page's
+   body-large 24px leading and 0.5px tracking on a 14px line. */
+const LINE = {
+  margin: 0,
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  fontWeight: "var(--text-body-medium--font-weight)",
+  color: "var(--text-secondary)"
+};
 function EmptyState({
   title,
   action,
@@ -16531,11 +16696,7 @@ function EmptyState({
     },
     "data-node": node
   }, /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-body-medium)",
-      color: "var(--text-secondary)"
-    },
+    style: LINE,
     "data-node": node && "title"
   }, title), action ?? (actionLabel && onAction ? /*#__PURE__*/React.createElement(Button, {
     variant: "outline",
@@ -16551,11 +16712,7 @@ function LoadingState({
   return /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
-    style: {
-      margin: 0,
-      fontSize: "var(--text-body-medium)",
-      color: "var(--text-secondary)"
-    }
+    style: LINE
   }, label);
 }
 __ds_scope.EmptyState = EmptyState;
@@ -17082,6 +17239,8 @@ __ds_ns.PUBLIC_DOMAIN = __ds_scope.PUBLIC_DOMAIN;
 
 __ds_ns.LICENSE_MENU_LABEL = __ds_scope.LICENSE_MENU_LABEL;
 
+__ds_ns.LICENSE_SUMMARY = __ds_scope.LICENSE_SUMMARY;
+
 __ds_ns.LicenseSummary = __ds_scope.LicenseSummary;
 
 __ds_ns.LicenseChooser = __ds_scope.LicenseChooser;
@@ -17254,6 +17413,8 @@ __ds_ns.StancePad = __ds_scope.StancePad;
 
 __ds_ns.ATTACHMENT_FIELD_HEIGHT_PX = __ds_scope.ATTACHMENT_FIELD_HEIGHT_PX;
 
+__ds_ns.ATTACHMENT_DETENT_PX = __ds_scope.ATTACHMENT_DETENT_PX;
+
 __ds_ns.AttachmentPad = __ds_scope.AttachmentPad;
 
 __ds_ns.DIMENSION_MIN = __ds_scope.DIMENSION_MIN;
@@ -17313,6 +17474,8 @@ __ds_ns.TAG_WITHDRAWN_LABEL = __ds_scope.TAG_WITHDRAWN_LABEL;
 __ds_ns.StanceValue = __ds_scope.StanceValue;
 
 __ds_ns.UNREACHABLE_TAIL = __ds_scope.UNREACHABLE_TAIL;
+
+__ds_ns.EMPTY_LANDING_WORDS = __ds_scope.EMPTY_LANDING_WORDS;
 
 __ds_ns.StanceReadout = __ds_scope.StanceReadout;
 

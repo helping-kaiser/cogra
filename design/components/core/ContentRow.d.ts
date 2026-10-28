@@ -32,8 +32,11 @@ export interface ContentRowProps {
   name?: string;
   /** …else a stance face, for a record that is a stance — or `"walkedBack"`,
    *  the 🤷 at the full emoji treatment, for a stance walked back (the
-   *  withdrawal notification)… */
-  face?: { pDirected: number; pInterest: number } | "walkedBack";
+   *  withdrawal notification)… A pair at exactly (0, 0) cannot say by its
+   *  numbers whether it was walked back or empty-signed, so the data says:
+   *  `severed` (a standing walked back to nothing) speaks `Walked back`;
+   *  absent or false, the (0, 0) says nothing — `Says nothing`. */
+  face?: { pDirected: number; pInterest: number; severed?: boolean } | "walkedBack";
   /**
    * …else the mark a kind with no icon wears — a topic's `#`, a text post's
    * `T`. `NodeMark`'s own rule, read by a second row master: no icon set has a
