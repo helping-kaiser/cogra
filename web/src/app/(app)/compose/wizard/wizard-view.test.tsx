@@ -1708,3 +1708,43 @@ describe("the already-published marker", () => {
     expect(screen.queryByTestId("composeDetails.mediaRow.published")).toBeNull();
   });
 });
+
+// ROUND 22, THE PICK STEP (ComposePick.md / ComposePickWeb.md): the arrow is
+// `Back`, the empty step says nothing, every tray tile carries its X — the
+// cover's included — and the caption stands only while the tiles leave it its
+// line, the row clipping past that rather than scrolling.
+describe("the pick step's round-22 laws", () => {
+  it("names the first stage's arrow Back, never Back a step", async () => {
+    render();
+    await screen.findByTestId("wizard-file-input");
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Back a step" })).toBeNull();
+  });
+
+  it("holds Next inert with nothing picked and says nothing about it", async () => {
+    render();
+    await screen.findByTestId("wizard-file-input");
+    expect(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next"))).toBeDisabled();
+    expect(screen.queryByTestId("wizard-body-error")).toBeNull();
+    expect(screen.queryByText("Pick at least one picture.")).toBeNull();
+  });
+
+  it("gives every tray tile its remove control, the cover's included", async () => {
+    render();
+    await pick(["a.jpg", "b.jpg"]);
+    expect(screen.getByLabelText("Remove picture 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("Remove picture 2")).toBeInTheDocument();
+  });
+
+  it("keeps the caption while three tiles leave it room, and drops it past that", async () => {
+    render();
+    await pick(["a.jpg", "b.jpg", "c.jpg"]);
+    expect(screen.getByTestId("wizard-tray-caption")).toHaveTextContent("The first one is the cover.");
+    await pick(["d.jpg"]);
+    expect(screen.queryByTestId("wizard-tray-caption")).toBeNull();
+    // Clipped at the band's edge, never a scroll box.
+    const row = screen.getByLabelText("Remove picture 1").closest("ul")!.parentElement!;
+    expect(row.className).toContain("overflow-x-clip");
+    expect(row.className).not.toContain("overflow-x-auto");
+  });
+});
