@@ -147,7 +147,10 @@ private fun DialogSurfacePreview() {
     Cogra2PreviewTheme {
         DialogSurface(
             title = "Remove this post?",
-            paragraphs = listOf("The words and pictures leave every reader's view.", "This is immediate and permanent."),
+            paragraphs = listOf(
+                "The words and pictures leave every reader's view.",
+                "This is immediate and permanent.",
+            ),
             onScrimPress = {},
             actions = {
                 CograButton("Remove", {}, kind = ButtonKind.Text)
