@@ -30,7 +30,7 @@ import {
 import { HelpDialog } from "./help-dialog";
 import { StageHost } from "./media/stage-host";
 import { VideoPlayer } from "./media/video-player";
-import { RemoveConfirm } from "./remove-confirm";
+import { RemoveDialog } from "./remove-confirm";
 
 const noop = () => {};
 
@@ -191,8 +191,8 @@ describe("the primitives announce themselves", () => {
     expect(raisedLayersForTests()).toEqual([]);
   });
 
-  it("RemoveConfirm suspends while open", () => {
-    render(<RemoveConfirm open onClose={noop} onRemove={noop} />);
+  it("the removal dialog suspends while open", () => {
+    render(<RemoveDialog kind="post" onClose={noop} onRemove={noop} testId="remove" />);
     expect(raisedLayersForTests()).toEqual(["suspend"]);
   });
 

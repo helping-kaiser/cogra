@@ -91,6 +91,10 @@ function postNode(id: string, title: string | null, writtenDaysAgo = 1, by = aut
     updatedAt: daysAgo(writtenDaysAgo),
     landing: { __typename: "Landing", state: "LANDED" },
     moderationStatus: "NORMAL",
+    // The node's own mark (api-spec.md `Post.removal`) — what the card's
+    // RedactedContent reads its wording and its moment off.
+    removal: removed ? { __typename: "Removal", at: hoursAgo(0.3), by: "AUTHOR" } : null,
+    genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
     references: [],
@@ -111,6 +115,8 @@ function commentNode(id: string, by = author("u2", "tobias", "Tobias")) {
     updatedAt: hoursAgo(1),
     landing: { __typename: "Landing", state: "LANDED" },
     moderationStatus: "NORMAL",
+    removal: null,
+    genesisRecordId: `rec-${id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
     references: [],
@@ -123,6 +129,7 @@ function commentNode(id: string, by = author("u2", "tobias", "Tobias")) {
       attachments: [],
       author: { __typename: "User", id: "u1", handle: "ada" },
       moderationStatus: "NORMAL",
+      removal: null,
     },
     post: { __typename: "Post", id: "p1" },
   };
@@ -345,7 +352,38 @@ describe("History — the seen-list as a feed (History.md)", () => {
     render();
     await screen.findByTestId("history-list");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p9", "history.card:p1"]);
-    expect(screen.getByTestId("history-post-p9-removed")).toBeInTheDocument();
+    // The mark is the card's own part, `<card>.removed` with its line and its
+    // moment (the evident path while Removed is unregistered).
+    expect(screen.getByTestId(byNode("history.card.removed", "p9"))).toHaveTextContent("Removed by its author");
+    expect(screen.getByTestId(byNode("history.card.removed.when", "p9"))).toHaveTextContent("18m");
+  });
+
+  it("the_readers_own_removal_from_a_cards_menu_leaves_it_in_place_wearing_its_mark", async () => {
+    // History.md:39 with RM-G9's build word: removed from History's own ⋮,
+    // the card stands as its mark where it stood. The removal answers here.
+    const mine: Entry = { node: postNode("p5", "Mine", 1, author("me", "me", "Me")), firstSeenAt: hoursAgo(0.5) };
+    serveHistory(() => page([COMMENT, mine, POST]));
+    server.use(
+      gqlLink.mutation("RemoveContent", () =>
+        HttpResponse.json({
+          data: { removeContent: { __typename: "RemoveContentPayload", records: [], userErrors: [] } },
+        }),
+      ),
+      gqlLink.query("PostRemoval", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            post: { __typename: "Post", id: variables.id, removal: { __typename: "Removal", at: hoursAgo(0), by: "AUTHOR" } },
+          },
+        }),
+      ),
+    );
+    render();
+    await screen.findByTestId("history-list");
+    fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p5")));
+    fireEvent.click(screen.getByTestId("history-menu-remove"));
+    fireEvent.click(await screen.findByTestId("history-menu-remove-confirm-remove"));
+    expect(await screen.findByTestId(byNode("history.card.removed", "p5"))).toHaveTextContent("Removed by its author");
+    expect(cards()).toEqual(["history.commentCard:c1", "history.card:p5", "history.card:p1"]);
   });
 
   it("a_hidden_accounts_posts_and_comments_stay_out_and_its_profile_card_stays", async () => {

@@ -9,7 +9,7 @@ function citingPost(id: string, title: string, pDirected: number, pInterest: num
     id,
     pDirected,
     pInterest,
-    target: { __typename: "Post", id: `p-${id}`, title: { value: title } },
+    target: { __typename: "Post", id: `p-${id}`, title: { value: title }, removal: null },
   };
 }
 
@@ -26,6 +26,7 @@ function citingComment(
       __typename: "Comment",
       id: `c-${id}`,
       content: { value: body },
+      removal: null,
       target: root,
     },
   };

@@ -1180,6 +1180,52 @@ type Health {
 	mirrorEpoch: Int
 }
 
+type HeldTopicConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [HeldTopicEdge!]!
+	"""
+	How many topics the viewer holds, across every page — the count
+	Explore's Your topics door reads, which is this list's length.
+	Priced at zero like every connection count; saturates at
+	[`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type HeldTopicEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Hashtag!
+	"""
+	Association — the folded `pDirected`, sum-then-clip. The list's
+	order, strongest first.
+	"""
+	pDirected: Dimension!
+	"""
+	Attraction — the folded `pInterest`, sum-then-clip.
+	"""
+	pInterest: Dimension!
+	"""
+	True while any record in the bundle is still in flight; always
+	false in the L1 view.
+	"""
+	pending: Boolean!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
 type HiddenActorConnection {
 	"""
 	Information to aid in pagination.
@@ -4787,6 +4833,18 @@ type User implements Node & Actor {
 	`(hiddenAt, actor id)`. Field-level: viewer-only.
 	"""
 	hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
+	"""
+	The topics the viewer holds — every Type toward which their netted
+	Affinity bundle is not `(0, 0)`, the read-side bundle fold taken
+	across every Type at once, and nothing else: a bundle walked back
+	to `(0, 0)` leaves the list, and one held against stands in it like
+	any other. Strongest first by association — the folded `pDirected`
+	descending, then the name ascending; keyset on `(pDirected,
+	name)`. `includePending` carries the meaning and default it has on
+	`viewerStance`. An invalid cursor is BAD_INPUT. Field-level:
+	viewer-only.
+	"""
+	heldTopics(includePending: Boolean! = true, first: Int, after: String, last: Int, before: String): HeldTopicConnection
 	"""
 	When the viewer saved this person; null when not kept, or with no
 	session. What the profile menus' Save / Unsave row reads.

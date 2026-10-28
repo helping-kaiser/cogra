@@ -11,6 +11,28 @@ import { ApplicantStatus } from "./applicant-status";
 
 const server = startMswServer();
 
+function myApplication(fields: { rejectedAt: string | null }) {
+  return gqlLink.query("MyApplication", () =>
+    HttpResponse.json({
+      data: {
+        me: {
+          __typename: "User",
+          id: "u1",
+          askLink: "5d9e7a41-b062-4c38-8e5f-1a4703cbd926",
+          application: {
+            __typename: "Application",
+            id: "a1",
+            approvedAt: null,
+            landedAt: null,
+            ...fields,
+            approver: { __typename: "User", id: "u9", handle: "mira" },
+          },
+        },
+      },
+    }),
+  );
+}
+
 function approval(overrides: Partial<{
   emailVerified: boolean;
   keyAttached: boolean;
@@ -105,13 +127,14 @@ describe("ApplicantStatus", () => {
     expect(screen.getByTestId("home_key_elsewhere")).toBeInTheDocument();
     expect(screen.getByTestId("home_fresh_key")).toHaveAttribute("href", "/key");
     expect(screen.queryByTestId("home_create_key")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("home_waiting")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
   });
 
-  it("shows the dismissible waiting hint once both proofs are in", () => {
+  it("stands the application card once both proofs are in (ApplicantWaiting.md:3)", async () => {
+    server.use(myApplication({ rejectedAt: null }));
     renderStatus(approval({ emailVerified: true, keyAttached: true, keyOnDevice: true }));
-    expect(screen.getByTestId("home_waiting")).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("home_waiting_dismiss"));
-    expect(screen.queryByTestId("home_waiting")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("feed.application.title")).toHaveTextContent("All set — waiting on @mira");
+    fireEvent.click(screen.getByTestId("feed.application.dismiss"));
+    expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
   });
 });

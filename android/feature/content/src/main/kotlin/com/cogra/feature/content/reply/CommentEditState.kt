@@ -1,8 +1,6 @@
 package com.cogra.feature.content.reply
 
 import com.cogra.core.designsystem.v2.compose.HelpTopic
-import com.cogra.core.designsystem.v2.compose.PickedPicture
-import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.content.isCommentBodyTooLong
 import com.cogra.domain.content.isSensitiveReasonTooLong
@@ -10,23 +8,21 @@ import com.cogra.domain.repo.ContentRepository
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.edit.EditActRow
+import com.cogra.feature.content.edit.EditCrop
+import com.cogra.feature.content.edit.EditGallery
 import com.cogra.feature.content.edit.actCount
 import com.cogra.feature.content.edit.editActRows
-import com.cogra.feature.content.wizard.AssetUpload
-import com.cogra.feature.content.wizard.UploadFailure
-import com.cogra.feature.content.wizard.PickedAsset
-import com.cogra.feature.content.wizard.inFlight
-import com.cogra.feature.content.wizard.pickedPictures
-import com.cogra.feature.content.wizard.withAltText
-import com.cogra.feature.content.wizard.withSourceRatio
-import com.cogra.feature.content.wizard.withUpload
+import com.cogra.feature.content.wizard.RefusedPick
+import com.cogra.feature.content.wizard.SealFault
 
 /**
- * `CommentEdit` — the post's one-screen-one-batch at comment scale.
+ * `CommentEdit` / `CommentEditVideo` — the post's one-screen-one-batch at
+ * comment scale.
  *
- * One screen, no stages: words, pictures, topics, citations, and the
- * license shown locked. The acts footer is the only thing that opens
- * anything, and what it opens is a sheet (`CommentEditActs`).
+ * One screen, no stages: words, pictures or one clip, topics, citations, and
+ * the license shown locked. The acts footer is the only thing that opens
+ * anything, and what it opens is a sheet (`CommentEditActs`); the cover's
+ * crop alone is raised over it, as a stage of the edit.
  */
 data class CommentEditState(
     val commentId: String = "",
@@ -34,11 +30,22 @@ data class CommentEditState(
     val parentTitle: String = "",
 
     val body: String = "",
-    val picked: List<PickedAsset> = emptyList(),
+
+    /**
+     * The gallery the edit leaves standing — the comment's own pictures,
+     * whole, never cropped, four at most, or its one clip — and the clip's
+     * new face (EditGallery).
+     */
+    val gallery: EditGallery = EditGallery(),
+
+    /** Files the add control turned away, standing under the pictures until dismissed. */
+    val refused: List<RefusedPick> = emptyList(),
+
+    /** The cover's crop, raised over the edit (CoverCrop.md: the comment's square). */
+    val cropping: EditCrop.Cover? = null,
 
     /** What the read loaded — what a change is measured against. */
     val loadedBody: String = "",
-    val loadedAttachmentIds: List<String> = emptyList(),
     val tagSection: TagSectionState = TagSectionState(),
     val referenceSection: ReferenceSectionState = ReferenceSectionState(),
 
@@ -66,8 +73,8 @@ data class CommentEditState(
     /**
      * Whether the edit record is in the batch. STICKY: set by the first
      * change to a field the record carries — the words, the pictures, the
-     * mark — and never cleared by typing it back. The guard is the acts
-     * batch, never a byte comparison (EditComposeUnchanged.md:3).
+     * clip's face, the mark — and never cleared by typing it back. The guard
+     * is the acts batch, never a byte comparison (EditComposeUnchanged.md:3).
      */
     val recordStaged: Boolean = false,
 
@@ -83,26 +90,32 @@ data class CommentEditState(
     val help: HelpTopic? = null,
 
     val loading: Boolean = true,
+    /**
+     * Sign the edit was pressed while the edit's uploads ran: the press is
+     * HELD and signs the moment the last lands; a failed upload drops it
+     * (CommentEdit.md).
+     */
+    val heldPress: Boolean = false,
     val submitting: Boolean = false,
+    /** The signing has gone 5s unanswered — the slow line stands under the count. */
+    val slow: Boolean = false,
+    /** The prepared batch was not the one the foot read — the held press dropped. */
+    val countChanged: Boolean = false,
+    /**
+     * What became of a refused press (`SealFault`): the write rule's notice,
+     * one citation that never landed, or the bug notice. Null at rest.
+     */
+    val fault: SealFault? = null,
     val keyAbsent: Boolean = false,
     val refusal: String? = null,
     val signingFailed: Boolean = false,
     val transportFailed: Boolean = false,
     val saved: Boolean = false,
 ) {
-    val hasPictures: Boolean get() = picked.isNotEmpty()
+    val hasPictures: Boolean get() = !gallery.isEmpty && gallery.clip == null
 
-    val uploadedIds: List<String> get() = picked.mapNotNull { it.mediaId }
-
-    val uploadsDone: Int get() = uploadedIds.size
-
-    val uploadsComplete: Boolean get() = uploadedIds.size == picked.size
-
-    val uploadsFailed: Boolean get() = picked.any { it.upload is AssetUpload.Failed }
-
-    val describedCount: Int get() = picked.count { it.altText.isNotBlank() }
-
-    val canAddPicture: Boolean get() = picked.size < ReplyWizardState.MAX_PICTURES
+    /** NEVER shut at the cap: a fifth picture is refused in words under the pictures. */
+    val canAddPicture: Boolean get() = gallery.clip == null
 
     /** The comment body's own cap. */
     val bodyTooLong: Boolean get() = isCommentBodyTooLong(body)
@@ -114,14 +127,10 @@ data class CommentEditState(
     /**
      * Whether leaving would lose something, and so has to ask first.
      *
-     * An edit keeps no draft either, but "something to lose" here means
-     * something *changed*: an edit opened and closed untouched has lost
-     * nothing, and asking about it would be the noise the rule warns
-     * against (design/readme.md §13).
-     *
-     * It is the act count that answers, not the words alone: a topic or
-     * a citation moved is its own act and would be lost with the rest,
-     * and an edit that would sign nothing has nothing to lose.
+     * An edit keeps no draft, but "something to lose" here means something
+     * *changed*: it is the act count that answers, not the words alone — a
+     * topic or a citation moved is its own act and would be lost with the
+     * rest, and an edit that would sign nothing has nothing to lose.
      */
     val hasSomethingToLose: Boolean get() = signedActionCount > 0
 
@@ -150,15 +159,28 @@ data class CommentEditState(
      */
     val signedActionCount: Int get() = actRows.actCount()
 
-    /** An edit that changes nothing signs nothing. */
+    /** The write rule's notice stands in the commit's place. */
+    val writeRuleRefused: Boolean get() = fault == SealFault.WriteRule
+
+    /**
+     * The commit was pressed and has not answered — signing, or held at the
+     * upload gate. The 200ms label swap and the 5s slow line count from it.
+     */
+    val pressed: Boolean get() = submitting || heldPress
+
+    /**
+     * Whether Sign the edit answers a press: an edit that changes nothing
+     * signs nothing; ENABLED while an upload runs — a press there is held —
+     * and disabled while the gate shows its fault reading (CommentEdit.md).
+     */
     val canSign: Boolean
-        get() = !submitting &&
+        get() = !pressed &&
             !loading &&
             !keyAbsent &&
             body.isNotBlank() &&
             !bodyTooLong &&
             !sensitiveReasonTooLong &&
-            uploadsComplete &&
+            gallery.uploadsFailed == 0 &&
             signedActionCount > 0
 
     companion object {
@@ -168,38 +190,6 @@ data class CommentEditState(
         const val RECORD_NAME_CHARS = 60
     }
 }
-
-/** The picks as the components see them — whole frames, never cropped. */
-fun CommentEditState.pickedPictures(): List<PickedPicture> = picked.pickedPictures()
-
-// ---------------------------------------------------------------------
-// Transitions.
-// ---------------------------------------------------------------------
-
-// A picture taken, removed or described is a change to the record's own
-// payload, so each stages the record — and it stays staged (the guard is
-// the acts batch, EditComposeUnchanged.md:3).
-
-fun CommentEditState.addPick(uri: String, sourceRatio: Float? = null): CommentEditState {
-    if (picked.any { it.uri == uri }) return this
-    if (!canAddPicture) return this
-    return copy(picked = picked + PickedAsset(uri, sourceRatio), recordStaged = true)
-}
-
-fun CommentEditState.removePick(uri: String): CommentEditState = copy(
-    picked = picked.filterNot { it.uri == uri },
-    describingIndex = null,
-    recordStaged = true,
-)
-
-fun CommentEditState.withUpload(uri: String, upload: AssetUpload): CommentEditState =
-    copy(picked = picked.withUpload(uri, upload))
-
-fun CommentEditState.withSourceRatio(uri: String, ratio: Float): CommentEditState =
-    copy(picked = picked.withSourceRatio(uri, ratio))
-
-fun CommentEditState.withAltText(uri: String, text: String): CommentEditState =
-    copy(picked = picked.withAltText(uri, text), recordStaged = true)
 
 /** Drops every drawer without leaving the screen. */
 fun CommentEditState.closedSheets(): CommentEditState =

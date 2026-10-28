@@ -50,6 +50,17 @@ enum class UploadFailure {
     /** Pictures and a clip in one body: a post carries one or the other. */
     POST_MIXED_BODY,
 
+    /** A fifth picture: a comment carries four (copy-voice "Refused files"). */
+    COMMENT_PICTURE_COUNT,
+
+    /**
+     * A clip picked at an edit. UNDRAWN — the edit's video path waits on the
+     * cover step, so the edits refuse a new clip on the media row in the words
+     * the web already says (`pick.ts` `VIDEO_AT_EDIT`); a deviation candidate
+     * filed to design.
+     */
+    VIDEO_AT_EDIT,
+
     /** The upload never reached the server. */
     TRANSPORT,
 }

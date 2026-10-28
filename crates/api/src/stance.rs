@@ -14,11 +14,14 @@
 //! to `(0, 0)` with counter-records, each its own priced act
 //! (feed-ranking.md §8.1).
 
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as B64;
 use common::hashtag::canonicalize;
 use common::l1::census::Family;
+use common::l1::exact::Decimal;
 use common::l1::fold::{BundleSum, Standing};
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::stance::BundleView;
+use postgres_store::stance::{BundleView, HeldCursor};
 use postgres_store::{PgPool, stance as stance_store};
 use uuid::Uuid;
 
@@ -336,5 +339,79 @@ fn stance_gesture(author: &str, resolved: &StanceTarget, p_d: f64, p_i: f64) -> 
         deps: nodes::deps_awaiting(&[], [&resolved.awaits]),
         payload: vec![],
         node: None,
+    }
+}
+
+/// The held-topics list's wire cursor (api-spec.md `User.heldTopics`):
+/// the folded association it resumes from, as the exact decimal the order
+/// compared, and the canonical name that breaks ties — opaque per the
+/// Relay spec.
+pub fn encode_held_cursor(cursor: &HeldCursor) -> String {
+    B64.encode(format!("held:{}:{}", cursor.association, cursor.name))
+}
+
+/// A wire cursor back to its position; None for anything this list did
+/// not issue. Both halves are checked before they reach SQL: the
+/// association must be a decimal inside the fold's range, and the name a
+/// canonical topic name, so a forged cursor is a refusal rather than a
+/// failed cast.
+pub fn decode_held_cursor(cursor: &str) -> Option<HeldCursor> {
+    let text = String::from_utf8(B64.decode(cursor).ok()?).ok()?;
+    let rest = text.strip_prefix("held:")?;
+    let (association, name) = rest.split_once(':')?;
+    if association.len() > MAX_CURSOR_DECIMAL {
+        return None;
+    }
+    let value = association.parse::<Decimal>().ok()?.to_f64();
+    if !(-1.0..=1.0).contains(&value) || canonicalize(name).ok()? != name {
+        return None;
+    }
+    Some(HeldCursor {
+        association: association.to_string(),
+        name: name.to_string(),
+    })
+}
+
+/// The longest association a cursor may carry. A folded value is a clip
+/// of a sum of census parameters, so its text is short; the bound keeps a
+/// forged cursor from handing SQL an arbitrarily long numeral.
+const MAX_CURSOR_DECIMAL: usize = 64;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A held-topics cursor decodes back to its position, and one this list did not issue decodes to nothing.
+    /// ´claim:topics:a-held-cursor-round-trips´
+    #[test]
+    fn a_held_cursor_round_trips_and_a_foreign_one_does_not_decode() {
+        for cursor in [
+            HeldCursor {
+                association: "0.6".into(),
+                name: "saltmaps".into(),
+            },
+            HeldCursor {
+                association: "-1".into(),
+                name: "a.b-c_d".into(),
+            },
+        ] {
+            assert_eq!(
+                decode_held_cursor(&encode_held_cursor(&cursor)),
+                Some(cursor)
+            );
+        }
+        for foreign in [
+            "not base64!",
+            &B64.encode("hidden:0.5:rust"),
+            &B64.encode("held:0.5"),
+            &B64.encode("held:half:rust"),
+            &B64.encode("held:1.5:rust"),
+            &B64.encode("held:1e999999:rust"),
+            &B64.encode("held:0.5:Rust"),
+            &B64.encode("held:0.5:has space"),
+            &B64.encode(format!("held:0.{}:rust", "1".repeat(80))),
+        ] {
+            assert_eq!(decode_held_cursor(foreign), None, "{foreign}");
+        }
     }
 }
