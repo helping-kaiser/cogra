@@ -184,6 +184,8 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
                   <PostCard
                     post={node}
                     href={`/posts/${node.id}`}
+                    // THE SCORE OPENS ITS TRACE, whose back arrow reads `Back to #<thattag>`.
+                    scoreOrigin={{ kind: "tag", name }}
                     testId={`topic-post-${node.id}`}
                     authorTestId={`topic-author-${node.id}`}
                     stanceTestId={`topic-stance-${node.id}`}

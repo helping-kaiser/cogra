@@ -54,6 +54,7 @@ import { CommentFeedCard } from "@/lib/ui/comment-feed-card";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
+import type { TraceOrigin } from "@/lib/score/trace-session";
 import { ProfileFeedCard } from "@/lib/ui/profile-feed-card";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { scrollHostToTopAnimated, useScrollHost } from "@/lib/ui/scroll-host";
@@ -86,6 +87,8 @@ export const SAVED_SEARCH_DEBOUNCE_MS = 250;
 
 /** Where a card's doors say the reader came from: `Back to Saved`. */
 const FROM = "saved";
+/** A card's score opens its trace, whose back arrow reads `Back to Saved` (Saved.md:37). */
+const SAVED_ORIGIN: TraceOrigin = { kind: "saved" };
 
 type Entry = SavedEntry & { readonly id: string };
 
@@ -472,6 +475,7 @@ function SavedCard({
           // Each card keeps its kind's own name on the page (Saved.jsx),
           // keyed by the record's own identity, as the feed keys its cards.
           node={{ path: "saved.card", key: node.id }}
+          scoreOrigin={SAVED_ORIGIN}
           href={`/posts/${node.id}?from=${FROM}`}
           shareHref={`/posts/${node.id}`}
           testId={`saved-post-${node.id}`}
@@ -490,6 +494,7 @@ function SavedCard({
           comment={node}
           from={FROM}
           node={{ path: "saved.commentCard", key: node.id }}
+          scoreOrigin={SAVED_ORIGIN}
           testId={`saved-comment-${node.id}`}
           onNotify={notify}
           onLinkCopied={copied}
@@ -501,6 +506,7 @@ function SavedCard({
           person={node}
           href={`/u/${node.handle}?from=${FROM}`}
           node={{ path: "saved.profileCard", key: node.id }}
+          scoreOrigin={SAVED_ORIGIN}
           testId={`saved-person-${node.id}`}
           onNotify={notify}
           onLinkCopied={copied}

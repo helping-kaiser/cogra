@@ -50,7 +50,7 @@ import { OverflowMenu } from "@/lib/ui2/overflow-menu";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
-import type { DataNode } from "./data-node";
+import { part, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { NodeMark } from "./node-mark";
 import { PendingMarker } from "./pending-marker";
@@ -65,6 +65,9 @@ import {
   sensitiveSignature,
 } from "./post-media";
 import { RowLine } from "./row-line";
+import { ScoreSlot } from "@/lib/score/score-slot";
+import type { TraceOrigin } from "@/lib/score/trace-session";
+import { commentCover } from "@/lib/score/cover";
 import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
@@ -192,8 +195,11 @@ export function CommentFeedCard({
   node,
   onNotify,
   onLinkCopied,
+  scoreOrigin,
 }: {
   comment: CommentFeedView;
+  /** Where the card stands, for its score slot's trace; absent, no score is drawn. */
+  scoreOrigin?: TraceOrigin;
   /** The surface the doors' destinations name on their back arrows (`saved`). */
   from: string;
   testId: string;
@@ -471,6 +477,20 @@ export function CommentFeedCard({
           target={{ id: comment.id, kind: "comment", label: "this comment" }}
           testIdPrefix={`${testId}-stance`}
         />
+        {/* OPINION, THEN THE SCORE, THEN THE REPLY GLYPH (FeedKinds.md:3). The
+            slot is tagged by the board's evident path: the comment card's
+            row is not registered (reported). */}
+        {scoreOrigin !== undefined && (
+          <ScoreSlot
+            targetId={comment.id}
+            kind="comment"
+            pending={isPending(comment)}
+            cover={() => commentCover(comment)}
+            origin={scoreOrigin}
+            node={part(node, "actionRow.score")}
+            testId={`${testId}-score`}
+          />
+        )}
         {place !== null && !redacted && (
           <Link
             href={`${place}&reply=1`}

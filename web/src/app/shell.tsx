@@ -89,6 +89,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     pathname === "/wallet" ||
     pathname.startsWith("/posts/") ||
     pathname.startsWith("/u/") ||
+    // The score's trace reads for every viewer — guests open it (Main.md:67).
+    pathname.startsWith("/trace/") ||
     // The own profile is a gated read surface: its frame waits for the
     // gate, which replaces a signed-out arrival with /login.
     (signedIn && pathname === "/profile") ||
@@ -124,6 +126,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         ? "explore"
         : /^\/posts\/[^/]+$/.test(pathname)
           ? "postDetail"
+          : /^\/trace\/[^/]+$/.test(pathname)
+            ? // The score's four levels share one prefix (nodes.json, round 7).
+              "feedEntry"
           : pathname === "/profile" || /^\/u\/[^/]+$/.test(pathname)
             ? "profile"
             : pathname === "/saved"
@@ -135,7 +140,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   : null;
   // A drill-in — a post's detail or someone's profile — reads its origin off
   // the URL and keeps that root lit.
-  const drillIn = screen === "postDetail" || (screen === "profile" && pathname !== "/profile");
+  // The score's trace is one too: it keeps lit the root its score was
+  // tapped under (History and Saved keep Profile, the rest the Feed).
+  const drillIn =
+    screen === "postDetail" || screen === "feedEntry" || (screen === "profile" && pathname !== "/profile");
   const scroller = useRef<HTMLDivElement>(null);
   const rootSlot = ROOT_OF[pathname];
   const reselectRoot = () => {
