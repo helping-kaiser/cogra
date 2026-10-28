@@ -425,8 +425,17 @@ noun):
   settings screens): Signing needs your key, and it isn't on this
   browser — nothing is signed without it. / A recovery code brings the
   key to any device. Until it's here, anything waiting on it stays on
-  this device. *(One text for all four key-absent surfaces, the key-loss
-  round: nothing in it assumes a write in progress.)*
+  this device. *(One text for the seal and the two settings screens, the
+  key-loss round: nothing in it assumes a write in progress. On the stance
+  pad (`PadKeyAbsent`) the notice already says that signing needs the key
+  and that the recovery code restores it, so the dialog says only what the
+  notice does not — where the key is, why nothing signs, and what waits
+  for the restore: `Your key lives where you made it or last restored it,
+  never held by CoGra — nothing is signed in your name without it.` /
+  `Your recovery code brings it here. A pick you keep waits on this
+  browser until then, and you review every kept pick before it's
+  signed.` — in the app, `…waits in this app until then…` (seam 245, ask
+  17; merged under the autonomy order, 2026-10-28; review pending).)*
 - **Why signing waits** (the write rule's notice — the seal
   and the stance pad): There's a limit to how many signed actions can
   go through in a short time — it keeps the network safe from flooding.
