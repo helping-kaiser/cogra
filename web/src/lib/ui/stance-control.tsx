@@ -1379,7 +1379,12 @@ export function StanceControl({
               (§8.6, §10) — visually hidden until focused, and named for its
               target so a page with several controls never repeats one
               anonymous name (the master's `Choose your opinion on {label}`). */}
+          {/* HIDDEN BY ITS WRAPPER, NOT BY ITSELF: the button is a `cg-state`
+              surface, whose unlayered `position: relative` outranks the
+              utility layer's `sr-only` — so on the button itself the hiding
+              never took, and the route stood in flow, 70px beside the face. */}
           {phase === "signedIn" && (
+            <span className="sr-only focus-within:not-sr-only">
             <button
               type="button"
               data-testid={`${testIdPrefix}-choose`}
@@ -1394,10 +1399,11 @@ export function StanceControl({
                 openConsidered("alternates", kept !== null && keyAbsent === true ? kept : TAP_DEFAULT);
                 askForKey();
               }}
-              className={`sr-only focus:not-sr-only ${buttonClassName({ variant: "text", size: "sm" })}`}
+              className={buttonClassName({ variant: "text", size: "sm" })}
             >
               Choose your opinion on {target.label}
             </button>
+            </span>
           )}
         </div>
       )}
@@ -1517,7 +1523,11 @@ export function StanceControl({
       {/* Fired once per completed action (design.md §6), and mounted
           whether or not it has anything to say so the announcement is
           heard when it does. Never a failure. */}
-      <Snackbar message={signed} onDismiss={() => setSigned(null)} testId={`${testIdPrefix}-signed`} />
+      {/* Out of the column's flow: an empty live region is still a flex item,
+          and the column's gap stood 4px under every anchor for it. */}
+      <div className="absolute">
+        <Snackbar message={signed} onDismiss={() => setSigned(null)} testId={`${testIdPrefix}-signed`} />
+      </div>
 
       {/* Mounted only when asked for: a read surface renders many of
           these controls, and an always-present dialog per card is a

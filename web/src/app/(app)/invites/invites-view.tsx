@@ -334,7 +334,7 @@ export function InvitesView({
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col pb-8">
-      <CollapsingTop>
+      <CollapsingTop flush>
         <PageHeader
           title={INVITES_TITLE}
           backHref={origin.href}
