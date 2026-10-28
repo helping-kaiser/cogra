@@ -2161,6 +2161,38 @@
           "tobias",
           "sol"
         ],
+        "feed.commentCard.actionRow": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.reply": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.score": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.score.value": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.share": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.stance": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.stance.anchor": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.actionRow.stance.anchor.face": [
+          "tobias",
+          "sol"
+        ],
         "feed.commentCard.media": [
           "tobias",
           "sol"
@@ -2710,6 +2742,222 @@
         "feed.snackbar.message": []
       }
     },
+    "FeedKinds": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "feed.commentCard": "the comment author's handle, without @ (CommentCard)",
+        "feed.profileCard": "the person's handle, without @ (the profile feed card)",
+        "feed.tagCard": "the tag's name, without # (the tag feed card)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "sol"
+        ],
+        "feed.card.actionRow": [
+          "sol"
+        ],
+        "feed.card.actionRow.comments": [
+          "sol"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "sol"
+        ],
+        "feed.card.actionRow.score": [
+          "sol"
+        ],
+        "feed.card.actionRow.score.value": [
+          "sol"
+        ],
+        "feed.card.actionRow.share": [
+          "sol"
+        ],
+        "feed.card.actionRow.stance": [
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "sol"
+        ],
+        "feed.card.authorChip": [
+          "sol"
+        ],
+        "feed.card.authorChip.avatar": [
+          "sol"
+        ],
+        "feed.card.authorChip.handle": [
+          "sol"
+        ],
+        "feed.card.authorChip.name": [
+          "sol"
+        ],
+        "feed.card.description": [
+          "sol"
+        ],
+        "feed.card.media": [
+          "sol"
+        ],
+        "feed.card.media.dots": [
+          "sol"
+        ],
+        "feed.card.media.frame": [
+          "sol/1",
+          "sol/2"
+        ],
+        "feed.card.menu": [
+          "sol"
+        ],
+        "feed.card.opener": [
+          "sol"
+        ],
+        "feed.card.tagsLine": [
+          "sol"
+        ],
+        "feed.card.tagsLine.tag": [
+          "sol/fieldnotes",
+          "sol/saltmaps"
+        ],
+        "feed.card.timestamp": [
+          "sol"
+        ],
+        "feed.card.title": [
+          "sol"
+        ],
+        "feed.commentCard": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "feed.commentCard.actionRow.stance.anchor.face": [
+          "tobias"
+        ],
+        "feed.profileCard": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.score": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.score.value": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.share": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.stance": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "feed.profileCard.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "feed.profileCard.avatar": [
+          "mira"
+        ],
+        "feed.profileCard.bio": [
+          "mira"
+        ],
+        "feed.profileCard.handle": [
+          "mira"
+        ],
+        "feed.profileCard.menu": [
+          "mira"
+        ],
+        "feed.profileCard.name": [
+          "mira"
+        ],
+        "feed.tagCard": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.compose": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.score": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.score.value": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.share": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.stance": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.stance.anchor": [
+          "saltmaps"
+        ],
+        "feed.tagCard.actionRow.stance.anchor.face": [
+          "saltmaps"
+        ],
+        "feed.tagCard.glimpse": [
+          "saltmaps"
+        ],
+        "feed.tagCard.glimpse.by": [
+          "saltmaps"
+        ],
+        "feed.tagCard.glimpse.newest": [
+          "saltmaps"
+        ],
+        "feed.tagCard.mark": [
+          "saltmaps"
+        ],
+        "feed.tagCard.name": [
+          "saltmaps"
+        ],
+        "feed.tagCard.through": [
+          "saltmaps"
+        ],
+        "feed.tagCard.timestamp": [
+          "saltmaps"
+        ]
+      }
+    },
     "FeedNewerVersion": {
       "prefix": "feed",
       "keys": {
@@ -2830,6 +3078,27 @@
         "feed.snackbar": [],
         "feed.snackbar.action": [],
         "feed.snackbar.message": []
+      }
+    },
+    "FeedNothing": {
+      "prefix": "feed",
+      "keys": {},
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.nothing": [],
+        "feed.nothing.action": [],
+        "feed.nothing.title": []
       }
     },
     "FeedPostLicense": {
@@ -3365,6 +3634,219 @@
         "feed.seenSeparator.label": []
       }
     },
+    "FeedSheet": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "feed.filterSheet.people.everyone": "the people chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "feed.filterSheet.people.sign": "the people chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "feed.filterSheet.people.yourPeople": "the people chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "feed.filterSheet.topic.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.share": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.name": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.body": [
+          "tobias"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.filterSheet": [],
+        "feed.filterSheet.also": [],
+        "feed.filterSheet.also.hint": [],
+        "feed.filterSheet.also.label": [],
+        "feed.filterSheet.also.removedChip": [],
+        "feed.filterSheet.also.sensitiveChip": [],
+        "feed.filterSheet.also.settlingChip": [],
+        "feed.filterSheet.dragHandle": [],
+        "feed.filterSheet.foot": [],
+        "feed.filterSheet.foot.done": [],
+        "feed.filterSheet.foot.reset": [],
+        "feed.filterSheet.forms": [],
+        "feed.filterSheet.forms.hint": [],
+        "feed.filterSheet.forms.label": [],
+        "feed.filterSheet.forms.photosChip": [],
+        "feed.filterSheet.forms.textChip": [],
+        "feed.filterSheet.forms.videoChip": [],
+        "feed.filterSheet.help": [],
+        "feed.filterSheet.kinds": [],
+        "feed.filterSheet.kinds.commentsChip": [],
+        "feed.filterSheet.kinds.hint": [],
+        "feed.filterSheet.kinds.label": [],
+        "feed.filterSheet.kinds.postsChip": [],
+        "feed.filterSheet.kinds.profilesChip": [],
+        "feed.filterSheet.kinds.topicsChip": [],
+        "feed.filterSheet.order": [],
+        "feed.filterSheet.order.hint": [],
+        "feed.filterSheet.order.label": [],
+        "feed.filterSheet.order.picker": [],
+        "feed.filterSheet.order.picker.newestOption": [],
+        "feed.filterSheet.order.picker.rankedOption": [],
+        "feed.filterSheet.order.seen": [],
+        "feed.filterSheet.order.seen.box": [],
+        "feed.filterSheet.order.seen.label": [],
+        "feed.filterSheet.people": [],
+        "feed.filterSheet.people.everyone": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.everyone.dot": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.everyone.hint": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.everyone.label": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.hint": [],
+        "feed.filterSheet.people.label": [],
+        "feed.filterSheet.people.sign": [
+          "your-people"
+        ],
+        "feed.filterSheet.people.sign.against": [
+          "your-people"
+        ],
+        "feed.filterSheet.people.sign.either": [
+          "your-people"
+        ],
+        "feed.filterSheet.people.sign.for": [
+          "your-people"
+        ],
+        "feed.filterSheet.people.yourPeople": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.yourPeople.dot": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.yourPeople.hint": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.people.yourPeople.label": [
+          "everyone",
+          "your-people"
+        ],
+        "feed.filterSheet.topic": [],
+        "feed.filterSheet.topic.allTopics": [],
+        "feed.filterSheet.topic.hint": [],
+        "feed.filterSheet.topic.label": [],
+        "feed.filterSheet.topic.tag": [
+          "saltmaps",
+          "coastroad",
+          "fieldnotes",
+          "tidetables"
+        ]
+      }
+    },
     "FeedUnread": {
       "prefix": "feed",
       "keys": {
@@ -3601,6 +4083,30 @@
         "history.commentCard": [
           "tobias"
         ],
+        "history.commentCard.actionRow": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor.face": [
+          "tobias"
+        ],
         "history.day": [
           "today",
           "yesterday",
@@ -3813,6 +4319,30 @@
         "history.commentCard": [
           "tobias"
         ],
+        "history.commentCard.actionRow": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor.face": [
+          "tobias"
+        ],
         "history.filterSheet": [],
         "history.filterSheet.dragHandle": [],
         "history.filterSheet.foot": [],
@@ -3928,6 +4458,30 @@
           "ada"
         ],
         "history.commentCard": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "history.commentCard.actionRow.stance.anchor.face": [
           "tobias"
         ],
         "history.day": [
@@ -6640,6 +7194,30 @@
         "saved.commentCard": [
           "tobias"
         ],
+        "saved.commentCard.actionRow": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance.anchor.face": [
+          "tobias"
+        ],
         "saved.header": [],
         "saved.header.back": [],
         "saved.header.title": [],
@@ -6936,6 +7514,30 @@
           "tobias"
         ],
         "saved.commentCard": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.reply": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.score": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.score.value": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.share": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "saved.commentCard.actionRow.stance.anchor.face": [
           "tobias"
         ],
         "saved.header": [],
