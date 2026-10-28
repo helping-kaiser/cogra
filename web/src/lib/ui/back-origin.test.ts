@@ -15,6 +15,10 @@ describe("backFor", () => {
     expect(backFor(personOrigin("ada"))).toEqual({ href: "/u/ada", label: "Back to the profile" });
   });
 
+  it("names History, the reader's seen-list (History.md:47-61)", () => {
+    expect(backFor("history")).toEqual({ href: "/history", label: "Back to History" });
+  });
+
   it("never builds a profile link from an empty handle", () => {
     expect(backFor("u:")).toEqual({ href: "/feed", label: "Back to feed" });
   });

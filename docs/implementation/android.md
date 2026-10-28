@@ -166,7 +166,12 @@ completable with discrete nudge and zoom controls.
 ## Screens
 
 The destination map — type-safe destinations, one NavHost inside
-the shell scaffold (`CograNavGraph.kt`). Auth drives navigation:
+the shell scaffold (`CograNavGraph.kt`). Each destination slot of
+the bottom bar is a nested graph with its own back stack
+(`TopLevelTab.kt`): a screen stands in the graph of the tab it was
+opened from, the bar lights that tab, and a tab switch saves the
+tab left and restores the one arrived at — design/readme.md "The
+bottom bar's re-tap ladder" holds the rules. Auth drives navigation:
 a phase flip lands on the new phase's root — `Login` signed
 out, the `Feed` tab signed in — with a cleared stack, so which
 stack reaches a destination is its access gate. The shell frames

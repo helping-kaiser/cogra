@@ -29,6 +29,7 @@ import { SLOW_NETWORK_MS, useSlowAnswer, useWaitedPast } from "@/lib/ui2/waiting
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
 import { newReferenceDraft } from "@/lib/references/draft";
 import { untypedTargetView } from "@/lib/references/normalize";
+import { newTagDraft } from "@/lib/topics/draft";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -161,15 +162,18 @@ export function ComposeWizard({
   // its target by id, so the write stands whatever this instance can
   // render, and dropping the gesture silently would be worse than a chip
   // with no label (`ReferenceClaim.target` is nullable for exactly this).
-  const prefill = useSearchParams().get("reference");
-  const [state, setState] = useState<WizardState>(() =>
-    prefill === null
-      ? emptyWizard()
-      : {
-          ...emptyWizard(),
-          references: [newReferenceDraft(prefill, untypedTargetView(prefill))],
-        },
-  );
+  //
+  // `?tag=` IS THE TAG CARD'S ACT (`Tag a new post with it`, History.md:63;
+  // FeedKinds.md): the composer opens at its first stage with the tag
+  // riding staged among the new post's tags, the same initial-state way.
+  const params = useSearchParams();
+  const prefill = params.get("reference");
+  const prefillTag = params.get("tag");
+  const [state, setState] = useState<WizardState>(() => ({
+    ...emptyWizard(),
+    ...(prefill === null ? {} : { references: [newReferenceDraft(prefill, untypedTargetView(prefill))] }),
+    ...(prefillTag === null || prefillTag === "" ? {} : { tags: [newTagDraft(prefillTag)] }),
+  }));
   const dispatch = useCallback((action: WizardAction) => {
     setState((current) => wizardReducer(current, action));
   }, []);
@@ -1063,6 +1067,11 @@ export function ComposeWizard({
                     ),
                   ]
                 : offered.references,
+              // THE STAGED TAG CROSSES THE RESTORE for the citation's reason.
+              tags:
+                prefillTag === null || prefillTag === "" || offered.tags.some((tag) => tag.name === prefillTag)
+                  ? offered.tags
+                  : [...offered.tags, newTagDraft(prefillTag)],
             }));
             setOffered(null);
           }}

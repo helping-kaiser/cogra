@@ -25,7 +25,9 @@ export function PendingMarker({
   /** What the content waits on; `Still settling` for a signed record. */
   label?: string;
 }) {
-  const ink = "text-label-small text-on-surface-variant";
+  // The label-small SIZE in the secondary ink, and nothing else (`PendingMarker.jsx`:
+  // `fontSize`, `color`) — leading and weight are the line's surroundings'.
+  const ink = "text-[length:var(--text-label-small)] text-on-surface-variant";
   if (inline) {
     return (
       <span data-testid={testId} className={ink}>

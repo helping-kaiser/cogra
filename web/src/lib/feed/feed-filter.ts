@@ -53,7 +53,7 @@ export const FEED_FILTER_DEFAULT: FeedFilterValue = {
 };
 
 /** The value/kind split (FeedFilter.jsx:57-72): the sheet's word, the wire's kind. */
-const KIND_OF: Record<FeedKindValue, NodeKind> = {
+export const KIND_OF: Record<FeedKindValue, NodeKind> = {
   posts: "POST",
   comments: "COMMENT",
   profiles: "USER",
