@@ -81,6 +81,8 @@ describe("icons", () => {
       // (`_shared.jsx` `ProfileBand`, `CHRONICLE_TABS`).
       "settings",
       "history",
+      // The bar's Wallet slot (BottomNav.jsx `GLYPHS`), opening its coming-soon door.
+      "wallet",
     ];
     expect([...shippedNames()].sort()).toEqual([...needed].sort());
   });

@@ -27,9 +27,14 @@ export async function generateMetadata({
 
 export default async function TopicPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ name: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { name } = await params;
-  return <TopicView name={name} />;
+  const { from } = await searchParams;
+  // A History tag card's page reads `Back to History`, a search result's `Back
+  // to the search` (the origin-naming table).
+  return <TopicView name={name} from={typeof from === "string" ? from : null} />;
 }

@@ -11,8 +11,11 @@
 // guessed and nothing corrected — a query carries handles and tag names,
 // which correction would break. What the action key does is each surface's
 // own (`onAction`): the tag picker's stages its first row. The platform's own
-// clear (the search input's ×) is not drawn: the master's pill carries none,
-// and a pill that grew a second control on typing would not be the drawn one.
+// clear (the search input's ×) is not drawn: the master's pill carries none.
+//
+// A TRAILING × WHILE TEXT IS PRESENT, where a surface's sidecar asks for one
+// (`onClear`; Explore.md:11-13): it empties the field. The master draws no ×
+// yet, so its node is the field's evident part, `clear`.
 //
 // `error` IS THE FIELD-ERROR STATE IN THE PILL'S IDIOM (the caps-affordance
 // round; `TagPickerRefused`): a 1px `--error` ring drawn INSIDE the pill's own
@@ -25,12 +28,16 @@ import type { Ref } from "react";
 import { Icon } from "@/lib/ui/icons";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
+/** The ×'s spoken name — undrawn; the house's plain verb for what it does. */
+export const CLEAR_SEARCH = "Clear search";
+
 export function SearchBar({
   query,
   onChange,
   placeholder = "Search",
   ariaLabel = "Search",
   onAction,
+  onClear,
   error = false,
   describedBy,
   inputRef,
@@ -42,6 +49,8 @@ export function SearchBar({
   ariaLabel?: string;
   /** The keyboard's action key; the field does nothing on it otherwise. */
   onAction?: () => void;
+  /** Draws the trailing × while the field holds text. */
+  onClear?: () => void;
   /** The field refuses what is typed: the error ring, and `aria-invalid`. */
   error?: boolean;
   /** The id of the line that names the refusal. */
@@ -88,6 +97,17 @@ export function SearchBar({
           {...testAttributes(part(node, "input"))}
           className="cg-focus min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-body-large text-inherit outline-none placeholder:text-on-surface-variant [&::-webkit-search-cancel-button]:appearance-none"
         />
+        {onClear !== undefined && query !== "" && (
+          <button
+            type="button"
+            aria-label={CLEAR_SEARCH}
+            onClick={onClear}
+            {...testAttributes(part(node, "clear"))}
+            className="cg-state cg-focus cg-hit -mr-2 grid size-10 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-on-surface-variant"
+          >
+            <Icon name="close" size={20} />
+          </button>
+        )}
       </div>
     </div>
   );

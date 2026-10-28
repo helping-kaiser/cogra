@@ -52,9 +52,15 @@ const PATHS = {
   more_vert: [
     "M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z",
   ],
-  // The search field's leading glyph (`SearchBar.jsx`), on Saved's search.
+  // The search field's leading glyph (`SearchBar.jsx`), on Saved's search —
+  // and the bar's Explore slot, keyed `search` (`BottomNav.jsx` GLYPHS).
   search: [
     "M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z",
+  ],
+  // The bar's Wallet slot (`BottomNav.jsx` GLYPHS), whose door is
+  // `WalletComingSoon` in V1.0.
+  wallet: [
+    "M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z",
   ],
   // The comments affordance on a card. Filled, so it sits at the same weight as
   // the rest of the row.

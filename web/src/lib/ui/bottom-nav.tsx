@@ -1,9 +1,9 @@
-// The app's frame (design.md §6). Five slots left to right — feed, search,
-// create post, wallet, profile — EACH ARRIVING WITH THE SLICE THAT BUILDS ITS
-// SURFACE. The product ships three today: feed, the compose action, and
-// profile. Explore waits for slice 2.7's search backend (readme §13, the audit
-// answers: "no surface built against the exact-match lookup before it"), and
-// the wallet waits for the wallet surfaces.
+// The app's frame (design.md §6; design/components/navigation/BottomNav.jsx).
+// Five slots left to right — feed, search, create post, wallet, profile — and
+// V1.0 carries all five (readme §13, *The V1.0 scope cut*): Explore is the
+// search slot's surface, and the wallet slot opens its coming-soon door
+// (`WalletComingSoon`) — a thinner bar reads wrong, and re-adding a slot later
+// costs every reader the muscle memory twice.
 //
 // The centre slot is the compose ACTION, not a destination — a deliberate
 // deviation from M3's destinations-only navigation-bar guidance, accepted for
@@ -12,7 +12,14 @@
 //
 // Every viewer gets the same shell: the bar shows for signed-in, applicant and
 // anonymous viewers alike, and a slot that needs an account asks on an
-// anonymous tap rather than yanking the read away.
+// anonymous tap rather than yanking the read away. Feed, Explore and the
+// Wallet's door need none (Explore.md:35-37; WalletComingSoon.md:5, :15):
+// only New post and Profile ask.
+//
+// THE SLOTS ARE RE-ENTRY POINTS (BottomNav.jsx; readme §13, the re-tap
+// ladder): another tab comes back as it was left, and the active tab tapped
+// at its own root is the root's to answer — `reselect` hands the tap to it
+// instead of navigating to where the reader already stands.
 //
 // 64px band on `surfaceContainer`, hairline `outlineVariant` top border,
 // safe-area padding at the bottom. Selection shows in COLOUR
@@ -36,7 +43,7 @@ import { JoinPrompt } from "@/lib/ui/join-prompt";
 
 export type NavSlot = "feed" | "search" | "compose" | "wallet" | "profile";
 
-/** Where the bar is going, once Explore and the wallet have surfaces. */
+/** The V1.0 bar: all five slots (BottomNav.jsx `ALL_SLOTS`). */
 export const ALL_SLOTS: readonly NavSlot[] = [
   "feed",
   "search",
@@ -44,9 +51,6 @@ export const ALL_SLOTS: readonly NavSlot[] = [
   "wallet",
   "profile",
 ];
-
-/** The slots whose surfaces exist. A slot arrives WITH its surface. */
-export const SHIPPED_SLOTS: readonly NavSlot[] = ["feed", "compose", "profile"];
 
 // The discovery slot is keyed `search` (its route, its glyph) but READS
 // "Explore": implementation vocabulary stays off the screen, and "Explore" says
@@ -60,19 +64,24 @@ const LABELS: Record<NavSlot, string> = {
   profile: "Profile",
 };
 
-// A slot arrives with its surface, and so does its glyph: `search` and `wallet`
-// are exported in the design's set and stay unshipped here until the surfaces
-// they name exist, rather than sitting in the tree unreachable.
+// The glyphs (BottomNav.jsx `GLYPHS`); profile takes its two cuts below.
 const GLYPHS: Partial<Record<NavSlot, GlyphName>> = {
   feed: "dynamic_feed",
+  search: "search",
+  wallet: "wallet",
 };
 
-/** A slot with no destination is one whose surface has not shipped. */
-const DESTINATIONS: Partial<Record<NavSlot, string>> = {
+/** Where each slot leads: its tab's root, or the compose action. */
+const DESTINATIONS: Record<NavSlot, string> = {
   feed: "/feed",
+  search: "/explore",
   compose: "/compose",
+  wallet: "/wallet",
   profile: "/profile",
 };
+
+/** The slots a reader without an account may take: the reads (Feed, Explore) and the Wallet's door. */
+const OPEN_TO_GUESTS: readonly NavSlot[] = ["feed", "search", "wallet"];
 
 // TEXT SCALE IS NEVER CAPPED (`BottomNav.jsx`; readme §4 *Type*, K13.4): above
 // 1.3× a label may wrap to a second line, and the bar grows past its 64px
@@ -83,9 +92,10 @@ const ITEM =
 export function BottomNav({
   active,
   signedIn,
-  slots = SHIPPED_SLOTS,
+  slots = ALL_SLOTS,
   node,
   onReselectFeed,
+  reselect = {},
 }: {
   active: NavSlot | null;
   signedIn: boolean;
@@ -95,7 +105,14 @@ export function BottomNav({
    * there. Absent anywhere else, where the slot is the plain way to the feed.
    */
   onReselectFeed?: () => void;
-  /** Defaults to the shipped three; pass more as their surfaces land. */
+  /**
+   * THE ACTIVE TAB TAPPED AT ITS OWN ROOT (BottomNav.jsx, the ladder): the
+   * root answers — scrolled, back to its top; at the top, nothing
+   * (Explore.md:43; WalletComingSoon.md:19-21). Keyed by slot; absent, the
+   * slot is the plain way to its root.
+   */
+  reselect?: Partial<Record<NavSlot, () => void>>;
+  /** The V1.0 bar's five by default (BottomNav.jsx `ALL_SLOTS`). */
   slots?: readonly NavSlot[];
   /**
    * The registered bar node of the screen it rides (`feed.bottomBar`); each
@@ -116,7 +133,7 @@ export function BottomNav({
     >
       {slots.map((slot) => {
         const href = DESTINATIONS[slot];
-        if (href === undefined) return null;
+        const onReselect = slot === "feed" ? (onReselectFeed ?? reselect.feed) : reselect[slot];
         const selected = active === slot;
         const ids = testAttributes(part(node, `${slot}Slot`), `nav-${slot}`);
 
@@ -143,9 +160,9 @@ export function BottomNav({
             </>
           );
 
-        // A slot that needs an account asks on an anonymous tap; the feed is
-        // readable without one, so it stays a link for every viewer.
-        if (!signedIn && slot !== "feed") {
+        // A slot that needs an account asks on an anonymous tap; the reads and
+        // the Wallet's door stay links for every viewer.
+        if (!signedIn && !OPEN_TO_GUESTS.includes(slot)) {
           return (
             <button
               key={slot}
@@ -165,15 +182,15 @@ export function BottomNav({
             key={slot}
             href={href}
             // A tab that remembers where its reader was restores that place
-            // itself (`feed-memory.ts`), and Next scrolling to the first Page
+            // itself (`feed-memory.ts`; Explore's `exploreMemory`), and Next scrolling to the first Page
             // element would land on top of the restore (Next `link.md`,
             // "scroll"). The tabs that remember nothing yet keep the default.
-            scroll={slot === "feed" ? false : undefined}
+            scroll={slot === "feed" || slot === "search" ? false : undefined}
             onClick={
-              slot === "feed" && onReselectFeed !== undefined
+              onReselect !== undefined
                 ? (event) => {
                     event.preventDefault();
-                    onReselectFeed();
+                    onReselect();
                   }
                 : undefined
             }

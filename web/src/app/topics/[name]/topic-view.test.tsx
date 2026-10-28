@@ -291,6 +291,18 @@ describe("TopicView", () => {
     expect(screen.getByTestId("topic-back")).toHaveAttribute("href", "/feed");
   });
 
+  // History.md:57: a History tag card's page reads Back to History.
+  it("backs to History when opened from a History card", async () => {
+    server.use(
+      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
+    );
+    renderWithProviders(<TopicView name="rust" from="history" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("topic-name");
+    const back = screen.getByTestId("topic-back");
+    expect(back).toHaveAttribute("href", "/history");
+    expect(back).toHaveAttribute("aria-label", "Back to History");
+  });
+
   it("renders a tagged comment with a link to its parent post", async () => {
     server.use(
       gqlLink.query("HashtagDetail", () =>
