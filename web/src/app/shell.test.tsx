@@ -12,6 +12,7 @@ let pathname = "/feed";
 let search = "";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
+  useRouter: () => ({ push: () => {} }),
   useSearchParams: () => new URLSearchParams(search),
 }));
 
