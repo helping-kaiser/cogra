@@ -55,6 +55,27 @@ mutation PrepareCommentEdit($input: PrepareCommentEditInput!) {
   }
 }
 
+# THE AUTHOR'S REMOVE (api-spec.md `removeContent`; erasure.md §1): the whole
+# chain at once — the node's genesis record named by `genesisRecordId`, and
+# `includeRevisions: true` because the confirm promises "every earlier
+# version's". Immediate and unsigned: nothing is prepared or signed, so it
+# is not a prepare. The payload names only the records that have landed — a
+# still-settling post answers `records: []` with no error and lands reduced —
+# so the surface re-reads the node to draw its mark rather than trusting
+# this list.
+mutation RemoveContent($record: RecordId!) {
+  removeContent(input: { record: $record, includeRevisions: true }) {
+    records {
+      id
+      payloadState
+      redactedAt
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
 # A post as the FEED CARD draws it — and, for the same reason, what the detail
 # page paints from the cache before its own read lands (`readCachedPost`).
 #
