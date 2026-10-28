@@ -8,7 +8,6 @@ package com.cogra.network.repo
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
 import com.cogra.domain.Outcome
-import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.map
 import com.cogra.domain.search.SEARCH_KINDS
 import com.cogra.domain.search.SearchAsk
@@ -20,7 +19,6 @@ import com.cogra.domain.search.SearchRepository
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
 import com.cogra.network.graphql.SearchQuery
-import com.cogra.network.graphql.type.NodeKind
 import com.cogra.network.graphql.type.ReadOrder
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -59,13 +57,6 @@ class SearchRepositoryImpl @Inject constructor(
 }
 
 private const val NORMAL = "NORMAL"
-
-private fun FeedKind.toWire(): NodeKind = when (this) {
-    FeedKind.POST -> NodeKind.POST
-    FeedKind.COMMENT -> NodeKind.COMMENT
-    FeedKind.PROFILE -> NodeKind.USER
-    FeedKind.TAG -> NodeKind.HASHTAG
-}
 
 /** A member of the union this build serves; null for one it cannot draw. */
 private fun SearchQuery.Node.toDomain(): SearchNode? {
