@@ -259,10 +259,25 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_words_next").assertIsNotEnabled()
     }
 
+    // ComposePick.md (round 22): an empty pick step is silent — Next inert, no line asks for a pick.
     @Test
     fun theNextPillWaitsForAPick() {
         compose.setContent { Wizard(ComposeWizardState()) }
-        compose.onNodeWithTag("wizard_pick_next").assertIsNotEnabled()
+        compose.onNodeWithTag("wizard_pick_next").assertIsNotEnabled().performClick()
+        compose.onNodeWithText("Pick at least one picture.", substring = true).assertDoesNotExist()
+    }
+
+    // ComposePick.md (round 22): the first stage's arrow is named Back, never Back a step.
+    @Test
+    fun theFirstStagesArrowIsNamedBack() {
+        compose.setContent { Wizard(ComposeWizardState()) }
+        compose.onNodeWithTag("wizard_header_back").assertContentDescriptionEquals("Back")
+    }
+
+    @Test
+    fun aLaterStagesArrowIsNamedBackAStep() {
+        compose.setContent { Wizard(words.copy(body = "Salt maps", step = WizardStep.Seal)) }
+        compose.onNodeWithTag("wizard_header_back").assertContentDescriptionEquals("Back a step")
     }
 
     @Test
