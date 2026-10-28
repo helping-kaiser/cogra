@@ -1,4 +1,4 @@
-//! ´mod:module:mailer-config´
+//! ´mod:module:config´
 //!
 //! Which mailer the server sends through, read from the environment at
 //! boot (development.md "Environment Variables").
