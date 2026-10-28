@@ -80,6 +80,17 @@ export const MIXED_BODY = "A post carries pictures or one video, not both.";
 export const MIXED_BODY_COMMENT = "A comment carries pictures or one video, not both.";
 /** The eleventh picture's line (copy-voice, *Refused files*; ComposePick.md). */
 export const TOO_MANY_POST = "That's more than a post carries — up to ten pictures.";
+/** The fifth picture's line, the comment's twin (copy-voice, *Refused files*). */
+export const TOO_MANY_COMMENT = "That's more than a comment carries — up to four pictures.";
+
+/**
+ * A video picked into an edit whose body has no clip — the add path the
+ * edits do not build yet (EditWords.md: "its face is chosen on the cover step
+ * before the edit takes it"; the cover step is the shape-keyed compose
+ * lane's). UNDRAWN copy, written to the refused-file pattern and reported as
+ * a deviation candidate, never presented as board-backed.
+ */
+export const VIDEO_AT_EDIT = "A video can't be added at an edit yet — post it on its own.";
 
 /**
  * What a surface's video costs and what it says when a file exceeds it.
