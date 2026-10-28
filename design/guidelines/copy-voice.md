@@ -3497,20 +3497,16 @@ every card and detail already draws:
 
 ## The coming-soon surfaces
 
-Four places stand in for something not here yet: the screen the
+Three places stand in for something not here yet: the screen the
 band's chats icon opens (`ChatsComingSoon`, backlog item 68), the door
 the bar's wallet slot opens (`WalletComingSoon`, the v1.0.0 scope cut),
-the door the bar's Explore slot opens until search ships
-(`ExploreComingSoon`, seam 245 ask 12), and the hero card on Explore
-(backlog item 16). **All name the promise the same way** — the thing,
-an em dash, `coming soon`, then one sentence of what will be there:
+and the hero card on Explore (backlog item 16). **All name the promise
+the same way** — the thing, an em dash, `coming soon`, then one
+sentence of what will be there:
 
 - `Chats — coming soon. Your conversations will be here.`
 - `Wallet — coming soon. Your earnings will be here.` *(Ruled by jakob
   2026-09-25.)*
-- `Explore — coming soon. Search will be here.` — Explore's root is the
-  search field first, so the sentence names that. *(Merged under the
-  autonomy order, 2026-10-28; review pending.)*
 - `The Sky — coming soon` · `Your sky — every account a star, sized by
   your own paths to it.`
 
