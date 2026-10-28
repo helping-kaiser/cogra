@@ -19,13 +19,13 @@
    not a set, and its cover is the next step's whole subject.
 
    WEB TAKES THIS STATE 1:1 — the drop region and the file dialog play the
-   grid's part and the staged state is identical, so no web board is drawn
-   (the same blessing ComposePickWeb's refusals ride on). */
+   grid's part, the region dimmed and emptied the way this grid is (the
+   `body` chip on `ComposePickWeb` draws it; seam 245, ask 13 A). */
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="New post" />
+      <WizardHeader title="New post" backLabel="Back" />
       <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
       <PickTray count={1} caption="A video is the whole post. Its cover comes next.">
         <MediaThumb src="post-photo.jpg" alt="" width={114} height={64} video onRemove={() => {}} removeLabel="Remove this video" />

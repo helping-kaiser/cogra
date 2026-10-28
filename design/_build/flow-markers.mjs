@@ -172,6 +172,7 @@ export const FLOW_MARKERS = {
 // chats and bell in the sweeps further down (the active tab's edge is `self`).
 Object.assign(FLOW_MARKERS, {
   WalletComingSoon: [...nav(1)],
+  ExploreComingSoon: [...nav(1)],
 });
 
 // The Feed & Search page. Signed-in post cards carry standings, so the stance
@@ -773,13 +774,12 @@ Object.assign(FLOW_MARKERS, {
   ComposeWords: composeWords("1px solid var(--border-field)"),
   ComposeWordsCaps: composeWords("1px solid var(--error)"),
   ComposePick: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
     { n: 5, find: ">Show all</button>", tag: "button" },
-    { n: 6, find: ">Cover</span>", tag: "div" },
-    { n: 7, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 8, find: ">Your photos app</span>", tag: "button" },
     // Every tile of the roll is the same control repeated — one edge covers
     // them, the way one edge covers a feed's repeated per-post affordances.
@@ -817,7 +817,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Next</button>", tag: "button" },
   ],
   ComposeDraft: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Discard</button>", tag: "button" },
     { n: 4, find: ">Continue</button>", tag: "button" },
@@ -969,7 +969,8 @@ Object.assign(FLOW_MARKERS, {
   ComposePicked: [
     { n: 1, find: "cursor:grab", tag: "button", all: true },
     { n: 2, find: ">Describe</button>", tag: "button", all: true },
-    { n: 3, find: 'aria-label="Remove', tag: "button", all: true },
+    { n: 3, find: 'aria-label="Remove the cover"', tag: "button" },
+    { n: 3, find: 'aria-label="Remove picture ', tag: "button", all: true },
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
     { n: 6, find: ">Make it the cover</button>", tag: "button", all: true },
@@ -977,13 +978,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Move down</button>", tag: "button", all: true },
   ],
   ComposePickedErrors: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
     { n: 5, find: ">Show all</button>", tag: "button" },
     { n: 6, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 7, find: ">Remove it</button>", tag: "button", all: true },
+    { n: 8, find: ">Your photos app</span>", tag: "button" },
+    { n: 9, find: "position:relative;width:125px", tag: "div", all: true },
   ],
   ComposeDescribe: [
     { n: 1, find: 'aria-label="Describing pictures"', tag: "button" },
@@ -998,7 +1001,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   ComposePickVideo: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
@@ -1006,7 +1009,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   // The same step once a cover exists: one anatomy, so one marker list.
   ComposePickVideoCover: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
@@ -1148,13 +1151,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Back</button>", tag: "button" },
   ],
   ComposePickWeb: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
     { n: 5, find: ">Show all</button>", tag: "button" },
-    { n: 6, find: 'aria-label="Remove this picture"', tag: "button" },
-    { n: 7, find: "1px dashed var(--border-field)", tag: "div" },
+    { n: 6, find: 'aria-label="Remove this picture"', tag: "button", all: true },
+    { n: 6, find: 'aria-label="Remove this video"', tag: "button" },
+    { n: 7, find: "1px dashed var(--border-field)", tag: "div", all: true },
     { n: 8, find: ">Choose from your files</button>", tag: "button" },
   ],
   AvatarCrop: [
@@ -2657,7 +2661,7 @@ const BAND_CHATS = {
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
   FeedGallery: 15, FeedCover: 17, FeedWordsSensitive: 16,
-  WalletComingSoon: 6,
+  WalletComingSoon: 6, ExploreComingSoon: 6,
 };
 for (const [board, n] of Object.entries(BAND_CHATS)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Chats"', tag: "button" });
@@ -2676,7 +2680,7 @@ const BAND_BELL = {
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
   FeedCover: 19, FeedWordsSensitive: 18,
-  WalletComingSoon: 7,
+  WalletComingSoon: 7, ExploreComingSoon: 7,
   Profile: 15, ProfileApplicant: 15,
 };
 for (const [board, n] of Object.entries(BAND_BELL)) {

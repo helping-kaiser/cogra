@@ -16,6 +16,8 @@ ALWAYS the stage never stands on an empty body
 
 ALWAYS composeDetails.mediaRow carries no crop or edit shortcut of its own
 
+ALWAYS the first picture on composeDetails.mediaRow wears the Cover badge
+
 WHEN tap composeDetails.mediaRow -> the Show all sheet opens over the stage
 
 ALWAYS composeDetails.describeRow.reason reads Read aloud to people who can't see it.
