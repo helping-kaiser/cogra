@@ -671,6 +671,21 @@ class StancePadTest {
         compose.onNodeWithTag("${TAG}_stance_landing").assertTextEquals("This takes you back to zero.")
     }
 
+    // EmptySignConfirm.md (round 20): the pad's landing under a pick that lands
+    // at (0, 0) with nothing standing reads Resulting opinion 🤷 Says nothing.
+    @Test
+    fun anEmptyLandingSaysNothingNeverBackToZero() {
+        val empty = StanceLanding(StancePoint.Origin, true, true, true, empty = true)
+        show(open.copy(pick = StancePoint.Origin, landing = empty))
+        compose.onNodeWithTag("${TAG}_stance_landing")
+            .assertContentDescriptionEquals("Resulting opinion: Says nothing.")
+        compose.onNodeWithText("Says nothing.", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("🤷", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("This takes you back to zero.").assertDoesNotExist()
+        // The 🤷 opens nothing: the unreachable state's door is not the empty sign's.
+        compose.onNodeWithTag("${TAG}_stance_landing_zero", useUnmergedTree = true).assertDoesNotExist()
+    }
+
     @Test
     fun aTopicsLandingOnZeroReadsAsNoOpinion() {
         show(

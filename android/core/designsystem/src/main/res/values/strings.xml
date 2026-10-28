@@ -233,6 +233,9 @@
     <string name="stance_unreachable_against">Against it, no interest either way</string>
     <string name="stance_unreachable_tail">this won\'t shape anyone\'s feed.</string>
     <string name="stance_unreachable_line">%1$s — %2$s</string>
+    <!-- The master's EMPTY_LANDING_WORDS (round 20, blessed round 21): a (0, 0)
+         landing where nothing stands reads `Resulting opinion 🤷 Says nothing.` -->
+    <string name="stance_landing_empty">%1$s.</string>
     <!-- The master's BORROWED_KEPT_LINE: under an unreachable or severed
          landing while the reader still borrows a view. Warns, never blocks. -->
     <string name="stance_borrowed_kept">You\'d keep your borrowed view — no feed of your own yet.</string>

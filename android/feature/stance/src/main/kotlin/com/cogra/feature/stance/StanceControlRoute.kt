@@ -31,6 +31,7 @@ import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.domain.stance.isEmptySign
 
 /**
  * The stance control for one [target]. The view model is scoped to the
@@ -195,6 +196,9 @@ internal fun TargetStance.toControlState(
             inertDirected = it.inertDirected,
             inertInterest = it.inertInterest,
             severance = it.severance,
+            // The trigger split's own reading (`isEmptySign`): the landing
+            // routes the line exactly as Set routes the ask.
+            empty = isEmptySign(it, standingRecords, standingSevered),
         )
     },
     busy = busy,

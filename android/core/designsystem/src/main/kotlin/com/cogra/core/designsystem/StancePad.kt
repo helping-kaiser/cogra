@@ -167,6 +167,12 @@ data class StanceLanding(
     val inertDirected: Boolean,
     val inertInterest: Boolean,
     val severance: Boolean,
+    /**
+     * A `(0, 0)` landing over a bundle where nothing stands — no record ever,
+     * or already walked back (`localLanding`'s `nothingStands`): the empty
+     * sign's, never a walk-back. It reads `Resulting opinion 🤷 Says nothing.`
+     */
+    val empty: Boolean = false,
 )
 
 /**
