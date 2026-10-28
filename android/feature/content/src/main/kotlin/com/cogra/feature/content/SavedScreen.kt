@@ -65,7 +65,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -93,16 +92,13 @@ import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SurfaceCover
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.PostView
-import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
 import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.saved.ComfortKind
-import com.cogra.domain.saved.CommentTarget
 import com.cogra.domain.saved.SavedCard
 import com.cogra.domain.saved.SavedEntry
 import com.cogra.domain.saved.SavedOverlay
 import com.cogra.domain.saved.SavedWrites
-import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.saved.LocalSavedHost
 import com.cogra.feature.saved.SavedUiState
@@ -110,7 +106,6 @@ import com.cogra.feature.saved.SavedViewModel
 import com.cogra.feature.saved.overlayState
 import com.cogra.feature.saved.rememberHiddenSet
 import com.cogra.feature.saved.rememberSavedHost
-import com.cogra.feature.stance.StanceControlRoute
 import kotlinx.coroutines.launch
 import com.cogra.feature.saved.R as SavedR
 
@@ -127,19 +122,10 @@ private val SAVED_PLACEMENT = CardPlacement(
     menuRows = emptySet(),
 )
 
-/** Where the doors a Saved card opens are asked to land. */
-data class SavedDoors(
-    val onOpenPost: (String) -> Unit,
-    /** The thread over [postId], landed on [commentId]; [aimReply] opens the composer aimed at it. */
-    val onOpenComment: (postId: String, commentId: String, aimReply: Boolean) -> Unit,
-    val onOpenActor: (String) -> Unit,
-    val onOpenTopic: (String) -> Unit,
-)
-
 @Composable
 fun SavedRoute(
     onBack: () -> Unit,
-    doors: SavedDoors,
+    doors: CardDoors,
     viewerId: String?,
     signedIn: Boolean?,
     onEditPost: (String) -> Unit,
@@ -165,17 +151,17 @@ fun SavedRoute(
         onSearch = viewModel::search,
         onBack = onBack,
         doors = doors,
-        hooks = SavedCardHooks(
+        hooks = CardHooks(
             viewerId = viewerId,
             onShare = { url -> context.sharePost(url) },
-            shareUrls = SavedShareUrls(viewModel::postShareUrl, viewModel::commentShareUrl, viewModel::profileShareUrl),
+            shareUrls = CardShareUrls(viewModel::postShareUrl, viewModel::commentShareUrl, viewModel::profileShareUrl),
             onEditPost = onEditPost,
             onCitePost = onCitePost,
             onReveal = viewModel::onReveal,
             stanceControl = nodeStanceControl,
         ),
         commentsSheet = { postId, onDismiss ->
-            SavedThread(
+            ListThread(
                 postId = postId,
                 post = state.postOf(postId),
                 viewerId = viewerId,
@@ -194,50 +180,6 @@ fun SavedRoute(
         reportSheet = reportDoor(null, SAVED_REPORT_SHEET),
     )
 }
-
-/** THE THREAD, OVER SAVED: a post card's comment count raises it, as over the feed. */
-@Composable
-private fun SavedThread(
-    postId: String,
-    post: PostView?,
-    viewerId: String?,
-    signedIn: Boolean?,
-    onDismiss: () -> Unit,
-    doors: SavedDoors,
-    onCitePost: (String) -> Unit,
-    onReply: (ReplyTarget) -> Unit,
-    onEditComment: (commentId: String, parentTitle: String) -> Unit,
-    onSignInOrJoin: () -> Unit,
-    commentsReturn: CommentsReturn,
-    onCommentsReturnConsumed: () -> Unit,
-    onCommentsDepart: (CommentsScroll) -> Unit,
-) {
-    CommentsSheetRoute(
-        postId = postId,
-        viewerId = viewerId,
-        signedIn = signedIn,
-        onDismiss = onDismiss,
-        onReply = { request -> (request.comment?.asReplyTarget() ?: post?.asReplyTarget())?.let(onReply) },
-        onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
-        onOpenActor = doors.onOpenActor,
-        onOpenTopic = doors.onOpenTopic,
-        onReference = onCitePost,
-        onSignInOrJoin = onSignInOrJoin,
-        onDepart = onCommentsDepart,
-        commentsReturn = commentsReturn,
-        onReturnConsumed = onCommentsReturnConsumed,
-        stanceControl = { target, tag ->
-            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
-        },
-    )
-}
-
-/** What a card's share hands over: the thing's own address. */
-data class SavedShareUrls(
-    val post: (String) -> String,
-    val comment: (postId: String, commentId: String) -> String,
-    val profile: (String) -> String,
-)
 
 /** The report confirm over Saved — no Saved board draws one, so it keeps its tag. */
 internal const val SAVED_REPORT_SHEET = "saved_report_sheet"
@@ -276,40 +218,6 @@ internal fun savedView(state: SavedUiState, overlay: SavedOverlay): SavedView {
     return SavedView(shown, empty, none, fielded = !empty && (shown.isNotEmpty() || searching))
 }
 
-/**
- * What the route hands Saved's cards beyond their doors: the viewer, the
- * shares, the menus' routes, the veil's reveal and the stance control —
- * hoisted, so the screen stays free of DI and previewable.
- */
-data class SavedCardHooks(
-    val viewerId: String? = null,
-    val onShare: (String) -> Unit = {},
-    val shareUrls: SavedShareUrls = SavedShareUrls({ it }, { _, comment -> comment }, { it }),
-    val onEditPost: (String) -> Unit = {},
-    val onCitePost: (String) -> Unit = {},
-    val onReveal: (String, SensitiveMark) -> Unit = { _, _ -> },
-    val stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit =
-        { _, _, _ -> },
-)
-
-/** What every card on Saved is handed: the route's hooks, its doors, the reveals and the sheets it raises. */
-internal data class SavedCardActions(
-    val hooks: SavedCardHooks,
-    val doors: SavedDoors,
-    val reveals: Map<String, SensitiveMark>,
-    val onOpenComments: (String) -> Unit,
-    val onReport: (String) -> Unit,
-) {
-    val viewerId: String? get() = hooks.viewerId
-    val onShare: (String) -> Unit get() = hooks.onShare
-    val shareUrls: SavedShareUrls get() = hooks.shareUrls
-    val onEditPost: (String) -> Unit get() = hooks.onEditPost
-    val onCitePost: (String) -> Unit get() = hooks.onCitePost
-    val onReveal: (String, SensitiveMark) -> Unit get() = hooks.onReveal
-    val stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit
-        get() = hooks.stanceControl
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedScreen(
@@ -320,9 +228,9 @@ fun SavedScreen(
     onRetryMore: () -> Unit,
     onSearch: (String) -> Unit,
     onBack: () -> Unit,
-    doors: SavedDoors,
+    doors: CardDoors,
     hidden: HiddenSet? = null,
-    hooks: SavedCardHooks = SavedCardHooks(),
+    hooks: CardHooks = CardHooks(),
     commentsSheet: @Composable (postId: String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
     reportSheet: ReportSheetSlot = { _, _, _ -> },
 ) {
@@ -337,8 +245,8 @@ fun SavedScreen(
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var reportFor by remember { mutableStateOf<String?>(null) }
     val notify = rememberSavedNotify(snackbar)
-    LoadNextAtTheTail(listState, state, view.shown.size, onLoadMore)
-    val actions = SavedCardActions(hooks, doors, state.reveals, { commentsFor = it }, { reportFor = it })
+    LoadNextAtTheTail(listState, state.hasNextPage, state.moreFailed, view.shown.size, onLoadMore)
+    val actions = CardActions(hooks, doors, state.reveals, { commentsFor = it }, { reportFor = it })
     CompositionLocalProvider(LocalCoveringLayers provides layers, LocalSavedHost provides savedHost) {
         SavedScaffold(
             state = state,
@@ -372,7 +280,7 @@ private fun SavedScaffold(
     view: SavedView,
     listState: LazyListState,
     focus: CardFocus,
-    actions: SavedCardActions,
+    actions: CardActions,
     suspended: Boolean,
     onRefresh: () -> Unit,
     onRetryMore: () -> Unit,
@@ -451,7 +359,7 @@ private fun SavedContent(
     listState: LazyListState,
     suspended: Boolean,
     focus: CardFocus,
-    actions: SavedCardActions,
+    actions: CardActions,
     onRefresh: () -> Unit,
     onRetryMore: () -> Unit,
     onShowEverything: () -> Unit,
@@ -494,7 +402,7 @@ private fun SavedContent(
 
 /** One kept thing, as its kind's own feed card. */
 @Composable
-private fun SavedCardFor(entry: SavedEntry, actions: SavedCardActions) {
+private fun SavedCardFor(entry: SavedEntry, actions: CardActions) {
     val doors = actions.doors
     when (val card = entry.card) {
         is SavedCard.Post -> PostCard(
@@ -515,7 +423,14 @@ private fun SavedCardFor(entry: SavedEntry, actions: SavedCardActions) {
             placement = SAVED_PLACEMENT,
         )
 
-        is SavedCard.Comment -> SavedCommentCard(card, actions)
+        is SavedCard.Comment -> ListCommentCard(
+            comment = card.comment,
+            target = card.target,
+            threadPostId = card.threadPostId,
+            node = SAVED / "commentCard",
+            testTagPrefix = "saved_comment_${card.comment.id}",
+            actions = actions,
+        )
 
         is SavedCard.Person -> ProfileFeedCard(
             profile = card.profile,
@@ -526,41 +441,6 @@ private fun SavedCardFor(entry: SavedEntry, actions: SavedCardActions) {
             onShare = { actions.onShare(actions.shareUrls.profile(card.profile.handle)) },
             stanceControl = actions.stanceControl,
         )
-    }
-}
-
-/** A kept comment as the comment feed card, its doors landing on its thread. */
-@Composable
-private fun SavedCommentCard(card: SavedCard.Comment, actions: SavedCardActions) {
-    val doors = actions.doors
-    val comment = card.comment
-    val post = card.threadPostId
-    var licenseOpen by remember(comment.id) { mutableStateOf(false) }
-    CommentFeedCard(
-        comment = comment,
-        target = card.target,
-        node = SAVED / "commentCard",
-        testTagPrefix = "saved_comment_${comment.id}",
-        revealed = actions.reveals.isRevealed(comment.id, comment.sensitiveMark()),
-        onReveal = { actions.onReveal(comment.id, comment.sensitiveMark()) },
-        onOpenTarget = {
-            when (val target = card.target) {
-                is CommentTarget.Post -> doors.onOpenPost(target.id)
-                is CommentTarget.Comment -> post?.let { doors.onOpenComment(it, target.id, false) }
-                null -> Unit
-            }
-        },
-        onOpenPlace = { post?.let { doors.onOpenComment(it, comment.id, false) } },
-        onReply = { post?.let { doors.onOpenComment(it, comment.id, true) } },
-        onShare = { post?.let { actions.onShare(actions.shareUrls.comment(it, comment.id)) } },
-        onOpenActor = doors.onOpenActor,
-        onOpenTopic = doors.onOpenTopic,
-        onCite = { actions.onCitePost(comment.id) },
-        onLicense = { licenseOpen = true },
-        stanceControl = actions.stanceControl,
-    )
-    if (licenseOpen) {
-        LicenseSheet(license = comment.license, onDismiss = { licenseOpen = false })
     }
 }
 
@@ -590,18 +470,6 @@ private fun rememberCardFocus(shown: List<SavedEntry>, overlay: SavedOverlay): C
         runCatching { (next?.takeIf(focus::has)?.let(focus::card) ?: focus.empty).requestFocus() }
     }
     return focus
-}
-
-/** THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (readme §13): asked a few cards short of the end. */
-@Composable
-private fun LoadNextAtTheTail(list: LazyListState, state: SavedUiState, cards: Int, onLoadMore: () -> Unit) {
-    LaunchedEffect(list, state.hasNextPage, state.moreFailed, cards) {
-        snapshotFlow { list.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1 }
-            .collect { last ->
-                val nearEnd = last >= cards - FEED_TAIL_DISTANCE
-                if (state.hasNextPage && !state.moreFailed && nearEnd) onLoadMore()
-            }
-    }
 }
 
 @Composable

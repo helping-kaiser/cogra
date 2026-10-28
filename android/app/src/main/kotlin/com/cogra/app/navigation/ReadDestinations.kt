@@ -25,7 +25,7 @@ import com.cogra.feature.content.CHATS_FROM_OWN_PROFILE
 import com.cogra.feature.content.ChatsComingSoonRoute
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.PostDetailRoute
-import com.cogra.feature.content.SavedDoors
+import com.cogra.feature.content.CardDoors
 import com.cogra.feature.content.SavedRoute
 import com.cogra.feature.home.NewerVersionAnnouncement
 import com.cogra.feature.home.VouchedInScreen
@@ -349,7 +349,7 @@ private fun ShellScope.SavedDestination(entry: NavBackStackEntry) {
     val accountId by authState.accountId.collectAsStateWithLifecycle()
     SavedRoute(
         onBack = { navController.navigateUp() },
-        doors = SavedDoors(
+        doors = CardDoors(
             onOpenPost = { id -> navController.navigate(PostDetail(id, from = SAVED_ORIGIN)) },
             onOpenComment = { postId, commentId, aimReply ->
                 navController.navigate(
