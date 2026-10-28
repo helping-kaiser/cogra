@@ -103,6 +103,8 @@ type FixtureComment = {
   references?: ReferenceFixture[];
   attachments?: unknown[];
   attachmentsStatus?: string;
+  /** The node's mark (`Comment.removal`); absent, it stands. */
+  removal?: { at: string; by: string };
 };
 
 /**
@@ -166,6 +168,8 @@ function commentNode(comment: FixtureComment): Record<string, unknown> {
     updatedAt: comment.edited ? "2026-08-12T11:00:00Z" : "2026-08-12T10:05:00Z",
     landing: landing(comment.pending),
     moderationStatus: "NORMAL",
+    removal: comment.removal ? { __typename: "Removal", ...comment.removal } : null,
+    genesisRecordId: `rec-${comment.id}`,
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: comment.topics ?? [],
     references: comment.references ?? [],
@@ -195,6 +199,7 @@ function detail(
     attachments?: unknown[];
     attachmentsStatus?: string;
     moderationStatus?: string;
+    removal?: { at: string; by: string };
   } = {},
 ) {
   return {
@@ -217,6 +222,8 @@ function detail(
       updatedAt: "2026-08-12T10:00:00Z",
       landing: landing(postPending),
       moderationStatus: body.moderationStatus ?? "NORMAL",
+      removal: body.removal ? { __typename: "Removal", ...body.removal } : null,
+      genesisRecordId: "rec-p1",
       license: { __typename: "License", attribution: 0, provenance: 0 },
       topics: postTopics,
       references: postReferences,
@@ -976,26 +983,344 @@ describe("PostView", () => {
     expect(back).toHaveAttribute("href", "/saved");
   });
 
-  // The dialog ships; the removal does not (jakob 2026-09-14 — erasure is
-  // slice 8's, whole).
-  it("opens the think-twice dialog from Remove, and removes nothing", async () => {
-    server.use(
-      ...thread("acct-1", []),
-    );
-    renderWithProviders(<PostView postId="p1" />, {
-      store: storeFor("acct-1"),
-      writeSigner: fakeWriteSigner(),
-    });
-    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("postDetail.menuSheet.remove"));
-    const dialog = screen.getByTestId("post-menu-remove-confirm") as HTMLDialogElement;
-    expect(dialog.open).toBe(true);
-    expect(dialog).toHaveTextContent("This is immediate and permanent.");
+  // CONTENT REMOVAL, on the detail and in its thread — compiled 1:1 from
+  // RemoveMenu.md:19, Removed.md:3-17, CommentMenuOwn.md:3/:7/:13 and
+  // CommentRemoved.md:3-21. The removal itself runs against MSW: the
+  // mutation, the node's re-read, and the reads that follow.
+  describe("content removal", () => {
+    // The removal's own moment, a moment ago — the mark's `when` reads `now`.
+    const removedAt = () => new Date(Date.now() - 20_000).toISOString();
+    let removals: string[] = [];
 
-    fireEvent.click(screen.getByTestId("post-menu-remove-confirm-remove"));
-    expect(dialog.open).toBe(false);
-    // The post is still on the page: nothing was removed.
-    expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
+    /** The server's side of a taken removal: the verb, and the node's mark after it. */
+    function removalHandlers(kind: "post" | "comment", by = "AUTHOR") {
+      const at = removedAt();
+      return [
+        gqlLink.mutation("RemoveContent", ({ variables }) => {
+          removals.push(variables.record as string);
+          return HttpResponse.json({
+            data: {
+              removeContent: {
+                __typename: "RemoveContentPayload",
+                records: [
+                  { __typename: "Record", id: variables.record, payloadState: "REDUCED", redactedAt: at },
+                ],
+                userErrors: [],
+              },
+            },
+          });
+        }),
+        gqlLink.query(kind === "post" ? "PostRemoval" : "CommentRemoval", ({ variables }) =>
+          HttpResponse.json({
+            data: {
+              [kind]: {
+                __typename: kind === "post" ? "Post" : "Comment",
+                id: variables.id,
+                removal: { __typename: "Removal", at, by },
+              },
+            },
+          }),
+        ),
+      ];
+    }
+
+    beforeEach(() => {
+      removals = [];
+    });
+
+    /** The own post's menu, up to its Remove. */
+    async function raiseRemove() {
+      fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+      fireEvent.click(screen.getByTestId("postDetail.menuSheet.remove"));
+      return screen.getByTestId("postDetail.dialog") as HTMLDialogElement;
+    }
+
+    // RemoveMenu.md:19 WHEN tap Remove -> the think-twice dialog opens — and
+    // the sheet it was tapped in closes (RemoveMenu, graph:1487).
+    it("opens the think-twice dialog from the own menu's Remove, the sheet closing", async () => {
+      server.use(...thread("acct-1", []));
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      const dialog = await raiseRemove();
+      expect(dialog.open).toBe(true);
+      expect(dialog).toHaveAccessibleName("Remove this post?");
+      expect(dialog).toHaveTextContent("This is immediate and permanent.");
+      expect((screen.getByTestId(byNode("postDetail.menuSheet")) as HTMLDialogElement).open).toBe(false);
+      expect(screen.getByTestId(byNode("postDetail.menuSheet"))).toHaveAccessibleName("Post actions");
+    });
+
+    // RemoveConfirm.md:11 WHEN the removal is taken -> the post stands as its
+    // mark; Removed.md:3/:7/:11/:13 — the mark in the words' place, its two
+    // lines and its moment, back alone in the header, and the skeleton kept.
+    it("stands the detail as Removed once the removal is taken", async () => {
+      let removed = false;
+      server.use(
+        ...threadFrom(() =>
+          removed
+            ? detail("acct-1", [{ id: "c1", body: "First!" }], undefined, false, [], [], {
+                content: null,
+                removal: { at: removedAt(), by: "AUTHOR" },
+              })
+            : detail("acct-1", [{ id: "c1", body: "First!" }]),
+        ),
+        ...removalHandlers("post"),
+        gqlLink.query("CitedByCount", () =>
+          HttpResponse.json({ data: { records: { __typename: "RecordConnection", totalCount: 3 } } }),
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      expect(await screen.findByTestId(byNode("postDetail.card.citedBy"))).toBeInTheDocument();
+      const dialog = await raiseRemove();
+      removed = true;
+      fireEvent.click(screen.getByTestId("postDetail.dialog.remove"));
+
+      const mark = await screen.findByTestId(byNode("postDetail.card.removed"));
+      await waitFor(() => expect(dialog.isConnected && dialog.open).toBe(false));
+      // The whole-chain removal, named by the genesis record.
+      expect(removals).toEqual(["rec-p1"]);
+      expect(screen.getByTestId(byNode("postDetail.card.removed.line"))).toHaveTextContent(
+        "Removed by its author",
+      );
+      expect(screen.getByTestId(byNode("postDetail.card.removed.detail"))).toHaveTextContent(
+        "The words and pictures are gone. The post's place in the thread, and every response, remain.",
+      );
+      expect(screen.getByTestId(byNode("postDetail.card.removed.when"))).toHaveTextContent("now");
+      // Removed.md:9 — never the platform's words.
+      expect(mark).not.toHaveTextContent("Removed under the platform's rules");
+      // Removed.md:11 — the header carries the way back alone and no menu.
+      expect(screen.getByTestId(byNode("postDetail.header.back"))).toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("postDetail.header.menu"))).not.toBeInTheDocument();
+      // The words are gone, and the cited-by line with them (`PostCard.jsx`).
+      expect(screen.queryByTestId(byNode("postDetail.card.title"))).not.toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("postDetail.card.body"))).not.toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("postDetail.card.citedBy"))).not.toBeInTheDocument();
+      // Removed.md:13 — its author chip, its opinion, its comment count, its share.
+      expect(screen.getByTestId(byNode("postDetail.card.authorChip"))).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.card.actionRow.stance.anchor"))).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.card.actionRow.comments"))).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.card.actionRow.share"))).toBeInTheDocument();
+    });
+
+    // Removed.md:15 WHEN tap the comment count -> the thread opens with every
+    // response in it.
+    it("opens the whole thread from a removed post's comment count", async () => {
+      server.use(
+        ...thread(
+          "acct-1",
+          [
+            { id: "c1", body: "First!" },
+            { id: "c2", body: "Second" },
+          ],
+          undefined,
+          false,
+          [],
+          [],
+          { content: null, removal: { at: removedAt(), by: "AUTHOR" } },
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+      await screen.findByTestId(byNode("postDetail.card.removed"));
+      await openComments();
+      expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
+      expect(screen.getByTestId("post-comment-c2")).toHaveTextContent("Second");
+    });
+
+    // Removed.md:5 — swept with its author's account deletion, it reads the
+    // author's own mark: AUTHOR and ACCOUNT never branch the words.
+    it("reads an account sweep as Removed by its author", async () => {
+      server.use(
+        ...thread("u1", [], undefined, false, [], [], {
+          content: null,
+          removal: { at: removedAt(), by: "ACCOUNT" },
+        }),
+      );
+      renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+      expect(await screen.findByTestId(byNode("postDetail.card.removed.line"))).toHaveTextContent(
+        "Removed by its author",
+      );
+    });
+
+    // The mark is read off `removal`, never `moderationStatus` (the packet's
+    // item 11): a removed post whose fields still read NORMAL wears it.
+    it("reads the mark off the node's removal, whatever its fields still say", async () => {
+      server.use(
+        ...thread("u1", [], undefined, false, [], [], { removal: { at: removedAt(), by: "AUTHOR" } }),
+      );
+      renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+      expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("postDetail.card.body"))).not.toBeInTheDocument();
+    });
+
+    // RM-G8's build word: Removed is the detail in its removed state, so the
+    // back arrow names the origin it arrived with (the origin table).
+    it("keeps the origin's back label on a removed post", async () => {
+      server.use(
+        ...thread("u1", [], undefined, false, [], [], {
+          content: null,
+          removal: { at: removedAt(), by: "AUTHOR" },
+        }),
+      );
+      renderWithProviders(<PostView postId="p1" from="saved" />, { writeSigner: fakeWriteSigner() });
+      await screen.findByTestId(byNode("postDetail.card.removed"));
+      expect(screen.getByTestId(byNode("postDetail.header.back"))).toHaveAttribute(
+        "aria-label",
+        "Back to Saved",
+      );
+    });
+
+    // RemoveConfirm.md:13 over the detail: nothing removed, the post whole.
+    it("leaves the post whole when the removal does not go through", async () => {
+      server.use(...thread("acct-1", []), gqlLink.mutation("RemoveContent", () => HttpResponse.error()));
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      const dialog = await raiseRemove();
+      fireEvent.click(screen.getByTestId("postDetail.dialog.remove"));
+      expect(await screen.findByTestId("postDetail.dialog.line")).toHaveTextContent(
+        "That didn't send. Try again.",
+      );
+      expect(dialog.open).toBe(true);
+      expect(screen.getByTestId(byNode("postDetail.card.body"))).toHaveTextContent("The body");
+      expect(screen.queryByTestId(byNode("postDetail.card.removed"))).not.toBeInTheDocument();
+    });
+
+    // CommentMenuOwn.md:3 — Save or Unsave, Cite in a new post, Remove, Cited
+    // by, Opinions on this, License terms; :7 — no Report row.
+    it("gives the reader's own comment the own menu's rows, in order", async () => {
+      server.use(...thread("u1", [{ id: "c1", body: "Mine", authorId: "acct-1" }]));
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      await openComments();
+      fireEvent.click(screen.getByTestId("comment-menu-c1"));
+      const order = Array.from(
+        screen.getByTestId("comment-menu-c1-sheet-body").querySelectorAll("[data-testid]"),
+        (node) => node.getAttribute("data-testid"),
+      );
+      expect(order).toEqual([
+        "comment-menu-save-c1",
+        "comment-menu-cite-c1",
+        "comment-menu-remove-c1",
+        "comment-menu-cited-by-c1",
+        "comment-menu-opinions-c1",
+        "comment-menu-license-c1",
+      ]);
+      expect(screen.getByTestId("comment-menu-c1-sheet")).toHaveAccessibleName("Comment actions");
+      expect(screen.queryByTestId("comment-menu-report-c1")).not.toBeInTheDocument();
+    });
+
+    it("gives someone else's comment no Remove", async () => {
+      server.use(...thread("u1", [{ id: "c1", body: "Theirs", authorId: "u2" }]));
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      await openComments();
+      fireEvent.click(screen.getByTestId("comment-menu-c1"));
+      expect(screen.queryByTestId("comment-menu-remove-c1")).not.toBeInTheDocument();
+    });
+
+    // CommentMenuOwn.md:13 WHEN tap Remove -> the menu closes AND the
+    // think-twice dialog comes up over the thread; CommentRemoveConfirm.md:11
+    // and CommentRemoved.md:3-19 — the mark in the comment's own place, the
+    // card's author, time and place kept, no ⋮ and no Edit, Reply and the face
+    // kept, its unfolded replies under it and readable, the thread's place held.
+    it("removes the reader's own comment in place, the thread standing as it was", async () => {
+      server.use(
+        ...thread("u1", [
+          { id: "c0", body: "Above" },
+          { id: "c1", body: "Mine", authorId: "acct-1", replyCount: 1 },
+        ]),
+        gqlLink.query("CommentReplies", () =>
+          HttpResponse.json({
+            data: {
+              comment: {
+                __typename: "Comment",
+                id: "c1",
+                replies: {
+                  __typename: "CommentConnection",
+                  edges: [{ __typename: "CommentEdge", node: commentNode({ id: "c1a", body: "An answer" }) }],
+                  pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+                },
+              },
+            },
+          }),
+        ),
+        ...removalHandlers("comment"),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      const sheet = await openComments();
+      fireEvent.click(screen.getByTestId("replies-more-c1"));
+      expect(await screen.findByTestId("post-comment-c1a")).toHaveTextContent("An answer");
+      const scroller = screen.getByTestId("comments-sheet-body");
+      scroller.scrollTop = 440;
+
+      fireEvent.click(screen.getByTestId("comment-menu-c1"));
+      fireEvent.click(screen.getByTestId("comment-menu-remove-c1"));
+      const dialog = screen.getByTestId("comment-remove-confirm") as HTMLDialogElement;
+      expect(dialog).toHaveAccessibleName("Remove this comment?");
+      expect((screen.getByTestId("comment-menu-c1-sheet") as HTMLDialogElement).open).toBe(false);
+      expect((sheet as HTMLDialogElement).open).toBe(true);
+
+      fireEvent.click(screen.getByTestId("comment-remove-confirm-remove"));
+      const mark = await screen.findByTestId("comment-c1-removed");
+      await waitFor(() => expect(screen.queryByTestId("comment-remove-confirm")).not.toBeInTheDocument());
+      expect(removals).toEqual(["rec-c1"]);
+      expect(mark).toHaveTextContent("Removed by its author");
+      expect(mark).toHaveTextContent("The comment's place in the thread, and every response, remain.");
+      expect(mark).toHaveTextContent("now");
+      const card = screen.getByTestId("post-comment-c1");
+      expect(card).not.toHaveTextContent("Mine");
+      // :3 its author and its time; :9 no menu; the removed card loses Edit.
+      expect(screen.getByTestId("comment-author-c1")).toBeInTheDocument();
+      expect(screen.getByTestId("comment-c1-timestamp")).toBeInTheDocument();
+      expect(screen.queryByTestId("comment-menu-c1")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("comment-edit-c1")).not.toBeInTheDocument();
+      // :11 its opinion and its Reply.
+      expect(screen.getByTestId("comment-stance-c1")).toBeInTheDocument();
+      expect(screen.getByTestId("comment-reply-c1")).toBeInTheDocument();
+      // :15 its replies stay under it, readable; its neighbours untouched.
+      expect(screen.getByTestId("post-comment-c1a")).toHaveTextContent("An answer");
+      expect(screen.getByTestId("post-comment-c0")).toHaveTextContent("Above");
+      // :19 the thread holds the reader's offset, and the sheet stays up.
+      expect(scroller.scrollTop).toBe(440);
+      expect((sheet as HTMLDialogElement).open).toBe(true);
+    });
+
+    // CommentRemoveConfirm.md:13 / :15 — not through, or kept: the thread
+    // stands as it was.
+    it("leaves the comment whole when the removal does not go through, or is kept", async () => {
+      server.use(
+        ...thread("u1", [{ id: "c1", body: "Mine", authorId: "acct-1" }]),
+        gqlLink.mutation("RemoveContent", () => HttpResponse.error()),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      await openComments();
+      fireEvent.click(screen.getByTestId("comment-menu-c1"));
+      fireEvent.click(screen.getByTestId("comment-menu-remove-c1"));
+      fireEvent.click(screen.getByTestId("comment-remove-confirm-remove"));
+      await waitFor(() =>
+        expect(screen.getByTestId("comment-remove-confirm-remove")).toHaveTextContent("Retry"),
+      );
+      expect(screen.queryByTestId("comment-c1-removed")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("comment-remove-confirm-keep"));
+      await waitFor(() => expect(screen.queryByTestId("comment-remove-confirm")).not.toBeInTheDocument());
+      expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("Mine");
+      expect(screen.getByTestId("comment-menu-c1")).toBeInTheDocument();
+    });
   });
 
   it("serves not-found for an unknown id", async () => {
@@ -2859,7 +3184,7 @@ describe("PostView — references", () => {
         );
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        expect(await screen.findByTestId("post-removed")).toBeInTheDocument();
+        expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toBeInTheDocument();
         expect(screen.queryByTestId("post-detail-clip")).toBeNull();
       });
     });
@@ -2896,7 +3221,7 @@ describe("PostView — references", () => {
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-      const mark = await screen.findByTestId("post-removed");
+      const mark = await screen.findByTestId(byNode("postDetail.card.removed"));
       expect(mark).toHaveTextContent("Removed by its author");
       expect(screen.queryByRole("img")).not.toBeInTheDocument();
       expect(screen.queryByTestId(byNode("postDetail.card.title"))).not.toBeInTheDocument();
@@ -2925,7 +3250,7 @@ describe("PostView — references", () => {
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-      expect(await screen.findByTestId("post-removed")).toHaveTextContent(
+      expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toHaveTextContent(
         "Removed under the platform's rules",
       );
     });
@@ -3462,7 +3787,7 @@ describe("PostView — opened from the feed", () => {
     const data = detail("u1", []);
     await openOnto(data, removed(data));
 
-    expect(await screen.findByTestId("post-removed")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toBeInTheDocument();
     expect(screen.queryByTestId(byNode("postDetail.card.title"))).not.toBeInTheDocument();
     expect(line()).not.toBeInTheDocument();
   });
@@ -3494,7 +3819,7 @@ describe("PostView — opened from the feed", () => {
     );
     await openOnto(data, fresh);
 
-    expect(await screen.findByTestId("post-removed")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toBeInTheDocument();
     expect(line()).not.toBeInTheDocument();
   });
 
@@ -3554,7 +3879,7 @@ describe("PostView — opened from the feed", () => {
     const element = screen.getByTestId("post-detail-clip-media").querySelector("video");
 
     read.release();
-    expect(await screen.findByTestId("post-removed")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toBeInTheDocument();
     expect(screen.queryByTestId("post-detail-clip")).toBeNull();
     expect(element?.isConnected ?? false).toBe(false);
     expect(line()).not.toBeInTheDocument();

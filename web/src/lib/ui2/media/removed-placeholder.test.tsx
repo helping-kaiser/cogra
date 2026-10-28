@@ -1,15 +1,37 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { RemovedPlaceholder } from "./removed-placeholder";
+import { REMOVED_COMMENT_NOTE, RemovedPlaceholder } from "./removed-placeholder";
 
 describe("RemovedPlaceholder", () => {
+  // Removed.md:3, :7 — the decided mark of copy-voice, both lines whole: the
+  // second names what went before what stays.
   it("says an author's own removal in the author's terms", () => {
     render(<RemovedPlaceholder reason="author" />);
     expect(screen.getByText("Removed by its author")).toBeInTheDocument();
     expect(
-      screen.getByText("The post's place in the thread, and every response, remain."),
+      screen.getByText(
+        "The words and pictures are gone. The post's place in the thread, and every response, remain.",
+      ),
     ).toBeInTheDocument();
+  });
+
+  // CommentRemoved.md:5 — the comment's second line swaps the noun.
+  it("takes the comment's second line where a comment wears it", () => {
+    render(<RemovedPlaceholder reason="author" note={REMOVED_COMMENT_NOTE} />);
+    expect(screen.getByText("Removed by its author")).toBeInTheDocument();
+    expect(
+      screen.getByText("The comment's place in the thread, and every response, remain."),
+    ).toBeInTheDocument();
+  });
+
+  // Round 20 (seam 245 ask 6): each line sets its whole role.
+  it("sets each line in its whole type role, and names its parts", () => {
+    render(<RemovedPlaceholder reason="author" when="2h" node={{ path: "postDetail.card.removed", key: "p1" }} />);
+    expect(screen.getByTestId("postDetail.card.removed.line").className).toContain("text-body-medium");
+    expect(screen.getByTestId("postDetail.card.removed.detail").className).toContain("text-body-small");
+    expect(screen.getByTestId("postDetail.card.removed.when")).toHaveTextContent("2h");
+    expect(screen.getByTestId("postDetail.card.removed.when").className).toContain("text-label-small");
   });
 
   it("says a platform removal as the public verdict it is", () => {
