@@ -511,6 +511,10 @@ pub async fn discard_pending(
 /// `instants` are parallel: each index is one write's node and the
 /// authoring instant its rows carry, and the pair is what every
 /// statement matches on.
+///
+/// A pending node a removal took down carries one row that is not pending
+/// — its head tombstone — and it goes with the node: on the graph nothing
+/// ever existed, so there is nothing left to mark.
 pub async fn discard_pending_many(
     tx: &mut Transaction<'_, Postgres>,
     nodes: &[Uuid],
@@ -544,6 +548,28 @@ pub async fn discard_pending_many(
          WHERE (actor_id, created_at)
                IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))
            AND pending",
+        nodes,
+        instants,
+    )
+    .execute(&mut **tx)
+    .await?;
+    sqlx::query!(
+        "DELETE FROM post_versions v
+         USING posts p
+         WHERE v.post_id = p.id AND p.landed_epoch IS NULL
+           AND (p.id, p.created_at)
+               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))",
+        nodes,
+        instants,
+    )
+    .execute(&mut **tx)
+    .await?;
+    sqlx::query!(
+        "DELETE FROM comment_versions v
+         USING comments c
+         WHERE v.comment_id = c.id AND c.landed_epoch IS NULL
+           AND (c.id, c.created_at)
+               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))",
         nodes,
         instants,
     )
@@ -674,15 +700,21 @@ pub async fn put_genesis_act_payload(
 /// and must not invent any — zero bytes is the canonical empty payload,
 /// so an empty row would claim the act carried nothing. Idempotent on the
 /// act id, like the full promotion: a row already there is kept.
+///
+/// `reduced_at` is the moment the redaction reaped the staged copy — when
+/// the payload actually left — not the landing's: the record's
+/// `redactedAt` is the mark's own moment, and the landing only records it.
 pub async fn insert_reduced_act_payload(
     tx: &mut Transaction<'_, Postgres>,
     act_id: &str,
+    reduced_at: Timestamp,
 ) -> Result<(), ContentError> {
     sqlx::query!(
         "INSERT INTO act_payloads (act_id, payload, content_salt, payload_state, reduced_at)
-         VALUES ($1, NULL, NULL, 'reduced', NOW())
+         VALUES ($1, NULL, NULL, 'reduced', $2)
          ON CONFLICT (act_id) DO NOTHING",
         act_id,
+        reduced_at,
     )
     .execute(&mut **tx)
     .await?;
@@ -760,24 +792,28 @@ pub async fn act_payload(pool: &PgPool, act_id: &str) -> Result<Option<ActPayloa
 }
 
 /// Which of `act_ids` carry a payload the controller has reduced
-/// (layers.md §5), in one round trip.
+/// (layers.md §5), each with the moment it was reduced, in one round
+/// trip.
 ///
-/// Batched rather than per-act because the field is resolved once per
+/// Batched rather than per-act because the fields are resolved once per
 /// record on a chronicle page, and an act with no payload row at all is
 /// simply absent — the reader's answer for both absences is the same:
 /// nothing has been removed.
 pub async fn reduced_payload_acts(
     pool: &PgPool,
     act_ids: &[String],
-) -> Result<Vec<String>, ContentError> {
-    Ok(sqlx::query_scalar!(
-        r#"SELECT act_id AS "act_id!"
+) -> Result<Vec<(String, Timestamp)>, ContentError> {
+    Ok(sqlx::query!(
+        r#"SELECT act_id, reduced_at AS "reduced_at!"
            FROM act_payloads
            WHERE act_id = ANY($1) AND payload_state = 'reduced'"#,
         act_ids,
     )
     .fetch_all(pool)
-    .await?)
+    .await?
+    .into_iter()
+    .map(|r| (r.act_id, r.reduced_at))
+    .collect())
 }
 
 /// The landing coordinates of a row, all-present or all-absent (the
