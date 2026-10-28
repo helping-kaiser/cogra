@@ -19,9 +19,9 @@ import com.cogra.domain.settings.SensitiveContentChoice
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.ThemeChoice
 import com.cogra.domain.testing.FakeDeviceData
-import com.cogra.domain.testing.FakeExploreDeviceStore
 import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.cogra.domain.testing.FakeDevicePreferences
+import com.cogra.domain.testing.FakeExploreDeviceStore
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
