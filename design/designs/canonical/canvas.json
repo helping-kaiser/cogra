@@ -1091,6 +1091,15 @@
       "page": "feed"
     },
     {
+      "file": "ExploreComingSoon.dc.html",
+      "title": "Explore · not here yet",
+      "x": 2400,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "ExploreNone.dc.html",
       "title": "Explore · nothing found",
       "x": 1440,
@@ -1680,7 +1689,7 @@
       "x": -6800,
       "y": 0,
       "w": 6380,
-      "h": 5368,
+      "h": 5456,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },

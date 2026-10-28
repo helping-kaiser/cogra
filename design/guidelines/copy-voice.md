@@ -567,6 +567,16 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
   is fine.`
 - `That's more than a post carries — up to ten pictures.`
 - `That's more than a comment carries — up to four pictures.`
+- `A post carries one video.` — a second clip in one photos-app batch, or
+  one dropped while a clip is staged; the batch's first clip is the body.
+  `A comment carries one video.` is its comment-scale twin. (Seam 245,
+  ask 13 H; *merged under the autonomy order, 2026-10-28; review pending*.)
+
+**The empty pick step says nothing.** With nothing picked, Next stays
+inert and no line asks for a pick: a refusal answers a file, never the
+absence of one, and the words path is silent the same way
+(`ComposeWords`). Never `Pick at least one picture.` (seam 245, ask 13 E;
+*merged under the autonomy order, 2026-10-28; review pending*).
 
 **Screens say MB; the caps are MiB** — MB on every user-facing surface,
 never MiB (jakob 2026-10-02). The limit enforced is the binary
@@ -630,6 +640,11 @@ gains the post scale's count (the comment scale already draws its
 Retry (`UploadErrorLine` with both ways out):
 
 - `That video didn't upload.`
+- `3 pictures didn't upload.` — the plural of `One picture didn't upload.`,
+  one line for every failure, with `Retry` (each failed one tries again)
+  and `Remove them` (each failed one leaves); at the gate it reads `3
+  pictures didn't upload. Signing waits for them.` (Seam 245, ask 13 G;
+  *merged under the autonomy order, 2026-10-28; review pending*.)
 
   The transport voice would write it *That didn't upload. Try again.*;
   the line is drawn short because Retry stands beside it and the pair
@@ -659,6 +674,11 @@ and the way back to it from an edit:
   from the clip (`ComposeCoverNoFrames`).
 - `No frame` — the neutral tile's label in that state
   (`ComposeCoverNoFrames`).
+- `Reading the video…` — the frame strip's caption while the device cuts
+  the clip's frames, standing only once they are 200 ms late (readme §4,
+  *Loading*), never a spinner; the in-flight grammar, saying what is
+  happening (seam 245, ask 13 G; *merged under the autonomy order,
+  2026-10-28; review pending*).
 
 ## The crops' how-to line
 
@@ -912,7 +932,9 @@ boards already speak, recorded so the registry is whole:
 - **A password field's eye** — `Show password` (`PasswordField`;
   `SignIn`, `Join`, `ChangePassword` and every form with a password).
 - **The wizard's two ends** — `Back a step`, the arrow on every wizard
-  stage; the X says what leaving keeps: `Leave — your
+  stage but the first: the post's pick step, whose arrow leaves toward
+  where compose began, is named `Back` (seam 245, ask 13 D; *merged under
+  the autonomy order, 2026-10-28; review pending*); the X says what leaving keeps: `Leave — your
   draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
   the edit is discarded` (a comment edit and a post edit), and a bare `Leave` on the
   profile's and the picture's seals and the picture's crop.
@@ -937,7 +959,10 @@ boards already speak, recorded so the registry is whole:
   the N citations`' twin for the tags row (`ComposeTags`); a thumb whose
   upload failed `Didn't upload`, one still going `Uploading, 65%`; the
   describe sheet's `Describe this picture` · `Describe this video`; the
-  sensitive sheet and its switch `Mark as sensitive`.
+  sensitive sheet and its switch `Mark as sensitive`; the first picture's
+  badge `Cover` wherever a picked set is shown — the tray, Show all and the
+  details row (the row's badge kept, seam 245 ask 13 F; *merged under the
+  autonomy order, 2026-10-28; review pending*).
 - **The edit's** — `What the edit signs`, the acts sheet's name
   (`EditActs`, `CommentEditActs`), and `The license never changes`, the
   lock beside the License row it cannot change (`EditCompose` and its
@@ -2353,6 +2378,50 @@ words, recorded so the registry is whole:
   acts row `Picture` reading `A new profile picture`, and the same
   signed-change line (`AvatarSeal`).
 
+**The chronicle's verbs, one per family it lists** (seam 245, ask 10;
+*merged under the autonomy order, 2026-10-28; review pending* — the
+lines blessed above stand as they are). A row's title is the act, past
+tense, its actor the profile's owner and never named; the aside names
+the target; the second line, where there is one, is the target's own
+words. A record is one row, whatever gesture signed it.
+
+- **A post** — `Published a post`, the title under it; any later record
+  of the post `Edited a post`, whatever it changed — words, media or the
+  backing. The disc `dynamic_feed`.
+- **A comment** — `Commented`, the words under it; a later record
+  `Edited a comment`. The disc `chat_bubble`.
+- **An opinion** — `Gave an opinion`, the aside the target: `on @mira`,
+  `on #saltmaps` for a topic, `on a post` · `on a comment` with the
+  post's title or the comment's words under it. The disc is the record's
+  own face; a revision is one more opinion given and reads the same, and
+  an empty sign is one too, wearing 🤷.
+- **A vouch** — the opinion that vouched someone in: `Vouched for`,
+  the aside `@rafa`, the disc the record's face. A later opinion on the
+  same person is `Gave an opinion`.
+- **A walk-back** — every record a walk-back signs: `Walked back an
+  opinion`, the aside the target as above, the disc 🤷 — never the
+  counter-record's own face, which would read as an opinion against.
+- **A tag** — `Tagged a post` · `Tagged a comment`, the aside the tag
+  (`#saltmaps`), the title or words under it; one taken off `Un-tagged
+  a post` · `Un-tagged a comment` (`Un-tag`'s past). The disc the `#`
+  monogram, as Explore's `Your topics` door wears it.
+- **A citation** — `Cited a post` · `Cited a comment`, the cited
+  thing's title or words under it, the disc that thing's own glyph; a
+  person cited `Mentioned`, the aside `@ada`, the disc their avatar; one
+  taken back `Withdrew a citation`, the cited thing under it.
+- **The profile** — the first record, the account's own registration,
+  `Joined`; every later one `Updated your profile` · `Updated their
+  profile`. The disc `person`.
+
+**A member's empty chronicle says only that** (seam 245, ask 11;
+*merged under the autonomy order, 2026-10-28; review pending*): a tab
+with nothing in it reads `Nothing here yet.` at `EmptyState`, the line
+alone. A member knows why their own is empty, and another's needs no
+reason; only the applicant's empty chronicle says what fills it and
+when, because that is new (`ProfileApplicant`, above). A member's
+`Everything` always holds their registration, so the line meets a
+member on `Posts` or `Comments` (`ProfileComments`' `comments` chip).
+
 ## The vouch-back ceremony
 
 Blessed with the close-out round. `VouchedIn` is the one board that
@@ -3428,16 +3497,20 @@ every card and detail already draws:
 
 ## The coming-soon surfaces
 
-Three places stand in for something drawn after the MVP: the screen the
+Four places stand in for something not here yet: the screen the
 band's chats icon opens (`ChatsComingSoon`, backlog item 68), the door
 the bar's wallet slot opens (`WalletComingSoon`, the v1.0.0 scope cut),
-and the hero card on Explore (backlog item 16). **All name the promise
-the same way** — the thing, an em dash, `coming soon`, then one sentence
-of what will be there:
+the door the bar's Explore slot opens until search ships
+(`ExploreComingSoon`, seam 245 ask 12), and the hero card on Explore
+(backlog item 16). **All name the promise the same way** — the thing,
+an em dash, `coming soon`, then one sentence of what will be there:
 
 - `Chats — coming soon. Your conversations will be here.`
 - `Wallet — coming soon. Your earnings will be here.` *(Ruled by jakob
   2026-09-25.)*
+- `Explore — coming soon. Search will be here.` — Explore's root is the
+  search field first, so the sentence names that. *(Merged under the
+  autonomy order, 2026-10-28; review pending.)*
 - `The Sky — coming soon` · `Your sky — every account a star, sized by
   your own paths to it.`
 
@@ -3453,7 +3526,7 @@ the words say that something is intended and nothing about when it
 lands.
 
 The Sky card carries the promise in its heading, where its name already
-was; the two doors carry it on the coming-soon card — the promise as the
+was; the three doors carry it on the coming-soon card — the promise as the
 headline, the sentence as its one line (`ComingSoonCard`, the
 drawn-anatomy ruling, jakob 2026-09-25). No coming-soon surface offers
 an action — nothing a reader can do fills any of them yet.

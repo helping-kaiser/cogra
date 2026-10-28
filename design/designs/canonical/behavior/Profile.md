@@ -26,6 +26,8 @@ ALWAYS a chronicle card reads Still settling GIVEN its act still pends
 
 ALWAYS a chronicle card with no destination is the same card, inert
 
+ALWAYS a tab with nothing in it reads Nothing here yet. below profile.tabRow, the line alone
+
 ALWAYS the chronicle offers no Show more, no page numbers and no count of what is left
 
 WHEN the chronicle is scrolled toward its end GIVEN more acts exist -> the next page arrives in place as the reader keeps going

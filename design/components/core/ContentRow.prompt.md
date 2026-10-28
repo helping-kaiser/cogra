@@ -3,7 +3,7 @@ Use `ContentRow` for every list line in the product: a 40px disc, two lines of w
 ```jsx
 <ContentRow variant="campaign" title="Sunday at the tide market" second="Open · ends 8 Sep" image={cover} trailing="12,500" onOpen={openCampaign} />
 <ContentRow variant="door" title="Campaigns" second="1 open · start a new one" glyph="campaign" onOpen={openCampaigns} />
-<ContentRow variant="chronicle" title="Signed a post" titleAside="2 acts" second="Sunday at the tide market — four pictures…" glyph="history" trailing="4d" chevron={false} inert />
+<ContentRow variant="chronicle" title="Published a post" second="Sunday at the tide market — four pictures…" glyph="dynamic_feed" trailing="4d" chevron={false} inert />
 ```
 
 The wallet's history has its own name for this row — use [`LedgerRow`](../wallet/LedgerRow.prompt.md), which speaks money (`words`, `context`, `amount`, `pending`) over this master.
