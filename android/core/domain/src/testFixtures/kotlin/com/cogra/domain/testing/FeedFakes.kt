@@ -2,6 +2,7 @@ package com.cogra.domain.testing
 
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
+import com.cogra.domain.feed.FeedCard
 import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedRankArgs
@@ -39,6 +40,12 @@ open class ScriptedFeedRepository : FeedRepository {
     /** When set, every window answers this instead. */
     var windowAnswer: Outcome<List<PostView>>? = null
 
+    /** The other kinds' cards a `FeedCards` read hydrates, by id. */
+    val cardsById = mutableMapOf<String, FeedCard>()
+
+    /** Every `FeedCards` read asked for, in call order. */
+    val cardReads = mutableListOf<List<String>>()
+
     override suspend fun ranking(viewer: String, args: FeedRankArgs): Outcome<FeedRanking?> {
         rankings += viewer to args
         return answer
@@ -48,6 +55,11 @@ open class ScriptedFeedRepository : FeedRepository {
         windows += ids
         windowAnswer?.let { return it }
         return Outcome.Success(ids.mapNotNull { posts[it] ?: defaultPost(it) })
+    }
+
+    override suspend fun cards(ids: List<String>): Outcome<List<FeedCard>> {
+        cardReads += ids
+        return Outcome.Success(ids.mapNotNull { cardsById[it] })
     }
 
     /** What an id hydrates to when [posts] names nothing for it; a plain post by default. */

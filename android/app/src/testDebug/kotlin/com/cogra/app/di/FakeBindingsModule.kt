@@ -34,6 +34,7 @@ import com.cogra.domain.UserProfile
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.SealedDraftStore
 import com.cogra.domain.deletion.AccountDeletionRepository
+import com.cogra.domain.feed.FeedCard
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
@@ -508,6 +509,9 @@ class ListingFeedRepository(private val content: ScriptedContentRepository) : Fe
         val byId = content.listing.associateBy { it.id }
         return Outcome.Success(ids.mapNotNull { byId[it] })
     }
+
+    // The scripted listing carries posts only.
+    override suspend fun cards(ids: List<String>): Outcome<List<FeedCard>> = Outcome.Success(emptyList())
 }
 
 /** The wizard's local draft, in memory (the shared fixture, under the name the app tests use). */
