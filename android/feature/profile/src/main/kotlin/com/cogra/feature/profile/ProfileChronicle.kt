@@ -29,8 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.cogra.core.designsystem.DataNode
-import com.cogra.core.designsystem.EMPTY_PICK_LABEL
-import com.cogra.core.designsystem.SEVERED_LABEL
 import com.cogra.core.designsystem.v2.atom.ContentRow
 import com.cogra.core.designsystem.v2.atom.ContentRowDisc
 import com.cogra.core.designsystem.v2.atom.ContentRowSecond
@@ -98,11 +96,7 @@ internal fun discOf(row: RecordRow): ContentRowDisc {
         row.family == Family.REGISTRATION -> ContentRowDisc.Glyph(Icons.Filled.Person)
         // The stance record's own face — which (0, 0) it reads, from the
         // record's own `severed`.
-        opinion != null -> ContentRowDisc.Face(
-            opinion.directed,
-            opinion.interest,
-            zeroLabel = if (opinion.severed) SEVERED_LABEL else EMPTY_PICK_LABEL,
-        )
+        opinion != null -> ContentRowDisc.Face(opinion.directed, opinion.interest, severed = opinion.severed)
         else -> ContentRowDisc.Glyph(Icons.Filled.History)
     }
 }
