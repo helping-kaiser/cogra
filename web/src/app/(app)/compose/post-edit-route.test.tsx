@@ -4,7 +4,7 @@
 // board is registered yet (feed-card-rework §16), so these pin behavior by test
 // id; the structural diff waits on registration.
 
-import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -12,9 +12,11 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { postBackingHandler } from "@/test/backing";
 import { fakeIdentityStore } from "@/test/identity";
 import { gqlLink, startMswServer } from "@/test/msw";
+import { echoedMedia } from "@/test/media-echo";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { PostEditRoute } from "./post-edit-route";
+import { EDIT_LEAVE_LABEL } from "./post-edit-view";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -787,12 +789,21 @@ describe("PostEditRoute — signing", () => {
     const signer = draw();
     fireEvent.change(await screen.findByTestId("post-edit-words"), { target: { value: "x" } });
     fireEvent.click(sign());
-    expect(await screen.findByTestId("post-edit-write-rule")).toHaveTextContent(
-      "You can’t sign right now.",
-    );
+    // EditCompose.md: "the notice's fact ends Nothing was signed or spent —
+    // your edit is still here. AND the way out under the notice reads Not now
+    // AND NEVER the notice says a draft is kept AND NEVER Retry appears".
+    const notice = await screen.findByTestId("post-edit-write-rule");
+    expect(notice).toHaveTextContent("You can't sign right now");
+    expect(notice).toHaveTextContent(/Nothing was signed or spent — your edit is still here\.$/);
+    expect(notice).not.toHaveTextContent(/draft/);
     expect(screen.queryByTestId("post-edit-sign")).not.toBeInTheDocument();
     expect(screen.queryByText(/Retry/)).not.toBeInTheDocument();
     expect(signer.signStaged).not.toHaveBeenCalled();
+    // Not now: the notice goes and the edit stands again with the batch as it was.
+    fireEvent.click(screen.getByTestId("post-edit-not-now"));
+    expect(screen.queryByTestId("post-edit-write-rule")).not.toBeInTheDocument();
+    expect(footer()).toHaveTextContent("You're signing 1 thing");
+    expect(sign()).not.toBeDisabled();
   });
 
   it("drops the held press when the prepared count is not the one the foot read", async () => {
@@ -808,5 +819,509 @@ describe("PostEditRoute — signing", () => {
     );
     expect(signer.signStaged).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();
+  });
+});
+
+// ---- the add paths (FC-8 remainder) -----------------------------------------
+//
+// EditCompose.md, EditComposeVideo.md and EditWords.md compiled: `+ Add
+// pictures`, the crop locked to the post's one shape, a clip's new face
+// through the cover's crop, and the upload gate with the held press. The
+// bytes really go up — the encoder stubbed (jsdom has no canvas), the upload
+// answered by MSW and held open where a line needs it running.
+
+// The device's upload digest, pinned so the server can echo it (test/media-echo.ts).
+vi.mock("@/lib/api/media-api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/media-api")>()),
+  uploadDigestOf: async () => "ee".repeat(32),
+}));
+
+/** jsdom has no canvas and no WebP encoder, so the encode is stubbed whole. */
+function installEncoder() {
+  vi.stubGlobal(
+    "createImageBitmap",
+    vi.fn(async () => ({ width: 1200, height: 1500, close: () => {} })),
+  );
+  class Canvas {
+    constructor(
+      public width: number,
+      public height: number,
+    ) {}
+    getContext() {
+      return { drawImage: () => {} };
+    }
+    async convertToBlob({ type }: { type: string }) {
+      return new Blob([new Uint8Array(8) as BlobPart], { type });
+    }
+  }
+  vi.stubGlobal("OffscreenCanvas", Canvas);
+  Object.defineProperty(URL, "createObjectURL", { value: () => "blob:preview", configurable: true });
+  Object.defineProperty(URL, "revokeObjectURL", { value: () => {}, configurable: true });
+}
+
+/**
+ * The upload, answered as the test says: each call waits on its own latch,
+ * and lands READY under the next id or fails on the network.
+ */
+function uploads() {
+  const latches: { release: (outcome: "land" | "fail") => void }[] = [];
+  let next = 0;
+  let calls = 0;
+  server.use(
+    gqlLink.mutation("UploadMedia", async () => {
+      calls += 1;
+      const outcome = await new Promise<"land" | "fail">((resolve) => latches.push({ release: resolve }));
+      if (outcome === "fail") return HttpResponse.error();
+      return HttpResponse.json({
+        data: {
+          uploadMedia: {
+            __typename: "UploadMediaPayload",
+            media: echoedMedia(`up-${next++}`),
+            userErrors: [],
+          },
+        },
+      });
+    }),
+  );
+  return {
+    calls: () => calls,
+    /** Lets the oldest waiting upload answer, once it has been asked. */
+    async answer(outcome: "land" | "fail" = "land") {
+      await waitFor(() => expect(latches.length).toBeGreaterThan(0));
+      latches.shift()!.release(outcome);
+    },
+  };
+}
+
+function picture(name: string, type = "image/jpeg") {
+  return new File([new Uint8Array([1, 2, 3]) as BlobPart], name, { type });
+}
+
+/** Hands files to a hidden input the way a real picker's change event does. */
+async function pickInto(testId: string, files: File[]) {
+  const input = await screen.findByTestId(testId);
+  Object.defineProperty(input, "files", { value: files, configurable: true });
+  fireEvent.change(input);
+  // The screening reads each file's bytes before anything joins.
+  await act(async () => {});
+}
+
+function clipAttachment({ coverTaken = false, cover = true } = {}) {
+  return {
+    __typename: "MediaAttachment",
+    id: "clip-1",
+    url: "https://media.test/clip-1.mp4",
+    altText: null,
+    status: "NORMAL",
+    mimeType: "video/mp4",
+    options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 18_000 },
+    coverMedia: cover
+      ? {
+          __typename: "MediaAttachment",
+          id: "face-1",
+          url: "https://media.test/face-1.webp",
+          status: "NORMAL",
+          options: { __typename: "MediaOptions", aspectRatio: "9:16" },
+        }
+      : null,
+    coverTaken,
+  };
+}
+
+const gate = () => screen.queryByTestId("post-edit-gate");
+
+/** One more picture picked on a picture post, the crop standing. */
+async function cropOneMore() {
+  fireEvent.click(await screen.findByTestId("post-edit-add-pictures"));
+  await pickInto("post-edit-add-pictures-input", [picture("third.jpg")]);
+  return screen.findByTestId("post-edit-crop");
+}
+
+describe("PostEditRoute — + Add pictures (EditCompose)", () => {
+  beforeEach(() => {
+    push.mockClear();
+    installEncoder();
+  });
+
+  it("reads the cap on the add control and opens the device's own picker, never a pick stage", async () => {
+    serve(editablePost({ attachments: [attachment("m-1"), attachment("m-2")] }));
+    draw();
+    const add = await screen.findByTestId("post-edit-add-pictures");
+    expect(add).toHaveTextContent("+ Add pictures · 2 of 10");
+    const input = screen.getByTestId("post-edit-add-pictures-input") as HTMLInputElement;
+    const opened = vi.spyOn(input, "click");
+    fireEvent.click(add);
+    expect(opened).toHaveBeenCalledTimes(1);
+    expect(input.accept).toBe("image/*");
+    expect(screen.queryByTestId("wizard-file-input")).not.toBeInTheDocument();
+    // The body rule stands under the add control.
+    expect(screen.getByTestId("post-edit-body-rule")).toHaveTextContent(
+      "A post’s body is words or media, never both.",
+    );
+  });
+
+  // ComposeCrop.md: "the crop is reached by adding pictures to a published
+  // post's edit -> the crop is locked to the post's one shape".
+  it("passes the picked pictures through the crop locked to the post's shape, the row growing by them", async () => {
+    serve(editablePost({ attachments: [attachment("m-1"), attachment("m-2")] }));
+    uploads();
+    draw();
+    const crop = await cropOneMore();
+    expect(within(crop).queryByRole("group", { name: "The post's shape" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("post-edit-shape-tall")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("post-edit-next"));
+    expect(await screen.findByLabelText("Manage the 3 pictures")).toBeInTheDocument();
+    expect(footer()).toHaveTextContent("You're signing 1 thing");
+  });
+
+  it("the crop's back arrow returns to the edit as it was, the pictures unused", async () => {
+    serve(editablePost({ attachments: [attachment("m-1"), attachment("m-2")] }));
+    const sent = uploads();
+    draw();
+    await cropOneMore();
+    fireEvent.click(within(screen.getByTestId("post-edit-crop-header")).getByLabelText("Back to the edit"));
+    expect(await screen.findByLabelText("Manage the 2 pictures")).toBeInTheDocument();
+    expect(footer()).toHaveTextContent("Nothing to sign yet");
+    expect(sent.calls()).toBe(0);
+  });
+
+  // ComposeCrop.md: "press the header X GIVEN the crop was entered from an
+  // edit -> DiscardConfirm opens, as the edit's own X raises it".
+  it("the crop's X is the edit's own X: it asks first where the batch holds an act", async () => {
+    serve(editablePost({ attachments: [attachment("m-1"), attachment("m-2")] }));
+    draw();
+    fireEvent.change(await screen.findByTestId("post-edit-title"), { target: { value: "New title" } });
+    await cropOneMore();
+    fireEvent.click(within(screen.getByTestId("post-edit-crop-header")).getByLabelText(EDIT_LEAVE_LABEL));
+    expect(await screen.findByText("Discard the changes?")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  // EditCompose.md: "break the cap of ten or come in a format nothing here
+  // reads -> the refusal says why on the media row AND NEVER a dialog opens".
+  it("refuses past ten and an unreadable file on the media row, never in a dialog", async () => {
+    serve(editablePost({ attachments: Array.from({ length: 9 }, (_, i) => attachment(`m-${i}`)) }));
+    draw();
+    fireEvent.click(await screen.findByTestId("post-edit-add-pictures"));
+    await pickInto("post-edit-add-pictures-input", [
+      picture("ten.jpg"),
+      picture("eleven.jpg"),
+      picture("notes.txt", "text/plain"),
+    ]);
+    // What fit goes on through the crop; the edit holds the refusals for its return.
+    fireEvent.click(await screen.findByTestId("post-edit-next"));
+    const refusals = await screen.findByTestId("post-edit-refusals");
+    expect(refusals).toHaveTextContent("That's more than a post carries — up to ten pictures.");
+    expect(refusals).toHaveTextContent("That file isn't a picture or a video CoGra can read.");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // Remove it is the only way out, and the line leaves with it.
+    fireEvent.click(within(refusals).getAllByText("Remove it")[0]!);
+    expect(screen.getByTestId("post-edit-refusals")).not.toHaveTextContent("up to ten pictures");
+  });
+
+  it("stands the gate over the foot while the picture uploads, enabled, and lets it go when the bytes land", async () => {
+    serve(editablePost({ attachments: [attachment("m-1"), attachment("m-2")] }));
+    const sent = uploads();
+    draw();
+    await cropOneMore();
+    fireEvent.click(screen.getByTestId("post-edit-next"));
+    expect(await screen.findByTestId("post-edit-gate")).toHaveTextContent(
+      "Uploading 0 of 1 — signing waits for the picture.",
+    );
+    // EditCompose.md: "Sign the edit is enabled GIVEN an upload is running".
+    expect(sign()).not.toBeDisabled();
+    await sent.answer("land");
+    await waitFor(() => expect(gate()).not.toBeInTheDocument());
+    // EditCompose.md: "the last upload lands GIVEN Sign the edit was not
+    // pressed -> the upload line goes AND Sign the edit stays as it was".
+    expect(sign()).not.toBeDisabled();
+    expect(sign()).toHaveTextContent("Sign the edit");
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("counts the pictures the edit took in the gate's noun", async () => {
+    serve(editablePost({ attachments: [attachment("m-1")] }));
+    uploads();
+    draw();
+    fireEvent.click(await screen.findByTestId("post-edit-add-pictures"));
+    await pickInto("post-edit-add-pictures-input", [picture("a.jpg"), picture("b.jpg")]);
+    fireEvent.click(await screen.findByTestId("post-edit-next"));
+    expect(await screen.findByTestId("post-edit-gate")).toHaveTextContent(
+      "Uploading 0 of 2 — signing waits for the pictures.",
+    );
+  });
+
+  // EditCompose.md: "press Sign the edit GIVEN an upload is running -> Sign the
+  // edit refuses a second press AND NEVER anything is signed before the last
+  // upload lands AND NEVER Sign the edit dims" … "the last upload lands GIVEN
+  // Sign the edit was pressed while the uploads ran -> signing proceeds AND
+  // NEVER a second press is asked".
+  it("holds a press at the gate and signs the moment the last upload lands, with no second press", async () => {
+    let sent: { attachments: { mediaId: string }[] } | null = null;
+    serve(editablePost({ attachments: [attachment("m-1"), attachment("m-2")] }));
+    server.use(
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
+        sent = variables.input as never;
+        return HttpResponse.json({ data: editPrepared() });
+      }),
+    );
+    const bytes = uploads();
+    const signer = draw();
+    await cropOneMore();
+    fireEvent.click(screen.getByTestId("post-edit-next"));
+    await screen.findByTestId("post-edit-gate");
+    fireEvent.click(sign());
+    fireEvent.click(sign());
+    expect(sign()).not.toBeDisabled();
+    // Past 200ms the commit reads its in-flight label in its own place.
+    await waitFor(() => expect(sign()).toHaveTextContent("Signing the edit…"), { timeout: 1000 });
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    // The ways out refuse while it is held.
+    fireEvent.click(within(screen.getByTestId("post-edit-header")).getByLabelText(EDIT_LEAVE_LABEL));
+    expect(screen.queryByText("Discard the changes?")).not.toBeInTheDocument();
+    await bytes.answer("land");
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(signer.signStaged).toHaveBeenCalledTimes(1);
+    expect(sent!.attachments.map((entry) => entry.mediaId)).toEqual(["m-1", "m-2", "up-0"]);
+  });
+
+  // EditCompose.md: "an upload fails GIVEN Sign the edit was pressed while the
+  // uploads ran -> the held press drops AND the gate line takes its fault
+  // reading AND Sign the edit reads Sign the edit again AND the header back
+  // arrow and the header X answer again AND NEVER anything is signed" …
+  // "Sign the edit is disabled GIVEN the gate line shows its fault reading".
+  it("drops the held press on a failed upload, the gate in its fault reading and Sign disabled", async () => {
+    serve(editablePost({ attachments: [attachment("m-1"), attachment("m-2")] }));
+    const bytes = uploads();
+    const signer = draw();
+    await cropOneMore();
+    fireEvent.click(screen.getByTestId("post-edit-next"));
+    await screen.findByTestId("post-edit-gate");
+    fireEvent.click(sign());
+    await bytes.answer("fail");
+    await waitFor(() =>
+      expect(gate()).toHaveTextContent("One picture didn't upload. Signing waits for it."),
+    );
+    expect(sign()).toHaveTextContent("Sign the edit");
+    expect(sign()).toBeDisabled();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    // The tile is marked and the row's own line carries Retry and Remove it.
+    expect(screen.getByTestId("post-edit-upload-error")).toHaveTextContent("One picture didn't upload.");
+    // The ways out answer again.
+    fireEvent.click(within(screen.getByTestId("post-edit-header")).getByLabelText(EDIT_LEAVE_LABEL));
+    expect(await screen.findByText("Discard the changes?")).toBeInTheDocument();
+  });
+
+  // EditCompose.md: "press Retry GIVEN the held press dropped -> the gate runs
+  // again AND NEVER signing proceeds until Sign the edit is pressed again".
+  it("Retry re-gates the upload and nothing signs until Sign is pressed again", async () => {
+    serve(editablePost({ attachments: [attachment("m-1"), attachment("m-2")] }));
+    server.use(gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared() })));
+    const bytes = uploads();
+    const signer = draw();
+    await cropOneMore();
+    fireEvent.click(screen.getByTestId("post-edit-next"));
+    fireEvent.click(sign());
+    await bytes.answer("fail");
+    fireEvent.click(await screen.findByTestId("post-edit-gate-retry"));
+    expect(await screen.findByTestId("post-edit-gate")).toHaveTextContent("Uploading 0 of 1");
+    await bytes.answer("land");
+    await waitFor(() => expect(gate()).not.toBeInTheDocument());
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    fireEvent.click(sign());
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+  });
+
+  // EditCompose.md: "press Remove it under the picked row GIVEN nothing else
+  // the edit took is uploading -> the failed picture leaves the batch AND the
+  // gate line goes AND Sign the edit is enabled".
+  it("Remove it under the row takes the failed picture out and un-gates Sign", async () => {
+    serve(editablePost({ attachments: [attachment("m-1"), attachment("m-2")] }));
+    const bytes = uploads();
+    draw();
+    await cropOneMore();
+    fireEvent.click(screen.getByTestId("post-edit-next"));
+    await bytes.answer("fail");
+    fireEvent.click(await screen.findByTestId("post-edit-upload-error-remove"));
+    expect(await screen.findByLabelText("Manage the 2 pictures")).toBeInTheDocument();
+    expect(gate()).not.toBeInTheDocument();
+    expect(sign()).not.toBeDisabled();
+  });
+});
+
+describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
+  beforeEach(() => {
+    push.mockClear();
+    installEncoder();
+  });
+
+  it("draws the clip, its one description and the quiet line where an add control would stand", async () => {
+    serve(editablePost({ attachments: [clipAttachment()] }));
+    draw();
+    expect(await screen.findByTestId("post-edit-clip")).toBeInTheDocument();
+    expect(screen.getByTestId("post-edit-clip-note")).toHaveTextContent("A video is the whole post.");
+    expect(screen.queryByTestId("post-edit-add-pictures")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("post-edit-describe-clip"));
+    expect(await screen.findByTestId("post-edit-describe")).toBeInTheDocument();
+  });
+
+  it("shows the chosen face and Change the cover where a cover was chosen", async () => {
+    serve(editablePost({ attachments: [clipAttachment({ coverTaken: false })] }));
+    draw();
+    expect(await screen.findByTestId("post-edit-change-cover")).toHaveTextContent("Change the cover");
+    expect(screen.getByTestId("post-edit-cover")).toBeInTheDocument();
+    expect(screen.queryByTestId("post-edit-add-cover")).not.toBeInTheDocument();
+  });
+
+  // EditComposeVideo.md: "the cover field reads Add a cover GIVEN no cover was
+  // ever chosen, even when a taken still exists".
+  it("offers the door over a taken still", async () => {
+    serve(editablePost({ attachments: [clipAttachment({ coverTaken: true })] }));
+    draw();
+    expect(await screen.findByTestId("post-edit-add-cover")).toHaveTextContent("Add a cover");
+    expect(screen.queryByTestId("post-edit-cover")).not.toBeInTheDocument();
+  });
+
+  it("offers the door over a clip with no face at all", async () => {
+    serve(editablePost({ attachments: [clipAttachment({ cover: false })] }));
+    draw();
+    expect(await screen.findByTestId("post-edit-add-cover")).toBeInTheDocument();
+  });
+
+  it("opens the device's own picker for the face, never the clip's frames", async () => {
+    serve(editablePost({ attachments: [clipAttachment({ coverTaken: true })] }));
+    draw();
+    const input = (await screen.findByTestId("post-edit-cover-input")) as HTMLInputElement;
+    const opened = vi.spyOn(input, "click");
+    fireEvent.click(screen.getByTestId("post-edit-add-cover"));
+    expect(opened).toHaveBeenCalledTimes(1);
+    expect(input.accept).toBe("image/*");
+    expect(screen.queryByTestId("wizard-cover-frame-0")).not.toBeInTheDocument();
+  });
+
+  // EditComposeVideo.md: "a picture is picked for the cover -> it passes the
+  // crop locked to the clip's shape AND the new cover joins the edit's batch".
+  it("crops the face at the clip's locked shape and joins it to the batch behind the cover gate", async () => {
+    serve(editablePost({ attachments: [clipAttachment({ coverTaken: true })] }));
+    uploads();
+    draw();
+    await pickInto("post-edit-cover-input", [picture("face.jpg")]);
+    const crop = await screen.findByTestId("post-edit-cover-crop");
+    expect(within(crop).getByText("The cover takes the video's shape.")).toBeInTheDocument();
+    expect(within(crop).queryByRole("group", { name: "The post's shape" })).not.toBeInTheDocument();
+    expect(within(crop).getByRole("heading", { name: "The cover" })).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("post-edit-cover-crop-next"));
+    expect(await screen.findByTestId("post-edit-gate")).toHaveTextContent(
+      "Uploading 0 of 1 — signing waits for the cover.",
+    );
+    expect(footer()).toHaveTextContent("You're signing 1 thing");
+    // The field now holds the face and its other half, Change the cover.
+    expect(screen.getByTestId("post-edit-change-cover")).toBeInTheDocument();
+  });
+
+  // EditComposeVideo.md: "press Sign the edit GIVEN the signing is taken -> the
+  // post opens with the edit settling AND the clip points at the cover the
+  // edit set".
+  it("signs the clip pointing at the face it set, the clip itself unchanged", async () => {
+    let sent: { attachments: Record<string, unknown>[] } | null = null;
+    serve(editablePost({ attachments: [clipAttachment()] }));
+    server.use(
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
+        sent = variables.input as never;
+        return HttpResponse.json({ data: editPrepared() });
+      }),
+    );
+    const bytes = uploads();
+    draw();
+    fireEvent.click(await screen.findByTestId("post-edit-change-cover"));
+    await pickInto("post-edit-cover-input", [picture("face.jpg")]);
+    fireEvent.click(await screen.findByTestId("post-edit-cover-crop-next"));
+    fireEvent.click(sign());
+    await bytes.answer("land");
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(sent!.attachments).toEqual([
+      expect.objectContaining({ mediaId: "clip-1", coverMediaId: "up-0", coverTaken: null }),
+    ]);
+  });
+
+  // EditComposeVideo.md: "the cover the edit set fails to upload -> the
+  // cover's thumbnail is marked AND the line One picture didn't upload. stands
+  // under the cover row with Retry and Remove it" … "press Remove it under the
+  // cover row -> the new cover leaves the batch AND the cover field reads as it
+  // stood before the edit".
+  it("marks a failed face under the cover row, and Remove it puts the field back as it stood", async () => {
+    serve(editablePost({ attachments: [clipAttachment({ coverTaken: true })] }));
+    const bytes = uploads();
+    draw();
+    await pickInto("post-edit-cover-input", [picture("face.jpg")]);
+    fireEvent.click(await screen.findByTestId("post-edit-cover-crop-next"));
+    await bytes.answer("fail");
+    expect(await screen.findByTestId("post-edit-cover-error")).toHaveTextContent(
+      "One picture didn't upload.",
+    );
+    expect(gate()).toHaveTextContent("One picture didn't upload. Signing waits for it.");
+    expect(sign()).toBeDisabled();
+    fireEvent.click(screen.getByTestId("post-edit-cover-error-remove"));
+    expect(await screen.findByTestId("post-edit-add-cover")).toBeInTheDocument();
+    expect(gate()).not.toBeInTheDocument();
+    expect(sign()).not.toBeDisabled();
+  });
+
+  it("the cover crop's back arrow gives the cover row back, the picture unused", async () => {
+    serve(editablePost({ attachments: [clipAttachment({ coverTaken: true })] }));
+    const bytes = uploads();
+    draw();
+    await pickInto("post-edit-cover-input", [picture("face.jpg")]);
+    await screen.findByTestId("post-edit-cover-crop");
+    fireEvent.click(screen.getByLabelText("Back to the edit"));
+    expect(await screen.findByTestId("post-edit-add-cover")).toBeInTheDocument();
+    expect(footer()).toHaveTextContent("Nothing to sign yet");
+    expect(bytes.calls()).toBe(0);
+  });
+
+  // EditComposeVideo.md: "tap the clip's remove control -> the clip leaves
+  // whole AND the words edit stands with its field empty".
+  it("the clip's remove control leaves it whole, onto the words edit with its field empty", async () => {
+    serve(editablePost({ attachments: [clipAttachment()] }));
+    draw();
+    fireEvent.click(await screen.findByLabelText("Remove this video"));
+    expect(await screen.findByTestId("post-edit-words")).toHaveValue("");
+    expect(screen.queryByTestId("post-edit-clip")).not.toBeInTheDocument();
+  });
+});
+
+// EditWords.md: "press + Add pictures or a video -> the device's own picker
+// opens" … "pictures are picked -> they pass the crop AND the words they
+// replace are gone from the body".
+describe("PostEditRoute — + Add pictures or a video (EditWords)", () => {
+  beforeEach(() => {
+    push.mockClear();
+    installEncoder();
+  });
+
+  it("takes pictures through the crop, its chips offered, and the words they replace go", async () => {
+    let sent: Record<string, unknown> | null = null;
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
+        sent = variables.input as never;
+        return HttpResponse.json({ data: editPrepared() });
+      }),
+    );
+    const bytes = uploads();
+    draw();
+    const add = await screen.findByTestId("post-edit-add-media");
+    expect(add).toHaveTextContent("+ Add pictures or a video");
+    await pickInto("post-edit-add-media-input", [picture("a.jpg")]);
+    // A words post has no shape yet, so the chips choose one.
+    fireEvent.click(await screen.findByTestId("post-edit-shape-wide"));
+    fireEvent.click(screen.getByTestId("post-edit-next"));
+    expect(await screen.findByLabelText("Manage the picture")).toBeInTheDocument();
+    expect(screen.queryByTestId("post-edit-words")).not.toBeInTheDocument();
+    await bytes.answer("land");
+    await waitFor(() => expect(gate()).not.toBeInTheDocument());
+    fireEvent.click(sign());
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(sent).toMatchObject({ content: "", attachments: [expect.objectContaining({ mediaId: "up-0" })] });
   });
 });
