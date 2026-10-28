@@ -45,3 +45,25 @@ describe("UploadErrorLine", () => {
     expect(screen.getByTestId("upload-error")).toHaveTextContent("Two pictures didn't upload.");
   });
 });
+
+// ComposeUploading.md (round 22): "WHEN more than one picture's upload fails
+// -> ... the line N pictures didn't upload. ... with Retry and Remove them";
+// the gate's form reads "N pictures didn't upload. Signing waits for them."
+describe("the plural failure", () => {
+  it("offers Remove them under a count, Remove it under one", () => {
+    const { unmount } = render(
+      <UploadErrorLine message="2 pictures didn't upload." count={2} onRetry={vi.fn()} onRemove={vi.fn()} />,
+    );
+    expect(screen.getByTestId("upload-error-remove")).toHaveTextContent("Remove them");
+    unmount();
+    render(<UploadErrorLine onRetry={vi.fn()} onRemove={vi.fn()} />);
+    expect(screen.getByTestId("upload-error-remove")).toHaveTextContent("Remove it");
+  });
+
+  it("says signing waits for them at the gate", () => {
+    render(<UploadStatusLine done={0} total={0} failed failedCount={3} message="3 pictures didn't upload." />);
+    expect(screen.getByTestId("upload-status")).toHaveTextContent(
+      "3 pictures didn't upload. Signing waits for them.",
+    );
+  });
+});

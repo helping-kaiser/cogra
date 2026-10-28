@@ -7,11 +7,11 @@ import { describe, expect, it } from "vitest";
 
 import { ContentRow } from "./content-row";
 
-function face(pDirected: number, pInterest: number, zeroLabel?: string) {
+function face(pDirected: number, pInterest: number, severed?: boolean) {
   render(
     <ContentRow
       title="@sol gave an opinion on you"
-      disc={{ kind: "face", pDirected, pInterest, zeroLabel }}
+      disc={{ kind: "face", pDirected, pInterest, severed }}
       testId="row"
     />,
   );
@@ -19,14 +19,16 @@ function face(pDirected: number, pInterest: number, zeroLabel?: string) {
 }
 
 describe("the identity row's stance face", () => {
-  it("speaks an empty sign's (0, 0) as Says nothing when the record says so", () => {
-    const img = face(0, 0, "Says nothing");
+  // ContentRow.jsx `face.severed` (seam 245, ask 19): absent or false, a
+  // (0, 0) says nothing — the default is no longer the walk-back's word.
+  it("speaks a (0, 0) face with no severed flag as Says nothing", () => {
+    const img = face(0, 0);
     expect(img).toHaveTextContent("🤷");
     expect(img).toHaveAccessibleName("Says nothing, +0.00 / +0.00");
   });
 
-  it("speaks a walk-back's (0, 0) with the master's default word", () => {
-    expect(face(0, 0)).toHaveAccessibleName("Walked back, +0.00 / +0.00");
+  it("speaks a severed (0, 0) as Walked back", () => {
+    expect(face(0, 0, true)).toHaveAccessibleName("Walked back, +0.00 / +0.00");
   });
 
   it("thinks at one zero and names the state, never a table face (ProfileStances.md:11)", () => {

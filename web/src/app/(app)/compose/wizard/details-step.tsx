@@ -394,6 +394,7 @@ function BodyStrip({
           onRemove={() => {
             for (const asset of failed) onRemove(asset.id);
           }}
+          count={failed.length}
           testId="wizard-upload-error"
         />
       )}

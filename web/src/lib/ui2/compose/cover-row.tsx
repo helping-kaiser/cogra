@@ -15,10 +15,13 @@
 // picture tile is a smaller decision, and the picture tile already covers the
 // author who wants a face the clip does not contain.
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { COVER_FROM_PICTURE, type CoverAsset } from "@/lib/compose/wizard";
 import { LABEL_SMALL_PLAIN } from "../plain-type";
+
+/** How late the frames may be before the strip says it is reading the clip. */
+export const READING_LATE_MS = 200;
 
 export function CoverRow({
   framePreviews,
@@ -48,6 +51,19 @@ export function CoverRow({
   // not seek. NO_FRAMES (ComposeCoverNoFrames) is the terminal answer, never
   // shown while `capturing` still has a chance of producing an offer.
   const noFrames = !capturing && framePreviews.length === 0;
+  // `Reading the video…` STANDS ONLY ONCE THE FRAMES ARE 200ms LATE
+  // (ComposeCover.md, round 22; readme §4 *Loading*): a cut that answers at
+  // once never flashes a caption, and the line is never a spinner.
+  const waiting = capturing && framePreviews.length === 0;
+  const [late, setLate] = useState(false);
+  useEffect(() => {
+    if (!waiting) return undefined;
+    const timer = setTimeout(() => setLate(true), READING_LATE_MS);
+    return () => {
+      clearTimeout(timer);
+      setLate(false);
+    };
+  }, [waiting]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -80,7 +96,7 @@ export function CoverRow({
           />
         ))}
 
-        {capturing && framePreviews.length === 0 && (
+        {waiting && late && (
           <span
             data-testid={`${testIdPrefix}-cover-capturing`}
             className="text-body-small text-on-surface-variant"

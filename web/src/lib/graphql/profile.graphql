@@ -123,6 +123,9 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
             }
           }
         }
+        # The terminal leg: a Review's Comment, or what a Reference cites —
+        # a post (`Cited a post`, its title under), a comment, or a person
+        # (`Mentioned`, `@ada` beside) — copy-voice's chronicle verbs.
         terminal {
           __typename
           ... on Comment {
@@ -135,6 +138,22 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
               ... on Post {
                 id
               }
+            }
+          }
+          ... on Post {
+            id
+            title {
+              value
+            }
+            content {
+              value
+            }
+          }
+          ... on User {
+            id
+            handle
+            avatar {
+              url
             }
           }
         }

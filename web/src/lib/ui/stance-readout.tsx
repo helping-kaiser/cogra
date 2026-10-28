@@ -91,6 +91,27 @@ export const UNREACHABLE_TAIL = "this won't shape anyone's feed.";
 export { EMPTY_PICK_LABEL, unreachableHead };
 
 /**
+ * THE WRITE RULE'S WORDS AT THE STANCE FAMILY'S SCALES (`StanceReadout.jsx`
+ * `WRITE_RULE_WORDS`; copy-voice, *Faults by code*). Nothing in this family
+ * keeps a draft, so its fact stops at what was not signed or spent. One
+ * object, because the pad, the alternates, the row and the two dialogs raised
+ * over the pad all say the same refusal: `title`, `padFact` and `help` are the
+ * notice panel's; `row` the quiet line under a face; `dialog` the quiet line in
+ * the walk-back's and the empty sign's dialogs, where the fault line would be.
+ */
+export const WRITE_RULE_WORDS = {
+  title: "You can't sign right now",
+  padFact:
+    "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.",
+  help: "Why signing waits",
+  row: "You can't sign right now.",
+  dialog: "You can't sign right now. Nothing was signed or spent.",
+} as const;
+
+/** What an empty landing says beside its 🤷 (`EMPTY_LANDING_WORDS`): `Says nothing.` */
+export const EMPTY_LANDING_WORDS = `${EMPTY_PICK_LABEL}.`;
+
+/**
  * THE BORROWED VIEW HOLDS UNTIL AN OPINION IS LIVE (jakob 2026-10-20; the
  * master's `BORROWED_KEPT_LINE`): a reader who holds no outgoing opinion
  * with neither number at zero walks a borrowed view, so a pick that lands
@@ -150,6 +171,19 @@ export function landingParts(
 ): ReadoutParts {
   const sever = severanceWords(axes);
   if (landing === null) return { sentence: "Adding it up…" };
+  // A (0, 0) LANDING WITH NOTHING STANDING SAYS NOTHING (StanceReadout.jsx,
+  // seam 245 ask 20; EmptySignConfirm.md): over a bundle that holds no record,
+  // or one already walked back, the family's `This takes you back to zero.` is
+  // false — there is nothing to go back from. It reads as a landing reads.
+  if (landing.empty === true) {
+    return {
+      label: RESULTING_LABEL,
+      emoji: ZERO_BUNDLE_EMOJI,
+      head: EMPTY_PICK_LABEL,
+      words: EMPTY_LANDING_WORDS,
+      spoken: `${RESULTING_LABEL}: ${EMPTY_LANDING_WORDS}`,
+    };
+  }
   if (landing.severed) return { sentence: sever.landing };
   if (landing.inert) {
     const head = unreachableHead(landing.landing);
@@ -368,7 +402,9 @@ export function StanceLandingLine({
       <ReadoutBlock
         parts={landingParts(landing, axes)}
         ids={readoutIds(node, `${testIdPrefix}-landing`, true)}
-        onExplainZero={onExplainZero}
+        // The 🤔's door is the unreachable state's alone: an empty landing's
+        // 🤷 reads in the same shape and opens nothing.
+        onExplainZero={landing?.empty === true ? undefined : onExplainZero}
         zeroShown={zeroShown}
       />
       {keepsBorrowed && (

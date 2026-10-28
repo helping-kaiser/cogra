@@ -17,6 +17,21 @@ describe("pillClassName", () => {
     expect(classes).toContain("px-4");
   });
 
+  // THE BORDER IS INSIDE THE HEIGHT (Button.jsx, seam 245 ask 1): every
+  // variant wears a 1px border, and 1 + padding + 20 + padding + 1 is the
+  // height. The outlined pill drew 42 / 34 on a 10px / 6px padding.
+  it.each([
+    ["md", 9, 40],
+    ["sm", 5, 32],
+  ] as const)("draws every variant a true height at %s", (size, pad, height) => {
+    for (const variant of ["filled", "outlined", "text", "inverse", "inverseText"] as const) {
+      const classes = pillClassName({ variant, size }).split(" ");
+      expect(classes).toContain("border");
+      expect(classes).toContain(`py-[${pad}px]`);
+      expect(1 + pad + 20 + pad + 1).toBe(height);
+    }
+  });
+
   it("puts primary on the label of both unfilled variants, not on a border", () => {
     expect(pillClassName({ variant: "outlined" })).toContain("text-primary");
     expect(pillClassName({ variant: "text" })).toContain("text-primary");

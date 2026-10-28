@@ -27,9 +27,9 @@ describe("Button", () => {
   });
 
   it("variant and size pick the shared class strings", () => {
-    expect(buttonClassName({ variant: "primary", size: "sm" })).toContain("px-4 py-1.5");
+    expect(buttonClassName({ variant: "primary", size: "sm" })).toContain("px-4 py-[5px]");
     expect(buttonClassName({ variant: "outline", size: "lg" })).toContain("border");
-    expect(buttonClassName({})).toContain("px-6 py-2.5");
+    expect(buttonClassName({})).toContain("px-6 py-[9px]");
     expect(buttonClassName({ selfStart: true })).toContain("self-start");
     expect(buttonClassName({})).not.toContain("self-start");
   });
@@ -43,6 +43,27 @@ describe("Button", () => {
     for (const size of ["sm", "lg"] as const) {
       expect(buttonClassName({ size })).toContain("min-w-16");
       expect(buttonClassName({ size })).toContain("box-border");
+    }
+  });
+
+  // THE BORDER IS INSIDE THE HEIGHT (Button.jsx, seam 245 ask 1): every
+  // variant wears a 1px border, transparent where it is not drawn, and the
+  // label's 20px line + the vertical padding + that border IS the height. The
+  // outline drew 42 / 34 when its border rode on a 10px / 6px padding.
+  it.each([
+    ["lg", 40],
+    ["sm", 32],
+  ] as const)("every variant draws a true %s height of %ipx", (size, height) => {
+    for (const variant of ["primary", "outline", "text"] as const) {
+      const classes = buttonClassName({ variant, size }).split(" ");
+      const padding = classes
+        .map((name) => /^py-\[(\d+)px\]$/.exec(name) ?? /^py-(\d+(?:\.\d+)?)$/.exec(name))
+        .find((match) => match !== null);
+      expect(padding, `${variant} ${size} padding`).toBeDefined();
+      const pad = padding![0].includes("[") ? Number(padding![1]) : Number(padding![1]) * 4;
+      // Every variant wears the 1px border, so the arithmetic is one sum.
+      expect(classes, `${variant} ${size} border`).toContain("border");
+      expect(1 + pad + 20 + pad + 1).toBe(height);
     }
   });
 
