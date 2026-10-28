@@ -833,8 +833,21 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
 
   it("at_the_next_pull_the_hidden_persons_posts_and_comments_are_out_and_their_profile_stays", async () => {
     // HistoryHidden.md:7.
+    // The server keeps serving Ada's post, so what takes it out at the pull is
+    // the device's own set, read again beside the page — and that read now
+    // holds the hide the tap sent.
     serveHistory(() => page([COMMENT, POST, { node: personNode("u1", "ada", "Ada"), firstSeenAt: daysAgo(1) }]));
-    server.use(...hiddenHandlers(hiddenLog()));
+    const log = hiddenLog();
+    server.use(...hiddenHandlers(log));
+    server.use(
+      gqlLink.query("HiddenActorsPage", () =>
+        HttpResponse.json(
+          hiddenPage(
+            log.hides.length === 0 ? [] : [{ id: "u1", handle: "ada", displayName: "Ada", hiddenAt: daysAgo(0) }],
+          ),
+        ),
+      ),
+    );
     const scroller = document.createElement("div");
     document.body.append(scroller);
     renderWithProviders(
@@ -847,6 +860,7 @@ describe("History — hiding from a card in it (HistoryHidden.md)", () => {
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p1")));
     fireEvent.click(screen.getByTestId("history-menu-hide"));
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p1", "history.profileCard:u1"]);
+    await waitFor(() => expect(log.hides).toHaveLength(1));
     pull(scroller);
     await waitFor(() => expect(cards()).toEqual(["history.commentCard:c1", "history.profileCard:u1"]));
     scroller.remove();
