@@ -27,6 +27,7 @@
 use common::envelope::{CograContent, CograProfile, MediaAsset};
 use postgres_store::retention::{self, NewUnit};
 use postgres_store::{PgPool, content as content_store, media as media_store, mirror, staged};
+use sqlx::{PgConnection, Postgres, Transaction};
 use serde_json::json;
 use uuid::Uuid;
 
@@ -130,14 +131,65 @@ pub async fn redact<B: L1Boundary>(
         done.push(redact_act(pool, r).await?);
     }
     let act_ids: Vec<String> = redactions.iter().map(|r| r.act_id.to_string()).collect();
-    boundary.drop_carriage(&act_ids).await?;
-    for act in &mut done {
-        act.held_moved = media_areas::hold_all(pool, areas, &act.held_media).await;
-    }
+    release(boundary, pool, areas, &act_ids, &mut done).await?;
     Ok(done)
 }
 
-/// The Postgres half of one act's redaction, in one transaction:
+/// What follows the Postgres commits of a set of redactions: the
+/// substrate's residue of every act is dropped in one call, then the bytes
+/// of every asset the redactions held move out of the live store — each
+/// recorded on the act that held it.
+///
+/// Both are idempotent, and neither undoes a commit: a crash here leaves
+/// the residue for a retry and the bytes for the media reconciler.
+pub async fn release<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    areas: &MediaAreas,
+    act_ids: &[String],
+    done: &mut [Redacted],
+) -> Result<(), RedactionError> {
+    boundary.drop_carriage(act_ids).await?;
+    for act in done.iter_mut() {
+        act.held_moved = media_areas::hold_all(pool, areas, &act.held_media).await;
+    }
+    Ok(())
+}
+
+/// The Postgres half of one act's redaction, in one transaction — see
+/// [`reduce_in`] for the steps. An engine that writes more in the same
+/// transaction (a removal's display tombstones) calls [`reduce_in`] and
+/// [`Reduced::hold_in`] itself instead.
+pub async fn redact_act(pool: &PgPool, r: &Redaction<'_>) -> Result<Redacted, RedactionError> {
+    let mut tx = pool.begin().await?;
+    let done = reduce_in(&mut tx, r).await?.hold_in(&mut tx).await?;
+    tx.commit().await?;
+    Ok(done)
+}
+
+/// One act reduced inside a caller's transaction, its media hold still to
+/// run: [`Reduced::hold_in`] is the transaction's last statement, so the
+/// hold sees every tombstone the caller wrote after the reduction.
+#[derive(Debug)]
+#[must_use = "the media hold has not run; call hold_in before committing"]
+pub struct Reduced {
+    done: Redacted,
+    media: Vec<Uuid>,
+}
+
+impl Reduced {
+    /// Step 5: holds each asset the act's envelope named whose last live
+    /// placement is now gone, on the same transaction.
+    pub async fn hold_in(
+        mut self,
+        tx: &mut Transaction<'_, Postgres>,
+    ) -> Result<Redacted, RedactionError> {
+        self.done.held_media = retention::hold_unplaced(tx, &self.media).await?;
+        Ok(self.done)
+    }
+}
+
+/// Steps 1–4 of one act's redaction on the caller's transaction:
 ///
 /// 1. **Promote first.** An act whose landed staged row is still the only
 ///    copy of its payload — the admission Registration's handle, before
@@ -154,14 +206,18 @@ pub async fn redact<B: L1Boundary>(
 /// 3. **Reduce** the carriage row: payload and salt to NULL, state
 ///    `reduced`.
 /// 4. **Reap** the staged row: payload, content salt and nonce to NULL.
-/// 5. **Hold** each named asset whose last live placement is now gone.
 ///
-/// The `l1_acts` copy is dropped, and the held bytes moved, separately
-/// ([`redact`]).
-pub async fn redact_act(pool: &PgPool, r: &Redaction<'_>) -> Result<Redacted, RedactionError> {
-    let mut tx = pool.begin().await?;
-    let carriage = content_store::lock_act_payload(&mut tx, r.act_id).await?;
-    let copy = staged::lock_copy(&mut tx, r.act_id).await?;
+/// Every read runs on that transaction's connection: an engine holding
+/// one pooled connection for the transaction never waits on a second one
+/// for a read, which a pool under concurrent redactions would never hand
+/// out. Step 5, the hold, is [`Reduced::hold_in`]; the `l1_acts` copy is
+/// dropped, and the held bytes moved, after the commit ([`release`]).
+pub async fn reduce_in(
+    tx: &mut Transaction<'_, Postgres>,
+    r: &Redaction<'_>,
+) -> Result<Reduced, RedactionError> {
+    let carriage = content_store::lock_act_payload(tx, r.act_id).await?;
+    let copy = staged::lock_copy(tx, r.act_id).await?;
     if let Some(copy) = &copy
         && copy.state == staged::StagedState::Carried.as_str()
     {
@@ -174,7 +230,7 @@ pub async fn redact_act(pool: &PgPool, r: &Redaction<'_>) -> Result<Redacted, Re
         (None, Some(copy)) if copy.state == staged::StagedState::Landed.as_str() => {
             match (&copy.payload, &copy.content_salt) {
                 (Some(payload), Some(salt)) if !payload.is_empty() => {
-                    content_store::insert_act_payload(&mut tx, r.act_id, payload, salt).await?;
+                    content_store::insert_act_payload(tx, r.act_id, payload, salt).await?;
                     done.promoted_first = true;
                     Some(content_store::ActPayload {
                         payload: Some(payload.clone()),
@@ -197,14 +253,14 @@ pub async fn redact_act(pool: &PgPool, r: &Redaction<'_>) -> Result<Redacted, Re
     };
     let witness = match source.as_ref().filter(|(p, _)| !p.is_empty()) {
         None => None,
-        Some(_) => match mirror::record_full(pool, r.act_id).await? {
-            Some(record) => Some(record.payload_witness),
+        Some(_) => match mirror::payload_witness(tx, r.act_id).await? {
+            Some(witness) => Some(witness),
             None => copy.as_ref().and_then(|s| s.content_commitment.clone()),
         },
     };
     let mut media_ids = Vec::new();
     if let (Some((envelope, content_salt)), Some(witness)) = (source, witness) {
-        let media = unit_media(pool, r.actor_id, &envelope).await?;
+        let media = unit_media(tx, r.actor_id, &envelope).await?;
         media_ids = media.iter().map(|m| m.media_id).collect();
         let data = json!({
             "unit": 1,
@@ -216,7 +272,7 @@ pub async fn redact_act(pool: &PgPool, r: &Redaction<'_>) -> Result<Redacted, Re
             "media": media.iter().map(UnitMedia::to_json).collect::<Vec<_>>(),
         });
         done.archived = retention::insert_unit(
-            &mut tx,
+            tx,
             &NewUnit {
                 original_id: r.act_id,
                 original_type: retention::ACT_PAYLOAD,
@@ -229,11 +285,12 @@ pub async fn redact_act(pool: &PgPool, r: &Redaction<'_>) -> Result<Redacted, Re
         .await?;
     }
 
-    done.reduced = content_store::reduce_act_payload(&mut tx, r.act_id).await?;
-    done.staged_reaped = staged::reap_payload(&mut tx, r.act_id).await? > 0;
-    done.held_media = retention::hold_unplaced(&mut tx, &media_ids).await?;
-    tx.commit().await?;
-    Ok(done)
+    done.reduced = content_store::reduce_act_payload(tx, r.act_id).await?;
+    done.staged_reaped = staged::reap_payload(tx, r.act_id).await? > 0;
+    Ok(Reduced {
+        done,
+        media: media_ids,
+    })
 }
 
 /// One asset an archived envelope names: both digests the record
@@ -269,7 +326,7 @@ impl UnitMedia {
 /// read/ingest admission, so a payload a newer format wrote still names
 /// the media it carries.
 async fn unit_media(
-    pool: &PgPool,
+    conn: &mut PgConnection,
     author: Uuid,
     envelope: &[u8],
 ) -> Result<Vec<UnitMedia>, RedactionError> {
@@ -299,7 +356,7 @@ async fn unit_media(
         return Ok(Vec::new());
     }
     let digests: Vec<Vec<u8>> = wanted.iter().map(|n| n.rendition.clone()).collect();
-    let rows = media_store::assets_by_digests(pool, author, &digests).await?;
+    let rows = media_store::named_assets(conn, author, &digests).await?;
     let mut media: Vec<UnitMedia> = Vec::new();
     for n in wanted {
         let Some(row) = rows.iter().find(|row| row.digest == n.rendition) else {
