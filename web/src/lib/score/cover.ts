@@ -20,6 +20,12 @@ export type TraceCover = {
   readonly snippet: string | null;
   /** The face the row leads with; null for a tag, which wears its `#` tile. */
   readonly disc: { readonly name: string; readonly src: string | null } | null;
+  /**
+   * The picture the trace's end mark wears (PathTrace's `NodeMark`): a post's
+   * cover, a person's face; null draws the kind's letter or glyph. A veiled
+   * or removed post's picture never reaches it.
+   */
+  readonly markSrc: string | null;
   /** When the thing was made — a publish step's age (RankPath.md:11). */
   readonly createdAt: string | null;
 };
@@ -51,6 +57,13 @@ function words(text: string | null | undefined): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
+/** A post's cover tile: its first picture, or a clip's still. */
+function coverPicture(post: CoverPost): string | null {
+  const lead = post.attachments[0];
+  if (lead === undefined) return null;
+  return lead.mimeType.startsWith("video/") ? (lead.coverMedia?.url ?? null) : lead.url;
+}
+
 function discOf(author: Author): TraceCover["disc"] {
   if (author === null || author === undefined) return { name: "", src: null };
   return { name: author.displayName.value ?? author.handle, src: author.avatar?.url ?? null };
@@ -70,6 +83,7 @@ export function postCover(post: CoverPost): TraceCover {
         ? null
         : (words(post.content.value) ?? words(post.description.value)),
     disc: discOf(post.author ?? null),
+    markSrc: redacted || bodyIsSensitive(post) ? null : coverPicture(post),
     createdAt: post.createdAt,
   };
 }
@@ -85,6 +99,7 @@ export function commentCover(comment: {
     title: comment.author ? `@${comment.author.handle}` : "Deleted account",
     snippet: comment.content.status === "REDACTED" ? REMOVED_WORDS.author : words(comment.content.value),
     disc: discOf(comment.author ?? null),
+    markSrc: null,
     createdAt: comment.createdAt ?? null,
   };
 }
@@ -96,11 +111,12 @@ export function personCover(person: NonNullable<Author>): TraceCover {
     title: person.displayName.value ?? `@${person.handle}`,
     snippet: `@${person.handle}`,
     disc: discOf(person),
+    markSrc: person.avatar?.url ?? null,
     createdAt: null,
   };
 }
 
 /** A tag's cover: its name beside its `#` tile. */
 export function topicCover(name: string): TraceCover {
-  return { kind: "topic", title: `#${name}`, snippet: null, disc: null, createdAt: null };
+  return { kind: "topic", title: `#${name}`, snippet: null, disc: null, markSrc: null, createdAt: null };
 }

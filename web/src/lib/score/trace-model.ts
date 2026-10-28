@@ -290,6 +290,12 @@ export function stepAge(path: TracePath, step: TraceStep, context: TraceContext)
   return at === null ? "" : ladderAge(at, context.now);
 }
 
+/** A step's `Newest of them`: when the newest of its records landed (RankHop.md:3). */
+export function hopNewest(hop: TraceHop, now: number): string {
+  const at = newestLanding(hop.records);
+  return at === null ? "" : ladderAge(at, now);
+}
+
 /** `2 opinions` (RankHop's `Behind it`). */
 export function opinionsCount(n: number): string {
   return n === 1 ? "1 opinion" : `${n} opinions`;
@@ -343,11 +349,27 @@ export function throughLine(path: TracePath, context: TraceContext): string {
 }
 
 /**
+ * The people one step joins (RankHop's trace): its two ends, where they are
+ * people — the reached thing stands as the mark after them.
+ */
+export function stepPeople(path: TracePath, step: TraceStep, context: TraceContext): (TracePerson | null)[] {
+  const last = path.nodes.length - 1;
+  return path.nodes
+    .slice(step.from, step.to + 1)
+    .filter((node, offset) => step.from + offset !== last && isPersonNode(node))
+    .map((node) => personOf(node, context));
+}
+
+/**
  * The trace's spoken line (PathTrace, copy-voice): `You, then @ada, then what
  * reached you`; two or more people between take `several steps`.
  */
 export function spokenTrace(path: TracePath, context: TraceContext): string {
-  const people = pathPeople(path, context);
+  return spokenPeople(pathPeople(path, context), context);
+}
+
+/** A trace of `people` spoken; the lead is the view's own word. */
+export function spokenPeople(people: readonly (TracePerson | null)[], context: TraceContext): string {
   const lead = context.borrowed ? handleOf(people[0] ?? null) : "You";
   const between = people.slice(1);
   if (between.length === 0) return `${lead}, then what reached you`;
