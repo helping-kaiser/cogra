@@ -16,7 +16,6 @@ import { useAuthGuard } from "@/lib/session/runtime";
 import { securityNotices, type SecurityNotices } from "@/lib/session/security-notices";
 import { useRegistrationFlow, useRegistrationProgress } from "@/lib/signing/provider";
 import { TransportError } from "@/lib/ui/transport-error";
-import { AppOpenSnackbar } from "@/lib/invites/app-open-notice";
 import type { ApplicationSurface } from "./application-card";
 import { ApplicantStatus } from "./applicant-status";
 import { MemberStatus } from "./member-status";
@@ -159,8 +158,6 @@ export function StatusBanners({
       {isApplicant && <ApplicantStatus progress={progress} surface={surface} />}
       {me?.accountState === "MEMBER" && <MemberStatus />}
       {transportFailed && <TransportError testId="home_transport_error" />}
-      {/* An ask link this reader cannot vouch through answers here (VouchAsk.md:13, :15). */}
-      <AppOpenSnackbar />
     </section>
   );
 }

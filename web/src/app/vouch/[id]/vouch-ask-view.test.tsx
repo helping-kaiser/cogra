@@ -7,6 +7,7 @@ import { HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { takeInvitesNotice } from "@/lib/invites/invites-notice";
+import { CarriedSnackbar, resetCarriedSnackbarForTests } from "@/lib/ui/carried-snackbar";
 import { heldAskLink } from "@/lib/session/held-link";
 import { createTokenStore } from "@/lib/session/token-store";
 import { expectation, stanceRecord } from "@/lib/signing/intent";
@@ -93,6 +94,7 @@ beforeEach(() => {
   push.mockReset();
   replace.mockReset();
   takeInvitesNotice();
+  resetCarriedSnackbarForTests();
 });
 
 describe("the ask (behavior/VouchAsk.md)", () => {
@@ -127,16 +129,32 @@ describe("the ask (behavior/VouchAsk.md)", () => {
 
   it(":13 an applicant lands at app-open, never this page", async () => {
     server.use(meHandler("APPLICANT"), myApplication("someone-else"), check(USABLE));
-    renderWithProviders(<VouchAskView id={ASK} />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    renderWithProviders(
+      <>
+        <VouchAskView id={ASK} />
+        <CarriedSnackbar />
+      </>,
+      { store: signedInStore(), writeSigner: fakeWriteSigner() },
+    );
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
     expect(screen.queryByTestId("vouchAsk.ask")).not.toBeInTheDocument();
+    expect(screen.getByTestId("carried-snackbar")).toHaveTextContent("You can vouch once you're in.");
   });
 
   it(":15, :49 the asker lands at app-open even when the link stages nobody", async () => {
     server.use(meHandler("APPLICANT"), myApplication(ASK), check({ usable: false, applicantHandle: "noor", reason: "LANDED" }));
-    renderWithProviders(<VouchAskView id={ASK} />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+    renderWithProviders(
+      <>
+        <VouchAskView id={ASK} />
+        <CarriedSnackbar />
+      </>,
+      { store: signedInStore(), writeSigner: fakeWriteSigner() },
+    );
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
     expect(screen.queryByTestId("vouchAsk.title")).not.toBeInTheDocument();
+    expect(screen.getByTestId("carried-snackbar")).toHaveTextContent(
+      "That's your own ask link — send it to someone who's already in.",
+    );
   });
 
   it(":17 a member already holding the asker meets Invites with its snackbar", async () => {

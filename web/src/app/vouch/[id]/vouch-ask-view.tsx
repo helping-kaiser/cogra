@@ -31,7 +31,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import { fetchMe } from "@/lib/api/auth-api";
 import { checkAskLink, fetchMyApplication, type AskCheck } from "@/lib/api/invites-api";
-import { carryToAppOpen, VOUCH_ONCE_IN, YOUR_OWN_ASK_LINK } from "@/lib/invites/app-open-notice";
+import { carrySnackbar } from "@/lib/ui/carried-snackbar";
 import {
   createAskStanceData,
   type ApprovalDetour,
@@ -61,6 +61,9 @@ const ROOT: DataNode = { path: "vouchAsk" };
 const ASK = part(ROOT, "ask");
 
 export const ASK_TITLE = "A vouch, asked for";
+/** The snackbars app-open says to readers who cannot vouch through the link (VouchAsk.md:13, :15). */
+export const VOUCH_ONCE_IN = "You can vouch once you're in.";
+export const YOUR_OWN_ASK_LINK = "That's your own ask link — send it to someone who's already in.";
 export const NOT_NOW = "Not now";
 export const INVALID_TITLE = "This ask link doesn't work";
 export const INVALID_BODY =
@@ -148,12 +151,12 @@ export function VouchAskView({ id }: { id: string }) {
       // The reader's own case answers first, at app-open, whatever the
       // link's state (VouchAsk.md:13-15, :49).
       if (mine.kind === "success" && mine.value.askLink === id) {
-        carryToAppOpen(YOUR_OWN_ASK_LINK);
+        carrySnackbar(YOUR_OWN_ASK_LINK);
         router.replace("/");
         return;
       }
       if (me.kind === "success" && me.value.accountState !== "MEMBER") {
-        carryToAppOpen(VOUCH_ONCE_IN);
+        carrySnackbar(VOUCH_ONCE_IN);
         router.replace("/");
         return;
       }
