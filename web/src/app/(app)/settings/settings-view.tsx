@@ -44,10 +44,11 @@ import { useHiddenSet } from "@/lib/hidden/provider";
 import { seenRecord } from "@/lib/history/seen-record";
 import { forgetSeen } from "@/lib/history/seen-sync";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
-import { forgetKeptPicks } from "@/lib/stance/kept-picks";
+import { forgetKeptPicks, keptOpinions, useKeptPicks } from "@/lib/stance/kept-picks";
+import { keptPicksHref } from "@/lib/stance/kept-picks-route";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { useHostSnack } from "@/lib/saved/save-row";
-import { useTokenStore } from "@/lib/session/provider";
+import { useActiveAccountId, useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard, useDeviceLock } from "@/lib/session/runtime";
 import { RUNNING_VERSION } from "@/lib/release/running-version";
 import { eraseEverything } from "@/lib/settings/erase-everything";
@@ -200,6 +201,7 @@ export function SettingsView({
   const router = useRouter();
   const notice = settingsNoticeOf(useSearchParams().get("done"));
   const keyOnDevice = useKeyOnDeviceState(store);
+  const keptPicks = useKeptPicks(useActiveAccountId());
   const deletionStatus = useAccountDeletion();
   const refreshDeletion = deletionStatus.refresh;
 
@@ -508,6 +510,7 @@ export function SettingsView({
 
   const beforeCeremony = account !== null && account.actorPubkey == null;
   const backupMade = account?.keyBackupCreatedAt != null;
+  const keptWaiting = keptOpinions(keptPicks).length;
   const pending = account?.pendingEmailChange ?? null;
   const deletionPath = deletionStatus.standing?.path ?? null;
   const grace = deletionStatus.standing?.deletion ?? null;
@@ -701,6 +704,16 @@ export function SettingsView({
             onOpen={() => router.push(beforeCeremony ? "/key" : "/settings/key")}
             node={node("backup.key")}
           />
+          {/* THE KEPT PICKS WAITING FOR THEIR REVIEW, last in the group, only
+              while the key is here (Settings.md:73-81): no status line, no
+              badge, no colour, and nothing elsewhere reminds of it. */}
+          {keyOnDevice === "present" && keptWaiting > 0 && (
+            <SettingsRow
+              label={`${keptWaiting} kept ${keptWaiting === 1 ? "pick" : "picks"} waiting`}
+              onOpen={() => router.push(keptPicksHref("/settings"))}
+              node={node("backup.keptPicks")}
+            />
+          )}
         </SettingsGroup>
 
         {/* After Key backup, because the loss it warns of is the key's
