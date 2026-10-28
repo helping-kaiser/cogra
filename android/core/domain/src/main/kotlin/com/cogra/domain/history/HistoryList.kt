@@ -75,7 +75,7 @@ private fun dateWords(day: LocalDate, today: LocalDate): String {
     return if (day.year == today.year) date else "$date ${day.year}"
 }
 
-/** The divider's registered key (nodes.json `history.day`): its words, lowercased, each run of other characters one `-`. */
+/** The divider's registered key (nodes.json `history.day`): its words lowercased, other runs one `-`. */
 fun historyDayKey(label: String): String = label.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), "-").trim('-')
 
 /**

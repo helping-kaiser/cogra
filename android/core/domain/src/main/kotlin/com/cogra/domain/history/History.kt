@@ -13,6 +13,11 @@ import com.cogra.domain.PostView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.saved.CommentTarget
+import com.cogra.domain.saved.REMOVED_BY_AUTHOR
+import com.cogra.domain.saved.firstLine
+import com.cogra.domain.saved.postTitle
+import com.cogra.domain.saved.redacted
+import com.cogra.domain.saved.text
 import java.time.Instant
 
 /** History's own read over the contract. */
@@ -116,3 +121,43 @@ data class TaggedGlimpse(
     val authorHandle: String?,
     val createdAt: Instant,
 )
+
+/**
+ * A tagged post as the glimpse names it (`tag-feed-card.tsx` `glimpsed`): its
+ * title, B11's stand-in for an untitled one; a removed one by the removal
+ * line, its tile emptied.
+ */
+fun taggedPost(
+    id: String,
+    title: ModeratedField,
+    content: ModeratedField,
+    mimeTypes: List<String>,
+    coverUrl: String?,
+    authorHandle: String?,
+    createdAt: Instant,
+): TaggedGlimpse {
+    val removed = title.redacted() || content.redacted()
+    return TaggedGlimpse(
+        id = id,
+        comment = false,
+        title = if (removed) REMOVED_BY_AUTHOR else postTitle(title, content, mimeTypes, authorHandle),
+        coverUrl = coverUrl.takeUnless { removed },
+        removed = removed,
+        authorHandle = authorHandle,
+        createdAt = createdAt,
+    )
+}
+
+/** A tagged comment as the glimpse names it: its first line, or the removal line. */
+fun taggedComment(id: String, content: ModeratedField, authorHandle: String?, createdAt: Instant): TaggedGlimpse {
+    val removed = content.redacted()
+    return TaggedGlimpse(
+        id = id,
+        comment = true,
+        title = if (removed) REMOVED_BY_AUTHOR else firstLine(content.text()).first,
+        coverUrl = null,
+        removed = removed,
+        authorHandle = authorHandle,
+        createdAt = createdAt,
+    )
+}

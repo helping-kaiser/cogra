@@ -44,3 +44,112 @@ mutation MarkSeen($nodes: [UUID!]!) {
     }
   }
 }
+
+# HISTORY'S OWN READ (History.md, HistoryFilter.md, HistorySearch.md): the
+# seen-list as a feed, newest first by first seeing, a page of TEN at a
+# time — Saved's size, for Saved's reason: every edge carries whole card
+# selections. The document is web's twin's (web/src/lib/graphql/history.graphql
+# `HistoryPage`) in this client's fragments.
+#
+# EVERY KIND AS ITS OWN FEED CARD: a post as the feed card's `PostFields`
+# with its comment count, a comment as the thread's `CommentFields` plus its
+# head row's target and its thread's post (Saved's selection), a person as
+# the profile reads them, and a topic as the tag card draws it — its name and
+# a glimpse of the newest three things carrying it.
+#
+# `kinds` NARROWS (null = every kind History serves) and `query` NARROWS BY
+# THE ONE SEARCH LAW over the seen set alone, on the server; a narrowed list
+# is sectioned — people, then topics, then content — pages on its own
+# cursors, and caps its people and topics at three behind `hasMorePeople` /
+# `hasMoreTags`, the sections' doors. A cursor is only ever passed back with
+# the query and kinds it came from.
+query HistoryPage($query: String, $kinds: [NodeKind!], $after: String) {
+  me {
+    id
+    viewHistory(kinds: $kinds, query: $query, first: 10, after: $after) {
+      edges {
+        cursor
+        firstSeenAt
+        node {
+          __typename
+          ... on Post {
+            ...PostFields
+            commentCount: comments(first: 0, includePending: true) {
+              totalCount
+            }
+          }
+          ... on Comment {
+            ...CommentFields
+            # The comment card's head row: what the comment answers.
+            target {
+              ...CommentHeadFields
+            }
+            # The thread's root post: where the card's doors land.
+            post {
+              id
+            }
+          }
+          ... on User {
+            ...ProfileFields
+          }
+          ... on Hashtag {
+            id
+            name {
+              value
+              status
+            }
+            # The tag card's glimpse: the newest three things carrying it.
+            taggedContent(limit: 3, includePending: true) {
+              node {
+                __typename
+                ... on Post {
+                  id
+                  title {
+                    value
+                    status
+                  }
+                  content {
+                    value
+                    status
+                  }
+                  attachments {
+                    url
+                    status
+                    mimeType
+                    coverMedia {
+                      url
+                      status
+                    }
+                  }
+                  author {
+                    id
+                    handle
+                  }
+                  createdAt
+                }
+                ... on Comment {
+                  id
+                  content {
+                    value
+                    status
+                  }
+                  author {
+                    id
+                    handle
+                  }
+                  createdAt
+                }
+              }
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      hasMorePeople
+      hasMoreTags
+    }
+  }
+}

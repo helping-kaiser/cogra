@@ -15,6 +15,7 @@ import com.cogra.domain.deletion.AccountDeletionRepository
 import com.cogra.domain.feed.FeedRepository
 import com.cogra.domain.history.SeenHistorySource
 import com.cogra.domain.history.SeenRecordStore
+import com.cogra.domain.history.HistoryRepository
 import com.cogra.domain.history.ViewHistoryRepository
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.AccountRepository
@@ -61,6 +62,7 @@ import com.cogra.network.repo.HiddenRepositoryImpl
 import com.cogra.network.repo.NotificationsRepositoryImpl
 import com.cogra.network.repo.SavedRepositoryImpl
 import com.cogra.network.repo.TopicRepositoryImpl
+import com.cogra.network.repo.HistoryRepositoryImpl
 import com.cogra.network.repo.ViewHistoryRepositoryImpl
 import com.cogra.network.repo.FeedRepositoryImpl
 import com.cogra.network.store.SeenRecordStoreImpl
@@ -214,6 +216,9 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun seenHistorySource(impl: ViewHistoryRepositoryImpl): SeenHistorySource
+
+    @Binds
+    abstract fun historyRepository(impl: HistoryRepositoryImpl): HistoryRepository
 
     @Binds
     abstract fun reportRepository(impl: ReportRepositoryImpl): ReportRepository

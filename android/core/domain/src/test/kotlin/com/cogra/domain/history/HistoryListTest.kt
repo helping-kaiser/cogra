@@ -4,6 +4,8 @@
 package com.cogra.domain.history
 
 import com.cogra.domain.ActorRef
+import com.cogra.domain.FieldStatus
+import com.cogra.domain.ModeratedField
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testModeratedField
@@ -114,6 +116,43 @@ class HistoryListTest {
     fun `a blank query narrows nothing`() {
         assertThat(historyNarrowing("  ")).isNull()
         assertThat(historyNarrowing(" mira ")).isEqualTo("mira")
+    }
+
+    @Test
+    fun `a tagged post is named by its title, an untitled one by its first words`() {
+        val at = Instant.EPOCH
+        val titled = taggedPost(
+            id = "p1",
+            title = testModeratedField("Low tide"),
+            content = testModeratedField("words"),
+            mimeTypes = emptyList(),
+            coverUrl = "c.jpg",
+            authorHandle = "ada",
+            createdAt = at,
+        )
+        assertThat(titled.title).isEqualTo("Low tide")
+        assertThat(titled.coverUrl).isEqualTo("c.jpg")
+        val words = testModeratedField("First\nsecond")
+        val untitled = taggedPost("p2", testModeratedField(null), words, emptyList(), null, "ada", at)
+        assertThat(untitled.title).isEqualTo("First")
+    }
+
+    @Test
+    fun `a removed tagged thing reads the removal line with its tile emptied`() {
+        val gone = ModeratedField(null, FieldStatus.REDACTED)
+        val post = taggedPost("p1", gone, gone, emptyList(), "c.jpg", "ada", Instant.EPOCH)
+        assertThat(post.title).isEqualTo("Removed by its author")
+        assertThat(post.removed).isTrue()
+        assertThat(post.coverUrl).isNull()
+        val comment = taggedComment("c1", gone, "ada", Instant.EPOCH)
+        assertThat(comment.title).isEqualTo("Removed by its author")
+        assertThat(comment.comment).isTrue()
+    }
+
+    @Test
+    fun `a tagged comment is named by its first line`() {
+        val comment = taggedComment("c1", testModeratedField("Kinder at low tide\nthan noon"), "ada", Instant.EPOCH)
+        assertThat(comment.title).isEqualTo("Kinder at low tide")
     }
 
     private fun entry(card: HistoryCard) = HistoryEntry(card, now)
