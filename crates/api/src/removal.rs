@@ -161,7 +161,7 @@ pub async fn remove_content<B: L1Boundary>(
     if located.act.author != address {
         return Err(RemovalError::NotAuthor);
     }
-    if !matches!(located.family, Family::Publish | Family::Review) {
+    if !removable(located.family) {
         return Err(RemovalError::OutOfScope(located.family.as_str().to_string()));
     }
     if located.carried {
@@ -341,5 +341,39 @@ impl Chain<'_> {
         }
         scope.sort_by_key(ScopeAct::rank);
         Ok(scope)
+    }
+}
+
+/// Whether a family's records are content this verb removes (RM-G4): a
+/// post's Publish chain and a comment's Review chain. A Send is a chat
+/// message (post-MVP), and a Registration is the person's own profile —
+/// removing the admission act would take the handle by the back door.
+fn removable(family: Family) -> bool {
+    matches!(family, Family::Publish | Family::Review)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Removal reaches posts and comments, and nothing else — a stance, a
+    /// chat message, a profile registration answer BAD_INPUT.
+    ///
+    /// Only a post's or a comment's chain is removable content.
+    /// ´claim:removal:only-posts-and-comments-are-removable´
+    #[test]
+    fn only_a_post_or_a_comment_is_removable_content() {
+        assert!(removable(Family::Publish));
+        assert!(removable(Family::Review));
+        for family in [
+            Family::Registration,
+            Family::Send,
+            Family::Opinion,
+            Family::Affinity,
+            Family::Tag,
+            Family::Reference,
+        ] {
+            assert!(!removable(family), "{family:?}");
+        }
     }
 }
