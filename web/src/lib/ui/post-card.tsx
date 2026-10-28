@@ -168,6 +168,8 @@ export function PostCard({
   commentsHref,
   onOpenComments,
   onLinkCopied,
+  opinions = 0,
+  onOpenOpinions,
   citedBy = 0,
   onOpenCitedBy,
   mediaAbove = false,
@@ -221,6 +223,14 @@ export function PostCard({
   onOpenComments?: () => void;
   /** Says `Link copied` where the browser has no platform share sheet. */
   onLinkCopied: () => void;
+  /**
+   * How many PEOPLE hold an opinion on this post — the rows of the opinions
+   * sheet the line opens, never a count of their records. DETAIL VARIANT
+   * ONLY, and only above zero.
+   */
+  opinions?: number;
+  /** Opens the opinions sheet. */
+  onOpenOpinions?: () => void;
   /**
    * How many artifacts cite this one — the INBOUND mirror of `references`,
    * which counts what this post points at. DETAIL VARIANT ONLY, and only above
@@ -571,8 +581,27 @@ export function PostCard({
           />
         </>
       )}
+      {/* WHO HOLDS AN OPINION ON THIS, on the detail surface only
+          (`PostCard.jsx`; readme item 55): a quiet count line under the tags
+          line, in `TopicsLine`'s register — the affordance row is closed and
+          nothing joins it. IT CARRIES NO FACE: a face on a post card already
+          means "your opinion" (PostDetail.md). The count is the sheet's
+          length — people, not records — and at zero there is no line. The
+          count rides inside the name, `8 opinions on this post`, as the line
+          under it does. */}
+      {!redacted && detail && opinions > 0 && (
+        <button
+          type="button"
+          className="cg-state cg-focus cg-hit flex w-full items-center border-0 bg-transparent p-0 text-left text-body-small text-on-surface-variant"
+          {...testAttributes(part(node, "opinions"), `${testId}-opinions`)}
+          onClick={onOpenOpinions}
+        >
+          <span>{opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`}</span>
+        </button>
+      )}
       {/* WHAT CITES THIS, as a count that opens the list holding them
-          (`screens/CitedBy.jsx`; readme item 55).
+          (`screens/CitedBy.jsx`; readme item 55), directly under the opinions
+          line and in its register.
 
           IT IS NOT THE REFERENCES LINE GROWN A SECOND NUMBER. That line's count
           is the tags-and-references sheet's length — a law this leaves where it

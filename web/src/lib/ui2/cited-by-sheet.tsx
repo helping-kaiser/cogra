@@ -1,9 +1,9 @@
 "use client";
 
 // WHAT CITES THIS (`design/designs/canonical/screens/CitedBy.jsx`,
-// `CommentCitedByEmpty.jsx`; design/readme.md item 55): the inbound mirror of
-// the references a node declares. A post has always said what it points AT;
-// this is the list of what points back.
+// `CommentCitedByEmpty.jsx`; CitedBy.md, CommentCitedByEmpty.md; design/readme.md
+// item 55): the inbound mirror of the references a node declares. A post has
+// always said what it points AT; this is the list of what points back.
 //
 // IT IS NOT `RefsSheet` WITH MORE IN IT. That sheet holds the tags and
 // citations the AUTHOR signed, and the card's count IS that list's length — a
@@ -11,31 +11,33 @@
 // by other authors, in a different order; folded together, neither number would
 // be checkable.
 //
+// ONE ROW PER STANDING CITATION, and exactly as many as the detail's `Cited by
+// N` counts (CitedBy.md): the rows are the fold over the records
+// (`citing-fold.ts`), handed in whole — a revised citation is one row at its
+// net, a withdrawn one is none.
+//
 // NEWEST-FIRST, AND THAT IS THE DEPARTURE. The opinions sheet is
 // strongest-first. An opinions list is a STANDING, where the strongest position
 // is the one worth reading; this is a CHRONICLE of acts — each happened at a
 // moment, no citation outranks another, and what a reader comes for is what has
-// just arrived. The server's terminal-anchored read already serves that order.
+// just arrived.
 //
-// THE ROWS ARE THE READING SIDE'S REFERENCE ROW, so an inbound citation reads
-// exactly as an outbound one does: the kind's own mark, the artifact's name, and
-// the pair its author signed on the act.
+// THE ROWS ARE `ReferenceRow`, so an inbound citation reads exactly as an
+// outbound one does: the kind's own mark — a media post its cover — the
+// artifact's name, and the pair its author signed on the act, its digits the
+// geek reading. A sheet of rows (`BottomSheet` `rows`): the rows run edge to
+// edge carrying their own 24px gutter.
 //
 // NOTHING READ HERE REACHES A FEED. Inbound records are public topology and
 // display only; only viewer-rooted forward paths shape a rank.
 
-import type { ReactNode } from "react";
-
-import type { CitingRecordView } from "@/lib/api/references-api";
-import { bundleReadout } from "@/lib/stance/anchors";
+import type { CitingArtifactView, CitingTarget } from "@/lib/api/references-api";
+import { postTitle } from "@/lib/saved/row-content";
+import { postPreview, removalMark } from "@/lib/stance/kept-preview";
+import { instance, part, type DataNode } from "@/lib/ui/data-node";
 import { EmptyState } from "@/lib/ui/empty-state";
-import { Icon } from "@/lib/ui/icons";
-import { formatReferenceParamWords } from "@/lib/ui/reference-format";
-import { formatStancePair } from "@/lib/ui/stance-format";
-import { SEVERED_LABEL } from "@/lib/ui/stance-readout";
 import { BottomSheet } from "./bottom-sheet";
-import { ListRow } from "./list-row";
-import { PairReadout } from "./pair-readout";
+import { ReferenceRow, type ReferenceKind } from "./reference-row";
 
 /**
  * The drawn title, on both doors. A comment's sheet is titled the same as a
@@ -52,35 +54,30 @@ const TITLE = "Cited by";
  */
 const EMPTY = "Nothing cites this yet — yours would be the first.";
 
-/** The 32px kind tile the reading-side rows share. */
-function NodeTile({ children }: { children: ReactNode }) {
-  return (
-    <span className="flex size-8 flex-none items-center justify-center rounded-small bg-surface-container-highest text-label-large text-on-surface-variant">
-      {children}
-    </span>
-  );
-}
-
 /**
- * What the row names, drawn from the citing artifact. The kind rides in words
- * beside the name, which is what lets the leading mark stay decorative.
+ * What the row names, drawn from the citing artifact.
  *
  * A citing artifact this client cannot type still counts and still shows: it
  * keeps its row and simply offers no destination, the same contract
- * `RefsSheet` gives a citation whose far end it cannot address.
+ * `RefsSheet` gives a citation whose far end it cannot address. A REMOVED
+ * artifact keeps its row too, its mark emptied and its name the removal's own
+ * mark — the citation is still a fact, its payload is what went.
  */
-function citingView(target: CitingRecordView["target"]): {
-  label: string;
-  kind: string;
-  mark: ReactNode;
-  href: string | undefined;
+function citingView(target: CitingTarget | null): {
+  kind: ReferenceKind;
+  name: string;
+  src: string | null;
+  href: string | null;
+  redacted: boolean;
 } {
   if (target?.__typename === "Post") {
+    const removed = removalMark(target.removal);
     return {
-      label: target.title.value ?? "",
-      kind: "Post",
-      mark: <NodeTile>T</NodeTile>,
+      kind: "post",
+      name: removed ?? postTitle(target),
+      src: removed === null ? postPreview(target).src : null,
       href: `/posts/${target.id}`,
+      redacted: removed !== null,
     };
   }
   if (target?.__typename === "Comment") {
@@ -89,84 +86,69 @@ function citingView(target: CitingRecordView["target"]): {
     // for; a reply nested deeper keeps its row without a destination rather
     // than paying for a walk up the chain.
     const root = target.target?.__typename === "Post" ? target.target.id : null;
+    const removed = removalMark(target.removal);
     return {
-      label: target.content.value ?? "",
-      kind: "Comment",
-      mark: (
-        <NodeTile>
-          <Icon name="chat_bubble" size={18} />
-        </NodeTile>
-      ),
-      href: root === null ? undefined : `/posts/${root}`,
+      kind: "comment",
+      name: removed ?? target.content.value ?? "",
+      src: null,
+      href: root === null ? null : `/posts/${root}`,
+      redacted: removed !== null,
     };
   }
-  return { label: "", kind: "Reference", mark: <NodeTile>{null}</NodeTile>, href: undefined };
+  return { kind: "post", name: "", src: null, href: null, redacted: false };
 }
 
 export function CitedBySheet({
   open,
   onClose,
-  records,
-  hasMore = false,
-  loadingMore = false,
-  onLoadMore,
+  artifacts,
   stacked = false,
+  node,
   testId = "cited-by-sheet",
 }: {
   open: boolean;
   onClose: () => void;
-  records: readonly CitingRecordView[];
-  hasMore?: boolean;
-  loadingMore?: boolean;
-  onLoadMore?: () => void;
+  /** The standing citations, newest first; null while the read is out. */
+  artifacts: readonly CitingArtifactView[] | null;
   /** The comment path opens this over the thread's own sheet. */
   stacked?: boolean;
+  /**
+   * The sheet's node on the detail (`postDetail.citedBySheet`) — UNREGISTERED:
+   * the CitedBy board names no node, so this is the path it evidently takes,
+   * reported to design.
+   */
+  node?: DataNode;
   testId?: string;
 }) {
   return (
-    <BottomSheet open={open} onClose={onClose} title={TITLE} stacked={stacked} testId={testId}>
-      {records.length === 0 && (
+    <BottomSheet open={open} onClose={onClose} title={TITLE} stacked={stacked} rows node={node} testId={testId}>
+      {artifacts !== null && artifacts.length === 0 && (
         <div className="px-6 pb-2">
-          <EmptyState title={EMPTY} testId={`${testId}-empty`} />
+          <EmptyState title={EMPTY} testId={`${testId}-empty`} node={part(node, "empty")} />
         </div>
       )}
-      {records.map((record) => {
-        const view = citingView(record.target);
-        const pair = { pDirected: record.pDirected, pInterest: record.pInterest };
-        // `ReferenceRow`'s face: the value's own (seam 243). Only the glyph
-        // is drawn; a citation's anchor word is never spoken.
-        const anchor = bundleReadout(pair, SEVERED_LABEL);
+      {artifacts?.map((artifact, index) => {
+        const view = citingView(artifact.target);
         return (
-          <ListRow
-            key={record.id}
-            testId={`${testId}-record-${record.id}`}
-            mark={view.mark}
-            title={view.label}
+          <ReferenceRow
+            key={artifact.key}
             kind={view.kind}
+            name={view.name}
+            src={view.src}
+            redacted={view.redacted}
             href={view.href}
-            trailing={
-              <PairReadout
-                emoji={anchor.emoji}
-                exact={formatStancePair(pair)}
-                spoken={formatReferenceParamWords(record.pDirected, record.pInterest)}
-                pending={false}
-                testId={`${testId}-record-${record.id}-pair`}
-              />
-            }
+            // The sheet is the door, not the destination: dropped as a row is
+            // followed, so Back lands where the reader opened it from.
+            onOpen={onClose}
+            pair={artifact.pair}
+            // The chronicle serves ordered fact only (api-spec.md: "the record
+            // set has no pending namespace"), so a row read from it has landed.
+            pending={false}
+            node={instance(node, "row", String(index + 1))}
+            testId={`${testId}-row-${index + 1}`}
           />
         );
       })}
-      {hasMore && (
-        <button
-          type="button"
-          className="min-h-12 w-full px-6 text-left text-label-large text-primary"
-          data-testid={`${testId}-more`}
-          disabled={loadingMore}
-          onClick={onLoadMore}
-        >
-          {loadingMore ? "Loading…" : "Load more"}
-        </button>
-      )}
     </BottomSheet>
   );
 }

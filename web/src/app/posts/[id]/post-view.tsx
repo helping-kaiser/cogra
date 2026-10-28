@@ -15,12 +15,8 @@ import { useCallback, useEffect, useReducer, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchPostDetail, readCachedPost, type PostView as Post } from "@/lib/api/content-api";
-import { appendDeduped } from "@/lib/api/pagination";
-import {
-  fetchCitedBy,
-  fetchCitedByCount,
-  type CitingRecordView,
-} from "@/lib/api/references-api";
+import { fetchHeldOpinions, type HeldOpinionView } from "@/lib/api/opinions-api";
+import { fetchCitingArtifacts, type CitingArtifactView } from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { Button } from "@/lib/ui/button";
 import { PageHeader } from "@/lib/ui/page-header";
@@ -39,6 +35,7 @@ import { DetailClip } from "@/lib/ui2/media/detail-clip";
 import { PostCard } from "@/lib/ui/post-card";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
+import { OpinionsSheet } from "@/lib/ui2/opinions-sheet";
 import { OverflowTrigger } from "@/lib/ui2/overflow-menu";
 import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
@@ -125,15 +122,18 @@ export function PostView({
   // (`MediaViewer.jsx:26-27`) — the viewer is a layer over this page, so the
   // page is what owns whether it is up.
   const [viewerAt, setViewerAt] = useState<number | null>(null);
-  // The post's own inbound list, raised by its count line — over the page,
-  // never over the thread, so it never stacks.
+  // THE DETAIL'S TWO COUNT LINES AND THE SHEETS THEY RAISE (PostDetail.md,
+  // PostOpinions.md, CitedBy.md) — over the page, never over the thread, so
+  // they never stack. Each line's count IS its sheet's length, so the line and
+  // the sheet read ONE list: the folded rows, held here from the read until
+  // the next one, and the line counts what the sheet will show. Null until
+  // the read lands, which draws no line.
+  const [opinions, setOpinions] = useState<readonly HeldOpinionView[] | null>(null);
+  const [opinionsOpen, setOpinionsOpen] = useState(false);
+  const [citing, setCiting] = useState<readonly CitingArtifactView[] | null>(null);
   const [citedByOpen, setCitedByOpen] = useState(false);
-  const [citedByRecords, setCitedByRecords] = useState<readonly CitingRecordView[]>([]);
-  const [citedByCursor, setCitedByCursor] = useState<string | null>(null);
-  const [citedByHasMore, setCitedByHasMore] = useState(false);
-  const [citedByLoadingMore, setCitedByLoadingMore] = useState(false);
-  // The post's own inbound count, for the line that draws only above zero.
-  const [citedByCount, setCitedByCount] = useState(0);
+  // The page's own pull, which re-reads both lists with the post.
+  const [listsToken, setListsToken] = useState(0);
 
   // `asked`: the reader's own pull — the one read that brings the newest in
   // over the opened version rather than holding it behind the line.
@@ -168,45 +168,26 @@ export function PostView({
 
   useEffect(() => refresh(), [refresh]);
 
-  // The count rides its own read: it is not a field of the post, and it is one
-  // aggregate rather than a page, so it costs nothing to ask for separately and
-  // keeps the detail read's own budget where it is. A failure leaves the count
-  // at zero, which draws no line — an inbound count is not worth a fault banner
-  // over the post the reader came for.
+  // The lists ride their own reads: neither is a field of the post, and each
+  // is folded from the records behind it (`held-opinions.ts`,
+  // `citing-fold.ts`) — the line needs the rows to count them, because a
+  // revised opinion or citation is several records and one row. A failure
+  // keeps what was held (null draws no line) — an inbound list is not worth a
+  // fault banner over the post the reader came for.
   useEffect(() => {
     let cancelled = false;
-    void fetchCitedByCount(client, postId).then((outcome) => {
+    void fetchHeldOpinions(client, postId).then((outcome) => {
       if (cancelled || outcome.kind !== "success") return;
-      setCitedByCount(outcome.value);
+      setOpinions(outcome.value);
+    });
+    void fetchCitingArtifacts(client, postId).then((outcome) => {
+      if (cancelled || outcome.kind !== "success") return;
+      setCiting(outcome.value);
     });
     return () => {
       cancelled = true;
     };
-  }, [client, postId]);
-
-  const openCitedBy = () => {
-    setCitedByOpen(true);
-    setCitedByRecords([]);
-    setCitedByCursor(null);
-    setCitedByHasMore(false);
-    void fetchCitedBy(client, postId).then((outcome) => {
-      if (outcome.kind !== "success") return;
-      setCitedByRecords(outcome.value.items);
-      setCitedByCursor(outcome.value.endCursor);
-      setCitedByHasMore(outcome.value.hasNextPage);
-    });
-  };
-
-  const onLoadMoreCitedBy = async () => {
-    if (citedByLoadingMore || !citedByHasMore) return;
-    setCitedByLoadingMore(true);
-    const outcome = await fetchCitedBy(client, postId, citedByCursor);
-    setCitedByLoadingMore(false);
-    if (outcome.kind !== "success") return;
-    setCitedByRecords((current) => appendDeduped(current, outcome.value.items));
-    setCitedByCursor(outcome.value.endCursor);
-    setCitedByHasMore(outcome.value.hasNextPage);
-  };
+  }, [client, postId, listsToken]);
 
   // Pull-down at the top is one of the surfaces the pull-to-refresh
   // ruling names (design/readme.md, "The pull-down lives on every
@@ -220,6 +201,7 @@ export function PostView({
   const onPull = useCallback(() => {
     setRefreshing(true);
     setThreadToken((n) => n + 1);
+    setListsToken((n) => n + 1);
     refresh(true);
   }, [refresh]);
   // The thread is the sheet's own read, so the page's pull has to say so to
@@ -443,8 +425,10 @@ export function PostView({
           // carries it.
           onOpenComments={() => setCommentsOpen(true)}
           onLinkCopied={() => notify(LINK_COPIED)}
-          citedBy={citedByCount}
-          onOpenCitedBy={openCitedBy}
+          opinions={opinions?.length ?? 0}
+          onOpenOpinions={() => setOpinionsOpen(true)}
+          citedBy={citing?.length ?? 0}
+          onOpenCitedBy={() => setCitedByOpen(true)}
         />
       </div>
       {/* THE ONE COMMENTS SURFACE, raised over this page by the card's count.
@@ -488,19 +472,24 @@ export function PostView({
           refresh(true);
         }}
       />
-      {/* The post's own count line. A comment's ⋮ raises the thread's own
-          copy, stacked over the sheet, which is the sheet's to mount. */}
-      {citedByOpen && (
-        <CitedBySheet
-          open
-          onClose={() => setCitedByOpen(false)}
-          records={citedByRecords}
-          hasMore={citedByHasMore}
-          loadingMore={citedByLoadingMore}
-          onLoadMore={() => void onLoadMoreCitedBy()}
-          testId="cited-by-sheet"
-        />
-      )}
+      {/* The post's own count lines' sheets, reading the lists the lines
+          count. A comment's ⋮ raises the thread's own copies, stacked over the
+          sheet, which are the sheet's to mount. */}
+      <OpinionsSheet
+        open={opinionsOpen}
+        onClose={() => setOpinionsOpen(false)}
+        on="post"
+        opinions={opinions}
+        node={{ path: "postDetail.opinionsSheet" }}
+        testId="opinions-sheet"
+      />
+      <CitedBySheet
+        open={citedByOpen}
+        onClose={() => setCitedByOpen(false)}
+        artifacts={citing}
+        node={{ path: "postDetail.citedBySheet" }}
+        testId="cited-by-sheet"
+      />
       {/* Where the browser has no platform share sheet the control copies the
           link, and this is what says so (readme §13, the audit answers); the
           menu's aftermath lands here too. */}

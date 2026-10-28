@@ -128,31 +128,60 @@ mutation PrepareReferenceWithdrawal($input: PrepareReferenceWithdrawalInput!) {
 # node's OWN citations, and its source-kind filter takes one kind where
 # this list holds both.
 #
-# Newest-first is the server's own order here, and a deliberate departure
-# from the opinions sheet's strongest-first: this is a chronicle of acts,
-# where no citation outranks another and what a reader comes for is what
-# just arrived.
+# THE RECORDS, NOT THE CITATIONS. A citation is a bundle of records keyed
+# (author, citing artifact, target) that nets — revised, it is several
+# records; withdrawn, its counter-records net it to (0, 0) — so the list
+# and the detail's count are the client's fold over the whole set
+# (`citing-fold.ts`), read 100 at a time. The count line needs the rows,
+# so there is no separate count read: `totalCount` counts records.
 #
 # INBOUND RECORDS ARE DISPLAY ONLY. Nothing read here reaches a feed —
 # per the ranking model only viewer-rooted forward paths do.
-query CitedBy($id: UUID!, $first: Int!, $after: String) {
-  records(terminal: $id, family: REFERENCE, first: $first, after: $after) {
-    totalCount
+query CitingRecords($id: UUID!, $after: String) {
+  records(terminal: $id, family: REFERENCE, first: 100, after: $after) {
     edges {
       node {
         id
+        # The bundle key's other half, and the fold's inputs.
+        authorId
+        targetId
         pDirected
         pInterest
+        payloadMarked
+        # The causal key: which record in a bundle is newest.
+        landingEpoch
+        actTime
+        position
         # The middle node of the hyper act: the artifact the citation was
         # built into, which is what the row names.
         # A removed citing artifact keeps its row; `removal` is what its mark
-        # reads, carried here for the row that draws it.
+        # reads.
         target {
           __typename
           ... on Post {
             id
             title {
               value
+              status
+            }
+            content {
+              value
+              status
+            }
+            # The row's tile is a media post's cover (`ReferenceRow`'s
+            # `NodeMark`), and the untitled post's stand-in reads its kind.
+            attachments {
+              url
+              mimeType
+              status
+              coverMedia {
+                url
+                status
+              }
+            }
+            author {
+              id
+              handle
             }
             removal {
               at
@@ -163,6 +192,7 @@ query CitedBy($id: UUID!, $first: Int!, $after: String) {
             id
             content {
               value
+              status
             }
             removal {
               at
@@ -182,15 +212,5 @@ query CitedBy($id: UUID!, $first: Int!, $after: String) {
       hasNextPage
       endCursor
     }
-  }
-}
-
-# The count alone, for the detail card's line — which draws only above
-# zero, so it needs the number before the list. `first: 0` is the same
-# collapsed-count read a post's comment thread already uses for its
-# replies: one aggregate, no edges, priced at zero.
-query CitedByCount($id: UUID!) {
-  records(terminal: $id, family: REFERENCE, first: 0) {
-    totalCount
   }
 }
