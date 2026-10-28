@@ -10,7 +10,6 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
-import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -146,16 +145,18 @@ class ExploreScreenTest {
         render(member.copy(query = "salt"))
         compose.onNodeWithTag("explore.band.wordmark", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("explore.skyCard", useUnmergedTree = true).assertDoesNotExist()
-        compose.onNodeWithTag("explore.filterTrigger", useUnmergedTree = true)
-            .assertContentDescriptionEquals("Everything, what the search shows")
+        // The tag is the drawn pill; the control around it carries the name.
+        compose.onNodeWithTag("explore.filterTrigger", useUnmergedTree = true).assertExists()
+        compose.onNodeWithContentDescription("Everything, what the search shows").assertExists()
     }
 
     @Test
     fun `the trigger speaks only the deviations from the reader's default`() {
         val filter = SearchFilter(kinds = setOf(FeedKind.COMMENT), order = SearchOrder.NEWEST)
         render(member.copy(query = "salt", filter = filter))
-        compose.onNodeWithTag("explore.filterTrigger", useUnmergedTree = true)
-            .assertContentDescriptionEquals("Comments · newest, what the search shows")
+        // The tag is the drawn pill; the control around it carries the name.
+        compose.onNodeWithTag("explore.filterTrigger", useUnmergedTree = true).assertExists()
+        compose.onNodeWithContentDescription("Comments · newest, what the search shows").assertExists()
     }
 
     @Test
