@@ -344,8 +344,27 @@ class StanceViewModel @Inject constructor(
      */
     fun onCommit(target: StanceTarget) {
         val entry = _state.value.targets[target] ?: return
+        // A Set pressed before the standing has loaded has no landing to
+        // check yet; it waits for the read rather than skipping the (0, 0)
+        // ask, and a read that fails signs nothing (StanceControl.jsx `commitChecked`
+        // always holds the bundle).
+        if (entry.standingRaw == null) return commitOnceRead(target)
         if (entry.landing?.severance == true) return askAtZero(target)
         commit(target, entry.pick)
+    }
+
+    private fun commitOnceRead(target: StanceTarget) {
+        if (_state.value.targets[target]?.busy == true) return
+        update(target) { it.copy(busy = true, failed = false) }
+        viewModelScope.launch {
+            readStanding(target)
+            val read = _state.value.targets[target] ?: return@launch
+            update(target) { it.copy(busy = false) }
+            when {
+                read.standingRaw == null -> fail(target, needsKey = false)
+                read.pad != PadMode.CLOSED -> onCommit(target)
+            }
+        }
     }
 
     /**
