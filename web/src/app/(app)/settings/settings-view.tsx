@@ -44,6 +44,8 @@ import { useHiddenSet } from "@/lib/hidden/provider";
 import { seenRecord } from "@/lib/history/seen-record";
 import { forgetSeen } from "@/lib/history/seen-sync";
 import { forgetRecents } from "@/lib/search/recents";
+import { FEED_FILTER_DEFAULT, feedFilterSummary } from "@/lib/feed/feed-filter";
+import { useReaderDefault, writeReaderDefault } from "@/lib/feed/reader-default";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
 import { forgetKeptPicks, keptOpinions, useKeptPicks } from "@/lib/stance/kept-picks";
 import { keptPicksHref } from "@/lib/stance/kept-picks-route";
@@ -84,6 +86,7 @@ import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 import { EraseConfirm } from "./erase-confirm";
 import { SettingsHiddenSheet } from "./settings-hidden-sheet";
 import { SettingsLicenseSheet } from "./settings-license-sheet";
+import { SettingsReadingSheet } from "./settings-reading-sheet";
 import {
   EMAIL_ROUTES,
   emailDestination,
@@ -246,6 +249,13 @@ export function SettingsView({
   const signOutRow = useRef<HTMLButtonElement | null>(null);
   const eraseRow = useRef<HTMLButtonElement | null>(null);
   const licenseRow = useRef<HTMLButtonElement | null>(null);
+  // WHAT YOUR FEED SHOWS (SettingsReading.md): the reader's default on this
+  // device, the row reading it back in the filter pill's words — against
+  // CoGra's own default, so CoGra's reads `Posts`.
+  const readingAccount = useActiveAccountId();
+  const readerDefault = useReaderDefault(readingAccount);
+  const [readingOpen, setReadingOpen] = useState(false);
+  const readingRow = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     void guard.run(() => fetchSettingsAccount(client)).then((outcome) => {
@@ -613,11 +623,16 @@ export function SettingsView({
           footnote="Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device."
           node={node("reading")}
         >
-          {/* DRIFT (feed-filter packet): the sheet this row opens
-              (SettingsReading) waits for the feed filter that owns the
-              reader's default. Every feed shows posts today, so the row reads
-              true; the tap opens nothing until the filter exists. */}
-          <SettingsRow label="What your feed shows" value="Posts" onOpen={() => {}} node={node("reading.feed")} />
+          {/* THE ROW IS THE TRIGGER (SettingsReading.jsx): it opens the feed's
+              own sheet over Settings and reads the saved default back in the
+              pill's words. */}
+          <SettingsRow
+            label="What your feed shows"
+            value={feedFilterSummary(readerDefault, FEED_FILTER_DEFAULT)}
+            onOpen={readingAccount === null ? undefined : () => setReadingOpen(true)}
+            rowRef={readingRow}
+            node={node("reading.feed")}
+          />
           <SettingsRow
             checked={exactValues === "on"}
             label="Show exact values"
@@ -868,6 +883,24 @@ export function SettingsView({
           />
         </SettingsGroup>
       </div>
+
+      {/* Done saves the default and the row reads it back; every way out
+          returns focus to the row (SettingsReading.md). */}
+      {readingOpen && readingAccount !== null && (
+        <SettingsReadingSheet
+          saved={readerDefault}
+          node={NODE}
+          onDone={(value) => {
+            setReadingOpen(false);
+            writeReaderDefault(readingAccount, value);
+            readingRow.current?.focus();
+          }}
+          onDiscard={() => {
+            setReadingOpen(false);
+            readingRow.current?.focus();
+          }}
+        />
+      )}
 
       {licenseOpen && (
         <SettingsLicenseSheet

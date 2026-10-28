@@ -41,3 +41,12 @@ describe("the identity row's stance face", () => {
     expect(img).toHaveAccessibleName("Really into this, +0.60 / +0.65");
   });
 });
+
+describe("the identity row's trailing age", () => {
+  it("sets the label-small tracking with its leading (ContentRow.jsx TYPE)", () => {
+    render(<ContentRow title="@ada commented on your post" trailing="35m" disc={{ kind: "monogram", name: "Ada" }} testId="row" />);
+    const age = screen.getByTestId("row-trailing");
+    expect(age.style.letterSpacing).toBe("var(--text-label-small--letter-spacing)");
+    expect(age.style.lineHeight).toBe("var(--text-label-small--line-height)");
+  });
+});

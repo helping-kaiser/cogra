@@ -1602,7 +1602,8 @@ describe("FeedView's ranked data path", () => {
     renderWithProviders(<FeedView />);
     await screen.findByTestId(byNode("feed.card", "p1"));
     act(() => announceFeedDone({ ...FEED_FILTER_DEFAULT, kinds: [] }));
-    expect(await screen.findByTestId("feed-empty")).toBeInTheDocument();
+    // FeedNothing.md:5 — the empty state that says everything is switched off.
+    expect(await screen.findByTestId(byNode("feed.nothing"))).toBeInTheDocument();
     expect(reads.ranks).toHaveLength(1);
   });
 

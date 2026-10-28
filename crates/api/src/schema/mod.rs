@@ -155,6 +155,7 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(loaders.post_removals)
         .data(loaders.comment_removals)
         .data(loaders.severing_records)
+        .data(loaders.record_acts)
         .data(loaders.epoch_instants)
         .data(loaders.bookmarks)
         .data(loaders.thread_posts)
