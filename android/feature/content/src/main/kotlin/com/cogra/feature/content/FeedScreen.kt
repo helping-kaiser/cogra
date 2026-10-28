@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -40,11 +41,16 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -59,6 +65,8 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.StanceAxes
+import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.collapsingTop
@@ -74,6 +82,9 @@ import com.cogra.core.designsystem.v2.atom.CograBandChats
 import com.cogra.core.designsystem.v2.atom.CograBandIdentity
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograMark
+import com.cogra.core.designsystem.v2.atom.EmptyState
+import com.cogra.core.designsystem.v2.atom.FilterTrigger
+import com.cogra.core.designsystem.v2.atom.filterTriggerName
 import com.cogra.core.designsystem.v2.atom.taskRing
 import com.cogra.core.designsystem.v2.atom.taskRingColors
 import com.cogra.core.designsystem.v2.media.CoverKind
@@ -90,6 +101,9 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.feed.FeedCard
+import com.cogra.domain.feed.FeedFilter
+import com.cogra.domain.feed.feedFilterSummary
 import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.removal.RemovalKind
 import com.cogra.domain.removal.marked
@@ -97,6 +111,7 @@ import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
+import com.cogra.feature.feedfilter.FeedFilterSheet
 import com.cogra.feature.saved.LocalSavedHost
 import com.cogra.feature.saved.asHiddenPerson
 import com.cogra.feature.saved.rememberHiddenSet
@@ -107,6 +122,7 @@ import com.cogra.feature.stance.StanceControlRoute
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import com.cogra.feature.feedfilter.R as FilterR
 
 /**
  * How many posts short of the end the tail watch sits — the same effective
@@ -201,11 +217,23 @@ fun FeedRoute(
     onRequireAccount: (() -> Unit)? = null,
     /** The bar's Feed slot re-tapped over this root, counted ([FeedReselectEffect]). */
     reselectSignal: Int = 0,
+    /**
+     * A comment card's door (FeedKinds.md): the post's comment section landed
+     * on the comment, [aimReply] with the composer aimed at it. Null opens the post.
+     */
+    onOpenComment: ((postId: String, commentId: String, aimReply: Boolean) -> Unit)? = null,
+    /** A tag card's `Tag a new post with it` (FeedKinds.md): the composer at its first stage, the tag staged. */
+    onComposeWithTag: (String) -> Unit = {},
+    /** The filter sheet's `All your topics`; null stands it inert until the app draws Your topics. */
+    onOpenTopics: (() -> Unit)? = null,
     viewModel: FeedViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     consumeRefreshSignal(refreshSignal, onRefreshSignalConsumed, viewModel::refresh)
+    // THE FEED IS BACK IN VIEW: its held pages come back wearing any removal
+    // taken meanwhile, re-cut under the filter they were made under (CD-4).
+    LaunchedEffect(viewModel) { viewModel.onShown() }
     // THE FEED'S REMOVAL, for every own card's ⋮ and the thread a count raises:
     // a card removed here stands as its mark in place (RM-G9).
     ProvideRemoval {
@@ -261,8 +289,58 @@ fun FeedRoute(
             saved = rememberSavedWrites(),
             onRequireAccount = onRequireAccount,
             hidden = rememberHiddenSet(),
+            filter = FeedFilterCallbacks(
+                onApply = viewModel::applyFilter,
+                onShowPostsAgain = viewModel::showPostsAgain,
+                onSheetOpened = viewModel::onSheetOpened,
+                onOpenTopics = onOpenTopics,
+            ),
+            kinds = FeedKindHooks(
+                onOpenComment = onOpenComment ?: { postId, _, _ -> onOpenPost(postId) },
+                onShareUrl = { url -> context.sharePost(url) },
+                shareUrls = viewModel.shareUrls,
+                onComposeWithTag = onComposeWithTag,
+                onShareTopic = { name -> context.sharePost(viewModel.topicShareUrl(name)) },
+                topicStance = feedTopicStanceControl,
+            ),
         )
     }
+}
+
+/**
+ * The band's filter and its sheet, hoisted ([FeedViewModel]): Done's commit,
+ * FeedNothing's way back, the sheet's opening (its topics are read then), and
+ * `All your topics`.
+ */
+data class FeedFilterCallbacks(
+    val onApply: (FeedFilter) -> Unit = {},
+    val onShowPostsAgain: () -> Unit = {},
+    val onSheetOpened: () -> Unit = {},
+    val onOpenTopics: (() -> Unit)? = null,
+)
+
+/** What the other kinds' cards are handed beyond the feed's doors: their shares, the tag's composer and stance. */
+data class FeedKindHooks(
+    /** A comment card's doors: the post's comment section landed on it; [aimReply] opens the composer at it. */
+    val onOpenComment: (postId: String, commentId: String, aimReply: Boolean) -> Unit = { _, _, _ -> },
+    /** Hands an address to the platform's own share sheet. */
+    val onShareUrl: (String) -> Unit = {},
+    val shareUrls: CardShareUrls = CardShareUrls({ it }, { _, comment -> comment }, { it }),
+    val onComposeWithTag: (String) -> Unit = {},
+    val onShareTopic: (String) -> Unit = {},
+    val topicStance: @Composable (name: String, node: DataNode) -> Unit = { _, _ -> },
+)
+
+/** The tag card's Affinity control on the feed (FeedTagShapes.md: the face is the reader's own Affinity). */
+private val feedTopicStanceControl: @Composable (name: String, node: DataNode) -> Unit = { name, node ->
+    StanceControlRoute(
+        target = StanceTarget.Topic(name),
+        testTagPrefix = "feed_tag_$name",
+        axes = StanceAxes.Affinity,
+        zeroWords = StanceZeroWords.Disconnected,
+        targetLabel = "#$name",
+        node = node,
+    )
 }
 
 /**
@@ -281,10 +359,10 @@ private fun rememberShownFeed(state: FeedUiState, hidden: HiddenSet?, onLoadMore
     // stage with its payload (RM-G9; the remembered pages pick it up).
     val marks = rememberRemovedMarks()
     val shown = remember(state, view, marks) {
-        val kept = state.posts.filterNot { view.hides(it.author?.id, it.id) }.map { it.marked(marks) }
-        if (kept == state.posts) state else state.copy(posts = kept)
+        val kept = state.cards.filterNot { view.hides(it.authorId, it.id) }.map { it.marked(marks) }
+        if (kept == state.cards) state else state.copy(cards = kept)
     }
-    val emptied = shown.posts.isEmpty() && state.posts.isNotEmpty() && state.hasNextPage
+    val emptied = shown.cards.isEmpty() && state.cards.isNotEmpty() && state.hasNextPage
     LaunchedEffect(emptied) { if (emptied) onLoadMore() }
     return shown
 }
@@ -314,9 +392,14 @@ private fun consumeRefreshSignal(signal: Boolean, consume: () -> Unit, refresh: 
     refresh()
 }
 
-/** The band's working edge: chats, then the bell, right-most (Profile.md:3; ChatsComingSoon.md:3). */
+/**
+ * The band's working edge (`CograBand.jsx`, the band law): the screen's own
+ * control INBOARD — the feed's filter trigger — then chats, then the bell,
+ * right-most (Profile.md:3; ChatsComingSoon.md:3).
+ */
 @Composable
-private fun FeedBandActions(onChats: (() -> Unit)?, bell: BandBell?, band: DataNode) {
+private fun FeedBandActions(onChats: (() -> Unit)?, bell: BandBell?, band: DataNode, trigger: @Composable () -> Unit) {
+    trigger()
     onChats?.let { CograBandChats(it, testTag = "feed_band", node = band) }
     bell?.let { CograBandBell(it, testTag = "feed_band", node = band) }
     // The band's own 16dp end (`CograBand.jsx` `0 var(--space-4)`): the bar's
@@ -391,7 +474,22 @@ fun FeedScreen(
     hidden: HiddenSet? = null,
     /** The bar's Feed slot re-tapped over this root, counted ([FeedReselectEffect]). */
     reselectSignal: Int = 0,
+    /** The band's filter trigger and its sheet (FeedSheet.md), hoisted. */
+    filter: FeedFilterCallbacks = FeedFilterCallbacks(),
+    /** The comment, profile and tag cards' own hooks (FeedKinds.md). */
+    kinds: FeedKindHooks = FeedKindHooks(),
 ) {
+    // THE FILTER SHEET (FeedSheet.md): open, and what it has staged since it
+    // opened — a copy taken at opening, so nothing behind it moves before Done.
+    // Remembered, not saved: a reader who comes back finds the feed, never a
+    // sheet still standing over it.
+    var sheetOpen by remember { mutableStateOf(false) }
+    var staged by remember { mutableStateOf(state.filter) }
+    // THE APPLY IS SAID ONCE (FeedFilter.jsx; WCAG 4.1.3): Done with changes
+    // leaves one polite status in a region mounted from the start.
+    var said by remember { mutableStateOf("") }
+    val trigger = remember { FocusRequester() }
+    val purpose = stringResource(FilterR.string.feedfilter_purpose)
     // EVERY LAYER RAISED OVER THE FEED SAYS IT IS UP (Feed.md:31-37): the
     // card's menu, the terms and the report's confirm each stop the playing
     // clip while they stand, the way the raised thread does, and the stage
@@ -447,22 +545,63 @@ fun FeedScreen(
     // the moment it left.
     val collapsingTop = rememberCollapsingTop()
     WatchFeedTail(listState = listState, state = drawn, onLoadMore = onLoadMore)
-    // SEEN, AT THE LIST: a post card fully in the viewport joins the
-    // reader's History, as itself (History.md). Only the post rows map to
-    // an id; the banner and expiry rows are not cards.
-    val postIds = remember(drawn.posts) { drawn.posts.mapTo(HashSet()) { it.id } }
+    // SEEN, AT THE LIST: a card fully in the viewport joins the reader's
+    // History, as itself, whatever its kind (History.md). Only the card rows
+    // map to an id; the banner and expiry rows are not cards. The raised
+    // thread and the filter sheet suspend it: a card under a sheet is not
+    // being read.
+    val cardIds = remember(drawn.cards) { drawn.cards.mapTo(HashSet()) { it.id } }
     SeenCardsEffect(
         listState = listState,
-        nodeIdOf = { key -> (key as? String)?.takeIf { it in postIds } },
+        nodeIdOf = { key -> (key as? String)?.takeIf { it in cardIds } },
         onSeen = onCardsSeen,
         onEdgesSeen = onCardEdgesSeen,
         onCheckpoint = onSeenCheckpoint,
-        suspended = commentsFor != null,
+        suspended = commentsFor != null || sheetOpen,
     )
     val band = FEED / "band"
     // THE CARDS' MENUS SAVE THROUGH THE ONE OVERLAY AND HIDE THROUGH THE ONE
     // SET, their aftermath on the feed's own snackbar (`saveMenuRow`, `hidePerson`).
     val savedHost = rememberSavedHost(saved, snackbar, FEED / "snackbar", onRequireAccount, hidden)
+    // THE OTHER KINDS' CARDS (FeedKinds.md) take the feed's own doors, menus
+    // and sheets: a comment card's thread is the feed's, its report the feed's.
+    val kindActions = CardActions(
+        hooks = CardHooks(
+            viewerId = viewerId,
+            onShare = kinds.onShareUrl,
+            shareUrls = kinds.shareUrls,
+            onEditPost = onEditPost,
+            onCitePost = onCitePost,
+            onReveal = onReveal,
+            stanceControl = stanceControl,
+        ),
+        doors = CardDoors(onOpenPost, kinds.onOpenComment, onOpenActor, onOpenTopic),
+        reveals = state.reveals,
+        onOpenComments = { commentsFor = it },
+        onReport = { reportFor = it },
+    )
+    val tagActions = TagCardActions(
+        onOpen = onOpenTopic,
+        onCompose = kinds.onComposeWithTag,
+        onShare = kinds.onShareTopic,
+        stance = kinds.topicStance,
+    )
+    // DONE (FeedSheet.md:81-85; CD-1): the sheet closes; with changes the feed
+    // takes them — one ranking where Kinds or the topic changed, a local
+    // re-derive otherwise — and one polite status says the trigger's new name;
+    // unchanged, nothing is asked and nothing is said. Focus returns to the
+    // trigger either way.
+    val readingOf: (FeedFilter) -> String = { value ->
+        feedFilterSummary(value, state.readerDefault, state.borrowedHandle)
+    }
+    val closeSheet: (FeedFilter?) -> Unit = { done ->
+        sheetOpen = false
+        if (done != null && done != state.filter) {
+            said = filterTriggerName(readingOf(done), purpose)
+            filter.onApply(done)
+        }
+        trigger.requestFocusSafely()
+    }
     CompositionLocalProvider(LocalCoveringLayers provides layers, LocalSavedHost provides savedHost) {
         Scaffold(
             modifier = Modifier.dataNodeSurface(),
@@ -474,7 +613,22 @@ fun FeedScreen(
                         // (FE-09). The 48dp band is the drawn one (F-10).
                         title = { CograBandIdentity(testTag = "feed_band", node = band) },
                         modifier = Modifier.dataNode(band),
-                        actions = { FeedBandActions(onChats, bell, band) },
+                        actions = {
+                            FeedBandActions(onChats, bell, band) {
+                                FilterTrigger(
+                                    reading = feedFilterSummary(state.filter, state.readerDefault, state.borrowedHandle),
+                                    purpose = purpose,
+                                    onOpen = {
+                                        staged = state.filter
+                                        sheetOpen = true
+                                        filter.onSheetOpened()
+                                    },
+                                    expanded = sheetOpen,
+                                    node = band / "filterTrigger",
+                                    modifier = Modifier.focusRequester(trigger),
+                                )
+                            }
+                        },
                         expandedHeight = Layout.TopBarHeight,
                         colors = surfaceTopAppBarColors(),
                         scrollBehavior = collapsingTop.scrollBehavior,
@@ -494,7 +648,8 @@ fun FeedScreen(
         ) { padding ->
             PullToRefreshBox(
                 isRefreshing = state.loading,
-                onRefresh = onRefresh,
+                // A PULL INSIDE THE FILTER SHEET NEVER REFRESHES THE FEED (FeedSheet.md:77).
+                onRefresh = { if (!sheetOpen) onRefresh() },
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxSize(),
@@ -513,7 +668,7 @@ fun FeedScreen(
                     // The status banners ride every branch — an applicant with an
                     // empty feed still sees their application cards.
                     when {
-                        state.transportFault != null && drawn.posts.isEmpty() -> Column(
+                        state.transportFault != null && drawn.cards.isEmpty() -> Column(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
@@ -528,7 +683,15 @@ fun FeedScreen(
                                 Text(stringResource(R.string.content_retry))
                             }
                         }
-                        !state.loading && drawn.posts.isEmpty() -> Column(
+                        // FEEDNOTHING (FeedNothing.md): every kind off — the empty
+                        // state alone, no seen separator and no seen rows, and the
+                        // way back. The client never ranked.
+                        !state.loading && state.filter.kinds.isEmpty() -> FeedNothing(
+                            banners = banners,
+                            vouchCard = vouchCard,
+                            onShowPostsAgain = filter.onShowPostsAgain,
+                        )
+                        !state.loading && drawn.cards.isEmpty() -> Column(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
@@ -584,7 +747,7 @@ fun FeedScreen(
                             // (Feed.md:31-35).
                             ScrollStageHost(
                                 listState,
-                                suspended = feedCovered(commentsFor, layers),
+                                suspended = feedCovered(commentsFor, layers) || sheetOpen,
                                 hardTopReelects = true,
                             ) {
                                 // A feed post spans the screen edge to edge,
@@ -649,19 +812,28 @@ fun FeedScreen(
                                             )
                                         }
                                     }
+                                    // EVERY KIND AS ITS OWN CARD (FeedKinds.md): a post
+                                    // as the feed card, a comment, a person and a topic
+                                    // as theirs — the same cards History draws.
+                                    val cardRow: @Composable (FeedCard) -> Unit = { card ->
+                                        when (card) {
+                                            is FeedCard.Post -> postRow(card.post)
+                                            else -> KindCard(card, kindActions, kinds, tagActions)
+                                        }
+                                    }
                                     // THE SEEN TAIL (FeedSeenTail.md): the unseen
                                     // cards, then the separator, then the cards the
                                     // reader has already seen — each run in the
                                     // feed's own order. The separator stands only
                                     // once a seen card is drawn, so with nothing
                                     // unseen the feed opens at it.
-                                    val split = seenSplit(drawn.posts, state.seenTail)
-                                    val unseen = drawn.posts.subList(0, split)
-                                    val seen = drawn.posts.subList(split, drawn.posts.size)
-                                    items(unseen, key = { it.id }) { postRow(it) }
+                                    val split = seenSplit(drawn.cards, state.seenTail)
+                                    val unseen = drawn.cards.subList(0, split)
+                                    val seen = drawn.cards.subList(split, drawn.cards.size)
+                                    items(unseen, key = { it.id }) { cardRow(it) }
                                     if (seen.isNotEmpty()) {
                                         item(key = FEED_SEEN_SEPARATOR) { SeenSeparator() }
-                                        items(seen, key = { it.id }) { postRow(it) }
+                                        items(seen, key = { it.id }) { cardRow(it) }
                                     }
                                     // The slot the next page fills. At rest it draws
                                     // nothing — the page comes because the reader
@@ -693,6 +865,123 @@ fun FeedScreen(
         reportFor?.let { postId ->
             reportSheet(postId, { reportFor = null }, notify)
         }
+        if (sheetOpen) {
+            FeedFilterSheet(
+                staged = staged,
+                onStage = { staged = it },
+                // Reset stages the READER'S default (FeedSheet.md:63), never CoGra's.
+                onReset = { staged = state.readerDefault },
+                onDone = { closeSheet(staged) },
+                // The scrim, a swipe down and Back drop what is staged (:85-87).
+                onDismiss = { closeSheet(null) },
+                node = FILTER_SHEET,
+                topics = state.heldTopics,
+                onOpenTopics = filter.onOpenTopics,
+                borrowedHandle = state.borrowedHandle,
+            )
+        }
+        // The polite status region, mounted from the start: assistive
+        // technology announces only changes to a region it already watches. It
+        // draws nothing.
+        Box(
+            Modifier
+                .size(1.dp)
+                .testTag(FEED_FILTER_STATUS)
+                .semantics {
+                    liveRegion = LiveRegionMode.Polite
+                    if (said.isNotEmpty()) contentDescription = said
+                },
+        )
+    }
+}
+
+/** The polite status a Done with changes leaves (FeedSheet.md:81). */
+internal const val FEED_FILTER_STATUS = "feed_filter_status"
+
+/**
+ * The feed's filter sheet. UNREGISTERED: FeedSheet is drawn but the registry
+ * holds only `feed.band.filterTrigger`, so the sheet wears the path its
+ * siblings' evident one gives it (`history.filterSheet`, `explore.filterSheet`)
+ * — web's too — and is reported for registration.
+ */
+private val FILTER_SHEET = FEED / "filterSheet"
+
+/** FeedNothing's empty state — UNREGISTERED, tagged by its evident path, as web's. */
+private val NOTHING = FEED / "nothing"
+
+/** Focus back to the trigger, if it is still placed (a sheet closing over a feed that left keeps none). */
+private fun FocusRequester.requestFocusSafely() {
+    runCatching { requestFocus() }
+}
+
+/**
+ * FEEDNOTHING (FeedNothing.md; `EmptyState.jsx`): every kind switched off —
+ * allowed at the chip, answered here: the line says what is off and `Show
+ * posts again` is the way back, an outlined small button. It stands alone:
+ * no seen separator, no seen rows. The status banners still ride it, as every
+ * branch of the feed carries them.
+ */
+@Composable
+private fun FeedNothing(banners: @Composable () -> Unit, vouchCard: @Composable () -> Unit, onShowPostsAgain: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = Space.x2),
+    ) {
+        Box(Modifier.padding(horizontal = Space.x4)) { banners() }
+        vouchCard()
+        // The board's own `8 24` body (FeedNothing.jsx).
+        EmptyState(
+            testTag = NOTHING.tag,
+            title = stringResource(R.string.content_feed_nothing),
+            registered = true,
+            modifier = Modifier.padding(horizontal = Space.x6),
+            action = {
+                CograButton(
+                    text = stringResource(R.string.content_feed_show_posts_again),
+                    onClick = onShowPostsAgain,
+                    kind = ButtonKind.Outlined,
+                    size = ButtonSize.Compact,
+                    testTag = (NOTHING / "action").tag,
+                )
+            },
+        )
+    }
+}
+
+/**
+ * A comment's, a person's or a topic's feed card (FeedKinds.md;
+ * FeedCommentShapes, FeedProfileShapes, FeedTagShapes) — the same cards
+ * History and Saved stand. `feed.commentCard` is registered; the person's and
+ * the topic's are UNREGISTERED on the feed, so they wear their evident paths
+ * (`feed.profileCard`, `feed.tagCard`, as History's and web's).
+ */
+@Composable
+private fun KindCard(card: FeedCard, actions: CardActions, kinds: FeedKindHooks, tags: TagCardActions) {
+    val doors = actions.doors
+    when (card) {
+        // A FEED COMMENT CARD CARRIES NO VIEW-REPLIES LINE (FeedKinds.md:19).
+        is FeedCard.Comment -> ListCommentCard(
+            listed = card.comment,
+            target = card.target,
+            threadPostId = card.threadPostId,
+            node = FEED / "commentCard",
+            testTagPrefix = "feed_comment_${card.comment.id}",
+            actions = actions,
+        )
+        is FeedCard.Person -> ProfileFeedCard(
+            profile = card.profile,
+            node = FEED / "profileCard",
+            testTagPrefix = "feed_person_${card.profile.id}",
+            viewerId = actions.viewerId,
+            onOpen = { doors.onOpenActor(card.profile.handle) },
+            onShare = { actions.onShare(kinds.shareUrls.profile(card.profile.handle)) },
+            stanceControl = actions.stanceControl,
+        )
+        is FeedCard.Tag -> TagFeedCard(topic = card.topic, node = FEED / "tagCard", actions = tags)
+        // A post is the feed's own card, drawn by the list itself.
+        is FeedCard.Post -> Unit
     }
 }
 
@@ -727,9 +1016,9 @@ private fun WatchFeedTail(
     state: FeedUiState,
     onLoadMore: () -> Unit,
 ) {
-    LaunchedEffect(state.posts, state.hasNextPage, state.transportFault) {
+    LaunchedEffect(state.cards, state.hasNextPage, state.transportFault) {
         if (!state.hasNextPage || state.transportFault == TransportFault.APPEND) return@LaunchedEffect
-        val tailId = state.posts.getOrNull(feedTailIndexOf(state.posts.size))?.id ?: return@LaunchedEffect
+        val tailId = state.cards.getOrNull(feedTailIndexOf(state.cards.size))?.id ?: return@LaunchedEffect
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.any { it.key == tailId } }
             .distinctUntilChanged()
             .filter { it }
@@ -804,9 +1093,9 @@ internal const val FEED_SEEN_SEPARATOR = "feed_seen_separator"
  * yet. The derive stands every tail row after every unseen one, so the
  * cards split at one point.
  */
-internal fun seenSplit(posts: List<PostView>, seenTail: Set<String>): Int {
-    val first = posts.indexOfFirst { it.id in seenTail }
-    return if (first < 0) posts.size else first
+internal fun seenSplit(cards: List<FeedCard>, seenTail: Set<String>): Int {
+    val first = cards.indexOfFirst { it.id in seenTail }
+    return if (first < 0) cards.size else first
 }
 
 /**

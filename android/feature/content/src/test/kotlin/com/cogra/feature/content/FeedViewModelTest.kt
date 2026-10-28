@@ -28,17 +28,21 @@ import com.cogra.domain.feed.FeedViewer
 import com.cogra.domain.feed.PeopleMark
 import com.cogra.domain.feed.PeopleScope
 import com.cogra.domain.feed.PeopleSign
+import com.cogra.domain.feed.ReaderDefaults
 import com.cogra.domain.hidden.HiddenEntry
 import com.cogra.domain.hidden.HiddenPerson
 import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.history.StoredSeenRecord
+import com.cogra.domain.removal.RemovedMarks
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.RecordingHiddenRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ScriptedFeedRepository
+import com.cogra.domain.testing.ScriptedFeedTopics
 import com.cogra.domain.testing.ScriptedSeenHistory
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.entry
@@ -81,6 +85,11 @@ class FeedViewModelTest {
 
     private val feed = ScriptedFeedRepository()
 
+    /** The reader defaults this device holds, per account; none unless a test saves one. */
+    private val defaults = InMemoryReaderDefaultStore()
+    private val heldTopics = ScriptedFeedTopics()
+    private val removedMarks = RemovedMarks()
+
     /** The process's record and tracker — built lazily, so a test can script the store first. */
     private val seenRecord by lazy { SeenRecord(records, server, session, appScope) }
     private val seenTracker by lazy { SeenTracker(history, session, appScope, seenRecord) }
@@ -99,6 +108,9 @@ class FeedViewModelTest {
         WEB_ORIGIN,
         seenTracker,
         hidden,
+        ReaderDefaults(defaults, session),
+        heldTopics,
+        removedMarks,
     )
 
     private fun FeedViewModel.ids() = state.value.posts.map { it.id }
@@ -657,6 +669,9 @@ class FeedViewModelTest {
             WEB_ORIGIN,
             seenTracker,
             hidden,
+            ReaderDefaults(defaults, session),
+            heldTopics,
+            removedMarks,
         )
         settle()
 

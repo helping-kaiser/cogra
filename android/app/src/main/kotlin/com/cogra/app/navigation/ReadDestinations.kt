@@ -133,6 +133,14 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
         // The profile names its way back by the door it came through.
         onOpenActor = { handle -> navController.navigate(Profile(handle, from = FEED_ORIGIN)) },
         onOpenCommentActor = { handle -> navController.navigate(Profile(handle, from = COMMENTS_ORIGIN)) },
+        // A comment card's doors (FeedKinds.md): the post's comment section,
+        // landed on the comment, the composer aimed at it on the comment glyph.
+        onOpenComment = { postId, commentId, aimReply ->
+            navController.navigate(PostDetail(postId, commentId = commentId, aimReply = aimReply))
+        },
+        // `Tag a new post with it` (FeedKinds.md): the composer at its first
+        // stage, the tag riding staged.
+        onComposeWithTag = { name -> navController.navigate(ComposePost(tag = name)) },
         onOpenTopic = { name -> navController.navigate(Topic(name)) },
         // The card's ⋮ reaches the same two destinations the
         // detail's menu does: a feed card's rows are the post's
