@@ -81,9 +81,9 @@ mirror_bucket() {
   # The commands are expanded by the container's shell, not this one.
   # shellcheck disable=SC2016
   if [ "$direction" = pull ]; then
-    cmd='mc mirror --overwrite --remove --quiet "s/$BUCKET" "/data/$BUCKET"'
+    cmd='mc mirror --overwrite --remove --quiet "s/$BUCKET" "/data/$BUCKET" >/dev/null'
   else
-    cmd='mc mb --ignore-existing "s/$BUCKET" && mc mirror --overwrite --remove --quiet "/data/$BUCKET" "s/$BUCKET"'
+    cmd='mc mb --ignore-existing "s/$BUCKET" && mc mirror --overwrite --remove --quiet "/data/$BUCKET" "s/$BUCKET" >/dev/null'
   fi
   podman run --rm --pull=never --network "$network" \
     --secret "$prefix-root-user,type=env,target=MC_ROOT_USER" \

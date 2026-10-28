@@ -22,7 +22,7 @@ install -m 0644 "$src/proxy/Caddyfile" /etc/cogra/Caddyfile
 
 # Operator scripts and what the units mount from the host.
 install -m 0644 "$src/scripts/lib.sh" /usr/local/lib/cogra/lib.sh
-for script in alert backup bootstrap deploy disk-watch log-alert restore; do
+for script in alert backup bootstrap deploy disk-watch log-alert restore secret; do
   install -m 0755 "$src/scripts/$script.sh" "/usr/local/lib/cogra/$script.sh"
 done
 install -m 0755 "$src/media/provision.sh" /usr/local/lib/cogra/media-provision.sh

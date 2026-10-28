@@ -19,7 +19,6 @@ if [ "${1:-}" = --once ]; then
   if [ -n "$(find "$stamp" -mmin "-$((hours * 60))" 2>/dev/null)" ]; then
     exit 0
   fi
-  touch "$stamp"
 fi
 title=${1:?usage: alert.sh [--once KEY HOURS] TITLE MESSAGE}
 message=${2:?usage: alert.sh [--once KEY HOURS] TITLE MESSAGE}
@@ -29,3 +28,6 @@ load_env alert.env
 log "alert: $title — $message"
 curl -fsS --max-time 20 -H "Title: $title" -H "Priority: high" -H "Tags: warning" \
   --data "$message" "$NTFY_URL" >/dev/null
+# Stamped only once the post went through: a failed post is retried on the
+# next run rather than silenced for the window.
+if [ -n "${stamp:-}" ]; then touch "$stamp"; fi

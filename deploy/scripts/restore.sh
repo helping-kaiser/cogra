@@ -75,9 +75,9 @@ media_image=$(image_of cogra-media)
 api_image=localhost/cogra-api:deployed
 
 podman network create --internal cogra-drill >/dev/null
-openssl rand -hex 24 | podman secret create cogra-drill-pg - >/dev/null
+printf '%s' "$(openssl rand -hex 24)" | podman secret create cogra-drill-pg - >/dev/null
 printf 'drill' | podman secret create cogra-drill-root-user - >/dev/null
-openssl rand -hex 24 | podman secret create cogra-drill-root-password - >/dev/null
+printf '%s' "$(openssl rand -hex 24)" | podman secret create cogra-drill-root-password - >/dev/null
 
 podman run -d --name cogra-drill-postgres --network cogra-drill --pull=never \
   --secret cogra-drill-pg,type=env,target=POSTGRES_PASSWORD \
