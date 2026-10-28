@@ -29,20 +29,30 @@ export function CropStep({
   assets,
   previews,
   shape,
+  locked = false,
   focused,
   onShape,
   onFocus,
   onCrop,
   onNext,
+  testIdPrefix = "wizard",
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
   shape: PostShape;
+  /**
+   * The post's one shape already stands — pictures added to a published
+   * post's edit (ComposeCrop.md: "the crop is locked to the post's one
+   * shape") — so no chip is offered: a chip there could only make a picture
+   * disagree with the ones the post already carries.
+   */
+  locked?: boolean;
   focused: number;
   onShape: (next: PostShape) => void;
   onFocus: (index: number) => void;
   onCrop: (id: string, crop: Crop) => void;
   onNext: () => void;
+  testIdPrefix?: string;
 }) {
   const canPinch = useCanPinch();
   const asset = assets[focused];
@@ -53,18 +63,20 @@ export function CropStep({
       {/* A named group of the master's switches (`Chip.jsx`) rather than a
           radiogroup: a radiogroup whose children are not radios lies to a
           screen reader about what it will find inside. */}
-      <div className="flex gap-2" role="group" aria-label="The post's shape">
-        {POST_SHAPE_ORDER.map((option) => (
-          <Chip
-            key={option}
-            testId={`wizard-shape-${option}`}
-            selected={option === shape}
-            onClick={() => onShape(option)}
-          >
-            {POST_SHAPES[option].label}
-          </Chip>
-        ))}
-      </div>
+      {!locked && (
+        <div className="flex gap-2" role="group" aria-label="The post's shape">
+          {POST_SHAPE_ORDER.map((option) => (
+            <Chip
+              key={option}
+              testId={`${testIdPrefix}-shape-${option}`}
+              selected={option === shape}
+              onClick={() => onShape(option)}
+            >
+              {POST_SHAPES[option].label}
+            </Chip>
+          ))}
+        </div>
+      )}
 
       <CropFrame
         src={previews[asset.id] ?? ""}
@@ -72,13 +84,13 @@ export function CropStep({
         crop={asset.crop}
         onChange={(next) => onCrop(asset.id, next)}
         zoomSlider
-        testId="wizard-crop-frame"
+        testId={`${testIdPrefix}-crop-frame`}
       />
 
       {/* The QuietNote under the zoom (ComposeCrop.jsx), its second sentence
           naming the gestures this device has (ComposeCrop.md; copy-voice,
           *The crops' how-to line*). */}
-      <QuietNote testId="wizard-crop-note">
+      <QuietNote testId={`${testIdPrefix}-crop-note`}>
         {canPinch
           ? "One shape for the whole post. Drag to move, pinch to zoom."
           : "One shape for the whole post. Drag or use the arrow keys to move, the slider to zoom."}
@@ -90,7 +102,7 @@ export function CropStep({
             <li key={each.id} className="flex-none">
               <button
                 type="button"
-                data-testid={`wizard-crop-pick-${index}`}
+                data-testid={`${testIdPrefix}-crop-pick-${index}`}
                 aria-label={`Frame picture ${index + 1} of ${assets.length}`}
                 aria-current={index === focused}
                 onClick={() => onFocus(index)}
@@ -100,7 +112,7 @@ export function CropStep({
               >
                 {/* Each tile shows ITS OWN framing, so the strip reads as the
                     set of choices already made rather than as the originals. */}
-                <MediaThumb src={previews[each.id] ?? null} crop={each.crop} testId={`wizard-crop-tile-${index}`} />
+                <MediaThumb src={previews[each.id] ?? null} crop={each.crop} testId={`${testIdPrefix}-crop-tile-${index}`} />
               </button>
             </li>
           ))}
@@ -111,7 +123,7 @@ export function CropStep({
       {/* THE FORWARD ACTION IS AT THE BOTTOM, on every stage (jakob 2026-09-01):
           the top-right corner used to mean Next here and X later, and an author
           trained on the corner left the flow by accident. */}
-      <PillButton testId="wizard-next" full onClick={onNext}>
+      <PillButton testId={`${testIdPrefix}-next`} full onClick={onNext}>
         Next
       </PillButton>
     </div>

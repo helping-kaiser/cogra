@@ -92,6 +92,17 @@ describe("the chrome around the cropper", () => {
     expect(given().showGrid).toBe(true);
   });
 
+  // CoverCrop.md: the cover's crop is locked to the clip's shape and offers no
+  // chips — the frame is CropViewport's square, the cut a window at the clip's
+  // ratio inside it, with no composition guides over the window and its mask.
+  it("cuts a locked ratio as a window in a square frame, without the guides", () => {
+    render(<CropFrame src="blob:x" shape={{ ratio: 9 / 16 }} onChange={() => {}} />);
+    expect(screen.getByTestId("crop-frame").style.aspectRatio).toBe("1 / 1");
+    expect(given().aspect).toBe(9 / 16);
+    expect(given().cropShape).toBe("rect");
+    expect(given().showGrid).toBe(false);
+  });
+
   it("describes the picture with the alt text it was given", () => {
     render(<CropFrame src="blob:x" shape="tall" alt="A jar of honey" onChange={() => {}} />);
     expect(screen.getByAltText("A jar of honey")).toBeInTheDocument();
