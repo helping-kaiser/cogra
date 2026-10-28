@@ -221,9 +221,12 @@ internal fun TargetStance.toControlState(
             failed = it.failed,
             pick = pick.toPoint().takeIf { _ -> it.fromPick },
             bundleRecords = it.quote.bundleRecords,
+            writeRule = it.writeRule,
         )
     },
-    emptySign = emptySign?.let { EmptySignPrompt(working = it.working, failed = it.failed) },
+    emptySign = emptySign?.let {
+        EmptySignPrompt(working = it.working, failed = it.failed, writeRule = it.writeRule)
+    },
     coaching = coaching,
     confirmation = confirmation?.toPoint(),
     walkedBack = walkedBack,

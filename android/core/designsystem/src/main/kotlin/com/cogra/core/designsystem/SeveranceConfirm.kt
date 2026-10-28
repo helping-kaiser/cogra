@@ -107,6 +107,7 @@ fun SeveranceConfirm(
                             .testTag("${testTagPrefix}_severance_failed"),
                     )
                 }
+                if (prompt.writeRule) WriteRuleDialogLine("${testTagPrefix}_severance_write_rule")
             }
         },
         // Material's `confirmButton` slot draws last — the right-hand one —
@@ -121,7 +122,8 @@ fun SeveranceConfirm(
         dismissButton = {
             // IN FLIGHT THE LABEL SAYS WHAT IS HAPPENING: the family's own
             // present participle, inert and never dimmed. Dimming is kept for
-            // the one true refusal, a bundle already at nothing.
+            // the true refusals: a bundle already at nothing, and the write
+            // rule's no (round 21, ask 15).
             CograButton(
                 text = when {
                     busy -> stringResource(zeroWords.busy)
@@ -130,10 +132,28 @@ fun SeveranceConfirm(
                 },
                 onClick = { if (!prompt.working) onConfirm() },
                 kind = ButtonKind.Text,
-                enabled = !prompt.alreadySevered,
+                enabled = !prompt.alreadySevered && !prompt.writeRule,
                 testTag = "${testTagPrefix}_severance_confirm",
             )
         },
+    )
+}
+
+/**
+ * THE WRITE RULE'S NO IN A DIALOG RAISED OVER THE PAD (round 21, seam 245 ask
+ * 15; SeveranceConfirm.md, EmptySignConfirm.md): a notice, not a fault —
+ * its pre-check staged and spent nothing — so the row's quiet words stand
+ * where the fault line would, in the pending marker's secondary ink,
+ * announced politely, never the error colour and never as an alert.
+ */
+@Composable
+internal fun WriteRuleDialogLine(testTag: String) {
+    Text(
+        text = stringResource(R.string.stance_write_rule_dialog),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .semantics { liveRegion = LiveRegionMode.Polite }
+            .testTag(testTag),
     )
 }
 

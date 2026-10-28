@@ -256,6 +256,9 @@
     <string name="stance_write_rule_help_limit">There\'s a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You\'ve hit it for now.</string>
     <string name="stance_write_rule_help_later">Nothing was signed or spent. Try again in a little while.</string>
     <string name="stance_write_rule_row">You can\'t sign right now.</string>
+    <!-- In a dialog raised over the pad — the walk-back, the empty sign — where
+         the fault line would stand (round 21, seam 245 ask 15; WRITE_RULE_WORDS.dialog). -->
+    <string name="stance_write_rule_dialog">You can\'t sign right now. Nothing was signed or spent.</string>
     <string name="stance_write_rule_not_now">Not now</string>
     <!-- The key elsewhere, on the pad (PadKeyAbsent; copy-voice *Platform
          nouns*: "this app" on Android, never a bare "device"). -->

@@ -228,6 +228,27 @@ class SeveranceConfirmTest {
         assertThat(dismissed).isEqualTo(0)
     }
 
+    // SeveranceConfirm.md (round 21): the write rule's no — a notice, not a
+    // fault: the quiet line where the fault line would, Walk it back dimmed, no Retry.
+    @Test
+    fun theWriteRulesNoIsTheQuietLineTheActDimmedAndNoRetry() {
+        show(prompt(fromPick = true, pick = StancePoint(-1.0, -1.0)).copy(writeRule = true))
+        compose.onNodeWithTag("${TAG}_severance_write_rule")
+            .assertTextEquals("You can't sign right now. Nothing was signed or spent.")
+        compose.onNodeWithTag("${TAG}_severance_failed").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_severance_confirm").assertTextEquals("Walk it back").assertIsNotEnabled()
+            .performClick()
+        assertThat(confirmed).isEqualTo(0)
+        compose.onNodeWithTag("${TAG}_severance_keep").performClick()
+        assertThat(dismissed).isEqualTo(1)
+    }
+
+    @Test
+    fun theWriteRulesDialogLineIsTheMasters() {
+        val readout = java.io.File("../../../design/components/stance/StanceReadout.jsx").readText()
+        assertThat(readout).contains("dialog: \"You can't sign right now. Nothing was signed or spent.\"")
+    }
+
     @Test
     fun aFailedWalkBackKeepsTheDialogWithTheFaultAndRetry() {
         show(prompt(failed = true))

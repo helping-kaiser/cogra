@@ -90,6 +90,8 @@ fun EmptySignConfirm(
                             .testTag("${testTagPrefix}_empty_sign_failed"),
                     )
                 }
+                // The write rule's no is `SeveranceConfirm`'s (round 21, ask 15).
+                if (prompt.writeRule) WriteRuleDialogLine("${testTagPrefix}_empty_sign_write_rule")
             }
         },
         // Material's `confirmButton` slot draws last — the right-hand one —
@@ -112,6 +114,9 @@ fun EmptySignConfirm(
                 },
                 onClick = { if (!prompt.working) onConfirm() },
                 kind = ButtonKind.Text,
+                // Dimmed only for the write rule's no: asking again at once
+                // meets the same answer, so no Retry is offered.
+                enabled = !prompt.writeRule,
                 testTag = "${testTagPrefix}_empty_sign_confirm",
             )
         },

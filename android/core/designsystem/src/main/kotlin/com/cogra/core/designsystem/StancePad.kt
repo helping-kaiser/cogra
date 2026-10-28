@@ -205,6 +205,12 @@ data class SeverancePrompt(
      * still something said.
      */
     val bundleRecords: Int,
+    /**
+     * The write rule refused the walk-back (round 21, ask 15): a notice, not a
+     * fault — the quiet line where the fault line would stand, the act dimmed,
+     * no Retry; `Keep it` returns to the pick.
+     */
+    val writeRule: Boolean = false,
 )
 
 /**
@@ -216,6 +222,8 @@ data class SeverancePrompt(
 data class EmptySignPrompt(
     val working: Boolean = false,
     val failed: Boolean = false,
+    /** The write rule refused the empty sign — [SeverancePrompt.writeRule]'s state. */
+    val writeRule: Boolean = false,
 )
 
 @Immutable
