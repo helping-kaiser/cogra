@@ -25,8 +25,8 @@
 // `Back to feed` from the feed, `Back to Explore` from Explore and from a cold
 // entry, the state the board draws.
 //
-// UNREGISTERED: nodes.json carries no `YourTopics`; the screen wears its
-// evident prefix, `yourTopics`, as the Android screen does.
+// REGISTERED (nodes.json `YourTopics`, round 23): each row is a
+// `yourTopics.heldTopic`, keyed by the topic's name without #.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
@@ -173,7 +173,7 @@ export function YourTopicsView({ from = null }: { from?: string | null }) {
                 pairFamily="stance"
                 pending={row.pending}
                 href={row.name === null ? null : topicHref(row.name)}
-                node={{ path: `${NODE.path}.row`, key: row.name ?? row.id }}
+                node={{ path: `${NODE.path}.heldTopic`, key: row.name ?? row.id }}
                 testId={`your-topics-row-${row.name ?? row.id}`}
               />
             </div>

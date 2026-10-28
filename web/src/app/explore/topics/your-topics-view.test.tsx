@@ -86,7 +86,7 @@ const render = (from: string | null = null) =>
   renderWithProviders(<YourTopicsView from={from} />, { store: signedIn() });
 
 const rowNames = () =>
-  screen.getAllByTestId(byNode("yourTopics.row")).map((row) => row.getAttribute("data-testid-key"));
+  screen.getAllByTestId(byNode("yourTopics.heldTopic")).map((row) => row.getAttribute("data-testid-key"));
 
 describe("Your topics", () => {
   it("your_topics_md_3_lists_every_topic_held_and_asks_with_pending_acts_in", async () => {
@@ -100,8 +100,8 @@ describe("Your topics", () => {
   it("your_topics_md_9_a_topic_held_against_stands_like_any_other_with_no_mark_of_its_own", async () => {
     serve(BOARD);
     render();
-    const against = await screen.findByTestId(byNode("yourTopics.row", "wellness"));
-    const warm = screen.getByTestId(byNode("yourTopics.row", "saltmaps"));
+    const against = await screen.findByTestId(byNode("yourTopics.heldTopic", "wellness"));
+    const warm = screen.getByTestId(byNode("yourTopics.heldTopic", "saltmaps"));
     // The same parts, and nothing more: the feed's own filter is where it shows.
     const parts = (row: HTMLElement) =>
       Array.from(row.querySelectorAll("[data-testid]")).map((el) => el.getAttribute("data-testid")!.replace(/-wellness|-saltmaps/, ""));
@@ -111,17 +111,17 @@ describe("Your topics", () => {
   it("your_topics_md_11_a_row_carries_the_mark_the_name_and_the_affinity_pair_signed", async () => {
     serve(BOARD);
     render();
-    const row = await screen.findByTestId(byNode("yourTopics.row", "saltmaps"));
-    expect(within(row).getByTestId(byNode("yourTopics.row.mark", "saltmaps"))).toHaveTextContent("#");
-    expect(within(row).getByTestId(byNode("yourTopics.row.name", "saltmaps"))).toHaveTextContent("#saltmaps");
-    const edgeOf = within(row).getByTestId(byNode("yourTopics.row.value", "saltmaps"));
+    const row = await screen.findByTestId(byNode("yourTopics.heldTopic", "saltmaps"));
+    expect(within(row).getByTestId(byNode("yourTopics.heldTopic.mark", "saltmaps"))).toHaveTextContent("#");
+    expect(within(row).getByTestId(byNode("yourTopics.heldTopic.name", "saltmaps"))).toHaveTextContent("#saltmaps");
+    const edgeOf = within(row).getByTestId(byNode("yourTopics.heldTopic.value", "saltmaps"));
     // The board's face, the digits as the geek reading, the word spoken with
     // the pair (copy-voice, *The readouts, spoken*).
     expect(within(edgeOf).getByText("😊")).toBeInTheDocument();
     expect(within(edgeOf).getByText("+0.60 / +0.35")).toHaveClass("cg-exact");
     expect(within(edgeOf).getByText("Like this, +0.60 / +0.35")).toHaveClass("sr-only");
     // The topic held against reads its own face, the minus a true minus.
-    const against = screen.getByTestId(byNode("yourTopics.row.value", "wellness"));
+    const against = screen.getByTestId(byNode("yourTopics.heldTopic.value", "wellness"));
     expect(within(against).getByText("Dislike, keep away, −0.65 / −0.30")).toBeInTheDocument();
   });
 
@@ -129,10 +129,10 @@ describe("Your topics", () => {
     serve(BOARD);
     render();
     await screen.findByTestId("your-topics-list");
-    const settling = screen.getByTestId(byNode("yourTopics.row.value", "fieldnotes"));
-    expect(within(settling).getByTestId("yourTopics.row.value.pending")).toHaveTextContent("Still settling");
-    const landed = screen.getByTestId(byNode("yourTopics.row.value", "saltmaps"));
-    expect(within(landed).queryByTestId("yourTopics.row.value.pending")).toBeNull();
+    const settling = screen.getByTestId(byNode("yourTopics.heldTopic.value", "fieldnotes"));
+    expect(within(settling).getByTestId("yourTopics.heldTopic.value.pending")).toHaveTextContent("Still settling");
+    const landed = screen.getByTestId(byNode("yourTopics.heldTopic.value", "saltmaps"));
+    expect(within(landed).queryByTestId("yourTopics.heldTopic.value.pending")).toBeNull();
   });
 
   // Never erase silently: a held topic whose name moderation took away keeps
@@ -161,12 +161,12 @@ describe("Your topics", () => {
       }),
     );
     render();
-    const row = await screen.findByTestId(byNode("yourTopics.row", "t-gone"));
+    const row = await screen.findByTestId(byNode("yourTopics.heldTopic", "t-gone"));
     expect(rowNames()).toEqual(["saltmaps", "t-gone"]);
-    expect(within(row).getByTestId(byNode("yourTopics.row.name", "t-gone")).textContent).toBe("#");
+    expect(within(row).getByTestId(byNode("yourTopics.heldTopic.name", "t-gone")).textContent).toBe("#");
     expect(row.tagName).not.toBe("A");
     expect(within(row).queryByRole("link")).toBeNull();
-    expect(within(row).getByTestId(byNode("yourTopics.row.value", "t-gone"))).toHaveTextContent("+0.20 / +0.40");
+    expect(within(row).getByTestId(byNode("yourTopics.heldTopic.value", "t-gone"))).toHaveTextContent("+0.20 / +0.40");
   });
 
   it("your_topics_md_13_rows_stand_strongest_first_as_served", async () => {
@@ -180,7 +180,7 @@ describe("Your topics", () => {
   it("your_topics_md_15_a_row_offers_no_removal_of_its_own_and_opens_the_topics_page", async () => {
     serve(BOARD);
     render();
-    const row = await screen.findByTestId(byNode("yourTopics.row", "saltmaps"));
+    const row = await screen.findByTestId(byNode("yourTopics.heldTopic", "saltmaps"));
     expect(row.tagName).toBe("A");
     expect(row).toHaveAttribute("href", "/topics/saltmaps?from=yourTopics");
     expect(within(row).queryByRole("button")).toBeNull();
