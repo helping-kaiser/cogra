@@ -25,12 +25,14 @@ import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.media.CropFraming
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.MediaAssetView
+import com.cogra.domain.media.CropSpec
 import com.cogra.domain.signing.KnownMedia
 import com.cogra.feature.content.toItem
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.formatDuration
 import com.cogra.feature.content.wizard.pickedPictures
+import com.cogra.feature.content.wizard.toFraming
 
 /** One picture or clip an edit holds. */
 sealed interface EditPicture {
@@ -61,6 +63,13 @@ data class EditGallery(
      * cover, so this is null on every other body.
      */
     val newCover: PickedAsset? = null,
+    /**
+     * What each upload the edit took is cut to, by its device uri — a post's
+     * picture to the post's one shape, the clip's face to the clip's. What its
+     * tile draws and what a retry sends again. A comment's pictures go up
+     * whole, so they have none.
+     */
+    val crops: Map<String, CropSpec> = emptyMap(),
 ) {
     val size: Int get() = pictures.size
 
@@ -182,7 +191,12 @@ data class EditGallery(
     /** A picture or the clip leaves; the clip takes its new face with it. */
     fun removing(key: String): EditGallery {
         val left = pictures.filterNot { it.key == key }
-        return copy(pictures = left, newCover = newCover.takeIf { left.isNotEmpty() && clip?.key != key })
+        val cover = newCover.takeIf { left.isNotEmpty() && clip?.key != key }
+        return copy(
+            pictures = left,
+            newCover = cover,
+            crops = crops.filterKeys { uri -> uri != key && (uri != newCover?.uri || cover != null) },
+        )
     }
 
     /** The picture at [from] moves to [to]; the one now first is the cover. */
@@ -195,23 +209,36 @@ data class EditGallery(
      * Adds pictures up to [cap]. Each caller screens the batch first, so
      * nothing past the cap reaches here to be dropped in silence.
      */
-    fun adding(assets: List<PickedAsset>, cap: Int): EditGallery {
+    fun adding(assets: List<PickedAsset>, cap: Int, framings: Map<String, CropSpec> = emptyMap()): EditGallery {
         val room = (cap - pictures.size).coerceAtLeast(0)
-        val fresh = assets.filterNot { asset -> pictures.any { it.key == asset.uri } }
-        return copy(pictures = pictures + fresh.take(room).map { EditPicture.Added(it) })
+        val taken = assets.filterNot { asset -> pictures.any { it.key == asset.uri } }.take(room)
+        return copy(
+            pictures = pictures + taken.map { EditPicture.Added(it) },
+            crops = crops + framings.filterKeys { uri -> taken.any { it.uri == uri } },
+        )
     }
 
-    /** Sets, or with null takes back, the face this edit gives its clip. */
-    fun withNewCover(cover: PickedAsset?): EditGallery = if (clip == null) this else copy(newCover = cover)
+    /**
+     * Sets, or with null takes back, the face this edit gives its clip, cut
+     * to [crop]. Taking it back leaves the clip with the face it arrived with.
+     */
+    fun withNewCover(cover: PickedAsset?, crop: CropSpec? = null): EditGallery {
+        if (clip == null) return this
+        val without = crops.filterKeys { it != newCover?.uri }
+        return copy(
+            newCover = cover,
+            crops = if (cover != null && crop != null) without + (cover.uri to crop) else without,
+        )
+    }
 
     /**
      * The gallery as the components draw it: a kept picture at its served
-     * URL, an added one at its device uri wearing its upload's ring, mark or
-     * framing. [framingOf] hands back an added picture's window — a post's
-     * pictures are cut, a comment's are whole.
+     * URL, an added one at its device uri wearing its upload's ring, mark and
+     * the window it was cut to — a post's pictures are cut, a comment's whole.
      */
-    fun pickedPictures(framingOf: (PickedAsset) -> CropFraming = { CropFraming.Whole }): List<PickedPicture> =
-        pictures.map { picture ->
+    fun pickedPictures(): List<PickedPicture> {
+        val framingOf: (PickedAsset) -> CropFraming = { crops[it.uri].toFraming() }
+        return pictures.map { picture ->
             when (picture) {
                 is EditPicture.Kept -> PickedPicture(
                     item = picture.asset.toItem(),
@@ -221,6 +248,7 @@ data class EditGallery(
                 is EditPicture.Added -> listOf(picture.asset).pickedPictures(framingOf).single()
             }
         }
+    }
 
     companion object {
         /** The gallery the content arrived with, in its author's order. */
