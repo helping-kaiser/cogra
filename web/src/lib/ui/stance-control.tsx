@@ -220,6 +220,14 @@ export type PadVariant = {
    4px active stroke in `primary`, no track — drawn around the face from
    twelve o'clock at the press, filling over the 500ms. Under reduced motion
    it still fills: it is a reading of the time left (readme §4). */
+/**
+ * THE RESTING FACE'S TYPE (`StanceControl.jsx`: `fontSize: var(--text-title-large),
+ * lineHeight: 1`): the title-large SIZE only, set solid, its weight the
+ * anchor's own — not the whole title-large role, whose 28px leading and 400
+ * weight the master never asks for.
+ */
+const FACE_TYPE = "text-[length:var(--text-title-large)] [line-height:1]";
+
 const HOLD_RING_PX = 40;
 const HOLD_RING_STROKE_PX = 4;
 
@@ -1040,7 +1048,7 @@ export function StanceControl({
         onKeyDown={trapTab}
         {...testAttributes(padNode, `${testIdPrefix}-pad`)}
         style={parkedPadStyle(inset, aboveBar)}
-        className="cg-dialog-in z-40 flex w-[17rem] touch-none flex-col gap-3 overflow-y-auto rounded-extra-large bg-surface-container-high p-4 text-on-surface outline-none"
+        className="cg-dialog-in z-40 box-content flex w-[17rem] touch-none flex-col gap-3 overflow-y-auto rounded-extra-large bg-surface-container-high p-4 text-on-surface outline-none"
       >
         {/* The help affordance: a circled `?` in the pad's top-right corner,
             out of the reading order of the three readouts. 48px target,
@@ -1290,8 +1298,8 @@ export function StanceControl({
                   {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
                   className={
                     restingFace === null
-                      ? "flex-none text-title-large opacity-40 grayscale"
-                      : "flex-none text-title-large"
+                      ? `flex-none ${FACE_TYPE} opacity-40 grayscale`
+                      : `flex-none ${FACE_TYPE}`
                   }
                 >
                   {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}

@@ -121,7 +121,9 @@ export function ActsCard({
       {rows.map((row) => (
         <Row key={row.key ?? row.label} row={row} />
       ))}
-      <div className="flex min-h-12 flex-col justify-center gap-0.5 py-1.5">
+      {/* 48px of CONTENT plus 6px above and below, as the master's inline style
+          measures it (content-box: 60px in all). */}
+      <div className="box-content flex min-h-12 flex-col justify-center gap-0.5 py-1.5">
         <span
           data-testid={testId === undefined ? undefined : `${testId}-total`}
           className="text-body-medium [font-weight:var(--text-label-large--font-weight)]"

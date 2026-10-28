@@ -1160,6 +1160,9 @@ describe("the pad as its masters draw it", () => {
     expect(pad).toHaveAttribute("aria-modal", "true");
     expect(pad).toHaveAccessibleName("Opinion pad for this post");
     expect(pad.className).toContain("w-[17rem]");
+    // 17rem of CONTENT, as the master's inline style measures it: its 16px
+    // padding comes on top (304px in all), not out of the 17rem.
+    expect(pad.className).toContain("box-content");
     expect(pad.className).toContain("gap-3");
     expect(pad.className).toContain("p-4");
     expect(pad.className).toContain("rounded-extra-large");
