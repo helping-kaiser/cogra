@@ -46,6 +46,7 @@ export function DetailsStep({
   clipFace,
   coverPreview,
   durationMs,
+  coverDoor,
   onCover,
   title,
   description,
@@ -73,7 +74,14 @@ export function DetailsStep({
   coverPreview: string | null;
   /** The video's length, badged on its own thumbnail. Meaningless off a video post. */
   durationMs: number;
-  /** Opens the cover stage — one Back away, from either state of the field. */
+  /**
+   * Whether the `Add a cover` door stands: a vertical clip that skipped the
+   * cover step and has no face chosen yet (ComposeDetailsVideo.md: "the stage
+   * carries the Add a cover door GIVEN the clip skipped the cover step" and
+   * "no cover section GIVEN the clip came through the cover step").
+   */
+  coverDoor: boolean;
+  /** The door: opens the step the clip skipped, whose Next comes back here. */
   onCover: () => void;
   title: string;
   description: string;
@@ -114,9 +122,7 @@ export function DetailsStep({
           tile"). Once a face exists it rides the clip's own tile above as
           its inset corner mark instead of a second field — a gallery has no
           such field either way: its cover is its order. */}
-      {mode === "media" && assets[0] !== undefined && kindOf(assets[0]) === "video" && coverPreview === null && (
-        <CoverField onOpen={onCover} />
-      )}
+      {mode === "media" && coverDoor && <CoverField onOpen={onCover} />}
 
       <TextField
         label="Title"

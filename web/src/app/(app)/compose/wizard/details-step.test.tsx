@@ -24,6 +24,7 @@ function renderStep(overrides: Partial<Parameters<typeof DetailsStep>[0]> = {}) 
     clipFace: null,
     coverPreview: null,
     durationMs: 0,
+    coverDoor: false,
     onCover: vi.fn(),
     title: "",
     description: "",
@@ -123,9 +124,9 @@ describe("DetailsStep", () => {
   // own tile above as its inset corner mark instead of a second field —
   // ONE TILE, NEVER TWO.
   describe("the Cover field", () => {
-    it("shows the door when the clip has no chosen cover", () => {
+    it("shows the door when the clip skipped the cover step and has no face", () => {
       const onCover = vi.fn();
-      renderStep({ mode: "media", assets: [VIDEO_ASSET], coverPreview: null, onCover });
+      renderStep({ mode: "media", assets: [VIDEO_ASSET], coverPreview: null, coverDoor: true, onCover });
 
       screen.getByTestId("wizard-cover-door").click();
       expect(onCover).toHaveBeenCalledTimes(1);
@@ -142,6 +143,15 @@ describe("DetailsStep", () => {
       // The old two-state face row is gone entirely — the cover rides the
       // tile's own inset mark instead (asserted in "the video body strip"
       // below), never a second field under it.
+      expect(screen.queryByText("Cover")).not.toBeInTheDocument();
+    });
+
+    // ComposeDetailsVideo.md: "ALWAYS the stage carries no cover section
+    // GIVEN the clip came through the cover step" — a face declined there is
+    // one Back away, never a second door.
+    it("draws no door for a clip that came through the cover step without a face", () => {
+      renderStep({ mode: "media", assets: [VIDEO_ASSET], coverPreview: null, coverDoor: false });
+      expect(screen.queryByTestId("wizard-cover-door")).not.toBeInTheDocument();
       expect(screen.queryByText("Cover")).not.toBeInTheDocument();
     });
 

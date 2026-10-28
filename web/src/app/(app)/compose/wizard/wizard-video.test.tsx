@@ -34,7 +34,10 @@ vi.mock("@/lib/ui2/media/video", async (importOriginal) => {
     ...actual,
     // The real ones need a decoder; the container sniff and the cap check are
     // left real, because those are the rules this screen is meant to apply.
-    probeVideo: vi.fn(async () => ({ durationMs: 42_000, width: 1080, height: 1920 })),
+    // LANDSCAPE BY DEFAULT: the shape decides the route (`isVerticalClip`),
+    // and a horizontal clip is the one that walks the cover step. The
+    // vertical path mocks its own shape below.
+    probeVideo: vi.fn(async () => ({ durationMs: 42_000, width: 1920, height: 1080 })),
     // FOUR, not three (CW-13): the 1s-clamped opening plus the three
     // fractional offers ("FOUR FRAMES, NOT THREE: 1s, 10%, 50%, 90%").
     captureFrames: vi.fn(async () => [FRAME, FRAME, FRAME, FRAME]),
@@ -182,8 +185,13 @@ describe("picking a video", () => {
     expect(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next"))).not.toBeDisabled();
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
-    // Details: the clip is the body and the cover field is still its door.
-    expect(await screen.findByTestId("wizard-cover-door")).toBeInTheDocument();
+    // Details: the clip is the body, faceless — and it carries NO door, since
+    // it came through the cover step (ComposeDetailsVideo.md: "the stage
+    // carries no cover section GIVEN the clip came through the cover step";
+    // ComposeCover.md: "press Next GIVEN the author has picked no face -> the
+    // details stage opens with the clip coverless").
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    expect(screen.queryByTestId("wizard-cover-door")).toBeNull();
     expect(screen.queryByTestId("wizard-cover-face")).toBeNull();
   });
 
@@ -262,11 +270,13 @@ describe("picking a video", () => {
       return frame.style.aspectRatio;
     }
 
-    it("shows a vertical clip at 4:5, not as a square", async () => {
-      // The harness's own clip is 1080x1920.
+    it("shows a vertical clip at 4:5, not as a square, behind the details door", async () => {
+      // A vertical clip never meets the step on its own; the door opens it.
+      vi.mocked(probeVideo).mockResolvedValueOnce({ durationMs: 8_000, width: 1080, height: 1920 });
       render();
       await pickFiles([aVideo()]);
       fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      fireEvent.click(await screen.findByTestId("wizard-cover-door"));
 
       // Taller than the cap, so it shows AT the cap — which is what the post
       // will be, and what the feed tile reserves for it.
@@ -783,5 +793,133 @@ describe("picking a video", () => {
       // cover already standing means it never fires at all.
       expect(saved?.autoCover).toBeNull();
     });
+  });
+});
+
+// THE SHAPE-KEYED VIDEO STEPS (H1; design/readme.md, the video-cover round:
+// "No-cover is first-class, and the default is shape-keyed"). Each case is a
+// sidecar line: ComposePickVideo.md, ComposeDetailsVideo.md, ComposeCover.md.
+describe("a vertical clip", () => {
+  const VERTICAL = { durationMs: 8_000, width: 1080, height: 1920 };
+  const next = () => screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next"));
+
+  async function pickVertical(probe = VERTICAL) {
+    vi.mocked(probeVideo).mockResolvedValueOnce(probe);
+    await pickFiles([aVideo()]);
+  }
+
+  async function reachDetails() {
+    render();
+    await pickVertical();
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+  }
+
+  it("drops the cover promise from the tray's line", async () => {
+    // ComposePickVideo.md: the tray's line reads A video is the whole post.
+    // GIVEN the clip is vertical.
+    render();
+    await pickVertical();
+    expect(await screen.findByText("A video is the whole post.")).toBeInTheDocument();
+    expect(screen.queryByText(/Its cover comes next\./)).toBeNull();
+  });
+
+  it("keeps the cover promise on a horizontal clip's tray", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    expect(await screen.findByText("A video is the whole post. Its cover comes next.")).toBeInTheDocument();
+  });
+
+  it("opens details with the Add a cover door on Next, and never the cover step", async () => {
+    await reachDetails();
+    expect(screen.queryByText("The video's face")).toBeNull();
+    expect(screen.getByTestId("wizard-cover-door")).toHaveTextContent("Add a cover");
+  });
+
+  it("skips the step whatever the clip's length", async () => {
+    // ComposePickVideo.md: NEVER the clip's length decides whether the cover
+    // step comes next — a long vertical clip skips it as a short one does.
+    render();
+    await pickVertical({ durationMs: 600_000, width: 720, height: 1280 });
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    expect(await screen.findByTestId("wizard-cover-door")).toBeInTheDocument();
+  });
+
+  it("opens the cover step from the door, and its Next comes back to details", async () => {
+    await reachDetails();
+    fireEvent.click(screen.getByTestId("wizard-cover-door"));
+    expect(await screen.findByText("The video's face")).toBeInTheDocument();
+
+    fireEvent.click(next());
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    // Still faceless, so the door still stands: nothing was chosen.
+    expect(screen.getByTestId("wizard-cover-door")).toBeInTheDocument();
+  });
+
+  it("drops the door once a face is chosen through it", async () => {
+    // ComposeCover.md: press Next GIVEN a cover is chosen -> the details stage
+    // opens AND NEVER an Add a cover door stands there.
+    await reachDetails();
+    fireEvent.click(screen.getByTestId("wizard-cover-door"));
+    fireEvent.click(await screen.findByTestId("wizard-cover-frame-1"));
+    fireEvent.click(next());
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    expect(screen.queryByTestId("wizard-cover-door")).toBeNull();
+    expect(screen.getByTestId("wizard-picked-row-thumb-0-cover-mark")).toBeInTheDocument();
+  });
+
+  it("goes back from the door's cover step to details", async () => {
+    // ComposeCover.md: back GIVEN the step was opened by the details stage's
+    // Add a cover -> the details stage comes back.
+    await reachDetails();
+    fireEvent.click(screen.getByTestId("wizard-cover-door"));
+    await screen.findByText("The video's face");
+    fireEvent.click(screen.getByTestId("header-back"));
+    expect(await screen.findByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
+  });
+
+  it("goes back from details to the pick with the clip staged", async () => {
+    // ComposeDetailsVideo.md: back GIVEN the clip skipped the cover step ->
+    // the pick step comes back with the clip staged.
+    await reachDetails();
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.header.back")));
+    expect(await screen.findByText("A video is the whole post.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Remove this video")).toBeInTheDocument();
+  });
+
+  it("goes back from a horizontal clip's details to its cover step", async () => {
+    // ComposeDetailsVideo.md: back GIVEN the clip came through the cover step
+    // -> the cover step comes back with its choice.
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    fireEvent.click(await screen.findByTestId("wizard-cover-frame-2"));
+    fireEvent.click(next());
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.header.back")));
+    expect(await screen.findByTestId("wizard-cover-frame-2")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("takes its frame 0 as its still with no step", async () => {
+    // ComposeDetailsVideo.md: WHEN the clip skips the cover step -> the device
+    // extracts the clip's frame 0 without a step AND uploads it as the
+    // clip's still.
+    const drafts = fakeDrafts();
+    renderWithProviders(
+      <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={drafts} />,
+      { store: signedInStore(), writeSigner: fakeWriteSigner() },
+    );
+    await pickVertical();
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+
+    const saved = await drafts.load();
+    expect(saved?.cover).toBeNull();
+    expect(saved?.autoCover?.file).toBe(FRAME_ZERO);
+    // The shape rides the draft, so a restored draft routes the same way.
+    expect(saved?.assets[0]?.clipRatio).toBe(1080 / 1920);
   });
 });

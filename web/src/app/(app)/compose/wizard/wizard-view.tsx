@@ -49,6 +49,7 @@ import {
   emptyWizard,
   isVideoPost,
   shapeRatio,
+  skipsCoverStep,
   stepIndex,
   uploadsFailed,
   uploadsPending,
@@ -86,6 +87,26 @@ const NO_ASSETS: readonly PickedAsset[] = [];
 const NO_FRAMES: readonly Blob[] = [];
 const NO_URLS: readonly string[] = [];
 const NO_REFUSALS: readonly PickRefusal[] = [];
+
+/**
+ * The clip's length and displayed shape (width ÷ height after rotation), read
+ * off its header. A decoder that reported no dimensions gives a null ratio
+ * rather than NaN — "shape unknown", which keeps the cover step and draws the
+ * neutral square — and a clip whose header states no duration still uploads:
+ * only the badge is poorer for it, and the server writes the authoritative
+ * number.
+ */
+async function readClip(file: Blob): Promise<{ durationMs: number; ratio: number | null }> {
+  try {
+    const probe = await probeVideo(file);
+    return {
+      durationMs: probe.durationMs,
+      ratio: probe.width > 0 && probe.height > 0 ? probe.width / probe.height : null,
+    };
+  } catch {
+    return { durationMs: 0, ratio: null };
+  }
+}
 
 /** The faces one clip offers, and the URLs drawn from them. */
 type Captured = {
@@ -186,12 +207,22 @@ export function ComposeWizard({
   // because React mounts effects twice in development, which without this would
   // upload every picture twice. Declared here because choosing a cover clears
   // entries from it, and that happens above the upload effect.
-  const started = useRef(new Set<string>());
+  //
+  // EACH RUN CARRIES ITS OWN TOKEN, and a run whose token is no longer the
+  // asset's writes nothing. A runner cannot be cancelled, so forgetting an
+  // asset (a new face chosen, a retry, a re-crop) used to leave the old run
+  // free to land "done" on top of the fresh "waiting" — the clip then counted
+  // as uploaded with the face it no longer has, and the chosen cover waited
+  // forever. The details door makes that path ordinary: a vertical clip is
+  // already going up when `Add a cover` opens the step.
+  const started = useRef(new Map<string, number>());
+  const runCount = useRef(0);
 
   // ---- the video, its length, and the faces it offers -----------------------
 
   const video = isVideoPost(state) ? state.assets[0] : undefined;
   const videoFile = video?.file ?? null;
+  const videoId = video?.id;
   // Both of these are keyed BY THE CLIP THEY DESCRIBE rather than reset when it
   // changes: a result that belongs to a file the draft no longer holds is
   // simply not read, which is the same outcome as clearing it without the
@@ -243,30 +274,26 @@ export function ComposeWizard({
   // whether they need a cover.
   const clipFace = useObjectUrl(forSilentCover?.frame ?? null);
 
-  // The badge's number AND the clip's shape, read off the clip as soon as it is
-  // picked rather than waiting for the cover screen — the details row shows the
-  // length too, and the cover screen has to draw the preview at the shape the
-  // post will take.
+  // The badge's number AND the clip's shape, read off the clip as it is
+  // picked rather than waiting for the cover screen — the details row shows
+  // the length too, the cover screen draws the preview at the shape the post
+  // will take, and THE SHAPE DECIDES THE ROUTE (`isVerticalClip`): it is read
+  // in `takeFiles`, before the clip joins the draft, so Next can never be
+  // pressed on a clip whose shape is still on its way. This effect is the
+  // fallback for a clip that arrived without that read — a draft kept before
+  // the shape was — and fills the draft's shape in when it lands.
   useEffect(() => {
-    if (videoFile === null) return;
+    if (videoFile === null || probed?.file === videoFile) return;
     let cancelled = false;
-    void probeVideo(videoFile)
-      .then((probe) => {
-        if (cancelled) return;
-        // A decoder that reported no dimensions gives null rather than a
-        // NaN ratio; the preview then falls back to the neutral square, which
-        // is what "shape unknown" has always meant here.
-        const ratio =
-          probe.width > 0 && probe.height > 0 ? probe.width / probe.height : null;
-        setProbed({ file: videoFile, durationMs: probe.durationMs, ratio });
-      })
-      // A clip whose header states no duration still uploads; only the badge
-      // is poorer for it, and the server writes the authoritative number.
-      .catch(() => {});
+    void readClip(videoFile).then((read) => {
+      if (cancelled) return;
+      setProbed({ file: videoFile, ...read });
+      if (videoId !== undefined) dispatch({ type: "clipRatio", id: videoId, clipRatio: read.ratio });
+    });
     return () => {
       cancelled = true;
     };
-  }, [videoFile]);
+  }, [videoFile, videoId, probed, dispatch]);
 
   // THE FACE IS EXTRACTED AS SOON AS THE CLIP IS PICKED, not only once the
   // cover screen is reached (`design/designs/canonical/screens/
@@ -351,12 +378,19 @@ export function ComposeWizard({
       setRefusals((current) => [...current, ...outcome.refusals]);
     }
     if (outcome.accepted.length === 0) return;
+    // A CLIP JOINS WITH ITS SHAPE (Android reads it in the same step that
+    // stages the clip, `onTogglePick`): the shape decides whether Next opens
+    // the cover step, so it is known before the tray can offer Next at all.
+    const clip = outcome.kind === "video" ? outcome.accepted[0] : undefined;
+    const read = clip === undefined ? null : await readClip(clip);
+    if (clip !== undefined && read !== null) setProbed({ file: clip, ...read });
     dispatch({
       type: "pick",
       assets: outcome.accepted.map((file) => ({
         id: newComposeId(),
         file,
         kind: outcome.kind,
+        ...(file === clip && read !== null ? { clipRatio: read.ratio } : {}),
       })),
     });
   };
@@ -546,19 +580,27 @@ export function ComposeWizard({
       }
 
       const effective = effectiveCover(cover, state.autoCover);
-      started.current.add(video.id);
-      if (effective !== null) started.current.add(effective.id);
+      runCount.current += 1;
+      const run = runCount.current;
+      started.current.set(video.id, run);
+      if (effective !== null) started.current.set(effective.id, run);
       void runVideoUpload(
         client,
         guard,
         video,
         effective,
-        (upload) => dispatch({ type: "upload", id: video.id, upload }),
+        (upload) => {
+          if (started.current.get(video.id) === run) dispatch({ type: "upload", id: video.id, upload });
+        },
         // A CHOSEN COVER'S PROGRESS IS THE ONLY ONE EVER DRAWN. The auto-cover
         // has no screen of its own, so its steps land on `autoCoverUpload`
         // where only the gate and `attachmentClaims` read them — never on
         // `coverUpload`, which is what the (nonexistent) cover UI would watch.
-        (upload) => dispatch({ type: cover !== null ? "coverUpload" : "autoCoverUpload", upload }),
+        (upload) => {
+          if (started.current.get(video.id) === run) {
+            dispatch({ type: cover !== null ? "coverUpload" : "autoCoverUpload", upload });
+          }
+        },
         POST_SCALE,
       );
       return;
@@ -566,10 +608,12 @@ export function ComposeWizard({
 
     for (const asset of state.assets) {
       if (asset.upload.kind !== "waiting" || started.current.has(asset.id)) continue;
-      started.current.add(asset.id);
-      void runUpload(client, guard, asset, ratio, (upload) =>
-        dispatch({ type: "upload", id: asset.id, upload }),
-      );
+      runCount.current += 1;
+      const run = runCount.current;
+      started.current.set(asset.id, run);
+      void runUpload(client, guard, asset, ratio, (upload) => {
+        if (started.current.get(asset.id) === run) dispatch({ type: "upload", id: asset.id, upload });
+      });
     }
   }, [
     uploading,
@@ -981,6 +1025,7 @@ export function ComposeWizard({
             error={gate.ok ? null : gate.reason}
             blocked={!gate.ok}
             coverSrc={coverPreview}
+            vertical={skipsCoverStep(state)}
             durationMs={durationMs}
             clipFace={clipFace}
             onWords={(words) => dispatch({ type: "words", words })}
@@ -1051,7 +1096,8 @@ export function ComposeWizard({
           clipFace={clipFace}
           coverPreview={coverPreview}
           durationMs={durationMs}
-          onCover={() => dispatch({ type: "back" })}
+          coverDoor={skipsCoverStep(state) && state.cover === null}
+          onCover={() => dispatch({ type: "openCover" })}
           title={state.title}
           description={state.description}
           tags={state.tags}
