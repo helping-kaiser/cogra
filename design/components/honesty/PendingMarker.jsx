@@ -29,14 +29,15 @@ export function PendingMarker({ label = "Still settling", inline = false, node }
     AS A DOOR IT IS A PRESSABLE LIKE ANY OTHER (readme §4, the K13 round):
     `cg-state cg-focus cg-hit`, so the label-small ink answers to a 48px target
     with the pressed layer and the focus ring every control carries. */
-export function EditedMarker({ label = "Edited", onInspect }) {
+export function EditedMarker({ label = "Edited", onInspect, node }) {
   if (!onInspect) {
-    return <p style={{ margin: 0, fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }}>{label}</p>;
+    return <p style={{ margin: 0, fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }} data-node={node}>{label}</p>;
   }
   return (
     <button
       type="button"
       onClick={onInspect}
+      data-node={node}
       className="cg-state cg-focus cg-hit"
       style={{
         alignSelf: "flex-start",

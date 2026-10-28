@@ -35,14 +35,18 @@
    the picker stays open, and they would stand in the staged section above the
    list (`TagPicker`); this board draws none. The refused name stages nothing,
    so nothing is added on the way out. */
+/* REGISTERED under the `tagPicker` prefix (seam 248), `TagPicker`'s names;
+   the refusal that stands in the rule's place is `refusal`. */
+export const NODE = "tagPicker";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" />} />
+      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" node="help" />} node="header" />
       <div style={{ flex: "none" }}>
-        <SearchBar query="#salt maps" placeholder="Name a tag" ariaLabel="Name a tag" error describedBy="tag-name-refusal" />
+        <SearchBar query="#salt maps" placeholder="Name a tag" ariaLabel="Name a tag" error describedBy="tag-name-refusal" node="nameField" />
         <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
           <p
+            data-node="refusal"
             id="tag-name-refusal"
             role="alert"
             style={{
@@ -56,16 +60,16 @@ export function Screen() {
             A tag name is letters, digits, dot, dash and underscore.
           </p>
         </div>
-        <PickAnnouncement />
+        <PickAnnouncement node="announcement" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ flex: 1 }} />
-        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="footnote">
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
         </p>
       </div>
       <div style={{ flex: "none", padding: "0 24px 24px" }}>
-        <Button style={{ width: "100%" }}>Done</Button>
+        <Button style={{ width: "100%" }} node="done">Done</Button>
       </div>
     </>
   );

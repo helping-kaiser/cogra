@@ -1,10 +1,10 @@
 # TagPickerRefused · `spec:design:behavior-tag-picker-refused`
 
-ALWAYS the name field wears the error ring GIVEN the typed name is refused
+ALWAYS tagPicker.nameField wears the error ring GIVEN the typed name is refused
 
-ALWAYS the line A tag name is letters, digits, dot, dash and underscore. stands under the name field in place of the rule GIVEN the typed name carries a character no name may carry
+ALWAYS tagPicker.refusal, A tag name is letters, digits, dot, dash and underscore., stands under tagPicker.nameField in place of tagPicker.rule GIVEN the typed name carries a character no name may carry
 
-ALWAYS the line A tag name is at most 128 characters. stands under the name field in place of the rule GIVEN the typed name is longer than 128 characters
+ALWAYS tagPicker.refusal, A tag name is at most 128 characters., stands under tagPicker.nameField in place of tagPicker.rule GIVEN the typed name is longer than 128 characters
 
 ALWAYS no first row stands and the list is empty without a message GIVEN the typed name is refused
 

@@ -36,14 +36,22 @@ import { MediaThumb } from "./MediaThumb.jsx";
    Rows are 56px thumbs with a name ("Cover — shown first", "Picture 2") so a
    screen-reader pass reads as a list of pictures, not a list of buttons. */
 
-export function PickedSheet({ open = false, onClose, items = [], onDone, inline = false }) {
+/* `node` is the data-node name its placer gives the sheet (seam 248): the
+   sheet takes it, its `title`, one `picture` per row keyed by its place in the
+   media, counted from 1 — `reorder`, `thumb`, `label`, `described` or
+   `describe`, `makeCover`, `moveUp`, `moveDown`, `remove` — the `note` and
+   `done`. Given none, it renders exactly as before. */
+export function PickedSheet({ open = false, onClose, items = [], onDone, inline = false, node }) {
+  const part = (name) => node && name;
   return (
-    <BottomSheet open={open} onClose={onClose} ariaLabel={`Picked · ${items.length}`} inline={inline} maxHeight="88%">
-      <SheetTitle>Picked · {items.length}</SheetTitle>
+    <BottomSheet open={open} onClose={onClose} ariaLabel={`Picked · ${items.length}`} inline={inline} maxHeight="88%" node={node}>
+      <SheetTitle node={part("title")}>Picked · {items.length}</SheetTitle>
       <div style={{ display: "flex", flexDirection: "column", padding: "0 var(--space-6)", borderTop: "1px solid var(--border-hairline)" }}>
         {items.map((item, index) => (
           <div
             key={item.src ?? index}
+            data-node={part("picture")}
+            data-node-key={node && String(index + 1)}
             style={{
               display: "flex",
               alignItems: "center",
@@ -56,6 +64,7 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
               type="button"
               aria-label={`Reorder ${index === 0 ? "the cover" : `picture ${index + 1}`}`}
               aria-keyshortcuts="ArrowUp ArrowDown"
+              data-node={part("reorder")}
               className="cg-state cg-focus cg-hit"
               style={{
                 border: 0,
@@ -69,7 +78,7 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
             >
               <Icon name="drag_indicator" size={20} />
             </button>
-            <MediaThumb src={item.src} alt={item.alt} size={56} cover={index === 0} />
+            <MediaThumb src={item.src} alt={item.alt} size={56} cover={index === 0} node={part("thumb")} />
             <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: "2px" }}>
               <span
                 style={{
@@ -78,6 +87,7 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
                   fontWeight: "var(--text-label-large--font-weight)",
                   letterSpacing: "var(--text-label-large--letter-spacing)",
                 }}
+                data-node={part("label")}
               >
                 {index === 0 ? "Cover — shown first" : `Picture ${index + 1}`}
               </span>
@@ -85,26 +95,26 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
                   hit areas stand clear under WCAG 2.5.8's spacing rule. */}
               <span style={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: "var(--space-3)", rowGap: "var(--space-2)" }}>
                 {item.described ? (
-                  <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
+                  <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={part("described")}>
                     Described
                   </span>
                 ) : (
-                  <InlineAction size="sm" onClick={item.onDescribe}>
+                  <InlineAction size="sm" onClick={item.onDescribe} node={part("describe")}>
                     Describe
                   </InlineAction>
                 )}
                 {index > 0 && (
-                  <InlineAction size="sm" onClick={item.onMakeCover}>
+                  <InlineAction size="sm" onClick={item.onMakeCover} node={part("makeCover")}>
                     Make it the cover
                   </InlineAction>
                 )}
                 {index > 0 && (
-                  <InlineAction size="sm" onClick={item.onMoveUp}>
+                  <InlineAction size="sm" onClick={item.onMoveUp} node={part("moveUp")}>
                     Move up
                   </InlineAction>
                 )}
                 {index < items.length - 1 && (
-                  <InlineAction size="sm" onClick={item.onMoveDown}>
+                  <InlineAction size="sm" onClick={item.onMoveDown} node={part("moveDown")}>
                     Move down
                   </InlineAction>
                 )}
@@ -114,6 +124,7 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
               type="button"
               aria-label={`Remove ${index === 0 ? "the cover" : `picture ${index + 1}`}`}
               onClick={item.onRemove}
+              data-node={part("remove")}
               className="cg-state cg-focus cg-hit"
               style={{
                 border: 0,
@@ -139,11 +150,12 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
           letterSpacing: "var(--text-label-small--letter-spacing)",
           color: "var(--text-secondary)",
         }}
+        data-node={part("note")}
       >
         The first one is the cover.
       </p>
       <div style={{ display: "flex", justifyContent: "flex-end", padding: "var(--space-2) var(--space-4) var(--space-2)" }}>
-        <Button variant="text" onClick={onDone ?? onClose}>
+        <Button variant="text" onClick={onDone ?? onClose} node={part("done")}>
           Done
         </Button>
       </div>

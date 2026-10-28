@@ -47,6 +47,8 @@ export interface StanceReadoutProps {
   /** The record family's axis questions, for the spoken reading. */
   names?: AxisNames;
   style?: React.CSSProperties;
+  /** The data-node name its placer gives the readout (design ⇄ impl seam 002; renders as attributes only). Given one, it also names `face` and `exact`. */
+  node?: string;
 }
 
 export declare function StanceReadout(props: StanceReadoutProps): JSX.Element;
@@ -58,6 +60,8 @@ export declare function StanceReadout(props: StanceReadoutProps): JSX.Element;
 export interface AttachmentReadoutProps {
   pDirected: number;
   style?: React.CSSProperties;
+  /** The data-node name its placer gives the readout (design ⇄ impl seam 002; renders as attributes only). Given one, it also names `face` and `exact`. */
+  node?: string;
 }
 
 export declare function AttachmentReadout(props: AttachmentReadoutProps): JSX.Element;

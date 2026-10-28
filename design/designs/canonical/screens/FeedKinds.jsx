@@ -31,13 +31,17 @@
    `FeedCommentShapes`, `FeedProfileShapes` and `FeedTagShapes`.
 
    NO SECOND ALGORITHM. All four kinds rank by the ordinary rank, side by side
-   — the default feed's order, the kinds only widening what it may admit. */
+   — the default feed's order, the kinds only widening what it may admit.
+
+   REGISTERED under the `feed` prefix (seam 248), the cards named as
+   `History` names them: `commentCard`, `profileCard`, `tagCard`, `card`. */
 const EVERY_KIND = { ...FEED_FILTER_DEFAULT, kinds: FEED_KINDS.map((kind) => kind.value) };
 
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter value={EVERY_KIND} />} />
+      <CograBand trailing={<FeedFilter value={EVERY_KIND} node="filterTrigger" />} node="band" />
       <FeedList>
         <CommentFeedCard
           author={TOBIAS}
@@ -47,12 +51,13 @@ export function Screen() {
           topics={["glovebox", "coastroad"]}
           references={1}
           score="12.40"
+          node="commentCard"
         />
-        <ProfileFeedCard person={MIRA} src="inviter.jpg" bio="Runs the stand by the sea wall — honey from the headland hives." score="11.70" />
-        <TagFeedCard name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" />
-        <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} />
+        <ProfileFeedCard person={MIRA} src="inviter.jpg" bio="Runs the stand by the sea wall — honey from the headland hives." score="11.70" node="profileCard" />
+        <TagFeedCard name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" node="tagCard" />
+        <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

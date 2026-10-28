@@ -22,6 +22,8 @@ export interface ActsFooterProps {
    * the footer is the line alone.
    */
   subline?: string;
+  /** The data-node name its placer gives the footer (design ⇄ impl seam 002; renders as attributes only). Given one, the footer stands in its column wrapper in every state and names its parts: `line` and, where it stands, `slow`. */
+  node?: string;
 }
 
 export declare function ActsFooter(props: ActsFooterProps): JSX.Element;

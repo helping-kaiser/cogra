@@ -35,14 +35,18 @@
    which is an entry point rather than a checking surface. This is not one.
 
    THE WORD "token" NEVER APPEARS. The record calls this a link capability and
-   the API calls the field an id; on screen it is a link. */
+   the API calls the field an id; on screen it is a link.
+
+   REGISTERED under the `invites` prefix (seam 248): the sheet `linkSheet`, the
+   card in it `link`, named as a live link's card is, and `share`. */
+export const NODE = "invites";
 export function Screen() {
   return (
     <>
       <InvitesBody />
 
-      <BottomSheet open ariaLabel="Your invite link">
-        <SheetTitle>Your invite link</SheetTitle>
+      <BottomSheet open ariaLabel="Your invite link" node="linkSheet">
+        <SheetTitle node="title">Your invite link</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px" }}>
           <PayoutAddress
             label="Single use · not used yet"
@@ -50,9 +54,10 @@ export function Screen() {
             onCopy={() => {}}
             copyLabel="Copy the link"
             caption="Expires in 7 days · 22.09.2026"
+            node="link"
           />
 
-          <Button style={{ width: "100%" }}>Share link</Button>
+          <Button style={{ width: "100%" }} node="share">Share link</Button>
         </div>
       </BottomSheet>
     </>

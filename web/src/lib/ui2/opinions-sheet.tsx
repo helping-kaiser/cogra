@@ -88,7 +88,7 @@ export function OpinionsSheet({
       )}
       {opinions?.map((opinion, index) => (
         <StanceRow
-          key={opinion.authorId}
+          key={opinion.holderId}
           name={opinion.holder.name}
           handle={opinion.holder.handle}
           src={opinion.holder.avatarUrl}

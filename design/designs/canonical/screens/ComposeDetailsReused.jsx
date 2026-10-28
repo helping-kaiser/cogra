@@ -20,7 +20,12 @@
    words (readme §10, K13.11), so the door is named by the sentence it reads.
 
    Only the author's own published posts count: a match in drafts alone, or in
-   someone else's post, draws nothing — that is `ComposeDetails` at rest. */
+   someone else's post, draws nothing — that is `ComposeDetails` at rest.
+
+   REGISTERED under the `composeDetails` prefix (seam 248), `ComposeDetails`'
+   names; the marker is `published`, beside `mediaRow` rather than inside it —
+   the line stands under the row, not in it, and a path follows the drawing. */
+export const NODE = "composeDetails";
 export function Screen() {
   return <ComposeDetailsBody publishedOn="12 September" />;
 }

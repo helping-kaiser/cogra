@@ -1,24 +1,24 @@
 # WalletComingSoon · `spec:design:behavior-wallet-coming-soon`
 
-WHEN tap the bottom bar's wallet slot -> the Wallet tab's root opens reading Wallet — coming soon and Your earnings will be here. AND the wallet slot stands selected AND NEVER the tap does nothing
+WHEN tap wallet.bottomBar.walletSlot -> the Wallet tab's root opens, wallet.comingSoonCard reading Wallet — coming soon and Your earnings will be here. AND wallet.bottomBar.walletSlot stands selected AND NEVER the tap does nothing
 
 ALWAYS the wallet's coming-soon page serves every reader state with one face: a member, a member whose key is elsewhere, an applicant, a turned-down applicant and a guest
 
 ALWAYS the wallet's coming-soon page offers no action and names no date
 
-ALWAYS the wallet's coming-soon page wears the bottom bar with all five slots and no back arrow
+ALWAYS the wallet's coming-soon page wears wallet.bottomBar with all five slots and no back arrow
 
-ALWAYS the band above the wallet's coming-soon page carries the chats icon and the bell GIVEN the reader is signed in
+ALWAYS wallet.band carries wallet.band.chats and wallet.band.bell GIVEN the reader is signed in
 
-ALWAYS the band and the bottom bar are the bare view's, the band carrying no bell, GIVEN the reader is a guest
+ALWAYS wallet.band and wallet.bottomBar are the bare view's, wallet.band carrying no bell, GIVEN the reader is a guest
 
-WHEN tap the chats icon, New post or Profile GIVEN the reader is a guest -> the guest gate opens AND NEVER the surface behind it opens
+WHEN tap wallet.band.chats, wallet.bottomBar.composeSlot or wallet.bottomBar.profileSlot GIVEN the reader is a guest -> the guest gate opens AND NEVER the surface behind it opens
 
-WHEN tap Feed GIVEN the reader is a guest -> the bare view opens
+WHEN tap wallet.bottomBar.feedSlot GIVEN the reader is a guest -> the bare view opens
 
-WHEN tap the wallet slot GIVEN the page is scrolled -> the page returns to its top
+WHEN tap wallet.bottomBar.walletSlot GIVEN the page is scrolled -> the page returns to its top
 
-WHEN tap the wallet slot GIVEN the page is at its top -> NEVER anything changes
+WHEN tap wallet.bottomBar.walletSlot GIVEN the page is at its top -> NEVER anything changes
 
 WHEN press Android's system Back on the wallet's coming-soon page -> Feed's root opens for the reader's state AND NEVER the app leaves from the Wallet tab
 

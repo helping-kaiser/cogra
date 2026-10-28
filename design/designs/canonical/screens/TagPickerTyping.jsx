@@ -47,28 +47,30 @@
    `Done` IS THE HEADER BACK'S AFFIRMATIVE TWIN (jakob, 2026-10-01; `TagPicker`):
    the same leave to the composer, every staged tag kept. Neither stages the
    typed name: leaving is navigation, and only a pick adds. */
+/* REGISTERED under the `tagPicker` prefix (seam 248), `TagPicker`'s names. */
+export const NODE = "tagPicker";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" />} />
+      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" node="help" />} node="header" />
       <div style={{ flex: "none" }}>
-        <SearchBar query="#SaltMaps" placeholder="Name a tag" ariaLabel="Name a tag" />
+        <SearchBar query="#SaltMaps" placeholder="Name a tag" ariaLabel="Name a tag" node="nameField" />
         <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
-          <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+          <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="rule">
             Letters, digits, dot, dash and underscore. Capitals become lowercase.
           </p>
         </div>
-        <PickAnnouncement />
+        <PickAnnouncement node="announcement" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="topic" name="saltmaps" sub="Signs as #saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <ReferenceRow kind="topic" name="saltmaps" sub="Signs as #saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltmaps" />
         <div style={{ flex: 1 }} />
-        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="footnote">
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
         </p>
       </div>
       <div style={{ flex: "none", padding: "0 24px 24px" }}>
-        <Button style={{ width: "100%" }}>Done</Button>
+        <Button style={{ width: "100%" }} node="done">Done</Button>
       </div>
     </>
   );

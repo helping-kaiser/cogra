@@ -115,17 +115,24 @@ const DOOR = {
 
 /* The count slot. Without a noun it is what it always was — an action row's
    "1 more" is already words, and says itself. */
-function Count({ count, noun }) {
-  if (!noun) return <span style={COUNT}>{count}</span>;
+function Count({ count, noun, node }) {
+  if (!noun) return <span style={COUNT} data-node={node}>{count}</span>;
   return (
-    <span style={COUNT}>
+    <span style={COUNT} data-node={node}>
       <span aria-hidden="true">{count}</span>
       <span style={SR_ONLY}>{`${count} ${count === "1" ? noun : `${noun}s`}`}</span>
     </span>
   );
 }
 
-export function ActsCard({ rows = [], total, note, noteTone = "quiet" }) {
+/* `node` is the data-node name its placer gives the card (seam 248). Given one,
+   every row is an `actRow` keyed by its place in the card, counted from 1, with
+   its `label`, `value` (an action row's `action`) and `count`; the closing
+   line is `total` and its subline `note`. Given none, the card renders exactly
+   as before. */
+export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
+  const named = (index) => (node ? { "data-node": "actRow", "data-node-key": String(index + 1) } : null);
+  const part = (name) => node && name;
   return (
     <div
       style={{
@@ -135,41 +142,43 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet" }) {
         background: "var(--surface-container-highest)",
         padding: "4px var(--space-4)",
       }}
+      data-node={node}
     >
       {rows.map((row, index) =>
         row.action ? (
-          <InlineAction key={index} size="sm" onClick={row.onAct} style={{ ...ROW, textAlign: "left" }}>
-            <span style={LABEL}>{row.label}</span>
-            <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap" }}>{row.action}</span>
-            <Count count={row.count} noun={row.countNoun} />
+          <InlineAction key={index} size="sm" onClick={row.onAct} style={{ ...ROW, textAlign: "left" }} node={node && "actRow"} nodeKey={node && String(index + 1)}>
+            <span style={LABEL} data-node={part("label")}>{row.label}</span>
+            <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap" }} data-node={part("action")}>{row.action}</span>
+            <Count count={row.count} noun={row.countNoun} node={part("count")} />
           </InlineAction>
         ) : row.onOpen ? (
-          <button key={index} type="button" onClick={row.onOpen} aria-label={row.openLabel} className={BUTTON_CLASS} style={DOOR}>
-            <span style={LABEL}>{row.label}</span>
-            <span style={VALUE}>{row.value}</span>
-            <Count count={row.count} noun={row.countNoun} />
+          <button key={index} type="button" onClick={row.onOpen} aria-label={row.openLabel} className={BUTTON_CLASS} style={DOOR} {...named(index)}>
+            <span style={LABEL} data-node={part("label")}>{row.label}</span>
+            <span style={VALUE} data-node={part("value")}>{row.value}</span>
+            <Count count={row.count} noun={row.countNoun} node={part("count")} />
           </button>
         ) : row.fault ? (
-          <div key={index} style={{ borderBottom: ROW.borderBottom, paddingBottom: "var(--space-2)" }}>
+          <div key={index} style={{ borderBottom: ROW.borderBottom, paddingBottom: "var(--space-2)" }} {...named(index)}>
             <div style={{ ...ROW, borderBottom: 0 }}>
-              <span style={LABEL}>{row.label}</span>
-              <span style={VALUE}>{row.value}</span>
-              <Count count={row.count} noun={row.countNoun} />
+              <span style={LABEL} data-node={part("label")}>{row.label}</span>
+              <span style={VALUE} data-node={part("value")}>{row.value}</span>
+              <Count count={row.count} noun={row.countNoun} node={part("count")} />
             </div>
             <div style={{ paddingLeft: `calc(${LABEL.width} + var(--space-2))` }}>
               <UploadErrorLine message={row.fault.message} onRemove={row.fault.onRemove} />
             </div>
           </div>
         ) : (
-          <div key={index} style={ROW}>
-            <span style={LABEL}>{row.label}</span>
-            <span style={VALUE}>{row.value}</span>
-            <Count count={row.count} noun={row.countNoun} />
+          <div key={index} style={ROW} {...named(index)}>
+            <span style={LABEL} data-node={part("label")}>{row.label}</span>
+            <span style={VALUE} data-node={part("value")}>{row.value}</span>
+            <Count count={row.count} noun={row.countNoun} node={part("count")} />
           </div>
         )
       )}
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "2px", minHeight: "48px", padding: "6px 0" }}>
         <span
+          data-node={part("total")}
           style={{
             fontSize: "var(--text-body-medium)",
             lineHeight: "var(--text-body-medium--line-height)",
@@ -187,6 +196,7 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet" }) {
             said honestly in words, no progress the signing cannot measure. */}
         {note && (
           <span
+            data-node={part("note")}
             role={noteTone === "slow" ? "status" : undefined}
             style={{
               fontSize: "var(--text-label-small)",

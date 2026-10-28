@@ -12,23 +12,27 @@
    reader signs lands until they restore the key, so it asks for their action
    and stands on the account-notice register (`tone="notice"`) — the register
    the key-absent panels already wear — its filled `Restore the key` in
-   `inverse`. */
+   `inverse`.
+
+   REGISTERED under the `feed` prefix (seam 248): the card is `keyCard`, as
+   the applicant's key card is, and its button `restore`. */
+export const NODE = "feed";
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser"`;
 
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
-        <TaskCard tone="notice" title="{{keyTitle}}" body="Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending.">
+        <TaskCard tone="notice" title="{{keyTitle}}" body="Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending." node="keyCard">
           <div style={{ display: "flex" }}>
-            <Button variant="inverse" size="sm">Restore the key</Button>
+            <Button variant="inverse" size="sm" node="restore">Restore the key</Button>
           </div>
         </TaskCard>
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} />
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

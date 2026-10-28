@@ -13,7 +13,7 @@ function held(
   extra: Partial<HeldOpinionView> & { redacted?: boolean } = {},
 ): HeldOpinionView {
   return {
-    authorId: `addr-${handle ?? name}`,
+    holderId: `addr-${handle ?? name}`,
     holder: { name, handle, avatarUrl: null, redacted: extra.redacted ?? false },
     pair: { pDirected, pInterest },
     severed: false,

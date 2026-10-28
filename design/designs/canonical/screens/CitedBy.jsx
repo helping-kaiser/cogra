@@ -33,21 +33,27 @@
    shape's own rule and the one surface that admits it.
 
    THE SHEET SITS OVER THE POST DETAIL, drawn whole beneath it, because that is
-   the surface the reader asked from. */
+   the surface the reader asked from.
+
+   REGISTERED under the `postDetail` prefix (seam 248): the sheet is
+   `citedBySheet`, each row a `citation` keyed by its place in the list,
+   newest first — the list is a chronicle, as Notifications is, and two
+   citing things can share a name. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
-      <DetailHeader items={READER_POST_MENU} />
+      <DetailHeader items={READER_POST_MENU} node="header" />
       <DetailColumn>
-        <PostCard {...MIRA_GALLERY_POST} variant="detail" onOpenOpinions={() => {}} citedBy={CITING_ARTIFACTS.length} onOpenCitedBy={() => {}} />
+        <PostCard {...MIRA_GALLERY_POST} variant="detail" onOpenOpinions={() => {}} citedBy={CITING_ARTIFACTS.length} onOpenCitedBy={() => {}} node="card" />
       </DetailColumn>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
-      <BottomSheet open ariaLabel="Cited by" maxHeight="88%">
-        <SheetTitle>Cited by</SheetTitle>
+      <BottomSheet open ariaLabel="Cited by" maxHeight="88%" node="citedBySheet">
+        <SheetTitle node="title">Cited by</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          {CITING_ARTIFACTS.map((artifact) => (
-            <ReferenceRow key={artifact.name} {...artifact} onOpen={() => {}} />
+          {CITING_ARTIFACTS.map((artifact, index) => (
+            <ReferenceRow key={artifact.name} {...artifact} onOpen={() => {}} node="citation" nodeKey={String(index + 1)} />
           ))}
         </div>
       </BottomSheet>

@@ -20,6 +20,8 @@ export interface ChipProps {
   tone?: "filter" | "readout";
   /** The data-node name its placer gives this chip (design ⇄ impl seam 002; renders as attributes only). A filter sheet names each kind chip as `<value>Chip` — `postsChip`, `topicsChip` — the way `SegmentedFilter` names its segments. */
   node?: string;
+  /** The key of a repeated chip whose set is content's, not fixed — the feed filter's topic chips, keyed by the topic's name. */
+  nodeKey?: string;
 }
 
 export declare function Chip(props: ChipProps): JSX.Element;
