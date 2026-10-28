@@ -37,7 +37,42 @@ export function releaseEmailChangeLink(): void {
   }
 }
 
+const ASK_KEY = "cogra.heldAskLink";
+
+/**
+ * Parks an ask link a guest raised the gate over, so the sign-in brings the
+ * ask back (VouchAsk.md:23). The id is the capability, so it stays in this
+ * tab and never rides a second URL.
+ */
+export function holdAskLink(id: string): void {
+  try {
+    window.sessionStorage.setItem(ASK_KEY, id);
+  } catch {
+    // nothing held; the reader opens the link again
+  }
+}
+
+/** The parked ask link, if any. */
+export function heldAskLink(): string | null {
+  try {
+    return window.sessionStorage.getItem(ASK_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Drops the parked ask link once the ask stands again. */
+export function releaseAskLink(): void {
+  try {
+    window.sessionStorage.removeItem(ASK_KEY);
+  } catch {
+    // nothing to drop
+  }
+}
+
 /** Where a fresh sign-in goes: back to a held link's landing, else home. */
 export function afterSignIn(): string {
-  return heldEmailChangeLink() === null ? "/" : "/email-change";
+  if (heldEmailChangeLink() !== null) return "/email-change";
+  const ask = heldAskLink();
+  return ask === null ? "/" : `/vouch/${ask}`;
 }

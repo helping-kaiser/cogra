@@ -1,11 +1,45 @@
-# The inviter's side: issue and revoke link capabilities, read the
-# approval queue, and approve — approveApplicants returns the
-# inviter's own Opinion records to sign; the vouch is the inviter's
-# signature, not a server write (api-spec.md "Auth and accounts").
+# The approver's side of admission (api-spec.md "Invites", "The ask
+# link"): issue and revoke link capabilities, read the one approval
+# queue spanning both ends of the funnel, approve — approveApplicants
+# returns the approver's own Opinion records to sign; the vouch is the
+# approver's signature, not a server write — and close applications
+# without approving them. The ask link's half: the anonymous check a
+# member's arrival reads, and the take-up that stages the asker.
 
-query InviteLinks {
+# One application row as the queue and the ask link both read it.
+fragment QueueApplicationFields on Application {
+  id
+  handle
+  emailVerified
+  keyAttached
+  # The node an approval's vouch points at — what the device checks the
+  # vouch it signs against (intent.ts).
+  graphId
+  createdAt
+  approvedAt
+  rejectedAt
+  landedAt
+  # Null for an ask-link staging: the row heads the list on its own
+  # (Invites.md:71; design digest item 5).
+  inviteLink {
+    id
+    singleUse
+  }
+}
+
+# Invites, in one read: the queue (waiting rows only, oldest first —
+# `approvalQueue`'s own contract) and the links, of which the screen
+# shows only those still usable (Invites.md:29).
+query Invites {
   me {
     id
+    approvalQueue(first: 100) {
+      edges {
+        node {
+          ...QueueApplicationFields
+        }
+      }
+    }
     inviteLinks(first: 50) {
       edges {
         node {
@@ -14,21 +48,7 @@ query InviteLinks {
           createdAt
           expiresAt
           revokedAt
-          applications(first: 50) {
-            edges {
-              node {
-                id
-                handle
-                emailVerified
-                keyAttached
-                # The node an approval's vouch points at — what the device
-                # checks the vouch it signs against (intent.ts).
-                graphId
-                approvedAt
-                landedAt
-              }
-            }
-          }
+          usable
         }
       }
     }
@@ -39,6 +59,11 @@ mutation CreateInviteLink($input: CreateInviteLinkInput!) {
   createInviteLink(input: $input) {
     inviteLink {
       id
+      singleUse
+      createdAt
+      expiresAt
+      revokedAt
+      usable
     }
     userErrors {
       ...UserErrorFields
@@ -67,6 +92,67 @@ mutation ApproveApplicants($input: ApproveApplicantsInput!) {
     }
     userErrors {
       ...UserErrorFields
+    }
+  }
+}
+
+mutation RejectApplication($input: RejectApplicationInput!) {
+  rejectApplication(input: $input) {
+    application {
+      id
+      rejectedAt
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation RejectLinkApplications($input: RejectLinkApplicationsInput!) {
+  rejectLinkApplications(input: $input) {
+    rejectedCount
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# The ask link, from the member's end.
+query AskLinkCheck($id: UUID!) {
+  askLinkCheck(id: $id) {
+    usable
+    applicantHandle
+    reason
+  }
+}
+
+mutation StageApplicant($input: StageApplicantInput!) {
+  stageApplicant(input: $input) {
+    application {
+      ...QueueApplicationFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# The applicant's own card (ApplicantWaiting, ApplicantRejected,
+# ProfileApplicant): the one application `User.application` answers by
+# precedence, whom it names, and the ask link the card holds.
+query MyApplication {
+  me {
+    id
+    askLink
+    application {
+      id
+      approvedAt
+      rejectedAt
+      landedAt
+      approver {
+        id
+        handle
+      }
     }
   }
 }

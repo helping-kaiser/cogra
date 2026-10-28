@@ -1,9 +1,22 @@
-import type { Metadata } from "next";
+"use client";
+
+// Invites, from whichever door opened it: `?from=` names the door for the
+// back arrow (Invites.md:95-97). `useSearchParams` needs a Suspense boundary
+// on a page that is otherwise statically rendered (Next `use-search-params`).
+
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { InvitesView } from "./invites-view";
 
-export const metadata: Metadata = { title: "Invites — CoGra" };
+function FromDoor() {
+  return <InvitesView from={useSearchParams().get("from")} />;
+}
 
 export default function InvitesPage() {
-  return <InvitesView />;
+  return (
+    <Suspense fallback={null}>
+      <FromDoor />
+    </Suspense>
+  );
 }
