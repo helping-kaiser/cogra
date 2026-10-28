@@ -8,6 +8,9 @@ export type BackTarget = { readonly href: string; readonly label: string };
 
 const ORIGINS: Record<string, BackTarget> = {
   saved: { href: "/saved", label: "Back to Saved" },
+  // The reader's seen-list (History.md:47-61: every door out of History
+  // reads `Back to History`).
+  history: { href: "/history", label: "Back to History" },
   notifications: { href: "/notifications", label: "Back to Notifications" },
   // The reader's own profile (Profile.md: a chronicle card's post reads
   // `Back to your profile`; ChatsComingSoon.md:15, the band's chats).

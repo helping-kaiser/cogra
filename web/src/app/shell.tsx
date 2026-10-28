@@ -23,14 +23,16 @@
 // (`design/designs/canonical/screens/_shared.jsx`: a `flex: 1` scroller with
 // the nav as a static sibling) and what the ruling asks for.
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useRef, type ReactNode } from "react";
 
 import { announceFeedReselect } from "@/lib/feed/feed-reselect";
 import { notificationsOrigin } from "@/lib/notifications/origin";
 import type { BellRoot } from "@/lib/notifications/row-content";
 import { useAuthPhase } from "@/lib/session/provider";
+import { KeptPicksNavigation } from "@/lib/stance/kept-picks-route";
 import { BottomNav, type NavSlot } from "@/lib/ui/bottom-nav";
+import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
 import { scrollHostToTopAnimated, scrollOffsetOf } from "@/lib/ui/scroll-host";
 
 /** The bar slot each bell root lights. */
@@ -47,15 +49,15 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
  * THE ROOT A DRILL-IN KEEPS LIT (PostDetail.md:57-59; ProfileOther.md:11;
  * ProfileDeleted.md:27; `BottomNav.prompt.md`, jakob 2026-10-06): the root a
  * post or someone's profile was opened from stays lit on the drill-in. A
- * Saved row, and your own profile's chronicle, belong to the Profile stack
- * (`from=saved`, `from=profile`); a search result belongs to Explore's
- * (`from=search`, BottomNav.prompt.md: "opened from Explore lights Explore");
- * anything else — the feed, a link, a notification — lights the Feed, where
- * author chips and links land.
+ * Saved row, a History card, and your own profile's chronicle, belong to the
+ * Profile stack (`from=saved`, `from=history`, `from=profile`); a search
+ * result belongs to Explore's (`from=search`, BottomNav.prompt.md: "opened
+ * from Explore lights Explore"); anything else — the feed, a link, a
+ * notification — lights the Feed, where author chips and links land.
  */
 export function detailRoot(from: string | null): NavSlot {
   if (from === "search") return "search";
-  return from === "saved" || from === "profile" ? "profile" : "feed";
+  return from === "saved" || from === "history" || from === "profile" ? "profile" : "feed";
 }
 
 /** The tab roots whose own slot, tapped there, the shell answers (the ladder). */
@@ -91,10 +93,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     // gate, which replaces a signed-out arrival with /login.
     (signedIn && pathname === "/profile") ||
     (signedIn && pathname === "/saved") ||
+    (signedIn && pathname === "/history") ||
     (signedIn && pathname === "/notifications");
   const showBar = phase !== "resolving" && readSurface;
-  // SAVED KEEPS PROFILE LIT (Saved.md, design digest item 51: the originating
-  // root stays lit on a drill-in) — its one door is the reader's own profile.
+  // SAVED AND HISTORY KEEP PROFILE LIT (Saved.md, design digest item 51;
+  // History.md:121: the originating root stays lit on a drill-in) — their one
+  // door is the reader's own profile.
   // NOTIFICATIONS KEEPS LIT THE ROOT THE BELL WAS TAPPED ON (Notifications.md:27).
   const active =
     pathname === "/feed"
@@ -103,30 +107,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         ? "search"
         : pathname === "/wallet"
           ? "wallet"
-          : pathname === "/profile" || pathname === "/saved"
-        ? "profile"
-        : pathname === "/notifications"
-          ? ROOT_SLOT[notificationsOrigin(null)]
-          : null;
+          : pathname === "/profile" || pathname === "/saved" || pathname === "/history"
+            ? "profile"
+            : pathname === "/notifications"
+              ? ROOT_SLOT[notificationsOrigin(null)]
+              : null;
   // The bar is drawn once, here, but its node belongs to the SCREEN it rides
   // (`design/designs/canonical/nodes.json` registers `feed.bottomBar`,
-  // `postDetail.bottomBar`, `profile.bottomBar` and `saved.bottomBar`), so the
-  // registered screens name it by route. Your own profile and someone else's
-  // are one surface (`Profile`, `ProfileOther`: the `profile` prefix).
+  // `postDetail.bottomBar`, `profile.bottomBar`, `saved.bottomBar` and
+  // `history.bottomBar`), so the registered screens name it by route. Your
+  // own profile and someone else's are one surface (`Profile`, `ProfileOther`: the `profile` prefix).
   const screen =
     pathname === "/feed"
       ? "feed"
       : pathname === "/explore"
         ? "explore"
-      : /^\/posts\/[^/]+$/.test(pathname)
-        ? "postDetail"
-        : pathname === "/profile" || /^\/u\/[^/]+$/.test(pathname)
-          ? "profile"
-          : pathname === "/saved"
-            ? "saved"
-            : pathname === "/notifications"
-              ? "notifications"
-              : null;
+        : /^\/posts\/[^/]+$/.test(pathname)
+          ? "postDetail"
+          : pathname === "/profile" || /^\/u\/[^/]+$/.test(pathname)
+            ? "profile"
+            : pathname === "/saved"
+              ? "saved"
+              : pathname === "/history"
+                ? "history"
+                : pathname === "/notifications"
+                  ? "notifications"
+                  : null;
   // A drill-in — a post's detail or someone's profile — reads its origin off
   // the URL and keeps that root lit.
   const drillIn = screen === "postDetail" || (screen === "profile" && pathname !== "/profile");
@@ -135,6 +141,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const reselectRoot = () => {
     if (scrollOffsetOf(scroller) > 0) scrollHostToTopAnimated(scroller);
   };
+  const router = useRouter();
   const bar = (lit: NavSlot | null) => (
     <BottomNav
       active={lit}
@@ -153,6 +160,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
   return (
     <div className="flex h-full flex-col">
+      {/* A kept pick's anchor opens its review through the router; acts that
+          end by leaving confirm on the surface they land on (`carried-snackbar`). */}
+      <KeptPicksNavigation navigate={router.push}>
       <ScrollHostProvider value={scroller}>
         <PadParkingProvider value={showBar}>
         <div
@@ -172,6 +182,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </PadParkingProvider>
       </ScrollHostProvider>
+      </KeptPicksNavigation>
+      <CarriedSnackbar />
     </div>
   );
 }

@@ -5,7 +5,7 @@
 // thing that moves the application forward.
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { resendVerificationEmail } from "@/lib/api/onboarding-api";
@@ -13,6 +13,10 @@ import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { TransportError } from "@/lib/ui/transport-error";
+import { NO_BACKUP_LINE } from "@/lib/ui/key-absent-notice";
+import { Icon } from "@/lib/ui/icons";
+import { pillClassName } from "@/lib/ui2/pill-button";
+import { useOptionalStanceData } from "@/lib/stance/provider";
 
 export function ApplicantStatus({ progress }: { progress: RegistrationProgress | null }) {
   const [waitingHintDismissed, setWaitingHintDismissed] = useState(false);
@@ -169,21 +173,59 @@ function KeyElsewhereCard() {
   );
 }
 
+/**
+ * THE KEY CARD (KeyElsewhere.md, KeyElsewhereNoBackup.md; `TaskCard`'s
+ * `tone="notice"`): the account-notice register — the olive ground under the
+ * task ring, the mark in the corner, and `Restore the key` filled in inverse.
+ * It stands at the head of the feed until the key is restored here.
+ *
+ * WITH NO BACKUP there is nothing to restore from: the body says so and the
+ * card carries no control. Which one stands is read once, as the card mounts
+ * (the card never changes while the feed stands loaded); an unread answer
+ * keeps the restore on offer.
+ */
 export function RestoreCard() {
+  const data = useOptionalStanceData();
+  const [backedUp, setBackedUp] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (data === null) return undefined;
+    let live = true;
+    void data.keyBackedUp().then((backed) => {
+      if (live) setBackedUp(backed);
+    });
+    return () => {
+      live = false;
+    };
+  }, [data]);
+  const noBackup = backedUp === false;
   return (
-    <Card>
-      <h2 className="text-title-medium">Your key isn&apos;t on this browser</h2>
-      <p className="text-body-medium text-on-surface-variant">
-        Restore it with your recovery code to post, vouch, and act.
+    <section
+      data-testid={noBackup ? "home_key_no_backup" : "home_key_elsewhere_card"}
+      className="cg-task-ring-notice flex flex-none flex-col gap-3 rounded-medium p-4 text-on-tertiary-container"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="m-0 text-title-medium">Your key isn&apos;t on this browser</h2>
+        <span className="flex-none text-on-tertiary-container">
+          <Icon name="mark" size={20} pickColor="var(--primary-container)" />
+        </span>
+      </div>
+      <p className="m-0 text-body-medium">
+        {noBackup
+          ? NO_BACKUP_LINE
+          : "Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending."}
       </p>
-      <Link
-        href="/restore"
-        data-testid="home_restore"
-        className={buttonClassName({ size: "sm", selfStart: true })}
-      >
-        Restore the key
-      </Link>
-    </Card>
+      {!noBackup && (
+        <div className="flex">
+          <Link
+            href="/restore"
+            data-testid="home_restore"
+            className={pillClassName({ variant: "inverse", size: "sm" })}
+          >
+            Restore the key
+          </Link>
+        </div>
+      )}
+    </section>
   );
 }
 

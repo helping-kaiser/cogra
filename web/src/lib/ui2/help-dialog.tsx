@@ -100,6 +100,15 @@ export const HELP_TOPICS = {
       "Nothing was signed or spent, and your draft is kept. Try again in a little while.",
     ],
   },
+  // The same dialog from the kept picks' seal, which keeps the picks (copy-voice,
+  // *Why signing waits*, blessed jakob 2026-10-05).
+  whySigningWaitsKept: {
+    title: "Why signing waits",
+    paragraphs: [
+      "There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now.",
+      "Nothing was signed or spent, and your picks are still kept. Try again in a little while.",
+    ],
+  },
   // The same dialog from an edit, which keeps no draft: the clause says what is
   // true there (copy-voice, *Why signing waits*: "from a comment edit,
   // `Nothing was signed or spent, and your edit is still here. Try again in a

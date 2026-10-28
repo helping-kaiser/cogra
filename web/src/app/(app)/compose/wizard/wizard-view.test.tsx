@@ -761,6 +761,21 @@ describe("the compose wizard", () => {
     );
   });
 
+  // THE TAG CARD'S ACT (`Tag a new post with it`, History.md:63): the
+  // composer opens at its first stage, the tag riding staged among the new
+  // post's tags.
+  it("stages the tag the tag card's act sent it", async () => {
+    searchParams = new URLSearchParams("tag=saltmaps");
+    render();
+
+    expect(await screen.findByTestId("wizard-to-words")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    expect(await screen.findByTestId(byNode("composeDetails.tags.tag", "saltmaps"))).toHaveTextContent("saltmaps");
+  });
+
   // A TARGET THE LOOKUP CANNOT TYPE IS STILL STAGED: the citation names its
   // target by id, so dropping the author's gesture silently would be worse
   // than a chip with no label.

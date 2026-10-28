@@ -18,16 +18,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DynamicFeed
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Wallet
-import androidx.compose.material.icons.outlined.DynamicFeed
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Wallet
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationItemColors
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.ShortNavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -35,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -87,16 +87,14 @@ fun CograBottomBar(
                     slot = slot,
                     selected = feedSelected,
                     onClick = onFeed,
-                    filled = Icons.Filled.DynamicFeed,
-                    outlined = Icons.Outlined.DynamicFeed,
+                    glyph = Icons.Filled.DynamicFeed,
                     testTag = node?.div("feedSlot")?.tag ?: "bar_feed",
                 )
                 NavSlot.Search -> DestinationSlot(
                     slot = slot,
                     selected = searchSelected,
                     onClick = onSearch,
-                    filled = Icons.Filled.Search,
-                    outlined = Icons.Outlined.Search,
+                    glyph = Icons.Filled.Search,
                     testTag = node?.div("searchSlot")?.tag ?: "bar_explore",
                 )
                 NavSlot.Compose -> ComposeSlot(onCompose, node?.div("composeSlot")?.tag ?: "bar_compose")
@@ -104,16 +102,15 @@ fun CograBottomBar(
                     slot = slot,
                     selected = walletSelected,
                     onClick = onWallet,
-                    filled = Icons.Filled.Wallet,
-                    outlined = Icons.Outlined.Wallet,
+                    glyph = Icons.Filled.Wallet,
                     testTag = node?.div("walletSlot")?.tag ?: "bar_wallet",
                 )
                 NavSlot.Profile -> DestinationSlot(
                     slot = slot,
                     selected = profileSelected,
                     onClick = onProfile,
-                    filled = Icons.Filled.Person,
-                    outlined = Icons.Outlined.Person,
+                    glyph = Icons.Filled.PersonOutline,
+                    selectedGlyph = Icons.Filled.Person,
                     testTag = node?.div("profileSlot")?.tag ?: "bar_profile",
                 )
             }
@@ -122,8 +119,10 @@ fun CograBottomBar(
 }
 
 /**
- * A destination slot. Selection shows in COLOUR and in the filled icon cut —
- * never an indicator pill (`design.md` §6) — and the colour is never alone,
+ * A destination slot. Selection shows in COLOUR — `onSurfaceVariant` to
+ * `onSurface` — and, on the profile's slot alone, in the filled cut; never
+ * an indicator pill (`BottomNav.jsx`, `Icon.jsx`: every other glyph keeps
+ * the one filled cut whatever its state). The colour is never alone,
  * because `ShortNavigationBarItem` announces the selection too.
  */
 @Composable
@@ -131,18 +130,33 @@ private fun DestinationSlot(
     slot: NavSlot,
     selected: Boolean,
     onClick: () -> Unit,
-    filled: ImageVector,
-    outlined: ImageVector,
+    glyph: ImageVector,
     testTag: String,
+    selectedGlyph: ImageVector = glyph,
 ) {
     ShortNavigationBarItem(
         selected = selected,
         onClick = onClick,
-        icon = { Icon(if (selected) filled else outlined, contentDescription = null) },
+        icon = { Icon(if (selected) selectedGlyph else glyph, contentDescription = null) },
         label = { Text(stringResource(slot.label)) },
         modifier = Modifier.testTag(testTag),
+        colors = barItemColors(),
     )
 }
+
+/**
+ * The slots' colours by the master (`BottomNav.jsx`: `tone(selected)`):
+ * M3's defaults would tint a selected slot `secondary` over a
+ * `secondaryContainer` indicator pill, and the bar draws neither.
+ */
+@Composable
+internal fun barItemColors(): NavigationItemColors = ShortNavigationBarItemDefaults.colors(
+    selectedIconColor = MaterialTheme.colorScheme.onSurface,
+    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+    selectedIndicatorColor = Color.Transparent,
+    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+)
 
 /** The centre slot: the compose ACTION, wearing the one loud surface. */
 @Composable

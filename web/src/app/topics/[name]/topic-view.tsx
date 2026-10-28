@@ -35,9 +35,9 @@ import { useApolloClient } from "@apollo/client/react";
 import { fetchHashtagDetail, type HashtagDetail } from "@/lib/api/topics-api";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
 import { ActorChip } from "@/lib/ui/actor-chip";
+import { backFor } from "@/lib/ui/back-origin";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
-import { backFor } from "@/lib/ui/back-origin";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
 import { useScrollHost } from "@/lib/ui/scroll-host";
@@ -49,9 +49,6 @@ import { TransportError } from "@/lib/ui/transport-error";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 
 export function TopicView({ name, from = null }: { name: string; from?: string | null }) {
-  // BACK FROM THE TAG PAGE IS HISTORY, NAMED BY ITS ORIGIN (design/readme.md,
-  // the tag-page smalls' table): `Back to the search` from Explore mid-query.
-  const back = backFor(from);
   const client = useApolloClient();
   const [hashtag, setHashtag] = useState<HashtagDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,6 +94,10 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
   );
   useSeenTracker({ root: host, list: listRef, ids: seenIds });
 
+  // THE BACK ARROW NAMES THE LIST THE PAGE WAS OPENED FROM (the origin-naming
+  // table; History.md:57: `Back to History`; Explore mid-query, `Back to the
+  // search`), the feed otherwise.
+  const back = backFor(from);
   const header = (
     <PageHeader backHref={back.href} backScroll={false} backLabel={back.label} backTestId="topic-back" inGutter />
   );
