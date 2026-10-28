@@ -54,19 +54,18 @@ export const COULDNT_LOAD_MORE = "Couldn't load more";
 
 const NODE: DataNode = { path: "yourTopics" };
 
-type Row = HeldTopic & { readonly name: string };
-
-/** A redacted name has nothing to draw or open (named as a design gap). */
-function rowsOf(items: readonly HeldTopic[]): Row[] {
-  return items.filter((item): item is Row => item.name !== null);
-}
+// A NAME MODERATION TOOK AWAY STILL STANDS (never erase silently): the held
+// record is the reader's own act, so the row keeps its place, its mark and its
+// pair, drawn as the topic page draws a removed name — the `#` alone where the
+// name was — and opens nothing, since the name is the page's address
+// (hashtag.md §1). The board draws no such row; filed as a design gap.
 
 export function YourTopicsView({ from = null }: { from?: string | null }) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const host = useScrollHost();
 
-  const [rows, setRows] = useState<readonly Row[]>([]);
+  const [rows, setRows] = useState<readonly HeldTopic[]>([]);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -88,7 +87,7 @@ export function YourTopicsView({ from = null }: { from?: string | null }) {
       }
       setFailed(false);
       setMoreFailed(false);
-      setRows(rowsOf(outcome.value.items));
+      setRows(outcome.value.items);
       setEndCursor(outcome.value.endCursor);
       setHasNextPage(outcome.value.hasNextPage);
     });
@@ -114,7 +113,7 @@ export function YourTopicsView({ from = null }: { from?: string | null }) {
       setMoreFailed(true);
       return;
     }
-    setRows((current) => appendDeduped(current, rowsOf(outcome.value.items)));
+    setRows((current) => appendDeduped(current, outcome.value.items));
     setEndCursor(outcome.value.endCursor);
     setHasNextPage(outcome.value.hasNextPage);
   }, [client, guard, loadingMore, hasNextPage, endCursor]);
@@ -169,13 +168,13 @@ export function YourTopicsView({ from = null }: { from?: string | null }) {
             <div key={row.id} ref={index === tailIndex ? tailRef : undefined}>
               <ReferenceRow
                 kind="topic"
-                name={`#${row.name}`}
+                name={`#${row.name ?? ""}`}
                 pair={{ pDirected: row.pDirected, pInterest: row.pInterest }}
                 pairFamily="stance"
                 pending={row.pending}
-                href={topicHref(row.name)}
-                node={{ path: `${NODE.path}.row`, key: row.name }}
-                testId={`your-topics-row-${row.name}`}
+                href={row.name === null ? null : topicHref(row.name)}
+                node={{ path: `${NODE.path}.row`, key: row.name ?? row.id }}
+                testId={`your-topics-row-${row.name ?? row.id}`}
               />
             </div>
           ))}

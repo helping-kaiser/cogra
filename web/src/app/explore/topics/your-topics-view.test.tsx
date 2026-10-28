@@ -133,6 +133,40 @@ describe("Your topics", () => {
     expect(screen.queryByTestId("your-topics-row-saltmaps-pair-pending")).toBeNull();
   });
 
+  // Never erase silently: a held topic whose name moderation took away keeps
+  // its row, drawn as the topic page draws a removed name — the `#` alone —
+  // with its pair, and opening nothing (the name is the page's address).
+  it("your_topics_a_held_topic_whose_name_was_removed_keeps_its_row_and_opens_nothing", async () => {
+    server.use(
+      gqlLink.query("HeldTopics", () => {
+        const removed = edge({ name: "gone", d: 0.2, i: 0.4 });
+        removed.node.id = "t-gone";
+        removed.node.name = { __typename: "ModeratedText", value: null as unknown as string, status: "REDACTED" };
+        return HttpResponse.json({
+          data: {
+            me: {
+              __typename: "User",
+              id: "me",
+              heldTopics: {
+                __typename: "HeldTopicConnection",
+                totalCount: 2,
+                edges: [edge(BOARD[0]!), removed],
+                pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+              },
+            },
+          },
+        });
+      }),
+    );
+    render();
+    const row = await screen.findByTestId(byNode("yourTopics.row", "t-gone"));
+    expect(rowNames()).toEqual(["saltmaps", "t-gone"]);
+    expect(within(row).getByTestId(byNode("yourTopics.row.name", "t-gone")).textContent).toBe("#");
+    expect(row.tagName).not.toBe("A");
+    expect(within(row).queryByRole("link")).toBeNull();
+    expect(within(row).getByTestId(byNode("yourTopics.row.value", "t-gone"))).toHaveTextContent("+0.20 / +0.40");
+  });
+
   it("your_topics_md_13_rows_stand_strongest_first_as_served", async () => {
     // The order is the server's; a list served in any order is drawn in it.
     serve([BOARD[4]!, BOARD[0]!]);
