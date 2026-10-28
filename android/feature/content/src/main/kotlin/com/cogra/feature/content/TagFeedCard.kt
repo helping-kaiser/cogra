@@ -30,10 +30,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -128,13 +130,15 @@ private fun TagLead(name: String, through: List<String>, topic: TagCardTopic, ca
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TopicMark(card / "mark")
-            Column {
+            // The lead's column is as wide as its widest line (the master's
+            // shrink-wrapped span), each line spanning it.
+            Column(Modifier.width(IntrinsicSize.Max)) {
                 Text(
                     text = "#$name",
                     style = MaterialTheme.typography.labelLarge,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.dataNode(card / "name"),
+                    modifier = Modifier.fillMaxWidth().dataNode(card / "name"),
                 )
                 if (through.isNotEmpty()) {
                     Text(
@@ -143,7 +147,7 @@ private fun TagLead(name: String, through: List<String>, topic: TagCardTopic, ca
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.dataNode(card / "through"),
+                        modifier = Modifier.fillMaxWidth().dataNode(card / "through"),
                     )
                 }
             }
@@ -217,7 +221,7 @@ private fun Glimpse(topic: TagCardTopic, card: DataNode) {
                 color = quietIf(newest.removed),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.dataNode(glimpse / "newest"),
+                modifier = Modifier.fillMaxWidth().dataNode(glimpse / "newest"),
             )
             val more = topic.tagged.size - 1
             val by = newest.authorHandle?.let { "@$it" }.orEmpty()
@@ -227,7 +231,7 @@ private fun Glimpse(topic: TagCardTopic, card: DataNode) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.dataNode(glimpse / "by"),
+                modifier = Modifier.fillMaxWidth().dataNode(glimpse / "by"),
             )
         }
     }
