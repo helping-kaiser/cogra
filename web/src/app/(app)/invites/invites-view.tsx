@@ -27,6 +27,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 
 import { fetchMe } from "@/lib/api/auth-api";
+import type { Outcome } from "@/lib/api/outcome";
 import {
   fetchInvites,
   rejectApplication,
@@ -185,15 +186,19 @@ export function InvitesView({
   }, []);
   const dismissSnack = useCallback(() => setSnack(null), []);
 
-  const refresh = useCallback(async () => {
-    const outcome = await guard.run(() => fetchInvites(client));
+  /** What a read answered: the page, or the fault line beside what it shows. */
+  const apply = useCallback((outcome: Outcome<InvitesRead>) => {
     if (outcome.kind === "success") {
       setRead(outcome.value);
       setFault(false);
     } else {
       setFault(true);
     }
-  }, [client, guard]);
+  }, []);
+
+  const refresh = useCallback(async () => {
+    apply(await guard.run(() => fetchInvites(client)));
+  }, [client, guard, apply]);
 
   // AN APPLICANT NEVER STANDS HERE (ProfileApplicant.md:18: their Invites
   // answers with a snackbar and never opens). A reader who is not a member
@@ -209,8 +214,14 @@ export function InvitesView({
   }, [client, guard, router]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let live = true;
+    void guard.run(() => fetchInvites(client)).then((outcome) => {
+      if (live) apply(outcome);
+    });
+    return () => {
+      live = false;
+    };
+  }, [client, guard, apply]);
 
   const onPull = useCallback(() => void refresh(), [refresh]);
   usePullToRefresh({ host, onPull, enabled: !sheetOpen && closing === null && approving === null });

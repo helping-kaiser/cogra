@@ -137,14 +137,20 @@ export function createApprovalStanceData(deps: Deps, application: ApplicationVie
 /**
  * The ask link's pad (VouchAskPad): Set stages the asker, then approves the
  * staged row — or, where the asker is not fully registered yet, stops at the
- * stage and hands the host the detour.
+ * stage and keeps the detour for the host to take (`takeDetour`).
  */
-export function createAskStanceData(
-  deps: Deps,
-  askLink: string,
-  onDetour: (detour: ApprovalDetour) => void,
-): StanceData & { staged: () => ApplicationView | null; stage: () => Promise<Outcome<ApplicationView>> } {
+export type AskStanceData = StanceData & {
+  /** The row the take-up staged, held for a Retry of the approval only. */
+  readonly staged: () => ApplicationView | null;
+  /** Stages the asker, once. */
+  readonly stage: () => Promise<Outcome<ApplicationView>>;
+  /** The detour the last commit took instead of signing, once; null when it signed. */
+  readonly takeDetour: () => ApprovalDetour | null;
+};
+
+export function createAskStanceData(deps: Deps, askLink: string): AskStanceData {
   let held: ApplicationView | null = null;
+  let detour: ApprovalDetour | null = null;
   const stage = async (): Promise<Outcome<ApplicationView>> => {
     if (held !== null) return success(held);
     const outcome = await deps.guard.run(() => stageApplicant(deps.client, askLink));
@@ -152,17 +158,23 @@ export function createAskStanceData(
     return outcome;
   };
   const data = approvalData(deps, async () => {
+    detour = null;
     const staged = await stage();
     if (staged.kind === "refused" && staged.errors.some((e) => e.code === "ASK_LINK_UNUSABLE")) {
-      onDetour({ kind: "unusable" });
+      detour = { kind: "unusable" };
       return "detoured";
     }
     if (staged.kind !== "success") return staged;
     if (!approvable(staged.value)) {
-      onDetour({ kind: "notRegistered", application: staged.value });
+      detour = { kind: "notRegistered", application: staged.value };
       return "detoured";
     }
     return staged;
   });
-  return { ...data, staged: () => held, stage };
+  const takeDetour = () => {
+    const taken = detour;
+    detour = null;
+    return taken;
+  };
+  return { ...data, staged: () => held, stage, takeDetour };
 }

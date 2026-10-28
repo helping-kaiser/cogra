@@ -25,17 +25,14 @@
 // signed snackbar (:25). A guest's tap or hold raises the guest gate, and a
 // sign-in from it brings the ask back (VouchAsk.md:21-23, :37).
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchMe } from "@/lib/api/auth-api";
 import { checkAskLink, fetchMyApplication, type AskCheck } from "@/lib/api/invites-api";
 import { carrySnackbar } from "@/lib/ui/carried-snackbar";
-import {
-  createAskStanceData,
-  type ApprovalDetour,
-} from "@/lib/invites/approval-stance-data";
+import { createAskStanceData } from "@/lib/invites/approval-stance-data";
 import { carryToInvites } from "@/lib/invites/invites-notice";
 import { keepApproval } from "@/lib/invites/kept-approvals";
 import {
@@ -275,20 +272,14 @@ function AskCard({
   const router = useRouter();
   const account = useActiveAccountId();
   const base = useStanceData();
-  const detour = useRef<ApprovalDetour | null>(null);
   const data = useMemo(
-    () =>
-      createAskStanceData({ client, guard, signer, base }, askLink, (taken) => {
-        detour.current = taken;
-      }),
+    () => createAskStanceData({ client, guard, signer, base }, askLink),
     [client, guard, signer, base, askLink],
   );
   const bare = handle.slice(1);
 
-
   const onTaken = (landed: StancePair) => {
-    const took = detour.current;
-    detour.current = null;
+    const took = data.takeDetour();
     if (took?.kind === "unusable") {
       onUnusable();
       return;
