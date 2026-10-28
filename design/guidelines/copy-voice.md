@@ -2388,6 +2388,15 @@ words. A record is one row, whatever gesture signed it.
   `Joined`; every later one `Updated your profile` · `Updated their
   profile`. The disc `person`.
 
+**A member's empty chronicle says only that** (seam 245, ask 11;
+*merged under the autonomy order, 2026-10-28; review pending*): a tab
+with nothing in it reads `Nothing here yet.` at `EmptyState`, the line
+alone. A member knows why their own is empty, and another's needs no
+reason; only the applicant's empty chronicle says what fills it and
+when, because that is new (`ProfileApplicant`, above). A member's
+`Everything` always holds their registration, so the line meets a
+member on `Posts` or `Comments` (`ProfileComments`' `comments` chip).
+
 ## The vouch-back ceremony
 
 Blessed with the close-out round. `VouchedIn` is the one board that
