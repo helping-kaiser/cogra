@@ -52,12 +52,25 @@ function Mark({
  * glyph through the choke point, the digits in a `cg-exact` span that paints
  * only in geek mode, and an SR-only twin so nothing spoken depends on the mode.
  * A citation's anchor WORD is withheld — a stance anchor names a feeling about
- * a stance, which a citation is not — so its twin is the pair itself.
+ * a stance, which a citation is not — so its twin is the pair itself. BY THAT
+ * SAME TEST an Affinity takes its word (`pairFamily="stance"`, Your topics):
+ * it IS a stance, the reader's own toward the Type the row names, so its twin
+ * is `Like this, +0.60 / +0.35` (copy-voice, *The readouts, spoken*).
  *
  * A SETTLING ACT SAYS SO UNDER THE PAIR, not under the name: what has not
  * landed is the act, not the node it points at.
  */
-function PairValue({ pair, pending, node }: { pair: StancePair; pending: boolean; node?: DataNode }) {
+function PairValue({
+  pair,
+  family,
+  pending,
+  node,
+}: {
+  pair: StancePair;
+  family: "citation" | "stance";
+  pending: boolean;
+  node?: DataNode;
+}) {
   const anchor = bundleReadout(pair, SEVERED_LABEL);
   const exact = formatStancePair(pair);
   return (
@@ -73,7 +86,7 @@ function PairValue({ pair, pending, node }: { pair: StancePair; pending: boolean
           {exact}
         </span>
       </span>
-      <span className="sr-only">{exact}</span>
+      <span className="sr-only">{family === "stance" ? `${anchor.label}, ${exact}` : exact}</span>
       {pending && <PendingMarker inline testId={node === undefined ? "pending" : `${node.path}.pending`} />}
     </span>
   );
@@ -87,6 +100,7 @@ export function ReferenceRow({
   rank = null,
   value = null,
   pair = null,
+  pairFamily = "citation",
   pending = false,
   redacted = false,
   href,
@@ -102,6 +116,12 @@ export function ReferenceRow({
   value?: string | null;
   /** The signed pair on the edge, as numbers the row formats (a citation's). */
   pair?: StancePair | null;
+  /**
+   * Which record family `pair` belongs to (`ReferenceRow.d.ts` `pairFamily`):
+   * a citation's by default; `stance` for the reader's own Affinity on Your
+   * topics, whose anchor word is spoken with the pair.
+   */
+  pairFamily?: "citation" | "stance";
   /** The act is still settling: the marker stacks under the pair. */
   pending?: boolean;
   /** The thing the row names was removed: its mark keeps its space and fills with nothing. */
@@ -144,7 +164,7 @@ export function ReferenceRow({
           <span className="sr-only">{rank}</span>
         </>
       ) : pair !== null ? (
-        <PairValue pair={pair} pending={pending} node={part(node, "value")} />
+        <PairValue pair={pair} family={pairFamily} pending={pending} node={part(node, "value")} />
       ) : (
         value !== null && (
           <span

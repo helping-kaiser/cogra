@@ -316,11 +316,35 @@ describe("Explore at rest", () => {
     expect(screen.queryByTestId(byNode("explore.topics"))).toBeNull();
   });
 
-  it("explore_md_41_your_topics_stands_as_a_door", () => {
+  it("explore_md_41_your_topics_second_line_counts_the_topics_held_and_the_door_opens_the_list", async () => {
+    const asked: unknown[] = [];
+    server.use(
+      gqlLink.query("HeldTopicsCount", ({ variables }) => {
+        asked.push(variables);
+        return HttpResponse.json({
+          data: { me: { __typename: "User", id: "me", heldTopics: { __typename: "HeldTopicConnection", totalCount: 5 } } },
+        });
+      }),
+    );
     renderExplore();
     const door = screen.getByTestId(byNode("explore.topics"));
     expect(within(door).getByTestId(byNode("explore.topics.title"))).toHaveTextContent("Your topics");
     expect(within(door).getByTestId(byNode("explore.topics.chevron"))).toBeInTheDocument();
+    expect(await within(door).findByTestId(byNode("explore.topics.second"))).toHaveTextContent("5 held");
+    // The count is the length of the list the door opens: pending acts in.
+    expect(asked).toEqual([{ includePending: true }]);
+    expect(within(door).getByRole("link")).toHaveAttribute("href", "/explore/topics");
+  });
+
+  it("explore_md_41_the_door_prints_no_count_it_could_not_read", async () => {
+    server.use(gqlLink.query("HeldTopicsCount", () => HttpResponse.error()));
+    renderExplore();
+    const door = screen.getByTestId(byNode("explore.topics"));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    });
+    expect(within(door).queryByTestId(byNode("explore.topics.second"))).toBeNull();
+    expect(within(door).getByRole("link")).toHaveAttribute("href", "/explore/topics");
   });
 });
 
