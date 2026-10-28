@@ -971,8 +971,8 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     draw();
     const crop = await cropOneMore();
     expect(within(crop).queryByRole("group", { name: "The post's shape" })).not.toBeInTheDocument();
-    expect(screen.queryByTestId("post-edit-shape-tall")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("post-edit-next"));
+    expect(screen.queryByTestId("composeCrop.shapes.tallChip")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("composeCrop.next"));
     expect(await screen.findByLabelText("Manage the 3 pictures")).toBeInTheDocument();
     expect(footer()).toHaveTextContent("You're signing 1 thing");
   });
@@ -982,7 +982,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     const sent = uploads();
     draw();
     await cropOneMore();
-    fireEvent.click(within(screen.getByTestId("post-edit-crop-header")).getByLabelText("Back to the edit"));
+    fireEvent.click(within(screen.getByTestId("composeCrop.header")).getByLabelText("Back to the edit"));
     expect(await screen.findByLabelText("Manage the 2 pictures")).toBeInTheDocument();
     expect(footer()).toHaveTextContent("Nothing to sign yet");
     expect(sent.calls()).toBe(0);
@@ -995,7 +995,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     draw();
     fireEvent.change(await screen.findByTestId("post-edit-title"), { target: { value: "New title" } });
     await cropOneMore();
-    fireEvent.click(within(screen.getByTestId("post-edit-crop-header")).getByLabelText(EDIT_LEAVE_LABEL));
+    fireEvent.click(within(screen.getByTestId("composeCrop.header")).getByLabelText(EDIT_LEAVE_LABEL));
     await waitFor(() => expect(screen.getByTestId("post-edit-discard-confirm")).toHaveAttribute("open"));
     expect(push).not.toHaveBeenCalled();
   });
@@ -1013,7 +1013,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
       picture("notes.txt", "text/plain"),
     ]);
     // What fit goes on through the crop; the edit holds the refusals for its return.
-    fireEvent.click(await screen.findByTestId("post-edit-next"));
+    fireEvent.click(await screen.findByTestId("composeCrop.next"));
     const refusals = await screen.findByTestId("post-edit-refusals");
     expect(refusals).toHaveTextContent("That's more than a post carries — up to ten pictures.");
     expect(refusals).toHaveTextContent("That file isn't a picture or a video CoGra can read.");
@@ -1031,7 +1031,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     const sent = uploads();
     draw();
     await cropOneMore();
-    fireEvent.click(screen.getByTestId("post-edit-next"));
+    fireEvent.click(screen.getByTestId("composeCrop.next"));
     expect(await screen.findByTestId("post-edit-gate")).toHaveTextContent(
       "Uploading 0 of 1 — signing waits for the picture.",
     );
@@ -1052,7 +1052,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     draw();
     fireEvent.click(await screen.findByTestId("post-edit-add-pictures"));
     await pickInto("post-edit-add-pictures-input", [picture("a.jpg"), picture("b.jpg")]);
-    fireEvent.click(await screen.findByTestId("post-edit-next"));
+    fireEvent.click(await screen.findByTestId("composeCrop.next"));
     expect(await screen.findByTestId("post-edit-gate")).toHaveTextContent(
       "Uploading 0 of 2 — signing waits for the pictures.",
     );
@@ -1075,7 +1075,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     const bytes = uploads();
     const signer = draw();
     await cropOneMore();
-    fireEvent.click(screen.getByTestId("post-edit-next"));
+    fireEvent.click(screen.getByTestId("composeCrop.next"));
     await screen.findByTestId("post-edit-gate");
     fireEvent.click(sign());
     fireEvent.click(sign());
@@ -1102,7 +1102,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     const bytes = uploads();
     const signer = draw();
     await cropOneMore();
-    fireEvent.click(screen.getByTestId("post-edit-next"));
+    fireEvent.click(screen.getByTestId("composeCrop.next"));
     await screen.findByTestId("post-edit-gate");
     fireEvent.click(sign());
     await bytes.answer("fail");
@@ -1127,7 +1127,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     const bytes = uploads();
     const signer = draw();
     await cropOneMore();
-    fireEvent.click(screen.getByTestId("post-edit-next"));
+    fireEvent.click(screen.getByTestId("composeCrop.next"));
     fireEvent.click(sign());
     await bytes.answer("fail");
     fireEvent.click(await screen.findByTestId("post-edit-gate-retry"));
@@ -1147,7 +1147,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     const bytes = uploads();
     draw();
     await cropOneMore();
-    fireEvent.click(screen.getByTestId("post-edit-next"));
+    fireEvent.click(screen.getByTestId("composeCrop.next"));
     await bytes.answer("fail");
     fireEvent.click(await screen.findByTestId("post-edit-upload-error-remove"));
     expect(await screen.findByLabelText("Manage the 2 pictures")).toBeInTheDocument();
@@ -1217,7 +1217,7 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     expect(within(crop).getByText("The cover takes the video's shape.")).toBeInTheDocument();
     expect(within(crop).queryByRole("group", { name: "The post's shape" })).not.toBeInTheDocument();
     expect(within(crop).getByRole("heading", { name: "The cover" })).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("post-edit-cover-crop-next"));
+    fireEvent.click(screen.getByTestId("coverCrop.next"));
     expect(await screen.findByTestId("post-edit-gate")).toHaveTextContent(
       "Uploading 0 of 1 — signing waits for the cover.",
     );
@@ -1242,7 +1242,7 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     draw();
     fireEvent.click(await screen.findByTestId("post-edit-change-cover"));
     await pickInto("post-edit-cover-input", [picture("face.jpg")]);
-    fireEvent.click(await screen.findByTestId("post-edit-cover-crop-next"));
+    fireEvent.click(await screen.findByTestId("coverCrop.next"));
     fireEvent.click(sign());
     await bytes.answer("land");
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
@@ -1261,7 +1261,7 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     const bytes = uploads();
     draw();
     await pickInto("post-edit-cover-input", [picture("face.jpg")]);
-    fireEvent.click(await screen.findByTestId("post-edit-cover-crop-next"));
+    fireEvent.click(await screen.findByTestId("coverCrop.next"));
     await bytes.answer("fail");
     expect(await screen.findByTestId("post-edit-cover-error")).toHaveTextContent(
       "One picture didn't upload.",
@@ -1321,8 +1321,8 @@ describe("PostEditRoute — + Add pictures or a video (EditWords)", () => {
     expect(add).toHaveTextContent("+ Add pictures or a video");
     await pickInto("post-edit-add-media-input", [picture("a.jpg")]);
     // A words post has no shape yet, so the chips choose one.
-    fireEvent.click(await screen.findByTestId("post-edit-shape-wide"));
-    fireEvent.click(screen.getByTestId("post-edit-next"));
+    fireEvent.click(await screen.findByTestId("composeCrop.shapes.wideChip"));
+    fireEvent.click(screen.getByTestId("composeCrop.next"));
     expect(await screen.findByLabelText("Manage the picture")).toBeInTheDocument();
     expect(screen.queryByTestId("post-edit-words")).not.toBeInTheDocument();
     await bytes.answer("land");

@@ -544,6 +544,8 @@ export function PostEditRoute({
           onLeave={leave}
           leaveLabel={EDIT_LEAVE_LABEL}
           testId="post-edit-crop-header"
+          // The registered ComposeCrop and CoverCrop screens name their band.
+          node={{ path: cropping.kind === "pictures" ? "composeCrop.header" : "coverCrop.header" }}
         />
         {cropping.kind === "pictures" ? (
           <CropStep
@@ -567,6 +569,7 @@ export function PostEditRoute({
               setCropping(null);
             }}
             testIdPrefix="post-edit"
+            node={{ path: "composeCrop" }}
           />
         ) : (
           <CoverCrop

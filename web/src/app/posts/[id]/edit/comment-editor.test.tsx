@@ -371,7 +371,7 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     expect(await screen.findByTestId("comment-edit-cover-crop")).toHaveTextContent(
       "The cover takes the video's shape.",
     );
-    fireEvent.click(screen.getByTestId("comment-edit-cover-crop-next"));
+    fireEvent.click(screen.getByTestId("coverCrop.next"));
     expect(await screen.findByTestId("comment-edit-gate")).toHaveTextContent(
       "Uploading 0 of 1 — signing waits for the cover.",
     );
@@ -399,7 +399,7 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     const bytes = uploads();
     draw(comment([CLIP]));
     await pickInto("comment-edit-cover-input", [picture("face.jpg")]);
-    fireEvent.click(await screen.findByTestId("comment-edit-cover-crop-next"));
+    fireEvent.click(await screen.findByTestId("coverCrop.next"));
     await bytes.answer("fail");
     fireEvent.click(await screen.findByTestId("comment-edit-cover-error-remove"));
     await waitFor(() => expect(gate()).not.toBeInTheDocument());

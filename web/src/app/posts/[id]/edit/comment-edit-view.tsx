@@ -316,6 +316,7 @@ export function CommentEditView({
             onLeave={leave}
             leaveLabel={COMMENT_EDIT_LEAVE_LABEL}
             testId="comment-edit-crop-header"
+            node={{ path: "coverCrop.header" }}
           />
           <div data-testid="comment-edit-cover-crop" className="flex min-h-0 flex-1 flex-col">
             <CoverCrop

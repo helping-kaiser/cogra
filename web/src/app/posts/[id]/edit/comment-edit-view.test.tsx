@@ -464,7 +464,7 @@ describe("CommentEditVideo", () => {
     expect(screen.getByRole("heading", { name: "The cover" })).toBeInTheDocument();
     expect(screen.getByTestId("comment-edit-cover-crop")).toHaveTextContent("The cover takes the video's shape.");
     expect(screen.queryByRole("group", { name: "The post's shape" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("comment-edit-cover-crop-next"));
+    fireEvent.click(screen.getByTestId("coverCrop.next"));
     expect(onNext).toHaveBeenCalled();
     fireEvent.click(screen.getByLabelText("Back to the edit"));
     expect(onBack).toHaveBeenCalled();
