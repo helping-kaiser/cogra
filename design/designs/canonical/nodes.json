@@ -1533,6 +1533,78 @@
         "composeDetails.title.label": []
       }
     },
+    "ComposeDetailsReused": {
+      "prefix": "composeDetails",
+      "keys": {
+        "composeDetails.mediaRow.thumb": "the picture's position in the draft's media, counted from 1 (PickedRow)",
+        "composeDetails.references.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+        "composeDetails.tags.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "composeDetails.describeRow": [],
+        "composeDetails.describeRow.count": [],
+        "composeDetails.describeRow.describe": [],
+        "composeDetails.describeRow.reason": [],
+        "composeDetails.description": [],
+        "composeDetails.description.corner": [],
+        "composeDetails.description.input": [],
+        "composeDetails.description.label": [],
+        "composeDetails.header": [],
+        "composeDetails.header.back": [],
+        "composeDetails.header.leave": [],
+        "composeDetails.header.title": [],
+        "composeDetails.mediaRow": [],
+        "composeDetails.mediaRow.caption": [],
+        "composeDetails.mediaRow.thumb": [
+          "1",
+          "2"
+        ],
+        "composeDetails.next": [],
+        "composeDetails.published": [],
+        "composeDetails.references": [],
+        "composeDetails.references.add": [],
+        "composeDetails.references.label": [],
+        "composeDetails.references.stagedReference": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.kind": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.mark": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.name": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair.exact": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.pair.face": [
+          "1"
+        ],
+        "composeDetails.references.stagedReference.remove": [
+          "1"
+        ],
+        "composeDetails.tags": [],
+        "composeDetails.tags.add": [],
+        "composeDetails.tags.label": [],
+        "composeDetails.tags.tag": [
+          "fieldnotes",
+          "coastroad"
+        ],
+        "composeDetails.tags.tag.remove": [
+          "fieldnotes",
+          "coastroad"
+        ],
+        "composeDetails.title": [],
+        "composeDetails.title.corner": [],
+        "composeDetails.title.input": [],
+        "composeDetails.title.label": []
+      }
+    },
     "DeleteAccount": {
       "prefix": "deleteAccount",
       "keys": {
@@ -7326,6 +7398,56 @@
         "postDetail.menuSheet.save": []
       }
     },
+    "ReferencePicker": {
+      "prefix": "referencePicker",
+      "keys": {
+        "referencePicker.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
+        "referencePicker.staged.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)"
+      },
+      "nodes": {
+        "referencePicker.announcement": [],
+        "referencePicker.done": [],
+        "referencePicker.filterTrigger": [],
+        "referencePicker.header": [],
+        "referencePicker.header.back": [],
+        "referencePicker.header.help": [],
+        "referencePicker.header.title": [],
+        "referencePicker.result": [
+          "1"
+        ],
+        "referencePicker.result.mark": [
+          "1"
+        ],
+        "referencePicker.result.name": [
+          "1"
+        ],
+        "referencePicker.result.sub": [
+          "1"
+        ],
+        "referencePicker.result.trailing": [
+          "1"
+        ],
+        "referencePicker.searchField": [],
+        "referencePicker.searchField.glyph": [],
+        "referencePicker.searchField.input": [],
+        "referencePicker.staged": [],
+        "referencePicker.staged.stagedReference": [
+          "1"
+        ],
+        "referencePicker.staged.stagedReference.kind": [
+          "1"
+        ],
+        "referencePicker.staged.stagedReference.mark": [
+          "1"
+        ],
+        "referencePicker.staged.stagedReference.name": [
+          "1"
+        ],
+        "referencePicker.staged.stagedReference.remove": [
+          "1"
+        ]
+      }
+    },
     "RejectAllConfirm": {
       "prefix": "invites",
       "keys": {
@@ -9923,6 +10045,117 @@
         "tagPage.snackbar": [],
         "tagPage.snackbar.action": [],
         "tagPage.snackbar.message": []
+      }
+    },
+    "TagPicker": {
+      "prefix": "tagPicker",
+      "keys": {
+        "tagPicker.staged.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "tagPicker.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "tagPicker.announcement": [],
+        "tagPicker.done": [],
+        "tagPicker.footnote": [],
+        "tagPicker.header": [],
+        "tagPicker.header.back": [],
+        "tagPicker.header.help": [],
+        "tagPicker.header.title": [],
+        "tagPicker.nameField": [],
+        "tagPicker.nameField.glyph": [],
+        "tagPicker.nameField.input": [],
+        "tagPicker.rule": [],
+        "tagPicker.staged": [],
+        "tagPicker.staged.tag": [
+          "saltmarsh",
+          "saltflats"
+        ],
+        "tagPicker.staged.tag.mark": [
+          "saltmarsh",
+          "saltflats"
+        ],
+        "tagPicker.staged.tag.name": [
+          "saltmarsh",
+          "saltflats"
+        ],
+        "tagPicker.staged.tag.remove": [
+          "saltmarsh",
+          "saltflats"
+        ],
+        "tagPicker.tag": [
+          "salt",
+          "saltmaps",
+          "saltcrust"
+        ],
+        "tagPicker.tag.mark": [
+          "salt",
+          "saltmaps",
+          "saltcrust"
+        ],
+        "tagPicker.tag.name": [
+          "salt",
+          "saltmaps",
+          "saltcrust"
+        ],
+        "tagPicker.tag.sub": [
+          "salt"
+        ],
+        "tagPicker.tag.trailing": [
+          "salt",
+          "saltmaps",
+          "saltcrust"
+        ]
+      }
+    },
+    "TagPickerRefused": {
+      "prefix": "tagPicker",
+      "keys": {},
+      "nodes": {
+        "tagPicker.announcement": [],
+        "tagPicker.done": [],
+        "tagPicker.footnote": [],
+        "tagPicker.header": [],
+        "tagPicker.header.back": [],
+        "tagPicker.header.help": [],
+        "tagPicker.header.title": [],
+        "tagPicker.nameField": [],
+        "tagPicker.nameField.glyph": [],
+        "tagPicker.nameField.input": [],
+        "tagPicker.refusal": []
+      }
+    },
+    "TagPickerTyping": {
+      "prefix": "tagPicker",
+      "keys": {
+        "tagPicker.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "tagPicker.announcement": [],
+        "tagPicker.done": [],
+        "tagPicker.footnote": [],
+        "tagPicker.header": [],
+        "tagPicker.header.back": [],
+        "tagPicker.header.help": [],
+        "tagPicker.header.title": [],
+        "tagPicker.nameField": [],
+        "tagPicker.nameField.glyph": [],
+        "tagPicker.nameField.input": [],
+        "tagPicker.rule": [],
+        "tagPicker.tag": [
+          "saltmaps"
+        ],
+        "tagPicker.tag.mark": [
+          "saltmaps"
+        ],
+        "tagPicker.tag.name": [
+          "saltmaps"
+        ],
+        "tagPicker.tag.sub": [
+          "saltmaps"
+        ],
+        "tagPicker.tag.trailing": [
+          "saltmaps"
+        ]
       }
     },
     "VerifyExpired": {

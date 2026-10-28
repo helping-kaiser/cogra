@@ -176,9 +176,9 @@ function ExactTail({ exact, spoken }) {
    the visible confirmation, and a toast over a picker the reader is still
    working would cover the list they are picking from. A pick says `Added — in
    the staged list.`; the × says `Removed from the staged list.` */
-function PickAnnouncement({ said = "" }) {
+function PickAnnouncement({ said = "", node }) {
   return (
-    <div role="status" aria-live="polite" style={SR_ONLY}>
+    <div role="status" aria-live="polite" style={SR_ONLY} data-node={node}>
       {said}
     </div>
   );
@@ -2036,7 +2036,7 @@ function ComposeDetailsBody({
               onManage={() => {}}
               node="mediaRow"
             />
-            {publishedOn && <EditedMarker label={`Already in your post from ${publishedOn}.`} onInspect={() => {}} />}
+            {publishedOn && <EditedMarker label={`Already in your post from ${publishedOn}.`} onInspect={() => {}} node="published" />}
             <DescribeCounter described={0} total={2} onDescribe={() => {}} node="describeRow" />
           </>
         )}
