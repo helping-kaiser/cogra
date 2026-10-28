@@ -2353,6 +2353,41 @@ words, recorded so the registry is whole:
   acts row `Picture` reading `A new profile picture`, and the same
   signed-change line (`AvatarSeal`).
 
+**The chronicle's verbs, one per family it lists** (seam 245, ask 10;
+*merged under the autonomy order, 2026-10-28; review pending* — the
+lines blessed above stand as they are). A row's title is the act, past
+tense, its actor the profile's owner and never named; the aside names
+the target; the second line, where there is one, is the target's own
+words. A record is one row, whatever gesture signed it.
+
+- **A post** — `Published a post`, the title under it; any later record
+  of the post `Edited a post`, whatever it changed — words, media or the
+  backing. The disc `dynamic_feed`.
+- **A comment** — `Commented`, the words under it; a later record
+  `Edited a comment`. The disc `chat_bubble`.
+- **An opinion** — `Gave an opinion`, the aside the target: `on @mira`,
+  `on #saltmaps` for a topic, `on a post` · `on a comment` with the
+  post's title or the comment's words under it. The disc is the record's
+  own face; a revision is one more opinion given and reads the same, and
+  an empty sign is one too, wearing 🤷.
+- **A vouch** — the opinion that vouched someone in: `Vouched for`,
+  the aside `@rafa`, the disc the record's face. A later opinion on the
+  same person is `Gave an opinion`.
+- **A walk-back** — every record a walk-back signs: `Walked back an
+  opinion`, the aside the target as above, the disc 🤷 — never the
+  counter-record's own face, which would read as an opinion against.
+- **A tag** — `Tagged a post` · `Tagged a comment`, the aside the tag
+  (`#saltmaps`), the title or words under it; one taken off `Un-tagged
+  a post` · `Un-tagged a comment` (`Un-tag`'s past). The disc the `#`
+  monogram, as Explore's `Your topics` door wears it.
+- **A citation** — `Cited a post` · `Cited a comment`, the cited
+  thing's title or words under it, the disc that thing's own glyph; a
+  person cited `Mentioned`, the aside `@ada`, the disc their avatar; one
+  taken back `Withdrew a citation`, the cited thing under it.
+- **The profile** — the first record, the account's own registration,
+  `Joined`; every later one `Updated your profile` · `Updated their
+  profile`. The disc `person`.
+
 ## The vouch-back ceremony
 
 Blessed with the close-out round. `VouchedIn` is the one board that
