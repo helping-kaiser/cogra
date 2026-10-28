@@ -44,7 +44,9 @@ export function PairReadout({
       {...testAttributes(node)}
     >
       <span aria-hidden="true" className="inline-flex items-center gap-1" data-testid={testId}>
-        <span className="text-[length:var(--text-body-medium)] leading-none">{emoji}</span>
+        <span className="text-[length:var(--text-body-medium)]" style={{ lineHeight: 1 }}>
+          {emoji}
+        </span>
         <span className="cg-exact" data-testid={`${testId}-exact`}>
           {exact}
         </span>
