@@ -67,7 +67,8 @@ export const SHEET_CEILING =
 const CONTENT_MAX = "92dvh";
 
 /** What a sheet's surface — and the column inside it — is bounded by. */
-function sheetHeight(tallest: boolean): CSSProperties {
+function sheetHeight(tallest: boolean, height?: string): CSSProperties {
+  if (height !== undefined) return { height: `min(${height}, ${SHEET_CEILING})` };
   return tallest
     ? { height: SHEET_CEILING }
     : { maxHeight: `min(${CONTENT_MAX}, ${SHEET_CEILING})` };
@@ -80,6 +81,7 @@ export function BottomSheet({
   titleTrailing,
   titleHidden = false,
   tallest = false,
+  height,
   foot,
   children,
   bodyRef,
@@ -170,6 +172,13 @@ export function BottomSheet({
    * why the composer's growth comes out of the list above it.
    */
   tallest?: boolean;
+  /**
+   * A HEIGHT OF ITS OWN, held under the ceiling like every class: the filter
+   * sheets' `88%` (FeedSheet.md:3, SettingsReading.md: "it stands at 88% of
+   * the screen's height") — `FeedFilterSheet` takes `height: "88%"` when it
+   * is given a foot, so the foot is pinned and the sections scroll above it.
+   */
+  height?: string;
   /**
    * The row pinned below the scrolling body — design's `CommentComposerFoot`
    * slot. It sits outside the scroll region so it stays reachable however
@@ -318,7 +327,7 @@ export function BottomSheet({
       onPointerUp={endPull}
       onPointerCancel={endPull}
       style={
-        { "--cg-sheet-drag": `${pull}px`, ...sheetHeight(tallest) } as CSSProperties
+        { "--cg-sheet-drag": `${pull}px`, ...sheetHeight(tallest, height) } as CSSProperties
       }
       // `mt-auto` is what puts it at the bottom edge: a dialog is centred by
       // default, and this one rises from the edge it will go back to. It
@@ -346,7 +355,7 @@ export function BottomSheet({
         // The same bound as the surface: a percentage of an indefinite height
         // resolves to nothing, so the column cannot simply ask for `100%` of
         // a sheet that is only capped.
-        style={tallest ? { height: "100%" } : sheetHeight(false)}
+        style={tallest || height !== undefined ? { height: "100%" } : sheetHeight(false)}
       >
         {/* The handle says the sheet can be pulled down, and it can. The
             gesture is read across the whole surface, so the grip marks where

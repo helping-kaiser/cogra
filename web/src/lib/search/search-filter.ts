@@ -10,14 +10,14 @@
 // kind semantics").
 //
 // THE ORDER AND THE SEEN TOGGLE ARE THE READER'S DEFAULT (ExploreFilter.md:11-15,
-// the one default object, fix-fix ruling 12): the default set in Settings, the
-// app's until the reader sets their own. Settings' Reading row draws no editor
-// yet on the web (`settings-view.tsx`, `reading.feed`), so the reader's default
-// IS the app's — Ranked, seen off — and `readerSearchDefault` says so in one
-// place for the day the row ships.
+// the one default object, fix-fix ruling 12; SettingsReading.md: "search's
+// order and its already-seen toggle follow the reader's saved default, and
+// search's kinds stay search's own"): the feed default the reader saved in
+// Settings on this device (`reader-default.ts`), CoGra's until they set one.
 
 import type { NodeKind, ReadOrder } from "@/__generated__/graphql";
 import type { FeedKindValue } from "@/lib/feed/feed-filter";
+import { readReaderDefault } from "@/lib/feed/reader-default";
 
 export type SearchOrder = "ranked" | "newest";
 
@@ -48,11 +48,12 @@ export const APP_SEARCH_DEFAULT: SearchFilterValue = { kinds: [], order: "ranked
 
 /**
  * The reader's default (ExploreFilter.md:11-13): no kind narrowed, the order
- * and the seen toggle at the reader's own feed-filter default — the app's,
- * until Settings' Reading row ships its editor.
+ * and the seen toggle at `account`'s own feed-filter default — CoGra's where
+ * they set none, and always for a guest.
  */
-export function readerSearchDefault(): SearchFilterValue {
-  return APP_SEARCH_DEFAULT;
+export function readerSearchDefault(account: string | null = null): SearchFilterValue {
+  const saved = readReaderDefault(account);
+  return { kinds: APP_SEARCH_DEFAULT.kinds, order: saved.order, seen: saved.seen };
 }
 
 /**

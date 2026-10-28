@@ -204,7 +204,7 @@ export function ExploreView({
   const who = !resolved ? "" : guest ? "guest" : (reader ?? "guest");
   const committedDefault = useMemo(
     (): SearchFilterValue =>
-      guest ? guestSearchFilter(readCommittedFilter(null)?.kinds ?? []) : (readCommittedFilter(reader) ?? readerSearchDefault()),
+      guest ? guestSearchFilter(readCommittedFilter(null)?.kinds ?? []) : (readCommittedFilter(reader) ?? readerSearchDefault(reader)),
     // Read once per reader: the committed filter changes only through `commit`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [who],
@@ -449,7 +449,7 @@ export function ExploreView({
     [guest, reader, who],
   );
 
-  const defaultFilter = guest ? guestSearchFilter() : readerSearchDefault();
+  const defaultFilter = guest ? guestSearchFilter() : readerSearchDefault(reader);
   const reading = searchFilterSummary(filter, defaultFilter);
 
   const items: ResultItem[] = useMemo(

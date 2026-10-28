@@ -27,13 +27,17 @@ import { useApolloClient } from "@apollo/client/react";
 
 import { fetchBorrowedView, fetchMe, type BorrowedVantage } from "@/lib/api/auth-api";
 import type { PostView } from "@/lib/api/content-api";
-import { fetchFeedRanking, fetchFeedWindow } from "@/lib/api/feed-api";
+import { fetchFeedRanking, fetchFeedWindow, type FeedItemView } from "@/lib/api/feed-api";
 import { failed, success } from "@/lib/api/outcome";
 import { appendDeduped } from "@/lib/api/pagination";
 import { withCachedRemoval } from "@/lib/api/removal-api";
-import { onFeedDone } from "@/lib/feed/feed-done";
+import { announceFeedDone, onFeedDone } from "@/lib/feed/feed-done";
+import { feedFilterSummary, sameFilter, type FeedFilterValue } from "@/lib/feed/feed-filter";
+import { admitsItem } from "@/lib/feed/feed-predicates";
 import { onFeedReselect } from "@/lib/feed/feed-reselect";
 import { RankedFeed, type FeedIo, type FeedWindow } from "@/lib/feed/ranked-feed";
+import { readReaderDefault, useReaderDefault } from "@/lib/feed/reader-default";
+import { fetchHeldTopicsFor } from "@/lib/api/held-topics-api";
 import { seenRecord } from "@/lib/history/seen-record";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
@@ -57,6 +61,14 @@ import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { PostCard } from "@/lib/ui/post-card";
 import type { TraceOrigin } from "@/lib/score/trace-session";
+import { CommentFeedCard } from "@/lib/ui/comment-feed-card";
+import { ProfileFeedCard } from "@/lib/ui/profile-feed-card";
+import { TagFeedCard } from "@/lib/ui/tag-feed-card";
+import { EmptyState } from "@/lib/ui/empty-state";
+import { FeedFilterSheet, WHAT_YOUR_FEED_SHOWS } from "@/lib/ui2/feed-filter-sheet";
+import { FilterTrigger, triggerName } from "@/lib/ui2/filter-sheet";
+import { HelpDialog, HELP_TOPICS } from "@/lib/ui2/help-dialog";
+import type { FeedTopic } from "@/lib/feed/feed-filter";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { scrollHostToTopAnimated, scrollOffsetOf, useScrollHost } from "@/lib/ui/scroll-host";
@@ -123,10 +135,113 @@ function SeenSeparator() {
   );
 }
 
-/** Every clip a list of posts draws, by the media id the clip memory keys on. */
-function clipIdsOf(posts: readonly PostView[]): string[] {
-  return posts.flatMap((post) => post.attachments.map((attachment) => attachment.id));
+/** Every clip a list's posts and comments draw, by the media id the clip memory keys on. */
+function clipIdsOf(items: readonly FeedItemView[]): string[] {
+  return items.flatMap((item) =>
+    item.__typename === "Post" || item.__typename === "Comment"
+      ? item.attachments.map((attachment) => attachment.id)
+      : [],
+  );
 }
+
+/**
+ * Whom a row is by — a post's or a comment's author — for the hidden set. A
+ * person and a topic are by no one: a hidden account's own profile card
+ * stays, as on History (History.md:41).
+ */
+function authorOf(item: FeedItemView): string | null {
+  if (item.__typename === "Post" || item.__typename === "Comment") return item.author?.id ?? null;
+  return null;
+}
+
+/**
+ * A held row as the client knows it now: a post wearing the mark the cache
+ * learned since it was hydrated (`withCachedRemoval`, the remove packet's
+ * RM-G9 word) — so a removal taken on the detail reaches the feed's Removed
+ * cut and its card alike.
+ */
+function currentOf(client: Parameters<typeof withCachedRemoval>[0], item: FeedItemView): FeedItemView {
+  return item.__typename === "Post" ? (withCachedRemoval(client, item as PostView) as FeedItemView) : item;
+}
+
+/** Where a feed card's doors say the reader came from (`back-origin.ts`: the feed otherwise). */
+const FROM = "feed";
+
+/**
+ * A comment, a person or a topic, as its kind's own feed card (FeedKinds.md;
+ * FeedCommentShapes, FeedProfileShapes, FeedTagShapes) — the same cards
+ * History draws, unchanged. The comment card is registered on the feed
+ * (`feed.commentCard`); the profile and tag cards are drawn but UNREGISTERED
+ * on the feed, so they wear their evident paths (`feed.profileCard`,
+ * `feed.tagCard`, as History's) and are reported for registration.
+ *
+ * The tag card's why-line stands only where the tag reaches the reader
+ * through someone, and no field carries whom yet (FC-G9's contract delta,
+ * riding ranked-feed-api's next amendment) — so the feed hands none, as
+ * History does.
+ */
+function OtherCard({
+  item,
+  notify,
+}: {
+  item: Exclude<FeedItemView, { __typename: "Post" }>;
+  notify: ReturnType<typeof useHostSnack>["notify"];
+}) {
+  const copied = () => notify(LINK_COPIED);
+  switch (item.__typename) {
+    case "Comment":
+      return (
+        <CommentFeedCard
+          comment={item}
+          from={FROM}
+          node={{ path: "feed.commentCard", key: item.id }}
+          testId={`feed-comment-${item.id}`}
+          onNotify={notify}
+          onLinkCopied={copied}
+        />
+      );
+    case "User":
+      return (
+        <ProfileFeedCard
+          person={item}
+          href={`/u/${item.handle}?from=${FROM}`}
+          node={{ path: "feed.profileCard", key: item.id }}
+          testId={`feed-person-${item.id}`}
+          onNotify={notify}
+          onLinkCopied={copied}
+        />
+      );
+    case "Hashtag":
+      return (
+        <TagFeedCard
+          topic={item}
+          from={FROM}
+          node={{ path: "feed.tagCard", key: item.id }}
+          testId={`feed-tag-${item.id}`}
+          onLinkCopied={copied}
+        />
+      );
+    default:
+      return null;
+  }
+}
+
+const FILTER_TRIGGER: DataNode = { path: "feed.band.filterTrigger" };
+
+/**
+ * The feed's sheet. UNREGISTERED: FeedSheet is drawn but the registry holds
+ * only `feed.band.filterTrigger`, so the sheet wears the path its siblings'
+ * evident one gives it (`history.filterSheet`, `explore.filterSheet`) and is
+ * reported for registration.
+ */
+const FILTER_SHEET: DataNode = { path: "feed.filterSheet" };
+
+/** FeedNothing's empty state — UNREGISTERED, tagged by its evident path. */
+const NOTHING: DataNode = { path: "feed.nothing" };
+
+/** FeedNothing.md:5 and its way back (:7). */
+export const SHOWING_NOTHING = "Your feed is showing nothing — everything is switched off.";
+export const SHOW_POSTS_AGAIN = "Show posts again";
 
 /**
  * The band, for the reader whose feed is not their own — guest, applicant,
@@ -148,9 +263,16 @@ function clipIdsOf(posts: readonly PostView[]): string[] {
 function BorrowedView({
   signedOut,
   refreshSignal,
+  onVantage,
 }: {
   signedOut: boolean;
   refreshSignal: number;
+  /**
+   * Whose view the feed borrows, as it changes: the filter sheet's people
+   * rows, order hint and trigger speak that account's name (FeedSheet.md,
+   * "GIVEN the feed borrows a view").
+   */
+  onVantage: (handle: string | null) => void;
 }) {
   const client = useApolloClient();
   const guard = useAuthGuard();
@@ -175,6 +297,7 @@ function BorrowedView({
       // label over a feed already on screen, not a thing to guess at.
       const borrowed = outcome.kind === "success" ? outcome.value : null;
       setVantage(borrowed);
+      onVantage(borrowed?.handle ?? null);
       if (borrowed === null || signedOut) return;
       const me = await guard.run(() => fetchMe(client));
       if (cancelled) return;
@@ -185,7 +308,7 @@ function BorrowedView({
     return () => {
       cancelled = true;
     };
-  }, [client, guard, signedOut, signedSignal, refreshSignal]);
+  }, [client, guard, signedOut, signedSignal, refreshSignal, onVantage]);
 
   if (vantage === null) return null;
   const { handle } = vantage;
@@ -248,15 +371,36 @@ export function FeedView({
   // below from it is what makes the pages come back on the FIRST render,
   // before any paint.
   const [remembered] = useState(() => recallFeed(reader));
+  // THE READER'S DEFAULT (SettingsReading.md: "every feed opens with the
+  // reader's saved default"): what a new feed is ranked under, what the
+  // trigger speaks deviations from, and what the sheet's Reset stages.
+  const readerDefault = useReaderDefault(reader);
   // The held ranking. It outlives this mount through the memory, and a
-  // different reader gets a feed of their own (`feed-memory.ts`).
+  // different reader gets a feed of their own (`feed-memory.ts`), opened
+  // under their own default as it stands at that moment.
   const feedRef = useRef<RankedFeed | null>(remembered?.feed ?? null);
   const feedFor = useCallback((who: string | null): RankedFeed => {
     if (feedRef.current === null || feedRef.current.reader !== who) {
-      feedRef.current = new RankedFeed(who);
+      feedRef.current = new RankedFeed(who, readReaderDefault(who));
     }
     return feedRef.current;
   }, []);
+  // THE FILTER THE LIST ON SCREEN WAS DERIVED UNDER — what the trigger reads.
+  // A remembered feed comes back with the filter its pages were made under,
+  // never the default, so the pill and the list never disagree.
+  const [applied, setApplied] = useState<FeedFilterValue | null>(() => remembered?.feed.filter ?? null);
+  const filter = applied ?? readerDefault;
+  // Whose view the feed borrows, for the sheet's and the trigger's words.
+  const [borrowedHandle, setBorrowedHandle] = useState<string | null>(null);
+  // THE SHEET (FeedSheet.md): open, and what it has staged since it opened.
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [staged, setStaged] = useState<FeedFilterValue>(filter);
+  const [filterHelp, setFilterHelp] = useState(false);
+  const [heldTopics, setHeldTopics] = useState<readonly FeedTopic[]>([]);
+  // THE APPLY IS SAID ONCE (FeedSheet.md:81; WCAG 4.1.3): one polite status
+  // message, in a region mounted from the start, that draws nothing.
+  const [said, setSaid] = useState("");
+  const triggerRef = useRef<HTMLSpanElement | null>(null);
   // Whether this mount is still on screen. A ranking runs several reads in a
   // row; once the feed has left, the rest of them are not asked at all.
   const alive = useRef(true);
@@ -272,11 +416,10 @@ export function FeedView({
   // through, when the row stands carrying its line (design digest item 55).
   const hidden = useHiddenSet();
   const hides = useCallback(
-    (post: PostView) =>
-      reader !== null &&
-      post.author != null &&
-      hidden.has(post.author.id) &&
-      hidden.failure(post.id) === null,
+    (item: FeedItemView) => {
+      const author = authorOf(item);
+      return reader !== null && author !== null && hidden.has(author) && hidden.failure(item.id) === null;
+    },
     [hidden, reader],
   );
   // The reads the held ranking is handed per call (`ranked-feed.ts`).
@@ -294,22 +437,30 @@ export function FeedView({
         return success(borrowed.value?.id ?? reader);
       },
       rank: (viewer, args) => (alive.current ? fetchFeedRanking(client, viewer, args) : gone()),
-      hydrate: (ids) => (alive.current ? fetchFeedWindow(client, ids) : gone()),
+      hydrate: (ids, kinds) => (alive.current ? fetchFeedWindow(client, ids, kinds) : gone()),
       seen: async () => {
         await seenRecord.use(reader);
         return seenRecord;
       },
       wanted: () => alive.current,
-      hides: (item) => hides(item as PostView),
+      hides,
+      current: (item) => currentOf(client, item),
     };
   }, [client, guard, reader, hides]);
   const [rememberedPlace] = useState(() => remembered?.place ?? null);
   // A REMOVAL TAKEN WHILE THE FEED WAS AWAY (on the detail) reached the cache,
   // not the memory — so the remembered pages come back wearing what the cache
-  // has learned of their marks, never showing a removed post whole.
-  const [posts, setPosts] = useState<readonly PostView[]>(() =>
-    (remembered?.posts ?? []).map((post) => withCachedRemoval(client, post)),
-  );
+  // has learned of their marks, never showing a removed post whole. And they
+  // come back RE-DERIVED by the device's predicates under the filter they were
+  // made under (CD-4): a post removed meanwhile leaves a feed whose Removed is
+  // off, and stands as its mark in one whose Removed is on. Deleting a row
+  // never moves the others (FP-1), so the place the reader left still holds.
+  const [posts, setPosts] = useState<readonly FeedItemView[]>(() => {
+    if (remembered === null) return [];
+    return remembered.posts
+      .map((item) => currentOf(client, item))
+      .filter((item) => admitsItem(remembered.feed.filter, item));
+  });
   const [endCursor, setEndCursor] = useState<string | null>(remembered?.endCursor ?? null);
   const [hasNextPage, setHasNextPage] = useState(remembered?.hasNextPage ?? false);
   // THE SEEN TAIL (FeedSeenTail.md): which of the list's rows stand under the
@@ -421,6 +572,7 @@ export function FeedView({
             setListEra((era) => era + 1);
           }
           showFirst(first.value);
+          setApplied(feed.filter);
         } else {
           // A failed ranking keeps the held snapshot on screen (§4.5): the
           // fault rides above it, and nothing silently stands in for it.
@@ -467,6 +619,9 @@ export function FeedView({
           if (done.kind === "success" && done.value === "nothing") return;
           const first = done.kind === "success" ? await feed.window(0, io) : done;
           if (!alive.current || mine !== ask.current) return;
+          // The filter the list now stands under — the staged one, or, where a
+          // ranking Done failed, the one it was applied over (`RankedFeed.done`).
+          setApplied(feed.filter);
           if (first.kind === "success") {
             setTransportFault(null);
             showFirst(first.value);
@@ -477,6 +632,46 @@ export function FeedView({
       }),
     [io, showFirst],
   );
+
+  // THE TRIGGER OPENS THE SHEET OVER THE FEED, staged from what the feed shows
+  // (FeedFilter.jsx: "The sheet works on a staged copy taken when it opens").
+  // The topics held for are read at each opening, so one the reader took up
+  // elsewhere is there; a borrowed view's are the borrowed account's, which no
+  // read serves (`heldTopics` is the viewer's own), so that section stands
+  // only on the reader's own feed.
+  const openSheet = useCallback(() => {
+    setStaged(filter);
+    setSheetOpen(true);
+    if (reader === null || borrowedHandle !== null) {
+      setHeldTopics([]);
+      return;
+    }
+    void guard.run(() => fetchHeldTopicsFor(client)).then((read) => {
+      if (alive.current) setHeldTopics(read.kind === "success" ? read.value : []);
+    });
+  }, [borrowedHandle, client, filter, guard, reader]);
+
+  // DONE (FeedSheet.md:81-85): the sheet closes; with changes, the feed takes
+  // them — one ranking where Kinds or the topic changed, a local re-derive
+  // otherwise (`feed-done.ts` → `RankedFeed.done`) — and one polite status
+  // message says the trigger's new name; unchanged, nothing is asked and
+  // nothing is said. Focus returns to the trigger either way.
+  const onDone = useCallback(() => {
+    setSheetOpen(false);
+    if (!sameFilter(staged, filter)) {
+      setSaid(triggerName(feedFilterSummary(staged, readerDefault, borrowedHandle), WHAT_YOUR_FEED_SHOWS));
+      setApplied(staged);
+      announceFeedDone(staged);
+    }
+    triggerRef.current?.querySelector("button")?.focus();
+  }, [borrowedHandle, filter, readerDefault, staged]);
+
+  // FEEDNOTHING'S WAY BACK (FeedNothing.md:7): the filter returns to its
+  // default — the reader's — and the feed shows its default view.
+  const showPostsAgain = useCallback(() => {
+    setApplied(readerDefault);
+    announceFeedDone(readerDefault);
+  }, [readerDefault]);
 
   // The pages, kept for the next mount. Written from an effect rather than
   // from each fetch so no path can set state and forget to record it.
@@ -505,7 +700,8 @@ export function FeedView({
     setLoading(true);
     refresh(true);
   }, [releasePin, refresh]);
-  usePullToRefresh({ host, onPull, enabled: !commentsOpen });
+  // A pull inside the filter sheet never refreshes the feed (FeedSheet.md:77).
+  usePullToRefresh({ host, onPull, enabled: !commentsOpen && !sheetOpen });
 
   // THE WAY BACK UP (FeedScrolled.md:11-13): the list goes to the top,
   // animated, and NEVER refreshes — the pill's tap and the bar's re-tap from a
@@ -576,12 +772,14 @@ export function FeedView({
     if (emptiedByHide && hasNextPage && transportFault === null) void loadMore();
   }, [emptiedByHide, hasNextPage, transportFault, loadMore]);
 
-  // A POST WHOLLY ON SCREEN JOINS HISTORY (History.md:5) — the card's own
-  // post, never its author or tags. Attached at the list, so the card stays
-  // the feed's (`seen-tracker.ts` says what counts and when it is sent).
+  // A CARD WHOLLY ON SCREEN JOINS HISTORY (History.md:5-7) — its top-layer
+  // content only: a post as itself, a comment as itself, a person or a topic
+  // as the card's own thing, never an author's avatar or a card's tags.
+  // Attached at the list, so the card stays the feed's (`seen-tracker.ts`
+  // says what counts and when it is sent). A sheet over the feed covers it.
   const listRef = useRef<HTMLUListElement>(null);
   const postIds = useMemo(() => shown.map((post) => post.id), [shown]);
-  useSeenTracker({ root: host, list: listRef, ids: postIds, suspended: commentsOpen });
+  useSeenTracker({ root: host, list: listRef, ids: postIds, suspended: commentsOpen || sheetOpen });
   // Where the drawn cards cross into the seen tail: the derive stands every
   // tail row after every unseen one, so the separator goes before the first
   // tail card drawn — and with nothing unseen, the feed opens at it.
@@ -631,13 +829,35 @@ export function FeedView({
               ? { lit: bellIsLit, onOpen: () => router.push(notificationsHref("feed")) }
               : undefined
           }
+          // THE FILTER TRIGGER ON THE BAND'S RIGHT EDGE (FeedFilter.jsx, ruled
+          // 2026-08-28; FeedBare draws it for a guest too): the pill reads the
+          // deviations from the reader's default and opens the sheet. Drawn once
+          // the phase resolves, since whose default it reads against is the
+          // reader's to say.
+          trailing={
+            phase === "resolving" ? undefined : (
+              <span ref={triggerRef} className="inline-flex min-w-0">
+                <FilterTrigger
+                  reading={feedFilterSummary(filter, readerDefault, borrowedHandle)}
+                  purpose={WHAT_YOUR_FEED_SHOWS}
+                  expanded={sheetOpen}
+                  onOpen={openSheet}
+                  node={FILTER_TRIGGER}
+                />
+              </span>
+            )
+          }
         >
           {/* The band carries its own gutter — it is a bare line under the
               identity band, not a card in the stack below it. Nothing is
               drawn while the phase resolves: the two readings differ, and
               guessing puts the wrong sentence on screen for a frame. */}
           {phase !== "resolving" && (
-            <BorrowedView signedOut={phase === "signedOut"} refreshSignal={listEra} />
+            <BorrowedView
+              signedOut={phase === "signedOut"}
+              refreshSignal={listEra}
+              onVantage={setBorrowedHandle}
+            />
           )}
           {/* Must-act, so it collapses into the header and follows the
               reader back up instead of living only at the top. It stands as
@@ -694,9 +914,23 @@ export function FeedView({
             Loading…
           </p>
         )}
-        {!loading && transportFault === null && shown.length === 0 && !hasNextPage && (
-          <p data-testid="feed-empty">Nothing here yet — write the first post.</p>
+        {/* EVERY KIND OFF (FeedNothing.md): the empty state stands alone — no
+            seen separator, no rows — says what is off, and offers the way
+            back. The trigger reads `Nothing`. */}
+        {!loading && transportFault === null && filter.kinds.length === 0 && (
+          <EmptyState
+            testId="feed-nothing"
+            node={NOTHING}
+            title={SHOWING_NOTHING}
+            actionLabel={SHOW_POSTS_AGAIN}
+            onAction={showPostsAgain}
+          />
         )}
+        {!loading &&
+          transportFault === null &&
+          filter.kinds.length > 0 &&
+          shown.length === 0 &&
+          !hasNextPage && <p data-testid="feed-empty">Nothing here yet — write the first post.</p>}
       </div>
       {/* A FEED POST IS A FULL-WIDTH CONTAINER (design/readme.md, "Feed
           containers — rounded full-width cards"): the filled card keeps its
@@ -737,6 +971,9 @@ export function FeedView({
                 {...(seenTail.has(post.id) ? {} : { [SEEN_ATTRIBUTE]: post.id })}
                 ref={index === tailIndex ? tailRef : undefined}
               >
+                {post.__typename !== "Post" ? (
+                  <OtherCard item={post} notify={notify} />
+                ) : (
                 <PostCard
                   post={post}
                   // The registered Feed screen's card, keyed by the post's id —
@@ -766,6 +1003,7 @@ export function FeedView({
                   }}
                   menuOpen={menuOpen && menuPost?.id === post.id}
                 />
+                )}
               </li>
             </Fragment>
           ))}
@@ -819,6 +1057,35 @@ export function FeedView({
           rises over the feed too — the license terms (:21) and the report's
           confirm (:23), registered as `feed.licenseSheet` and
           `feed.reportSheet` (FC-G10). */}
+      {/* THE APPLY IS SAID ONCE (FeedSheet.md:81; WCAG 4.1.3): mounted from
+          the start, since assistive technology announces only a region it was
+          already watching, and it draws nothing. */}
+      <p role="status" aria-live="polite" className="sr-only" data-testid="feed-filter-status">
+        {said}
+      </p>
+      {/* THE FILTER SHEET, OVER THE FEED (FeedSheet.md). It stages: the feed
+          behind it never moves before Done. Reset stages the reader's default
+          (:63); the scrim, a swipe down, Back and Escape drop what is staged
+          and the feed is what it was (:85-87). */}
+      <FeedFilterSheet
+        open={sheetOpen}
+        staged={staged}
+        onStage={setStaged}
+        onReset={() => setStaged(readerDefault)}
+        onDone={onDone}
+        onClose={() => setSheetOpen(false)}
+        onHelp={() => setFilterHelp(true)}
+        topics={heldTopics}
+        borrowedHandle={borrowedHandle}
+        node={FILTER_SHEET}
+        testId="feed-filter-sheet"
+      />
+      <HelpDialog
+        open={filterHelp}
+        onClose={() => setFilterHelp(false)}
+        topic={HELP_TOPICS.theFeedFilter}
+        testId="feed-filter-help-dialog"
+      />
       <PostMenuHost
         post={menuPost}
         open={menuOpen}
@@ -836,7 +1103,7 @@ export function FeedView({
         // mark" (RemoveConfirm.md:11) holds here as on the detail. The
         // device's Removed filter is what cuts it, at its next re-derive.
         onRemoved={(removed) =>
-          setPosts((current) => current.map((post) => (post.id === removed.id ? removed : post)))
+          setPosts((current) => current.map((post) => (post.id === removed.id ? (removed as FeedItemView) : post)))
         }
       />
       {/* Conditionally mounted, matching `stance-control.tsx`'s own guest

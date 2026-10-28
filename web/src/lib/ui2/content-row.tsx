@@ -228,11 +228,15 @@ export function ContentRow({
         <span className="flex flex-none flex-col items-end gap-0.5">
           {trailing !== undefined && (
             <span
-              // The master sets label-small's SIZE and leading only; the weight
-              // is the ground's (ContentRow.jsx `TYPE`), a quiet fact. The line
-              // height rides the style, read off the role's own token.
+              // The master sets label-small's size, leading and tracking; the
+              // weight is the ground's (ContentRow.jsx `TYPE`), a quiet fact.
+              // Leading and tracking ride the style, read off the role's own
+              // tokens, so a <button> and a <div> row draw one tracking.
               className="text-[length:var(--text-label-small)] text-on-surface-variant"
-              style={{ lineHeight: "var(--text-label-small--line-height)" }}
+              style={{
+                lineHeight: "var(--text-label-small--line-height)",
+                letterSpacing: "var(--text-label-small--letter-spacing)",
+              }}
               {...testAttributes(part(node, "trailing"), `${testId}-trailing`)}
             >
               {trailing}
