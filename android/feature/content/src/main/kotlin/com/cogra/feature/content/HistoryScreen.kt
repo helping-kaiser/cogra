@@ -174,7 +174,7 @@ fun HistoryRoute(
         callbacks = HistoryCallbacks(
             onRefresh = viewModel::refresh,
             onLoadMore = viewModel::loadMore,
-            onRetryMore = viewModel::retryMore,
+            onRetryMore = viewModel::loadMore,
             onSearch = viewModel::search,
             onApplyKinds = viewModel::applyKinds,
             onNarrowTo = viewModel::narrowTo,
@@ -217,7 +217,7 @@ private fun HistoryViewModel.cardHooks(
 ) = CardHooks(
     viewerId = viewerId,
     onShare = share,
-    shareUrls = CardShareUrls(::postShareUrl, ::commentShareUrl, ::profileShareUrl),
+    shareUrls = shareUrls,
     onEditPost = onEditPost,
     onCitePost = onCitePost,
     onReveal = ::onReveal,
@@ -300,21 +300,26 @@ internal data class HistoryView(
  * caption and its door, and no day divider at all.
  */
 internal fun historyView(state: HistoryUiState, now: Instant): HistoryView {
-    val answered = state.answered
-    val searching = state.query.isNotBlank()
-    val byQuery = answered?.query != null
-    val byKinds = answered != null && answered.kinds.isNotEmpty()
-    val nothingShown = !state.loading && !state.failed && state.entries.isEmpty() &&
-        !state.hasNextPage && !state.loadingMore
-    val empty = nothingShown && !byQuery && !byKinds && !searching && state.kinds.isEmpty()
-    val none = when {
-        !nothingShown || empty -> null
-        byQuery -> NoneCause.SEARCH
-        byKinds -> NoneCause.KINDS
-        else -> null
-    }
+    val byQuery = state.answered?.query != null
+    val empty = state.settledEmpty() && state.unnarrowed()
+    val none = if (state.settledEmpty() && !empty) noneCause(state.answered) else null
     val rows = if (byQuery) sectioned(state) else dated(state.entries, now)
-    return HistoryView(rows, empty, none, fielded = !empty && answered != null)
+    return HistoryView(rows, empty, none, fielded = !empty && state.answered != null)
+}
+
+/** The read has settled with nothing standing: no card, no page to come, none on its way. */
+private fun HistoryUiState.settledEmpty(): Boolean =
+    !loading && !failed && entries.isEmpty() && !hasNextPage && !loadingMore
+
+/** Nothing narrows the list — no query asked or typed, no kind narrowed. */
+private fun HistoryUiState.unnarrowed(): Boolean =
+    answered?.query == null && answered?.kinds.isNullOrEmpty() && query.isBlank() && kinds.isEmpty()
+
+/** Which narrowing found nothing (HistoryNone.md:3, :5): the query first, else the kinds. */
+private fun noneCause(answered: HistoryAsk?): NoneCause? = when {
+    answered?.query != null -> NoneCause.SEARCH
+    !answered?.kinds.isNullOrEmpty() -> NoneCause.KINDS
+    else -> null
 }
 
 private fun dated(entries: List<HistoryEntry>, now: Instant): List<HistoryRow> {

@@ -102,13 +102,14 @@ class HistoryViewModel @Inject constructor(
     fun onReveal(nodeId: String, mark: SensitiveMark) = reveals.reveal(nodeId, mark)
 
     /** What a card's share hands over: the thing's own web address, never History's. */
-    fun postShareUrl(postId: String): String = "$webOrigin/posts/$postId"
+    val shareUrls = CardShareUrls(
+        post = { postId -> "$webOrigin/posts/$postId" },
+        comment = { postId, commentId -> "$webOrigin/posts/$postId?comment=$commentId" },
+        profile = { handle -> "$webOrigin/u/$handle" },
+    )
 
-    fun commentShareUrl(postId: String, commentId: String): String = "$webOrigin/posts/$postId?comment=$commentId"
-
-    fun profileShareUrl(handle: String): String = "$webOrigin/u/$handle"
-
-    fun topicShareUrl(name: String): String = "$webOrigin/topics/$name"
+    /** A tag card's share: the tag page's own address. */
+    val topicShareUrl: (String) -> String = { name -> "$webOrigin/topics/$name" }
 
     /** The first page — on arrival, the reader's pull (History.md:111) and Retry — under what stands. */
     fun refresh() {
@@ -232,7 +233,8 @@ class HistoryViewModel @Inject constructor(
         val current = _state.value
         val cursor = current.endCursor
         val ask = current.answered
-        if (current.loadingMore || !current.hasNextPage || cursor == null || ask == null) return
+        if (current.loadingMore || !current.hasNextPage) return
+        if (cursor == null || ask == null) return
         val asked = request
         _state.update { it.copy(loadingMore = true, moreFailed = false) }
         viewModelScope.launch {
@@ -256,7 +258,4 @@ class HistoryViewModel @Inject constructor(
             }
         }
     }
-
-    /** The fault's Retry: the page asked again. */
-    fun retryMore() = loadMore()
 }
