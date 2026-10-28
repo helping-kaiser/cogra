@@ -131,6 +131,7 @@ class FakeIdentityStore : IdentityStore {
     var seed: ByteArray? = null
     var pendingBlob: ByteArray? = null
     var stancePadTaught = false
+    var applicationCardPutAway = false
     var forgetOnSignOut = false
     val handshakes = mutableMapOf<String, PreSignedProposal>()
 
@@ -180,6 +181,12 @@ class FakeIdentityStore : IdentityStore {
         stancePadTaught = true
     }
 
+    override suspend fun applicationCardPutAway(): Boolean = applicationCardPutAway
+
+    override suspend fun putApplicationCardAway() {
+        applicationCardPutAway = true
+    }
+
     private val inputMode = MutableStateFlow(StanceInputMode.Default)
 
     override val stanceInputMode: Flow<StanceInputMode> = inputMode
@@ -220,6 +227,7 @@ class FakeIdentityStore : IdentityStore {
         seed = null
         pendingBlob = null
         stancePadTaught = false
+        applicationCardPutAway = false
         forgetOnSignOut = false
         inputMode.value = StanceInputMode.Default
         confirmMultiAction.value = true

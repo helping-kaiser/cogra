@@ -123,6 +123,16 @@ interface IdentityStore {
     suspend fun markStancePadTaught()
 
     /**
+     * The applicant's waiting card was put away with `Got it` on this device
+     * (ApplicantWaiting.md:15: "it stays away on this device"). Account-scoped
+     * and device-local, like the lesson above; the closed and landing cards
+     * stand whatever it says (:17, :19).
+     */
+    suspend fun applicationCardPutAway(): Boolean
+
+    suspend fun putApplicationCardAway()
+
+    /**
      * Which surface the stance control offers, everywhere (design.md
      * §8.6). A rendering preference with nothing private in it, kept
      * here because this is the device's preference store; a Flow because
