@@ -40,6 +40,7 @@ use async_graphql::dataloader::{DataLoader, Loader};
 use postgres_store::auth::ActorIdentity;
 use postgres_store::content::{Comment, Post};
 use postgres_store::media::{GalleryEntry, MediaAttachment};
+use postgres_store::removal::{self as removal_store, Removal};
 use postgres_store::{
     PgPool, auth as store, bookmarks as bookmarks_store, content as content_store,
     media as media_store,
@@ -210,26 +211,58 @@ impl Loader<Uuid> for MediaByIdLoader {
     }
 }
 
-/// Whether an act's payload has been reduced, keyed on the act
-/// identifier.
+/// When an act's payload was reduced, keyed on the act identifier.
 ///
-/// `Record.payloadState` is a per-record field, so a chronicle page asks
-/// once per record; batching collapses a page into one read. A key with
-/// no row is absent from the map, which the resolver reads as FULL —
-/// the same answer an act that never carried a payload deserves.
+/// `Record.payloadState` and `Record.redactedAt` are per-record fields, so
+/// a chronicle page asks once per record; batching collapses a page into
+/// one read. A key with no row is absent from the map, which the resolver
+/// reads as FULL — the same answer an act that never carried a payload
+/// deserves.
 pub struct PayloadStateLoader(PgPool);
 
 impl Loader<String> for PayloadStateLoader {
-    type Value = bool;
+    type Value = chrono::DateTime<chrono::Utc>;
     type Error = LoadError;
 
-    async fn load(&self, keys: &[String]) -> Result<HashMap<String, bool>, LoadError> {
+    async fn load(
+        &self,
+        keys: &[String],
+    ) -> Result<HashMap<String, chrono::DateTime<chrono::Utc>>, LoadError> {
         Ok(content_store::reduced_payload_acts(&self.0, keys)
             .await
             .map_err(LoadError::from_display)?
             .into_iter()
-            .map(|act_id| (act_id, true))
             .collect())
+    }
+}
+
+/// A removed post's mark, keyed on the post id: `Post.removal` and a
+/// removed post's `updatedAt` ask once per removed card on a page. A post
+/// with no tombstone is absent.
+pub struct PostRemovalLoader(PgPool);
+
+impl Loader<Uuid> for PostRemovalLoader {
+    type Value = Removal;
+    type Error = LoadError;
+
+    async fn load(&self, keys: &[Uuid]) -> Result<HashMap<Uuid, Removal>, LoadError> {
+        removal_store::post_removals(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)
+    }
+}
+
+/// The comment side of [`PostRemovalLoader`].
+pub struct CommentRemovalLoader(PgPool);
+
+impl Loader<Uuid> for CommentRemovalLoader {
+    type Value = Removal;
+    type Error = LoadError;
+
+    async fn load(&self, keys: &[Uuid]) -> Result<HashMap<Uuid, Removal>, LoadError> {
+        removal_store::comment_removals(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)
     }
 }
 
@@ -352,6 +385,8 @@ pub struct NodeLoaders {
     pub comment_galleries: DataLoader<CommentGalleryLoader>,
     pub media: DataLoader<MediaByIdLoader>,
     pub payload_states: DataLoader<PayloadStateLoader>,
+    pub post_removals: DataLoader<PostRemovalLoader>,
+    pub comment_removals: DataLoader<CommentRemovalLoader>,
     pub severing_records: DataLoader<SeveringRecordLoader>,
     pub epoch_instants: DataLoader<EpochInstantLoader>,
     pub bookmarks: DataLoader<BookmarkLoader>,
@@ -369,6 +404,8 @@ impl NodeLoaders {
             comment_galleries: DataLoader::new(CommentGalleryLoader(pool.clone()), tokio::spawn),
             media: DataLoader::new(MediaByIdLoader(pool.clone()), tokio::spawn),
             payload_states: DataLoader::new(PayloadStateLoader(pool.clone()), tokio::spawn),
+            post_removals: DataLoader::new(PostRemovalLoader(pool.clone()), tokio::spawn),
+            comment_removals: DataLoader::new(CommentRemovalLoader(pool.clone()), tokio::spawn),
             severing_records: DataLoader::new(SeveringRecordLoader(pool.clone()), tokio::spawn),
             epoch_instants: DataLoader::new(EpochInstantLoader(pool.clone()), tokio::spawn),
             bookmarks: DataLoader::new(BookmarkLoader(pool.clone()), tokio::spawn),
