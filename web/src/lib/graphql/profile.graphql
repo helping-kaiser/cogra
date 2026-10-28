@@ -66,13 +66,18 @@ query MyProfile {
 # genesis when its target/terminal is the mint of its own act id. The
 # row's age is its landing, an opinion row wears its own face (the pair,
 # and `severed` to tell a walk-back), and an opinion on a person names
-# them (`on @mira`, copy-voice's chronicle rows).
+# them (`on @mira`, copy-voice's chronicle rows). `act` is the server's
+# reading of what the record did beyond its family — GENESIS (a post
+# published, a comment made, the account's joining), WALK_BACK (every
+# record a walk-back signed), VOUCH (the vouch that landed someone),
+# ORDINARY — the chronicle verbs' data.
 query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after: String) {
   records(author: $author, family: $family, first: $first, after: $after) {
     edges {
       node {
         id
         family
+        act
         targetId
         terminalId
         landedAt
@@ -118,6 +123,9 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
             }
           }
         }
+        # The terminal leg: a Review's Comment, or what a Reference cites —
+        # a post (`Cited a post`, its title under), a comment, or a person
+        # (`Mentioned`, `@ada` beside) — copy-voice's chronicle verbs.
         terminal {
           __typename
           ... on Comment {
@@ -132,12 +140,49 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
               }
             }
           }
+          ... on Post {
+            id
+            title {
+              value
+            }
+            content {
+              value
+            }
+          }
+          ... on User {
+            id
+            handle
+            avatar {
+              url
+            }
+          }
         }
       }
     }
     pageInfo {
       hasNextPage
       endCursor
+    }
+  }
+}
+
+# The header's three figures (ProfileHeader; open-questions.md Q35):
+# record counts, each labelled and never merged, each a `totalCount`
+# with `first: 0` — the number without a page. `Posts` counts the
+# records that minted the person's posts (`genesis: true`), never an
+# edit; `Opinions on them` the Opinion records aimed at their profile;
+# `Opinions by them` the Opinion records they authored toward a person.
+query ProfileFigures($id: UUID!) {
+  user(id: $id) {
+    id
+    posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 0) {
+      totalCount
+    }
+    opinionsOn: incomingRecords(family: OPINION, first: 0) {
+      totalCount
+    }
+    opinionsBy: outgoingRecords(family: OPINION, toKind: USER, first: 0) {
+      totalCount
     }
   }
 }

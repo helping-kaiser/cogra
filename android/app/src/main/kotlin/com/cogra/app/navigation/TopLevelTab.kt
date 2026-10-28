@@ -24,11 +24,14 @@ import kotlin.reflect.KClass
 
 /**
  * A bottom-bar slot that is a destination: its nested graph, the slot that
- * lights for it, and its root. A future slot root — Explore, the wallet — is
- * one entry here and one `navigation<…>` block in the shell's NavHost.
+ * lights for it, and its root. A slot root is one entry here and one
+ * `navigation<…>` block in the shell's NavHost — all four destination slots
+ * stand (the fifth, New post, is an action).
  */
 internal enum class TopLevelTab(val graph: KClass<*>, val graphRoute: Any, val slot: NavSlot) {
     FEED(FeedTab::class, FeedTab, NavSlot.Feed),
+    EXPLORE(ExploreTab::class, ExploreTab, NavSlot.Search),
+    WALLET(WalletTab::class, WalletTab, NavSlot.Wallet),
     PROFILE(ProfileTab::class, ProfileTab, NavSlot.Profile),
     ;
 
@@ -39,6 +42,8 @@ internal enum class TopLevelTab(val graph: KClass<*>, val graphRoute: Any, val s
      */
     fun isRoot(entry: NavBackStackEntry): Boolean = when (this) {
         FEED -> entry.destination.hasRoute<Feed>()
+        EXPLORE -> entry.destination.hasRoute<Explore>()
+        WALLET -> entry.destination.hasRoute<Wallet>()
         PROFILE -> entry.destination.hasRoute<Profile>() && entry.toRoute<Profile>().handle == null
     }
 }

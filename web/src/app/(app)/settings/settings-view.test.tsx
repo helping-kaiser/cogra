@@ -1270,3 +1270,98 @@ describe("the kept picks in settings", () => {
     expect(await listKeptPicks("acct-1")).toHaveLength(1);
   });
 });
+
+// WHAT YOUR FEED SHOWS (SettingsReading.md), compiled line for line: the
+// Reading row opens the feed's own filter sheet, titled, over Settings; Done
+// saves the reader's default ON THIS DEVICE and the row reads it back.
+describe("What your feed shows (SettingsReading.md)", () => {
+  const sheet = () => screen.getByTestId("settings.feedSheet") as HTMLDialogElement;
+  const open = async () => {
+    fireEvent.click(await screen.findByTestId("settings.reading.feed"));
+    await waitFor(() => expect(sheet().open).toBe(true));
+    return sheet();
+  };
+
+  it("reads CoGra's default back in the pill's words where the reader has set none", async () => {
+    renderSettings();
+    expect(await screen.findByTestId("settings.reading.feed")).toHaveTextContent("Posts");
+  });
+
+  it("opens the feed's own sheet over settings, titled, with focus on its title and the \"?\" on its row", async () => {
+    renderSettings();
+    const dialog = await open();
+    expect(dialog).toHaveAccessibleName("What your feed shows");
+    expect(within(dialog).getByTestId("settings.feedSheet.title")).toHaveTextContent("What your feed shows");
+    expect(within(dialog).getByRole("heading", { name: "What your feed shows" })).toHaveFocus();
+    expect(within(dialog).getByTestId("settings.feedSheet.title.help")).toHaveAccessibleName("How the filter works");
+    expect(within(dialog).getByTestId("settings.feedSheet.note")).toHaveTextContent("Every feed starts from this.");
+    // The feed's sections; a default never holds a topic.
+    for (const section of ["kinds", "forms", "order", "also", "people"]) {
+      expect(within(dialog).getByTestId(`settings.feedSheet.${section}`)).toBeInTheDocument();
+    }
+    expect(within(dialog).queryByRole("group", { name: "One topic" })).toBeNull();
+    const foot = within(dialog).getByTestId("settings.feedSheet.foot");
+    expect(within(foot).getAllByRole("button").map((button) => button.textContent)).toEqual(["Reset", "Done"]);
+  });
+
+  it("tags the people rows and the sign row by the people chip's value", async () => {
+    renderSettings();
+    const dialog = await open();
+    expect(within(dialog).getByTestId("settings.feedSheet.people.everyone")).toHaveAttribute("data-testid-key", "everyone");
+    expect(within(dialog).queryByTestId("settings.feedSheet.people.sign")).toBeNull();
+    fireEvent.click(within(dialog).getByRole("radio", { name: /^Your people/ }));
+    expect(within(dialog).getByTestId("settings.feedSheet.people.sign")).toHaveAttribute("data-testid-key", "your-people");
+    expect(within(dialog).getByTestId("settings.feedSheet.people.sign.either")).toHaveTextContent("Either");
+  });
+
+  it("stages every tap and saves nothing before Done; Done saves it on this device and the row reads it back", async () => {
+    renderSettings();
+    const dialog = await open();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Newest" }));
+    fireEvent.click(within(dialog).getByRole("radio", { name: /^Your people/ }));
+    fireEvent.click(within(dialog).getByRole("radio", { name: "For" }));
+    expect(window.localStorage.getItem("cogra.feed.default.acct-1")).toBeNull();
+    fireEvent.click(within(dialog).getByTestId("settings.feedSheet.foot.done"));
+    await waitFor(() => expect(screen.queryByTestId("settings.feedSheet")).toBeNull());
+    const saved = JSON.parse(window.localStorage.getItem("cogra.feed.default.acct-1")!);
+    expect(saved).toMatchObject({ order: "newest", people: "yourPeople", peopleSign: "for", topic: null });
+    expect(screen.getByTestId("settings.reading.feed")).toHaveTextContent("Posts · 2 changes");
+    expect(screen.getByTestId("settings.reading.feed")).toHaveFocus();
+  });
+
+  it("opens on the reader's own default, and Reset stages CoGra's, never theirs", async () => {
+    window.localStorage.setItem(
+      "cogra.feed.default.acct-1",
+      JSON.stringify({
+        kinds: ["posts"],
+        forms: ["text", "photos", "video"],
+        order: "newest",
+        seen: true,
+        also: ["settling"],
+        topic: null,
+        people: "everyone",
+        peopleSign: "either",
+      }),
+    );
+    renderSettings();
+    const dialog = await open();
+    expect(within(dialog).getByRole("button", { name: "Newest" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(dialog).getByRole("checkbox", { name: "Show what you've already seen" })).toBeChecked();
+    fireEvent.click(within(dialog).getByTestId("settings.feedSheet.foot.reset"));
+    expect(within(dialog).getByRole("button", { name: "Ranked" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(dialog).getByRole("checkbox", { name: "Show what you've already seen" })).not.toBeChecked();
+    // Reset only stages: nothing is saved before Done.
+    expect(JSON.parse(window.localStorage.getItem("cogra.feed.default.acct-1")!).order).toBe("newest");
+  });
+
+  it("the scrim closes it and the default is what it was", async () => {
+    renderSettings();
+    const dialog = await open();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Newest" }));
+    fireEvent.click(dialog);
+    await waitFor(() => expect(screen.queryByTestId("settings.feedSheet")).toBeNull());
+    expect(window.localStorage.getItem("cogra.feed.default.acct-1")).toBeNull();
+    expect(screen.getByTestId("settings.reading.feed")).toHaveTextContent("Posts");
+    expect(screen.getByTestId("settings.reading.feed")).toHaveFocus();
+  });
+});

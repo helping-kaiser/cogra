@@ -105,7 +105,7 @@ fn rate_limited() -> async_graphql::Error {
 
 /// The current-address half of an email change. The code ends the body
 /// after the last `: `, where the dev mailer's reader finds bare tokens.
-fn code_mail(to: String, code: &str) -> Mail {
+pub(crate) fn code_mail(to: String, code: &str) -> Mail {
     Mail {
         to,
         subject: "Confirm your CoGra email change".into(),
@@ -117,7 +117,7 @@ fn code_mail(to: String, code: &str) -> Mail {
 /// unverified carve-out — the account's verification link, which is the
 /// carve-out's whole proof (auth.md "Link URLs"). The bare token rides
 /// beside the URL, the fallback native apps accept as a paste.
-fn link_mail(to: String, requires_code: bool, web_origin: &str, token: &str) -> Mail {
+pub(crate) fn link_mail(to: String, requires_code: bool, web_origin: &str, token: &str) -> Mail {
     let (subject, line, path) = if requires_code {
         (
             "Confirm your new CoGra address",
@@ -140,13 +140,41 @@ fn link_mail(to: String, requires_code: bool, web_origin: &str, token: &str) -> 
 /// (auth.md "Self-service deletion"). The link is the capability; the bare
 /// token rides beside the URL, the fallback native apps accept as a paste
 /// (auth.md "Link URLs").
-fn deletion_mail(to: String, web_origin: &str, token: &str) -> Mail {
+pub(crate) fn deletion_mail(to: String, web_origin: &str, token: &str) -> Mail {
     Mail {
         to,
         subject: "Confirm the deletion of your CoGra account".into(),
         body: format!(
             "Confirm the deletion of your account (link valid {DELETION_LINK_TTL_DAYS} days): {web_origin}/delete-account?token={token}\nOr paste the token in the app: {token}\n\nOpening the link starts a {DELETION_GRACE_DAYS}-day grace period; until it ends, you can cancel from any device."
         ),
+    }
+}
+
+/// The password-reset link and its bare token (auth.md "Password reset").
+pub(crate) fn reset_mail(to: String, web_origin: &str, token: &str) -> Mail {
+    Mail {
+        to,
+        subject: "Reset your CoGra password".into(),
+        body: format!(
+            "Reset your password: {web_origin}/reset?token={token}\nOr paste the token in the app: {token}\n\nValid {PASSWORD_RESET_TTL_MINUTES} minutes."
+        ),
+    }
+}
+
+/// The notice that the key backup's recovery code was replaced, to the
+/// account's address on file.
+pub(crate) fn recovery_code_replaced_mail(to: String) -> Mail {
+    Mail {
+        to,
+        subject: "Your CoGra recovery code was replaced".into(),
+        body: "Someone replaced the recovery code on your CoGra \
+               account just now. Your previous code no longer opens \
+               your key backup.\n\n\
+               If that was you, nothing to do — keep the new code safe.\n\n\
+               If it wasn't, someone has access to a device holding \
+               your actor key. Sign out every session and change your \
+               password from Settings."
+            .into(),
     }
 }
 
@@ -2298,15 +2326,7 @@ impl Mutation {
             .await?;
             let web_origin = ctx.data::<WebOrigin>()?;
             mailer
-                .send(Mail {
-                    to: email,
-                    subject: "Reset your CoGra password".into(),
-                    body: format!(
-                        "Reset your password: {origin}/reset?token={token}\nOr paste the token in the app: {token}\n\nValid {PASSWORD_RESET_TTL_MINUTES} minutes.",
-                        origin = web_origin.0,
-                        token = secret.token
-                    ),
-                })
+                .send(reset_mail(email, &web_origin.0, &secret.token))
                 .await;
         }
         Ok(RequestPasswordResetPayload { ok: true })
@@ -3197,18 +3217,7 @@ impl Mutation {
         store::upload_key_backup(pool, v.user_id, &blob).await?;
         if replaced && let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? {
             mailer
-                .send(Mail {
-                    to: credentials.email,
-                    subject: "Your CoGra recovery code was replaced".into(),
-                    body: "Someone replaced the recovery code on your CoGra \
-                           account just now. Your previous code no longer opens \
-                           your key backup.\n\n\
-                           If that was you, nothing to do — keep the new code safe.\n\n\
-                           If it wasn't, someone has access to a device holding \
-                           your actor key. Sign out every session and change your \
-                           password from Settings."
-                        .into(),
-                })
+                .send(recovery_code_replaced_mail(credentials.email))
                 .await;
         }
         Ok(UploadKeyBackupPayload {

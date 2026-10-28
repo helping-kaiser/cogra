@@ -217,6 +217,33 @@ const val DEFAULT_STANCE = 0.1
 // ---------------------------------------------------------------------
 
 /**
+ * Who removed a node's payload (api-spec.md `RemovalAgent`). AUTHOR is the
+ * author's own `removeContent`, ACCOUNT the content sweep their account
+ * deletion chose, MODERATION a passed verdict. AUTHOR and ACCOUNT read the
+ * same words — the data keeps them distinct, the reader does not.
+ *
+ * UNKNOWN is the forward-compatible fallback: an agent this build cannot
+ * name is never read as a verdict.
+ */
+enum class RemovalAgent {
+    AUTHOR,
+    ACCOUNT,
+    MODERATION,
+    UNKNOWN,
+}
+
+/**
+ * A node's payload removal, read off the node itself (`Post.removal`,
+ * `Comment.removal`). Nodes are never deleted, so a removed node still
+ * resolves and wears this mark wherever it appears. [at] is the removal's
+ * own moment — the mark's `when` — never the content's age.
+ */
+data class Removal(
+    val at: Instant,
+    val by: RemovalAgent,
+)
+
+/**
  * A whole node's moderation state, as against [FieldStatus]'s per-field
  * one. It is what tells a passed proposal's removal from an author's
  * own, which the docs require to stay distinguishable — collapsing them
@@ -492,8 +519,19 @@ data class PostView(
     val attachments: List<MediaAssetView> = emptyList(),
     /** The gallery's state — one for the whole set, never per asset (D12). */
     val attachmentsStatus: FieldStatus = FieldStatus.NORMAL,
-    /** This post's own moderation state — what names a removal's reason. */
+    /**
+     * This post's own moderation state — what names a removal's reason where
+     * the node carries no [removal] of its own.
+     */
     val moderation: ModerationState = ModerationState.NORMAL,
+    /** The node's removal mark; null while its payload stands. */
+    val removal: Removal? = null,
+    /**
+     * The act that minted this post, pending included — what the author's
+     * Remove names (`removeContent`'s `record`). Null only where a surface
+     * read the post without it.
+     */
+    val genesisRecordId: String? = null,
     /**
      * How many comments this post holds, across every page — the number
      * the card's comment affordance states, on the feed and the detail
@@ -543,8 +581,15 @@ data class CommentView(
      */
     val attachments: List<MediaAssetView> = emptyList(),
     val attachmentsStatus: FieldStatus = FieldStatus.NORMAL,
-    /** This comment's own moderation state — what names a removal's reason. */
+    /**
+     * This comment's own moderation state — what names a removal's reason
+     * where the node carries no [removal] of its own.
+     */
     val moderation: ModerationState = ModerationState.NORMAL,
+    /** The comment's removal mark, as a post's; its replies stay readable beneath it. */
+    val removal: Removal? = null,
+    /** The act that minted this comment — what the author's Remove names. */
+    val genesisRecordId: String? = null,
     /**
      * The author's **own** sensitive mark, alone — not the veil.
      *

@@ -133,11 +133,20 @@ export function valenceTravelHalfExtent(rect: PadRect, inset: number): number {
   return Math.max(0, rect.width / 2 - inset);
 }
 
+/** The zero detent's reach: the knob's own radius (`ATTACHMENT_DETENT_PX`, 10px). */
+export const ATTACHMENT_DETENT_PX = KNOB_DIAMETER_PX / 2;
+
 /**
  * The value this much horizontal travel picks STARTING FROM `base`, by
  * the same accumulated-travel rule the square uses — so one pad's finger
  * and the other's move their knobs alike. Clamped once, on the sum; a
  * field with no travel in it keeps the base rather than dividing by zero.
+ *
+ * THE ZERO HAIRLINE IS A DETENT (jakob 2026-10-20; the master's
+ * `attachmentFrom`, built in round 20 as the reference the clients conform
+ * to): while the travel would put the knob's centre within the knob's own
+ * radius of the hairline, the knob holds ON it and the pick reads exactly
+ * 0.00 — `No side yet` is a place a drag rests on purpose.
  */
 export function valenceFrom(
   base: number,
@@ -147,7 +156,10 @@ export function valenceFrom(
 ): number {
   const halfExtent = valenceTravelHalfExtent(rect, inset);
   if (halfExtent === 0) return clampDimension(base);
-  return clampDimension(base + dx / halfExtent);
+  const raw = clampDimension(base + dx / halfExtent);
+  // One unit of the axis is `halfExtent` pixels of travel, so the knob's
+  // centre stands |raw| × halfExtent px from the hairline.
+  return Math.abs(raw) * halfExtent <= ATTACHMENT_DETENT_PX ? 0 : raw;
 }
 
 /**

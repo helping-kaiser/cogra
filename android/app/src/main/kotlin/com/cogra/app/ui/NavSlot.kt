@@ -6,9 +6,8 @@ import com.cogra.app.R
 /**
  * A slot in the shell's bottom bar, in the order the master draws them
  * (`design/components/navigation/BottomNav.jsx`). The enum is the whole
- * five-slot vocabulary; which of them a build renders is [ShippingSlots]'s
- * business, because **a slot arrives with the slice that builds its
- * surface**.
+ * five-slot vocabulary, and V1.0 renders all five (`BottomNav.jsx`: readme
+ * §13, *The V1.0 scope cut*): the wallet's opens its coming-soon door.
  *
  * [Search] reads "Explore" rather than its route's name: `design.md` §7 keeps
  * implementation vocabulary off the screen, and "Explore" says what the
@@ -22,12 +21,3 @@ enum class NavSlot(@param:StringRes val label: Int) {
     Wallet(R.string.bar_wallet),
     Profile(R.string.bar_profile),
 }
-
-/**
- * The slots whose surfaces exist today. Explore waits for slice 2.7's search
- * backend — jakob ruled 2026-09-09 that no surface is built against the
- * exact-match lookup before it — and the wallet waits for its own surfaces.
- * Neither is drawn as a dead slot: a bar item that opens nothing teaches the
- * reader the bar lies.
- */
-val ShippingSlots: List<NavSlot> = listOf(NavSlot.Feed, NavSlot.Compose, NavSlot.Profile)

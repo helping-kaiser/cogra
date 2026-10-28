@@ -26,11 +26,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
@@ -149,14 +151,16 @@ private fun RowScope.ProfileLead(profile: ProfileView, card: DataNode) {
                 modifier = Modifier.dataNode(card / "avatar"),
             )
         }
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        // The lead's column is as wide as its widest line (`ProfileFeedCard`'s
+        // shrink-wrapped span), the name and the handle each spanning it.
+        Column(Modifier.width(IntrinsicSize.Max), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = if (deleted) stringResource(R.string.content_deleted_account) else name,
                 style = MaterialTheme.typography.titleMedium,
                 color = quietIf(deleted),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.dataNode(card / "name"),
+                modifier = Modifier.fillMaxWidth().dataNode(card / "name"),
             )
             if (!deleted) {
                 Text(
@@ -165,7 +169,7 @@ private fun RowScope.ProfileLead(profile: ProfileView, card: DataNode) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.dataNode(card / "handle"),
+                    modifier = Modifier.fillMaxWidth().dataNode(card / "handle"),
                 )
             }
         }

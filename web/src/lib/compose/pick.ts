@@ -78,6 +78,14 @@ export const ANIMATED_GIF =
   "That GIF moves, and CoGra can't take a moving GIF here. A still one is fine.";
 export const MIXED_BODY = "A post carries pictures or one video, not both.";
 export const MIXED_BODY_COMMENT = "A comment carries pictures or one video, not both.";
+/**
+ * A second clip — one more in a photos-app batch, or one dropped while a clip
+ * is staged; the batch's first clip is the body (copy-voice, *Refused files*,
+ * round 22; ComposePick.md, ComposePickWeb.md).
+ */
+export const ONE_VIDEO = "A post carries one video.";
+/** Its comment-scale twin. */
+export const ONE_VIDEO_COMMENT = "A comment carries one video.";
 /** The eleventh picture's line (copy-voice, *Refused files*; ComposePick.md). */
 export const TOO_MANY_POST = "That's more than a post carries — up to ten pictures.";
 /** The fifth picture's line, the comment's twin (copy-voice, *Refused files*). */
@@ -109,6 +117,8 @@ export type PickScale = {
    */
   readonly tooBigVideo: string;
   readonly mixedBody: string;
+  /** What a second clip reads: the body holds one. */
+  readonly oneVideo: string;
   readonly destination: MediaScale;
   /**
    * How many pictures the body holds, and the line a picture past that reads.
@@ -123,6 +133,7 @@ export const POST_SCALE: PickScale = {
   videoMaxBytes: POST_VIDEO_MAX_BYTES,
   tooBigVideo: TOO_BIG_VIDEO_POST,
   mixedBody: MIXED_BODY,
+  oneVideo: ONE_VIDEO,
   destination: "POST",
   pictureCap: { count: POST_ATTACHMENT_CAP, refusal: TOO_MANY_POST },
 };
@@ -131,6 +142,7 @@ export const COMMENT_SCALE: PickScale = {
   videoMaxBytes: COMMENT_VIDEO_MAX_BYTES,
   tooBigVideo: TOO_BIG_VIDEO_COMMENT,
   mixedBody: MIXED_BODY_COMMENT,
+  oneVideo: ONE_VIDEO_COMMENT,
   destination: "COMMENT",
 };
 
@@ -223,21 +235,27 @@ export async function screenPick(
     refuse(file, UNREADABLE);
   }
 
-  // A video takes the body whole, so the kinds cannot share a batch or a draft.
+  // A video takes the body whole, so the kinds cannot share a batch or a
+  // draft. Onto a staged clip a picture is the mixing's refusal and a clip the
+  // one-video one (ComposePickWeb.md, round 22).
   if (held.hasVideo) {
-    for (const file of [...videos, ...pictures]) refuse(file, scale.mixedBody);
+    for (const file of videos) refuse(file, scale.oneVideo);
+    for (const file of pictures) refuse(file, scale.mixedBody);
     return { accepted: [], kind: "picture", refusals };
   }
 
   if (videos.length > 0) {
     if (held.count > 0 || pictures.length > 0) {
-      for (const file of [...videos, ...pictures]) refuse(file, scale.mixedBody);
-      return { accepted: [], kind: "picture", refusals };
+      // THE PICTURES ARE KEPT AND THE VIDEO IS REFUSED (ComposePick.md): a
+      // clip beside pictures — in the tray or in the same batch — is the one
+      // that cannot join; the pictures go on to the cap below.
+      for (const file of videos) refuse(file, scale.mixedBody);
+    } else {
+      // One video, however many were offered at once: the batch's first is
+      // the body, and each other clip reads the one-video line.
+      for (const extra of videos.slice(1)) refuse(extra, scale.oneVideo);
+      return { accepted: videos.slice(0, 1), kind: "video", refusals };
     }
-    // One video, however many were offered at once. The rest are refused for
-    // the same reason a second one cannot join: the body holds one.
-    for (const extra of videos.slice(1)) refuse(extra, scale.mixedBody);
-    return { accepted: videos.slice(0, 1), kind: "video", refusals };
   }
 
   // The grammar's last word: the pictures past the body's cap are refused, one

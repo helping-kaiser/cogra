@@ -540,18 +540,34 @@ describe("FeedView", () => {
     expect(comments).toHaveTextContent("");
   });
 
-  // One slot the row is drawn with and cannot fill yet, absent rather than
-  // dead: the Post Score has no field on the contract until slice 3's ranker.
-  // The ⋮ beside it is drawn — `PostCard.jsx:262` puts it on every non-detail
-  // card — and the rows it holds are read on the card's own suite.
-  it("draws the overflow ⋮ but not the Post Score, whose field does not exist", async () => {
+  // THE SCORE SLOT IS A DOOR (score-readout §8; FeedKinds.md:3-7): the card
+  // wears the figure its feed fetch found — the held ranking's own entry —
+  // and the tap opens that thing's live trace, whose back arrow names the
+  // feed. The ⋮ beside it is drawn — `PostCard.jsx:262` puts it on every
+  // non-detail card — and the rows it holds are read on the card's own suite.
+  it("the_card_score_opens_the_live_trace_of_its_thing", async () => {
     server.use(
-      ...rankedFeed([post("p1", "First")]),
+      ...rankedFeed([post("p1", "First"), post("p2", "Second")]),
     );
     renderWithProviders(<FeedView />);
-    await screen.findByTestId(byNode("feed.card", "p1"));
-    expect(screen.queryByTestId("feed-post-p1-score")).not.toBeInTheDocument();
+    await screen.findByTestId(byNode("feed.card", "p2"));
+    const score = screen.getByTestId(byNode("feed.card.actionRow.score", "p1"));
+    expect(score).toHaveAccessibleName("Feed score 1.00");
+    expect(screen.getByTestId(byNode("feed.card.actionRow.score.value", "p2"))).toHaveTextContent("0.99");
+    expect(score).toHaveAttribute("href", "/trace/p1?from=feed&kind=post");
     expect(screen.getByTestId(byNode("feed.card.menu", "p1"))).toHaveAccessibleName("More on this post");
+  });
+
+  // A SETTLING ROW'S SLOT STANDS BARE beside its pending mark, and is still a
+  // door — to the trace that makes no fetch (FeedKinds.md:15; SR-G2(b)).
+  it("every_settling_slot_opens_the_no_fetch_settling_trace", async () => {
+    server.use(
+      ...rankedFeed([post("p1", "First", true)]),
+    );
+    renderWithProviders(<FeedView />);
+    const score = await screen.findByTestId(byNode("feed.card.actionRow.score", "p1"));
+    expect(screen.queryByTestId(byNode("feed.card.actionRow.score.value", "p1"))).not.toBeInTheDocument();
+    expect(score).toHaveAttribute("href", "/trace/p1?from=feed&kind=post&settling=1");
   });
 
   it("carries the post's topics on one line, each chip navigating to its topic route", async () => {
@@ -1602,7 +1618,8 @@ describe("FeedView's ranked data path", () => {
     renderWithProviders(<FeedView />);
     await screen.findByTestId(byNode("feed.card", "p1"));
     act(() => announceFeedDone({ ...FEED_FILTER_DEFAULT, kinds: [] }));
-    expect(await screen.findByTestId("feed-empty")).toBeInTheDocument();
+    // FeedNothing.md:5 — the empty state that says everything is switched off.
+    expect(await screen.findByTestId(byNode("feed.nothing"))).toBeInTheDocument();
     expect(reads.ranks).toHaveLength(1);
   });
 

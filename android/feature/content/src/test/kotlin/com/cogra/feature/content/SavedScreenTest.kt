@@ -151,7 +151,7 @@ class SavedScreenTest {
     private val all get() = listOf(post, comment, person())
 
     private val opened = mutableListOf<String>()
-    private val doors = SavedDoors(
+    private val doors = CardDoors(
         onOpenPost = { opened += "post:$it" },
         onOpenComment = { postId, commentId, aim ->
             opened += "comment:$postId/$commentId" + if (aim) "+reply" else ""

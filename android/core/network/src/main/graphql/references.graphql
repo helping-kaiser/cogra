@@ -105,9 +105,10 @@ fragment ReferenceClaimFields on ReferenceClaim {
 # whatever node it addresses. An empty or unresolvable query yields an
 # empty list rather than an error — a finder runs on every keystroke,
 # so most of what it is asked is a prefix of something still being
-# typed (D20).
-query ReferenceCandidates($query: String!, $limit: Int) {
-  referenceCandidates(query: $query, limit: $limit) {
+# typed (D20). `kinds` is the picker filter's narrowing (kinds subtract;
+# null narrows nothing), so the filter never trims a 10-row answer locally.
+query ReferenceCandidates($query: String!, $kinds: [NodeKind!], $limit: Int) {
+  referenceCandidates(query: $query, kinds: $kinds, limit: $limit) {
     target {
       ...ReferenceTargetFields
     }

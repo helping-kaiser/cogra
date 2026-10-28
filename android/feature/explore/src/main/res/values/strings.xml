@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Explore at rest (Explore.jsx; copy-voice, Explore's carried-over words). -->
+    <string name="explore_placeholder">Search people, posts, tags…</string>
+    <!-- The field's name is the use's, never the placeholder (SearchBar.jsx). -->
+    <string name="explore_field_name">Search</string>
+    <string name="explore_sky_title">The Sky — coming soon</string>
+    <string name="explore_sky_description">Your sky — every account a star, sized by your own paths to it.</string>
+    <string name="explore_topics">Your topics</string>
+    <!-- The door's second line counts what is behind it (Explore.md:43; copy-voice, `5 held`). -->
+    <string name="explore_topics_held">%1$d held</string>
+    <string name="explore_recent">Recent</string>
+
+    <!-- Searching: the trigger, its "?" and the sheet (ExploreSearch.md:15-19; ExploreFilter.jsx). -->
+    <string name="explore_filter_purpose">What the search shows</string>
+    <string name="explore_help">How searching works</string>
+    <string name="explore_filter_help">How the filter works</string>
+    <string name="explore_everything">Everything</string>
+    <string name="explore_all_kinds">All kinds</string>
+    <string name="explore_some_kinds">%1$d kinds</string>
+    <string name="explore_kind_posts">Posts</string>
+    <string name="explore_kind_comments">Comments</string>
+    <string name="explore_kind_profiles">Profiles</string>
+    <string name="explore_kind_tags">Tags</string>
+    <!-- The trigger's deviations, in the feed filter's words (copy-voice, the filter's state words). -->
+    <string name="explore_reading_newest">newest</string>
+    <string name="explore_reading_ranked">ranked</string>
+    <string name="explore_reading_showing_seen">showing seen</string>
+    <string name="explore_reading_hiding_seen">hiding seen</string>
+    <string name="explore_kinds">Kinds</string>
+    <string name="explore_kinds_hint">Combine as many as you like. All, until you narrow it.</string>
+    <string name="explore_order">Order</string>
+    <string name="explore_order_hint">Ranked puts what\'s closest to you first — your view, no one else\'s. Newest ignores it and lists by time.</string>
+    <string name="explore_order_ranked">Ranked</string>
+    <string name="explore_order_newest">Newest</string>
+    <string name="explore_seen">Show what you\'ve already seen</string>
+    <string name="explore_reset">Reset</string>
+    <string name="explore_done">Done</string>
+
+    <!-- The results (ExploreSearch.md, ExplorePerson.md; copy-voice). -->
+    <string name="explore_seam">Beyond your reach — newest first</string>
+    <string name="explore_profiles">Profiles</string>
+    <string name="explore_see_all_profiles">See all profiles</string>
+    <string name="explore_sub_on">on %1$s</string>
+    <string name="explore_sub_tagged_by">tagged by @%1$s</string>
+    <string name="explore_sub_handle">\@%1$s</string>
+    <string name="explore_none">Nothing carries that name. Search reads names and titles, never bodies — fewer words reach further.</string>
+    <string name="explore_unscoped">Found through people and tags — start with @handle or #tag.</string>
+    <!-- The read faults (ExploreSearch.md:59-63; design digest item 27). -->
+    <string name="explore_couldnt_load_more">Couldn\'t load more</string>
+    <string name="explore_retry">Retry</string>
+    <string name="explore_cant_reach">Can\'t reach the server. Check your connection and try again.</string>
+
+    <!-- Your topics (YourTopics.jsx; copy-voice, *The list is Your topics*). -->
+    <string name="your_topics_title">Your topics</string>
+    <string name="your_topics_back">Back to Explore</string>
+    <string name="your_topics_empty">No topics yet — say how you feel about one from its page.</string>
+</resources>

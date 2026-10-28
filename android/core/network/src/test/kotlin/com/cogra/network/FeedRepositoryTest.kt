@@ -161,6 +161,7 @@ class FeedRepositoryTest {
          "updatedAt":"2026-08-12T11:00:00+00:00",
          "landing":{"__typename":"Landing","state":"LANDED","epoch":7},
          "moderationStatus":"NORMAL",
+         "removal":null,"genesisRecordId":"rec:$id",
          "license":{"__typename":"License","attribution":0.5,"provenance":1.0},
          "topics":[],
          "references":[],

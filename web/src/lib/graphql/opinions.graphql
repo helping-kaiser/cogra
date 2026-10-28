@@ -1,0 +1,54 @@
+# WHO HOLDS AN OPINION ON THIS (design/readme.md item 55,
+# `screens/PostOpinions.jsx`, `CommentOpinionsEmpty.jsx`): the Opinion
+# records pointing at a post or a comment, ungated — everyone can check
+# every node.
+#
+# THE RECORDS, NOT THE PEOPLE. A revised opinion is a parallel record in
+# its author's bundle, so the sheet's rows — one per person, their
+# standing opinion — and the detail's count of them are the client's
+# fold over the whole set (`held-opinions.ts`), read 100 at a time.
+# `totalCount` would count records, which is why it is not read.
+#
+# INBOUND RECORDS ARE DISPLAY ONLY. Nothing read here reaches a feed —
+# per the ranking model only viewer-rooted forward paths do.
+query NodeOpinions($id: UUID!, $after: String) {
+  node(id: $id) {
+    id
+    incomingRecords(family: OPINION, first: 100, after: $after) {
+      edges {
+        node {
+          id
+          authorId
+          pDirected
+          pInterest
+          # Which (0, 0) the row speaks — walked back, or saying nothing —
+          # read off the bundle's newest record.
+          severed
+          payloadMarked
+          # The causal key: which record in a bundle is newest.
+          landingEpoch
+          actTime
+          position
+          # The person the row is about: `StanceRow`'s avatar, name and
+          # handle. Null where no account fronts the address.
+          author {
+            id
+            handle
+            displayName {
+              value
+              status
+            }
+            avatar {
+              url
+              status
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

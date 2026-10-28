@@ -31,14 +31,16 @@
 // record, so a different reader — a sign-in, a sign-out, an account switch —
 // is a feed that has not been here yet, never someone else's list.
 
-import type { PostView } from "@/lib/api/content-api";
+import type { FeedItemView } from "@/lib/api/feed-api";
+import type { FeedFilterValue } from "@/lib/feed/feed-filter";
 import type { RankedFeed } from "@/lib/feed/ranked-feed";
 import type { ScrollPlace } from "@/lib/ui/scroll-pin";
 
 export type FeedMemory = {
   /** The held ranking: its answer, filter, derived list and hydrated rows. */
   feed: RankedFeed;
-  posts: readonly PostView[];
+  /** The hydrated rows on screen, of every kind the filter let in. */
+  posts: readonly FeedItemView[];
   /** Where the next window starts in the derived list; null at its end. */
   endCursor: string | null;
   hasNextPage: boolean;
@@ -66,7 +68,41 @@ export function rememberFeedPlace(place: ScrollPlace): void {
   if (memory !== null) memory.place = place;
 }
 
+/**
+ * THE FILTER SHEET THAT LAUNCHED A FORWARD NAVIGATION COMES BACK (design
+ * readme, *A sheet that launched a forward navigation comes back*; flows.json:
+ * FeedSheet → YourTopics, "back returns the feed with this sheet up, as it was
+ * left"): what it had staged and where its body stood, for the reader who left.
+ */
+export type FeedSheetMemory = {
+  readonly reader: string | null;
+  readonly staged: FeedFilterValue;
+  readonly offset: number;
+};
+
+let sheet: FeedSheetMemory | null = null;
+
+/** Keep the sheet as it was left, at the moment its door navigates away. */
+export function rememberFeedSheet(left: FeedSheetMemory): void {
+  sheet = left;
+}
+
+/**
+ * The sheet `reader` left, or null. A READ, NOT A TAKE: a lazy state
+ * initializer may run twice (React StrictMode), so the feed drops it with
+ * {@link forgetFeedSheet} once the sheet is back up.
+ */
+export function recallFeedSheet(reader: string | null): FeedSheetMemory | null {
+  return sheet !== null && sheet.reader === reader ? sheet : null;
+}
+
+/** The sheet is back up — or another reader arrived: it comes back once. */
+export function forgetFeedSheet(): void {
+  sheet = null;
+}
+
 /** Drop it — the page load ending (a cold start), for a test. */
 export function forgetFeed(): void {
   memory = null;
+  sheet = null;
 }

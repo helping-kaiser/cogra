@@ -33,6 +33,9 @@ import { Card } from "./card";
 import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { NodeMark } from "./node-mark";
+import { ScoreSlot } from "@/lib/score/score-slot";
+import type { TraceOrigin } from "@/lib/score/trace-session";
+import { topicCover } from "@/lib/score/cover";
 import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
 import { AFFINITY_AXES } from "./stance-format";
@@ -154,8 +157,11 @@ export function TagFeedCard({
   testId,
   node,
   onLinkCopied,
+  scoreOrigin,
 }: {
   topic: TagCardTopic;
+  /** Where the card stands, for its score slot's trace; absent, no score is drawn. */
+  scoreOrigin?: TraceOrigin;
   /** The surface the tag page's back arrow names (`history`). */
   from: string;
   /** Whom the tag reaches the reader through — none until the ranker says (History.md:59). */
@@ -263,6 +269,18 @@ export function TagFeedCard({
             testIdPrefix={`${testId}-stance`}
             axes={AFFINITY_AXES}
             node={part(node, "actionRow.stance")}
+          />
+        )}
+        {/* OPINION, THEN THE SCORE, THEN THE KIND'S OWN ACT (FeedKinds.md:3). */}
+        {scoreOrigin !== undefined && (
+          <ScoreSlot
+            targetId={topic.id}
+            kind="topic"
+            pending={false}
+            cover={() => topicCover(name)}
+            origin={scoreOrigin}
+            node={part(node, "actionRow.score")}
+            testId={`${testId}-score`}
           />
         )}
         <button

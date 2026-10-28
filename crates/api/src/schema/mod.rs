@@ -23,6 +23,12 @@ use async_graphql::{EmptySubscription, Schema};
 use postgres_store::PgPool;
 
 pub use mutation::Mutation;
+/// Every transactional mail the resolvers compose, for the mailer's
+/// per-kind tests.
+#[cfg(test)]
+pub(crate) use mutation::{
+    code_mail, deletion_mail, link_mail, recovery_code_replaced_mail, reset_mail,
+};
 pub use query::Query;
 
 use crate::auth::AuthConfig;
@@ -149,6 +155,7 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(loaders.post_removals)
         .data(loaders.comment_removals)
         .data(loaders.severing_records)
+        .data(loaders.record_acts)
         .data(loaders.epoch_instants)
         .data(loaders.bookmarks)
         .data(loaders.thread_posts)

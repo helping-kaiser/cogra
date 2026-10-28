@@ -96,6 +96,7 @@ private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
     if (!editing) {
         ComposeWizardRoute(
             referenceTargetId = entry.toRoute<ComposePost>().referenceTargetId,
+            stagedTag = entry.toRoute<ComposePost>().tag,
             // `ComposeLanded` lands on the post itself, not on
             // the feed: the author's next question is what
             // they just made, and a feed landing answers a

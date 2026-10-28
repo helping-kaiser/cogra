@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import type { FeedItemView } from "@/lib/api/feed-api";
 import { failed, success, type Outcome } from "@/lib/api/outcome";
+import { adoptTrace, forgetStandings, heldViewer, standingOf } from "@/lib/score/standing";
 import type { HeldAnswer, SeenLookup } from "./derive";
 import { FEED_FILTER_DEFAULT, type RankArguments } from "./feed-filter";
 import { FEED_WINDOW, RankedFeed, type FeedIo } from "./ranked-feed";
@@ -34,14 +35,32 @@ function rowIds(feed: RankedFeed): string[] {
   return [...feed.derived.head, ...feed.derived.tail].map((row) => row.targetId);
 }
 
-function postItem(id: string): FeedItemView {
-  return { __typename: "Post", id } as unknown as FeedItemView;
+function postItem(id: string, body: Record<string, unknown> = {}): FeedItemView {
+  // A words post whose payload stands, unless `body` says otherwise.
+  return { __typename: "Post", id, attachments: [], attachmentsStatus: "VISIBLE", ...body } as unknown as FeedItemView;
 }
+
+/** A post whose payload went: the node's mark (`Post.removal`). */
+const REMOVED = {
+  attachments: [],
+  attachmentsStatus: "VISIBLE",
+  removal: { at: "2026-10-28T10:00:00Z", by: "AUTHOR" },
+};
+
+/** A post whose body is veiled. */
+const SENSITIVE = { attachments: [], attachmentsStatus: "VISIBLE", moderationStatus: "SENSITIVE" };
+
+/** A picture post. */
+const PHOTO = {
+  attachments: [{ url: "u", status: "VISIBLE", mimeType: "image/jpeg", options: {} }],
+  attachmentsStatus: "VISIBLE",
+};
 
 /** A fake of the feed's reads, recording every call. */
 function io(answers: (HeldAnswer | "fault")[], seen: Set<string> = new Set()) {
   const ranks: RankArguments[] = [];
   const windows: string[][] = [];
+  const kinds: string[][] = [];
   let next = 0;
   const reads: FeedIo = {
     resolveViewer: async () => success("viewer-1"),
@@ -51,20 +70,30 @@ function io(answers: (HeldAnswer | "fault")[], seen: Set<string> = new Set()) {
       next += 1;
       return answer === "fault" ? (failed(new Error("pod down")) as Outcome<never>) : success(answer);
     },
-    hydrate: async (ids) => {
+    hydrate: async (ids, rowKinds) => {
       windows.push([...ids]);
-      // A Comment row draws no card yet; "gone" is an expired pending write.
+      kinds.push([...rowKinds]);
+      // "gone" is an expired pending write; "r…" a removed post, "s…" a
+      // sensitive one, "ph…" a picture post, "k…" a comment.
       return success(
         ids
           .filter((id) => id !== "gone")
           .map((id) =>
-            id.startsWith("c") ? ({ __typename: "Comment", id } as unknown as FeedItemView) : postItem(id),
+            id.startsWith("k")
+              ? ({ __typename: "Comment", id } as unknown as FeedItemView)
+              : id.startsWith("r")
+                ? postItem(id, REMOVED)
+                : id.startsWith("s")
+                  ? postItem(id, SENSITIVE)
+                  : id.startsWith("ph")
+                    ? postItem(id, PHOTO)
+                    : postItem(id),
           ),
       );
     },
     seen: async (): Promise<SeenLookup> => seen,
   };
-  return { reads, ranks, windows };
+  return { reads, ranks, windows, kinds };
 }
 
 describe("the held ranking", () => {
@@ -154,7 +183,7 @@ describe("the held ranking", () => {
 
   it("a_window_of_only_filtered_rows_loads_the_next", async () => {
     const ids = [
-      ...Array.from({ length: FEED_WINDOW }, (_, i) => `c${i}`),
+      ...Array.from({ length: FEED_WINDOW }, (_, i) => `r${i}`),
       "p-after",
     ];
     const fake = io([answerOf(ids)]);
@@ -231,5 +260,102 @@ describe("the held ranking", () => {
     expect((await feed.refresh(reads)).kind).toBe("success");
     expect(fake.ranks).toHaveLength(0);
     expect(rowIds(feed)).toEqual([]);
+  });
+
+  // THE POST-RANK PREDICATES (CD-4; FeedSheet.md:43): forms, Sensitive and
+  // Removed read the hydrated row, at the derive.
+  describe("the post-rank predicates", () => {
+    async function firstIds(ids: string[], filter = FEED_FILTER_DEFAULT, extra: Partial<FeedIo> = {}) {
+      const fake = io([answerOf(ids)]);
+      const reads = { ...fake.reads, ...extra };
+      const feed = new RankedFeed("reader-1", filter);
+      await feed.refresh(reads);
+      const first = await feed.window(0, reads);
+      return first.kind === "success" ? first.value.items.map((item) => item.id) : null;
+    }
+
+    it("removed_is_off_by_default_and_cuts_on_the_device", async () => {
+      expect(await firstIds(["a", "r1", "b"])).toEqual(["a", "b"]);
+    });
+
+    it("removed_on_admits_the_mark", async () => {
+      expect(await firstIds(["a", "r1", "b"], { ...FEED_FILTER_DEFAULT, also: ["settling", "removed"] })).toEqual([
+        "a",
+        "r1",
+        "b",
+      ]);
+    });
+
+    it("sensitive_is_off_by_default_and_cuts_on_the_device", async () => {
+      expect(await firstIds(["a", "s1"])).toEqual(["a"]);
+      expect(await firstIds(["a", "s1"], { ...FEED_FILTER_DEFAULT, also: ["settling", "sensitive"] })).toEqual([
+        "a",
+        "s1",
+      ]);
+    });
+
+    it("the_kinds_of_post_cut_by_form", async () => {
+      expect(await firstIds(["a", "ph1"], { ...FEED_FILTER_DEFAULT, forms: ["photos"] })).toEqual(["ph1"]);
+      expect(await firstIds(["a", "ph1"], { ...FEED_FILTER_DEFAULT, forms: ["text"] })).toEqual(["a"]);
+    });
+
+    it("a_removal_the_cache_learned_since_hydration_is_cut_at_the_next_derive", async () => {
+      const fake = io([answerOf(["a", "b"])]);
+      const feed = new RankedFeed("reader-1");
+      await feed.refresh(fake.reads);
+      await feed.window(0, fake.reads);
+      // "b" was removed on another surface: the cache wears its mark now.
+      const current = (item: FeedItemView) => (item.id === "b" ? postItem("b", REMOVED) : item);
+      await feed.done({ ...FEED_FILTER_DEFAULT, order: "newest" }, fake.reads);
+      const again = await feed.window(0, { ...fake.reads, current });
+      expect(again.kind === "success" && again.value.items.map((item) => item.id)).toEqual(["a"]);
+      expect(fake.windows).toHaveLength(1);
+    });
+
+    it("comment_cards_come_once_their_kind_is_selected", async () => {
+      const fake = io([answerOf(["a"]), answerOf(["k1", "a"])]);
+      const feed = new RankedFeed("reader-1");
+      await feed.refresh(fake.reads);
+      await feed.done({ ...FEED_FILTER_DEFAULT, kinds: ["posts", "comments"] }, fake.reads);
+      const first = await feed.window(0, fake.reads);
+      expect(first.kind === "success" && first.value.items.map((item) => item.__typename)).toEqual([
+        "Comment",
+        "Post",
+      ]);
+      expect(fake.ranks.at(-1)?.kinds).toEqual(["POST", "COMMENT"]);
+    });
+
+    it("hands_the_hydration_each_rows_kind", async () => {
+      const answer = answerOf(["a", "k1"]);
+      const withComment: HeldAnswer = {
+        ...answer,
+        entries: answer.entries.map((entry) => (entry.targetId === "k1" ? { ...entry, kind: "COMMENT" } : entry)),
+      };
+      const fake = io([withComment]);
+      const feed = new RankedFeed("reader-1", { ...FEED_FILTER_DEFAULT, kinds: ["posts", "comments"] });
+      await feed.refresh(fake.reads);
+      await feed.window(0, fake.reads);
+      expect(fake.kinds).toEqual([["POST", "COMMENT"]]);
+    });
+  });
+});
+
+describe("the held ranking as the score's lookup source (score-readout CD-SR5)", () => {
+  it("a fetch holds its answer and its viewer; a local re-derive keeps every adoption", async () => {
+    forgetStandings();
+    const fake = io([answerOf(["a", "b"]), answerOf(["a"])]);
+    const feed = new RankedFeed("reader-1");
+    await feed.refresh(fake.reads);
+    expect(feed.viewer).toBe("viewer-1");
+    expect(heldViewer("reader-1")).toBe("viewer-1");
+    expect(standingOf("reader-1", "a", false)).toEqual({ kind: "figure", score: 1 });
+
+    adoptTrace("a", null);
+    await feed.done({ ...FEED_FILTER_DEFAULT, order: "newest" }, fake.reads);
+    expect(standingOf("reader-1", "a", false)).toEqual({ kind: "dash" });
+
+    await feed.refresh(fake.reads);
+    expect(standingOf("reader-1", "a", false)).toEqual({ kind: "figure", score: 1 });
+    forgetStandings();
   });
 });

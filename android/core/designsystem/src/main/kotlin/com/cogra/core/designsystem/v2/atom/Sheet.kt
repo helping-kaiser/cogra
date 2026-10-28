@@ -142,6 +142,12 @@ fun CograSheetSurface(
     modifier: Modifier = Modifier,
     showHandle: Boolean = true,
     tallest: Boolean = false,
+    /**
+     * A sheet of edge-to-edge parts (`BottomSheet.jsx`'s own `0` side padding):
+     * every child carries its own 24dp gutter, as a filter sheet's sections
+     * and foot do, so the surface pads nothing horizontally.
+     */
+    edgeToEdge: Boolean = false,
     testTag: String? = null,
     /** The handle's data-node on a registered sheet (`settings.licenseSheet.dragHandle`). */
     handleTestTag: String? = null,
@@ -155,7 +161,7 @@ fun CograSheetSurface(
     stacked: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val side = if (tallest) 0.dp else Space.x6
+    val side = if (tallest || edgeToEdge) 0.dp else Space.x6
     Column(
         modifier = modifier
             .fillMaxWidth()

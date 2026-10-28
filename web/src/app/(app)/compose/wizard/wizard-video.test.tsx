@@ -453,6 +453,21 @@ describe("picking a video", () => {
     expect(screen.queryByTestId("wizard-open-picker")).toBeNull();
   });
 
+  // ComposePickWeb.md (round 22): "ALWAYS the region stands dimmed, with no
+  // Choose from your files and no drop line, GIVEN a clip is staged"; a clip
+  // dropped there anyway reads "A post carries one video.".
+  it("dims the drop region inert while a clip is staged and refuses a second clip in words", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    const region = await screen.findByTestId("wizard-video-body");
+    expect(region.className).toContain("opacity-45");
+    expect(region).toHaveAttribute("inert");
+    expect(region).not.toHaveTextContent("…or drop them here.");
+    expect(region).not.toHaveTextContent("A video is the whole post.");
+    await pickFiles([aVideo()]);
+    expect(await screen.findByTestId("wizard-refusals")).toHaveTextContent("A post carries one video.");
+  });
+
   // CW-06 (ComposePickVideo's PickTray): one clip is not a set to reorder, so
   // the tray drops Show all and swaps the picture caption for the one this
   // state needs — it says why nothing else can join AND what happens next.

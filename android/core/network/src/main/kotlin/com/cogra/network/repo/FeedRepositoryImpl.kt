@@ -83,7 +83,7 @@ private fun FeedRankingQuery.FeedRanking.toFeedRanking() = FeedRanking(
     },
 )
 
-private fun FeedKind.toWire(): NodeKind = when (this) {
+internal fun FeedKind.toWire(): NodeKind = when (this) {
     FeedKind.POST -> NodeKind.POST
     FeedKind.COMMENT -> NodeKind.COMMENT
     FeedKind.PROFILE -> NodeKind.USER

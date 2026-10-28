@@ -69,6 +69,7 @@ import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.tagReadout
 import com.cogra.core.designsystem.twoPlaces
 import com.cogra.core.designsystem.twoPlacesUnsigned
+import com.cogra.core.designsystem.v2.atom.SectionLabel
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.ReferenceClaimView
@@ -145,22 +146,6 @@ internal fun RefsSheet(
             }
         }
     }
-}
-
-/**
- * A quiet section caption (`SectionLabel.jsx`): the small secondary word that
- * names a group. It is a caption, not a heading — what it names is already
- * visible underneath it — and its padding is asymmetric on purpose, so it sits
- * with the group it opens rather than floating between two of them.
- */
-@Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = Space.x6, end = Space.x6, top = Space.x3, bottom = Space.x1),
-    )
 }
 
 @Composable

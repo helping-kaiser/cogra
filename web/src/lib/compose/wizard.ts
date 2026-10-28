@@ -402,8 +402,11 @@ export function bodyGate(state: WizardState): Gate {
     const problem = bodyProblem(state.words);
     return problem === null ? ALLOWED : { ok: false, reason: problem };
   }
+  // THE EMPTY PICK STEP SAYS NOTHING (copy-voice, round 22; ComposePick.md):
+  // Next stays inert and no line asks for a pick — a refusal answers a file,
+  // never the absence of one. The empty reason is the silence.
   if (state.assets.length === 0) {
-    return { ok: false, reason: "Pick at least one picture." };
+    return { ok: false, reason: "" };
   }
   if (state.assets.length > POST_ATTACHMENT_CAP) {
     return {

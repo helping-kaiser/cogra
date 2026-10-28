@@ -47,6 +47,8 @@ use postgres_store::{
 };
 use uuid::Uuid;
 
+use crate::schema::types::RecordAct;
+
 /// A batch read's failure, shared out to every key that was waiting on
 /// it. `Loader::Error` must be `Clone`, and neither store error is, so
 /// the message is what travels — the surfaces that raise it turn any
@@ -283,6 +285,59 @@ impl Loader<String> for SeveringRecordLoader {
     }
 }
 
+/// What a record did beyond its family (`Record.act`), keyed on the record
+/// identifier: every record of a page asks once. The three readings are
+/// three independent reads — the mirror's genesis shape, the stance
+/// bundles a walk-back is read off, the application ledger's landing
+/// vouches — run side by side for the whole batch. A record none of them
+/// names is absent, which the resolver reads as ORDINARY.
+///
+/// The precedence is `RecordAct`'s declared order. The readings cannot
+/// actually meet — a genesis is a minting act or a Registration, a
+/// walk-back and a vouch are Opinions or Affinities — but the order is the
+/// contract's, so it is applied rather than assumed.
+pub struct RecordActLoader(PgPool);
+
+impl Loader<String> for RecordActLoader {
+    type Value = RecordAct;
+    type Error = LoadError;
+
+    async fn load(&self, keys: &[String]) -> Result<HashMap<String, RecordAct>, LoadError> {
+        let (genesis, walked_back, vouches) = tokio::try_join!(
+            async {
+                postgres_store::mirror::genesis_records(&self.0, keys)
+                    .await
+                    .map_err(LoadError::from_display)
+            },
+            async {
+                postgres_store::stance::walk_back_records(&self.0, keys)
+                    .await
+                    .map_err(LoadError::from_display)
+            },
+            async {
+                store::admitting_vouch_records(&self.0, keys)
+                    .await
+                    .map_err(LoadError::from_display)
+            },
+        )?;
+        Ok(keys
+            .iter()
+            .filter_map(|id| {
+                let act = if genesis.contains(id) {
+                    RecordAct::Genesis
+                } else if walked_back.contains(id) {
+                    RecordAct::WalkBack
+                } else if vouches.contains(id) {
+                    RecordAct::Vouch
+                } else {
+                    return None;
+                };
+                Some((id.clone(), act))
+            })
+            .collect())
+    }
+}
+
 /// An epoch's attested boundary timestamp, keyed on the epoch:
 /// `Record.landedAt` on every record of a page asks once per distinct
 /// epoch. An epoch the mirror has not ingested is absent.
@@ -388,6 +443,7 @@ pub struct NodeLoaders {
     pub post_removals: DataLoader<PostRemovalLoader>,
     pub comment_removals: DataLoader<CommentRemovalLoader>,
     pub severing_records: DataLoader<SeveringRecordLoader>,
+    pub record_acts: DataLoader<RecordActLoader>,
     pub epoch_instants: DataLoader<EpochInstantLoader>,
     pub bookmarks: DataLoader<BookmarkLoader>,
     pub thread_posts: DataLoader<ThreadPostLoader>,
@@ -407,6 +463,7 @@ impl NodeLoaders {
             post_removals: DataLoader::new(PostRemovalLoader(pool.clone()), tokio::spawn),
             comment_removals: DataLoader::new(CommentRemovalLoader(pool.clone()), tokio::spawn),
             severing_records: DataLoader::new(SeveringRecordLoader(pool.clone()), tokio::spawn),
+            record_acts: DataLoader::new(RecordActLoader(pool.clone()), tokio::spawn),
             epoch_instants: DataLoader::new(EpochInstantLoader(pool.clone()), tokio::spawn),
             bookmarks: DataLoader::new(BookmarkLoader(pool.clone()), tokio::spawn),
             thread_posts: DataLoader::new(ThreadPostLoader(pool), tokio::spawn),

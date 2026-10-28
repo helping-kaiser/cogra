@@ -149,3 +149,16 @@ mutation AbortMediaUpload($uploadId: UUID!) {
     }
   }
 }
+
+# The composer's already-published marker (copy-voice *The already-published
+# marker*; api-spec.md `Query.ownPublishedPlacement`): the earliest of the
+# viewer's own published posts whose gallery carries any of the stage's
+# media — matched by the asset each upload resolved to, so a re-picked clip
+# whose re-encode merged into a held asset still finds its post. The line
+# names the post's date and opens it.
+query OwnPublishedPlacement($mediaIds: [UUID!]!) {
+  ownPublishedPlacement(mediaIds: $mediaIds) {
+    id
+    createdAt
+  }
+}

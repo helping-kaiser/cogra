@@ -180,6 +180,67 @@ pub async fn severing_records(
     .collect())
 }
 
+/// The given records a walk-back signed (api-spec.md `RecordAct.WALK_BACK`):
+/// the record that brought its stance bundle back to `(0, 0)` and, for a
+/// severance batch, every record of the batch — the reading of
+/// [`common::l1::fold::walk_back_records`], applied to each bundle a given
+/// record folds into.
+///
+/// The bundles are [`severing_records`]' — a binary Opinion or Affinity,
+/// unmarked, its leg census-known, keyed (author, family, target) — read
+/// whole in the published order, because whether a record belongs to a
+/// batch depends on the records before it. One round trip for every bundle
+/// the given records touch; a record that folds into no stance bundle is
+/// never a walk-back.
+pub async fn walk_back_records(
+    pool: &PgPool,
+    record_ids: &[String],
+) -> Result<std::collections::HashSet<String>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"WITH bundles AS (
+               SELECT DISTINCT l.family, l.source, l.target
+               FROM mirror_record_legs l
+               JOIN mirror_records r ON r.record_id = l.record_id
+               WHERE l.record_id = ANY($1)
+                 AND l.leg = 'binary' AND l.family IN ('opinion', 'affinity')
+                 AND NOT r.payload_marked
+                 AND NOT l.census_unknown
+           )
+           SELECT b.record_id AS "record_id!", b.family AS "family!",
+                  b.source AS "source!", b.target AS "target!",
+                  b.p_d AS "p_d!", b.p_i AS "p_i!"
+           FROM bundles k
+           JOIN mirror_record_legs b
+             ON b.leg = 'binary' AND b.family = k.family
+            AND b.source = k.source AND b.target = k.target
+           JOIN mirror_records br ON br.record_id = b.record_id
+           WHERE NOT br.payload_marked
+             AND NOT b.census_unknown
+           ORDER BY b.family, b.source, b.target,
+                    br.epoch, br.act_time, br.position"#,
+        record_ids,
+    )
+    .fetch_all(pool)
+    .await?;
+    let wanted: std::collections::HashSet<&str> = record_ids.iter().map(String::as_str).collect();
+    let mut found = std::collections::HashSet::new();
+    for bundle in
+        rows.chunk_by(|a, b| (&a.family, &a.source, &a.target) == (&b.family, &b.source, &b.target))
+    {
+        let pairs: Vec<(f64, f64)> = bundle.iter().map(|row| (row.p_d, row.p_i)).collect();
+        let marks = common::l1::fold::walk_back_records(&pairs)
+            .map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
+        found.extend(
+            bundle
+                .iter()
+                .zip(marks)
+                .filter(|(row, walked)| *walked && wanted.contains(row.record_id.as_str()))
+                .map(|(row, _)| row.record_id.clone()),
+        );
+    }
+    Ok(found)
+}
+
 /// Whether the author holds at least one live outgoing Opinion edge: some
 /// target whose netted bundle is not routing-inert, `p̄_d ≠ 0` and
 /// `p̄_i ≠ 0` (edges.md §1) — the end of the borrowed view (api-spec.md
