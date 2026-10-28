@@ -27,6 +27,7 @@ import { DescribeCounter, PickedRow, type PickedThumb } from "@/lib/ui2/compose/
 import { UploadErrorLine } from "@/lib/ui2/compose/upload-notice";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
+import { publishedMarkerText } from "@/lib/compose/published-match";
 import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import type { TagDraft } from "@/lib/topics/draft";
@@ -67,7 +68,17 @@ export function DetailsStep({
   onRemove,
   onNext,
   blocked,
+  published = null,
+  onOpenPublished = () => {},
 }: {
+  /**
+   * The earliest of the author's own published posts carrying media on the
+   * stage, and its date — the already-published marker (ComposeDetailsReused).
+   * Null draws the stage at rest.
+   */
+  published?: { readonly postId: string; readonly date: string } | null;
+  /** The marker's door: opens the post it names. */
+  onOpenPublished?: (postId: string) => void;
   mode: "words" | "media";
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
@@ -121,6 +132,8 @@ export function DetailsStep({
           onDescribe={onDescribe}
           onRetry={onRetry}
           onRemove={onRemove}
+          published={published}
+          onOpenPublished={onOpenPublished}
         />
       )}
 
@@ -254,12 +267,16 @@ function BodyStrip({
   onDescribe,
   onRetry,
   onRemove,
+  published,
+  onOpenPublished,
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
   clipFace: string | null;
   coverPreview: string | null;
   durationMs: number;
+  published: { readonly postId: string; readonly date: string } | null;
+  onOpenPublished: (postId: string) => void;
   onManage: () => void;
   onDescribe: () => void;
   onRetry: (id: string) => void;
@@ -317,6 +334,22 @@ function BodyStrip({
         testId="wizard-picked-row"
         node={{ path: "composeDetails.mediaRow" }}
       />
+
+      {/* THE ALREADY-PUBLISHED MARKER (ComposeDetailsReused.md): one soft line
+          under the media row in the honesty-marker ink, in the tappable-marker
+          form `Edited` wears — underlined, quiet, `cg-hit` — named by its own
+          words. It opens the post it names; nothing asks, nothing gates, and
+          Next stays as live as at rest. */}
+      {published !== null && (
+        <button
+          type="button"
+          onClick={() => onOpenPublished(published.postId)}
+          data-testid="composeDetails.mediaRow.published"
+          className="cg-state cg-focus cg-hit cursor-pointer self-start border-0 bg-transparent p-0 text-left font-sans text-[length:var(--text-label-small)] text-on-surface-variant underline"
+        >
+          {publishedMarkerText(published.date)}
+        </button>
+      )}
 
       {/* One line for the failure, whatever its count — the tiles already say
           WHICH ones, so repeating a row per picture would say it twice. */}

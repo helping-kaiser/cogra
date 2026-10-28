@@ -344,3 +344,39 @@ describe("DetailsStep — the staged pairs", () => {
     expect(screen.queryByTestId("wizard-upload-aside")).toBeNull();
   });
 });
+
+// THE ALREADY-PUBLISHED MARKER (ComposeDetailsReused.md, ComposeDetails.md).
+describe("DetailsStep — the already-published marker", () => {
+  const PICTURE: PickedAsset = { ...VIDEO_ASSET, id: "p0", kind: "picture" };
+
+  it("stands under the media row, named by its own words, and opens the post it names", () => {
+    const onOpenPublished = vi.fn();
+    renderStep({
+      mode: "media",
+      assets: [PICTURE],
+      published: { postId: "p-old", date: "12 September" },
+      onOpenPublished,
+    });
+    const door = screen.getByRole("button", { name: "Already in your post from 12 September." });
+    expect(door).toHaveAttribute("data-testid", "composeDetails.mediaRow.published");
+    fireEvent.click(door);
+    expect(onOpenPublished).toHaveBeenCalledWith("p-old");
+    // It never blocks: Next is as live as at rest, and no dialog asks.
+    expect(screen.getByTestId(byNode("composeDetails.next"))).not.toBeDisabled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("follows the media row and leads the describe row", () => {
+    renderStep({ mode: "media", assets: [PICTURE], published: { postId: "p-old", date: "12 September" } });
+    const row = screen.getByTestId(byNode("composeDetails.mediaRow"));
+    const door = screen.getByTestId("composeDetails.mediaRow.published");
+    const describe = screen.getByTestId(byNode("composeDetails.describeRow"));
+    expect(row.compareDocumentPosition(door) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(door.compareDocumentPosition(describe) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("draws nothing when no published post of the author's matches", () => {
+    renderStep({ mode: "media", assets: [PICTURE], published: null });
+    expect(screen.queryByText(/^Already in your post/)).not.toBeInTheDocument();
+  });
+});

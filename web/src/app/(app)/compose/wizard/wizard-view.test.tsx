@@ -1613,3 +1613,83 @@ describe("the details stage's pickers", () => {
     expect(row).toHaveTextContent("+0.10 / +0.10");
   });
 });
+
+// THE ALREADY-PUBLISHED MARKER, WIRED (ComposeDetails.md: "WHEN media
+// attaches GIVEN it matches media in a published post of the author ->
+// composeDetails.mediaRow shows the already-published marker"; "WHEN tap the
+// already-published marker -> the earliest matching post opens").
+describe("the already-published marker", () => {
+  const landed = (): WizardState => ({
+    ...emptyWizard(),
+    step: "details",
+    mode: "media",
+    assets: [
+      {
+        id: "a0",
+        file: new Blob([new Uint8Array([1]) as BlobPart], { type: "image/webp" }),
+        crop: { x: 0, y: 0, zoom: 1, area: null, areaPercent: null },
+        altText: "",
+        upload: {
+          kind: "done",
+          mediaId: "m-held",
+          media: { digest: "d-held", uploadDigest: "d-held", mime: "image/webp" },
+        },
+        kind: "picture",
+      },
+    ],
+  });
+
+  function chronicle(...posts: readonly { id: string; createdAt: string; mediaId: string }[]) {
+    server.use(
+      gqlLink.query("OwnPublishedMedia", () =>
+        HttpResponse.json({
+          data: {
+            records: {
+              __typename: "RecordConnection",
+              edges: posts.map((post) => ({
+                __typename: "RecordEdge",
+                node: {
+                  __typename: "Record",
+                  id: `r-${post.id}`,
+                  target: {
+                    __typename: "Post",
+                    id: post.id,
+                    createdAt: post.createdAt,
+                    attachments: [{ __typename: "MediaAttachment", id: post.mediaId, digest: `d-${post.mediaId.slice(2)}` }],
+                  },
+                },
+              })),
+              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+            },
+          },
+        }),
+      ),
+    );
+  }
+
+  it("names the earliest of the author's posts carrying the picture, and opens it", async () => {
+    chronicle(
+      { id: "p-new", createdAt: "2026-10-20T10:00:00Z", mediaId: "m-held" },
+      { id: "p-old", createdAt: "2026-09-12T10:00:00Z", mediaId: "m-held" },
+    );
+    render(fakeDrafts(landed()));
+    fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
+
+    const door = await screen.findByTestId("composeDetails.mediaRow.published");
+    expect(door).toHaveTextContent(/^Already in your post from .*12.*\.$/);
+    expect(screen.getByTestId(byNode("composeDetails.next"))).not.toBeDisabled();
+    fireEvent.click(door);
+    expect(push).toHaveBeenCalledWith("/posts/p-old");
+  });
+
+  it("draws nothing when no published post carries it", async () => {
+    chronicle({ id: "p-other", createdAt: "2026-09-12T10:00:00Z", mediaId: "m-other" });
+    render(fakeDrafts(landed()));
+    fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(screen.queryByTestId("composeDetails.mediaRow.published")).toBeNull();
+  });
+});
