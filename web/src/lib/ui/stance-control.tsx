@@ -562,6 +562,22 @@ export function StanceControl({
     };
   }, [settling, settledRecords, phase, data, seamTarget]);
 
+  // THE PAD-ONLY HOST'S OPEN ASKS FOR THE KEY the way a tap's does
+  // (PadKeyAbsent.md; ApprovePad.md:39): the pad mounts already open, so with
+  // the key elsewhere the notice must stand in place of Set from the first
+  // frame it can — never a Set that could only fail at the signature.
+  const padOnlyHost = padOnly !== undefined;
+  useEffect(() => {
+    if (!padOnlyHost) return undefined;
+    let live = true;
+    void data.keyOnDevice().then((present) => {
+      if (live) setKeyAbsent(!present);
+    });
+    return () => {
+      live = false;
+    };
+  }, [padOnlyHost, data]);
+
   // The pad-only host's open spends the teaching the way a tap's does.
   const taughtOnMount = useRef(false);
   useEffect(() => {
