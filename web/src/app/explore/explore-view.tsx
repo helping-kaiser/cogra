@@ -195,14 +195,27 @@ export function ExploreView({
     return kept;
   });
 
-  const committedDefault = useCallback(
+  // WHOSE FILTER THIS IS. The phase resolves after the first paint, and with
+  // it the filter: the account's committed one, or a guest's — newest, with
+  // no seen toggle (ExploreSearch.md:65; ExploreFilter.md:41). A filter the
+  // reader chose here belongs to whoever chose it, so a change of reader
+  // falls back to that reader's own (React's "adjusting state when a prop
+  // changes", derived rather than synced in an effect).
+  const resolved = phase !== "resolving";
+  const who = !resolved ? "" : guest ? "guest" : (reader ?? "guest");
+  const committedDefault = useMemo(
     (): SearchFilterValue =>
       guest ? guestSearchFilter(readCommittedFilter(null)?.kinds ?? []) : (readCommittedFilter(reader) ?? readerSearchDefault()),
-    [guest, reader],
+    // Read once per reader: the committed filter changes only through `commit`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [who],
   );
+  const [chosen, setChosen] = useState<{ readonly who: string; readonly value: SearchFilterValue } | null>(
+    remembered === null ? null : { who, value: remembered.filter },
+  );
+  const filter = chosen !== null && chosen.who === who ? chosen.value : committedDefault;
 
   const [query, setQuery] = useState(remembered?.query ?? initialQuery ?? "");
-  const [filter, setFilter] = useState<SearchFilterValue>(() => remembered?.filter ?? committedDefault());
   const [results, setResults] = useState<Results | null>(remembered?.results ?? null);
   const [pending, setPending] = useState(false);
   const [slow, setSlow] = useState(false);
@@ -216,16 +229,6 @@ export function ExploreView({
   const [joinPrompt, setJoinPrompt] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   const [recents, remember] = useRecents(guest ? null : reader);
-
-  // THE PHASE RESOLVES AFTER THE FIRST PAINT, and with it whose filter this
-  // is: the account's committed one, or a guest's — newest, with no seen
-  // toggle (ExploreSearch.md:65; ExploreFilter.md:41). A restored root keeps
-  // the filter it was left with.
-  const resolved = phase !== "resolving";
-  useEffect(() => {
-    if (!resolved || remembered !== null) return;
-    setFilter(committedDefault());
-  }, [resolved, committedDefault, remembered]);
 
   const asked = query.trim();
   const searching = asked !== "";
@@ -420,7 +423,9 @@ export function ExploreView({
 
   // THE ROOT AS IT WAS LEFT, kept as it changes and the scroll at leaving.
   const live = useRef<ExploreMemory | null>(null);
-  live.current = { reader, query, filter, results, scroll: 0 };
+  useEffect(() => {
+    live.current = { reader, query, filter, results, scroll: 0 };
+  });
   useLayoutEffect(() => {
     if (remembered !== null && remembered.scroll > 0) scrollHostTo(host, remembered.scroll);
     return () => {
@@ -439,10 +444,10 @@ export function ExploreView({
   // re-queries once, and the filter is kept on this device.
   const commit = useCallback(
     (next: SearchFilterValue) => {
-      setFilter(next);
+      setChosen({ who, value: next });
       writeCommittedFilter(guest ? null : reader, next);
     },
-    [guest, reader],
+    [guest, reader, who],
   );
 
   const defaultFilter = guest ? guestSearchFilter() : readerSearchDefault();
