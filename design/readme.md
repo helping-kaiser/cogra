@@ -10474,6 +10474,48 @@ jakob after his hand test.
 - **The gate**: edges hold at **2127**, flows at **227**, the registry
   at **100 screens**; no board added — two boards gain a chip.
 
+### Round 22, the A-side surfaces and blessings — 2026-10-28
+
+Seam 245's asks 9–13, under the same autonomy order: built, merged,
+reviewed by jakob after his hand test. Every new string is in copy-voice,
+marked *merged under the autonomy order, review pending*.
+
+- **The profile figures stand** (Q35 closed in docs/open-questions.md,
+  jakob's confirmation pending): the header counts records, never a
+  fold — the posts published, the Opinion records toward the person,
+  the ones they gave toward people (§7, `ProfileHeader`).
+- **The chronicle's verbs**, one per family it lists: `Edited a post`,
+  `Edited a comment`, `Vouched for`, `Walked back an opinion`, `Tagged a
+  post`, `Un-tagged a post`, `Cited a post`, `Mentioned`, `Withdrew a
+  citation`, `Joined`, beside the four already blessed (copy-voice, the
+  profile).
+- **A member's empty chronicle** reads `Nothing here yet.`, the line
+  alone, drawn on `ProfileComments`' `comments` chip — a member's
+  `Everything` always holds their registration, so a filtered tab is
+  where they meet it.
+- **`ExploreComingSoon`** — `Explore — coming soon` · `Search will be
+  here.` — `WalletComingSoon`'s sibling at the end of the Explore row on
+  the Feed & Search page, a declared entry until search ships.
+- **The media gaps.** The web drop region dims while a clip is staged
+  (`ComposePickWeb`'s `body` chip); every tray tile carries its X, the
+  cover's included; the tray caption stands only while the tiles leave it
+  its line (up to three), the row clipping past that, never scrolling;
+  the pick step's arrow is `Back`; the empty pick step says nothing, its
+  Next inert; `PickedRow` badges its first picture `Cover`, so every
+  details and edit row does; `Reading the video…`, `3 pictures didn't
+  upload.` with `Remove them`, and `A post carries one video.` are
+  blessed; `ComposePickedErrors` keeps the live grid (`PickGrid`, shared
+  with `ComposePick`) under its refusals; the crop's arrow keys move the
+  window the arrow's way where the picture stays whole; the clip tiles
+  keep their 114×64 and 54×96 boxes for every shape. The tray-drag law
+  is gone — reorder lives in Show all.
+- **The gate**: edges **2127 → 2135** (`ExploreComingSoon`'s seven,
+  `ComposePickedErrors`' photos app and grid, less `ComposePick`'s tray
+  drag); flows hold at **227**, four re-blessed for the new door's
+  `New post` (`publish-a-post`, `publish-words`, `publish-a-video`,
+  `publish-a-vertical-video`: 60 → 61 origins). The registry holds at
+  **100 screens**; the new board is unregistered.
+
 ---
 
 ## 14. The canvases
