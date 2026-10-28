@@ -30,6 +30,9 @@ import { REDACTED_ACTOR_NAME } from "@/lib/ui2/content-row";
 import { Card } from "./card";
 import { part, testAttributes, type DataNode } from "./data-node";
 import { RowLine } from "./row-line";
+import { ScoreSlot } from "@/lib/score/score-slot";
+import type { TraceOrigin } from "@/lib/score/trace-session";
+import { personCover } from "@/lib/score/cover";
 import { ShareButton } from "./share-button";
 import { StanceControl } from "./stance-control";
 
@@ -58,8 +61,11 @@ export function ProfileFeedCard({
   node,
   onNotify,
   onLinkCopied,
+  scoreOrigin,
 }: {
   person: ProfileCardPerson;
+  /** Where the card stands, for its score slot's trace; absent, no score is drawn. */
+  scoreOrigin?: TraceOrigin;
   /** The profile's own route, with the origin its back arrow names. */
   href: string;
   testId: string;
@@ -135,6 +141,20 @@ export function ProfileFeedCard({
           testIdPrefix={`${testId}-stance`}
           node={part(node, "actionRow.stance")}
         />
+        {/* OPINION, THEN THE SCORE, THEN SHARE (FeedKinds.md:5): the act's slot waits for chats. */}
+        {scoreOrigin !== undefined && (
+          <ScoreSlot
+            targetId={person.id}
+            kind="person"
+            pending={false}
+            cover={() =>
+              personCover({ handle: person.handle, displayName: { value: name }, avatar: avatar === null ? null : { url: avatar } })
+            }
+            origin={scoreOrigin}
+            node={part(node, "actionRow.score")}
+            testId={`${testId}-score`}
+          />
+        )}
         <ShareButton
           href={`/u/${person.handle}`}
           targetLabel={label}
