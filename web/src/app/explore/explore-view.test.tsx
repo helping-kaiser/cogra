@@ -199,6 +199,16 @@ describe("Explore at rest", () => {
     expect(new URLSearchParams(window.location.search).get("q")).toBe("salt");
   });
 
+  it("explore_md_9_the_first_keystroke_keeps_the_field_it_was_typed_into", () => {
+    serveSearch(() => answer([]));
+    renderExplore();
+    const input = field();
+    input.focus();
+    type("s");
+    expect(field()).toBe(input);
+    expect(input).toHaveFocus();
+  });
+
   it("explore_md_11_13_the_trailing_x_stands_only_with_text_and_brings_rest", async () => {
     serveSearch(() => answer([]));
     renderExplore();
