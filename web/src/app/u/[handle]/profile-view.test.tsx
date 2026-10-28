@@ -252,6 +252,82 @@ describe("ProfileScreen", () => {
     expect(screen.getByTestId(byNode("profile.identity.figures.stancesTaken.value"))).toHaveTextContent("7");
   });
 
+  // THE FIGURES ARE ONE DOOR ONTO THE OPINIONS PAGE (ProfileHeader.jsx
+  // `onCounts`; graph.json `the figures row` → ProfileStances; copy-voice,
+  // *The profile's figures, spoken*): never three, never inert.
+  describe("the figures row", () => {
+    function figures(id: string) {
+      return gqlLink.query("ProfileFigures", () =>
+        HttpResponse.json({
+          data: {
+            user: {
+              __typename: "User",
+              id,
+              posts: { __typename: "RecordConnection", totalCount: 12 },
+              opinionsOn: { __typename: "RecordConnection", totalCount: 1204 },
+              opinionsBy: { __typename: "RecordConnection", totalCount: 7 },
+            },
+          },
+        }),
+      );
+    }
+
+    it("opens someone's opinions page, named by its numbers and its purpose", async () => {
+      server.use(
+        gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })),
+        recordsHandler([]),
+        figures("u2"),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" />);
+      const door = await screen.findByRole("link", {
+        name: "12 Posts, 1,204 Opinions on them, 7 Opinions by them, opinions on and by @ada",
+      });
+      expect(door).toHaveAttribute("data-testid", "profile.identity.figures");
+      expect(door).toHaveAttribute("href", "/u/ada/opinions");
+      expect(door.className).toContain("cg-hit");
+    });
+
+    it("carries the profile's own origin onto the page, so its way back holds", async () => {
+      server.use(
+        gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })),
+        recordsHandler([]),
+        figures("u2"),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" from="saved" />);
+      expect(await screen.findByTestId(byNode("profile.identity.figures"))).toHaveAttribute(
+        "href",
+        "/u/ada/opinions?from=saved",
+      );
+    });
+
+    it("opens your own opinions page from your own root, both directions", async () => {
+      server.use(
+        meHandler(),
+        gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+        recordsHandler([]),
+        figures("u1"),
+      );
+      renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+      const door = await screen.findByRole("link", {
+        name: "12 Posts, 1,204 Opinions on you, 7 Opinions by you, your opinions, both directions",
+      });
+      expect(door).toHaveAttribute("href", "/profile/opinions");
+    });
+  });
+
+  // A PERSON OPENED FROM AN OPINIONS PAGE (ProfileStances.md:21): their arrow
+  // reads `Back to the opinions` and returns to the page on its tab.
+  it("reads Back to the opinions when an opinions row opened it", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u3", "tobias") } })),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="tobias" from="opinions.by:ada" />);
+    const back = await screen.findByTestId(byNode("profile.header.back"));
+    expect(back).toHaveAccessibleName("Back to the opinions");
+    expect(back).toHaveAttribute("href", "/u/ada/opinions?tab=by");
+  });
+
   // THE CHRONICLE'S TAB ROW (TabBar.jsx; Profile.md:21): three glyph toggles
   // named in the accessibility tree, the reader landing on Everything.
   it("lands on Everything under the chronicle's glyph tabs", async () => {
