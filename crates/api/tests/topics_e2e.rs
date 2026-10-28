@@ -1725,8 +1725,6 @@ async fn the_un_tag_is_admitted_on_an_artifact_at_the_standing_topic_cap(pool: P
     assert_eq!(writes.len(), 1, "{prepared}");
 }
 
-// ── The held-topics read (api-spec.md `User.heldTopics`) ────────────────
-
 const HELD_TOPICS: &str = r#"query($ip: Boolean!, $first: Int, $after: String, $last: Int, $before: String) {
   me {
     heldTopics(includePending: $ip, first: $first, after: $after, last: $last, before: $before) {
@@ -1778,7 +1776,12 @@ fn held_names(page: &Value) -> Vec<String> {
         .as_array()
         .expect("edges")
         .iter()
-        .map(|e| e["node"]["name"]["value"].as_str().expect("name").to_string())
+        .map(|e| {
+            e["node"]["name"]["value"]
+                .as_str()
+                .expect("name")
+                .to_string()
+        })
         .collect()
 }
 
@@ -1948,7 +1951,9 @@ async fn held_topic_pages_walk_the_list_exactly_once_either_way(pool: PgPool) {
     let mut forward = Vec::new();
     let mut after = Value::Null;
     loop {
-        let page = rig.held(&token, json!({ "first": 2, "after": after })).await;
+        let page = rig
+            .held(&token, json!({ "first": 2, "after": after }))
+            .await;
         forward.extend(held_names(&page));
         if page["pageInfo"]["hasNextPage"] != true {
             break;

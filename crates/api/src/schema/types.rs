@@ -1712,8 +1712,6 @@ impl User {
             None => None,
         };
         let view = BundleView::from_include_pending(include_pending);
-        // A keyless account has signed nothing, so it holds nothing: the
-        // list is there and empty, as it is for any viewer with no follow.
         let Some(author) = self.identity.realization_address.clone() else {
             return Ok(Some(HeldTopicConnection::with_additional_fields(
                 false,
@@ -1722,16 +1720,10 @@ impl User {
             )));
         };
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
-        let mut held = stance_store::held_topics(
-            pool,
-            &author,
-            view,
-            cursor.as_ref(),
-            backward,
-            limit + 1,
-        )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let mut held =
+            stance_store::held_topics(pool, &author, view, cursor.as_ref(), backward, limit + 1)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         let has_more = held.len() as i64 > limit;
         if has_more {
             if backward {

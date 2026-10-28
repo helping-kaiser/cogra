@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) AS \"n!\" FROM (\n               SELECT target\n               FROM (\n                   SELECT l.target, l.p_d, l.p_i\n                   FROM mirror_record_legs l\n                   JOIN mirror_records r ON r.record_id = l.record_id\n                   WHERE l.leg = 'binary' AND l.family = 'affinity'\n                     AND l.source = $1\n                     AND NOT r.payload_marked\n                     AND NOT l.census_unknown\n                   UNION ALL\n                   SELECT target, p_d, p_i\n                   FROM staged_writes\n                   WHERE $2 AND family = 'affinity' AND author = $3\n                     AND middle IS NULL\n                     AND octet_length(payload) = 0\n                     AND (pre_signed_at IS NOT NULL OR carried)\n                     AND state NOT IN ('landed', 'expired')\n               ) legs\n               GROUP BY target\n               HAVING NOT (SUM(p_d::text::numeric) = 0 AND SUM(p_i::text::numeric) = 0)\n           ) held",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "n!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "ee8e5550786ac094b4eac912ae8acae9612f718e095f490dd3956fa7789a2d82"
+}
