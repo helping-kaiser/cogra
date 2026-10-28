@@ -20,7 +20,23 @@ export interface StanceAlternatesProps {
    * sheet's own control).
    */
   onSever?: () => void;
+  /** Legacy: the same as `signing="busy"`. */
   busy?: boolean;
+  /**
+   * The commit's signing, as `StanceControl`'s `signing` hands it while the
+   * alternates are up (dialog host only). "busy" — past 200ms the commit
+   * reads `Signing…` and goes inert, never dimmed. "failed" — `That didn't
+   * send. Try again.` above the action row, and an outlined `Retry` in the
+   * commit's slot. "writeRule" — the write rule's notice where the landing
+   * line and the action row were, with its own "?" and `Not now`; no Retry.
+   */
+  signing?: "busy" | "failed" | "writeRule";
+  /**
+   * The typed fields' text mid-typing, for a board — `{ pDirected: "1.5" }`.
+   * The pick is the clamped value; the field shows what was typed until it
+   * loses focus, then the value the pick holds.
+   */
+  typed?: { pDirected?: string; pInterest?: string };
   /** The current-opinion block, rendered above the inputs as it sits above the pad. */
   children?: React.ReactNode;
   /** The landing line, below the inputs as it sits below the field. */

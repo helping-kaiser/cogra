@@ -21,7 +21,14 @@ import React from "react";
    The pill at every size (Material's button shape, not a rung of the shape
    scale); both sizes carry `label-large`. Heights are TRUE heights (border-box):
    40px `lg`, 32px `sm` — and every pill holds a 64px minimum width so short
-   labels (Next, Set, Done) keep their weight (readme §13, 2026-08-27). */
+   labels (Next, Set, Done) keep their weight (readme §13, 2026-08-27).
+
+   THE BORDER IS INSIDE THE HEIGHT (seam 245, ask 1). Every variant wears a
+   1px border — transparent where it is not drawn, so the four never differ in
+   size — and the label's 20px line plus the vertical padding plus that border
+   is the height: 1 + 9 + 20 + 9 + 1 = 40, 1 + 5 + 20 + 5 + 1 = 32. A padding
+   that ignored the border drew 42 and 34, past the `minHeight` that was
+   meant to be the height. */
 
 const VARIANTS = {
   primary: { background: "var(--primary)", color: "var(--on-primary)", border: "1px solid transparent" },
@@ -31,8 +38,8 @@ const VARIANTS = {
 };
 
 const SIZES = {
-  sm: { padding: "6px 16px" },
-  lg: { padding: "10px 24px" },
+  sm: { padding: "5px 16px" },
+  lg: { padding: "9px 24px" },
 };
 
 export function buttonStyle({ variant = "primary", size = "lg", selfStart = false, disabled = false, busy = false } = {}) {
@@ -60,7 +67,7 @@ export function buttonStyle({ variant = "primary", size = "lg", selfStart = fals
 }
 
 /* Every pressable control wears these: the state layer of tokens/states.css, the
-   focus ring, and the 48px hit expansion — a small button is 33px of ink and 48px
+   focus ring, and the 48px hit expansion — a small button is 32px of ink and 48px
    of target, which is how the unconditional 48px promise survives a dense row.
    Pass it wherever `buttonStyle` is used on a raw <button>. */
 export const BUTTON_CLASS = "cg-state cg-focus cg-hit";

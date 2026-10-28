@@ -48,7 +48,22 @@
    without closing the pad it was picked on, so `Keep it` returns to a pick that
    is still parked. The wash covers it, as the dialog's own scrim covers
    everything beneath — and the pad is drawn once, on its own boards, rather
-   than a second time under a dim where nobody could read it. */
+   than a second time under a dim where nobody could read it.
+
+   THE `answer` CHIP DRAWS THE WRITE RULE'S NO (seam 245, ask 15). `asking`
+   is the dialog as the pick raises it. `writeRule` is the same dialog after
+   its own `Walk it back` met the write rule: the pre-check staged nothing and spent
+   nothing, so this is a notice, not a fault, and it answers in the register
+   the row already speaks — `You can't sign right now.`, quiet, in the
+   pending marker's ink, with the one fact the cost line above it makes a
+   reader ask: `Nothing was signed or spent.` It stands where the fault line
+   would. NO RETRY: asking again at once meets the same answer, so `Walk it
+   back` dims — the dialog's second true refusal, beside a bundle already at
+   nothing — and `Keep it` is the way out, back to the pick still parked on
+   the pad. No `error` colour: the write rule refuses nobody's choice. */
+export const PROPS = { answer: { editor: "enum", options: ["asking", "writeRule"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "writeRule" ? "none" : "block", writeRuleShown: this.props.answer === "writeRule" ? "block" : "none"`;
+
 export function Screen() {
   return (
     <>
@@ -59,12 +74,23 @@ export function Screen() {
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
 
-      <SeveranceConfirm
-        pick={{ pDirected: -1, pInterest: -1 }}
-        targetLabel="this post"
-        bundle={mkBundle(1, 1)}
-        records={1}
-      />
+      <div style={{ display: "{{askingShown}}" }}>
+        <SeveranceConfirm
+          pick={{ pDirected: -1, pInterest: -1 }}
+          targetLabel="this post"
+          bundle={mkBundle(1, 1)}
+          records={1}
+        />
+      </div>
+      <div style={{ display: "{{writeRuleShown}}" }}>
+        <SeveranceConfirm
+          pick={{ pDirected: -1, pInterest: -1 }}
+          targetLabel="this post"
+          bundle={mkBundle(1, 1)}
+          records={1}
+          writeRule
+        />
+      </div>
     </>
   );
 }

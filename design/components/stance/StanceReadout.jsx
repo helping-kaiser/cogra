@@ -147,6 +147,29 @@ export const STANCE_SEVERANCE_WORDS = {
   helpAlternates: "Walk it back takes everything to nothing, and each thing you've said is walked back by its own signature.",
 };
 
+/* THE WRITE RULE'S WORDS, AT THE STANCE FAMILY'S SCALES (copy-voice, *Faults
+   by code*). The seal's panel says the draft is kept; nothing in this family
+   keeps a draft, so its fact stops at what was not signed or spent. One
+   object, because the pad, the alternates, the row and the two dialogs
+   raised over the pad all say the same refusal, and a sentence kept in two
+   files is a sentence that drifts:
+
+   · `title`, `padFact` and `help` — the notice panel standing where the
+     landing line and the commit row were (the pad, the alternates), its "?"
+     the seal panel's own dialog.
+   · `row` — the quiet line under a target's face, after a hold.
+   · `dialog` — the quiet line in a dialog raised over the pad (the walk-back,
+     the empty sign), where the fault line would stand: the row's words, and
+     the fact the cost line just above it makes the reader ask (seam 245,
+     ask 15). */
+export const WRITE_RULE_WORDS = {
+  title: "You can't sign right now",
+  padFact: "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.",
+  help: "Why signing waits",
+  row: "You can't sign right now.",
+  dialog: "You can't sign right now. Nothing was signed or spent.",
+};
+
 /** A family's severance words, or the default family's. */
 export function severanceWords(names) {
   return (names && names.severance) || STANCE_SEVERANCE_WORDS;
@@ -475,16 +498,21 @@ export function formatStanceWords(pair, names = STANCE_AXIS_NAMES) {
   return `${names.directed} ${formatDimension(pair.pDirected)}, ${names.interest} ${formatDimension(pair.pInterest)}`;
 }
 
-/** Where a pick lands the bundle: `clip` of RAW SUM plus pick, folded locally. */
-export function localLanding(rawSum, pick) {
+/** Where a pick lands the bundle: `clip` of RAW SUM plus pick, folded locally.
+ *  `nothingStands` is the bundle's own word — no record ever, or already
+ *  walked back to nothing — and a (0, 0) landing over it is the EMPTY SIGN's
+ *  (`empty`), never a walk-back: there is nothing to go back from. */
+export function localLanding(rawSum, pick, nothingStands = false) {
   const landing = clampPair({
     pDirected: rawSum.pDirected + pick.pDirected,
     pInterest: rawSum.pInterest + pick.pInterest,
   });
+  const severed = landing.pDirected === 0 && landing.pInterest === 0;
   return {
     landing,
     inert: landing.pDirected === 0 || landing.pInterest === 0,
-    severed: landing.pDirected === 0 && landing.pInterest === 0,
+    severed,
+    empty: severed && nothingStands,
   };
 }
 
@@ -566,8 +594,17 @@ export function unreachableHead(pair) {
   return pair.pDirected > 0 ? "For it, no interest either way" : "Against it, no interest either way";
 }
 
+/* A (0, 0) LANDING WITH NOTHING STANDING SAYS NOTHING (seam 245, ask 20).
+   Over a bundle that holds no record, or one already walked back, a pick
+   landing (0, 0) is the empty sign (`EmptySignConfirm`), and the severance
+   family's `This takes you back to zero.` is false of it — there is nothing
+   to go back from. It reads as a landing reads: `Resulting opinion`, the
+   shrug, and the empty sign's own word. */
+export const EMPTY_LANDING_WORDS = `${EMPTY_PICK_LABEL}.`;
+
 export function landingLine(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return "Adding it up…";
+  if (landing.empty) return `${readoutWords(names).resulting} ${ZERO_BUNDLE_EMOJI} ${EMPTY_LANDING_WORDS}`;
   if (landing.severed) return severanceWords(names).landing;
   const { resulting } = readoutWords(names);
   if (landing.inert) return `${resulting} ${UNREACHABLE_EMOJI} ${unreachableHead(landing.landing)} — ${UNREACHABLE_TAIL}`;
@@ -674,8 +711,17 @@ export function standingParts(bundle, targetLabel, names = STANCE_AXIS_NAMES) {
 /** The landing, split the same way. */
 export function landingParts(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return { sentence: "Adding it up…" };
-  if (landing.severed) return { sentence: landingLine(landing, names) };
   const words = readoutWords(names);
+  if (landing.empty) {
+    return {
+      label: words.resulting,
+      emoji: ZERO_BUNDLE_EMOJI,
+      head: EMPTY_PICK_LABEL,
+      words: EMPTY_LANDING_WORDS,
+      spoken: `${words.resulting}: ${EMPTY_LANDING_WORDS}`,
+    };
+  }
+  if (landing.severed) return { sentence: landingLine(landing, names) };
   if (landing.inert) {
     const head = unreachableHead(landing.landing);
     return {
@@ -763,8 +809,9 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, words, head, onExp
         </span>
       )}
       {words !== undefined ? (
-        /* THE UNREACHABLE LANDING: the zero face and the state in words, where
-           the pair would stand. Handed `onExplainZero`, the face is a door —
+        /* THE UNREACHABLE LANDING, and the empty sign's: the zero face and
+           the state in words, where the pair would stand. Handed
+           `onExplainZero` (the unreachable state only), the face is a door —
            its explanation replaces the pad's body in place, the "?"'s
            grammar — named by the state it explains. */
         <span style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
@@ -891,7 +938,9 @@ export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, onExplai
   const keepsBorrowed = borrowed && landing !== null && landing !== undefined && (landing.inert || landing.severed);
   return (
     <div aria-live="polite" style={keepsBorrowed ? { display: "flex", flexDirection: "column", gap: "var(--space-1)", ...style } : style}>
-      <ReadoutBlock {...landingParts(landing, names)} onExplainZero={onExplainZero} zeroShown={zeroShown} node={node} />
+      {/* The 🤔's door is the unreachable state's alone: an empty landing's 🤷
+          reads in the same shape and opens nothing. */}
+      <ReadoutBlock {...landingParts(landing, names)} onExplainZero={landing && landing.empty ? undefined : onExplainZero} zeroShown={zeroShown} node={node} />
       {keepsBorrowed && (
         <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "borrowed"}>
           {BORROWED_KEPT_LINE}
@@ -985,12 +1034,21 @@ export function alternatesHelp(names) {
    reader doubts them: the opinion is still held (a person stays under `Your
    people` — `FeedSheet`'s set, whichever way the opinion points); nothing
    passes through it; and it is not the family's way out, which is an act of
-   its own. The target is the pad's, and the way out is the family's word. */
+   its own. The target is the pad's, and the way out is the family's word.
+
+   THE FIRST LINE NAMES THE LIST THE TARGET STAYS ON, by the label's kind
+   (seam 245, ask 18): a person (`@ada`) stays under `Your people`, a topic
+   (`#saltmaps`) on `Your topics` — held is a netted Affinity other than
+   (0, 0), so one zero keeps it there. A post or a comment sits on no list
+   of the reader's, so its line stops at the opinion. */
 export function unreachableHelp(names, targetLabel) {
+  const stays = targetLabel.startsWith("@")
+    ? `${targetLabel} stays under Your people`
+    : targetLabel.startsWith("#")
+      ? `${targetLabel} stays on Your topics`
+      : null;
   return [
-    targetLabel.startsWith("@")
-      ? `It still counts among your opinions — ${targetLabel} stays under Your people.`
-      : "It still counts among your opinions.",
+    stays === null ? "It still counts among your opinions." : `It still counts among your opinions — ${stays}.`,
     "It shapes no one's feed, earns nothing, and nothing passes on through you.",
     `${severanceWords(names).control} is different: its own act, confirmed and paid for, that leaves a clean slate.`,
   ];

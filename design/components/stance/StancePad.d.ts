@@ -107,7 +107,10 @@ export declare function padPairFrom(
  */
 export interface AttachmentPadProps {
   value?: number;
-  /** Omit for a static specimen; pass to make the strip draggable. */
+  /** Omit for a static specimen; pass to make the strip draggable. Called with
+   *  the live pick while the finger moves — exactly 0 inside the zero
+   *  hairline's detent — and once more on release with the pick parked on
+   *  its nearest hundredth (`snapAttachment`). */
   onChange?: (value: number) => void;
   fieldRef?: React.RefObject<HTMLDivElement | null>;
   /** The two pole words, drawn in the square's gutters beside the strip. On by default. */
@@ -125,5 +128,11 @@ export declare function AttachmentPad(props: AttachmentPadProps): JSX.Element;
 export declare const ATTACHMENT_FIELD_HEIGHT_PX: number;
 /** Where the knob sits on the strip, as a percentage of its travel. */
 export declare function attachmentPercentOf(value: number): number;
-/** The attachment this much horizontal travel picks, starting from `base`. */
+/** The attachment this much horizontal travel picks, starting from `base` —
+ *  exactly 0 while the knob's centre would stand within `ATTACHMENT_DETENT_PX`
+ *  of the zero hairline (the `No side yet` detent). */
 export declare function attachmentFrom(base: number, rect: { width: number }, dx: number, inset?: number): number;
+/** The zero detent's reach: the knob's own radius, 10px. */
+export declare const ATTACHMENT_DETENT_PX: number;
+/** Where a released one-axis pick parks: the nearest hundredth, clamped, never -0. */
+export declare function snapAttachment(value: number): number;

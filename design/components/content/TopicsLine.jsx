@@ -120,12 +120,18 @@ function countsText(hiddenTopics, references) {
   return `· ${parts.join(" · ")}`;
 }
 
+/* THE LINE CLIPS SIDEWAYS ONLY (seam 245, ask 8). `overflow: hidden` clipped
+   both axes, and the 48px targets `cg-hit` grows above and below the 34px
+   line — the detail's whole-line door and the card's count — are exactly what
+   stands outside it vertically, so the line cut its own promise off. A line
+   that never wraps can only overflow sideways, and `overflow-x: clip` holds
+   that axis alone, the other left visible, without becoming a scroll box. */
 const LINE = {
   display: "flex",
   alignItems: "center",
   gap: "var(--space-2)",
   flexWrap: "nowrap",
-  overflow: "hidden",
+  overflowX: "clip",
   minWidth: 0,
 };
 

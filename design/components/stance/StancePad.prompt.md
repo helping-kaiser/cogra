@@ -15,6 +15,8 @@ The one-axis pick parks on hundredths at release — the knob follows the drag w
 
 The zero hairline is the strip's "no side yet" detent (jakob 2026-10-20): while the finger stays within the knob's own radius of it, the knob holds on the hairline and the pick reads exactly `0.00`, so no side taken is a place a drag rests on purpose, never one it only passes.
 
+The master builds both, and is the reference the clients conform to: `attachmentFrom` holds the detent (`ATTACHMENT_DETENT_PX`, the knob's 10px radius), and release — or a cancelled pointer — calls `onChange` once more with `snapAttachment` of the last pick.
+
 ```jsx
 <AttachmentPad value={0.1} />
 <AttachmentPad value={a} onChange={setA} />

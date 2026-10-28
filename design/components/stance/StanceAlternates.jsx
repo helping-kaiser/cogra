@@ -3,7 +3,9 @@ import { DialogSurface } from "../core/JoinPrompt.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import { StanceSlider } from "./StanceSlider.jsx";
 import { STANCE_AXES } from "./StancePad.jsx";
-import { alternatesHelp, clampDimension, HelpLine, helpKey, severanceWords, STANCE_RANGES } from "./StanceReadout.jsx";
+import { TransportError } from "../honesty/TransportError.jsx";
+import { NoticePanel, NoticeLine } from "../honesty/NoticePanel.jsx";
+import { alternatesHelp, clampDimension, HelpLine, helpKey, severanceWords, STANCE_RANGES, WRITE_RULE_WORDS } from "./StanceReadout.jsx";
 
 /* The alternate inputs (guidelines/stance-control.md, *Alternate and accessible
    inputs*) — paired sliders and direct entry. Same
@@ -40,9 +42,22 @@ import { alternatesHelp, clampDimension, HelpLine, helpKey, severanceWords, STAN
 /* THE BOUND IS A PROP HERE TOO, for `StanceSlider`'s reason: the typed route and
    the dragged one must not disagree about what a value may be. A field that
    refuses −1 on one axis and accepts it on another is the census speaking, and
-   the census travels with the record family. */
-function DirectEntry({ label, value, onChange, min = -1, max = 1 }) {
+   the census travels with the record family.
+
+   A TYPED VALUE CLAMPS AS THE PAD CLAMPS (seam 245, ask 14 — the readout
+   law). The field keeps what the reader typed while they type; the pick
+   takes the nearest value the bound allows, so a `1.5` signs +1.00 the way a
+   knob dragged past the edge stops on it, and the readout above says so
+   before anything is signed. No refusal line: the field never refuses a
+   value it can clamp, any more than the pad refuses a corner. What does not
+   parse — an emptied field, a lone minus sign — moves nothing: the pick
+   keeps its last value, because reading it as 0 would land a pick on the
+   one number that means something of its own. Leaving the field rewrites
+   it to the value the pick holds. `text` draws a field mid-typing for a
+   board, a state a click cannot reach. */
+function DirectEntry({ label, value, onChange, min = -1, max = 1, text }) {
   const id = React.useId();
+  const [draft, setDraft] = React.useState(text ?? null);
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)" }}>
       <label htmlFor={id} style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}>
@@ -55,8 +70,14 @@ function DirectEntry({ label, value, onChange, min = -1, max = 1 }) {
         min={min}
         max={max}
         step={0.01}
-        value={value}
-        onChange={(event) => onChange && onChange(clampDimension(Number(event.target.value), min, max))}
+        value={draft ?? value}
+        onChange={(event) => {
+          const raw = event.target.value;
+          setDraft(raw);
+          const parsed = raw.trim() === "" ? NaN : Number(raw);
+          if (Number.isFinite(parsed) && onChange) onChange(clampDimension(parsed, min, max));
+        }}
+        onBlur={() => setDraft(null)}
         style={{
           width: "6rem",
           borderRadius: "var(--radius-extra-small)",
@@ -75,7 +96,7 @@ function DirectEntry({ label, value, onChange, min = -1, max = 1 }) {
 /* THE TWO TRACKS AND THEIR SWAP — the part of the alternates every host shares.
    The bound reaches both routes from one `ranges`, so the slider and the typed
    field refuse the same values the field does. */
-function AlternateInputs({ showing, setShowing, pick, onPick, axes, ranges, axis = "pair" }) {
+function AlternateInputs({ showing, setShowing, pick, onPick, axes, ranges, axis = "pair", typed }) {
   const directed = ranges.pDirected;
   const interest = ranges.pInterest;
   const one = axis === "one";
@@ -94,7 +115,7 @@ function AlternateInputs({ showing, setShowing, pick, onPick, axes, ranges, axis
               onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })}
             />
           ) : (
-            <DirectEntry label={axes.directed} min={directed.min} max={directed.max} value={pick.pDirected} onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })} />
+            <DirectEntry label={axes.directed} min={directed.min} max={directed.max} value={pick.pDirected} text={typed?.pDirected} onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })} />
           )
         ) : showing === "sliders" ? (
           <>
@@ -119,8 +140,8 @@ function AlternateInputs({ showing, setShowing, pick, onPick, axes, ranges, axis
           </>
         ) : (
           <>
-            <DirectEntry label={axes.directed} min={directed.min} max={directed.max} value={pick.pDirected} onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })} />
-            <DirectEntry label={axes.interest} min={interest.min} max={interest.max} value={pick.pInterest} onChange={(pInterest) => onPick && onPick({ ...pick, pInterest })} />
+            <DirectEntry label={axes.directed} min={directed.min} max={directed.max} value={pick.pDirected} text={typed?.pDirected} onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })} />
+            <DirectEntry label={axes.interest} min={interest.min} max={interest.max} value={pick.pInterest} text={typed?.pInterest} onChange={(pInterest) => onPick && onPick({ ...pick, pInterest })} />
           </>
         )}
       </div>
@@ -193,7 +214,23 @@ export function StanceAlternates({
      tapped: it replaces the body in place, and `onZeroBack` returns. */
   zeroHelp,
   onZeroBack,
+  /* THE COMMIT WAITS FOR ITS SIGNATURE, AS SET DOES (seam 245, ask 14 —
+     `StanceControl`'s `signing`, handed on while the alternates are up).
+     `"busy"`: past 200ms the commit reads `Signing…` and goes inert, never
+     dimmed. `"failed"`: the dialog stays up at the pick, the fault line
+     stands above the action row in the seal's words, and `Retry`, outlined,
+     takes the commit's slot — the pad's grammar, because it is the same act
+     through another control. `"writeRule"`: the write rule's notice stands
+     where the landing line and the action row were, `PadWriteRule`'s shape,
+     its own "?" by the stopper exception, and `Not now` the way out; no
+     Retry. The legacy `busy` reads as `"busy"`. Dialog host only: a sheet
+     never signs. */
+  signing,
+  /* What the typed fields hold mid-typing, for a board (`{ pDirected:
+     "1.5" }`): a state a click cannot reach. */
+  typed,
 }) {
+  const state = signing ?? (busy ? "busy" : undefined);
   const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
   // The same help affordance the pad carries, for the same reason: TWO VALUES per
   // interaction is the genuinely new idea in this control, and a reader meeting it
@@ -217,7 +254,7 @@ export function StanceAlternates({
     const measured = slotRef.current?.offsetHeight;
     if (measured) setSlotHeight(measured);
   }, [explaining, zeroHelp, showing]);
-  const inputs = <AlternateInputs showing={showing} setShowing={setShowing} pick={pick} onPick={onPick} axes={axes} ranges={ranges} axis={axis} />;
+  const inputs = <AlternateInputs showing={showing} setShowing={setShowing} pick={pick} onPick={onPick} axes={axes} ranges={ranges} axis={axis} typed={typed} />;
   if (host === "sheet") {
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
@@ -326,22 +363,60 @@ export function StanceAlternates({
         <div ref={slotRef} style={{ display: "flex", flexDirection: "column" }}>
           {children}
           {inputs}
-          {landing}
+          {state !== "writeRule" && landing}
         </div>
       )}
-      <div style={{ marginTop: "var(--space-6)", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
-        {onSever && (
-          <button type="button" onClick={onSever} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}>
-            {severanceWords(axes).control}
+      {state === "writeRule" ? (
+        /* The write rule's no (`PadWriteRule`): the notice where the landing
+           line and the action row were, the readouts and the tracks above it
+           as they were, and `Not now` — the way out that keeps nothing. */
+        <div style={{ marginTop: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+          <NoticePanel title={WRITE_RULE_WORDS.title} helpLabel={WRITE_RULE_WORDS.help} onHelp={() => {}}>
+            <NoticeLine>{WRITE_RULE_WORDS.padFact}</NoticeLine>
+          </NoticePanel>
+          <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text" }), width: "100%" }}>
+            Not now
           </button>
-        )}
-        <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })}>
-          Cancel
-        </button>
-        <button type="button" disabled={busy} onClick={onCommit} className={BUTTON_CLASS} style={buttonStyle({ variant: "primary", size: "sm", disabled: busy })}>
-          {commitLabel}
-        </button>
-      </div>
+        </div>
+      ) : (
+        <>
+          {/* A signing that did not go through says so above the action row,
+              in the seal's words, and the commit's slot asks it again. */}
+          {state === "failed" && (
+            <div style={{ marginTop: "var(--space-4)" }}>
+              <TransportError message="That didn't send. Try again." />
+            </div>
+          )}
+          <div
+            style={{
+              marginTop: state === "failed" ? "var(--space-3)" : "var(--space-6)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              gap: "var(--space-2)",
+            }}
+          >
+            {onSever && (
+              <button type="button" onClick={onSever} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}>
+                {severanceWords(axes).control}
+              </button>
+            )}
+            <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={state === "busy" ? undefined : onCommit}
+              aria-busy={state === "busy" || undefined}
+              aria-disabled={state === "busy" || undefined}
+              className={BUTTON_CLASS}
+              style={buttonStyle({ variant: state === "failed" ? "outline" : "primary", size: "sm", busy: state === "busy" })}
+            >
+              {state === "busy" ? "Signing…" : state === "failed" ? "Retry" : commitLabel}
+            </button>
+          </div>
+        </>
+      )}
     </DialogSurface>
   );
 }

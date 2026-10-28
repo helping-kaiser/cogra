@@ -10,7 +10,8 @@ export interface FactRowProps {
   /**
    * The current answer. A string is drawn in the variant's own value voice; in
    * `seal` a node is handed through as given (a stance readout draws its own
-   * line), while in `ledger` everything wears the answer's voice.
+   * line), while in `ledger` everything wears the answer's voice. A sentence
+   * is passed as a string — the License row's `licenseSummary(license)`.
    */
   value?: React.ReactNode;
   /** The word at the end of the row — drawn as an `InlineAction`. A node is

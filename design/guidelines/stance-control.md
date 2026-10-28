@@ -61,7 +61,7 @@ looking like a bug.
 | Drag | moves the knob by **accumulated travel**, not absolute position |
 | Release | parks the pick; the pad stays open; **nothing is signed** |
 | Set | signs the pick |
-| Cancel, outside press, Esc | dismisses and stages nothing |
+| Cancel, outside press, Esc | dismisses and stages nothing — while Set signs, dismisses and leaves the signing to the target's row (*Confirmation*) |
 | `?` | replaces the pad's body with four lines of help, and disables Set while it shows — on the seal-scale pads (compose, reply, and the post edit's) it opens their named dialog instead (copy-voice, *The "?" dialogs*) |
 | Walk it back | the explicit route to `(0, 0)` |
 
@@ -249,6 +249,13 @@ instead is explain, and confirm when it matters:
   bundle counts it, stays at `(0, 0)` and is not severed. Where the
   opinion vouches someone in, the ask warns that they start out cut off,
   and the vouch-in proceeds.
+- a `(0, 0)` landing over the standing an empty sign left is severance's
+  again, never a second empty sign (seam 245, ask 20): the empty record
+  stands — counted, its `Walk it back` there at a cost of 1 — and
+  severance is a `(0, 0)` landing over anything standing, so the
+  walk-back asks, and confirmed it signs one record. Whether that
+  walk-back then reads as severed or as saying nothing is the docs' open
+  Q60; the trigger does not wait on it.
 
 The cost is legible: each counter-record is its own priced act, so the
 dialog states the count — `It signs 3 things, each paid separately.`
@@ -306,6 +313,13 @@ beside every stance in a feed. Both surfaces carry the same circled `?`
 as the pad, and on the alternates its first line is the one thing two
 sliders cannot teach by themselves: *two values, not one*.
 
+**A typed value clamps as the field clamps** (seam 245, ask 14): past the
+bound, the pick takes the nearest value the bound allows — `1.5` signs
+`+1.00` — and `Your pick` reads it before anything is signed, so no
+refusal line is drawn. A field that holds no number moves nothing, never
+a 0: zero is the one value that means something of its own. Leaving the
+field rewrites it to the pick's value.
+
 ## Teaching it
 
 A held gesture is invisible until taught — and the pad is the teacher.
@@ -331,3 +345,21 @@ didn't sign.` with `Retry`. The snackbar never carries a failure.
 `Set` waits the same way: the pad stays open, `Setting…`, until the
 signature is taken, and a failure keeps it open at the pick with the
 fault above its commit row.
+
+**Cancel closes the pad, never the act** (seam 245, ask 16). While `Set`
+reads `Setting…`, `Cancel` — and the outside press, and Esc — stay live:
+the pad is not the act, and the act was sent and cannot be called back.
+The pad closes and the signing's wait moves to the target's row, exactly
+a hold's: `Signing…` under the face, the anchor refusing a second hold,
+then the new face and the snackbar, or `That didn't sign.` with a
+`Retry` that asks the same pick again. `PadFailed`'s `moment` chip draws
+it. The dialogs raised over the pad keep their own law: their ways out
+wait while their act signs.
+
+**The alternates wait the same way** (ask 14): their commit reads
+`Signing…`, a fault keeps the dialog at the pick with `Retry` in the
+commit's slot, and the write rule's notice takes the landing line's and
+the action row's place, with `Not now`. A write rule's no inside the
+walk-back or the empty sign is the row's quiet line where the fault line
+stands — `You can't sign right now. Nothing was signed or spent.` — the
+act dimmed, no Retry (ask 15).

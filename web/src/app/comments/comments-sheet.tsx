@@ -27,56 +27,27 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import {
   fetchCommentChain,
   fetchCommentReplies,
-  fetchCommentSelfMark,
   fetchPostComments,
   isPending,
-  prepareCommentEdit,
   type CommentView,
   type PostView,
   type ReplyView,
 } from "@/lib/api/content-api";
-import { firstRefusalMessage } from "@/lib/ui/error-messages";
 import { appendDeduped } from "@/lib/api/pagination";
-import type { StagedWriteView } from "@/lib/api/writes-api";
-import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
-import { fetchKnownMedia } from "@/lib/api/media-api";
-import { editExpectation } from "@/lib/compose/intent";
-import { contentExpectation } from "@/lib/compose/payload-expectation";
-import { commentEdit, type Expectation, type ExpectedWrite } from "@/lib/signing/intent";
-import { prepareTag } from "@/lib/api/topics-api";
-import {
-  fetchCitedBy,
-  prepareReference,
-  prepareReferenceWithdrawal,
-  type CitingRecordView,
-} from "@/lib/api/references-api";
+import { fetchCitedBy, type CitingRecordView } from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
-import { signedValues, tagChanges, type TagDraft } from "@/lib/topics/draft";
-import { referenceDrafts } from "@/lib/references/claims";
-import {
-  editActCount,
-  editActRows,
-  undoReferenceWithdrawal,
-  undoTagWithdrawal,
-} from "@/lib/compose/edit-batch";
-import {
-  referenceChanges,
-  type ReferenceDraft,
-} from "@/lib/references/draft";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
-import { useAuthGuard } from "@/lib/session/runtime";
-import { useWriteSigner } from "@/lib/signing/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import type { DataNode } from "@/lib/ui/data-node";
-import { PUBLIC_DOMAIN, type License } from "@/lib/license";
+import type { License } from "@/lib/license";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { useMeasureEffect } from "@/lib/ui/measure-effect";
 import {
@@ -97,35 +68,13 @@ import {
 import { shortTimestamp } from "@/lib/ui/timestamp";
 import { TopicsLine } from "@/lib/ui/topics-line";
 import type { ReplyTarget } from "@/lib/compose/reply-wizard";
-import {
-  addTo,
-  addedAssets,
-  addedLedger,
-  editBlocked,
-  editClaims,
-  galleryOf,
-  keptMediaIds,
-  keptPreviews,
-  pictureAltText,
-  pictureId,
-  removeFrom as removeFromGallery,
-  withAltText,
-  withUpload,
-  type EditGallery,
-} from "@/lib/compose/comment-edit";
-import { runUpload } from "@/lib/compose/uploads";
-import { usePreviewUrls } from "@/lib/compose/previews";
-import { sensitiveReasonProblem } from "@/lib/compose/wizard";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
-import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
-import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
-import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { commentTarget, ReplyWizard } from "@/app/posts/[id]/reply/reply-wizard-view";
-import { CommentEditView } from "@/app/posts/[id]/edit/comment-edit-view";
+import { CommentEditor } from "@/app/posts/[id]/edit/comment-editor";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { RowLine } from "@/lib/ui/row-line";
@@ -171,21 +120,6 @@ const LANDING_PAGES = 10;
 
 /** A reader who has not scrolled the thread is at its top. */
 const TOP: ScrollPlace = { offset: 0, anchorId: null, anchorTop: 0 };
-
-/** A comment's claims as the tag section drafts them. */
-function tagDrafts(
-  topics: readonly {
-    hashtag: { name: { value?: string | null } };
-    relevance: number;
-    confidence: number;
-  }[],
-): readonly TagDraft[] {
-  return topics.map((claim) => ({
-    name: claim.hashtag.name.value ?? "",
-    relevance: claim.relevance,
-    confidence: claim.confidence,
-  }));
-}
 
 /** What the thread hands the wizard when "Add a comment" is pressed. */
 function postTarget(post: PostView): ReplyTarget {
@@ -274,8 +208,6 @@ export function CommentsSheet({
 }) {
   const client = useApolloClient();
   const router = useRouter();
-  const guard = useAuthGuard();
-  const signer = useWriteSigner();
   const viewerId = useActiveAccountId();
   const phase = useAuthPhase();
 
@@ -317,57 +249,14 @@ export function CommentsSheet({
 
   // Reply threads expanded past their prefetched page, keyed by comment.
   const [replyThreads, setReplyThreads] = useState<Record<string, ReplyThread>>({});
-  // The inline comment edit — the affordance renders on own comments
-  // only. It carries what the comment LOADED with beside what the editor
-  // holds now: the baseline both the tag changes and the "did the text
-  // move at all" question read (F10, the post-edit precedent).
+  // The inline comment edit — the affordance renders on own comments only.
+  // The editor owns its own state (`CommentEditor`); the thread holds only
+  // which comment it is on, and where the return lands (Q6).
   const [editing, setEditing] = useState<{
-    id: string;
-    draft: string;
-    loadedDraft: string;
-    loadedTags: readonly TagDraft[];
-    tags: readonly TagDraft[];
-    loadedReferences: readonly ReferenceDraft[];
-    references: readonly ReferenceDraft[];
-    /** The gallery as the comment carried it, and as the editor holds it now. */
-    loadedGallery: EditGallery;
-    gallery: EditGallery;
-    /** What the comment is on, for the editor's lede. */
-    targetLabel: string;
-    /**
-     * The comment this one hangs under, or null at the top level — so the
-     * return can put the edited words back in front of the author (Q6).
-     */
+    comment: ThreadComment;
+    /** The comment this one hangs under, or null at the top level. */
     parentId: string | null;
-    /** The author's own mark as the editor found it, and as it holds it now. */
-    loadedSensitive: boolean;
-    loadedSensitiveReason: string;
-    sensitive: boolean;
-    sensitiveReason: string;
-    /** The comment's license as signed — shown on the locked row. */
-    license: License;
-    /**
-     * Whether the edit record is in the batch: set by the first change to a
-     * field it carries and never cleared by typing it back — the guard is the
-     * acts batch, never a byte comparison (EditComposeUnchanged.md:3).
-     */
-    recordStaged: boolean;
   } | null>(null);
-  const [editDescribing, setEditDescribing] = useState<string | null>(null);
-  const [editActsOpen, setEditActsOpen] = useState(false);
-  // `Discard the changes?` stands over the edit (DiscardConfirm.md).
-  const [editConfirmingDiscard, setEditConfirmingDiscard] = useState(false);
-  // The editor has two help doors — the header's "Editing" and the mark
-  // sheet's "?" — so the state is which topic is open, not whether one is.
-  const [editHelp, setEditHelp] = useState<HelpTopic | null>(null);
-  const [editSensitiveOpen, setEditSensitiveOpen] = useState(false);
-  const [editSubmitting, setEditSubmitting] = useState(false);
-  const [editFailed, setEditFailed] = useState(false);
-  const [editRefusedMessage, setEditRefusedMessage] = useState<string | null>(null);
-  const [editTagErrors, setEditTagErrors] = useState<Readonly<Record<number, string>>>({});
-  const [editReferenceErrors, setEditReferenceErrors] = useState<
-    Readonly<Record<number, string>>
-  >({});
 
   // ---- where the reader was -----------------------------------------------
 
@@ -623,35 +512,6 @@ export function CommentsSheet({
     setLandingAt(null);
   }, [landingAt, comments, replyThreads]);
 
-  // ---- the edit's own pictures --------------------------------------------
-
-  // A kept picture is already on the server, so only the ADDED ones are handed
-  // to `runUpload`; the ref guards React's double mount in development.
-  // Memoised so the preview hook and the upload effect see one stable array
-  // rather than a fresh one on every keystroke in the words field.
-  const editAdded = useMemo(
-    () => (editing === null ? [] : addedAssets(editing.gallery)),
-    [editing],
-  );
-  const editPickedPreviews = usePreviewUrls(editAdded);
-  const startedEditUploads = useRef(new Set<string>());
-
-  useEffect(() => {
-    for (const asset of editAdded) {
-      if (asset.upload.kind !== "waiting" || startedEditUploads.current.has(asset.id)) continue;
-      startedEditUploads.current.add(asset.id);
-      // No ratio: a comment's pictures keep their own shape, on an edit as on
-      // a compose.
-      void runUpload(client, guard, asset, undefined, (upload) =>
-        setEditing((current) =>
-          current === null
-            ? current
-            : { ...current, gallery: withUpload(current.gallery, asset.id, upload) },
-        ),
-      );
-    }
-  }, [editAdded, client, guard]);
-
   const onLoadMore = async () => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
@@ -728,247 +588,6 @@ export function CommentsSheet({
     setCitedByHasMore(outcome.value.hasNextPage);
   };
 
-  /**
-   * Signs the WHOLE staged batch, never just its head: a comment that
-   * mints with tags comes back as the record plus one act per tag, and
-   * all of them are this device's to sign.
-   */
-  const signAll = async (
-    writes: readonly StagedWriteView[],
-    expected: Expectation,
-  ): Promise<boolean> => {
-    const results = await signer.sign(writes, expected);
-    return results.every((result) => result.kind === "done");
-  };
-
-  // What the edit signs (CommentEdit / CommentEditActs): THE GUARD IS THE ACTS
-  // BATCH, NEVER A BYTE COMPARISON (EditComposeUnchanged.md — the family's
-  // rule). The edit record is staged by the first change to a field it
-  // carries — the words, the gallery, the mark — and stays staged when the
-  // field is typed back; each tag and citation change is its own act, a
-  // citation's withdrawal at its counter-records (`withdrawalCost`).
-  const editChanges = editing === null ? [] : tagChanges(editing.loadedTags, editing.tags);
-  const editReferenceChanges =
-    editing === null ? [] : referenceChanges(editing.loadedReferences, editing.references);
-  const editTextChanged = editing !== null && editing.recordStaged;
-  const editRows =
-    editing === null
-      ? []
-      : editActRows({
-          recordStaged: editing.recordStaged,
-          recordName: editing.draft.trim().slice(0, 60) || "Your comment",
-          loadedTags: editing.loadedTags,
-          tags: editing.tags,
-          loadedReferences: editing.loadedReferences,
-          references: editing.references,
-        });
-  const editActions = editActCount(editRows);
-  // The reason answers to its cap only while the mark is on: an unmarked
-  // edit's reason is never sent (`sensitiveInput`), so a leftover over-length
-  // reason from a mark switched back off must not hold up an edit that no
-  // longer carries it.
-  const editGateReason =
-    editing === null
-      ? null
-      : (editBlocked(editing.gallery, editing.draft) ??
-        (editing.sensitive ? sensitiveReasonProblem(editing.sensitiveReason) : null));
-
-  /**
-   * F10: prepares EVERYTHING before signing anything — a refusal on the
-   * third tag must not leave the first two signed. The edit record is
-   * staged only when the text actually moved (post-edit precedent);
-   * staged writes nobody signs are collected by the server's own GC.
-   */
-  const runEdit = async () => {
-    if (editing === null) return;
-    setEditSubmitting(true);
-    setEditFailed(false);
-    setEditRefusedMessage(null);
-    setEditTagErrors({});
-    setEditReferenceErrors({});
-    const writes: StagedWriteView[] = [];
-    const perTag: Record<number, string> = {};
-    const perReference: Record<number, string> = {};
-    let general: string | null = null;
-
-    // The L1 ids of the comment, the node it answers, and every cited node
-    // the edit touches — read before anything is staged, so the batch is
-    // checked against them before its first pre-signature (intent.ts).
-    const parentUuid = editing.parentId ?? post.id;
-    const graphIds = await guard.run(() =>
-      fetchGraphIds(client, [
-        editing.id,
-        parentUuid,
-        ...editReferenceChanges.map((change) => change.reference.targetId),
-      ]),
-    );
-    if (graphIds.kind !== "success") {
-      setEditSubmitting(false);
-      setEditFailed(true);
-      return;
-    }
-    const commentGraphId = graphIdOf(graphIds.value, editing.id);
-    const sent = {
-      id: editing.id,
-      content: editing.draft,
-      // Re-stated, never omitted: the edit carries the whole state — the
-      // gallery for the same reason as the mark.
-      attachments: editClaims(editing.gallery) ?? undefined,
-      sensitive: editing.sensitive,
-      sensitiveReason: editing.sensitiveReason,
-    };
-    // The record's payload is complete state: the pictures added here are
-    // held to the digests this device computed, the kept ones to the
-    // digests of the asset each names, read back by id (payload-expectation.ts).
-    let record: ExpectedWrite | null = null;
-    if (editTextChanged) {
-      const kept = await guard.run(() => fetchKnownMedia(client, keptMediaIds(editing.gallery)));
-      if (kept.kind !== "success") {
-        setEditSubmitting(false);
-        setEditFailed(true);
-        return;
-      }
-      const ledger = new Map([...kept.value, ...addedLedger(editing.gallery)]);
-      record = commentEdit(
-        graphIdOf(graphIds.value, parentUuid),
-        commentGraphId,
-        contentExpectation(editing.id, sent, "comment", ledger),
-      );
-    }
-    const expected = editExpectation(
-      commentGraphId,
-      record,
-      { tags: editChanges, references: editReferenceChanges },
-      graphIds.value,
-    );
-
-    if (editTextChanged) {
-      const prepared = await guard.run(() => prepareCommentEdit(client, sent));
-      if (prepared.kind === "failed") {
-        setEditSubmitting(false);
-        setEditFailed(true);
-        return;
-      }
-      if (prepared.kind === "refused") {
-        general = firstRefusalMessage(prepared.errors, "The server refused this write.");
-      } else {
-        writes.push(...prepared.value.writes);
-      }
-    }
-
-    for (const change of editChanges) {
-      const prepared = await guard.run(() =>
-        prepareTag(client, {
-          target: editing.id,
-          name: change.tag.name,
-          // Withdrawing is a Tag act at (0,0) (hashtag.md §4).
-          ...signedValues(change),
-        }),
-      );
-      if (prepared.kind === "failed") {
-        setEditSubmitting(false);
-        setEditFailed(true);
-        return;
-      }
-      if (prepared.kind === "refused") {
-        // A PRE-STAGING refusal is a field error, never the signing line
-        // (F2). An added tag carries it on its own chip; a withdrawal has
-        // no chip left to carry it, so it reads on the general line.
-        const message = firstRefusalMessage(prepared.errors, "The server refused this write.");
-        const index =
-          change.kind === "tag"
-            ? editing.tags.findIndex((tag) => tag.name === change.tag.name)
-            : -1;
-        if (index >= 0) perTag[index] = message;
-        else general = general ?? message;
-      } else {
-        writes.push(...prepared.value);
-      }
-    }
-
-    // One Reference act per added or re-tuned reference; a removal is a
-    // WITHDRAWAL, whose counter-records the server assembles (D11).
-    for (const change of editReferenceChanges) {
-      const prepared = await guard.run(() =>
-        change.kind === "reference"
-          ? prepareReference(client, {
-              artifact: editing.id,
-              target: change.reference.targetId,
-              relevance: change.reference.relevance,
-              support: change.reference.support,
-            })
-          : prepareReferenceWithdrawal(client, {
-              artifact: editing.id,
-              target: change.reference.targetId,
-            }),
-      );
-      if (prepared.kind === "failed") {
-        setEditSubmitting(false);
-        setEditFailed(true);
-        return;
-      }
-      if (prepared.kind === "refused") {
-        const message = firstRefusalMessage(prepared.errors, "The server refused this write.");
-        const index =
-          change.kind === "reference"
-            ? editing.references.findIndex(
-                (reference) => reference.targetId === change.reference.targetId,
-              )
-            : -1;
-        if (index >= 0) perReference[index] = message;
-        else general = general ?? message;
-      } else {
-        writes.push(...prepared.value);
-      }
-    }
-
-    if (
-      general !== null ||
-      Object.keys(perTag).length > 0 ||
-      Object.keys(perReference).length > 0
-    ) {
-      setEditSubmitting(false);
-      setEditTagErrors(perTag);
-      setEditReferenceErrors(perReference);
-      setEditRefusedMessage(general);
-      return;
-    }
-
-    const done = await signAll(writes, expected);
-    setEditSubmitting(false);
-    if (done) {
-      // The edit settles IN THE THREAD (`CommentEdit` 12 → the thread), so
-      // the sheet comes back up with it and the snackbar reads over it.
-      //
-      // SHOW THEM WHAT THEY JUST WROTE — an edit as much as a reply (jakob
-      // 2026-09-15, Q6): "editing sth and then not seeing the corrected
-      // version gives the user uncertainty if it even happened". An edited
-      // reply lives one level down, behind its parent's collapsed count, so
-      // the return unfolds that branch the same way the reply path does.
-      landed(editing.parentId);
-    } else {
-      setEditFailed(true);
-    }
-  };
-
-  // THE EDIT KEEPS NO DRAFT, so the way out reads the acts batch — the same
-  // count the sign guard reads: an empty batch leaves at once, and a batch
-  // holding an act is asked before anything is discarded (DiscardConfirm.md).
-  const leaveEdit = () => {
-    if (editSubmitting) return;
-    if (editActions === 0) backToThread({ place: place.current, unfolding: null });
-    else setEditConfirmingDiscard(true);
-  };
-
-  const onSubmitEdit = async () => {
-    if (editing === null || editSubmitting || editing.draft.trim() === "") return;
-    if (editActions === 0) return;
-    // Sign is the confirmation: the count is said on the foot and in the acts
-    // sheet, and no dialog asks again (CommentEditActs; `_shared.jsx`
-    // `CommentEditBody`).
-    await runEdit();
-  };
-
   const openLicense = (license: License) => {
     setLicenseShown(license);
     setLicenseOpen(true);
@@ -1008,7 +627,6 @@ export function CommentsSheet({
   const backToThread = (returned: Return) => {
     setReplying(null);
     setEditing(null);
-    setEditConfirmingDiscard(false);
     setRestoring(returned);
     onOpenChange(true);
   };
@@ -1053,58 +671,7 @@ export function CommentsSheet({
     // the composer's twin surface, so the thread yields to it the same
     // way (see `openComposer`).
     depart();
-    const loadedDraft = comment.content.value ?? "";
-    const loaded = tagDrafts(comment.topics);
-    // A claim CoGra cannot type has no L2 id to name it back by, so it is
-    // left out of the section — never staged, never read as a removal.
-    const loadedRefs = referenceDrafts(comment.references);
-    const loadedGallery = galleryOf(comment.attachments);
-    setEditing({
-      id: comment.id,
-      draft: loadedDraft,
-      loadedDraft,
-      loadedTags: loaded,
-      tags: loaded,
-      loadedReferences: loadedRefs,
-      references: loadedRefs,
-      loadedGallery,
-      gallery: loadedGallery,
-      targetLabel: post.title.value?.trim() || "this post",
-      parentId,
-      // The OR is what a READER sees; the switch is the author's own mark
-      // and arrives from its own read a moment later (round 4). Starting
-      // from the OR would show a moderator's verdict as the author's until
-      // it landed, so the switch starts unmarked and the read turns it on.
-      loadedSensitive: false,
-      loadedSensitiveReason: "",
-      sensitive: false,
-      sensitiveReason: "",
-      license: comment.license ?? PUBLIC_DOMAIN,
-      recordStaged: false,
-    });
-    void fetchCommentSelfMark(client, comment.id).then((outcome) => {
-      if (outcome.kind !== "success") return;
-      const mark = outcome.value;
-      if (mark === null) return;
-      // The read lands as BOTH the switch and what it is compared against,
-      // so arriving marked is not itself a change the editor offers to sign.
-      setEditing((current) =>
-        current === null || current.id !== comment.id
-          ? current
-          : {
-              ...current,
-              loadedSensitive: mark.sensitive,
-              loadedSensitiveReason: mark.reason,
-              sensitive: mark.sensitive,
-              sensitiveReason: mark.reason,
-            },
-      );
-    });
-    setEditTagErrors({});
-    setEditReferenceErrors({});
-    setEditRefusedMessage(null);
-    setEditFailed(false);
-    setEditSensitiveOpen(false);
+    setEditing({ comment, parentId });
     setReplying(null);
   };
 
@@ -1524,129 +1091,22 @@ export function CommentsSheet({
       )}
       {/* CommentEdit, over the thread for the same reasons the wizard is. */}
       {editing !== null && (
-        <>
-          <CommentEditView
-            targetLabel={editing.targetLabel}
-            words={editing.draft}
-            gallery={editing.gallery}
-            previews={{ ...keptPreviews(editing.gallery), ...editPickedPreviews }}
-            license={editing.license}
-            tags={editing.tags}
-            references={editing.references}
-            loadedTags={editing.loadedTags}
-            loadedReferences={editing.loadedReferences}
-            tagErrors={editTagErrors}
-            referenceErrors={editReferenceErrors}
-            sensitive={editing.sensitive}
-            sensitiveReason={editing.sensitiveReason}
-            sensitiveOpen={editSensitiveOpen}
-            acts={editRows}
-            actsOpen={editActsOpen}
-            busy={editSubmitting}
-            blocked={editGateReason}
-            refusal={editRefusedMessage}
-            failed={editFailed}
-            onWords={(draft) => setEditing({ ...editing, draft, recordStaged: true })}
-            // Functional updates: the sheet's Done hands the mark and its reason
-            // over in one gesture, and a second spread of `editing` would
-            // drop the first.
-            onSensitive={(sensitive) =>
-              setEditing((current) => (current === null ? current : { ...current, sensitive, recordStaged: true }))
-            }
-            onSensitiveReason={(sensitiveReason) =>
-              setEditing((current) =>
-                current === null ? current : { ...current, sensitiveReason, recordStaged: true },
-              )
-            }
-            onSensitiveOpen={setEditSensitiveOpen}
-            onSensitiveHelp={() => setEditHelp(HELP_TOPICS.markingAsSensitive)}
-            onPick={(files) =>
-              setEditing({
-                ...editing,
-                gallery: addTo(
-                  editing.gallery,
-                  files.map((file) => ({ id: crypto.randomUUID(), file })),
-                ),
-                recordStaged: true,
-              })
-            }
-            onRemovePicture={(id) =>
-              setEditing({
-                ...editing,
-                gallery: removeFromGallery(editing.gallery, id),
-                recordStaged: true,
-              })
-            }
-            onDescribe={setEditDescribing}
-            onTags={(tags) => setEditing({ ...editing, tags })}
-            onReferences={(references) => setEditing({ ...editing, references })}
-            onUndoTag={(name) =>
-              setEditing({
-                ...editing,
-                tags: undoTagWithdrawal(editing.loadedTags, editing.tags, name),
-              })
-            }
-            onUndoReference={(targetId) =>
-              setEditing({
-                ...editing,
-                references: undoReferenceWithdrawal(
-                  editing.loadedReferences,
-                  editing.references,
-                  targetId,
-                ),
-              })
-            }
-            onActs={setEditActsOpen}
-            onHelp={() => setEditHelp(HELP_TOPICS.editing)}
-            onSign={() => void onSubmitEdit()}
-            onLeave={leaveEdit}
-          />
-          {/* Discard keeps nothing: the edit's state lives in this sheet alone,
-              and leaving drops it — the comment stands as it was. */}
-          <DiscardConfirm
-            open={editConfirmingDiscard}
-            subject="edit"
-            onKeepWriting={() => setEditConfirmingDiscard(false)}
-            onDiscard={() => backToThread({ place: place.current, unfolding: null })}
-            testId="comment-edit-discard-confirm"
-          />
-          {/* One picture at a time, keyed by id: comments have no in-sheet
-              stepping, on the editor as on the composer. */}
-          <DescribeSheet
-            open={editDescribing !== null}
-            onClose={() => setEditDescribing(null)}
-            src={
-              editDescribing === null
-                ? null
-                : ({ ...keptPreviews(editing.gallery), ...editPickedPreviews }[editDescribing] ??
-                  null)
-            }
-            crop={null}
-            value={
-              editDescribing === null
-                ? ""
-                : (editing.gallery
-                    .filter((picture) => pictureId(picture) === editDescribing)
-                    .map(pictureAltText)[0] ?? "")
-            }
-            onChange={(altText) => {
-              if (editDescribing !== null) {
-                setEditing({
-                  ...editing,
-                  gallery: withAltText(editing.gallery, editDescribing, altText),
-                  recordStaged: true,
-                });
-              }
-            }}
-            testId="comment-edit-describe-sheet"
-          />
-          <HelpDialog
-            open={editHelp !== null}
-            onClose={() => setEditHelp(null)}
-            topic={editHelp ?? HELP_TOPICS.editing}
-            testId="comment-edit-help-dialog"
-          />
-        </>
+        <CommentEditor
+          key={editing.comment.id}
+          comment={editing.comment}
+          parentId={editing.parentId}
+          postId={post.id}
+          targetLabel={post.title.value?.trim() || "this post"}
+          onLeave={() => backToThread({ place: place.current, unfolding: null })}
+          // The edit settles IN THE THREAD (`CommentEdit` → the thread), so the
+          // sheet comes back up with it and the snackbar reads over it.
+          //
+          // SHOW THEM WHAT THEY JUST WROTE — an edit as much as a reply (jakob
+          // 2026-09-15, Q6): an edited reply lives one level down, behind its
+          // parent's collapsed count, so the return unfolds that branch the
+          // same way the reply path does.
+          onSigned={() => landed(editing.parentId)}
+        />
       )}
       {joinOpen && <JoinPrompt open onClose={() => setJoinOpen(false)} />}
     </>

@@ -4,19 +4,25 @@ import { COMMENT_ATTACHMENT_CAP } from "./comment-media";
 import { COMMENT_BODY_MAX_CHARS } from "./reply-wizard";
 import {
   addTo,
+  clipOf,
+  coverChosen,
   describedCount,
   editBlocked,
   editClaims,
   galleryChanged,
   galleryOf,
+  keptMediaIds,
   pictureId,
   removeFrom,
+  uploadsDone,
   uploadsFailed,
   uploadsPending,
   withAltText,
+  withNewCover,
   withUpload,
   type EditGallery,
 } from "./comment-edit";
+import type { PickedAsset } from "./wizard";
 
 const ATTACHMENTS = [
   { id: "m1", url: "https://media.test/1.webp", altText: "A film camera" },
@@ -172,9 +178,74 @@ describe("editBlocked", () => {
     expect(editBlocked(galleryOf([]), over)).toMatch(/too long/i);
   });
 
-  it("still reports a pending upload once the words are within the cap", () => {
+  // CommentEdit.md: "Sign the edit is enabled GIVEN an upload is running" — a
+  // press is held at the gate, never refused — and "disabled GIVEN the gate
+  // line shows its fault reading".
+  it("never holds the commit for a running upload, only for a failed one", () => {
     const gallery = addTo(galleryOf([]), picked(1));
-    expect(editBlocked(gallery, "fine")).toBe("One picture is still uploading.");
+    expect(editBlocked(gallery, "fine")).toBeNull();
+    const failed = withUpload(gallery, "new-0", { kind: "failed", message: "no", retryable: true });
+    expect(editBlocked(failed, "fine")).toBe("One picture didn't upload.");
+  });
+});
+
+/** A clip whose face was chosen when it was published. */
+const CHOSEN_CLIP = [
+  {
+    id: "v1",
+    url: "https://media.test/v1.mp4",
+    altText: "A headland",
+    mimeType: "video/mp4",
+    options: { aspectRatio: "9:16", durationMs: 18_000 },
+    coverMedia: { id: "c1", url: "https://media.test/c1.webp" },
+    coverTaken: false,
+  },
+];
+
+const newFace = (upload: PickedAsset["upload"]): PickedAsset => ({
+  id: "face",
+  file: new Blob(["x"], { type: "image/jpeg" }),
+  crop: { x: 0, y: 0, zoom: 1, area: null, areaPercent: null },
+  altText: "",
+  upload,
+});
+
+describe("a clip's face (EditComposeVideo, CommentEditVideo)", () => {
+  it("reads a clip, its own ratio and the face it already wears off the read", () => {
+    const clip = clipOf(galleryOf(CHOSEN_CLIP));
+    expect(clip?.video).toBe(true);
+    expect(clip?.ratio).toBeCloseTo(9 / 16);
+    expect(clip?.coverUrl).toBe("https://media.test/c1.webp");
+    expect(clipOf(galleryOf(ATTACHMENTS))).toBeUndefined();
+  });
+
+  it("offers the door over a taken frame and over no face, the change over a chosen one", () => {
+    expect(coverChosen(clipOf(galleryOf(CHOSEN_CLIP))!)).toBe(true);
+    expect(coverChosen(clipOf(galleryOf([{ ...CHOSEN_CLIP[0]!, coverTaken: true }]))!)).toBe(false);
+    expect(
+      coverChosen(clipOf(galleryOf([{ ...CHOSEN_CLIP[0]!, coverMedia: null, coverTaken: null }]))!),
+    ).toBe(false);
+  });
+
+  it("gates the edit on the new face, and names it once it has landed", () => {
+    const waiting = withNewCover(galleryOf(CHOSEN_CLIP), "v1", newFace({ kind: "waiting" }));
+    expect(uploadsPending(waiting)).toBe(1);
+    expect(editClaims(waiting)).toBeNull();
+    const landedFace = withUpload(waiting, "face", { kind: "done", mediaId: "c9" });
+    expect(uploadsDone(landedFace)).toBe(1);
+    // The clip itself never changes: only its cover pointer, now a chosen one.
+    expect(editClaims(landedFace)).toEqual([
+      { mediaId: "v1", altText: "A headland", coverMediaId: "c9", coverTaken: null },
+    ]);
+    // The face it replaced is named by nothing the edit signs.
+    expect(keptMediaIds(landedFace)).toEqual(["v1"]);
+  });
+
+  it("puts the clip back as it stood when the new face is taken back", () => {
+    const opened = galleryOf(CHOSEN_CLIP);
+    const back = withNewCover(withNewCover(opened, "v1", newFace({ kind: "waiting" })), "v1", null);
+    expect(editClaims(back)).toEqual(editClaims(opened));
+    expect(uploadsPending(back)).toBe(0);
   });
 });
 

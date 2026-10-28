@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="1240x760" name="Stance alternates" subtitle="The non-drag path. One control at a time — sliders lead, typing is a tap away. A tag or citation sheet hosts it in the field's place; one axis takes one track." -->
+<!-- @dsCard group="Components" viewport="1240x1800" name="Stance alternates" subtitle="The non-drag path. One control at a time — sliders lead, typing is a tap away. A tag or citation sheet hosts it in the field's place; one axis takes one track. Its commit waits as Set does, and a typed value past the edge clamps." -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -20,6 +20,7 @@ function Demo(){
   const [c,setC]=React.useState({pDirected:0.1,pInterest:1});
   const [d,setD]=React.useState({pDirected:0.1,pInterest:1});
   const [e,setE]=React.useState({pDirected:0,pInterest:1});
+  const [f,setF]=React.useState({pDirected:1,pInterest:0.2});
   const backingBox={width:300,padding:16,borderRadius:"var(--radius-extra-large)",background:"var(--surface-dialog)"};
   return (
   <div className="col" style={{gap:24}}>
@@ -52,6 +53,32 @@ function Demo(){
       <span className="lbl">One axis, typed — one field</span>
       <StanceAlternates host="sheet" axis="one" mode="entry" pick={e} onPick={setE}>
         <AttachmentStanding pick={e.pDirected}/>
+      </StanceAlternates>
+    </div>
+    <div className="col">
+      <span className="lbl">Typed past the edge — the pick clamps, as the field stops at its edge; the readout says so before anything signs</span>
+      <StanceAlternates inline onSever={()=>{}} mode="entry" pick={f} onPick={setF} typed={{pDirected:"1.5"}} landing={<StanceLandingLine landing={landingOf(standing.rawSum,f)}/>}>
+        <StanceStanding pick={f} bundle={standing} targetLabel="this post"/>
+      </StanceAlternates>
+    </div>
+  </div>
+  <div className="row">
+    <div className="col">
+      <span className="lbl">Signing, past 200ms — the commit inert, never dimmed</span>
+      <StanceAlternates inline onSever={()=>{}} signing="busy" pick={a} onPick={setA} landing={<StanceLandingLine landing={landingOf(standing.rawSum,a)}/>}>
+        <StanceStanding pick={a} bundle={standing} targetLabel="this post"/>
+      </StanceAlternates>
+    </div>
+    <div className="col">
+      <span className="lbl">Didn't go through — the dialog stays at the pick, the fault line, and Retry in the commit's slot</span>
+      <StanceAlternates inline onSever={()=>{}} signing="failed" pick={a} onPick={setA} landing={<StanceLandingLine landing={landingOf(standing.rawSum,a)}/>}>
+        <StanceStanding pick={a} bundle={standing} targetLabel="this post"/>
+      </StanceAlternates>
+    </div>
+    <div className="col">
+      <span className="lbl">The write rule says not now — the pad's notice where the landing and the actions were; no Retry</span>
+      <StanceAlternates inline onSever={()=>{}} signing="writeRule" pick={a} onPick={setA} landing={<StanceLandingLine landing={landingOf(standing.rawSum,a)}/>}>
+        <StanceStanding pick={a} bundle={standing} targetLabel="this post"/>
       </StanceAlternates>
     </div>
   </div>
