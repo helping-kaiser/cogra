@@ -118,10 +118,10 @@ export function OpinionsScreen({
     [client],
   );
 
-  // The direction rides in a ref too, so a refresh reads the tab standing now
-  // without re-running the profile read on every switch.
-  const directionNow = useRef(direction);
-  directionNow.current = direction;
+  // The direction rides in a ref too, written where it changes (the tab tap),
+  // so a refresh reads the tab standing now without re-running the profile
+  // read on every switch.
+  const directionNow = useRef<OpinionDirection>(tab);
 
   const refresh = useCallback(() => {
     let cancelled = false;
@@ -170,6 +170,7 @@ export function OpinionsScreen({
   // integrates with the router — linking-and-navigating.md).
   const onDirection = (next: OpinionDirection) => {
     if (next === direction) return;
+    directionNow.current = next;
     setDirection(next);
     setListed(null);
     window.history.replaceState(null, "", opinionsHref(handle, next, from));

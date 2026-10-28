@@ -112,11 +112,11 @@ describe("OpinionsScreen", () => {
   it("draws each row as a person, the face leading and the pair spoken (:9)", async () => {
     server.use(theirProfile(), userOpinions("on", [theBoardsFive()]));
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    const first = await screen.findByTestId("opinions-row-1");
+    const first = await screen.findByTestId(byNode("profileStances.row", "1"));
     expect(first).toHaveTextContent("Tobias Lindqvist");
     expect(first).toHaveTextContent("@tobias");
     expect(within(first).getByRole("img", { name: "Like this, +0.70 / +0.40" })).toBeInTheDocument();
-    expect(within(screen.getByTestId("opinions-row-3")).getByRole("img")).toHaveAccessibleName(
+    expect(within(screen.getByTestId(byNode("profileStances.row", "3"))).getByRole("img")).toHaveAccessibleName(
       "Show me more, +0.40 / +0.50",
     );
   });
@@ -124,7 +124,7 @@ describe("OpinionsScreen", () => {
   it("wears 🤔 at exactly one zero, spoken Interested, never a table face (:11)", async () => {
     server.use(theirProfile(), userOpinions("on", [theBoardsFive()]));
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    const kel = await screen.findByTestId("opinions-row-4");
+    const kel = await screen.findByTestId(byNode("profileStances.row", "4"));
     const value = within(kel).getByRole("img");
     expect(value).toHaveAccessibleName("Interested, no side taken, +0.00 / +0.35");
     expect(value).toHaveTextContent("🤔");
@@ -142,7 +142,7 @@ describe("OpinionsScreen", () => {
   it("stands the rows strongest first, down past nothing into the ones held against (:15)", async () => {
     server.use(theirProfile(), userOpinions("on", [theBoardsFive()]));
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    await screen.findByTestId("opinions-row-5");
+    await screen.findByTestId(byNode("profileStances.row", "5"));
     expect(rowNames()).toEqual(["Tobias Lindqvist", "Sol Ferreira", "Mira Voss", "Kel Moreau", "Juno Baptiste"]);
   });
 
@@ -153,7 +153,7 @@ describe("OpinionsScreen", () => {
       userOpinions("on", [[opinionRecord("sol", 0.6, 0.3, { displayName: "Sol Ferreira" })]], (id) => asked.push(id)),
     );
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    expect(await screen.findByTestId("opinions-row-1")).toHaveTextContent("Sol Ferreira");
+    expect(await screen.findByTestId(byNode("profileStances.row", "1"))).toHaveTextContent("Sol Ferreira");
     expect(asked).toEqual(["u-ada"]);
   });
 
@@ -165,9 +165,9 @@ describe("OpinionsScreen", () => {
       userOpinions("by", [[opinionGiven("rafa", 0.3, 0.2, { displayName: "Rafa Quintero" })]], (id) => asked.push(id)),
     );
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    await screen.findByTestId("opinions-row-1");
+    await screen.findByTestId(byNode("profileStances.row", "1"));
     fireEvent.click(screen.getByTestId(byNode("profileStances.tabRow.byTab")));
-    await waitFor(() => expect(screen.getByTestId("opinions-row-1")).toHaveTextContent("Rafa Quintero"));
+    await waitFor(() => expect(screen.getByTestId(byNode("profileStances.row", "1"))).toHaveTextContent("Rafa Quintero"));
     expect(screen.queryByText("Sol Ferreira")).not.toBeInTheDocument();
     expect(asked).toEqual(["u-ada"]);
     expect(screen.getByTestId(byNode("profileStances.tabRow.byTab"))).toHaveAttribute("aria-pressed", "true");
@@ -177,7 +177,7 @@ describe("OpinionsScreen", () => {
   it("opens on By them when the address says so", async () => {
     server.use(theirProfile(), userOpinions("by", [[opinionGiven("rafa", 0.3, 0.2)]]));
     renderWithProviders(<OpinionsScreen handle="ada" tab="by" />);
-    expect(await screen.findByTestId("opinions-row-1")).toHaveTextContent("@rafa");
+    expect(await screen.findByTestId(byNode("profileStances.row", "1"))).toHaveTextContent("@rafa");
     expect(screen.getByTestId(byNode("profileStances.tabRow.byTab"))).toHaveAttribute("aria-pressed", "true");
   });
 
@@ -188,10 +188,10 @@ describe("OpinionsScreen", () => {
       userOpinions("by", [[opinionGiven("rafa", 0.3, 0.2)]]),
     );
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    expect(await screen.findByTestId("opinions-row-1")).toHaveAttribute("href", "/u/tobias?from=opinions%3Aada");
+    expect(await screen.findByTestId(byNode("profileStances.row", "1"))).toHaveAttribute("href", "/u/tobias?from=opinions%3Aada");
     fireEvent.click(screen.getByTestId(byNode("profileStances.tabRow.byTab")));
     await waitFor(() =>
-      expect(screen.getByTestId("opinions-row-1")).toHaveAttribute("href", "/u/rafa?from=opinions.by%3Aada"),
+      expect(screen.getByTestId(byNode("profileStances.row", "1"))).toHaveAttribute("href", "/u/rafa?from=opinions.by%3Aada"),
     );
   });
 
@@ -234,8 +234,8 @@ describe("OpinionsScreen", () => {
       ]),
     );
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    const row = await screen.findByTestId("opinions-row-1");
-    expect(screen.queryByTestId("opinions-row-2")).not.toBeInTheDocument();
+    const row = await screen.findByTestId(byNode("profileStances.row", "1"));
+    expect(screen.queryByTestId(byNode("profileStances.row", "2"))).not.toBeInTheDocument();
     expect(within(row).getByRole("img")).toHaveAccessibleName(/\+0\.40 \/ \+0\.35$/);
   });
 
@@ -253,7 +253,7 @@ describe("OpinionsScreen", () => {
       ),
     );
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    await screen.findByTestId("opinions-row-2");
+    await screen.findByTestId(byNode("profileStances.row", "2"));
     expect(after).toEqual([null, "p1"]);
     // Kel's two records sum past Sol's one: the second page moved the order.
     expect(rowNames()).toEqual(["Kel Moreau", "Sol Ferreira"]);
@@ -265,9 +265,9 @@ describe("OpinionsScreen", () => {
       userOpinions("by", [[opinionGiven("rafa", 0.3, 0.2), opinionGiven("rafa", 0.2, 0.1), opinionGiven("wren", 0.1, 0.1)]]),
     );
     renderWithProviders(<OpinionsScreen handle="ada" tab="by" />);
-    await screen.findByTestId("opinions-row-2");
-    expect(screen.queryByTestId("opinions-row-3")).not.toBeInTheDocument();
-    expect(within(screen.getByTestId("opinions-row-1")).getByRole("img")).toHaveAccessibleName(/\+0\.50 \/ \+0\.30$/);
+    await screen.findByTestId(byNode("profileStances.row", "2"));
+    expect(screen.queryByTestId(byNode("profileStances.row", "3"))).not.toBeInTheDocument();
+    expect(within(screen.getByTestId(byNode("profileStances.row", "1"))).getByRole("img")).toHaveAccessibleName(/\+0\.50 \/ \+0\.30$/);
   });
 
   // WHICH (0, 0) THE ROW SPEAKS IS THE ROW'S DATA (StanceRow `severed`, round 20).
@@ -283,7 +283,7 @@ describe("OpinionsScreen", () => {
       ]),
     );
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    await screen.findByTestId("opinions-row-2");
+    await screen.findByTestId(byNode("profileStances.row", "2"));
     const names = screen
       .getAllByTestId(byNode("profileStances.row.value"))
       .map((value) => value.getAttribute("aria-label"));
@@ -293,7 +293,7 @@ describe("OpinionsScreen", () => {
   it("names a deleted account's rows by the reserved name, opening nothing", async () => {
     server.use(theirProfile(), userOpinions("on", [[opinionRecord("gone", 0.3, 0.3, { redacted: true })]]));
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    const row = await screen.findByTestId("opinions-row-1");
+    const row = await screen.findByTestId(byNode("profileStances.row", "1"));
     expect(row.tagName).not.toBe("A");
     expect(row).not.toHaveTextContent("@gone");
   });
@@ -358,7 +358,7 @@ describe("OpinionsScreen", () => {
     expect(await screen.findByTestId("opinions-transport-error")).toBeInTheDocument();
     fail = false;
     fireEvent.click(screen.getByTestId("opinions-retry"));
-    expect(await screen.findByTestId("opinions-row-1")).toHaveTextContent("@sol");
+    expect(await screen.findByTestId(byNode("profileStances.row", "1"))).toHaveTextContent("@sol");
   });
 
   describe("pulling down at the top (:29)", () => {
@@ -385,14 +385,14 @@ describe("OpinionsScreen", () => {
           <OpinionsScreen handle="ada" />
         </ScrollHostProvider>,
       );
-      await screen.findByTestId("opinions-row-1");
+      await screen.findByTestId(byNode("profileStances.row", "1"));
       expect(reads).toBe(1);
       fireEvent(scroller, touch("touchstart", 100));
       fireEvent(scroller, touch("touchmove", 100 + PULL_THRESHOLD));
       fireEvent(scroller, touch("touchend", 100 + PULL_THRESHOLD));
       await waitFor(() => expect(reads).toBe(2));
       // The list already on screen stays while the read is out.
-      expect(screen.getByTestId("opinions-row-1")).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("profileStances.row", "1"))).toBeInTheDocument();
       scroller.remove();
     });
   });
