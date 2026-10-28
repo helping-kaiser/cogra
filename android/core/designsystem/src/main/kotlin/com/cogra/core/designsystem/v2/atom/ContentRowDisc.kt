@@ -31,6 +31,13 @@ sealed interface ContentRowDisc {
         val zeroLabel: Int get() = if (severed) SEVERED_LABEL else EMPTY_PICK_LABEL
     }
 
+    /**
+     * The mark a kind with no icon wears (`ContentRow.jsx`'s `letter`,
+     * `NodeMark`'s rule): a topic's `#`, a text post's `T` — in the disc's
+     * own tone, at `title-medium`.
+     */
+    data class Letter(val letter: String) : ContentRowDisc
+
     /** 🤷 where a picture would go, for a stance walked back (the withdrawal notification). */
     data object WalkedBack : ContentRowDisc
 

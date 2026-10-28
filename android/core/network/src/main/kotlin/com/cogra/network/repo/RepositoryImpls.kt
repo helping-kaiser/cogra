@@ -26,6 +26,8 @@ import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
+import com.cogra.domain.RecordAbout
+import com.cogra.domain.RecordAct
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordOpinion
 import com.cogra.domain.RecordRow
@@ -1031,33 +1033,60 @@ private fun Family.toRecordFamily(): com.cogra.network.graphql.type.RecordFamily
  */
 private fun AuthorRecordsQuery.Node.toRow(): RecordRow {
     val mint = "mint:$id"
+    val kind = family.toDomain()
+    // A citation is about its terminal leg — the cited thing — while every
+    // other family is about its target (a Review's terminal being the
+    // comment it minted, whose words are the row's).
+    val cites = kind == Family.REFERENCE
     val terminalComment = terminal?.onComment
+    val terminalPost = terminal?.onPost
     val targetPost = target?.onPost
     val targetComment = target?.onComment
-    val snippet = terminalComment?.content?.value
-        ?: targetPost?.title?.value
-        ?: targetPost?.content?.value
-        ?: targetComment?.content?.value
+    val snippet = if (cites) {
+        terminalPost?.title?.value ?: terminalPost?.content?.value ?: terminalComment?.content?.value
+    } else {
+        terminalComment?.content?.value
+            ?: targetPost?.title?.value
+            ?: targetPost?.content?.value
+            ?: targetComment?.content?.value
+    }
     val link = when {
+        cites && terminalPost != null -> RecordLink.ToPost(terminalPost.id)
         // A Review's thread opens at its parent post, when the parent
         // is a post CoGra carries; nested reply chains stay unlinked
         // until a comment permalink exists.
         terminalComment != null -> terminalComment.target?.onPost?.id?.let { RecordLink.ToPost(it) }
+        cites -> null
         targetPost != null -> RecordLink.ToPost(targetPost.id)
         targetComment != null -> targetComment.target?.onPost?.id?.let { RecordLink.ToPost(it) }
         else -> null
     }
-    val kind = family.toDomain()
+    val about = when {
+        cites && terminal?.onUser != null -> RecordAbout.PERSON
+        cites && terminalPost != null -> RecordAbout.POST
+        cites && terminalComment != null -> RecordAbout.COMMENT
+        cites -> null
+        target?.onUser != null -> RecordAbout.PERSON
+        targetPost != null -> RecordAbout.POST
+        targetComment != null -> RecordAbout.COMMENT
+        else -> null
+    }
+    // The server's reading of what the record did (`Record.act`); a value
+    // this client does not know reads ordinary.
+    val did = runCatching { RecordAct.valueOf(act.rawValue) }.getOrDefault(RecordAct.ORDINARY)
     return RecordRow(
         id = id,
         family = kind,
-        genesis = targetId == mint || terminalId == mint,
+        genesis = did == RecordAct.GENESIS || targetId == mint || terminalId == mint,
         snippet = snippet,
         link = link,
         landedAt = landedAt,
         // Both stance families wear their own face (the chronicle's opinion card).
         opinion = RecordOpinion(pDirected, pInterest, severed == true)
             .takeIf { kind == Family.OPINION || kind == Family.AFFINITY },
-        targetHandle = target?.onUser?.handle,
+        targetHandle = (if (cites) terminal?.onUser?.handle else target?.onUser?.handle),
+        act = did,
+        about = about,
+        untag = kind == Family.TAG && pDirected == 0.0 && pInterest == 0.0,
     )
 }

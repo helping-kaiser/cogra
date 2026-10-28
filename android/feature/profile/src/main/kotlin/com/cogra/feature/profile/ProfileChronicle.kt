@@ -36,6 +36,8 @@ import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.atom.LoadingState
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.crypto.Family
+import com.cogra.domain.RecordAbout
+import com.cogra.domain.RecordAct
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
 import com.cogra.domain.ageLadder
@@ -57,10 +59,12 @@ internal fun ChronicleAct(
     onOpenPost: (String) -> Unit,
 ) {
     val post = (row.link as? RecordLink.ToPost)?.postId
+    val aside = asideOf(row)?.let { (words, handle) ->
+        if (handle == null) stringResource(words) else stringResource(words, handle)
+    }
     ContentRow(
         title = stringResource(verbOf(row, own)),
-        titleAside = row.targetHandle?.takeIf { row.opinion != null }
-            ?.let { stringResource(R.string.chronicle_opinion_on, it) },
+        titleAside = aside,
         disc = discOf(row),
         second = row.snippet?.takeIf { it.isNotBlank() }?.let { words -> { ContentRowSecond(words) } },
         trailing = row.landedAt?.let { ageLadder(it, now) },
@@ -72,31 +76,86 @@ internal fun ChronicleAct(
 }
 
 /**
- * The act's verb in the profile's blessed words (copy-voice.md, "Carried
- * over": `Published a post`, `Commented`, `Gave an opinion`, `Updated your
- * profile` · `Updated their profile`). An opinion is the reader's word for
- * both stance families — "stance" never reaches a screen.
+ * THE CHRONICLE'S VERBS, ONE PER FAMILY IT LISTS (copy-voice, the profile;
+ * round 22, seam 245 ask 10), read from the record's own `act` (#324): the
+ * title is the act, past tense, its actor the profile's owner and never
+ * named. An opinion is the reader's word for both stance families —
+ * "stance" never reaches a screen. A family with no blessed verb keeps the
+ * unblessed `Did something`.
  */
 internal fun verbOf(row: RecordRow, own: Boolean): Int = when (row.family) {
     Family.PUBLISH -> if (row.genesis) R.string.chronicle_published else R.string.chronicle_edited_post
     Family.REVIEW -> if (row.genesis) R.string.chronicle_commented else R.string.chronicle_edited_comment
-    // The anchoring record and its updates share one label — the chain
-    // shape is not visible per-row.
-    Family.REGISTRATION -> if (own) R.string.chronicle_profile_yours else R.string.chronicle_profile_theirs
-    Family.OPINION, Family.AFFINITY -> R.string.chronicle_opinion
+    // The account's own anchoring registration is `Joined`; every later one
+    // updates the profile.
+    Family.REGISTRATION -> when {
+        row.act == RecordAct.GENESIS -> R.string.chronicle_joined
+        own -> R.string.chronicle_profile_yours
+        else -> R.string.chronicle_profile_theirs
+    }
+    Family.OPINION, Family.AFFINITY -> when (row.act) {
+        RecordAct.WALK_BACK -> R.string.chronicle_walked_back
+        RecordAct.VOUCH -> R.string.chronicle_vouched
+        else -> R.string.chronicle_opinion
+    }
+    Family.TAG -> when {
+        row.about == RecordAbout.POST ->
+            if (row.untag) R.string.chronicle_untagged_post else R.string.chronicle_tagged_post
+        row.about == RecordAbout.COMMENT ->
+            if (row.untag) R.string.chronicle_untagged_comment else R.string.chronicle_tagged_comment
+        else -> R.string.chronicle_acted
+    }
+    Family.REFERENCE -> when (row.about) {
+        RecordAbout.PERSON -> R.string.chronicle_mentioned
+        RecordAbout.POST -> R.string.chronicle_cited_post
+        RecordAbout.COMMENT -> R.string.chronicle_cited_comment
+        null -> R.string.chronicle_acted
+    }
     else -> R.string.chronicle_acted
 }
 
-/** Each act's disc, by kind (`_shared.jsx` `ProfileOwnBody`'s chronicle). */
+/**
+ * The aside names the target (copy-voice, the profile): an opinion's or a
+ * walk-back's `on @mira` · `on a post` · `on a comment`, a vouch's or a
+ * mention's `@rafa`. A string resource and the handle it takes, if any.
+ */
+internal fun asideOf(row: RecordRow): Pair<Int, String?>? {
+    val handle = row.targetHandle
+    return when (row.family) {
+        Family.OPINION, Family.AFFINITY -> when {
+            row.act == RecordAct.VOUCH -> handle?.let { R.string.chronicle_person to it }
+            handle != null -> R.string.chronicle_opinion_on to handle
+            row.about == RecordAbout.POST -> R.string.chronicle_on_post to null
+            row.about == RecordAbout.COMMENT -> R.string.chronicle_on_comment to null
+            else -> null
+        }
+        Family.REFERENCE -> handle?.takeIf { row.about == RecordAbout.PERSON }?.let { R.string.chronicle_person to it }
+        else -> null
+    }
+}
+
+/** Each act's disc, by kind (copy-voice, the profile's chronicle verbs). */
 internal fun discOf(row: RecordRow): ContentRowDisc {
     val opinion = row.opinion
     return when {
         row.family == Family.PUBLISH -> ContentRowDisc.Glyph(Icons.Filled.DynamicFeed)
         row.family == Family.REVIEW -> ContentRowDisc.Glyph(Icons.Filled.ChatBubble)
         row.family == Family.REGISTRATION -> ContentRowDisc.Glyph(Icons.Filled.Person)
+        // Every record a walk-back signs wears 🤷 — never the counter-record's
+        // own face, which would read as an opinion against.
+        row.act == RecordAct.WALK_BACK -> ContentRowDisc.WalkedBack
         // The stance record's own face — which (0, 0) it reads, from the
         // record's own `severed`.
         opinion != null -> ContentRowDisc.Face(opinion.directed, opinion.interest, severed = opinion.severed)
+        // A tag wears the `#` mark, as Explore's `Your topics` door does.
+        row.family == Family.TAG -> ContentRowDisc.Letter("#")
+        // A mention wears the person's own disc; a cited thing its own glyph.
+        row.family == Family.REFERENCE -> when (row.about) {
+            RecordAbout.PERSON -> ContentRowDisc.Monogram(row.targetHandle ?: "")
+            RecordAbout.POST -> ContentRowDisc.Glyph(Icons.Filled.DynamicFeed)
+            RecordAbout.COMMENT -> ContentRowDisc.Glyph(Icons.Filled.ChatBubble)
+            null -> ContentRowDisc.Glyph(Icons.Filled.History)
+        }
         else -> ContentRowDisc.Glyph(Icons.Filled.History)
     }
 }

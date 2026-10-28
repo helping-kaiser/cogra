@@ -95,8 +95,22 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
             }
           }
         }
+        # A citation's cited thing is its terminal leg: a post or a comment
+        # (`Cited a post`, the title under it) or a person (`Mentioned`).
         terminal {
           __typename
+          ... on User {
+            handle
+          }
+          ... on Post {
+            id
+            title {
+              value
+            }
+            content {
+              value
+            }
+          }
           ... on Comment {
             id
             content {

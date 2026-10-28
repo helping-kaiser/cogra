@@ -84,6 +84,21 @@ private fun Disc(disc: ContentRowDisc) {
                 modifier = Modifier.size(20.dp),
             )
         }
+        is ContentRowDisc.Letter -> Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(DISC)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        ) {
+            Text(
+                text = disc.letter,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                // Decorative: the row's sentence says what it is (`aria-hidden`).
+                modifier = Modifier.clearAndSetSemantics {},
+            )
+        }
     }
 }
 
