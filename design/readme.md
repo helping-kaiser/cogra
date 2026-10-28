@@ -939,7 +939,11 @@ paper over:
   because the two directions are different facts and the label has to
   say which one it counts; one merged "followers" figure would describe
   a different product, where a link is one-way and carries no opinion.
-  The figures are one tap target toward the
+  Each figure counts records, never a fold (open-questions Q35, closed
+  2026-10-28 under the autonomy order, jakob's confirmation pending):
+  the posts published, never their edits; the Opinion records toward
+  the person; the Opinion records they gave toward people — a revision
+  is one more. The figures are one tap target toward the
   stances page. On another's profile the stance wears the wide anchor with
   Message beside it; one's own avatar wears the change badge (the
   standalone crop-and-seal shortcut). No cover image: the largest thing on
