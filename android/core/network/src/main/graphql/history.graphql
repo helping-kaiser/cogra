@@ -46,10 +46,15 @@ mutation MarkSeen($nodes: [UUID!]!) {
 }
 
 # HISTORY'S OWN READ (History.md, HistoryFilter.md, HistorySearch.md): the
-# seen-list as a feed, newest first by first seeing, a page of TEN at a
-# time — Saved's size, for Saved's reason: every edge carries whole card
-# selections. The document is web's twin's (web/src/lib/graphql/history.graphql
-# `HistoryPage`) in this client's fragments.
+# seen-list as a feed, newest first by first seeing, a page of EIGHT at a
+# time. The document is web's twin's (web/src/lib/graphql/history.graphql
+# `HistoryPage`) in this client's card fragments, which are heavier than
+# web's: every edge carries a post card's whole `PostFields` (its gallery,
+# topics and references), and the tag card's glimpse adds three tagged
+# things with their galleries. At ten a page it measured 51 663 complexity —
+# past the 50 000 the query-budget guard's 1.4× headroom allows
+# (`crates/api/tests/client_operations.rs`) — so the page, not the cards,
+# gives: eight a page keeps every card whole and pages a little sooner.
 #
 # EVERY KIND AS ITS OWN FEED CARD: a post as the feed card's `PostFields`
 # with its comment count, a comment as the thread's `CommentFields` plus its
@@ -66,7 +71,7 @@ mutation MarkSeen($nodes: [UUID!]!) {
 query HistoryPage($query: String, $kinds: [NodeKind!], $after: String) {
   me {
     id
-    viewHistory(kinds: $kinds, query: $query, first: 10, after: $after) {
+    viewHistory(kinds: $kinds, query: $query, first: 8, after: $after) {
       edges {
         cursor
         firstSeenAt
