@@ -34,6 +34,7 @@ import com.cogra.domain.search.SearchOrder
 import com.cogra.domain.search.SearchRepository
 import com.cogra.domain.search.guestSearchFilter
 import com.cogra.domain.search.onlyUnscopedComments
+import com.cogra.domain.search.unscopedComments
 import com.cogra.domain.store.TokenStore
 import com.cogra.domain.topics.HeldTopicsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -97,8 +98,24 @@ data class ExploreUiState(
 
     /** Loading… stands in the rows' place once an ask outran the ladder. */
     val rowsShown: Boolean get() = results != null && !(slow && pending)
+
+    /** Comments are on and no cue names a scope: the search-scope line stands (ExploreUnscoped.md:3-7). */
+    val unscopedLine: Boolean get() = results?.let { unscopedComments(it.query, it.filter.kinds) } == true
+
+    /** The answer to the query standing in the field came back empty, for no other reason (ExploreNone.md:3). */
+    val nothingLine: Boolean
+        get() {
+            val answer = results ?: return false
+            val answered = answer.query == query.trim() && !pending && !failed
+            return answered && answer.hits.isEmpty() && !unscopedLine
+        }
 }
 
+// One handler per intent the boards draw (type, clear, recent, action key,
+// open, Done, See all profiles, retry, pull, the next page and its retry):
+// the surface is one state machine, and splitting its intents across classes
+// would hide the transitions they share.
+@Suppress("TooManyFunctions")
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
@@ -235,7 +252,8 @@ class ExploreViewModel @Inject constructor(
     fun loadMore() {
         val current = _state.value
         val results = current.results ?: return
-        if (current.loadingMore || !results.hasNextPage || results.endCursor == null || current.moreFailed) return
+        val exhausted = !results.hasNextPage || results.endCursor == null
+        if (current.loadingMore || current.moreFailed || exhausted) return
         fetchMore(results)
     }
 

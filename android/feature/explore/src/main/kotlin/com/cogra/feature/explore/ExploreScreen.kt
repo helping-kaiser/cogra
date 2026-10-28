@@ -122,7 +122,6 @@ import com.cogra.domain.search.SearchOrder
 import com.cogra.domain.search.layoutResults
 import com.cogra.domain.search.reading
 import com.cogra.domain.search.recentNodeKey
-import com.cogra.domain.search.unscopedComments
 import java.time.Instant
 
 /** The registered prefix (nodes.json `explore`). */
@@ -453,30 +452,50 @@ private fun RecentRow(query: String, onTap: () -> Unit) {
  */
 @Composable
 private fun SkyField(modifier: Modifier = Modifier) {
-    val hairline = MaterialTheme.colorScheme.outlineVariant
-    val near = MaterialTheme.colorScheme.primaryContainer
-    val most = MaterialTheme.colorScheme.primary
-    val far = MaterialTheme.colorScheme.outline
+    val scheme = MaterialTheme.colorScheme
+    val tones = mapOf(
+        SkyTone.FAR to scheme.outline,
+        SkyTone.NEAR to scheme.primaryContainer,
+        SkyTone.MOST to scheme.primary,
+    )
+    val hairline = scheme.outlineVariant
     Canvas(modifier.fillMaxWidth().height(SKY_HEIGHT)) {
         // `xMidYMid slice` on a 358 × 180 box: scale to cover, centred.
         val scale = maxOf(size.width / SKY_BOX_WIDTH, size.height / SKY_BOX_HEIGHT)
         val dx = (size.width - SKY_BOX_WIDTH * scale) / 2f
         val dy = (size.height - SKY_BOX_HEIGHT * scale) / 2f
-        fun at(x: Float, fraction: Float) = Offset(dx + x * scale, dy + SKY_BOX_HEIGHT * fraction * scale)
-        val stroke = 1.dp.toPx()
-        drawLine(hairline, at(40f, 0.55f), at(140f, 0.3f), stroke)
-        drawLine(hairline, at(140f, 0.3f), at(230f, 0.62f), stroke)
-        drawLine(hairline, at(230f, 0.62f), at(318f, 0.38f), stroke)
-        drawLine(hairline, at(140f, 0.3f), at(196f, 0.14f), stroke)
-        drawCircle(near, 7f * scale, at(40f, 0.55f))
-        drawCircle(most, 12f * scale, at(140f, 0.3f))
-        drawCircle(far, 4f * scale, at(196f, 0.14f))
-        drawCircle(near, 9f * scale, at(230f, 0.62f))
-        drawCircle(near, 6f * scale, at(318f, 0.38f))
-        drawCircle(far, 3f * scale, at(286f, 0.78f))
-        drawCircle(far, 4f * scale, at(90f, 0.82f))
+        fun at(point: SkyPoint) = Offset(dx + point.x * scale, dy + SKY_BOX_HEIGHT * point.y * scale)
+        SKY_EDGES.forEach { (from, to) -> drawLine(hairline, at(SKY_POINTS[from]), at(SKY_POINTS[to]), 1.dp.toPx()) }
+        SKY_POINTS.forEach { point -> drawCircle(tones.getValue(point.tone), point.r * scale, at(point)) }
     }
 }
+
+/** The three rungs the field spends: `outline` far, `primaryContainer` near, `primary` the most-weighted. */
+private enum class SkyTone { FAR, NEAR, MOST }
+
+/** One point of `SkyField`: on the 358 box, its height as a fraction of the field, its radius and its rung. */
+private data class SkyPoint(val x: Float, val y: Float, val r: Float, val tone: SkyTone)
+
+/** `_shared.jsx` `SkyField`'s points, verbatim. */
+private val SKY_POINTS = listOf(
+    SkyPoint(x = 40f, y = 0.55f, r = 7f, tone = SkyTone.NEAR),
+    SkyPoint(x = 140f, y = 0.3f, r = 12f, tone = SkyTone.MOST),
+    SkyPoint(x = 196f, y = 0.14f, r = 4f, tone = SkyTone.FAR),
+    SkyPoint(x = 230f, y = 0.62f, r = 9f, tone = SkyTone.NEAR),
+    SkyPoint(x = 318f, y = 0.38f, r = 6f, tone = SkyTone.NEAR),
+    SkyPoint(x = 286f, y = 0.78f, r = 3f, tone = SkyTone.FAR),
+    SkyPoint(x = 90f, y = 0.82f, r = 4f, tone = SkyTone.FAR),
+)
+
+/** One hairline edge of the field, by index into [SKY_POINTS]. */
+private data class SkyEdge(val from: Int, val to: Int)
+
+private val SKY_EDGES = listOf(
+    SkyEdge(from = 0, to = 1),
+    SkyEdge(from = 1, to = 3),
+    SkyEdge(from = 3, to = 4),
+    SkyEdge(from = 1, to = 2),
+)
 
 private val SKY_HEIGHT = 180.dp
 private const val SKY_BOX_WIDTH = 358f
@@ -492,9 +511,33 @@ private fun Results(
     actions: ExploreActions,
     now: Instant,
 ) {
-    val results = state.results
-    val items = remember(results, state.guest, state.reader, now) {
-        results?.let {
+    val items = rememberResultItems(state, now)
+    val rowCount = items.count { it is ResultItem.Row }
+    LoadNextAtTheTail(list, rowCount, state.results?.hasNextPage == true && !state.moreFailed, actions.onLoadMore)
+    PullToRefreshBox(
+        isRefreshing = state.refreshing,
+        onRefresh = actions.onPull,
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        LazyColumn(state = list, modifier = Modifier.fillMaxSize().testTag("explore_results")) {
+            resultsHead(state, rowCount, actions)
+            if (state.rowsShown) {
+                items.forEach { item -> resultItem(item, doors, actions) }
+                if (state.unscopedLine) {
+                    item(key = "unscoped") { ResultsLine(stringResource(R.string.explore_unscoped)) }
+                }
+                if (state.nothingLine) item(key = "none") { ResultsLine(stringResource(R.string.explore_none)) }
+            }
+            resultsTail(state, actions)
+        }
+    }
+}
+
+/** The answer laid out as served (`layoutResults`); a guest's reads Newest. */
+@Composable
+private fun rememberResultItems(state: ExploreUiState, now: Instant): List<ResultItem> =
+    remember(state.results, state.guest, state.reader, now) {
+        state.results?.let {
             layoutResults(
                 hits = it.hits,
                 kinds = it.filter.kinds,
@@ -508,51 +551,39 @@ private fun Results(
             )
         }.orEmpty()
     }
-    val rowCount = items.count { it is ResultItem.Row }
-    val asked = state.query.trim()
-    val unscopedLine = results != null && unscopedComments(results.query, results.filter.kinds)
-    val nothing = results != null && results.hits.isEmpty() && !state.failed && results.query == asked &&
-        !state.pending && !unscopedLine
-    LoadNextAtTheTail(list, rowCount, results?.hasNextPage == true && !state.moreFailed, actions.onLoadMore)
-    PullToRefreshBox(
-        isRefreshing = state.refreshing,
-        onRefresh = actions.onPull,
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        LazyColumn(state = list, modifier = Modifier.fillMaxSize().testTag("explore_results")) {
-            if (state.slow && state.pending) {
-                item(key = "loading") {
-                    LoadingState("explore_loading", Modifier.padding(horizontal = Space.x6, vertical = Space.x2))
+
+/** Over the rows: Loading… past the ladder, and a failed ask's line (ExploreSearch.md:55-63). */
+private fun LazyListScope.resultsHead(state: ExploreUiState, rowCount: Int, actions: ExploreActions) {
+    if (state.slow && state.pending) {
+        item(key = "loading") {
+            LoadingState("explore_loading", Modifier.padding(horizontal = Space.x6, vertical = Space.x2))
+        }
+    }
+    if (state.failed && !state.pending) {
+        item(key = "failed") {
+            if (rowCount > 0) {
+                FaultLine(stringResource(R.string.explore_couldnt_load_more), "explore_refine_failed") {
+                    actions.onRetry()
                 }
+            } else {
+                HouseFault(actions.onRetry)
             }
-            if (state.failed && !state.pending) {
-                item(key = "failed") {
-                    if (rowCount > 0) {
-                        FaultLine(stringResource(R.string.explore_couldnt_load_more), "explore_refine_failed") {
-                            actions.onRetry()
-                        }
-                    } else {
-                        HouseFault(actions.onRetry)
-                    }
-                }
+        }
+    }
+}
+
+/** Under the rows: a failed next page, or the next page loading. */
+private fun LazyListScope.resultsTail(state: ExploreUiState, actions: ExploreActions) {
+    if (state.moreFailed) {
+        item(key = "moreFailed") {
+            FaultLine(stringResource(R.string.explore_couldnt_load_more), "explore_more_failed") {
+                actions.onRetryMore()
             }
-            if (state.rowsShown) {
-                items.forEach { item -> resultItem(item, doors, actions) }
-                if (unscopedLine) item(key = "unscoped") { ResultsLine(stringResource(R.string.explore_unscoped)) }
-                if (nothing) item(key = "none") { ResultsLine(stringResource(R.string.explore_none)) }
-            }
-            if (state.moreFailed) {
-                item(key = "moreFailed") {
-                    FaultLine(stringResource(R.string.explore_couldnt_load_more), "explore_more_failed") {
-                        actions.onRetryMore()
-                    }
-                }
-            }
-            if (state.loadingMore) {
-                item(key = "loadingMore") {
-                    LoadingState("explore_loading_more", Modifier.padding(horizontal = Space.x6, vertical = Space.x3))
-                }
-            }
+        }
+    }
+    if (state.loadingMore) {
+        item(key = "loadingMore") {
+            LoadingState("explore_loading_more", Modifier.padding(horizontal = Space.x6, vertical = Space.x3))
         }
     }
 }

@@ -127,26 +127,30 @@ fun SearchBar(
                         .dataNode(node?.div("input")),
                 )
             }
-            if (onClear != null && query.isNotEmpty()) {
-                val clear = stringResource(R.string.search_bar_clear)
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .offset(x = Space.x2)
-                        .size(CLEAR_TARGET)
-                        .clip(CircleShape)
-                        .clickable(role = Role.Button, onClick = onClear)
-                        .semantics { contentDescription = clear }
-                        .testTag(node?.div("clear")?.tag ?: "search_bar_clear"),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(SEARCH_GLYPH),
-                    )
-                }
-            }
+            if (onClear != null && query.isNotEmpty()) ClearControl(onClear, node)
         }
+    }
+}
+
+/** The trailing ×: 40dp of target pulled 8 into the pill's end padding, the 20dp close glyph, named for what it does. */
+@Composable
+private fun ClearControl(onClear: () -> Unit, node: DataNode?) {
+    val clear = stringResource(R.string.search_bar_clear)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .offset(x = Space.x2)
+            .size(CLEAR_TARGET)
+            .clip(CircleShape)
+            .clickable(role = Role.Button, onClick = onClear)
+            .semantics { contentDescription = clear }
+            .testTag(node?.div("clear")?.tag ?: "search_bar_clear"),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Close,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(SEARCH_GLYPH),
+        )
     }
 }

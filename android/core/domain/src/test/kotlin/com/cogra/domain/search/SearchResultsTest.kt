@@ -136,7 +136,13 @@ class SearchResultsTest {
 
     @Test
     fun `a comment reads on its root post's title and lands on itself in the thread`() {
-        val comment = SearchNode.Comment("c1", "The wax-stick ones", now, threadPostId = "p9", threadPostTitle = "Salt flats")
+        val comment = SearchNode.Comment(
+            id = "c1",
+            content = "The wax-stick ones",
+            createdAt = now,
+            threadPostId = "p9",
+            threadPostTitle = "Salt flats",
+        )
         val row = rows(layoutResults(listOf(SearchHit(comment, null)), emptySet(), false, context())).single()
         assertThat(row.sub).isEqualTo(ResultSub.On("Salt flats"))
         assertThat(row.door).isEqualTo(ResultDoor.Comment("p9", "c1"))
@@ -144,9 +150,8 @@ class SearchResultsTest {
 
     @Test
     fun `a tag reached through a person cue reads tagged by that handle`() {
-        val row = rows(
-            layoutResults(listOf(SearchHit(tag("t1", "saltmaps"), 3.4)), emptySet(), false, context(query = "@sol salt")),
-        ).single()
+        val hits = listOf(SearchHit(tag("t1", "saltmaps"), 3.4))
+        val row = rows(layoutResults(hits, emptySet(), false, context(query = "@sol salt"))).single()
         assertThat(row.sub).isEqualTo(ResultSub.TaggedBy("sol"))
         assertThat(row.door).isEqualTo(ResultDoor.Topic("saltmaps"))
     }

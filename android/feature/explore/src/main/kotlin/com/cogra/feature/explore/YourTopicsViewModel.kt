@@ -62,8 +62,9 @@ class YourTopicsViewModel @Inject constructor(
     /** The next page, as the list nears its tail. */
     fun loadMore() {
         val current = _state.value
-        if (current.loadingMore || current.moreFailed || !current.hasNextPage || current.endCursor == null) return
-        fetchMore(current.endCursor)
+        val cursor = current.endCursor ?: return
+        if (current.loadingMore || current.moreFailed || !current.hasNextPage) return
+        fetchMore(cursor)
     }
 
     /** Retry after a failed next page. */

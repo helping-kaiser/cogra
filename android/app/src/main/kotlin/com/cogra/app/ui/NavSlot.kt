@@ -21,4 +21,3 @@ enum class NavSlot(@param:StringRes val label: Int) {
     Wallet(R.string.bar_wallet),
     Profile(R.string.bar_profile),
 }
-

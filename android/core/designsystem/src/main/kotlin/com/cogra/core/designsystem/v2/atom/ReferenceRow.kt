@@ -270,7 +270,12 @@ private fun ReferenceRowPreview() {
             ReferenceRow(MarkKind.TOPIC, "saltmaps", sub = "tagged by @sol", edge = RowEdge.Rank("3.40"), onOpen = {})
             ReferenceRow(MarkKind.COMMENT, "The wax-stick ones", sub = "on Salt flats", edge = RowEdge.Value("2h"))
             ReferenceRow(MarkKind.PERSON, "Sal Torres", sub = "@saltorres", edge = RowEdge.Rank("4.20"))
-            ReferenceRow(MarkKind.TOPIC, "#fieldnotes", edge = RowEdge.Stance(StancePoint(0.3, 0.15)), pending = true)
+            ReferenceRow(
+                MarkKind.TOPIC,
+                "#fieldnotes",
+                edge = RowEdge.Stance(StancePoint(directed = 0.3, interest = 0.15)),
+                pending = true,
+            )
         }
     }
 }
