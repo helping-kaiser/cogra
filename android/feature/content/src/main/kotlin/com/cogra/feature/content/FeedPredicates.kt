@@ -24,10 +24,10 @@
 package com.cogra.feature.content
 
 import com.cogra.domain.MediaAssetView
+import com.cogra.domain.Removal
 import com.cogra.domain.feed.FeedCard
 import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedForm
-import com.cogra.domain.removal.Removal
 import com.cogra.domain.removal.marked
 
 /** The form a body takes: a clip anywhere is video, pictures photos, none text. */

@@ -616,7 +616,7 @@ fun FeedScreen(
                         actions = {
                             FeedBandActions(onChats, bell, band) {
                                 FilterTrigger(
-                                    reading = feedFilterSummary(state.filter, state.readerDefault, state.borrowedHandle),
+                                    reading = readingOf(state.filter),
                                     purpose = purpose,
                                     onOpen = {
                                         staged = state.filter
@@ -922,7 +922,11 @@ private fun FocusRequester.requestFocusSafely() {
  * branch of the feed carries them.
  */
 @Composable
-private fun FeedNothing(banners: @Composable () -> Unit, vouchCard: @Composable () -> Unit, onShowPostsAgain: () -> Unit) {
+private fun FeedNothing(
+    banners: @Composable () -> Unit,
+    vouchCard: @Composable () -> Unit,
+    onShowPostsAgain: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
