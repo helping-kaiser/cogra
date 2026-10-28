@@ -1676,7 +1676,7 @@ describe("the already-published marker", () => {
     render(fakeDrafts(landed()));
     fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
 
-    const door = await screen.findByTestId("composeDetails.mediaRow.published");
+    const door = await screen.findByTestId("composeDetails.published");
     expect(door).toHaveTextContent(/^Already in your post from .*12.*\.$/);
     expect(screen.getByTestId(byNode("composeDetails.next"))).not.toBeDisabled();
     fireEvent.click(door);
@@ -1692,7 +1692,7 @@ describe("the already-published marker", () => {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
-    expect(screen.queryByTestId("composeDetails.mediaRow.published")).toBeNull();
+    expect(screen.queryByTestId("composeDetails.published")).toBeNull();
   });
 });
 

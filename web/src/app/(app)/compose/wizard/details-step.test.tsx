@@ -358,7 +358,7 @@ describe("DetailsStep — the already-published marker", () => {
       onOpenPublished,
     });
     const door = screen.getByRole("button", { name: "Already in your post from 12 September." });
-    expect(door).toHaveAttribute("data-testid", "composeDetails.mediaRow.published");
+    expect(door).toHaveAttribute("data-testid", "composeDetails.published");
     fireEvent.click(door);
     expect(onOpenPublished).toHaveBeenCalledWith("p-old");
     // It never blocks: Next is as live as at rest, and no dialog asks.
@@ -369,7 +369,7 @@ describe("DetailsStep — the already-published marker", () => {
   it("follows the media row and leads the describe row", () => {
     renderStep({ mode: "media", assets: [PICTURE], published: { postId: "p-old", date: "12 September" } });
     const row = screen.getByTestId(byNode("composeDetails.mediaRow"));
-    const door = screen.getByTestId("composeDetails.mediaRow.published");
+    const door = screen.getByTestId("composeDetails.published");
     const describe = screen.getByTestId(byNode("composeDetails.describeRow"));
     expect(row.compareDocumentPosition(door) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(door.compareDocumentPosition(describe) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
