@@ -37,13 +37,35 @@ import com.cogra.core.designsystem.v2.token.Layout
  * does nothing, which reads as a broken build.
  */
 @Composable
-fun ChatsComingSoonRoute(onBack: () -> Unit) {
-    ChatsComingSoonScreen(onBack = onBack)
+fun ChatsComingSoonRoute(from: String, onBack: () -> Unit) {
+    ChatsComingSoonScreen(from = from, onBack = onBack)
 }
+
+/** The `from` the band's chats icon on the feed opens the page with (`Back to feed`). */
+const val CHATS_FROM_FEED = "feed"
+
+/** ...on the reader's own profile (`Back to your profile`). */
+const val CHATS_FROM_OWN_PROFILE = "profile"
+
+/** ...and a profile's Message (`Back to the profile`). */
+const val CHATS_FROM_MESSAGE = "message"
+
+/**
+ * THE ARROW NAMES WHERE IT GOES (ChatsComingSoon.md:15-17): the root the band's
+ * chats icon was tapped on, or the profile whose Message opened the page.
+ */
+@Composable
+private fun chatsBackLabel(from: String): String = stringResource(
+    when (from) {
+        CHATS_FROM_OWN_PROFILE -> R.string.content_chats_back_own_profile
+        CHATS_FROM_MESSAGE -> R.string.content_chats_back_profile
+        else -> R.string.content_chats_back_feed
+    },
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatsComingSoonScreen(onBack: () -> Unit) {
+fun ChatsComingSoonScreen(onBack: () -> Unit, from: String = CHATS_FROM_FEED) {
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
         modifier = Modifier.collapsingTop(collapsingTop),
@@ -59,7 +81,7 @@ fun ChatsComingSoonScreen(onBack: () -> Unit) {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("chats_back")) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.content_back),
+                            contentDescription = chatsBackLabel(from),
                         )
                     }
                 },
