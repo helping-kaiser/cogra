@@ -37,10 +37,14 @@ import { WashCard } from "../wallet/WashCard.jsx";
    It serves every reader state with one face (§13): a door has nothing in it
    that depends on who is looking. */
 
-export function ComingSoonCard({ thing, line }) {
+/* `node` is the data-node name its placer gives the card (seam 248): the card
+   takes it, its headline `title` and its sentence `line`. Given none, the card
+   renders exactly as before. */
+export function ComingSoonCard({ thing, line, node }) {
   return (
-    <WashCard ghost={false}>
+    <WashCard ghost={false} node={node}>
       <h2
+        data-node={node && "title"}
         style={{
           margin: 0,
           fontSize: "var(--text-headline-small)",
@@ -52,6 +56,7 @@ export function ComingSoonCard({ thing, line }) {
         {thing} — coming soon
       </h2>
       <p
+        data-node={node && "line"}
         style={{
           margin: 0,
           fontSize: "var(--text-body-medium)",

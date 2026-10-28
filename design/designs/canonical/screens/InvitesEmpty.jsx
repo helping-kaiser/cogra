@@ -28,19 +28,24 @@
    list carries at the head of its column, so the two states of one screen
    offer one control that looks like itself in both. `EmptyState`'s `action`
    slot is what makes this a choice rather than a fork — the component's calm
-   default stays the default for every other empty list in the tree. */
+   default stays the default for every other empty list in the tree.
+
+   REGISTERED under the `invites` prefix (seam 248): the empty state `empty`,
+   its action `empty.create`. */
+export const NODE = "invites";
 export function Screen() {
   return (
     <>
-      <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" />
+      <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "16px 24px 32px" }}>
         <EmptyState
           title="No invites out yet. A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in."
           action={
-            <Button style={{ width: "100%" }} onClick={() => {}}>
+            <Button style={{ width: "100%" }} onClick={() => {}} node="create">
               Create invite
             </Button>
           }
+          node="empty"
         />
       </div>
     </>

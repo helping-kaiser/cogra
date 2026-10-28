@@ -4218,6 +4218,339 @@
         "history.tagsLabel": []
       }
     },
+    "InviteCreated": {
+      "prefix": "invites",
+      "keys": {
+        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
+      },
+      "nodes": {
+        "invites.application": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.close": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.disc": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.second": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.title": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.trailing": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.applicationsLabel": [],
+        "invites.create": [],
+        "invites.group": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.group.close": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.group.label": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.header": [],
+        "invites.header.back": [],
+        "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.linkSheet": [],
+        "invites.linkSheet.dragHandle": [],
+        "invites.linkSheet.link": [],
+        "invites.linkSheet.link.address": [],
+        "invites.linkSheet.link.caption": [],
+        "invites.linkSheet.link.copy": [],
+        "invites.linkSheet.link.label": [],
+        "invites.linkSheet.share": [],
+        "invites.linkSheet.title": [],
+        "invites.linksLabel": []
+      }
+    },
+    "InviteExpiry": {
+      "prefix": "invites",
+      "keys": {
+        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
+        "invites.expirySheet.expiryOption": "the expiry's length as its row prints it, lowercased, each run of other characters one - (the invite's expiry chooser)",
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
+      },
+      "nodes": {
+        "invites.application": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.close": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.disc": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.second": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.title": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.trailing": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.applicationsLabel": [],
+        "invites.create": [],
+        "invites.createSheet": [],
+        "invites.createSheet.create": [],
+        "invites.createSheet.dragHandle": [],
+        "invites.createSheet.options": [],
+        "invites.createSheet.options.expiry": [],
+        "invites.createSheet.options.expiry.chevron": [],
+        "invites.createSheet.options.expiry.label": [],
+        "invites.createSheet.options.expiry.value": [],
+        "invites.createSheet.options.footnote": [],
+        "invites.createSheet.options.singleUse": [],
+        "invites.createSheet.options.singleUse.label": [],
+        "invites.createSheet.options.singleUse.switch": [],
+        "invites.createSheet.title": [],
+        "invites.expirySheet": [],
+        "invites.expirySheet.dragHandle": [],
+        "invites.expirySheet.expiryOption": [
+          "24-hours",
+          "7-days",
+          "30-days"
+        ],
+        "invites.expirySheet.expiryOption.choice": [
+          "24-hours",
+          "7-days",
+          "30-days"
+        ],
+        "invites.expirySheet.expiryOption.label": [
+          "24-hours",
+          "7-days",
+          "30-days"
+        ],
+        "invites.expirySheet.title": [],
+        "invites.group": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.group.close": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.group.label": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.header": [],
+        "invites.header.back": [],
+        "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.linksLabel": []
+      }
+    },
+    "InviteNew": {
+      "prefix": "invites",
+      "keys": {
+        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
+      },
+      "nodes": {
+        "invites.application": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.close": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.disc": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.second": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.title": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.application.trailing": [
+          "imke",
+          "vora81",
+          "vora82",
+          "vora83",
+          "rafa"
+        ],
+        "invites.applicationsLabel": [],
+        "invites.create": [],
+        "invites.createSheet": [],
+        "invites.createSheet.create": [],
+        "invites.createSheet.dragHandle": [],
+        "invites.createSheet.options": [],
+        "invites.createSheet.options.expiry": [],
+        "invites.createSheet.options.expiry.chevron": [],
+        "invites.createSheet.options.expiry.label": [],
+        "invites.createSheet.options.expiry.value": [],
+        "invites.createSheet.options.footnote": [],
+        "invites.createSheet.options.singleUse": [],
+        "invites.createSheet.options.singleUse.label": [],
+        "invites.createSheet.options.singleUse.switch": [],
+        "invites.createSheet.title": [],
+        "invites.group": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.group.close": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.group.label": [
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24",
+          "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64"
+        ],
+        "invites.header": [],
+        "invites.header.back": [],
+        "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.linksLabel": []
+      }
+    },
     "Invites": {
       "prefix": "invites",
       "keys": {
@@ -4315,6 +4648,18 @@
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
         ],
         "invites.linksLabel": []
+      }
+    },
+    "InvitesEmpty": {
+      "prefix": "invites",
+      "keys": {},
+      "nodes": {
+        "invites.empty": [],
+        "invites.empty.create": [],
+        "invites.empty.title": [],
+        "invites.header": [],
+        "invites.header.back": [],
+        "invites.header.title": []
       }
     },
     "KeyCeremony": {
@@ -8440,6 +8785,26 @@
         "vouchedIn.title": []
       }
     },
+    "WalletComingSoon": {
+      "prefix": "wallet",
+      "keys": {},
+      "nodes": {
+        "wallet.band": [],
+        "wallet.band.bell": [],
+        "wallet.band.chats": [],
+        "wallet.band.mark": [],
+        "wallet.band.wordmark": [],
+        "wallet.bottomBar": [],
+        "wallet.bottomBar.composeSlot": [],
+        "wallet.bottomBar.feedSlot": [],
+        "wallet.bottomBar.profileSlot": [],
+        "wallet.bottomBar.searchSlot": [],
+        "wallet.bottomBar.walletSlot": [],
+        "wallet.comingSoonCard": [],
+        "wallet.comingSoonCard.line": [],
+        "wallet.comingSoonCard.title": []
+      }
+    },
     "WhatsNew": {
       "prefix": "whatsNew",
       "keys": {
@@ -8498,6 +8863,45 @@
           "0-1-2",
           "0-1-1",
           "0-1-0"
+        ]
+      }
+    },
+    "YourTopics": {
+      "prefix": "yourTopics",
+      "keys": {
+        "yourTopics.heldTopic": "the held topic's name, without # (Your topics)"
+      },
+      "nodes": {
+        "yourTopics.header": [],
+        "yourTopics.header.back": [],
+        "yourTopics.header.title": [],
+        "yourTopics.heldTopic": [
+          "saltmaps",
+          "coastroad",
+          "fieldnotes",
+          "tidetables",
+          "wellness"
+        ],
+        "yourTopics.heldTopic.mark": [
+          "saltmaps",
+          "coastroad",
+          "fieldnotes",
+          "tidetables",
+          "wellness"
+        ],
+        "yourTopics.heldTopic.name": [
+          "saltmaps",
+          "coastroad",
+          "fieldnotes",
+          "tidetables",
+          "wellness"
+        ],
+        "yourTopics.heldTopic.value": [
+          "saltmaps",
+          "coastroad",
+          "fieldnotes",
+          "tidetables",
+          "wellness"
         ]
       }
     }

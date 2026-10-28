@@ -5210,18 +5210,20 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
    SINGLE USE IS THE DEFAULT. A targeted invite is the ordinary one and the safe
    one — a leaked link stages at most one stranger (`invitations.md` §6) — so the
    default sits where a reader who changes nothing is least exposed. */
+/* Named under `invites` (seam 248): the sheet `createSheet`, its two rows
+   `singleUse` and `expiry` in the `options` group, and `create`. */
 function NewInviteSheet() {
   return (
-    <BottomSheet open ariaLabel="New invite">
-      <SheetTitle>New invite</SheetTitle>
+    <BottomSheet open ariaLabel="New invite" node="createSheet">
+      <SheetTitle node="title">New invite</SheetTitle>
       <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px" }}>
-        <SettingsGroup footnote="With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time.">
-          <SettingsRow label="Only one person can use it" checked onOpen={() => {}} />
-          <SettingsRow label="Expires after" value="7 days" onOpen={() => {}} />
+        <SettingsGroup footnote="With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time." node="options">
+          <SettingsRow label="Only one person can use it" checked onOpen={() => {}} node="singleUse" />
+          <SettingsRow label="Expires after" value="7 days" onOpen={() => {}} node="expiry" />
         </SettingsGroup>
 
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <Button>Create invite</Button>
+          <Button node="create">Create invite</Button>
         </div>
       </div>
     </BottomSheet>
