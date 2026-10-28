@@ -289,6 +289,32 @@ describe("AppShell", () => {
     },
   );
 
+  // YourTopics.md:17: Your topics carries no bottom bar — a subpage of Explore
+  // a reader arrives at, reads and leaves (TagPage's arrangement). Its sibling
+  // root carries one, so the session has settled when the subpage is asked.
+  it("leaves Your topics, Explore's subpage, without the bar", async () => {
+    pathname = "/explore";
+    const { unmount } = renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      { store: signedInStore() },
+    );
+    expect(await screen.findByTestId(byNode("explore.bottomBar"))).toBeInTheDocument();
+    unmount();
+    pathname = "/explore/topics";
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      { store: signedInStore() },
+    );
+    expect(await screen.findByText("content")).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByTestId("bottom-nav")).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
+
   it("keeps the bar off the front door", async () => {
     pathname = "/";
     renderWithProviders(

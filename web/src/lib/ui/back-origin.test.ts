@@ -37,6 +37,11 @@ describe("backFor", () => {
     expect(backFor("opinions.by:ada")).toEqual({ href: "/u/ada/opinions?tab=by", label: "Back to the opinions" });
   });
 
+  // TagPage.md:35: Back to Your topics from Your topics.
+  it("names Your topics, the list a topic row opens from", () => {
+    expect(backFor("yourTopics")).toEqual({ href: "/explore/topics", label: "Back to Your topics" });
+  });
+
   it("never builds a profile link from an empty handle", () => {
     expect(backFor("u:")).toEqual({ href: "/feed", label: "Back to feed" });
   });

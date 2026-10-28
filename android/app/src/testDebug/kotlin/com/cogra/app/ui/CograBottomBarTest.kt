@@ -1,7 +1,6 @@
-// The bar's slot vocabulary. The bar is drawn against five slots and ships
-// the ones whose surfaces exist — so what this pins is the pair of rules that
-// keeps those two facts from drifting apart: the structure knows all five, and
-// a build renders no slot that opens nothing (F-08).
+// The bar's slot vocabulary: five slots in the drawn order, and V1.0 ships all
+// five (BottomNav.jsx; readme §13, *The V1.0 scope cut*) — the wallet's opens
+// its coming-soon door rather than standing as a slot that opens nothing.
 //
 // HiltTestActivity rather than createComposeRule()'s bare ComponentActivity:
 // testDebug's robolectric.properties runs the whole source set under
@@ -38,7 +37,10 @@ class CograBottomBarTest {
     val compose = createAndroidComposeRule<HiltTestActivity>()
 
     @Test
-    fun theBarShipsOnlyTheSlotsThatHaveSurfaces() {
+    fun theV10BarCarriesAllFiveSlots() {
+        // BottomNav.jsx: "V1.0 carries all five" (readme §13, *The V1.0 scope
+        // cut*). Explore stands on slice 2.7's search, and the wallet slot
+        // keeps its place opening its coming-soon door (WalletComingSoon.md:3).
         compose.setContent {
             CograTheme {
                 CograBottomBar(
@@ -51,14 +53,9 @@ class CograBottomBarTest {
             }
         }
 
-        compose.onNodeWithTag("bar_feed").assertExists()
-        compose.onNodeWithTag("bar_compose").assertExists()
-        compose.onNodeWithTag("bar_profile").assertExists()
-        // Explore waits for slice 2.7's search backend and the wallet for
-        // its own surfaces; a bar item that opens nothing teaches the
-        // reader the bar lies.
-        compose.onNodeWithTag("bar_explore").assertDoesNotExist()
-        compose.onNodeWithTag("bar_wallet").assertDoesNotExist()
+        listOf("bar_feed", "bar_explore", "bar_compose", "bar_wallet", "bar_profile").forEach {
+            compose.onNodeWithTag(it).assertExists()
+        }
     }
 
     @Test

@@ -18,6 +18,14 @@ data object FeedTab
 @Serializable
 data object ProfileTab
 
+/** The Explore tab's nested graph: Explore and every screen a search or its door opens. */
+@Serializable
+data object ExploreTab
+
+/** The Wallet tab's nested graph: today its coming-soon door, and what its band opens. */
+@Serializable
+data object WalletTab
+
 // The destinations (type-safe routes, Navigation 2.8+).
 @Serializable
 data class InviteEntry(val inviteId: String? = null)
@@ -40,6 +48,18 @@ data object KeyCeremony
 @Serializable
 data object Feed
 
+/** Explore — the bar's search slot (Explore.md); searching is a state of this root, never a route. */
+@Serializable
+data object Explore
+
+/** The Wallet tab's root: the coming-soon door (WalletComingSoon.md). */
+@Serializable
+data object Wallet
+
+/** Every topic the reader holds, behind Explore's door (YourTopics.md). */
+@Serializable
+data object YourTopics
+
 /**
  * The composer. [postId] names an edit target; [referenceTargetId]
  * arrives from a node's Reference affordance and opens a fresh post
@@ -49,6 +69,8 @@ data object Feed
 data class ComposePost(
     val postId: String? = null,
     val referenceTargetId: String? = null,
+    /** A tag card's act: the composer opens with this tag already staged (History.md:63). */
+    val tag: String? = null,
 )
 
 /**
@@ -89,9 +111,9 @@ data class ReplyWizard(
 @Serializable
 data class EditComment(val commentId: String, val parentTitle: String)
 
-/** A topic by its canonical name — reachable from a chip anywhere (D20). */
+/** A topic by its canonical name — reachable from a chip anywhere (D20). [from] names the back arrow's origin. */
 @Serializable
-data class Topic(val name: String)
+data class Topic(val name: String, val from: String? = null)
 
 /** An actor's profile; a null handle is the viewer's own (the tab). [from] names the back arrow's origin. */
 @Serializable
@@ -100,6 +122,10 @@ data class Profile(val handle: String? = null, val from: String? = null)
 /** The reader's Saved list, reached from their own profile's ⋮ (Saved.md). */
 @Serializable
 data object Saved
+
+/** The reader's History, reached from their own profile's ⋮ (History.md), Saved's sibling. */
+@Serializable
+data object History
 
 /**
  * The reader's notification list, reached from the bell on a root band

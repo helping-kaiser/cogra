@@ -50,6 +50,12 @@ const val CHATS_FROM_OWN_PROFILE = "profile"
 /** ...and a profile's Message (`Back to the profile`). */
 const val CHATS_FROM_MESSAGE = "message"
 
+/** ...on Explore's band (`Back to Explore`). */
+const val CHATS_FROM_EXPLORE = "explore"
+
+/** ...on the Wallet tab's band (`Back to Wallet`). */
+const val CHATS_FROM_WALLET = "wallet"
+
 /**
  * THE ARROW NAMES WHERE IT GOES (ChatsComingSoon.md:15-17): the root the band's
  * chats icon was tapped on, or the profile whose Message opened the page.
@@ -59,6 +65,8 @@ private fun chatsBackLabel(from: String): String = stringResource(
     when (from) {
         CHATS_FROM_OWN_PROFILE -> R.string.content_chats_back_own_profile
         CHATS_FROM_MESSAGE -> R.string.content_chats_back_profile
+        CHATS_FROM_EXPLORE -> R.string.content_chats_back_explore
+        CHATS_FROM_WALLET -> R.string.content_chats_back_wallet
         else -> R.string.content_chats_back_feed
     },
 )

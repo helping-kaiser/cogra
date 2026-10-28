@@ -22,7 +22,7 @@
 // four kinds and four sections outrun the sheet, so the sections scroll and
 // the one control that must always be reachable stays under them.
 
-import { Fragment } from "react";
+import { Fragment, type RefObject } from "react";
 
 import {
   FEED_ALSO,
@@ -225,6 +225,7 @@ export function FeedFilterSheet({
   onOpenTopics,
   borrowedHandle = null,
   titled = false,
+  bodyRef,
   node,
   testId,
 }: {
@@ -240,7 +241,7 @@ export function FeedFilterSheet({
   onHelp: () => void;
   /** The topics the reader holds and is for; none draws no topic section. */
   topics?: readonly FeedTopic[];
-  /** `All your topics`, the door to everything held; absent stands it inert. */
+  /** `All your topics`, the door to everything held (Your topics); the host navigates. */
   onOpenTopics?: () => void;
   borrowedHandle?: string | null;
   /**
@@ -250,6 +251,8 @@ export function FeedFilterSheet({
    * thumb away, still on screen — and wears its "?" in the corner.
    */
   titled?: boolean;
+  /** The sheet's scrolling body, for a host that brings the sheet back at its offset. */
+  bodyRef?: RefObject<HTMLDivElement | null>;
   node?: DataNode;
   testId: string;
 }) {
@@ -274,6 +277,7 @@ export function FeedFilterSheet({
       // and foot padding sit inside its height, so they are added back here.
       height="calc(88dvh + 32px)"
       rows
+      bodyRef={bodyRef}
       node={node}
       testId={testId}
       foot={<FilterFoot node={part(node, "foot")} testId={`${testId}-foot`} onReset={onReset} onDone={onDone} />}
@@ -368,9 +372,10 @@ export function FeedFilterSheet({
             </Chip>
           ))}
           <div className="basis-full">
-            {/* DRIFT (feed-filter lane w-f): `All your topics` opens
-                YourTopics, which the web does not draw yet — the door
-                stands, inert, until it does (introduced-but-inert law). */}
+            {/* `All your topics` opens Your topics (FeedSheet → YourTopics):
+                everything held, the ones held against included, where a topic
+                is walked back. The host navigates and brings this sheet back
+                as it was left. */}
             <Button
               testId={`${testId}-all-topics`}
               node={part(node, "topic.allTopics")}

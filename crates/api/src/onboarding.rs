@@ -249,14 +249,11 @@ pub async fn register(
     }
 
     mailer
-        .send(Mail {
-            to: email,
-            subject: "Verify your CoGra email".into(),
-            body: format!(
-                "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}\n\nThe account expires in {UNVERIFIED_TTL_DAYS} days if unverified.",
-                token = verification.token
-            ),
-        })
+        .send(signup_verification_mail(
+            email,
+            web_origin,
+            &verification.token,
+        ))
         .await;
     let session = auth::issue_session(pool, auth_cfg, account_id, device_label.as_deref()).await?;
     Ok(RegisteredAccount {
@@ -337,16 +334,32 @@ pub async fn resend_verification(
         }
     };
     mailer
-        .send(Mail {
-            to,
-            subject: "Verify your CoGra email".into(),
-            body: format!(
-                "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}",
-                token = fresh.token
-            ),
-        })
+        .send(resend_verification_mail(to, web_origin, &fresh.token))
         .await;
     Ok(())
+}
+
+/// The registration's verification mail: the link, the bare token beside
+/// it (auth.md "Link URLs"), and the unverified account's expiry.
+pub(crate) fn signup_verification_mail(to: String, web_origin: &str, token: &str) -> Mail {
+    Mail {
+        to,
+        subject: "Verify your CoGra email".into(),
+        body: format!(
+            "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}\n\nThe account expires in {UNVERIFIED_TTL_DAYS} days if unverified."
+        ),
+    }
+}
+
+/// The resent verification mail: the rotated link and its bare token.
+pub(crate) fn resend_verification_mail(to: String, web_origin: &str, token: &str) -> Mail {
+    Mail {
+        to,
+        subject: "Verify your CoGra email".into(),
+        body: format!(
+            "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}"
+        ),
+    }
 }
 
 /// Attaches the device-minted actor identity to the viewer's account

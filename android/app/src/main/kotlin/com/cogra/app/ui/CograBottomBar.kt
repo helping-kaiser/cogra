@@ -1,6 +1,6 @@
 // The shell's bottom bar (design.md §6): five slots left to right —
-// feed, search, create post, wallet, profile — each arriving with the
-// slice that builds its surface. The center slot is an action, not a
+// feed, search, create post, wallet, profile — all five in V1.0, the
+// wallet's opening its coming-soon door (BottomNav.jsx). The center slot is an action, not a
 // destination — a deliberate, documented deviation from M3's
 // destinations-only navigation-bar guidance — and wears
 // primaryContainer, the one loud surface per screen (design.md §2.4).
@@ -51,7 +51,7 @@ fun CograBottomBar(
     onCompose: () -> Unit,
     onProfile: () -> Unit,
     modifier: Modifier = Modifier,
-    slots: List<NavSlot> = ShippingSlots,
+    slots: List<NavSlot> = NavSlot.entries,
     onSearch: () -> Unit = {},
     onWallet: () -> Unit = {},
     searchSelected: Boolean = false,

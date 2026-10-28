@@ -5,6 +5,7 @@
 // profile cannot name the same origin two ways.
 
 import { opinionsHref, parseOpinionsOrigin } from "@/lib/profile/opinions-route";
+import { FROM_YOUR_TOPICS, YOUR_TOPICS_HREF } from "@/lib/topics/your-topics";
 
 export type BackTarget = { readonly href: string; readonly label: string };
 
@@ -25,6 +26,9 @@ const ORIGINS: Record<string, BackTarget> = {
   // back is to it — the query and the scroll as they were (Explore.md:19;
   // ProfileOther.md:73, PostDetail's origin-noun table).
   search: { href: "/explore", label: "Back to the search" },
+  // Your topics, Explore's subpage (TagPage.md:35: `Back to Your topics` from
+  // Your topics) — its rows open the topic's page.
+  [FROM_YOUR_TOPICS]: { href: YOUR_TOPICS_HREF, label: "Back to Your topics" },
 };
 
 /** Someone else's profile as an origin: `from=u:<handle>`. */

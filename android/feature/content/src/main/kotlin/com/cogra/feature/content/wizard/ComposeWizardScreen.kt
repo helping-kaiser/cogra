@@ -65,6 +65,8 @@ import com.cogra.feature.content.parkedPadPlacement
 @Composable
 fun ComposeWizardRoute(
     referenceTargetId: String?,
+    /** A tag card's `Tag a new post with it` (History.md:63): the tag rides staged among the post's tags. */
+    stagedTag: String? = null,
     onSigned: (nodeId: String) -> Unit,
     onExpired: (label: String) -> Unit,
     onLeave: () -> Unit,
@@ -82,7 +84,7 @@ fun ComposeWizardRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) { viewModel.start(referenceTargetId) }
+    LaunchedEffect(Unit) { viewModel.start(referenceTargetId, stagedTag) }
 
     // The last moment the process is guaranteed to be alive. The draft is
     // already written continuously as the author works; this closes the
