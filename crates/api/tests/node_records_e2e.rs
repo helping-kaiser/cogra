@@ -1058,7 +1058,8 @@ async fn the_genesis_filter_counts_posts_never_edits(pool: PgPool) {
     let (bob, bob_key) = rig.funded_actor("bob").await;
     let first = rig.post(alice, &alice_key, "First").await;
     rig.post(alice, &alice_key, "Second").await;
-    rig.edit_post(alice, &alice_key, first, "First, edited").await;
+    rig.edit_post(alice, &alice_key, first, "First, edited")
+        .await;
     rig.edit_post(alice, &alice_key, first, "First, edited again")
         .await;
     let comment = rig.comment(bob, &bob_key, first).await;

@@ -224,7 +224,9 @@ pub async fn walk_back_records(
     .await?;
     let wanted: std::collections::HashSet<&str> = record_ids.iter().map(String::as_str).collect();
     let mut found = std::collections::HashSet::new();
-    for bundle in rows.chunk_by(|a, b| (&a.family, &a.source, &a.target) == (&b.family, &b.source, &b.target)) {
+    for bundle in
+        rows.chunk_by(|a, b| (&a.family, &a.source, &a.target) == (&b.family, &b.source, &b.target))
+    {
         let pairs: Vec<(f64, f64)> = bundle.iter().map(|row| (row.p_d, row.p_i)).collect();
         let marks = common::l1::fold::walk_back_records(&pairs)
             .map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
