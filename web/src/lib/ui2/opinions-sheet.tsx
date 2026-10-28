@@ -61,9 +61,9 @@ export function OpinionsSheet({
   /** The comment path opens this over the thread's own sheet. */
   stacked?: boolean;
   /**
-   * The sheet's node on the detail (`postDetail.opinionsSheet`) — UNREGISTERED:
-   * the PostOpinions board names no node, so this is the path it evidently
-   * takes, reported to design.
+   * The sheet's node on the detail (`postDetail.opinionsSheet`, nodes.json
+   * PostOpinions): each row an `opinion` keyed by its holder's handle without
+   * @ (an address no account fronts, by that address).
    */
   node?: DataNode;
   testId?: string;
@@ -98,7 +98,7 @@ export function OpinionsSheet({
           // The sheet is the door, not the destination: dropped as the row is
           // followed, so Back lands where the reader opened it from.
           onOpen={onClose}
-          node={instance(node, "row", String(index + 1))}
+          node={instance(node, "opinion", opinion.holder.handle ?? opinion.holderId)}
           testId={`${testId}-row-${index + 1}`}
         />
       ))}

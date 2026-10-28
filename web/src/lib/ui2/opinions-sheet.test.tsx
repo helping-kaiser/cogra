@@ -29,7 +29,7 @@ const HOLDERS: readonly HeldOpinionView[] = [
 ];
 
 const NODE = { path: "postDetail.opinionsSheet" };
-const rows = () => screen.getAllByTestId(byNode("postDetail.opinionsSheet.row"));
+const rows = () => screen.getAllByTestId(byNode("postDetail.opinionsSheet.opinion"));
 
 describe("OpinionsSheet", () => {
   it("is titled for what the opinions are on", () => {
@@ -44,10 +44,10 @@ describe("OpinionsSheet", () => {
   it("carries the person, and their opinion — face drawn, pair the geek reading", () => {
     render(<OpinionsSheet open onClose={() => {}} on="post" opinions={HOLDERS} node={NODE} />);
     const mira = rows()[0]!;
-    expect(mira.querySelector('[data-testid="postDetail.opinionsSheet.row.name"]')).toHaveTextContent("Mira Voss");
-    expect(mira.querySelector('[data-testid="postDetail.opinionsSheet.row.handle"]')).toHaveTextContent("@mira");
-    expect(mira.querySelector('[data-testid="postDetail.opinionsSheet.row.value.face"]')).toHaveTextContent("😍");
-    const exact = mira.querySelector('[data-testid="postDetail.opinionsSheet.row.value.exact"]')!;
+    expect(mira.querySelector('[data-testid="postDetail.opinionsSheet.opinion.name"]')).toHaveTextContent("Mira Voss");
+    expect(mira.querySelector('[data-testid="postDetail.opinionsSheet.opinion.handle"]')).toHaveTextContent("@mira");
+    expect(mira.querySelector('[data-testid="postDetail.opinionsSheet.opinion.value.face"]')).toHaveTextContent("😍");
+    const exact = mira.querySelector('[data-testid="postDetail.opinionsSheet.opinion.value.exact"]')!;
     expect(exact).toHaveTextContent("+0.90 / +0.25");
     expect(exact.className).toContain("cg-exact");
     // One image, named by the face's word and the pair in either mode.
@@ -56,7 +56,8 @@ describe("OpinionsSheet", () => {
 
   it("keeps the order it is handed — the fold's strongest-first", () => {
     render(<OpinionsSheet open onClose={() => {}} on="post" opinions={HOLDERS} node={NODE} />);
-    expect(rows().map((r) => r.getAttribute("data-testid-key"))).toEqual(["1", "2", "3"]);
+    // Each row keyed by its holder's handle (nodes.json `postDetail.opinionsSheet.opinion`).
+    expect(rows().map((r) => r.getAttribute("data-testid-key"))).toEqual(["mira", "ada", "juno"]);
     expect(rows().map((r) => r.querySelector('[data-testid$=".name"]')?.textContent)).toEqual([
       "Mira Voss",
       "Ada Okonkwo",
@@ -68,7 +69,7 @@ describe("OpinionsSheet", () => {
   // face, GIVEN the row's opinion has exactly one number at zero".
   it("wears 🤔 on an opinion with exactly one number at zero", () => {
     render(<OpinionsSheet open onClose={() => {}} on="post" opinions={[held("kel", "Kel", 0.4, 0)]} node={NODE} />);
-    expect(screen.getByTestId(byNode("postDetail.opinionsSheet.row.value.face"))).toHaveTextContent("🤔");
+    expect(screen.getByTestId(byNode("postDetail.opinionsSheet.opinion.value.face"))).toHaveTextContent("🤔");
   });
 
   // Seam 245: which (0, 0) the row draws is the row's data.
@@ -103,8 +104,10 @@ describe("OpinionsSheet", () => {
         node={NODE}
       />,
     );
-    const only = screen.getByTestId(byNode("postDetail.opinionsSheet.row"));
+    const only = screen.getByTestId(byNode("postDetail.opinionsSheet.opinion"));
     expect(only).toHaveTextContent("Deleted account");
+    // No handle to print: the row is keyed by the address that holds the opinion.
+    expect(only.getAttribute("data-testid-key")).toBe("addr-Deleted account");
     expect(only.tagName).not.toBe("A");
   });
 
