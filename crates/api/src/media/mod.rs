@@ -2162,6 +2162,7 @@ mod held_store_tests {
     }
 
     /// Unset, the held bucket sits on the live service — development's shape.
+    /// ´claim:media:the-held-store-falls-back-to-the-live-service´
     #[test]
     fn the_held_store_defaults_to_a_bucket_of_the_live_service() {
         let held = held_store(&live(), "cogra-media-held", lookup(&[])).expect("defaults");
@@ -2173,6 +2174,7 @@ mod held_store_tests {
     }
 
     /// Production's shape: a service of its own, reached with its own keys.
+    /// ´claim:media:a-held-service-takes-its-own-endpoint-and-keys´
     #[test]
     fn a_held_service_of_its_own_takes_its_own_endpoint_and_keys() {
         let held = held_store(
@@ -2197,6 +2199,7 @@ mod held_store_tests {
     }
 
     /// A config printed for a log line carries no secret key.
+    /// ´claim:media:a-store-config-prints-no-secret-key´
     #[test]
     fn a_store_config_debug_prints_no_secret_key() {
         let printed = format!("{:?}", live());
@@ -2209,6 +2212,7 @@ mod held_store_tests {
 
     /// An endpoint without both keys would dial the held service with the
     /// live store's credential, so it refuses to start.
+    /// ´claim:media:a-held-endpoint-without-its-keys-refuses-to-start´
     #[test]
     fn a_held_endpoint_without_its_own_keys_refuses_to_start() {
         for vars in [
