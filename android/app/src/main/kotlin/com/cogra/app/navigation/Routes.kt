@@ -3,6 +3,7 @@
 
 package com.cogra.app.navigation
 
+import com.cogra.feature.content.CHATS_FROM_FEED
 import kotlinx.serialization.Serializable
 
 /**
@@ -184,11 +185,11 @@ data class DeleteAccountConfirmed(val token: String)
 
 /**
  * Chats — coming soon (backlog item 68, ruled 2026-09-14). Reachable from
- * every root band's chats affordance; no state of its own, so one route
- * serves every caller.
+ * every root band's chats affordance and a profile's Message; [from] names
+ * which, for the back arrow's noun (ChatsComingSoon.md:15-17).
  */
 @Serializable
-data object ChatsComingSoon
+data class ChatsComingSoon(val from: String = CHATS_FROM_FEED)
 
 /**
  * The vouch-back's ceremony (`VouchedIn`; VouchedIn.md). It carries the

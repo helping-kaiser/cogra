@@ -19,6 +19,9 @@ import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.domain.notifications.NotificationTarget
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.feature.content.CHATS_FROM_FEED
+import com.cogra.feature.content.CHATS_FROM_MESSAGE
+import com.cogra.feature.content.CHATS_FROM_OWN_PROFILE
 import com.cogra.feature.content.ChatsComingSoonRoute
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.PostDetailRoute
@@ -77,8 +80,11 @@ internal fun NavGraphBuilder.readDrillIns(shell: ShellScope) {
     // comment count raises the thread over Saved, as over the feed, so
     // the thread's return is read here the same way.
     composable<Saved> { entry -> shell.SavedDestination(entry) }
-    composable<ChatsComingSoon> {
-        ChatsComingSoonRoute(onBack = { shell.navController.navigateUp() })
+    composable<ChatsComingSoon> { entry ->
+        ChatsComingSoonRoute(
+            from = entry.toRoute<ChatsComingSoon>().from,
+            onBack = { shell.navController.navigateUp() },
+        )
     }
 }
 
@@ -142,7 +148,7 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
                 { requireJoin() }
             }
             true -> {
-                { navController.navigate(ChatsComingSoon) }
+                { navController.navigate(ChatsComingSoon(CHATS_FROM_FEED)) }
             }
             null -> null
         },
@@ -297,8 +303,8 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
         // The band's chats on the own root (Profile.md:39), and Message on
         // another's: the chats coming-soon; a guest meets the gate
         // (ProfileOther.md:51-53).
-        onChats = { navController.navigate(ChatsComingSoon) }.takeIf { ownRoot },
-        onMessage = { navController.navigate(ChatsComingSoon) },
+        onChats = { navController.navigate(ChatsComingSoon(CHATS_FROM_OWN_PROFILE)) }.takeIf { ownRoot },
+        onMessage = { navController.navigate(ChatsComingSoon(CHATS_FROM_MESSAGE)) },
     )
 }
 

@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -337,6 +338,31 @@ class TabNavigationTest {
         pressBack()
         waitForTag("wizard_body")
         assertThat(onTop<ComposePost>()).isTrue()
+    }
+
+    @Test
+    fun theChatsPageFromTheProfilesBandNamesTheProfileAndKeepsItLit() {
+        memberOnTheFeed()
+        openProfileTab()
+        compose.onNodeWithTag("profile.band.chats").performClick()
+        waitUntilOn { onTop<ChatsComingSoon>() }
+
+        // ChatsComingSoon.md:13 and :15.
+        compose.onNodeWithTag("chats_back").assertContentDescriptionEquals("Back to your profile")
+        assertLit("profile")
+    }
+
+    @Test
+    fun theChatsPageFromAProfilesMessageNamesTheProfile() {
+        memberOnTheFeed()
+        compose.onNodeWithTag("feed.card.authorChip").performClick()
+        waitForTag("profile.identity.actionRow.message")
+        compose.onNodeWithTag("profile.identity.actionRow.message").performScrollTo().performClick()
+        waitUntilOn { onTop<ChatsComingSoon>() }
+
+        // ChatsComingSoon.md:17 — and the page stands in the feed's stack.
+        compose.onNodeWithTag("chats_back").assertContentDescriptionEquals("Back to the profile")
+        assertLit("feed")
     }
 
     private companion object {

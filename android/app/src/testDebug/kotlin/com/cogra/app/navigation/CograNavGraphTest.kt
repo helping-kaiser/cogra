@@ -328,7 +328,8 @@ class CograNavGraphTest {
         compose.onNodeWithTag("chats_empty").assertTextEquals(
             "Chats — coming soon. Your conversations will be here.",
         )
-        compose.onNodeWithTag("chats_back").assertContentDescriptionEquals("Back")
+        // The arrow names the root the icon was tapped on (ChatsComingSoon.md:15).
+        compose.onNodeWithTag("chats_back").assertContentDescriptionEquals("Back to feed")
 
         // A read drill-in keeps the shell frame (design.md §6), same as a
         // post detail's own drill-in.
