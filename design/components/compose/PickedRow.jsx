@@ -10,7 +10,12 @@ import { MediaThumb } from "./MediaThumb.jsx";
    per-picture manager (`PickedSheet`: reorder, first = cover, remove,
    describe). The crop step needs no second entrance: the wizard is linear and
    Back reaches it, and a duplicate entrance to the same step is the two-menus
-   pattern the system refuses elsewhere. */
+   pattern the system refuses elsewhere.
+
+   THE FIRST PICTURE WEARS `Cover` HERE TOO (seam 245, ask 13 F): the row
+   summarises the set the tray built, and the tray's rule is that the first
+   one is the cover — so the badge rides the first tile by default, the way
+   the tray and Show all mark it. */
 
 export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage the pictures", node }) {
   return (
@@ -36,7 +41,7 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
       data-node={node}
     >
       {items.map((item, index) => (
-        <MediaThumb key={item.src ?? index} {...item} size={48} node={node && "thumb"} nodeKey={node && String(index + 1)} />
+        <MediaThumb key={item.src ?? index} cover={index === 0} {...item} size={48} node={node && "thumb"} nodeKey={node && String(index + 1)} />
       ))}
       {caption && (
         <span

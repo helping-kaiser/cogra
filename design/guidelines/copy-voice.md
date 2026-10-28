@@ -945,7 +945,10 @@ boards already speak, recorded so the registry is whole:
   the N citations`' twin for the tags row (`ComposeTags`); a thumb whose
   upload failed `Didn't upload`, one still going `Uploading, 65%`; the
   describe sheet's `Describe this picture` · `Describe this video`; the
-  sensitive sheet and its switch `Mark as sensitive`.
+  sensitive sheet and its switch `Mark as sensitive`; the first picture's
+  badge `Cover` wherever a picked set is shown — the tray, Show all and the
+  details row (the row's badge kept, seam 245 ask 13 F; *merged under the
+  autonomy order, 2026-10-28; review pending*).
 - **The edit's** — `What the edit signs`, the acts sheet's name
   (`EditActs`, `CommentEditActs`), and `The license never changes`, the
   lock beside the License row it cannot change (`EditCompose` and its
