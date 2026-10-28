@@ -27,6 +27,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -185,7 +186,8 @@ private fun CograNavGraphContent(
         // is already where it should be: the landing is the destination.
         val destination = navController.currentBackStackEntry?.destination
         val onLinkLanding = destination?.hasRoute(ChangeEmailLinked::class) == true ||
-            destination?.hasRoute(DeleteAccountConfirmed::class) == true
+            destination?.hasRoute(DeleteAccountConfirmed::class) == true ||
+            destination?.hasRoute(VouchAsk::class) == true
         // An applicant's account deleted from here: the session ended because
         // the account is gone, so the reader lands signed out on the bare view
         // under one snackbar, never on sign-in (DeleteAccount.md:29).
@@ -215,6 +217,13 @@ private fun CograNavGraphContent(
         if (root == Feed && phase == AuthPhase.SIGNED_IN && held != null) {
             shellState.heldEmailLink = null
             navController.navigate(ChangeEmailLinked(held))
+        }
+        // A guest who raised the gate over an ask comes back to it once
+        // signed in (VouchAsk.md:23).
+        val heldAsk = shellState.heldAskLink
+        if (root == Feed && phase == AuthPhase.SIGNED_IN && heldAsk != null) {
+            shellState.heldAskLink = null
+            navController.navigate(VouchAsk(heldAsk))
         }
     }
 
@@ -249,7 +258,8 @@ private fun CograNavGraphContent(
             }
             val path = newIntent.data?.path
             val answersSignedIn = path?.startsWith(EMAIL_CHANGE_PATH) == true ||
-                path?.startsWith(DELETE_ACCOUNT_PATH) == true
+                path?.startsWith(DELETE_ACCOUNT_PATH) == true ||
+                path?.startsWith(VOUCH_PATH) == true
             if (phaseNow == AuthPhase.SIGNED_OUT || (answersSignedIn && phaseNow == AuthPhase.SIGNED_IN)) {
                 navController.handleDeepLink(newIntent)
             }
@@ -296,7 +306,8 @@ private fun CograNavGraphContent(
 
     val bellModel: BellViewModel = hiltViewModel()
     val bellLit by bellModel.lit.collectAsStateWithLifecycle()
-    val shell = Shell(navController, authState, signedIn, shellState, bellLit, shellSnackbar)
+    val shellScope = rememberCoroutineScope()
+    val shell = Shell(navController, authState, signedIn, shellState, bellLit, shellSnackbar, shellScope)
 
     // The shell: one scaffold owning the bottom bar and the shell-level
     // snackbar host (design.md §6) — one frame for every viewer: the bar

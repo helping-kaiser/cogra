@@ -17,6 +17,7 @@ import androidx.navigation.NavHostController
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.atom.BandBell
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.feature.home.ApplicationSurface
 import com.cogra.feature.home.BorrowedViewBandRoute
 import com.cogra.feature.home.DeletionBandRoute
 import com.cogra.feature.home.KeyRestoreBannerRoute
@@ -25,6 +26,8 @@ import com.cogra.feature.home.VOUCH_CARD
 import com.cogra.feature.home.VouchCardRoute
 import com.cogra.feature.stance.StanceControlRoute
 import com.cogra.feature.stance.vouchBackVariant
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * The shell's side of every destination: the controller, the session's
@@ -61,8 +64,12 @@ internal interface ShellScope {
     /** The vouch card, the feed's own first card (`VouchBack`). */
     val vouchCard: @Composable () -> Unit
 
-    /** The shell's account-status banners, fed the Restore result the root read. */
-    val statusBanners: @Composable (restored: Boolean, onConsumed: () -> Unit) -> Unit
+    /**
+     * The shell's account-status banners, fed the Restore result the root
+     * read; [ApplicationSurface] says which screen they ride, so the
+     * application card speaks in that screen's words.
+     */
+    val statusBanners: @Composable (restored: Boolean, onConsumed: () -> Unit, surface: ApplicationSurface) -> Unit
 
     /** The guest prompt behind an account-needing slot: ask, never bounce. */
     fun requireJoin()
@@ -72,6 +79,12 @@ internal interface ShellScope {
 
     /** Holds (or drops) the email-change link a signed-out landing asked to sign in for. */
     fun holdEmailLink(token: String?)
+
+    /** Holds (or drops) the ask link a guest raised the gate over, for the ask to come back (VouchAsk.md:23). */
+    fun holdAskLink(askLinkId: String?)
+
+    /** Says [line] on the shell's snackbar, outliving the destination that asked. */
+    fun announce(line: String)
 
     /** The bell on the root band named [from]; null for a guest, who has no list. */
     fun bellFor(from: String): BandBell?
@@ -94,6 +107,7 @@ internal class ShellState(
     feedPulls: Int = 0,
     reselects: IntArray = IntArray(TopLevelTab.entries.size),
     heldEmailLink: String? = null,
+    heldAskLink: String? = null,
 ) {
     /** The feed's own pulls, counted: the readers riding the feed (the band, the vouch card) read again with each. */
     var feedPulls by mutableIntStateOf(feedPulls)
@@ -108,6 +122,13 @@ internal class ShellState(
      */
     var heldEmailLink by mutableStateOf(heldEmailLink)
 
+    /**
+     * The ask link a guest raised the gate over, held through the sign-in the
+     * gate asks for (VouchAsk.md:23: "the ask comes back"); landed once the
+     * session exists.
+     */
+    var heldAskLink by mutableStateOf(heldAskLink)
+
     /** The guest prompt is up (design.md §6): ask, never bounce. */
     var joinPrompt by mutableStateOf(false)
 
@@ -120,8 +141,8 @@ internal class ShellState(
 
     companion object {
         val Saver: Saver<ShellState, Any> = listSaver(
-            save = { listOf(it.feedPulls, it.reselects.toIntArray(), it.heldEmailLink) },
-            restore = { ShellState(it[0] as Int, it[1] as IntArray, it[2] as String?) },
+            save = { listOf(it.feedPulls, it.reselects.toIntArray(), it.heldEmailLink, it.heldAskLink) },
+            restore = { ShellState(it[0] as Int, it[1] as IntArray, it[2] as String?, it[3] as String?) },
         )
     }
 }
@@ -137,6 +158,7 @@ internal class Shell(
     private val state: ShellState,
     private val bellLit: Boolean,
     private val snackbar: SnackbarHostState,
+    private val scope: CoroutineScope,
 ) : ShellScope {
     override fun reselects(tab: TopLevelTab): Int = state.reselects(tab)
 
@@ -189,13 +211,14 @@ internal class Shell(
         }
     }
 
-    override val statusBanners: @Composable (Boolean, () -> Unit) -> Unit = { restored, onConsumed ->
+    override val statusBanners: @Composable (Boolean, () -> Unit, ApplicationSurface) -> Unit = { restored, onConsumed, surface ->
         if (signedIn == true) {
             StatusBannersRoute(
                 actorRestoredResult = restored,
                 onActorRestoredResultConsumed = onConsumed,
                 onStartKeyCeremony = { navController.navigate(KeyCeremony) },
                 snackbarHostState = snackbar,
+                surface = surface,
             )
         }
     }
@@ -210,6 +233,14 @@ internal class Shell(
 
     override fun holdEmailLink(token: String?) {
         state.heldEmailLink = token
+    }
+
+    override fun holdAskLink(askLinkId: String?) {
+        state.heldAskLink = askLinkId
+    }
+
+    override fun announce(line: String) {
+        scope.launch { snackbar.showSnackbar(line) }
     }
 
     // THE BELL'S DOT: one state the whole shell shows, lit only on a root's

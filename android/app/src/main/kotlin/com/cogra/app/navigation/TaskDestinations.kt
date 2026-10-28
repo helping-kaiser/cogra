@@ -16,6 +16,7 @@ import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
 import com.cogra.feature.content.reply.ReplyWizardRoute
 import com.cogra.feature.content.wizard.ComposeWizardRoute
+import com.cogra.feature.invites.InvitesNotice
 import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.profile.FramedPicture
 import com.cogra.feature.profile.ProfileEditRoute
@@ -41,9 +42,26 @@ internal fun NavGraphBuilder.taskFlows(shell: ShellScope) {
     }
     composable<ProfileEdit> { entry -> shell.ProfileEditDestination(entry) }
     composable<AvatarFlow> { entry -> shell.AvatarFlowDestination(entry) }
-    composable<Invites> {
-        InvitesRoute(onBack = { shell.navController.navigateUp() }, deletionBand = shell.deletionBand(node = null))
-    }
+    composable<Invites> { entry -> shell.InvitesDestination(entry) }
+}
+
+/**
+ * Invites, with the door it came through and what an ask link handed over on
+ * the way here (VouchAsk.md:17, :27, :31). A reader who is not a member never
+ * stands here (ProfileApplicant.md:18): they go back the way they came.
+ */
+@Composable
+private fun ShellScope.InvitesDestination(entry: NavBackStackEntry) {
+    val (notice, consumeNotice) = entry.navResult(invitesNoticeKey)
+    InvitesRoute(
+        from = entry.toRoute<Invites>().from,
+        onBack = { navController.navigateUp() },
+        onNotMember = { navController.navigateUp() },
+        onRestoreKey = { navController.navigate(Restore) },
+        arrival = InvitesNotice.decode(notice),
+        onArrivalConsumed = consumeNotice,
+        deletionBand = deletionBand(node = null),
+    )
 }
 
 /**
