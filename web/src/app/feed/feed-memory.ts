@@ -31,14 +31,15 @@
 // record, so a different reader — a sign-in, a sign-out, an account switch —
 // is a feed that has not been here yet, never someone else's list.
 
-import type { PostView } from "@/lib/api/content-api";
+import type { FeedItemView } from "@/lib/api/feed-api";
 import type { RankedFeed } from "@/lib/feed/ranked-feed";
 import type { ScrollPlace } from "@/lib/ui/scroll-pin";
 
 export type FeedMemory = {
   /** The held ranking: its answer, filter, derived list and hydrated rows. */
   feed: RankedFeed;
-  posts: readonly PostView[];
+  /** The hydrated rows on screen, of every kind the filter let in. */
+  posts: readonly FeedItemView[];
   /** Where the next window starts in the derived list; null at its end. */
   endCursor: string | null;
   hasNextPage: boolean;

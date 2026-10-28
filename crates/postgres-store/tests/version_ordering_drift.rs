@@ -4,7 +4,7 @@
 //! sqlx's macros take a string literal and nothing that expands to one —
 //! `concat!` is rejected at macro-expansion time — so the ordering cannot
 //! be a shared `const` spliced into the queries. It is therefore copied,
-//! twenty-one times across four modules, and re-encoded again in the seven
+//! twenty-two times across five modules, and re-encoded again in the seven
 //! indexes that serve it. A miss in any one of them serves a different
 //! version, silently and only for that query.
 //!

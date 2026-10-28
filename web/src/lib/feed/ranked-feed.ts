@@ -19,7 +19,8 @@
 // nothing here outlives the client it was built with.
 
 import { failed, success, type Outcome } from "@/lib/api/outcome";
-import type { FeedItemView, FeedPostView } from "@/lib/api/feed-api";
+import type { NodeKind } from "@/__generated__/graphql";
+import type { FeedItemView } from "@/lib/api/feed-api";
 import {
   derive,
   NOTHING_DERIVED,
@@ -38,6 +39,7 @@ import {
   type FeedFilterValue,
   type RankArguments,
 } from "./feed-filter";
+import { admitsItem } from "./feed-predicates";
 
 /**
  * How many rows one hydration window carries: the listing's own page, well
@@ -54,7 +56,8 @@ export type FeedIo = {
    */
   resolveViewer(): Promise<Outcome<string | null>>;
   rank(viewer: string, args: RankArguments): Promise<Outcome<HeldAnswer | null>>;
-  hydrate(ids: readonly string[]): Promise<Outcome<readonly FeedItemView[]>>;
+  /** Hydrates `ids`, `kinds` naming each one's kind as the ranking did. */
+  hydrate(ids: readonly string[], kinds: readonly NodeKind[]): Promise<Outcome<readonly FeedItemView[]>>;
   /** The READER's seen record, loaded, as it stands now (CD-10). */
   seen(): Promise<SeenLookup>;
   /**
@@ -69,12 +72,19 @@ export type FeedIo = {
    * still carries the hidden rows — Undo puts them back where they stood —
    * but only a visible row ends the fill. Absent hides nobody.
    */
-  hides?(item: FeedPostView): boolean;
+  hides?(item: FeedItemView): boolean;
+  /**
+   * A hydrated row as the client knows it NOW — a removal taken since it was
+   * hydrated reached the cache, not this feed's rows (`withCachedRemoval`) —
+   * so the Removed cut reads the mark at every derive. Absent reads the row
+   * as hydrated.
+   */
+  current?(item: FeedItemView): FeedItemView;
 };
 
 /** A hydrated stretch of the derived list. */
 export type FeedWindow = {
-  readonly items: readonly FeedPostView[];
+  readonly items: readonly FeedItemView[];
   /** Where the next window starts in the derived list. */
   readonly next: number;
   readonly hasMore: boolean;
@@ -89,8 +99,14 @@ export type FeedWindow = {
 /** What every kind switched off answers, without asking (FeedNothing.md:3-5). */
 const NOTHING_RANKED: HeldAnswer = { asOfEpoch: 0, entries: [], settling: [] };
 
-function isPost(item: FeedItemView | null | undefined): item is FeedPostView {
-  return item?.__typename === "Post";
+/** The kinds a feed card is drawn for (FeedKinds.md). */
+function isCard(item: FeedItemView | null | undefined): item is FeedItemView {
+  return (
+    item?.__typename === "Post" ||
+    item?.__typename === "Comment" ||
+    item?.__typename === "User" ||
+    item?.__typename === "Hashtag"
+  );
 }
 
 export class RankedFeed {
@@ -205,24 +221,38 @@ export class RankedFeed {
 
   /**
    * Hydrates the derived list from `from` on, a window at a time, until a
-   * window carries a row the card draws and the reader has not hidden, or the
-   * list ends — the shared fill rule (§5.1; hidden-actors §4.4 "over-fetch to
-   * fill"). Rows already hydrated for this answer are not asked again.
+   * window carries a row a card draws, the filter admits and the reader has
+   * not hidden, or the list ends — the shared fill rule (§5.1; hidden-actors
+   * §4.4 "over-fetch to fill"). Rows already hydrated for this answer are not
+   * asked again.
+   *
+   * THE POST-RANK PREDICATES CUT HERE (CD-4): forms, Sensitive and Removed
+   * read the hydrated row, so they are the derive's last step — a row they
+   * cut is never handed to the screen, and a Done or a refresh is what
+   * re-applies them. A hidden row is handed over (Undo puts it back where it
+   * stood) but never ends the fill.
    */
   async window(from: number, io: FeedIo): Promise<Outcome<FeedWindow>> {
     let at = Math.max(0, from);
-    const items: FeedPostView[] = [];
-    const visible = (item: FeedPostView) => io.hides?.(item) !== true;
+    const items: FeedItemView[] = [];
+    const visible = (item: FeedItemView) => io.hides?.(item) !== true;
     while (at < this.rows.length && !items.some(visible)) {
-      const ids = this.rows.slice(at, at + FEED_WINDOW).map((row) => row.targetId);
-      const missing = ids.filter((id) => !this.hydrated.has(id));
+      const rows = this.rows.slice(at, at + FEED_WINDOW);
+      const ids = rows.map((row) => row.targetId);
+      const missingRows = rows.filter((row) => !this.hydrated.has(row.targetId));
+      const missing = missingRows.map((row) => row.targetId);
       if (missing.length > 0) {
-        const fetched = await io.hydrate(missing);
+        const fetched = await io.hydrate(missing, missingRows.map((row) => row.kind));
         if (fetched.kind !== "success") return fetched;
         const answered = new Map(fetched.value.map((item) => [item.id, item]));
         for (const id of missing) this.hydrated.set(id, answered.get(id) ?? null);
       }
-      items.push(...ids.map((id) => this.hydrated.get(id)).filter(isPost));
+      for (const id of ids) {
+        const hydrated = this.hydrated.get(id);
+        if (!isCard(hydrated)) continue;
+        const item = io.current?.(hydrated) ?? hydrated;
+        if (admitsItem(this.applied, item)) items.push(item);
+      }
       at += ids.length;
     }
     return success({ items, next: at, hasMore: at < this.rows.length, seenTail: this.tailIds });

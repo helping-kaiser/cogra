@@ -3833,6 +3833,17 @@ pub enum ReferenceTarget {
     Profile(User),
 }
 
+impl ReferenceTarget {
+    /// The kind a `kinds` filter names this target by.
+    pub fn kind(&self) -> NodeKind {
+        match self {
+            Self::Post(_) => NodeKind::Post,
+            Self::Comment(_) => NodeKind::Comment,
+            Self::Profile(_) => NodeKind::User,
+        }
+    }
+}
+
 /// One standing citation from an artifact — a chip in the reference row.
 ///
 /// The bundle key is (author, citing artifact, target) and its records

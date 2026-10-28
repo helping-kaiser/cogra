@@ -156,9 +156,12 @@ export function OrderSection<T extends string>({
   onOrder,
   seen,
   onSeen,
+  hint = ORDER_HINT,
   node,
 }: {
   options: readonly { value: T; label: string }[];
+  /** The section's hint: the borrowed view's own on a feed that borrows one (FeedSheet.md). */
+  hint?: string;
   order: T;
   onOrder: (next: T) => void;
   /** The seen toggle; omitted where it cannot stand (a guest's search, ExploreFilter.md:41). */
@@ -167,7 +170,7 @@ export function OrderSection<T extends string>({
   node?: DataNode;
 }) {
   return (
-    <FilterSection label="Order" hint={ORDER_HINT} node={node}>
+    <FilterSection label="Order" hint={hint} node={node}>
       <SegmentedFilter ariaLabel="Order" options={options} value={order} onChange={onOrder} node={part(node, "picker")} />
       {seen !== undefined && onSeen !== undefined && (
         <div className="basis-full">
