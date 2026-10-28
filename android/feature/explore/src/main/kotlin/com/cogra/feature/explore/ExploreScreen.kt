@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -51,7 +50,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -120,7 +118,6 @@ import com.cogra.domain.search.SEARCH_KINDS
 import com.cogra.domain.search.SearchFilter
 import com.cogra.domain.search.SearchFilterReading
 import com.cogra.domain.search.SearchOrder
-import com.cogra.domain.search.SearchSection
 import com.cogra.domain.search.layoutResults
 import com.cogra.domain.search.reading
 import com.cogra.domain.search.recentNodeKey
@@ -208,8 +205,9 @@ fun ExploreScreen(
     val restList = rememberLazyListState()
     // The results keep their own scroll, so the way back finds them as they were (Explore.md:19).
     val resultsList = rememberLazyListState()
-    var sheetOpen by rememberSaveable { mutableStateOf(false) }
-    var help by rememberSaveable { mutableStateOf<HelpTopic?>(null) }
+    // A transient — the sheet, a dialog — is never part of what comes back (design/readme.md §13).
+    var sheetOpen by remember { mutableStateOf(false) }
+    var help by remember { mutableStateOf<HelpTopic?>(null) }
     var announced by remember { mutableStateOf<SearchFilter?>(null) }
     // THE RE-TAP LADDER (BottomNav.jsx): scrolled, back to the top; at the top, nothing.
     RootReselectEffect(reselects, if (state.searching) resultsList else restList)
@@ -350,12 +348,15 @@ private fun AtRest(state: ExploreUiState, list: LazyListState, doors: ExploreDoo
         if (state.resolved && !state.guest) {
             item(key = "topics") {
                 val topics = EXPLORE / "topics"
+                val held = state.heldCount?.let { stringResource(R.string.explore_topics_held, it) }
                 ContentRow(
                     title = stringResource(R.string.explore_topics),
                     disc = ContentRowDisc.Letter("#", loud = true),
                     testTag = topics.tag,
-                    second = state.heldCount?.let { count ->
-                        { ContentRowDoorSecond(stringResource(R.string.explore_topics_held, count)) }
+                    second = if (held != null) {
+                        { ContentRowDoorSecond(held) }
+                    } else {
+                        null
                     },
                     onOpen = doors.onOpenYourTopics,
                     node = topics,
