@@ -88,6 +88,19 @@ class AttachmentPadTest {
         assertThat(attachmentFrom(0.4, 999f, 0f)).isEqualTo(0.4)
     }
 
+    // ComposePad.md / EditPad.md, built on the master in round 20: the zero
+    // hairline is the no-side-yet detent — within the knob's own radius the
+    // knob holds on it and the pick reads exactly 0.00; past it, it follows.
+    @Test
+    fun theZeroHairlineHoldsTheKnobWithinItsRadius() {
+        val radius = 10f
+        val inside = attachmentFrom(0.1, ((-0.1 + 9.5 / extent) * extent).toFloat(), extent, radius)
+        val outside = attachmentFrom(0.1, ((-0.1 + 11.0 / extent) * extent).toFloat(), extent, radius)
+        assertThat(inside).isEqualTo(0.0)
+        assertThat(outside).isWithin(1e-6).of(11.0 / extent)
+        assertThat(attachmentReleased(0.1, ((-0.1 - 9.5 / extent) * extent).toFloat(), extent, radius)).isEqualTo(0.0)
+    }
+
     @Test
     fun negativeZeroIsAuthoredAsZero() {
         val picked = attachmentFrom(-0.0, 0f, extent)
