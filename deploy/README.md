@@ -34,7 +34,7 @@ podman save -m cogra-api:<c> cogra-web:<c> cogra-ranker:<c> | ssh root@<host> po
 git clone https://github.com/helping-kaiser/cogra && cd cogra && git checkout <c>
 deploy/scripts/install.sh                # units, scripts, templates into place
 $EDITOR /etc/cogra/*.env                 # fill in the domain and origins
-podman secret create cogra-postgres-password -   # …and every secret in deployment.md "Configuration"
+/usr/local/lib/cogra/secret.sh cogra-postgres-password --random 24   # …and every secret in deployment.md "Configuration"
 podman pull docker.io/library/postgres:18-alpine docker.io/minio/minio:RELEASE.2025-09-07T16-13-09Z docker.io/library/caddy:2.11.7-alpine
 for i in api web ranker; do podman tag localhost/cogra-$i:<c> localhost/cogra-$i:deployed; done
 /usr/lib/systemd/system-generators/podman-system-generator --dryrun >/dev/null && echo units ok
@@ -67,5 +67,5 @@ The pre-deploy snapshot of every deploy is in `/var/lib/cogra/deploys.log`.
 systemctl list-units 'cogra-*'
 journalctl -u cogra-api -f
 podman exec -it cogra-postgres psql -U cogra -d cogra
-podman exec cogra-media-held mc ls local/cogra-media-held
+podman exec cogra-media-held sh -c 'mc alias set root http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mc ls root/cogra-media-held'
 ```

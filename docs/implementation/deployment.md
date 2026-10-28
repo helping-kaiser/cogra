@@ -137,8 +137,13 @@ must be able to read its own backups.
 | `cogra-genesis-password` | bootstrap, once | Afterwards an ordinary account password |
 | restic password, backend credentials | the backup timer | Files under `/etc/cogra/secrets/`; without the password every backup is unreadable |
 
-A secret is created from standard input so it never lands in shell
-history: `podman secret create cogra-session-signing-seed -`.
+Every secret is created with `secret.sh`, from a silent prompt or
+generated, so it never lands in shell history and carries **no
+trailing newline**: `echo x | podman secret create` stores `x\n`, and
+a credential its two consumers read differently — a store and its
+provisioning one-shot — refuses every request. Generated values:
+`secret.sh cogra-session-signing-seed --random 32`; chosen ones (the
+SMTP URL): `secret.sh cogra-smtp-url`.
 
 The production values that differ from development, beside the
 origins and endpoints:
@@ -229,8 +234,13 @@ asset's bytes therefore leave the live store's process, credential
 and disk area entirely. The API reaches it through
 `MEDIA_HELD_S3_ENDPOINT` and the held keys; unset, those fall back to
 the live store's, which is how compose runs it. The operator reaches
-it from the host: `podman exec cogra-media-held mc ls
-local/cogra-media-held`.
+it from the host with the store's own root, which the container's
+environment carries:
+
+```bash
+podman exec cogra-media-held sh -c 'mc alias set root http://127.0.0.1:9000 \
+  "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mc ls root/cogra-media-held'
+```
 
 ### The media store
 
@@ -258,7 +268,12 @@ backup restores into any S3 store.
 
 A unit counts as started only once its container is healthy: each
 long-running unit's `ExecStartPost` waits for `podman wait
---condition=healthy` (podman 4.9 predates `Notify=healthy`). Ordering
+--condition=healthy` (podman 4.9 predates `Notify=healthy`); the
+application probes run every ten seconds, so the gate costs a deploy
+seconds rather than a probe interval. The API and the ranker run under
+an init (`RunInit=true`): neither binary installs a SIGTERM handler,
+and as PID 1 a process ignores a signal it does not handle, so a stop
+would wait out its timeout and end in SIGKILL. Ordering
 follows from that: the API starts after Postgres answers and both
 stores are provisioned; web and ranker after the API; the proxy last.
 Every unit restarts always and starts at boot, and a unit that fails
@@ -428,7 +443,7 @@ into [Budgets](#budgets).
 | B-2 | Admin user, ssh key-only, firewall 22/80/443 in, `unattended-upgrades`, time sync | an external scan shows 22 only |
 | B-3 | `apt install podman restic`; data filesystem per D-1 | `podman --version` is 4.9.x |
 | B-4 | DNS (D-2): `A`/`AAAA` for the domain; mail DNS per D-3 (SPF, DKIM, DMARC) | `dig` resolves from outside |
-| B-5 | `deploy/scripts/install.sh` from a checkout; fill `/etc/cogra/*.env`; create every secret; `restic init` | `podman secret ls` lists every secret |
+| B-5 | `deploy/scripts/install.sh` from a checkout; fill `/etc/cogra/*.env`; create every secret with `secret.sh`; `restic init` | `podman secret ls` lists every secret |
 | B-6 | Check the generated units | `podman-system-generator --dryrun` is clean |
 | B-7 | `podman pull` the pinned public images; `podman load` the commit's images; tag them `:deployed` | `podman images` shows all six |
 | B-8 | Start postgres, both stores and their inits | healthy; the buckets exist |
@@ -449,18 +464,27 @@ into [Budgets](#budgets).
 
 ## Budgets
 
-Measured at the artifacts' first build on the dev toolbox
-(claude-podman, podman 4.9.3); the host's figures replace them at
-bring-up.
+Measured on the dev toolbox (claude-podman, podman 4.9.3, a shared
+19 GB VM, cargo at four jobs), against a scratch stack run from these
+units under its systemd with a seeded instance of two media objects.
+The budget is the measurement plus half again, rounded; the host's
+first figures replace both at bring-up.
 
 | Action | Measured | Budget |
 |---|---|---|
-| `cogra-api` image build, cold | *to measure* | *from the first run* |
-| `cogra-web` image build, cold | *to measure* | *from the first run* |
-| `cogra-ranker` image build, cold | *to measure* | *from the first run* |
-| `cogra-api` image size | *to measure* | — |
-| `cogra-web` image size | *to measure* | — |
-| Backup pair, restore drill, deploy, reboot to healthy | at bring-up (B-15, B-16, B-18) | from the first run |
+| `cogra-api` image build, cold | 643 s | 16 min |
+| `cogra-api` image build, warm (cache mounts, no Rust change) | 20 s | 1 min |
+| `cogra-web` image build, cold | 186 s | 5 min |
+| `cogra-ranker` image build, cold | 194 s | 5 min |
+| Image sizes: api / web / ranker | 580 / 654 / 86 MB | — |
+| Ordered cold start of every unit | 85 s | 2 min |
+| API start to healthy (64 migrations applied) | 12 s | 20 s |
+| Stop of web, ranker and API | 2 s | 10 s |
+| Backup pair | 6 s | grows with media; re-measured at B-15 |
+| Restore drill | 26 s | grows with media; re-measured at B-16 |
+| Production restore | 8 s | grows with media |
+| `deploy.sh`, pre-deploy pair included | 75 s | 3 min |
+| Reboot to healthy | at bring-up (B-18) | from the first run |
 
 ---
 
@@ -472,6 +496,7 @@ its wall time, and none prints a secret.
 | Script | Does |
 |---|---|
 | `install.sh` | puts a checkout's `deploy/` tree in place; never overwrites an instance's env file |
+| `secret.sh` | creates one podman secret, prompted or generated, without a trailing newline |
 | `deploy.sh` | deploy and rollback |
 | `backup.sh` | one backup pair; prints the snapshot id |
 | `restore.sh` | the restore drill, and the production restore |
