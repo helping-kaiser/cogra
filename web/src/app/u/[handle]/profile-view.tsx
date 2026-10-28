@@ -36,7 +36,9 @@ import {
   fetchAuthorRecords,
   fetchMyProfile,
   fetchProfileByHandle,
+  fetchProfileFigures,
   type ChronicleFilter,
+  type ProfileFigures,
   type ProfileView as Profile,
   type RecordRow,
 } from "@/lib/api/profile-api";
@@ -140,6 +142,10 @@ export function ProfileScreen({
   // The viewer's own read, kept for the one profile it changes: the member
   // who vouched them in, whose anchor opens the vouch-back.
   const [viewer, setViewer] = useState<MeUser | null>(null);
+  // THE HEADER'S FIGURES (`ProfileFigures`), read beside the profile: until
+  // they answer — or where the read fails — the header draws no figures cell
+  // rather than a number it does not have.
+  const [figures, setFigures] = useState<ProfileFigures | null>(null);
 
   // OPENING SOMEONE'S PROFILE ADDS THE PROFILE TO HISTORY (History.md:11) —
   // the profile alone; its posts join only as the reader's lists see them.
@@ -207,6 +213,9 @@ export function ProfileScreen({
         setApplicant(me?.accountState === "APPLICANT");
         setFilter("everything");
         void loadRows(loaded.id, "everything", null, mine);
+        void fetchProfileFigures(client, loaded.id).then((counted) => {
+          if (!cancelled) setFigures(counted.kind === "success" ? counted.value : null);
+        });
       } else if (outcome.kind === "refused") {
         // The own-profile read refused: the session is gone; the
         // phase flip handles it.
@@ -383,6 +392,8 @@ export function ProfileScreen({
               bio={profile.bio.value}
               website={profile.websiteUrl.value}
               redacted={deleted}
+              figures={figures}
+              own={own}
               // The handle repeats only where the bar does not carry it: the
               // own root's band carries none.
               showHandle={handle === null}
@@ -575,6 +586,20 @@ function discOf(row: RecordRow): ContentRowDisc {
             pInterest: row.face.pInterest,
             severed: row.face.severed,
           };
+    // A walk-back's every record wears 🤷 — never the counter-record's own
+    // face, which would read as an opinion against (copy-voice, the chronicle).
+    case "walkBack":
+      return { kind: "walkedBack" };
+    // A tag wears the `#` monogram, as Explore's `Your topics` door does.
+    case "tag":
+      return { kind: "letter", letter: "#" };
+    // A citation wears the cited thing's own glyph; a mention the person's.
+    case "citation":
+      return row.cited === "person" && row.mentioned !== null
+        ? row.mentioned.avatar !== null
+          ? { kind: "picture", src: row.mentioned.avatar, name: row.mentioned.handle }
+          : { kind: "monogram", name: row.mentioned.handle }
+        : { kind: "glyph", glyph: row.cited === "comment" ? "chat_bubble" : "dynamic_feed" };
     default:
       return { kind: "glyph", glyph: "history" };
   }

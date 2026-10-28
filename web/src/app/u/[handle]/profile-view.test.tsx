@@ -87,6 +87,7 @@ function recordsHandler(
     postId?: string;
     on?: string;
     pair?: [number, number];
+    act?: string;
   }[],
 ) {
   return gqlLink.query("AuthorRecords", () =>
@@ -100,7 +101,7 @@ function recordsHandler(
               __typename: "Record",
               id: row.id,
               family: row.family,
-              act: row.targetId === undefined ? "GENESIS" : "ORDINARY",
+              act: row.act ?? (row.targetId === undefined ? "GENESIS" : "ORDINARY"),
               targetId: row.targetId ?? `mint:${row.id}`,
               terminalId: null,
               landedAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
@@ -183,6 +184,69 @@ describe("ProfileScreen", () => {
     expect(screen.getByTestId(byNode("profile.chronicle.act", "2"))).toHaveTextContent(
       "Updated their profile",
     );
+  });
+
+  // THE CHRONICLE'S VERBS (copy-voice, round 22; seam 247 rider 2): the
+  // server's `act` picks the verb — a walk-back wears 🤷 and reads `Walked
+  // back an opinion`, the vouch that landed someone reads `Vouched for`, and
+  // the account's first registration reads `Joined`.
+  it("reads a walk-back, a vouch and the joining from the record's act", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([
+        { id: "act:a:3:opinion", family: "OPINION", targetId: "prof:mira", on: "mira", pair: [-0.4, -0.5], act: "WALK_BACK" },
+        { id: "act:a:2:opinion", family: "OPINION", targetId: "prof:rafa", on: "rafa", pair: [0.1, 0.1], act: "VOUCH" },
+        { id: "act:a:1:registration", family: "REGISTRATION", act: "GENESIS" },
+      ]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const walkBack = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
+    expect(walkBack).toHaveTextContent("Walked back an opinion");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "1"))).toHaveTextContent("on @mira");
+    // 🤷, never the counter-record's own face.
+    expect(screen.getByTestId(byNode("profile.chronicle.act.disc", "1"))).toHaveTextContent("🤷");
+    expect(screen.getByTestId(byNode("profile.chronicle.act", "2"))).toHaveTextContent("Vouched for");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "2"))).toHaveTextContent("@rafa");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "2"))).not.toHaveTextContent("on @rafa");
+    expect(screen.getByTestId(byNode("profile.chronicle.act", "3"))).toHaveTextContent("Joined");
+  });
+
+  // THE HEADER'S FIGURES (ProfileOther.md:7; Q35 closed toward the drawn
+  // figures, jakob's confirmation pending): three labelled record counts,
+  // never merged, grouped as every figure is.
+  it("draws the three figures, each labelled, from ProfileFigures", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+      gqlLink.query("ProfileFigures", () =>
+        HttpResponse.json({
+          data: {
+            user: {
+              __typename: "User",
+              id: "u2",
+              posts: { __typename: "RecordConnection", totalCount: 12 },
+              opinionsOn: { __typename: "RecordConnection", totalCount: 1204 },
+              opinionsBy: { __typename: "RecordConnection", totalCount: 7 },
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const posts = await screen.findByTestId(byNode("profile.identity.figures.posts"));
+    expect(posts).toHaveTextContent("12Posts");
+    expect(screen.getByTestId(byNode("profile.identity.figures.stancesOn.value"))).toHaveTextContent("1,204");
+    expect(screen.getByTestId(byNode("profile.identity.figures.stancesOn.label"))).toHaveTextContent(
+      "Opinions on them",
+    );
+    expect(screen.getByTestId(byNode("profile.identity.figures.stancesTaken.label"))).toHaveTextContent(
+      "Opinions by them",
+    );
+    expect(screen.getByTestId(byNode("profile.identity.figures.stancesTaken.value"))).toHaveTextContent("7");
   });
 
   // THE CHRONICLE'S TAB ROW (TabBar.jsx; Profile.md:21): three glyph toggles
