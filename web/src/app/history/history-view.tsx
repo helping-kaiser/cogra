@@ -338,6 +338,9 @@ export function HistoryScreen({
   const content = narrowedByQuery
     ? entries.filter((entry) => sectionOf(entry.node.__typename) === "content")
     : entries;
+  // Whether a section's caption opens the list, standing right under the trigger.
+  const captionLeads =
+    (people.length > 0 && !peopleAlone) || (people.length === 0 && tags.length > 0 && !tagsAlone);
   // DAY DIVIDERS BELONG TO THE WHOLE LIST: under a query the sections break
   // the one chronological column, and the board draws none there.
   const dividers = narrowedByQuery ? content.map(() => null) : dividersOf(content.map((entry) => entry.firstSeenAt));
@@ -468,7 +471,14 @@ export function HistoryScreen({
         // THE FEED'S ONE STAGE (History.md:77-83): at most one clip plays, and
         // the stage re-elects at the list's hard top, by the feed's law.
         <StageHost>
-          <div data-testid="history-list" className="flex flex-col pt-2">
+          {/* ONE COLUMN AT THE FEED LIST'S 8px RHYTHM (`FeedList`): captions,
+              sections and doors are its direct children, as the board draws
+              them; a caption leading the column stands right under the
+              trigger, the list's own 8px top otherwise. */}
+          <div
+            data-testid="history-list"
+            className={`flex flex-col gap-2 ${captionLeads ? "" : "pt-2"}`}
+          >
             {people.length > 0 && (
               <>
                 {!peopleAlone && (
@@ -478,7 +488,7 @@ export function HistoryScreen({
                   {people.map((entry) => renderEntry(entry))}
                 </ul>
                 {!peopleAlone && hasMorePeople && (
-                  <div className="flex px-2 pt-2">
+                  <div className="flex px-2">
                     <Button
                       testId="history-profiles-door"
                       node={{ path: "history.profilesDoor" }}
@@ -499,7 +509,7 @@ export function HistoryScreen({
                   {tags.map((entry) => renderEntry(entry))}
                 </ul>
                 {!tagsAlone && hasMoreTags && (
-                  <div className="flex px-2 pt-2">
+                  <div className="flex px-2">
                     <Button
                       testId="history-tags-door"
                       node={{ path: "history.tagsDoor" }}
@@ -515,9 +525,7 @@ export function HistoryScreen({
             )}
             {content.length > 0 && (
               // THE CONTENT TAKES NO CAPTION OF ITS OWN (HistorySearch.md:23).
-              <ul
-                className={`m-0 flex list-none flex-col gap-2 p-0 ${people.length + tags.length > 0 ? "pt-2" : ""}`}
-              >
+              <ul className="m-0 flex list-none flex-col gap-2 p-0">
                 {content.map((entry, index) => {
                   const day = dividers[index];
                   return (
