@@ -19,6 +19,7 @@ import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.AccountState
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.MediaAssetState
+import com.cogra.domain.RemovalAgent
 import com.cogra.domain.WriteState
 import com.cogra.domain.feed.PeopleMark
 import com.cogra.network.graphql.type.MediaAttachmentState
@@ -31,6 +32,7 @@ private typealias GeneratedAccountState = com.cogra.network.graphql.type.Account
 private typealias GeneratedAccountDeletionPath = com.cogra.network.graphql.type.AccountDeletionPath
 private typealias GeneratedErrorCode = com.cogra.network.graphql.type.ErrorCode
 private typealias GeneratedPeopleMark = com.cogra.network.graphql.type.PeopleMark
+private typealias GeneratedRemovalAgent = com.cogra.network.graphql.type.RemovalAgent
 
 class EnumParityTest {
 
@@ -78,6 +80,11 @@ class EnumParityTest {
             "MediaAssetState",
             MediaAttachmentState.knownValues().map { it.rawValue },
             MediaAssetState.entries.filter { it != MediaAssetState.UNKNOWN }.map { it.name },
+        )
+        assertParity(
+            "RemovalAgent",
+            GeneratedRemovalAgent.knownValues().map { it.rawValue },
+            RemovalAgent.entries.filter { it != RemovalAgent.UNKNOWN }.map { it.name },
         )
     }
 }

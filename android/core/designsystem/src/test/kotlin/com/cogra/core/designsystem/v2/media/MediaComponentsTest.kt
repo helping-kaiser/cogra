@@ -355,6 +355,42 @@ class MediaComponentsTest {
         compose.onNodeWithText("Removed under the platform's rules").assertIsDisplayed()
     }
 
+    /** Each reason carries its own second line (`REASONS`, SensitiveVeil.jsx; Removed.md:7). */
+    @Test
+    fun eachReasonReadsItsOwnSecondLineAndItsWhen() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column {
+                    RemovedPlaceholder(RemovalReason.Author, timestamp = "2h")
+                    RemovedPlaceholder(RemovalReason.Platform)
+                }
+            }
+        }
+
+        compose.onNodeWithText(
+            "The words and pictures are gone. The post's place in the thread, and every response, remain.",
+        ).assertIsDisplayed()
+        compose.onNodeWithText("A passed proposal removed it. The decision is public.").assertIsDisplayed()
+        compose.onNodeWithText("2h").assertIsDisplayed()
+    }
+
+    /** A comment's mark swaps the noun in its second line and nothing else (CommentRemoved.md:5). */
+    @Test
+    fun aNoteReplacesTheSecondLineAndTheMarkStands() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                RemovedPlaceholder(
+                    RemovalReason.Author,
+                    note = "The comment's place in the thread, and every response, remain.",
+                )
+            }
+        }
+
+        compose.onNodeWithText("Removed by its author").assertIsDisplayed()
+        compose.onNodeWithText("The comment's place in the thread, and every response, remain.").assertIsDisplayed()
+        compose.onNodeWithText("The words and pictures are gone.", substring = true).assertDoesNotExist()
+    }
+
     // ---- The crop -----------------------------------------------------
 
     private fun cropContent(state: CropState, shape: MediaShape = MediaShape.Square) {

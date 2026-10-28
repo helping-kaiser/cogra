@@ -1,11 +1,12 @@
 "use client";
 
 // THE REFERENCE ROW (design/components/content/ReferenceRow.jsx): a node in a
-// list of found things — the search's results first. A 32px mark saying the
-// kind, the name on one line, the INDIRECT line under it when the row was
-// found through something else (`on <title>`, `tagged by @sol`), and one right
-// edge: the viewer-relative RANK beside the score's graph glyph, or a plain
-// VALUE (an age), or nothing.
+// list of found things — the search's results, and what cites a node. A 32px
+// mark saying the kind, the name on one line, the INDIRECT line under it when
+// the row was found through something else (`on <title>`, `tagged by @sol`),
+// and one right edge: the viewer-relative RANK beside the score's graph glyph,
+// the signed PAIR of the act the row is about, or a plain VALUE (an age), or
+// nothing.
 //
 // THE MARK SAYS THE KIND WITHOUT A WORD: a person is their avatar — people are
 // circles everywhere in this system — a post with a cover its cover, a text
@@ -21,48 +22,73 @@ import type { StancePair } from "@/lib/stance/model";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 import { NodeMark } from "@/lib/ui/node-mark";
-import { formatStancePair, STANCE_SEVERANCE_WORDS } from "@/lib/ui/stance-format";
+import { PendingMarker } from "@/lib/ui/pending-marker";
+import { formatStancePair } from "@/lib/ui/stance-format";
+import { SEVERED_LABEL } from "@/lib/ui/stance-readout";
 import { MonogramAvatar } from "./monogram-avatar";
-import { PairReadout } from "./pair-readout";
 
 export type ReferenceKind = "post" | "comment" | "person" | "topic";
 
-function Mark({ kind, name, src, node }: { kind: ReferenceKind; name: string; src: string | null; node?: DataNode }) {
-  if (kind === "person") return <MonogramAvatar name={name} src={src} size={32} node={node} />;
+function Mark({
+  kind,
+  name,
+  src,
+  redacted,
+  node,
+}: {
+  kind: ReferenceKind;
+  name: string;
+  src: string | null;
+  redacted: boolean;
+  node?: DataNode;
+}) {
+  if (kind === "person") return <MonogramAvatar name={name} src={src} size={32} redacted={redacted} node={node} />;
   // A result list stands off any card, so the tile keeps its own tone (`onCard`).
-  return <NodeMark kind={kind} src={src} onCard={false} node={node} />;
+  return <NodeMark kind={kind} src={src} redacted={redacted} onCard={false} node={node} />;
 }
 
 /**
- * AN AFFINITY'S EDGE (ReferenceRow.jsx, "THE FAMILY IS THE ACT'S, NOT THE
- * KIND'S"): the face through the one choke point (`bundleReadout`), the digits
- * as the geek reading, and — because an Affinity IS a stance, the reader's own
- * — the anchor's word spoken with the pair: `Like this, +0.60 / +0.35`
- * (copy-voice, *The readouts, spoken*). A held topic is never (0, 0); the zero
- * word is the stance family's should the fold ever serve one.
+ * THE SIGNED PAIR ON THE ROW'S EDGE (`ReferenceRow.jsx`): the nearest anchor's
+ * glyph through the choke point, the digits in a `cg-exact` span that paints
+ * only in geek mode, and an SR-only twin so nothing spoken depends on the mode.
+ * A citation's anchor WORD is withheld — a stance anchor names a feeling about
+ * a stance, which a citation is not — so its twin is the pair itself. BY THAT
+ * SAME TEST an Affinity takes its word (`pairFamily="stance"`, Your topics):
+ * it IS a stance, the reader's own toward the Type the row names, so its twin
+ * is `Like this, +0.60 / +0.35` (copy-voice, *The readouts, spoken*).
+ *
+ * A SETTLING ACT SAYS SO UNDER THE PAIR, not under the name: what has not
+ * landed is the act, not the node it points at.
  */
-function StanceEdge({
+function PairValue({
   pair,
+  family,
   pending,
   node,
-  testId,
 }: {
   pair: StancePair;
+  family: "citation" | "stance";
   pending: boolean;
   node?: DataNode;
-  testId?: string;
 }) {
-  const anchor = bundleReadout(pair, STANCE_SEVERANCE_WORDS.zero);
+  const anchor = bundleReadout(pair, SEVERED_LABEL);
   const exact = formatStancePair(pair);
   return (
-    <PairReadout
-      emoji={anchor.emoji}
-      exact={exact}
-      spoken={`${anchor.label}, ${exact}`}
-      pending={pending}
-      node={node}
-      testId={`${testId ?? "reference-row"}-pair`}
-    />
+    <span
+      className="flex flex-none flex-col items-end text-body-small whitespace-nowrap text-on-surface-variant"
+      {...testAttributes(node)}
+    >
+      <span aria-hidden="true" className="inline-flex items-center gap-1">
+        <span className="text-[length:var(--text-body-medium)] [line-height:1]" {...testAttributes(part(node, "face"))}>
+          {anchor.emoji}
+        </span>
+        <span className="cg-exact" {...testAttributes(part(node, "exact"))}>
+          {exact}
+        </span>
+      </span>
+      <span className="sr-only">{family === "stance" ? `${anchor.label}, ${exact}` : exact}</span>
+      {pending && <PendingMarker inline testId={node === undefined ? "pending" : `${node.path}.pending`} />}
+    </span>
   );
 }
 
@@ -74,8 +100,9 @@ export function ReferenceRow({
   rank = null,
   value = null,
   pair = null,
-  pairFamily,
+  pairFamily = "citation",
   pending = false,
+  redacted = false,
   href,
   onOpen,
   node,
@@ -87,17 +114,18 @@ export function ReferenceRow({
   src?: string | null;
   rank?: string | null;
   value?: string | null;
-  /**
-   * The pair signed on this act, as numbers; the row formats it. Only the
-   * family a list on this client draws is here: `stance`, the reader's own
-   * AFFINITY on Your topics (`ReferenceRow.d.ts` `pairFamily`), read through
-   * the twenty faces with the anchor's word spoken. The tag and citation
-   * families join with the list that first draws them through this row.
-   */
+  /** The signed pair on the edge, as numbers the row formats (a citation's). */
   pair?: StancePair | null;
-  pairFamily?: "stance";
-  /** The act is signed but not yet ordered: the settling mark under the pair. */
+  /**
+   * Which record family `pair` belongs to (`ReferenceRow.d.ts` `pairFamily`):
+   * a citation's by default; `stance` for the reader's own Affinity on Your
+   * topics, whose anchor word is spoken with the pair.
+   */
+  pairFamily?: "citation" | "stance";
+  /** The act is still settling: the marker stacks under the pair. */
   pending?: boolean;
+  /** The thing the row names was removed: its mark keeps its space and fills with nothing. */
+  redacted?: boolean;
   /** Where the row opens; null draws a row that opens nothing. */
   href: string | null;
   onOpen?: () => void;
@@ -106,7 +134,7 @@ export function ReferenceRow({
 }) {
   const inner = (
     <>
-      <Mark kind={kind} name={name} src={src} node={part(node, "mark")} />
+      <Mark kind={kind} name={name} src={src} redacted={redacted} node={part(node, "mark")} />
       <span className="flex min-w-0 flex-1 flex-col">
         <span
           className="min-w-0 overflow-hidden text-body-medium text-ellipsis whitespace-nowrap"
@@ -135,8 +163,8 @@ export function ReferenceRow({
           </span>
           <span className="sr-only">{rank}</span>
         </>
-      ) : pair !== null && pairFamily === "stance" ? (
-        <StanceEdge pair={pair} pending={pending} node={part(node, "value")} testId={testId} />
+      ) : pair !== null ? (
+        <PairValue pair={pair} family={pairFamily} pending={pending} node={part(node, "value")} />
       ) : (
         value !== null && (
           <span

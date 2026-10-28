@@ -3,11 +3,9 @@
 // The right edge of a reading-side reference row: the face, the exact pair, and
 // — stacked under them — the settling mark.
 //
-// It lives on its own because it is drawn on more than one surface: the
-// tags-and-references sheet reads the acts this node's author signed, the
-// cited-by sheet reads the acts other people signed at it, and Your topics
-// reads the reader's own Affinities. One drawing, one module — the rule
-// `ListRow` already states for the row around it.
+// The tags-and-references sheet draws it, for both of its families — the
+// tags this node's author signed and the citations. `ReferenceRow` carries
+// its own edge with the same drawing (`PairValue`).
 //
 // THE DIGITS ARE THE GEEK READING (`ReferenceRow.jsx`): the face is drawn in
 // both modes and the pair rides a `cg-exact` span that paints only when the

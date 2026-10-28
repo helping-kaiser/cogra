@@ -38,6 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.CommentStanceTarget
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.RowLine
@@ -54,6 +55,8 @@ import com.cogra.domain.CommentView
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.removal.RemovalKind
+import com.cogra.domain.removal.marked
 import com.cogra.domain.saved.SavedWrites
 import com.cogra.feature.content.R
 import com.cogra.feature.saved.LocalSavedHost
@@ -271,6 +274,10 @@ fun CommentsSheet(
     }
     val listState = rememberLazyListState()
     ThreadPlacement(state, listState, restoreTo, onRestored, onLanded)
+    // WHICH OF THE READER'S OWN COMMENTS THE THINK-TWICE DIALOG IS UP FOR
+    // (CommentMenuOwn.md:11): the menu closes and the dialog comes up over the
+    // thread, which stays where the reader opened the menu.
+    var removeFor by remember { mutableStateOf<CommentView?>(null) }
     val depart: (() -> Unit) -> Unit = { go ->
         onDepart(
             CommentsScroll(
@@ -318,6 +325,7 @@ fun CommentsSheet(
                     onOpenTopic = onOpenTopic,
                     onReference = onReference,
                     onLicense = onLicense,
+                    onRemoveComment = { comment -> removeFor = comment },
                     stanceControl = stanceControl,
                 )
             }
@@ -325,6 +333,24 @@ fun CommentsSheet(
             CograSnackbarHost(snackbar)
         }
     }
+    // OVER THE THREAD, the sheet beneath whole and inert (CommentRemoveConfirm.md:3):
+    // the dialog is its own window, raised after the sheet's. Taken, only the
+    // one comment gives way to its mark — the list is not re-read, so the
+    // reader's place and every unfolded branch hold (CommentRemoved.md:19).
+    removeFor?.let { comment -> CommentRemoveConfirm(comment, onClose = { removeFor = null }) }
+}
+
+/** The comment's think-twice dialog (CommentRemoveConfirm): the post's anatomy, the comment's nouns. */
+@Composable
+private fun CommentRemoveConfirm(comment: CommentView, onClose: () -> Unit) {
+    RemoveConfirm(
+        kind = RemovalKind.Comment,
+        nodeId = comment.id,
+        record = comment.genesisRecordId,
+        onClose = onClose,
+        testTag = "comment_remove_confirm",
+        node = POST_DETAIL / "dialog",
+    )
 }
 
 /** Where the thread's list stands when it opens: the reader's old place, or a landing. */
@@ -381,6 +407,8 @@ private fun CommentsList(
     onOpenTopic: (String) -> Unit,
     onReference: (String) -> Unit,
     onLicense: (LicenseChoice) -> Unit,
+    /** An own comment's Remove row: the think-twice dialog over the thread. */
+    onRemoveComment: (CommentView) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -433,6 +461,7 @@ private fun CommentsList(
                         onOpenTopic = onOpenTopic,
                         onReference = onReference,
                         onLicense = onLicense,
+                        onRemoveComment = onRemoveComment,
                         stanceControl = stanceControl,
                     )
                 }
@@ -520,51 +549,55 @@ private fun CommentsFoot(
 }
 
 /**
- * THE COMMENT'S ROWS (`_shared.jsx:392`) — Save · Cite in a new post ·
+ * THE COMMENT'S ROWS (`_shared.jsx` `COMMENT_MENU` / `OWN_COMMENT_MENU`) —
+ * Save · Cite in a new post · [Remove, on the reader's own] · Cited by ·
  * Opinions on this · License terms.
+ *
+ * REMOVE IS THE LAST OF THE ACTS on the reader's own comment
+ * (CommentMenuOwn.md:3): after Save and Cite, before the two readings, the
+ * license closing the menu — `OWN_POST_MENU`'s place for the row. No Edit row:
+ * a comment's Edit is a button on its own card.
  *
  * NO HIDE ROW, AND THE ABSENCE IS RULED (jakob 2026-09-12): hiding is an
  * act on an ACTOR, and the route to it is the commenter's own profile,
  * one tap away through their chip. A thread of many voices is not where
  * that decision belongs.
  *
- * `Opinions on this` STANDS WHATEVER THE COUNT IS, which is the
- * difference between a menu row and a count line: a row that came and
- * went with a number would make the menu a different menu every time.
+ * `Cited by` and `Opinions on this` STAND WHATEVER THE COUNT IS, which is
+ * the difference between a menu row and a count line: a row that came and
+ * went with a number would make the menu a different menu every time. Their
+ * sheets are not built on this client yet, so the rows stand inert (the
+ * introduced-but-inert law, jakob 2026-09-14).
+ *
+ * @param onRemove the Remove row's door; null on someone else's comment, which
+ *   carries no such row.
+ * @param sheet the registered sheet the rows name themselves under — the
+ *   thread's `postDetail.menuSheet` (CommentMenu, CommentMenuOwn); null keeps
+ *   the per-comment tags a surface off the thread binds to.
  */
 @Composable
 internal fun commentMenuRows(
     comment: CommentView,
     onCite: () -> Unit,
     onLicense: () -> Unit,
+    onRemove: (() -> Unit)? = null,
+    sheet: DataNode? = null,
 ): List<MenuRow> = buildList {
+    fun tag(row: String, legacy: String): String = sheet?.div(row)?.tag ?: "comment_menu_${legacy}_${comment.id}"
     // SAVE IS THE ONE BEHAVIOUR EVERY MENU SHARES (`saveMenuRow`); the comment
     // menus gain the `Saved.` snackbar too (design digest item 54).
     val save = stringResource(R.string.content_menu_save)
     add(
-        LocalSavedHost.current?.menuRow(comment.id, comment.viewerBookmarkedAt, "comment_menu_save_${comment.id}")
-            ?: MenuRow(save, "comment_menu_save_${comment.id}") {},
+        LocalSavedHost.current?.menuRow(comment.id, comment.viewerBookmarkedAt, tag("save", "save"))
+            ?: MenuRow(save, tag("save", "save")) {},
     )
-    add(
-        MenuRow(
-            stringResource(R.string.content_menu_cite),
-            "comment_menu_cite_${comment.id}",
-            onCite,
-        ),
-    )
-    add(
-        MenuRow(
-            stringResource(R.string.content_menu_opinions),
-            "comment_menu_opinions_${comment.id}",
-        ) {},
-    )
-    add(
-        MenuRow(
-            stringResource(R.string.content_menu_license),
-            "comment_menu_license_${comment.id}",
-            onLicense,
-        ),
-    )
+    add(MenuRow(stringResource(R.string.content_menu_cite), tag("cite", "cite"), onCite))
+    if (onRemove != null) {
+        add(MenuRow(stringResource(R.string.content_menu_remove), tag("remove", "remove"), onRemove))
+    }
+    add(MenuRow(stringResource(R.string.content_menu_cited_by), tag("citedBy", "cited_by")) {})
+    add(MenuRow(stringResource(R.string.content_menu_opinions), tag("opinions", "opinions")) {})
+    add(MenuRow(stringResource(R.string.content_menu_license), tag("license", "license"), onLicense))
 }
 
 /**
@@ -602,6 +635,7 @@ private fun CommentThread(
     onReference: (String) -> Unit,
     /** Raises the terms in the sheet the menu's License row opens. */
     onLicense: (LicenseChoice) -> Unit,
+    onRemoveComment: (CommentView) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
     val indent = (minOf(depth, MAX_INDENT_DEPTH) * 12).dp
@@ -612,7 +646,10 @@ private fun CommentThread(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CommentCard(
-            comment = comment,
+            // ONLY THE ONE NODE GIVES WAY (CommentRemoveConfirm.md:11): a
+            // comment removed since the thread was read wears its mark in its
+            // own place, and its branch below is untouched.
+            comment = comment.marked(rememberRemovedMarks()),
             state = state,
             viewerId = viewerId,
             signedIn = signedIn,
@@ -623,6 +660,7 @@ private fun CommentThread(
             onOpenTopic = onOpenTopic,
             onReference = onReference,
             onLicense = onLicense,
+            onRemoveComment = onRemoveComment,
             stanceControl = stanceControl,
         )
         CommentBranch(
@@ -639,6 +677,7 @@ private fun CommentThread(
             onOpenTopic = onOpenTopic,
             onReference = onReference,
             onLicense = onLicense,
+            onRemoveComment = onRemoveComment,
             stanceControl = stanceControl,
         )
     }
@@ -661,6 +700,7 @@ private fun CommentCard(
     onOpenTopic: (String) -> Unit,
     onReference: (String) -> Unit,
     onLicense: (LicenseChoice) -> Unit,
+    onRemoveComment: (CommentView) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
     Card(
@@ -683,11 +723,28 @@ private fun CommentCard(
                 at = comment.createdAt,
                 onOpenActor = onOpenActor,
                 testTagPrefix = "comment_${comment.id}",
-                menu = commentMenuRows(
-                    comment = comment,
-                    onCite = { onReference(comment.id) },
-                    onLicense = { onLicense(comment.license) },
-                ),
+                // A REMOVED COMMENT HAS NO MENU LEFT (CommentRemoved.md:9; the
+                // post's `Removed` rule): nothing on it is left to save, cite
+                // or read the terms of, so its ⋮ goes with the payload.
+                menu = if (comment.removed) {
+                    emptyList()
+                } else {
+                    commentMenuRows(
+                        comment = comment,
+                        onCite = { onReference(comment.id) },
+                        onLicense = { onLicense(comment.license) },
+                        onRemove = if (isOwn(comment, viewerId)) {
+                            { onRemoveComment(comment) }
+                        } else {
+                            null
+                        },
+                        // CommentMenu and CommentMenuOwn register the thread's
+                        // menu under the detail's prefix, whichever surface
+                        // raised the thread (`postDetail.menuSheet.*`).
+                        sheet = POST_DETAIL / "menuSheet",
+                    )
+                },
+                menuSheetNode = POST_DETAIL / "menuSheet",
                 menuContentDescription = stringResource(R.string.content_menu_comment),
                 // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`):
                 // the thread already lives in a sheet, so this menu is a
@@ -735,6 +792,7 @@ private fun CommentCardBody(
         attachments = comment.attachments,
         attachmentsStatus = comment.attachmentsStatus,
         moderation = comment.moderation,
+        removal = comment.removal,
         testTagPrefix = "comment_${comment.id}",
         surface = BodySurface.Comment,
         revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),
@@ -806,8 +864,10 @@ private fun CommentAffordances(
             }
         }
         // `ReplyMedia` 6 — an own comment wears Edit, and it
-        // opens `CommentEdit`.
-        if (viewerId != null && comment.author?.id == viewerId) {
+        // opens `CommentEdit`. A REMOVED ONE LOSES IT WITH ITS PAYLOAD
+        // (CommentRemoved.md:9; `_shared.jsx` `onEdit={removed ? undefined …}`):
+        // there is nothing left on it to edit. Reply and the face stay.
+        if (isOwn(comment, viewerId) && !comment.removed) {
             TextButton(
                 onClick = { onEditComment(comment) },
                 modifier = Modifier.testTag("comment_edit_${comment.id}"),
@@ -817,6 +877,10 @@ private fun CommentAffordances(
         }
     }
 }
+
+/** Whether the reader wrote [comment] — what gives it Edit and the own menu's Remove. */
+private fun isOwn(comment: CommentView, viewerId: String?): Boolean =
+    viewerId != null && comment.author?.id == viewerId
 
 /**
  * The branch under a card: the replies a reader has opened, and the one line
@@ -840,6 +904,7 @@ private fun CommentBranch(
     onOpenTopic: (String) -> Unit,
     onReference: (String) -> Unit,
     onLicense: (LicenseChoice) -> Unit,
+    onRemoveComment: (CommentView) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
     val thread = state.replyThreads[comment.id]
@@ -860,6 +925,7 @@ private fun CommentBranch(
             onOpenTopic = onOpenTopic,
             onReference = onReference,
             onLicense = onLicense,
+            onRemoveComment = onRemoveComment,
             stanceControl = stanceControl,
         )
     }

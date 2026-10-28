@@ -129,8 +129,10 @@ describe("Your topics", () => {
     serve(BOARD);
     render();
     await screen.findByTestId("your-topics-list");
-    expect(screen.getByTestId("your-topics-row-fieldnotes-pair-pending")).toHaveTextContent("Still settling");
-    expect(screen.queryByTestId("your-topics-row-saltmaps-pair-pending")).toBeNull();
+    const settling = screen.getByTestId(byNode("yourTopics.row.value", "fieldnotes"));
+    expect(within(settling).getByTestId("yourTopics.row.value.pending")).toHaveTextContent("Still settling");
+    const landed = screen.getByTestId(byNode("yourTopics.row.value", "saltmaps"));
+    expect(within(landed).queryByTestId("yourTopics.row.value.pending")).toBeNull();
   });
 
   // Never erase silently: a held topic whose name moderation took away keeps

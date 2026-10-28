@@ -60,6 +60,7 @@ import { notificationsHref } from "@/lib/notifications/origin";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { PostCard } from "@/lib/ui/post-card";
+import type { TraceOrigin } from "@/lib/score/trace-session";
 import { CommentFeedCard } from "@/lib/ui/comment-feed-card";
 import { ProfileFeedCard } from "@/lib/ui/profile-feed-card";
 import { TagFeedCard } from "@/lib/ui/tag-feed-card";
@@ -115,6 +116,8 @@ function feedMenuRow(row: PostMenuRow): DataNode | undefined {
 
 /** No row under the separator: the list before its first derive. */
 const NO_SEEN_TAIL: ReadonlySet<string> = new Set();
+/** Where a feed card's score opens its trace from (`Back to feed`). */
+const FEED_ORIGIN: TraceOrigin = { kind: "feed" };
 
 const SEEN_SEPARATOR: DataNode = { path: "feed.seenSeparator" };
 
@@ -200,6 +203,7 @@ function OtherCard({
           comment={item}
           from={FROM}
           node={{ path: "feed.commentCard", key: item.id }}
+          scoreOrigin={FEED_ORIGIN}
           testId={`feed-comment-${item.id}`}
           onNotify={notify}
           onLinkCopied={copied}
@@ -211,6 +215,7 @@ function OtherCard({
           person={item}
           href={`/u/${item.handle}?from=${FROM}`}
           node={{ path: "feed.profileCard", key: item.id }}
+          scoreOrigin={FEED_ORIGIN}
           testId={`feed-person-${item.id}`}
           onNotify={notify}
           onLinkCopied={copied}
@@ -222,6 +227,7 @@ function OtherCard({
           topic={item}
           from={FROM}
           node={{ path: "feed.tagCard", key: item.id }}
+          scoreOrigin={FEED_ORIGIN}
           testId={`feed-tag-${item.id}`}
           onLinkCopied={copied}
         />
@@ -1016,6 +1022,8 @@ export function FeedView({
                   // the record's own identity, where the board keys its sample
                   // cards by author (`design/designs/canonical/nodes.json`).
                   node={{ path: "feed.card", key: post.id }}
+                  // THE SCORE OPENS ITS TRACE, whose back arrow reads `Back to feed`.
+                  scoreOrigin={FEED_ORIGIN}
                   href={`/posts/${post.id}`}
                   testId={`feed-post-${post.id}`}
                   authorTestId={`feed-author-${post.id}`}
