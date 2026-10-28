@@ -298,6 +298,194 @@ pub async fn publish_bundle(
     Ok(sum.bundle())
 }
 
+/// Where a held-topics page resumes: the folded association of the row it
+/// resumes from, as the exact decimal the order compared, and that row's
+/// canonical name, which breaks ties.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HeldCursor {
+    pub association: String,
+    pub name: String,
+}
+
+/// One Type the author holds: its canonical name, the bundle's sums, and
+/// whether any record in it is still in flight.
+#[derive(Debug, Clone, PartialEq)]
+pub struct HeldTopic {
+    /// The canonical name — the `name(s)` atom, lowercase, no `#`.
+    pub name: String,
+    pub sum: BundleSum,
+    /// The folded association the order compares, as exact decimal text —
+    /// what the next page's cursor carries back.
+    pub association: String,
+    pub pending: bool,
+}
+
+impl HeldTopic {
+    pub fn cursor(&self) -> HeldCursor {
+        HeldCursor {
+            association: self.association.clone(),
+            name: self.name.clone(),
+        }
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum HeldError {
+    /// A stored Affinity leg whose target is not a `name(s)` identifier.
+    /// The census fixes an Affinity's target to a Type, so this means the
+    /// mirror itself is corrupt.
+    #[error("affinity leg targets `{0}`, which is not a Type identifier")]
+    NotATypeTarget(String),
+    #[error(transparent)]
+    Storage(#[from] sqlx::Error),
+}
+
+/// The Types the author holds (api-spec.md `User.heldTopics`): every
+/// Affinity bundle of theirs whose sums are not exactly `(0, 0)`, the
+/// [`standing`] fold taken across every Type at once — the same legs, the
+/// same exclusions, the same pending half. A bundle walked back to
+/// `(0, 0)` is not held; one at zero on a single axis still is, and so is
+/// one held against.
+///
+/// Strongest first, by association: the folded `p_d` descending, then the
+/// name ascending in byte order, so the order is total and a cursor is a
+/// position. The fold's clip is applied to the exact sum in SQL —
+/// `LEAST(GREATEST(Σ, -1), 1)` on `numeric` — so two bundles past the
+/// same bound tie exactly as their folded pairs do, and the cursor
+/// carries the compared value back as text, never through a float.
+///
+/// `backward` pages toward the head (`last`/`before`); rows still come
+/// back in the list's own order. Paging is over a fold, not a table: a
+/// stance the author changes between two pages moves its row, which the
+/// list's next read shows (api-spec.md "A page is a snapshot").
+pub async fn held_topics(
+    pool: &PgPool,
+    author_atom: &str,
+    view: BundleView,
+    cursor: Option<&HeldCursor>,
+    backward: bool,
+    limit: i64,
+) -> Result<Vec<HeldTopic>, HeldError> {
+    let source = NodeId::Addr(author_atom.to_string()).to_string();
+    let (association, name) = match cursor {
+        Some(c) => (Some(c.association.as_str()), Some(c.name.as_str())),
+        None => (None, None),
+    };
+    let rows = sqlx::query!(
+        r#"WITH legs AS (
+               SELECT l.target, l.p_d::text::numeric AS p_d,
+                      l.p_i::text::numeric AS p_i, FALSE AS pending
+               FROM mirror_record_legs l
+               JOIN mirror_records r ON r.record_id = l.record_id
+               WHERE l.leg = 'binary' AND l.family = 'affinity'
+                 AND l.source = $1
+                 AND NOT r.payload_marked
+                 AND NOT l.census_unknown
+               UNION ALL
+               SELECT target, p_d::text::numeric, p_i::text::numeric, TRUE
+               FROM staged_writes
+               WHERE $2 AND family = 'affinity' AND author = $3
+                 AND middle IS NULL
+                 AND octet_length(payload) = 0
+                 AND (pre_signed_at IS NOT NULL OR carried)
+                 AND state NOT IN ('landed', 'expired')
+           ), held AS (
+               SELECT target COLLATE "C" AS target,
+                      SUM(p_d) AS sum_d, SUM(p_i) AS sum_i,
+                      COUNT(*) AS records, BOOL_OR(pending) AS pending,
+                      LEAST(GREATEST(SUM(p_d), -1), 1) AS association
+               FROM legs
+               GROUP BY target
+               HAVING NOT (SUM(p_d) = 0 AND SUM(p_i) = 0)
+           )
+           SELECT target AS "target!", sum_d::text AS "sum_d!",
+                  sum_i::text AS "sum_i!", records AS "records!",
+                  pending AS "pending!", association::text AS "association!"
+           FROM held
+           WHERE $4::text IS NULL
+              OR (NOT $6 AND (association < $4::text::numeric
+                              OR (association = $4::text::numeric
+                                  AND target > ('name:' || $5::text) COLLATE "C")))
+              OR ($6 AND (association > $4::text::numeric
+                          OR (association = $4::text::numeric
+                              AND target < ('name:' || $5::text) COLLATE "C")))
+           ORDER BY CASE WHEN $6 THEN association END ASC,
+                    CASE WHEN $6 THEN target END DESC,
+                    CASE WHEN NOT $6 THEN association END DESC,
+                    CASE WHEN NOT $6 THEN target END ASC
+           LIMIT $7"#,
+        source,
+        view == BundleView::IncludingPending,
+        author_atom,
+        association,
+        name,
+        backward,
+        limit,
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let mut held = Vec::with_capacity(rows.len());
+    for row in rows {
+        let name = row
+            .target
+            .strip_prefix("name:")
+            .ok_or_else(|| HeldError::NotATypeTarget(row.target.clone()))?
+            .to_string();
+        let mut sum = ExactSums::default();
+        sum.absorb(&row.sum_d, &row.sum_i, row.records)?;
+        held.push(HeldTopic {
+            name,
+            sum: sum.bundle(),
+            association: row.association,
+            pending: row.pending,
+        });
+    }
+    if backward {
+        held.reverse();
+    }
+    Ok(held)
+}
+
+/// How many Types the author holds — [`held_topics`]' whole length, the
+/// count Explore's Your topics door reads.
+pub async fn count_held_topics(
+    pool: &PgPool,
+    author_atom: &str,
+    view: BundleView,
+) -> Result<i64, sqlx::Error> {
+    let source = NodeId::Addr(author_atom.to_string()).to_string();
+    sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "n!" FROM (
+               SELECT target
+               FROM (
+                   SELECT l.target, l.p_d, l.p_i
+                   FROM mirror_record_legs l
+                   JOIN mirror_records r ON r.record_id = l.record_id
+                   WHERE l.leg = 'binary' AND l.family = 'affinity'
+                     AND l.source = $1
+                     AND NOT r.payload_marked
+                     AND NOT l.census_unknown
+                   UNION ALL
+                   SELECT target, p_d, p_i
+                   FROM staged_writes
+                   WHERE $2 AND family = 'affinity' AND author = $3
+                     AND middle IS NULL
+                     AND octet_length(payload) = 0
+                     AND (pre_signed_at IS NOT NULL OR carried)
+                     AND state NOT IN ('landed', 'expired')
+               ) legs
+               GROUP BY target
+               HAVING NOT (SUM(p_d::text::numeric) = 0 AND SUM(p_i::text::numeric) = 0)
+           ) held"#,
+        source,
+        view == BundleView::IncludingPending,
+        author_atom,
+    )
+    .fetch_one(pool)
+    .await
+}
+
 /// A bundle's exact sums as SQL assembles them, in halves.
 ///
 /// Every sum in this crate is `SUM(x::text::numeric)`: the float8's text

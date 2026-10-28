@@ -34,6 +34,7 @@ export default async function TopicPage({
 }) {
   const { name } = await params;
   const { from } = await searchParams;
-  // A History tag card's page reads `Back to History` (the origin-naming table).
+  // A History tag card's page reads `Back to History`, a search result's `Back
+  // to the search` (the origin-naming table).
   return <TopicView name={name} from={typeof from === "string" ? from : null} />;
 }

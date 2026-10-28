@@ -1,6 +1,6 @@
 // A QUIET SECTION CAPTION (`design/components/core/SectionLabel.jsx`): the
 // small secondary word that names a group on a sectioned surface — a search's
-// `Profiles` and `Tags` over the cards they head.
+// `Profiles` and `Tags` over the cards they head, and Explore's `Recent`.
 //
 // IT IS A CAPTION, NOT A HEADING: no heading level and no weight beyond
 // `label-small`, because what it names is already visible under it. Its
