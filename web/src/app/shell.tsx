@@ -1,6 +1,4 @@
-      : pathname === "/profile" || pathname === "/saved" || pathname === "/history"
-    (signedIn && pathname === "/saved") ||
-    (signedIn && pathname === "/history") ||  return from === "saved" || from === "history" || from === "profile" ? "profile" : "feed";"use client";
+"use client";
 
 // The app shell (design.md §6): one frame for every viewer — the
 // bottom bar rides the read surfaces signed in or out, its
@@ -97,9 +95,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // The bar is drawn once, here, but its node belongs to the SCREEN it rides
   // (`design/designs/canonical/nodes.json` registers `feed.bottomBar`,
   // `postDetail.bottomBar`, `profile.bottomBar`, `saved.bottomBar` and
-  // `history.bottomBar`), so the
-  // registered screens name it by route. Your own profile and someone else's
-  // are one surface (`Profile`, `ProfileOther`: the `profile` prefix).
+  // `history.bottomBar`), so the registered screens name it by route. Your
+  // own profile and someone else's are one surface (`Profile`, `ProfileOther`: the `profile` prefix).
   const screen =
     pathname === "/feed"
       ? "feed"
