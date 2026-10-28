@@ -45,7 +45,9 @@ function borrowedView(handle: string | null) {
   );
 }
 
-const server = startMswServer(...stanceHandlers(), borrowedView(null));
+// The reader is signed in and reads their own view (no borrowed vantage), so the
+// sheet speaks in their own words; the borrowed-view test overrides it.
+const server = startMswServer(...stanceHandlers(), borrowedView(null), meHandler(), heldTopics());
 
 function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
@@ -245,6 +247,11 @@ function signedInStore() {
   return store;
 }
 
+/** The feed, for the signed-in reader acct-1. */
+function renderFeed() {
+  return renderWithProviders(<FeedView />, { store: signedInStore() });
+}
+
 const trigger = () => screen.getByTestId(byNode("feed.band.filterTrigger"));
 const sheet = () => screen.getByTestId(byNode("feed.filterSheet")) as HTMLDialogElement;
 const status = () => screen.getByTestId("feed-filter-status");
@@ -280,7 +287,7 @@ describe("the feed filter", () => {
   describe("the trigger (FeedNarrowed.md, FeedSheet.md)", () => {
     it("stands on the band and reads Posts at the default, with no glyph", async () => {
       server.use(...rankedFeed([post("p1")], reads()));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       const pill = await screen.findByTestId(byNode("feed.band.filterTrigger"));
       expect(pill).toHaveTextContent(/^Posts$/);
       expect(screen.getByTestId(byNode("feed.band")).contains(pill)).toBe(true);
@@ -290,7 +297,7 @@ describe("the feed filter", () => {
 
     it("is named by its reading followed by what your feed shows", async () => {
       server.use(...rankedFeed([post("p1")], reads()));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       expect(await screen.findByTestId(byNode("feed.band.filterTrigger"))).toHaveAccessibleName(
         "Posts, what your feed shows",
       );
@@ -300,7 +307,7 @@ describe("the feed filter", () => {
   describe("the sheet (FeedSheet.md)", () => {
     it("opens over the feed, holding the four kinds V1.0 serves, Posts the one on", async () => {
       server.use(...rankedFeed([post("p1")], reads()));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await openSheet();
       expect(trigger()).toHaveAttribute("aria-expanded", "true");
       const kinds = ["postsChip", "commentsChip", "profilesChip", "topicsChip"].map((id) => chip(`kinds.${id}`));
@@ -310,7 +317,7 @@ describe("the feed filter", () => {
 
     it("stands at its default: Ranked, Everyone, seen off, Still settling on, Sensitive and Removed off", async () => {
       server.use(...rankedFeed([post("p1")], reads()));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await openSheet();
       expect(within(sheet()).getByRole("button", { name: "Ranked" })).toHaveAttribute("aria-pressed", "true");
       expect(within(sheet()).getByRole("radio", { name: /^Everyone/ })).toBeChecked();
@@ -325,7 +332,7 @@ describe("the feed filter", () => {
     it("stages every tap and never moves the feed behind it before Done", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1"), post("p2")], r));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       await openSheet();
       fireEvent.click(chip("kinds.commentsChip"));
@@ -340,7 +347,7 @@ describe("the feed filter", () => {
 
     it("lets the last kind chip go — it never refuses (FeedSheet.md:75)", async () => {
       server.use(...rankedFeed([post("p1")], reads()));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await openSheet();
       fireEvent.click(chip("kinds.postsChip"));
       expect(chip("kinds.postsChip")).toHaveAttribute("aria-checked", "false");
@@ -349,7 +356,7 @@ describe("the feed filter", () => {
 
     it("raises the sign row under Your people, keeps its word through Everyone (FeedSheet.md:13-27)", async () => {
       server.use(...rankedFeed([post("p1")], reads()));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await openSheet();
       fireEvent.click(within(sheet()).getByRole("radio", { name: /^Your people/ }));
       const signs = within(sheet()).getByRole("radiogroup", { name: "Which of your people" });
@@ -372,7 +379,7 @@ describe("the feed filter", () => {
 
     it("offers only the topics the reader holds for, one on at a time, last in the sheet (FeedSheet.md:29-35, :53)", async () => {
       server.use(...rankedFeed([post("p1")], reads()), heldTopics(), meHandler());
-      renderWithProviders(<FeedView />, { store: signedInStore() });
+      renderFeed();
       await openSheet();
       const salt = await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps"));
       const tide = within(sheet()).getByTestId(byNode("feed.filterSheet.topic.chip", "tidepools"));
@@ -391,7 +398,7 @@ describe("the feed filter", () => {
 
     it("holds Reset in its foot's corner and Done at its end, with no reading of the staged filter", async () => {
       server.use(...rankedFeed([post("p1")], reads()));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await openSheet();
       const foot = within(sheet()).getByTestId(byNode("feed.filterSheet.foot"));
       expect(within(foot).getAllByRole("button").map((button) => button.textContent)).toEqual(["Reset", "Done"]);
@@ -402,7 +409,8 @@ describe("the feed filter", () => {
       const r = reads();
       writeReaderDefault("acct-1", { ...FEED_FILTER_DEFAULT, order: "newest" });
       server.use(...rankedFeed([post("p1")], r), heldTopics(), meHandler());
-      renderWithProviders(<FeedView />, { store: signedInStore() });
+      renderFeed();
+      await screen.findByTestId(byNode("feed.card", "p1"));
       await openSheet();
       fireEvent.click(within(sheet()).getByRole("button", { name: "Ranked" }));
       fireEvent.click(chip("kinds.commentsChip"));
@@ -414,7 +422,7 @@ describe("the feed filter", () => {
 
     it("says what Reset does in its \"?\" (FeedSheet.md:73-75)", async () => {
       server.use(...rankedFeed([post("p1")], reads()));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await openSheet();
       fireEvent.click(within(sheet()).getByRole("button", { name: "How the filter works" }));
       const help = await screen.findByTestId("feed-filter-help-dialog");
@@ -429,7 +437,7 @@ describe("the feed filter", () => {
     it("with Kinds changed: closes, re-queries once, says the new name, returns focus", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1"), comment("k1")], r));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       await openSheet();
       fireEvent.click(chip("kinds.commentsChip"));
@@ -447,7 +455,7 @@ describe("the feed filter", () => {
     it("with only device changes: re-derives on the device and never re-queries", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1"), post("p2")], r));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       await openSheet();
       fireEvent.click(within(sheet()).getByRole("button", { name: "Newest" }));
@@ -461,7 +469,7 @@ describe("the feed filter", () => {
     it("with nothing changed: closes, the feed is what it was, nothing is said", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1")], r));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       await openSheet();
       fireEvent.click(chip("kinds.commentsChip"));
@@ -476,7 +484,7 @@ describe("the feed filter", () => {
     it("the scrim drops what is staged and never re-queries", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1")], r));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       const dialog = await openSheet();
       fireEvent.click(chip("kinds.commentsChip"));
@@ -492,12 +500,14 @@ describe("the feed filter", () => {
     it("Escape drops what is staged", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1")], r));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       const dialog = await openSheet();
       fireEvent.click(within(dialog).getByRole("button", { name: "Newest" }));
+      // Escape is the platform's own: a cancel, then the dialog closes itself.
       fireEvent.keyDown(dialog, { key: "Escape" });
       fireEvent(dialog, new Event("cancel"));
+      act(() => dialog.close());
       await waitFor(() => expect(dialog.open).toBe(false));
       expect(r.ranks).toHaveLength(1);
       expect(trigger()).toHaveTextContent(/^Posts$/);
@@ -508,7 +518,7 @@ describe("the feed filter", () => {
     it("opens every feed with the reader's saved default and speaks only deviations from it", async () => {
       writeReaderDefault("acct-1", { ...FEED_FILTER_DEFAULT, order: "newest" });
       server.use(...rankedFeed([post("p1"), post("p2")], reads()), meHandler());
-      renderWithProviders(<FeedView />, { store: signedInStore() });
+      renderFeed();
       await waitFor(() => expect(cardIds()).toEqual(["p2", "p1"]));
       expect(trigger()).toHaveTextContent(/^Posts$/);
     });
@@ -516,7 +526,7 @@ describe("the feed filter", () => {
     it("speaks a deviation back toward the app's default like any other", async () => {
       writeReaderDefault("acct-1", { ...FEED_FILTER_DEFAULT, order: "newest" });
       server.use(...rankedFeed([post("p1"), post("p2")], reads()), meHandler(), heldTopics());
-      renderWithProviders(<FeedView />, { store: signedInStore() });
+      renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       await openSheet();
       fireEvent.click(within(sheet()).getByRole("button", { name: "Ranked" }));
@@ -528,14 +538,14 @@ describe("the feed filter", () => {
   describe("the device's cuts (CD-4)", () => {
     it("removed_is_off_by_default_and_cuts_on_the_device", async () => {
       server.use(...rankedFeed([post("p1"), post("p2", REMOVED), post("p3")], reads()));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await waitFor(() => expect(cardIds()).toEqual(["p1", "p3"]));
     });
 
     it("removed_on_admits_the_mark_after_a_local_rederive", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1"), post("p2", REMOVED)], r));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await waitFor(() => expect(cardIds()).toEqual(["p1"]));
       await openSheet();
       fireEvent.click(chip("also.removedChip"));
@@ -548,7 +558,7 @@ describe("the feed filter", () => {
 
     it("sensitive_is_off_by_default_and_cuts_on_the_device", async () => {
       server.use(...rankedFeed([post("p1"), post("p2", SENSITIVE)], reads()));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await waitFor(() => expect(cardIds()).toEqual(["p1"]));
     });
   });
@@ -557,7 +567,7 @@ describe("the feed filter", () => {
     it("every kind off: Nothing, the empty state alone, and Show posts again restores the default", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1")], r));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       await openSheet();
       fireEvent.click(chip("kinds.postsChip"));
@@ -579,7 +589,7 @@ describe("the feed filter", () => {
     it("narrows to one topic: the ranker is asked with it, and the trigger names it", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1")], r), heldTopics(), meHandler());
-      renderWithProviders(<FeedView />, { store: signedInStore() });
+      renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       await openSheet();
       fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps")));
@@ -594,7 +604,7 @@ describe("the feed filter", () => {
     it("draws profile and tag cards once their kinds are let in", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1"), person("u3", "mira"), tag("t1", "saltmaps")], r));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       expect(screen.queryByTestId(byNode("feed.profileCard"))).toBeNull();
       await openSheet();
@@ -612,14 +622,14 @@ describe("the feed filter", () => {
     it("come back under the filter they were made under, the trigger reading it", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1"), post("p2")], r));
-      const first = renderWithProviders(<FeedView />);
+      const first = renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       await openSheet();
       fireEvent.click(within(sheet()).getByRole("button", { name: "Newest" }));
       done();
       await waitFor(() => expect(cardIds()).toEqual(["p2", "p1"]));
       first.unmount();
-      renderWithProviders(<FeedView />);
+      renderFeed();
       expect(await screen.findByTestId(byNode("feed.band.filterTrigger"))).toHaveTextContent(/^Posts · newest$/);
       expect(cardIds()).toEqual(["p2", "p1"]);
       expect(r.ranks).toHaveLength(1);
@@ -629,8 +639,8 @@ describe("the feed filter", () => {
   describe("a borrowed view (FeedSheet.md, GIVEN the feed borrows a view)", () => {
     it("speaks the borrowed account's people and order, the reader's own words elsewhere", async () => {
       server.use(...rankedFeed([post("p1")], reads()), borrowedView("mira"));
-      renderWithProviders(<FeedView />);
-      await screen.findByTestId("feed-borrowed-view");
+      renderFeed();
+      await screen.findByTestId(byNode("feed.borrowedViewBand"));
       await openSheet();
       expect(within(sheet()).getByRole("radio", { name: /^@mira's people/ })).toBeInTheDocument();
       expect(sheet()).toHaveTextContent("The whole feed, as far as @mira's eyes reach.");
@@ -649,7 +659,7 @@ describe("the feed filter", () => {
     it("never refreshes the feed from inside the sheet (FeedSheet.md:77)", async () => {
       const r = reads();
       server.use(...rankedFeed([post("p1")], r));
-      renderWithProviders(<FeedView />);
+      renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       const dialog = await openSheet();
       act(() => {

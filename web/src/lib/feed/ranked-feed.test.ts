@@ -35,7 +35,8 @@ function rowIds(feed: RankedFeed): string[] {
 }
 
 function postItem(id: string, body: Record<string, unknown> = {}): FeedItemView {
-  return { __typename: "Post", id, ...body } as unknown as FeedItemView;
+  // A words post whose payload stands, unless `body` says otherwise.
+  return { __typename: "Post", id, attachments: [], attachmentsStatus: "VISIBLE", ...body } as unknown as FeedItemView;
 }
 
 /** A post whose payload went: the node's mark (`Post.removal`). */
