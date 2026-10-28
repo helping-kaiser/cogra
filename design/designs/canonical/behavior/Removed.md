@@ -14,4 +14,6 @@ ALWAYS the post keeps its author chip, its opinion, its score, its comment count
 
 WHEN tap the comment count -> the thread opens with every response in it
 
-WHEN press the back arrow -> the feed opens
+ALWAYS the back arrow names the screen the post was opened from by the post detail's origin table, as Back to feed from the feed and Back to Saved from Saved
+
+WHEN press the back arrow -> the screen the post was opened from comes back, in the state it was left
