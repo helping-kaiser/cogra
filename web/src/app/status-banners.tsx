@@ -17,6 +17,7 @@ import { securityNotices, type SecurityNotices } from "@/lib/session/security-no
 import { useRegistrationFlow, useRegistrationProgress } from "@/lib/signing/provider";
 import { TransportError } from "@/lib/ui/transport-error";
 import { AppOpenSnackbar } from "@/lib/invites/app-open-notice";
+import type { ApplicationSurface } from "./application-card";
 import { ApplicantStatus } from "./applicant-status";
 import { MemberStatus } from "./member-status";
 
@@ -41,9 +42,12 @@ function noticeDate(detectedAt: string): string {
 
 export function StatusBanners({
   notices = securityNotices,
+  surface = "feed",
 }: {
   /** Test injection. */
   notices?: SecurityNotices;
+  /** The screen the banners ride: the application card says it in that screen's words. */
+  surface?: ApplicationSurface;
 } = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
@@ -152,7 +156,7 @@ export function StatusBanners({
           Welcome — you&apos;re in. Your registration landed.
         </p>
       )}
-      {isApplicant && <ApplicantStatus progress={progress} />}
+      {isApplicant && <ApplicantStatus progress={progress} surface={surface} />}
       {me?.accountState === "MEMBER" && <MemberStatus />}
       {transportFailed && <TransportError testId="home_transport_error" />}
       {/* An ask link this reader cannot vouch through answers here (VouchAsk.md:13, :15). */}
