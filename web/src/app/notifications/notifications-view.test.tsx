@@ -237,6 +237,22 @@ describe("NotificationsScreen", () => {
     expect(screen.getByTestId("notification-n4-open")).toHaveAttribute("href", "/u/sol?from=notifications");
   });
 
+  it("the_list_sits_directly_under_the_header_and_draws_its_own_8px_top_padding", async () => {
+    serve(THREE);
+    renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
+    const list = await screen.findByTestId("notifications.list");
+    // ChronicleList (_shared.jsx) carries the 8px; a band 8px under the header would double it.
+    expect(list).toHaveClass("pt-2");
+    expect(screen.getByTestId("notifications.header").closest(".sticky")).not.toHaveClass("pb-2");
+  });
+
+  it("the_loading_line_sets_the_body_medium_role_in_the_secondary_colour", () => {
+    serve(THREE);
+    renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
+    const loading = screen.getByTestId("notifications-loading");
+    expect(loading).toHaveClass("text-body-medium", "text-on-surface-variant");
+  });
+
   it("the_empty_list_names_the_kinds_with_no_action_and_no_error_colour", async () => {
     const marks = serve([]);
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });

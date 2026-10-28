@@ -119,7 +119,7 @@ describe("the kept picks' review", () => {
     const line = await screen.findByTestId("keptPicks.approval");
     expect(line).toHaveTextContent("An approval waits in your invites — go there to sign it.");
     fireEvent.click(within(line).getByText("Open Invites"));
-    expect(router.push).toHaveBeenCalledWith("/invites");
+    expect(router.push).toHaveBeenCalledWith("/invites?from=kept-picks");
     expect((await listKeptPicks("u1")).length).toBe(2);
   });
 
