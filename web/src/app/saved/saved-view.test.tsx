@@ -78,6 +78,9 @@ function postNode(id: string, title: string | null, savedAt: string, writtenDays
     updatedAt: at(writtenDaysAgo),
     landing: { __typename: "Landing", state: "LANDED" },
     moderationStatus: "NORMAL",
+    // No removal: the node stands (api-spec.md `Post.removal`).
+    removal: null,
+    genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: tags.map(topic),
     references: [],
@@ -98,6 +101,9 @@ function commentNode(id: string, savedAt: string, tags: string[] = []) {
     updatedAt: at(0.05),
     landing: { __typename: "Landing", state: "LANDED" },
     moderationStatus: "NORMAL",
+    // No removal: the node stands (api-spec.md `Post.removal`).
+    removal: null,
+    genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: tags.map(topic),
     references: [],
@@ -110,6 +116,9 @@ function commentNode(id: string, savedAt: string, tags: string[] = []) {
       attachments: [],
       author: { __typename: "User", id: "u1", handle: "ada" },
       moderationStatus: "NORMAL",
+      // No removal: the node stands (api-spec.md `Post.removal`).
+      removal: null,
+      genesisRecordId: "rec-genesis",
     },
     post: { __typename: "Post", id: "p1", title: moderated("The long way home") },
   };

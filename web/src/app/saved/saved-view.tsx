@@ -422,6 +422,17 @@ export function SavedScreen({
         onClose={() => setMenuOpen(false)}
         testId="saved-menu"
         notify={notify}
+        // A kept post the reader removes keeps its place on the shelf, wearing
+        // its mark (RM-G9's build word; History.md:39's "keeps its place").
+        onRemoved={(removed) =>
+          setEntries((current) =>
+            current.map((entry) =>
+              entry.node.__typename === "Post" && entry.node.id === removed.id
+                ? { ...entry, node: { ...entry.node, removal: removed.removal } }
+                : entry,
+            ),
+          )
+        }
       />
       {commentsPost !== null && (
         <CommentsSheet

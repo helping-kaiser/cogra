@@ -111,6 +111,11 @@ query HistoryPage(
                   handle
                 }
                 moderationStatus
+                # The target's own mark, as on Saved's head row.
+                removal {
+                  at
+                  by
+                }
               }
               ... on Comment {
                 id
@@ -123,6 +128,11 @@ query HistoryPage(
                   handle
                 }
                 moderationStatus
+                # The target's own mark, as on Saved's head row.
+                removal {
+                  at
+                  by
+                }
               }
             }
             # The thread's root post: where the card's doors land.

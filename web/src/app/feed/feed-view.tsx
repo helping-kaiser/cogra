@@ -30,6 +30,7 @@ import type { PostView } from "@/lib/api/content-api";
 import { fetchFeedRanking, fetchFeedWindow } from "@/lib/api/feed-api";
 import { failed, success } from "@/lib/api/outcome";
 import { appendDeduped } from "@/lib/api/pagination";
+import { withCachedRemoval } from "@/lib/api/removal-api";
 import { onFeedDone } from "@/lib/feed/feed-done";
 import { onFeedReselect } from "@/lib/feed/feed-reselect";
 import { RankedFeed, type FeedIo, type FeedWindow } from "@/lib/feed/ranked-feed";
@@ -300,7 +301,12 @@ export function FeedView({
     };
   }, [client, guard, reader, hides]);
   const [rememberedPlace] = useState(() => remembered?.place ?? null);
-  const [posts, setPosts] = useState<readonly PostView[]>(remembered?.posts ?? []);
+  // A REMOVAL TAKEN WHILE THE FEED WAS AWAY (on the detail) reached the cache,
+  // not the memory — so the remembered pages come back wearing what the cache
+  // has learned of their marks, never showing a removed post whole.
+  const [posts, setPosts] = useState<readonly PostView[]>(() =>
+    (remembered?.posts ?? []).map((post) => withCachedRemoval(client, post)),
+  );
   const [endCursor, setEndCursor] = useState<string | null>(remembered?.endCursor ?? null);
   const [hasNextPage, setHasNextPage] = useState(remembered?.hasNextPage ?? false);
   // THE SEEN TAIL (FeedSeenTail.md): which of the list's rows stand under the
@@ -820,6 +826,13 @@ export function FeedView({
         }}
         testId="feed-menu"
         notify={notify}
+        // THE CARD STANDS AS ITS MARK IN PLACE (RM-G9's build word): the feed
+        // own menu's removal is undrawn, and "NEVER the post leaves without a
+        // mark" (RemoveConfirm.md:11) holds here as on the detail. The
+        // device's Removed filter is what cuts it, at its next re-derive.
+        onRemoved={(removed) =>
+          setPosts((current) => current.map((post) => (post.id === removed.id ? removed : post)))
+        }
       />
       {/* Conditionally mounted, matching `stance-control.tsx`'s own guest
           gate: `JoinPrompt` always draws its `data-testid`, so a second one
