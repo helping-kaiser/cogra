@@ -183,7 +183,7 @@ export class StreamSession {
    */
   prefetch(): void {
     const { index, clips, hasMore } = this.state;
-    if (index === clips.length - 1 && hasMore && !this.failedLoad) void this.load();
+    if (index >= clips.length - 1 && hasMore && !this.failedLoad) void this.load();
   }
 
   /**

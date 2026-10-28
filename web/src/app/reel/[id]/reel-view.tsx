@@ -185,8 +185,8 @@ function Stream({ session }: { session: StreamSession }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || commentsOpen) return;
-      const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, [role=slider], [role=dialog], dialog") ?? false) return;
+      const target = event.target;
+      if (target instanceof Element && target.closest("input, textarea, [role=slider], [role=dialog], dialog") !== null) return;
       if (event.key === "ArrowDown" || event.key === "PageDown") {
         event.preventDefault();
         next();
@@ -372,7 +372,7 @@ function Clip({
         >
           <VeilContext.Provider value={veiled}>
             {media !== undefined && media.src && (
-              <ViewTransition name={reelClipName(media.mediaId)} share="cg-squish" default="none">
+              <ViewTransition name={reelClipName(media.mediaId ?? post.id)} share="cg-squish" default="none">
                 <div className="absolute inset-0">
                   <VideoPlayer
                     src={media.src}
