@@ -8,7 +8,6 @@
 # NO `encode` ANYWHERE. The API compresses /graphql itself, and never a
 # mutation's answer (the BREACH posture, PD-1); Next compresses its own
 # responses. A proxy-side encoder would compress twice or undo that rule.
-
 {
 	email {$ACME_EMAIL}
 	servers {

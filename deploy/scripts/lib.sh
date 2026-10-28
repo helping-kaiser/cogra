@@ -78,6 +78,8 @@ mirror_bucket() {
   image=$(image_of "$store")
   mkdir -p "$dir/$bucket"
   local cmd
+  # The commands are expanded by the container's shell, not this one.
+  # shellcheck disable=SC2016
   if [ "$direction" = pull ]; then
     cmd='mc mirror --overwrite --remove --quiet "s/$BUCKET" "/data/$BUCKET"'
   else

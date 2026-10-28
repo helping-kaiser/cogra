@@ -21,7 +21,7 @@ snapshot=${2:-latest}
 case $mode in
   drill) ;;
   production)
-    [ "${2:-}" ] && [ "${3:-}" = --overwrite-production ] || usage
+    if [ -z "${2:-}" ] || [ "${3:-}" != --overwrite-production ]; then usage; fi
     ;;
   *) usage ;;
 esac
@@ -51,6 +51,7 @@ restored=$work$BACKUP_STAGING
 if [ "$mode" = production ]; then
   log "stopping cogra-web, cogra-ranker and cogra-api"
   systemctl stop cogra-web.service cogra-ranker.service cogra-api.service
+  # shellcheck disable=SC2317 # called through timed
   restore_db() {
     # --clean --if-exists drops what the dump recreates: the database ends
     # as the snapshot had it, migrations table included.
