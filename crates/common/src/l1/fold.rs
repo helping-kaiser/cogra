@@ -313,6 +313,89 @@ fn walk_back(total: &Decimal, n: usize) -> Vec<f64> {
         .collect()
 }
 
+/// Which records of one stance bundle a walk-back signed, given the
+/// bundle's records in published order, oldest first — one flag per
+/// record (api-spec.md `RecordAct.WALK_BACK`).
+///
+/// A walk-back is the act that brings a bundle that says something to
+/// `(0, 0)`: a counter-pick landing there, or a severance batch. The
+/// record that lands it is the one [`Standing::is_severed`] reads at — a
+/// record that says something, after which the bundle nets to exactly
+/// zero. A batch signs more records than that one, and every one of them
+/// is the walk-back's: the batch is the gesture, priced record by record.
+///
+/// The batch is recognised by its shape, which is fully determined by the
+/// bundle it walks back: [`Standing::severance_batch`] of the sum standing
+/// before it. So the records ending at a severing record are a batch
+/// exactly when they are the records the sum before them stages — the
+/// widest such run is taken, and a run never reaches back past the last
+/// point the bundle stood at `(0, 0)`, where no walk-back can start. The
+/// run is compared as a multiset, never as a sequence: a batch's records
+/// declare no dependency on one another, so the host may order them as it
+/// likes (layer1-interface.md, host ordering discretion), and the sum
+/// before the run does not depend on the order inside it. A counter-pick
+/// that lands at `(0, 0)` is the one-record case of the same test, which
+/// every severing record passes.
+///
+/// An empty sign is never a walk-back: a `(0, 0)` record says nothing,
+/// whatever it lands on (open-questions.md Q60 reads a `(0, 0)` landing
+/// over a standing that already says nothing as saying nothing).
+///
+/// A non-finite parameter has no decimal to sum and is refused, as
+/// [`BundleSum::of_records`] refuses it.
+pub fn walk_back_records(records: &[(f64, f64)]) -> Result<Vec<bool>, NotFinite> {
+    let mut prefix = Vec::with_capacity(records.len() + 1);
+    prefix.push((Decimal::zero(), Decimal::zero()));
+    for &(p_d, p_i) in records {
+        let (d, i) = prefix.last().expect("seeded with the empty prefix");
+        let next = (
+            d + &Decimal::of_f64(p_d).ok_or(NotFinite)?,
+            i + &Decimal::of_f64(p_i).ok_or(NotFinite)?,
+        );
+        prefix.push(next);
+    }
+    let at_zero = |k: usize| prefix[k].0.is_zero() && prefix[k].1.is_zero();
+    let mut marks = vec![false; records.len()];
+    let mut floor = 0;
+    for (k, &(p_d, p_i)) in records.iter().enumerate() {
+        if !at_zero(k + 1) {
+            continue;
+        }
+        if says_something(p_d, p_i) {
+            let start = (floor..k)
+                .find(|&j| {
+                    let before = BundleSum::from_decimals(
+                        &prefix[j].0,
+                        &prefix[j].1,
+                        u32::try_from(j).unwrap_or(u32::MAX),
+                    );
+                    before.severance_cost() == k - j + 1
+                        && same_records(before.severance_batch(), &records[j..=k])
+                })
+                .unwrap_or(k);
+            marks[start..=k].fill(true);
+        }
+        floor = k + 1;
+    }
+    Ok(marks)
+}
+
+/// Whether two runs hold the same records, whatever their order. Zero is
+/// compared as one value — `-0.0` and `0.0` are the same parameter.
+fn same_records(mut staged: Vec<(f64, f64)>, landed: &[(f64, f64)]) -> bool {
+    fn canonical(pairs: &mut [(f64, f64)]) {
+        for (d, i) in pairs.iter_mut() {
+            *d += 0.0;
+            *i += 0.0;
+        }
+        pairs.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.total_cmp(&b.1)));
+    }
+    let mut landed = landed.to_vec();
+    canonical(&mut staged);
+    canonical(&mut landed);
+    staged == landed
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -754,5 +837,108 @@ mod tests {
             let s = standing(&records);
             assert_eq!(s.severance_cost(), s.severance_batch().len(), "{records:?}");
         }
+    }
+
+    /// The batch a walk-back stages is the walk-back, every record of it:
+    /// a bundle summing past one record's reach walks back in several, and
+    /// each one reads as the walk-back — the last alone would leave the
+    /// rest reading as opinions against.
+    ///
+    /// Every record of a severance batch reads as the walk-back, not only the one that lands the bundle at zero.
+    /// ´claim:fold:every-record-of-a-severance-batch-is-the-walk-back´
+    #[test]
+    fn every_record_of_a_severance_batch_is_the_walk_back() {
+        let given = [(0.8, 0.5), (0.8, 0.5), (0.8, 0.5)];
+        let batch = standing(&given).severance_batch();
+        assert_eq!(batch.len(), 3, "⌈2.4⌉");
+        let bundle: Vec<(f64, f64)> = given.iter().copied().chain(batch).collect();
+        assert_eq!(
+            walk_back_records(&bundle).expect("finite"),
+            vec![false, false, false, true, true, true]
+        );
+    }
+
+    /// The host may publish a batch's records in any order — they declare
+    /// no dependency on one another — and the batch is still the walk-back,
+    /// every record of it.
+    ///
+    /// A severance batch reads as the walk-back in whatever order the host published its records.
+    /// ´claim:fold:a-batch-is-the-walk-back-in-any-published-order´
+    #[test]
+    fn a_batch_is_the_walk_back_in_any_published_order() {
+        let given = [(0.8, 0.5), (0.8, 0.5), (0.8, 0.5)];
+        let mut batch = standing(&given).severance_batch();
+        batch.reverse();
+        let bundle: Vec<(f64, f64)> = given.iter().copied().chain(batch).collect();
+        assert_eq!(
+            walk_back_records(&bundle).expect("finite"),
+            vec![false, false, false, true, true, true]
+        );
+    }
+
+    /// A counter-pick that lands the bundle at `(0, 0)` is a walk-back of
+    /// one record; the records the bundle stood on before it are not, and
+    /// neither is a later pick that says something again.
+    ///
+    /// A counter-pick landing at zero is a one-record walk-back, and only it.
+    /// ´claim:fold:a-counter-pick-to-zero-is-a-one-record-walk-back´
+    #[test]
+    fn a_counter_pick_to_zero_is_a_one_record_walk_back() {
+        let bundle = [(0.5, 0.2), (-0.2, 0.1), (-0.3, -0.3), (0.4, 0.4)];
+        assert_eq!(
+            walk_back_records(&bundle).expect("finite"),
+            vec![false, false, true, false]
+        );
+    }
+
+    /// The run a batch is recognised by never reaches past an earlier point
+    /// at `(0, 0)`, and a pick that merely shares a value with a batch step
+    /// does not join it: only the records the sum before them would stage
+    /// are the batch. The first bundle walks 1.0 back by one record, then
+    /// 1.5 by its batch `(−1, −0.5)`; the opening `−1.0` counter-pick
+    /// matches a batch step's value and still is not part of the second
+    /// walk-back. The second walks a 1.5 down by hand with `−0.6` then
+    /// `−0.9` — no batch — so only the pick that lands at zero is the
+    /// walk-back.
+    ///
+    /// A walk-back is read off the records since the bundle last stood at zero, and only the batch shape joins it.
+    /// ´claim:fold:a-walk-back-never-reaches-past-the-last-zero´
+    #[test]
+    fn a_walk_back_never_reaches_past_the_last_zero() {
+        let bundle = [
+            (1.0, 1.0),
+            (-1.0, -1.0),
+            (1.0, 1.0),
+            (0.5, 0.5),
+            (-1.0, -1.0),
+            (-0.5, -0.5),
+        ];
+        assert_eq!(
+            walk_back_records(&bundle).expect("finite"),
+            vec![false, true, false, false, true, true]
+        );
+        let by_hand = [(1.0, 1.0), (0.5, 0.5), (-0.6, -0.6), (-0.9, -0.9)];
+        assert_eq!(
+            walk_back_records(&by_hand).expect("finite"),
+            vec![false, false, false, true]
+        );
+    }
+
+    /// An empty sign is never a walk-back — not over nothing, not over a
+    /// severed bundle, and not the one `(0, 0)` record that walks back a
+    /// standing that says nothing (open-questions.md Q60 reads it as
+    /// saying nothing).
+    ///
+    /// A record at zero never reads as a walk-back.
+    /// ´claim:fold:an-empty-sign-is-never-a-walk-back´
+    #[test]
+    fn an_empty_sign_is_never_a_walk_back() {
+        let bundle = [(0.0, 0.0), (0.3, 0.3), (-0.3, -0.3), (0.0, 0.0), (0.0, 0.0)];
+        assert_eq!(
+            walk_back_records(&bundle).expect("finite"),
+            vec![false, false, true, false, false]
+        );
+        assert_eq!(walk_back_records(&[]).expect("finite"), Vec::<bool>::new());
+        assert!(walk_back_records(&[(f64::NAN, 0.0)]).is_err());
     }
 }

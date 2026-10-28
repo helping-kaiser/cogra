@@ -413,6 +413,9 @@ export function PostView({
           // The registered PostDetail screen's card, keyed by the post's id
           // (`design/designs/canonical/nodes.json`).
           node={{ path: "postDetail.card", key: post.id }}
+          // THE SCORE OPENS ITS TRACE, whose back arrow reads `Back to the
+          // post` and returns here with this detail's own origin kept.
+          scoreOrigin={{ kind: "post", postId: post.id, via: from }}
           testId="post"
           authorTestId="post-author"
           stanceTestId="post-stance"

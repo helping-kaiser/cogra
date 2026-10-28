@@ -574,17 +574,19 @@ type Comment implements Node {
 	chronicle; the generic way to read any relationship before named
 	convenience views exist. Filter by family, by the kind of node
 	on the far end, by parameter sign (e.g. only vouch-positive
-	Opinions, or (0,0) update records), payload-marked state, and/or
-	a landing-epoch window.
+	Opinions, or (0,0) update records), payload-marked state, genesis
+	(`true`: only the records that anchor their node — a person's
+	posts' own Publish records, never the edits), and/or a
+	landing-epoch window.
 	"""
-	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, genesis: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
 	"""
 	Records pointing at this node. Exposed as public topology / an
 	inbound-attention surface only — per the feed-ranking model,
 	inbound records never shape this node's own feed. Same filters
 	as outgoingRecords; fromKind selects the source kind.
 	"""
-	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, genesis: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
 	content: ModeratedText!
 	"""
 	The author's own sensitive mark, alone — the state an edit switch
@@ -2379,13 +2381,13 @@ interface Node {
 	"""
 	landing: Landing!
 	"""
-	Records authored from this node — for an actor, their outgoing chronicle; the generic way to read any relationship before named convenience views exist. Filter by family, by the kind of node on the far end, by parameter sign (e.g. only vouch-positive Opinions, or (0,0) update records), payload-marked state, and/or a landing-epoch window.
+	Records authored from this node — for an actor, their outgoing chronicle; the generic way to read any relationship before named convenience views exist. Filter by family, by the kind of node on the far end, by parameter sign (e.g. only vouch-positive Opinions, or (0,0) update records), payload-marked state, genesis (`true`: only the records that anchor their node — a person's posts' own Publish records, never the edits), and/or a landing-epoch window.
 	"""
-	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, genesis: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
 	"""
 	Records pointing at this node. Exposed as public topology / an inbound-attention surface only — per the feed-ranking model, inbound records never shape this node's own feed. Same filters as outgoingRecords; fromKind selects the source kind.
 	"""
-	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, genesis: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
 }
 
 """
@@ -2654,17 +2656,19 @@ type Post implements Node {
 	chronicle; the generic way to read any relationship before named
 	convenience views exist. Filter by family, by the kind of node
 	on the far end, by parameter sign (e.g. only vouch-positive
-	Opinions, or (0,0) update records), payload-marked state, and/or
-	a landing-epoch window.
+	Opinions, or (0,0) update records), payload-marked state, genesis
+	(`true`: only the records that anchor their node — a person's
+	posts' own Publish records, never the edits), and/or a
+	landing-epoch window.
 	"""
-	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, genesis: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
 	"""
 	Records pointing at this node. Exposed as public topology / an
 	inbound-attention surface only — per the feed-ranking model,
 	inbound records never shape this node's own feed. Same filters
 	as outgoingRecords; fromKind selects the source kind.
 	"""
-	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, genesis: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
 	title: ModeratedText!
 	description: ModeratedText!
 	"""
@@ -3332,11 +3336,14 @@ type Query {
 	landing order. `target` matches a record's target (the middle
 	node on hyper families); `terminal` matches the terminal leg —
 	a comment's revision chain is `records(terminal: <comment>)`.
+	`genesis: true` keeps only the records that anchor their node (a
+	post's own Publish, never its edits; a person's first
+	Registration), `false` only the rest — `Record.act`'s GENESIS.
 	The UUID filters translate to the mirror's own identifiers, so an
 	id that resolves to no known node yields an empty page rather than
 	an error — the same contract a null slot in `nodes` carries.
 	"""
-	records(author: UUID, target: UUID, terminal: UUID, family: RecordFamily, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, after: String, before: String, first: Int, last: Int): RecordConnection!
+	records(author: UUID, target: UUID, terminal: UUID, family: RecordFamily, payloadMarked: Boolean, genesis: Boolean, sinceEpoch: Int, untilEpoch: Int, after: String, before: String, first: Int, last: Int): RecordConnection!
 	"""
 	Candidate targets for the reference picker.
 	
@@ -3550,6 +3557,11 @@ type Record {
 	id: RecordId!
 	family: RecordFamily!
 	"""
+	What the record did beyond its family (`RecordAct`): a genesis, a
+	walk-back, the vouch that landed an account, or ordinary.
+	"""
+	act: RecordAct!
+	"""
 	The authoring account. Null when no account fronts the author's
 	address — system actors, until the actor surface grows.
 	"""
@@ -3644,6 +3656,43 @@ type Record {
 	repeat the actor's leg.
 	"""
 	legs: [RecordLeg!]!
+}
+
+"""
+What one record did beyond its family — the distinction a chronicle row
+speaks that the family alone does not carry, read server-side so no
+client re-derives it from identifiers or pairs. Every record is exactly
+one; a record that could read as two reads as the first that applies,
+in the order listed.
+"""
+enum RecordAct {
+	"""
+	The record that anchors its node: a minting act — the act whose
+	terminal target, the binary leg's or the T leg's, is the mint of its
+	own identifier (a post's Publish, a comment's Review) — or a
+	person's anchoring Registration, the first their author signed.
+	Never an edit and never a later Registration, which are ORDINARY.
+	"""
+	GENESIS
+	"""
+	A record a walk-back signed: the Opinion or Affinity that brought
+	its author's bundle toward the target back to `(0, 0)` from a
+	standing that said something, and every record of a severance batch
+	that did — the batch the sum before it stages. An empty sign is
+	never one.
+	"""
+	WALK_BACK
+	"""
+	The Opinion that vouched someone in: of an account's approval
+	vouches, the first to land, which landed the account — the record
+	behind `User.invitedBy`. Any later vouch-Opinion is ORDINARY.
+	"""
+	VOUCH
+	"""
+	Everything else: an edit, a later Registration, an opinion given, a
+	tag, a citation.
+	"""
+	ORDINARY
 }
 
 type RecordConnection {
@@ -4774,17 +4823,19 @@ type User implements Node & Actor {
 	chronicle; the generic way to read any relationship before named
 	convenience views exist. Filter by family, by the kind of node
 	on the far end, by parameter sign (e.g. only vouch-positive
-	Opinions, or (0,0) update records), payload-marked state, and/or
-	a landing-epoch window.
+	Opinions, or (0,0) update records), payload-marked state, genesis
+	(`true`: only the records that anchor their node — a person's
+	posts' own Publish records, never the edits), and/or a
+	landing-epoch window.
 	"""
-	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, genesis: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
 	"""
 	Records pointing at this node. Exposed as public topology / an
 	inbound-attention surface only — per the feed-ranking model,
 	inbound records never shape this node's own feed. Same filters
 	as outgoingRecords; fromKind selects the source kind.
 	"""
-	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, genesis: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
 	"""
 	The account's name in the one actor namespace: 3–30 characters of
 	[a-z0-9_], case-folded.
