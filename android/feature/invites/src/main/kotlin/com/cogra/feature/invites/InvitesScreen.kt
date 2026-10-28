@@ -56,6 +56,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -106,6 +108,7 @@ import com.cogra.domain.forwardLadder
 import com.cogra.domain.invites.ApplicationGroup
 import com.cogra.domain.invites.ApplicationInfo
 import com.cogra.domain.invites.InviteLinkInfo
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -267,12 +270,19 @@ private fun InvitesSnacks(snack: InvitesSnack?, host: SnackbarHostState, onShown
         is InvitesSnack.FinishRegistering -> stringResource(R.string.invites_finish_registering, snack.handle)
         is InvitesSnack.AlreadyWaiting -> stringResource(R.string.invites_already_waiting, snack.handle)
     }
-    LaunchedEffect(snack) {
-        if (words != null) {
-            // Spent before the wait, so a recomposition cannot repeat it.
-            onShown()
-            host.showSnackbar(words)
-        }
+    // Keyed on the HOST, which outlives any one line: consuming the one-shot
+    // clears the state that describes it, and an effect keyed on that state
+    // would be cancelled mid-show (StanceConfirmation's own pattern).
+    val message = rememberUpdatedState(words)
+    val consume = rememberUpdatedState(onShown)
+    LaunchedEffect(host) {
+        snapshotFlow { message.value }
+            .filterNotNull()
+            .collect { line ->
+                // Spent before the wait, so a recomposition cannot repeat it.
+                consume.value()
+                host.showSnackbar(line)
+            }
     }
 }
 
