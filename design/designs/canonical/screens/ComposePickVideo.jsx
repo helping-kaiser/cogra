@@ -25,7 +25,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="New post" />
+      <WizardHeader title="New post" backLabel="Back" />
       <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
       <PickTray count={1} caption="A video is the whole post. Its cover comes next.">
         <MediaThumb src="post-photo.jpg" alt="" width={114} height={64} video onRemove={() => {}} removeLabel="Remove this video" />

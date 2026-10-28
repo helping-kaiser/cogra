@@ -30,6 +30,8 @@ WHEN press Next -> what was accepted goes on to the crop
 
 WHEN tap Show all -> the Show all sheet opens on the accepted pictures alone
 
+ALWAYS the header back arrow is named Back, never Back a step
+
 WHEN press the header back arrow -> the wizard leaves toward where compose began AND the draft is kept AND NEVER a dialog asks
 
 WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks

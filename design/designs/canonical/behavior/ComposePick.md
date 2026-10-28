@@ -28,6 +28,8 @@ WHEN a picture is picked -> NEVER the picture uploads before the crop
 
 WHEN press Next GIVEN the body is one video -> NEVER the clip's length decides whether the cover step comes next
 
+ALWAYS the header back arrow is named Back, never Back a step
+
 WHEN press the header back arrow -> the wizard leaves toward where compose began AND the draft is kept AND NEVER a dialog asks
 
 WHEN make the platform back gesture -> the wizard leaves toward where compose began AND the draft is kept AND NEVER a dialog asks

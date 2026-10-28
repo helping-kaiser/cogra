@@ -20,7 +20,7 @@ const PICKED = [
 export function Screen() {
   return (
     <>
-      <WizardHeader title="New post" />
+      <WizardHeader title="New post" backLabel="Back" />
       <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
       <PickTray count={3} onShowAll={() => {}}>
         {PICKED.map((item) => (

@@ -774,7 +774,7 @@ Object.assign(FLOW_MARKERS, {
   ComposeWords: composeWords("1px solid var(--border-field)"),
   ComposeWordsCaps: composeWords("1px solid var(--error)"),
   ComposePick: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
@@ -817,7 +817,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Next</button>", tag: "button" },
   ],
   ComposeDraft: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Discard</button>", tag: "button" },
     { n: 4, find: ">Continue</button>", tag: "button" },
@@ -977,7 +977,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Move down</button>", tag: "button", all: true },
   ],
   ComposePickedErrors: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
@@ -998,7 +998,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   ComposePickVideo: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
@@ -1006,7 +1006,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   // The same step once a cover exists: one anatomy, so one marker list.
   ComposePickVideoCover: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
@@ -1148,7 +1148,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Back</button>", tag: "button" },
   ],
   ComposePickWeb: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },

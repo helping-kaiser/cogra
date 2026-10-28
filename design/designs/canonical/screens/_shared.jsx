@@ -1308,7 +1308,7 @@ const DRAFT_SHADES = [
 function ComposeDraftBody() {
   return (
     <>
-      <WizardHeader title="New post" />
+      <WizardHeader title="New post" backLabel="Back" />
 
       <Card
         style={{

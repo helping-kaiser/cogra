@@ -912,7 +912,9 @@ boards already speak, recorded so the registry is whole:
 - **A password field's eye** — `Show password` (`PasswordField`;
   `SignIn`, `Join`, `ChangePassword` and every form with a password).
 - **The wizard's two ends** — `Back a step`, the arrow on every wizard
-  stage; the X says what leaving keeps: `Leave — your
+  stage but the first: the post's pick step, whose arrow leaves toward
+  where compose began, is named `Back` (seam 245, ask 13 D; *merged under
+  the autonomy order, 2026-10-28; review pending*); the X says what leaving keeps: `Leave — your
   draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
   the edit is discarded` (a comment edit and a post edit), and a bare `Leave` on the
   profile's and the picture's seals and the picture's crop.
