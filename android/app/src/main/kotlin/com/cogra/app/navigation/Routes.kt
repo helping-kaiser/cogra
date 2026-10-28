@@ -18,6 +18,14 @@ data object FeedTab
 @Serializable
 data object ProfileTab
 
+/** The Explore tab's nested graph: Explore and every screen a search or its door opens. */
+@Serializable
+data object ExploreTab
+
+/** The Wallet tab's nested graph: today its coming-soon door, and what its band opens. */
+@Serializable
+data object WalletTab
+
 // The destinations (type-safe routes, Navigation 2.8+).
 @Serializable
 data class InviteEntry(val inviteId: String? = null)
@@ -39,6 +47,18 @@ data object KeyCeremony
 
 @Serializable
 data object Feed
+
+/** Explore — the bar's search slot (Explore.md); searching is a state of this root, never a route. */
+@Serializable
+data object Explore
+
+/** The Wallet tab's root: the coming-soon door (WalletComingSoon.md). */
+@Serializable
+data object Wallet
+
+/** Every topic the reader holds, behind Explore's door (YourTopics.md). */
+@Serializable
+data object YourTopics
 
 /**
  * The composer. [postId] names an edit target; [referenceTargetId]

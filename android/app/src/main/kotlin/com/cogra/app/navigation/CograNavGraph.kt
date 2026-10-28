@@ -348,6 +348,14 @@ private fun CograNavGraphContent(
                 vouchedIn(shell)
                 tabDestinations(shell)
             }
+            navigation<ExploreTab>(startDestination = Explore) {
+                exploreRoot(shell)
+                tabDestinations(shell)
+            }
+            navigation<WalletTab>(startDestination = Wallet) {
+                walletRoot(shell)
+                tabDestinations(shell)
+            }
             navigation<ProfileTab>(startDestination = Profile::class) {
                 // The tab's root is the reader's own profile — the
                 // `Profile` with no handle — and the profiles stacked on
@@ -362,6 +370,7 @@ private fun CograNavGraphContent(
 /** What every tab's stack can hold above its root: the read drill-ins and the task flows. */
 private fun NavGraphBuilder.tabDestinations(shell: ShellScope) {
     readDrillIns(shell)
+    yourTopics(shell)
     taskFlows(shell)
     settingsFlows(shell)
 }
@@ -372,6 +381,8 @@ private fun NavDestination?.isReadSurface(): Boolean =
 
 private val READ_SURFACES = listOf(
     Feed::class,
+    Explore::class,
+    Wallet::class,
     Profile::class,
     PostDetail::class,
     ChatsComingSoon::class,
@@ -400,7 +411,13 @@ private fun ShellBottomBar(shell: ShellScope, state: ShellState, destination: Na
         node = destination?.let { BAR_NODES.firstOrNull { (route, _) -> it.hasRoute(route) }?.second },
         feedSelected = tab == TopLevelTab.FEED,
         profileSelected = tab == TopLevelTab.PROFILE,
+        searchSelected = tab == TopLevelTab.EXPLORE,
+        walletSelected = tab == TopLevelTab.WALLET,
         onFeed = { select(TopLevelTab.FEED) },
+        // Explore and the wallet's door are open to every reader, a guest
+        // included (Explore.md:35-37; WalletComingSoon.md:5).
+        onSearch = { select(TopLevelTab.EXPLORE) },
+        onWallet = { select(TopLevelTab.WALLET) },
         onCompose = {
             if (shell.signedIn == true) navController.navigate(ComposePost()) else shell.requireJoin()
         },
@@ -413,6 +430,9 @@ private fun ShellBottomBar(shell: ShellScope, state: ShellState, destination: Na
 /** The registered names the bar wears, by the screen it stands under (nodes.json `*.bottomBar`). */
 private val BAR_NODES = listOf(
     Feed::class to DataNode("feed") / "bottomBar",
+    Explore::class to DataNode("explore") / "bottomBar",
+    // Unregistered (nodes.json has no WalletComingSoon): the evident prefix.
+    Wallet::class to DataNode("wallet") / "bottomBar",
     PostDetail::class to DataNode("postDetail") / "bottomBar",
     Notifications::class to DataNode("notifications") / "bottomBar",
     Profile::class to DataNode("profile") / "bottomBar",

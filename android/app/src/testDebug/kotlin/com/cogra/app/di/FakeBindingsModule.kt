@@ -62,6 +62,8 @@ import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.saved.SavedRepository
+import com.cogra.domain.search.ExploreDeviceStore
+import com.cogra.domain.search.SearchRepository
 import com.cogra.domain.settings.AccountEmail
 import com.cogra.domain.settings.EmailChangeLinkCheck
 import com.cogra.domain.settings.PendingEmailChange
@@ -85,6 +87,7 @@ import com.cogra.domain.store.TokenStore
 import com.cogra.domain.testing.FakeDeviceData
 import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.cogra.domain.testing.FakeDevicePreferences
+import com.cogra.domain.testing.FakeExploreDeviceStore
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeSeenRecordStore
@@ -99,7 +102,9 @@ import com.cogra.domain.testing.RecordingReportRepository
 import com.cogra.domain.testing.RecordingSavedRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ScriptedAccountDeletionRepository
+import com.cogra.domain.testing.ScriptedHeldTopicsRepository
 import com.cogra.domain.testing.ScriptedReleaseRegistry
+import com.cogra.domain.testing.ScriptedSearchRepository
 import com.cogra.domain.testing.ScriptedSeenHistory
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
@@ -114,6 +119,7 @@ import com.cogra.domain.testing.ThrowingStanceRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
 import com.cogra.domain.testing.testGraphId
 import com.cogra.domain.testing.testModeratedField
+import com.cogra.domain.topics.HeldTopicsRepository
 import com.cogra.domain.topics.TagClaim
 import com.cogra.network.di.NetworkBindsModule
 import dagger.Module
@@ -690,6 +696,29 @@ object FakeBindingsModule {
 
     @Provides
     fun savedRepository(fake: RecordingSavedRepository): SavedRepository = fake
+
+    // Explore: every search reads empty, no topic is held, and the device
+    // keeps recents and filters in memory, unless a test scripts them.
+    @Provides
+    @Singleton
+    fun scriptedSearchRepository(): ScriptedSearchRepository = ScriptedSearchRepository()
+
+    @Provides
+    fun searchRepository(fake: ScriptedSearchRepository): SearchRepository = fake
+
+    @Provides
+    @Singleton
+    fun scriptedHeldTopicsRepository(): ScriptedHeldTopicsRepository = ScriptedHeldTopicsRepository()
+
+    @Provides
+    fun heldTopicsRepository(fake: ScriptedHeldTopicsRepository): HeldTopicsRepository = fake
+
+    @Provides
+    @Singleton
+    fun fakeExploreDeviceStore(): FakeExploreDeviceStore = FakeExploreDeviceStore()
+
+    @Provides
+    fun exploreDeviceStore(fake: FakeExploreDeviceStore): ExploreDeviceStore = fake
 
     // The notification list reads empty and the bell quiet unless a test
     // scripts them.
