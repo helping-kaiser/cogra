@@ -113,7 +113,9 @@ data class PickedPicture(
  *
  * **The row carries no "Crop" or "Edit" links** (jakob 2026-08-31: "none").
  * The whole row is the affordance and it opens the Show all sheet, which is
- * where ordering, the cover, removal and describing all live. The crop step
+ * where ordering, the cover, removal and describing all live. The first tile
+ * wears `Cover`, the set's rule said where the set is summarised (round 22).
+ * The crop step
  * needs no second entrance: the wizard is linear and Back reaches it, and a
  * duplicate entrance to the same step is the two-menus pattern the system
  * refuses elsewhere.
@@ -161,8 +163,12 @@ fun PickedRow(
         pictures.forEachIndexed { index, picture ->
             MediaThumb(
                 item = picture.item,
+                // THE FIRST PICTURE WEARS `Cover` HERE TOO (seam 245, ask 13 F;
+                // PickedRow.jsx): the row summarises a set whose first is its
+                // cover, as the tray and Show all mark it. A clip is no set —
+                // it has no manager — so its one tile wears no cover badge.
                 badge = onRemove?.let { remove -> ThumbBadge.Remove { remove(index) } }
-                    ?: picture.badge(cover = false),
+                    ?: picture.badge(cover = onManage != null && index == 0),
                 uploading = picture.uploading,
                 progress = picture.progress,
                 duration = picture.duration,

@@ -1,10 +1,12 @@
 package com.cogra.feature.content.edit
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -17,12 +19,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,18 +38,23 @@ import com.cogra.core.designsystem.v2.atom.DiscardConfirm
 import com.cogra.core.designsystem.v2.atom.DiscardSubject
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.HelpDialog
+import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.InlineSize
+import com.cogra.core.designsystem.v2.atom.QuietNote
 import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.WizardHeader
 import com.cogra.core.designsystem.v2.compose.DescribeSheet
 import com.cogra.core.designsystem.v2.compose.HelpTopic
-import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.compose.PickedRow
 import com.cogra.core.designsystem.v2.compose.PickedSheet
 import com.cogra.core.designsystem.v2.compose.licenseName
+import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
 import com.cogra.domain.content.MAX_POST_BODY_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
+import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.feature.content.BackingEdit
 import com.cogra.feature.content.BackingPad
@@ -81,16 +88,15 @@ const val EDIT_LEAVE_LABEL = "Leave — the edit is discarded"
  * and Discard leaves toward where the edit began with the post as it was —
  * the ViewModel is scoped to this back-stack entry, so nothing outlives it.
  *
- * DRIFT (registration-gated, feed-card-rework §16): no Edit* board is in
- * nodes.json yet, so this surface carries test tags, not node paths; the
- * structural diff waits on registration.
+ * THE ADD PATHS OPEN THE DEVICE'S OWN PICKER, never a pick stage
+ * (EditCompose.md): `+ Add pictures · N of 10` takes pictures, the words
+ * edit's `+ Add pictures or a video` pictures or a clip, and the cover field
+ * one picture. The pickers live here, at the route, so the screen stays
+ * stateless and previewable.
  *
- * DRIFT (FC-8 remainder, named in the PR): the edit's own add paths — `+ Add
- * pictures · N of 10` through the device picker and the locked crop, the
- * upload gate's lines, and a clip's `Change the cover` — are not built here;
- * the media this edit authors is the post's own pictures, reordered,
- * re-covered, described or removed. When the crops land, their X raises the
- * same ask the edit's own X does (ComposeCrop.md, CoverCrop.md).
+ * DRIFT (registration-gated): no Edit* board — nor ComposeCrop or CoverCrop —
+ * is in nodes.json yet, so this surface carries test tags, not node paths;
+ * the structural diff waits on registration.
  */
 @Composable
 fun PostEditRoute(
@@ -113,56 +119,110 @@ fun PostEditRoute(
             viewModel.onSavedConsumed()
         }
     }
-    PostEditScreen(
-        state = state,
-        actions = PostEditActions(
-            onTitleChange = viewModel::onTitleChange,
-            onDescriptionChange = viewModel::onDescriptionChange,
-            onBodyChange = viewModel::onBodyChange,
-            onOpenPicked = viewModel::onOpenPicked,
-            onMovePicture = viewModel::onMovePicture,
-            onRemovePicture = viewModel::onRemovePicture,
-            onDescribePicture = viewModel::onDescribePicture,
-            onAltTextChange = viewModel::onAltTextChange,
-            onOpenSensitive = viewModel::onOpenSensitive,
-            onSensitiveChange = viewModel::onSensitiveChange,
-            onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
-            onOpenActs = viewModel::onOpenActs,
-            onCloseSheet = viewModel::onCloseSheet,
-            onSign = viewModel::onSign,
-            onLeave = { if (viewModel.onLeaveRequested()) onBack() },
-            onKeepWriting = viewModel::onKeepWriting,
-            onDiscard = onBack,
-            onTagInputChange = viewModel::onTagInputChange,
-            onAddTag = viewModel::onAddTag,
-            onRemoveTag = viewModel::onRemoveTag,
-            onTuneTag = viewModel::onTuneTag,
-            onDoneTuningTag = viewModel::onDoneTuningTag,
-            onTagRelevanceChange = viewModel::onTagRelevanceChange,
-            onTagConfidenceChange = viewModel::onTagConfidenceChange,
-            onUndoTagWithdrawal = viewModel::onUndoTagWithdrawal,
-            onOpenFinder = viewModel::onOpenFinder,
-            onCloseFinder = viewModel::onCloseFinder,
-            onFinderQueryChange = viewModel::onFinderQueryChange,
-            onPickReference = viewModel::onPickReference,
-            onRemoveReference = viewModel::onRemoveReference,
-            onTuneReference = viewModel::onTuneReference,
-            onDoneTuningReference = viewModel::onDoneTuningReference,
-            onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
-            onReferenceSupportChange = viewModel::onReferenceSupportChange,
-            onUndoReferenceWithdrawal = viewModel::onUndoReferenceWithdrawal,
-            onOpenBackingPad = viewModel::onOpenBackingPad,
-            onBackingPickChange = viewModel::onBackingPickChange,
-            onWalkBack = viewModel::onWalkBack,
-            onSetBacking = viewModel::onSetBacking,
-            onCancelBackingPad = viewModel::onCancelBackingPad,
-        ),
-        keyCard = keyCard,
-        deletionBand = deletionBand,
-    )
+    // Never shut at the cap: a picture past ten is refused in words on the
+    // row, which a picker capped at the room left would only hide.
+    val addPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(PostEditUiState.MAX_PICTURES),
+    ) { uris -> viewModel.onAddPictures(uris.map { it.toString() }) }
+    // A cover is a still by contract, so the picker offers pictures alone.
+    val coverPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        uri?.let { viewModel.onPickCover(it.toString()) }
+    }
+    val actions = viewModel.coreActions(onBack)
+        .withSections(viewModel)
+        .withMedia(
+            viewModel,
+            onAddMedia = {
+                addPicker.launch(
+                    PickVisualMediaRequest(
+                        // The words edit takes pictures or a clip; a picture
+                        // body takes pictures (EditWords.md, EditCompose.md).
+                        if (state.mediaBody) {
+                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                        } else {
+                            ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                        },
+                    ),
+                )
+            },
+            onPickCover = {
+                coverPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            },
+        )
+    PostEditScreen(state = state, actions = actions, keyCard = keyCard, deletionBand = deletionBand)
 }
 
-/** Everything the edit's surface can ask for, in one value rather than forty parameters. */
+/** The edit's own fields, its sheets, its leaving and its signing. */
+private fun PostEditViewModel.coreActions(onBack: () -> Unit) = PostEditActions(
+    onTitleChange = this::onTitleChange,
+    onDescriptionChange = this::onDescriptionChange,
+    onBodyChange = this::onBodyChange,
+    onOpenSensitive = this::onOpenSensitive,
+    onSensitiveChange = this::onSensitiveChange,
+    onSensitiveReasonChange = this::onSensitiveReasonChange,
+    onOpenActs = this::onOpenActs,
+    onCloseSheet = this::onCloseSheet,
+    onSign = this::onSign,
+    onLeave = { if (onLeaveRequested()) onBack() },
+    onKeepWriting = this::onKeepWriting,
+    onDiscard = onBack,
+    onWriteRuleNotNow = this::onWriteRuleNotNow,
+    onOpenBackingPad = this::onOpenBackingPad,
+    onBackingPickChange = this::onBackingPickChange,
+    onWalkBack = this::onWalkBack,
+    onSetBacking = this::onSetBacking,
+    onCancelBackingPad = this::onCancelBackingPad,
+)
+
+/** The tags and citations, their own acts beside the record. */
+private fun PostEditActions.withSections(viewModel: PostEditViewModel) = copy(
+    onTagInputChange = viewModel::onTagInputChange,
+    onAddTag = viewModel::onAddTag,
+    onRemoveTag = viewModel::onRemoveTag,
+    onTuneTag = viewModel::onTuneTag,
+    onDoneTuningTag = viewModel::onDoneTuningTag,
+    onTagRelevanceChange = viewModel::onTagRelevanceChange,
+    onTagConfidenceChange = viewModel::onTagConfidenceChange,
+    onUndoTagWithdrawal = viewModel::onUndoTagWithdrawal,
+    onOpenFinder = viewModel::onOpenFinder,
+    onCloseFinder = viewModel::onCloseFinder,
+    onFinderQueryChange = viewModel::onFinderQueryChange,
+    onPickReference = viewModel::onPickReference,
+    onRemoveReference = viewModel::onRemoveReference,
+    onTuneReference = viewModel::onTuneReference,
+    onDoneTuningReference = viewModel::onDoneTuningReference,
+    onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
+    onReferenceSupportChange = viewModel::onReferenceSupportChange,
+    onUndoReferenceWithdrawal = viewModel::onUndoReferenceWithdrawal,
+)
+
+/** The body's media: the manager, the add paths, the uploads' faults, the crops and the cover. */
+private fun PostEditActions.withMedia(
+    viewModel: PostEditViewModel,
+    onAddMedia: () -> Unit,
+    onPickCover: () -> Unit,
+) = copy(
+    onOpenPicked = viewModel::onOpenPicked,
+    onMovePicture = viewModel::onMovePicture,
+    onRemovePicture = viewModel::onRemovePicture,
+    onDescribePicture = viewModel::onDescribePicture,
+    onAltTextChange = viewModel::onAltTextChange,
+    onAddMedia = onAddMedia,
+    onDismissRefusal = viewModel::onDismissRefusal,
+    onRetryUploads = viewModel::onRetryUploads,
+    onRemoveFailed = viewModel::onRemoveFailed,
+    onPickCover = onPickCover,
+    onRemoveCover = viewModel::onRemoveCover,
+    onCropBack = viewModel::onCropBack,
+    onCropNext = viewModel::onCropDone,
+    onCoverCropNext = viewModel::onCoverCropDone,
+    onFrameAsset = viewModel::onFrameAsset,
+    onCropShapeChange = viewModel::onCropShapeChange,
+    onCropsChanged = viewModel::onCropsChanged,
+    onCoverCropChanged = viewModel::onCoverCropChanged,
+)
+
+/** Everything the edit's surface can ask for, in one value rather than fifty parameters. */
 data class PostEditActions(
     val onTitleChange: (String) -> Unit = {},
     val onDescriptionChange: (String) -> Unit = {},
@@ -182,6 +242,8 @@ data class PostEditActions(
     val onLeave: () -> Unit = {},
     val onKeepWriting: () -> Unit = {},
     val onDiscard: () -> Unit = {},
+    /** `Not now` under the write rule's notice. */
+    val onWriteRuleNotNow: () -> Unit = {},
     val onTagInputChange: (String) -> Unit = {},
     val onAddTag: () -> Unit = {},
     val onRemoveTag: (String) -> Unit = {},
@@ -205,13 +267,30 @@ data class PostEditActions(
     val onWalkBack: () -> Unit = {},
     val onSetBacking: () -> Unit = {},
     val onCancelBackingPad: () -> Unit = {},
+    /** `+ Add pictures · N of 10` / `+ Add pictures or a video`: the device's own picker. */
+    val onAddMedia: () -> Unit = {},
+    val onDismissRefusal: (Int) -> Unit = {},
+    val onRetryUploads: () -> Unit = {},
+    val onRemoveFailed: () -> Unit = {},
+    /** `Add a cover` / `Change the cover`: the device's own picker, one picture. */
+    val onPickCover: () -> Unit = {},
+    val onRemoveCover: () -> Unit = {},
+    val onCropBack: () -> Unit = {},
+    val onCropNext: () -> Unit = {},
+    val onCoverCropNext: () -> Unit = {},
+    val onFrameAsset: (Int) -> Unit = {},
+    val onCropShapeChange: (DraftShape) -> Unit = {},
+    val onCropsChanged: (Map<String, CropSpec>) -> Unit = {},
+    val onCoverCropChanged: (CropSpec) -> Unit = {},
 )
 
 /**
  * `EditCompose` / `EditComposeVideo` / `EditWords` / `EditComposeUnchanged`:
  * the post edit, one screen and one batch (`_shared.jsx` `EditComposeBody`,
- * `EditWords.jsx`). The license is locked and shown by name; the mark is the
- * author's ongoing judgment and opens the seal's own sheet (ruling 42).
+ * `EditWords.jsx`, `EditComposeVideo.jsx`). The license is locked and shown
+ * by name; the mark is the author's ongoing judgment and opens the seal's own
+ * sheet (ruling 42). A crop raised over it — `ComposeCrop` for added
+ * pictures, `CoverCrop` for the clip's face — is a stage of the edit.
  */
 @Composable
 fun PostEditScreen(
@@ -222,15 +301,18 @@ fun PostEditScreen(
     /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
     deletionBand: @Composable () -> Unit = {},
 ) {
-    val slowAnswer = rememberSlowAnswer(state.submitting)
+    // The 200ms label swap counts from the press, held at the upload gate or
+    // not; while it stands the back arrow and the X refuse a press and never
+    // dim (EditCompose.md).
+    val slowAnswer = rememberSlowAnswer(state.pressed)
     var help by remember { mutableStateOf<HelpTopic?>(null) }
-    // While the signing holds the reader, the back arrow and the X refuse a
-    // press and never dim (EditCompose.md).
     val leave = { if (!slowAnswer) actions.onLeave() }
     BackHandler(onBack = leave)
     // The system's Back over the parked pad closes it and stages nothing
     // (EditPad.md); composed after the leave handler, so it answers first.
     BackHandler(enabled = state.backingPadOpen, onBack = actions.onCancelBackingPad)
+    // Over a crop, Back is the crop's own back arrow: the picture goes unused.
+    BackHandler(enabled = state.cropping != null, onBack = actions.onCropBack)
 
     if (state.confirmingDiscard) {
         DiscardConfirm(
@@ -239,6 +321,12 @@ fun PostEditScreen(
             onDiscard = actions.onDiscard,
             testTag = "post_edit_discard_confirm",
         )
+    }
+
+    val cropping = state.cropping
+    if (cropping != null) {
+        PostEditCrop(cropping, actions, leave)
+        return
     }
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -289,6 +377,17 @@ private fun PostEditColumn(
     deletionBand: @Composable () -> Unit,
     onHelp: (HelpTopic) -> Unit,
 ) {
+    // THE OPENING FOCUS (EditCompose.md: "focus lands on the stage's heading
+    // AND NEVER the keyboard rises before a field is tapped"; EditWords.md:
+    // "the body takes focus with its caret at the end AND the keyboard
+    // rises"). The words edit's body is the one field it exists for.
+    val heading = remember { FocusRequester() }
+    val words = remember { FocusRequester() }
+    val opened = !state.loading && !state.notFound
+    val wordsStage = opened && !state.mediaBody
+    LaunchedEffect(opened) {
+        if (opened) runCatching { (if (wordsStage) words else heading).requestFocus() }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -302,12 +401,13 @@ private fun PostEditColumn(
             leaveContentDescription = EDIT_LEAVE_LABEL,
             onHelp = { onHelp(HelpTopic.Editing) },
             helpContentDescription = HelpTopic.Editing.title,
+            titleFocus = heading,
             testTag = "post_edit_header",
         )
         // Directly under the header (FeedDeleting.md:5).
         deletionBand()
 
-        WizardBody(gap = Space.x3, top = Space.x3, bottom = Space.x2, scrollable = true) {
+        WizardBody(gap = FIELD_GAP, top = Space.x3, bottom = Space.x2, scrollable = true) {
             when {
                 state.loading -> Text(
                     text = "Loading…",
@@ -320,22 +420,27 @@ private fun PostEditColumn(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("post_edit_not_found"),
                 )
-                else -> EditFields(state, actions)
+                else -> EditFields(state, actions, words)
             }
         }
 
-        WizardFooter { EditFoot(state, actions, slowAnswer, keyCard) }
+        WizardFooter(gap = FIELD_GAP) { EditFoot(state, actions, slowAnswer, keyCard, onHelp) }
     }
 }
 
-/** The count over the commit — or, in the commit's place, the key-absent seal or the write rule's notice. */
+/**
+ * The foot: the gate over the count over the commit — or, in the commit's
+ * place, the key-absent seal or the write rule's notice.
+ */
 @Composable
 private fun EditFoot(
     state: PostEditUiState,
     actions: PostEditActions,
     slowAnswer: Boolean,
     keyCard: @Composable () -> Unit,
+    onHelp: (HelpTopic) -> Unit,
 ) {
+    EditUploadGate(state.gallery, onRetry = actions.onRetryUploads, testTag = "post_edit_gate")
     ActsFooter(
         count = state.signedActionCount,
         onOpen = actions.onOpenActs,
@@ -348,23 +453,22 @@ private fun EditFoot(
     )
     when {
         state.keyAbsent -> keyCard()
-        // The write rule's notice takes the commit's place, with no Retry
-        // beside it (EditCompose.md).
-        state.writeRuleRefused -> Text(
-            text = "You can't sign right now.",
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("post_edit_write_rule")
-                .semantics { liveRegion = LiveRegionMode.Polite },
+        // The write rule's notice takes the commit's place, its fact ending
+        // on what is true for an edit, `Not now` its way out and no Retry
+        // (EditCompose.md).
+        state.writeRuleRefused -> EditWriteRuleNotice(
+            onHelp = onHelp,
+            onNotNow = actions.onWriteRuleNotNow,
+            testTagPrefix = "post_edit",
         )
-        // Inert, never hidden, at an empty batch; a press while the signing
-        // is out is refused without the button dimming.
+        // Inert, never hidden, at an empty batch; enabled while uploads run —
+        // a press there is held — and disabled at the gate's fault reading;
+        // a press while the signing is out or held is refused without the
+        // button dimming.
         else -> CograButton(
             text = signLabel(slowAnswer),
-            onClick = { if (!state.submitting) actions.onSign() },
-            enabled = state.canSign || state.submitting,
+            onClick = { if (!state.pressed) actions.onSign() },
+            enabled = state.canSign || state.pressed,
             modifier = Modifier.fillMaxWidth(),
             testTag = "post_edit_sign",
         )
@@ -372,18 +476,78 @@ private fun EditFoot(
 }
 
 @Composable
-private fun EditFields(state: PostEditUiState, actions: PostEditActions) {
-    WordsOrMedia(state, actions)
+private fun EditFields(state: PostEditUiState, actions: PostEditActions, words: FocusRequester) {
+    WordsOrMedia(state, actions, words)
     TitleAndDescription(state, actions)
     TagsAndReferences(state, actions)
     Terms(state, actions)
 }
 
 @Composable
-private fun WordsOrMedia(state: PostEditUiState, actions: PostEditActions) {
-    if (state.mediaBody) {
-        MediaBody(state, actions)
-    } else {
+private fun WordsOrMedia(state: PostEditUiState, actions: PostEditActions, words: FocusRequester) {
+    val clip = state.gallery.clip
+    when {
+        clip != null -> {
+            // `EditComposeVideo`: the clip, which stays or leaves whole, and
+            // its cover — a new face is a new picture, never a new clip.
+            ClipField(
+                clip = clip,
+                onRemove = { actions.onRemovePicture(0) },
+                onDescribe = { actions.onDescribePicture(0) },
+                testTagPrefix = "post_edit",
+                note = CLIP_WHOLE_POST_LINE,
+            )
+            CoverField(
+                gallery = state.gallery,
+                onPick = actions.onPickCover,
+                onRetry = actions.onRetryUploads,
+                onRemoveCover = actions.onRemoveCover,
+                testTagPrefix = "post_edit",
+                doorNote = true,
+            )
+        }
+        state.mediaBody -> PicturesBody(state, actions)
+        else -> WordsBody(state, actions, words)
+    }
+}
+
+/**
+ * `EditCompose`'s body: the picked row — the edit's row is the compose row,
+ * the first tile its cover, and the whole row opens Show all (`EditPicked`) —
+ * then what failed, what was refused, the add control and the body's rule.
+ */
+@Composable
+private fun PicturesBody(state: PostEditUiState, actions: PostEditActions) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        val count = state.gallery.size
+        PickedRow(
+            pictures = state.gallery.pickedPictures(),
+            caption = "${if (count == 1) "1 picture" else "$count pictures"} — the body",
+            onManage = actions.onOpenPicked,
+            manageLabel = if (count == 1) "Manage the picture" else "Manage the $count pictures",
+            testTag = "post_edit_picked",
+        )
+        EditUploadErrorLine(
+            gallery = state.gallery,
+            onRetry = actions.onRetryUploads,
+            onRemove = actions.onRemoveFailed,
+            testTag = "post_edit_upload_error",
+        )
+        RefusedFileRows(state.refused, actions.onDismissRefusal, testTagPrefix = "post_edit")
+        InlineAction(
+            text = "+ Add pictures · $count of ${PostEditUiState.MAX_PICTURES}",
+            onClick = actions.onAddMedia,
+            size = InlineSize.Small,
+            testTag = "post_edit_add_pictures",
+        )
+        BodyRule()
+    }
+}
+
+/** `EditWords`' body: the words, and the way back to a media body under them. */
+@Composable
+private fun WordsBody(state: PostEditUiState, actions: PostEditActions, words: FocusRequester) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         CograTextField(
             value = state.body,
             onValueChange = actions.onBodyChange,
@@ -393,7 +557,15 @@ private fun WordsOrMedia(state: PostEditUiState, actions: PostEditActions) {
             modifier = Modifier.fillMaxWidth(),
             cap = MAX_POST_BODY_CHARS,
             error = WORDS_OVER_CAP_LINE.takeIf { state.bodyTooLong },
+            focusRequester = words,
             testTag = "post_edit_words",
+        )
+        RefusedFileRows(state.refused, actions.onDismissRefusal, testTagPrefix = "post_edit")
+        InlineAction(
+            text = "+ Add pictures or a video",
+            onClick = actions.onAddMedia,
+            size = InlineSize.Small,
+            testTag = "post_edit_add_media",
         )
         BodyRule()
     }
@@ -433,7 +605,7 @@ private fun TitleAndDescription(state: PostEditUiState, actions: PostEditActions
 
 @Composable
 private fun TagsAndReferences(state: PostEditUiState, actions: PostEditActions) {
-    FieldGroup(label = "Tags") {
+    EditFieldGroup(label = "Tags") {
         TopicEntry(
             section = state.tagSection,
             testTagPrefix = "post_edit",
@@ -455,7 +627,7 @@ private fun TagsAndReferences(state: PostEditUiState, actions: PostEditActions) 
         }
     }
 
-    FieldGroup(label = "References") {
+    EditFieldGroup(label = "References") {
         ReferenceEntry(
             section = state.referenceSection,
             testTagPrefix = "post_edit",
@@ -535,76 +707,10 @@ private fun Terms(state: PostEditUiState, actions: PostEditActions) {
     }
 }
 
-/**
- * The picture body: the picked row, whose whole row opens Show all
- * (`EditPicked`), or the one clip with its own remove control and
- * description (`EditComposeVideo`) — the clip itself never changes at an
- * edit.
- */
-@Composable
-private fun MediaBody(state: PostEditUiState, actions: PostEditActions) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        val pictures = state.attachments.map { asset ->
-            PickedPicture(item = asset.toItem(), described = !asset.altText.isNullOrBlank())
-        }
-        if (state.clipBody) {
-            PickedRow(
-                pictures = pictures,
-                caption = "Video",
-                onManage = null,
-                onRemove = { actions.onRemovePicture(0) },
-                testTag = "post_edit_clip",
-            )
-            SettingRow(
-                label = "Description",
-                value = if (state.attachments.first().altText.isNullOrBlank()) "None" else "Described",
-                actionText = "Describe the video",
-                onAction = { actions.onDescribePicture(0) },
-                testTag = "post_edit_describe_clip",
-            )
-            Text(
-                text = "A video is the whole post.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        } else {
-            val count = pictures.size
-            PickedRow(
-                pictures = pictures,
-                caption = "${if (count == 1) "1 picture" else "$count pictures"} — the body",
-                onManage = actions.onOpenPicked,
-                manageLabel = if (count == 1) "Manage the picture" else "Manage the $count pictures",
-                testTag = "post_edit_picked",
-            )
-            BodyRule()
-        }
-    }
-}
-
+/** The body's rule in the quiet voice (`QuietNote`, `_shared.jsx` `EditComposeBody`). */
 @Composable
 private fun BodyRule() {
-    Text(
-        text = BODY_RULE_LINE,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.testTag("post_edit_body_rule"),
-    )
-}
-
-/** One labelled group, as the board stacks them at 6dp. */
-@Composable
-private fun FieldGroup(label: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        content()
-    }
+    QuietNote(text = BODY_RULE_LINE, modifier = Modifier.testTag("post_edit_body_rule"))
 }
 
 /** Every drawer the edit can open — one at a time, in the one sheet host. */
@@ -613,22 +719,20 @@ private fun FieldGroup(label: String, content: @Composable ColumnScope.() -> Uni
 private fun PostEditSheets(state: PostEditUiState, actions: PostEditActions, onHelp: (HelpTopic) -> Unit) {
     if (!state.anySheetOpen) return
     CograSheetHost(onDismissRequest = actions.onCloseSheet) {
-        val describing = state.describingIndex?.let { state.attachments.getOrNull(it) }
+        val describing = state.describingIndex?.let { state.gallery.pictures.getOrNull(it) }
         when {
             describing != null -> DescribeSheet(
-                item = describing.toItem(),
-                value = describing.altText.orEmpty(),
+                item = describing.describeItem(),
+                value = describing.altText,
                 onValueChange = { text -> actions.onAltTextChange(state.describingIndex ?: 0, text) },
                 onDone = actions.onCloseSheet,
-                video = describing.isVideo,
+                video = describing.isClip(),
                 cap = MAX_ALT_TEXT_CHARS,
-                tooLongMessage = describeTooLong(describing.isVideo),
+                tooLongMessage = describeTooLong(describing.isClip()),
                 testTag = "post_edit_describe_sheet",
             )
             state.pickedOpen -> PickedSheet(
-                pictures = state.attachments.map { asset ->
-                    PickedPicture(item = asset.toItem(), described = !asset.altText.isNullOrBlank())
-                },
+                pictures = state.gallery.pickedPictures(),
                 onDescribe = actions.onDescribePicture,
                 onRemove = actions.onRemovePicture,
                 onMove = actions.onMovePicture,
@@ -650,10 +754,40 @@ private fun PostEditSheets(state: PostEditUiState, actions: PostEditActions, onH
     }
 }
 
+/** What the describe sheet previews: a kept picture or clip as served, an added picture as picked. */
+internal fun EditPicture.describeItem(): MediaItem = when (this) {
+    is EditPicture.Kept -> asset.toItem()
+    is EditPicture.Added -> MediaItem(asset.uri, asset.sourceRatio ?: 1f, asset.altText.ifBlank { null })
+}
+
+/** A clip takes one description, read as the video's (DescribeSheet's other shape). */
+internal fun EditPicture.isClip(): Boolean = this is EditPicture.Kept && asset.isVideo
+
 /** The one line the edit shows when a submit did not go through. */
 internal fun PostEditUiState.problem(): String? = when {
     refusal != null -> refusal
     transportFailed -> "Can't reach the server. Check the connection and retry."
     signingFailed -> "Signing did not finish — the write stays pending."
     else -> null
+}
+
+/** The edit's fields stand 14 apart (`EditComposeBody`, `CommentEditBody`: `gap: 14`). */
+internal val FIELD_GAP = 14.dp
+
+/** A crop raised over the post edit — ComposeCrop for pictures on their way in, CoverCrop for the clip's face. */
+@Composable
+private fun PostEditCrop(cropping: EditCrop, actions: PostEditActions, leave: () -> Unit) {
+    EditCropStage(
+        crop = cropping,
+        actions = EditCropActions(
+            onBack = actions.onCropBack,
+            onLeave = leave,
+            onNext = if (cropping is EditCrop.Cover) actions.onCoverCropNext else actions.onCropNext,
+            onFrameAsset = actions.onFrameAsset,
+            onShapeChange = actions.onCropShapeChange,
+            onCropsChanged = actions.onCropsChanged,
+            onCoverCropChanged = actions.onCoverCropChanged,
+        ),
+        testTagPrefix = "post_edit",
+    )
 }

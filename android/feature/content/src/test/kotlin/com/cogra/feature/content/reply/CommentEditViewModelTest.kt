@@ -13,6 +13,8 @@ import com.cogra.domain.SelfMarkView
 import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.Expectation
@@ -36,7 +38,11 @@ import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testGraphId
 import com.cogra.domain.testing.testHashtag
 import com.cogra.domain.testing.testParentOf
+import com.cogra.feature.content.edit.GatedMedia
+import com.cogra.feature.content.edit.ScriptedClips
+import com.cogra.feature.content.edit.ScriptedPictures
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.SealFault
 import com.cogra.feature.content.wizard.UploadFailure
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
@@ -175,7 +181,10 @@ class CommentEditViewModelTest {
     private val processor = ScriptedProcessor()
     private val references = ThrowingReferenceRepository()
 
-    private fun opened(): CommentEditViewModel {
+    private fun opened(
+        media: MediaRepository = this.media,
+        processor: MediaProcessor = this.processor,
+    ): CommentEditViewModel {
         val vm = CommentEditViewModel(
             content,
             references,
@@ -183,6 +192,7 @@ class CommentEditViewModelTest {
             processor,
             WriteSigner(sealer, identity),
             topics,
+            ScriptedClips(),
         )
         vm.start(TEST_COMMENT_ID, "A post")
         dispatcher.scheduler.advanceUntilIdle()
@@ -381,7 +391,7 @@ class CommentEditViewModelTest {
     @Test
     fun theGalleryIsSentComplete() = runTest(dispatcher) {
         val vm = opened()
-        vm.onPicked("a.jpg")
+        vm.onPicked(listOf("a.jpg"))
         dispatcher.scheduler.advanceUntilIdle()
         vm.onAltTextChange("a.jpg", "A picture")
 
@@ -504,8 +514,10 @@ class CommentEditViewModelTest {
         assertThat(content.lastAttachments).containsExactly(AttachmentClaim("m1", null))
     }
 
+    // CommentEdit.md: the signing refused for one staged act whose target landed
+    // stands the notice This shouldn't have happened, no row marked (SealFaultBug).
     @Test
-    fun aRefusalOnAChipLandsOnThatChip() = runTest(dispatcher) {
+    fun aRefusedStagedActStandsTheBugNotice() = runTest(dispatcher) {
         val vm = opened()
         vm.onBodyChange("Reworded")
         vm.onTagInputChange("rust")
@@ -517,7 +529,8 @@ class CommentEditViewModelTest {
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.tagSection.tags.single().error).isEqualTo("no such topic")
+        assertThat(vm.state.value.fault).isEqualTo(SealFault.Bug)
+        assertThat(vm.state.value.tagSection.tags.single().error).isNull()
         assertThat(vm.state.value.refusal).isNull()
         assertThat(vm.state.value.submitting).isFalse()
     }
@@ -543,24 +556,24 @@ class CommentEditViewModelTest {
         processor.processed = null
         val vm = opened()
 
-        vm.onPicked("a.jpg")
+        vm.onPicked(listOf("a.jpg"))
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(media.calls).isEqualTo(0)
-        assertThat(vm.state.value.picked.single().upload)
+        assertThat(vm.state.value.gallery.uploads.single().upload)
             .isEqualTo(AssetUpload.Failed(UploadFailure.UNREADABLE_PICTURE))
-        assertThat(vm.state.value.uploadsFailed).isTrue()
+        assertThat(vm.state.value.gallery.uploadsFailed).isEqualTo(1)
     }
 
     @Test
     fun removingAPickTakesItOutOfTheGallery() = runTest(dispatcher) {
         val vm = opened()
-        vm.onPicked("a.jpg")
+        vm.onPicked(listOf("a.jpg"))
         dispatcher.scheduler.advanceUntilIdle()
 
         vm.onRemovePickAt(0)
 
-        assertThat(vm.state.value.picked).isEmpty()
+        assertThat(vm.state.value.gallery.isEmpty).isTrue()
     }
 
     // -- Leaving --
@@ -597,5 +610,193 @@ class CommentEditViewModelTest {
         vm.onSavedConsumed()
 
         assertThat(vm.state.value.saved).isFalse()
+    }
+
+    // -- The upload gate (CommentEdit.md) --
+
+    private val gated = GatedMedia()
+
+    private fun gatedEdit(): CommentEditViewModel {
+        val vm = opened(media = gated, processor = ScriptedPictures(gated))
+        vm.onBodyChange("Reworded")
+        vm.onPicked(listOf("a.jpg"))
+        dispatcher.scheduler.advanceUntilIdle()
+        return vm
+    }
+
+    @Test
+    fun aPressWhileAPictureUploadsIsHeldAndSignsWhenItLands() = runTest(dispatcher) {
+        val vm = gatedEdit()
+        assertThat(vm.state.value.canSign).isTrue()
+
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.heldPress).isTrue()
+        assertThat(content.editCalls).isEqualTo(0)
+        vm.onSign()
+
+        gated.land(0)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.saved).isTrue()
+        assertThat(content.editCalls).isEqualTo(1)
+        assertThat(content.lastAttachments.map { it.mediaId }).containsExactly("m-1")
+    }
+
+    @Test
+    fun aFailedUploadDropsTheHeldPressAndRetryNeverSignsOnItsOwn() = runTest(dispatcher) {
+        val vm = gatedEdit()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        gated.fail(0)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.pressed).isFalse()
+        assertThat(vm.state.value.canSign).isFalse()
+
+        vm.onRetryUploads()
+        dispatcher.scheduler.advanceUntilIdle()
+        gated.land(1)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.editCalls).isEqualTo(0)
+        assertThat(vm.state.value.canSign).isTrue()
+    }
+
+    @Test
+    fun removingTheFailedPictureUngatesSign() = runTest(dispatcher) {
+        val vm = gatedEdit()
+        gated.fail(0)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onRemoveFailed()
+
+        assertThat(vm.state.value.gallery.isEmpty).isTrue()
+        assertThat(vm.state.value.canSign).isTrue()
+    }
+
+    @Test
+    fun aCommentsPicturesGoUpWhole() = runTest(dispatcher) {
+        val vm = opened(media = gated, processor = ScriptedPictures(gated).apply { ratio = 0.5f })
+        vm.onPicked(listOf("a.jpg"))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // A target equal to the source frames nothing away.
+        assertThat(gated.crops.single()).isEqualTo(CropSpec(targetRatio = 0.5f))
+        assertThat(vm.state.value.recordStaged).isTrue()
+    }
+
+    /** Copy-voice, *Refused files*: a fifth picture is refused in words, never dropped in silence. */
+    @Test
+    fun aFifthPictureIsRefusedInWords() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onPicked(listOf("a.jpg", "b.jpg", "c.jpg", "d.jpg", "e.jpg"))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.gallery.size).isEqualTo(CommentEditState.MAX_PICTURES)
+        assertThat(vm.state.value.refused.single().reason).isEqualTo(UploadFailure.COMMENT_PICTURE_COUNT)
+    }
+
+    // -- CommentEditVideo --
+
+    private fun clipComment(cover: MediaAssetView? = null) {
+        content.loaded = Outcome.Success(
+            CommentForEdit(
+                comment = testComment(TEST_COMMENT_ID, body = "As it stands").copy(
+                    attachments = listOf(fakeUpload("v1").copy(cover = cover, durationMs = 18_000)),
+                ),
+                selfMark = SelfMarkView(sensitive = false, reason = null),
+            ),
+        )
+    }
+
+    /** CommentEditVideo.md: the new face passes the crop locked to the comment's square and rides the placement. */
+    @Test
+    fun aNewFaceIsCutToTheSquareAndTheClipPointsAtIt() = runTest(dispatcher) {
+        clipComment(cover = fakeUpload("p8"))
+        val vm = opened(media = gated, processor = ScriptedPictures(gated))
+
+        vm.onPickCover("face.jpg")
+        assertThat(vm.state.value.cropping?.ratio).isEqualTo(1f)
+        vm.onCoverCropDone()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(gated.crops.single().targetRatio).isEqualTo(1f)
+        vm.onSign()
+        gated.land(0)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastAttachments)
+            .containsExactly(AttachmentClaim("v1", null, coverMediaId = "m-1", coverTaken = false))
+    }
+
+    @Test
+    fun removingAFailedFaceReadsTheCoverRowAsItStood() = runTest(dispatcher) {
+        clipComment(cover = fakeUpload("p8"))
+        val vm = opened(media = gated, processor = ScriptedPictures(gated))
+        vm.onPickCover("face.jpg")
+        vm.onCoverCropDone()
+        dispatcher.scheduler.advanceUntilIdle()
+        gated.fail(0)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onRemoveCover()
+
+        assertThat(vm.state.value.gallery.newCover).isNull()
+        assertThat(vm.state.value.gallery.coverChosen).isTrue()
+        assertThat(vm.state.value.canSign).isTrue()
+    }
+
+    @Test
+    fun theClipLeavesWholeAndTheCommentIsItsWords() = runTest(dispatcher) {
+        clipComment()
+        val vm = opened()
+
+        vm.onRemovePickAt(0)
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastAttachments).isEmpty()
+        assertThat(content.lastBody).isEqualTo("As it stands")
+    }
+
+    // -- The faults (CommentEdit.md) --
+
+    @Test
+    fun theWriteRuleIsANoticeAndNotNowStandsTheEditAgain() = runTest(dispatcher) {
+        content.editOutcome = Outcome.Refused(listOf(UserError(ErrorCode.WRITE_RULE_FAILED, "balance")))
+        val vm = opened()
+        vm.onBodyChange("Reworded")
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.writeRuleRefused).isTrue()
+        vm.onNotNow()
+        assertThat(vm.state.value.fault).isNull()
+        assertThat(vm.state.value.body).isEqualTo("Reworded")
+        assertThat(vm.state.value.canSign).isTrue()
+    }
+
+    @Test
+    fun anyOtherRefusalIsTheBugNotice() = runTest(dispatcher) {
+        content.editOutcome = Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "nope", listOf("content"))))
+        val vm = opened()
+        vm.onBodyChange("Reworded")
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.fault).isEqualTo(SealFault.Bug)
+        assertThat(vm.state.value.pressed).isFalse()
+    }
+
+    @Test
+    fun aSlowSigningShowsTheSlowLineAndItGoesWithTheAnswer() = runTest(dispatcher) {
+        val vm = gatedEdit()
+        vm.onSign()
+        dispatcher.scheduler.advanceTimeBy(CommentEditViewModel.SLOW_SIGNING_MS + 1)
+        dispatcher.scheduler.runCurrent()
+        assertThat(vm.state.value.slow).isTrue()
+
+        gated.land(0)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.slow).isFalse()
     }
 }
