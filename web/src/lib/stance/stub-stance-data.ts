@@ -90,6 +90,11 @@ export type StubStanceOptions = {
   readonly refuse?: UserError["code"];
   /** The signing key is not on this device (PadKeyAbsent). */
   readonly keyAbsent?: boolean;
+  /**
+   * How many of each target's newest records are signed but not yet ordered:
+   * a read that leaves pending out counts that many fewer.
+   */
+  readonly unorderedRecords?: number;
   /** The account has no recovery backup (KeyElsewhereNoBackup). */
   readonly noBackup?: boolean;
   /** The live previews a kept pick's row reads, by target id; others fall back to the kind. */
@@ -168,7 +173,11 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
       if (options.offline === true) return OFFLINE();
       noteRead(readOptions);
       freshFlags.push(readOptions?.fresh === true);
-      return success(standingOf(target));
+      const standing = standingOf(target);
+      if (readOptions?.includePending === false && options.unorderedRecords !== undefined) {
+        return success({ ...standing, records: Math.max(0, standing.records - options.unorderedRecords) });
+      }
+      return success(standing);
     },
 
     async project(target: StanceTarget, pick, readOptions): Promise<Outcome<StanceProjection>> {
