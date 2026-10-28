@@ -502,12 +502,12 @@ export function PostCard({
         // leaves the graph and no removal is silent.
         // THE MARK DATES ITSELF (`Removed.jsx`: `redacted={{ reason, when }}`):
         // `when` is the removal's own moment, read off the node's mark. Its
-        // node is the board's evident path — `<card>.removed`, with the mark's
-        // own `line`, `detail` and `when` — until the Removed board registers.
+        // node is `<card>.removalMark`, with the mark's own `line`, `detail`
+        // and `when` (nodes.json Removed, round 23).
         <RemovedPlaceholder
           reason={removalReason(post)}
           when={removalWhen(post)}
-          node={part(node, "removed")}
+          node={part(node, "removalMark")}
           testId={`${testId}-removed`}
         />
       ) : (

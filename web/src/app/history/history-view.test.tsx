@@ -353,10 +353,10 @@ describe("History — the seen-list as a feed (History.md)", () => {
     render();
     await screen.findByTestId("history-list");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p9", "history.card:p1"]);
-    // The mark is the card's own part, `<card>.removed` with its line and its
+    // The mark is the card's own part, `<card>.removalMark` with its line and its
     // moment (the evident path while Removed is unregistered).
-    expect(screen.getByTestId(byNode("history.card.removed", "p9"))).toHaveTextContent("Removed by its author");
-    expect(screen.getByTestId(byNode("history.card.removed.when", "p9"))).toHaveTextContent("18m");
+    expect(screen.getByTestId(byNode("history.card.removalMark", "p9"))).toHaveTextContent("Removed by its author");
+    expect(screen.getByTestId(byNode("history.card.removalMark.when", "p9"))).toHaveTextContent("18m");
   });
 
   it("the_readers_own_removal_from_a_cards_menu_leaves_it_in_place_wearing_its_mark", async () => {
@@ -383,7 +383,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
     fireEvent.click(screen.getByTestId(byNode("history.card.menu", "p5")));
     fireEvent.click(screen.getByTestId("history-menu-remove"));
     fireEvent.click(await screen.findByTestId("history-menu-remove-confirm-remove"));
-    expect(await screen.findByTestId(byNode("history.card.removed", "p5"))).toHaveTextContent("Removed by its author");
+    expect(await screen.findByTestId(byNode("history.card.removalMark", "p5"))).toHaveTextContent("Removed by its author");
     expect(cards()).toEqual(["history.commentCard:c1", "history.card:p5", "history.card:p1"]);
   });
 

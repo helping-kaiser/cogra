@@ -1085,17 +1085,17 @@ describe("PostView", () => {
       removed = true;
       fireEvent.click(screen.getByTestId("postDetail.dialog.remove"));
 
-      const mark = await screen.findByTestId(byNode("postDetail.card.removed"));
+      const mark = await screen.findByTestId(byNode("postDetail.card.removalMark"));
       await waitFor(() => expect(dialog.isConnected && dialog.open).toBe(false));
       // The whole-chain removal, named by the genesis record.
       expect(removals).toEqual(["rec-p1"]);
-      expect(screen.getByTestId(byNode("postDetail.card.removed.line"))).toHaveTextContent(
+      expect(screen.getByTestId(byNode("postDetail.card.removalMark.line"))).toHaveTextContent(
         "Removed by its author",
       );
-      expect(screen.getByTestId(byNode("postDetail.card.removed.detail"))).toHaveTextContent(
+      expect(screen.getByTestId(byNode("postDetail.card.removalMark.detail"))).toHaveTextContent(
         "The words and pictures are gone. The post's place in the thread, and every response, remain.",
       );
-      expect(screen.getByTestId(byNode("postDetail.card.removed.when"))).toHaveTextContent("now");
+      expect(screen.getByTestId(byNode("postDetail.card.removalMark.when"))).toHaveTextContent("now");
       // Removed.md:9 — never the platform's words.
       expect(mark).not.toHaveTextContent("Removed under the platform's rules");
       // Removed.md:11 — the header carries the way back alone and no menu.
@@ -1130,7 +1130,7 @@ describe("PostView", () => {
         ),
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-      await screen.findByTestId(byNode("postDetail.card.removed"));
+      await screen.findByTestId(byNode("postDetail.card.removalMark"));
       await openComments();
       expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
       expect(screen.getByTestId("post-comment-c2")).toHaveTextContent("Second");
@@ -1146,7 +1146,7 @@ describe("PostView", () => {
         }),
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-      expect(await screen.findByTestId(byNode("postDetail.card.removed.line"))).toHaveTextContent(
+      expect(await screen.findByTestId(byNode("postDetail.card.removalMark.line"))).toHaveTextContent(
         "Removed by its author",
       );
     });
@@ -1158,7 +1158,7 @@ describe("PostView", () => {
         ...thread("u1", [], undefined, false, [], [], { removal: { at: removedAt(), by: "AUTHOR" } }),
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-      expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toBeInTheDocument();
+      expect(await screen.findByTestId(byNode("postDetail.card.removalMark"))).toBeInTheDocument();
       expect(screen.queryByTestId(byNode("postDetail.card.body"))).not.toBeInTheDocument();
     });
 
@@ -1172,7 +1172,7 @@ describe("PostView", () => {
         }),
       );
       renderWithProviders(<PostView postId="p1" from="saved" />, { writeSigner: fakeWriteSigner() });
-      await screen.findByTestId(byNode("postDetail.card.removed"));
+      await screen.findByTestId(byNode("postDetail.card.removalMark"));
       expect(screen.getByTestId(byNode("postDetail.header.back"))).toHaveAttribute(
         "aria-label",
         "Back to Saved",
@@ -1193,7 +1193,7 @@ describe("PostView", () => {
       );
       expect(dialog.open).toBe(true);
       expect(screen.getByTestId(byNode("postDetail.card.body"))).toHaveTextContent("The body");
-      expect(screen.queryByTestId(byNode("postDetail.card.removed"))).not.toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("postDetail.card.removalMark"))).not.toBeInTheDocument();
     });
 
     // CommentMenuOwn.md:3 — Save or Unsave, Cite in a new post, Remove, Cited
@@ -3189,7 +3189,7 @@ describe("PostView — references", () => {
         );
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toBeInTheDocument();
+        expect(await screen.findByTestId(byNode("postDetail.card.removalMark"))).toBeInTheDocument();
         expect(screen.queryByTestId("post-detail-clip")).toBeNull();
       });
     });
@@ -3226,7 +3226,7 @@ describe("PostView — references", () => {
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-      const mark = await screen.findByTestId(byNode("postDetail.card.removed"));
+      const mark = await screen.findByTestId(byNode("postDetail.card.removalMark"));
       expect(mark).toHaveTextContent("Removed by its author");
       expect(screen.queryByRole("img")).not.toBeInTheDocument();
       expect(screen.queryByTestId(byNode("postDetail.card.title"))).not.toBeInTheDocument();
@@ -3255,7 +3255,7 @@ describe("PostView — references", () => {
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-      expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toHaveTextContent(
+      expect(await screen.findByTestId(byNode("postDetail.card.removalMark"))).toHaveTextContent(
         "Removed under the platform's rules",
       );
     });
@@ -3792,7 +3792,7 @@ describe("PostView — opened from the feed", () => {
     const data = detail("u1", []);
     await openOnto(data, removed(data));
 
-    expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("postDetail.card.removalMark"))).toBeInTheDocument();
     expect(screen.queryByTestId(byNode("postDetail.card.title"))).not.toBeInTheDocument();
     expect(line()).not.toBeInTheDocument();
   });
@@ -3824,7 +3824,7 @@ describe("PostView — opened from the feed", () => {
     );
     await openOnto(data, fresh);
 
-    expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("postDetail.card.removalMark"))).toBeInTheDocument();
     expect(line()).not.toBeInTheDocument();
   });
 
@@ -3884,7 +3884,7 @@ describe("PostView — opened from the feed", () => {
     const element = screen.getByTestId("post-detail-clip-media").querySelector("video");
 
     read.release();
-    expect(await screen.findByTestId(byNode("postDetail.card.removed"))).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("postDetail.card.removalMark"))).toBeInTheDocument();
     expect(screen.queryByTestId("post-detail-clip")).toBeNull();
     expect(element?.isConnected ?? false).toBe(false);
     expect(line()).not.toBeInTheDocument();

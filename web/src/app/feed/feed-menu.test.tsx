@@ -439,9 +439,9 @@ describe("the feed's post menu", () => {
     await openMenu();
     fireEvent.click(screen.getByTestId("feed-menu-remove"));
     fireEvent.click(await screen.findByTestId("feed-menu-remove-confirm-remove"));
-    const mark = await screen.findByTestId(byNode("feed.card.removed", "p1"));
+    const mark = await screen.findByTestId(byNode("feed.card.removalMark", "p1"));
     expect(mark).toHaveTextContent("Removed by its author");
-    expect(screen.getByTestId(byNode("feed.card.removed.when", "p1"))).toHaveTextContent("1m");
+    expect(screen.getByTestId(byNode("feed.card.removalMark.when", "p1"))).toHaveTextContent("1m");
     expect(removals).toEqual(["rec-genesis"]);
     // In place: the card stands where it stood, its neighbour untouched.
     const cards = screen.getAllByTestId(byNode("feed.card"));

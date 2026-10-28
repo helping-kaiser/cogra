@@ -551,7 +551,7 @@ describe("the feed filter", () => {
       fireEvent.click(chip("also.removedChip"));
       done();
       await waitFor(() => expect(cardIds()).toEqual(["p1", "p2"]));
-      expect(screen.getByTestId(byNode("feed.card.removed", "p2"))).toHaveTextContent("Removed by its author");
+      expect(screen.getByTestId(byNode("feed.card.removalMark", "p2"))).toHaveTextContent("Removed by its author");
       expect(r.ranks).toHaveLength(1);
       expect(trigger()).toHaveTextContent(/^Posts · \+ removed$/);
     });
