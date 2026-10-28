@@ -1,4 +1,4 @@
-# deploy/ — the production tree
+# The production tree · `guide:repo:deploy`
 
 Everything that runs CoGra on its production host: the images, the
 Quadlet units, the proxy, the env templates, and the operator scripts.
