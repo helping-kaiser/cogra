@@ -5825,6 +5825,98 @@
         "invites.linksLabel": []
       }
     },
+    "RemoveConfirm": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postDetail.card": [
+          "sol"
+        ],
+        "postDetail.card.actionRow": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.score": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.share": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor.exact": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "sol"
+        ],
+        "postDetail.card.authorChip": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.name": [
+          "sol"
+        ],
+        "postDetail.card.description": [
+          "sol"
+        ],
+        "postDetail.card.media": [
+          "sol"
+        ],
+        "postDetail.card.media.dots": [
+          "sol"
+        ],
+        "postDetail.card.media.frame": [
+          "sol/1",
+          "sol/2"
+        ],
+        "postDetail.card.opinions": [
+          "sol"
+        ],
+        "postDetail.card.tagsLine": [
+          "sol"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "sol/fieldnotes",
+          "sol/saltmaps"
+        ],
+        "postDetail.card.timestamp": [
+          "sol"
+        ],
+        "postDetail.card.title": [
+          "sol"
+        ],
+        "postDetail.dialog": [],
+        "postDetail.dialog.body": [],
+        "postDetail.dialog.keep": [],
+        "postDetail.dialog.remove": [],
+        "postDetail.dialog.title": [],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": []
+      }
+    },
     "RemoveMenu": {
       "prefix": "postDetail",
       "keys": {
@@ -5918,6 +6010,79 @@
         "postDetail.menuSheet.markSensitive": [],
         "postDetail.menuSheet.remove": [],
         "postDetail.menuSheet.save": []
+      }
+    },
+    "Removed": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "sol"
+        ],
+        "postDetail.card.actionRow": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.score": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.share": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "sol"
+        ],
+        "postDetail.card.authorChip": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.name": [
+          "sol"
+        ],
+        "postDetail.card.removalMark": [
+          "sol"
+        ],
+        "postDetail.card.removalMark.detail": [
+          "sol"
+        ],
+        "postDetail.card.removalMark.line": [
+          "sol"
+        ],
+        "postDetail.card.removalMark.when": [
+          "sol"
+        ],
+        "postDetail.card.timestamp": [
+          "sol"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": []
       }
     },
     "ReportConfirm": {

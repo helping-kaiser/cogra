@@ -1,19 +1,19 @@
 # Removed · `spec:design:behavior-removed`
 
-ALWAYS the mark Removed by its author stands in the post's words and pictures' place
+ALWAYS postDetail.card.removalMark stands in the post's words and pictures' place
 
-ALWAYS the mark reads Removed by its author GIVEN the post went with its author's account deletion, its content sweep chosen
+ALWAYS postDetail.card.removalMark.line reads Removed by its author GIVEN the post went with its author's account deletion, its content sweep chosen
 
-ALWAYS the mark's second line reads The words and pictures are gone. The post's place in the thread, and every response, remain.
+ALWAYS postDetail.card.removalMark.detail reads The words and pictures are gone. The post's place in the thread, and every response, remain.
 
 ALWAYS the author's mark never reads like Removed under the platform's rules
 
-ALWAYS the header carries the way back alone and no menu
+ALWAYS postDetail.header carries postDetail.header.back alone and no menu
 
-ALWAYS the post keeps its author chip, its opinion, its score, its comment count and its share
+ALWAYS the post keeps postDetail.card.authorChip, postDetail.card.actionRow.stance, postDetail.card.actionRow.score, postDetail.card.actionRow.comments.count and postDetail.card.actionRow.share
 
-WHEN tap the comment count -> the thread opens with every response in it
+WHEN tap postDetail.card.actionRow.comments -> the thread opens with every response in it
 
-ALWAYS the back arrow names the screen the post was opened from by the post detail's origin table, as Back to feed from the feed and Back to Saved from Saved
+ALWAYS postDetail.header.back names the screen the post was opened from by the post detail's origin table, as Back to feed from the feed and Back to Saved from Saved
 
-WHEN press the back arrow -> the screen the post was opened from comes back, in the state it was left
+WHEN press postDetail.header.back -> the screen the post was opened from comes back, in the state it was left

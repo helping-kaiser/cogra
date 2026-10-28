@@ -674,7 +674,7 @@ const REMOVE_CONFIRM_COPY = {
    thread — by `ReplyKeyAbsent`'s one layer of board glue: `DialogSurface` sits
    on the base wash layer and the sheet one above it, so the dialog is the
    thing raised last. Over the post detail there is no sheet to clear. */
-function RemoveDialog({ kind, overSheet = false }) {
+function RemoveDialog({ kind, overSheet = false, node }) {
   const { title, body } = REMOVE_CONFIRM_COPY[kind];
   const dialog = (
     <DialogSurface
@@ -683,10 +683,11 @@ function RemoveDialog({ kind, overSheet = false }) {
       body={[body, "This is immediate and permanent."]}
       actions={
         <>
-          <Button variant="text">Remove</Button>
-          <Button>Keep it</Button>
+          <Button variant="text" node={node && "remove"}>Remove</Button>
+          <Button node={node && "keep"}>Keep it</Button>
         </>
       }
+      node={node}
     />
   );
   return overSheet ? <div style={{ position: "fixed", inset: 0, zIndex: 43 }}>{dialog}</div> : dialog;
