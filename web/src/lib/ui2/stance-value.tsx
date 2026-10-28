@@ -33,7 +33,7 @@ export function StanceValue({
       className="inline-flex items-center gap-1.5"
       {...testAttributes(node, testId)}
     >
-      <span aria-hidden="true" className="text-title-medium" {...testAttributes(part(node, "face"))}>
+      <span aria-hidden="true" className="text-title-medium [font-weight:400]" {...testAttributes(part(node, "face"))}>
         {readout.emoji}
       </span>
       <span

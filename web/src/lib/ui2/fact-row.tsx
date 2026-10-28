@@ -4,6 +4,9 @@
 // secondary ink, and the rules ENCLOSE — a hairline above every row and one
 // under the last — so the block reads as a bounded list on the page's ground.
 //
+// THE 44px MINIMUM IS THE CONTENT'S, the hairlines outside it (FactRow.jsx
+// draws content-box: a row stands 45px, the last 46px on the built boards).
+//
 // THE ROW HOLDS ONE LINE, which is why a worded action is an `InlineAction`
 // and never a pill: the pill's 64px minimum is exactly what wraps a row ruled
 // to stay on one. An action given as a node — the edit's license lock — is
@@ -45,7 +48,7 @@ export function FactRow({
   return (
     <div
       {...testAttributes(node)}
-      className={`flex min-h-11 items-center gap-2 border-0 border-t border-solid border-outline-variant ${
+      className={`box-content flex min-h-11 items-center gap-2 border-0 border-t border-solid border-outline-variant ${
         last ? "border-b" : ""
       }`}
     >

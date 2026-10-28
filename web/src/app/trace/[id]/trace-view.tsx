@@ -351,7 +351,7 @@ function EntryLevel({
             aria-label={moreWords.name}
             onClick={onUnfold}
             data-testid="feedEntry.morePaths"
-            className="cg-state cg-focus cg-hit flex min-h-12 w-full items-center gap-2 border-0 bg-transparent px-3 text-left text-label-small text-on-surface-variant"
+            className="cg-state cg-focus cg-hit flex min-h-12 w-full items-center gap-2 border-0 bg-transparent px-3 text-left text-label-small text-on-surface-variant [font-weight:400]"
           >
             <span aria-hidden="true" className="flex-1" data-testid="feedEntry.morePaths.label">
               {moreWords.label}
