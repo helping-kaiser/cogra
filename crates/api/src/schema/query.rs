@@ -487,11 +487,18 @@ impl Query {
     /// And a keyless account fronts no Profile on the graph, so it
     /// resolves nowhere for the write path and must not be offered here
     /// either.
+    ///
+    /// `kinds` narrows the candidates by the search law — kinds subtract.
+    /// Null or empty narrows nothing; otherwise only candidates of a
+    /// listed kind are offered, and a kind the finder never offers — a
+    /// topic, or a comment by its words, which it carries none of —
+    /// reads empty, never an error.
     #[graphql(complexity = "list_cost(limit, child_complexity)")]
     async fn reference_candidates(
         &self,
         ctx: &Context<'_>,
         query: String,
+        kinds: Option<Vec<NodeKind>>,
         limit: Option<i32>,
     ) -> async_graphql::Result<Vec<ReferenceCandidate>> {
         let pool = ctx.data::<PgPool>()?;
@@ -500,6 +507,11 @@ impl Query {
         if query.is_empty() || limit == 0 || query.starts_with('#') {
             return Ok(Vec::new());
         }
+        let wanted = |kind: NodeKind| {
+            kinds
+                .as_deref()
+                .is_none_or(|kinds| kinds.is_empty() || kinds.contains(&kind))
+        };
 
         if let Ok(id) = Uuid::parse_str(query) {
             let mut out = Vec::new();
@@ -507,6 +519,7 @@ impl Query {
                 .await
                 .map_err(|e| async_graphql::Error::new(e.to_string()))?
                 && let Some(target) = resolve_reference_target(ctx, &node.to_string()).await?
+                && wanted(target.kind())
             {
                 out.push(ReferenceCandidate {
                     target,
@@ -516,14 +529,28 @@ impl Query {
             return Ok(out);
         }
 
-        let (text, kinds): (&str, &[IndexKind]) = match query.strip_prefix('@') {
+        let (text, offered): (&str, &[IndexKind]) = match query.strip_prefix('@') {
             Some(handle) => (handle, &[IndexKind::User]),
             None => (query, &[IndexKind::User, IndexKind::Post]),
         };
+        let kinds: Vec<IndexKind> = offered
+            .iter()
+            .copied()
+            .filter(|kind| {
+                wanted(match kind {
+                    IndexKind::User => NodeKind::User,
+                    IndexKind::Post => NodeKind::Post,
+                    IndexKind::Hashtag => NodeKind::Hashtag,
+                })
+            })
+            .collect();
+        if kinds.is_empty() {
+            return Ok(Vec::new());
+        }
         let Ok(search::Parsed::Unscoped(text)) = search::parse(text) else {
             return Ok(Vec::new());
         };
-        let request = search::unscoped(text, kinds, None, true);
+        let request = search::unscoped(text, &kinds, None, true);
         let hits = search_store::find(pool, &request, None, false, i64::from(limit))
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
