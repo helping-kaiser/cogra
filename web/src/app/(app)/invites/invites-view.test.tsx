@@ -12,7 +12,7 @@ import { carryToInvites } from "@/lib/invites/invites-notice";
 import { EMPTY_SIGN_WORDS } from "@/lib/ui/empty-sign-confirm";
 import { createTokenStore } from "@/lib/session/token-store";
 import { expectation, stanceRecord } from "@/lib/signing/intent";
-import { keepPick, keptPick } from "@/lib/stance/kept-picks";
+import { keepPick, listKeptPicks } from "@/lib/stance/kept-picks";
 import { writeStanceTaught } from "@/lib/stance/stance-coach";
 import {
   application,
@@ -262,7 +262,7 @@ describe("Invites (behavior/Invites.md)", () => {
   });
 
   it(":71-:75 an ask-link row heads Applications; kept with the key elsewhere it reads Waiting for your key", async () => {
-    keepPick("acct-1", { kind: "profile", id: "app-noor" }, { pDirected: 0.3, pInterest: 0.2 });
+    await keepPick("acct-1", { kind: "profile", id: "app-noor" }, { pDirected: 0.3, pInterest: 0.2 }, "approval");
     show({
       queue: [...boardQueue(), application({ handle: "noor", link: null, createdAt: daysAgo(2) })],
       signer: fakeWriteSigner({ hasKey: () => Promise.resolve(false) }),
@@ -277,7 +277,7 @@ describe("Invites (behavior/Invites.md)", () => {
   });
 
   it(":73-:75 with the key back the kept approval reads Ready for your approval", async () => {
-    keepPick("acct-1", { kind: "profile", id: "app-noor" }, { pDirected: 0.3, pInterest: 0.2 });
+    await keepPick("acct-1", { kind: "profile", id: "app-noor" }, { pDirected: 0.3, pInterest: 0.2 }, "approval");
     show({ queue: [application({ handle: "noor", link: null })] });
     await screen.findAllByTestId("invites.application");
     expect(within(row("noor")).getByTestId("invites.application.second")).toHaveTextContent(
@@ -286,7 +286,7 @@ describe("Invites (behavior/Invites.md)", () => {
   });
 
   it(":89 closing a kept approval drops the kept vouch and signs nothing", async () => {
-    keepPick("acct-1", { kind: "profile", id: "app-noor" }, { pDirected: 0.3, pInterest: 0.2 });
+    await keepPick("acct-1", { kind: "profile", id: "app-noor" }, { pDirected: 0.3, pInterest: 0.2 }, "approval");
     const { state, signer } = show({ queue: [application({ handle: "noor", link: null })] });
     server.use(
       gqlLink.mutation("RejectApplication", () => {
@@ -306,7 +306,7 @@ describe("Invites (behavior/Invites.md)", () => {
     fireEvent.click(within(row("noor")).getByTestId("invites.application.close"));
     fireEvent.click(await screen.findByTestId("invites.dialog.close"));
     await waitFor(() => expect(rows()).toHaveLength(0));
-    expect(keptPick("acct-1", { kind: "profile", id: "app-noor" })).toBeNull();
+    await waitFor(async () => expect(await listKeptPicks("acct-1")).toEqual([]));
     expect(signer.sign).not.toHaveBeenCalled();
   });
 
@@ -592,7 +592,15 @@ describe("the approval pad (behavior/ApprovePad.md)", () => {
     const { signer } = await openPad(fakeWriteSigner({ hasKey: () => Promise.resolve(false) }));
     expect(await screen.findByTestId("invites-approve-app-rafa-key-absent")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("invites-approve-app-rafa-keep-pending"));
-    expect(keptPick("acct-1", { kind: "profile", id: "app-rafa" })).toEqual({ pDirected: 0.1, pInterest: 0.1 });
+    await waitFor(async () =>
+      expect(await listKeptPicks("acct-1")).toEqual([
+        expect.objectContaining({
+          family: "approval",
+          target: { kind: "profile", id: "app-rafa" },
+          pick: { pDirected: 0.1, pInterest: 0.1 },
+        }),
+      ]),
+    );
     expect(signer.sign).not.toHaveBeenCalled();
   });
 });

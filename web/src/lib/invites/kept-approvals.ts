@@ -2,18 +2,19 @@
 
 // A KEPT APPROVAL (Invites.md:63-89, ApprovePad.md:39-41, VouchAskPad.md:29):
 // a vouch set on an approval pad while the signing key was elsewhere waits on
-// this device as a kept pick toward its APPLICATION — never in the kept picks'
-// review, and signed only through the approval pad on Invites. The pad keeps
-// it (the control's `Keep it pending`); this file is the one place Invites
-// reads it from and drops it, so the store behind it is a one-file swap.
+// this device as a kept pick of the APPROVAL family toward its application —
+// never in the kept picks' review (which lists plain opinions only), and
+// signed only through the approval pad on Invites. The pad keeps it (the
+// control's `Keep it pending`, `vouchesIn` naming the family); this file is
+// where Invites reads and drops it.
 //
 // An approval's seam target is the application, under the profile kind the
-// approval pads mount with: an application id names no profile, so a kept
-// approval can never be mistaken for a kept opinion on a person.
+// approval pads mount with: an application id names no profile, and the family
+// keeps it apart from any kept opinion besides.
 
 import { useEffect, useState } from "react";
 
-import { dropPick, useKeptPick } from "@/lib/stance/kept-picks";
+import { dropKeptPicks, keepPick, sameTarget, useKeptPicks } from "@/lib/stance/kept-picks";
 import type { StancePair } from "@/lib/stance/model";
 import type { StanceTarget } from "@/lib/stance/stance-data";
 import { useActiveAccountId } from "@/lib/session/provider";
@@ -34,10 +35,14 @@ export type KeptApproval = {
 export function useKeptApproval(applicationId: string): KeptApproval {
   const account = useActiveAccountId();
   const signer = useWriteSigner();
-  const [pick] = useKeptPick(account, approvalTarget(applicationId));
+  const picks = useKeptPicks(account);
+  const target = approvalTarget(applicationId);
+  const pick =
+    picks?.find((entry) => entry.family === "approval" && sameTarget(entry.target, target))?.pick ?? null;
   const [keyHere, setKeyHere] = useState<boolean | null>(null);
+  const kept = pick !== null;
   useEffect(() => {
-    if (pick === null) return undefined;
+    if (!kept) return undefined;
     let live = true;
     void (signer.hasKey?.() ?? Promise.resolve(true)).then((present) => {
       if (live) setKeyHere(present);
@@ -45,11 +50,18 @@ export function useKeptApproval(applicationId: string): KeptApproval {
     return () => {
       live = false;
     };
-  }, [pick, signer]);
-  return { pick, keyElsewhere: pick !== null && keyHere === false };
+  }, [kept, signer]);
+  return { pick, keyElsewhere: kept && keyHere === false };
 }
 
-/** Drops the vouch kept for a closed application: nothing is signed (RejectConfirm.md:7). */
-export function dropKeptApproval(account: string | null, applicationId: string): void {
-  if (account !== null) dropPick(account, approvalTarget(applicationId));
+/** Keeps a vouch toward a staged application (the ask link's pad, VouchAskPad.md:29, :33). */
+export function keepApproval(account: string | null, applicationId: string, pick: StancePair): Promise<void> {
+  if (account === null) return Promise.resolve();
+  return keepPick(account, approvalTarget(applicationId), pick, "approval");
+}
+
+/** Drops the vouches kept for closed applications: nothing is signed (RejectConfirm.md:7). */
+export function dropKeptApprovals(account: string | null, applicationIds: readonly string[]): Promise<void> {
+  if (account === null || applicationIds.length === 0) return Promise.resolve();
+  return dropKeptPicks(account, applicationIds.map(approvalTarget));
 }

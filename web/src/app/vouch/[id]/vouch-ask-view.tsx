@@ -37,7 +37,7 @@ import {
   type ApprovalDetour,
 } from "@/lib/invites/approval-stance-data";
 import { carryToInvites } from "@/lib/invites/invites-notice";
-import { approvalTarget } from "@/lib/invites/kept-approvals";
+import { keepApproval } from "@/lib/invites/kept-approvals";
 import {
   HOW_VOUCHING_WORKS,
   HOW_VOUCHING_WORKS_HELP,
@@ -47,7 +47,6 @@ import { holdAskLink, releaseAskLink } from "@/lib/session/held-link";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
-import { keepPick } from "@/lib/stance/kept-picks";
 import type { StancePair } from "@/lib/stance/model";
 import { StanceDataProvider } from "@/lib/stance/provider";
 import { MonogramAvatar } from "@/lib/ui/actor-chip";
@@ -282,10 +281,6 @@ function AskCard({
   );
   const bare = handle.slice(1);
 
-  /** A vouch kept toward the staged row, waiting on Invites as its own card. */
-  const keepApproval = (applicationId: string, pick: StancePair) => {
-    if (account !== null) keepPick(account, approvalTarget(applicationId), pick);
-  };
 
   const onTaken = (landed: StancePair) => {
     const took = detour.current;
@@ -296,7 +291,7 @@ function AskCard({
     }
     if (took?.kind === "notRegistered") {
       // Staged, the vouch kept, nothing signed or spent (VouchAskPad.md:33).
-      keepApproval(took.application.id, landed);
+      void keepApproval(account, took.application.id, landed);
       carryToInvites({ kind: "notRegistered", handle: bare });
       router.push("/invites");
       return;
@@ -309,7 +304,7 @@ function AskCard({
   // asker first, so the kept vouch waits on Invites as its own row.
   const keep = (pick: StancePair) => {
     void data.stage().then((staged) => {
-      if (staged.kind === "success") keepApproval(staged.value.id, pick);
+      if (staged.kind === "success") void keepApproval(account, staged.value.id, pick);
     });
   };
 

@@ -10,7 +10,7 @@ import { takeInvitesNotice } from "@/lib/invites/invites-notice";
 import { heldAskLink } from "@/lib/session/held-link";
 import { createTokenStore } from "@/lib/session/token-store";
 import { expectation, stanceRecord } from "@/lib/signing/intent";
-import { keptPick } from "@/lib/stance/kept-picks";
+import { listKeptPicks } from "@/lib/stance/kept-picks";
 import { writeStanceTaught } from "@/lib/stance/stance-coach";
 import {
   application,
@@ -56,6 +56,12 @@ function check(answer: Parameters<typeof askCheckAnswer>[0]) {
 }
 
 const USABLE = { usable: true, applicantHandle: "noor", reason: null } as const;
+
+const KEPT_NOOR = expect.objectContaining({
+  family: "approval",
+  target: { kind: "profile", id: "app-noor" },
+  pick: { pDirected: 0.1, pInterest: 0.1 },
+});
 
 function asMember(answer: Parameters<typeof askCheckAnswer>[0] = USABLE, signer = fakeWriteSigner()) {
   server.use(meHandler("MEMBER"), myApplication(null), check(answer));
@@ -200,7 +206,7 @@ describe("the ask's pad (behavior/VouchAskPad.md)", () => {
     fireEvent.click(within(pad).getByTestId("vouchAsk.ask.stance.pad.set"));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/invites"));
     expect(signer.sign).not.toHaveBeenCalled();
-    expect(keptPick("acct-1", { kind: "profile", id: "app-noor" })).toEqual({ pDirected: 0.1, pInterest: 0.1 });
+    await waitFor(async () => expect(await listKeptPicks("acct-1")).toEqual([KEPT_NOOR]));
     expect(takeInvitesNotice()).toEqual({ kind: "notRegistered", handle: "noor" });
   });
 
@@ -237,8 +243,8 @@ describe("the ask's pad (behavior/VouchAskPad.md)", () => {
     const signer = fakeWriteSigner({ hasKey: () => Promise.resolve(false) });
     await openPad(signer);
     fireEvent.click(await screen.findByTestId("vouch-ask-keep-pending"));
-    await waitFor(() =>
-      expect(keptPick("acct-1", { kind: "profile", id: "app-noor" })).toEqual({ pDirected: 0.1, pInterest: 0.1 }),
+    await waitFor(async () =>
+      expect(await listKeptPicks("acct-1")).toEqual([KEPT_NOOR]),
     );
     expect(signer.sign).not.toHaveBeenCalled();
   });

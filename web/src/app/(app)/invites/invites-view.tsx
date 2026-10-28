@@ -44,7 +44,7 @@ import {
 } from "@/lib/invites/invites-notice";
 import {
   approvalTarget,
-  dropKeptApproval,
+  dropKeptApprovals,
   useKeptApproval,
 } from "@/lib/invites/kept-approvals";
 import {
@@ -291,7 +291,10 @@ export function InvitesView({
     // A kept approval's close drops the kept vouch; nothing is signed
     // (RejectConfirm.md:7, Invites.md:89).
     const closed = asked.kind === "one" ? [asked.application] : asked.group.rows;
-    for (const application of closed) dropKeptApproval(account, application.id);
+    await dropKeptApprovals(
+      account,
+      closed.map((application) => application.id),
+    );
     const first = asked.kind === "one" ? asked.application : asked.group.rows[0];
     focusAfter.current = { section: "application", index: indexOfApplication(first.id) };
     setClosing(null);
