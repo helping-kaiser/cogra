@@ -249,6 +249,13 @@ instead is explain, and confirm when it matters:
   bundle counts it, stays at `(0, 0)` and is not severed. Where the
   opinion vouches someone in, the ask warns that they start out cut off,
   and the vouch-in proceeds.
+- a `(0, 0)` landing over the standing an empty sign left is severance's
+  again, never a second empty sign (seam 245, ask 20): the empty record
+  stands — counted, its `Walk it back` there at a cost of 1 — and
+  severance is a `(0, 0)` landing over anything standing, so the
+  walk-back asks, and confirmed it signs one record. Whether that
+  walk-back then reads as severed or as saying nothing is the docs' open
+  Q60; the trigger does not wait on it.
 
 The cost is legible: each counter-record is its own priced act, so the
 dialog states the count — `It signs 3 things, each paid separately.`

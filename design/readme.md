@@ -10423,7 +10423,7 @@ test). Measured headless on the built boards, Figtree loaded.
 - **Stance data.** `StanceRow` and `ContentRow` carry the bundle's
   `severed` to `StanceValue`'s `zeroLabel`; `severanceCost` honours a
   served 0; a `(0, 0)` landing where nothing stands reads `Resulting
-  opinion 🤷 Says nothing.` (*proposed; round 21 blesses it*), one
+  opinion 🤷 Says nothing.` (*blessed in round 21*), one
   `nothingStands` flag routing the line and the ask.
 - **`AttachmentPad`** holds the zero detent within the knob's 10px
   radius and parks the release on its nearest hundredth — backlog 144

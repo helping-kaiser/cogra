@@ -2649,9 +2649,11 @@ shipped, the vouch-in line drafted from his facts, the ordinary
 snackbar his ruling.*) The pad's landing under that pick reads in the
 landing's own shape, `Resulting opinion 🤷 Says nothing.` — never the
 walk-back's `This takes you back to zero.`, which is false where nothing
-stands. (*Proposed, not yet blessed — drafted 2026-10-28 from the
-blessed `Says nothing` (seam 245, ask 20); the formal blessing is round
-21's.*)
+stands. (*Drafted 2026-10-28 from the blessed `Says nothing` (seam 245,
+ask 20); merged under the autonomy order, 2026-10-28; review pending.*)
+Over the standing an empty sign left, a `(0, 0)` landing is the
+walk-back's again: that record stands, so `This takes you back to zero.`
+is true there and `Walk it all back?` asks.
 
 **The backing pad's own words** (`ComposePad`, `EditPad`, round 15):
 the readouts `Current backing` · `Your pick` · `Backing after`, the
