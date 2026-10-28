@@ -109,9 +109,9 @@ data class ReplyWizard(
 @Serializable
 data class EditComment(val commentId: String, val parentTitle: String)
 
-/** A topic by its canonical name — reachable from a chip anywhere (D20). */
+/** A topic by its canonical name — reachable from a chip anywhere (D20). [from] names the back arrow's origin. */
 @Serializable
-data class Topic(val name: String)
+data class Topic(val name: String, val from: String? = null)
 
 /** An actor's profile; a null handle is the viewer's own (the tab). [from] names the back arrow's origin. */
 @Serializable

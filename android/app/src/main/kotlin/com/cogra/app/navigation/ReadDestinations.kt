@@ -218,9 +218,11 @@ private fun ShellScope.PostDetailDestination(entry: NavBackStackEntry) {
 
 @Composable
 private fun ShellScope.TopicDestination(entry: NavBackStackEntry) {
-    val topic = entry.toRoute<Topic>().name
+    val route = entry.toRoute<Topic>()
+    val topic = route.name
     TopicRoute(
         name = topic,
+        from = route.from,
         onOpenPost = { id -> navController.navigate(PostDetail(id)) },
         onOpenActor = { handle -> navController.navigate(Profile(handle, from = topicOrigin(topic))) },
         onBack = { navController.navigateUp() },
