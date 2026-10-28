@@ -86,7 +86,6 @@ internal val commentsPlaceKey = NavResultKey<IntArray?>("comments_place", null)
 private fun IntArray?.asCommentsScroll(): CommentsScroll? =
     this?.takeIf { it.size == 2 }?.let { CommentsScroll(it[0], it[1]) }
 
-
 /**
  * The Wizard→Feed result key: a staged act was collected before it
  * landed. The value is the post's own label, so the feed's calm notice
