@@ -225,6 +225,17 @@ export const HELP_TOPICS = {
       "Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.",
     ],
   },
+  // The feed filter sheet's "?" — the feed's and Settings' What your feed shows
+  // (copy-voice, *The filter*: the feed's seen sentence follows the seen tail,
+  // jakob 2026-10-14; FeedSheet.md: "the feed filter's \"?\" says What you've
+  // already seen waits below the Already seen line unless you ask for it back").
+  theFeedFilter: {
+    title: "How the filter works",
+    paragraphs: [
+      "What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen waits below the Already seen line unless you ask for it back. Nothing changes until you press Done, and nothing here is signed or shared.",
+      "It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings.",
+    ],
+  },
   // The search filter sheet's "?" (copy-voice, *The filter*: the search's own
   // seen sentence; the Reset sentence jakob's own, blessed 2026-10-02).
   theSearchFilter: {
