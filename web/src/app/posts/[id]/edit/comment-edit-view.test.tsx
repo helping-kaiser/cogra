@@ -77,6 +77,8 @@ const CITED: ReferenceDraft = {
   relevance: 0.1,
   support: 0.1,
   withdrawalCost: 1,
+  rawRelevance: 0.1,
+  rawSupport: 0.1,
 };
 
 /** A comment whose body is one clip, its face chosen (or taken) when it was published. */

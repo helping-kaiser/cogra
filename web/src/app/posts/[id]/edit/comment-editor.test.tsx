@@ -243,7 +243,7 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     expect(signer.signStaged).not.toHaveBeenCalled();
     fireEvent.click(screen.getByTestId("header-leave"));
     // A batch holding an act asks first.
-    expect(await screen.findByText("Discard the changes?")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("comment-edit-discard-confirm")).toHaveAttribute("open"));
     expect(onLeave).not.toHaveBeenCalled();
   });
 

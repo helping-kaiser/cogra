@@ -101,7 +101,7 @@ function attachment(id: string, altText: string | null = null) {
 function editablePost({
   topics = [] as ReturnType<typeof topicClaim>[],
   references = [] as ReturnType<typeof referenceClaim>[],
-  attachments = [] as ReturnType<typeof attachment>[],
+  attachments = [] as Record<string, unknown>[],
   description = null as string | null,
   license = { attribution: 0, provenance: 0 },
 } = {}) {
@@ -993,7 +993,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     fireEvent.change(await screen.findByTestId("post-edit-title"), { target: { value: "New title" } });
     await cropOneMore();
     fireEvent.click(within(screen.getByTestId("post-edit-crop-header")).getByLabelText(EDIT_LEAVE_LABEL));
-    expect(await screen.findByText("Discard the changes?")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("post-edit-discard-confirm")).toHaveAttribute("open"));
     expect(push).not.toHaveBeenCalled();
   });
 
@@ -1001,6 +1001,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
   // reads -> the refusal says why on the media row AND NEVER a dialog opens".
   it("refuses past ten and an unreadable file on the media row, never in a dialog", async () => {
     serve(editablePost({ attachments: Array.from({ length: 9 }, (_, i) => attachment(`m-${i}`)) }));
+    uploads();
     draw();
     fireEvent.click(await screen.findByTestId("post-edit-add-pictures"));
     await pickInto("post-edit-add-pictures-input", [
@@ -1015,7 +1016,10 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     expect(refusals).toHaveTextContent("That file isn't a picture or a video CoGra can read.");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     // Remove it is the only way out, and the line leaves with it.
-    fireEvent.click(within(refusals).getAllByText("Remove it")[0]!);
+    const overCap = within(refusals)
+      .getAllByRole("listitem")
+      .find((row) => /up to ten pictures/.test(row.textContent ?? ""))!;
+    fireEvent.click(within(overCap).getByText("Remove it"));
     expect(screen.getByTestId("post-edit-refusals")).not.toHaveTextContent("up to ten pictures");
   });
 
@@ -1078,7 +1082,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     expect(signer.signStaged).not.toHaveBeenCalled();
     // The ways out refuse while it is held.
     fireEvent.click(within(screen.getByTestId("post-edit-header")).getByLabelText(EDIT_LEAVE_LABEL));
-    expect(screen.queryByText("Discard the changes?")).not.toBeInTheDocument();
+    expect(screen.getByTestId("post-edit-discard-confirm")).not.toHaveAttribute("open");
     await bytes.answer("land");
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
     expect(signer.signStaged).toHaveBeenCalledTimes(1);
@@ -1109,7 +1113,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     expect(screen.getByTestId("post-edit-upload-error")).toHaveTextContent("One picture didn't upload.");
     // The ways out answer again.
     fireEvent.click(within(screen.getByTestId("post-edit-header")).getByLabelText(EDIT_LEAVE_LABEL));
-    expect(await screen.findByText("Discard the changes?")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("post-edit-discard-confirm")).toHaveAttribute("open"));
   });
 
   // EditCompose.md: "press Retry GIVEN the held press dropped -> the gate runs

@@ -1,15 +1,4 @@
-  /**
-   * One change of the author's, read off the editor as it stands when React
-   * applies it — an upload's step can land between a render and a tap, and a
-   * patch built from the render's copy would undo it. `stagesRecord` marks a
-   * change to a field the edit record carries.
-   */
-  const update = (patch: (current: Editing) => Partial<Editing>, stagesRecord = false) =>
-    setEditing((current) => ({
-      ...current,
-      ...patch(current),
-      recordStaged: current.recordStaged || stagesRecord,
-    }));"use client";
+"use client";
 
 // The comment edit's controller: the batch, the bytes it takes, and the one
 // signing pass (CommentEdit, CommentEditVideo, CommentEditActs). The surface
@@ -277,10 +266,16 @@ export function CommentEditor({
   });
   const count = editActCount(rows);
 
-  const update = (patch: Partial<Editing>, stagesRecord = false) =>
+  /**
+   * One change of the author's, read off the editor as it stands when React
+   * applies it — an upload's step can land between a render and a tap, and a
+   * patch built from the render's copy would undo it. `stagesRecord` marks a
+   * change to a field the edit record carries.
+   */
+  const update = (patch: (current: Editing) => Partial<Editing>, stagesRecord = false) =>
     setEditing((current) => ({
       ...current,
-      ...patch,
+      ...patch(current),
       recordStaged: current.recordStaged || stagesRecord,
     }));
 
