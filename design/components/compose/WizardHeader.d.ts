@@ -24,7 +24,7 @@ export interface WizardHeaderProps {
   /** Anything else passive the corner must carry; it follows the pair above.
    *  A bare help dot is `help`, not this. */
   action?: React.ReactNode;
-  /** The data-node name its placer gives this header (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `back`, `title`, `leave`. */
+  /** The data-node name its placer gives this header (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `back`, `title`, `leave`, and where they stand `stage` and `help`. */
   node?: string;
 }
 

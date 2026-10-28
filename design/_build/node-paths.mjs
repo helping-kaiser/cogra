@@ -83,6 +83,7 @@ const STRIP = / data-node(?:-key|-chip)?="[^"]*"/g;
 export const KEY_RULES = {
   account: "the hidden account's handle, without @ (the hidden-accounts sheet)",
   act: "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
+  actRow: "the row's position in the acts card, counted from 1 (ActsCard)",
   application: "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
   axis: "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)",
   block: "the kind of thing the block holds — post, comment, person or topic (FeedEntryKinds' blocks)",
@@ -99,6 +100,7 @@ export const KEY_RULES = {
   link: "the invite link's id, the link's last path segment (Invites' live links)",
   notification: "the notification's position in the list, newest first, counted from 1 (Notifications)",
   opinion: "the opinion holder's handle, without @ (the opinions sheet)",
+  pick: "the kept pick's position in the kept picks' review, counted from 1 (KeptPicksReview)",
   path: "the path's position in the list, strongest first, counted from 1 (the score's trace)",
   profileCard: "the person's handle, without @ (the profile feed card)",
   record: "the record's key, as the row prints it (the score's trace)",

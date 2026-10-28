@@ -1542,9 +1542,10 @@ const KEPT_PICKS = [
    approval waits for the reader, nothing signs it for them.
    `shown` is the boards' `approval` chip. The wording is jakob's own,
    blessed (jakob 2026-10-05). */
-function KeptApprovalLine({ shown }) {
+function KeptApprovalLine({ shown, node }) {
   return (
     <p
+      data-node={node}
       style={{
         display: shown,
         margin: 0,
@@ -1555,7 +1556,7 @@ function KeptApprovalLine({ shown }) {
       }}
     >
       An approval waits in your invites — go there to sign it.{" "}
-      <InlineAction size="sm" onClick={() => {}}>
+      <InlineAction size="sm" onClick={() => {}} node={node && "open"}>
         Open Invites
       </InlineAction>
     </p>

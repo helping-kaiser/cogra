@@ -5339,6 +5339,106 @@
         "invites.header.title": []
       }
     },
+    "KeptPicksReview": {
+      "prefix": "keptPicks",
+      "keys": {
+        "keptPicks.pick": "the kept pick's position in the kept picks' review, counted from 1 (KeptPicksReview)"
+      },
+      "nodes": {
+        "keptPicks.approval": [],
+        "keptPicks.approval.open": [],
+        "keptPicks.header": [],
+        "keptPicks.header.back": [],
+        "keptPicks.header.title": [],
+        "keptPicks.intro": [],
+        "keptPicks.pick": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.consequence": [
+          "2"
+        ],
+        "keptPicks.pick.kind": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.mark": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.name": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.pair": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.pair.exact": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.pair.face": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.pick.remove": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicks.sign": []
+      }
+    },
+    "KeptPicksSeal": {
+      "prefix": "keptPicksSeal",
+      "keys": {
+        "keptPicksSeal.acts.actRow": "the row's position in the acts card, counted from 1 (ActsCard)"
+      },
+      "nodes": {
+        "keptPicksSeal.acts": [],
+        "keptPicksSeal.acts.actRow": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicksSeal.acts.actRow.count": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicksSeal.acts.actRow.label": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicksSeal.acts.actRow.value": [
+          "1",
+          "2",
+          "3"
+        ],
+        "keptPicksSeal.acts.note": [],
+        "keptPicksSeal.acts.total": [],
+        "keptPicksSeal.approval": [],
+        "keptPicksSeal.approval.open": [],
+        "keptPicksSeal.foot": [],
+        "keptPicksSeal.foot.back": [],
+        "keptPicksSeal.foot.sign": [],
+        "keptPicksSeal.header": [],
+        "keptPicksSeal.header.back": [],
+        "keptPicksSeal.header.help": [],
+        "keptPicksSeal.header.leave": [],
+        "keptPicksSeal.header.stage": [],
+        "keptPicksSeal.header.title": []
+      }
+    },
     "KeyCeremony": {
       "prefix": "keyCeremony",
       "keys": {},
@@ -5350,6 +5450,209 @@
         "keyCeremony.later": [],
         "keyCeremony.note": [],
         "keyCeremony.title": []
+      }
+    },
+    "KeyElsewhere": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "ada"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.keyCard": [],
+        "feed.keyCard.body": [],
+        "feed.keyCard.restore": [],
+        "feed.keyCard.title": []
+      }
+    },
+    "KeyElsewhereNoBackup": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "ada"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.keyCard": [],
+        "feed.keyCard.body": [],
+        "feed.keyCard.title": []
       }
     },
     "Notifications": {
@@ -5462,6 +5765,212 @@
         "onboarding.stage.youCaption": [],
         "onboarding.stage.youRing": [],
         "onboarding.title": []
+      }
+    },
+    "PadPending": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.pending": [
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "ada"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.keyCard": [],
+        "feed.keyCard.body": [],
+        "feed.keyCard.restore": [],
+        "feed.keyCard.title": []
+      }
+    },
+    "PadPendingReview": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.pending": [
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "ada"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada"
+        ],
+        "feed.card.title": [
+          "ada"
+        ]
       }
     },
     "PostDetail": {
