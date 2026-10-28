@@ -15,6 +15,7 @@ import {
   PrepareReferenceWithdrawalDocument,
   ReferenceCandidatesDocument,
   type CitedByQuery,
+  type NodeKind,
 } from "@/__generated__/graphql";
 import {
   newReferenceDraft,
@@ -36,17 +37,22 @@ export const CANDIDATE_LIMIT = 10;
  * A query that resolves nothing never leaves the browser — the server
  * would answer with an empty list anyway, and a finder runs on every
  * keystroke.
+ *
+ * `kinds` is the picker filter's narrowing, applied by the server (kinds
+ * subtract; null narrows nothing), so a narrowed answer is a full answer of
+ * its kinds rather than a 10-row answer trimmed on the device.
  */
 export async function fetchReferenceCandidates(
   client: ApolloClient,
   query: string,
   limit: number = CANDIDATE_LIMIT,
+  kinds: readonly NodeKind[] | null = null,
 ): Promise<Outcome<readonly ReferenceDraft[]>> {
   if (!isQueryable(query)) return success([]);
   const fetched = await fetchOutcome(() =>
     client.query({
       query: ReferenceCandidatesDocument,
-      variables: { query: query.trim(), limit },
+      variables: { query: query.trim(), limit, ...(kinds === null ? {} : { kinds: [...kinds] }) },
       fetchPolicy: "network-only",
     }),
   );
