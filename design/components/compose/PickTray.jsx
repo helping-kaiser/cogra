@@ -29,7 +29,15 @@ import { InlineAction } from "../core/Button.jsx";
    NO "Show all" WHEN THERE IS NOTHING TO SHOW: one staged clip is not a set to
    reorder, so the video board omits `onShowAll` and the count stops being a
    flex row — it is the only thing on its line, so it does not need to push
-   anything to the end of one. */
+   anything to the end of one.
+
+   THE CAPTION STANDS ONLY WHILE THE TILES LEAVE IT ROOM (seam 245, ask 13 C).
+   A picture caption stands beside the tiles while they leave it its one line
+   — at the drawn 48px tiles, up to three — and past that it goes: the row is
+   the tiles alone, clipped at the band's edge (`clip`), never scrolled, and
+   Show all is the way to the rest. A staged clip is one tile, so its caption
+   always stands, both lines of it. The caller passes `caption` only where it
+   stands; the master never squeezes it into a column. */
 
 const COUNT = {
   fontSize: "var(--text-label-small)",

@@ -4,6 +4,8 @@ ALWAYS the device grid stands newest first
 
 ALWAYS the first picture in the tray is the cover
 
+ALWAYS the tray's line The first one is the cover. stands beside the tiles only while they leave it its one line, and past that the tiles stand alone, clipped at the band's edge and never scrolled
+
 WHEN tap an unpicked picture tile in the grid GIVEN the tray holds fewer than ten pictures and no video -> the picture is picked AND its tile's ring shows its place in the post
 
 WHEN tap a picked picture tile in the grid -> the pick is undone AND the picture leaves the tray

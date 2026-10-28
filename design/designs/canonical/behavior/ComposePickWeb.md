@@ -4,6 +4,8 @@ ALWAYS the pick step in a browser draws no device grid, one region with Choose f
 
 ALWAYS the first picture in the tray is the cover
 
+ALWAYS the tray's line The first one is the cover. stands beside the tiles only while they leave it its one line, and past that the tiles stand alone, clipped at the band's edge and never scrolled
+
 WHEN press Choose from your files -> the browser's own file dialog opens AND what is chosen there lands in the tray
 
 WHEN files are dropped on the region -> the dropped files land in the tray
