@@ -779,7 +779,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
     { n: 5, find: ">Show all</button>", tag: "button" },
-    { n: 6, find: ">Cover</span>", tag: "div" },
     { n: 7, find: 'aria-label="Remove this picture"', tag: "button" },
     { n: 8, find: ">Your photos app</span>", tag: "button" },
     // Every tile of the roll is the same control repeated — one edge covers
