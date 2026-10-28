@@ -37,6 +37,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type { FeedKindValue } from "@/lib/feed/feed-filter";
+import { fetchHeldTopicsCount } from "@/lib/api/held-topics-api";
 import { fetchSearchPage, type SearchHit } from "@/lib/api/search-api";
 import { appendDeduped } from "@/lib/api/pagination";
 import { firstArrival, useBellLit, useFreshRootBell } from "@/lib/notifications/bell";
@@ -113,6 +114,14 @@ export const KINDS_HINT = "Combine as many as you like. All, until you narrow it
 /** The load-more fault (copy-voice; design digest item 27). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
 
+/** Where the Your topics door leads: Explore's subpage (its cold arrow reads `Back to Explore`). */
+export const YOUR_TOPICS_HREF = "/explore/topics";
+
+/** The door's second line (Explore.jsx `5 held`; copy-voice, *The list is `Your topics`*). */
+export function heldLine(count: number): string {
+  return `${count} held`;
+}
+
 /** How long the field waits for typing to settle before the search refines. */
 export const EXPLORE_SEARCH_DEBOUNCE_MS = 250;
 
@@ -186,6 +195,23 @@ export function ExploreView({
   // THE READER — a guest has none; an applicant reads as a member (Explore.md:39).
   const reader = phase === "signedIn" ? account : null;
   const guest = phase === "signedOut";
+
+  // YOUR TOPICS' COUNT (Explore.md:41): the length of the list the door opens,
+  // read at each arrival so a topic taken up elsewhere is counted. Until it
+  // answers — or when it cannot — the door stands without its second line:
+  // a number the server has not stated is not one the door may print.
+  const [held, setHeld] = useState<{ reader: string; count: number } | null>(null);
+  useEffect(() => {
+    if (reader === null) return;
+    let cancelled = false;
+    void guard.run(() => fetchHeldTopicsCount(client)).then((outcome) => {
+      if (!cancelled && outcome.kind === "success") setHeld({ reader, count: outcome.value });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, guard, reader]);
+  const heldCount = held !== null && held.reader === reader ? held.count : null;
 
   const [remembered] = useState(() => {
     const kept = exploreMemory;
@@ -541,6 +567,7 @@ export function ExploreView({
       {!searching && (
         <AtRest
           guest={guest}
+          heldCount={heldCount}
           recents={recents}
           onRecent={(recent) => setQuery(recent)}
         />
@@ -642,10 +669,13 @@ export function ExploreView({
 /** Explore at rest (Explore.md:3): the Sky's card, the door into Your topics, then Recent. */
 function AtRest({
   guest,
+  heldCount,
   recents,
   onRecent,
 }: {
   guest: boolean;
+  /** How many topics the reader holds; null until the read answers. */
+  heldCount: number | null;
   recents: readonly string[];
   onRecent: (query: string) => void;
 }) {
@@ -668,12 +698,14 @@ function AtRest({
       {/* NO DOOR FOR A GUEST (Explore.md:37): no guest can hold a topic. */}
       {!guest && (
         <div className="px-6 pb-2">
-          {/* TODO(SS-4): the held-topics read (lane b-t) gives the second line
-              its count and the door its YourTopics destination; until it lands
-              the door stands without either. */}
+          {/* THE DOOR INTO YOUR TOPICS (Explore.jsx; Explore.md:41): its second
+              line counts what is behind it, `5 held` (copy-voice), and it opens
+              the subpage, whose arrow reads `Back to Explore`. */}
           <ContentRow
             variant="door"
             title="Your topics"
+            second={heldCount === null ? undefined : heldLine(heldCount)}
+            href={YOUR_TOPICS_HREF}
             disc={{ kind: "letter", letter: "#" }}
             node={node("topics")}
             testId="explore-topics"
