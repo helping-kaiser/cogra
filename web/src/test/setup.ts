@@ -8,6 +8,9 @@ import { afterEach, beforeEach } from "vitest";
 
 import { resetSeenRecordForTests } from "@/lib/history/seen-record";
 import { resetSeenSyncForTests } from "@/lib/history/seen-sync";
+import { resetKeptPicksForTests } from "@/lib/stance/kept-picks";
+import { resetSettlingForTests } from "@/lib/stance/settling";
+import { resetCarriedSnackbarForTests } from "@/lib/ui/carried-snackbar";
 import { resetAnnouncerForTests } from "@/lib/release/newer-version-announcer";
 import { resetClipMemoryForTests } from "@/lib/ui2/media/clip-memory";
 import { resetElementPoolForTests } from "@/lib/ui2/media/video-stage";
@@ -39,6 +42,15 @@ beforeEach(() => {
   const store = new IDBFactory();
   resetSeenRecordForTests(() => store);
   resetSeenSyncForTests();
+});
+// The kept picks are module state over their own custody: a pick one test
+// kept would otherwise wait on the next test's anchor. A fresh custody each
+// test, nothing settling, and no snackbar carried over from the last.
+beforeEach(() => {
+  const custody = new IDBFactory();
+  resetKeptPicksForTests(() => custody);
+  resetSettlingForTests();
+  resetCarriedSnackbarForTests();
 });
 // The newer-version announcer's one read and one decision are per page load:
 // each test is a fresh load.

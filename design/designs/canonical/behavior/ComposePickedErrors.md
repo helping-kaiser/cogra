@@ -2,6 +2,8 @@
 
 ALWAYS what was accepted stands in the tray and what was refused is listed under it, one line per refused file
 
+ALWAYS the device grid stands under the refusals and still takes picks
+
 ALWAYS a refused file never joins the batch
 
 ALWAYS a refused file's only way out is Remove it, never Retry
@@ -29,6 +31,8 @@ WHEN press Remove it on a refused file -> its refusal leaves the list
 WHEN press Next -> what was accepted goes on to the crop
 
 WHEN tap Show all -> the Show all sheet opens on the accepted pictures alone
+
+ALWAYS the header back arrow is named Back, never Back a step
 
 WHEN press the header back arrow -> the wizard leaves toward where compose began AND the draft is kept AND NEVER a dialog asks
 

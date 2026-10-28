@@ -740,6 +740,9 @@ describe("the compose wizard", () => {
                   title: { __typename: "ModeratedText", value: "On folding" },
                   content: { __typename: "ModeratedText", value: "body" },
                   author: { __typename: "User", handle: "carol" },
+                  createdAt: "2026-10-25T10:00:00Z",
+                  attachmentsStatus: "NORMAL",
+                  attachments: [],
                 },
               },
             ],
@@ -756,6 +759,21 @@ describe("the compose wizard", () => {
     expect(await screen.findByTestId(byNode("composeDetails.references.stagedReference", "1"))).toHaveTextContent(
       "@carol: On folding",
     );
+  });
+
+  // THE TAG CARD'S ACT (`Tag a new post with it`, History.md:63): the
+  // composer opens at its first stage, the tag riding staged among the new
+  // post's tags.
+  it("stages the tag the tag card's act sent it", async () => {
+    searchParams = new URLSearchParams("tag=saltmaps");
+    render();
+
+    expect(await screen.findByTestId("wizard-to-words")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    expect(await screen.findByTestId(byNode("composeDetails.tags.tag", "saltmaps"))).toHaveTextContent("saltmaps");
   });
 
   // A TARGET THE LOOKUP CANNOT TYPE IS STILL STAGED: the citation names its
@@ -1527,5 +1545,166 @@ describe("a press held on the upload gate", () => {
     releaseUpload();
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-held?published=1"));
     expect(prepared).toBe(1);
+  });
+});
+
+// THE PICKERS IN THE WIZARD (TagPicker.md, ReferencePicker.md; ComposeDetails
+// board: `+ Add a tag`, `+ Cite something`). Each opens in the details stage's
+// place; a pick is the draft's at once, and Done returns to details.
+describe("the details stage's pickers", () => {
+  async function reachDetailsOnWords() {
+    render();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+  }
+
+  it("stages a named tag through the tag picker, and Done brings it back to details", async () => {
+    server.use(
+      gqlLink.query("TagNames", () =>
+        HttpResponse.json({ data: { search: { __typename: "SearchConnection", edges: [] } } }),
+      ),
+    );
+    await reachDetailsOnWords();
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.tags.add")));
+
+    const field = await screen.findByRole("searchbox", { name: "Name a tag" });
+    expect(screen.getByRole("heading", { name: "Add a tag" })).toBeInTheDocument();
+    fireEvent.change(field, { target: { value: "#Rust" } });
+    fireEvent.keyDown(field, { key: "Enter" });
+    expect(screen.getByTestId(byNode("tagPicker.staged.tag", "rust"))).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId(byNode("tagPicker.done")));
+    expect(await screen.findByTestId(byNode("composeDetails.tags.tag", "rust"))).toHaveTextContent("#rust");
+  });
+
+  it("keeps a pick when the picker is left by its arrow", async () => {
+    server.use(
+      gqlLink.query("TagNames", () =>
+        HttpResponse.json({ data: { search: { __typename: "SearchConnection", edges: [] } } }),
+      ),
+    );
+    await reachDetailsOnWords();
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.tags.add")));
+    const field = await screen.findByRole("searchbox", { name: "Name a tag" });
+    fireEvent.change(field, { target: { value: "salt" } });
+    fireEvent.keyDown(field, { key: "Enter" });
+    fireEvent.click(screen.getByRole("button", { name: "Back to the post" }));
+    expect(await screen.findByTestId(byNode("composeDetails.tags.tag", "salt"))).toBeInTheDocument();
+  });
+
+  it("stages a citation through the citation picker", async () => {
+    server.use(
+      gqlLink.query("ReferenceCandidates", () =>
+        HttpResponse.json({
+          data: {
+            referenceCandidates: [
+              {
+                __typename: "ReferenceCandidate",
+                targetId: "u-sal",
+                target: {
+                  __typename: "User",
+                  id: "u-sal",
+                  handle: "saltorres",
+                  displayName: { __typename: "ModeratedText", value: "Sal Torres" },
+                },
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    await reachDetailsOnWords();
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.references.add")));
+    const field = await screen.findByRole("searchbox", { name: "Cite something" });
+    fireEvent.change(field, { target: { value: "sal" } });
+    fireEvent.click(await screen.findByTestId(byNode("referencePicker.result", "u-sal")));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.done")));
+
+    // ComposeDetails.md: a citation staged here starts at the pair +0.10 / +0.10.
+    const row = await screen.findByTestId(byNode("composeDetails.references.stagedReference", "1"));
+    expect(row).toHaveTextContent("@saltorres");
+    expect(row).toHaveTextContent("+0.10 / +0.10");
+  });
+});
+
+// THE ALREADY-PUBLISHED MARKER, WIRED (ComposeDetails.md: "WHEN media
+// attaches GIVEN it matches media in a published post of the author ->
+// composeDetails.mediaRow shows the already-published marker"; "WHEN tap the
+// already-published marker -> the earliest matching post opens").
+describe("the already-published marker", () => {
+  const landed = (): WizardState => ({
+    ...emptyWizard(),
+    step: "details",
+    mode: "media",
+    assets: [
+      {
+        id: "a0",
+        file: new Blob([new Uint8Array([1]) as BlobPart], { type: "image/webp" }),
+        crop: { x: 0, y: 0, zoom: 1, area: null, areaPercent: null },
+        altText: "",
+        upload: {
+          kind: "done",
+          mediaId: "m-held",
+          media: { digest: "d-held", uploadDigest: "d-held", mime: "image/webp" },
+        },
+        kind: "picture",
+      },
+    ],
+  });
+
+  function chronicle(...posts: readonly { id: string; createdAt: string; mediaId: string }[]) {
+    server.use(
+      gqlLink.query("OwnPublishedMedia", () =>
+        HttpResponse.json({
+          data: {
+            records: {
+              __typename: "RecordConnection",
+              edges: posts.map((post) => ({
+                __typename: "RecordEdge",
+                node: {
+                  __typename: "Record",
+                  id: `r-${post.id}`,
+                  target: {
+                    __typename: "Post",
+                    id: post.id,
+                    createdAt: post.createdAt,
+                    attachments: [{ __typename: "MediaAttachment", id: post.mediaId, digest: `d-${post.mediaId.slice(2)}` }],
+                  },
+                },
+              })),
+              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+            },
+          },
+        }),
+      ),
+    );
+  }
+
+  it("names the earliest of the author's posts carrying the picture, and opens it", async () => {
+    chronicle(
+      { id: "p-new", createdAt: "2026-10-20T10:00:00Z", mediaId: "m-held" },
+      { id: "p-old", createdAt: "2026-09-12T10:00:00Z", mediaId: "m-held" },
+    );
+    render(fakeDrafts(landed()));
+    fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
+
+    const door = await screen.findByTestId("composeDetails.mediaRow.published");
+    expect(door).toHaveTextContent(/^Already in your post from .*12.*\.$/);
+    expect(screen.getByTestId(byNode("composeDetails.next"))).not.toBeDisabled();
+    fireEvent.click(door);
+    expect(push).toHaveBeenCalledWith("/posts/p-old");
+  });
+
+  it("draws nothing when no published post carries it", async () => {
+    chronicle({ id: "p-other", createdAt: "2026-09-12T10:00:00Z", mediaId: "m-other" });
+    render(fakeDrafts(landed()));
+    fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(screen.queryByTestId("composeDetails.mediaRow.published")).toBeNull();
   });
 });

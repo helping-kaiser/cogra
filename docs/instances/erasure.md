@@ -310,6 +310,13 @@ the archive; carriage and Postgres may be partially redacted, but
 never lose data. A reconciler re-runs any incomplete redaction
 from the request record.
 
+Per-content removal has no request record to reconcile from, so it
+needs none: per act, the archive unit, the payload removal, the
+reap of the staged copy, the display tombstones and the media hold
+commit in one transaction, the archive-first order held inside it.
+A crash leaves every act either wholly removed or untouched, and the
+author's retry completes the rest.
+
 ## 7. Interaction with moderation
 
 [Moderation](moderation.md) and the self-service paths all invoke

@@ -12,6 +12,8 @@
 
 import type { ReactNode } from "react";
 
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 export function Chip({
   children,
   testId,
@@ -21,9 +23,12 @@ export function Chip({
   onDismiss,
   dismissLabel,
   onClick,
+  node,
 }: {
   children: ReactNode;
   testId: string;
+  /** The registered chip (`history.filterSheet.kinds.postsChip`); it then names the chip instead of `testId`. */
+  node?: DataNode;
   selected?: boolean;
   disabled?: boolean;
   onDismiss?: () => void;
@@ -38,7 +43,7 @@ export function Chip({
     <span className="relative inline-flex">
       <button
         type="button"
-        data-testid={testId}
+        {...testAttributes(node, testId)}
         disabled={disabled}
         // A selectable chip is a toggle, so it reports its state rather than
         // relying on the colour change alone — colour never carries meaning

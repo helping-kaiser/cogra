@@ -9,22 +9,54 @@
 //
 // ITS KEYBOARD IS THE SEARCH KEYBOARD: the `search` return key, no capitals
 // guessed and nothing corrected — a query carries handles and tag names,
-// which correction would break.
+// which correction would break. What the action key does is each surface's
+// own (`onAction`): the tag picker's stages its first row. The platform's own
+// clear (the search input's ×) is not drawn: the master's pill carries none.
+//
+// A TRAILING × WHILE TEXT IS PRESENT, where a surface's sidecar asks for one
+// (`onClear`; Explore.md:11-13): it empties the field. The master draws no ×
+// yet, so its node is the field's evident part, `clear`.
+//
+// `error` IS THE FIELD-ERROR STATE IN THE PILL'S IDIOM (the caps-affordance
+// round; `TagPickerRefused`): a 1px `--error` ring drawn INSIDE the pill's own
+// box — an inset outline, so nothing moves the moment it arrives — with the
+// input `aria-invalid` and its refusal named by `describedBy`. The words are
+// the surface's, in the line under the bar.
+
+import type { Ref } from "react";
 
 import { Icon } from "@/lib/ui/icons";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+
+/** The ×'s spoken name — undrawn; the house's plain verb for what it does. */
+export const CLEAR_SEARCH = "Clear search";
 
 export function SearchBar({
   query,
   onChange,
   placeholder = "Search",
   ariaLabel = "Search",
+  onAction,
+  onClear,
+  error = false,
+  describedBy,
+  inputRef,
   node,
 }: {
   query: string;
   onChange: (query: string) => void;
   placeholder?: string;
   ariaLabel?: string;
+  /** The keyboard's action key; the field does nothing on it otherwise. */
+  onAction?: () => void;
+  /** Draws the trailing × while the field holds text. */
+  onClear?: () => void;
+  /** The field refuses what is typed: the error ring, and `aria-invalid`. */
+  error?: boolean;
+  /** The id of the line that names the refusal. */
+  describedBy?: string;
+  /** The bound input, for a surface that focuses it as it opens. */
+  inputRef?: Ref<HTMLInputElement>;
   /** The registered field; its `glyph` and `input` are its parts. */
   node?: DataNode;
 }) {
@@ -34,25 +66,48 @@ export function SearchBar({
         {...testAttributes(node)}
         className={`flex h-12 items-center gap-3 rounded-full bg-surface-container-high px-4 ${
           query === "" ? "text-on-surface-variant" : "text-on-surface"
-        }`}
+        } ${error ? "outline outline-1 -outline-offset-1 outline-error" : ""}`}
       >
         <span aria-hidden="true" className="inline-flex text-on-surface-variant" {...testAttributes(part(node, "glyph"))}>
           <Icon name="search" size={20} />
         </span>
         <input
+          ref={inputRef}
           type="search"
           value={query}
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
+          onKeyDown={
+            onAction === undefined
+              ? undefined
+              : (event) => {
+                  if (event.key !== "Enter") return;
+                  event.preventDefault();
+                  onAction();
+                }
+          }
           inputMode="search"
           enterKeyHint="search"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
           aria-label={ariaLabel}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
           {...testAttributes(part(node, "input"))}
-          className="cg-focus min-w-0 flex-1 border-0 bg-transparent p-0 text-body-large text-inherit outline-none placeholder:text-on-surface-variant"
+          className="cg-focus min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-body-large text-inherit outline-none placeholder:text-on-surface-variant [&::-webkit-search-cancel-button]:appearance-none"
         />
+        {onClear !== undefined && query !== "" && (
+          <button
+            type="button"
+            aria-label={CLEAR_SEARCH}
+            onClick={onClear}
+            {...testAttributes(part(node, "clear"))}
+            className="cg-state cg-focus cg-hit -mr-2 grid size-10 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-on-surface-variant"
+          >
+            <Icon name="close" size={20} />
+          </button>
+        )}
       </div>
     </div>
   );

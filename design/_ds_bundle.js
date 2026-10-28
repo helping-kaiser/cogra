@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"fc4b6cba1d23","components/compose/ActsFooter.jsx":"e61cf3a09d3b","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"7a44b02ca249","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"ae8d93d994e5","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"92f8711c1dd7","components/compose/StagedReference.jsx":"ecbf0ea4a732","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"183be9f6882c","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"6aa8be5f1614","components/content/CommentCard.jsx":"c9e7874a5611","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"03398f19f306","components/content/PostCard.jsx":"8a4a8ebc914f","components/content/ReferenceRow.jsx":"a574dc59b721","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"c79cb9fa78f7","components/content/TopicsLine.jsx":"808a7ff4dd2d","components/core/BottomSheet.jsx":"fb331d05687d","components/core/Button.jsx":"c1639e977d88","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"bc8d42f30ec4","components/core/ContentRow.jsx":"ef5f339d3165","components/core/FactRow.jsx":"e7e899b33d57","components/core/HelpDot.jsx":"0cc2d5d3fcaf","components/core/JoinPrompt.jsx":"4aff76ab6646","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6a5b54419cab","components/core/QuotedRow.jsx":"37e6dc79dbbb","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"e4c5a20b69d2","components/core/Snackbar.jsx":"c36839b728ef","components/forms/Checkbox.jsx":"058742547c9f","components/forms/LicenseChooser.jsx":"ca6f54717d44","components/forms/PasswordField.jsx":"caaf3deb600d","components/forms/RecoveryCode.jsx":"807de4c04d05","components/forms/SearchBar.jsx":"ef9a9dc56c68","components/forms/TextField.jsx":"95a0bb442204","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"6d2b95913097","components/honesty/SensitiveVeil.jsx":"c17f9bf67cd8","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/DetailClip.jsx":"604997e28cad","components/media/MediaAttachment.jsx":"4e954bd8dc14","components/media/MediaViewer.jsx":"2872a69c9ca5","components/media/ReelCaption.jsx":"5a78543cef0e","components/media/ReelRail.jsx":"ea1d8eb6e4a2","components/media/VideoControls.jsx":"e112d1eb1f77","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"403adfe920e8","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"def628da34f1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"a343fb0a5638","components/navigation/FeedFilter.jsx":"1119ebc2ed05","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"22433a18dd55","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"d7fcc2d71e96","components/people/ActorChip.jsx":"a5e5d0daba90","components/people/ProfileHeader.jsx":"e96d65ecd2fb","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"851eaf2760cf","components/stance/EmptySignConfirm.jsx":"b69109b4137f","components/stance/SeveranceConfirm.jsx":"e1a70805164d","components/stance/StanceAlternates.jsx":"c6d5e6c48cf6","components/stance/StanceControl.jsx":"7a86dbc8d8dd","components/stance/StancePad.jsx":"1935c44fb16d","components/stance/StanceReadout.jsx":"ea405c52af15","components/stance/StanceSlider.jsx":"b7e1d2f10fc6","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"5677af403ef2","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"eac455a8e445","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_SUMMARY","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_DETENT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"WRITE_RULE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_LANDING_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"fc4b6cba1d23","components/compose/ActsFooter.jsx":"e61cf3a09d3b","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"7a44b02ca249","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"048c1dccb391","components/compose/PickedRow.jsx":"f76887e19622","components/compose/PickedSheet.jsx":"ae8d93d994e5","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"92f8711c1dd7","components/compose/StagedReference.jsx":"ecbf0ea4a732","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"fbb646ecfc48","components/compose/UploadNotice.jsx":"183be9f6882c","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"1f9cf2f64b7c","components/content/CommentCard.jsx":"ba6c2b294956","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"03398f19f306","components/content/PostCard.jsx":"e1fae194e841","components/content/ReferenceRow.jsx":"a574dc59b721","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"c79cb9fa78f7","components/content/TopicsLine.jsx":"6d8718e249f2","components/core/BottomSheet.jsx":"fb331d05687d","components/core/Button.jsx":"7b79b1f87f0a","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"bc8d42f30ec4","components/core/ContentRow.jsx":"cf105ca3125d","components/core/FactRow.jsx":"595bc54eadf6","components/core/HelpDot.jsx":"0cc2d5d3fcaf","components/core/JoinPrompt.jsx":"4aff76ab6646","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6a5b54419cab","components/core/QuotedRow.jsx":"37e6dc79dbbb","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"e4c5a20b69d2","components/core/Snackbar.jsx":"c36839b728ef","components/forms/Checkbox.jsx":"058742547c9f","components/forms/LicenseChooser.jsx":"3bc4228de7ad","components/forms/PasswordField.jsx":"caaf3deb600d","components/forms/RecoveryCode.jsx":"807de4c04d05","components/forms/SearchBar.jsx":"ef9a9dc56c68","components/forms/TextField.jsx":"95a0bb442204","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"6d2b95913097","components/honesty/SensitiveVeil.jsx":"6ed9dd71e3fe","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/DetailClip.jsx":"604997e28cad","components/media/MediaAttachment.jsx":"4e954bd8dc14","components/media/MediaViewer.jsx":"2872a69c9ca5","components/media/ReelCaption.jsx":"5a78543cef0e","components/media/ReelRail.jsx":"ea1d8eb6e4a2","components/media/VideoControls.jsx":"e112d1eb1f77","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"403adfe920e8","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"def628da34f1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"a343fb0a5638","components/navigation/FeedFilter.jsx":"1119ebc2ed05","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"22433a18dd55","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"d7fcc2d71e96","components/people/ActorChip.jsx":"6e65598c2801","components/people/ProfileHeader.jsx":"e96d65ecd2fb","components/people/StanceRow.jsx":"464878b5e295","components/proposed/ExplainableNumber.jsx":"851eaf2760cf","components/stance/EmptySignConfirm.jsx":"257bd87a382d","components/stance/SeveranceConfirm.jsx":"bb05602b7ff8","components/stance/StanceAlternates.jsx":"9035c0d752df","components/stance/StanceControl.jsx":"30b05cfcc88a","components/stance/StancePad.jsx":"317581838256","components/stance/StanceReadout.jsx":"df7840d16aea","components/stance/StanceSlider.jsx":"b7e1d2f10fc6","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ee17e47230be","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"eac455a8e445","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"snapAttachment","sourcePath":"components/stance/StancePad.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
 
 (() => {
 
@@ -31,7 +31,14 @@ try { (() => {
    The pill at every size (Material's button shape, not a rung of the shape
    scale); both sizes carry `label-large`. Heights are TRUE heights (border-box):
    40px `lg`, 32px `sm` — and every pill holds a 64px minimum width so short
-   labels (Next, Set, Done) keep their weight (readme §13, 2026-08-27). */
+   labels (Next, Set, Done) keep their weight (readme §13, 2026-08-27).
+
+   THE BORDER IS INSIDE THE HEIGHT (seam 245, ask 1). Every variant wears a
+   1px border — transparent where it is not drawn, so the four never differ in
+   size — and the label's 20px line plus the vertical padding plus that border
+   is the height: 1 + 9 + 20 + 9 + 1 = 40, 1 + 5 + 20 + 5 + 1 = 32. A padding
+   that ignored the border drew 42 and 34, past the `minHeight` that was
+   meant to be the height. */
 
 const VARIANTS = {
   primary: {
@@ -57,10 +64,10 @@ const VARIANTS = {
 };
 const SIZES = {
   sm: {
-    padding: "6px 16px"
+    padding: "5px 16px"
   },
   lg: {
-    padding: "10px 24px"
+    padding: "9px 24px"
   }
 };
 function buttonStyle({
@@ -94,7 +101,7 @@ function buttonStyle({
 }
 
 /* Every pressable control wears these: the state layer of tokens/states.css, the
-   focus ring, and the 48px hit expansion — a small button is 33px of ink and 48px
+   focus ring, and the 48px hit expansion — a small button is 32px of ink and 48px
    of target, which is how the unconditional 48px promise survives a dense row.
    Pass it wherever `buttonStyle` is used on a raw <button>. */
 const BUTTON_CLASS = "cg-state cg-focus cg-hit";
@@ -421,6 +428,29 @@ const STANCE_SEVERANCE_WORDS = {
   landing: "This takes you back to zero.",
   help: "Walk it back takes everything you've said to nothing. It has its own confirmation, and each thing you've said is walked back by its own signature.",
   helpAlternates: "Walk it back takes everything to nothing, and each thing you've said is walked back by its own signature."
+};
+
+/* THE WRITE RULE'S WORDS, AT THE STANCE FAMILY'S SCALES (copy-voice, *Faults
+   by code*). The seal's panel says the draft is kept; nothing in this family
+   keeps a draft, so its fact stops at what was not signed or spent. One
+   object, because the pad, the alternates, the row and the two dialogs
+   raised over the pad all say the same refusal, and a sentence kept in two
+   files is a sentence that drifts:
+
+   · `title`, `padFact` and `help` — the notice panel standing where the
+     landing line and the commit row were (the pad, the alternates), its "?"
+     the seal panel's own dialog.
+   · `row` — the quiet line under a target's face, after a hold.
+   · `dialog` — the quiet line in a dialog raised over the pad (the walk-back,
+     the empty sign), where the fault line would stand: the row's words, and
+     the fact the cost line just above it makes the reader ask (seam 245,
+     ask 15). */
+const WRITE_RULE_WORDS = {
+  title: "You can't sign right now",
+  padFact: "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.",
+  help: "Why signing waits",
+  row: "You can't sign right now.",
+  dialog: "You can't sign right now. Nothing was signed or spent."
 };
 
 /** A family's severance words, or the default family's. */
@@ -926,16 +956,21 @@ function formatStanceWords(pair, names = STANCE_AXIS_NAMES) {
   return `${names.directed} ${formatDimension(pair.pDirected)}, ${names.interest} ${formatDimension(pair.pInterest)}`;
 }
 
-/** Where a pick lands the bundle: `clip` of RAW SUM plus pick, folded locally. */
-function localLanding(rawSum, pick) {
+/** Where a pick lands the bundle: `clip` of RAW SUM plus pick, folded locally.
+ *  `nothingStands` is the bundle's own word — no record ever, or already
+ *  walked back to nothing — and a (0, 0) landing over it is the EMPTY SIGN's
+ *  (`empty`), never a walk-back: there is nothing to go back from. */
+function localLanding(rawSum, pick, nothingStands = false) {
   const landing = clampPair({
     pDirected: rawSum.pDirected + pick.pDirected,
     pInterest: rawSum.pInterest + pick.pInterest
   });
+  const severed = landing.pDirected === 0 && landing.pInterest === 0;
   return {
     landing,
     inert: landing.pDirected === 0 || landing.pInterest === 0,
-    severed: landing.pDirected === 0 && landing.pInterest === 0
+    severed,
+    empty: severed && nothingStands
   };
 }
 function standingLine(bundle, targetLabel) {
@@ -1022,8 +1057,17 @@ function unreachableHead(pair) {
   if (pair.pDirected === 0) return pair.pInterest > 0 ? "Interested, no side taken" : "Rather not see it, no side taken";
   return pair.pDirected > 0 ? "For it, no interest either way" : "Against it, no interest either way";
 }
+
+/* A (0, 0) LANDING WITH NOTHING STANDING SAYS NOTHING (seam 245, ask 20).
+   Over a bundle that holds no record, or one already walked back, a pick
+   landing (0, 0) is the empty sign (`EmptySignConfirm`), and the severance
+   family's `This takes you back to zero.` is false of it — there is nothing
+   to go back from. It reads as a landing reads: `Resulting opinion`, the
+   shrug, and the empty sign's own word. */
+const EMPTY_LANDING_WORDS = `${EMPTY_PICK_LABEL}.`;
 function landingLine(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return "Adding it up…";
+  if (landing.empty) return `${readoutWords(names).resulting} ${ZERO_BUNDLE_EMOJI} ${EMPTY_LANDING_WORDS}`;
   if (landing.severed) return severanceWords(names).landing;
   const {
     resulting
@@ -1159,10 +1203,19 @@ function landingParts(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return {
     sentence: "Adding it up…"
   };
+  const words = readoutWords(names);
+  if (landing.empty) {
+    return {
+      label: words.resulting,
+      emoji: ZERO_BUNDLE_EMOJI,
+      head: EMPTY_PICK_LABEL,
+      words: EMPTY_LANDING_WORDS,
+      spoken: `${words.resulting}: ${EMPTY_LANDING_WORDS}`
+    };
+  }
   if (landing.severed) return {
     sentence: landingLine(landing, names)
   };
-  const words = readoutWords(names);
   if (landing.inert) {
     const head = unreachableHead(landing.landing);
     return {
@@ -1283,8 +1336,9 @@ function ReadoutBlock({
     "data-node": node && "label"
   }, label), words !== undefined ?
   /*#__PURE__*/
-  /* THE UNREACHABLE LANDING: the zero face and the state in words, where
-     the pair would stand. Handed `onExplainZero`, the face is a door —
+  /* THE UNREACHABLE LANDING, and the empty sign's: the zero face and
+     the state in words, where the pair would stand. Handed
+     `onExplainZero` (the unreachable state only), the face is a door —
      its explanation replaces the pad's body in place, the "?"'s
      grammar — named by the state it explains. */
   React.createElement("span", {
@@ -1507,7 +1561,7 @@ function StanceLandingLine({
       ...style
     } : style
   }, /*#__PURE__*/React.createElement(ReadoutBlock, _extends({}, landingParts(landing, names), {
-    onExplainZero: onExplainZero,
+    onExplainZero: landing && landing.empty ? undefined : onExplainZero,
     zeroShown: zeroShown,
     node: node
   })), keepsBorrowed && /*#__PURE__*/React.createElement("p", {
@@ -1591,9 +1645,16 @@ function alternatesHelp(names) {
    reader doubts them: the opinion is still held (a person stays under `Your
    people` — `FeedSheet`'s set, whichever way the opinion points); nothing
    passes through it; and it is not the family's way out, which is an act of
-   its own. The target is the pad's, and the way out is the family's word. */
+   its own. The target is the pad's, and the way out is the family's word.
+
+   THE FIRST LINE NAMES THE LIST THE TARGET STAYS ON, by the label's kind
+   (seam 245, ask 18): a person (`@ada`) stays under `Your people`, a topic
+   (`#saltmaps`) on `Your topics` — held is a netted Affinity other than
+   (0, 0), so one zero keeps it there. A post or a comment sits on no list
+   of the reader's, so its line stops at the opinion. */
 function unreachableHelp(names, targetLabel) {
-  return [targetLabel.startsWith("@") ? `It still counts among your opinions — ${targetLabel} stays under Your people.` : "It still counts among your opinions.", "It shapes no one's feed, earns nothing, and nothing passes on through you.", `${severanceWords(names).control} is different: its own act, confirmed and paid for, that leaves a clean slate.`];
+  const stays = targetLabel.startsWith("@") ? `${targetLabel} stays under Your people` : targetLabel.startsWith("#") ? `${targetLabel} stays on Your topics` : null;
+  return [stays === null ? "It still counts among your opinions." : `It still counts among your opinions — ${stays}.`, "It shapes no one's feed, earns nothing, and nothing passes on through you.", `${severanceWords(names).control} is different: its own act, confirmed and paid for, that leaves a clean slate.`];
 }
 __ds_scope.DIMENSION_MIN = DIMENSION_MIN;
 __ds_scope.DIMENSION_MAX = DIMENSION_MAX;
@@ -1612,6 +1673,7 @@ __ds_scope.HISTORY_DOOR_TAIL = HISTORY_DOOR_TAIL;
 __ds_scope.SEVERED_LABEL = SEVERED_LABEL;
 __ds_scope.NO_STANDING_LABEL = NO_STANDING_LABEL;
 __ds_scope.STANCE_SEVERANCE_WORDS = STANCE_SEVERANCE_WORDS;
+__ds_scope.WRITE_RULE_WORDS = WRITE_RULE_WORDS;
 __ds_scope.severanceWords = severanceWords;
 __ds_scope.ZERO_BUNDLE_EMOJI = ZERO_BUNDLE_EMOJI;
 __ds_scope.UNREACHABLE_EMOJI = UNREACHABLE_EMOJI;
@@ -1642,6 +1704,7 @@ __ds_scope.standingLine = standingLine;
 __ds_scope.severanceParts = severanceParts;
 __ds_scope.UNREACHABLE_TAIL = UNREACHABLE_TAIL;
 __ds_scope.unreachableHead = unreachableHead;
+__ds_scope.EMPTY_LANDING_WORDS = EMPTY_LANDING_WORDS;
 __ds_scope.landingLine = landingLine;
 __ds_scope.signedLine = signedLine;
 __ds_scope.StanceReadout = StanceReadout;
@@ -2920,6 +2983,8 @@ function ActorChip({
       ...clip,
       flexShrink: 999,
       fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      letterSpacing: "var(--text-label-large--letter-spacing)",
       fontWeight: "var(--text-label-large--font-weight)",
       color: redacted ? "var(--text-secondary)" : undefined
     },
@@ -4895,7 +4960,15 @@ const { InlineAction } = __ds_scope;
    NO "Show all" WHEN THERE IS NOTHING TO SHOW: one staged clip is not a set to
    reorder, so the video board omits `onShowAll` and the count stops being a
    flex row — it is the only thing on its line, so it does not need to push
-   anything to the end of one. */
+   anything to the end of one.
+
+   THE CAPTION STANDS ONLY WHILE THE TILES LEAVE IT ROOM (seam 245, ask 13 C).
+   A picture caption stands beside the tiles while they leave it its one line
+   — at the drawn 48px tiles, up to three — and past that it goes: the row is
+   the tiles alone, clipped at the band's edge (`clip`), never scrolled, and
+   Show all is the way to the rest. A staged clip is one tile, so its caption
+   always stands, both lines of it. The caller passes `caption` only where it
+   stands; the master never squeezes it into a column. */
 
 const COUNT = {
   fontSize: "var(--text-label-small)",
@@ -4968,7 +5041,12 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
    per-picture manager (`PickedSheet`: reorder, first = cover, remove,
    describe). The crop step needs no second entrance: the wizard is linear and
    Back reaches it, and a duplicate entrance to the same step is the two-menus
-   pattern the system refuses elsewhere. */
+   pattern the system refuses elsewhere.
+
+   THE FIRST PICTURE WEARS `Cover` HERE TOO (seam 245, ask 13 F): the row
+   summarises the set the tray built, and the tray's rule is that the first
+   one is the cover — so the badge rides the first tile by default, the way
+   the tray and Show all mark it. */
 
 function PickedRow({
   items = [],
@@ -4998,7 +5076,8 @@ function PickedRow({
     },
     "data-node": node
   }, items.map((item, index) => /*#__PURE__*/React.createElement(MediaThumb, _extends({
-    key: item.src ?? index
+    key: item.src ?? index,
+    cover: index === 0
   }, item, {
     size: 48,
     node: node && "thumb",
@@ -5447,6 +5526,9 @@ function TopicRemovable({
       display: "inline-flex",
       alignItems: "center",
       gap: 6,
+      /* A true height, padding inside it (seam 245, ask 2): without
+         border-box the 32 measured the content alone and drew 40. */
+      boxSizing: "border-box",
       minHeight: 32,
       padding: "4px 12px",
       borderRadius: "var(--radius-full)",
@@ -5703,7 +5785,9 @@ const { HelpDot, PageHeader, Icon } = __ds_scope;
 /* The wizard's header (jakob 2026-08-31): TWO ways out, each doing one thing.
 
    · The ARROW steps ONE STAGE BACK — never out of the flow. Details reaches
-     crop with it; the system back gesture does the same.
+     crop with it; the system back gesture does the same. The first stage has
+     no stage behind it, so its arrow leaves toward where the flow began and
+     the board names it `Back` (seam 245, ask 13 D).
    · The X LEAVES the whole flow from any stage. Where a draft is kept — the
      post wizard, the profile picture — the leave keeps it and nothing asks,
      because nothing is lost (the return surface is the draft prompt). The
@@ -5947,8 +6031,17 @@ function licenseSummary(license = PUBLIC_DOMAIN) {
   return `${name} — ${clause(credit.hint)}, and ${clause(record.hint)}.`;
 }
 
-/* The same reading as an element, for a slot that takes one (a `FactRow`
-   value, a sheet's foot). */
+/* THE SEAL'S ROW TAKES THE SENTENCE AS A STRING (seam 245, ask 3). `FactRow`
+   gives a string value its variant's voice and hands a node through as given
+   — a stance readout draws its own line — so this sentence, handed over as an
+   element, drew in the page's body-large and on-surface instead of the
+   seal's quiet value. A sentence is a string; the row is passed one. The
+   bundle hands boards only capitalised names, so the rule rides this one too
+   — `HIDE_ACTOR_LABEL`'s shape, a composed label under a constant's name. */
+const LICENSE_SUMMARY = licenseSummary;
+
+/* The same reading as an element, for a slot that takes one and gives it no
+   voice of its own (a sheet's foot, the settings default). */
 function LicenseSummary({
   license = PUBLIC_DOMAIN
 }) {
@@ -6144,6 +6237,7 @@ __ds_scope.PUBLIC_DOMAIN = PUBLIC_DOMAIN;
 __ds_scope.LICENSE_MENU_LABEL = LICENSE_MENU_LABEL;
 __ds_scope.licenseReadings = licenseReadings;
 __ds_scope.licenseSummary = licenseSummary;
+__ds_scope.LICENSE_SUMMARY = LICENSE_SUMMARY;
 __ds_scope.LicenseSummary = LicenseSummary;
 __ds_scope.LicenseChooser = LicenseChooser;
 __ds_scope.LicenseTerms = LicenseTerms;
@@ -6785,11 +6879,35 @@ function attachmentPercentOf(value) {
   return percent(fractionOf(clampDimension(value), STANCE_RANGES.pDirected));
 }
 
-/** The attachment this much horizontal travel picks, starting from `base`. Clamped once, on the sum. */
+/* THE ZERO HAIRLINE IS A DETENT (jakob 2026-10-20, round 18): `No side yet`
+   is a place a drag rests on purpose, never one it only passes. While the
+   finger's travel would put the knob's centre within the knob's own radius
+   of the hairline, the knob holds ON it and the pick reads exactly 0.00 —
+   past that radius the knob follows the finger again. The radius is the
+   knob's, so the hold is as wide as the thing being held.
+
+   THE PICK PARKS ON A HUNDREDTH (jakob 2026-10-16, round 17): the knob
+   follows the drag wherever the finger is, and release lands the pick on the
+   nearest hundredth — `snapAttachment` — so the number a readout prints is
+   the pick itself, never a rounding of it. The square's value stays
+   continuous; only the strip parks. The master builds both (backlog 144):
+   it is the reference the clients conform to. */
+const ATTACHMENT_DETENT_PX = KNOB_DIAMETER_PX / 2;
+
+/** The attachment this much horizontal travel picks, starting from `base`.
+ *  Clamped once, on the sum; held at exactly 0 inside the hairline's detent. */
 function attachmentFrom(base, rect, dx, inset = KNOB_TRAVEL_INSET_PX) {
   const halfExtent = Math.max(0, rect.width / 2 - inset);
   if (halfExtent === 0) return clampDimension(base);
-  return clampDimension(base + dx * perPixel(STANCE_RANGES.pDirected, halfExtent));
+  const raw = clampDimension(base + dx * perPixel(STANCE_RANGES.pDirected, halfExtent));
+  /* One unit of the axis is `halfExtent` pixels of travel, so the knob's
+     centre stands |raw| × halfExtent px from the hairline. */
+  return Math.abs(raw) * halfExtent <= ATTACHMENT_DETENT_PX ? 0 : raw;
+}
+
+/** Where a released pick parks: the nearest hundredth — and a plain 0, never -0. */
+function snapAttachment(value) {
+  return Math.round(clampDimension(value) * 100) / 100 || 0;
 }
 
 /* NAMED ONLY WHERE ITS PLACER NAMES IT, the square's rule: the whole field
@@ -6816,7 +6934,8 @@ function AttachmentPad({
     if (!onChange) return;
     drag.current = {
       x: event.clientX,
-      base: value
+      base: value,
+      last: value
     };
     setDragging(true);
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -6825,11 +6944,15 @@ function AttachmentPad({
     const from = drag.current;
     const field = ref.current;
     if (!from || !field || !onChange) return;
-    onChange(attachmentFrom(from.base, field.getBoundingClientRect(), event.clientX - from.x));
+    from.last = attachmentFrom(from.base, field.getBoundingClientRect(), event.clientX - from.x);
+    onChange(from.last);
   };
+  /* Release — or a cancelled pointer — parks the pick on its hundredth. */
   const endDrag = () => {
+    const from = drag.current;
     drag.current = null;
     setDragging(false);
+    if (from && onChange) onChange(snapAttachment(from.last));
   };
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6946,7 +7069,9 @@ __ds_scope.padPercentOf = padPercentOf;
 __ds_scope.StancePad = StancePad;
 __ds_scope.ATTACHMENT_FIELD_HEIGHT_PX = ATTACHMENT_FIELD_HEIGHT_PX;
 __ds_scope.attachmentPercentOf = attachmentPercentOf;
+__ds_scope.ATTACHMENT_DETENT_PX = ATTACHMENT_DETENT_PX;
 __ds_scope.attachmentFrom = attachmentFrom;
+__ds_scope.snapAttachment = snapAttachment;
 __ds_scope.AttachmentPad = AttachmentPad;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StancePad.jsx", error: String((e && e.message) || e) }); }
 
@@ -7040,684 +7165,6 @@ function StanceSlider({
 }
 __ds_scope.StanceSlider = StanceSlider;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StanceSlider.jsx", error: String((e && e.message) || e) }); }
-
-// components/stance/StanceAlternates.jsx
-try { (() => {
-const { DialogSurface, buttonStyle, BUTTON_CLASS, StanceSlider, STANCE_AXES, alternatesHelp, clampDimension, HelpLine, helpKey, severanceWords, STANCE_RANGES } = __ds_scope;
-/* The alternate inputs (guidelines/stance-control.md, *Alternate and accessible
-   inputs*) — paired sliders and direct entry. Same
-   machinery as the pad, different surface: they write the same two values, and the
-   readout above them is the same lossy face.
-
-   They are also the ACCESSIBLE path (the same section; readme §10): the pad is a drag gesture, and
-   these give screen-reader and switch users the FULL RANGE through ordinary,
-   well-supported controls rather than a degraded version of the gesture — which is
-   why the entry into them is present on every stance control regardless of the
-   stored preference. Selecting an alternate replaces the pad everywhere, not
-   per-screen.
-
-   DIVERGENCE FROM THE SOURCE: ONE CONTROL AT A TIME. The source shows sliders AND
-   direct entry together whenever neither is the stored input. Two controls editing
-   the same two numbers in one dialog is a needless choice at the moment of a
-   priced act — the reader has to work out that they are the same values before
-   using either. Sliders lead (draggable, but keyboard- and switch-operable, and
-   Android's own StanceSlider); typing is one quiet tap away. The section asks that both
-   routes exist, not that both are on screen at once.
-
-   Severance is findable from the open pad; for anyone whose input is an alternate
-   the pad never opens, so it is findable here instead.
-
-   THE WORDS TRAVEL WITH THE RECORD FAMILY, exactly as they do on the field
-   (`STANCE_AXES`, StancePad.jsx). The alternates are the SAME gesture through
-   other controls, so a family that names its own poles must name them here too
-   — a field reading `Dislike / Like` beside a slider reading `Against / For`
-   would make the accessible route a different question from the drawn one.
-   THE AXIS NAMES ABOVE THE TRACKS TRAVEL THE SAME WAY (backlog item 79): this
-   is where the axis is actually NAMED rather than merely ended, so a family
-   whose slots hold something other than a stance says so here or nowhere. */
-
-/* THE BOUND IS A PROP HERE TOO, for `StanceSlider`'s reason: the typed route and
-   the dragged one must not disagree about what a value may be. A field that
-   refuses −1 on one axis and accepts it on another is the census speaking, and
-   the census travels with the record family. */
-function DirectEntry({
-  label,
-  value,
-  onChange,
-  min = -1,
-  max = 1
-}) {
-  const id = React.useId();
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: "var(--space-3)"
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    htmlFor: id,
-    style: {
-      fontSize: "var(--text-label-large)",
-      fontWeight: "var(--text-label-large--font-weight)"
-    }
-  }, label), /*#__PURE__*/React.createElement("input", {
-    id: id,
-    type: "number",
-    inputMode: "decimal",
-    min: min,
-    max: max,
-    step: 0.01,
-    value: value,
-    onChange: event => onChange && onChange(clampDimension(Number(event.target.value), min, max)),
-    style: {
-      width: "6rem",
-      borderRadius: "var(--radius-extra-small)",
-      border: "1px solid var(--border-field)",
-      background: "transparent",
-      color: "var(--on-surface)",
-      padding: "8px",
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-body-medium)"
-    }
-  }));
-}
-
-/* THE TWO TRACKS AND THEIR SWAP — the part of the alternates every host shares.
-   The bound reaches both routes from one `ranges`, so the slider and the typed
-   field refuse the same values the field does. */
-function AlternateInputs({
-  showing,
-  setShowing,
-  pick,
-  onPick,
-  axes,
-  ranges,
-  axis = "pair"
-}) {
-  const directed = ranges.pDirected;
-  const interest = ranges.pInterest;
-  const one = axis === "one";
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: "var(--space-4)",
-      display: "flex",
-      flexDirection: "column",
-      gap: "var(--space-4)"
-    }
-  }, one ? showing === "sliders" ? /*#__PURE__*/React.createElement(StanceSlider, {
-    label: axes.directed,
-    minLabel: axes.left,
-    maxLabel: axes.right,
-    min: directed.min,
-    max: directed.max,
-    value: pick.pDirected,
-    onChange: pDirected => onPick && onPick({
-      ...pick,
-      pDirected
-    })
-  }) : /*#__PURE__*/React.createElement(DirectEntry, {
-    label: axes.directed,
-    min: directed.min,
-    max: directed.max,
-    value: pick.pDirected,
-    onChange: pDirected => onPick && onPick({
-      ...pick,
-      pDirected
-    })
-  }) : showing === "sliders" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(StanceSlider, {
-    label: axes.directed,
-    minLabel: axes.left,
-    maxLabel: axes.right,
-    min: directed.min,
-    max: directed.max,
-    value: pick.pDirected,
-    onChange: pDirected => onPick && onPick({
-      ...pick,
-      pDirected
-    })
-  }), /*#__PURE__*/React.createElement(StanceSlider, {
-    label: axes.interest,
-    minLabel: axes.bottom,
-    maxLabel: axes.top,
-    min: interest.min,
-    max: interest.max,
-    value: pick.pInterest,
-    onChange: pInterest => onPick && onPick({
-      ...pick,
-      pInterest
-    })
-  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DirectEntry, {
-    label: axes.directed,
-    min: directed.min,
-    max: directed.max,
-    value: pick.pDirected,
-    onChange: pDirected => onPick && onPick({
-      ...pick,
-      pDirected
-    })
-  }), /*#__PURE__*/React.createElement(DirectEntry, {
-    label: axes.interest,
-    min: interest.min,
-    max: interest.max,
-    value: pick.pInterest,
-    onChange: pInterest => onPick && onPick({
-      ...pick,
-      pInterest
-    })
-  }))), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: () => setShowing(current => current === "sliders" ? "entry" : "sliders"),
-    className: BUTTON_CLASS,
-    style: {
-      ...buttonStyle({
-        variant: "text",
-        size: "sm"
-      }),
-      alignSelf: "flex-start",
-      marginTop: "var(--space-2)",
-      color: "var(--text-secondary)",
-      fontSize: "var(--text-label-medium)"
-    }
-  }, showing === "sliders" ? one ? "Type an exact value" : "Type exact values" : one ? "Use a slider" : "Use sliders"));
-}
-
-/* THE ALTERNATES TRAVEL WITH THE RECORD FAMILY, AND SO DOES THEIR HOST (jakob's
-   ruling, the night batch 2026-10-01 — audit K10.1). The tag and citation
-   sheets carried a pad no keyboard, switch or screen reader could reach, and
-   this surface could not host them honestly: it took no bound, titled itself
-   "Choose your opinion", committed with "Sign it", and always offered a
-   walk-away. Each of those is now the caller's:
-
-   · `ranges` — the census's reach per slot (`TAG_RANGES` for a tag's pair, the
-     stance's ±1 otherwise), handed to both tracks and both typed fields.
-   · `title` and `commitLabel` — the dialog's name and its affirmative, for a
-     family whose act is not an opinion.
-   · `onSever` — the walk-away is drawn only when the caller hands one. An
-     opinion's control always does; a tag or citation sheet never does, because
-     its withdrawal is a control of the sheet's own (`Un-tag`, `Remove
-     citation`), never the far end of a pair.
-   · `host="sheet"` — no dialog at all. The sheet that hosts it keeps its own
-     title, its own `Done` and its own scrim; this renders only the readouts it
-     is handed, the two tracks, their swap and the landing, IN THE PLACE OF THE
-     FIELD. One commit, and no modal stacked over a sheet. The "?" stays the
-     dialog's: its lines teach the opinion's sign-it act, which a sheet that
-     stages and never signs does not have. */
-function StanceAlternates({
-  mode = "pad",
-  pick,
-  onPick,
-  onCommit,
-  onCancel,
-  onSever,
-  busy = false,
-  children,
-  landing,
-  inline = false,
-  helpLabel = "How opinions work",
-  axes = STANCE_AXES,
-  ranges = STANCE_RANGES,
-  title = "Choose your opinion",
-  commitLabel = "Sign it",
-  host = "dialog",
-  /* ONE AXIS (jakob 2026-10-20, seam 240: the input setting governs
-     everywhere). A family with one free parameter — the backing an author
-     signs with their own content, `p_i` pinned at 1 by the census — takes ONE
-     track and ONE typed field, over `pDirected` alone. The pinned number is
-     never drawn, not even as a locked track: a control nobody can move is a
-     choice the record does not have. The pick keeps its pair shape, the pin
-     riding along untouched. */
-  axis = "pair",
-  /* The unreachable landing's explanation, handed by the host once its 🤔 is
-     tapped: it replaces the body in place, and `onZeroBack` returns. */
-  zeroHelp,
-  onZeroBack
-}) {
-  const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
-  // The same help affordance the pad carries, for the same reason: TWO VALUES per
-  // interaction is the genuinely new idea in this control, and a reader meeting it
-  // as two sliders has nothing to infer it from — the pad at least teaches it by
-  // being a square. `helpLabel` mirrors `StanceControl`'s own prop (ruling A7):
-  // the caller passing one pad's name passes the same name here.
-  const [explaining, setExplaining] = React.useState(false);
-  /* THE DIALOG MUST NOT RESIZE WHEN THE HELP OPENS. The pad gets this for free — it
-     is parked by its bottom edge, so its actions stay put however tall it is. This
-     dialog is centred, so every height change moves every button in it.
-      So the help replaces the WHOLE body — the readouts included, since a reader
-     following an explanation is not reading their own numbers at the same time —
-     and it takes at least the height of what it replaced. That space is larger
-     than the four lines need, so nothing scrolls: an inner scrollbar on a phone
-     surface is not a native gesture and the copy is not long enough to earn one. */
-  const slotRef = React.useRef(null);
-  const [slotHeight, setSlotHeight] = React.useState(null);
-  React.useEffect(() => {
-    if (explaining || zeroHelp) return;
-    const measured = slotRef.current?.offsetHeight;
-    if (measured) setSlotHeight(measured);
-  }, [explaining, zeroHelp, showing]);
-  const inputs = /*#__PURE__*/React.createElement(AlternateInputs, {
-    showing: showing,
-    setShowing: setShowing,
-    pick: pick,
-    onPick: onPick,
-    axes: axes,
-    ranges: ranges,
-    axis: axis
-  });
-  if (host === "sheet") {
-    return /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        flexDirection: "column"
-      }
-    }, children, inputs, landing);
-  }
-  return /*#__PURE__*/React.createElement(DialogSurface, {
-    ariaLabel: title,
-    inline: inline,
-    onScrimPress: onCancel
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "relative"
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-expanded": explaining,
-    "aria-label": helpLabel,
-    onClick: () => setExplaining(shown => !shown),
-    className: BUTTON_CLASS,
-    style: {
-      position: "absolute",
-      top: "-12px",
-      right: "-12px",
-      display: "grid",
-      placeItems: "center",
-      height: "var(--touch-target-min)",
-      width: "var(--touch-target-min)",
-      border: 0,
-      background: "none",
-      borderRadius: "var(--radius-full)",
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      display: "grid",
-      placeItems: "center",
-      height: "32px",
-      width: "32px",
-      borderRadius: "var(--radius-full)",
-      border: "1px solid var(--border-hairline)",
-      color: "var(--primary)",
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-label-large)",
-      fontWeight: "var(--text-label-large--font-weight)"
-    }
-  }, "?")), /*#__PURE__*/React.createElement("h2", {
-    style: {
-      margin: 0,
-      paddingRight: "40px",
-      fontSize: "var(--text-title-large)",
-      lineHeight: "var(--text-title-large--line-height)",
-      fontWeight: "var(--text-title-large--font-weight)"
-    }
-  }, title)), zeroHelp ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      minHeight: slotHeight ?? undefined,
-      display: "flex",
-      flexDirection: "column",
-      gap: "var(--space-2)"
-    }
-  }, zeroHelp.map(line => /*#__PURE__*/React.createElement("p", {
-    key: helpKey(line),
-    style: {
-      margin: 0,
-      fontSize: "var(--text-body-small)",
-      color: "var(--text-secondary)"
-    }
-  }, /*#__PURE__*/React.createElement(HelpLine, {
-    line: line
-  }))), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onZeroBack,
-    className: BUTTON_CLASS,
-    style: {
-      ...buttonStyle({
-        variant: "text",
-        size: "sm"
-      }),
-      alignSelf: "flex-start"
-    }
-  }, "Back")) : explaining ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      minHeight: slotHeight ?? undefined,
-      display: "flex",
-      flexDirection: "column",
-      gap: "var(--space-2)"
-    }
-  }, alternatesHelp(axes).map(line => /*#__PURE__*/React.createElement("p", {
-    key: helpKey(line),
-    style: {
-      margin: 0,
-      fontSize: "var(--text-body-small)",
-      color: "var(--text-secondary)"
-    }
-  }, /*#__PURE__*/React.createElement(HelpLine, {
-    line: line
-  }))), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: () => setExplaining(false),
-    className: BUTTON_CLASS,
-    style: {
-      ...buttonStyle({
-        variant: "text",
-        size: "sm"
-      }),
-      alignSelf: "flex-start"
-    }
-  }, "Back")) : /*#__PURE__*/React.createElement("div", {
-    ref: slotRef,
-    style: {
-      display: "flex",
-      flexDirection: "column"
-    }
-  }, children, inputs, landing), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: "var(--space-6)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "flex-end",
-      gap: "var(--space-2)"
-    }
-  }, onSever && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onSever,
-    className: BUTTON_CLASS,
-    style: {
-      ...buttonStyle({
-        variant: "text",
-        size: "sm"
-      }),
-      marginRight: "auto"
-    }
-  }, severanceWords(axes).control), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onCancel,
-    className: BUTTON_CLASS,
-    style: buttonStyle({
-      variant: "text",
-      size: "sm"
-    })
-  }, "Cancel"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    disabled: busy,
-    onClick: onCommit,
-    className: BUTTON_CLASS,
-    style: buttonStyle({
-      variant: "primary",
-      size: "sm",
-      disabled: busy
-    })
-  }, commitLabel)));
-}
-__ds_scope.StanceAlternates = StanceAlternates;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StanceAlternates.jsx", error: String((e && e.message) || e) }); }
-
-// components/stance/SeveranceConfirm.jsx
-try { (() => {
-const { DialogSurface, buttonStyle, BUTTON_CLASS, bundleReadout, EMPTY_PICK_LABEL, severanceParts, severanceWords, formatStancePair, formatStanceWords, STANCE_AXIS_NAMES, SR_ONLY } = __ds_scope;
-// The severance confirmation (guidelines/stance-control.md, *Severance*). It serves both routes to (0, 0):
-// the explicit gesture, and an ordinary pick that happens to land the bundle
-// there — the second is confirmed, never refused, because the control never
-// prevents a choice (the same section). The two are the SAME dialog, distinguished only by
-// the pick line the second one adds. Both need an opinion standing: a pick that lands
-// (0, 0) with nothing standing walks nothing back and asks `EmptySignConfirm` instead.
-//
-// The order is fixed (Android parity): title · the pick line when it was reached
-// by a pick · the consequences · what the reader has said in total (and, only when
-// it exceeds the clip, the cap as an aside) · the cost · the failure line when one
-// exists · the way out, Keep it.
-//
-// EVERY WORD OF IT IS THE RECORD FAMILY'S (jakob 2026-09-15). The dialog's
-// title, its two sentences and the button that confirms come from the family's
-// own severance words, the way its axes already do: a person is walked back, a
-// topic is disconnected from, and neither register is made to serve the other.
-// The SHAPE is the control's and does not vary — same order, same safe action
-// on the right, same raw-total-first arithmetic.
-//
-// THE RAW TOTAL LEADS. *Two numbers, never one* requires the raw sums on every surface that explains
-// cost, because they are what a walk back to zero actually walks — but stating the
-// clipped fold first and the raw sum second reads as broken arithmetic ("my opinion
-// is +1.00, so why does walking it back take +1.40?"). The total is what the
-// reader built up; the cap is what routing reads of it. In that order it explains
-// itself.
-//
-// DIVERGENCE FROM THE SOURCE, deliberate: the source draws both actions as text
-// buttons of equal weight. On a destructive dialog that is a coin flip — two
-// identical-looking words, one of which is irreversible and priced. Here the SAFE
-// action carries the emphasis (filled) and keeps the right-hand slot the thumb
-// goes to by habit, while the way out stays a text button on the left. It is still
-// reachable in one tap, so the control still never prevents the choice; it just
-// stops being the default-looking one. No new colour is introduced — severance is
-// a deliberate act, not a failure, so `error` stays off this surface (readme §4, *Colour*).
-//
-// The batch size is the legible cost — each counter-record is its own priced act,
-// so the count is what the reader needs before signing. And the line above it
-// states the RAW SUMS, not the clipped fold: they are what a walk back to zero
-// actually walks.
-
-function SeveranceConfirm({
-  pick = null,
-  targetLabel,
-  bundle,
-  records = 1,
-  alreadySevered = false,
-  busy = false,
-  failed = false,
-  onConfirm,
-  onCancel,
-  inline = false,
-  names = STANCE_AXIS_NAMES
-}) {
-  /* THE COST IS COUNTED IN THINGS, NOT IN ACTIONS (jakob's ruling, the geek
-     round). "Signed action" is the repo's word for a record; what the reader
-     has is a pile of things they said, each of which has to be said back. */
-  const cost = records === 1 ? "It signs 1 thing, paid on its own." : `It signs ${records} things, each paid separately.`;
-  /* The pick wears the face every pair wears (`bundleReadout`): a pick with
-     one number at zero thinks, as it does on the pad. A pick of (0, 0) reaches
-     this dialog only over a standing already at (0, 0) — an empty sign's —
-     and there it says nothing, as it does on the pad; with nothing standing it
-     asks `EmptySignConfirm` instead. */
-  const sever = severanceWords(names);
-  const title = sever.title(targetLabel);
-  const pickAnchor = pick === null ? null : bundleReadout(pick, EMPTY_PICK_LABEL);
-  const read = severanceParts(bundle, targetLabel);
-  return (
-    /*#__PURE__*/
-    /* THE SHELL LAYS IT OUT (readme §11, *Dialogs*): the order below is the
-       body's, and the size, alignment and body colour are `DialogSurface`'s.
-       The scrim, Escape and Back take `Keep it`, the safe answer. */
-    React.createElement(DialogSurface, {
-      inline: inline,
-      onScrimPress: busy ? undefined : onCancel,
-      title: title,
-      body: [pickAnchor !== null && /*#__PURE__*/React.createElement("p", {
-        style: {
-          margin: 0
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        "aria-hidden": "true"
-      }, "Your pick: ", pickAnchor.emoji, " ", formatStancePair(pick)), /*#__PURE__*/React.createElement("span", {
-        style: SR_ONLY
-      }, `Your pick: ${pickAnchor.label}, ${formatStanceWords(pick, names)}`)), sever.effect(targetLabel),
-      /* The RAW total leads and the cap is derived from it. The other order —
-         the fold first, the sum second — reads as arithmetic that does not
-         work: "my opinion is +1.00, so why does walking it back take +1.40?"
-         The two lines are one statement, so they keep a tight 4px apart. */
-      read.sentence !== undefined ? /*#__PURE__*/React.createElement("p", {
-        style: {
-          margin: 0,
-          fontSize: "var(--text-body-small)",
-          lineHeight: "var(--text-body-small--line-height)"
-        }
-      }, read.sentence) : /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--space-1)",
-          fontSize: "var(--text-body-small)",
-          lineHeight: "var(--text-body-small--line-height)"
-        }
-      }, /*#__PURE__*/React.createElement("p", {
-        style: {
-          margin: 0
-        }
-      }, sever.sum(targetLabel, read.raw)), read.capped && /*#__PURE__*/React.createElement("p", {
-        style: {
-          margin: 0
-        }
-      }, "Your feed reads it capped at ", read.folded, ".")), alreadySevered ? "You are already at nothing here." : cost,
-      /* A FAILED SIGNING RE-RAISES ITS OWN SURFACE WITH RETRY (jakob, the
-         failure pack). The dialog never closed — the act waits for its
-         answer — so the fault line stands above the pair and the
-         commitment's own slot reads `Retry`: the same act, asked again, from
-         where it was asked. The safe action keeps its place. */
-      failed && /*#__PURE__*/React.createElement("p", {
-        role: "alert",
-        style: {
-          margin: 0,
-          color: "var(--text-failure)"
-        }
-      }, "That didn't send. Try again.")].filter(Boolean),
-      actions: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-        type: "button",
-        disabled: alreadySevered,
-        onClick: busy ? undefined : onConfirm,
-        "aria-busy": busy || undefined,
-        "aria-disabled": busy || undefined,
-        className: BUTTON_CLASS,
-        style: buttonStyle({
-          variant: "text",
-          disabled: alreadySevered,
-          busy
-        })
-      }, busy ? sever.busy ?? "Signing…" : failed ? "Retry" : sever.control), /*#__PURE__*/React.createElement("button", {
-        type: "button",
-        onClick: busy ? undefined : onCancel,
-        "aria-disabled": busy || undefined,
-        className: BUTTON_CLASS,
-        style: buttonStyle({
-          variant: "primary",
-          busy
-        })
-      }, "Keep it"))
-    })
-  );
-}
-__ds_scope.SeveranceConfirm = SeveranceConfirm;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/SeveranceConfirm.jsx", error: String((e && e.message) || e) }); }
-
-// components/stance/EmptySignConfirm.jsx
-try { (() => {
-const { DialogSurface, buttonStyle, BUTTON_CLASS } = __ds_scope;
-/* THE EMPTY SIGN (jakob 2026-10-21, seam 242). A pick whose landing is
-   exactly (0, 0) while nothing stands — no record ever signed toward the
-   target, or a bundle already walked back to nothing — is not a walk-back:
-   there is nothing to walk back. It is a priced record that says nothing —
-   signed, it joins the bundle like any other record and the fold stays at
-   (0, 0), never severed. So it gets its own ask, never
-   `SeveranceConfirm`, and never a block: the control never prevents a choice,
-   and `Set it anyway` is always there — the compose pad's `Start it
-   unreachable?` pattern.
-
-   THE SHAPE IS `SeveranceConfirm`'s, because it is the same moment on the
-   same pad: the dialog vehicle (`DialogSurface`, readme §11), the pad still
-   parked beneath it, and the destructive-dialog rule — the SAFE action,
-   `Keep it`, filled and in the right-hand slot the thumb goes to by habit,
-   the act a text button on the left, one tap away. No `error` colour: an
-   empty sign is a choice, not a fault.
-
-   TWO LINES, EACH ONE NEW (jakob's hard rule, round 18: never state the
-   expected). The first says what the record does — nothing about the target,
-   nothing in any feed, and no move from where the reader stands, which is the
-   one thing a reader who knows the walk-back would assume otherwise. The
-   second is the cost, in things, as every signature's is counted — the
-   severance dialog's own sentence for one record.
-
-   IT SIGNS LIKE ANY SET, and confirms like one: the ordinary snackbar, the
-   ordinary bundle (jakob 2026-10-21). `busy` and `failed` are the failure pack's, exactly
-   as `SeveranceConfirm` carries them: past 200ms the act reads Set's own
-   participle and goes inert, never dimmed; a signing that did not go through
-   keeps the dialog up with the fault line and `Retry` in the act's slot.
-
-   WHERE THE OPINION VOUCHES SOMEONE IN, IT WARNS HARDER (jakob 2026-10-21).
-   Approving an applicant, or answering a vouch asked for, signs the opinion
-   that brings them in — and an empty one still does: `Set it anyway` is the
-   act, and the vouch-in proceeds. Blocking makes no sense; the approver could
-   walk it back a moment later. But the person it lands on starts cut off —
-   no feed carries them and community funds stay closed to them until someone
-   holds an opinion of them that says something — and that is the one new
-   fact, so it takes the first line's place. `vouchIn` draws it. */
-const EMPTY_SIGN_WORDS = {
-  title: "Sign an empty opinion?",
-  effect: targetLabel => `This says nothing about ${targetLabel}, shapes no feed, and leaves you where you are.`,
-  vouchIn: targetLabel => `${targetLabel} would be vouched in but start out cut off: no feed can carry them, and community funds stay closed to them, until someone gives them an opinion that says something.`,
-  cost: "It signs 1 thing, paid on its own.",
-  confirm: "Set it anyway",
-  busy: "Setting…",
-  keep: "Keep it"
-};
-function EmptySignConfirm({
-  targetLabel,
-  vouchIn = false,
-  busy = false,
-  failed = false,
-  onConfirm,
-  onCancel,
-  inline = false
-}) {
-  const words = EMPTY_SIGN_WORDS;
-  return (
-    /*#__PURE__*/
-    /* The scrim, Escape and Back take `Keep it`, the safe answer — and wait,
-       as it does, while the act signs. */
-    React.createElement(DialogSurface, {
-      inline: inline,
-      onScrimPress: busy ? undefined : onCancel,
-      title: words.title,
-      body: [vouchIn ? words.vouchIn(targetLabel) : words.effect(targetLabel), words.cost, failed && /*#__PURE__*/React.createElement("p", {
-        role: "alert",
-        style: {
-          margin: 0,
-          color: "var(--text-failure)"
-        }
-      }, "That didn't send. Try again.")].filter(Boolean),
-      actions: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-        type: "button",
-        onClick: busy ? undefined : onConfirm,
-        "aria-busy": busy || undefined,
-        "aria-disabled": busy || undefined,
-        className: BUTTON_CLASS,
-        style: buttonStyle({
-          variant: "text",
-          busy
-        })
-      }, busy ? words.busy : failed ? "Retry" : words.confirm), /*#__PURE__*/React.createElement("button", {
-        type: "button",
-        onClick: busy ? undefined : onCancel,
-        "aria-disabled": busy || undefined,
-        className: BUTTON_CLASS,
-        style: buttonStyle({
-          variant: "primary",
-          busy
-        })
-      }, words.keep))
-    })
-  );
-}
-__ds_scope.EMPTY_SIGN_WORDS = EMPTY_SIGN_WORDS;
-__ds_scope.EmptySignConfirm = EmptySignConfirm;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/EmptySignConfirm.jsx", error: String((e && e.message) || e) }); }
 
 // components/honesty/TransportError.jsx
 try { (() => {
@@ -7901,9 +7348,792 @@ __ds_scope.NoticePanel = NoticePanel;
 __ds_scope.NoticeLine = NoticeLine;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/honesty/NoticePanel.jsx", error: String((e && e.message) || e) }); }
 
+// components/stance/StanceAlternates.jsx
+try { (() => {
+const { DialogSurface, buttonStyle, BUTTON_CLASS, StanceSlider, STANCE_AXES, TransportError, NoticePanel, NoticeLine, alternatesHelp, clampDimension, HelpLine, helpKey, severanceWords, STANCE_RANGES, WRITE_RULE_WORDS } = __ds_scope;
+/* The alternate inputs (guidelines/stance-control.md, *Alternate and accessible
+   inputs*) — paired sliders and direct entry. Same
+   machinery as the pad, different surface: they write the same two values, and the
+   readout above them is the same lossy face.
+
+   They are also the ACCESSIBLE path (the same section; readme §10): the pad is a drag gesture, and
+   these give screen-reader and switch users the FULL RANGE through ordinary,
+   well-supported controls rather than a degraded version of the gesture — which is
+   why the entry into them is present on every stance control regardless of the
+   stored preference. Selecting an alternate replaces the pad everywhere, not
+   per-screen.
+
+   DIVERGENCE FROM THE SOURCE: ONE CONTROL AT A TIME. The source shows sliders AND
+   direct entry together whenever neither is the stored input. Two controls editing
+   the same two numbers in one dialog is a needless choice at the moment of a
+   priced act — the reader has to work out that they are the same values before
+   using either. Sliders lead (draggable, but keyboard- and switch-operable, and
+   Android's own StanceSlider); typing is one quiet tap away. The section asks that both
+   routes exist, not that both are on screen at once.
+
+   Severance is findable from the open pad; for anyone whose input is an alternate
+   the pad never opens, so it is findable here instead.
+
+   THE WORDS TRAVEL WITH THE RECORD FAMILY, exactly as they do on the field
+   (`STANCE_AXES`, StancePad.jsx). The alternates are the SAME gesture through
+   other controls, so a family that names its own poles must name them here too
+   — a field reading `Dislike / Like` beside a slider reading `Against / For`
+   would make the accessible route a different question from the drawn one.
+   THE AXIS NAMES ABOVE THE TRACKS TRAVEL THE SAME WAY (backlog item 79): this
+   is where the axis is actually NAMED rather than merely ended, so a family
+   whose slots hold something other than a stance says so here or nowhere. */
+
+/* THE BOUND IS A PROP HERE TOO, for `StanceSlider`'s reason: the typed route and
+   the dragged one must not disagree about what a value may be. A field that
+   refuses −1 on one axis and accepts it on another is the census speaking, and
+   the census travels with the record family.
+
+   A TYPED VALUE CLAMPS AS THE PAD CLAMPS (seam 245, ask 14 — the readout
+   law). The field keeps what the reader typed while they type; the pick
+   takes the nearest value the bound allows, so a `1.5` signs +1.00 the way a
+   knob dragged past the edge stops on it, and the readout above says so
+   before anything is signed. No refusal line: the field never refuses a
+   value it can clamp, any more than the pad refuses a corner. What does not
+   parse — an emptied field, a lone minus sign — moves nothing: the pick
+   keeps its last value, because reading it as 0 would land a pick on the
+   one number that means something of its own. Leaving the field rewrites
+   it to the value the pick holds. `text` draws a field mid-typing for a
+   board, a state a click cannot reach. */
+function DirectEntry({
+  label,
+  value,
+  onChange,
+  min = -1,
+  max = 1,
+  text
+}) {
+  const id = React.useId();
+  const [draft, setDraft] = React.useState(text ?? null);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "var(--space-3)"
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    htmlFor: id,
+    style: {
+      fontSize: "var(--text-label-large)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, label), /*#__PURE__*/React.createElement("input", {
+    id: id,
+    type: "number",
+    inputMode: "decimal",
+    min: min,
+    max: max,
+    step: 0.01,
+    value: draft ?? value,
+    onChange: event => {
+      const raw = event.target.value;
+      setDraft(raw);
+      const parsed = raw.trim() === "" ? NaN : Number(raw);
+      if (Number.isFinite(parsed) && onChange) onChange(clampDimension(parsed, min, max));
+    },
+    onBlur: () => setDraft(null),
+    style: {
+      width: "6rem",
+      borderRadius: "var(--radius-extra-small)",
+      border: "1px solid var(--border-field)",
+      background: "transparent",
+      color: "var(--on-surface)",
+      padding: "8px",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-body-medium)"
+    }
+  }));
+}
+
+/* THE TWO TRACKS AND THEIR SWAP — the part of the alternates every host shares.
+   The bound reaches both routes from one `ranges`, so the slider and the typed
+   field refuse the same values the field does. */
+function AlternateInputs({
+  showing,
+  setShowing,
+  pick,
+  onPick,
+  axes,
+  ranges,
+  axis = "pair",
+  typed
+}) {
+  const directed = ranges.pDirected;
+  const interest = ranges.pInterest;
+  const one = axis === "one";
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: "var(--space-4)",
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-4)"
+    }
+  }, one ? showing === "sliders" ? /*#__PURE__*/React.createElement(StanceSlider, {
+    label: axes.directed,
+    minLabel: axes.left,
+    maxLabel: axes.right,
+    min: directed.min,
+    max: directed.max,
+    value: pick.pDirected,
+    onChange: pDirected => onPick && onPick({
+      ...pick,
+      pDirected
+    })
+  }) : /*#__PURE__*/React.createElement(DirectEntry, {
+    label: axes.directed,
+    min: directed.min,
+    max: directed.max,
+    value: pick.pDirected,
+    text: typed?.pDirected,
+    onChange: pDirected => onPick && onPick({
+      ...pick,
+      pDirected
+    })
+  }) : showing === "sliders" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(StanceSlider, {
+    label: axes.directed,
+    minLabel: axes.left,
+    maxLabel: axes.right,
+    min: directed.min,
+    max: directed.max,
+    value: pick.pDirected,
+    onChange: pDirected => onPick && onPick({
+      ...pick,
+      pDirected
+    })
+  }), /*#__PURE__*/React.createElement(StanceSlider, {
+    label: axes.interest,
+    minLabel: axes.bottom,
+    maxLabel: axes.top,
+    min: interest.min,
+    max: interest.max,
+    value: pick.pInterest,
+    onChange: pInterest => onPick && onPick({
+      ...pick,
+      pInterest
+    })
+  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DirectEntry, {
+    label: axes.directed,
+    min: directed.min,
+    max: directed.max,
+    value: pick.pDirected,
+    text: typed?.pDirected,
+    onChange: pDirected => onPick && onPick({
+      ...pick,
+      pDirected
+    })
+  }), /*#__PURE__*/React.createElement(DirectEntry, {
+    label: axes.interest,
+    min: interest.min,
+    max: interest.max,
+    value: pick.pInterest,
+    text: typed?.pInterest,
+    onChange: pInterest => onPick && onPick({
+      ...pick,
+      pInterest
+    })
+  }))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setShowing(current => current === "sliders" ? "entry" : "sliders"),
+    className: BUTTON_CLASS,
+    style: {
+      ...buttonStyle({
+        variant: "text",
+        size: "sm"
+      }),
+      alignSelf: "flex-start",
+      marginTop: "var(--space-2)",
+      color: "var(--text-secondary)",
+      fontSize: "var(--text-label-medium)"
+    }
+  }, showing === "sliders" ? one ? "Type an exact value" : "Type exact values" : one ? "Use a slider" : "Use sliders"));
+}
+
+/* THE ALTERNATES TRAVEL WITH THE RECORD FAMILY, AND SO DOES THEIR HOST (jakob's
+   ruling, the night batch 2026-10-01 — audit K10.1). The tag and citation
+   sheets carried a pad no keyboard, switch or screen reader could reach, and
+   this surface could not host them honestly: it took no bound, titled itself
+   "Choose your opinion", committed with "Sign it", and always offered a
+   walk-away. Each of those is now the caller's:
+
+   · `ranges` — the census's reach per slot (`TAG_RANGES` for a tag's pair, the
+     stance's ±1 otherwise), handed to both tracks and both typed fields.
+   · `title` and `commitLabel` — the dialog's name and its affirmative, for a
+     family whose act is not an opinion.
+   · `onSever` — the walk-away is drawn only when the caller hands one. An
+     opinion's control always does; a tag or citation sheet never does, because
+     its withdrawal is a control of the sheet's own (`Un-tag`, `Remove
+     citation`), never the far end of a pair.
+   · `host="sheet"` — no dialog at all. The sheet that hosts it keeps its own
+     title, its own `Done` and its own scrim; this renders only the readouts it
+     is handed, the two tracks, their swap and the landing, IN THE PLACE OF THE
+     FIELD. One commit, and no modal stacked over a sheet. The "?" stays the
+     dialog's: its lines teach the opinion's sign-it act, which a sheet that
+     stages and never signs does not have. */
+function StanceAlternates({
+  mode = "pad",
+  pick,
+  onPick,
+  onCommit,
+  onCancel,
+  onSever,
+  busy = false,
+  children,
+  landing,
+  inline = false,
+  helpLabel = "How opinions work",
+  axes = STANCE_AXES,
+  ranges = STANCE_RANGES,
+  title = "Choose your opinion",
+  commitLabel = "Sign it",
+  host = "dialog",
+  /* ONE AXIS (jakob 2026-10-20, seam 240: the input setting governs
+     everywhere). A family with one free parameter — the backing an author
+     signs with their own content, `p_i` pinned at 1 by the census — takes ONE
+     track and ONE typed field, over `pDirected` alone. The pinned number is
+     never drawn, not even as a locked track: a control nobody can move is a
+     choice the record does not have. The pick keeps its pair shape, the pin
+     riding along untouched. */
+  axis = "pair",
+  /* The unreachable landing's explanation, handed by the host once its 🤔 is
+     tapped: it replaces the body in place, and `onZeroBack` returns. */
+  zeroHelp,
+  onZeroBack,
+  /* THE COMMIT WAITS FOR ITS SIGNATURE, AS SET DOES (seam 245, ask 14 —
+     `StanceControl`'s `signing`, handed on while the alternates are up).
+     `"busy"`: past 200ms the commit reads `Signing…` and goes inert, never
+     dimmed. `"failed"`: the dialog stays up at the pick, the fault line
+     stands above the action row in the seal's words, and `Retry`, outlined,
+     takes the commit's slot — the pad's grammar, because it is the same act
+     through another control. `"writeRule"`: the write rule's notice stands
+     where the landing line and the action row were, `PadWriteRule`'s shape,
+     its own "?" by the stopper exception, and `Not now` the way out; no
+     Retry. The legacy `busy` reads as `"busy"`. Dialog host only: a sheet
+     never signs. */
+  signing,
+  /* What the typed fields hold mid-typing, for a board (`{ pDirected:
+     "1.5" }`): a state a click cannot reach. */
+  typed
+}) {
+  const state = signing ?? (busy ? "busy" : undefined);
+  const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
+  // The same help affordance the pad carries, for the same reason: TWO VALUES per
+  // interaction is the genuinely new idea in this control, and a reader meeting it
+  // as two sliders has nothing to infer it from — the pad at least teaches it by
+  // being a square. `helpLabel` mirrors `StanceControl`'s own prop (ruling A7):
+  // the caller passing one pad's name passes the same name here.
+  const [explaining, setExplaining] = React.useState(false);
+  /* THE DIALOG MUST NOT RESIZE WHEN THE HELP OPENS. The pad gets this for free — it
+     is parked by its bottom edge, so its actions stay put however tall it is. This
+     dialog is centred, so every height change moves every button in it.
+      So the help replaces the WHOLE body — the readouts included, since a reader
+     following an explanation is not reading their own numbers at the same time —
+     and it takes at least the height of what it replaced. That space is larger
+     than the four lines need, so nothing scrolls: an inner scrollbar on a phone
+     surface is not a native gesture and the copy is not long enough to earn one. */
+  const slotRef = React.useRef(null);
+  const [slotHeight, setSlotHeight] = React.useState(null);
+  React.useEffect(() => {
+    if (explaining || zeroHelp) return;
+    const measured = slotRef.current?.offsetHeight;
+    if (measured) setSlotHeight(measured);
+  }, [explaining, zeroHelp, showing]);
+  const inputs = /*#__PURE__*/React.createElement(AlternateInputs, {
+    showing: showing,
+    setShowing: setShowing,
+    pick: pick,
+    onPick: onPick,
+    axes: axes,
+    ranges: ranges,
+    axis: axis,
+    typed: typed
+  });
+  if (host === "sheet") {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column"
+      }
+    }, children, inputs, landing);
+  }
+  return /*#__PURE__*/React.createElement(DialogSurface, {
+    ariaLabel: title,
+    inline: inline,
+    onScrimPress: onCancel
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-expanded": explaining,
+    "aria-label": helpLabel,
+    onClick: () => setExplaining(shown => !shown),
+    className: BUTTON_CLASS,
+    style: {
+      position: "absolute",
+      top: "-12px",
+      right: "-12px",
+      display: "grid",
+      placeItems: "center",
+      height: "var(--touch-target-min)",
+      width: "var(--touch-target-min)",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      display: "grid",
+      placeItems: "center",
+      height: "32px",
+      width: "32px",
+      borderRadius: "var(--radius-full)",
+      border: "1px solid var(--border-hairline)",
+      color: "var(--primary)",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-label-large)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, "?")), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: 0,
+      paddingRight: "40px",
+      fontSize: "var(--text-title-large)",
+      lineHeight: "var(--text-title-large--line-height)",
+      fontWeight: "var(--text-title-large--font-weight)"
+    }
+  }, title)), zeroHelp ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: slotHeight ?? undefined,
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-2)"
+    }
+  }, zeroHelp.map(line => /*#__PURE__*/React.createElement("p", {
+    key: helpKey(line),
+    style: {
+      margin: 0,
+      fontSize: "var(--text-body-small)",
+      color: "var(--text-secondary)"
+    }
+  }, /*#__PURE__*/React.createElement(HelpLine, {
+    line: line
+  }))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onZeroBack,
+    className: BUTTON_CLASS,
+    style: {
+      ...buttonStyle({
+        variant: "text",
+        size: "sm"
+      }),
+      alignSelf: "flex-start"
+    }
+  }, "Back")) : explaining ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: slotHeight ?? undefined,
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-2)"
+    }
+  }, alternatesHelp(axes).map(line => /*#__PURE__*/React.createElement("p", {
+    key: helpKey(line),
+    style: {
+      margin: 0,
+      fontSize: "var(--text-body-small)",
+      color: "var(--text-secondary)"
+    }
+  }, /*#__PURE__*/React.createElement(HelpLine, {
+    line: line
+  }))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setExplaining(false),
+    className: BUTTON_CLASS,
+    style: {
+      ...buttonStyle({
+        variant: "text",
+        size: "sm"
+      }),
+      alignSelf: "flex-start"
+    }
+  }, "Back")) : /*#__PURE__*/React.createElement("div", {
+    ref: slotRef,
+    style: {
+      display: "flex",
+      flexDirection: "column"
+    }
+  }, children, inputs, state !== "writeRule" && landing), state === "writeRule" ?
+  /*#__PURE__*/
+  /* The write rule's no (`PadWriteRule`): the notice where the landing
+     line and the action row were, the readouts and the tracks above it
+     as they were, and `Not now` — the way out that keeps nothing. */
+  React.createElement("div", {
+    style: {
+      marginTop: "var(--space-4)",
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-3)"
+    }
+  }, /*#__PURE__*/React.createElement(NoticePanel, {
+    title: WRITE_RULE_WORDS.title,
+    helpLabel: WRITE_RULE_WORDS.help,
+    onHelp: () => {}
+  }, /*#__PURE__*/React.createElement(NoticeLine, null, WRITE_RULE_WORDS.padFact)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onCancel,
+    className: BUTTON_CLASS,
+    style: {
+      ...buttonStyle({
+        variant: "text"
+      }),
+      width: "100%"
+    }
+  }, "Not now")) : /*#__PURE__*/React.createElement(React.Fragment, null, state === "failed" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: "var(--space-4)"
+    }
+  }, /*#__PURE__*/React.createElement(TransportError, {
+    message: "That didn't send. Try again."
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: state === "failed" ? "var(--space-3)" : "var(--space-6)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: "var(--space-2)"
+    }
+  }, onSever && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onSever,
+    className: BUTTON_CLASS,
+    style: {
+      ...buttonStyle({
+        variant: "text",
+        size: "sm"
+      }),
+      marginRight: "auto"
+    }
+  }, severanceWords(axes).control), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onCancel,
+    className: BUTTON_CLASS,
+    style: buttonStyle({
+      variant: "text",
+      size: "sm"
+    })
+  }, "Cancel"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: state === "busy" ? undefined : onCommit,
+    "aria-busy": state === "busy" || undefined,
+    "aria-disabled": state === "busy" || undefined,
+    className: BUTTON_CLASS,
+    style: buttonStyle({
+      variant: state === "failed" ? "outline" : "primary",
+      size: "sm",
+      busy: state === "busy"
+    })
+  }, state === "busy" ? "Signing…" : state === "failed" ? "Retry" : commitLabel))));
+}
+__ds_scope.StanceAlternates = StanceAlternates;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StanceAlternates.jsx", error: String((e && e.message) || e) }); }
+
+// components/stance/SeveranceConfirm.jsx
+try { (() => {
+const { DialogSurface, buttonStyle, BUTTON_CLASS, bundleReadout, EMPTY_PICK_LABEL, severanceParts, severanceWords, formatStancePair, formatStanceWords, STANCE_AXIS_NAMES, SR_ONLY, WRITE_RULE_WORDS } = __ds_scope;
+// The severance confirmation (guidelines/stance-control.md, *Severance*). It serves both routes to (0, 0):
+// the explicit gesture, and an ordinary pick that happens to land the bundle
+// there — the second is confirmed, never refused, because the control never
+// prevents a choice (the same section). The two are the SAME dialog, distinguished only by
+// the pick line the second one adds. Both need an opinion standing: a pick that lands
+// (0, 0) with nothing standing walks nothing back and asks `EmptySignConfirm` instead.
+//
+// The order is fixed (Android parity): title · the pick line when it was reached
+// by a pick · the consequences · what the reader has said in total (and, only when
+// it exceeds the clip, the cap as an aside) · the cost · the failure line when one
+// exists · the way out, Keep it.
+//
+// EVERY WORD OF IT IS THE RECORD FAMILY'S (jakob 2026-09-15). The dialog's
+// title, its two sentences and the button that confirms come from the family's
+// own severance words, the way its axes already do: a person is walked back, a
+// topic is disconnected from, and neither register is made to serve the other.
+// The SHAPE is the control's and does not vary — same order, same safe action
+// on the right, same raw-total-first arithmetic.
+//
+// THE RAW TOTAL LEADS. *Two numbers, never one* requires the raw sums on every surface that explains
+// cost, because they are what a walk back to zero actually walks — but stating the
+// clipped fold first and the raw sum second reads as broken arithmetic ("my opinion
+// is +1.00, so why does walking it back take +1.40?"). The total is what the
+// reader built up; the cap is what routing reads of it. In that order it explains
+// itself.
+//
+// DIVERGENCE FROM THE SOURCE, deliberate: the source draws both actions as text
+// buttons of equal weight. On a destructive dialog that is a coin flip — two
+// identical-looking words, one of which is irreversible and priced. Here the SAFE
+// action carries the emphasis (filled) and keeps the right-hand slot the thumb
+// goes to by habit, while the way out stays a text button on the left. It is still
+// reachable in one tap, so the control still never prevents the choice; it just
+// stops being the default-looking one. No new colour is introduced — severance is
+// a deliberate act, not a failure, so `error` stays off this surface (readme §4, *Colour*).
+//
+// The batch size is the legible cost — each counter-record is its own priced act,
+// so the count is what the reader needs before signing. And the line above it
+// states the RAW SUMS, not the clipped fold: they are what a walk back to zero
+// actually walks.
+
+function SeveranceConfirm({
+  pick = null,
+  targetLabel,
+  bundle,
+  records = 1,
+  alreadySevered = false,
+  busy = false,
+  failed = false,
+  /* THE WRITE RULE REFUSED THE WALK-BACK (seam 245, ask 15). Its pre-check
+     staged nothing and spent nothing, so it is a notice, not a fault, and it
+     answers in the write rule's register: where the fault line would stand,
+     the row's quiet words in the pending marker's ink, `role="status"`, with
+     the one fact the cost line above makes a reader ask — nothing was signed
+     or spent (`WRITE_RULE_WORDS.dialog`). NO RETRY: asking again at once
+     meets the same answer, so the act dims — the second true refusal this
+     dialog has, beside a bundle already at nothing — and `Keep it` is the
+     way out, back to the pick still parked on the pad. Additive — absent,
+     the dialog renders exactly as before. */
+  writeRule = false,
+  onConfirm,
+  onCancel,
+  inline = false,
+  names = STANCE_AXIS_NAMES
+}) {
+  /* THE COST IS COUNTED IN THINGS, NOT IN ACTIONS (jakob's ruling, the geek
+     round). "Signed action" is the repo's word for a record; what the reader
+     has is a pile of things they said, each of which has to be said back. */
+  const cost = records === 1 ? "It signs 1 thing, paid on its own." : `It signs ${records} things, each paid separately.`;
+  /* The pick wears the face every pair wears (`bundleReadout`): a pick with
+     one number at zero thinks, as it does on the pad. A pick of (0, 0) reaches
+     this dialog only over a standing already at (0, 0) — an empty sign's —
+     and there it says nothing, as it does on the pad; with nothing standing it
+     asks `EmptySignConfirm` instead. */
+  const sever = severanceWords(names);
+  const title = sever.title(targetLabel);
+  const pickAnchor = pick === null ? null : bundleReadout(pick, EMPTY_PICK_LABEL);
+  const read = severanceParts(bundle, targetLabel);
+  return (
+    /*#__PURE__*/
+    /* THE SHELL LAYS IT OUT (readme §11, *Dialogs*): the order below is the
+       body's, and the size, alignment and body colour are `DialogSurface`'s.
+       The scrim, Escape and Back take `Keep it`, the safe answer. */
+    React.createElement(DialogSurface, {
+      inline: inline,
+      onScrimPress: busy ? undefined : onCancel,
+      title: title,
+      body: [pickAnchor !== null && /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: 0
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        "aria-hidden": "true"
+      }, "Your pick: ", pickAnchor.emoji, " ", formatStancePair(pick)), /*#__PURE__*/React.createElement("span", {
+        style: SR_ONLY
+      }, `Your pick: ${pickAnchor.label}, ${formatStanceWords(pick, names)}`)), sever.effect(targetLabel),
+      /* The RAW total leads and the cap is derived from it. The other order —
+         the fold first, the sum second — reads as arithmetic that does not
+         work: "my opinion is +1.00, so why does walking it back take +1.40?"
+         The two lines are one statement, so they keep a tight 4px apart. */
+      read.sentence !== undefined ? /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: 0,
+          fontSize: "var(--text-body-small)",
+          lineHeight: "var(--text-body-small--line-height)"
+        }
+      }, read.sentence) : /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          flexDirection: "column",
+          gap: "var(--space-1)",
+          fontSize: "var(--text-body-small)",
+          lineHeight: "var(--text-body-small--line-height)"
+        }
+      }, /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: 0
+        }
+      }, sever.sum(targetLabel, read.raw)), read.capped && /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: 0
+        }
+      }, "Your feed reads it capped at ", read.folded, ".")), alreadySevered ? "You are already at nothing here." : cost,
+      /* A FAILED SIGNING RE-RAISES ITS OWN SURFACE WITH RETRY (jakob, the
+         failure pack). The dialog never closed — the act waits for its
+         answer — so the fault line stands above the pair and the
+         commitment's own slot reads `Retry`: the same act, asked again, from
+         where it was asked. The safe action keeps its place. */
+      failed && /*#__PURE__*/React.createElement("p", {
+        role: "alert",
+        style: {
+          margin: 0,
+          color: "var(--text-failure)"
+        }
+      }, "That didn't send. Try again."), writeRule && /*#__PURE__*/React.createElement("p", {
+        role: "status",
+        style: {
+          margin: 0,
+          color: "var(--text-secondary)"
+        }
+      }, WRITE_RULE_WORDS.dialog)].filter(Boolean),
+      actions: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        disabled: alreadySevered || writeRule,
+        onClick: busy ? undefined : onConfirm,
+        "aria-busy": busy || undefined,
+        "aria-disabled": busy || undefined,
+        className: BUTTON_CLASS,
+        style: buttonStyle({
+          variant: "text",
+          disabled: alreadySevered || writeRule,
+          busy
+        })
+      }, busy ? sever.busy ?? "Signing…" : failed ? "Retry" : sever.control), /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        onClick: busy ? undefined : onCancel,
+        "aria-disabled": busy || undefined,
+        className: BUTTON_CLASS,
+        style: buttonStyle({
+          variant: "primary",
+          busy
+        })
+      }, "Keep it"))
+    })
+  );
+}
+__ds_scope.SeveranceConfirm = SeveranceConfirm;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/SeveranceConfirm.jsx", error: String((e && e.message) || e) }); }
+
+// components/stance/EmptySignConfirm.jsx
+try { (() => {
+const { DialogSurface, buttonStyle, BUTTON_CLASS, WRITE_RULE_WORDS } = __ds_scope;
+/* THE EMPTY SIGN (jakob 2026-10-21, seam 242). A pick whose landing is
+   exactly (0, 0) while nothing stands — no record ever signed toward the
+   target, or a bundle already walked back to nothing — is not a walk-back:
+   there is nothing to walk back. It is a priced record that says nothing —
+   signed, it joins the bundle like any other record and the fold stays at
+   (0, 0), never severed. So it gets its own ask, never
+   `SeveranceConfirm`, and never a block: the control never prevents a choice,
+   and `Set it anyway` is always there — the compose pad's `Start it
+   unreachable?` pattern.
+
+   THE SHAPE IS `SeveranceConfirm`'s, because it is the same moment on the
+   same pad: the dialog vehicle (`DialogSurface`, readme §11), the pad still
+   parked beneath it, and the destructive-dialog rule — the SAFE action,
+   `Keep it`, filled and in the right-hand slot the thumb goes to by habit,
+   the act a text button on the left, one tap away. No `error` colour: an
+   empty sign is a choice, not a fault.
+
+   TWO LINES, EACH ONE NEW (jakob's hard rule, round 18: never state the
+   expected). The first says what the record does — nothing about the target,
+   nothing in any feed, and no move from where the reader stands, which is the
+   one thing a reader who knows the walk-back would assume otherwise. The
+   second is the cost, in things, as every signature's is counted — the
+   severance dialog's own sentence for one record.
+
+   IT SIGNS LIKE ANY SET, and confirms like one: the ordinary snackbar, the
+   ordinary bundle (jakob 2026-10-21). `busy` and `failed` are the failure pack's, exactly
+   as `SeveranceConfirm` carries them: past 200ms the act reads Set's own
+   participle and goes inert, never dimmed; a signing that did not go through
+   keeps the dialog up with the fault line and `Retry` in the act's slot.
+
+   WHERE THE OPINION VOUCHES SOMEONE IN, IT WARNS HARDER (jakob 2026-10-21).
+   Approving an applicant, or answering a vouch asked for, signs the opinion
+   that brings them in — and an empty one still does: `Set it anyway` is the
+   act, and the vouch-in proceeds. Blocking makes no sense; the approver could
+   walk it back a moment later. But the person it lands on starts cut off —
+   no feed carries them and community funds stay closed to them until someone
+   holds an opinion of them that says something — and that is the one new
+   fact, so it takes the first line's place. `vouchIn` draws it. */
+const EMPTY_SIGN_WORDS = {
+  title: "Sign an empty opinion?",
+  effect: targetLabel => `This says nothing about ${targetLabel}, shapes no feed, and leaves you where you are.`,
+  vouchIn: targetLabel => `${targetLabel} would be vouched in but start out cut off: no feed can carry them, and community funds stay closed to them, until someone gives them an opinion that says something.`,
+  cost: "It signs 1 thing, paid on its own.",
+  confirm: "Set it anyway",
+  busy: "Setting…",
+  keep: "Keep it"
+};
+
+/* THE WRITE RULE'S NO IS `SeveranceConfirm`'S (seam 245, ask 15): the same
+   moment over the same pad, so the same answer — the quiet line where the
+   fault line would stand, `Set it anyway` dimmed, no Retry, and `Keep it` the
+   way back to the pick. */
+function EmptySignConfirm({
+  targetLabel,
+  vouchIn = false,
+  busy = false,
+  failed = false,
+  writeRule = false,
+  onConfirm,
+  onCancel,
+  inline = false
+}) {
+  const words = EMPTY_SIGN_WORDS;
+  return (
+    /*#__PURE__*/
+    /* The scrim, Escape and Back take `Keep it`, the safe answer — and wait,
+       as it does, while the act signs. */
+    React.createElement(DialogSurface, {
+      inline: inline,
+      onScrimPress: busy ? undefined : onCancel,
+      title: words.title,
+      body: [vouchIn ? words.vouchIn(targetLabel) : words.effect(targetLabel), words.cost, failed && /*#__PURE__*/React.createElement("p", {
+        role: "alert",
+        style: {
+          margin: 0,
+          color: "var(--text-failure)"
+        }
+      }, "That didn't send. Try again."), writeRule && /*#__PURE__*/React.createElement("p", {
+        role: "status",
+        style: {
+          margin: 0,
+          color: "var(--text-secondary)"
+        }
+      }, WRITE_RULE_WORDS.dialog)].filter(Boolean),
+      actions: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        disabled: writeRule,
+        onClick: busy ? undefined : onConfirm,
+        "aria-busy": busy || undefined,
+        "aria-disabled": busy || undefined,
+        className: BUTTON_CLASS,
+        style: buttonStyle({
+          variant: "text",
+          disabled: writeRule,
+          busy
+        })
+      }, busy ? words.busy : failed ? "Retry" : words.confirm), /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        onClick: busy ? undefined : onCancel,
+        "aria-disabled": busy || undefined,
+        className: BUTTON_CLASS,
+        style: buttonStyle({
+          variant: "primary",
+          busy
+        })
+      }, words.keep))
+    })
+  );
+}
+__ds_scope.EMPTY_SIGN_WORDS = EMPTY_SIGN_WORDS;
+__ds_scope.EmptySignConfirm = EmptySignConfirm;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/EmptySignConfirm.jsx", error: String((e && e.message) || e) }); }
+
 // components/stance/StanceControl.jsx
 try { (() => {
-const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, STANCE_AXES, StanceAlternates, SeveranceConfirm, EmptySignConfirm, PendingMarker, SigningPending, TransportError, NoticePanel, NoticeLine, bundleReadout, clampPair, EMPTY_PICK_LABEL, formatStancePair, helpKey, HelpLine, localLanding, ORIGIN, padHelp, RESTING_FACE_EMOJI, severanceWords, signedLine, StanceLandingLine, StanceStanding, TAP_DEFAULT, unreachableHelp } = __ds_scope;
+const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, STANCE_AXES, StanceAlternates, SeveranceConfirm, EmptySignConfirm, PendingMarker, SigningPending, TransportError, NoticePanel, NoticeLine, bundleReadout, clampPair, EMPTY_PICK_LABEL, formatStancePair, helpKey, HelpLine, localLanding, ORIGIN, padHelp, RESTING_FACE_EMOJI, severanceWords, signedLine, StanceLandingLine, StanceStanding, TAP_DEFAULT, unreachableHelp, WRITE_RULE_WORDS } = __ds_scope;
 /* CoGra's SIGNATURE INTERACTION (readme §8; guidelines/stance-control.md).
    Everything in this file is a rule from those, not a preference:
 
@@ -7945,6 +8175,14 @@ const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, STANCE
    that fails leaves the pad where it was, at the pick, with the fault line
    above the commit row and `Retry`, outlined, in Set's slot — a failed signed
    act re-raises its own surface, and here the surface never went away.
+   CANCEL STAYS LIVE WHILE SET SIGNS, and it closes the pad, never the act
+   (seam 245, ask 16): what was sent cannot be called back, so the wait moves
+   to the target's row as a hold's does — `Signing…` under the face, then the
+   face and the snackbar, or `That didn't sign.` with a Retry that asks the
+   same pick again. The press outside and Escape do the same. THE ALTERNATES
+   WAIT THE SAME WAY (ask 14): their commit reads `Signing…`, a fault keeps
+   them up with `Retry` in its slot, and the write rule's notice takes the
+   landing line's and the action row's place, as on the pad.
 
    THE PAD IS THE TEACHER (the check round's Q6, jakob 2026-10-06). The
    account's first-ever pad open carries the two coaching lines in the shell's
@@ -8039,13 +8277,13 @@ function HoldRing({
 }
 
 /* The write rule's words at the pad's and the row's scale (copy-voice,
-   *Faults by code*). The seal's panel says the draft is kept; a pad has no
-   draft, so its fact stops at what was not signed or spent. The "?" is the
-   seal panel's own dialog, named by its title. */
-const WRITE_RULE_TITLE = "You can't sign right now";
-const WRITE_RULE_PAD_FACT = "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.";
-const WRITE_RULE_HELP = "Why signing waits";
-const WRITE_RULE_ROW = "You can't sign right now.";
+   *Faults by code*) — `WRITE_RULE_WORDS`, shared with the alternates and the
+   two dialogs raised over the pad. The "?" is the seal panel's own dialog,
+   named by its title. */
+const WRITE_RULE_TITLE = WRITE_RULE_WORDS.title;
+const WRITE_RULE_PAD_FACT = WRITE_RULE_WORDS.padFact;
+const WRITE_RULE_HELP = WRITE_RULE_WORDS.help;
+const WRITE_RULE_ROW = WRITE_RULE_WORDS.row;
 /* A comfort's revert, said on the row (copy-voice, *Faults by code*). */
 const COMFORT_FAILED_ROW = "That didn't go through.";
 
@@ -8086,9 +8324,11 @@ const EMPTY_BUNDLE = {
 /* `severanceCost` (api-spec.md): how many counter-records the explicit
    walk-back stages — each one clipped to ±1, so the larger raw sum, rounded
    up. Served on the bundle as `severance.records`; derived here where a board
-   hands only the sums. */
+   hands only the sums. A SERVED 0 IS AN ANSWER (seam 245, ask 21): only a
+   count that is absent is derived, never one that is zero. */
 function severanceCost(bundle) {
-  if (bundle.severance?.records) return bundle.severance.records;
+  const served = bundle.severance?.records;
+  if (served !== undefined && served !== null) return served;
   const reach = Math.max(Math.abs(bundle.rawSum.pDirected), Math.abs(bundle.rawSum.pInterest));
   return Math.max(1, Math.ceil(Math.round(reach * 100) / 100));
 }
@@ -8191,7 +8431,9 @@ function StanceControl({
      pack). `"busy"` is the wait past 200ms, `"failed"` the signing that did
      not complete. With the pad closed it is the hold's, and the target's row
      carries it under the face; with the pad open it is Set's, and the pad's
-     commit row carries it. `"writeRule"` (jakob 2026-10-01, backlog item
+     commit row carries it; with the alternates up it is theirs, and with the
+     walk-back or the empty sign raised it is that dialog's (seam 245, asks
+     14 and 15). `"writeRule"` (jakob 2026-10-01, backlog item
      117) is the write rule's refusal, which is a notice and not a fault: on
      the row a quiet line with no Retry, and in the pad the notice panel
      standing where the landing line and the commit row would, in
@@ -8259,8 +8501,13 @@ function StanceControl({
   const holdTimer = React.useRef(null);
   const suppressClick = React.useRef(false);
   const fieldRef = React.useRef(null);
+  /* The last pick sent to be signed, so a row's Retry asks that act again. */
+  const sent = React.useRef(null);
   const considered = open || alternates;
-  const landing = considered ? localLanding(bundle.rawSum, pick) : null;
+  /* Nothing stands when no record ever has, or the bundle is walked back:
+     a (0, 0) landing there is the empty sign's, read and asked as one. */
+  const nothingStands = bundle.records === 0 || bundle.severed === true;
+  const landing = considered ? localLanding(bundle.rawSum, pick, nothingStands) : null;
   const clearHold = () => {
     if (holdTimer.current !== null) {
       clearTimeout(holdTimer.current);
@@ -8277,14 +8524,18 @@ function StanceControl({
   React.useEffect(() => {
     if (!open) return undefined;
     /* Over the walk-back's dialog, Escape is the dialog's `Keep it`: the pad
-       beneath stays parked. */
+       beneath stays parked — and, like `Keep it`, it waits while the
+       dialog's act signs. */
     const onKey = event => {
       if (event.key !== "Escape") return;
-      if (confirming !== null) setConfirming(null);else if (emptyAsk !== null) setEmptyAsk(null);else closeAll();
+      if (confirming !== null || emptyAsk !== null) {
+        if (signing === "busy") return;
+        if (confirming !== null) setConfirming(null);else setEmptyAsk(null);
+      } else closeAll();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, confirming, emptyAsk]);
+  }, [open, confirming, emptyAsk, signing]);
   const apply = (chosen, landed, records = 1) => {
     const rawSum = {
       pDirected: bundle.rawSum.pDirected + chosen.pDirected,
@@ -8318,8 +8569,9 @@ function StanceControl({
      parked beneath, and signs one record; `Keep it` returns to the pick.
      With nothing standing the ask is the empty sign's, never the walk-back's. */
   const commitChecked = chosen => {
-    const landed = localLanding(bundle.rawSum, chosen);
-    if (landed.severed && (bundle.records === 0 || bundle.severed === true)) {
+    sent.current = chosen;
+    const landed = localLanding(bundle.rawSum, chosen, nothingStands);
+    if (landed.empty) {
       setEmptyAsk({
         pick: chosen,
         landed
@@ -8391,10 +8643,22 @@ function StanceControl({
      an empty sign's standing, or a kept pick — it says nothing. */
   const restingZero = !pendingPick && bundle.severed ? severanceWords(axes).zero : EMPTY_PICK_LABEL;
   const restingFace = restingPair === null ? null : bundleReadout(restingPair, restingZero);
-  /* Whose state `signing` is: the pad's while it is open, the row's while it
-     is not. An anchor whose hold is still signing refuses a second hold. */
-  const rowSigning = open ? undefined : signing;
-  const padSigning = open ? signing : undefined;
+  /* Whose state `signing` is: the surface that sent the act. A dialog raised
+     over the pad — the walk-back, the empty sign — sends its own, so the
+     signing is the dialog's while one is up; the pad's while it is open
+     beneath none; the alternates' while they stand in its place (seam 245,
+     ask 14); the row's while nothing is open. CANCEL MID-SIGNING CLOSES THE
+     SURFACE, NEVER THE SIGNING (ask 16): the act was sent and cannot be
+     called back, so its wait passes to the target's row — `Signing…` under
+     the face, the anchor refusing a second hold — and it ends there as a
+     hold's would: the face moves and the snackbar confirms, or the row says
+     it did not sign, with Retry. An anchor whose hold is still signing
+     refuses a second hold. */
+  const dialogUp = confirming !== null || emptyAsk !== null;
+  const rowSigning = open || alternates ? undefined : signing;
+  const padSigning = open && !dialogUp ? signing : undefined;
+  const altSigning = alternates && !dialogUp ? signing : undefined;
+  const dialogSigning = dialogUp ? signing : undefined;
   const anchorBusy = rowSigning === "busy";
   /* The face, ringed while a hold is under way — the ring centred on it, the
      face's own box unchanged, so nothing beside it moves. */
@@ -8541,7 +8805,7 @@ function StanceControl({
     row: true,
     onRetry: () => {
       setSigned(null);
-      commitChecked(TAP_DEFAULT);
+      commitChecked(sent.current ?? TAP_DEFAULT);
     }
   }), rowSigning === "writeRule" && /*#__PURE__*/React.createElement(SigningPending, {
     row: true,
@@ -8732,6 +8996,7 @@ function StanceControl({
     onCommit: () => commitChecked(pick),
     onCancel: closeAll,
     onSever: openSeverance,
+    signing: altSigning,
     landing: /*#__PURE__*/React.createElement(StanceLandingLine, {
       landing: landing,
       names: axes,
@@ -8755,6 +9020,9 @@ function StanceControl({
     bundle: bundle,
     records: Math.max(1, confirming.records),
     alreadySevered: confirming.alreadySevered === true,
+    busy: dialogSigning === "busy",
+    failed: dialogSigning === "failed",
+    writeRule: dialogSigning === "writeRule",
     names: axes,
     onCancel: () => setConfirming(null),
     onConfirm: () => {
@@ -8765,16 +9033,25 @@ function StanceControl({
   }), emptyAsk !== null && /*#__PURE__*/React.createElement(EmptySignConfirm, {
     targetLabel: targetLabel,
     vouchIn: vouchesIn,
+    busy: dialogSigning === "busy",
+    failed: dialogSigning === "failed",
+    writeRule: dialogSigning === "writeRule",
     onCancel: () => setEmptyAsk(null),
     onConfirm: () => {
       applyEmpty(emptyAsk.pick, emptyAsk.landed);
       setEmptyAsk(null);
       closeAll();
     }
-  }), /*#__PURE__*/React.createElement(Snackbar, {
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      width: 0,
+      height: 0
+    }
+  }, /*#__PURE__*/React.createElement(Snackbar, {
     message: signed,
     onDismiss: () => setSigned(null)
-  }), joinPrompt && /*#__PURE__*/React.createElement(JoinPrompt, {
+  })), joinPrompt && /*#__PURE__*/React.createElement(JoinPrompt, {
     open: true,
     onClose: () => setJoinPrompt(false)
   }));
@@ -9336,12 +9613,19 @@ function countsText(hiddenTopics, references) {
   if (parts.length === 0) return null;
   return `· ${parts.join(" · ")}`;
 }
+
+/* THE LINE CLIPS SIDEWAYS ONLY (seam 245, ask 8). `overflow: hidden` clipped
+   both axes, and the 48px targets `cg-hit` grows above and below the 34px
+   line — the detail's whole-line door and the card's count — are exactly what
+   stands outside it vertically, so the line cut its own promise off. A line
+   that never wraps can only overflow sideways, and `overflow-x: clip` holds
+   that axis alone, the other left visible, without becoming a scroll box. */
 const LINE = {
   display: "flex",
   alignItems: "center",
   gap: "var(--space-2)",
   flexWrap: "nowrap",
-  overflow: "hidden",
+  overflowX: "clip",
   minWidth: 0
 };
 function visibleChips(topics, references) {
@@ -10695,6 +10979,28 @@ const REASONS = {
   }
 };
 
+/* The mark's three lines, each in its whole type role. */
+const REDACTED_TYPE = {
+  "body-medium": {
+    fontSize: "var(--text-body-medium)",
+    lineHeight: "var(--text-body-medium--line-height)",
+    letterSpacing: "var(--text-body-medium--letter-spacing)",
+    fontWeight: "var(--text-body-medium--font-weight)"
+  },
+  "body-small": {
+    fontSize: "var(--text-body-small)",
+    lineHeight: "var(--text-body-small--line-height)",
+    letterSpacing: "var(--text-body-small--letter-spacing)",
+    fontWeight: "var(--text-body-small--font-weight)"
+  },
+  "label-small": {
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
+    fontWeight: "var(--text-label-small--font-weight)"
+  }
+};
+
 /**
  * Replaces a node's ENTIRE content region: title, body, description, media, all
  * at once. There is no field-level or inline cut, because redaction is
@@ -10730,20 +11036,20 @@ function RedactedContent({
     "data-node": node
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: "var(--text-body-medium)",
+      ...REDACTED_TYPE["body-medium"],
       color: "var(--text-body)"
     },
     "data-node": node && "line"
   }, copy.line), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: "var(--text-body-small)",
+      ...REDACTED_TYPE["body-small"],
       color: "var(--text-secondary)",
       textWrap: "pretty"
     },
     "data-node": node && "detail"
   }, note ?? copy.detail), when && /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: "var(--text-label-small)",
+      ...REDACTED_TYPE["label-small"],
       color: "var(--text-secondary)"
     },
     "data-node": node && "when"
@@ -11044,7 +11350,10 @@ function CommentCard({
       margin: 0,
       cursor: "pointer",
       fontFamily: "var(--font-sans)",
+      // The whole label-medium role, `PostCard`'s opener's (seam 245, ask 6).
       fontSize: "var(--text-label-medium)",
+      lineHeight: "var(--text-label-medium--line-height)",
+      letterSpacing: "var(--text-label-medium--letter-spacing)",
       fontWeight: "var(--text-label-medium--font-weight)",
       color: "var(--text-secondary)"
     }
@@ -11802,7 +12111,12 @@ function PostCard({
       margin: 0,
       cursor: "pointer",
       fontFamily: "var(--font-sans)",
+      /* The whole label-medium role (seam 245, ask 6): a <button> does
+         not inherit the page's leading, so the size alone drew a 22px
+         opener where the role's 16px line makes it 24. */
       fontSize: "var(--text-label-medium)",
+      lineHeight: "var(--text-label-medium--line-height)",
+      letterSpacing: "var(--text-label-medium--letter-spacing)",
       fontWeight: "var(--text-label-medium--font-weight)",
       color: "var(--text-secondary)"
     },
@@ -12138,7 +12452,7 @@ __ds_scope.TaggedRow = TaggedRow;
 
 // components/core/ContentRow.jsx
 try { (() => {
-const { Icon, MonogramAvatar, REDACTED_ACTOR_NAME, PendingMarker, StanceValue, ZERO_BUNDLE_EMOJI } = __ds_scope;
+const { Icon, MonogramAvatar, REDACTED_ACTOR_NAME, PendingMarker, EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue, ZERO_BUNDLE_EMOJI } = __ds_scope;
 /* THE IDENTITY ROW — the card-lite line every list in this product is built
    from: a 40px disc saying who or what, two lines of words saying which and
    when, and whatever the list keeps on its trailing edge.
@@ -12209,14 +12523,21 @@ const VARIANTS = {
     disc: "container"
   }
 };
+
+/* Each rung sets its role's tracking with its size and leading (seam 245,
+   ask 7): a row is a <button> or a <div>, and the one resets letter-spacing
+   while the other inherits the page's 0.5px, so a rung that left it to the
+   box drew two trackings for one role. */
 const TYPE = {
   "label-small": {
     fontSize: "var(--text-label-small)",
-    lineHeight: "var(--text-label-small--line-height)"
+    lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)"
   },
   "body-medium": {
     fontSize: "var(--text-body-medium)",
-    lineHeight: "var(--text-body-medium--line-height)"
+    lineHeight: "var(--text-body-medium--line-height)",
+    letterSpacing: "var(--text-body-medium--letter-spacing)"
   }
 };
 const TONES = {
@@ -12290,10 +12611,17 @@ function Disc({
       fontSize: "var(--text-title-medium)",
       lineHeight: 1
     }
-  }, ZERO_BUNDLE_EMOJI) : face ? /*#__PURE__*/React.createElement(StanceValue, {
+  }, ZERO_BUNDLE_EMOJI) : face ?
+  /*#__PURE__*/
+  /* WHICH (0, 0) THE ROW DRAWS, FROM THE ROW'S OWN DATA (seam 245, ask
+     19): the numbers cannot tell a walked-back standing from an
+     empty-signed one, so the face carries `severed`, and only a
+     standing walked back speaks `Walked back`. */
+  React.createElement(StanceValue, {
     pDirected: face.pDirected,
     pInterest: face.pInterest,
-    showPair: false
+    showPair: false,
+    zeroLabel: face.severed ? SEVERED_LABEL : EMPTY_PICK_LABEL
   }) : letter ? /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true",
     style: {
@@ -12349,6 +12677,7 @@ function ContentRow({
     style: {
       fontSize: "var(--text-label-large)",
       lineHeight: "var(--text-label-large--line-height)",
+      letterSpacing: "var(--text-label-large--letter-spacing)",
       fontWeight: "var(--text-label-large--font-weight)",
       ...(redacted ? {
         color: "var(--text-secondary)"
@@ -12553,7 +12882,9 @@ const EMPHASIS = {
       color: "var(--text-secondary)"
     },
     /* A node in the seal's value slot draws its own line — the stance readout
-       is a face and a pair, not a sentence — so only a string gets the voice. */
+       is a face and a pair, not a sentence — so only a string gets the voice,
+       and a sentence is handed over as one: the License row takes
+       `licenseSummary(license)`, never the element (seam 245, ask 3). */
     wrapNodes: false,
     border: last => ({
       borderTop: "1px solid var(--border-hairline)",
@@ -16252,7 +16583,7 @@ __ds_scope.ProfileHeader = ProfileHeader;
 
 // components/people/StanceRow.jsx
 try { (() => {
-const { MonogramAvatar, StanceValue } = __ds_scope;
+const { MonogramAvatar, EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue } = __ds_scope;
 /* A person on an opinions list (item 17, the conformance round): their face,
    their name, and THE STANCE THE ROW IS ABOUT (jakob 2026-09-01) — the
    record's own value, read-only.
@@ -16285,15 +16616,24 @@ const { MonogramAvatar, StanceValue } = __ds_scope;
    destination, so the door needs a spoken name of its own; `HISTORY_DOOR_TAIL`
    is the same promise in the words the pad's label wears. */
 const HISTORY_DOOR_LABEL = "See how this opinion built";
+
+/* WHICH (0, 0) THE ROW DRAWS IS THE ROW'S DATA (seam 245, ask 19). A stance
+   at exactly (0, 0) wears 🤷 either way, but its numbers cannot tell a
+   standing walked back to nothing from one an empty sign joined, and the
+   spoken word differs — `Walked back` is false of the second. So the row
+   carries the bundle's own `severed`: walked back speaks `Walked back`;
+   absent or false, the (0, 0) `Says nothing`. */
 function StanceRow({
   name,
   handle,
   src,
   pDirected,
   pInterest,
+  severed = false,
   onOpen,
   onOpenHistory
 }) {
+  const zeroLabel = severed ? SEVERED_LABEL : EMPTY_PICK_LABEL;
   const box = {
     display: "flex",
     alignItems: "center",
@@ -16345,7 +16685,8 @@ function StanceRow({
     }
   }, "@", handle)), !onOpenHistory && /*#__PURE__*/React.createElement(StanceValue, {
     pDirected: pDirected,
-    pInterest: pInterest
+    pInterest: pInterest,
+    zeroLabel: zeroLabel
   }));
   if (!onOpenHistory) return person;
   return /*#__PURE__*/React.createElement("div", {
@@ -16373,7 +16714,8 @@ function StanceRow({
     }
   }, /*#__PURE__*/React.createElement(StanceValue, {
     pDirected: pDirected,
-    pInterest: pInterest
+    pInterest: pInterest,
+    zeroLabel: zeroLabel
   })));
 }
 __ds_scope.HISTORY_DOOR_LABEL = HISTORY_DOOR_LABEL;
@@ -16512,8 +16854,19 @@ const { Button } = __ds_scope;
    The loading state is TEXT, not a spinner or a shimmer: motion clarifies where
    something came from and never performs (§4), and a skeleton that pretends to be
    content is the opposite of §9's honesty. Space for media is reserved by the
-   media component when it arrives, which is a different job. */
+   media component when it arrives, which is a different job.
 
+   BOTH LINES SET THE WHOLE body-medium ROLE (seam 245, ask 6): size, leading,
+   tracking and weight together (§7). The size alone left the page's
+   body-large 24px leading and 0.5px tracking on a 14px line. */
+const LINE = {
+  margin: 0,
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  fontWeight: "var(--text-body-medium--font-weight)",
+  color: "var(--text-secondary)"
+};
 function EmptyState({
   title,
   action,
@@ -16531,11 +16884,7 @@ function EmptyState({
     },
     "data-node": node
   }, /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-body-medium)",
-      color: "var(--text-secondary)"
-    },
+    style: LINE,
     "data-node": node && "title"
   }, title), action ?? (actionLabel && onAction ? /*#__PURE__*/React.createElement(Button, {
     variant: "outline",
@@ -16551,11 +16900,7 @@ function LoadingState({
   return /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
-    style: {
-      margin: 0,
-      fontSize: "var(--text-body-medium)",
-      color: "var(--text-secondary)"
-    }
+    style: LINE
   }, label);
 }
 __ds_scope.EmptyState = EmptyState;
@@ -17082,6 +17427,8 @@ __ds_ns.PUBLIC_DOMAIN = __ds_scope.PUBLIC_DOMAIN;
 
 __ds_ns.LICENSE_MENU_LABEL = __ds_scope.LICENSE_MENU_LABEL;
 
+__ds_ns.LICENSE_SUMMARY = __ds_scope.LICENSE_SUMMARY;
+
 __ds_ns.LicenseSummary = __ds_scope.LicenseSummary;
 
 __ds_ns.LicenseChooser = __ds_scope.LicenseChooser;
@@ -17254,6 +17601,8 @@ __ds_ns.StancePad = __ds_scope.StancePad;
 
 __ds_ns.ATTACHMENT_FIELD_HEIGHT_PX = __ds_scope.ATTACHMENT_FIELD_HEIGHT_PX;
 
+__ds_ns.ATTACHMENT_DETENT_PX = __ds_scope.ATTACHMENT_DETENT_PX;
+
 __ds_ns.AttachmentPad = __ds_scope.AttachmentPad;
 
 __ds_ns.DIMENSION_MIN = __ds_scope.DIMENSION_MIN;
@@ -17290,6 +17639,8 @@ __ds_ns.NO_STANDING_LABEL = __ds_scope.NO_STANDING_LABEL;
 
 __ds_ns.STANCE_SEVERANCE_WORDS = __ds_scope.STANCE_SEVERANCE_WORDS;
 
+__ds_ns.WRITE_RULE_WORDS = __ds_scope.WRITE_RULE_WORDS;
+
 __ds_ns.ZERO_BUNDLE_EMOJI = __ds_scope.ZERO_BUNDLE_EMOJI;
 
 __ds_ns.UNREACHABLE_EMOJI = __ds_scope.UNREACHABLE_EMOJI;
@@ -17313,6 +17664,8 @@ __ds_ns.TAG_WITHDRAWN_LABEL = __ds_scope.TAG_WITHDRAWN_LABEL;
 __ds_ns.StanceValue = __ds_scope.StanceValue;
 
 __ds_ns.UNREACHABLE_TAIL = __ds_scope.UNREACHABLE_TAIL;
+
+__ds_ns.EMPTY_LANDING_WORDS = __ds_scope.EMPTY_LANDING_WORDS;
 
 __ds_ns.StanceReadout = __ds_scope.StanceReadout;
 

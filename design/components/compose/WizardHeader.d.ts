@@ -9,7 +9,7 @@
 export interface WizardHeaderProps {
   title?: string;
   backHref?: string;
-  /** Defaults to "Back a step" — the arrow's honest name. */
+  /** Defaults to "Back a step" — the arrow's honest name; the first stage, whose arrow leaves the flow, passes "Back". */
   backLabel?: string;
   onBack?: (event: React.MouseEvent) => void;
   onLeave?: () => void;

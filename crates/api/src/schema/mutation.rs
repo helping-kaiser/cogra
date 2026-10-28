@@ -27,8 +27,8 @@ use uuid::Uuid;
 
 use super::types::{
     AccountDeletion, Application, AuthSession, Dimension, ErrorCode, InviteLink,
-    MediaAttachmentType, PendingEmailChange, PreparedWrite, Session, StagedWriteType, User,
-    UserError, UserPreferences,
+    MediaAttachmentType, PendingEmailChange, PreparedWrite, Record, RecordId, Session,
+    StagedWriteType, User, UserError, UserPreferences,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
@@ -1570,6 +1570,37 @@ struct SendReportPayload {
     /// When the report was sent; null when it was refused.
     reported_at: Option<DateTime<Utc>>,
     user_errors: Vec<UserError>,
+}
+
+/// Remove the payload of a record the viewer authored — the per-content
+/// self-service erasure path (erasure.md §1).
+#[derive(InputObject)]
+struct RemoveContentInput {
+    /// A post's or comment's record — `genesisRecordId` names the node's
+    /// own; an edit's record names that version.
+    record: RecordId,
+    /// Also remove every record in the target's revision chain — the
+    /// whole post or comment history, every earlier version's words
+    /// included. Defaults to false (the single record only); the product's
+    /// Remove sends true.
+    include_revisions: Option<bool>,
+}
+
+#[derive(SimpleObject)]
+struct RemoveContentPayload {
+    /// The removed records that have landed, now payloadState: REDUCED. An
+    /// act still in flight has no record yet; it lands REDUCED.
+    records: Vec<Record>,
+    user_errors: Vec<UserError>,
+}
+
+impl RemoveContentPayload {
+    fn refused(error: UserError) -> Self {
+        Self {
+            records: vec![],
+            user_errors: vec![error],
+        }
+    }
 }
 
 #[derive(SimpleObject)]
@@ -3281,6 +3312,76 @@ impl Mutation {
         store::discard_device_lock(pool, v.user_id, input.lock).await?;
         Ok(DiscardDeviceLockPayload {
             ok: Some(true),
+            user_errors: vec![],
+        })
+    }
+
+    /// Remove the payload of a record the viewer authored — the
+    /// per-content self-service erasure path (erasure.md §1). Immediate
+    /// and permanent: each act's payload is archived and reduced, its
+    /// display rows tombstoned and its pictures held unless another
+    /// placement still shows them, atomically per act; the node keeps its
+    /// place, its routing and its replies, and wears the author-removed
+    /// mark. Needs a session and authorship, no particular account state:
+    /// it signs nothing (erasure.md §1). Idempotent: removing a removed
+    /// record answers the same and archives nothing new.
+    async fn remove_content(
+        &self,
+        ctx: &Context<'_>,
+        input: RemoveContentInput,
+    ) -> async_graphql::Result<RemoveContentPayload> {
+        use crate::removal::RemovalError;
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let boundary = ctx.data::<StandInBoundary>()?;
+        let areas = ctx.data::<MediaAreas>()?;
+        let at_record =
+            |code: ErrorCode, message: &str| UserError::at(code, message, vec!["record".into()]);
+        let removed = match crate::removal::remove_content(
+            boundary,
+            pool,
+            areas,
+            v.user_id,
+            &input.record.0,
+            input.include_revisions.unwrap_or(false),
+        )
+        .await
+        {
+            Ok(removed) => removed,
+            Err(RemovalError::NotFound) => {
+                return Ok(RemoveContentPayload::refused(at_record(
+                    ErrorCode::NotFound,
+                    "no record has this identifier",
+                )));
+            }
+            Err(RemovalError::NotAuthor) => {
+                return Ok(RemoveContentPayload::refused(at_record(
+                    ErrorCode::Forbidden,
+                    "only its author removes a record",
+                )));
+            }
+            Err(RemovalError::OutOfScope(family)) => {
+                return Ok(RemoveContentPayload::refused(at_record(
+                    ErrorCode::BadInput,
+                    &format!("a {family} record is not a post or a comment"),
+                )));
+            }
+            Err(RemovalError::Carried(_)) => {
+                return Ok(RemoveContentPayload::refused(at_record(
+                    ErrorCode::BadInput,
+                    "a record carried with an application is deleted with it, not removed",
+                )));
+            }
+            Err(e) => return Ok(RemoveContentPayload::refused(internal(e))),
+        };
+        let mut landed = postgres_store::mirror::records_by_ids(pool, &removed.acts).await?;
+        Ok(RemoveContentPayload {
+            records: removed
+                .acts
+                .iter()
+                .filter_map(|act| landed.remove(act))
+                .map(Record)
+                .collect(),
             user_errors: vec![],
         })
     }

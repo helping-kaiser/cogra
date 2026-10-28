@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RestoreResult } from "@/lib/identity/restorer";
 import { createTokenStore } from "@/lib/session/token-store";
+import { keepPick, listKeptPicks } from "@/lib/stance/kept-picks";
+import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
 import { fakeIdentityStore } from "@/test/identity";
 import { renderWithProviders } from "@/test/providers";
 import { fakeFlow } from "@/test/registration";
@@ -47,6 +49,29 @@ describe("RestoreForm", () => {
     expect(flow.ensureAdvancing).toHaveBeenCalled();
   });
 
+  it("opens the kept picks' review under the restore's snackbar when picks wait, signing none", async () => {
+    // Restore.md:41 — KeptPicksReview opens under the same snackbar; never a pick signs on its own.
+    await keepPick("acct-1", { kind: "post", id: "post-1" }, { pDirected: 0.1, pInterest: 0.1 });
+    renderWithProviders(
+      <>
+        <RestoreForm />
+        <CarriedSnackbar />
+      </>,
+      { store: signedInStore() },
+    );
+    submit();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/kept-picks?from=%2F"));
+    expect(screen.getByTestId("carried-snackbar")).toHaveTextContent("Your key is on this browser now.");
+    expect(await listKeptPicks("acct-1")).toHaveLength(1);
+  });
+
+  it("goes home as ever when only a kept approval waits", async () => {
+    await keepPick("acct-1", { kind: "profile", id: "u-9" }, { pDirected: 0.1, pInterest: 0.1 }, "approval");
+    renderWithProviders(<RestoreForm />, { store: signedInStore() });
+    submit();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+  });
+
   it("flags the account ephemeral when don't-remember is checked", async () => {
     const identity = fakeIdentityStore();
     const setEphemeral = vi.spyOn(identity, "setEphemeral");
@@ -63,6 +88,8 @@ describe("RestoreForm", () => {
     renderWithProviders(<RestoreForm store={identity} />, { store: signedInStore() });
     submit();
     await waitFor(() => expect(setEphemeral).toHaveBeenCalledWith(false));
+    // The restore runs on to its navigation; waited for, so it never lands in the next test.
+    await waitFor(() => expect(replace).toHaveBeenCalled());
   });
 
   it("records no choice when the restore fails", async () => {

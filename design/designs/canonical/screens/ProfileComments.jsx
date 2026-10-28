@@ -3,7 +3,21 @@
    Same header block; only the list changes. Drawn on @ada's profile — the
    master instance every profile's comments tab follows. The ⋮ rides the
    actions row and holds the whole profile menu, exactly as the profile's own
-   board draws it (the band law): a tab of a page is not a smaller page. */
+   board draws it (the band law): a tab of a page is not a smaller page.
+
+   A MEMBER'S EMPTY CHRONICLE (seam 245, ask 11; the `comments` chip at
+   `none`). A tab with nothing in it reads `Nothing here yet.` at
+   `EmptyState`, the line alone: a member knows why their own is empty, and
+   another's needs no reason — only the applicant's says what fills it and
+   when (`ProfileApplicant`), because that is new. It is drawn here because
+   this is where a member meets it: `Everything` always holds the member's
+   own registration, while `Comments` is empty for anyone who never
+   commented — and the figures, which count no comments, stay true over it.
+   Merged under the autonomy order of 2026-10-28; the wording jakob's at
+   review. */
+export const PROPS = { comments: { editor: "enum", options: ["some", "none"], default: "some" } };
+export const VALS = `someShown: this.props.comments === "none" ? "none" : "flex", noneShown: this.props.comments === "none" ? "flex" : "none"`;
+
 export function Screen() {
   return (
     <>
@@ -26,7 +40,7 @@ export function Screen() {
           />
         </div>
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="comments" tabs={CHRONICLE_TABS} />
-        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 0 0" }}>
+        <div style={{ flex: 1, overflow: "hidden", display: "{{someShown}}", flexDirection: "column", gap: 8, padding: "8px 0 0" }}>
           <CommentCard
             author={ADA}
             content="The glovebox camera earns its keep — this is the print from 2019 that almost catches it."
@@ -49,6 +63,9 @@ export function Screen() {
             target="“Salt maps of the coast road” — @sol"
             onOpenTarget={() => {}}
           />
+        </div>
+        <div style={{ flex: 1, overflow: "hidden", display: "{{noneShown}}", flexDirection: "column", padding: "8px 16px 0" }}>
+          <EmptyState title="Nothing here yet." />
         </div>
       </div>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />

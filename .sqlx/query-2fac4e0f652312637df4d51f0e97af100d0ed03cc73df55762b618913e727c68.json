@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT act_id, author, family, target, state, pre_signed_at\n         FROM staged_writes WHERE act_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "act_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "author",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "family",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "target",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "state",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "pre_signed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "2fac4e0f652312637df4d51f0e97af100d0ed03cc73df55762b618913e727c68"
+}

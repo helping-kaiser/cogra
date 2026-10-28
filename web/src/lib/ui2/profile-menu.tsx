@@ -21,10 +21,9 @@
 // ids rather than the profile page's registered paths.
 //
 // BUILT WHOLE, WIRED IN PART (saved-surface SS-1; the introduced-but-inert
-// law, jakob 2026-09-14): History waits on the History surface, Mention on
-// the compose wizard's profile reference.
-// Those rows stand at full strength and do nothing yet; the hand-test notes
-// name each.
+// law, jakob 2026-09-14): Mention waits on the compose wizard's profile
+// reference. That row stands at full strength and does nothing yet; the
+// hand-test notes name it.
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -145,8 +144,9 @@ export function ProfileMenu({
     ariaLabel = "More on your profile";
     items = [
       { label: "Saved", onSelect: () => router.push("/saved"), testId: "profile-menu-saved", node: row("saved") },
-      // INERT until History is built (saved-surface D4 / History's H3).
-      { label: "History", onSelect: inert, testId: "profile-menu-history", node: row("history") },
+      // History opens whole, or on its empty state when nothing is seen yet
+      // (ProfileOwnMenu.md:13/15) — the page decides which.
+      { label: "History", onSelect: () => router.push("/history"), testId: "profile-menu-history", node: row("history") },
       { label: "Share your profile", onSelect: share, testId: "profile-menu-share", node: row("share") },
     ];
   } else if (kind === "deleted") {

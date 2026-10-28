@@ -7,10 +7,14 @@ import type { StanceBundle, StancePair } from "./StanceReadout";
  */
 export interface StanceControlProps {
   /**
-   * Already in the reader's words — "this post", "this comment", "@ada". Names
-   * the face's aria-label and the visually-hidden "Choose your opinion on
-   * {targetLabel}" skip-link beside it, so a page (e.g. TagPage) carrying more
-   * than one stance control names each of them (backlog item 46.1).
+   * Already in the reader's words, one per kind (copy-voice, *The target,
+   * named one way per kind*): a post "this post" (the default), a comment
+   * "this comment", a person their handle "@ada" ("this account" once no
+   * name is left), a topic its tag "#saltmaps". Names the face's aria-label
+   * and the visually-hidden "Choose your opinion on {targetLabel}" skip-link
+   * beside it, so a page (e.g. TagPage) carrying more than one stance control
+   * names each of them (backlog item 46.1), and every line the pad, its
+   * dialogs and its snackbar build around the target.
    */
   targetLabel?: string;
   /**

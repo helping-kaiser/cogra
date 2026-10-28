@@ -100,6 +100,15 @@ export const HELP_TOPICS = {
       "Nothing was signed or spent, and your draft is kept. Try again in a little while.",
     ],
   },
+  // The same dialog from the kept picks' seal, which keeps the picks (copy-voice,
+  // *Why signing waits*, blessed jakob 2026-10-05).
+  whySigningWaitsKept: {
+    title: "Why signing waits",
+    paragraphs: [
+      "There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now.",
+      "Nothing was signed or spent, and your picks are still kept. Try again in a little while.",
+    ],
+  },
   // The same dialog from an edit, which keeps no draft: the clause says what is
   // true there (copy-voice, *Why signing waits*: "from a comment edit,
   // `Nothing was signed or spent, and your edit is still here. Try again in a
@@ -139,6 +148,24 @@ export const HELP_TOPICS = {
     paragraphs: [
       "A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own.",
       "Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.",
+    ],
+  },
+  // The tag picker's one "?" (copy-voice, *Tagging*, the K13 round): the
+  // dot is named by the dialog it opens.
+  tagging: {
+    title: "Tagging",
+    paragraphs: [
+      "A tag is a name anyone can use — nobody owns one, and using a name nobody has used before takes no extra step. Tagging is its own signed action, and it carries how much the post is about that tag.",
+      "Names are lowercased, and a name can hold letters, digits, dot, dash and underscore. Tap a tag you have added to set how it relates.",
+    ],
+  },
+  // The citation picker's one "?" (copy-voice, *Citing*; trimmed to v1.0.0's
+  // citable kinds, jakob 2026-09-25).
+  citing: {
+    title: "Citing",
+    paragraphs: [
+      "A citation is its own signed action and carries an opinion of what you cite. You can cite a post, a comment or a person.",
+      'A comment can also be cited from itself — open its menu and choose "Cite in a new post".',
     ],
   },
   editing: {
@@ -187,6 +214,24 @@ export const HELP_TOPICS = {
     paragraphs: [
       "Signing needs your key, and it isn't on this browser — nothing is signed without it.",
       "A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.",
+    ],
+  },
+  // Explore's results' "?" (copy-voice, *Searching*; re-voiced for the
+  // unified sigil law, blessed jakob 2026-10-16).
+  searching: {
+    title: "How searching works",
+    paragraphs: [
+      "Search reads names, handles and titles, never bodies. Start with @ to find people by their handle — what they made follows them. Start with # to find tags and what carries them.",
+      "Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.",
+    ],
+  },
+  // The search filter sheet's "?" (copy-voice, *The filter*: the search's own
+  // seen sentence; the Reset sentence jakob's own, blessed 2026-10-02).
+  theSearchFilter: {
+    title: "How the filter works",
+    paragraphs: [
+      "What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Nothing changes until you press Done, and nothing here is signed or shared.",
+      "It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings.",
     ],
   },
 } as const satisfies Record<string, HelpTopic>;

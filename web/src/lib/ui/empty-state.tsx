@@ -29,7 +29,7 @@ export function EmptyState({
   actionLabel?: string;
   onAction?: () => void;
   testId: string;
-  /** The registered empty line (`profile.chronicle.empty`), naming its `title`. */
+  /** The registered empty line (`profile.chronicle.empty`), naming its `title` and its `action`. */
   node?: DataNode;
 }) {
   return (
@@ -41,6 +41,7 @@ export function EmptyState({
         (actionLabel !== undefined && onAction !== undefined ? (
           <Button
             testId={`${testId}-action`}
+            node={part(node, "action")}
             variant="outline"
             size="sm"
             selfStart

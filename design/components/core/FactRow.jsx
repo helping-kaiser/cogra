@@ -29,7 +29,9 @@ const EMPHASIS = {
     label: { whiteSpace: "nowrap" },
     value: { color: "var(--text-secondary)" },
     /* A node in the seal's value slot draws its own line — the stance readout
-       is a face and a pair, not a sentence — so only a string gets the voice. */
+       is a face and a pair, not a sentence — so only a string gets the voice,
+       and a sentence is handed over as one: the License row takes
+       `licenseSummary(license)`, never the element (seam 245, ask 3). */
     wrapNodes: false,
     border: (last) => ({
       borderTop: "1px solid var(--border-hairline)",

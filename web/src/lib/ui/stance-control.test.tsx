@@ -3,7 +3,14 @@ import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
-import { DEFAULT_STANCE_INPUT_MODE, writeStanceInputMode } from "@/lib/stance/input-mode";
+import {
+  DEFAULT_STANCE_INPUT_MODE,
+  writeStanceInputMode,
+  type StanceInputMode,
+} from "@/lib/stance/input-mode";
+import { keepPick, listKeptPicks } from "@/lib/stance/kept-picks";
+import { KeptPicksNavigation } from "@/lib/stance/kept-picks-route";
+import { markSettling } from "@/lib/stance/settling";
 import { ORIGIN, TAP_DEFAULT } from "@/lib/stance/model";
 import { KNOB_TRAVEL_INSET_PX } from "@/lib/stance/pad-geometry";
 import { writeStanceTaught } from "@/lib/stance/stance-coach";
@@ -46,6 +53,9 @@ function alreadyTaught() {
   writeStanceTaught();
 }
 
+/** Where a kept pick's anchor sent the reader (`useOpenKeptPicks`). */
+const navigated: string[] = [];
+
 function mount(
   options: StubStanceOptions = {},
   {
@@ -53,13 +63,23 @@ function mount(
     target = TARGET,
     axes,
     barBeneath = false,
-  }: { signedIn?: boolean; target?: StanceTargetRef; axes?: StanceAxes; barBeneath?: boolean } = {},
+    mode = "pad",
+  }: {
+    signedIn?: boolean;
+    target?: StanceTargetRef;
+    axes?: StanceAxes;
+    barBeneath?: boolean;
+    mode?: StanceInputMode;
+  } = {},
 ) {
+  if (mode !== "pad") writeStanceInputMode(mode);
   const data = createStubStanceData(options);
   renderWithProviders(
-    <PadParkingProvider value={barBeneath}>
-      <StanceControl target={target} testIdPrefix={PREFIX} axes={axes} />
-    </PadParkingProvider>,
+    <KeptPicksNavigation navigate={(href) => navigated.push(href)}>
+      <PadParkingProvider value={barBeneath}>
+        <StanceControl target={target} testIdPrefix={PREFIX} axes={axes} />
+      </PadParkingProvider>
+    </KeptPicksNavigation>,
     {
       store: signedIn ? signedInStore() : createTokenStore(),
       stanceData: data,
@@ -84,9 +104,16 @@ function Host() {
   );
 }
 
+/**
+ * The clock moves `ms`, and the custody the kept picks live in (IndexedDB,
+ * which answers on the REAL `setImmediate` — see the fake-timer set below) is
+ * given a few real turns to answer.
+ */
 async function settle(ms = 0) {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(ms);
+    for (let turn = 0; turn < 10; turn += 1) await new Promise((resolve) => setImmediate(resolve));
+    await vi.advanceTimersByTimeAsync(0);
   });
 }
 
@@ -211,12 +238,15 @@ const percent = (value: string) => Number(value.replace("%", ""));
 
 beforeEach(() => {
   window.localStorage.clear();
+  navigated.length = 0;
   stubbedBoxes.clear();
   dragging = false;
   setViewport(1024, 768);
   stubBox(PREFIX, { left: 400, top: 500, ...BUTTON_BOX });
   stubBox(FIELD_ID, { width: FIELD, height: FIELD });
-  vi.useFakeTimers();
+  // Every clock but `setImmediate`: fake-indexeddb answers on it, and a faked
+  // one leaves the kept picks' custody waiting forever.
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "Date"] });
 });
 
 afterEach(() => {
@@ -1130,6 +1160,9 @@ describe("the pad as its masters draw it", () => {
     expect(pad).toHaveAttribute("aria-modal", "true");
     expect(pad).toHaveAccessibleName("Opinion pad for this post");
     expect(pad.className).toContain("w-[17rem]");
+    // 17rem of CONTENT, as the master's inline style measures it: its 16px
+    // padding comes on top (304px in all), not out of the 17rem.
+    expect(pad.className).toContain("box-content");
     expect(pad.className).toContain("gap-3");
     expect(pad.className).toContain("p-4");
     expect(pad.className).toContain("rounded-extra-large");
@@ -1442,18 +1475,184 @@ describe("the pad with the signing key elsewhere", () => {
     expect(screen.queryByTestId(`${PREFIX}-kept`)).toBeNull();
   });
 
-  it("wears the bundle again, the kept pick untouched, once the key is here", async () => {
-    // The kept pick is never destroyed by the key coming back; with the key
-    // here the anchor reads the bundle (the review is its own surface).
-    window.localStorage.setItem(
-      "cogra.keptPicks.u1",
-      JSON.stringify({ "post:post-1": { pDirected: 0.55, pInterest: 0.2 } }),
+  it("carries the pad's one ?: the notice's, never the pad's own beside it", async () => {
+    // PadKeyAbsent draws no pad "?" over the notice's — at most one per screen.
+    mount({ keyAbsent: true });
+    await settle();
+    await openPad();
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-key-help`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`${PREFIX}-explain`)).toBeNull();
+  });
+
+  it("opens the Your key text from the notice's ?", async () => {
+    mount({ keyAbsent: true });
+    await settle();
+    await openPad();
+    await settle();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-key-help`));
+    });
+    expect(screen.getByTestId(`${PREFIX}-notice-help`)).toHaveTextContent("Your key");
+  });
+
+  it("replaces a pick kept on the same target, and keeps several targets at once", async () => {
+    // PadKeyAbsent.md:31,35.
+    await keepPick("u1", { kind: "post", id: "other" }, { pDirected: 0.3, pInterest: 0.3 });
+    await keepPick("u1", { kind: "post", id: "post-1" }, { pDirected: 0.1, pInterest: 0.1 });
+    mount({ keyAbsent: true });
+    await settle();
+    await openPad();
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-exact`)).toHaveTextContent("+0.10 / +0.10");
+    layOutPad();
+    moveKnob(HALF * 0.45, -HALF * 0.1);
+    await settle();
+    await release();
+    await keepPending();
+    await settle();
+    const kept = await listKeptPicks("u1");
+    expect(kept.map((k) => [k.target.id, k.pick])).toEqual([
+      ["other", { pDirected: 0.3, pInterest: 0.3 }],
+      ["post-1", { pDirected: 0.55, pInterest: 0.2 }],
+    ]);
+  });
+
+  it("drops Restore the key and says so when the account has no backup, keeping Keep it pending", async () => {
+    // PadKeyAbsent.md:49; KeyElsewhereNoBackup.md:15-17.
+    mount({ keyAbsent: true, noBackup: true });
+    await settle();
+    await openPad();
+    await settle();
+    const notice = screen.getByTestId(`${PREFIX}-key-absent`);
+    expect(notice).toHaveTextContent(
+      "This account has no backup, so the key can't be brought here yet. Make a recovery code on the device that holds it, then restore it here. Until then, anything you sign waits as pending.",
     );
+    expect(notice).not.toHaveTextContent("Restore the key with your recovery code to finish.");
+    expect(screen.queryByTestId(`${PREFIX}-restore`)).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-keep-pending`)).toHaveTextContent("Keep it pending, restore later");
+  });
+
+  it("carries the same notice in the alternates, in place of the landing and the actions", async () => {
+    // §8.6: the alternates replace the pad everywhere, the key notice included.
+    const data = mount({ keyAbsent: true }, { mode: "sliders" });
+    await settle();
+    await openPad();
+    await settle();
+    const dialog = screen.getByTestId("stance-alternates");
+    expect(dialog).toContainElement(screen.getByTestId(`${PREFIX}-key-absent`));
+    for (const gone of ["stance-alt-commit", "stance-alt-cancel", "stance-alt-help"]) {
+      expect(screen.queryByTestId(gone)).toBeNull();
+    }
+    await keepPending();
+    await settle();
+    expect(screen.queryByTestId("stance-alternates")).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-kept`)).toHaveTextContent("Waiting for your key");
+    expect(data.sent).toEqual([]);
+  });
+});
+
+// PadPending.md — the anchor while the key is elsewhere and a pick waits.
+describe("a pick kept pending, the key elsewhere", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  it("wears the kept pick's face and Waiting for your key, the bundle untouched", async () => {
+    await keepPick("u1", { kind: "post", id: "post-1" }, { pDirected: 0.55, pInterest: 0.2 });
+    const data = mount({ keyAbsent: true });
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-resting-face`)).toHaveTextContent("😊");
+    expect(screen.getByTestId(`${PREFIX}-kept`)).toHaveTextContent("Waiting for your key");
+    expect(control()).toHaveAccessibleName(
+      "Your opinion on this post, waiting for your key: Like this, +0.55 / +0.20.",
+    );
+    expect(data.recordsOf("post-1")).toEqual([]);
+  });
+
+  it("opens the pad holding the kept pick on a hold, and signs nothing", async () => {
+    await keepPick("u1", { kind: "post", id: "post-1" }, { pDirected: 0.55, pInterest: 0.2 });
+    const data = mount({ keyAbsent: true });
+    await settle();
+    await hold();
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-key-absent`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-exact`)).toHaveTextContent("+0.55 / +0.20");
+    expect(data.sent).toEqual([]);
+  });
+});
+
+// PadPendingReview.md — the anchor once the key is back and the review was left unsigned.
+describe("a pick kept pending, the key back", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  it("wears the kept pick's face and Waiting for your review, never Still settling", async () => {
+    await keepPick("u1", { kind: "post", id: "post-1" }, { pDirected: 0.55, pInterest: 0.2 });
     mount();
     await settle();
+    expect(screen.getByTestId(`${PREFIX}-resting-face`)).toHaveTextContent("😊");
+    const line = screen.getByTestId(`${PREFIX}-kept`);
+    expect(line).toHaveTextContent("Waiting for your review");
+    expect(line).not.toHaveTextContent("Waiting for your key");
+    expect(line).not.toHaveTextContent("Still settling");
+    expect(control()).toHaveAccessibleName(
+      "Your opinion on this post, waiting for your review: Like this, +0.55 / +0.20.",
+    );
+  });
+
+  it("opens the kept picks' review on a tap — never the key notice, never a pad", async () => {
+    await keepPick("u1", { kind: "post", id: "post-1" }, { pDirected: 0.55, pInterest: 0.2 });
+    mount();
+    await settle();
+    await openPad();
+    await settle();
+    expect(navigated).toEqual(["/kept-picks?from=%2F"]);
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-key-absent`)).toBeNull();
+  });
+
+  it("opens the review on a hold too, and the hold signs nothing", async () => {
+    await keepPick("u1", { kind: "post", id: "post-1" }, { pDirected: 0.55, pInterest: 0.2 });
+    const data = mount();
+    await settle();
+    await hold();
+    await settle();
+    expect(navigated).toEqual(["/kept-picks?from=%2F"]);
+    expect(data.sent).toEqual([]);
+  });
+
+  it("waits for the key again once the key leaves this device", async () => {
+    // PadPendingReview.md:19 / PadPending.md:21.
+    await keepPick("u1", { kind: "post", id: "post-1" }, { pDirected: 0.55, pInterest: 0.2 });
+    mount({ keyAbsent: true });
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-kept`)).toHaveTextContent("Waiting for your key");
+    await openPad();
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-key-absent`)).toBeInTheDocument();
+    expect(navigated).toEqual([]);
+  });
+
+  it("wears Still settling under the face once the batch is signed, until the record is ordered", async () => {
+    // PadPendingReview.md:21 — `Still settling`, never `Waiting for your review`.
+    markSettling([{ kind: "post", id: "post-1" }]);
+    mount({
+      seed: { "post-1": { records: [{ pDirected: 0.55, pInterest: 0.2 }] } },
+      unorderedRecords: 1,
+    });
+    await settle();
     expect(screen.queryByTestId(`${PREFIX}-kept`)).toBeNull();
-    expect(screen.getByTestId(`${PREFIX}-resting-face`)).toHaveTextContent("🫥");
-    expect(window.localStorage.getItem("cogra.keptPicks.u1")).toContain("post:post-1");
+    expect(screen.getByTestId(`${PREFIX}-settling`)).toHaveTextContent("Still settling");
+  });
+
+  it("drops Still settling once the ordered read counts the record", async () => {
+    markSettling([{ kind: "post", id: "post-1" }]);
+    mount({ seed: { "post-1": { records: [{ pDirected: 0.55, pInterest: 0.2 }] } } });
+    await settle();
+    await settle();
+    expect(screen.queryByTestId(`${PREFIX}-settling`)).toBeNull();
   });
 });
 

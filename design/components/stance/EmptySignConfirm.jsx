@@ -1,6 +1,7 @@
 import React from "react";
 import { DialogSurface } from "../core/JoinPrompt.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
+import { WRITE_RULE_WORDS } from "./StanceReadout.jsx";
 
 /* THE EMPTY SIGN (jakob 2026-10-21, seam 242). A pick whose landing is
    exactly (0, 0) while nothing stands — no record ever signed toward the
@@ -51,7 +52,11 @@ export const EMPTY_SIGN_WORDS = {
   keep: "Keep it",
 };
 
-export function EmptySignConfirm({ targetLabel, vouchIn = false, busy = false, failed = false, onConfirm, onCancel, inline = false }) {
+/* THE WRITE RULE'S NO IS `SeveranceConfirm`'S (seam 245, ask 15): the same
+   moment over the same pad, so the same answer — the quiet line where the
+   fault line would stand, `Set it anyway` dimmed, no Retry, and `Keep it` the
+   way back to the pick. */
+export function EmptySignConfirm({ targetLabel, vouchIn = false, busy = false, failed = false, writeRule = false, onConfirm, onCancel, inline = false }) {
   const words = EMPTY_SIGN_WORDS;
   return (
     /* The scrim, Escape and Back take `Keep it`, the safe answer — and wait,
@@ -68,16 +73,22 @@ export function EmptySignConfirm({ targetLabel, vouchIn = false, busy = false, f
             That didn&apos;t send. Try again.
           </p>
         ),
+        writeRule && (
+          <p role="status" style={{ margin: 0, color: "var(--text-secondary)" }}>
+            {WRITE_RULE_WORDS.dialog}
+          </p>
+        ),
       ].filter(Boolean)}
       actions={
         <>
           <button
             type="button"
+            disabled={writeRule}
             onClick={busy ? undefined : onConfirm}
             aria-busy={busy || undefined}
             aria-disabled={busy || undefined}
             className={BUTTON_CLASS}
-            style={buttonStyle({ variant: "text", busy })}
+            style={buttonStyle({ variant: "text", disabled: writeRule, busy })}
           >
             {busy ? words.busy : failed ? "Retry" : words.confirm}
           </button>

@@ -630,11 +630,15 @@ export function FeedView({
           {phase !== "resolving" && (
             <BorrowedView signedOut={phase === "signedOut"} refreshSignal={listEra} />
           )}
-          <div className="flex flex-col gap-4 px-6">
-            {/* Must-act, so it collapses into the header and follows the
-                reader back up instead of living only at the top. */}
-            {phase === "signedIn" && keyOnDevice === false && !noKeyYet && <RestoreCard />}
-          </div>
+          {/* Must-act, so it collapses into the header and follows the
+              reader back up instead of living only at the top. It stands as
+              the head of the list does (KeyElsewhere.jsx: first in `FeedList`,
+              full width, 8px under the band), so it keeps no gutter. */}
+          {phase === "signedIn" && keyOnDevice === false && !noKeyYet && (
+            <div className="flex flex-col pt-2">
+              <RestoreCard />
+            </div>
+          )}
         </CograBand>
       </CollapsingTop>
       {/* Empty, the slot is nothing at all to the layout; holding a banner,

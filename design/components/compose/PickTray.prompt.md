@@ -21,6 +21,8 @@ The band under the pick step's caption: what has been picked, the way to manage 
 
 **The clip caption is the shape's.** A vertical clip skips the cover step (the shape keys the step; the device takes frame 1 silently), so its tray wears the trim `A video is the whole post.` — the second sentence only stands where a cover step follows (jakob 2026-09-24, backlog item 104). The example above is the landscape case.
 
+**The caption stands only while the tiles leave it room.** A picture caption stands beside the tiles while they leave it its one line — up to three tiles at 48px — and past that it goes; pass `caption` only then. The row is then the tiles alone, clipped at the band's edge (`clip`), never scrolled, and Show all is the way to the rest. A staged clip is one tile, so its caption always stands, both lines of it (seam 245, ask 13 C).
+
 **Omit `onShowAll` when there is no set.** One staged video is not something to reorder and its cover is the next step's whole subject, so the tray drops Show all and the count sits alone on its line. `clip` is for the full batch, where ten tiles would otherwise push the band wider than the screen.
 
 `Show all` is a real button — focusable, with the state layer and a 48px target — drawn as `InlineAction size="sm"`, which is its resting look value for value. Never redraw it as a span.

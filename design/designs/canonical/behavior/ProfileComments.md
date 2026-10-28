@@ -4,6 +4,8 @@ ALWAYS the comments view lists the person's comments as comment cards, each in r
 
 ALWAYS a comment card here leads with the pointer to what it answers
 
+ALWAYS the list below the tab row reads Nothing here yet., the line alone, GIVEN the person has written no comment
+
 ALWAYS the header block above the tab row stands unchanged in every tab view, and only the list below the tab row changes
 
 ALWAYS the ⋮ closes the actions row and holds the whole profile menu, as the profile's own page does

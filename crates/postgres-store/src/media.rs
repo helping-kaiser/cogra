@@ -314,6 +314,10 @@ struct NewAsset<'a> {
 /// the same key has committed; and the second read then sees the row that
 /// won. A failed asset is never the answer: it holds its digests no
 /// longer, so the same file can be uploaded again once the cause is gone.
+/// Nor is a held one: its bytes left the live store for the archive with
+/// the content that showed them, and it holds its digests no longer
+/// either, so an upload of the same file mints a fresh live asset
+/// (data-model.md "Media areas").
 async fn write_asset(pool: &PgPool, new: NewAsset<'_>) -> Result<MediaAttachment, sqlx::Error> {
     if let Some(row) = upload_of(pool, new.author_id, new.digest).await? {
         return Ok(row);
@@ -384,6 +388,7 @@ async fn upload_of(
             FROM media_attachments
             WHERE author_id = $1
               AND state <> 'failed'
+              AND held_at IS NULL
               AND (digest = $2 OR source_digest = $2)
             ORDER BY created_at
             LIMIT 1
@@ -548,8 +553,9 @@ pub async fn finish_ingest(
 /// answers with the asset it names, and the client attaches it as it
 /// would any other — to as many of its posts as it likes.
 ///
-/// Only a `ready` asset is merged into. Ready rows never change again, so
-/// a merged row always resolves to final bytes. `None` when there is no
+/// Only a `ready`, live asset is merged into. Ready rows never change
+/// again, so a merged row always resolves to final bytes; a held one's
+/// bytes have left the live store. `None` when there is no
 /// such row to merge into, or the job's row is no longer `processing`;
 /// the caller hands the job back to be tried again.
 pub async fn merge_ingest(
@@ -567,6 +573,7 @@ pub async fn merge_ingest(
         FROM (
             SELECT id FROM media_attachments
             WHERE author_id = $2 AND digest = $3 AND state = 'ready'
+              AND held_at IS NULL
         ) held
         WHERE j.id = $1 AND j.state = 'processing'
         RETURNING held.id
@@ -875,8 +882,10 @@ pub async fn comment_galleries(
 /// The author's assets for a set of digests — how a landed payload's
 /// manifest is turned back into rows.
 ///
-/// `(author_id, digest)` is unique, so an author and a digest name at most
-/// one asset and the manifest resolves without ambiguity. Scoping to the
+/// `(author_id, digest)` names at most one **live** asset — a held one has
+/// left the author's reach for the archive and freed its digest — so an
+/// author and a digest resolve without ambiguity, and a manifest never
+/// places an asset that belongs to the archive. Scoping to the
 /// author is not an optimisation: two authors may hold identical bytes
 /// under two rows, and a manifest names its own author's assets only
 /// (data-model.md "Why parents point at attachments" — the anti-hijack
@@ -901,11 +910,43 @@ pub async fn assets_by_digests(
                COALESCE(source_digest, digest) AS "upload_digest!"
         FROM media_attachments
         WHERE author_id = $1 AND digest = ANY($2) AND state = 'ready'
+          AND held_at IS NULL
         "#,
         author_id,
         digests,
     )
     .fetch_all(pool)
+    .await
+}
+
+/// The author's ready assets for a set of digests as an archive unit
+/// names them, read on the redaction's own connection: held ones
+/// included, because a unit references what its envelope named wherever
+/// those bytes now sit, and live ones first, because a digest names at
+/// most one live asset and that is the one a still-carried envelope's
+/// placements show.
+pub async fn named_assets(
+    conn: &mut sqlx::PgConnection,
+    author_id: Uuid,
+    digests: &[Vec<u8>],
+) -> Result<Vec<MediaAttachment>, sqlx::Error> {
+    sqlx::query_as!(
+        MediaAttachment,
+        r#"
+        SELECT id, author_id, digest, digest_algo, storage_key,
+               mime_type, size_bytes,
+               options AS "options!: serde_json::Value",
+               state AS "state: AssetState", failure_reason,
+               redaction_reason, redacted_at, created_at,
+               COALESCE(source_digest, digest) AS "upload_digest!"
+        FROM media_attachments
+        WHERE author_id = $1 AND digest = ANY($2) AND state = 'ready'
+        ORDER BY held_at IS NOT NULL, created_at DESC
+        "#,
+        author_id,
+        digests,
+    )
+    .fetch_all(conn)
     .await
 }
 
@@ -952,7 +993,9 @@ pub struct ResolvedAsset {
 /// The assets a client named by id, each resolved through a merged row to
 /// the asset it names — what a gallery input or a profile picture is read
 /// through before anything is staged. An id naming nothing is absent from
-/// the answer.
+/// the answer, and so is one whose asset is held: it belongs to the
+/// archive with the content that showed it, and its author attaches those
+/// bytes again only by uploading them again.
 pub async fn resolve_assets(
     pool: &PgPool,
     ids: &[Uuid],
@@ -969,7 +1012,7 @@ pub async fn resolve_assets(
                COALESCE(m.source_digest, m.digest) AS "upload_digest!"
         FROM media_attachments named
         JOIN media_attachments m ON m.id = COALESCE(named.merged_into, named.id)
-        WHERE named.id = ANY($1)
+        WHERE named.id = ANY($1) AND m.held_at IS NULL
         "#,
         ids,
     )
