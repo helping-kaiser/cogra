@@ -4722,6 +4722,10 @@ const CITING_ARTIFACTS = [
 const SOL_INVITE_ID = "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15";
 const SOL_INVITE_LINK = `https://cogra.social/join/${SOL_INVITE_ID}`;
 const SOL_INVITE_LINK_OPEN = "https://cogra.social/join/c47b19e0-3a52-4f68-b1d9-6e0a85f37c24";
+/* @rafa came through a single-use link sol issued before the fresh one. Using
+   it used it up, so it keys his group and never stands under Live links: a
+   link that no longer works is not live (Invites.md). */
+const SOL_INVITE_USED_ID = "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64";
 
 /* THE ASK LINK — the invite link's mirror, and shaped as its mirror: the same
    origin, its own path, one id. What it is NOT is the difference that matters.
@@ -5101,7 +5105,7 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             node="application"
             nodeKey="vora83"
           />
-          <ApplicationGroup label="Single use" count={1} node="group" nodeKey={SOL_INVITE_ID} />
+          <ApplicationGroup label="Single use" count={1} node="group" nodeKey={SOL_INVITE_USED_ID} />
           <ContentRow
             variant="chronicle"
             chevron={false}
