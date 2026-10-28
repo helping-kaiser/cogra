@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.token.StateTokens
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
 /**
@@ -43,6 +45,9 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * @param onRemove when present, a trailing `close` glyph that removes the
  *   chip. It is part of the chip's own semantics rather than a separate
  *   node, so a screen reader hears one control with two actions.
+ * @param enabled false draws the master's `disabled` chip (`Chip.jsx`: the
+ *   locked look, `--state-disabled`) and takes no tap — the forms of post
+ *   while neither posts nor comments are in (FeedFilter.jsx `postsish`).
  */
 @Composable
 fun CograChip(
@@ -52,6 +57,7 @@ fun CograChip(
     onClick: (() -> Unit)? = null,
     onRemove: (() -> Unit)? = null,
     testTag: String? = null,
+    enabled: Boolean = true,
 ) {
     val colors = MaterialTheme.colorScheme
     val container = if (selected) {
@@ -72,13 +78,19 @@ fun CograChip(
                     Modifier.hitTarget(
                         interactive = Modifier
                             .clip(CircleShape)
-                            .toggleable(value = selected, role = Role.Switch, onValueChange = { onClick() }),
+                            .toggleable(
+                                value = selected,
+                                enabled = enabled,
+                                role = Role.Switch,
+                                onValueChange = { onClick() },
+                            ),
                         drawnHeight = Layout.ChipHeight,
                     )
                 } else {
                     Modifier
                 },
             )
+            .then(if (enabled) Modifier else Modifier.alpha(StateTokens.DISABLED))
             .defaultMinSize(minHeight = Layout.ChipHeight)
             .clip(CircleShape)
             .then(container)

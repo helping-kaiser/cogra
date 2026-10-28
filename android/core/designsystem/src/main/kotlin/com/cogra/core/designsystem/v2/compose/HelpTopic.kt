@@ -57,6 +57,23 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
     ),
 
     /**
+     * The feed filter sheet's "?" — the feed's and Settings' What your feed
+     * shows (copy-voice *The filter*: the feed's seen sentence follows the
+     * seen tail; FeedSheet.md: "the feed filter's \"?\" says What you've
+     * already seen waits below the Already seen line unless you ask for it back").
+     */
+    TheFeedFilter(
+        title = "How the filter works",
+        paragraphs = listOf(
+            "What you let in, and in what order — the kinds combine freely, ranked or newest is one " +
+                "choice, and what you've already seen waits below the Already seen line unless you ask " +
+                "for it back. Nothing changes until you press Done, and nothing here is signed or shared.",
+            "It lasts until you change it, on this device only. Reset brings back your defaults, to " +
+                "change them go to settings.",
+        ),
+    ),
+
+    /**
      * The sensitive self-mark sheet — the post's, the reply's, and both
      * edit surfaces'. One wording for both scales (ruling 42): a comment
      * has no description to name, and a post's description is words.
