@@ -15,6 +15,14 @@ describe("backFor", () => {
     expect(backFor(personOrigin("ada"))).toEqual({ href: "/u/ada", label: "Back to the profile" });
   });
 
+  // Explore mid-query names the search, and a drill-in returns to it; the
+  // two roots name themselves (ExplorePerson.md:23; ChatsComingSoon.md:15).
+  it("names the search, Explore and the Wallet as the roots they are", () => {
+    expect(backFor("search")).toEqual({ href: "/explore", label: "Back to the search" });
+    expect(backFor("explore")).toEqual({ href: "/explore", label: "Back to Explore" });
+    expect(backFor("wallet")).toEqual({ href: "/wallet", label: "Back to Wallet" });
+  });
+
   it("never builds a profile link from an empty handle", () => {
     expect(backFor("u:")).toEqual({ href: "/feed", label: "Back to feed" });
   });

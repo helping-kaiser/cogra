@@ -31,6 +31,7 @@ import { notificationsOrigin } from "@/lib/notifications/origin";
 import type { BellRoot } from "@/lib/notifications/row-content";
 import { useAuthPhase } from "@/lib/session/provider";
 import { BottomNav, type NavSlot } from "@/lib/ui/bottom-nav";
+import { scrollHostToTopAnimated, scrollOffsetOf } from "@/lib/ui/scroll-host";
 
 /** The bar slot each bell root lights. */
 const ROOT_SLOT: Record<BellRoot, NavSlot> = {
@@ -47,13 +48,22 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
  * ProfileDeleted.md:27; `BottomNav.prompt.md`, jakob 2026-10-06): the root a
  * post or someone's profile was opened from stays lit on the drill-in. A
  * Saved row, and your own profile's chronicle, belong to the Profile stack
- * (`from=saved`, `from=profile`); anything else —
- * the feed, a link, a notification — lights the Feed, where author chips and
- * links land. (`from=explore` arrives with the Explore surface.)
+ * (`from=saved`, `from=profile`); a search result belongs to Explore's
+ * (`from=search`, BottomNav.prompt.md: "opened from Explore lights Explore");
+ * anything else — the feed, a link, a notification — lights the Feed, where
+ * author chips and links land.
  */
 export function detailRoot(from: string | null): NavSlot {
+  if (from === "search") return "search";
   return from === "saved" || from === "profile" ? "profile" : "feed";
 }
+
+/** The tab roots whose own slot, tapped there, the shell answers (the ladder). */
+const ROOT_OF: Partial<Record<string, NavSlot>> = {
+  "/explore": "search",
+  "/wallet": "wallet",
+  "/profile": "profile",
+};
 
 /**
  * Reads the detail's origin off the URL. `useSearchParams` opts its subtree
@@ -71,6 +81,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const signedIn = phase === "signedIn";
   const readSurface =
     pathname === "/feed" ||
+    // Explore and the Wallet's door read for every viewer (Explore.md:35-39;
+    // WalletComingSoon.md:5).
+    pathname === "/explore" ||
+    pathname === "/wallet" ||
     pathname.startsWith("/posts/") ||
     pathname.startsWith("/u/") ||
     // The own profile is a gated read surface: its frame waits for the
@@ -85,7 +99,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const active =
     pathname === "/feed"
       ? "feed"
-      : pathname === "/profile" || pathname === "/saved"
+      : pathname === "/explore"
+        ? "search"
+        : pathname === "/wallet"
+          ? "wallet"
+          : pathname === "/profile" || pathname === "/saved"
         ? "profile"
         : pathname === "/notifications"
           ? ROOT_SLOT[notificationsOrigin(null)]
@@ -98,6 +116,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const screen =
     pathname === "/feed"
       ? "feed"
+      : pathname === "/explore"
+        ? "explore"
       : /^\/posts\/[^/]+$/.test(pathname)
         ? "postDetail"
         : pathname === "/profile" || /^\/u\/[^/]+$/.test(pathname)
@@ -111,6 +131,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // the URL and keeps that root lit.
   const drillIn = screen === "postDetail" || (screen === "profile" && pathname !== "/profile");
   const scroller = useRef<HTMLDivElement>(null);
+  const rootSlot = ROOT_OF[pathname];
+  const reselectRoot = () => {
+    if (scrollOffsetOf(scroller) > 0) scrollHostToTopAnimated(scroller);
+  };
   const bar = (lit: NavSlot | null) => (
     <BottomNav
       active={lit}
@@ -120,6 +144,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       // answers; from anywhere deeper it is the way back to the root,
       // which comes back at the scroll it was left (Feed.md:85).
       onReselectFeed={pathname === "/feed" ? announceFeedReselect : undefined}
+      // Explore, the Wallet and Profile at their own root: scrolled, back to
+      // the top; at the top, nothing (BottomNav.jsx; Explore.md:43;
+      // WalletComingSoon.md:19-21). A standing search is Explore's root too
+      // (Explore.md:9), so the tap there goes to the top of the results.
+      reselect={rootSlot === undefined ? undefined : { [rootSlot]: reselectRoot }}
     />
   );
   return (

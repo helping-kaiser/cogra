@@ -43,6 +43,7 @@ import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useHiddenSet } from "@/lib/hidden/provider";
 import { seenRecord } from "@/lib/history/seen-record";
 import { forgetSeen } from "@/lib/history/seen-sync";
+import { forgetRecents } from "@/lib/search/recents";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { useHostSnack } from "@/lib/saved/save-row";
@@ -421,6 +422,9 @@ export function SettingsView({
     if (purge) await discardLock();
     await guard.run(() => revokeSession(client, null));
     if (purge) await purgeCustody();
+    // THE RECENT SEARCHES GO WITH EVERY SIGN-OUT (Explore.md:31): a shared
+    // browser never shows the next reader what this one looked for.
+    forgetRecents(tokens.activeAccountId());
     // Clearing the tokens flips the phase; the (app) gate replaces the
     // location with sign-in.
     tokens.clear();

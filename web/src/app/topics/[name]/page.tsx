@@ -27,9 +27,12 @@ export async function generateMetadata({
 
 export default async function TopicPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ name: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { name } = await params;
-  return <TopicView name={name} />;
+  const { from } = await searchParams;
+  return <TopicView name={name} from={typeof from === "string" ? from : null} />;
 }

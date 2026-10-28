@@ -37,6 +37,7 @@ import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { backFor } from "@/lib/ui/back-origin";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
 import { useScrollHost } from "@/lib/ui/scroll-host";
@@ -47,7 +48,10 @@ import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError } from "@/lib/ui/transport-error";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 
-export function TopicView({ name }: { name: string }) {
+export function TopicView({ name, from = null }: { name: string; from?: string | null }) {
+  // BACK FROM THE TAG PAGE IS HISTORY, NAMED BY ITS ORIGIN (design/readme.md,
+  // the tag-page smalls' table): `Back to the search` from Explore mid-query.
+  const back = backFor(from);
   const client = useApolloClient();
   const [hashtag, setHashtag] = useState<HashtagDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,7 +98,7 @@ export function TopicView({ name }: { name: string }) {
   useSeenTracker({ root: host, list: listRef, ids: seenIds });
 
   const header = (
-    <PageHeader backHref="/feed" backScroll={false} backLabel="Back to feed" backTestId="topic-back" inGutter />
+    <PageHeader backHref={back.href} backScroll={false} backLabel={back.label} backTestId="topic-back" inGutter />
   );
 
   if (loading) {

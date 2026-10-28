@@ -130,3 +130,44 @@ export function toggleKind(kinds: readonly FeedKindValue[], kind: FeedKindValue)
   const next = kinds.includes(kind) ? kinds.filter((entry) => entry !== kind) : [...kinds, kind];
   return SEARCH_KINDS.map((entry) => entry.value).filter((value) => next.includes(value));
 }
+
+// THE COMMITTED FILTER LASTS ON THIS DEVICE (copy-voice, *The filter*: "It
+// lasts until you change it, on this device only"): kept per account — a
+// guest's under the guest key — beside the recents, under the `cogra.` prefix
+// Settings' erase clears.
+
+const FILTER_PREFIX = "cogra.explore.filter.";
+
+function filterKey(account: string | null): string {
+  return `${FILTER_PREFIX}${account ?? "guest"}`;
+}
+
+function isKind(value: unknown): value is FeedKindValue {
+  return SEARCH_KINDS.some((kind) => kind.value === value);
+}
+
+/** The filter `account` last committed on this device, or null. */
+export function readCommittedFilter(account: string | null): SearchFilterValue | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(filterKey(account));
+    if (raw === null) return null;
+    const value = JSON.parse(raw) as Partial<SearchFilterValue>;
+    if (!Array.isArray(value.kinds) || !value.kinds.every(isKind)) return null;
+    if (value.order !== "ranked" && value.order !== "newest") return null;
+    if (typeof value.seen !== "boolean") return null;
+    return { kinds: value.kinds, order: value.order, seen: value.seen };
+  } catch {
+    return null;
+  }
+}
+
+/** Keeps `value` as `account`'s committed filter. */
+export function writeCommittedFilter(account: string | null, value: SearchFilterValue): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(filterKey(account), JSON.stringify(value));
+  } catch {
+    // A full or blocked storage keeps the filter for this visit only.
+  }
+}

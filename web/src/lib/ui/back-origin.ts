@@ -12,6 +12,14 @@ const ORIGINS: Record<string, BackTarget> = {
   // The reader's own profile (Profile.md: a chronicle card's post reads
   // `Back to your profile`; ChatsComingSoon.md:15, the band's chats).
   profile: { href: "/profile", label: "Back to your profile" },
+  // Explore and the Wallet tab as roots (ChatsComingSoon.md:15, the band's
+  // chats; the tag page's origin table, design/readme.md: `Back to Explore`).
+  explore: { href: "/explore", label: "Back to Explore" },
+  wallet: { href: "/wallet", label: "Back to Wallet" },
+  // Explore mid-query: every result opens from a standing search, and the way
+  // back is to it — the query and the scroll as they were (Explore.md:19;
+  // ProfileOther.md:73, PostDetail's origin-noun table).
+  search: { href: "/explore", label: "Back to the search" },
 };
 
 /** Someone else's profile as an origin: `from=u:<handle>`. */
