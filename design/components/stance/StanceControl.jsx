@@ -194,9 +194,11 @@ const EMPTY_BUNDLE = { current: ORIGIN, rawSum: ORIGIN, records: 0, severed: fal
 /* `severanceCost` (api-spec.md): how many counter-records the explicit
    walk-back stages — each one clipped to ±1, so the larger raw sum, rounded
    up. Served on the bundle as `severance.records`; derived here where a board
-   hands only the sums. */
+   hands only the sums. A SERVED 0 IS AN ANSWER (seam 245, ask 21): only a
+   count that is absent is derived, never one that is zero. */
 function severanceCost(bundle) {
-  if (bundle.severance?.records) return bundle.severance.records;
+  const served = bundle.severance?.records;
+  if (served !== undefined && served !== null) return served;
   const reach = Math.max(Math.abs(bundle.rawSum.pDirected), Math.abs(bundle.rawSum.pInterest));
   return Math.max(1, Math.ceil(Math.round(reach * 100) / 100));
 }
