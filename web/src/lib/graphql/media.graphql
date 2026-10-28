@@ -110,3 +110,47 @@ mutation AbortMediaUpload($uploadId: UUID!) {
     }
   }
 }
+
+# THE ALREADY-PUBLISHED MARKER'S READ (ComposeDetailsReused; copy-voice *The
+# already-published marker*), built from the reads the contract has. The
+# viewer's own Publish records, newest first, each with its post's date and
+# the assets its gallery carries — the composer pages them to find the
+# EARLIEST of the author's own published posts carrying media the stage
+# holds. A draft never reaches the mirror and another author's post is never
+# in this chronicle, so both draw nothing by construction.
+#
+# A CONTRACT GAP, NAMED: no read answers "media → the author's own published
+# post" directly, so this pages the chronicle. The minimal read that would
+# replace it is a placement field on the asset (the PR's deviation
+# candidates spell it out).
+query OwnPublishedMedia($author: UUID!, $first: Int!, $after: String) {
+  records(author: $author, family: PUBLISH, first: $first, after: $after) {
+    edges {
+      node {
+        id
+        target {
+          __typename
+          ... on Post {
+            id
+            createdAt
+            attachments {
+              id
+              digest
+            }
+          }
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# Whose chronicle the marker reads: the viewer's own id.
+query ViewerId {
+  me {
+    id
+  }
+}
