@@ -23,6 +23,9 @@ const ORIGINS: Record<string, BackTarget> = {
   // back is to it — the query and the scroll as they were (Explore.md:19;
   // ProfileOther.md:73, PostDetail's origin-noun table).
   search: { href: "/explore", label: "Back to the search" },
+  // Your topics, Explore's subpage (TagPage.md:35: `Back to Your topics` from
+  // Your topics) — its rows open the topic's page.
+  yourTopics: { href: "/explore/topics", label: "Back to Your topics" },
 };
 
 /** Someone else's profile as an origin: `from=u:<handle>`. */
