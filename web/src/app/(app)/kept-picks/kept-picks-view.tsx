@@ -73,6 +73,12 @@ const SEAL: DataNode = { path: "keptPicksSeal" };
 export const KEPT_PICKS_TITLE = "Kept picks";
 export const KEPT_PICKS_INTRO =
   "These waited on this device for your key, and nothing is signed yet. Remove any you no longer mean — the rest sign together.";
+/**
+ * Invites opened from here names its door: its back arrow reads `Back to Kept
+ * picks` (Invites.md:97).
+ */
+export const KEPT_PICKS_INVITES = "/invites?from=kept-picks";
+
 export const KEPT_APPROVAL_LINE = "An approval waits in your invites — go there to sign it.";
 export const NOTHING_LEFT = "Nothing left to sign.";
 const WRITE_RULE_TITLE = "You can't sign right now";
@@ -261,7 +267,7 @@ export function KeptPicksView() {
           {approvalKept && (
             <p className="m-0 text-body-medium text-on-surface-variant" {...testAttributes(part(REVIEW, "approval"))}>
               {KEPT_APPROVAL_LINE}{" "}
-              <InlineAction size="sm" onClick={() => router.push("/invites")} node={part(REVIEW, "approval.open")}>
+              <InlineAction size="sm" onClick={() => router.push(KEPT_PICKS_INVITES)} node={part(REVIEW, "approval.open")}>
                 Open Invites
               </InlineAction>
             </p>
@@ -379,7 +385,7 @@ export function KeptPicksView() {
         {approvalKept && (
           <p className="m-0 text-body-medium text-on-surface-variant" {...testAttributes(part(SEAL, "approval"))}>
             {KEPT_APPROVAL_LINE}{" "}
-            <InlineAction size="sm" onClick={() => router.push("/invites")} node={part(SEAL, "approval.open")}>
+            <InlineAction size="sm" onClick={() => router.push(KEPT_PICKS_INVITES)} node={part(SEAL, "approval.open")}>
               Open Invites
             </InlineAction>
           </p>
