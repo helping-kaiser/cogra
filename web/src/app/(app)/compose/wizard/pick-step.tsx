@@ -352,7 +352,7 @@ function MediaBody({
                 </li>
               ))}
             </ul>
-            <span className={`flex-1 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
+            <span data-testid="wizard-tray-caption" className={`flex-1 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
               {!holdsVideo
                 ? "The first one is the cover."
                 : // THE CAPTION TAKES THE SETTLED FACT once the cover step has

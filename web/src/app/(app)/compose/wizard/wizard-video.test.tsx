@@ -820,14 +820,16 @@ describe("a vertical clip", () => {
     // GIVEN the clip is vertical.
     render();
     await pickVertical();
-    expect(await screen.findByText("A video is the whole post.")).toBeInTheDocument();
-    expect(screen.queryByText(/Its cover comes next\./)).toBeNull();
+    expect(await screen.findByTestId("wizard-tray-caption")).toHaveTextContent(/^A video is the whole post.$/);
+    expect(screen.queryByText(/Its cover comes next./)).toBeNull();
   });
 
   it("keeps the cover promise on a horizontal clip's tray", async () => {
     render();
     await pickFiles([aVideo()]);
-    expect(await screen.findByText("A video is the whole post. Its cover comes next.")).toBeInTheDocument();
+    expect(await screen.findByTestId("wizard-tray-caption")).toHaveTextContent(
+      "A video is the whole post. Its cover comes next.",
+    );
   });
 
   it("opens details with the Add a cover door on Next, and never the cover step", async () => {
@@ -883,7 +885,7 @@ describe("a vertical clip", () => {
     // the pick step comes back with the clip staged.
     await reachDetails();
     fireEvent.click(screen.getByTestId(byNode("composeDetails.header.back")));
-    expect(await screen.findByText("A video is the whole post.")).toBeInTheDocument();
+    expect(await screen.findByTestId("wizard-tray-caption")).toHaveTextContent(/^A video is the whole post.$/);
     expect(screen.getByLabelText("Remove this video")).toBeInTheDocument();
   });
 

@@ -206,7 +206,7 @@ describe("ReferencePicker — the filter", () => {
     fireEvent.click(screen.getByTestId("reference-picker-filter-profiles"));
     // Staged, not applied: the results do not move under the sheet.
     expect(results()).toEqual(["u-sal", "p-salt"]);
-    fireEvent.click(screen.getByTestId("reference-picker-filter-done"));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.done")));
     expect(results()).toEqual(["u-sal"]);
     expect(screen.getByTestId(byNode("referencePicker.filterTrigger"))).toHaveTextContent("Profiles");
   });
