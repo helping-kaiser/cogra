@@ -529,6 +529,7 @@ private fun FeedKind.chipValue(): String = when (this) {
  * it opens; Done commits once, and the scrim, a swipe down and Back drop what
  * it staged. Reset stages the default — no kind narrowed — and reads nothing.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HistoryFilterSheet(committed: Set<FeedKind>, onDone: (Set<FeedKind>) -> Unit, onDismiss: () -> Unit) {
     var staged by remember { mutableStateOf(committed) }
