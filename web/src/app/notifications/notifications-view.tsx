@@ -36,6 +36,7 @@ import { useAuthGuard } from "@/lib/session/runtime";
 import { Button } from "@/lib/ui/button";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { instance, type DataNode } from "@/lib/ui/data-node";
+import { EmptyState } from "@/lib/ui/empty-state";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { PageHeader } from "@/lib/ui/page-header";
 import { useScrollHost } from "@/lib/ui/scroll-host";
@@ -149,7 +150,7 @@ export function NotificationsScreen({ from }: { from: string | null }) {
         />
       </CollapsingTop>
       {loading && rows.length === 0 && (
-        <p role="status" aria-live="polite" data-testid="notifications-loading" className="px-4 pt-2">
+        <p role="status" aria-live="polite" data-testid="notifications-loading" className="px-4 pt-2 text-body-medium text-on-surface-variant">
           Loading…
         </p>
       )}
@@ -171,14 +172,14 @@ export function NotificationsScreen({ from }: { from: string | null }) {
       )}
       {empty && (
         // NOTIFICATIONSEMPTY: the kinds named in words — no action button,
-        // no error colour; the list fills when somebody else acts.
-        <div className="px-6 pt-2" data-testid="notifications.empty">
-          <p
-            data-testid="notifications.empty.title"
-            className="py-2 text-body-medium text-on-surface-variant"
-          >
-            {NOTIFICATIONS_EMPTY}
-          </p>
+        // no error colour; the list fills when somebody else acts. The shared
+        // EmptyState master carries the line (`notifications.empty`).
+        <div className="px-6 pt-2">
+          <EmptyState
+            title={NOTIFICATIONS_EMPTY}
+            testId="notifications.empty"
+            node={{ path: "notifications.empty" }}
+          />
         </div>
       )}
       {visible.length > 0 && (
@@ -218,7 +219,7 @@ export function NotificationsScreen({ from }: { from: string | null }) {
         </div>
       )}
       {loadingMore && (
-        <p role="status" aria-live="polite" data-testid="notifications-loading-more" className="px-4 pt-3">
+        <p role="status" aria-live="polite" data-testid="notifications-loading-more" className="px-4 pt-3 text-body-medium text-on-surface-variant">
           Loading…
         </p>
       )}
