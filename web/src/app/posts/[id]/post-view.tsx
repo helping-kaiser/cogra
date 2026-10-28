@@ -472,9 +472,21 @@ export function PostView({
           row: (row) => ({ path: `postDetail.menuSheet.${row}` }),
           licenseSheet: { path: "postDetail.licenseSheet" },
           reportSheet: { path: "postDetail.reportSheet" },
+          // UNREGISTERED: the RemoveConfirm board names no node yet, so the
+          // dialog wears the path the packet proposes for it under the detail
+          // (`postDetail.dialog` and its parts), reported to design.
+          removeDialog: { path: "postDetail.dialog" },
         }}
         testId="post-menu"
         notify={notify}
+        // TAKEN, THE DETAIL STANDS AS REMOVED (RemoveConfirm.md:11): the post
+        // wearing its mark lands at once — the freeze lands a redaction
+        // whatever else changed — and the detail re-reads behind it, as the
+        // reader's own ask, so what stands is the server's whole answer.
+        onRemoved={(removed) => {
+          land({ kind: "read", fresh: removed, asked: true });
+          refresh(true);
+        }}
       />
       {/* The post's own count line. A comment's ⋮ raises the thread's own
           copy, stacked over the sheet, which is the sheet's to mount. */}

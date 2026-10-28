@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { PostView } from "@/lib/api/content-api";
+import { withRemoval } from "@/lib/api/removal-api";
 import { sendReport } from "@/lib/api/report-api";
 import { hideAct, hiddenPersonOf } from "@/lib/hidden/hide-row";
 import { useHiddenSet } from "@/lib/hidden/provider";
@@ -57,6 +58,8 @@ export type PostMenuHostNodes = {
   reportSheet?: DataNode;
   /** The license terms (`feed.licenseSheet`, `postDetail.licenseSheet`). */
   licenseSheet?: DataNode;
+  /** The removal's think-twice dialog, where its board names it. */
+  removeDialog?: DataNode;
 };
 
 export function PostMenuHost({
@@ -66,6 +69,7 @@ export function PostMenuHost({
   nodes = {},
   testId,
   notify,
+  onRemoved,
 }: {
   /** The post whose menu is up, or was last; null before any. */
   post: PostView | null;
@@ -76,6 +80,13 @@ export function PostMenuHost({
   testId: string;
   /** The host's own snackbar, which carries the menu's aftermath. */
   notify: Notify;
+  /**
+   * The author's Remove was taken (RemoveConfirm.md:11). The host swaps the
+   * post it holds for `removed` — the same post wearing its mark — so the card
+   * or the detail stands as its mark in place, never leaving without one
+   * (RM-G9's build word on the hosts off the detail).
+   */
+  onRemoved: (removed: PostView) => void;
 }) {
   const router = useRouter();
   const client = useApolloClient();
@@ -92,7 +103,9 @@ export function PostMenuHost({
   const shareCapable = useShareCapable();
   const [licenseShown, setLicenseShown] = useState<License | null>(null);
   const [licenseOpen, setLicenseOpen] = useState(false);
-  const [removeOpen, setRemoveOpen] = useState(false);
+  // THE POST THE DIALOG REMOVES, held from the moment its row was tapped: the
+  // menu's own post may move on (another card's ⋮) while the dialog is up.
+  const [removing, setRemoving] = useState<PostView | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
@@ -111,7 +124,8 @@ export function PostMenuHost({
             setLicenseShown(license);
             setLicenseOpen(true);
           },
-          openRemove: () => setRemoveOpen(true),
+          // RemoveMenu.md:19 — the sheet closes and the think-twice dialog opens.
+          openRemove: () => setRemoving(post),
           // A GUEST IS ASKED TO JOIN, never shown a sheet whose commit the
           // server would refuse (ReportConfirm.md:21).
           openReport: () => (phase === "signedOut" ? setJoinOpen(true) : setReportOpen(true)),
@@ -177,7 +191,7 @@ export function PostMenuHost({
         open={open}
         onClose={onClose}
         items={items}
-        ariaLabel="More on this post"
+        ariaLabel="Post actions"
         testId={`${testId}-sheet`}
         node={nodes.sheet}
       />
@@ -190,14 +204,20 @@ export function PostMenuHost({
           node={nodes.licenseSheet}
         />
       )}
-      {/* THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
-          slice 8's, whole, so Remove closes the dialog and changes nothing. */}
-      <RemoveConfirm
-        open={removeOpen}
-        onClose={() => setRemoveOpen(false)}
-        onRemove={() => setRemoveOpen(false)}
-        testId={`${testId}-remove-confirm`}
-      />
+      {/* THE THINK-TWICE DIALOG, over the surface the menu rose from. Mounted
+          only while it is up: the dialog is the removal's own surface, and its
+          in-flight and failed states belong to one asking. */}
+      {removing !== null && (
+        <RemoveConfirm
+          kind="post"
+          nodeId={removing.id}
+          record={removing.genesisRecordId}
+          onClose={() => setRemoving(null)}
+          onRemoved={(removal) => onRemoved(withRemoval(removing, removal))}
+          node={nodes.removeDialog}
+          testId={`${testId}-remove-confirm`}
+        />
+      )}
       <ReportConfirm
         open={reportOpen}
         onClose={() => setReportOpen(false)}

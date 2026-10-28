@@ -150,6 +150,9 @@ function post(
     updatedAt: "2026-08-12T10:00:00Z",
     landing: { __typename: "Landing", state: pending ? "PENDING" : "LANDED" },
     moderationStatus: "NORMAL",
+    // No removal: the node stands (api-spec.md `Post.removal`).
+    removal: null,
+    genesisRecordId: "rec-genesis",
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics,
     references: [],

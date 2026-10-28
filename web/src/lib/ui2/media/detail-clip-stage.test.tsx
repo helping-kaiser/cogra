@@ -35,7 +35,7 @@ import {
 
 import { BottomSheet } from "../bottom-sheet";
 import { useCoversSurface, type CoverKind } from "../covering-layer";
-import { RemoveConfirm } from "../remove-confirm";
+import { RemoveDialog } from "../remove-confirm";
 import { DetailClip } from "./detail-clip";
 import { MediaViewer } from "./media-viewer";
 import { isMuted, resetMuteForTests } from "./mute";
@@ -123,7 +123,7 @@ function Detail({
         <p>CC BY 4.0</p>
       </BottomSheet>
       <JoinPrompt open={raised.join ?? false} onClose={noop} />
-      <RemoveConfirm open={raised.remove ?? false} onClose={noop} onRemove={noop} />
+      {raised.remove === true && <RemoveDialog kind="post" onClose={noop} onRemove={noop} testId="remove" />}
       <Layer open={raised.pad ?? false} kind="pause" />
       <Layer open={raised.takeover ?? false} kind="suspend" />
     </>

@@ -627,6 +627,18 @@ export function HistoryScreen({
         onClose={() => setMenuOpen(false)}
         testId="history-menu"
         notify={notify}
+        // A REMOVED THING KEEPS ITS PLACE IN HISTORY, WEARING ITS MARK
+        // (History.md:39): the reader's own removal from a card's ⋮ stands the
+        // card as its mark where it stood (RM-G9's build word).
+        onRemoved={(removed) =>
+          setEntries((current) =>
+            current.map((entry) =>
+              entry.node.__typename === "Post" && entry.node.id === removed.id
+                ? { ...entry, node: { ...entry.node, removal: removed.removal } }
+                : entry,
+            ),
+          )
+        }
       />
       {commentsPost !== null && (
         <CommentsSheet

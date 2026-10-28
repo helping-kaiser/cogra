@@ -85,6 +85,9 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
             id
             handle
           }
+          # A removed post or comment keeps its row in the chronicle; `removal`
+          # is what its mark reads (the profile's removal-mark item, a sibling
+          # lane, draws it — this read only carries it).
           ... on Post {
             id
             title {
@@ -93,11 +96,19 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
             content {
               value
             }
+            removal {
+              at
+              by
+            }
           }
           ... on Comment {
             id
             content {
               value
+            }
+            removal {
+              at
+              by
             }
             target {
               __typename
