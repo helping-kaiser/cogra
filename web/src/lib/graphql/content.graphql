@@ -76,6 +76,33 @@ mutation RemoveContent($record: RecordId!) {
   }
 }
 
+# THE NODE RE-READ AFTER A REMOVE (the packet's RM-G5 build word): the mark
+# alone, off the node itself — `removal` is the one field the card's whole
+# removed state derives from. A node read rather than the surface's own
+# refetch, because the surfaces a removal happens on hold things a refetch
+# would throw away: the thread its unfolded branches and the reader's place
+# (CommentRemoved.md:15, :19), the feed its derived window. Apollo normalises
+# the answer onto the cached node, so every cached read agrees with it.
+query PostRemoval($id: UUID!) {
+  post(id: $id) {
+    id
+    removal {
+      at
+      by
+    }
+  }
+}
+
+query CommentRemoval($id: UUID!) {
+  comment(id: $id) {
+    id
+    removal {
+      at
+      by
+    }
+  }
+}
+
 # A post as the FEED CARD draws it — and, for the same reason, what the detail
 # page paints from the cache before its own read lands (`readCachedPost`).
 #

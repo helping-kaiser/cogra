@@ -126,8 +126,14 @@ function redactedParts(node: unknown, path = "", out = new Set<string>()): Set<s
   if (node === null || typeof node !== "object") return out;
   for (const [key, value] of Object.entries(node)) {
     if (key === "comments") continue;
-    // `status` on a field or an attachment; `attachmentsStatus`, the gallery's one state.
-    if ((key === "status" || key === "attachmentsStatus") && value === REDACTED) {
+    // `status` on a field or an attachment; `attachmentsStatus`, the gallery's
+    // one state; and the node's own mark (`removal`), the whole payload gone —
+    // so a removal lands at once even over a version that would otherwise
+    // wait behind the line.
+    if (
+      ((key === "status" || key === "attachmentsStatus") && value === REDACTED) ||
+      (key === "removal" && value !== null && value !== undefined)
+    ) {
       out.add(`${path}.${key}`);
     } else {
       redactedParts(value, `${path}.${key}`, out);

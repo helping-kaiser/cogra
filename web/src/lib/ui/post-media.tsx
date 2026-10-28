@@ -13,15 +13,17 @@
 //    sensitive veil covers, with the title outside it (D12).
 //
 // A REDACTED gallery renders the placeholder instead. Which of the two wordings
-// it gets is read off the record: a post carrying an `ILLEGAL` verdict was
-// removed under the platform's rules, and a redaction without one is the
-// author's own. The contract states no removal reason on the asset itself, so
-// this is the only honest reading available — and getting it wrong in the other
+// it gets is read off the node's own mark (`removal.by`, api-spec.md
+// `Post.removal`): a passed moderation verdict reads as the platform's rules,
+// an author's removal and their account sweep both read as the author's. Where
+// a node carries no mark — a single redacted asset, say — the record's
+// `ILLEGAL` verdict is the only reading left, and getting it wrong in the other
 // direction (an author's choice shown as a platform verdict) is the worse error.
 
 import type React from "react";
 
 import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { ladderAge } from "@/lib/ui/timestamp";
 import { parseAspectRatio, tileRatio } from "@/lib/ui2/media/aspect";
 import { BodyVeil } from "@/lib/ui2/media/body-veil";
 import { MediaGallery, type GalleryItem, type PlayerSurface } from "@/lib/ui2/media/media-gallery";
@@ -54,6 +56,8 @@ type Bearer = {
   attachments: readonly Attachment[];
   attachmentsStatus: string;
   moderationStatus?: string;
+  /** The node's mark (`Post.removal` / `Comment.removal`); null while it stands. */
+  removal?: { readonly at: string; readonly by: string } | null;
 };
 
 /** A bearer plus the authored text fields, which carry their own statuses. */
@@ -83,10 +87,13 @@ export function galleryIsRedacted(node: Bearer): boolean {
  * and the license go at once. There is no redacted title beside a surviving
  * body, and no field is veiled or blanked on its own — the card draws the
  * skeleton instead. Any field answering REDACTED therefore says the whole
- * payload is gone.
+ * payload is gone — and so does the node's own mark, which a surface holding
+ * the node patches in the moment a removal is taken, before any field is
+ * re-read (`withRemoval`).
  */
 export function payloadIsRedacted(node: Payload): boolean {
   return (
+    (node.removal !== null && node.removal !== undefined) ||
     galleryIsRedacted(node) ||
     node.title?.status === "REDACTED" ||
     node.description?.status === "REDACTED" ||
@@ -99,8 +106,28 @@ export function bodyIsSensitive(node: Bearer): boolean {
   return node.attachmentsStatus === "SENSITIVE" || node.moderationStatus === "SENSITIVE";
 }
 
+/**
+ * Which wording the mark takes. `removal.by` is the data: MODERATION is the
+ * platform's verdict, and AUTHOR and ACCOUNT are both the author's
+ * (api-spec.md `RemovalAgent` — "AUTHOR and ACCOUNT both read `Removed by its
+ * author`; the data keeps them distinct"). No other branch is taken on `by`.
+ */
 export function removalReason(node: Bearer): RemovalReason {
+  if (node.removal !== null && node.removal !== undefined) {
+    return node.removal.by === "MODERATION" ? "platform" : "author";
+  }
   return node.moderationStatus === "ILLEGAL" ? "platform" : "author";
+}
+
+/**
+ * The mark's `when`: the removal's own moment in the one age ladder
+ * (copy-voice *Ages*; backlog item 45), never the content's age. Undefined
+ * where the node carries no mark to date.
+ */
+export function removalWhen(node: Bearer, now: number = Date.now()): string | undefined {
+  return node.removal === null || node.removal === undefined
+    ? undefined
+    : ladderAge(node.removal.at, now);
 }
 
 /** Whether a node's gallery is the moving kind — one clip rather than pictures. */
