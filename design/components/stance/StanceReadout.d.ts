@@ -28,6 +28,10 @@ export interface StanceLanding {
   inert: boolean;
   /** Both axes folded to zero: severance. */
   severed: boolean;
+  /** Both axes at zero over a bundle where nothing stands — no record ever,
+   *  or already walked back: the empty sign's landing, never a walk-back.
+   *  It reads `Resulting opinion 🤷 Says nothing.` and asks `EmptySignConfirm`. */
+  empty?: boolean;
 }
 
 /** One pair's reading: the face, and the exact numbers in a `cg-exact` span that
@@ -142,13 +146,13 @@ export interface StanceLandingLineProps {
   landing: StanceLanding | null;
   /** The record family's axis questions, for the spoken reading. */
   names?: AxisNames;
-  /** Handed, an unreachable landing's 🤔 is a button — named by the state it reads — that opens its explanation in place (`unreachableHelp`). */
+  /** Handed, an unreachable landing's 🤔 is a button — named by the state it reads — that opens its explanation in place (`unreachableHelp`). An empty landing's 🤷 never is. */
   onExplainZero?: () => void;
   /** Whether that explanation is showing, for the button's `aria-expanded`. */
   zeroShown?: boolean;
   /** The reader still borrows a view: an unreachable or severed landing adds `BORROWED_KEPT_LINE` beneath it. Warns, never blocks. */
   borrowed?: boolean;
-  /** The data-node name its placer gives the readout (design ⇄ impl seam 002; renders as attributes only — the open pad's `landing`). Given one, the readout carries it, with its `label`, `face` and `exact` while it reads as a readout rather than a sentence — an unreachable landing's `label`, `zero` (or `face`) and `words` — and the borrowed-view line is `borrowed`. */
+  /** The data-node name its placer gives the readout (design ⇄ impl seam 002; renders as attributes only — the open pad's `landing`). Given one, the readout carries it, with its `label`, `face` and `exact` while it reads as a readout rather than a sentence — an unreachable landing's `label`, `zero` (or `face`) and `words`, an empty landing's `label`, `face` and `words` — and the borrowed-view line is `borrowed`. */
   node?: string;
 }
 
@@ -255,9 +259,14 @@ export declare function formatDimension(value: number): string;
 export declare function formatUnsigned(value: number): string;
 /** A tag's pair: relevance signed, confidence unsigned, so the two families never look alike. */
 export declare function formatTagPair(pair: StancePair): string;
-export declare function localLanding(rawSum: StancePair, pick: StancePair): StanceLanding;
+/** Where a pick lands the bundle. `nothingStands` — the bundle holds no record,
+ *  or is walked back — marks a (0, 0) landing `empty`, the empty sign's. */
+export declare function localLanding(rawSum: StancePair, pick: StancePair, nothingStands?: boolean): StanceLanding;
 export declare function standingLine(bundle: StanceBundle | null | undefined, targetLabel: string): string;
+/** The landing as one line: an empty landing's `Resulting opinion 🤷 Says nothing.`, a walk-back's family `landing` words, an unreachable state, or face and pair. */
 export declare function landingLine(landing: StanceLanding | null, names?: AxisNames): string;
+/** What an empty landing says beside its 🤷: `Says nothing.` */
+export declare const EMPTY_LANDING_WORDS: string;
 /** An unreachable landing's state in words — "Interested, no side taken" and its three siblings, by which number is zero and the other's sign. */
 export declare function unreachableHead(pair: StancePair): string;
 /** The one consequence an unreachable landing states after its head. */

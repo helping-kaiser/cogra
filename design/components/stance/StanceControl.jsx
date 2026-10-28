@@ -375,7 +375,10 @@ export function StanceControl({
   const fieldRef = React.useRef(null);
 
   const considered = open || alternates;
-  const landing = considered ? localLanding(bundle.rawSum, pick) : null;
+  /* Nothing stands when no record ever has, or the bundle is walked back:
+     a (0, 0) landing there is the empty sign's, read and asked as one. */
+  const nothingStands = bundle.records === 0 || bundle.severed === true;
+  const landing = considered ? localLanding(bundle.rawSum, pick, nothingStands) : null;
 
   const clearHold = () => {
     if (holdTimer.current !== null) {
@@ -428,8 +431,8 @@ export function StanceControl({
      parked beneath, and signs one record; `Keep it` returns to the pick.
      With nothing standing the ask is the empty sign's, never the walk-back's. */
   const commitChecked = (chosen) => {
-    const landed = localLanding(bundle.rawSum, chosen);
-    if (landed.severed && (bundle.records === 0 || bundle.severed === true)) {
+    const landed = localLanding(bundle.rawSum, chosen, nothingStands);
+    if (landed.empty) {
       setEmptyAsk({ pick: chosen, landed });
       return;
     }

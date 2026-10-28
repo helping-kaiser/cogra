@@ -4,6 +4,8 @@ WHEN tap Set GIVEN the pick lands at exactly (0, 0) and nothing stands toward th
 
 ALWAYS Set stays enabled on a pick that lands at exactly (0, 0), and the dialog asks rather than blocks
 
+ALWAYS the pad's landing under the pick reads Resulting opinion with 🤷 and Says nothing., never This takes you back to zero. GIVEN the pick lands at exactly (0, 0) and nothing stands toward the target
+
 ALWAYS the dialog reads, in order, its title Sign an empty opinion?, This says nothing about @ada, shapes no feed, and leaves you where you are., It signs 1 thing, paid on its own., and the fault line when one stands GIVEN the opinion vouches no one in
 
 ALWAYS the dialog reads, in order, its title Sign an empty opinion?, @rafa would be vouched in but start out cut off: no feed can carry them, and community funds stay closed to them, until someone gives them an opinion that says something., It signs 1 thing, paid on its own., and the fault line when one stands GIVEN the pad approves an applicant or answers a vouch asked for
