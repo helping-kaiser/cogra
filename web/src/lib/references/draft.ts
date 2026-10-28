@@ -41,6 +41,16 @@ export type ReferenceTargetView = {
    */
   readonly handle?: string;
   readonly displayName?: string | null;
+  /**
+   * THE PICKER'S ROW (ReferencePicker.jsx): a post's or comment's own words
+   * without the label's attribution, its author, when it was made, and a
+   * post's cover still — read only where the candidate lookup selects them,
+   * absent everywhere else.
+   */
+  readonly name?: string;
+  readonly author?: string;
+  readonly createdAt?: string;
+  readonly cover?: string | null;
 };
 
 export type ReferenceDraft = {
