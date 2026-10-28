@@ -10,6 +10,7 @@ import type { PostView } from "@/lib/api/content-api";
 import { createTokenStore } from "@/lib/session/token-store";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { stanceHandlers } from "@/test/stance";
 import { PostCard } from "./post-card";
 
 vi.mock("next/navigation", () => ({
@@ -21,6 +22,8 @@ const AT = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
 const removals: string[] = [];
 
 startMswServer(
+  // The card's stance control reads its standing on mount.
+  ...stanceHandlers(),
   gqlLink.mutation("RemoveContent", ({ variables }) => {
     removals.push(variables.record as string);
     return HttpResponse.json({

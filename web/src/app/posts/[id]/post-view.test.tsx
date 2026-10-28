@@ -1031,6 +1031,8 @@ describe("PostView", () => {
     /** The own post's menu, up to its Remove. */
     async function raiseRemove() {
       fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+      // The sheet is named as the board names it (`RemoveMenu.jsx`: "Post actions").
+      expect(screen.getByTestId(byNode("postDetail.menuSheet"))).toHaveAccessibleName("Post actions");
       fireEvent.click(screen.getByTestId("postDetail.menuSheet.remove"));
       return screen.getByTestId("postDetail.dialog") as HTMLDialogElement;
     }
@@ -1047,8 +1049,9 @@ describe("PostView", () => {
       expect(dialog.open).toBe(true);
       expect(dialog).toHaveAccessibleName("Remove this post?");
       expect(dialog).toHaveTextContent("This is immediate and permanent.");
-      expect((screen.getByTestId(byNode("postDetail.menuSheet")) as HTMLDialogElement).open).toBe(false);
-      expect(screen.getByTestId(byNode("postDetail.menuSheet"))).toHaveAccessibleName("Post actions");
+      await waitFor(() =>
+        expect((screen.getByTestId(byNode("postDetail.menuSheet")) as HTMLDialogElement).open).toBe(false),
+      );
     });
 
     // RemoveConfirm.md:11 WHEN the removal is taken -> the post stands as its
@@ -1099,11 +1102,11 @@ describe("PostView", () => {
       expect(screen.queryByTestId(byNode("postDetail.card.title"))).not.toBeInTheDocument();
       expect(screen.queryByTestId(byNode("postDetail.card.body"))).not.toBeInTheDocument();
       expect(screen.queryByTestId(byNode("postDetail.card.citedBy"))).not.toBeInTheDocument();
-      // Removed.md:13 — its author chip, its opinion, its comment count, its share.
+      // Removed.md:13 — its author chip, its opinion, its comment count (share
+      // is capability-gated and untouched by the removal; jsdom has no share door).
       expect(screen.getByTestId(byNode("postDetail.card.authorChip"))).toBeInTheDocument();
       expect(screen.getByTestId(byNode("postDetail.card.actionRow.stance.anchor"))).toBeInTheDocument();
       expect(screen.getByTestId(byNode("postDetail.card.actionRow.comments"))).toBeInTheDocument();
-      expect(screen.getByTestId(byNode("postDetail.card.actionRow.share"))).toBeInTheDocument();
     });
 
     // Removed.md:15 WHEN tap the comment count -> the thread opens with every
@@ -1269,7 +1272,9 @@ describe("PostView", () => {
       fireEvent.click(screen.getByTestId("comment-menu-remove-c1"));
       const dialog = screen.getByTestId("comment-remove-confirm") as HTMLDialogElement;
       expect(dialog).toHaveAccessibleName("Remove this comment?");
-      expect((screen.getByTestId("comment-menu-c1-sheet") as HTMLDialogElement).open).toBe(false);
+      await waitFor(() =>
+        expect((screen.getByTestId("comment-menu-c1-sheet") as HTMLDialogElement).open).toBe(false),
+      );
       expect((sheet as HTMLDialogElement).open).toBe(true);
 
       fireEvent.click(screen.getByTestId("comment-remove-confirm-remove"));
