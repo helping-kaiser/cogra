@@ -48,7 +48,7 @@ import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import type { StancePair } from "@/lib/stance/model";
-import { StanceDataProvider } from "@/lib/stance/provider";
+import { StanceDataProvider, useStanceData } from "@/lib/stance/provider";
 import { MonogramAvatar } from "@/lib/ui/actor-chip";
 import { buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
@@ -271,13 +271,14 @@ function AskCard({
   const signer = useWriteSigner();
   const router = useRouter();
   const account = useActiveAccountId();
+  const base = useStanceData();
   const detour = useRef<ApprovalDetour | null>(null);
   const data = useMemo(
     () =>
-      createAskStanceData({ client, guard, signer }, askLink, (taken) => {
+      createAskStanceData({ client, guard, signer, base }, askLink, (taken) => {
         detour.current = taken;
       }),
-    [client, guard, signer, askLink],
+    [client, guard, signer, base, askLink],
   );
   const bare = handle.slice(1);
 

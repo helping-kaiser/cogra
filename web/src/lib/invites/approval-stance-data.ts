@@ -70,6 +70,11 @@ export type ApprovalDetour =
   | { readonly kind: "unusable" };
 
 type Deps = {
+  /**
+   * The app's own seam, for what is the ACCOUNT's and not the approval's:
+   * whether a recovery backup exists, which the key notice reads.
+   */
+  readonly base: Pick<StanceData, "keyBackedUp">;
   readonly client: ApolloClient;
   readonly guard: AuthGuard;
   readonly signer: WriteSigner;
@@ -115,6 +120,12 @@ function approvalData(
     // nothing standing the control never asks for one.
     sever: async () => failed(new Error("an approval has nothing to walk back")),
     keyOnDevice: () => signer.hasKey?.() ?? Promise.resolve(true),
+    keyBackedUp: () => deps.base.keyBackedUp(),
+    // A kept approval never joins the kept picks' batch (Invites.md:63,
+    // VouchAskPad.md:31): it signs only through its own pad, and the review,
+    // which lists plain opinions, never asks this seam to preview or seal one.
+    commitBatch: async () => failed(new Error("an approval never signs in the kept picks' batch")),
+    preview: async () => failed(new Error("an approval is never previewed in the kept picks' review")),
   };
 }
 

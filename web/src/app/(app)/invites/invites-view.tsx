@@ -94,7 +94,7 @@ import {
 import { useActiveAccountId } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
-import { StanceDataProvider } from "@/lib/stance/provider";
+import { StanceDataProvider, useStanceData } from "@/lib/stance/provider";
 import { buttonClassName } from "@/lib/ui/button";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
@@ -550,10 +550,11 @@ function ApplicationRow({
   const client = useApolloClient();
   const guard = useAuthGuard();
   const signer = useWriteSigner();
+  const base = useStanceData();
   const kept = useKeptApproval(application.id);
   const data = useMemo(
-    () => createApprovalStanceData({ client, guard, signer }, application),
-    [client, guard, signer, application],
+    () => createApprovalStanceData({ client, guard, signer, base }, application),
+    [client, guard, signer, base, application],
   );
   const handle = handleOf(application);
   const node = instance(ROOT, "application", application.handle);
