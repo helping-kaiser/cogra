@@ -23,24 +23,27 @@ import type { ReactNode } from "react";
 
 import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 
+// EVERY VARIANT WEARS A 1px BORDER (Button.jsx, seam 245 ask 1) — transparent
+// where it is not drawn — so no variant differs from another in size.
 const VARIANTS = {
-  filled: "bg-primary text-on-primary",
-  outlined: "border border-outline text-primary",
-  text: "text-primary",
-  inverse: "bg-on-tertiary-container text-tertiary-container",
+  filled: "border-transparent bg-primary text-on-primary",
+  outlined: "border-outline text-primary",
+  text: "border-transparent text-primary",
+  inverse: "border-transparent bg-on-tertiary-container text-tertiary-container",
   // The TEXT button on the same tonal panel: no fill, the panel's own ink
   // (`VouchBack.jsx`'s `Got it`, `color: var(--on-tertiary-container)`).
-  inverseText: "text-on-tertiary-container",
+  inverseText: "border-transparent text-on-tertiary-container",
 } as const;
 
-// Heights are `min-h` on a border-box element, so the border of the outlined
-// variant sits inside the stated height rather than adding to it — that is what
-// makes "true 40px" true across all three variants.
+// THE BORDER IS INSIDE THE HEIGHT (Button.jsx, seam 245 ask 1): the label's
+// 20px line plus the padding plus the 1px border IS the height — 1 + 9 + 20 +
+// 9 + 1 = 40, 1 + 5 + 20 + 5 + 1 = 32. A 10px / 6px padding plus the outlined
+// border drew 42 / 34, past the `min-h` that was meant to be the height.
 const SIZES = {
   // The wizard's own action button: Next, Set, Done.
-  md: "min-h-10 min-w-16 px-6 py-2.5",
+  md: "min-h-10 min-w-16 px-6 py-[9px]",
   // Dense rows.
-  sm: "min-h-8 min-w-16 px-4 py-1.5",
+  sm: "min-h-8 min-w-16 px-4 py-[5px]",
 } as const;
 
 export type PillVariant = keyof typeof VARIANTS;
@@ -57,7 +60,7 @@ export function pillClassName({
 }): string {
   return [
     "cg-state cg-focus",
-    "box-border inline-flex items-center justify-center gap-2 rounded-full",
+    "box-border inline-flex items-center justify-center gap-2 rounded-full border border-solid",
     "text-label-large",
     "disabled:opacity-[var(--state-disabled)]",
     SIZES[size],

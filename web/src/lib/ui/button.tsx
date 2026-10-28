@@ -13,11 +13,15 @@ import { testAttributes, type DataNode } from "./data-node";
 // a *`primary`* label — the label carries the emphasis, not the border), and
 // text (transparent, `primary`, no border). A control that performs an action
 // is one of these three; a control that navigates stays a link.
+//
+// EVERY VARIANT WEARS A 1px BORDER (Button.jsx, seam 245 ask 1) —
+// transparent where it is not drawn — so the three never differ in size.
 const VARIANTS = {
-  primary: "bg-primary text-on-primary disabled:opacity-[var(--state-disabled)]",
+  primary:
+    "border border-solid border-transparent bg-primary text-on-primary disabled:opacity-[var(--state-disabled)]",
   outline:
-    "border border-outline text-primary disabled:opacity-[var(--state-disabled)]",
-  text: "text-primary disabled:opacity-[var(--state-disabled)]",
+    "border border-solid border-outline text-primary disabled:opacity-[var(--state-disabled)]",
+  text: "border border-solid border-transparent text-primary disabled:opacity-[var(--state-disabled)]",
 } as const;
 
 // label-large is Material's button role, so both sizes carry the same type and
@@ -27,12 +31,15 @@ const VARIANTS = {
 // The measurements are the canvas's own (design/components/core/Button.jsx):
 // a TRUE 40px tall with 24px side padding at `lg`, a true 32px with 16px at
 // `sm`, and a 64px MINIMUM WIDTH at both, so short labels — Next, Set, Done —
-// keep their weight instead of shrinking to the width of four letters. Heights
-// are `min-h` on a border-box element, so the outlined variant's border sits
-// inside the stated height rather than adding to it.
+// keep their weight instead of shrinking to the width of four letters.
+//
+// THE BORDER IS INSIDE THE HEIGHT (Button.jsx, seam 245 ask 1): the label's
+// 20px line plus the padding plus the 1px border IS the height — 1 + 9 + 20 +
+// 9 + 1 = 40, 1 + 5 + 20 + 5 + 1 = 32. A 10px / 6px padding plus the outline's
+// border drew 42 / 34, past the `min-h` that was meant to be the height.
 const SIZES = {
-  sm: "min-h-8 min-w-16 rounded-full px-4 py-1.5 text-label-large",
-  lg: "min-h-10 min-w-16 rounded-full px-6 py-2.5 text-label-large",
+  sm: "min-h-8 min-w-16 rounded-full px-4 py-[5px] text-label-large",
+  lg: "min-h-10 min-w-16 rounded-full px-6 py-[9px] text-label-large",
 } as const;
 
 // What every pressable control wears (design/components/core/Button.jsx's

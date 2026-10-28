@@ -78,6 +78,25 @@ describe("the unreachable landing", () => {
   });
 });
 
+// EmptySignConfirm.md (round 20/21): "the pad's landing under the pick reads
+// Resulting opinion with 🤷 and Says nothing., never This takes you back to
+// zero. GIVEN the pick lands at exactly (0, 0) and nothing stands".
+describe("the empty sign's landing", () => {
+  const empty = { landing: { pDirected: 0, pInterest: 0 }, inert: true, severed: true, empty: true };
+
+  it("reads in the landing's own shape, never the walk-back's line", () => {
+    expect(landingLine(empty)).toBe("Resulting opinion 🤷 Says nothing.");
+    expect(MASTER).toContain("export const EMPTY_LANDING_WORDS = `${EMPTY_PICK_LABEL}.`;");
+  });
+
+  it("opens no door on its 🤷 even when the pad hands one", () => {
+    render(<StanceLandingLine landing={empty} testIdPrefix="pad" onExplainZero={() => {}} />);
+    expect(screen.queryByTestId("pad-landing-zero")).toBeNull();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByTestId("pad-landing")).toHaveTextContent(/Resulting opinion.*🤷.*Says nothing./u);
+  });
+});
+
 describe("the borrowed-view line", () => {
   const inert = { landing: { pDirected: 0, pInterest: 0.4 }, inert: true, severed: false };
   const severed = { landing: { pDirected: 0, pInterest: 0 }, inert: true, severed: true };
@@ -133,6 +152,19 @@ describe("the readouts' words and the family's way out", () => {
     expect(MASTER).toContain(held);
     expect(MASTER).toContain(inert);
     expect(MASTER).toContain(wayOut.replace("Walk it back", "${severanceWords(names).control}"));
+  });
+
+  // StanceReadout.jsx `unreachableHelp` (round 21, seam 245 ask 18): the
+  // first line names the list the target stays on, by the label's kind.
+  it("names Your people for a person and Your topics for a topic", () => {
+    expect(unreachableHelp(undefined, "@ada")[0]).toBe(
+      "It still counts among your opinions — @ada stays under Your people.",
+    );
+    expect(unreachableHelp(undefined, "#saltmaps")[0]).toBe(
+      "It still counts among your opinions — #saltmaps stays on Your topics.",
+    );
+    expect(unreachableHelp(undefined, "this comment")[0]).toBe("It still counts among your opinions.");
+    expect(MASTER).toContain("`${targetLabel} stays on Your topics`");
   });
 
   it("writes a negative pair with U+2212, substituted by part, in en-US", () => {

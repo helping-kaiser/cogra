@@ -53,6 +53,16 @@ describe("the local landing", () => {
     expect(localLanding(pair(0.25, -0.25), pair(-0.25, 0.25)).severed).toBe(true);
   });
 
+  // StanceReadout.jsx `localLanding` (seam 245, ask 20): a (0, 0) landing
+  // over a bundle where nothing stands is the empty sign's, never a walk-back.
+  it("marks a (0, 0) landing empty only where nothing stands", () => {
+    expect(localLanding(ORIGIN, ORIGIN, true).empty).toBe(true);
+    expect(localLanding(ORIGIN, ORIGIN, false).empty).toBe(false);
+    expect(localLanding(pair(1, 1), pair(-1, -1)).empty).toBe(false);
+    // Nothing stands, but the pick says something: no empty landing.
+    expect(localLanding(ORIGIN, pair(0.1, 0.1), true).empty).toBe(false);
+  });
+
   it("calls a landing inert on either axis alone", () => {
     const directed = localLanding(pair(0.5, 0.5), pair(-0.5, 0));
     expect(directed.inert).toBe(true);

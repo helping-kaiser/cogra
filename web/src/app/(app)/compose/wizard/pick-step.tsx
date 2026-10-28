@@ -40,6 +40,12 @@ const ACCEPT = `image/*,${PICKABLE_VIDEO_TYPES}`;
 /** The staged clip's tile in the tray, as `ComposePickVideo.jsx` draws it. */
 const CLIP_TILE = { width: 114, height: 64 } as const;
 
+/**
+ * How many 48px picture tiles still leave the tray caption its one line
+ * (PickTray.jsx, round 22): past three the tiles stand alone.
+ */
+const CAPTION_ROOM = 3;
+
 export function PickStep({
   mode,
   words,
@@ -318,8 +324,10 @@ function MediaBody({
               </InlineAction>
             </div>
           )}
-          <div className="flex items-center gap-2">
-            <ul className="m-0 flex list-none gap-2 overflow-x-auto p-0">
+          {/* THE ROW CLIPS AT THE BAND'S EDGE, NEVER SCROLLING (PickTray.jsx,
+              round 22): Show all is the way to the rest. */}
+          <div className="flex min-w-0 items-center gap-2 overflow-x-clip">
+            <ul className="m-0 flex flex-none list-none gap-2 p-0">
               {assets.map((asset, index) => (
                 <li key={asset.id} className="flex-none">
                   <MediaThumb
@@ -351,7 +359,12 @@ function MediaBody({
                 </li>
               ))}
             </ul>
-            <span data-testid="wizard-tray-caption" className={`flex-1 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
+            {/* THE CAPTION STANDS ONLY WHILE THE TILES LEAVE IT ITS LINE
+                (ComposePick.md / ComposePickWeb.md, round 22): up to three
+                picture tiles; past that the tiles stand alone. A staged clip
+                is one tile, so its caption always stands. */}
+            {(holdsVideo || assets.length <= CAPTION_ROOM) && (
+            <span data-testid="wizard-tray-caption" className={`min-w-0 flex-1 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
               {!holdsVideo
                 ? "The first one is the cover."
                 : // THE CAPTION TAKES THE SETTLED FACT once the cover step has
@@ -365,6 +378,7 @@ function MediaBody({
                     ? "A video is the whole post."
                     : "A video is the whole post. Its cover comes next."}
             </span>
+            )}
           </div>
         </div>
       )}
@@ -423,25 +437,26 @@ function MediaBody({
             device-gallery API, so the web's equivalent of the grid is the file
             picker and a drop target (ComposePickWeb). Dropping works where a
             desktop exists and costs nothing on a phone. */}
+        {/* A CLIP STAGED DIMS THE REGION (ComposePickWeb's `body` chip,
+            round 22): it stays where it was, inert at the dead grid's
+            opacity, with nothing left to press — Choose from your files and
+            the drop line go. A file dropped on it anyway is refused in words
+            like any other pick, never opened by the browser. */}
         <div
+          data-testid={holdsVideo ? "wizard-video-body" : undefined}
+          inert={holdsVideo || undefined}
+          aria-hidden={holdsVideo || undefined}
           className={`flex flex-1 flex-col items-center justify-center gap-3 rounded-medium border border-dashed p-6 ${
-            over ? "border-primary bg-surface-container" : "border-outline"
+            holdsVideo ? "border-outline opacity-45" : over ? "border-primary bg-surface-container" : "border-outline"
           }`}
         >
-          {holdsVideo ? (
-            <span
-              data-testid="wizard-video-body"
-              className="text-label-small text-on-surface-variant"
-            >
-              A video is the whole post.
-            </span>
-          ) : (
+          <span className="flex size-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant">
+            <svg viewBox="0 0 24 24" width={24} height={24} fill="currentColor" aria-hidden="true">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+            </svg>
+          </span>
+          {!holdsVideo && (
             <>
-              <span className="flex size-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant">
-                <svg viewBox="0 0 24 24" width={24} height={24} fill="currentColor" aria-hidden="true">
-                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                </svg>
-              </span>
               {/* NEVER SHUT AT TEN: an eleventh picture is refused in words
                   under the tray (ComposePick.md), which a closed picker would
                   only hide. */}

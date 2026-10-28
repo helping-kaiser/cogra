@@ -321,8 +321,9 @@ describe("the compose wizard", () => {
     const half = valenceTravelHalfExtent({ left: 0, top: 0, width: WIDTH, height: 56 }, KNOB_TRAVEL_INSET_PX);
     fireEvent.pointerDown(strip, { pointerId: 1, clientX: 0, clientY: 0 });
     fireEvent.pointerMove(strip, { pointerId: 1, clientX: (0.0031 - DEFAULT_P_DIRECTED) * half, clientY: 0 });
-    // Under the thumb it is a float that prints +0.00 and smiles.
-    expect(screen.getByTestId("wizard-stance-pick-face").textContent).not.toBe("🤔");
+    // Within the knob's radius of zero the detent already holds it at
+    // exactly 0 under the thumb (round 20, `attachmentFrom`).
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     fireEvent.pointerUp(strip, { pointerId: 1 });
     expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     fireEvent.click(screen.getByTestId("wizard-stance-set"));
@@ -1706,5 +1707,48 @@ describe("the already-published marker", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
     expect(screen.queryByTestId("composeDetails.mediaRow.published")).toBeNull();
+  });
+});
+
+// ROUND 22, THE PICK STEP (ComposePick.md / ComposePickWeb.md): the arrow is
+// `Back`, the empty step says nothing, every tray tile carries its X — the
+// cover's included — and the caption stands only while the tiles leave it its
+// line, the row clipping past that rather than scrolling.
+describe("the pick step's round-22 laws", () => {
+  it("names the first stage's arrow Back, never Back a step", async () => {
+    render();
+    await screen.findByTestId("wizard-file-input");
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Back a step" })).toBeNull();
+  });
+
+  it("holds Next inert with nothing picked and says nothing about it", async () => {
+    render();
+    await screen.findByTestId("wizard-file-input");
+    expect(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next"))).toBeDisabled();
+    expect(screen.queryByTestId("wizard-body-error")).toBeNull();
+    expect(screen.queryByText("Pick at least one picture.")).toBeNull();
+  });
+
+  it("gives every tray tile its remove control, the cover's included", async () => {
+    render();
+    await pick(["a.jpg", "b.jpg"]);
+    // The tray's own tiles (the Show all sheet carries X's of its own).
+    const removes = [
+      ...document.querySelectorAll('[data-testid^="wizard-unpick-"][data-testid$="-remove"]'),
+    ].map((button) => button.getAttribute("aria-label"));
+    expect(removes).toEqual(["Remove picture 1", "Remove picture 2"]);
+  });
+
+  it("keeps the caption while three tiles leave it room, and drops it past that", async () => {
+    render();
+    await pick(["a.jpg", "b.jpg", "c.jpg"]);
+    expect(screen.getByTestId("wizard-tray-caption")).toHaveTextContent("The first one is the cover.");
+    await pick(["d.jpg"]);
+    expect(screen.queryByTestId("wizard-tray-caption")).toBeNull();
+    // Clipped at the band's edge, never a scroll box.
+    const row = screen.getByLabelText("Remove picture 1").closest("ul")!.parentElement!;
+    expect(row.className).toContain("overflow-x-clip");
+    expect(row.className).not.toContain("overflow-x-auto");
   });
 });
