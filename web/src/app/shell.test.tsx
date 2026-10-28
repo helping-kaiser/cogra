@@ -168,7 +168,7 @@ describe("AppShell", () => {
     ["/explore", "searchSlot", false],
     ["/wallet", "walletSlot", true],
     ["/wallet", "walletSlot", false],
-  ] as const)("frames the %s root with its slot lit (signed in: %s)", async (path, slot, signedIn) => {
+  ] as const)("frames the %s root with its %s lit (signed in: %s)", async (path, slot, signedIn) => {
     pathname = path;
     renderWithProviders(
       <AppShell>
