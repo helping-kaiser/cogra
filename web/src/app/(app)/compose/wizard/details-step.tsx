@@ -25,6 +25,8 @@ import { PillButton } from "@/lib/ui2/pill-button";
 import { TextField } from "@/lib/ui2/text-field";
 import { DescribeCounter, PickedRow, type PickedThumb } from "@/lib/ui2/compose/picked-row";
 import { UploadErrorLine } from "@/lib/ui2/compose/upload-notice";
+import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
+import { instance, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { publishedMarkerText } from "@/lib/compose/published-match";
@@ -40,6 +42,12 @@ import {
   titleProblem,
   type PickedAsset,
 } from "@/lib/compose/wizard";
+
+/** The registered media row; on the video path, the clip's own block. */
+const MEDIA_ROW: DataNode = { path: "composeDetails.mediaRow" };
+
+/** The clip's tile on details, as `ComposeDetailsVideo.jsx` draws it. */
+const CLIP_TILE = { width: 54, height: 96 } as const;
 
 export function DetailsStep({
   mode,
@@ -162,7 +170,9 @@ export function DetailsStep({
           label="Description"
           optional
           multiline
-          rows={3}
+          // ComposeDetailsVideo draws the clip's description two rows deep,
+          // the gallery's three (ComposeDetailsBody).
+          rows={assets[0] !== undefined && kindOf(assets[0]) === "video" ? 2 : 3}
           value={description}
           onChange={onDescription}
           testId="wizard-description"
@@ -291,49 +301,53 @@ function BodyStrip({
     // ComposeDetails / ComposeUploading: the row, the failure line and the
     // describe counter stand in the stage's own 14px column rhythm.
     <div className="flex flex-col gap-3.5">
+      {isVideo ? (
+        // THE CLIP'S OWN BLOCK (ComposeDetailsVideo.jsx): `FieldLabel` `Video`
+        // over the clip's 54 × 96 tile — its face its own frame 0, the chosen
+        // cover only as the inset, its own × — then the one describe row, 6
+        // apart. No row, no caption, no manager: one clip is not a set (jakob
+        // 2026-09-15). Android's `ClipBlock` draws the same.
+        <div className="flex flex-col gap-1.5" {...testAttributes(MEDIA_ROW, "wizard-picked-row")}>
+          <span className="text-label-large">Video</span>
+          <MediaThumb
+            src={clipFace}
+            width={CLIP_TILE.width}
+            height={CLIP_TILE.height}
+            durationMs={durationMs}
+            coverSrc={coverPreview}
+            {...thumbState(first)}
+            onRemove={() => onRemove(first.id)}
+            removeLabel="Remove this video"
+            testId="wizard-picked-row-thumb-0"
+            node={instance(MEDIA_ROW, "thumb", "1")}
+          />
+          <DescribeCounter
+            described={described}
+            total={assets.length}
+            subject="the video"
+            onDescribe={onDescribe}
+            testId="wizard-describe-counter"
+            node={{ path: "composeDetails.describeRow" }}
+          />
+        </div>
+      ) : (
       <PickedRow
         items={assets.map((asset) => ({
           id: asset.id,
-          // A VIDEO'S TILE STANDS FOR THE CLIP, and shows the clip's face:
-          // the source preview is the video's blob URL, which an `<img>`
-          // cannot decode, so the still is the clip's own first frame —
-          // always, never the chosen cover, which rides the tile only as
-          // `coverSrc`'s inset mark below.
-          src: isVideo ? clipFace : (previews[asset.id] ?? null),
+          src: previews[asset.id] ?? null,
           // The row draws the framing the author left the crop step with —
-          // the source here would read as the crop having been discarded. A
-          // video post never reaches the crop screen, so it has none to draw.
-          crop: isVideo ? null : asset.crop,
-          durationMs: isVideo ? durationMs : undefined,
-          // ONE ATTACHMENT IS ONE TILE (jakob's ruling; `ComposeDetailsVideo
-          // .jsx:19-21`, design/readme.md §13 "The cover's tile"): the chosen
-          // cover rides the clip's own tile as its inset corner mark rather
-          // than a second Cover section. Pictures carry none.
-          coverSrc: isVideo ? coverPreview : undefined,
+          // the source here would read as the crop having been discarded.
+          crop: asset.crop,
           ...thumbState(asset),
         }))}
-        // THE BOARD NAMES THE CLIP, IT DOES NOT COUNT IT. A gallery reads
-        // "3 pictures — the body" because the count is the thing to know;
-        // a clip is the whole body and there is only ever one, so
-        // `ComposeDetailsVideo` labels it "Video" and leaves the counting
-        // to the path that has something to count.
-        caption={
-          isVideo
-            ? "Video"
-            : assets.length === 1
-              ? "1 picture — the body"
-              : `${assets.length} pictures — the body`
-        }
-        // A CLIP HAS NO MANAGER (jakob's ruling 2026-09-15: "one clip is not
-        // a set") — the row opens the Show all sheet for a gallery only; the
-        // video tile wears its own × via `onRemove` instead
-        // (`ComposeDetailsVideo.jsx` lines 22-32).
-        onManage={isVideo ? null : onManage}
-        onRemove={isVideo ? (index) => onRemove(assets[index]!.id) : undefined}
-        removeLabel={isVideo ? "Remove this video" : undefined}
+        // A gallery counts itself — "3 pictures — the body" — because the
+        // count is the thing to know; a clip names itself above instead.
+        caption={assets.length === 1 ? "1 picture — the body" : `${assets.length} pictures — the body`}
+        onManage={onManage}
         testId="wizard-picked-row"
-        node={{ path: "composeDetails.mediaRow" }}
+        node={MEDIA_ROW}
       />
+      )}
 
       {/* THE ALREADY-PUBLISHED MARKER (ComposeDetailsReused.md): one soft line
           under the media row in the honesty-marker ink, in the tappable-marker
@@ -384,14 +398,16 @@ function BodyStrip({
         />
       )}
 
-      <DescribeCounter
-        described={described}
-        total={assets.length}
-        subject={isVideo ? "the video" : "the pictures"}
-        onDescribe={onDescribe}
-        testId="wizard-describe-counter"
-        node={{ path: "composeDetails.describeRow" }}
-      />
+      {!isVideo && (
+        <DescribeCounter
+          described={described}
+          total={assets.length}
+          subject="the pictures"
+          onDescribe={onDescribe}
+          testId="wizard-describe-counter"
+          node={{ path: "composeDetails.describeRow" }}
+        />
+      )}
     </div>
   );
 }

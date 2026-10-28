@@ -380,3 +380,27 @@ describe("DetailsStep — the already-published marker", () => {
     expect(screen.queryByText(/^Already in your post/)).not.toBeInTheDocument();
   });
 });
+
+// ComposeDetailsVideo.jsx: FieldLabel `Video` over the clip's 54 × 96 tile,
+// then its describe row, 6 apart — the clip's own block, never the gallery's
+// captioned row — and its description two rows deep.
+describe("DetailsStep — the clip's own block", () => {
+  it("labels the clip Video above its 54 × 96 tile, with the describe row under it", () => {
+    renderStep({ mode: "media", assets: [VIDEO_ASSET], clipFace: "blob:frame-0", durationMs: 42_000 });
+    const block = screen.getByTestId(byNode("composeDetails.mediaRow"));
+    expect(block.firstElementChild).toHaveTextContent(/^Video$/);
+    const tile = within(block).getByTestId(byNode("composeDetails.mediaRow.thumb", "1"));
+    expect(tile.style.width).toBe("54px");
+    expect(tile.style.height).toBe("96px");
+    expect(within(block).getByTestId(byNode("composeDetails.describeRow"))).toHaveTextContent(
+      "Describe the video",
+    );
+    // No gallery caption on the clip.
+    expect(screen.queryByTestId(byNode("composeDetails.mediaRow.caption"))).not.toBeInTheDocument();
+  });
+
+  it("gives the clip's description two rows, the gallery's three", () => {
+    renderStep({ mode: "media", assets: [VIDEO_ASSET] });
+    expect(screen.getByTestId(byNode("composeDetails.description.input"))).toHaveAttribute("rows", "2");
+  });
+});
