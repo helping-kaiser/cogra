@@ -64,16 +64,16 @@ private const val TRIGGER_ALPHABET =
     " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~·"
 
 private const val TRIGGER_ADVANCE_TABLE =
-    "244.27 301.75 345.07 629.43 560.98 793.06 644.58 212.1 360.07 360.07 " +
-    "482.59 625.73 234.64 414.27 218.95 400.67 642.87 415.73 564.19 547.03 " +
-    "624.31 576.3 569.46 542.33 613.57 569.46 266.11 271.39 625.73 625.73 " +
-    "625.73 506.31 989.72 686.94 611.15 721.87 691.03 590.99 546.17 755.53 " +
-    "750.85 275.75 524.94 625.27 524.47 848.74 773.71 779.17 585.77 782.02 " +
-    "630.9 612.13 561.22 706.42 700.78 966.63 632.0 616.1 638.27 329.19 " +
-    "400.67 329.19 559.07 437.13 232.81 516.29 588.59 542.15 588.31 548.26 " +
-    "375.77 591.17 561.45 240.07 274.62 499.69 227.2 856.76 560.88 580.15 " +
-    "593.59 581.46 349.24 466.0 384.34 560.88 530.08 798.12 492.14 539.97 " +
-    "487.54 387.73 257.14 387.73 594.94 256.01"
+        "244.27 301.75 345.07 629.43 560.98 793.06 644.58 212.1 360.07 360.07 " +
+        "482.59 625.73 234.64 414.27 218.95 400.67 642.87 415.73 564.19 547.03 " +
+        "624.31 576.3 569.46 542.33 613.57 569.46 266.11 271.39 625.73 625.73 " +
+        "625.73 506.31 989.72 686.94 611.15 721.87 691.03 590.99 546.17 755.53 " +
+        "750.85 275.75 524.94 625.27 524.47 848.74 773.71 779.17 585.77 782.02 " +
+        "630.9 612.13 561.22 706.42 700.78 966.63 632.0 616.1 638.27 329.19 " +
+        "400.67 329.19 559.07 437.13 232.81 516.29 588.59 542.15 588.31 548.26 " +
+        "375.77 591.17 561.45 240.07 274.62 499.69 227.2 856.76 560.88 580.15 " +
+        "593.59 581.46 349.24 466.0 384.34 560.88 530.08 798.12 492.14 539.97 " +
+        "487.54 387.73 257.14 387.73 594.94 256.01"
 
 /** The table, one advance per [TRIGGER_ALPHABET] character, in its order. */
 private val TRIGGER_ADVANCES: List<Double> = TRIGGER_ADVANCE_TABLE.split(' ').map(String::toDouble)
@@ -137,17 +137,7 @@ fun feedFilterSummary(
         // The topic leads the extras (FeedTopic.md:3), by the tag's own name.
         value.topic?.let { add("#${it.name}") }
         addAll(peopleExtras(value, against, borrowedHandle))
-        // Every form off has no word in the master's table: the head's kinds
-        // already say what the feed admits.
-        if (value.forms.isNotEmpty() && value.forms != against.forms) {
-            add(
-                if (value.forms.size == FeedForm.entries.size) {
-                    "all forms"
-                } else {
-                    FeedForm.entries.filter { it in value.forms }.joinToString(" + ") { it.label.lowercase() }
-                },
-            )
-        }
+        formsExtra(value, against)?.let { add(it) }
         if (value.order != against.order) add(value.order.label.lowercase())
         if (value.showSeen != against.showSeen) add(if (value.showSeen) "showing seen" else "hiding seen")
         addAll(alsoExtras(value, against))
@@ -156,6 +146,17 @@ fun feedFilterSummary(
     val spelled = (listOf(head) + extras).joinToString(" · ")
     if (measureTriggerText(spelled) <= budget) return spelled
     return "$head · ${extras.size} ${if (extras.size == 1) "change" else "changes"}"
+}
+
+/**
+ * The forms: the forms it holds, `text + photos`; every form, `all forms`.
+ * Every form off has no word in the master's table — the head's kinds already
+ * say what the feed admits.
+ */
+private fun formsExtra(value: FeedFilter, against: FeedFilter): String? = when {
+    value.forms.isEmpty() || value.forms == against.forms -> null
+    value.forms.size == FeedForm.entries.size -> "all forms"
+    else -> FeedForm.entries.filter { it in value.forms }.joinToString(" + ") { it.label.lowercase() }
 }
 
 /**

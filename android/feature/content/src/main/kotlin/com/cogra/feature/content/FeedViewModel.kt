@@ -165,39 +165,11 @@ class FeedViewModel @Inject constructor(
     /** The reader's default has been read: no ranking leaves before it (every feed opens with it). */
     private val opened = CompletableDeferred<Unit>()
 
-    // READING THE TAIL RECORDS NOTHING (FeedSeenTail.md): a card under the
-    // separator is one the record already holds, and seeing it again is
-    // never reported — the tracker hears only the rows above the line.
+    /** What the feed's cards tell the seen tracker; the tail never reports (FeedSeenTail.md). */
+    val seenCards = FeedSeenCards(seenTracker) { _state.value.seenTail }
 
-    /** Cards that stood fully in the viewport, in the order they did. */
-    fun onCardsSeen(nodeIds: List<String>) {
-        val tail = _state.value.seenTail
-        seenTracker.saw(nodeIds.filterNot { it in tail })
-    }
-
-    /** Tall cards with an edge on screen; each joins once both edges have been. */
-    fun onCardEdgesSeen(sightings: List<EdgeSighting>) {
-        val tail = _state.value.seenTail
-        sightings
-            .filterNot { it.nodeId in tail }
-            .forEach { seenTracker.sawEdges(it.nodeId, top = it.top, bottom = it.bottom) }
-    }
-
-    /** The reading paused — the scroll rested or the reader left. */
-    fun onSeenCheckpoint() = seenTracker.flush()
-
-    /** What the share control hands to the platform's own sheet. */
-    fun shareUrl(postId: String): String = postShareUrl(webOrigin, postId)
-
-    /** What the other kinds' shares hand over: the thing's own web address, as History's cards do. */
-    val shareUrls = CardShareUrls(
-        post = { postId -> postShareUrl(webOrigin, postId) },
-        comment = { postId, commentId -> "$webOrigin/posts/$postId?comment=$commentId" },
-        profile = { handle -> "$webOrigin/u/$handle" },
-    )
-
-    /** A tag card's share: the tag page's own address. */
-    fun topicShareUrl(name: String): String = "$webOrigin/topics/$name"
+    /** What every card's share hands over: the thing's own web address. */
+    val shares = FeedShares(webOrigin)
 
     /** A reader chose to look at a veiled body, as it stands right now. */
     fun onReveal(nodeId: String, mark: SensitiveMark) = reveals.reveal(nodeId, mark)
@@ -519,3 +491,46 @@ private fun List<FeedCard>.withLanding(id: String, change: (PostView) -> PostVie
         map { if (it is FeedCard.Post && it.id == id) it.copy(post = change(it.post)) else it }
     }
 
+/**
+ * READING THE TAIL RECORDS NOTHING (FeedSeenTail.md): a card under the
+ * separator is one the record already holds, and seeing it again is never
+ * reported — the tracker hears only the rows above the line, as [tail] stands
+ * at the last derive.
+ */
+class FeedSeenCards internal constructor(
+    private val tracker: SeenTracker,
+    private val tail: () -> Set<String>,
+) {
+    /** Cards that stood fully in the viewport, in the order they did. */
+    fun onCardsSeen(nodeIds: List<String>) {
+        val under = tail()
+        tracker.saw(nodeIds.filterNot { it in under })
+    }
+
+    /** Tall cards with an edge on screen; each joins once both edges have been. */
+    fun onCardEdgesSeen(sightings: List<EdgeSighting>) {
+        val under = tail()
+        sightings
+            .filterNot { it.nodeId in under }
+            .forEach { tracker.sawEdges(it.nodeId, top = it.top, bottom = it.bottom) }
+    }
+
+    /** The reading paused — the scroll rested or the reader left. */
+    fun onSeenCheckpoint() = tracker.flush()
+}
+
+/** What the feed's cards hand the platform's share sheet: each thing's own web address, as History's cards do. */
+class FeedShares internal constructor(private val webOrigin: String) {
+    /** A post card's share. */
+    fun post(postId: String): String = postShareUrl(webOrigin, postId)
+
+    /** The other kinds' shares. */
+    val urls = CardShareUrls(
+        post = ::post,
+        comment = { postId, commentId -> "$webOrigin/posts/$postId?comment=$commentId" },
+        profile = { handle -> "$webOrigin/u/$handle" },
+    )
+
+    /** A tag card's share: the tag page's own address. */
+    fun topic(name: String): String = "$webOrigin/topics/$name"
+}

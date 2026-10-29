@@ -257,26 +257,7 @@ fun SettingsScreen(
 
     SettingsDialogs(state, actions)
     HiddenAccountsSheet(hiddenAccounts)
-    // WHAT YOUR FEED SHOWS, over Settings (SettingsReading.md): the feed's own
-    // sheet, titled; Done saves the default and the row reads it back; every
-    // way out returns focus to the row.
-    state.readingSheet?.let { staged ->
-        FeedFilterSheet(
-            staged = staged,
-            onStage = actions.onStageReading,
-            onReset = actions.onResetReading,
-            onDone = {
-                actions.onReadingDone()
-                runCatching { readingFocus.requestFocus() }
-            },
-            onDismiss = {
-                actions.onDismissReading()
-                runCatching { readingFocus.requestFocus() }
-            },
-            node = Page / "feedSheet",
-            titled = true,
-        )
-    }
+    SettingsReadingSheet(state, actions, readingFocus)
     state.licenseSheet?.let { staged ->
         SettingsLicenseSheet(
             staged = staged,
@@ -935,3 +916,28 @@ private fun EndingGroup(state: SettingsUiState, actions: SettingsActions) {
 
 /** The locked look's opacity — Material's disabled content alpha, the system's `disabled opacity`. */
 private const val DISABLED_ALPHA = 0.38f
+
+/**
+ * WHAT YOUR FEED SHOWS, over Settings (SettingsReading.md): the feed's own
+ * sheet, titled; Done saves the default and the row reads it back; every way
+ * out returns focus to the row. Nothing stands while no sheet is staged.
+ */
+@Composable
+private fun SettingsReadingSheet(state: SettingsUiState, actions: SettingsActions, readingFocus: FocusRequester) {
+    val staged = state.readingSheet ?: return
+    FeedFilterSheet(
+        staged = staged,
+        onStage = actions.onStageReading,
+        onReset = actions.onResetReading,
+        onDone = {
+            actions.onReadingDone()
+            runCatching { readingFocus.requestFocus() }
+        },
+        onDismiss = {
+            actions.onDismissReading()
+            runCatching { readingFocus.requestFocus() }
+        },
+        node = Page / "feedSheet",
+        titled = true,
+    )
+}

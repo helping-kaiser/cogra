@@ -25,6 +25,7 @@ import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedOrder
 import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
+import com.cogra.domain.feed.FeedRepository
 import com.cogra.domain.feed.FeedTopic
 import com.cogra.domain.feed.FeedViewer
 import com.cogra.domain.feed.PeopleMark
@@ -102,8 +103,8 @@ class FeedViewModelTest {
     private val hiddenRepository = RecordingHiddenRepository()
     private val hidden by lazy { HiddenSet(hiddenRepository, session, appScope) }
 
-    private fun viewModel() = FeedViewModel(
-        feed,
+    private fun viewModel(repository: FeedRepository = feed) = FeedViewModel(
+        repository,
         FeedViewer(account, session),
         seenRecord,
         landings,
@@ -222,7 +223,7 @@ class FeedViewModelTest {
         settle()
         val held = vm.state.value
 
-        vm.onSeenCheckpoint()
+        vm.seenCards.onSeenCheckpoint()
         advanceTimeBy(HOURS_AWAY)
         settle()
 
@@ -410,7 +411,7 @@ class FeedViewModelTest {
         val vm = viewModel()
         settle()
 
-        vm.onCardsSeen(listOf("a", "b"))
+        vm.seenCards.onCardsSeen(listOf("a", "b"))
         settle()
         vm.applyFilter(FeedFilter(order = FeedOrder.NEWEST))
         settle()
@@ -434,10 +435,10 @@ class FeedViewModelTest {
         settle()
         assertThat(vm.state.value.seenTail).containsExactly("a", "t")
 
-        vm.onCardsSeen(listOf("b", "a"))
-        vm.onCardEdgesSeen(listOf(EdgeSighting("t", top = true, bottom = false)))
-        vm.onCardEdgesSeen(listOf(EdgeSighting("t", top = false, bottom = true)))
-        vm.onSeenCheckpoint()
+        vm.seenCards.onCardsSeen(listOf("b", "a"))
+        vm.seenCards.onCardEdgesSeen(listOf(EdgeSighting("t", top = true, bottom = false)))
+        vm.seenCards.onCardEdgesSeen(listOf(EdgeSighting("t", top = false, bottom = true)))
+        vm.seenCards.onSeenCheckpoint()
         settle()
 
         assertThat(history.calls).containsExactly(listOf("b"))
@@ -467,8 +468,8 @@ class FeedViewModelTest {
         val vm = viewModel()
         settle()
 
-        vm.onCardsSeen(listOf("a"))
-        vm.onSeenCheckpoint()
+        vm.seenCards.onCardsSeen(listOf("a"))
+        vm.seenCards.onSeenCheckpoint()
         settle()
 
         assertThat(vm.ids()).containsExactly("a", "b", "c").inOrder()
@@ -488,7 +489,7 @@ class FeedViewModelTest {
         assertThat(vm.ids()).containsExactly("b", "c", "a").inOrder()
         assertThat(vm.state.value.seenTail).containsExactly("a")
 
-        vm.onCardsSeen(listOf("b"))
+        vm.seenCards.onCardsSeen(listOf("b"))
         settle()
         // W-6: the row seen on screen does not move, nor does the line.
         assertThat(vm.ids()).containsExactly("b", "c", "a").inOrder()
@@ -574,7 +575,7 @@ class FeedViewModelTest {
         val vm = viewModel()
         settle()
 
-        vm.onCardsSeen(listOf("a"))
+        vm.seenCards.onCardsSeen(listOf("a"))
         settle()
         vm.applyFilter(FeedFilter(order = FeedOrder.NEWEST))
         settle()
@@ -664,21 +665,7 @@ class FeedViewModelTest {
             override fun defaultPost(id: String): PostView? = if (id.startsWith("t")) null else testPost(id)
         }
         unrenderable.answer = Outcome.Success(rankingOf(topics + "p1"))
-        val vm = FeedViewModel(
-            unrenderable,
-            FeedViewer(account, session),
-            seenRecord,
-            landings,
-            reveals,
-            seen,
-            WEB_ORIGIN,
-            seenTracker,
-            hidden,
-            ReaderDefaults(defaults, session),
-            heldTopics,
-            removedMarks,
-            CommittedFeedFilter(committedFilters, session),
-        )
+        val vm = viewModel(unrenderable)
         settle()
 
         assertThat(vm.ids()).containsExactly("p1")
@@ -826,11 +813,11 @@ class FeedViewModelTest {
         val vm = viewModel()
         settle()
 
-        vm.onCardsSeen(listOf("p1", "p2"))
+        vm.seenCards.onCardsSeen(listOf("p1", "p2"))
         settle()
         assertThat(history.calls).isEmpty()
 
-        vm.onSeenCheckpoint()
+        vm.seenCards.onSeenCheckpoint()
         settle()
         assertThat(history.calls).containsExactly(listOf("p1", "p2"))
     }
@@ -840,13 +827,13 @@ class FeedViewModelTest {
         val vm = viewModel()
         settle()
 
-        vm.onCardEdgesSeen(listOf(EdgeSighting("p9", top = true, bottom = false)))
-        vm.onSeenCheckpoint()
+        vm.seenCards.onCardEdgesSeen(listOf(EdgeSighting("p9", top = true, bottom = false)))
+        vm.seenCards.onSeenCheckpoint()
         settle()
         assertThat(history.calls).isEmpty()
 
-        vm.onCardEdgesSeen(listOf(EdgeSighting("p9", top = false, bottom = true)))
-        vm.onSeenCheckpoint()
+        vm.seenCards.onCardEdgesSeen(listOf(EdgeSighting("p9", top = false, bottom = true)))
+        vm.seenCards.onSeenCheckpoint()
         settle()
         assertThat(history.calls).containsExactly(listOf("p9"))
     }

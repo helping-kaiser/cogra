@@ -24,6 +24,7 @@ import com.cogra.feature.content.CHATS_FROM_MESSAGE
 import com.cogra.feature.content.CHATS_FROM_OWN_PROFILE
 import com.cogra.feature.content.CardDoors
 import com.cogra.feature.content.ChatsComingSoonRoute
+import com.cogra.feature.content.FeedKindDoors
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.HistoryDoors
 import com.cogra.feature.content.HistoryRoute
@@ -134,17 +135,7 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
         // The profile names its way back by the door it came through.
         onOpenActor = { handle -> navController.navigate(Profile(handle, from = FEED_ORIGIN)) },
         onOpenCommentActor = { handle -> navController.navigate(Profile(handle, from = COMMENTS_ORIGIN)) },
-        // A comment card's doors (FeedKinds.md): the post's comment section,
-        // landed on the comment, the composer aimed at it on the comment glyph.
-        onOpenComment = { postId, commentId, aimReply ->
-            navController.navigate(PostDetail(postId, commentId = commentId, aimReply = aimReply))
-        },
-        // `Tag a new post with it` (FeedKinds.md): the composer at its first
-        // stage, the tag riding staged.
-        onComposeWithTag = { name -> navController.navigate(ComposePost(tag = name)) },
-        // The sheet's `All your topics`: the reader's own Your topics, never a
-        // borrowed view's account's list (FeedSheet.md).
-        onOpenTopics = { navController.navigate(YourTopics) },
+        kindDoors = feedKindDoors(),
         onOpenTopic = { name -> navController.navigate(Topic(name)) },
         // The card's ⋮ reaches the same two destinations the
         // detail's menu does: a feed card's rows are the post's
@@ -191,6 +182,21 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
     val context = LocalContext.current
     NewerVersionAnnouncement(onUpdateNow = { openStoreListing(context) })
 }
+
+/**
+ * The doors the feed's other kinds and its filter sheet open (FeedKinds.md,
+ * FeedSheet.md): a comment card lands on its comment in the post's thread, the
+ * comment glyph with the composer aimed at it; `Tag a new post with it` opens
+ * the composer with the tag staged; `All your topics` opens the reader's own
+ * Your topics, never a borrowed view's account's list.
+ */
+private fun ShellScope.feedKindDoors() = FeedKindDoors(
+    onOpenComment = { postId, commentId, aimReply ->
+        navController.navigate(PostDetail(postId, commentId = commentId, aimReply = aimReply))
+    },
+    onComposeWithTag = { name -> navController.navigate(ComposePost(tag = name)) },
+    onOpenTopics = { navController.navigate(YourTopics) },
+)
 
 @Composable
 private fun ShellScope.PostDetailDestination(entry: NavBackStackEntry) {

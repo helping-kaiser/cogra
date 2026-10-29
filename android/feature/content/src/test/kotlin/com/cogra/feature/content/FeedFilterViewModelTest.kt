@@ -19,8 +19,8 @@ import com.cogra.domain.RemovalAgent
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveReveals
-import com.cogra.domain.feed.FeedCard
 import com.cogra.domain.feed.CommittedFeedFilter
+import com.cogra.domain.feed.FeedCard
 import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedForm
 import com.cogra.domain.feed.FeedKind
@@ -35,7 +35,6 @@ import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.history.TagCardTopic
 import com.cogra.domain.removal.RemovedMarks
-import com.cogra.domain.topics.HeldTopic
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.InMemoryCommittedFilterStore
@@ -52,7 +51,9 @@ import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testModeratedField
 import com.cogra.domain.testing.testPost
 import com.cogra.domain.testing.testProfile
+import com.cogra.domain.topics.HeldTopic
 import com.google.common.truth.Truth.assertThat
+import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -63,7 +64,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FeedFilterViewModelTest {
