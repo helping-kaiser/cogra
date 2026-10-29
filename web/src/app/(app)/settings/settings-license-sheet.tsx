@@ -21,7 +21,7 @@ import {
 } from "@/lib/license";
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { buttonClassName } from "@/lib/ui/button";
-import { BottomSheet } from "@/lib/ui2/bottom-sheet";
+import { BottomSheet, SHEET_RAISED } from "@/lib/ui2/bottom-sheet";
 import { HelpDialog, HELP_TOPICS } from "@/lib/ui2/help-dialog";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { QuietNote } from "@/lib/ui2/quiet-note";
@@ -117,6 +117,8 @@ export function SettingsLicenseSheet({
         }
         node={SHEET}
         focusTitle
+        // SettingsLicense: the raised 88% class.
+        maxHeight={SHEET_RAISED}
         foot={
           <div
             className="mx-6 flex items-center gap-2 border-t border-outline-variant pt-2.5"

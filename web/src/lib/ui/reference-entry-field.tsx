@@ -27,6 +27,7 @@ import { useState, type ReactNode } from "react";
 
 import { type ReferenceDraft } from "@/lib/references/draft";
 import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
+import { SHEET_RAISED } from "@/lib/ui2/bottom-sheet";
 import { CITATION_FAMILY, PairSheet } from "@/lib/ui2/compose/pair-sheet";
 import { InlineAction } from "@/lib/ui2/inline-action";
 import { instance, part, testAttributes, type DataNode } from "./data-node";
@@ -219,6 +220,9 @@ export function ReferenceEntryField({
           // Scrim, swipe down, Back, Escape: the citation keeps what it had.
           onDiscard={() => setAdjusting(null)}
           testId={`${testIdPrefix}-reference-pair`}
+          // An edit's pair (no batch cap) is `RefPairEdit`, drawn at the raised
+          // 88% class; the composer's `RefPair` keeps the default.
+          maxHeight={cap === null ? SHEET_RAISED : undefined}
         />
       )}
     </div>

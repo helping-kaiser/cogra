@@ -20,7 +20,7 @@
 import type { License } from "@/lib/license";
 import { part, type DataNode } from "@/lib/ui/data-node";
 import { LicenseTerms } from "@/lib/ui/license-fields";
-import { BottomSheet } from "./bottom-sheet";
+import { BottomSheet, SHEET_RAISED } from "./bottom-sheet";
 
 export function LicenseSheet({
   open,
@@ -54,6 +54,8 @@ export function LicenseSheet({
       title="License terms"
       titleHidden
       testId={testId}
+      // LicenseSheet (`_shared.jsx`): the raised 88% class.
+      maxHeight={SHEET_RAISED}
       node={node}
       stacked={stacked}
     >
