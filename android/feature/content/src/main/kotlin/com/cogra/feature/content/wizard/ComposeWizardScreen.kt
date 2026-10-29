@@ -48,7 +48,6 @@ import com.cogra.feature.content.ParkedPadWash
 import com.cogra.feature.content.PickerInPlace
 import com.cogra.feature.content.PickerOrigin
 import com.cogra.feature.content.R
-import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.ReferencePickerHandlers
 import com.cogra.feature.content.TagPickerHandlers
@@ -200,17 +199,11 @@ fun ComposeWizardRoute(
         onDiscardDraft = viewModel::onDiscardDraft,
         onRestoreKey = onRestoreKey,
         onKeepDraft = viewModel::onLeave,
-        onTagInputChange = viewModel::onTagInputChange,
-        onAddTag = viewModel::onAddTag,
         onRemoveTag = viewModel::onRemoveTag,
         onTuneTag = viewModel::onTuneTag,
         onDoneTuningTag = viewModel::onDoneTuningTag,
         onTagRelevanceChange = viewModel::onTagRelevanceChange,
         onTagConfidenceChange = viewModel::onTagConfidenceChange,
-        onOpenFinder = viewModel::onOpenFinder,
-        onCloseFinder = viewModel::onCloseFinder,
-        onFinderQueryChange = viewModel::onFinderQueryChange,
-        onPickReference = viewModel::onPickReference,
         onRemoveReference = viewModel::onRemoveReference,
         onTuneReference = viewModel::onTuneReference,
         onDoneTuningReference = viewModel::onDoneTuningReference,
@@ -289,17 +282,11 @@ internal fun ComposeWizardScreen(
     onDiscardDraft: () -> Unit,
     onRestoreKey: () -> Unit,
     onKeepDraft: () -> Unit,
-    onTagInputChange: (String) -> Unit,
-    onAddTag: () -> Unit,
     onRemoveTag: (String) -> Unit,
     onTuneTag: (String) -> Unit,
     onDoneTuningTag: () -> Unit,
     onTagRelevanceChange: (String, Double) -> Unit,
     onTagConfidenceChange: (String, Double) -> Unit,
-    onOpenFinder: () -> Unit,
-    onCloseFinder: () -> Unit,
-    onFinderQueryChange: (String) -> Unit,
-    onPickReference: (ReferenceCandidateRow) -> Unit,
     onRemoveReference: (String) -> Unit,
     onTuneReference: (String) -> Unit,
     onDoneTuningReference: () -> Unit,
@@ -453,8 +440,6 @@ internal fun ComposeWizardScreen(
                                 TopicEntry(
                                     section = state.tagSection,
                                     testTagPrefix = "wizard",
-                                    onTagInputChange = onTagInputChange,
-                                    onAddTag = onAddTag,
                                     onRemoveTag = onRemoveTag,
                                     onTuneTag = onTuneTag,
                                     onDoneTuningTag = onDoneTuningTag,
@@ -471,10 +456,6 @@ internal fun ComposeWizardScreen(
                                 ReferenceEntry(
                                     section = state.referenceSection,
                                     testTagPrefix = "wizard",
-                                    onOpenFinder = onOpenFinder,
-                                    onCloseFinder = onCloseFinder,
-                                    onFinderQueryChange = onFinderQueryChange,
-                                    onPickReference = onPickReference,
                                     onRemoveReference = onRemoveReference,
                                     onTuneReference = onTuneReference,
                                     onDoneTuningReference = onDoneTuningReference,

@@ -38,7 +38,6 @@ import com.cogra.domain.signing.ledgerFor
 import com.cogra.domain.signing.postExpectation
 import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.valueOrNull
-import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferencePickerEditor
 import com.cogra.feature.content.ReferencePickerHandlers
 import com.cogra.feature.content.ReferenceSectionState
@@ -46,16 +45,12 @@ import com.cogra.feature.content.SectionsEditor
 import com.cogra.feature.content.TagPickerEditor
 import com.cogra.feature.content.TagPickerHandlers
 import com.cogra.feature.content.TagSectionState
-import com.cogra.feature.content.candidateRows
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -164,14 +159,16 @@ class ComposeWizardViewModel @Inject constructor(
         withTags = { state, tags -> state.copy(tagSection = tags) },
     )
 
-    /** `+ Cite something` on the details stage: the citation picker in the stage's place (ReferencePicker). */
-    val referencePicker: ReferencePickerHandlers = ReferencePickerEditor(
+    private val citations = ReferencePickerEditor(
         scope = viewModelScope,
         references = references,
         state = _state,
         referencesOf = { it.referenceSection },
         withReferences = { state, refs -> state.copy(referenceSection = refs) },
     )
+
+    /** `+ Cite something` on the details stage: the citation picker in the stage's place (ReferencePicker). */
+    val referencePicker: ReferencePickerHandlers get() = citations
 
     private var started = false
 
@@ -213,33 +210,10 @@ class ComposeWizardViewModel @Inject constructor(
         // meaningful change schedules a write, so a process death between
         // two taps loses nothing (fix-round-2 ruling).
         viewModelScope.launch { _state.collect { rememberDraft() } }
-        markPublished()
+        viewModelScope.markPublished(_state, media)
         prefillReference(referenceTargetId)
         prefillTag(stagedTag)
         seedLicense()
-    }
-
-    /**
-     * THE ALREADY-PUBLISHED MARKER (ComposeDetails.md, ComposeDetailsReused.md;
-     * web's `findPublishedMatch`). Reusing media never blocks: whenever the
-     * stage's landed uploads change, one read (`ownPublishedPlacement`) asks
-     * whether any already stands in one of the author's own published posts —
-     * the server matching each by asset id or rendition digest, earliest post
-     * first — and the details stage marks it. The answer is tagged with the
-     * ids it was asked for ([ComposeWizardState.publishedMarker]); a failed
-     * read draws the stage at rest, since the marker is a hint, never a gate.
-     */
-    private fun markPublished() {
-        viewModelScope.launch {
-            _state.map { state -> if (state.mode == BodyMode.Media) state.uploadedIds else emptyList() }
-                .distinctUntilChanged()
-                .collectLatest { ids ->
-                    if (ids.isEmpty()) return@collectLatest
-                    val answer = media.ownPublishedPlacement(ids) as? Outcome.Success ?: return@collectLatest
-                    val marker = answer.value?.let { PublishedMarker(ids, it.postId, it.createdAt) }
-                    _state.update { it.copy(published = marker) }
-                }
-        }
     }
 
     /**
@@ -540,9 +514,6 @@ class ComposeWizardViewModel @Inject constructor(
     // The topics + citations surface is one implementation, shared with
     // the reply wizard, the comment edit and the post edit; these
     // forward to it so the screens keep talking to the ViewModel.
-    fun onTagInputChange(value: String) = sections.onTagInputChange(value)
-
-    fun onAddTag() = sections.onAddTag()
 
     /**
      * A staged tag leaves on the spot. From the seal's Tags sheet the change
@@ -563,14 +534,6 @@ class ComposeWizardViewModel @Inject constructor(
     fun onTagConfidenceChange(name: String, value: Double) = sections.onTagConfidenceChange(name, value)
 
     private fun updateTags(block: (TagSectionState) -> TagSectionState) = sections.updateTags(block)
-
-    fun onOpenFinder() = sections.onOpenFinder()
-
-    fun onCloseFinder() = sections.onCloseFinder()
-
-    fun onFinderQueryChange(query: String) = sections.onFinderQueryChange(query)
-
-    fun onPickReference(row: ReferenceCandidateRow) = sections.onPickReference(row)
 
     /**
      * A staged citation leaves on the spot — from the details stage, the
@@ -611,23 +574,7 @@ class ComposeWizardViewModel @Inject constructor(
         updateTags { section -> section.withInput(name).added().withInput(section.input) }
     }
 
-    private fun prefillReference(targetId: String?) {
-        if (targetId == null) return
-        if (_state.value.referenceSection.references.any { it.targetId == targetId }) return
-        updateReferences { it.added(targetId, target = null) }
-        viewModelScope.launch {
-            val resolved = references.candidateRows(targetId).valueOrNull()
-                ?.firstOrNull { it.targetId == targetId }
-                ?: return@launch
-            updateReferences { section ->
-                section.copy(
-                    references = section.references.map { row ->
-                        if (row.targetId == targetId) row.copy(target = resolved.target) else row
-                    },
-                )
-            }
-        }
-    }
+    private fun prefillReference(targetId: String?) = targetId?.let(citations::stageById)
 
     // -- Navigation between stages --
 

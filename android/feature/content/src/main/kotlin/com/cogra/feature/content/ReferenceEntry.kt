@@ -60,10 +60,11 @@ import com.cogra.feature.content.R
 internal fun ReferenceEntry(
     section: ReferenceSectionState,
     testTagPrefix: String,
-    onOpenFinder: () -> Unit,
-    onCloseFinder: () -> Unit,
-    onFinderQueryChange: (String) -> Unit,
-    onPickReference: (ReferenceCandidateRow) -> Unit,
+    /** The finder's gestures — unused where [onOpenPicker] gives the section its door. */
+    onOpenFinder: () -> Unit = {},
+    onCloseFinder: () -> Unit = {},
+    onFinderQueryChange: (String) -> Unit = {},
+    onPickReference: (ReferenceCandidateRow) -> Unit = {},
     onRemoveReference: (String) -> Unit,
     onTuneReference: (String) -> Unit,
     onDoneTuningReference: () -> Unit,
@@ -91,6 +92,7 @@ internal fun ReferenceEntry(
      * and the add action then wear the registered paths. The finder and the
      * refusals keep their [testTagPrefix] tags.
      */
+    node: DataNode? = null,
     /**
      * `+ Cite something` opens the citation picker in the composer's place
      * (ReferencePicker; web #312/#341): given a door, the section draws it —
@@ -98,7 +100,6 @@ internal fun ReferenceEntry(
      * Null keeps the finder, on the surfaces whose boards draw no picker yet.
      */
     onOpenPicker: (() -> Unit)? = null,
-    node: DataNode? = null,
     /** False where the host's own group wears [node] — its label and lines beside the section (the edit). */
     wearsRoot: Boolean = true,
 ) {

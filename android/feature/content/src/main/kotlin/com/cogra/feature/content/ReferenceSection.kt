@@ -132,20 +132,6 @@ data class ReferenceSectionState(
         return copy(references = references + ReferenceRow(targetId, target))
     }
 
-    /**
-     * The picker's pick (ReferencePicker.md): the candidate joins the staged
-     * citations, capped at ten and never twice. A target the edit WITHDREW
-     * comes back as it stood — the loaded claim, its own pair — so the
-     * withdrawal unstages and no second record is staged for it.
-     */
-    fun staged(row: ReferenceCandidateRow): ReferenceSectionState {
-        if (capReached || references.any { it.targetId == row.targetId }) return this
-        val restored = loaded.firstOrNull { it.targetId == row.targetId }
-        return copy(references = references + (restored ?: ReferenceRow(row.targetId, row.target)))
-    }
-
-    fun withPicker(state: ReferencePickerState?) = copy(picker = state)
-
     fun removed(targetId: String) = copy(
         references = references.filterNot { it.targetId == targetId },
         tuning = if (tuning == targetId) null else tuning,

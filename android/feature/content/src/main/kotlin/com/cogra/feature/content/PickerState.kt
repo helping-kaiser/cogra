@@ -86,3 +86,40 @@ internal fun isQueryable(raw: String): Boolean {
     val trimmed = raw.trim()
     return trimmed.isNotEmpty() && !trimmed.startsWith("#") && trimmed != "@"
 }
+
+/** Which composer opened a picker — the arrow names it, and the cap line says its noun (the K13 round). */
+enum class PickerOrigin(val backLabel: String, val noun: String) {
+    /** A post's composer or its edit. */
+    Post("Back to the post", "post"),
+
+    /** A reply's composer or a comment's edit. */
+    Comment("Back to the comment", "comment"),
+}
+
+/**
+ * The tag picker's pick (TagPicker.md): [name] — already canonical — joins the
+ * staged tags, capped at ten and never twice. A name the edit WITHDREW comes
+ * back as it stood, the loaded claim with its own parameters, so the
+ * withdrawal unstages and no second record is staged for it ("the name's
+ * withdrawal is unstaged").
+ */
+fun TagSectionState.staged(name: String): TagSectionState {
+    if (capReached || tags.any { it.name == name }) return this
+    return copy(tags = tags + (loaded.firstOrNull { it.name == name } ?: TagRow(name)))
+}
+
+fun TagSectionState.withPicker(state: TagPickerState?): TagSectionState = copy(picker = state)
+
+/**
+ * The citation picker's pick (ReferencePicker.md): the candidate joins the
+ * staged citations, capped at ten and never twice. A target the edit WITHDREW
+ * comes back as it stood — the loaded claim, its own pair — so the
+ * withdrawal unstages and no second record is staged for it.
+ */
+fun ReferenceSectionState.staged(row: ReferenceCandidateRow): ReferenceSectionState {
+    if (capReached || references.any { it.targetId == row.targetId }) return this
+    val restored = loaded.firstOrNull { it.targetId == row.targetId }
+    return copy(references = references + (restored ?: ReferenceRow(row.targetId, row.target)))
+}
+
+fun ReferenceSectionState.withPicker(state: ReferencePickerState?): ReferenceSectionState = copy(picker = state)

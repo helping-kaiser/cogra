@@ -89,20 +89,6 @@ data class TagSectionState(
         )
     }
 
-    /**
-     * The picker's pick (TagPicker.md): [name] — already canonical — joins the
-     * staged tags, capped at ten and never twice. A name the edit WITHDREW
-     * comes back as it stood, the loaded claim with its own parameters, so
-     * the withdrawal unstages and no second record is staged for it
-     * (TagPicker.md: "the name's withdrawal is unstaged").
-     */
-    fun staged(name: String): TagSectionState {
-        if (capReached || tags.any { it.name == name }) return this
-        return copy(tags = tags + (loaded.firstOrNull { it.name == name } ?: TagRow(name)))
-    }
-
-    fun withPicker(state: TagPickerState?) = copy(picker = state)
-
     fun removed(name: String) = copy(tags = tags.filterNot { it.name == name }, tuning = null)
 
     /** Tapping a staged chip opens its parameters; null closes them (F6). */

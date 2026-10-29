@@ -70,15 +70,6 @@ import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.token.Space
 
-/** Which composer opened a picker — the arrow names it, and the cap line says its noun (the K13 round). */
-enum class PickerOrigin(val backLabel: String, val noun: String) {
-    /** A post's composer or its edit. */
-    Post("Back to the post", "post"),
-
-    /** A reply's composer or a comment's edit. */
-    Comment("Back to the comment", "comment"),
-}
-
 /** The pickers' spoken moves (`PickAnnouncement`; TagPicker.jsx, ReferencePicker.jsx). */
 internal const val PICK_ADDED = "Added — in the staged list."
 internal const val PICK_REMOVED = "Removed from the staged list."

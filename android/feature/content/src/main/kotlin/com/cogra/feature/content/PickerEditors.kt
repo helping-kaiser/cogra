@@ -23,6 +23,7 @@ import com.cogra.domain.search.SearchAsk
 import com.cogra.domain.search.SearchNode
 import com.cogra.domain.search.SearchOrder
 import com.cogra.domain.search.SearchRepository
+import com.cogra.domain.valueOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -162,6 +163,28 @@ internal class ReferencePickerEditor<S>(
     override fun onStageReference(row: ReferenceCandidateRow) = update { it.staged(row) }
 
     override fun onUnstageReference(targetId: String) = update { it.removed(targetId) }
+
+    /**
+     * A citation brought along by its id (`Cite in a new post`, ComposeCited.md):
+     * staged at once without a name, then given its target as the lookup
+     * resolves it — never doubled.
+     */
+    fun stageById(targetId: String) {
+        if (referencesOf(state.value).references.any { it.targetId == targetId }) return
+        update { it.added(targetId, target = null) }
+        scope.launch {
+            val resolved = references.candidateRows(targetId).valueOrNull()
+                ?.firstOrNull { it.targetId == targetId }
+                ?: return@launch
+            update { section ->
+                section.copy(
+                    references = section.references.map { row ->
+                        if (row.targetId == targetId) row.copy(target = resolved.target) else row
+                    },
+                )
+            }
+        }
+    }
 
     private fun read(debounce: Boolean) {
         val picker = referencesOf(state.value).picker ?: return

@@ -41,8 +41,10 @@ import com.cogra.domain.topics.tagNameProblem
 internal fun TopicEntry(
     section: TagSectionState,
     testTagPrefix: String,
-    onTagInputChange: (String) -> Unit,
-    onAddTag: () -> Unit,
+    /** The free-text field's typing; unused where [onOpenPicker] gives the section its door. */
+    onTagInputChange: (String) -> Unit = {},
+    /** The free-text field's add; unused where [onOpenPicker] gives the section its door. */
+    onAddTag: () -> Unit = {},
     onRemoveTag: (String) -> Unit,
     onTuneTag: (String) -> Unit,
     onDoneTuningTag: () -> Unit,
@@ -71,6 +73,7 @@ internal fun TopicEntry(
      * preview and the refusals are not drawn on the board and keep their
      * [testTagPrefix] tags.
      */
+    node: DataNode? = null,
     /**
      * `+ Add a tag` opens the tag picker in the composer's place (TagPicker;
      * web #312/#341): given a door, the section draws it — always, the cap
@@ -78,7 +81,6 @@ internal fun TopicEntry(
      * keeps the field, on the surfaces whose boards draw no picker yet.
      */
     onOpenPicker: (() -> Unit)? = null,
-    node: DataNode? = null,
     /** False where the host's own group wears [node] — its label and lines beside the section (the edit). */
     wearsRoot: Boolean = true,
 ) {
