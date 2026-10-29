@@ -486,3 +486,40 @@ describe("PostCard and the account's sensitive-content choice", () => {
     expect(screen.getByTestId("card-veil")).toBeInTheDocument();
   });
 });
+
+// THE VEIL NAMES ITS SOURCE ON EVERY VEIL, ONCE PER POST (LadderStates.md,
+// round 26; FeedWordsSensitive.md; PostCard.jsx's two faces).
+describe("PostCard's veil faces", () => {
+  afterEach(() => {
+    forgetReveals();
+  });
+
+  const marked = (over: Record<string, unknown>) =>
+    post({
+      attachmentsStatus: "SENSITIVE",
+      moderationStatus: "SENSITIVE",
+      content: moderated("The marked body", "SENSITIVE"),
+      ...over,
+    });
+
+  it("a words-only post blurs its words in place with Show, the author's warning and reason under them", () => {
+    mount(marked({ sensitiveSelfMark: true, sensitiveReason: "Grief" }));
+    expect(screen.getByRole("button", { name: "Show" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Sensitive — tap to view/ })).toBeNull();
+    expect(screen.getByTestId("card-veil-source")).toHaveTextContent("The author's warning — Grief");
+    expect(screen.getByText("The title")).toBeInTheDocument();
+  });
+
+  it("a verdict alone names the platform's verdict", () => {
+    mount(marked({ sensitiveSelfMark: false }));
+    expect(screen.getByTestId("card-veil-source")).toHaveTextContent("The platform's verdict");
+  });
+
+  it("a picture post wears the media face, naming the source once", () => {
+    mount(marked({ content: moderated(null), attachments: [picture()], sensitiveSelfMark: true }));
+    expect(
+      screen.getByRole("button", { name: "Sensitive — tap to view. The author's warning" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByTestId("card-veil-source")).toHaveLength(1);
+  });
+});

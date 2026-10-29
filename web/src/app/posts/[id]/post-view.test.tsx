@@ -3144,6 +3144,34 @@ describe("PostView — references", () => {
         expect(screen.getByTestId("post-veil")).toBeInTheDocument();
       });
 
+      // THE SOURCE LINE RIDES THE CLIP'S FACE, ONCE PER POST (LadderStates.md,
+      // round 26): the card's words beneath blur in place with their Show and
+      // leave the line to the clip.
+      it("names whose mark it is on the clip's face alone, the card's words wearing only Show", async () => {
+        server.use(
+          ...withBody({
+            description: "One rubbing includes a dead seabird.",
+            attachments: [clip("m1")],
+            attachmentsStatus: "SENSITIVE",
+          }),
+        );
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        await screen.findByTestId("post-detail-clip-veil");
+        expect(screen.getByTestId("post-detail-clip-veil-source")).toHaveTextContent("The platform's verdict");
+        expect(screen.queryByTestId("post-veil-source")).toBeNull();
+        expect(within(screen.getByTestId("post-veil")).getByRole("button", { name: "Show" })).toBeInTheDocument();
+      });
+
+      it("a sensitive comment wears the compact face, naming whose mark it is (CommentCard.jsx)", async () => {
+        server.use(...thread("u1", [{ id: "c1", body: "Marked words", attachmentsStatus: "SENSITIVE" }]));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+        await openComments();
+        const block = await screen.findByTestId("comment-c1-veil-reveal");
+        expect(block).toHaveAccessibleName("Sensitive — tap to view. The platform's verdict");
+        expect(screen.getByTestId("comment-c1-veil-source")).toHaveTextContent("The platform's verdict");
+      });
+
       it("answers one reveal for the detail clip and the card together", async () => {
         server.use(
           ...withBody({

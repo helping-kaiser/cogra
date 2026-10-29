@@ -531,6 +531,14 @@ export function PostCard({
       ) : (
         <BodyRegion
           veiled={veiled}
+          marks={post}
+          // THE FACE THE CARD'S MASTER DRAWS (PostCard.jsx): the media face over
+          // pictures or a clip; a words-only post's words blurred in place with
+          // their Show, naming the source itself as the post's only face
+          // (FeedWordsSensitive.md); and words under a clip lifted above the
+          // card (the detail's) leave the line to the clip's face — once per post.
+          face={drawsMedia ? "media" : "text"}
+          named={!media}
           testId={testId}
           nodeId={post.id}
           signature={sensitiveSignature(post)}

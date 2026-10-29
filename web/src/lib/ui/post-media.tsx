@@ -25,7 +25,7 @@ import type React from "react";
 import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { ladderAge } from "@/lib/ui/timestamp";
 import { parseAspectRatio, tileRatio } from "@/lib/ui2/media/aspect";
-import { BodyVeil, type VeilSource } from "@/lib/ui2/media/body-veil";
+import { BodyVeil, type VeilFace, type VeilSource } from "@/lib/ui2/media/body-veil";
 import { MediaGallery, type GalleryItem, type PlayerSurface } from "@/lib/ui2/media/media-gallery";
 import { RemovedPlaceholder, type RemovalReason } from "@/lib/ui2/media/removed-placeholder";
 import { useAlwaysUnveil } from "@/lib/settings/sensitive-content";
@@ -301,14 +301,25 @@ export function PostMedia({
 export function BodyRegion({
   children,
   veiled,
-  reason,
+  marks,
+  face = "media",
+  named = true,
   testId,
   nodeId,
   signature,
 }: {
   children: React.ReactNode;
   veiled: boolean;
-  reason?: string | null;
+  /**
+   * The node whose mark the veil is — the author's mark alone and the
+   * author's line (`veilSource`, `veilReason`): every face names its source,
+   * the reason after it where there is one (LadderStates.md, round 26).
+   */
+  marks?: { sensitiveSelfMark?: boolean | null; sensitiveReason?: string | null };
+  /** The face the host's master draws (`SensitiveVeil` `kind`; `BodyVeil`). */
+  face?: VeilFace;
+  /** A text face names the source only as the post's only face (`BodyVeil`). */
+  named?: boolean;
   testId?: string;
   /** The node the decision is about. */
   nodeId?: string;
@@ -319,7 +330,15 @@ export function BodyRegion({
   const body = <div className="flex flex-col gap-2">{children}</div>;
   if (!veiled || alwaysUnveil) return body;
   return (
-    <SharedVeil nodeId={nodeId} signature={signature} reason={reason} testId={testId}>
+    <SharedVeil
+      nodeId={nodeId}
+      signature={signature}
+      source={veilSource(marks ?? {})}
+      reason={veilReason(marks ?? {})}
+      face={face}
+      named={named}
+      testId={testId}
+    >
       {body}
     </SharedVeil>
   );
@@ -329,13 +348,19 @@ function SharedVeil({
   children,
   nodeId,
   signature,
+  source,
   reason,
+  face,
+  named,
   testId,
 }: {
   children: React.ReactNode;
   nodeId?: string;
   signature?: string;
-  reason?: string | null;
+  source: VeilSource;
+  reason: string | null;
+  face: VeilFace;
+  named: boolean;
   testId?: string;
 }) {
   const shared = nodeId !== undefined && signature !== undefined;
@@ -344,20 +369,15 @@ function SharedVeil({
   // has to call the hook — the empty key never matches a remembered reveal.
   const revealed = useRevealed(nodeId ?? "", signature ?? "");
   const veilId = testId ? `${testId}-veil` : undefined;
+  const faceProps = { source, reason, face, named, testId: veilId, radius: face === "media" ? "0px" : undefined };
 
   if (!shared) {
-    return (
-      <BodyVeil radius="0px" reason={reason} testId={veilId}>
-        {children}
-      </BodyVeil>
-    );
+    return <BodyVeil {...faceProps}>{children}</BodyVeil>;
   }
 
   return (
     <BodyVeil
-      radius="0px"
-      reason={reason}
-      testId={veilId}
+      {...faceProps}
       revealed={revealed}
       onReveal={() => {
         rememberReveal(nodeId, signature);

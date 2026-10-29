@@ -807,6 +807,13 @@ describe("the veiled stream (ReelSensitive.md)", () => {
     expect(screen.getByTestId(byNode("reel.stage.veil"))).toHaveTextContent("The platform's verdict");
   });
 
+  it("the stream's media face reads the source and the author's reason after it (ReelSensitive.md:9; round 26)", () => {
+    mountStream({ rows: [reelPost("s1", "9:16", { ...SENSITIVE, sensitiveReason: "One rubbing includes a dead seabird." })], startId: "s1" });
+    const veil = screen.getByTestId(byNode("reel.stage.veil"));
+    expect(veil).toHaveTextContent("The author's warning — One rubbing includes a dead seabird.");
+    expect(veil).toHaveAccessibleName("Sensitive — tap to view. The author's warning — One rubbing includes a dead seabird.");
+  });
+
   it("an author's own mark names the author's warning, though moderationStatus reads SENSITIVE with it (#336 defect)", () => {
     mountStream({ rows: [reelPost("s1", "9:16", SENSITIVE)], startId: "s1" });
     const veil = screen.getByTestId(byNode("reel.stage.veil"));

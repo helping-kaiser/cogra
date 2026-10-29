@@ -61,20 +61,47 @@ export function useVeiled(): boolean {
   return useContext(VeilContext);
 }
 
+/** Which face the veil wears (`SensitiveVeil.jsx` `kind`). */
+export type VeilFace = "media" | "text" | "compact";
+
+/** The wash every veil face wears: the standard covering scrim at half strength, never an error colour. */
+const WASH = "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)";
+
 export function BodyVeil({
   children,
-  // The author's own reason, when they gave one. Shown on the veil so the
-  // reader's choice is informed.
+  face = "media",
+  source = "author",
+  // The author's own reason, when they gave one. It follows the source on the
+  // veil so the reader's choice is informed.
   reason,
+  named = true,
   label = "Sensitive — tap to view",
+  revealLabel = "Show",
   revealed: controlled,
   onReveal,
   radius = "var(--radius-medium)",
   testId = "body-veil",
 }: {
   children: ReactNode;
+  /**
+   * THE FACE (`SensitiveVeil.jsx`): `media` lies over a post's pictures or
+   * clip, the words centred on the wash; `compact` is a comment's one block,
+   * words and pictures together, in the theme's type; `text` blurs words in
+   * place with their `Show`.
+   */
+  face?: VeilFace;
+  /** Whose mark this is (`veilSource`). */
+  source?: VeilSource;
   reason?: string | null;
+  /**
+   * A text veil names its source only where it is the post's ONLY face — a
+   * words-only post (FeedWordsSensitive.md); words under a veiled clip leave
+   * the line to that clip's face, once per post (LadderStates.md). The media
+   * and compact faces always name it (Q47: unconditional).
+   */
+  named?: boolean;
   label?: string;
+  revealLabel?: string;
   // A screen that remembers the decision across a navigation drives it; a lone
   // body governs itself.
   revealed?: boolean;
@@ -94,8 +121,13 @@ export function BodyVeil({
     else setLocal(true);
   };
 
+  // THE SOURCE LINE (Q47; LadderStates.md, round 26: "on every veil that
+  // stands"): whose mark, the reason after it where there is one.
+  const sourceLine = veilSourceLine(source, reason);
+  const body = <VeilContext.Provider value={!revealed}>{children}</VeilContext.Provider>;
+
   // REVEALING MOVES NOTHING — NOT EVEN IN THE TREE. The body stands at one
-  // place in the tree veiled or not: revealed, the two wrappers stay but draw
+  // place in the tree veiled or not: revealed, the wrappers stay but draw
   // no box of their own (`display: contents` — "the element itself does not
   // generate any boxes, but its children … generate boxes as normal",
   // https://developer.mozilla.org/en-US/docs/Web/CSS/display#contents), so the
@@ -104,7 +136,83 @@ export function BodyVeil({
   // new element — its preloaded frame dropped, its place on the stage given up
   // and asked for again — where "the unveil is an eligibility change, not a
   // suspension lift" and preloading under the veil "makes the unveil instant"
-  // (design/readme.md §13, the stage law).
+  // (design/readme.md §13, the stage law). Every face keeps one shape for
+  // that: its wrappers, then the body's own wrapper, then the body.
+
+  if (face === "text") {
+    // TEXT IS BLURRED IN PLACE (`SensitiveVeil kind="text"`): the words keep
+    // their own height, so nothing below moves on the reveal, and the shape of
+    // the sentence stays visible — the reader can see there is one, only not
+    // read it. `Show` stands beside the words; the source line, where this is
+    // the post's only face, stands under them (FeedWordsSensitive.md).
+    return (
+      <div
+        data-testid={revealed ? undefined : testId}
+        style={revealed ? CONTENTS : undefined}
+        className={revealed ? undefined : "flex min-w-0 flex-col gap-1"}
+      >
+        <div style={revealed ? CONTENTS : undefined} className={revealed ? undefined : "flex min-w-0 items-baseline gap-2"}>
+          <div
+            aria-hidden={revealed ? undefined : "true"}
+            style={revealed ? CONTENTS : { filter: "blur(6px)", opacity: 0.75 }}
+            className={revealed ? undefined : "min-w-0 flex-1 select-none"}
+          >
+            {body}
+          </div>
+          {!revealed && (
+            <button
+              type="button"
+              data-testid={`${testId}-reveal`}
+              onClick={reveal}
+              className="cg-state cg-focus cg-hit flex-none cursor-pointer border-0 bg-transparent p-0 font-sans text-[length:var(--text-label-small)] [font-weight:400] [line-height:normal] text-on-surface-variant underline"
+            >
+              {revealLabel}
+            </button>
+          )}
+        </div>
+        {!revealed && named && (
+          <span data-testid={`${testId}-source`} className="text-label-small text-on-surface-variant [text-wrap:pretty]">
+            {sourceLine}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  if (face === "compact") {
+    // THE COMMENT-SCALE FACE (`SensitiveVeil kind="compact"`): a comment is
+    // words first and its pictures join them, so ONE block stands in the
+    // body's place rather than a wash the height of two lines over one thing
+    // and a second over the other. The type is the THEME's: the block lies
+    // over the card, which is light in the light theme. The body stays mounted
+    // beneath it, out of view, so the reveal is an eligibility change.
+    return (
+      <div data-testid={revealed ? undefined : testId} style={revealed ? CONTENTS : undefined} className={revealed ? undefined : "min-w-0"}>
+        <div aria-hidden={revealed ? undefined : "true"} style={revealed ? CONTENTS : { display: "none" }}>
+          {body}
+        </div>
+        {!revealed && (
+          <button
+            type="button"
+            data-testid={`${testId}-reveal`}
+            onClick={reveal}
+            aria-label={`${label}. ${sourceLine}`}
+            style={{ background: WASH }}
+            className="cg-state cg-focus flex w-full cursor-pointer flex-col items-start gap-1 rounded-[var(--radius-medium)] border-0 p-3 text-left font-sans text-on-surface"
+          >
+            <span className="flex items-center gap-2">
+              <VisibilityGlyph size={18} />
+              <span className="text-label-medium">{label}</span>
+            </span>
+            <span data-testid={`${testId}-source`} className="text-body-small [text-wrap:pretty]">
+              {sourceLine}
+            </span>
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       data-testid={revealed ? undefined : testId}
@@ -120,19 +228,19 @@ export function BodyVeil({
         style={revealed ? CONTENTS : { filter: "blur(24px)", transform: "scale(1.06)" }}
         className={revealed ? undefined : "min-w-0 flex-1 overflow-hidden select-none"}
       >
-        <VeilContext.Provider value={!revealed}>{children}</VeilContext.Provider>
+        {body}
       </div>
       {!revealed && (
         <button
           type="button"
           data-testid={`${testId}-reveal`}
           onClick={reveal}
-          aria-label={reason ? `${label} — ${reason}` : label}
+          aria-label={`${label}. ${sourceLine}`}
           style={{
             borderRadius: radius,
             // A neutral wash, not a warning: the same scrim every covering
             // surface in this system uses, at a little over half strength.
-            background: "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)",
+            background: WASH,
           }}
           className="cg-focus absolute inset-0 grid cursor-pointer place-items-center border-0 p-0"
         >
@@ -144,7 +252,9 @@ export function BodyVeil({
           >
             <VisibilityGlyph />
             <span className="text-label-large">{label}</span>
-            {reason && <span className="text-body-small opacity-85">{reason}</span>}
+            <span data-testid={`${testId}-source`} className="text-body-small opacity-85 [text-wrap:pretty]">
+              {sourceLine}
+            </span>
           </span>
         </button>
       )}
