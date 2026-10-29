@@ -25,7 +25,7 @@ import { FormPasswordField } from "@/lib/ui2/form-fields";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { WaitingCommit } from "@/lib/ui2/waiting-commit";
 
-import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "../task-page";
+import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "@/lib/ui2/task-page";
 
 const NODE: DataNode = { path: "changePassword" };
 
