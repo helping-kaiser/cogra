@@ -36,7 +36,13 @@ class KeptPicksScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private fun row(id: String, preview: KeptPreview, pick: StancePair, severs: Boolean = false, topic: Boolean = false) =
+    private fun row(
+        id: String,
+        preview: KeptPreview,
+        pick: StancePair,
+        severs: Boolean = false,
+        topic: Boolean = false,
+    ) =
         KeptRow(
             pick = KeptPick(
                 target = if (topic) StanceTarget.Topic(id) else StanceTarget.Node(id),

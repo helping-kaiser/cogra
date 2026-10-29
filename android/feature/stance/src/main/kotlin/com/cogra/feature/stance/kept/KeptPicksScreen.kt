@@ -510,7 +510,11 @@ private fun SealPair(point: StancePoint, axes: StanceAxes) {
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
         modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = spoken },
     ) {
-        Text(text = anchor.emoji, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.clearAndSetSemantics { })
+        Text(
+            text = anchor.emoji,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.clearAndSetSemantics { },
+        )
         if (LocalShowExactValues.current) {
             Text(
                 text = point.pair(),

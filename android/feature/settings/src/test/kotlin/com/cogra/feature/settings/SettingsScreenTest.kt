@@ -374,6 +374,36 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun settings75_83_theKeptPicksRowStandsLastAndReopensTheReview() {
+        var opened = 0
+        render(
+            SettingsUiState(account = account(), actorKeyHere = true, now = NOW, keptPicks = 4),
+            doors = SettingsDoors(onOpenKeptPicks = { opened++ }),
+        )
+        node("settings.backup.kept.label").assertTextEquals("4 kept picks waiting")
+        node("settings.backup.kept").performScrollTo().performClick()
+        assertThat(opened).isEqualTo(1)
+    }
+
+    @Test
+    fun settings75_oneKeptPickReadsInTheSingular() {
+        render(SettingsUiState(account = account(), actorKeyHere = true, now = NOW, keptPicks = 1))
+        node("settings.backup.kept.label").assertTextEquals("1 kept pick waiting")
+    }
+
+    @Test
+    fun settings77_noRowStandsWithNothingKeptOrWithTheKeyElsewhere() {
+        render(SettingsUiState(account = account(), actorKeyHere = true, now = NOW, keptPicks = 0))
+        node("settings.backup.kept").assertDoesNotExist()
+    }
+
+    @Test
+    fun keptPicksReview39_theRowGoesWhileTheKeyIsElsewhere() {
+        render(SettingsUiState(account = account(), actorKeyHere = false, now = NOW, keptPicks = 3))
+        node("settings.backup.kept").assertDoesNotExist()
+    }
+
+    @Test
     fun noBackupReadsNotMadeYetAndTheFootnoteSaysSo() {
         render(SettingsUiState(account = account(keyBackupCreatedAt = null), now = NOW))
         node("settings.backup.recovery.status").assertTextEquals("Not made yet")
