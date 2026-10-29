@@ -21,6 +21,8 @@
 
 import { useState } from "react";
 
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 import { BottomSheet } from "../bottom-sheet";
 import { InlineAction } from "../inline-action";
 import { PillButton } from "../pill-button";
@@ -63,6 +65,7 @@ export function PickedSheet({
   onRemove,
   onMove,
   testId = "picked-sheet",
+  node,
 }: {
   open: boolean;
   onClose: () => void;
@@ -72,6 +75,12 @@ export function PickedSheet({
   // Move the picture at `from` to `to`. The sheet never reorders its own props.
   onMove: (from: number, to: number) => void;
   testId?: string;
+  /**
+   * The registered sheet on a registered screen (`postEdit.pickedSheet`): each
+   * row a `picture` keyed by its place from 1, with its controls, then the
+   * sheet's `note` and `done`. It names them instead of `testId`.
+   */
+  node?: DataNode;
 }) {
   // The row being dragged, where the pointer went down, how far it has
   // travelled, and the row pitch measured at the press.
@@ -83,14 +92,15 @@ export function PickedSheet({
   } | null>(null);
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={`Picked · ${items.length}`} testId={testId}>
+    <BottomSheet open={open} onClose={onClose} title={`Picked · ${items.length}`} testId={testId} node={node}>
       <ul className="m-0 flex list-none flex-col border-t border-outline-variant p-0">
         {items.map((item, index) => {
           const lifted = drag !== null && drag.from === index;
+          const picture = instance(node, "picture", String(index + 1));
           return (
             <li
               key={item.id}
-              data-testid={`${testId}-row-${index}`}
+              {...testAttributes(picture, `${testId}-row-${index}`)}
               style={
                 lifted
                   ? { transform: `translateY(${drag.travel}px)`, position: "relative", zIndex: 1 }
@@ -102,7 +112,7 @@ export function PickedSheet({
             >
               <button
                 type="button"
-                data-testid={`${testId}-move-${index}`}
+                {...testAttributes(part(picture, "reorder"), `${testId}-move-${index}`)}
                 aria-label={`Reorder ${index === 0 ? "the cover" : `picture ${index + 1}`}`}
                 aria-keyshortcuts="ArrowUp ArrowDown"
                 onKeyDown={(event) => {
@@ -152,9 +162,12 @@ export function PickedSheet({
                 size={56}
                 cover={index === 0}
                 testId={`${testId}-thumb-${index}`}
+                node={part(picture, "thumb")}
               />
               <span className="flex flex-1 flex-col gap-0.5">
-                <span className="text-label-large">{rowName(index)}</span>
+                <span className="text-label-large" {...testAttributes(part(picture, "label"))}>
+                  {rowName(index)}
+                </span>
                 {/* THE DRAG HAS NON-DRAG TWINS (the K13 round; PickedSheet.jsx):
                     after Describe, `Make it the cover` · `Move up` · `Move down`,
                     each only where the move is possible. They wrap at a 24px
@@ -162,28 +175,44 @@ export function PickedSheet({
                 <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
                   {item.described ? (
                     <span
-                      data-testid={`${testId}-described-${index}`}
+                      {...testAttributes(part(picture, "described"), `${testId}-described-${index}`)}
                       className="text-label-small text-on-surface-variant"
                     >
                       Described
                     </span>
                   ) : (
-                    <InlineAction size="sm" testId={`${testId}-describe-${index}`} onClick={() => onDescribe(item.id)}>
+                    <InlineAction
+                      size="sm"
+                      testId={`${testId}-describe-${index}`}
+                      node={part(picture, "describe")}
+                      onClick={() => onDescribe(item.id)}>
                       Describe
                     </InlineAction>
                   )}
                   {index > 0 && (
-                    <InlineAction size="sm" testId={`${testId}-make-cover-${index}`} onClick={() => onMove(index, 0)}>
+                    <InlineAction
+                      size="sm"
+                      testId={`${testId}-make-cover-${index}`}
+                      node={part(picture, "makeCover")}
+                      onClick={() => onMove(index, 0)}>
                       Make it the cover
                     </InlineAction>
                   )}
                   {index > 0 && (
-                    <InlineAction size="sm" testId={`${testId}-up-${index}`} onClick={() => onMove(index, index - 1)}>
+                    <InlineAction
+                      size="sm"
+                      testId={`${testId}-up-${index}`}
+                      node={part(picture, "moveUp")}
+                      onClick={() => onMove(index, index - 1)}>
                       Move up
                     </InlineAction>
                   )}
                   {index < items.length - 1 && (
-                    <InlineAction size="sm" testId={`${testId}-down-${index}`} onClick={() => onMove(index, index + 1)}>
+                    <InlineAction
+                      size="sm"
+                      testId={`${testId}-down-${index}`}
+                      node={part(picture, "moveDown")}
+                      onClick={() => onMove(index, index + 1)}>
                       Move down
                     </InlineAction>
                   )}
@@ -191,7 +220,7 @@ export function PickedSheet({
               </span>
               <button
                 type="button"
-                data-testid={`${testId}-remove-${index}`}
+                {...testAttributes(part(picture, "remove"), `${testId}-remove-${index}`)}
                 aria-label={`Remove ${index === 0 ? "the cover" : `picture ${index + 1}`}`}
                 onClick={() => onRemove(item.id)}
                 className="cg-state cg-focus cg-hit relative flex flex-none cursor-pointer items-center border-0 bg-transparent p-0 text-on-surface-variant"
@@ -207,11 +236,11 @@ export function PickedSheet({
       {/* PickedSheet.jsx: the footnote at the body's weight, then the Done row
           on its own 8 · 16 · 8 inset — 16 from the sheet's edge, not the
           column's 24. */}
-      <p className={`m-0 pt-3 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
+      <p className={`m-0 pt-3 ${LABEL_SMALL_PLAIN} text-on-surface-variant`} {...testAttributes(part(node, "note"))}>
         The first one is the cover.
       </p>
       <div className="-mr-2 flex justify-end py-2">
-        <PillButton testId={`${testId}-done`} variant="text" onClick={onClose}>
+        <PillButton testId={`${testId}-done`} node={part(node, "done")} variant="text" onClick={onClose}>
           Done
         </PillButton>
       </div>

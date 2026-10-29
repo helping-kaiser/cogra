@@ -10,6 +10,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { postBackingHandler } from "@/test/backing";
+import { byNode } from "@/test/data-node";
 import { fakeIdentityStore } from "@/test/identity";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { echoedMedia } from "@/test/media-echo";
@@ -179,8 +180,8 @@ function draw(
   return signer;
 }
 
-const footer = () => screen.getByTestId("post-edit-acts-footer");
-const sign = () => screen.getByTestId("post-edit-sign");
+const footer = () => screen.getByTestId("postEdit.acts.line");
+const sign = () => screen.getByTestId("postEdit.sign");
 
 describe("PostEditRoute — the guard is the acts batch (EditComposeUnchanged)", () => {
   beforeEach(() => push.mockClear());
@@ -216,7 +217,7 @@ describe("PostEditRoute — the guard is the acts batch (EditComposeUnchanged)",
       }),
     );
     const signer = draw();
-    const title = await screen.findByTestId("post-edit-title");
+    const title = await screen.findByTestId("postEdit.title.input");
     fireEvent.change(title, { target: { value: "Old title, edited" } });
     fireEvent.change(title, { target: { value: "Old title" } });
     // The first typed change staged the record, and typing it back keeps it.
@@ -238,10 +239,10 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     serve(editablePost());
     draw();
     await screen.findByTestId("post-edit");
-    const row = screen.getByTestId("post-edit-open-backing").parentElement!;
+    const row = screen.getByTestId("postEdit.facts.backing.action").parentElement!;
     expect(within(row).getByText("Your backing")).toBeInTheDocument();
-    expect(screen.getByTestId("post-edit-open-backing")).toHaveTextContent("Adjust");
-    const license = screen.getByTestId("post-edit-license").parentElement!;
+    expect(screen.getByTestId("postEdit.facts.backing.action")).toHaveTextContent("Adjust");
+    const license = screen.getByTestId("postEdit.facts.license.value").parentElement!;
     expect(license.nextElementSibling).toBe(row);
     // "opinion" is the face record's word, never the authoring row's.
     expect(screen.queryByText(/your opinion/i)).not.toBeInTheDocument();
@@ -252,22 +253,22 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
   it("reads the row off the live backing, and a Set moves it by the pick", async () => {
     serve(editablePost(), { backing: 0.1 });
     draw();
-    expect(await screen.findByTestId("post-edit-backing-value")).toHaveTextContent("+0.10");
+    expect(await screen.findByTestId("postEdit.facts.backing.value")).toHaveTextContent("+0.10");
     expect(screen.queryByTestId("post-edit-backing-unread")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     fireEvent.keyDown(await screen.findByTestId("post-edit-backing-pad-field-strip"), {
       key: "ArrowRight",
       shiftKey: true,
     });
     fireEvent.click(screen.getByTestId("post-edit-backing-pad-set"));
-    expect(screen.getByTestId("post-edit-backing-value")).toHaveTextContent("+0.30");
+    expect(screen.getByTestId("postEdit.facts.backing.value")).toHaveTextContent("+0.30");
   });
 
   it("the pad reads Current backing and Backing after off the live read", async () => {
     serve(editablePost(), { backing: 0.1 });
     draw();
     await screen.findByTestId("post-edit");
-    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     await screen.findByTestId("post-edit-backing-pad");
     expect(screen.getByTestId("post-edit-backing-pad-current-exact")).toHaveTextContent("+0.10");
     expect(screen.getByTestId("post-edit-backing-pad-after-exact")).toHaveTextContent("+0.10");
@@ -278,8 +279,8 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
   it("states the raw total and the cap when the live sum is past ±1", async () => {
     serve(editablePost(), { backing: 2 });
     draw();
-    expect(await screen.findByTestId("post-edit-backing-value")).toHaveTextContent("+1.00");
-    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    expect(await screen.findByTestId("postEdit.facts.backing.value")).toHaveTextContent("+1.00");
+    fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     await screen.findByTestId("post-edit-backing-pad");
     expect(screen.getByTestId("post-edit-backing-pad-current-exact")).toHaveTextContent("+1.00");
     expect(screen.getByTestId("post-edit-backing-pad-after-exact")).toHaveTextContent("+1.00");
@@ -298,15 +299,15 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
       }),
     );
     draw();
-    await screen.findByTestId("post-edit-backing-value");
-    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    await screen.findByTestId("postEdit.facts.backing.value");
+    fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     const walk = await screen.findByTestId("post-edit-backing-pad-walk-back");
     expect(walk).not.toBeDisabled();
     fireEvent.click(walk);
     expect(screen.getByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("−0.35");
     expect(screen.getByTestId("post-edit-backing-pad-after-exact")).toHaveTextContent("+0.00");
     fireEvent.click(screen.getByTestId("post-edit-backing-pad-set"));
-    expect(screen.getByTestId("post-edit-backing-value")).toHaveTextContent("+0.00");
+    expect(screen.getByTestId("postEdit.facts.backing.value")).toHaveTextContent("+0.00");
     expect(footer()).toHaveTextContent("You're signing 1 thing");
     fireEvent.click(sign());
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
@@ -316,8 +317,8 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
   it("greys Walk it all back while the live backing already nets 0.00", async () => {
     serve(editablePost(), { backing: 0 });
     draw();
-    await screen.findByTestId("post-edit-backing-value");
-    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    await screen.findByTestId("postEdit.facts.backing.value");
+    fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     expect(await screen.findByTestId("post-edit-backing-pad-walk-back")).toBeDisabled();
   });
 
@@ -327,7 +328,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     draw();
     await screen.findByTestId("post-edit");
     expect(screen.getByTestId("post-edit-backing-unread")).toHaveTextContent("Not readable yet");
-    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     await screen.findByTestId("post-edit-backing-pad");
     expect(screen.getByTestId("post-edit-backing-pad-current-unread")).toHaveTextContent("Not readable yet");
     expect(screen.getByTestId("post-edit-backing-pad-after-unread")).toHaveTextContent("Not readable yet");
@@ -338,7 +339,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     serve(editablePost());
     server.use(gqlLink.query("PostBacking", () => HttpResponse.error()));
     draw();
-    expect(await screen.findByTestId("post-edit-title")).toHaveValue("Old title");
+    expect(await screen.findByTestId("postEdit.title.input")).toHaveValue("Old title");
     expect(screen.getByTestId("post-edit-backing-unread")).toHaveTextContent("Not readable yet");
     expect(screen.queryByTestId("post-edit-load-failed")).not.toBeInTheDocument();
   });
@@ -382,7 +383,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
       ),
     );
     draw();
-    expect(await screen.findByTestId("post-edit-backing-value")).toHaveTextContent("+0.40");
+    expect(await screen.findByTestId("postEdit.facts.backing.value")).toHaveTextContent("+0.40");
   });
 
   it("an unmoved pick leaves the batch empty and travels as 0 with any change", async () => {
@@ -397,7 +398,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     const signer = draw();
     await screen.findByTestId("post-edit");
     expect(footer()).toHaveTextContent("Nothing to sign yet");
-    fireEvent.change(screen.getByTestId("post-edit-title"), { target: { value: "New title" } });
+    fireEvent.change(screen.getByTestId("postEdit.title.input"), { target: { value: "New title" } });
     fireEvent.click(sign());
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
     expect(sent).toMatchObject({ pDirected: 0 });
@@ -417,7 +418,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     const signer = draw();
     await screen.findByTestId("post-edit");
 
-    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     const pad = await screen.findByTestId("post-edit-backing-pad");
     expect(pad).toHaveAttribute("open");
     // The pad opens at the edit's own pick: 0.00.
@@ -446,14 +447,14 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     serve(editablePost());
     draw();
     await screen.findByTestId("post-edit");
-    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     fireEvent.keyDown(await screen.findByTestId("post-edit-backing-pad-field-strip"), { key: "ArrowLeft" });
     fireEvent.click(screen.getByTestId("post-edit-backing-pad-set"));
-    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("−0.05");
     fireEvent.keyDown(screen.getByTestId("post-edit-backing-pad-field-strip"), { key: "ArrowLeft" });
     fireEvent.click(screen.getByTestId("post-edit-backing-pad-cancel"));
-    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("−0.05");
   });
 
@@ -461,7 +462,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     serve(editablePost());
     draw();
     await screen.findByTestId("post-edit");
-    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     fireEvent.click(await screen.findByTestId("post-edit-backing-pad-set"));
     expect(screen.queryByText("Start it unreachable?")).not.toBeInTheDocument();
     expect(screen.queryByTestId("post-edit-backing-pad")).not.toBeInTheDocument();
@@ -486,9 +487,9 @@ describe("PostEditRoute — leaving (EditCompose, EditWords, DiscardConfirm): th
     serve(editablePost());
     draw();
     await screen.findByTestId("post-edit");
-    fireEvent.click(screen.getByTestId("header-leave"));
+    fireEvent.click(screen.getByTestId("postEdit.header.leave"));
     expect(push).toHaveBeenCalledWith("/posts/p1");
-    fireEvent.click(screen.getByTestId("header-back"));
+    fireEvent.click(screen.getByTestId("postEdit.header.back"));
     expect(push).toHaveBeenCalledTimes(2);
     expect(ask()).not.toHaveAttribute("open");
   });
@@ -496,8 +497,8 @@ describe("PostEditRoute — leaving (EditCompose, EditWords, DiscardConfirm): th
   it("a_staged_batch_asks_discard_the_changes_before_the_x_leaves", async () => {
     serve(editablePost());
     draw();
-    fireEvent.change(await screen.findByTestId("post-edit-title"), { target: { value: "New title" } });
-    fireEvent.click(screen.getByTestId("header-leave"));
+    fireEvent.change(await screen.findByTestId("postEdit.title.input"), { target: { value: "New title" } });
+    fireEvent.click(screen.getByTestId("postEdit.header.leave"));
     expect(push).not.toHaveBeenCalled();
     expect(ask()).toHaveAttribute("open");
     expect(ask()).toHaveTextContent("Discard the changes?");
@@ -507,8 +508,8 @@ describe("PostEditRoute — leaving (EditCompose, EditWords, DiscardConfirm): th
   it("a_staged_batch_asks_the_same_before_the_back_arrow_leaves", async () => {
     serve(editablePost());
     draw();
-    fireEvent.change(await screen.findByTestId("post-edit-title"), { target: { value: "New title" } });
-    fireEvent.click(screen.getByTestId("header-back"));
+    fireEvent.change(await screen.findByTestId("postEdit.title.input"), { target: { value: "New title" } });
+    fireEvent.click(screen.getByTestId("postEdit.header.back"));
     expect(push).not.toHaveBeenCalled();
     expect(ask()).toHaveAttribute("open");
   });
@@ -516,8 +517,8 @@ describe("PostEditRoute — leaving (EditCompose, EditWords, DiscardConfirm): th
   it("a_withdrawal_alone_is_an_act_so_leaving_asks", async () => {
     serve(editablePost({ topics: [topicClaim("coastroad")] }));
     draw();
-    fireEvent.click(await screen.findByTestId("post-edit-tag-0-remove"));
-    fireEvent.click(screen.getByTestId("header-leave"));
+    fireEvent.click(await screen.findByTestId("postEdit.tags.tag.remove"));
+    fireEvent.click(screen.getByTestId("postEdit.header.leave"));
     expect(push).not.toHaveBeenCalled();
     expect(ask()).toHaveAttribute("open");
   });
@@ -525,9 +526,9 @@ describe("PostEditRoute — leaving (EditCompose, EditWords, DiscardConfirm): th
   it("keep_writing_closes_the_ask_onto_the_edit_as_it_was", async () => {
     serve(editablePost());
     draw();
-    const title = await screen.findByTestId("post-edit-title");
+    const title = await screen.findByTestId("postEdit.title.input");
     fireEvent.change(title, { target: { value: "New title" } });
-    fireEvent.click(screen.getByTestId("header-leave"));
+    fireEvent.click(screen.getByTestId("postEdit.header.leave"));
     fireEvent.click(screen.getByTestId("post-edit-discard-confirm-keep"));
     expect(ask()).not.toHaveAttribute("open");
     expect(push).not.toHaveBeenCalled();
@@ -545,8 +546,8 @@ describe("PostEditRoute — leaving (EditCompose, EditWords, DiscardConfirm): th
       }),
     );
     const signer = draw();
-    fireEvent.change(await screen.findByTestId("post-edit-title"), { target: { value: "New title" } });
-    fireEvent.click(screen.getByTestId("header-leave"));
+    fireEvent.change(await screen.findByTestId("postEdit.title.input"), { target: { value: "New title" } });
+    fireEvent.click(screen.getByTestId("postEdit.header.leave"));
     fireEvent.click(screen.getByTestId("post-edit-discard-confirm-discard"));
     expect(push).toHaveBeenCalledTimes(1);
     expect(push).toHaveBeenCalledWith("/posts/p1");
@@ -556,7 +557,7 @@ describe("PostEditRoute — leaving (EditCompose, EditWords, DiscardConfirm): th
     // Nothing is kept: the next edit opens on the post as it stands.
     cleanup();
     draw();
-    expect(await screen.findByTestId("post-edit-title")).toHaveValue("Old title");
+    expect(await screen.findByTestId("postEdit.title.input")).toHaveValue("Old title");
     expect(footer()).toHaveTextContent("Nothing to sign yet");
   });
 });
@@ -567,16 +568,16 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
   it("withdraws a standing tag in place, with Undo, and counts it", async () => {
     serve(editablePost({ topics: [topicClaim("coastroad")] }));
     draw();
-    fireEvent.click(await screen.findByTestId("post-edit-tag-0-remove"));
-    expect(screen.getByTestId("post-edit-withdrawn-tag-coastroad")).toHaveTextContent(
+    fireEvent.click(await screen.findByTestId("postEdit.tags.tag.remove"));
+    expect(screen.getByTestId("postEdit.tags.withdrawn")).toHaveTextContent(
       "Withdrawn: #coastroad",
     );
     expect(screen.getByLabelText("Undo withdrawing #coastroad")).toBeInTheDocument();
     expect(footer()).toHaveTextContent("You're signing 1 thing");
 
-    fireEvent.click(screen.getByTestId("post-edit-withdrawn-tag-coastroad-undo"));
-    expect(screen.queryByTestId("post-edit-withdrawn-tag-coastroad")).not.toBeInTheDocument();
-    expect(screen.getByTestId("post-edit-tag-0")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("postEdit.tags.withdrawn.undo"));
+    expect(screen.queryByTestId("postEdit.tags.withdrawn")).not.toBeInTheDocument();
+    expect(screen.getByTestId("postEdit.tags.tag")).toBeInTheDocument();
     expect(footer()).toHaveTextContent("Nothing to sign yet");
   });
 
@@ -586,9 +587,9 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     fireEvent.change(await screen.findByTestId("post-edit-tag-input"), {
       target: { value: "saltmaps" },
     });
-    fireEvent.click(screen.getByTestId("post-edit-tag-add"));
+    fireEvent.click(screen.getByTestId("postEdit.tags.add"));
     expect(footer()).toHaveTextContent("You're signing 1 thing");
-    fireEvent.click(screen.getByTestId("post-edit-tag-0-remove"));
+    fireEvent.click(screen.getByTestId("postEdit.tags.tag.remove"));
     expect(screen.queryByText(/Withdrawn:/)).not.toBeInTheDocument();
     expect(footer()).toHaveTextContent("Nothing to sign yet");
   });
@@ -596,7 +597,7 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
   it("counts a citation's withdrawal at its counter-records", async () => {
     serve(editablePost({ references: [referenceClaim("u-juno", "juno", 2)] }));
     draw();
-    fireEvent.click(await screen.findByTestId("post-edit-reference-0-remove"));
+    fireEvent.click(await screen.findByTestId("postEdit.references.stagedReference.remove"));
     expect(screen.getByText(/Withdrawn:/)).toBeInTheDocument();
     expect(footer()).toHaveTextContent("You're signing 2 things");
   });
@@ -609,11 +610,11 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
       }),
     );
     draw();
-    fireEvent.change(await screen.findByTestId("post-edit-title"), {
+    fireEvent.change(await screen.findByTestId("postEdit.title.input"), {
       target: { value: "Salt maps" },
     });
-    fireEvent.click(screen.getByTestId("post-edit-tag-0-remove"));
-    fireEvent.click(screen.getByTestId("post-edit-reference-0-remove"));
+    fireEvent.click(screen.getByTestId("postEdit.tags.tag.remove"));
+    fireEvent.click(screen.getByTestId("postEdit.references.stagedReference.remove"));
     expect(footer()).toHaveTextContent("You're signing 4 things");
 
     fireEvent.click(footer());
@@ -660,11 +661,11 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
       }),
     );
     const signer = draw();
-    fireEvent.change(await screen.findByTestId("post-edit-words"), {
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), {
       target: { value: "New body" },
     });
-    fireEvent.click(screen.getByTestId("post-edit-tag-0-remove"));
-    fireEvent.click(screen.getByTestId("post-edit-reference-0-remove"));
+    fireEvent.click(screen.getByTestId("postEdit.tags.tag.remove"));
+    fireEvent.click(screen.getByTestId("postEdit.references.stagedReference.remove"));
     // Sign is the confirmation: no dialog asks again (EditActs.jsx).
     fireEvent.click(sign());
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
@@ -678,7 +679,7 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
   it("shows the license as signed, its name and the lock, with no action", async () => {
     serve(editablePost({ license: { attribution: 1, provenance: 0 } }));
     draw();
-    expect(await screen.findByTestId("post-edit-license")).toHaveTextContent(
+    expect(await screen.findByTestId("postEdit.facts.license.value")).toHaveTextContent(
       "Credit always · Not logged",
     );
     expect(screen.getByLabelText("The license never changes")).toBeInTheDocument();
@@ -691,15 +692,15 @@ describe("PostEditRoute — the body (EditWords, EditPicked)", () => {
   it("the words edit carries a title and no description field", async () => {
     serve(editablePost({ description: "left over" }));
     draw();
-    expect(await screen.findByTestId("post-edit-words")).toHaveValue("Old body");
-    expect(screen.queryByTestId("post-edit-description")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("postEdit.body.words.input")).toHaveValue("Old body");
+    expect(screen.queryByTestId("postEdit.description.input")).not.toBeInTheDocument();
     expect(screen.getByText("A post’s body is words or media, never both.")).toBeInTheDocument();
   });
 
   it("puts the words body's cap line under it and holds the sign", async () => {
     serve(editablePost());
     draw();
-    fireEvent.change(await screen.findByTestId("post-edit-words"), {
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), {
       target: { value: "x".repeat(5001) },
     });
     expect(screen.getByText("A post's words are at most 5,000 characters.")).toBeInTheDocument();
@@ -718,7 +719,7 @@ describe("PostEditRoute — the body (EditWords, EditPicked)", () => {
     draw();
     fireEvent.click(await screen.findByLabelText("Manage the 2 pictures"));
     fireEvent.click(await screen.findByTestId("post-edit-picked-sheet-make-cover-1"));
-    fireEvent.click(screen.getByTestId("post-edit-picked-sheet-done"));
+    fireEvent.click(screen.getByTestId("postEdit.pickedSheet.done"));
     expect(footer()).toHaveTextContent("You're signing 1 thing");
     fireEvent.click(sign());
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
@@ -738,13 +739,13 @@ describe("PostEditRoute — the body (EditWords, EditPicked)", () => {
       }),
     );
     draw();
-    expect(await screen.findByTestId("post-edit-description")).toHaveValue("Rubbings at low tide.");
+    expect(await screen.findByTestId("postEdit.description.input")).toHaveValue("Rubbings at low tide.");
     fireEvent.click(screen.getByLabelText("Manage the picture"));
     fireEvent.click(await screen.findByTestId("post-edit-picked-sheet-remove-0"));
     // The sheet closes onto the words edit, the field empty and no description.
-    const words = await screen.findByTestId("post-edit-words");
+    const words = await screen.findByTestId("postEdit.body.words.input");
     expect(words).toHaveValue("");
-    expect(screen.queryByTestId("post-edit-description")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("postEdit.description.input")).not.toBeInTheDocument();
     fireEvent.change(words, { target: { value: "Now it is words." } });
     fireEvent.click(sign());
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
@@ -765,7 +766,7 @@ describe("PostEditRoute — signing", () => {
       }),
     );
     draw({ keyOnDevice: false });
-    fireEvent.change(await screen.findByTestId("post-edit-words"), { target: { value: "x" } });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
     fireEvent.click(sign());
     expect(await screen.findByTestId("home_restore")).toBeInTheDocument();
     expect(prepared).toBe(false);
@@ -790,7 +791,7 @@ describe("PostEditRoute — signing", () => {
       ),
     );
     const signer = draw();
-    fireEvent.change(await screen.findByTestId("post-edit-words"), { target: { value: "x" } });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
     fireEvent.click(sign());
     // EditCompose.md: "the notice's fact ends Nothing was signed or spent —
     // your edit is still here. AND the way out under the notice reads Not now
@@ -799,7 +800,7 @@ describe("PostEditRoute — signing", () => {
     expect(notice).toHaveTextContent("You can't sign right now");
     expect(notice).toHaveTextContent(/Nothing was signed or spent — your edit is still here\.$/);
     expect(notice).not.toHaveTextContent(/draft/);
-    expect(screen.queryByTestId("post-edit-sign")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("postEdit.sign")).not.toBeInTheDocument();
     expect(screen.queryByText(/Retry/)).not.toBeInTheDocument();
     expect(signer.signStaged).not.toHaveBeenCalled();
     // Not now: the notice goes and the edit stands again with the batch as it was.
@@ -815,7 +816,7 @@ describe("PostEditRoute — signing", () => {
       gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared(2) })),
     );
     const signer = draw();
-    fireEvent.change(await screen.findByTestId("post-edit-words"), { target: { value: "x" } });
+    fireEvent.change(await screen.findByTestId("postEdit.body.words.input"), { target: { value: "x" } });
     fireEvent.click(sign());
     expect(await screen.findByTestId("post-edit-acts-footer-subline")).toHaveTextContent(
       "The count changed while you were editing — check it, then sign again.",
@@ -931,11 +932,11 @@ function clipAttachment({ coverTaken = false, cover = true } = {}) {
   };
 }
 
-const gate = () => screen.queryByTestId("post-edit-gate");
+const gate = () => screen.queryByTestId("postEdit.gate");
 
 /** One more picture picked on a picture post, the crop standing. */
 async function cropOneMore() {
-  fireEvent.click(await screen.findByTestId("post-edit-add-pictures"));
+  fireEvent.click(await screen.findByTestId("postEdit.body.add"));
   await pickInto("post-edit-add-pictures-input", [picture("third.jpg")]);
   return screen.findByTestId("post-edit-crop");
 }
@@ -949,7 +950,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
   it("reads the cap on the add control and opens the device's own picker, never a pick stage", async () => {
     serve(editablePost({ attachments: [attachment("m-1"), attachment("m-2")] }));
     draw();
-    const add = await screen.findByTestId("post-edit-add-pictures");
+    const add = await screen.findByTestId("postEdit.body.add");
     expect(add).toHaveTextContent("+ Add pictures · 2 of 10");
     const input = screen.getByTestId("post-edit-add-pictures-input") as HTMLInputElement;
     const opened = vi.spyOn(input, "click");
@@ -958,7 +959,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     expect(input.accept).toBe("image/*");
     expect(screen.queryByTestId("wizard-file-input")).not.toBeInTheDocument();
     // The body rule stands under the add control.
-    expect(screen.getByTestId("post-edit-body-rule")).toHaveTextContent(
+    expect(screen.getByTestId("postEdit.body.rule")).toHaveTextContent(
       "A post’s body is words or media, never both.",
     );
   });
@@ -993,7 +994,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
   it("the crop's X is the edit's own X: it asks first where the batch holds an act", async () => {
     serve(editablePost({ attachments: [attachment("m-1"), attachment("m-2")] }));
     draw();
-    fireEvent.change(await screen.findByTestId("post-edit-title"), { target: { value: "New title" } });
+    fireEvent.change(await screen.findByTestId("postEdit.title.input"), { target: { value: "New title" } });
     await cropOneMore();
     fireEvent.click(within(screen.getByTestId("composeCrop.header")).getByLabelText(EDIT_LEAVE_LABEL));
     await waitFor(() => expect(screen.getByTestId("post-edit-discard-confirm")).toHaveAttribute("open"));
@@ -1006,7 +1007,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     serve(editablePost({ attachments: Array.from({ length: 9 }, (_, i) => attachment(`m-${i}`)) }));
     uploads();
     draw();
-    fireEvent.click(await screen.findByTestId("post-edit-add-pictures"));
+    fireEvent.click(await screen.findByTestId("postEdit.body.add"));
     await pickInto("post-edit-add-pictures-input", [
       picture("ten.jpg"),
       picture("eleven.jpg"),
@@ -1032,7 +1033,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     draw();
     await cropOneMore();
     fireEvent.click(screen.getByTestId("composeCrop.next"));
-    expect(await screen.findByTestId("post-edit-gate")).toHaveTextContent(
+    expect(await screen.findByTestId("postEdit.gate")).toHaveTextContent(
       "Uploading 0 of 1 — signing waits for the picture.",
     );
     // EditCompose.md: "Sign the edit is enabled GIVEN an upload is running".
@@ -1050,10 +1051,10 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     serve(editablePost({ attachments: [attachment("m-1")] }));
     uploads();
     draw();
-    fireEvent.click(await screen.findByTestId("post-edit-add-pictures"));
+    fireEvent.click(await screen.findByTestId("postEdit.body.add"));
     await pickInto("post-edit-add-pictures-input", [picture("a.jpg"), picture("b.jpg")]);
     fireEvent.click(await screen.findByTestId("composeCrop.next"));
-    expect(await screen.findByTestId("post-edit-gate")).toHaveTextContent(
+    expect(await screen.findByTestId("postEdit.gate")).toHaveTextContent(
       "Uploading 0 of 2 — signing waits for the pictures.",
     );
   });
@@ -1076,7 +1077,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     const signer = draw();
     await cropOneMore();
     fireEvent.click(screen.getByTestId("composeCrop.next"));
-    await screen.findByTestId("post-edit-gate");
+    await screen.findByTestId("postEdit.gate");
     fireEvent.click(sign());
     fireEvent.click(sign());
     expect(sign()).not.toBeDisabled();
@@ -1084,7 +1085,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     await waitFor(() => expect(sign()).toHaveTextContent("Signing the edit…"), { timeout: 1000 });
     expect(signer.signStaged).not.toHaveBeenCalled();
     // The ways out refuse while it is held.
-    fireEvent.click(within(screen.getByTestId("post-edit-header")).getByLabelText(EDIT_LEAVE_LABEL));
+    fireEvent.click(within(screen.getByTestId("postEdit.header")).getByLabelText(EDIT_LEAVE_LABEL));
     expect(screen.getByTestId("post-edit-discard-confirm")).not.toHaveAttribute("open");
     await bytes.answer("land");
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
@@ -1103,7 +1104,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     const signer = draw();
     await cropOneMore();
     fireEvent.click(screen.getByTestId("composeCrop.next"));
-    await screen.findByTestId("post-edit-gate");
+    await screen.findByTestId("postEdit.gate");
     fireEvent.click(sign());
     await bytes.answer("fail");
     await waitFor(() =>
@@ -1113,9 +1114,9 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     expect(sign()).toBeDisabled();
     expect(signer.signStaged).not.toHaveBeenCalled();
     // The tile is marked and the row's own line carries Retry and Remove it.
-    expect(screen.getByTestId("post-edit-upload-error")).toHaveTextContent("One picture didn't upload.");
+    expect(screen.getByTestId("postEdit.body.uploadError")).toHaveTextContent("One picture didn't upload.");
     // The ways out answer again.
-    fireEvent.click(within(screen.getByTestId("post-edit-header")).getByLabelText(EDIT_LEAVE_LABEL));
+    fireEvent.click(within(screen.getByTestId("postEdit.header")).getByLabelText(EDIT_LEAVE_LABEL));
     await waitFor(() => expect(screen.getByTestId("post-edit-discard-confirm")).toHaveAttribute("open"));
   });
 
@@ -1130,8 +1131,8 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     fireEvent.click(screen.getByTestId("composeCrop.next"));
     fireEvent.click(sign());
     await bytes.answer("fail");
-    fireEvent.click(await screen.findByTestId("post-edit-gate-retry"));
-    expect(await screen.findByTestId("post-edit-gate")).toHaveTextContent("Uploading 0 of 1");
+    fireEvent.click(await screen.findByTestId("postEdit.gate.retry"));
+    expect(await screen.findByTestId("postEdit.gate")).toHaveTextContent("Uploading 0 of 1");
     await bytes.answer("land");
     await waitFor(() => expect(gate()).not.toBeInTheDocument());
     expect(signer.signStaged).not.toHaveBeenCalled();
@@ -1149,7 +1150,7 @@ describe("PostEditRoute — + Add pictures (EditCompose)", () => {
     await cropOneMore();
     fireEvent.click(screen.getByTestId("composeCrop.next"));
     await bytes.answer("fail");
-    fireEvent.click(await screen.findByTestId("post-edit-upload-error-remove"));
+    fireEvent.click(await screen.findByTestId("postEdit.body.uploadError.remove"));
     expect(await screen.findByLabelText("Manage the 2 pictures")).toBeInTheDocument();
     expect(gate()).not.toBeInTheDocument();
     expect(sign()).not.toBeDisabled();
@@ -1165,19 +1166,19 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
   it("draws the clip, its one description and the quiet line where an add control would stand", async () => {
     serve(editablePost({ attachments: [clipAttachment()] }));
     draw();
-    expect(await screen.findByTestId("post-edit-clip")).toBeInTheDocument();
-    expect(screen.getByTestId("post-edit-clip-note")).toHaveTextContent("A video is the whole post.");
-    expect(screen.queryByTestId("post-edit-add-pictures")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("post-edit-describe-clip"));
+    expect(await screen.findByTestId("postEdit.video.thumb")).toBeInTheDocument();
+    expect(screen.getByTestId("postEdit.video.rule")).toHaveTextContent("A video is the whole post.");
+    expect(screen.queryByTestId("postEdit.body.add")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("postEdit.video.describeRow.describe"));
     expect(await screen.findByTestId("post-edit-describe")).toBeInTheDocument();
   });
 
   it("shows the chosen face and Change the cover where a cover was chosen", async () => {
     serve(editablePost({ attachments: [clipAttachment({ coverTaken: false })] }));
     draw();
-    expect(await screen.findByTestId("post-edit-change-cover")).toHaveTextContent("Change the cover");
-    expect(screen.getByTestId("post-edit-cover")).toBeInTheDocument();
-    expect(screen.queryByTestId("post-edit-add-cover")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("postEdit.cover.change")).toHaveTextContent("Change the cover");
+    expect(screen.getByTestId("postEdit.cover.thumb")).toBeInTheDocument();
+    expect(screen.queryByTestId("postEdit.cover.add")).not.toBeInTheDocument();
   });
 
   // EditComposeVideo.md: "the cover field reads Add a cover GIVEN no cover was
@@ -1185,14 +1186,14 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
   it("offers the door over a taken still", async () => {
     serve(editablePost({ attachments: [clipAttachment({ coverTaken: true })] }));
     draw();
-    expect(await screen.findByTestId("post-edit-add-cover")).toHaveTextContent("Add a cover");
-    expect(screen.queryByTestId("post-edit-cover")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("postEdit.cover.add")).toHaveTextContent("Add a cover");
+    expect(screen.queryByTestId("postEdit.cover.thumb")).not.toBeInTheDocument();
   });
 
   it("offers the door over a clip with no face at all", async () => {
     serve(editablePost({ attachments: [clipAttachment({ cover: false })] }));
     draw();
-    expect(await screen.findByTestId("post-edit-add-cover")).toBeInTheDocument();
+    expect(await screen.findByTestId("postEdit.cover.add")).toBeInTheDocument();
   });
 
   it("opens the device's own picker for the face, never the clip's frames", async () => {
@@ -1200,7 +1201,7 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     draw();
     const input = (await screen.findByTestId("post-edit-cover-input")) as HTMLInputElement;
     const opened = vi.spyOn(input, "click");
-    fireEvent.click(screen.getByTestId("post-edit-add-cover"));
+    fireEvent.click(screen.getByTestId("postEdit.cover.add"));
     expect(opened).toHaveBeenCalledTimes(1);
     expect(input.accept).toBe("image/*");
     expect(screen.queryByTestId("wizard-cover-frame-0")).not.toBeInTheDocument();
@@ -1218,12 +1219,12 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     expect(within(crop).queryByRole("group", { name: "The post's shape" })).not.toBeInTheDocument();
     expect(within(crop).getByRole("heading", { name: "The cover" })).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("coverCrop.next"));
-    expect(await screen.findByTestId("post-edit-gate")).toHaveTextContent(
+    expect(await screen.findByTestId("postEdit.gate")).toHaveTextContent(
       "Uploading 0 of 1 — signing waits for the cover.",
     );
     expect(footer()).toHaveTextContent("You're signing 1 thing");
     // The field now holds the face and its other half, Change the cover.
-    expect(screen.getByTestId("post-edit-change-cover")).toBeInTheDocument();
+    expect(screen.getByTestId("postEdit.cover.change")).toBeInTheDocument();
   });
 
   // EditComposeVideo.md: "press Sign the edit GIVEN the signing is taken -> the
@@ -1240,7 +1241,7 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     );
     const bytes = uploads();
     draw();
-    fireEvent.click(await screen.findByTestId("post-edit-change-cover"));
+    fireEvent.click(await screen.findByTestId("postEdit.cover.change"));
     await pickInto("post-edit-cover-input", [picture("face.jpg")]);
     fireEvent.click(await screen.findByTestId("coverCrop.next"));
     fireEvent.click(sign());
@@ -1269,7 +1270,7 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     expect(gate()).toHaveTextContent("One picture didn't upload. Signing waits for it.");
     expect(sign()).toBeDisabled();
     fireEvent.click(screen.getByTestId("post-edit-cover-error-remove"));
-    expect(await screen.findByTestId("post-edit-add-cover")).toBeInTheDocument();
+    expect(await screen.findByTestId("postEdit.cover.add")).toBeInTheDocument();
     expect(gate()).not.toBeInTheDocument();
     expect(sign()).not.toBeDisabled();
   });
@@ -1281,7 +1282,7 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     await pickInto("post-edit-cover-input", [picture("face.jpg")]);
     await screen.findByTestId("post-edit-cover-crop");
     fireEvent.click(screen.getByLabelText("Back to the edit"));
-    expect(await screen.findByTestId("post-edit-add-cover")).toBeInTheDocument();
+    expect(await screen.findByTestId("postEdit.cover.add")).toBeInTheDocument();
     expect(footer()).toHaveTextContent("Nothing to sign yet");
     expect(bytes.calls()).toBe(0);
   });
@@ -1292,8 +1293,8 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     serve(editablePost({ attachments: [clipAttachment()] }));
     draw();
     fireEvent.click(await screen.findByLabelText("Remove this video"));
-    expect(await screen.findByTestId("post-edit-words")).toHaveValue("");
-    expect(screen.queryByTestId("post-edit-clip")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("postEdit.body.words.input")).toHaveValue("");
+    expect(screen.queryByTestId("postEdit.video.thumb")).not.toBeInTheDocument();
   });
 });
 
@@ -1317,14 +1318,14 @@ describe("PostEditRoute — + Add pictures or a video (EditWords)", () => {
     );
     const bytes = uploads();
     draw();
-    const add = await screen.findByTestId("post-edit-add-media");
+    const add = await screen.findByTestId("postEdit.body.add");
     expect(add).toHaveTextContent("+ Add pictures or a video");
     await pickInto("post-edit-add-media-input", [picture("a.jpg")]);
     // A words post has no shape yet, so the chips choose one.
     fireEvent.click(await screen.findByTestId("composeCrop.shapes.wideChip"));
     fireEvent.click(screen.getByTestId("composeCrop.next"));
     expect(await screen.findByLabelText("Manage the picture")).toBeInTheDocument();
-    expect(screen.queryByTestId("post-edit-words")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("postEdit.body.words.input")).not.toBeInTheDocument();
     await bytes.answer("land");
     await waitFor(() => expect(gate()).not.toBeInTheDocument());
     fireEvent.click(sign());

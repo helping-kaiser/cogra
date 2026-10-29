@@ -697,6 +697,7 @@ export function PostEditRoute({
         }}
         onMove={(from, to) => dispatch({ type: "movePicture", from, to })}
         testId="post-edit-picked-sheet"
+        node={{ path: "postEdit.pickedSheet" }}
       />
       <DescribeSheet
         open={describingPicture !== undefined}
