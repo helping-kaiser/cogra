@@ -32,25 +32,31 @@
    shared anatomy, `TagPicker`): `Back to the post` from a post's composer or
    its edit — drawn — and `Back to the comment` from a reply's composer or a
    comment's edit; the "?" is `Citing`. */
+/* REGISTERED under its own `referencePicker` prefix (seam 248): `header`
+   (its "?" `help`), the field `searchField` as Explore names its own, the
+   `filterTrigger`, the `staged` section with one `stagedReference` per staged
+   reference (the composer's name and key for it), one `result` per row keyed
+   by its place (Explore's rule), the `announcement` and `done`. */
+export const NODE = "referencePicker";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back to the post" title="Cite something" action={<HelpDot ariaLabel="Citing" />} />
+      <PageHeader backHref="#" backLabel="Back to the post" title="Cite something" action={<HelpDot ariaLabel="Citing" node="help" />} node="header" />
       <div style={{ flex: "none" }}>
-        <SearchBar query="salt" ariaLabel="Cite something" />
+        <SearchBar query="salt" ariaLabel="Cite something" node="searchField" />
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
-          <FilterTrigger reading="Everything" ariaLabel="What the search shows" />
+          <FilterTrigger reading="Everything" ariaLabel="What the search shows" node="filterTrigger" />
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }}>
-          <StagedReference kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" onRemove={() => {}} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }} data-node="staged">
+          <StagedReference kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" onRemove={() => {}} node="stagedReference" nodeKey="1" />
         </div>
-        <PickAnnouncement said="Added — in the staged list." />
+        <PickAnnouncement said="Added — in the staged list." node="announcement" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="result" nodeKey="1" />
       </div>
       <div style={{ flex: "none", padding: "8px 24px 24px" }}>
-        <Button style={{ width: "100%" }}>Done</Button>
+        <Button style={{ width: "100%" }} node="done">Done</Button>
       </div>
     </>
   );

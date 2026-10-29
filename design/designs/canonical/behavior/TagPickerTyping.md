@@ -6,11 +6,11 @@ ALWAYS a name in use that is the typed name stands as the first row alone, never
 
 ALWAYS the rows the index matches stand under the first row
 
-ALWAYS the line Letters, digits, dot, dash and underscore. Capitals become lowercase. stands under the name field GIVEN the typed name is a legal tag name
+ALWAYS the line Letters, digits, dot, dash and underscore. Capitals become lowercase. stands under tagPicker.nameField GIVEN the typed name is a legal tag name
 
 WHEN typing -> the first row follows the name as it is typed
 
-WHEN a character no tag name may carry is typed -> the first row goes AND the line under the name field turns into the refusal
+WHEN a character no tag name may carry is typed -> the first row goes AND the line under tagPicker.nameField turns into the refusal
 
 WHEN tap the first row -> the typed name is staged in the composer's tags AND the row moves into the staged section AND the status message announces the stage AND NEVER the picker closes
 

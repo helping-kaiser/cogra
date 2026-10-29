@@ -100,8 +100,8 @@ const READOUT = {
   flex: "none",
 };
 
-export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = false, size = "md", tone = "filter", node }) {
-  if (tone === "readout") return <span style={READOUT} data-node={node}>{label}</span>;
+export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = false, size = "md", tone = "filter", node, nodeKey }) {
+  if (tone === "readout") return <span style={READOUT} data-node={node} data-node-key={node && nodeKey}>{label}</span>;
   return (
     <button
       type="button"
@@ -111,6 +111,7 @@ export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = 
       disabled={disabled}
       onClick={onToggle}
       data-node={node}
+      data-node-key={node && nodeKey}
       className="cg-state cg-focus cg-hit"
       style={{
         ...pill(size),

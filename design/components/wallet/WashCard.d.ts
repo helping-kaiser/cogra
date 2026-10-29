@@ -9,6 +9,8 @@ export interface WashCardProps {
   ghost?: boolean;
   style?: React.CSSProperties;
   children?: React.ReactNode;
+  /** The data-node name its placer gives this card (design ⇄ impl seam 002; renders as an attribute only). */
+  node?: string;
 }
 
 export declare function WashCard(props: WashCardProps): JSX.Element;

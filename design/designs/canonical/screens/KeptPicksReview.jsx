@@ -74,16 +74,22 @@
    invites — go there to sign it.` — with the door to Invites
    (`KeptApprovalLine`), so a reader signing the picks never takes the
    approval for done. The `approval` chip draws it. The wording is jakob's
-   own, blessed (jakob 2026-10-05). */
+   own, blessed (jakob 2026-10-05).
+
+   REGISTERED under its own `keptPicks` prefix (seam 248): `header`, `intro`,
+   the `approval` line with its `open`, one `pick` per row keyed by its place
+   in the review, and `sign`. */
+export const NODE = "keptPicks";
 export const PROPS = { approval: { editor: "enum", options: ["none", "waiting"], default: "none" } };
 export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none"`;
 
 export function Screen() {
   return (
     <>
-      <PageHeader title="Kept picks" backHref="#" backLabel="Back" />
+      <PageHeader title="Kept picks" backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <p
+          data-node="intro"
           style={{
             margin: 0,
             fontSize: "var(--text-body-medium)",
@@ -95,14 +101,14 @@ export function Screen() {
           These waited on this device for your key, and nothing is signed yet. Remove any you no longer mean — the rest
           sign together.
         </p>
-        <KeptApprovalLine shown="{{approvalShown}}" />
+        <KeptApprovalLine shown="{{approvalShown}}" node="approval" />
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {KEPT_PICKS.map((pick) => (
-            <StagedReference key={pick.name} {...pick} stance onRemove={() => {}} />
+          {KEPT_PICKS.map((pick, index) => (
+            <StagedReference key={pick.name} {...pick} stance onRemove={() => {}} node="pick" nodeKey={String(index + 1)} />
           ))}
         </div>
         <div style={{ flex: 1 }} />
-        <Button style={{ width: "100%" }}>Sign them</Button>
+        <Button style={{ width: "100%" }} node="sign">Sign them</Button>
       </div>
     </>
   );

@@ -26,12 +26,15 @@ const PICKED = [
   { src: "inviter.jpg", alt: "", onDescribe: () => {}, onRemove: () => {} },
 ];
 
+/* REGISTERED under the `postEdit` prefix (seam 248): the edit beneath is
+   `EditComposeBody`'s names, the manager `pickedSheet`. */
+export const NODE = "postEdit";
 export function Screen() {
   return (
     <>
       <EditComposeBody />
 
-      <PickedSheet open items={PICKED} onClose={() => {}} />
+      <PickedSheet open items={PICKED} onClose={() => {}} node="pickedSheet" />
     </>
   );
 }

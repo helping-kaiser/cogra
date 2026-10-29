@@ -47,18 +47,32 @@
    default, `Everyone`; the chip's `your-people` draws the section with `Your
    people` chosen and its one-line sign row under it — `For · Against ·
    Either`, `Either` the default and in primary ink. */
+/* REGISTERED under the `feed` prefix (seam 248). The sheet is drawn beside
+   the band, not inside the trigger, so it takes the path `feed.filterSheet`
+   — `HistoryFilter`'s arrangement: the trigger stands expanded, reading the
+   default, and the sheet is the same `FeedFilterSheet` the trigger raises,
+   with `FeedFilter`'s own foot. */
+export const NODE = "feed";
 export const PROPS = PEOPLE_CHIP;
 export const VALS = PEOPLE_VALS;
 
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter defaultOpen topics={FEED_TOPICS} onOpenTopics={() => {}} peopleRows={<PeopleCopies />} />} />
+      <CograBand trailing={<FilterTrigger reading="Posts" expanded ariaLabel="What your feed shows" node="filterTrigger" />} node="band" />
       <FeedList>
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} />
-        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
+        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
+      <FeedFilterSheet
+        open
+        topics={FEED_TOPICS}
+        onOpenTopics={() => {}}
+        peopleRows={<PeopleCopies node="filterSheet" />}
+        foot={<FilterFoot node="foot" />}
+        node="filterSheet"
+      />
     </>
   );
 }

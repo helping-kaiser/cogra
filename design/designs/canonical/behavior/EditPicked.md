@@ -10,15 +10,15 @@ ALWAYS every change made in the sheet applies the moment it is made, and none wa
 
 WHEN drag a picture by its handle to a new place -> the pictures take the new order AND the picture now first is the cover
 
-ALWAYS a picture's second line reads Describe or Described, then Make it the cover, Move up and Move down as small inline actions, each only where the move is possible
+ALWAYS a picture's second line reads Describe or Described, then postEdit.pickedSheet.picture.makeCover, postEdit.pickedSheet.picture.moveUp and postEdit.pickedSheet.picture.moveDown as small inline actions, each only where the move is possible
 
-ALWAYS the cover offers neither Make it the cover nor Move up, and the last picture offers no Move down
+ALWAYS the cover offers neither postEdit.pickedSheet.picture.makeCover nor postEdit.pickedSheet.picture.moveUp, and the last picture offers no postEdit.pickedSheet.picture.moveDown
 
-WHEN tap Make it the cover -> the picture moves to the head of the list AND it is the cover AND every picture above it moves down one
+WHEN tap postEdit.pickedSheet.picture.makeCover -> the picture moves to the head of the list AND it is the cover AND every picture above it moves down one
 
-WHEN tap Move up -> the picture trades places with the one above it AND the picture now first is the cover
+WHEN tap postEdit.pickedSheet.picture.moveUp -> the picture trades places with the one above it AND the picture now first is the cover
 
-WHEN tap Move down -> the picture trades places with the one below it AND the picture now first is the cover
+WHEN tap postEdit.pickedSheet.picture.moveDown -> the picture trades places with the one below it AND the picture now first is the cover
 
 ALWAYS a picture's handle is focusable and named Reorder the cover or Reorder picture, then its place, as Reorder picture 2
 

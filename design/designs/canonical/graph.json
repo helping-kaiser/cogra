@@ -101,7 +101,6 @@
     "ProfileMoreFailed": "the page that didn't come — exempt for `NetworkError`'s reason, cited: the failed next page is the only thing this board is about, and the band, the header, the chronicle tabs, the rows and the five nav slots are `Profile`'s controls, wired on that board"
   },
   "entries": {
-    "ExploreComingSoon": "what every bar's Explore slot opens while search has not shipped (seam 245, ask 12) — the same tap that opens Explore once slice 2.7 lands, in the state the release brings; a release, not a different tap",
     "PostDetailVideoSensitive": "the same video detail any non-portrait clip tap opens, when the post is sensitive and unrevealed — the state the record brings, not a different tap (jakob 2026-09-24)",
     "ReelSensitive": "the same stream any portrait clip opens, when the clip on its stage is sensitive and unrevealed — a feed card's veil reveals in place, so it is the swipe that brings one; the state the record brings, not a different tap (jakob 2026-09-30)",
     "TagPageHeld": "the same tag page, opened by a reader whose netted Affinity on this topic is not (0, 0) — a state the record brings, not a different tap",
@@ -550,14 +549,6 @@
     { "from": "WalletComingSoon", "via": 5, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile", "case": "a member" }, { "board": "ProfileApplicant", "case": "an applicant" }, { "board": "GuestGate", "case": "a guest — the bare bar's gated slot" }] },
     { "from": "WalletComingSoon", "via": 6, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon", "case": "signed in" }, { "board": "GuestGate", "case": "a guest — the bare band's chats, gated as on the bare view" }] },
     { "from": "WalletComingSoon", "via": 7, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications", "case": "signed in — a guest's band is the bare view's, which carries no bell" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
-
-    { "from": "ExploreComingSoon", "via": 1, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed", "case": "a member" }, { "board": "KeyElsewhere", "case": "key elsewhere — the feed keeps reading, key still elsewhere" }, { "board": "ApplicantFeed", "case": "an applicant — first steps" }, { "board": "ApplicantWaiting", "case": "an applicant — everything done" }, { "board": "ApplicantRejected", "case": "an applicant whose application was closed" }, { "board": "FeedBare", "case": "a guest — the bare view" }] },
-    { "from": "ExploreComingSoon", "via": 2, "kind": "nav", "label": "nav · Explore", "to": [{ "terminal": "self", "case": "scrolled — back to the top; at the top, nothing" }] },
-    { "from": "ExploreComingSoon", "via": 3, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick", "case": "the wizard opens — for a member whose key is elsewhere the seal will ask for it" }, { "terminal": "self", "case": "an applicant — the wizard never opens: the snackbar answers You can post once you're in.", "info": true }, { "board": "GuestGate", "case": "a guest — the bare bar's gated slot" }] },
-    { "from": "ExploreComingSoon", "via": 4, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
-    { "from": "ExploreComingSoon", "via": 5, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile", "case": "a member" }, { "board": "ProfileApplicant", "case": "an applicant" }, { "board": "GuestGate", "case": "a guest — the bare bar's gated slot" }] },
-    { "from": "ExploreComingSoon", "via": 6, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon", "case": "signed in" }, { "board": "GuestGate", "case": "a guest — the bare band's chats, gated as on the bare view" }] },
-    { "from": "ExploreComingSoon", "via": 7, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications", "case": "signed in — a guest's band is the bare view's, which carries no bell" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "Explore", "via": 1, "kind": "advance", "label": "search field", "to": [{ "board": "ExploreSearch", "case": "typing — results as you type" }, { "board": "ExploreNone", "case": "nothing carries that name" }, { "board": "ExplorePerson", "case": "a query that reaches people — the people section first, at most three, then the content" }] },
     { "from": "Explore", "via": 2, "kind": "advance", "label": "recent-query rows", "to": [{ "board": "ExploreSearch", "case": "the query re-run" }] },
@@ -1735,10 +1726,10 @@
     { "from": "ComposeCited", "via": 7, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeSeal" }] },
     { "from": "ComposeCited", "via": 8, "kind": "advance", "label": "staged reference row", "to": [{ "board": "RefPair" }] },
 
-    { "from": "RemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "Removed", "case": "the visible mark — never silent" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "RemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "Removed", "case": "the visible mark — never silent" }, { "terminal": "self", "case": "the removal does not go through — the dialog stays up with its pair, the line That didn't send. Try again. in it, Remove reading Retry", "info": true }] },
     { "from": "RemoveConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes" }] },
     { "from": "RemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
-    { "from": "CommentRemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "CommentRemoved", "case": "the visible mark — the comment keeps its place in the thread, never silent" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "CommentRemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "CommentRemoved", "case": "the visible mark — the comment keeps its place in the thread, never silent" }, { "terminal": "self", "case": "the removal does not go through — the dialog stays up with its pair, its commitment reading Retry", "info": true }] },
     { "from": "CommentRemoveConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the thread as it was" }] },
     { "from": "CommentRemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
 

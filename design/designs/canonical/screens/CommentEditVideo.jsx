@@ -38,76 +38,73 @@
    `Signing the edit…` until the bytes land, a failed upload drops the held
    press, and the slow line counts from the press. The `upload` chip draws it:
    the face in the cover row is the new one, and the foot counts its one
-   record (`Cover changed`, `CommentEditActs`). */
+   record (`Cover changed`, `CommentEditActs`).
+
+   REGISTERED under the `commentEdit` prefix (seam 248), `CommentEditBody`'s
+   names; the clip's block is `video`, the cover's `cover`, and the count's
+   two readings are the `upload` chip's copies of `acts`. */
+export const NODE = "commentEdit";
 export const PROPS = { upload: { editor: "enum", options: ["none", "uploading"], default: "none" } };
 export const VALS = `gateShown: this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex"`;
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" />
+      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <QuietNote>Your comment on "The long way home".</QuietNote>
+        <QuietNote node="target">Your comment on "The long way home".</QuietNote>
 
-        <TextField label="Words" rows={2} cap={2000} value="Eighteen seconds of the same headland, if the light comes through at all." />
+        <TextField label="Words" rows={2} cap={2000} value="Eighteen seconds of the same headland, if the light comes through at all." node="words" />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Video</FieldLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="video">
+          <FieldLabel node="label">Video</FieldLabel>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" video onRemove={() => {}} removeLabel="Remove this video" />
+            <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" video onRemove={() => {}} removeLabel="Remove this video" node="thumb" />
           </div>
-          <DescribeCounter subject="video" described={1} total={1} onDescribe={() => {}} />
+          <DescribeCounter subject="video" described={1} total={1} onDescribe={() => {}} node="describeRow" />
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Cover</FieldLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="cover">
+          <FieldLabel node="label">Cover</FieldLabel>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MediaThumb src="comment-camera.jpg" alt="" size={56} fit="contain" />
-            <Button variant="text" size="sm">Change the cover</Button>
+            <MediaThumb src="comment-camera.jpg" alt="" size={56} fit="contain" node="thumb" />
+            <Button variant="text" size="sm" node="change">Change the cover</Button>
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Tags</FieldLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
+          <FieldLabel node="label">Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <TopicRemovable topic="glovebox" onEdit={() => {}} />
+            <TopicRemovable topic="glovebox" onEdit={() => {}} node="tag" />
           </div>
-          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
+          <InlineAction size="sm" selfStart node="add">+ Add a tag</InlineAction>
           {/* The tag withdrawn in this edit, read back with its Undo, as
               `CommentEdit` reads its own (`WithdrawnLine`). */}
-          <WithdrawnLine name="#coastroad" />
+          <WithdrawnLine name="#coastroad" node="withdrawn" />
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>References</FieldLabel>
-          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="references">
+          <FieldLabel node="label">References</FieldLabel>
+          <InlineAction size="sm" selfStart node="add">+ Cite something</InlineAction>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow
-            label="License"
-            value="Public domain"
-            action={
-              <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-                <Icon name="lock" size={16} />
-              </span>
-            }
-          />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+        <div style={{ display: "flex", flexDirection: "column" }} data-node="facts">
+          <LockedLicenseRow />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last node="sensitive" />
         </div>
 
         <div style={{ flex: 1 }} />
 
         <div style={{ display: "{{gateShown}}", flexDirection: "column" }}>
-          <UploadStatusLine done={0} total={1} media="cover" />
+          <UploadStatusLine done={0} total={1} media="cover" node="gate" />
         </div>
-        <div style={{ display: "{{restShown}}", flexDirection: "column" }}>
-          <ActsFooter count={3} />
+        <div style={{ display: "{{restShown}}", flexDirection: "column" }} {...chipCopy("upload", "none")}>
+          <ActsFooter count={3} node="acts" />
         </div>
-        <div style={{ display: "{{gateShown}}", flexDirection: "column" }}>
-          <ActsFooter count={4} />
+        <div style={{ display: "{{gateShown}}", flexDirection: "column" }} {...chipCopy("upload", "uploading")}>
+          <ActsFooter count={4} node="acts" />
         </div>
-        <Button style={{ width: "100%" }}>Sign the edit</Button>
+        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
       </div>
     </>
   );

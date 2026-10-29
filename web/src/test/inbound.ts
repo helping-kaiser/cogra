@@ -34,6 +34,7 @@ export function opinionRecord(
     __typename: "Record",
     id: `op-${sequence}`,
     authorId: `addr-${handle ?? "system"}`,
+    targetId: "graph-target",
     pDirected,
     pInterest,
     severed: extra.severed ?? false,
@@ -122,6 +123,78 @@ export function citingRecords(records: readonly object[], onRead?: (id: string) 
     return HttpResponse.json({
       data: {
         records: { __typename: "RecordConnection", edges: edges(records), pageInfo: LAST_PAGE },
+      },
+    });
+  });
+}
+
+/** The person a record names, as `OpinionPersonFields` serves them. */
+function person(handle: string, extra: { displayName?: string | null; redacted?: boolean } = {}) {
+  return {
+    __typename: "User",
+    id: `u-${handle}`,
+    handle,
+    displayName: {
+      __typename: "ModeratedText",
+      value: extra.redacted ? null : (extra.displayName ?? null),
+      status: extra.redacted ? "REDACTED" : "NORMAL",
+    },
+    avatar: null,
+  };
+}
+
+/**
+ * One Opinion record a person GAVE toward `handle` (`UserOpinionsBy`): the
+ * target is the row's person (null: no account fronts the address).
+ */
+export function opinionGiven(
+  handle: string | null,
+  pDirected: number,
+  pInterest: number,
+  extra: { severed?: boolean | null; displayName?: string | null; redacted?: boolean; payloadMarked?: boolean } = {},
+) {
+  const key = nextKey();
+  return {
+    __typename: "Record",
+    id: `given-${sequence}`,
+    authorId: "addr-owner",
+    targetId: `addr-${handle ?? "system"}`,
+    pDirected,
+    pInterest,
+    severed: extra.severed ?? false,
+    payloadMarked: extra.payloadMarked ?? false,
+    ...key,
+    target: handle === null ? null : person(handle, extra),
+  };
+}
+
+/**
+ * A person's opinions page reads (`UserOpinionsOn` · `UserOpinionsBy`)
+ * answered page by page: the first read gets `pages[0]`, the read `after`
+ * cursor `p<n>` gets `pages[n]`, and every page but the last says more follow.
+ */
+export function userOpinions(
+  direction: "on" | "by",
+  pages: readonly (readonly object[])[],
+  onRead?: (id: string, after: string | null) => void,
+) {
+  const field = direction === "on" ? "incomingRecords" : "outgoingRecords";
+  return gqlLink.query(direction === "on" ? "UserOpinionsOn" : "UserOpinionsBy", ({ variables }) => {
+    const after = (variables.after as string | null | undefined) ?? null;
+    onRead?.(variables.id as string, after);
+    const index = after === null ? 0 : Number(after.slice(1));
+    const last = index >= pages.length - 1;
+    return HttpResponse.json({
+      data: {
+        user: {
+          __typename: "User",
+          id: variables.id,
+          [field]: {
+            __typename: "RecordConnection",
+            edges: edges(pages[index] ?? []),
+            pageInfo: { __typename: "PageInfo", hasNextPage: !last, endCursor: last ? null : `p${index + 1}` },
+          },
+        },
       },
     });
   });

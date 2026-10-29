@@ -373,7 +373,9 @@ export function PostCard({
         </div>
       )}
       {viewing !== null && <MediaViewer items={media} index={viewing} onClose={closeViewer} />}
-      {redacted ? <RedactedContent {...(redacted === true ? {} : redacted)} /> : linkedText}
+      {/* The mark is named `removalMark`, the name the profile gives the same
+          master (seam 248). */}
+      {redacted ? <RedactedContent {...(redacted === true ? {} : redacted)} node={node && "removalMark"} /> : linkedText}
       {!redacted && opener}
       {/* ONE LINE on both variants — the sheet is the full set's home. On
           detail the whole line is the sheet's opener; in the feed the chips

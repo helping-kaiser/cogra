@@ -680,7 +680,8 @@ export function StanceControl({
           </button>
         )}
       </div>
-      {pendingPick && <PendingMarker label={pendingReview ? "Waiting for your review" : "Waiting for your key"} />}
+      {/* Named `pending` under the control's own name (seam 248). */}
+      {pendingPick && <PendingMarker label={pendingReview ? "Waiting for your review" : "Waiting for your key"} node={node && "pending"} />}
       {/* THE ROW LINE (vehicle (b)): the hold's wait, quiet, and its failure,
           in the failure voice with the way to ask again. */}
       {rowSigning === "busy" && <PendingMarker label="Signing…" />}

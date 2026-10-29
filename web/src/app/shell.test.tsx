@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { notificationsHref } from "@/lib/notifications/origin";
@@ -100,6 +100,30 @@ describe("AppShell", () => {
       "aria-current",
       "page",
     );
+  });
+
+  // THE OPINIONS PAGE KEEPS LIT THE ROOT ITS PROFILE WAS OPENED FROM
+  // (ProfileStances.md:27, Feed from the feed); unregistered, so the bar keeps
+  // its own ids.
+  it.each([
+    ["/profile/opinions", "", "/profile"],
+    ["/u/ada/opinions", "", "/feed"],
+    ["/u/ada/opinions", "from=saved", "/profile"],
+    ["/u/ada/opinions", "from=search", "/explore"],
+    // A row's person opened from the reader's own page stays in the Profile stack.
+    ["/u/tobias", "from=opinions", "/profile"],
+    ["/u/tobias", "from=opinions.by%3Aada", "/feed"],
+  ])("lights the root on %s?%s whose slot goes to %s", async (path, query, root) => {
+    pathname = path;
+    search = query;
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      { store: signedInStore() },
+    );
+    const nav = await screen.findByRole("navigation", { name: "Main" });
+    expect(within(nav).getByRole("link", { current: "page" })).toHaveAttribute("href", root);
   });
 
   it("marks the profile tab on /profile", async () => {

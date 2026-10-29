@@ -22,6 +22,8 @@ export interface CropViewportProps {
   height?: number;
   /** The arrow keys' pan, the drag's non-drag twin: called with (−1|0|1, −1|0|1) per press while the focused viewport holds focus; the picture stops where its edge meets the window's. */
   onPan?: (dx: number, dy: number) => void;
+  /** The data-node name its placer gives the viewport (design ⇄ impl seam 002; renders as an attribute only). */
+  node?: string;
 }
 
 export declare function CropViewport(props: CropViewportProps): JSX.Element;
@@ -37,6 +39,8 @@ export interface CropZoomProps {
   /** The crop's current scale, between `CROP_ZOOM_MIN` and `CROP_ZOOM_MAX`. */
   scale?: number;
   onChange?: (scale: number) => void;
+  /** The data-node name its placer gives the slider (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its range `input`. */
+  node?: string;
 }
 
 /** The visible zoom slider under every crop viewport, on both platforms — a desktop browser has no pinch. */

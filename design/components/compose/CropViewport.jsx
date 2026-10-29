@@ -44,6 +44,7 @@ export function CropViewport({
   inset = 24,
   height,
   onPan,
+  node,
 }) {
   const width = size - inset * 2;
   const windowHeight = height ?? width;
@@ -62,6 +63,7 @@ export function CropViewport({
       onKeyDown={onKeyDown}
       className="cg-focus"
       style={{ position: "relative", width: size, height: size, margin: `0 -${inset}px`, overflow: "hidden", flex: "none" }}
+      data-node={node}
     >
       <img
         src={src}
@@ -98,12 +100,14 @@ export const CROP_ZOOM_NAME = "Zoom";
    No words beside it: the viewport above is what it acts on, and its name
    carries what it does. The input stands 48px tall, so the thumb's target is
    the system's minimum. */
-export function CropZoom({ scale = CROP_ZOOM_MIN, onChange }) {
+export function CropZoom({ scale = CROP_ZOOM_MIN, onChange, node }) {
   return (
     // `data-field` for the flow badge, `TextField`'s reason: a range input is a
-    // replaced element and cannot host the badge's ::after.
-    <div data-field={CROP_ZOOM_NAME} style={{ flex: "none" }}>
+    // replaced element and cannot host the badge's ::after. `node` names the
+    // slider where a placer gives one (seam 248), its range `input`.
+    <div data-field={CROP_ZOOM_NAME} style={{ flex: "none" }} data-node={node}>
       <input
+        data-node={node && "input"}
         type="range"
         min={CROP_ZOOM_MIN}
         max={CROP_ZOOM_MAX}

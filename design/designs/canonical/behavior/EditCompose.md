@@ -32,7 +32,7 @@ WHEN press + Add pictures · 2 of 10 -> the device's own picker opens AND NEVER 
 
 WHEN pictures are picked from + Add pictures -> they pass the crop locked to the post's one shape AND the picked row grows by them
 
-WHEN pictures picked from + Add pictures break the cap of ten or come in a format nothing here reads -> the refusal says why on the media row AND NEVER a dialog opens
+WHEN pictures picked from + Add pictures break the cap of ten or come in a format nothing here reads -> the refusal says why on postEdit.body.mediaRow AND NEVER a dialog opens
 
 WHEN tap the × of a tag the post already carries -> the withdrawal of that tag is staged in the batch AND the chip leaves the row for the line Withdrawn: under the tags AND the footer counts one more AND NEVER a dialog asks
 

@@ -35,15 +35,18 @@ import { Button } from "../core/Button.jsx";
    header's back arrow and X refuse a press, because leaving mid-sign would
    orphan the outcome. Everything above the foot stays as it was and
    readable: the fault, if one comes, takes the commit's place
-   (`NetworkError`), and a success leaves the seal. */
+   (`NetworkError`), and a success leaves the seal.
 
-export function SealFooter({ signLabel, busyLabel, backLabel = "Back", disabled = false, busy = false, onSign, onBack }) {
+   `node` is the data-node name its placer gives the foot (seam 248), as
+   `FilterFoot` takes one: the foot is it, the pair `sign` and `back`. */
+
+export function SealFooter({ signLabel, busyLabel, backLabel = "Back", disabled = false, busy = false, onSign, onBack, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <Button disabled={disabled} busy={busy} busyLabel={busyLabel} onClick={onSign} style={{ width: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node={node}>
+      <Button disabled={disabled} busy={busy} busyLabel={busyLabel} onClick={onSign} style={{ width: "100%" }} node={node && "sign"}>
         {signLabel}
       </Button>
-      <Button variant="text" onClick={onBack} style={{ width: "100%" }}>
+      <Button variant="text" onClick={onBack} style={{ width: "100%" }} node={node && "back"}>
         {backLabel}
       </Button>
     </div>

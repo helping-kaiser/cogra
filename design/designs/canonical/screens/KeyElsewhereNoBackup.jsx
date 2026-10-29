@@ -26,23 +26,28 @@
 
    IT WEARS THE OLIVE LIKE `KeyElsewhere`'S CARD (jakob 2026-10-02, the olive
    split): the action it asks for happens on the other device, and it is
-   still the reader's to take (`tone="notice"`). */
+   still the reader's to take (`tone="notice"`).
+
+   REGISTERED under the `feed` prefix (seam 248), the card `keyCard` as on
+   `KeyElsewhere`, with no `restore`. */
+export const NODE = "feed";
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser"`;
 
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
         <TaskCard
           tone="notice"
           title="{{keyTitle}}"
           body="This account has no backup, so the key can't be brought here yet. Make a recovery code on the device that holds it, then restore it here. Until then, anything you sign waits as pending."
+          node="keyCard"
         />
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} />
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
