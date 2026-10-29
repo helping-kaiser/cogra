@@ -76,10 +76,10 @@ import { bundleReadout, EMPTY_PICK_LABEL, formatStancePair, formatStanceWords, S
    name: the × `Remove this citation: Post, Removed by its author` (a kept
    pick's says `pick`), and the row `Post, Removed by its author — set how it
    relates` (both blessed, jakob 2026-10-05). */
-function Body({ kind, name, sub, src, pair, stance, removed, consequence, node }) {
+function Body({ kind, name, sub, src, pair, stance, removed, consequence, axisNames, node }) {
   const exact = pair ? formatStancePair(pair) : null;
   const anchor = pair ? bundleReadout(pair, EMPTY_PICK_LABEL) : null;
-  const spoken = pair && stance ? `${anchor.label}, ${formatStanceWords(pair)}` : exact;
+  const spoken = pair && stance ? `${anchor.label}, ${formatStanceWords(pair, axisNames)}` : exact;
   return (
     <>
       {/* The row stands on `surface-container-highest`, the tile's own tone,
@@ -133,8 +133,8 @@ function Body({ kind, name, sub, src, pair, stance, removed, consequence, node }
   );
 }
 
-export function StagedReference({ kind = "post", name, sub, src, pair, stance = false, removed, consequence, onRemove, onEdit, node, nodeKey }) {
-  const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} stance={stance} removed={removed} consequence={consequence} node={node} />;
+export function StagedReference({ kind = "post", name, sub, src, pair, stance = false, removed, consequence, axisNames, onRemove, onEdit, node, nodeKey }) {
+  const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} stance={stance} removed={removed} consequence={consequence} axisNames={axisNames} node={node} />;
   // A removed target is named by its mark, never by the name it no longer shows.
   const markName = removed ? `${sub ? `${sub}, ` : ""}${removed}` : name;
   return (

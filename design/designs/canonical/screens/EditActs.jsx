@@ -21,8 +21,9 @@
      revision is the one additive record `RefPairEdit` stages.
    · `Citations withdrawn` — `ReferenceClaim.withdrawalCost` records per
      citation, possibly more than one.
-   · `Cover changed` — the video edit's new face, one record.
-   A row is drawn only when its kind is in the batch; this edit's batch holds
+   A video edit's new face is no row: it rides the `Edit` record (the
+   contract's `coverMediaId`; seam 248), staging it when nothing else has
+   and adding nothing when it is already staged. A row is drawn only when its kind is in the batch; this edit's batch holds
    four of them.
 
    A ROW'S COUNT IS THE RECORDS IT SIGNS, NEVER "1 PER REMOVAL" (jakob,

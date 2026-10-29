@@ -2866,8 +2866,10 @@ per item, each ending in `Undo`, spoken `Undo withdrawing #coastroad`.
 
 **The edit's acts, every kind.** The row labels: `Edit`, `Tags added`,
 `Tags withdrawn`, `Tags revised`, `Citations added`, `Citations
-revised`, `Citations withdrawn`, `Cover changed`. A row's count is the
-records it signs, heard as `2 things` where a withdrawal takes two.
+revised`, `Citations withdrawn`. A video edit's new face is no row of
+its own: it rides the `Edit` row, the edit's own record (seam 248). A
+row's count is the records it signs, heard as `2 things` where a
+withdrawal takes two.
 
 **The reply's gate, failed.** `One picture didn't upload. Signing waits
 for it.` with `Retry` — the fact in error ink, the consequence in the
@@ -4168,6 +4170,33 @@ results would stand — the way, not an apology:
 - `Found through people and tags — start with @handle or #tag.`
   **Drawn** on `ExploreUnscoped`, as the results region's empty state.
   *Blessed (jakob 2026-10-06).*
+
+## The drawn gaps' words
+
+Round 24's strings (readme §13, *Round 24, the drawn gaps*), each *new
+2026-10-29, merged under the autonomy order, review pending* unless it
+reuses a blessed line, which is named:
+
+- **The pickers at the batch's ten**: `Up to 10 citations per post.` ·
+  `Up to 10 citations per comment.` · `Up to 10 tags per post.` · `Up to
+  10 tags per comment.` — above the dimmed rows, a fact in the quiet
+  register (`ReferencePicker`, `TagPicker`, the `state` chip's `cap`). A
+  picker's read with no answer says the blessed house line, `Can't reach
+  the server. Check your connection and try again.`; an empty list and a
+  read in flight say nothing.
+- **Invites' empty halves**: `No applications waiting.` · `No live links.`
+  (`Invites`' `sections` chip). A copy that failed says the comfort's
+  blessed `That didn't go through.` with `Retry` on the link's card.
+- **Notifications' read with no answer**: `Can't reach the server —
+  notifications can't load right now.` over `Retry` — the noun form
+  `ProfileUnreachable` blesses; `Loading…` and `Couldn't load more` ·
+  `Retry` are blessed.
+- **A kept feeling's seal row**: `Feeling` — the acts card's family word
+  for a pick on a topic, beside `Opinion`; the review's row reads `Topic`
+  under the name.
+- **The search field's ×**: `Clear search`.
+- **A held topic whose name was removed** reads the blessed `Removed under
+  the platform's rules` in its name's place.
 
 ## Chats
 

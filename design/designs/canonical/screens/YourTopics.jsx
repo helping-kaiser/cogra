@@ -51,26 +51,60 @@
    below: the subpage is the only place that number can be checked.
 
    REGISTERED under its own `yourTopics` prefix (seam 248), a subpage as the
-   tag page is: `header`, and one `heldTopic` per row, keyed by its name. */
+   tag page is: `header`, and one `heldTopic` per row, keyed by its name.
+
+   THE `list` CHIP DRAWS TWO MORE STATES (seam 248). `empty` is a reader who
+   holds nothing: the line alone, `No topics yet — say how you feel about one
+   from its page.` (copy-voice, *The empty list*, blessed), as `empty`, and
+   Explore's door reads `0 held`. `redacted` is a held topic whose NAME
+   moderation took away — never erased silently: the reader's own record
+   still stands, so the row keeps its place in the order, its `#` tile and its
+   pair, and its name's place reads `Removed under the platform's rules` in
+   the system's voice (`ReferenceRow`'s `removed`, the kept-picks rows'
+   grammar); it opens nothing, because the name was the page's address. It
+   counts toward the door like any held topic (six here). It is
+   `redactedTopic`, keyed by the topic's id, the name being gone. */
 export const NODE = "yourTopics";
+export const PROPS = { list: { editor: "enum", options: ["held", "redacted", "empty"], default: "held" } };
+export const VALS = `rowsShown: this.props.list === "empty" ? "none" : "flex", redactedShown: this.props.list === "redacted" ? "flex" : "none", emptyShown: this.props.list === "empty" ? "block" : "none"`;
+const REDACTED_TOPIC_ID = "b51c7e20-8d94-4f3a-9e06-2a7d13c58f41";
+const heldRow = (topic) => (
+  <ReferenceRow
+    key={topic.name}
+    kind="topic"
+    pairFamily="stance"
+    name={topic.name}
+    pair={topic.pair}
+    pending={topic.pending}
+    onOpen={() => {}}
+    node="heldTopic"
+    nodeKey={topic.name.replace(/^#/, "")}
+  />
+);
 export function Screen() {
   return (
     <>
       <PageHeader title="Your topics" backHref="#" backLabel="Back to Explore" node="header" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "4px 0 0" }}>
-        {HELD_TOPICS.map((topic) => (
-          <ReferenceRow
-            key={topic.name}
-            kind="topic"
-            pairFamily="stance"
-            name={topic.name}
-            pair={topic.pair}
-            pending={topic.pending}
-            onOpen={() => {}}
-            node="heldTopic"
-            nodeKey={topic.name.replace(/^#/, "")}
-          />
-        ))}
+        <div style={{ display: "{{rowsShown}}", flexDirection: "column" }}>
+          {HELD_TOPICS.slice(0, 4).map(heldRow)}
+          {/* The removed name stands where its pair orders it, above the one
+              held against. */}
+          <div style={{ display: "{{redactedShown}}", flexDirection: "column" }} data-node-chip="list" data-node-key="redacted">
+            <ReferenceRow
+              kind="topic"
+              pairFamily="stance"
+              removed="Removed under the platform's rules"
+              pair={{ pDirected: 0.1, pInterest: 0.2 }}
+              node="redactedTopic"
+              nodeKey={REDACTED_TOPIC_ID}
+            />
+          </div>
+          {HELD_TOPICS.slice(4).map(heldRow)}
+        </div>
+        <div style={{ display: "{{emptyShown}}", padding: "8px 24px" }} data-node-chip="list" data-node-key="empty">
+          <EmptyState title="No topics yet — say how you feel about one from its page." node="empty" />
+        </div>
       </div>
     </>
   );

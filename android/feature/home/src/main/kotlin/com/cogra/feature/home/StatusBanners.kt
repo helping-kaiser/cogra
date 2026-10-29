@@ -6,6 +6,7 @@
 
 package com.cogra.feature.home
 
+import android.content.ClipData
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,7 +25,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,6 +40,7 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.dataNode
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.signing.RegistrationProgress
+import kotlinx.coroutines.launch
 
 @Composable
 fun StatusBannersRoute(
@@ -43,9 +48,13 @@ fun StatusBannersRoute(
     onActorRestoredResultConsumed: () -> Unit,
     onStartKeyCeremony: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    /** The screen the banners ride: the application card says it in that screen's words. */
+    surface: ApplicationSurface = ApplicationSurface.FEED,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
     LaunchedEffect(actorRestoredResult) {
         if (actorRestoredResult) {
             onActorRestoredResultConsumed()
@@ -59,6 +68,7 @@ fun StatusBannersRoute(
         onApprovedShown = viewModel::onApprovedShown,
         onWelcomeShown = viewModel::onWelcomeShown,
         onResentShown = viewModel::onResentShown,
+        onAskLinkCopiedShown = viewModel::onAskLinkCopiedShown,
     )
     StatusBanners(
         state = state,
@@ -66,11 +76,29 @@ fun StatusBannersRoute(
         onVerify = viewModel::onVerify,
         onResendEmailChange = viewModel::onResendEmailChange,
         onResend = viewModel::onResend,
-        onDismissWaitingHint = viewModel::onDismissWaitingHint,
         onResumePending = viewModel::onResumePending,
         onStartKeyCeremony = onStartKeyCeremony,
+        application = ApplicationCardActions(
+            surface = surface,
+            askUrl = viewModel::askUrl,
+            onCopy = { url ->
+                scope.launch {
+                    clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(url, url)))
+                    viewModel.onAskLinkCopied()
+                }
+            },
+            onPutAway = viewModel::onPutCardAway,
+        ),
     )
 }
+
+/** What the application card needs from its host. */
+data class ApplicationCardActions(
+    val surface: ApplicationSurface = ApplicationSurface.FEED,
+    val askUrl: (String) -> String = { "https://cogra.social/vouch/$it" },
+    val onCopy: (String) -> Unit = {},
+    val onPutAway: () -> Unit = {},
+)
 
 /**
  * The one-shot confirmations — restored, approved, landed, token
@@ -92,6 +120,7 @@ fun StatusBannerOneShots(
     onApprovedShown: () -> Unit,
     onWelcomeShown: () -> Unit,
     onResentShown: () -> Unit,
+    onAskLinkCopiedShown: () -> Unit = {},
 ) {
     val restoredMessage = stringResource(R.string.home_actor_restored)
     LaunchedEffect(state.actorRestored) {
@@ -119,6 +148,13 @@ fun StatusBannerOneShots(
         if (state.resent) {
             snackbarHostState.showSnackbar(resentMessage)
             onResentShown()
+        }
+    }
+    val copiedMessage = stringResource(R.string.application_link_copied)
+    LaunchedEffect(state.askLinkCopied) {
+        if (state.askLinkCopied) {
+            snackbarHostState.showSnackbar(copiedMessage)
+            onAskLinkCopiedShown()
         }
     }
 }
@@ -160,9 +196,9 @@ fun StatusBanners(
     onVerify: () -> Unit,
     onResendEmailChange: (String) -> Unit,
     onResend: () -> Unit,
-    onDismissWaitingHint: () -> Unit,
     onResumePending: () -> Unit,
     onStartKeyCeremony: () -> Unit,
+    application: ApplicationCardActions = ApplicationCardActions(),
 ) {
     if (state.loading) return
     // The host pads horizontally — the feed's list padding, the
@@ -178,8 +214,8 @@ fun StatusBanners(
                 onVerify = onVerify,
                 onResendEmailChange = onResendEmailChange,
                 onResend = onResend,
-                onDismissWaitingHint = onDismissWaitingHint,
                 onStartKeyCeremony = onStartKeyCeremony,
+                application = application,
             )
         } else {
             // The member husk warning rides the screen's collapsing top
@@ -220,8 +256,8 @@ private fun ApplicantStatus(
     onVerify: () -> Unit,
     onResendEmailChange: (String) -> Unit,
     onResend: () -> Unit,
-    onDismissWaitingHint: () -> Unit,
     onStartKeyCeremony: () -> Unit,
+    application: ApplicationCardActions,
 ) {
     when (val progress = state.progress) {
         null -> CircularProgressIndicator(modifier = Modifier.testTag("home_status_loading"))
@@ -238,11 +274,15 @@ private fun ApplicantStatus(
                 // keyAttached && !keyOnDevice: the restore ask rides the
                 // screen's collapsing top (KeyRestoreBanner), not this
                 // stack.
-                progress.keyAttached && progress.keyOnDevice ->
-                    if (progress.emailVerified && !state.waitingHintDismissed) {
-                        WaitingHint(onDismissWaitingHint)
-                    }
+                progress.keyAttached && progress.keyOnDevice -> Unit
             }
+            // THE APPLICATION CARD (ApplicantWaiting, ApplicantRejected): waiting
+            // once every owed step is done, closed whatever they are.
+            ApplicationCardSlot(
+                state = state,
+                stepsDone = progress.keyAttached && progress.keyOnDevice && progress.emailVerified,
+                actions = application,
+            )
         }
         RegistrationProgress.AwaitingLanding ->
             Text(
@@ -263,26 +303,6 @@ private fun ApplicantStatus(
             ErrorLine(R.string.error_generic, testTag = "home_application_refused")
         is RegistrationProgress.Failed ->
             ErrorLine(R.string.error_transport, testTag = "home_application_offline")
-    }
-}
-
-@Composable
-private fun WaitingHint(onDismiss: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(R.string.home_waiting_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.testTag("home_waiting"),
-            )
-            Text(stringResource(R.string.home_waiting_body))
-            TextButton(
-                onClick = onDismiss,
-                modifier = Modifier.testTag("home_waiting_dismiss"),
-            ) {
-                Text(stringResource(R.string.home_waiting_dismiss))
-            }
-        }
     }
 }
 

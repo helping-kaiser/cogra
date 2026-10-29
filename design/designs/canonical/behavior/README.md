@@ -214,7 +214,9 @@ And it checks nodes, against `nodes.json`:
   `FeedNewerVersion`; then the fabric-2 round's boards — `ReportConfirm`,
   `FeedPostMenu`, `HistoryHidden`, `TagPageHidden` and `DeleteLinkExpired`;
   then round 10's — `FeedPostLicense` and `FeedReportConfirm`; then round
-  11's — `PostLicense`, `CommentLicense` and `FeedSeenTail` —
+  11's — `PostLicense`, `CommentLicense` and `FeedSeenTail`; then round
+  23's sweep; then round 24's — `CommentRemoveConfirm`, `CommentRemoved`,
+  `FeedPostMenuOwn`, `FeedRemoveConfirm` and `FeedRemoved` —
   so far), plain words
   that spell one of its nodes fail: "the media row" on `ComposeDetails` is
   written `composeDetails.mediaRow`. The check knows a node by the words of a

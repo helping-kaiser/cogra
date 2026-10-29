@@ -29,7 +29,7 @@ export function Screen() {
   return (
     <>
       <ThreadDetail />
-      <CommentsThreadSheet />
+      <CommentsThreadSheet node="threadSheet" />
       <LicenseSheet stacked license={{ attribution: 0, provenance: 0 }} node="licenseSheet" />
     </>
   );

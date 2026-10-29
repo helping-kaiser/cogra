@@ -2,6 +2,8 @@
 
 ALWAYS the clip's tile wears the clip's frame 0 as its face
 
+ALWAYS the clip's tile is 54 by 96 whatever the clip's shape, a wide or square clip's frame filling it cropped to it
+
 ALWAYS the stage carries the Add a cover door GIVEN the clip skipped the cover step
 
 ALWAYS the stage carries no cover section GIVEN the clip came through the cover step

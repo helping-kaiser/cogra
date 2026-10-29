@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
+import { useRouter } from "next/navigation";
 
 import { fetchPostDetail, readCachedPost, type PostView as Post } from "@/lib/api/content-api";
 import { fetchHeldOpinions, type HeldOpinionView } from "@/lib/api/opinions-api";
@@ -43,6 +44,7 @@ import { useHostSnack } from "@/lib/saved/save-row";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 import { backFor } from "@/lib/ui/back-origin";
+import { streamClipOf, streamHref } from "@/lib/reel/stream-origin";
 
 import { freezeReducer, type Freeze } from "./detail-freeze";
 import { NewerVersionLine } from "./newer-version-line";
@@ -71,6 +73,10 @@ export function PostView({
   // a Saved row's destination reads `Back to Saved`, a notification's `Back to
   // Notifications`.
   const back = backFor(from);
+  // The stream this detail was opened from, by its score's door — the clip
+  // the reader left there (`stream-origin.ts`).
+  const fromStream = streamClipOf(from);
+  const router = useRouter();
   const client = useApolloClient();
   const host = useScrollHost();
 
@@ -396,6 +402,11 @@ export function PostView({
               // via 19 and via 3; PostDetailVideo.md:35/37). The clip is the
               // post's one attachment, so the viewer opens on it.
               onOpenViewer={() => setViewerAt(0)}
+              // CAME FROM THE STREAM, the clip's tap expands back into it at
+              // the clip the reader left (PostDetailVideo.md:33; BD-R2).
+              onReturnToStream={
+                fromStream === null ? undefined : () => router.push(streamHref(fromStream))
+              }
               testId="post-detail-clip"
             />
           </BodyRegion>

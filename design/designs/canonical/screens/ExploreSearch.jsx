@@ -54,8 +54,17 @@
    chip-drawn state duplicate): each `result` sits directly in its copy and
    keeps its own key, its position under that order (jakob 2026-10-07, ruling
    39). The `seam` is drawn once, under `ranked` alone, so it is no duplicate
-   and keeps its unkeyed path: it stands between the ranked copy's two halves
-   and simply hides under `newest`. */
+   and simply hides under `newest`.
+
+   THE ANSWER IS SECTIONED, AND THE BOARD SAYS SO (seam 248; api-spec,
+   *Search*, Order). The server answers people, then topics, then content,
+   under either order, so the tag stands first here — the topics section —
+   and the post and the comment follow as the content; each section stands
+   its own ranked head and then its own rest, so the seam is the CONTENT
+   section's, keyed `content`, and a topic past its own section's head would
+   stand behind a `topics` seam of its own (`ExplorePerson` draws all three).
+   The field carries its clear × while a query stands (`SearchBar`'s
+   `onClear`, `Clear search`). */
 export const NODE = "explore";
 export const PROPS = { order: { editor: "enum", options: ["ranked", "newest"], default: "ranked" } };
 export const VALS = `rankedShown: this.props.order === "newest" ? "none" : "flex", newestShown: this.props.order === "newest" ? "flex" : "none"`;
@@ -64,13 +73,13 @@ export function Screen() {
   return (
     <>
       <div style={{ flex: "none", paddingTop: 12 }}>
-        <SearchBar query="@sol salt" node="searchField" />
+        <SearchBar query="@sol salt" onClear={() => {}} node="searchField" />
         <SearchTriggerRow reading="Everything" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "{{rankedShown}}", flexDirection: "column" }} data-node-chip="order" data-node-key="ranked">
-          <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="1" />
-          <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} node="result" nodeKey="2" />
+          <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} node="result" nodeKey="1" />
+          <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="2" />
           <ReferenceRow
             kind="comment"
             name="The wax-stick ones read like weather charts…"
@@ -82,12 +91,13 @@ export function Screen() {
           />
         </div>
         <div style={{ display: "{{rankedShown}}", flexDirection: "column" }}>
-          <Seam node="seam" />
+          <Seam node="seam" nodeKey="content" />
         </div>
         <div style={{ display: "{{rankedShown}}", flexDirection: "column" }} data-node-chip="order" data-node-key="ranked">
           <ReferenceRow kind="post" name="First try at a rubbing" value="06.09.2024" onOpen={() => {}} node="result" nodeKey="4" />
         </div>
         <div style={{ display: "{{newestShown}}", flexDirection: "column" }} data-node-chip="order" data-node-key="newest">
+          <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" onOpen={() => {}} node="result" nodeKey="1" />
           <ReferenceRow
             kind="comment"
             name="The wax-stick ones read like weather charts…"
@@ -95,10 +105,9 @@ export function Screen() {
             value="2h"
             onOpen={() => {}}
             node="result"
-            nodeKey="1"
+            nodeKey="2"
           />
-          <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" value="3d" onOpen={() => {}} node="result" nodeKey="2" />
-          <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" onOpen={() => {}} node="result" nodeKey="3" />
+          <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" value="3d" onOpen={() => {}} node="result" nodeKey="3" />
           <ReferenceRow kind="post" name="First try at a rubbing" value="06.09.2024" onOpen={() => {}} node="result" nodeKey="4" />
         </div>
       </div>

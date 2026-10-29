@@ -36,8 +36,27 @@
    (its "?" `help`), the field `searchField` as Explore names its own, the
    `filterTrigger`, the `staged` section with one `stagedReference` per staged
    reference (the composer's name and key for it), one `result` per row keyed
-   by its place (Explore's rule), the `announcement` and `done`. */
+   by its place (Explore's rule), the `announcement` and `done`.
+
+   THE `state` CHIP DRAWS THE PICKER'S UNDRAWN STATES (seam 248, GAPS A–C).
+   `filter` is the trigger's sheet open: KINDS ONLY — `ExploreFilter`'s kinds
+   section and its foot, holding the three kinds a citation can point at,
+   Posts, Comments and Profiles — because a citation has no order to choose
+   and no other narrowing to make; it is `filterSheet`, its `kinds` and its
+   `foot`. `cap` is the picker with the batch at its ten (`ComposeSealCited`):
+   `Up to 10 citations per post.` stands above the results, and the rows
+   under it are dimmed and take no tap — a true refusal, so it dims — while
+   the staged rows' × still un-stage, which is how room comes back; from a
+   reply's composer it reads `per comment`. `fault` is the results' read
+   that got no answer, nothing loaded: the house line, `Can't reach the
+   server. Check your connection and try again.`, where the rows were, the
+   field still holding the query, a changed query reading again. An empty
+   result and the read in flight stay SILENT — the list is simply empty
+   until rows arrive, the field already saying what was asked. */
 export const NODE = "referencePicker";
+export const PROPS = { state: { editor: "enum", options: ["picking", "filter", "cap", "fault"], default: "picking" } };
+export const VALS = `filterShown: this.props.state === "filter" ? "block" : "none", capShown: this.props.state === "cap" ? "block" : "none", faultShown: this.props.state === "fault" ? "block" : "none", rowsShown: this.props.state === "fault" ? "none" : "flex", rowsOpacity: this.props.state === "cap" ? "var(--state-disabled)" : "1"`;
+const CITABLE_KINDS = FEED_KINDS.filter((kind) => kind.value !== "topics");
 export function Screen() {
   return (
     <>
@@ -53,10 +72,34 @@ export function Screen() {
         <PickAnnouncement said="Added — in the staged list." node="announcement" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="result" nodeKey="1" />
+        <div style={{ display: "{{capShown}}" }} data-node-chip="state" data-node-key="cap">
+          <p style={PICKER_NOTE} data-node="cap">
+            Up to 10 citations per post.
+          </p>
+        </div>
+        <div style={{ display: "{{faultShown}}", padding: "8px 24px" }} data-node-chip="state" data-node-key="fault">
+          <div data-node="fault">
+            <TransportError />
+          </div>
+        </div>
+        <div style={{ display: "{{rowsShown}}", flexDirection: "column", opacity: "{{rowsOpacity}}" }}>
+          <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="result" nodeKey="1" />
+        </div>
       </div>
       <div style={{ flex: "none", padding: "8px 24px 24px" }}>
         <Button style={{ width: "100%" }} node="done">Done</Button>
+      </div>
+
+      <div style={{ display: "{{filterShown}}" }} data-node-chip="state" data-node-key="filter">
+        <BottomSheet open ariaLabel="What the search shows" node="filterSheet">
+          <SheetTitle node="title">What the search shows</SheetTitle>
+          <FilterSection label="Kinds" hint="Combine as many as you like. All, until you narrow it." node="kinds">
+            {CITABLE_KINDS.map((kind) => (
+              <Chip key={kind.value} label={kind.label} selected={false} node={`${kind.value}Chip`} />
+            ))}
+          </FilterSection>
+          <FilterFoot node="foot" />
+        </BottomSheet>
       </div>
     </>
   );

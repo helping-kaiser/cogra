@@ -76,6 +76,13 @@
  * stand. Dark is declared twice — for Auto on a dark device, and for a chosen
  * Dark — because a media query and an attribute cannot share one rule;
  * palette.test.ts pins both copies to the same token file.
+ *
+ * THE CHOSEN-DARK BLOCK ALSO SCOPES A CONTAINER (the design system's own
+ * mechanism: "Attach `data-theme="dark"` to <html> or any container"). The
+ * stream is drawn dark whatever the reader's theme (Reel.jsx:59,
+ * `data-theme="dark"`), bar included, so the same block answers for any
+ * element wearing the attribute; the roles resolve where they are used
+ * (`@theme inline`), so a subtree flips with it.
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -123,7 +130,8 @@
   }
 }
 
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+[data-theme="dark"] {
   --primary: #ff8d50;
   --on-primary: #341100;
   --primary-container: #ef6c1a;

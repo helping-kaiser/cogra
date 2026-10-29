@@ -1045,7 +1045,8 @@
         "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "postDetail.citedBySheet.citation": "the citation's position in the list, newest first, counted from 1 (the cited-by sheet)"
+        "postDetail.citedBySheet.citation": "the citation's position in the list, newest first, counted from 1 (the cited-by sheet)",
+        "postDetail.citedBySheet.empty": "the list chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "postDetail.bottomBar": [],
@@ -1156,6 +1157,12 @@
           "4"
         ],
         "postDetail.citedBySheet.dragHandle": [],
+        "postDetail.citedBySheet.empty": [
+          "empty"
+        ],
+        "postDetail.citedBySheet.empty.title": [
+          "empty"
+        ],
         "postDetail.citedBySheet.title": [],
         "postDetail.header": [],
         "postDetail.header.back": [],
@@ -1318,7 +1325,8 @@
         "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "postDetail.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)"
+        "postDetail.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)",
+        "postDetail.threadSheet.commentCard": "the comment author's handle, without @ (CommentCard)"
       },
       "nodes": {
         "postDetail.bottomBar": [],
@@ -1415,7 +1423,71 @@
           "credit",
           "public-record-of-use"
         ],
-        "postDetail.licenseSheet.terms.publicDomain": []
+        "postDetail.licenseSheet.terms.publicDomain": [],
+        "postDetail.threadSheet": [],
+        "postDetail.threadSheet.commentCard": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.edit": [
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.reply": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.exact": [
+          "tobias"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.face": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.avatar": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.handle": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.name": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.menu": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.title": []
       }
     },
     "CommentMenu": {
@@ -1423,7 +1495,8 @@
       "keys": {
         "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.commentCard": "the comment author's handle, without @ (CommentCard)"
       },
       "nodes": {
         "postDetail.bottomBar": [],
@@ -1512,7 +1585,71 @@
         "postDetail.menuSheet.license": [],
         "postDetail.menuSheet.opinions": [],
         "postDetail.menuSheet.report": [],
-        "postDetail.menuSheet.save": []
+        "postDetail.menuSheet.save": [],
+        "postDetail.threadSheet": [],
+        "postDetail.threadSheet.commentCard": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.edit": [
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.reply": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.exact": [
+          "tobias"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.face": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.avatar": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.handle": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.name": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.menu": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.title": []
       }
     },
     "CommentMenuOwn": {
@@ -1520,7 +1657,8 @@
       "keys": {
         "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.commentCard": "the comment author's handle, without @ (CommentCard)"
       },
       "nodes": {
         "postDetail.bottomBar": [],
@@ -1609,7 +1747,411 @@
         "postDetail.menuSheet.license": [],
         "postDetail.menuSheet.opinions": [],
         "postDetail.menuSheet.remove": [],
-        "postDetail.menuSheet.save": []
+        "postDetail.menuSheet.save": [],
+        "postDetail.threadSheet": [],
+        "postDetail.threadSheet.commentCard": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.edit": [
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.reply": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.exact": [
+          "tobias"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.face": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.avatar": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.handle": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.name": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.menu": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.title": []
+      }
+    },
+    "CommentRemoveConfirm": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.dialog": "the answer chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "postDetail.threadSheet.commentCard": "the comment author's handle, without @ (CommentCard)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "ada"
+        ],
+        "postDetail.card.actionRow": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.share": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "postDetail.card.authorChip": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.name": [
+          "ada"
+        ],
+        "postDetail.card.description": [
+          "ada"
+        ],
+        "postDetail.card.media": [
+          "ada"
+        ],
+        "postDetail.card.media.frame": [
+          "ada/1"
+        ],
+        "postDetail.card.opinions": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "ada"
+        ],
+        "postDetail.card.title": [
+          "ada"
+        ],
+        "postDetail.dialog": [
+          "asking",
+          "failed"
+        ],
+        "postDetail.dialog.body": [
+          "asking",
+          "failed"
+        ],
+        "postDetail.dialog.keep": [
+          "asking",
+          "failed"
+        ],
+        "postDetail.dialog.line": [
+          "failed"
+        ],
+        "postDetail.dialog.remove": [
+          "asking",
+          "failed"
+        ],
+        "postDetail.dialog.title": [
+          "asking",
+          "failed"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.threadSheet": [],
+        "postDetail.threadSheet.commentCard": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.edit": [
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.reply": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.exact": [
+          "tobias"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.face": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.avatar": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.handle": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.name": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.menu": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.title": []
+      }
+    },
+    "CommentRemoved": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.threadSheet.commentCard": "the comment author's handle, without @ (CommentCard)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "ada"
+        ],
+        "postDetail.card.actionRow": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.share": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "postDetail.card.authorChip": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.name": [
+          "ada"
+        ],
+        "postDetail.card.description": [
+          "ada"
+        ],
+        "postDetail.card.media": [
+          "ada"
+        ],
+        "postDetail.card.media.frame": [
+          "ada/1"
+        ],
+        "postDetail.card.opinions": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "ada"
+        ],
+        "postDetail.card.title": [
+          "ada"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.threadSheet": [],
+        "postDetail.threadSheet.commentCard": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.reply": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.exact": [
+          "tobias"
+        ],
+        "postDetail.threadSheet.commentCard.actionRow.stance.anchor.face": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.avatar": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.handle": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.authorChip.name": [
+          "tobias",
+          "mira",
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.menu": [
+          "tobias",
+          "mira"
+        ],
+        "postDetail.threadSheet.commentCard.removalMark": [
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.removalMark.detail": [
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.removalMark.line": [
+          "sol"
+        ],
+        "postDetail.threadSheet.commentCard.removalMark.when": [
+          "sol"
+        ],
+        "postDetail.threadSheet.dragHandle": [],
+        "postDetail.threadSheet.title": []
       }
     },
     "ComposeCrop": {
@@ -2176,6 +2718,9 @@
         "postEdit.header.help": [],
         "postEdit.header.leave": [],
         "postEdit.header.title": [],
+        "postEdit.references": [],
+        "postEdit.references.add": [],
+        "postEdit.references.label": [],
         "postEdit.sign": [],
         "postEdit.tags": [],
         "postEdit.tags.add": [],
@@ -2617,6 +3162,7 @@
     "ExploreFilter": {
       "prefix": "explore",
       "keys": {
+        "explore.filterSheet.order": "the reader chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
       },
       "nodes": {
@@ -2639,15 +3185,33 @@
         "explore.filterSheet.kinds.postsChip": [],
         "explore.filterSheet.kinds.profilesChip": [],
         "explore.filterSheet.kinds.topicsChip": [],
-        "explore.filterSheet.order": [],
-        "explore.filterSheet.order.hint": [],
-        "explore.filterSheet.order.label": [],
-        "explore.filterSheet.order.picker": [],
-        "explore.filterSheet.order.picker.newestOption": [],
-        "explore.filterSheet.order.picker.rankedOption": [],
-        "explore.filterSheet.order.seen": [],
-        "explore.filterSheet.order.seen.box": [],
-        "explore.filterSheet.order.seen.label": [],
+        "explore.filterSheet.order": [
+          "member"
+        ],
+        "explore.filterSheet.order.hint": [
+          "member"
+        ],
+        "explore.filterSheet.order.label": [
+          "member"
+        ],
+        "explore.filterSheet.order.picker": [
+          "member"
+        ],
+        "explore.filterSheet.order.picker.newestOption": [
+          "member"
+        ],
+        "explore.filterSheet.order.picker.rankedOption": [
+          "member"
+        ],
+        "explore.filterSheet.order.seen": [
+          "member"
+        ],
+        "explore.filterSheet.order.seen.box": [
+          "member"
+        ],
+        "explore.filterSheet.order.seen.label": [
+          "member"
+        ],
         "explore.filterSheet.title": [],
         "explore.filterTrigger": [],
         "explore.help": [],
@@ -2668,9 +3232,13 @@
           "2"
         ],
         "explore.result.sub": [
+          "1"
+        ],
+        "explore.result.value": [
           "2"
         ],
         "explore.searchField": [],
+        "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
         "explore.searchField.input": []
       }
@@ -2690,6 +3258,7 @@
         "explore.filterTrigger": [],
         "explore.help": [],
         "explore.searchField": [],
+        "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
         "explore.searchField.input": []
       }
@@ -2697,7 +3266,8 @@
     "ExplorePerson": {
       "prefix": "explore",
       "keys": {
-        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
+        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
+        "explore.seam": "the section the seam splits — people, topics or content — each section standing its own ranked head, then its own rest (Explore's search)"
       },
       "nodes": {
         "explore.bottomBar": [],
@@ -2715,35 +3285,54 @@
           "2",
           "3",
           "4",
-          "5"
+          "5",
+          "6",
+          "7"
         ],
         "explore.result.mark": [
           "1",
           "2",
           "3",
           "4",
-          "5"
+          "5",
+          "6",
+          "7"
         ],
         "explore.result.name": [
           "1",
           "2",
           "3",
           "4",
-          "5"
+          "5",
+          "6",
+          "7"
         ],
         "explore.result.rank": [
           "1",
           "2",
-          "3",
           "4",
-          "5"
+          "6"
         ],
         "explore.result.sub": [
           "1",
           "2",
           "3"
         ],
+        "explore.result.value": [
+          "7"
+        ],
+        "explore.seam": [
+          "people",
+          "topics",
+          "content"
+        ],
+        "explore.seam.label": [
+          "people",
+          "topics",
+          "content"
+        ],
         "explore.searchField": [],
+        "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
         "explore.searchField.input": []
       }
@@ -2751,7 +3340,8 @@
     "ExploreSearch": {
       "prefix": "explore",
       "keys": {
-        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
+        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
+        "explore.seam": "the section the seam splits — people, topics or content — each section standing its own ranked head, then its own rest (Explore's search)"
       },
       "nodes": {
         "explore.bottomBar": [],
@@ -2786,25 +3376,33 @@
           "3"
         ],
         "explore.result.sub": [
-          "2",
+          "1",
           "3",
-          "1"
+          "2"
         ],
         "explore.result.value": [
           "4",
-          "1",
-          "2"
+          "2",
+          "3"
         ],
-        "explore.seam": [],
-        "explore.seam.label": [],
+        "explore.seam": [
+          "content"
+        ],
+        "explore.seam.label": [
+          "content"
+        ],
         "explore.searchField": [],
+        "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
         "explore.searchField.input": []
       }
     },
     "ExploreUnscoped": {
       "prefix": "explore",
-      "keys": {},
+      "keys": {
+        "explore.filterTrigger": "the kinds chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "explore.help": "the kinds chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
       "nodes": {
         "explore.bottomBar": [],
         "explore.bottomBar.composeSlot": [],
@@ -2814,9 +3412,16 @@
         "explore.bottomBar.walletSlot": [],
         "explore.empty": [],
         "explore.empty.title": [],
-        "explore.filterTrigger": [],
-        "explore.help": [],
+        "explore.filterTrigger": [
+          "comments",
+          "mixed"
+        ],
+        "explore.help": [
+          "comments",
+          "mixed"
+        ],
         "explore.searchField": [],
+        "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
         "explore.searchField.input": []
       }
@@ -2982,6 +3587,22 @@
           "tobias",
           "sol"
         ],
+        "feed.commentCard.authorChip": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.authorChip.avatar": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.authorChip.handle": [
+          "tobias",
+          "sol"
+        ],
+        "feed.commentCard.authorChip.name": [
+          "tobias",
+          "sol"
+        ],
         "feed.commentCard.media": [
           "tobias",
           "sol"
@@ -2995,6 +3616,10 @@
         ],
         "feed.commentCard.media.frame.soundDisc": [
           "tobias/1"
+        ],
+        "feed.commentCard.menu": [
+          "tobias",
+          "sol"
         ]
       }
     },
@@ -3658,6 +4283,21 @@
         "feed.commentCard.actionRow.stance.anchor.face": [
           "tobias"
         ],
+        "feed.commentCard.authorChip": [
+          "tobias"
+        ],
+        "feed.commentCard.authorChip.avatar": [
+          "tobias"
+        ],
+        "feed.commentCard.authorChip.handle": [
+          "tobias"
+        ],
+        "feed.commentCard.authorChip.name": [
+          "tobias"
+        ],
+        "feed.commentCard.menu": [
+          "tobias"
+        ],
         "feed.profileCard": [
           "mira"
         ],
@@ -4148,6 +4788,399 @@
         "feed.menuSheet.license": [],
         "feed.menuSheet.report": [],
         "feed.menuSheet.save": []
+      }
+    },
+    "FeedPostMenuOwn": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.description": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.media": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.media.dots": [
+          "sol"
+        ],
+        "feed.card.media.frame": [
+          "sol/1",
+          "sol/2",
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.opener": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "sol/fieldnotes",
+          "sol/saltmaps",
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.title": [
+          "sol",
+          "ada"
+        ],
+        "feed.menuSheet": [],
+        "feed.menuSheet.cite": [],
+        "feed.menuSheet.dragHandle": [],
+        "feed.menuSheet.edit": [],
+        "feed.menuSheet.license": [],
+        "feed.menuSheet.markSensitive": [],
+        "feed.menuSheet.remove": [],
+        "feed.menuSheet.save": []
+      }
+    },
+    "FeedRemoveConfirm": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.description": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.media": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.media.dots": [
+          "sol"
+        ],
+        "feed.card.media.frame": [
+          "sol/1",
+          "sol/2",
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.opener": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "sol/fieldnotes",
+          "sol/saltmaps",
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.title": [
+          "sol",
+          "ada"
+        ],
+        "feed.dialog": [],
+        "feed.dialog.body": [],
+        "feed.dialog.keep": [],
+        "feed.dialog.remove": [],
+        "feed.dialog.title": []
+      }
+    },
+    "FeedRemoved": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.removalMark": [
+          "sol"
+        ],
+        "feed.card.removalMark.detail": [
+          "sol"
+        ],
+        "feed.card.removalMark.line": [
+          "sol"
+        ],
+        "feed.card.removalMark.when": [
+          "sol"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "sol",
+          "ada"
+        ],
+        "feed.card.title": [
+          "ada"
+        ]
       }
     },
     "FeedReportConfirm": {
@@ -4896,6 +5929,21 @@
         "history.commentCard.actionRow.stance.anchor.face": [
           "tobias"
         ],
+        "history.commentCard.authorChip": [
+          "tobias"
+        ],
+        "history.commentCard.authorChip.avatar": [
+          "tobias"
+        ],
+        "history.commentCard.authorChip.handle": [
+          "tobias"
+        ],
+        "history.commentCard.authorChip.name": [
+          "tobias"
+        ],
+        "history.commentCard.menu": [
+          "tobias"
+        ],
         "history.day": [
           "today",
           "yesterday",
@@ -5132,6 +6180,21 @@
         "history.commentCard.actionRow.stance.anchor.face": [
           "tobias"
         ],
+        "history.commentCard.authorChip": [
+          "tobias"
+        ],
+        "history.commentCard.authorChip.avatar": [
+          "tobias"
+        ],
+        "history.commentCard.authorChip.handle": [
+          "tobias"
+        ],
+        "history.commentCard.authorChip.name": [
+          "tobias"
+        ],
+        "history.commentCard.menu": [
+          "tobias"
+        ],
         "history.filterSheet": [],
         "history.filterSheet.dragHandle": [],
         "history.filterSheet.foot": [],
@@ -5271,6 +6334,21 @@
           "tobias"
         ],
         "history.commentCard.actionRow.stance.anchor.face": [
+          "tobias"
+        ],
+        "history.commentCard.authorChip": [
+          "tobias"
+        ],
+        "history.commentCard.authorChip.avatar": [
+          "tobias"
+        ],
+        "history.commentCard.authorChip.handle": [
+          "tobias"
+        ],
+        "history.commentCard.authorChip.name": [
+          "tobias"
+        ],
+        "history.commentCard.menu": [
           "tobias"
         ],
         "history.day": [
@@ -5524,18 +6602,15 @@
         ],
         "history.tagCard.glimpse": [
           "moorings",
-          "mudflats",
-          "midsummer"
+          "mudflats"
         ],
         "history.tagCard.glimpse.by": [
           "moorings",
-          "mudflats",
-          "midsummer"
+          "mudflats"
         ],
         "history.tagCard.glimpse.newest": [
           "moorings",
-          "mudflats",
-          "midsummer"
+          "mudflats"
         ],
         "history.tagCard.mark": [
           "moorings",
@@ -5547,6 +6622,9 @@
           "mudflats",
           "midsummer"
         ],
+        "history.tagCard.nothing": [
+          "midsummer"
+        ],
         "history.tagCard.through": [
           "moorings",
           "mudflats",
@@ -5554,8 +6632,7 @@
         ],
         "history.tagCard.timestamp": [
           "moorings",
-          "mudflats",
-          "midsummer"
+          "mudflats"
         ],
         "history.tagsDoor": [],
         "history.tagsLabel": []
@@ -5898,8 +6975,12 @@
       "prefix": "invites",
       "keys": {
         "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
+        "invites.applicationsEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
-        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)",
+        "invites.link.copyFault": "the copy chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "invites.linksEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "invites.redactedApplication": "the deleted asker's actor id, the lowercase UUID the wire carries (Invites' applications, where an asker who deleted their account has no handle left to key by)"
       },
       "nodes": {
         "invites.application": [
@@ -5950,6 +7031,9 @@
           "vora83",
           "rafa"
         ],
+        "invites.applicationsEmpty": [
+          "no-applications"
+        ],
         "invites.applicationsLabel": [],
         "invites.create": [],
         "invites.group": [
@@ -5986,11 +7070,35 @@
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
         ],
+        "invites.link.copyFault": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15/failed"
+        ],
         "invites.link.label": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
         ],
-        "invites.linksLabel": []
+        "invites.linksEmpty": [
+          "no-links"
+        ],
+        "invites.linksLabel": [],
+        "invites.redactedApplication": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ],
+        "invites.redactedApplication.close": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ],
+        "invites.redactedApplication.disc": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ],
+        "invites.redactedApplication.second": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ],
+        "invites.redactedApplication.title": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ],
+        "invites.redactedApplication.trailing": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ]
       }
     },
     "InvitesEmpty": {
@@ -6011,6 +7119,7 @@
         "keptPicks.pick": "the kept pick's position in the kept picks' review, counted from 1 (KeptPicksReview)"
       },
       "nodes": {
+        "keptPicks.announcement": [],
         "keptPicks.approval": [],
         "keptPicks.approval.open": [],
         "keptPicks.header": [],
@@ -6020,7 +7129,8 @@
         "keptPicks.pick": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.consequence": [
           "2"
@@ -6028,37 +7138,44 @@
         "keptPicks.pick.kind": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.mark": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.name": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.pair": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.pair.exact": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.pair.face": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.remove": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.sign": []
       }
@@ -6073,22 +7190,26 @@
         "keptPicksSeal.acts.actRow": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicksSeal.acts.actRow.count": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicksSeal.acts.actRow.label": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicksSeal.acts.actRow.value": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicksSeal.acts.note": [],
         "keptPicksSeal.acts.total": [],
@@ -6324,6 +7445,9 @@
     "Notifications": {
       "prefix": "notifications",
       "keys": {
+        "notifications.list.fault": "the load chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "notifications.list.loading": "the load chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "notifications.list.moreFault": "the load chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "notifications.list.notification": "the notification's position in the list, newest first, counted from 1 (Notifications)"
       },
       "nodes": {
@@ -6337,6 +7461,21 @@
         "notifications.header.back": [],
         "notifications.header.title": [],
         "notifications.list": [],
+        "notifications.list.fault": [
+          "failed"
+        ],
+        "notifications.list.fault.retry": [
+          "failed"
+        ],
+        "notifications.list.loading": [
+          "loading"
+        ],
+        "notifications.list.moreFault": [
+          "more"
+        ],
+        "notifications.list.moreFault.retry": [
+          "more"
+        ],
         "notifications.list.notification": [
           "1",
           "2",
@@ -6938,6 +8077,7 @@
         "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.opinionsSheet.empty": "the list chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "postDetail.opinionsSheet.opinion": "the opinion holder's handle, without @ (the opinions sheet)"
       },
       "nodes": {
@@ -7025,6 +8165,12 @@
         "postDetail.header.menu": [],
         "postDetail.opinionsSheet": [],
         "postDetail.opinionsSheet.dragHandle": [],
+        "postDetail.opinionsSheet.empty": [
+          "empty"
+        ],
+        "postDetail.opinionsSheet.empty.title": [
+          "empty"
+        ],
         "postDetail.opinionsSheet.opinion": [
           "mira",
           "ada",
@@ -7995,12 +9141,57 @@
     "ReferencePicker": {
       "prefix": "referencePicker",
       "keys": {
+        "referencePicker.cap": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "referencePicker.fault": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "referencePicker.filterSheet": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "referencePicker.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
         "referencePicker.staged.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)"
       },
       "nodes": {
         "referencePicker.announcement": [],
+        "referencePicker.cap": [
+          "cap"
+        ],
         "referencePicker.done": [],
+        "referencePicker.fault": [
+          "fault"
+        ],
+        "referencePicker.filterSheet": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.dragHandle": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.foot": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.foot.done": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.foot.reset": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds.commentsChip": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds.hint": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds.label": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds.postsChip": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds.profilesChip": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.title": [
+          "filter"
+        ],
         "referencePicker.filterTrigger": [],
         "referencePicker.header": [],
         "referencePicker.header.back": [],
@@ -8243,7 +9434,8 @@
       "keys": {
         "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.dialog": "the answer chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "postDetail.card": [
@@ -8320,11 +9512,29 @@
         "postDetail.card.title": [
           "sol"
         ],
-        "postDetail.dialog": [],
-        "postDetail.dialog.body": [],
-        "postDetail.dialog.keep": [],
-        "postDetail.dialog.remove": [],
-        "postDetail.dialog.title": [],
+        "postDetail.dialog": [
+          "asking",
+          "failed"
+        ],
+        "postDetail.dialog.body": [
+          "asking",
+          "failed"
+        ],
+        "postDetail.dialog.keep": [
+          "asking",
+          "failed"
+        ],
+        "postDetail.dialog.line": [
+          "failed"
+        ],
+        "postDetail.dialog.remove": [
+          "asking",
+          "failed"
+        ],
+        "postDetail.dialog.title": [
+          "asking",
+          "failed"
+        ],
         "postDetail.header": [],
         "postDetail.header.back": [],
         "postDetail.header.menu": []
@@ -8732,6 +9942,21 @@
         "saved.commentCard.actionRow.stance.anchor.face": [
           "tobias"
         ],
+        "saved.commentCard.authorChip": [
+          "tobias"
+        ],
+        "saved.commentCard.authorChip.avatar": [
+          "tobias"
+        ],
+        "saved.commentCard.authorChip.handle": [
+          "tobias"
+        ],
+        "saved.commentCard.authorChip.name": [
+          "tobias"
+        ],
+        "saved.commentCard.menu": [
+          "tobias"
+        ],
         "saved.header": [],
         "saved.header.back": [],
         "saved.header.title": [],
@@ -9052,6 +10277,21 @@
           "tobias"
         ],
         "saved.commentCard.actionRow.stance.anchor.face": [
+          "tobias"
+        ],
+        "saved.commentCard.authorChip": [
+          "tobias"
+        ],
+        "saved.commentCard.authorChip.avatar": [
+          "tobias"
+        ],
+        "saved.commentCard.authorChip.handle": [
+          "tobias"
+        ],
+        "saved.commentCard.authorChip.name": [
+          "tobias"
+        ],
+        "saved.commentCard.menu": [
           "tobias"
         ],
         "saved.header": [],
@@ -10644,12 +11884,20 @@
     "TagPicker": {
       "prefix": "tagPicker",
       "keys": {
+        "tagPicker.cap": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "tagPicker.fault": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "tagPicker.staged.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "tagPicker.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "tagPicker.announcement": [],
+        "tagPicker.cap": [
+          "cap"
+        ],
         "tagPicker.done": [],
+        "tagPicker.fault": [
+          "fault"
+        ],
         "tagPicker.footnote": [],
         "tagPicker.header": [],
         "tagPicker.header.back": [],
@@ -11096,9 +12344,17 @@
     "YourTopics": {
       "prefix": "yourTopics",
       "keys": {
-        "yourTopics.heldTopic": "the held topic's name, without # (Your topics)"
+        "yourTopics.empty": "the list chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "yourTopics.heldTopic": "the held topic's name, without # (Your topics)",
+        "yourTopics.redactedTopic": "the held topic's id, as the wire carries it (Your topics, where a name moderation took away leaves no name to key by)"
       },
       "nodes": {
+        "yourTopics.empty": [
+          "empty"
+        ],
+        "yourTopics.empty.title": [
+          "empty"
+        ],
         "yourTopics.header": [],
         "yourTopics.header.back": [],
         "yourTopics.header.title": [],
@@ -11129,6 +12385,18 @@
           "fieldnotes",
           "tidetables",
           "wellness"
+        ],
+        "yourTopics.redactedTopic": [
+          "b51c7e20-8d94-4f3a-9e06-2a7d13c58f41"
+        ],
+        "yourTopics.redactedTopic.mark": [
+          "b51c7e20-8d94-4f3a-9e06-2a7d13c58f41"
+        ],
+        "yourTopics.redactedTopic.name": [
+          "b51c7e20-8d94-4f3a-9e06-2a7d13c58f41"
+        ],
+        "yourTopics.redactedTopic.value": [
+          "b51c7e20-8d94-4f3a-9e06-2a7d13c58f41"
         ]
       }
     }

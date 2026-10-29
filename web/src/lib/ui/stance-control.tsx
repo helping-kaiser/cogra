@@ -65,6 +65,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -244,6 +245,23 @@ export type PadVariant = {
  */
 const FACE_TYPE = "text-[length:var(--text-title-large)] [line-height:1]";
 
+/**
+ * THE ANCHOR IN ITS MEDIA DRESS (`StanceControl.jsx` `OVER_MEDIA_ANCHOR`): the
+ * stream rail's 56 × 44 slot, white, under the rail's own shadow — kept equal
+ * to `ReelRail`'s RAIL_SHADOW. Inline, so it outranks the anchor's utilities.
+ */
+const OVER_MEDIA_ANCHOR: CSSProperties = {
+  width: "56px",
+  height: "44px",
+  minWidth: "56px",
+  minHeight: "44px",
+  padding: 0,
+  border: 0,
+  background: "none",
+  color: "#fff",
+  filter: "drop-shadow(0 1px 6px rgba(0,0,0,0.75))",
+};
+
 const HOLD_RING_PX = 40;
 const HOLD_RING_STROKE_PX = 4;
 
@@ -309,7 +327,15 @@ export function StanceControl({
   borrowed = false,
   vouchesIn = false,
   wide = false,
+  overMedia = false,
 }: {
+  /**
+   * THE MEDIA DRESS (`StanceControl.jsx` `overMedia`; the stream's rail): the
+   * anchor is the rail's white 56 × 44 slot, the unset state a line face, and
+   * the hold's row line stands beside the face on the stream's plate. The
+   * tap, the hold, the pad and its seal are unchanged.
+   */
+  overMedia?: boolean;
   target: StanceTargetRef;
   /**
    * The standing the hosting read already carried. §8.2 counts on that —
@@ -1305,7 +1331,9 @@ export function StanceControl({
       onPointerUp={(event) => event.stopPropagation()}
     >
       {anchored && (
-        <div className={`flex min-w-0 items-center gap-2${wide ? " w-full" : ""}`}>
+        // OVER MEDIA THE ROW SPENDS NO GAP (StanceControl.jsx:552-555): the
+        // hidden skip-link's gap would push the anchor off the rail's axis.
+        <div className={`flex min-w-0 items-center ${overMedia ? "gap-0" : "gap-2"}${wide ? " w-full" : ""}`}>
           {/* 48px minimum, including at rest (design.md §4); the wide anchor
               draws 40 and answers to 48 through `cg-hit`. */}
           <button
@@ -1331,13 +1359,25 @@ export function StanceControl({
             className={`${BUTTON_CLASS} flex cursor-pointer touch-none select-none items-center justify-center gap-2 rounded-full bg-transparent px-3 text-label-large text-primary [-webkit-touch-callout:none] ${
               wide ? "min-h-10 min-w-0 flex-1 border border-solid border-outline" : "min-h-12 min-w-12 border-0"
             }`}
+            style={overMedia ? OVER_MEDIA_ANCHOR : undefined}
           >
             {/* Never a bare word: a viewer with no bundle gets a face outside
                 the table, muted and translucent — the control visibly waiting
                 to be given a value, never the shrug a zero opinion owns. The
                 anchor's words are not drawn; they ride the accessible name. */}
             <span className="relative inline-grid flex-none place-items-center">
-              {restingFace === null && lineFaceInk !== undefined ? (
+              {restingFace === null && overMedia ? (
+                // OVER MEDIA THE UNSET STATE IS A LINE FACE at the rail's
+                // weight (StanceControl.jsx:602-608): on photography "quiet"
+                // and "invisible" are the same thing.
+                <span
+                  aria-hidden="true"
+                  {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
+                  className="inline-flex flex-none"
+                >
+                  <Icon name="sentiment_neutral" size={28} />
+                </span>
+              ) : restingFace === null && lineFaceInk !== undefined ? (
                 <span
                   aria-hidden="true"
                   {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
@@ -1355,6 +1395,9 @@ export function StanceControl({
                       ? `flex-none ${FACE_TYPE} opacity-40 grayscale`
                       : `flex-none ${FACE_TYPE}`
                   }
+                  // A set face over media at `--size-face-over-media`
+                  // (StanceControl.jsx:618).
+                  style={overMedia ? { fontSize: "var(--size-face-over-media)" } : undefined}
                 >
                   {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
                 </span>
@@ -1429,8 +1472,16 @@ export function StanceControl({
       {anchored && !keptShown && settling && (
         <PendingMarker testId={`${testIdPrefix}-settling`} />
       )}
-      {anchored && rowState !== null && (
+      {anchored && rowState !== null && !overMedia && (
         <RowLine state={rowState} testId={`${testIdPrefix}-row-line`} />
+      )}
+      {/* OVER MEDIA THE LINE STANDS BESIDE THE FACE, on the stream's plate,
+          reading leftward (ReelRail.jsx:178-186; Reel.md:65-69): the row the
+          card would carry it on does not exist over a clip. */}
+      {anchored && rowState !== null && overMedia && (
+        <div className="absolute top-1/2 -translate-y-1/2" style={{ right: "calc(100% + 8px)" }}>
+          <RowLine plate state={rowState} testId={`${testIdPrefix}-row-line`} />
+        </div>
       )}
 
       {open && inBrowser && createPortal(pad, document.body)}

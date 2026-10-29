@@ -10562,6 +10562,62 @@ from the tree and the bar's Explore slot opens `Explore`.
   The registry grows **100 → 132 screens**, **3983 → 5142** board paths,
   **1081 → 1538** distinct.
 
+### Round 24, the drawn gaps — 2026-10-29
+
+Seam 248's undrawn states, under the same autonomy order: built, merged,
+reviewed by jakob after his hand test. Every new string is in its board's
+docblock and sidecar, *merged under the autonomy order, review pending*.
+
+- **The thread is named.** `CommentsThreadSheet` registers as
+  `postDetail.threadSheet` — its `title` and one `commentCard` per top-level
+  comment, keyed by handle, with `authorChip`, `menu`, `removalMark`,
+  `reply` and `edit`. The comment menus and the removal confirm are raised
+  over it, never inside it, so they keep `postDetail.menuSheet` (item 64)
+  and `postDetail.dialog`; `CommentRemoveConfirm` and `CommentRemoved`
+  register.
+- **A removal that gets no answer** keeps its dialog: `That didn't send.
+  Try again.` in `DialogSurface`'s new `line` slot above the pair, `Remove`
+  reading `Retry` — `RemoveConfirm`'s and `CommentRemoveConfirm`'s `answer`
+  chip.
+- **The own menu off the detail** is the detail's own sheet on its host:
+  `FeedPostMenuOwn`, `FeedRemoveConfirm`, and `FeedRemoved`, where the card
+  stands as its mark in place until the feed's next derive, which the
+  `Removed`-off filter cuts it from.
+- **The pickers' states.** The citation picker's filter sheet holds the
+  kinds only — Posts, Comments, Profiles — and its foot; at the batch's ten
+  both pickers dim their rows under `Up to 10 citations per post.` / `Up
+  to 10 tags per post.` (`per comment` from a reply); a read with no answer
+  says the house line where the rows were; an empty or in-flight list says
+  nothing. A clip's tiles keep their fixed boxes on every details stage.
+- **The key away in the alternates** carries `PadKeyAbsent`'s notice and
+  `Keep it pending, restore later` (the alternates card). **A kept topic
+  pick** reads back on its seal as a `Feeling`, in the Affinity pad's axis
+  words; the fixture keeps four picks, the settings row counting them.
+- **Invites' halves stand when empty** (the sidecar's law over the built
+  hiding): `No applications waiting.` · `No live links.`; a deleted asker's
+  row wears the removal mark (`redactedApplication`, keyed by actor id —
+  the API does not serve the signal yet); a failed copy says `That didn't
+  go through.` with `Retry` on its card.
+- **Notifications' reads**: `Loading…`, `Can't reach the server —
+  notifications can't load right now.` over `Retry`, and `Couldn't load
+  more — Retry`.
+- **Explore.** The answer is sectioned — people, topics, content — and
+  under Ranked each section closes its head with its own seam, keyed by
+  the section; a guest's filter sheet has no order section; Comments beside
+  another kind with nothing else found shows the scope line alone; the
+  search field's clear × is `SearchBar`'s `onClear`, `Clear search`.
+- **A new cover rides the Edit record** (the contract's `coverMediaId`):
+  the video edits' feet hold at 4 and 3, and `Cover changed` is no row. A
+  clip post's edit carries its References block.
+- **The empty and removed faces.** History's tag card that nothing carries,
+  Your topics empty (`0 held` on the door, no second line before the count
+  arrives) and a held topic whose name was removed (`Removed under the
+  platform's rules`, opening nothing), the post-scale opinions and cited-by
+  sheets empty, and the kept picks' spoken drop's region.
+- **The gate**: edges **2128 → 2155**; flows hold at **227**, six
+  re-blessed for their origin counts. The registry grows **132 → 137
+  screens**, **5142 → 5515** board paths, **1538 → 1629** distinct.
+
 ---
 
 ## 14. The canvases

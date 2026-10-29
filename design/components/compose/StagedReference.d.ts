@@ -39,6 +39,10 @@ export interface StagedReferenceProps {
    * family's landing words, under the kind; Sign is the confirmation.
    */
   consequence?: string;
+  /** The axis names a `stance` row's pair is spoken in — `{ directed, interest }`,
+   *  the opinion's by default; a kept feeling about a topic hands the Affinity
+   *  pad's (seam 248). */
+  axisNames?: { directed: string; interest: string };
   /** The × is its own button, named "Remove <name>". */
   onRemove?: () => void;
   /**

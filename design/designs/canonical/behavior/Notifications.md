@@ -53,3 +53,13 @@ WHEN tap an application-closed row -> the applicant's own feed opens with the cl
 WHEN tap the back arrow -> the root the bell was tapped on comes back, in the state it was left
 
 ALWAYS the back arrow reads Back to feed, Back to Explore, Back to Wallet or Back to your profile, by the root the bell was tapped on
+
+WHEN the list is first read GIVEN nothing has loaded yet -> notifications.list.loading reads Loading… in the list's place AND NEVER a skeleton or a spinner appears
+
+WHEN the first read gets no answer -> notifications.list.fault reads Can't reach the server — notifications can't load right now. over notifications.list.fault.retry, outlined, in the list's place AND NEVER the error dialog is raised
+
+WHEN tap notifications.list.fault.retry -> the list is read again AND notifications.list.loading stands until it arrives
+
+WHEN the next page does not arrive GIVEN rows stand -> the rows on screen stay AND notifications.list.moreFault reads Couldn't load more with notifications.list.moreFault.retry at its end, ending the list, in the list's quiet register AND NEVER the error colour
+
+WHEN tap notifications.list.moreFault.retry -> the next page is asked again AND the rows on screen stay

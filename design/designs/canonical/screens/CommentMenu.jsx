@@ -29,14 +29,14 @@
    REGISTERED under the `postDetail` prefix (design ⇄ impl seam 086): the thread
    is the post's detail with its sheet raised, and a menu belongs to the surface
    that hosts it. The detail beneath is named as `PostDetail` names it, the menu
-   is `menuSheet` with one name per row, as every menu's; the thread's own sheet
-   stays unnamed until a board registers it. */
+   is `menuSheet` with one name per row, as every menu's; the thread beneath is
+   `threadSheet` (seam 248, `CommentsThreadSheet`'s naming). */
 export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
       <ThreadDetail />
-      <CommentsThreadSheet />
+      <CommentsThreadSheet node="threadSheet" />
 
       <BottomSheet open stacked ariaLabel="Comment actions" node="menuSheet">
         {COMMENT_MENU.map((item) => (

@@ -66,8 +66,7 @@ export function Screen() {
         <ActsCard
           node="acts"
           rows={KEPT_PICKS.map((pick) => ({
-            label: "Opinion",
-            countNoun: "opinion",
+            ...keptPickFamily(pick),
             value: (
               <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
                 <span
@@ -78,9 +77,9 @@ export function Screen() {
                     ...(pick.removed ? { fontWeight: 400, color: "var(--text-secondary)" } : null),
                   }}
                 >
-                  {pick.removed || pick.name}
+                  {pick.removed || (pick.kind === "topic" ? `#${pick.name}` : pick.name)}
                 </span>
-                <StanceReadout pair={pick.pair} />
+                <StanceReadout pair={pick.pair} names={pick.kind === "topic" ? AFFINITY_AXES : undefined} />
               </span>
             ),
             count: "1",

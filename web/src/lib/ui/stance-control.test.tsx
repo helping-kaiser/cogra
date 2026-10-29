@@ -64,12 +64,14 @@ function mount(
     axes,
     barBeneath = false,
     mode = "pad",
+    overMedia = false,
   }: {
     signedIn?: boolean;
     target?: StanceTargetRef;
     axes?: StanceAxes;
     barBeneath?: boolean;
     mode?: StanceInputMode;
+    overMedia?: boolean;
   } = {},
 ) {
   if (mode !== "pad") writeStanceInputMode(mode);
@@ -77,7 +79,7 @@ function mount(
   renderWithProviders(
     <KeptPicksNavigation navigate={(href) => navigated.push(href)}>
       <PadParkingProvider value={barBeneath}>
-        <StanceControl target={target} testIdPrefix={PREFIX} axes={axes} />
+        <StanceControl target={target} testIdPrefix={PREFIX} axes={axes} overMedia={overMedia} />
       </PadParkingProvider>
     </KeptPicksNavigation>,
     {
@@ -3140,5 +3142,72 @@ describe("round 21's waits, write rule and typed input", () => {
     expect(proceed).toBeDisabled();
     expect(proceed).toHaveTextContent("Set it anyway");
     expect(screen.queryByTestId("empty-sign-failed")).toBeNull();
+  });
+});
+
+// THE STREAM'S RAIL DRESS (`StanceControl.jsx` `overMedia`; ReelRail.jsx
+// `stanceLine`; Reel.md:65-69, ReelSensitive.md:25-27). The hold's two lines
+// stand beside the face on the stream's plate, never under it and never in a
+// snackbar, and stand until answered.
+describe("the stance control over media (the stream's rail)", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  const plate = () => screen.getByTestId(`${PREFIX}-row-line`);
+
+  it("wears the line face unset, at the rail's 28px", async () => {
+    mount({}, { overMedia: true });
+    await settle();
+    const face = screen.getByTestId(`${PREFIX}-resting-face`);
+    expect(face.querySelector("svg")).toHaveAttribute("width", "28");
+    expect(face).not.toHaveTextContent("🫥");
+    expect(control()).toHaveStyle({ width: "56px", height: "44px", color: "#fff" });
+  });
+
+  it("an_unsigned_hold_reads_that_didnt_sign_with_retry_on_the_plate_never_a_snackbar", async () => {
+    const data = mount({}, { overMedia: true });
+    await settle();
+    const commit = data.commit;
+    data.commit = createStubStanceData({ offline: true }).commit;
+    await hold();
+    await settle();
+    // Reel.md:65: the face stays where it was, and the line beside it reads
+    // That didn't sign. in the failure voice followed by Retry.
+    expect(plate()).toHaveTextContent("That didn't sign.");
+    expect(plate()).toHaveAttribute("role", "alert");
+    expect(plate().style.background).toBe("rgba(0, 0, 0, 0.6)");
+    expect(plate().querySelector(".text-error")).toHaveTextContent("That didn't sign.");
+    // Beside the face, reading leftward — never under it (ReelRail.jsx:178-186).
+    expect(plate().parentElement).toHaveStyle({ right: "calc(100% + 8px)" });
+    expect(screen.queryByRole("status", { name: /didn't sign/ })).toBeNull();
+    data.commit = commit;
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-row-line-retry`));
+    });
+    await settle();
+    expect(data.sent).toEqual([{ target: "post-1", pick: TAP_DEFAULT }]);
+    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
+  });
+
+  it("a_refused_hold_reads_you_cant_sign_right_now_without_retry", async () => {
+    mount({ refuse: "WRITE_RULE_FAILED" }, { overMedia: true });
+    await settle();
+    await hold();
+    // Reel.md:67: in the quiet secondary ink, on the stream's plate, and
+    // NEVER Retry appears.
+    expect(plate()).toHaveTextContent("You can't sign right now.");
+    expect(plate()).toHaveAttribute("role", "status");
+    expect(plate().querySelector(".text-on-surface-variant")).not.toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-row-line-retry`)).toBeNull();
+  });
+
+  it("a_plate_line_stands_until_answered_and_never_fades_on_a_timer", async () => {
+    mount({ refuse: "WRITE_RULE_FAILED" }, { overMedia: true });
+    await settle();
+    await hold();
+    // Reel.md:69: never fades on a timer — a minute on, it still stands.
+    await settle(60_000);
+    expect(plate()).toHaveTextContent("You can't sign right now.");
   });
 });
