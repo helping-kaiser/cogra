@@ -58,6 +58,9 @@ describe("AppShell", () => {
     ["/u/alice", "profile.bottomBar"],
     // History.md:121: the bar keeps lit the root History was opened from.
     ["/history", "history.bottomBar"],
+    // The opinions page under either root (nodes.json `profileStances`, round 26).
+    ["/profile/opinions", "profileStances.bottomBar"],
+    ["/u/ada/opinions", "profileStances.bottomBar"],
   ])("names the bar on the registered screen %s after it", async (path, bar) => {
     pathname = path;
     renderWithProviders(
@@ -103,8 +106,7 @@ describe("AppShell", () => {
   });
 
   // THE OPINIONS PAGE KEEPS LIT THE ROOT ITS PROFILE WAS OPENED FROM
-  // (ProfileStances.md:27, Feed from the feed); unregistered, so the bar keeps
-  // its own ids.
+  // (ProfileStances.md:27, Feed from the feed).
   it.each([
     ["/profile/opinions", "", "/profile"],
     ["/u/ada/opinions", "", "/feed"],

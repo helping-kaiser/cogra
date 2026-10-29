@@ -135,7 +135,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // (`design/designs/canonical/nodes.json` registers `feed.bottomBar`,
   // `postDetail.bottomBar`, `profile.bottomBar`, `saved.bottomBar` and
   // `history.bottomBar`), so the registered screens name it by route. Your
-  // own profile and someone else's are one surface (`Profile`, `ProfileOther`: the `profile` prefix).
+  // own profile and someone else's are one surface (`Profile`, `ProfileOther`: the `profile` prefix),
+  // and the opinions page is one surface under either root (`profileStances`).
   const screen =
     pathname === "/feed"
       ? "feed"
@@ -148,6 +149,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               "feedEntry"
           : pathname === "/profile" || /^\/u\/[^/]+$/.test(pathname)
             ? "profile"
+            : pathname === "/profile/opinions" || OPINIONS_DRILL_IN.test(pathname)
+              ? "profileStances"
             : pathname === "/saved"
               ? "saved"
               : pathname === "/history"
@@ -164,8 +167,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     screen === "feedEntry" ||
     (screen === "profile" && pathname !== "/profile") ||
     // Someone's opinions page keeps lit what their profile did: its `from`
-    // is the profile's own (ProfileStances.md:27). Unregistered, so the bar
-    // keeps its own ids.
+    // is the profile's own (ProfileStances.md:27).
     OPINIONS_DRILL_IN.test(pathname);
   const scroller = useRef<HTMLDivElement>(null);
   const rootSlot = ROOT_OF[pathname];

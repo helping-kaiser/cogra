@@ -20,8 +20,9 @@
 // is strongest first, and a bundle's place is not known until its last record
 // is. The list then stands whole, with nothing left to page in.
 //
-// UNREGISTERED: the board names no node, so the page tags itself with the path
-// it evidently takes (`profileStances.*`), reported to design.
+// REGISTERED AS `profileStances` (nodes.json, round 26): the rows stand in
+// `list`, each `list.row` keyed by the handle of the person it names — the
+// opinion's holder on On, the one it is held on on By — never by position.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
@@ -49,6 +50,16 @@ import { StanceRow } from "@/lib/ui2/stance-row";
 import { TabBar, type Tab } from "@/lib/ui2/tab-bar";
 
 const PAGE: DataNode = { path: "profileStances" };
+const LIST = part(PAGE, "list");
+
+/**
+ * A row's key (nodes.json `profileStances.list.row`): the handle of the
+ * person the row names, without @. A deleted account's row has no handle left
+ * to name it, so its holder's address stands in — opaque, one per person.
+ */
+export function rowKey(opinion: HeldOpinionView): string {
+  return opinion.holder.handle ?? opinion.holderId;
+}
 
 /** The tab row (ProfileStances.jsx): the choice is named `Which direction`. */
 export const DIRECTION_TABS: readonly Tab<OpinionDirection>[] = [
@@ -248,7 +259,7 @@ export function OpinionsScreen({
         </div>
       )}
       {rows !== null && rows.length > 0 && (
-        <div className="flex flex-col pt-1" {...testAttributes(part(PAGE, "list"))}>
+        <div className="flex flex-col pt-1" {...testAttributes(LIST)}>
           {rows.map((opinion, index) => (
             <StanceRow
               key={opinion.holderId}
@@ -259,7 +270,7 @@ export function OpinionsScreen({
               pair={opinion.pair}
               severed={opinion.severed}
               from={rowOrigin}
-              node={instance(PAGE, "row", String(index + 1))}
+              node={instance(LIST, "row", rowKey(opinion))}
               testId={`opinions-row-${index + 1}`}
             />
           ))}
