@@ -504,7 +504,9 @@ function Player({
       "class",
       [
         surface === "reading" || framed ? "block size-full" : "block w-full",
-        fit === "contain" ? "object-contain" : "bg-surface-container-high object-cover",
+        // The stream reserves nothing of its own: its ground IS the stream's black
+        // (Reel.jsx:59), so the clip stands on it before its bytes land.
+        fit === "contain" ? "object-contain" : stream ? "object-cover" : "bg-surface-container-high object-cover",
       ].join(" "),
     );
   });
