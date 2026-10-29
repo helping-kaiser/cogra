@@ -39,6 +39,7 @@ import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.history.StoredSeenRecord
 import com.cogra.domain.removal.RemovedMarks
+import com.cogra.domain.score.FeedStandings
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.InMemoryCommittedFilterStore
@@ -95,6 +96,9 @@ class FeedViewModelTest {
     private val removedMarks = RemovedMarks()
     private val committedFilters = InMemoryCommittedFilterStore()
 
+    /** The process's standings: what every score slot reads (CD-SR5). */
+    private val standings = FeedStandings()
+
     /** The process's record and tracker — built lazily, so a test can script the store first. */
     private val seenRecord by lazy { SeenRecord(records, server, session, appScope) }
     private val seenTracker by lazy { SeenTracker(history, session, appScope, seenRecord) }
@@ -117,6 +121,7 @@ class FeedViewModelTest {
         heldTopics,
         removedMarks,
         CommittedFeedFilter(committedFilters, session),
+        standings,
     )
 
     private fun FeedViewModel.ids() = state.value.posts.map { it.id }

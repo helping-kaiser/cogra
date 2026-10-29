@@ -18,6 +18,7 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.domain.notifications.NotificationTarget
+import com.cogra.domain.score.TraceOrigin
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.CHATS_FROM_FEED
 import com.cogra.feature.content.CHATS_FROM_MESSAGE
@@ -49,7 +50,8 @@ import com.cogra.feature.topics.TopicRoute
 
 /** The Feed tab's root. */
 internal fun NavGraphBuilder.feedRoot(shell: ShellScope) {
-    composable<Feed> { entry -> shell.FeedDestination(entry) }
+    // EVERY RANKED CARD'S SCORE IS A DOOR TO ITS TRACE over the root it stands on.
+    composable<Feed> { entry -> shell.ScoresOpenOver(TraceOrigin.Feed) { shell.FeedDestination(entry) } }
 }
 
 /** The vouch-back's ceremony (`VouchedIn`), which opens over the feed root alone. */
@@ -73,7 +75,10 @@ internal fun NavGraphBuilder.vouchedIn(shell: ShellScope) = with(shell) {
 
 /** The read drill-ins: what a tab's stack holds above its root. */
 internal fun NavGraphBuilder.readDrillIns(shell: ShellScope) {
-    composable<PostDetail> { entry -> shell.PostDetailDestination(entry) }
+    composable<PostDetail> { entry ->
+        val origin = TraceOrigin.Post(entry.toRoute<PostDetail>().postId)
+        shell.ScoresOpenOver(origin) { shell.PostDetailDestination(entry) }
+    }
     composable<Topic> { entry -> shell.TopicDestination(entry) }
     composable<Profile> { entry -> shell.ProfileDestination(entry) }
     // NOTIFICATIONS (Notifications.md): reached from the bell on a root
@@ -85,11 +90,14 @@ internal fun NavGraphBuilder.readDrillIns(shell: ShellScope) {
     // thing with a back arrow reading `Back to Saved`. A post card's
     // comment count raises the thread over Saved, as over the feed, so
     // the thread's return is read here the same way.
-    composable<Saved> { entry -> shell.SavedDestination(entry) }
+    composable<Saved> { entry -> shell.ScoresOpenOver(TraceOrigin.Saved) { shell.SavedDestination(entry) } }
     // HISTORY (History.md): reached from the own profile's ⋮, Saved's sibling,
     // a feed of every seen thing as its kind's own card; every door opens
     // its thing with a back arrow reading `Back to History`.
-    composable<History> { entry -> shell.HistoryDestination(entry) }
+    composable<History> { entry -> shell.ScoresOpenOver(TraceOrigin.History) { shell.HistoryDestination(entry) } }
+    // THE SCORE'S TRACE (FeedEntry and below): opened from any card's score,
+    // over the root that card stands on.
+    scoreTrace(shell)
     composable<ChatsComingSoon> { entry ->
         ChatsComingSoonRoute(
             from = entry.toRoute<ChatsComingSoon>().from,

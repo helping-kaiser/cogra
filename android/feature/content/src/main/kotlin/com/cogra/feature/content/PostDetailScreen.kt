@@ -73,6 +73,7 @@ import com.cogra.domain.content.isRevealed
 import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.removal.RemovalKind
 import com.cogra.domain.saved.SavedWrites
+import com.cogra.domain.score.TraceThingKind
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
@@ -1020,6 +1021,20 @@ private fun DetailCardFoot(
         onShare = { onShare(post.id) },
         testTagPrefix = "detail_post",
         node = node / "actionRow",
+        // THE DETAIL WEARS ITS POST'S STANDING (PostDetail.md:17-19): the figure
+        // the latest fetch of the post found, wherever the detail was opened
+        // from; a post still settling reads the dash (ComposeLanded.md:5).
+        score = {
+            ScoreSlot(
+                targetId = post.id,
+                kind = TraceThingKind.POST,
+                pending = post.landing.isPending,
+                cover = postCover(post),
+                node = node / "actionRow" / "score",
+                testTag = "detail_post_score",
+                dashWhileSettling = true,
+            )
+        },
     ) {
         stanceControl(post.id, "detail_post", node / "actionRow" / "stance")
     }

@@ -97,22 +97,30 @@ private val ADD_GLYPH = 20.dp
 private val RANK_GLYPH = 14.dp
 
 /**
- * A node kind's mark: an avatar for a person, else a 32dp tile — the cover,
- * `T`, `#`, or the comment's glyph — on `surfaceContainerHighest`, or on
+ * A node kind's mark: an avatar for a person, else a [size] tile (32dp by
+ * default) — the cover, `T`, `#`, or the comment's glyph — on `surfaceContainerHighest`, or on
  * `surfaceContainerHigh` [onCard] (`NodeMark`'s `onCard`: a mark standing on a
  * staged row, whose own ground is the highest tone, would vanish into it).
+ * The score's trace draws it at its own sizes, 24 and 32.
  */
 @Composable
-fun NodeMark(kind: MarkKind, name: String, src: String?, modifier: Modifier = Modifier, onCard: Boolean = false) {
+fun NodeMark(
+    kind: MarkKind,
+    name: String,
+    src: String?,
+    modifier: Modifier = Modifier,
+    size: Dp = MARK,
+    onCard: Boolean = false,
+) {
     if (kind == MarkKind.PERSON) {
-        CograAvatar(name = name, size = MARK, url = src, modifier = modifier)
+        CograAvatar(name = name, size = size, url = src, modifier = modifier)
         return
     }
     val ground = MaterialTheme.colorScheme.let { if (onCard) it.surfaceContainerHigh else it.surfaceContainerHighest }
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(MARK)
+            .size(size)
             .clip(MaterialTheme.shapes.small)
             .background(ground),
     ) {
@@ -121,7 +129,7 @@ fun NodeMark(kind: MarkKind, name: String, src: String?, modifier: Modifier = Mo
                 model = src,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(MARK),
+                modifier = Modifier.size(size),
             )
             kind == MarkKind.COMMENT -> Icon(
                 Icons.Filled.ChatBubble,

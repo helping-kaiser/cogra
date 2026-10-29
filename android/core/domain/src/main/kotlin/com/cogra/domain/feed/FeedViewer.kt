@@ -23,6 +23,9 @@ class FeedViewer @Inject constructor(
     /** The viewer id; Success(null) when there is no view to rank at all. */
     suspend fun resolve(): Outcome<String?> = view().map { it?.viewer }
 
+    /** The reader whose figures these are: the signed-in account, or null for a guest. */
+    suspend fun reader(): String? = tokens.current()?.accountId
+
     /**
      * The view and, where it is borrowed, whose: the sheet and the trigger
      * speak a borrowed view's people in that account's name (FeedSheet.md,
