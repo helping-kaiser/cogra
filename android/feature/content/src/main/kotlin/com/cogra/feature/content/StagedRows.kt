@@ -290,5 +290,5 @@ private val MARK_SIZE = 32.dp
 /** The name's `label-large` line. */
 private val TOPIC_LINE = 20.dp
 
-/** `TopicRemovable`'s `minHeight: 32` (GAP: the master's content-box renders 40 on the board). */
+/** `TopicRemovable`'s true 32 — border-box on the master since round 20 (seam 245, ask 2). */
 private val TOPIC_MIN_HEIGHT = 32.dp

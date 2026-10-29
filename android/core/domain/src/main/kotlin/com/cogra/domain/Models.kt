@@ -880,6 +880,18 @@ data class ProfileView(
     val deleted: Boolean get() = displayName.status == FieldStatus.REDACTED
 }
 
+/**
+ * THE PROFILE HEADER'S FIGURES (design/readme.md §7 `ProfileHeader`;
+ * open-questions Q35, closed 2026-10-28 toward the drawn figures, jakob's
+ * confirmation pending). Each counts RECORDS, never a fold: [posts] the
+ * genesis Publish records of the person's posts — never an edit; [opinionsOn]
+ * the Opinion records aimed at the person; [opinionsBy] the Opinion records
+ * they gave toward people. A revision is one more record, so it counts.
+ * A figure the server did not serve is null, and the header draws it not
+ * at all — never a false zero (the master draws each figure it is handed).
+ */
+data class ProfileFigures(val posts: Int?, val opinionsOn: Int?, val opinionsBy: Int?)
+
 /** A tappable link from a chronicle row into the content it touched. */
 sealed interface RecordLink {
     /** The row opens this post. */
@@ -889,7 +901,7 @@ sealed interface RecordLink {
 /**
  * One row of an actor's chronicle — the `records(author:)` read
  * rendered as an honest labelled history (roadmap "Slice 2.1"). The
- * label derives from family + genesis; the snippet is the touched
+ * label derives from family + [act]; the snippet is the touched
  * content's current text, when CoGra carries a display row for it.
  */
 data class RecordRow(
@@ -907,9 +919,33 @@ data class RecordRow(
      * every other family.
      */
     val opinion: RecordOpinion? = null,
-    /** The person an opinion was given on (`on @mira`); null when the target is not a person. */
+    /**
+     * The person the row is about — an opinion's or a vouch's target, or the
+     * person a citation mentions (`on @mira`, `@rafa`); null when it is not a
+     * person.
+     */
     val targetHandle: String? = null,
+    /**
+     * What the record did beyond its family (`Record.act`, api-spec.md): the
+     * chronicle verbs' data — a genesis, a walk-back, the vouch that landed
+     * someone, or ordinary (round 22's verbs; #324).
+     */
+    val act: RecordAct = RecordAct.ORDINARY,
+    /**
+     * The kind of thing the row's act is about — an opinion's or a tag's
+     * target, a citation's cited thing — for the verb and aside that name it
+     * (`Tagged a post`, `on a comment`); null where no node CoGra carries is.
+     */
+    val about: RecordAbout? = null,
+    /** A tag signed at `(0, 0)` — the un-tag, read as withdrawn (hashtag.md §4). */
+    val untag: Boolean = false,
 )
+
+/** What one record did beyond its family (`RecordAct`, api-spec.md). */
+enum class RecordAct { GENESIS, WALK_BACK, VOUCH, ORDINARY }
+
+/** The kind of node a chronicle row's act is about. */
+enum class RecordAbout { POST, COMMENT, PERSON }
 
 /**
  * An opinion record's pair as signed, and whether the bundle it lands in was

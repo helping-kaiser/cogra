@@ -16,7 +16,9 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -259,10 +261,25 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_words_next").assertIsNotEnabled()
     }
 
+    // ComposePick.md (round 22): an empty pick step is silent — Next inert, no line asks for a pick.
     @Test
     fun theNextPillWaitsForAPick() {
         compose.setContent { Wizard(ComposeWizardState()) }
-        compose.onNodeWithTag("wizard_pick_next").assertIsNotEnabled()
+        compose.onNodeWithTag("wizard_pick_next").assertIsNotEnabled().performClick()
+        compose.onNodeWithText("Pick at least one picture.", substring = true).assertDoesNotExist()
+    }
+
+    // ComposePick.md (round 22): the first stage's arrow is named Back, never Back a step.
+    @Test
+    fun theFirstStagesArrowIsNamedBack() {
+        compose.setContent { Wizard(ComposeWizardState()) }
+        compose.onNodeWithTag("wizard_header_back").assertContentDescriptionEquals("Back")
+    }
+
+    @Test
+    fun aLaterStagesArrowIsNamedBackAStep() {
+        compose.setContent { Wizard(words.copy(body = "Salt maps", step = WizardStep.Seal)) }
+        compose.onNodeWithTag("wizard_header_back").assertContentDescriptionEquals("Back a step")
     }
 
     @Test
@@ -412,6 +429,24 @@ class ComposeWizardScreenTest {
         // The tray shows; the sheet manages.
         compose.onNodeWithTag("wizard_show_all").performClick()
         assertThat(manages).isEqualTo(1)
+    }
+
+    // ComposePick.md (round 22): the caption stands only while the tiles leave
+    // it its line; past that the tiles stand alone, clipped and never scrolled.
+    @Test
+    fun aFullTrayDropsItsCaptionAndClipsWithoutScrolling() {
+        val ten = (1..10).map { PickedAsset("p$it", 1f) }
+        compose.setContent { Wizard(withPicks.copy(picked = ten)) }
+        compose.onNodeWithTag("wizard_tray_caption").assertDoesNotExist()
+        compose.onAllNodes(hasScrollAction() and hasAnyAncestor(hasTestTag("wizard_tray"))).assertCountEquals(0)
+        // Every tile still carries its ×, the cover's included.
+        compose.onNodeWithTag("wizard_tray_0_remove", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun aTrayWithRoomCarriesTheCoverLine() {
+        compose.setContent { Wizard(withPicks) }
+        compose.onNodeWithTag("wizard_tray_caption").assertTextEquals("The first one is the cover.")
     }
 
     @Test
@@ -911,6 +946,30 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_sign").assertIsNotEnabled()
     }
 
+    // ComposeUploading.md (round 22): from two up the gate reads the plural.
+    @Test
+    fun twoFailedUploadsReadThePluralAtTheGate() {
+        val failed = withPicks.copy(step = WizardStep.Seal)
+            .withUpload("a", AssetUpload.Failed(UploadFailure.TRANSPORT))
+            .withUpload("b", AssetUpload.Failed(UploadFailure.TRANSPORT))
+        compose.setContent { Wizard(failed) }
+        compose.onNodeWithText("2 pictures didn't upload. Signing waits for them.", substring = true).assertExists()
+    }
+
+    // ComposeUploading.md (round 22): one line counts every failed picture,
+    // with Retry and Remove them; Remove them takes every failed one out.
+    @Test
+    fun twoFailedUploadsUnderTheRowReadOneLineAndRemoveThemTakesBoth() {
+        val failed = withPicks.copy(step = WizardStep.Details)
+            .withUpload("a", AssetUpload.Failed(UploadFailure.TRANSPORT))
+            .withUpload("b", AssetUpload.Failed(UploadFailure.TRANSPORT))
+        compose.setContent { Wizard(failed) }
+        compose.onNodeWithTag("wizard_upload_failed").performScrollTo()
+            .assertTextEquals("2 pictures didn't upload. Retry · Remove them")
+        compose.onNodeWithTag("wizard_upload_failed_0").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_upload_failed_1").assertDoesNotExist()
+    }
+
     @Test
     fun aPressedCommitRefusesASecondPressAndSaysSoPast200ms() {
         compose.mainClock.autoAdvance = false
@@ -1252,6 +1311,16 @@ class ComposeWizardScreenTest {
         assertThat(voice).contains("Dialog `$UNREACHABLE_TITLE`, body `$UNREACHABLE_BODY`")
         val law = java.io.File("../../../design/designs/canonical/behavior/ComposePad.md").readText()
         assertThat(law).contains("reads $UNREACHABLE_BODY with Keep adjusting filled and Set it anyway quiet")
+    }
+
+    // ComposePick.md (round 22, ask 13 H): the one-video refusal is the law's words.
+    @Test
+    fun theOneVideoRefusalIsTheLaws() {
+        val law = java.io.File("../../../design/designs/canonical/behavior/ComposePick.md").readText()
+        val strings = java.io.File("src/main/res/values/strings.xml").readText()
+        assertThat(law).contains("each other video is refused with A post carries one video.")
+        assertThat(strings)
+            .contains("<string name=\"content_upload_post_one_video\">A post carries one video.</string>")
     }
 
     // CW-27: the license sheet's "?" opens the same house explanation the
