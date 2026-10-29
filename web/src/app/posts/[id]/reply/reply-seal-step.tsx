@@ -21,6 +21,23 @@
 // THE SENSITIVE ROW IS THE BOARD'S THIRD FACT ROW — "Sensitive · Not marked ·
 // Mark" (`_shared.jsx`), opening the same `ComposeSensitive` sheet the post
 // seal and the comment editor open (design backlog item 25.4).
+//
+// WHILE IT SIGNS, IT HOLDS THE READER AS THE POST'S SEAL DOES (`ReplySeal.jsx`,
+// SealSigning.md, ReplySealUploading.md): the commit is inert from the press,
+// never dimmed; past 200ms it reads `Signing comment…` and every way out and
+// every row's door refuses a press; past 5s the subline under the total says
+// the network is slow. A press made while the reply's bytes still move is
+// HELD — the commit stays enabled through the gate, and only a failed upload
+// closes it, the gate line's fault reading saying why.
+//
+// WHAT BECAME OF THE PRESS IS THE FOOT'S, at comment scale (ReplySeal.md:19-21,
+// the post seal's failure pack): no answer at all puts the fault line, an
+// outlined Retry and Back in the commit's place; the write rule puts its notice
+// there, its fact ending on what is true of a reply — `your reply is still
+// here.` — and `Not now` under it; a staged act refused whose target landed
+// puts the bug notice there, with Try again, Report a problem and Discard the
+// reply. A cited post that never landed is said on its own row instead, and
+// the commit stays. Everything above the foot stays as it was.
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton } from "@/lib/ui2/pill-button";
@@ -28,7 +45,14 @@ import { FactRow } from "@/lib/ui2/fact-row";
 import { NoticeLine, NoticePanel } from "@/lib/ui2/notice-panel";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { ReadoutChip } from "@/lib/ui2/chip";
-import { ActsCard, actsTotal, ALL_OR_NOTHING, type ActsAction, type ActsRow } from "@/lib/ui2/compose/acts-card";
+import {
+  ActsCard,
+  actsTotal,
+  ALL_OR_NOTHING,
+  SLOW_SIGNING_LINE,
+  type ActsAction,
+  type ActsRow,
+} from "@/lib/ui2/compose/acts-card";
 import { CitedSheet } from "@/lib/ui2/compose/cited-sheet";
 import { CITATION_FAMILY, PairSheet } from "@/lib/ui2/compose/pair-sheet";
 import { TagsSheet } from "@/lib/ui2/compose/tags-sheet";
@@ -36,8 +60,12 @@ import { ParkedPad } from "@/lib/ui2/compose/parked-pad";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { StancePad } from "@/lib/ui2/compose/stance-pad";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
-import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 import { LicenseRows } from "@/lib/ui/license-rows";
+import { TransportError } from "@/lib/ui/transport-error";
+import type { SealFault } from "@/lib/compose/seal-fault";
+// The one sentence per noun a refused citation reads, shared with the post
+// seal and the comment edit rather than spelled a third time.
+import { unlandedCitationLine } from "@/app/(app)/compose/wizard/seal-step";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
@@ -49,8 +77,8 @@ import {
   replySummary,
   signedActions,
   type ReplyState,
+  type SealUploads,
 } from "@/lib/compose/reply-wizard";
-import { uploadsPending } from "@/lib/compose/comment-media";
 
 export type ReplySheet = "none" | "license" | "stance" | "tags" | "cited" | "pair" | "sensitive";
 
@@ -63,6 +91,23 @@ export const REPLYING_SIGNS_AN_OPINION = "Replying also signs an opinion on what
 /** The reply-scale key notice's line (ReplySealKeyAbsent.md:3). */
 export const REPLY_KEY_ABSENT_LINE = "A reply can't wait as pending — restore the key to sign this one.";
 
+/** No answer reached the seal (copy-voice, *No answer at all*: "Seal, pad or dialog"). */
+export const REPLY_OFFLINE_LINE = "That didn't send. Try again.";
+
+/**
+ * `WRITE_RULE_FAILED` on a reply's seal (copy-voice, *Faults by code*;
+ * WriteRuleFailed.md:25): a reply keeps no draft, so the fact's last clause is
+ * what is true here.
+ */
+export const REPLY_WRITE_RULE_TITLE = "You can't sign right now";
+export const REPLY_WRITE_RULE_FACT =
+  "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent — your reply is still here.";
+
+/** The bug notice, in the failure pack's blessed words (SealFaultBug.md:3). */
+export const REPLY_BUG_TITLE = "This shouldn't have happened";
+export const REPLY_BUG_FACT =
+  "That's a fault on our side, not yours. Nothing was signed or spent, and telling us helps us fix it.";
+
 const CLOSE_GLYPH =
   "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
 
@@ -71,9 +116,12 @@ export function ReplySealStep({
   sheet,
   stagedStance,
   blocked,
-  busy,
+  uploads,
+  signing,
+  swapped,
+  slow,
   keyOnDevice,
-  refusal,
+  fault,
   tagErrors,
   referenceErrors,
   onSheet,
@@ -89,6 +137,11 @@ export function ReplySealStep({
   onSensitiveHelp,
   onKeyHelp,
   onSign,
+  onRetry,
+  onRetryUploads,
+  onWriteRuleHelp,
+  onNotNow,
+  onReport,
   onBack,
   onDiscard,
   onRestoreKey,
@@ -97,11 +150,19 @@ export function ReplySealStep({
   sheet: ReplySheet;
   /** What the pad has under the finger — staged, not set, until Set. */
   stagedStance: StancePair;
-  /** Why the seal is closed, or null when it is open. */
+  /** Why the commit is closed, or null when it may be pressed (`sealClosed`). */
   blocked: string | null;
-  busy: boolean;
+  /** The gate line's reading (`sealUploads`). */
+  uploads: SealUploads;
+  /** A press is held or in flight: the commit refuses a second one. */
+  signing: boolean;
+  /** Past 200ms since the press: the label reads its participle and the ways out lock. */
+  swapped: boolean;
+  /** Past 5s since the press: the acts card's subline says so. */
+  slow: boolean;
   keyOnDevice: boolean | null;
-  refusal: string | null;
+  /** What became of the last press, when it did not leave the seal. */
+  fault: SealFault | null;
   /** A refused tag's words, by its place in the staged set. */
   tagErrors?: Readonly<Record<number, string>>;
   /** A refused citation's words, by its place in the staged set. */
@@ -122,16 +183,27 @@ export function ReplySealStep({
   /** The key notice's own "?" (ReplySealKeyAbsent.md:5). */
   onKeyHelp: () => void;
   onSign: () => void;
+  /** The offline fault's Retry and the bug notice's Try again: the same signing, asked again. */
+  onRetry: () => void;
+  /** The failed upload's Retry: the gate runs again, and nothing signs until the next press. */
+  onRetryUploads: () => void;
+  /** The write rule notice's own "?" — `Why signing waits`, the reply's clause. */
+  onWriteRuleHelp: () => void;
+  /** `Not now` under the write rule's notice: the notice goes and the seal stands again. */
+  onNotNow: () => void;
+  /** `Report a problem` under the bug notice. */
+  onReport: () => void;
   onBack: () => void;
-  /** `Discard the reply` under the key notice — the wizard's own leave, asking first. */
+  /** `Discard the reply` under the key notice and the bug notice — the wizard's own leave, asking first. */
   onDiscard: () => void;
   onRestoreKey: () => void;
 }) {
   const acts = signedActions(state);
-  const uploading = uploadsPending(state.media);
-  // SealFooter: the commit refuses a second press from the press on, and says
-  // its participle only past 200ms (ReplySeal.md:9-13) — never dimmed.
-  const slow = useSlowAnswer(busy);
+  // Inert for the label swap's duration, never dimmed (SealSigning.md): a press
+  // on a way out, a fact's action or a row's door does nothing then.
+  const guard = (act: () => void) => () => {
+    if (!swapped) act();
+  };
 
   const removeReference = (targetId: string) =>
     onReferences(state.references.filter((reference) => reference.targetId !== targetId));
@@ -164,7 +236,7 @@ export function ReplySealStep({
       value: `${state.tags.length} tags`,
       count: state.tags.length,
       countNoun: "tag",
-      open: { label: `Manage the ${state.tags.length} tags`, onOpen: () => onSheet("tags") },
+      open: { label: `Manage the ${state.tags.length} tags`, onOpen: guard(() => onSheet("tags")) },
       fault: tagFault,
       testId: "reply-open-tags-sheet",
     });
@@ -188,7 +260,16 @@ export function ReplySealStep({
   // item 70): nothing staged draws no row; ONE reads back as itself — its
   // name, which opens its pair (ReplyCited.md:9), and the × that drops it;
   // TWO OR MORE read back as their count, the row the door to `CitedSheet`.
-  const refusedReference = firstRefused(state.references, referenceErrors);
+  //
+  // A CITED POST THAT NEVER LANDED is said on its row in its own words, with
+  // `Remove it` and no Retry, and Sign comment stays (ReplySealComment.md:9,
+  // SealFaultRow.md); any other refusal of a citation, in the server's.
+  const unlandedId = fault?.kind === "row" ? fault.targetId : null;
+  const unlanded = state.references.find((reference) => reference.targetId === unlandedId);
+  const refusedReference =
+    unlanded !== undefined
+      ? { item: unlanded, message: unlandedCitationLine(unlanded) }
+      : firstRefused(state.references, referenceErrors);
   const only = state.references.length === 1 ? state.references[0] : undefined;
   if (only !== undefined) {
     rows.push({
@@ -199,7 +280,7 @@ export function ReplySealStep({
             type="button"
             aria-label={`${only.target.label} — set how it relates`}
             data-testid="reply-cited-repair"
-            onClick={() => onSheet("pair")}
+            onClick={guard(() => onSheet("pair"))}
             className="cg-state cg-focus min-w-0 cursor-pointer truncate rounded-small border-0 bg-transparent p-0 text-left font-sans text-body-medium text-on-surface"
           >
             {only.target.label}
@@ -208,7 +289,7 @@ export function ReplySealStep({
             type="button"
             aria-label={`Remove ${only.target.label}`}
             data-testid="reply-cited-remove"
-            onClick={() => removeReference(only.targetId)}
+            onClick={guard(() => removeReference(only.targetId))}
             className="cg-state cg-focus flex h-8 w-8 flex-none cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-on-surface-variant"
           >
             <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden="true">
@@ -232,7 +313,7 @@ export function ReplySealStep({
       value: `${count} cited`,
       count,
       countNoun: "citation",
-      open: { label: `Manage the ${count} citations`, onOpen: () => onSheet("cited") },
+      open: { label: `Manage the ${count} citations`, onOpen: guard(() => onSheet("cited")) },
       // Under a count the refused citation is named by Remove it's name.
       fault:
         refusedReference === null
@@ -248,8 +329,8 @@ export function ReplySealStep({
   // THE ACTION ROWS, in every state (`_shared.jsx` `ADD_ROWS`): the word and
   // what it would cost, `1 more`.
   rows.push(
-    { action: "+ Add a tag", count: "1 more", onAct: onOpenTagPicker, testId: "reply-open-tags" },
-    { action: "+ Cite something", count: "1 more", onAct: onOpenReferencePicker, testId: "reply-open-references" },
+    { action: "+ Add a tag", count: "1 more", onAct: guard(onOpenTagPicker), testId: "reply-open-tags" },
+    { action: "+ Cite something", count: "1 more", onAct: guard(onOpenReferencePicker), testId: "reply-open-references" },
   );
 
   return (
@@ -259,7 +340,11 @@ export function ReplySealStep({
       <ActsCard
         rows={rows}
         total={actsTotal(acts)}
-        note={acts > 1 ? ALL_OR_NOTHING : null}
+        // Past 5s from the press the subline says the network is slow, in its
+        // own place, whether the bytes have landed yet or not
+        // (ReplySealUploading.md:13, SealSigningSlow.md).
+        note={slow ? SLOW_SIGNING_LINE : acts > 1 ? ALL_OR_NOTHING : null}
+        noteTone={slow ? "slow" : "quiet"}
         testId="reply-seal-acts"
       />
 
@@ -269,14 +354,14 @@ export function ReplySealStep({
           value={<StanceValue pair={state.stance} testId="reply-stance-value" />}
           action="Adjust"
           testId="reply-open-stance"
-          onAction={() => onSheet("stance")}
+          onAction={guard(() => onSheet("stance"))}
         />
         <FactRow
           label="License"
           value={licenseReading(state.license)}
           action="Change"
           testId="reply-open-license"
-          onAction={() => onSheet("license")}
+          onAction={guard(() => onSheet("license"))}
         />
         <FactRow
           label="Sensitive"
@@ -287,7 +372,7 @@ export function ReplySealStep({
           }
           action={state.sensitive ? "Change" : "Mark"}
           testId="reply-open-sensitive"
-          onAction={() => onSheet("sensitive")}
+          onAction={guard(() => onSheet("sensitive"))}
           last
         />
       </div>
@@ -297,12 +382,6 @@ export function ReplySealStep({
       <QuietNote testId="reply-seal-note">{REPLYING_SIGNS_AN_OPINION}</QuietNote>
 
       <div className="flex-1" />
-
-      {refusal && (
-        <p role="alert" data-testid="reply-refused" className="m-0 text-body-medium text-error">
-          {refusal}
-        </p>
-      )}
 
       {/* THE KEY NOTICE TAKES THE FOOT'S PLACE (ReplySealKeyAbsent.md): every
           row stays, the reply-scale line, the restore, and `Discard the reply`
@@ -323,16 +402,87 @@ export function ReplySealStep({
             Discard the reply
           </PillButton>
         </>
+      ) : fault?.kind === "offline" ? (
+        // NO ANSWER REACHED THE SEAL (ReplySeal.md:19; `NetworkError`'s foot):
+        // the fault line and an outlined Retry take the commit's place, over
+        // the same way back. The rows above say what they said.
+        <div className="flex flex-col gap-2">
+          <TransportError testId="reply-transport-error" message={REPLY_OFFLINE_LINE} />
+          <PillButton testId="reply-retry" variant="outlined" full onClick={onRetry}>
+            Retry
+          </PillButton>
+          <PillButton testId="reply-back" variant="text" full onClick={onBack}>
+            Back
+          </PillButton>
+        </div>
+      ) : fault?.kind === "writeRule" ? (
+        // THE WRITE RULE IS NOT A FAULT (ReplySeal.md:21, WriteRuleFailed.md:25):
+        // nothing was staged or spent, so the tertiary notice stands in the
+        // commit's place with its own "?", and no Retry; `Not now` gives the
+        // seal back with the reply as it was.
+        <>
+          <NoticePanel
+            title={REPLY_WRITE_RULE_TITLE}
+            help={{ label: "Why signing waits", onOpen: onWriteRuleHelp, testId: "reply-write-rule-help" }}
+            testId="reply-write-rule"
+          >
+            <NoticeLine>{REPLY_WRITE_RULE_FACT}</NoticeLine>
+          </NoticePanel>
+          <PillButton testId="reply-not-now" variant="text" full onClick={onNotNow}>
+            Not now
+          </PillButton>
+        </>
+      ) : fault?.kind === "bug" ? (
+        // A STAGED ACT REFUSED WHOSE TARGET LANDED is a bug the picking stage
+        // should have blocked (ReplySealComment.md:11, SealFaultBug.md): the
+        // tertiary notice in the bug's own words takes the commit's place, no
+        // row marked, with Try again in it, and Report a problem and the
+        // reply's own discard under it — which asks first (:13).
+        <>
+          <NoticePanel title={REPLY_BUG_TITLE} testId="reply-seal-bug">
+            <NoticeLine>{REPLY_BUG_FACT}</NoticeLine>
+            <PillButton testId="reply-try-again" variant="inverse" full onClick={onRetry}>
+              Try again
+            </PillButton>
+          </NoticePanel>
+          <div className="flex flex-col">
+            <PillButton testId="reply-report" variant="text" full onClick={onReport}>
+              Report a problem
+            </PillButton>
+            <PillButton testId="reply-discard" variant="text" full onClick={onDiscard}>
+              Discard the reply
+            </PillButton>
+          </div>
+        </>
       ) : (
         <div className="flex flex-col gap-2">
-          {/* THE GATE, as ComposeSealUploading draws it: while bytes are still
-              moving the seal says so with the count, because nothing signs
-              until the content it signs exists. A failure is words rather
-              than a count — there is nothing left to wait for. */}
-          {blocked && uploading > 0 ? (
+          {/* THE GATE (ReplySealUploading, ReplySealUploadFailed): nothing
+              signs until the content it signs exists. While bytes move the
+              line counts them, naming the pictures or the video, and the
+              commit stays live — a press is held and signs the moment the
+              last one lands. A failed upload is the one thing that closes the
+              commit, and the line's fault reading says why, with Retry. */}
+          {uploads.failed > 0 ? (
             <UploadStatusLine
-              done={state.media.length - uploading}
-              total={state.media.length}
+              done={uploads.done}
+              total={uploads.total}
+              failed
+              failedCount={uploads.failed}
+              message={
+                uploads.video
+                  ? "The video didn't upload."
+                  : uploads.failed === 1
+                    ? "One picture didn't upload."
+                    : `${uploads.failed} pictures didn't upload.`
+              }
+              onRetry={onRetryUploads}
+              testId="reply-seal-blocked"
+            />
+          ) : uploads.pending > 0 ? (
+            <UploadStatusLine
+              done={uploads.done}
+              total={uploads.total}
+              media={uploads.video ? "video" : "pictures"}
               testId="reply-seal-blocked"
             />
           ) : blocked ? (
@@ -344,17 +494,19 @@ export function ReplySealStep({
               {blocked}
             </p>
           ) : null}
+          {/* SealFooter: the commit names what it signs; inert from the press,
+              its participle past 200ms, never dimmed and no spinner. */}
           <PillButton
             testId="reply-sign"
             full
             disabled={blocked !== null}
             onClick={() => {
-              if (!busy) onSign();
+              if (!signing) onSign();
             }}
           >
-            {slow ? "Signing comment…" : "Sign comment"}
+            {swapped ? "Signing comment…" : "Sign comment"}
           </PillButton>
-          <PillButton testId="reply-back" variant="text" full onClick={onBack}>
+          <PillButton testId="reply-back" variant="text" full onClick={guard(onBack)}>
             Back
           </PillButton>
         </div>
