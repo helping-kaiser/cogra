@@ -7,8 +7,10 @@
 // on the topic's own page, where the act is explained); the word "follow"
 // nowhere.
 //
-// UNREGISTERED: nodes.json carries no `YourTopics`; the screen wears its
-// evident prefix, `yourTopics`, until design registers it.
+// REGISTERED as `YourTopics` (prefix `yourTopics`, design round 23); a row
+// is `heldTopic`, keyed by the topic's name without #, and the empty state
+// `empty` (round 24). The error states are not drawn, so their tags stay
+// unregistered.
 
 package com.cogra.feature.explore
 
@@ -38,7 +40,7 @@ import com.cogra.core.designsystem.v2.atom.ReferenceRow
 import com.cogra.core.designsystem.v2.atom.RowEdge
 import com.cogra.core.designsystem.v2.token.Space
 
-/** The screen's evident prefix (unregistered). */
+/** The screen's registered prefix (nodes.json `YourTopics`). */
 internal val YOUR_TOPICS = DataNode("yourTopics")
 
 @Composable
@@ -96,6 +98,8 @@ fun YourTopicsScreen(
             state.topics.isEmpty() -> EmptyState(
                 testTag = (YOUR_TOPICS / "empty").tag,
                 title = stringResource(R.string.your_topics_empty),
+                // YourTopics draws the empty state once per `list` value, keyed by it.
+                node = (YOUR_TOPICS / "empty").keyed("empty"),
                 modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x2),
             )
             else -> LazyColumn(state = list, modifier = Modifier.fillMaxSize().padding(top = Space.x1)) {
@@ -106,7 +110,7 @@ fun YourTopicsScreen(
                         edge = RowEdge.Stance(StancePoint(topic.pDirected, topic.pInterest)),
                         pending = topic.pending,
                         onOpen = { onOpenTopic(topic.name) },
-                        node = (YOUR_TOPICS / "row").keyed(topic.name),
+                        node = (YOUR_TOPICS / "heldTopic").keyed(topic.name),
                     )
                 }
                 if (state.moreFailed) {

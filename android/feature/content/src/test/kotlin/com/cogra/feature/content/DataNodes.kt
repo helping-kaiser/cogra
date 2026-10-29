@@ -37,3 +37,19 @@ internal fun SemanticsNodeInteractionsProvider.onAllNodesIn(
 internal fun isDetailCard(): SemanticsMatcher = SemanticsMatcher("is the detail's card") { node ->
     node.config.getOrNull(SemanticsProperties.TestTag)?.startsWith("postDetail.card:") == true
 }
+
+/**
+ * The node at [path], keyed or not: a part the board draws once per state
+ * (`postEdit.sign:none`, `postEdit.sign:slow`) is found whichever state it
+ * stands in.
+ */
+internal fun isNode(path: String): SemanticsMatcher = SemanticsMatcher("is the node $path") { node ->
+    val tag = node.config.getOrNull(SemanticsProperties.TestTag)
+    tag == path || tag?.startsWith("$path:") == true
+}
+
+/** A thread comment card's own tag: `postDetail.threadSheet.commentCard` keyed by the comment's id. */
+internal fun threadCard(commentId: String): String = "postDetail.threadSheet.commentCard:$commentId"
+
+/** A part of a thread comment card (`menu`, `actionRow.reply`), found with [onNodeIn] inside [threadCard]. */
+internal fun threadPart(part: String): String = "postDetail.threadSheet.commentCard.$part"

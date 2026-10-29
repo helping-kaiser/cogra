@@ -470,7 +470,7 @@ class TabNavigationTest {
         tapSlot("wallet")
         waitUntilOn { onTop<Wallet>() }
         assertLit("wallet")
-        waitForTag("wallet.comingSoon")
+        waitForTag("wallet.comingSoonCard")
         waitForTag("wallet.bottomBar")
 
         pressBack()

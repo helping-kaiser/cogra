@@ -7,6 +7,7 @@
 package com.cogra.feature.home
 
 import android.content.ClipData
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,7 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
@@ -35,7 +38,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.v2.atom.ButtonKind
+import com.cogra.core.designsystem.v2.atom.ButtonSize
+import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.CograMark
+import com.cogra.core.designsystem.v2.atom.taskRing
+import com.cogra.core.designsystem.v2.atom.taskRingColors
+import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.signing.RegistrationProgress
 import kotlinx.coroutines.launch
@@ -169,15 +181,17 @@ fun StatusBannerOneShots(
 fun KeyRestoreBannerRoute(
     onRestoreActor: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
+    /** The card's data-node where its board registers it (`feed.keyCard`). */
+    node: DataNode? = null,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    KeyRestoreBanner(state, onRestoreActor)
+    KeyRestoreBanner(state, onRestoreActor, node)
 }
 
 @Composable
-fun KeyRestoreBanner(state: HomeUiState, onRestoreActor: () -> Unit) {
+fun KeyRestoreBanner(state: HomeUiState, onRestoreActor: () -> Unit, node: DataNode? = null) {
     if (state.loading || !state.keyElsewhere) return
-    RestoreCard(onRestoreActor)
+    RestoreCard(onRestoreActor, node)
 }
 
 /**
@@ -349,23 +363,50 @@ private fun KeyElsewhereCard(onStartKeyCeremony: () -> Unit) {
     }
 }
 
-/** The actor key lives elsewhere — restore brings it to this device. */
+/**
+ * The actor key lives elsewhere — restore brings it to this device
+ * (KeyElsewhere). `TaskCard` on the account-notice register (`tone="notice"`,
+ * the olive split): the task ring around the `tertiaryContainer` ground, every
+ * ink the panel's own, the title beside the mark, and `Restore the key` filled
+ * in `inverse` at the small rung.
+ */
 @Composable
-private fun RestoreCard(onRestoreActor: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+private fun RestoreCard(onRestoreActor: () -> Unit, node: DataNode?) {
+    val colors = MaterialTheme.colorScheme
+    val ink = colors.onTertiaryContainer
+    Column(
+        verticalArrangement = Arrangement.spacedBy(Space.x3),
+        modifier = Modifier
+            .fillMaxWidth()
+            .dataNode(node)
+            .clip(MaterialTheme.shapes.medium)
+            .background(colors.tertiaryContainer)
+            .taskRing(taskRingColors(), MaterialTheme.shapes.medium)
+            // The ring's 2dp stands inside the card's own 16 (`--ring-task-width`).
+            .padding(Space.x4 + 2.dp),
+    ) {
+        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.x3)) {
             Text(
                 text = stringResource(R.string.home_husk_title),
                 style = MaterialTheme.typography.titleMedium,
+                color = ink,
+                modifier = Modifier.weight(1f).dataNode(node?.div("title")),
             )
-            Text(stringResource(R.string.home_husk_body))
-            Button(
-                onClick = onRestoreActor,
-                modifier = Modifier.testTag("home_restore"),
-            ) {
-                Text(stringResource(R.string.home_husk_restore))
-            }
+            CograMark(size = 20.dp, tint = ink)
         }
+        Text(
+            text = stringResource(R.string.home_husk_body),
+            style = MaterialTheme.typography.bodyMedium,
+            color = ink,
+            modifier = Modifier.dataNode(node?.div("body")),
+        )
+        CograButton(
+            text = stringResource(R.string.home_husk_restore),
+            onClick = onRestoreActor,
+            kind = ButtonKind.Inverse,
+            size = ButtonSize.Compact,
+            testTag = node?.div("restore")?.tag ?: "home_restore",
+        )
     }
 }
 

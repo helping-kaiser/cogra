@@ -224,7 +224,12 @@ private fun StanceEdge(point: StancePoint) {
         horizontalArrangement = Arrangement.spacedBy(Space.x1),
         modifier = Modifier.clearAndSetSemantics { contentDescription = spoken },
     ) {
-        Text(readout.emoji, style = MaterialTheme.typography.bodyMedium)
+        // `ReferenceRow.jsx`: the face at body-medium with `lineHeight: 1`, so it
+        // stands no taller than its own glyph.
+        Text(
+            text = readout.emoji,
+            style = MaterialTheme.typography.bodyMedium.let { it.copy(lineHeight = it.fontSize) },
+        )
         if (LocalShowExactValues.current) {
             Text(
                 text = point.pair(),

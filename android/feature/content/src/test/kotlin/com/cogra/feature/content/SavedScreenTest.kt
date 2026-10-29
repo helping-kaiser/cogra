@@ -259,7 +259,7 @@ class SavedScreenTest {
     @Test
     fun `unsave from a card's menu takes the card and undo puts it back where it was`() {
         render(all)
-        compose.onNodeWithTag("saved_comment_c1_menu").performClick()
+        compose.onNodeIn("saved.commentCard:c1", "saved.commentCard.menu").performClick()
         compose.onNodeWithTag("comment_menu_save_c1").performClick()
         compose.waitForIdle()
         assertThat(shown(commentCard)).isFalse()
@@ -327,7 +327,7 @@ class SavedScreenTest {
     fun `every card's doors land as the feed's do`() {
         render(all)
         compose.onNodeWithTag("saved_comment_c1_head").performClick()
-        compose.onNodeWithTag("saved_comment_c1_reply").performClick()
+        compose.onNodeIn("saved.commentCard:c1", "saved.commentCard.actionRow.reply").performClick()
         compose.onNodeWithText("Mira Voss").performClick()
         assertThat(opened).containsExactly("post:p1", "comment:p1/c1+reply", "actor:mira").inOrder()
     }
