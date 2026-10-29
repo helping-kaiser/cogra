@@ -63,7 +63,7 @@ describe("a media tap's route", () => {
     expect(link.querySelector("video, img")).not.toBeNull();
   });
 
-  it("a surface that draws no stream case opens the post for a portrait clip too (Saved, TagPage)", () => {
+  it("a surface that draws no stream case opens the post for a portrait clip too (TagPage)", () => {
     renderWithProviders(
       <PostCard
         post={reelPost("p1", "9:16")}

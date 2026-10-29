@@ -708,3 +708,56 @@ describe("SavedScreen — states", () => {
     scroller.remove();
   });
 });
+
+// SAVED IS A STREAM ORIGIN (round 26; Saved.md: "WHEN tap a portrait clip on
+// saved.card -> the stream opens on that clip, Saved's cards narrowed to their
+// portrait clips in Saved's order, AND its back arrow reads Back to Saved").
+describe("the stream from Saved", () => {
+  const clip = (id: string, ratio: string, savedAt: string) => ({
+    ...postNode(id, `Clip ${id}`, savedAt),
+    content: moderated(null),
+    attachments: [
+      {
+        __typename: "MediaAttachment",
+        id: `${id}-m`,
+        url: `https://media.test/${id}.mp4`,
+        altText: null,
+        status: "NORMAL",
+        mimeType: "video/mp4",
+        options: { __typename: "MediaOptions", aspectRatio: ratio, durationMs: 9_000 },
+        coverMedia: null,
+        coverTaken: false,
+      },
+    ],
+  });
+
+  it("the_stream_from_saved_narrows_saveds_cards_in_their_order, its way back reading Back to Saved", async () => {
+    const { forgetStream, heldStream, streamBack } = await import("@/lib/reel/stream-session");
+    forgetStream();
+    const entries: Entry[] = [
+      { node: clip("v1", "9:16", SAVED[0]), bookmarkedAt: SAVED[0] },
+      { node: clip("w1", "16:9", SAVED[1]), bookmarkedAt: SAVED[1] },
+      THREE[1]!,
+      { node: clip("v2", "3:4", SAVED[2]), bookmarkedAt: SAVED[2] },
+    ];
+    server.use(
+      gqlLink.query("SavedPage", () =>
+        HttpResponse.json({ data: page(entries, { hasNextPage: true, endCursor: "c3" }) }),
+      ),
+    );
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    // The wide clip's tap opens the post; the portrait ones open the stream.
+    expect(screen.queryByTestId("saved-post-w1-stream-link")).toBeNull();
+    expect(screen.getByTestId("saved-post-w1-link")).toHaveAttribute("href", "/posts/w1?from=saved");
+    const door = screen.getByTestId("saved-post-v2-stream-link");
+    expect(door).toHaveAttribute("href", "/reel/v2");
+    fireEvent.click(door);
+    const stream = heldStream();
+    expect(stream?.snapshot.clips.map((row) => row.id)).toEqual(["v1", "v2"]);
+    expect(stream?.snapshot.index).toBe(1);
+    expect(stream?.snapshot.hasMore).toBe(true);
+    expect(streamBack(stream!.snapshot.origin)).toEqual({ href: "/saved", label: "Back to Saved" });
+    forgetStream();
+  });
+});

@@ -280,10 +280,10 @@ export function PostCard({
   onOpenMedia?: (index: number) => void;
   /**
    * THE STREAM THIS CARD'S SURFACE OPENS (Reel.md:3): where the card stands in
-   * a list the stream narrows — the feed, History — a portrait clip's tap
-   * opens the stream on it, `onOpen` handing the session the surface's list
-   * first. Absent, every media tap opens the post, as on surfaces that draw
-   * no stream case (Saved's, TagPage's; graph.json).
+   * a list the stream narrows — the feed, Saved, History — a portrait clip's
+   * tap opens the stream on it, `onOpen` handing the session the surface's
+   * list first. Absent, every media tap opens the post, as on surfaces that
+   * draw no stream case (TagPage's; graph.json).
    */
   stream?: { readonly href: string; readonly onOpen: () => void };
 }) {
