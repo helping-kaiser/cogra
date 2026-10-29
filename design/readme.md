@@ -379,7 +379,7 @@ never leave mid-task. Per surface:
 
 | Collapses | Pins |
 |---|---|
-| feed · search results · topic page · profile · saved · notifications · history · invites list · the chats list, both faces | post detail · every compose and edit stage · settings · the ceremonies · a chat's thread · About |
+| feed · search results · topic page · profile · the opinions page · saved · notifications · history · invites list · the chats list, both faces | post detail · every compose and edit stage · settings · the ceremonies · a chat's thread · About |
 
 On web, **pinned means `position: sticky`** — the bar rides the page's
 edge and never hides — and the collapsing surfaces adopt `CollapsingTop`
@@ -407,6 +407,12 @@ rendering is acceptable as a platform habit. Where a platform genuinely
 cannot — a capability the other has and this one does not — the
 difference is *presented*, deliberately and per case, the way `Back is
 the platform's` already is. The test is capability, never convention.
+**A house control is the design on both platforms, never the kit's
+stock one** (seam 248): where the master departs from M3 on purpose,
+Android draws the master, because drawing it is a capability Compose has.
+The `Checkbox` is the worked case — the master's 18px box with the one
+1px hairline is the Android box too, never M3's 20dp control with its
+2dp stroke, which §4's one-weight rule refuses.
 
 ### Corner radii and cards
 
@@ -2705,8 +2711,9 @@ item 33, jakob's rulings the same day).
 - **The stream carries portrait clips only** — clips taller than they
   are wide. Square and landscape clips keep the ordinary grammar, a
   tap to their post. **It is the list it was opened from narrowed to
-  them**, in that list's order — the feed, History's rows, a profile's
-  posts (jakob 2026-10-12): the same graph, the same order, a mechanical
+  them**, in that list's order — the feed, Saved's cards, History's rows,
+  a profile's posts (jakob 2026-10-12; Saved, History's sibling, round
+  26): the same graph, the same order, a mechanical
   filter, and **no second algorithm**. Nothing labels it, because a header saying "your feed"
   is the reassurance only a product that ranks two ways needs. What
   says it instead is the **score on the rail** — the reader's own
@@ -8502,10 +8509,12 @@ as the board's own; the back edge in `graph.json` carries the table.
   profile` from another's posts, `Back to your profile` from the
   reader's own, `Back to History` from History (jakob 2026-10-05).
 - **The stream** (`Reel`, `ReelSensitive`): `Back to feed` from the feed
-  it narrowed (drawn), `Back to the post` from a post's clip detail,
+  it narrowed (drawn), `Back to Saved` from Saved (round 26),
   `Back to the profile` from another's posts, `Back to your profile`
   from the reader's own, `Back to History` from History (jakob
-  2026-10-05).
+  2026-10-05). A post's clip detail opens no stream — its clip tap
+  returns into the one the reader came from, which keeps its list's
+  noun (round 26).
 - **The opinions page** (`ProfileStances`): `Back to the profile`
   (drawn; another's profile) or `Back to your profile` (the reader's
   own). It drew a bare `Back`.
@@ -10617,6 +10626,92 @@ docblock and sidecar, *merged under the autonomy order, review pending*.
 - **The gate**: edges **2128 → 2155**; flows hold at **227**, six
   re-blessed for their origin counts. The registry grows **132 → 137
   screens**, **5142 → 5515** board paths, **1538 → 1629** distinct.
+
+### Round 25, the wordings and the policy answers — 2026-10-29
+
+Seam 248's wordings, sidecar confirms and contradictions, under the same
+autonomy order: built, merged, reviewed by jakob after his hand test.
+Every new string is in copy-voice, *merged under the autonomy order,
+review pending*.
+
+- **The words.** The kept picks' seal commits `Sign the picks` — its
+  batch can hold a feeling; `A post` · `A comment` · `A person` name a
+  target no read reached, and `Topic` (the review) and `Feeling` (the
+  seal) name two things, what a pick is on and what it signs. The
+  close-all dialog at two reads `Both leave…` and `either of them`; the
+  trigger's move back from a Your-people default reads `everyone`; a
+  sentence counts citations, a label names references.
+- **One fault shape.** A read with nothing loaded says the house line's
+  noun form over an outlined `Retry` — the two pickers (`tags`,
+  `results`, a Retry drawn where none stood), search, Notifications,
+  the deletion landing; the long line never stands beside a control that
+  tries again. A cap dims, a standing refusal shown, and its rows take no
+  tap.
+- **A video picked at an edit** is staged (staged-surfaces) under `A
+  video can't join an edit yet — post it on its own.`; the drawn path is
+  the cover step, and a words comment's edit goes to jakob (backlog 148).
+- **The sidecars say what they meant.** A push notification lights Feed,
+  a Notifications row the bell's root; a cold mail link's `Back to
+  settings` lands Settings over the own profile, Profile lit. A filter
+  committed in a feed lasts on the device until changed — the help's and
+  the Reading footnote's words — and the saved default opens a feed with
+  none (`SettingsReading.md` had read "every feed opens with" it). Cited
+  by's settling row is gone: a lane's drawing, and no read serves a
+  pending inbound citation.
+- **Measured.** A sheet's height class is its whole height (border-box):
+  the 88% filter drew 774.72px on an 844 frame (91.8%), the tallest
+  sheet 804px, its top 40px under the 72px sliver; now 742.72 and 772.
+  The sign row's 14px (ruling 92) is the people rows' own gap, the board
+  unchanged at 14.
+- **Parity.** The brand wash is one token of three stops, carried whole
+  on Android; the house checkbox is Android's box too (§4).
+- **The gate**: edges **2155 → 2157** (the pickers' two `Retry`s); flows
+  hold at **227**, one re-blessed for `Sign the picks`
+  (`sign-the-picks-kept-while-the-key-was-away`). The registry holds at
+  **137 screens**, **5515 → 5517** board paths, **1629 → 1631** distinct
+  (`tagPicker.fault.retry`, `referencePicker.fault.retry`).
+
+### Round 26, the stream and the opinions page — 2026-10-29
+
+Seam 250's two surfaces the web built before any round registered them,
+and the gaps their lanes found, under the same autonomy order. Every new
+string is in copy-voice, *merged under the autonomy order, review
+pending*.
+
+- **The ids the web minted are the registry's**, with three departures,
+  each the join law's: the face's row line and its Retry are named
+  (`reel.rail.stanceLine`, `.retry` — a line a test must reach), the
+  settling line stands inside the score's door (`reel.rail.score.settling`
+  — the whole face is the door), and the opinions page's rows sit in its
+  list (`profileStances.list.row`, as `notifications.list.notification`
+  does), keyed by the handle of the person the row names. `ReelSensitive`
+  joins `reel`, one surface in two states; the score's faces, the plate
+  lines and the caption's head key by the `state` value that draws them.
+  The share's fallback is drawn once, on the existing board: `copied`,
+  the house snackbar's `Link copied`.
+- **Saved opens the stream.** Its portrait clip's edge was drawn when
+  Saved became History's sibling (jakob 2026-10-14), after the stream's
+  origin list was written (jakob 2026-10-12); the list was the one that
+  lagged. `Back to Saved` joins the stream's nouns.
+- **A clip detail opens no stream.** The detail's clip tap returns into a
+  stream the reader came from, or opens the viewer; no edge opened one from
+  a post, so `Back to the post` leaves the stream's table, and a return
+  from the detail keeps the noun of the list the stream was opened from.
+- **The stream's door is named for its act**: `Open the stream`, never
+  the clip's alt text.
+- **The veil names its source on every veil** (Q47's "always"): the media
+  face, a comment's compact block, a words-only post's plate, the
+  detail's and the stream's, once per post.
+- **The opinions page.** One's own reads `On you` · `By you`, a deleted
+  account's is titled `Opinions`, and each empty tab says the figure's
+  noun at zero (copy-voice, *The profile save*'s carried-over words). The
+  page browses, so it joins the Collapses column (§4). A person opened
+  from its rows keeps the root the page's stack began in — a stack is
+  where a screen was opened from (`BottomNav`), never Feed by default.
+- **The gate**: edges hold at **2157** (the share's fallback is an outcome
+  of the edges that stood); flows hold at **227**, none re-blessed. The
+  registry grows **137 → 140 screens**, **5517 → 5599** board paths,
+  **1631 → 1689** distinct.
 
 ---
 

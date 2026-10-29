@@ -730,7 +730,7 @@ export function SettingsView({
             <SettingsRow
               label={`${keptWaiting} kept ${keptWaiting === 1 ? "pick" : "picks"} waiting`}
               onOpen={() => router.push(keptPicksHref("/settings"))}
-              node={node("backup.keptPicks")}
+              node={node("backup.kept")}
             />
           )}
         </SettingsGroup>

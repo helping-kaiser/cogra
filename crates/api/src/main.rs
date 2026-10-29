@@ -13,7 +13,10 @@ use api::mailer::{MailerConfig, WebOrigin};
 use api::onboarding::OnboardingConfig;
 use api::ratelimit::RateLimitConfig;
 use api::schema::ApiContext;
+use api::shutdown::{self, Drained, Signals};
 use l1_standin::{StandIn, StandInConfig};
+use tokio_util::sync::CancellationToken;
+use tokio_util::task::TaskTracker;
 use tracing_subscriber::EnvFilter;
 
 /// The session-signing key (auth.md "Access token"): from
@@ -53,19 +56,28 @@ fn auth_config() -> anyhow::Result<AuthConfig> {
 ///
 /// `.env` is read before anything else, so a plain `cargo run` matches the
 /// make targets; real environment variables still win, because dotenvy
-/// never overrides. Every knob read here is an operational parameter
+/// never overrides. A line it cannot parse ends its read there, which is
+/// logged as soon as the subscriber is up. Every knob read here is an operational parameter
 /// documented in development.md, and each has a deployable default except
 /// where absence is itself the setting: an unset
 /// `L1_EPOCH_CLOSE_INTERVAL_SECS` leaves epochs to close on the act budget
 /// or a manual `l1-dev close`, and `BREACH_CHECK=off` exists only so
 /// offline dev can skip the live HIBP range API (auth.md "Password
 /// requirements").
+///
+/// The stop signals are installed once the ingest workers are about to
+/// start (`api::shutdown`): from there on there is work to drain, and
+/// before it a stop ends the process at once. The request drain and the
+/// worker drain are joined, so both are polled from the start and both
+/// graces are measured from the signal itself; the workers' bound carries
+/// the seconds their hand-back write needs past their own grace.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv().ok();
+    let dotenv = api::dotenv::read();
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
+    dotenv.report();
 
     let database_url =
         std::env::var("DATABASE_URL").context("DATABASE_URL must be set (see .env.example)")?;
@@ -191,14 +203,22 @@ async fn main() -> anyhow::Result<()> {
             None
         }
     };
+    let stop = CancellationToken::new();
+    Signals::install()
+        .context("installing the SIGTERM/SIGINT handlers")?
+        .cancel_on_signal(stop.clone());
+    let draining = TaskTracker::new();
     for _ in 0..media.ingest_workers {
-        tokio::spawn(api::media::ingest_queue::ingest_loop(
+        draining.spawn(api::media::ingest_queue::ingest_loop(
             pool.clone(),
             blobs.clone(),
             media.clone(),
             ffmpeg.clone(),
+            stop.clone(),
+            shutdown::GRACE,
         ));
     }
+    draining.close();
 
     let ranker_config = api::ranker_pod::RankerConfig::from_env()?;
     let ranker = api::ranker_pod::RankerClient::new(&ranker_config)
@@ -246,11 +266,32 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!(
         "listening on http://{addr} — /graphql, /media/uploads, /health, /playground (dev)"
     );
-    axum::serve(
+    let server = axum::serve(
         listener,
         api::app(schema, auth, ip_source, uploads)
             .into_make_service_with_connect_info::<std::net::SocketAddr>(),
     )
-    .await?;
+    .with_graceful_shutdown(stop.clone().cancelled_owned());
+    let (requests, workers) = tokio::join!(
+        shutdown::drain(server, stop.clone(), shutdown::GRACE),
+        shutdown::within(draining.wait(), stop, shutdown::GRACE + HAND_BACK),
+    );
+    match requests? {
+        Drained::Clean => tracing::info!("shutdown: every in-flight request finished"),
+        Drained::DeadlinePassed => tracing::warn!(
+            grace_secs = shutdown::GRACE.as_secs(),
+            "shutdown: requests still open at the end of the grace were dropped"
+        ),
+    }
+    match workers {
+        Drained::Clean => tracing::info!("shutdown complete"),
+        Drained::DeadlinePassed => {
+            tracing::warn!("shutdown: an ingest worker did not stop; its lease will lapse")
+        }
+    }
     Ok(())
 }
+
+/// What a stopping ingest worker gets past the grace to write its
+/// hand-back, keeping the whole stop inside the unit's 30-second timeout.
+const HAND_BACK: std::time::Duration = std::time::Duration::from_secs(5);

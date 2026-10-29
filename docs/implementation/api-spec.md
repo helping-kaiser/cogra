@@ -285,9 +285,9 @@ as the corpus shrinks** — a ceiling admits what the clients
 actually send, never a legacy high-water mark. Both are derived
 from replaying every committed operation of both clients against
 the schema; the heaviest is the Android post-detail read at
-46 427 complexity and 9 levels, and 70 000 leaves it 1.5×
-headroom — the smallest round ten-thousand above the 1.4× floor
-the standing test enforces. A thread arrives at its comments
+49 671 complexity and 9 levels, and 70 000 is the smallest round
+ten-thousand above the 1.4× floor (69 540) the standing test
+enforces. A thread arrives at its comments
 collapsed behind `totalCount` rather than carrying a page of
 replies (Q49): the reader unfolds a branch with its own
 `CommentReplies` read, so a post-detail read prices its comments

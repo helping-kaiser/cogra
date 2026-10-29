@@ -56,4 +56,6 @@ ALWAYS postDetail.card.opinions and postDetail.card.citedBy are named by their o
 
 ALWAYS postDetail.bottomBar keeps lit the slot of the root the post was opened from, postDetail.bottomBar.feedSlot from the feed and postDetail.bottomBar.searchSlot from Explore
 
-ALWAYS postDetail.bottomBar lights postDetail.bottomBar.feedSlot GIVEN the post was opened from a link or a notification
+ALWAYS postDetail.bottomBar lights postDetail.bottomBar.feedSlot GIVEN the post was opened from outside the app, by a link or a push notification
+
+ALWAYS postDetail.bottomBar keeps lit the slot of the root the bell was tapped on GIVEN the post was opened from a row of Notifications, postDetail.bottomBar.feedSlot from the feed's bell and postDetail.bottomBar.profileSlot from the profile's

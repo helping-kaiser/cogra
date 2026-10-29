@@ -308,6 +308,10 @@ internal fun ComposeWizardScreen(
             WizardHeader(
                 title = state.headerTitle(),
                 onBack = onBack,
+                // THE FIRST STAGE'S ARROW LEAVES THE FLOW, so it is named
+                // `Back`, never `Back a step` (round 22, seam 245 ask 13 D;
+                // ComposePick.md): there is no stage behind it.
+                backContentDescription = if (state.step == WizardStep.Body) "Back" else "Back a step",
                 // The X leaves from any stage, draft kept, nothing to confirm.
                 onLeave = onLeave,
                 // `ComposeSeal` says "Last step"; `ComposeCover` says

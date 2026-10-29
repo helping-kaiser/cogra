@@ -51,7 +51,7 @@ import { OverflowMenu } from "@/lib/ui2/overflow-menu";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
-import { part, type DataNode } from "./data-node";
+import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { NodeMark } from "./node-mark";
 import { PendingMarker } from "./pending-marker";
@@ -329,6 +329,7 @@ export function CommentFeedCard({
             displayName={comment.author.displayName.value}
             avatarUrl={comment.author.avatar?.url}
             testId={`${testId}-author`}
+            node={part(node, "authorChip")}
           />
         )}
         <div className="flex flex-none items-center gap-3">
@@ -346,6 +347,7 @@ export function CommentFeedCard({
             ariaLabel="More on this comment"
             sheetLabel="Comment actions"
             testId={`${testId}-menu`}
+            node={part(node, "menu")}
             trailing={
               <>
                 {licenseShown !== null && (
@@ -478,16 +480,17 @@ export function CommentFeedCard({
           spreads across the card (`CommentCard.jsx`, jakob's ruling, the geek
           round), every control on a 48px target. */}
       <div
-        data-testid={`${testId}-affordances`}
+        {...testAttributes(part(node, "actionRow"), `${testId}-affordances`)}
         className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1"
       >
         <StanceControl
           target={{ id: comment.id, kind: "comment", label: "this comment" }}
           testIdPrefix={`${testId}-stance`}
+          node={part(node, "actionRow.stance")}
         />
-        {/* OPINION, THEN THE SCORE, THEN THE REPLY GLYPH (FeedKinds.md:3). The
-            slot is tagged by the board's evident path: the comment card's
-            row is not registered (reported). */}
+        {/* OPINION, THEN THE SCORE, THEN THE REPLY GLYPH (FeedKinds.md:3),
+            the row and its controls wearing the card's registered
+            `actionRow` parts (round 23). */}
         {scoreOrigin !== undefined && (
           <ScoreSlot
             targetId={comment.id}
@@ -503,7 +506,7 @@ export function CommentFeedCard({
           <Link
             href={`${place}&reply=1`}
             aria-label={handle === null ? "Reply" : `Reply to @${handle}`}
-            data-testid={`${testId}-reply`}
+            {...testAttributes(part(node, "actionRow.reply"), `${testId}-reply`)}
             className="cg-state cg-focus cg-hit flex flex-none items-center rounded-full px-2 py-1.5 text-on-surface-variant"
           >
             <Icon name="chat_bubble" size={18} />
@@ -515,6 +518,7 @@ export function CommentFeedCard({
             targetLabel="this comment"
             onCopied={onLinkCopied}
             testId={`${testId}-share`}
+            node={part(node, "actionRow.share")}
           />
         )}
       </div>

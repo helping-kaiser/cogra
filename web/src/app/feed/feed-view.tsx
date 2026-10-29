@@ -101,9 +101,8 @@ import { FROM_FEED, YOUR_TOPICS_HREF } from "@/lib/topics/your-topics";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 /**
- * The rows FeedPostMenu registers (`feed.menuSheet.*`) — the reader menu's.
- * The author's own rows on the feed have no drawn board, so they keep their
- * own ids rather than wear a path the registry does not hold.
+ * The rows the feed's menus register (`feed.menuSheet.*`): the reader's
+ * (FeedPostMenu) and the author's own (FeedPostMenuOwn, round 24).
  */
 const FEED_MENU_ROWS: ReadonlySet<PostMenuRow> = new Set([
   "save",
@@ -111,6 +110,9 @@ const FEED_MENU_ROWS: ReadonlySet<PostMenuRow> = new Set([
   "hide",
   "license",
   "report",
+  "edit",
+  "markSensitive",
+  "remove",
 ]);
 
 function feedMenuRow(row: PostMenuRow): DataNode | undefined {
@@ -181,10 +183,9 @@ const FROM = "feed";
 /**
  * A comment, a person or a topic, as its kind's own feed card (FeedKinds.md;
  * FeedCommentShapes, FeedProfileShapes, FeedTagShapes) — the same cards
- * History draws, unchanged. The comment card is registered on the feed
- * (`feed.commentCard`); the profile and tag cards are drawn but UNREGISTERED
- * on the feed, so they wear their evident paths (`feed.profileCard`,
- * `feed.tagCard`, as History's) and are reported for registration.
+ * History draws, unchanged, each wearing its registered feed node
+ * (`feed.commentCard`, `feed.profileCard`, `feed.tagCard`; FeedKinds, round 23),
+ * keyed by the record's id as History's are.
  *
  * The tag card's why-line stands only where the tag reaches the reader
  * through someone, and no field carries whom yet (FC-G9's contract delta,
@@ -938,7 +939,7 @@ export function FeedView({
               full width, 8px under the band), so it keeps no gutter. */}
           {phase === "signedIn" && keyOnDevice === false && !noKeyYet && (
             <div className="flex flex-col pt-2">
-              <RestoreCard />
+              <RestoreCard node={{ path: "feed.keyCard" }} />
             </div>
           )}
         </CograBand>
@@ -987,10 +988,19 @@ export function FeedView({
             Loading…
           </p>
         )}
-        {/* EVERY KIND OFF (FeedNothing.md): the empty state stands alone — no
-            seen separator, no rows — says what is off, and offers the way
-            back. The trigger reads `Nothing`. */}
-        {!loading && transportFault === null && filter.kinds.length === 0 && (
+        {!loading &&
+          transportFault === null &&
+          filter.kinds.length > 0 &&
+          shown.length === 0 &&
+          !hasNextPage && <p data-testid="feed-empty">Nothing here yet — write the first post.</p>}
+      </div>
+      {/* EVERY KIND OFF (FeedNothing.md): the empty state stands alone — no
+          seen separator, no rows — says what is off, and offers the way back.
+          The trigger reads `Nothing`. It stands in the list's own column,
+          8px under the band (FeedNothing.jsx: `8px 24px`; the band's own 8px
+          strip is that top edge), never in the banners' slot. */}
+      {!loading && transportFault === null && filter.kinds.length === 0 && (
+        <div className="px-6 pb-2">
           <EmptyState
             testId="feed-nothing"
             node={NOTHING}
@@ -998,13 +1008,8 @@ export function FeedView({
             actionLabel={SHOW_POSTS_AGAIN}
             onAction={showPostsAgain}
           />
-        )}
-        {!loading &&
-          transportFault === null &&
-          filter.kinds.length > 0 &&
-          shown.length === 0 &&
-          !hasNextPage && <p data-testid="feed-empty">Nothing here yet — write the first post.</p>}
-      </div>
+        </div>
+      )}
       {/* A FEED POST IS A FULL-WIDTH CONTAINER (design/readme.md, "Feed
           containers — rounded full-width cards"): the filled card keeps its
           corners, tone and 16px text inset but spans the screen edge to edge,
@@ -1171,6 +1176,8 @@ export function FeedView({
           row: feedMenuRow,
           licenseSheet: { path: "feed.licenseSheet" },
           reportSheet: { path: "feed.reportSheet" },
+          // FeedRemoveConfirm's dialog (round 24).
+          removeDialog: { path: "feed.dialog" },
         }}
         testId="feed-menu"
         notify={notify}

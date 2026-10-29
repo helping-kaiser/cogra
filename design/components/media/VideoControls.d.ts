@@ -42,6 +42,8 @@ export interface SeekLineProps {
   progress?: number;
   elapsed?: string;
   duration?: string;
+  /** The data-node name its placer gives the line — the slider itself (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function SeekLine(props: SeekLineProps): JSX.Element;
@@ -63,6 +65,8 @@ export interface TimelineProps {
   /** The 48px target rises from the track's foot — the stream's seek line,
    *  which sits on the bottom bar; the surface keeps the caption clear above it. */
   hitAbove?: boolean;
+  /** The data-node name its placer gives the slider (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function Timeline(props: TimelineProps): JSX.Element;

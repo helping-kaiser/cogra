@@ -5188,3 +5188,18 @@ to the master measures off the token:
 The fix is round 20's: each site sets its role whole, measured headless
 on the built boards with Figtree loaded, and the boards' geometry diffed
 before and after.
+
+### 148 · Does a words comment's edit take a video? · *design* · **filed 2026-10-29**
+
+Round 25 (seam 248, VIDEO_AT_EDIT). A words post's edit takes a clip
+through the cover step (`EditWords.md`), and the interim refusal is
+staged until that step ships (staged-surfaces, *Waiting on a slice*). The
+comment edit is silent: `CommentEdit` draws a comment holding a picture,
+its add row `+ Add pictures · 1 of 4`, and no board or line says what a
+words comment's edit offers. Two readings, for jakob: (a) the family's —
+the edit's add row reads `+ Add pictures or a video`, as the reply's
+composer does, and a picked clip arrives as `CommentEditVideo` with its
+cover row; (b) a comment's edit adds pictures only, its row reading `+ Add
+pictures`, and a clip is refused by a rule of its own. Until ruled, the
+comment edit says the staged line, `A video can't join an edit yet — post
+it on its own.`

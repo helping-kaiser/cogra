@@ -13,6 +13,7 @@ import { ApplicationCard, type ApplicationSurface } from "./application-card";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { TransportError } from "@/lib/ui/transport-error";
 import { NO_BACKUP_LINE } from "@/lib/ui/key-absent-notice";
 import { Icon } from "@/lib/ui/icons";
@@ -194,7 +195,7 @@ function KeyElsewhereCard() {
  * (the card never changes while the feed stands loaded); an unread answer
  * keeps the restore on offer.
  */
-export function RestoreCard() {
+export function RestoreCard({ node }: { node?: DataNode } = {}) {
   const data = useOptionalStanceData();
   const [backedUp, setBackedUp] = useState<boolean | null>(null);
   useEffect(() => {
@@ -210,16 +211,21 @@ export function RestoreCard() {
   const noBackup = backedUp === false;
   return (
     <section
-      data-testid={noBackup ? "home_key_no_backup" : "home_key_elsewhere_card"}
+      // The registered card on the feed (`feed.keyCard`, KeyElsewhere and
+      // KeyElsewhereNoBackup): one node in both readings, its `restore` only
+      // where there is a backup to restore from.
+      {...testAttributes(node, noBackup ? "home_key_no_backup" : "home_key_elsewhere_card")}
       className="cg-task-ring-notice flex flex-none flex-col gap-3 rounded-medium p-4 text-on-tertiary-container"
     >
       <div className="flex items-start justify-between gap-3">
-        <h2 className="m-0 text-title-medium">Your key isn&apos;t on this browser</h2>
+        <h2 className="m-0 text-title-medium" {...testAttributes(part(node, "title"))}>
+          Your key isn&apos;t on this browser
+        </h2>
         <span className="flex-none text-on-tertiary-container">
           <Icon name="mark" size={20} pickColor="var(--primary-container)" />
         </span>
       </div>
-      <p className="m-0 text-body-medium">
+      <p className="m-0 text-body-medium" {...testAttributes(part(node, "body"))}>
         {noBackup
           ? NO_BACKUP_LINE
           : "Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending."}
@@ -228,7 +234,7 @@ export function RestoreCard() {
         <div className="flex">
           <Link
             href="/restore"
-            data-testid="home_restore"
+            {...testAttributes(part(node, "restore"), "home_restore")}
             className={pillClassName({ variant: "inverse", size: "sm" })}
           >
             Restore the key

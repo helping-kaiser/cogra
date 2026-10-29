@@ -188,7 +188,7 @@ describe("the opinions sheet (PostOpinions.md)", () => {
     await openPost();
     const count = Number((await opinionsLine()).textContent?.match(/^\d+/)?.[0]);
     const sheet = await openSheet();
-    expect(within(sheet).getAllByTestId(byNode("postDetail.opinionsSheet.row"))).toHaveLength(count);
+    expect(within(sheet).getAllByTestId(byNode("postDetail.opinionsSheet.opinion"))).toHaveLength(count);
   });
 
   it("stands strongest first, down past nothing into the ones held against", async () => {
@@ -196,7 +196,7 @@ describe("the opinions sheet (PostOpinions.md)", () => {
     await openPost();
     const sheet = await openSheet();
     const names = within(sheet)
-      .getAllByTestId(byNode("postDetail.opinionsSheet.row.name"))
+      .getAllByTestId(byNode("postDetail.opinionsSheet.opinion.name"))
       .map((name) => name.textContent);
     expect(names).toEqual(["Mira Voss", "Ada Okonkwo", "Kel", "Juno"]);
   });
@@ -205,11 +205,11 @@ describe("the opinions sheet (PostOpinions.md)", () => {
     server.use(nodeOpinions(boardOpinions()));
     await openPost();
     const sheet = await openSheet();
-    const mira = within(sheet).getAllByTestId(byNode("postDetail.opinionsSheet.row"))[0]!;
-    expect(within(mira).getByTestId(byNode("postDetail.opinionsSheet.row.handle"))).toHaveTextContent("@mira");
+    const mira = within(sheet).getAllByTestId(byNode("postDetail.opinionsSheet.opinion"))[0]!;
+    expect(within(mira).getByTestId(byNode("postDetail.opinionsSheet.opinion.handle"))).toHaveTextContent("@mira");
     // The revision netted: 0.5 + 0.4, 0.2 + 0.05.
     expect(within(mira).getByRole("img", { name: "Love this, +0.90 / +0.25" })).toBeInTheDocument();
-    expect(within(mira).getByTestId(byNode("postDetail.opinionsSheet.row.value.exact")).className).toContain(
+    expect(within(mira).getByTestId(byNode("postDetail.opinionsSheet.opinion.value.exact")).className).toContain(
       "cg-exact",
     );
   });
@@ -218,8 +218,8 @@ describe("the opinions sheet (PostOpinions.md)", () => {
     server.use(nodeOpinions(boardOpinions()));
     await openPost();
     const sheet = await openSheet();
-    const kel = within(sheet).getAllByTestId(byNode("postDetail.opinionsSheet.row"))[2]!;
-    expect(within(kel).getByTestId(byNode("postDetail.opinionsSheet.row.value.face"))).toHaveTextContent("🤔");
+    const kel = within(sheet).getAllByTestId(byNode("postDetail.opinionsSheet.opinion"))[2]!;
+    expect(within(kel).getByTestId(byNode("postDetail.opinionsSheet.opinion.value.face"))).toHaveTextContent("🤔");
   });
 
   it("speaks a walked-back standing as walked back, an empty-signed one as saying nothing", async () => {
@@ -242,7 +242,7 @@ describe("the opinions sheet (PostOpinions.md)", () => {
     store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "u-alice" });
     renderWithProviders(<PostView postId="p1" />, { store, writeSigner: fakeWriteSigner() });
     const sheet = await openSheet();
-    expect(within(sheet).getAllByTestId(byNode("postDetail.opinionsSheet.row"))).toHaveLength(4);
+    expect(within(sheet).getAllByTestId(byNode("postDetail.opinionsSheet.opinion"))).toHaveLength(4);
   });
 
   it("closes on Escape and the post stands open beneath it as it was", async () => {
@@ -288,15 +288,15 @@ describe("the cited-by line and sheet (PostDetail.md, CitedBy.md)", () => {
     fireEvent.click(await citedByLine());
     const sheet = screen.getByRole("dialog", { name: "Cited by" });
     expect(screen.getByTestId(byNode("postDetail.card"))).toBeInTheDocument();
-    const rows = within(sheet).getAllByTestId(byNode("postDetail.citedBySheet.row"));
+    const rows = within(sheet).getAllByTestId(byNode("postDetail.citedBySheet.citation"));
     expect(rows).toHaveLength(2);
     // Sol's revision is the newest act, so his citation leads.
-    expect(rows.map((row) => within(row).getByTestId(byNode("postDetail.citedBySheet.row.name")).textContent)).toEqual([
+    expect(rows.map((row) => within(row).getByTestId(byNode("postDetail.citedBySheet.citation.name")).textContent)).toEqual([
       "Where the salt goes in winter",
       "Answering the tide-market piece",
     ]);
     // At its net: 0.4 + 0.3, 0.2 + 0.3.
-    expect(within(rows[0]!).getByTestId(byNode("postDetail.citedBySheet.row.value.exact"))).toHaveTextContent(
+    expect(within(rows[0]!).getByTestId(byNode("postDetail.citedBySheet.citation.value.exact"))).toHaveTextContent(
       "+0.70 / +0.50",
     );
   });
@@ -312,7 +312,7 @@ describe("the cited-by line and sheet (PostDetail.md, CitedBy.md)", () => {
     server.use(citingRecords(boardCitations()));
     await openPost();
     fireEvent.click(await citedByLine());
-    const rows = screen.getAllByTestId(byNode("postDetail.citedBySheet.row"));
+    const rows = screen.getAllByTestId(byNode("postDetail.citedBySheet.citation"));
     expect(rows[1]).toHaveAttribute("href", "/posts/p-root");
   });
 });

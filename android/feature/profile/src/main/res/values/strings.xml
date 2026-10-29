@@ -49,14 +49,38 @@
     <string name="profile_more_failed">Couldn\'t load more</string>
     <string name="profile_more_retry">Retry</string>
 
+    <!-- The header's figures (`ProfileHeader.jsx`; copy-voice, the profile):
+         each labelled, never merged, the reader's own reading `you`. -->
+    <string name="profile_figure_posts">Posts</string>
+    <string name="profile_figure_on_them">Opinions on them</string>
+    <string name="profile_figure_on_you">Opinions on you</string>
+    <string name="profile_figure_by_them">Opinions by them</string>
+    <string name="profile_figure_by_you">Opinions by you</string>
+
+    <!-- The chronicle's verbs, one per family it lists (copy-voice, the
+         profile; round 22, seam 245 ask 10 — merged under the autonomy
+         order, review pending). `Did something` stays unblessed. -->
     <string name="chronicle_published">Published a post</string>
     <string name="chronicle_edited_post">Edited a post</string>
     <string name="chronicle_commented">Commented</string>
     <string name="chronicle_edited_comment">Edited a comment</string>
+    <string name="chronicle_joined">Joined</string>
     <string name="chronicle_profile_yours">Updated your profile</string>
     <string name="chronicle_profile_theirs">Updated their profile</string>
     <string name="chronicle_opinion">Gave an opinion</string>
+    <string name="chronicle_vouched">Vouched for</string>
+    <string name="chronicle_walked_back">Walked back an opinion</string>
+    <string name="chronicle_tagged_post">Tagged a post</string>
+    <string name="chronicle_tagged_comment">Tagged a comment</string>
+    <string name="chronicle_untagged_post">Un-tagged a post</string>
+    <string name="chronicle_untagged_comment">Un-tagged a comment</string>
+    <string name="chronicle_cited_post">Cited a post</string>
+    <string name="chronicle_cited_comment">Cited a comment</string>
+    <string name="chronicle_mentioned">Mentioned</string>
     <string name="chronicle_opinion_on">on @%1$s</string>
+    <string name="chronicle_on_post">on a post</string>
+    <string name="chronicle_on_comment">on a comment</string>
+    <string name="chronicle_person">@%1$s</string>
     <string name="chronicle_acted">Did something</string>
 
     <string name="profile_edit_title">Edit profile</string>

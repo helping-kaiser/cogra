@@ -36,6 +36,12 @@ describe("PickedSheet", () => {
     expect(screen.getByTestId("picked-sheet")).toHaveAttribute("aria-label", "Picked · 3");
   });
 
+  // PickedSheet.jsx: the list opens right under the title, its rule the first line.
+  it("stands the list right under the title, with no body padding of its own above it", () => {
+    open();
+    expect(screen.getByTestId("picked-sheet-body").className).not.toContain("pt-2");
+  });
+
   it("shows the quiet word instead of the link once a picture is described", () => {
     open();
     expect(screen.getByTestId("picked-sheet-described-0")).toHaveTextContent("Described");

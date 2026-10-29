@@ -20,6 +20,8 @@ import com.cogra.core.designsystem.v2.compose.DescribeCounter
 import com.cogra.core.designsystem.v2.compose.DescribeSubject
 import com.cogra.core.designsystem.v2.compose.PickedRow
 import com.cogra.core.designsystem.v2.compose.UploadErrorLine
+import com.cogra.core.designsystem.v2.compose.failedPicturesLine
+import com.cogra.core.designsystem.v2.compose.removeFailedLabel
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.REMOVE_VIDEO
@@ -243,12 +245,18 @@ private fun DescriptionField(value: String, tooLong: Boolean, onValueChange: (St
 internal val COMPOSE_DETAILS = DataNode("composeDetails")
 
 /**
- * The failure's words, one line per picture that did not upload.
+ * The failure's words under the row.
  *
  * The tile itself wears the badge; this carries Retry and Remove it,
  * because retry does not fit in 48dp
  * (`design/components/compose/UploadNotice.jsx`). Tile and line always
  * appear together.
+ *
+ * ONE LINE COUNTS THE PICTURES A FAULT STOPPED (round 22, seam 245 ask 13 G;
+ * ComposeUploading.md): `One picture didn't upload.`, from two up `2
+ * pictures didn't upload.`, with `Retry` (each tries again) and `Remove it` /
+ * `Remove them` (each leaves). A refusal no retry can change keeps its own
+ * line and its own reason.
  */
 @Composable
 private fun UploadFailures(
@@ -256,7 +264,23 @@ private fun UploadFailures(
     onRetry: (String) -> Unit,
     onRemove: (Int) -> Unit,
 ) {
+    val faults = state.picked.withIndex().filter { (_, asset) ->
+        val failure = asset.upload as? AssetUpload.Failed
+        failure != null && !asset.isVideo && failure.reason == UploadFailure.TRANSPORT && failure.retryable
+    }
+    if (faults.isNotEmpty()) {
+        UploadErrorLine(
+            message = failedPicturesLine(faults.size),
+            onRetry = { faults.forEach { (_, asset) -> onRetry(asset.uri) } },
+            // Highest first, so each index still names its picture.
+            onRemove = { faults.map { it.index }.sortedDescending().forEach(onRemove) },
+            removeLabel = removeFailedLabel(faults.size),
+            testTag = "wizard_upload_failed",
+        )
+    }
+    val counted = faults.map { it.index }.toSet()
     state.picked.forEachIndexed { index, asset ->
+        if (index in counted) return@forEachIndexed
         val failure = asset.upload as? AssetUpload.Failed ?: return@forEachIndexed
         UploadErrorLine(
             // A FAULT reads the board's line (`ComposeUploading`: `One picture

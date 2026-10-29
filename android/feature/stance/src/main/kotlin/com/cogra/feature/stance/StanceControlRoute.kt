@@ -31,6 +31,7 @@ import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.domain.stance.isEmptySign
 
 /**
  * The stance control for one [target]. The view model is scoped to the
@@ -156,6 +157,7 @@ fun StanceControlRoute(
         onConfirmEmptySign = { viewModel.onConfirmEmptySign(target) },
         onDismissEmptySign = { viewModel.onDismissEmptySign(target) },
         vouchesIn = vouchesIn,
+        onRetrySigning = { viewModel.onRetrySigning(target) },
     )
 }
 
@@ -195,6 +197,9 @@ internal fun TargetStance.toControlState(
             inertDirected = it.inertDirected,
             inertInterest = it.inertInterest,
             severance = it.severance,
+            // The trigger split's own reading (`isEmptySign`): the landing
+            // routes the line exactly as Set routes the ask.
+            empty = isEmptySign(it, standingRecords, standingSevered),
         )
     },
     busy = busy,
@@ -217,9 +222,12 @@ internal fun TargetStance.toControlState(
             failed = it.failed,
             pick = pick.toPoint().takeIf { _ -> it.fromPick },
             bundleRecords = it.quote.bundleRecords,
+            writeRule = it.writeRule,
         )
     },
-    emptySign = emptySign?.let { EmptySignPrompt(working = it.working, failed = it.failed) },
+    emptySign = emptySign?.let {
+        EmptySignPrompt(working = it.working, failed = it.failed, writeRule = it.writeRule)
+    },
     coaching = coaching,
     confirmation = confirmation?.toPoint(),
     walkedBack = walkedBack,

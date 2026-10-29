@@ -8,4 +8,4 @@ Use `Checkbox` for a binary opt-in that is not an action — "Don't remember thi
 />
 ```
 
-The 18px box sits on the extra-small rung with the system's 1px hairline — M3 draws a 2px checkbox border, and §4 rules that nothing carries one. Checked fills `primary` with the inlined `check` glyph, so the state is never colour alone. The row is the control: label included, 48px tall, one tap anywhere on it.
+The 18px box sits on the extra-small rung with the system's 1px hairline — M3 draws a 2px checkbox border, and §4 rules that nothing carries one. Checked fills `primary` with the inlined `check` glyph, so the state is never colour alone. The row is the control: label included, 48px tall, one tap anywhere on it. Android draws this box, not M3's stock 20dp `Checkbox` (readme §4, *One design, both platforms*).

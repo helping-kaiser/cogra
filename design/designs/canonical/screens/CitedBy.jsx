@@ -30,8 +30,7 @@
    outbound one does: the kind's own mark, the artifact's name, and the pair its
    author signed — a citation's pair, both axes signed, read through the twenty
    faces, painting in geek mode. A signed act is public record; the pair is part
-   of the act. One of them is still settling and says so, which is this row
-   shape's own rule and the one surface that admits it.
+   of the act.
 
    THE SHEET SITS OVER THE POST DETAIL, drawn whole beneath it, because that is
    the surface the reader asked from.

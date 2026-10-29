@@ -71,6 +71,17 @@ describe("the chrome around the cropper", () => {
     expect(screen.getByTestId("crop-frame").style.aspectRatio).toBe(`${POST_SHAPES.wide.ratio} / 1`);
   });
 
+  // nodes.json ComposeCrop / CoverCrop: on a registered crop screen the frame
+  // is its `viewport`, the slider's row its `zoom` and the slider `zoom.input`.
+  it("wears the crop screen's viewport and zoom nodes when handed one", () => {
+    render(<CropFrame src="blob:x" shape="tall" onChange={() => {}} zoomSlider node={{ path: "composeCrop" }} />);
+    expect(screen.getByTestId("composeCrop.viewport").style.aspectRatio).toBe(`${POST_SHAPES.tall.ratio} / 1`);
+    const zoom = screen.getByTestId("composeCrop.zoom");
+    expect(zoom).toContainElement(screen.getByTestId("composeCrop.zoom.input"));
+    expect(screen.getByTestId("composeCrop.zoom.input")).toHaveAccessibleName("Zoom");
+    expect(screen.queryByTestId("crop-frame")).toBeNull();
+  });
+
   // ComposeCrop and AvatarCrop both draw the viewport edge to edge, out of the
   // column's own 24px padding and with no corners to round. The avatar's frame
   // is NOT itself a circle: the library draws the round crop area and the scrim

@@ -50,6 +50,7 @@ private fun UploadFailure.limitLabel(): Int = when (this) {
     UploadFailure.COMMENT_VIDEO_TOO_BIG -> R.string.content_upload_comment_video_too_big
     UploadFailure.POST_PICTURE_COUNT -> R.string.content_upload_post_picture_count
     UploadFailure.POST_MIXED_BODY -> R.string.content_upload_post_mixed_body
+    UploadFailure.POST_ONE_VIDEO -> R.string.content_upload_post_one_video
     UploadFailure.COMMENT_PICTURE_COUNT -> R.string.content_upload_comment_picture_count
     UploadFailure.VIDEO_AT_EDIT -> R.string.content_upload_video_at_edit
     else -> error("$this is a fault, worded by label()")

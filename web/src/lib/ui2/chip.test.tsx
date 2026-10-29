@@ -12,6 +12,8 @@ describe("Chip", () => {
     );
     const chip = screen.getByTestId("tall");
     expect(chip.className).toContain("bg-secondary-container");
+    // Chip.jsx: selected keeps a 1px transparent edge — the same width either way.
+    expect(chip.className).toContain("border-transparent");
     // Colour never carries meaning alone.
     expect(chip).toHaveAttribute("aria-checked", "true");
   });

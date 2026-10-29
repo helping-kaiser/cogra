@@ -98,7 +98,9 @@ async fn list(pool: &postgres_store::PgPool, only: Option<AppComponent>) -> anyh
 /// (main.rs); `DATABASE_URL` names the registry the rows land in.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv().ok();
+    if let Some(problem) = api::dotenv::read().problem() {
+        eprintln!("warning: {problem}");
+    }
     let mut args = std::env::args().skip(1);
     let command = args.next().with_context(|| USAGE.to_string())?;
 
