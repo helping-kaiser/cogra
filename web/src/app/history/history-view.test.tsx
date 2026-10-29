@@ -421,7 +421,7 @@ describe("History — the seen-list as a feed (History.md)", () => {
       "href",
       "/posts/p1?comment=c1&from=history",
     );
-    expect(screen.getByTestId("history-comment-c1-reply")).toHaveAttribute(
+    expect(screen.getByTestId(byNode("history.commentCard.actionRow.reply", "c1"))).toHaveAttribute(
       "href",
       "/posts/p1?comment=c1&from=history&reply=1",
     );

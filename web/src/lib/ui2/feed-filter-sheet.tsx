@@ -364,7 +364,7 @@ export function FeedFilterSheet({
             <Chip
               key={topic.id}
               testId={`${testId}-topic-${topic.name}`}
-              node={node === undefined ? undefined : { path: `${node.path}.topic.chip`, key: topic.name }}
+              node={node === undefined ? undefined : { path: `${node.path}.topic.tag`, key: topic.name }}
               selected={staged.topic?.id === topic.id}
               onClick={() => set({ topic: staged.topic?.id === topic.id ? null : topic })}
             >

@@ -178,10 +178,9 @@ const FROM = "feed";
 /**
  * A comment, a person or a topic, as its kind's own feed card (FeedKinds.md;
  * FeedCommentShapes, FeedProfileShapes, FeedTagShapes) — the same cards
- * History draws, unchanged. The comment card is registered on the feed
- * (`feed.commentCard`); the profile and tag cards are drawn but UNREGISTERED
- * on the feed, so they wear their evident paths (`feed.profileCard`,
- * `feed.tagCard`, as History's) and are reported for registration.
+ * History draws, unchanged, each wearing its registered feed node
+ * (`feed.commentCard`, `feed.profileCard`, `feed.tagCard`; FeedKinds, round 23),
+ * keyed by the record's id as History's are.
  *
  * The tag card's why-line stands only where the tag reaches the reader
  * through someone, and no field carries whom yet (FC-G9's contract delta,

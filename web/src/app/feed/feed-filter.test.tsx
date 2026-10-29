@@ -381,9 +381,9 @@ describe("the feed filter", () => {
       server.use(...rankedFeed([post("p1")], reads()), heldTopics(), meHandler());
       renderFeed();
       await openSheet();
-      const salt = await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps"));
-      const tide = within(sheet()).getByTestId(byNode("feed.filterSheet.topic.chip", "tidepools"));
-      expect(within(sheet()).queryByTestId(byNode("feed.filterSheet.topic.chip", "harbour"))).toBeNull();
+      const salt = await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.tag", "saltmaps"));
+      const tide = within(sheet()).getByTestId(byNode("feed.filterSheet.topic.tag", "tidepools"));
+      expect(within(sheet()).queryByTestId(byNode("feed.filterSheet.topic.tag", "harbour"))).toBeNull();
       expect(salt).toHaveTextContent("#saltmaps");
       fireEvent.click(salt);
       fireEvent.click(tide);
@@ -592,7 +592,7 @@ describe("the feed filter", () => {
       renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       await openSheet();
-      fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps")));
+      fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.tag", "saltmaps")));
       done();
       await waitFor(() => expect(r.ranks).toHaveLength(2));
       expect(r.ranks[1]!.topic).toBe("t-salt");
@@ -654,14 +654,14 @@ describe("the feed filter", () => {
       await openSheet();
       // Staged, never applied: Newest, and the topic on.
       fireEvent.click(within(sheet()).getByRole("button", { name: "Newest" }));
-      fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps")));
+      fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.tag", "saltmaps")));
       fireEvent.click(within(sheet()).getByTestId(byNode("feed.filterSheet.topic.allTopics")));
       first.unmount();
       renderFeed();
       await waitFor(() => expect(sheet().open).toBe(true));
       expect(within(sheet()).getByRole("button", { name: "Newest" })).toHaveAttribute("aria-pressed", "true");
       expect(
-        await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps")),
+        await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.tag", "saltmaps")),
       ).toHaveAttribute("aria-checked", "true");
       // The feed behind it is what it was: the staged filter never applied.
       expect(trigger()).toHaveTextContent(/^Posts$/);

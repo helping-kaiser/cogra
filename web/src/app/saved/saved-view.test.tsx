@@ -281,11 +281,11 @@ describe("SavedScreen — a feed of kept things", () => {
     expect(screen.getByTestId("saved-comment-c1-head")).toHaveAttribute("href", "/posts/p1?from=saved");
     expect(screen.getByTestId("saved-comment-c1-link")).toHaveAttribute("href", "/posts/p1?comment=c1&from=saved");
     // Its comment glyph: the same landing with the reply composer aimed at it.
-    const reply = screen.getByTestId("saved-comment-c1-reply");
+    const reply = screen.getByTestId(byNode("saved.commentCard.actionRow.reply", "c1"));
     expect(reply).toHaveAttribute("href", "/posts/p1?comment=c1&from=saved&reply=1");
     expect(reply).toHaveAccessibleName("Reply to @tobias");
     // Its row spreads across the card, as the post card's does (CommentCard.jsx).
-    expect(screen.getByTestId("saved-comment-c1-affordances").className).toContain("justify-between");
+    expect(screen.getByTestId(byNode("saved.commentCard.actionRow", "c1")).className).toContain("justify-between");
     expect(screen.getByTestId("saved-person-u3-link")).toHaveAttribute("href", "/u/mira?from=saved");
   });
 
