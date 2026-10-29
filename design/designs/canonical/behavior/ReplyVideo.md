@@ -25,3 +25,9 @@ ALWAYS a video takes one description for the whole clip and its cover takes none
 WHEN tap the video's remove control -> the video leaves AND the composer is words again
 
 ALWAYS the web takes the video state unchanged, its file dialog and drop path playing the picker's part
+
+WHEN a photos-app batch holds more than one video GIVEN nothing is in the tray and the batch holds no picture -> the batch's first video becomes the whole comment AND each other video is refused with A comment carries one video. AND NEVER a later clip replaces the first
+
+WHEN a video is dropped GIVEN a clip is staged -> the clip is refused with A comment carries one video. AND NEVER the file joins the composer
+
+WHEN tap Remove it on a refused clip -> the refusal leaves the composer AND the staged clip stays

@@ -2,7 +2,7 @@
 
 ALWAYS the posts view lists the person's posts as post cards, never as chronicle entries
 
-ALWAYS the list below the tab row reads Nothing here yet., the line alone, GIVEN the person has published no post
+ALWAYS profile.posts.empty below profile.tabRow reads Nothing here yet., the line alone, GIVEN the person has published no post
 
 ALWAYS at most one clip plays in the posts view, by the feed's stage law
 
@@ -10,19 +10,19 @@ WHEN scroll settles at the posts view's hard top GIVEN a qualifying clip exists 
 
 WHEN an overscroll bounce settles back at the posts view's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in the posts view's order
 
-ALWAYS the header block above the tab row stands unchanged in every tab view, and only the list below the tab row changes
+ALWAYS the header block above profile.tabRow stands unchanged in every tab view, and only the list below profile.tabRow changes
 
 ALWAYS the ⋮ closes the actions row and holds the whole profile menu, as the profile's own page does
 
 ALWAYS the header bar carries the way back alone, titled with the person's handle
 
-WHEN tap the Comments tab -> the person's comments stand below the tab row AND the header above stays as it was
+WHEN tap profile.tabRow.commentsTab -> the person's comments stand below profile.tabRow AND the header above stays as it was
 
-WHEN tap the Everything tab -> the person's chronicle stands below the tab row AND the header above stays as it was
+WHEN tap profile.tabRow.everythingTab -> the person's chronicle stands below profile.tabRow AND the header above stays as it was
 
-WHEN tap the Posts tab -> NEVER anything changes
+WHEN tap profile.tabRow.postsTab -> NEVER anything changes
 
-WHEN tap the author chip on one of the person's own cards -> NEVER anything changes
+WHEN tap profile.posts.card.authorChip on one of the person's own cards -> NEVER anything changes
 
 WHEN tap the ⋮ in the actions row -> the profile's menu opens over the page
 
@@ -50,10 +50,10 @@ WHEN tap a card's media GIVEN it is not a portrait clip and the profile is the r
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 
-ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author chip, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the search from Explore mid-query and Back to with the tag's name from a tag's page
+ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the search from Explore mid-query and Back to with the tag's name from a tag's page
 
 ALWAYS the back arrow reads Back to feed and leads to the feed GIVEN the profile was entered with no history behind it
 
 WHEN pull down GIVEN the posts view stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
 
-ALWAYS the bottom bar keeps lit the slot of the root the profile was opened from, Feed from the feed
+ALWAYS profile.bottomBar keeps lit the slot of the root the profile was opened from, profile.bottomBar.feedSlot from the feed

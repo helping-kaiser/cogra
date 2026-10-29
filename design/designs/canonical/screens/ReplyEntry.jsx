@@ -33,9 +33,18 @@
    have comments of their own (jakob 2026-10-02), so in their reading the
    thread holds only others': the foot's face is @juno's, the canvas's
    applicant, and @sol's comment is someone else's — no `Edit`, and its ⋮
-   opens `CommentMenu`. */
-export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"], default: "member" } };
-export const VALS = `lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", memberShown: this.props.reader === "applicant" ? "none" : "flex", applicantShown: this.props.reader === "applicant" ? "flex" : "none"`;
+   opens `CommentMenu`.
+
+   REGISTERED under the `postDetail` prefix (round 27, seam 252): the thread at
+   rest is the post's detail with its sheet raised, named as `CommentMenu`
+   names it — the detail beneath, the sheet `threadSheet`, each top-level
+   comment `commentCard` keyed by its author. @sol's two readings are the
+   `reader` chip's copies of one card. THE `pick` CHIP draws a kept pick on
+   @tobias's comment (`PickCopies`), adding the stance control's `pending`
+   line to `threadSheet.commentCard`. */
+export const NODE = "postDetail";
+export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"], default: "member" }, ...PICK_CHIP };
+export const VALS = `lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", memberShown: this.props.reader === "applicant" ? "none" : "flex", applicantShown: this.props.reader === "applicant" ? "flex" : "none", ${PICK_VALS}`;
 
 export function Screen() {
   return (
@@ -45,6 +54,8 @@ export function Screen() {
         footOpacity="{{lockOpacity}}"
         replyOpacity="{{lockOpacity}}"
         shown={{ member: "{{memberShown}}", applicant: "{{applicantShown}}" }}
+        pick
+        node="threadSheet"
       />
       <div style={{ display: "{{lockedLine}}" }}>
         <Snackbar message="You can comment once you're in." offset={88} />

@@ -371,6 +371,36 @@ function JoinPrivacyNotice() {
 }
 
 /* The feed column: full-width rounded cards, 8px of surface as the seam. */
+/* THE KEPT PICK ON EVERY HOST (round 27, seam 252, item 1). The stance
+   control's `pending` line — `Waiting for your key`, or `Waiting for your
+   review` once the key is back and the kept picks' review waits — stands
+   wherever the control stands, so every host that registers the control draws
+   it once: a board's `pick` chip draws one card three times, one copy shown at
+   a time — `none` as the board always drew it, `key` and `review` with a pick
+   kept on it (`PadPending`'s +0.10 / +0.10). The card sits directly in each
+   copy, so it keeps its own key (ruling 39) and the copies add only the
+   control's `pending` to the registry. `draw` is handed the copy's stance
+   props. The anatomy is `PadPending`'s and `PadPendingReview`'s on the feed;
+   nothing else about the host changes. */
+const PICK_CHIP = { pick: { editor: "enum", options: ["none", "key", "review"], default: "none" } };
+const PICK_VALS = `pickNone: this.props.pick === "none" ? "contents" : "none", pickKey: this.props.pick === "key" ? "contents" : "none", pickReview: this.props.pick === "review" ? "contents" : "none"`;
+const KEPT_PICK = { pDirected: 0.1, pInterest: 0.1 };
+function PickCopies({ draw }) {
+  return (
+    <>
+      <div style={{ display: "{{pickNone}}" }} data-node-chip="pick" data-node-key="none">
+        {draw({})}
+      </div>
+      <div style={{ display: "{{pickKey}}" }} data-node-chip="pick" data-node-key="key">
+        {draw({ stancePendingPick: KEPT_PICK })}
+      </div>
+      <div style={{ display: "{{pickReview}}" }} data-node-chip="pick" data-node-key="review">
+        {draw({ stancePendingPick: KEPT_PICK, stancePendingReview: true })}
+      </div>
+    </>
+  );
+}
+
 function FeedList({ children }) {
   return (
     <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 0 0 0" }}>
@@ -2718,10 +2748,30 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    addition. The comment menus and the removal confirm are raised OVER the
    sheet, never inside it, so they keep their own names beside it
    (`postDetail.menuSheet` — jakob's item 64: one path for every menu on the
-   detail, told apart by board — and `postDetail.dialog`). A board that names
-   the sheet draws one reader, so the `shown` pair stays unnamed. */
-function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, node }) {
+   detail, told apart by board — and `postDetail.dialog`).
+
+   THE PATH NAMES THE SHEET, NOT THE HOST IT IS RAISED OVER (round 27, seam
+   252, item 5). The thread is drawn once — `ReplyEntry`, where every host's
+   comment count lands in the graph, the feed's, History's, Saved's, a
+   profile's posts — so it is `postDetail.threadSheet` wherever it is raised,
+   and what is raised from inside it is the detail's too: a comment's menu
+   `postDetail.menuSheet`, its terms `postDetail.licenseSheet`
+   (`CommentLicense`), its removal `postDetail.dialog`. Item 64's reasoning,
+   one step on. A sheet a host's OWN card raises — the card's ⋮ and the rows it
+   opens — is drawn over that host and takes its prefix (`feed.menuSheet`,
+   `feed.licenseSheet`, `FeedPostLicense`).
+
+   A BOARD THAT NAMES THE SHEET AND DRAWS BOTH READERS (`ReplyEntry`, round 27)
+   marks the `shown` pair as its `reader` chip's copies: @sol's comment is one
+   card in two readings, so each copy names it `commentCard` under its own
+   key, `sol` (ruling 39).
+
+   `pick` DRAWS A KEPT PICK ON THE FIRST COMMENT (round 27, seam 252): given,
+   @tobias's card stands in `PickCopies`, so the board's `pick` chip adds the
+   stance control's `pending` line to `threadSheet.commentCard`. */
+function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, pick = false, node }) {
   const card = node && "commentCard";
+  const readerCopy = (value) => (node ? { "data-node-chip": "reader", "data-node-key": value } : null);
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
       <CommentCard
@@ -2747,29 +2797,33 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
       onEdit={removed ? undefined : () => {}}
       menuItems={removed ? [] : OWN_THREAD_MENU}
       redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
-      node={shown ? undefined : card}
+      node={card}
     />
+  );
+  const tobias = (stance) => (
+    <CommentCard
+      node={card}
+      author={TOBIAS}
+      content={TOBIAS_COMMENT}
+      timestamp="1h"
+      bundle={mkBundle(0.1, 0.1)}
+      {...stance}
+      onReply={() => {}}
+      replyOpacity={replyOpacity}
+      replyCount={2}
+      onOpenReplies={landed ? undefined : () => {}}
+      replies={landed ? TOBIAS_REPLIES : []}
+      topics={["glovebox", "coastroad"]}
+      references={1}
+      license={{ attribution: 0, provenance: 0 }}
+      menuItems={CARD_MENU}
+    >
+      {landed ? settledReply : null}
+    </CommentCard>
   );
   return (
     <CommentsSheet scrolledBy={scrolledBy} footOpacity={footOpacity} shown={shown} node={node}>
-      <CommentCard
-        node={card}
-        author={TOBIAS}
-        content={TOBIAS_COMMENT}
-        timestamp="1h"
-        bundle={mkBundle(0.1, 0.1)}
-        onReply={() => {}}
-        replyOpacity={replyOpacity}
-        replyCount={2}
-        onOpenReplies={landed ? undefined : () => {}}
-        replies={landed ? TOBIAS_REPLIES : []}
-        topics={["glovebox", "coastroad"]}
-        references={1}
-        license={{ attribution: 0, provenance: 0 }}
-        menuItems={CARD_MENU}
-      >
-        {landed ? settledReply : null}
-      </CommentCard>
+      {pick ? <PickCopies draw={tobias} /> : tobias({})}
       {/* The veiled comment sits SECOND, where the frame still shows it
           whole: the thread is taller than the sheet, and a state drawn
           below the fold is a state nobody can check. The whole body — the
@@ -2793,12 +2847,12 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
       />
       {shown ? (
         <>
-          <li style={{ display: shown.member, flexDirection: "column", listStyle: "none" }}>
+          <li style={{ display: shown.member, flexDirection: "column", listStyle: "none" }} {...readerCopy("member")}>
             <ul style={NESTED_LIST}>{ownSol}</ul>
           </li>
-          <li style={{ display: shown.applicant, flexDirection: "column", listStyle: "none" }}>
+          <li style={{ display: shown.applicant, flexDirection: "column", listStyle: "none" }} {...readerCopy("applicant")}>
             <ul style={NESTED_LIST}>
-              <CommentCard {...solComment} menuItems={CARD_MENU} />
+              <CommentCard {...solComment} menuItems={CARD_MENU} node={card} />
             </ul>
           </li>
         </>
@@ -4491,7 +4545,7 @@ const commentTarget = (parent, kind) =>
           cover: parent.media?.[0]?.src,
         };
 
-function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, node }) {
+function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, stancePendingPick, stancePendingReview, node }) {
   const target = commentTarget(parent, parentKind);
   return (
     <CommentCard
@@ -4508,6 +4562,8 @@ function CommentFeedCard({ author, content, timestamp, parent, parentKind = "pos
       onOpenTarget={() => {}}
       onOpen={() => {}}
       bundle={bundle}
+      stancePendingPick={stancePendingPick}
+      stancePendingReview={stancePendingReview}
       topics={topics}
       references={references}
       score={score}
