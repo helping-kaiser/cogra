@@ -8,8 +8,9 @@
 // nowhere.
 //
 // REGISTERED as `YourTopics` (prefix `yourTopics`, design round 23); a row
-// is `heldTopic`, keyed by the topic's name without #. The empty and error
-// states are not drawn, so their tags stay unregistered.
+// is `heldTopic`, keyed by the topic's name without #, and the empty state
+// `empty` (round 24). The error states are not drawn, so their tags stay
+// unregistered.
 
 package com.cogra.feature.explore
 
@@ -97,6 +98,8 @@ fun YourTopicsScreen(
             state.topics.isEmpty() -> EmptyState(
                 testTag = (YOUR_TOPICS / "empty").tag,
                 title = stringResource(R.string.your_topics_empty),
+                // YourTopics draws the empty state once per `list` value, keyed by it.
+                node = (YOUR_TOPICS / "empty").keyed("empty"),
                 modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x2),
             )
             else -> LazyColumn(state = list, modifier = Modifier.fillMaxSize().padding(top = Space.x1)) {
