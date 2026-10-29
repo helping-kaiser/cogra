@@ -58,8 +58,8 @@ internal fun TopicEntry(
     /**
      * The composer's own drawing (`ComposeDetailsBody`): the block headed by
      * `FieldLabel` `Tags`, 6 apart, and each staged tag a `TopicRemovable`
-     * pill. The edit, reply and comment surfaces keep theirs until their own
-     * boards are conformed.
+     * pill — the composer's and the post and comment edits'; the reply keeps
+     * its own until its board is conformed.
      */
     staged: Boolean = false,
     /**

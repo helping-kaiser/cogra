@@ -637,6 +637,8 @@ private fun TagsAndReferences(state: PostEditUiState, actions: PostEditActions) 
             testTagPrefix = "post_edit",
             node = tags,
             wearsRoot = false,
+            // The edit's tags are the composer's staged pills (`TopicRemovable`, EditCompose).
+            staged = true,
             onTagInputChange = actions.onTagInputChange,
             onAddTag = actions.onAddTag,
             onRemoveTag = actions.onRemoveTag,
@@ -663,6 +665,8 @@ private fun TagsAndReferences(state: PostEditUiState, actions: PostEditActions) 
             testTagPrefix = "post_edit",
             node = references,
             wearsRoot = false,
+            // A standing citation is the composer's staged row (`StagedReference`, EditCompose).
+            staged = true,
             onOpenFinder = actions.onOpenFinder,
             onCloseFinder = actions.onCloseFinder,
             onFinderQueryChange = actions.onFinderQueryChange,
