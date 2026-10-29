@@ -75,6 +75,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.CollapsingTop
@@ -152,6 +154,8 @@ fun InvitesRoute(
         }
     }
     LaunchedEffect(state.notMember) { if (state.notMember) onNotMember() }
+    // A restore taken on its own screen reaches the kept approvals on the way back.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onResume() }
     val copy: (String) -> Unit = { url ->
         scope.launch {
             clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(url, url)))
@@ -494,6 +498,7 @@ private fun LazyListScope.applications(
             padState = padState,
             approvalPad = approvalPad,
             actions = actions,
+            keyElsewhere = state.keyAbsent && application.id in state.keptApprovals,
             modifier = Modifier.focusRequester(focus),
         )
     }
@@ -584,6 +589,8 @@ private fun ApplicationRow(
     padState: ApprovalPadState?,
     approvalPad: () -> ApprovalPad?,
     actions: InvitesActions,
+    /** A vouch kept for this application waits on the key (Invites.md:87). */
+    keyElsewhere: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val handle = "@${application.handle}"
@@ -595,7 +602,15 @@ private fun ApplicationRow(
         testTag = "invites_application_${application.id}",
         second = {
             ContentRowSecond(
-                stringResource(if (application.approvable) R.string.invites_ready else R.string.invites_not_registered),
+                stringResource(
+                    when {
+                        // A kept approval with the key elsewhere reads the kept pick's
+                        // own line (Invites.md:87); back, the row reads as any row (:89, :91).
+                        keyElsewhere -> R.string.invites_waiting_key
+                        application.approvable -> R.string.invites_ready
+                        else -> R.string.invites_not_registered
+                    },
+                ),
             )
         },
         trailing = ageLadder(application.createdAt, now),

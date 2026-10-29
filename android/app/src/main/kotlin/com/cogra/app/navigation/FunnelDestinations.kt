@@ -4,6 +4,8 @@
 package com.cogra.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraphBuilder
@@ -20,6 +22,7 @@ import com.cogra.feature.onboarding.InviteEntryRoute
 import com.cogra.feature.onboarding.KeyCeremonyRoute
 import com.cogra.feature.settings.ChangeEmailLinkedRoute
 import com.cogra.feature.settings.DeleteAccountConfirmedRoute
+import kotlinx.coroutines.launch
 
 /** The entry funnel: the invite entry, the application, sign-in and its reset, the key's two ceremonies. */
 internal fun NavGraphBuilder.funnel(shell: ShellScope) = with(shell) {
@@ -77,15 +80,29 @@ internal fun NavGraphBuilder.funnel(shell: ShellScope) = with(shell) {
             onBack = { navController.popBackStack() },
         )
     }
-    composable<Restore> {
-        RestoreRoute(
-            onRestored = {
-                navController.report(actorRestoredKey, true)
+    composable<Restore> { RestoreDestination() }
+}
+
+/**
+ * The key's restore. PICKS KEPT PENDING WAIT: their review opens over the
+ * surface the restore returns to, under the same snackbar, and nothing signs
+ * on its own (Restore.md:39).
+ */
+@Composable
+private fun ShellScope.RestoreDestination() {
+    val keptPicks: KeptPicksDoorViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
+    RestoreRoute(
+        onRestored = {
+            navController.report(actorRestoredKey, true)
+            scope.launch {
+                val waiting = keptPicks.picksWaiting()
                 navController.popBackStack()
-            },
-            onBack = { navController.popBackStack() },
-        )
-    }
+                if (waiting) navController.navigate(KeptPicks)
+            }
+        },
+        onBack = { navController.popBackStack() },
+    )
 }
 
 /** The mailed links' landings, each an App Link on the web origin. */

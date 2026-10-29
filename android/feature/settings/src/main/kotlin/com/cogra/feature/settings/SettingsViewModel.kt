@@ -22,7 +22,9 @@ import com.cogra.domain.settings.SensitiveContentChoice
 import com.cogra.domain.settings.SettingsAccount
 import com.cogra.domain.settings.SettingsRepository
 import com.cogra.domain.settings.UNVEIL_LEVEL
+import com.cogra.domain.stance.KeptPickStore
 import com.cogra.domain.stance.StanceInputMode
+import com.cogra.domain.stance.opinions
 import com.cogra.domain.store.DevicePreferences
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.ThemeChoice
@@ -53,6 +55,8 @@ data class SettingsUiState(
     val account: SettingsAccount? = null,
     /** Whether this phone holds the account's actor key. */
     val actorKeyHere: Boolean = false,
+    /** How many plain picks wait unsigned for their review (Settings.md:75, KeptPicksReview.md:37). */
+    val keptPicks: Int = 0,
     /** The moment the ages read from — the read's own. */
     val now: Instant = Instant.EPOCH,
     val theme: ThemeChoice = ThemeChoice.AUTO,
@@ -167,6 +171,8 @@ class SettingsViewModel @Inject constructor(
     private val deletionState: AccountDeletionState,
     private val deviceLock: DeviceLock,
     private val readerDefaults: ReaderDefaults,
+    /** The picks kept while the key was elsewhere: the Key backup group's last row (Settings.md:75). */
+    private val keptPicks: KeptPickStore,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsUiState())
@@ -179,6 +185,9 @@ class SettingsViewModel @Inject constructor(
     internal var clock: () -> Instant = Instant::now
 
     init {
+        viewModelScope.launch {
+            keptPicks.watch().collect { kept -> _state.update { it.copy(keptPicks = kept.opinions().size) } }
+        }
         viewModelScope.launch {
             identity.stanceInputMode.collect { mode -> _state.update { it.copy(stanceInputMode = mode) } }
         }

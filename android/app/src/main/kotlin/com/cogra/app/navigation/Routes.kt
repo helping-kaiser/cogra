@@ -158,6 +158,17 @@ data class AvatarFlow(val uri: String, val fromEdit: Boolean)
 @Serializable
 data class Invites(val from: String? = null)
 
+/** Invites opened from the kept picks' review or seal: its back reads `Back to Kept picks` (Invites.md:111). */
+internal const val INVITES_FROM_KEPT_PICKS = "kept-picks"
+
+/**
+ * The kept picks' review and its seal (KeptPicksReview, KeptPicksSeal): a task
+ * flow over whatever opened it — a kept pick's face, the restore, the Key
+ * backup group's row — to which every way out returns.
+ */
+@Serializable
+data object KeptPicks
+
 /**
  * The ask link's landing (`VouchAsk`; auth.md "Link URLs": `/vouch/<link-id>`).
  * A root-level destination, like the mailed links' landings: it is reached

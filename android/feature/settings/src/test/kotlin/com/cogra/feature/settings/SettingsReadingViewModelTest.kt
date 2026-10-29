@@ -24,6 +24,7 @@ import com.cogra.domain.testing.FakeExploreDeviceStore
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.google.common.truth.Truth.assertThat
@@ -72,6 +73,7 @@ class SettingsReadingViewModelTest {
         AccountDeletionState(ScriptedAccountDeletionRepository()),
         deviceLock,
         ReaderDefaults(readerDefaults, tokens),
+        InMemoryKeptPickStore(),
     ).also {
         it.clock = { NOW }
         it.refresh()

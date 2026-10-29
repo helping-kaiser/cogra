@@ -19,6 +19,7 @@ import com.cogra.domain.map
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StanceKind
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
@@ -90,6 +91,17 @@ class StanceRepositoryImpl @Inject constructor(
     // The node each target's last bundle read named — what a stance or
     // severance signed from that read must point at (Intent.kt).
     private val graphIds = ConcurrentHashMap<StanceTarget, String>()
+
+    // What the probe learned, as a kept pick names it — no read of its own.
+    override suspend fun kindOf(target: StanceTarget): StanceKind? = when (target) {
+        is StanceTarget.Topic -> StanceKind.TOPIC
+        is StanceTarget.Node -> when (kinds[target.id]) {
+            TargetKind.POST -> StanceKind.POST
+            TargetKind.COMMENT -> StanceKind.COMMENT
+            TargetKind.USER -> StanceKind.PERSON
+            null -> null
+        }
+    }
 
     override suspend fun targetGraphId(target: StanceTarget): Outcome<String> =
         graphIds[target]?.let { Outcome.Success(it) }
@@ -209,10 +221,18 @@ class StanceRepositoryImpl @Inject constructor(
         name: String,
         pick: Optional<StancePickInput?>,
         includePending: Boolean,
-    ): Outcome<StanceBundleFields> = when (val read = askTopic(name, pick, includePending)) {
-        is Outcome.Failed -> Outcome.Failed(read.cause)
-        is Outcome.Refused -> Outcome.Refused(read.errors)
-        is Outcome.Success -> read.value?.let { it.bundle.orRefusal() } ?: notFound()
+    ): Outcome<StanceBundleFields> {
+        // The topic's own root. `hashtag(name:)` resolves any well-formed
+        // name — a Type is anchored vacuously, so a topic nobody has tagged
+        // yet still answers — and a null here means the name is one the
+        // substrate cannot carry, not an empty bundle.
+        val read = client.query(HashtagStanceQuery(name, pick, includePending)).fetch()
+            .map { data -> data.hashtag?.let { RootAnswer(it.viewerStance?.stanceBundleFields) } }
+        return when (read) {
+            is Outcome.Failed -> Outcome.Failed(read.cause)
+            is Outcome.Refused -> Outcome.Refused(read.errors)
+            is Outcome.Success -> read.value?.let { it.bundle.orRefusal() } ?: notFound()
+        }
     }
 
     /**
@@ -246,19 +266,6 @@ class StanceRepositoryImpl @Inject constructor(
         kinds.remove(id)
         return notFound()
     }
-
-    /**
-     * The topic's own root. `hashtag(name:)` resolves any well-formed
-     * name — a Type is anchored vacuously, so a topic nobody has tagged
-     * yet still answers — and a null here means the name is one the
-     * substrate cannot carry, not an empty bundle.
-     */
-    private suspend fun askTopic(
-        name: String,
-        pick: Optional<StancePickInput?>,
-        includePending: Boolean,
-    ): Outcome<RootAnswer?> = client.query(HashtagStanceQuery(name, pick, includePending)).fetch()
-        .map { data -> data.hashtag?.let { RootAnswer(it.viewerStance?.stanceBundleFields) } }
 
     /** One root's answer, or null where that root does not hold the id. */
     private suspend fun ask(

@@ -46,6 +46,7 @@ import com.cogra.domain.ApplicationView
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.UserProfile
 import com.cogra.domain.identity.SecurityNotices
+import com.cogra.domain.stance.StancePair
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
@@ -102,6 +103,8 @@ class CograNavGraphTest {
     @Inject lateinit var reveals: com.cogra.domain.content.SensitiveReveals
 
     @Inject lateinit var readerDefaults: com.cogra.domain.testing.InMemoryReaderDefaultStore
+
+    @Inject lateinit var keptPicks: com.cogra.domain.testing.InMemoryKeptPickStore
 
     private lateinit var navController: TestNavHostController
 
@@ -166,9 +169,9 @@ class CograNavGraphTest {
         }
     }
 
-    private fun waitFor(matcher: SemanticsMatcher) {
+    private fun waitFor(matcher: SemanticsMatcher, unmerged: Boolean = false) {
         compose.waitUntil(timeoutMillis = 30_000) {
-            compose.onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodes(matcher, useUnmergedTree = unmerged).fetchSemanticsNodes().isNotEmpty()
         }
     }
 
@@ -1211,6 +1214,54 @@ class CograNavGraphTest {
 
     private fun stanceTarget() =
         compose.onNodeWithTag("feed.card.actionRow.stance.anchor", useUnmergedTree = true)
+
+    private fun keepAPick() = runBlocking {
+        keptPicks.keep(
+            com.cogra.domain.stance.StanceTarget.Node("p1"),
+            StancePair(0.3, 0.2),
+            com.cogra.domain.stance.KeptFamily.OPINION,
+            com.cogra.domain.stance.StanceKind.POST,
+        )
+    }
+
+    @Test
+    fun padPendingReview11_aKeptPicksFaceWithTheKeyHereOpensTheReview() {
+        // The face's tap opens the kept picks' review, never a pad, never the key notice.
+        keepAPick()
+        feedWithAPost()
+        // The card's opener merges its body, so the line is read off the unmerged tree.
+        waitFor(hasTestTag("feed.card.actionRow.stance.pending"), unmerged = true)
+
+        stanceTarget().performClick()
+        compose.waitForIdle()
+
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<KeptPicks>()).isTrue()
+        waitForTag("keptPicks.header")
+        // The header back closes the review to where it was opened from, every pick kept.
+        compose.onNodeWithTag("keptPicks.header.back").performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+        assertThat(keptPicks.picks.value).hasSize(1)
+    }
+
+    @Test
+    fun settings83_theKeyBackupGroupsRowReopensTheReview() {
+        keepAPick()
+        signIn()
+        identity.seed = actor.seed()
+        account.profile = member()
+        render()
+        waitFor(barSlot("profile"))
+        compose.onNode(barSlot("profile")).performClick()
+        waitForTag("profile.band.gear")
+        compose.onNodeWithTag("profile.band.gear").performClick()
+        waitForTag("settings.backup.kept")
+
+        compose.onNodeWithTag("settings.backup.kept").performScrollTo().performClick()
+        compose.waitForIdle()
+
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<KeptPicks>()).isTrue()
+    }
 
     @Test
     fun aSignedStanceConfirmsOnTheShellsOwnSnackbar() {

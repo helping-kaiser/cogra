@@ -26,6 +26,7 @@ import com.cogra.domain.testing.FakeExploreDeviceStore
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.google.common.truth.Truth.assertThat
@@ -70,6 +71,8 @@ class SettingsViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private val kept = InMemoryKeptPickStore()
+
     private suspend fun signedIn() = tokens.save(AuthTokens("a", "r", "u1"))
 
     private fun viewModel() = SettingsViewModel(
@@ -82,6 +85,7 @@ class SettingsViewModelTest {
         deletionState,
         deviceLock,
         ReaderDefaults(InMemoryReaderDefaultStore(), tokens),
+        kept,
     ).also {
         it.clock = { NOW }
         it.refresh()

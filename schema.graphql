@@ -2355,8 +2355,9 @@ type NetworkParameter {
 
 """
 Every graph-backed thing with an identity and a lifecycle
-(api-spec.md "Identity and actor interfaces"). Coverage grows with
-the slices; slice 2 carries the content nodes.
+(api-spec.md "Identity and actor interfaces"). Posts, comments and
+users implement it today; further node types join as their slices
+land.
 
 The `duplicated_attributes` allow answers a named clippy false
 positive (rust-clippy #12537): the lint misfires on derive-helper
@@ -3317,13 +3318,13 @@ type Query {
 	"""
 	hashtag(name: String!): Hashtag
 	"""
-	Any node by its L2 id, typed. Coverage grows with the slices —
-	content nodes resolve here today; null for an unknown id.
+	Any node by its L2 id, typed — a post, a comment or a user, the
+	types that implement `Node`; null for an unknown id.
 	"""
 	node(id: UUID!): Node
 	"""
-	Batch node lookup — order preserved; an unknown id yields null
-	in its slot.
+	Batch form of `node` — nodes of any type at once, order
+	preserved; an unknown id yields null in its slot.
 	"""
 	nodes(ids: [UUID!]!): [Node]!
 	"""

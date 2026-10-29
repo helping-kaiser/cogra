@@ -385,18 +385,18 @@ impl Query {
             .map(|name| HashtagType { name }))
     }
 
-    /// Any node by its L2 id, typed. Coverage grows with the slices —
-    /// content nodes resolve here today; null for an unknown id.
+    /// Any node by its L2 id, typed — a post, a comment or a user, the
+    /// types that implement `Node`; null for an unknown id.
     async fn node(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<Node>> {
         let pool = ctx.data::<PgPool>()?;
-        Ok(crate::nodes::resolve_content(pool, id)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?
-            .map(typed_node))
+        Ok(resolve_nodes(pool, &[id])
+            .await?
+            .remove(&id)
+            .map(Resolved::into_node))
     }
 
-    /// Batch node lookup — order preserved; an unknown id yields null
-    /// in its slot.
+    /// Batch form of `node` — nodes of any type at once, order
+    /// preserved; an unknown id yields null in its slot.
     #[graphql(complexity = "ids.len() * child_complexity + 1")]
     async fn nodes(
         &self,
@@ -410,12 +410,10 @@ impl Query {
             )));
         }
         let pool = ctx.data::<PgPool>()?;
-        let resolved = crate::nodes::resolve_content_many(pool, &ids)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let resolved = resolve_nodes(pool, &ids).await?;
         Ok(ids
             .iter()
-            .map(|id| resolved.get(id).cloned().map(typed_node))
+            .map(|id| resolved.get(id).cloned().map(Resolved::into_node))
             .collect())
     }
 
@@ -1236,6 +1234,52 @@ fn search_page(
             )
         }));
     connection
+}
+
+/// Every node among `ids`, typed, in two round trips whatever the batch
+/// size: the content classes (`resolve_content_many`), then the user
+/// accounts in one read. The id spaces do not overlap — an actor id is
+/// never a content id — so each id lands in at most one class.
+///
+/// A user resolves exactly as `user(id:)` serves it (`kind == "user"`,
+/// no viewer session), so a deleted account reads as its husk through
+/// the `User` fields here too.
+async fn resolve_nodes(
+    pool: &PgPool,
+    ids: &[Uuid],
+) -> async_graphql::Result<HashMap<Uuid, Resolved>> {
+    let mut nodes: HashMap<Uuid, Resolved> = crate::nodes::resolve_content_many(pool, ids)
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .into_iter()
+        .map(|(id, content)| (id, Resolved::Content(content)))
+        .collect();
+    for identity in store::actor_identities_by_ids(pool, ids).await? {
+        if identity.kind == "user" {
+            nodes.insert(identity.id, Resolved::User(identity));
+        }
+    }
+    Ok(nodes)
+}
+
+/// A node the batch resolved, kept un-typed so a repeated id can be
+/// served twice (the `Node` values themselves are not `Clone`).
+#[derive(Clone)]
+enum Resolved {
+    Content(crate::nodes::ContentNode),
+    User(store::ActorIdentity),
+}
+
+impl Resolved {
+    fn into_node(self) -> Node {
+        match self {
+            Self::Content(content) => typed_node(content),
+            Self::User(identity) => Node::Profile(User {
+                identity,
+                viewer_session: None,
+            }),
+        }
+    }
 }
 
 /// A resolved content row as the `Node` union serves it.
