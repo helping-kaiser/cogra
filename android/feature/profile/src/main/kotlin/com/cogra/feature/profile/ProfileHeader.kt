@@ -22,11 +22,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -176,12 +178,14 @@ private fun FiguresRow(figures: List<Figure>, node: DataNode, modifier: Modifier
     Row(horizontalArrangement = Arrangement.spacedBy(FIGURES_GAP), modifier = modifier.dataNode(cell)) {
         figures.forEach { figure ->
             val own = cell / figure.node
-            Column(Modifier.dataNode(own)) {
+            // The number and the label share the figure's width (`display: flex;
+            // flex-direction: column` stretches both to the wider one).
+            Column(Modifier.width(IntrinsicSize.Max).dataNode(own)) {
                 Text(
                     text = figure.value.toString(),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.dataNode(own / "value"),
+                    modifier = Modifier.fillMaxWidth().dataNode(own / "value"),
                 )
                 Text(
                     text = figure.label,
@@ -189,7 +193,7 @@ private fun FiguresRow(figures: List<Figure>, node: DataNode, modifier: Modifier
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     softWrap = false,
-                    modifier = Modifier.dataNode(own / "label"),
+                    modifier = Modifier.fillMaxWidth().dataNode(own / "label"),
                 )
             }
         }
