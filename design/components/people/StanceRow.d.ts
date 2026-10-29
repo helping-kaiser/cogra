@@ -8,6 +8,12 @@ export interface StanceRowProps {
   handle?: string;
   /** A face; without one, `MonogramAvatar` draws the initials. */
   src?: string;
+  /**
+   * A deleted account's row: the reserved disc, `Deleted account` in the
+   * system's voice and no handle line (`ActorChip`'s law). Its placer names it
+   * `redactedRow`, keyed by the actor's id.
+   */
+  redacted?: boolean;
   pDirected?: number;
   pInterest?: number;
   /**

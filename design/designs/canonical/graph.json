@@ -2201,7 +2201,7 @@
     { "from": "ProfileStances", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to the profile whose figures row was tapped — the layer law: the state they left, exactly — and the label names it (readme §13, *The nav-noun sweep*): `Back to your profile` from the reader's own, `Back to the profile` from another's, the state the board draws" }] },
     { "from": "ProfileStances", "via": 2, "kind": "advance", "label": "On them", "to": [{ "terminal": "self", "case": "the inbound direction — On you on the reader's own page; held by no one, its empty line in the list's place (the list chip's empty)" }] },
     { "from": "ProfileStances", "via": 3, "kind": "advance", "label": "By them", "to": [{ "terminal": "self", "case": "the outbound direction — By you on the reader's own page; held by no one, its empty line in the list's place (the list chip's empty)" }] },
-    { "from": "ProfileStances", "via": 4, "kind": "advance", "label": "a person", "to": [{ "board": "ProfileOther", "case": "their profile" }] },
+    { "from": "ProfileStances", "via": 4, "kind": "advance", "label": "a person", "to": [{ "board": "ProfileOther", "case": "their profile" }, { "board": "ProfileDeleted", "case": "a deleted account's row — the deleted account's page, reached by structure that still points at it (round 27)" }] },
     { "from": "ProfileStances", "via": 6, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
     { "from": "ProfileStances", "via": 7, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
     { "from": "ProfileStances", "via": 8, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
