@@ -85,7 +85,7 @@ Where each sidecar's words come from:
   picks' review*): one batch, signed only from its seal; the × that drops
   a pick with no confirm and no undo, and the last drop's exit; leaving
   unsigned keeps every pick. And the kept-picks rulings (readme §13, *The
-  kept picks and the pads, ruled*): plain opinions only, the removed-mark
+  kept picks and the pads, ruled*): plain picks only, the removed-mark
   face, the severance said on its row with Sign as the confirmation, the
   write rule's `Not now` back to the review, the spoken drop, the anchor's
   `Waiting for your review` and the settings row's conditions.
@@ -214,7 +214,9 @@ And it checks nodes, against `nodes.json`:
   `FeedNewerVersion`; then the fabric-2 round's boards — `ReportConfirm`,
   `FeedPostMenu`, `HistoryHidden`, `TagPageHidden` and `DeleteLinkExpired`;
   then round 10's — `FeedPostLicense` and `FeedReportConfirm`; then round
-  11's — `PostLicense`, `CommentLicense` and `FeedSeenTail` —
+  11's — `PostLicense`, `CommentLicense` and `FeedSeenTail`; then round
+  23's sweep; then round 24's — `CommentRemoveConfirm`, `CommentRemoved`,
+  `FeedPostMenuOwn`, `FeedRemoveConfirm` and `FeedRemoved` —
   so far), plain words
   that spell one of its nodes fail: "the media row" on `ComposeDetails` is
   written `composeDetails.mediaRow`. The check knows a node by the words of a

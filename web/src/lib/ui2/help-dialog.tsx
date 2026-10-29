@@ -216,6 +216,17 @@ export const HELP_TOPICS = {
       "A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.",
     ],
   },
+  // THE PAD'S "?" SAYS ONLY WHAT ITS NOTICE DOES NOT (PadKeyAbsent.md, round
+  // 21; copy-voice, *The "?" dialogs*): the notice already says signing needs
+  // the key and that the recovery code restores it, so this keeps to where the
+  // key lives and what waits for the restore — in the browser's words.
+  yourKeyOnPad: {
+    title: "Your key",
+    paragraphs: [
+      "Your key lives where you made it or last restored it, never held by CoGra — nothing is signed in your name without it.",
+      "Your recovery code brings it here. A pick you keep waits on this browser until then, and you review every kept pick before it's signed.",
+    ],
+  },
   // Explore's results' "?" (copy-voice, *Searching*; re-voiced for the
   // unified sigil law, blessed jakob 2026-10-16).
   searching: {

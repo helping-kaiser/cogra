@@ -11,7 +11,6 @@
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
-        "ExploreComingSoon",
         "ExploreNone",
         "ExplorePerson",
         "ExploreSearch",
@@ -69,7 +68,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 61 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -85,7 +84,6 @@
         "CommentNotFound",
         "DeleteAccountCanceled",
         "Explore",
-        "ExploreComingSoon",
         "ExploreNone",
         "ExplorePerson",
         "ExploreSearch",
@@ -219,6 +217,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -244,7 +243,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 34 boards → ReplyEntry",
+        "start · «comment count» on 35 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -265,6 +264,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -553,6 +553,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -571,7 +572,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 26 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 27 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -586,6 +587,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -775,7 +777,6 @@
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
-        "ExploreComingSoon",
         "ExploreNone",
         "ExplorePerson",
         "ExploreSearch",
@@ -833,7 +834,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 61 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
         "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
@@ -849,7 +850,6 @@
         "CommentNotFound",
         "DeleteAccountCanceled",
         "Explore",
-        "ExploreComingSoon",
         "ExploreNone",
         "ExplorePerson",
         "ExploreSearch",
@@ -917,7 +917,6 @@
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
-        "ExploreComingSoon",
         "ExploreNone",
         "ExplorePerson",
         "ExploreSearch",
@@ -975,7 +974,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 61 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -991,7 +990,6 @@
         "CommentNotFound",
         "DeleteAccountCanceled",
         "Explore",
-        "ExploreComingSoon",
         "ExploreNone",
         "ExplorePerson",
         "ExploreSearch",
@@ -1059,7 +1057,6 @@
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
-        "ExploreComingSoon",
         "ExploreNone",
         "ExplorePerson",
         "ExploreSearch",
@@ -1117,7 +1114,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 61 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1131,7 +1128,6 @@
         "CommentNotFound",
         "DeleteAccountCanceled",
         "Explore",
-        "ExploreComingSoon",
         "ExploreNone",
         "ExplorePerson",
         "ExploreSearch",
@@ -1221,13 +1217,14 @@
         "ComposeDetailsWords",
         "EditCompose",
         "EditComposeUnchanged",
+        "EditComposeVideo",
         "ReplyCited",
         "ReplyCitedMany",
         "ReplySeal",
         "ReplySealComment"
       ],
       "steps": [
-        "start · «+ Cite something» on 14 boards → ReferencePicker",
+        "start · «+ Cite something» on 15 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → self — the pick stages in the composer's references — the row leaves the results for the staged section above them, wearing its ×, and the picker stays open for the next"
       ],
       "boards": [
@@ -1242,6 +1239,7 @@
         "ComposeDetailsWords",
         "EditCompose",
         "EditComposeUnchanged",
+        "EditComposeVideo",
         "ReplyCited",
         "ReplyCitedMany",
         "ReplySeal",
@@ -1548,6 +1546,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -1573,7 +1572,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 40 boards → ProfileOther",
+        "start · «author chip» on 41 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1595,6 +1594,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -1862,12 +1862,13 @@
         "CommentMenu",
         "CommentMenuOwn",
         "FeedPostMenu",
+        "FeedPostMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
         "RemoveMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 6 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 7 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1879,6 +1880,7 @@
         "CommentMenu",
         "CommentMenuOwn",
         "FeedPostMenu",
+        "FeedPostMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
         "RemoveMenu"
@@ -1940,6 +1942,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -1964,7 +1967,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» — to FeedEntry on 39 boards → FeedEntry",
+        "start · «Feed score» — to FeedEntry on 40 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1992,6 +1995,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -2418,7 +2422,7 @@
         "start · KeyElsewhere · 2 «Restore the key» → Restore",
         "Restore · 4 «Restore the key» → KeptPicksReview — key restored, with picks kept pending — the kept picks' review opens, the restore's snackbar riding in over it; they sign together, in one batch the reader looks over first",
         "KeptPicksReview · 3 «Sign them» → KeptPicksSeal — the standard seal, the kept picks its what-you-sign list",
-        "end · KeptPicksSeal · 4 «Sign the opinions» → back — signed, all together — back where the review was opened from, with the snackbar Signed 3 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone"
+        "end · KeptPicksSeal · 4 «Sign the picks» → back — signed, all together — back where the review was opened from, with the snackbar Signed 3 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone"
       ],
       "boards": [
         "KeyElsewhere",
@@ -5067,6 +5071,7 @@
     },
     "EditComposeVideo": {
       "flows": [
+        "cite-something",
         "edit-a-video-post"
       ],
       "endpoint": [
@@ -5113,15 +5118,6 @@
         "search-into-a-thread",
         "walk-your-topics"
       ]
-    },
-    "ExploreComingSoon": {
-      "flows": [
-        "publish-a-post",
-        "publish-a-vertical-video",
-        "publish-a-video",
-        "publish-words"
-      ],
-      "endpoint": []
     },
     "ExploreFilter": {
       "flows": [
@@ -5436,6 +5432,21 @@
         "cite-a-post",
         "hide-someone-from-the-feed",
         "read-a-posts-license"
+      ],
+      "endpoint": []
+    },
+    "FeedPostMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "FeedRemoved": {
+      "flows": [
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author"
       ],
       "endpoint": []
     },

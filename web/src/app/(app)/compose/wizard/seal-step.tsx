@@ -407,6 +407,7 @@ export function SealStep({
             <UploadStatusLine
               done={state.assets.length - failed}
               total={state.assets.length}
+              failedCount={video ? 1 : failed}
               failed
               message={
                 video

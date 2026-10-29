@@ -30,7 +30,7 @@
    review with every pick still in it.
 
    NO SEVERANCE STEP. A pick that nets its bundle to nothing said so on its
-   review row, and `Sign the opinions` is its confirmation (kept picks 3);
+   review row, and `Sign the picks` is its confirmation (kept picks 3);
    the seal raises no `SeveranceConfirm`. Mira's row here reads its pair and
    nothing more.
 
@@ -49,19 +49,24 @@
    amended): the review's line, `KeptApprovalLine`, under the acts card, with
    the door to Invites — the seal signs the picks and nothing else. The
    `approval` chip draws it. The wording is jakob's own, blessed (jakob
-   2026-10-05). */
+   2026-10-05).
+
+   REGISTERED under its own `keptPicksSeal` prefix (seam 248): `header`, the
+   card `acts` with one `actRow` per pick, the `approval` line with its
+   `open`, and the foot `foot` with `sign` and `back`. */
+export const NODE = "keptPicksSeal";
 export const PROPS = { approval: { editor: "enum", options: ["none", "waiting"], default: "none" } };
 export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none"`;
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="Leave — your picks are kept" stageLabel="Last step" help="How signing works" />
+      <WizardHeader title="What you sign" leaveLabel="Leave — your picks are kept" stageLabel="Last step" help="How signing works" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <ActsCard
+          node="acts"
           rows={KEPT_PICKS.map((pick) => ({
-            label: "Opinion",
-            countNoun: "opinion",
+            ...keptPickFamily(pick),
             value: (
               <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
                 <span
@@ -72,9 +77,9 @@ export function Screen() {
                     ...(pick.removed ? { fontWeight: 400, color: "var(--text-secondary)" } : null),
                   }}
                 >
-                  {pick.removed || pick.name}
+                  {pick.removed || (pick.kind === "topic" ? `#${pick.name}` : pick.name)}
                 </span>
-                <StanceReadout pair={pick.pair} />
+                <StanceReadout pair={pick.pair} names={pick.kind === "topic" ? AFFINITY_AXES : undefined} />
               </span>
             ),
             count: "1",
@@ -83,11 +88,14 @@ export function Screen() {
           note="They land together, or none does."
         />
 
-        <KeptApprovalLine shown="{{approvalShown}}" />
+        <KeptApprovalLine shown="{{approvalShown}}" node="approval" />
 
         <div style={{ flex: 1 }} />
 
-        <SealFooter signLabel="Sign the opinions" />
+        {/* `Sign the picks`: the batch can hold a feeling beside the
+            opinions (seam 248), and a pick is the review's own word for each
+            of its rows (copy-voice, the kept picks' review). */}
+        <SealFooter signLabel="Sign the picks" node="foot" />
       </div>
     </>
   );

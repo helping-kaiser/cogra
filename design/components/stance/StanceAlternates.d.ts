@@ -30,7 +30,7 @@ export interface StanceAlternatesProps {
    * commit's slot. "writeRule" — the write rule's notice where the landing
    * line and the action row were, with its own "?" and `Not now`; no Retry.
    */
-  signing?: "busy" | "failed" | "writeRule";
+  signing?: "busy" | "failed" | "writeRule" | "keyAbsent";
   /**
    * The typed fields' text mid-typing, for a board — `{ pDirected: "1.5" }`.
    * The pick is the clamped value; the field shows what was typed until it

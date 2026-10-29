@@ -11,8 +11,9 @@
    THE KINDS ARE THE COMPLETE SET, COUNTED IN RECORDS (backlog 126, jakob
    2026-10-02: the post edit's package "same semantics at comment scale").
    `EditActs` names the set — `Edit`, `Tags added`, `Tags withdrawn`, `Tags
-   revised`, `Citations added`, `Citations revised`, `Citations withdrawn`,
-   `Cover changed` — a row per kind in the batch. A tag withdrawal is one
+   revised`, `Citations added`, `Citations revised`, `Citations withdrawn` —
+   a row per kind in the batch; a video edit's new face rides the `Edit` row
+   (seam 248). A tag withdrawal is one
    record; a citation's withdrawal is `ReferenceClaim.withdrawalCost`
    records, and the one withdrawn here was revised past 1, so its row reads
    `2`, heard as `2 things`. The title, the footer and the rows add up to the

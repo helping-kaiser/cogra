@@ -172,7 +172,6 @@ export const FLOW_MARKERS = {
 // chats and bell in the sweeps further down (the active tab's edge is `self`).
 Object.assign(FLOW_MARKERS, {
   WalletComingSoon: [...nav(1)],
-  ExploreComingSoon: [...nav(1)],
 });
 
 // The Feed & Search page. Signed-in post cards carry standings, so the stance
@@ -231,6 +230,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "Salt maps of the coast road", tag: "button", all: true },
     { n: 4, find: "First try at a rubbing", tag: "button", all: true },
     { n: 5, find: "The wax-stick ones read like weather charts", tag: "button", all: true },
+    // The field's clear × (seam 248), the next free number.
+    { n: 12, find: 'aria-label="Clear search"', tag: "button" },
   ],
   /* The Profiles row (ruling 23): `ExploreSearch`'s numbering, the person's
      row taking the comment row's 5 — the one row each board has that the
@@ -245,6 +246,11 @@ Object.assign(FLOW_MARKERS, {
     /* The people section's door (round 14, sectioned search (a)) takes the
        board's next free number — the numbering is append-only. */
     { n: 12, find: ">See all profiles</button>", tag: "button" },
+    // Seam 248: the topics' and the content's rests, numbered as their kinds
+    // are, and the field's clear ×, the next free number.
+    { n: 11, find: ">saltcrust<", tag: "button" },
+    { n: 4, find: "First try at a rubbing", tag: "button" },
+    { n: 13, find: 'aria-label="Clear search"', tag: "button" },
   ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
@@ -255,8 +261,16 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Done</button>", tag: "button" },
     { n: 7, find: ">Reset</button>", tag: "button" },
   ],
-  ExploreNone: [...searchShell("brackish cartography", 4)],
-  ExploreUnscoped: [...searchShell("salt flats", 4)],
+  ExploreNone: [...searchShell("brackish cartography", 4), { n: 9, find: 'aria-label="Clear search"', tag: "button" }],
+  // The `kinds` chip draws the trigger row twice (seam 248), so the trigger
+  // and the "?" are stamped in both copies.
+  ExploreUnscoped: [
+    { n: 1, find: "salt flats", tag: "div" },
+    { n: 2, find: 'what the search shows"', tag: "button", all: true },
+    { n: 3, find: 'aria-label="How searching works"', tag: "button", all: true },
+    ...nav(4),
+    { n: 9, find: 'aria-label="Clear search"', tag: "button" },
+  ],
   Feed: [
     { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
@@ -548,6 +562,15 @@ Object.assign(FLOW_MARKERS, {
     // The staged section's × (the closing batch, 2026-10-01), appended so no
     // via renumbers.
     { n: 7, find: 'aria-label="Remove Salt maps of the coast road"', tag: "button" },
+    // The `filter` state's kinds-only sheet (seam 248, GAP A), appended: the
+    // kind chips share one via, as `ExploreFilter`'s do, then the foot's pair
+    // and the scrim.
+    { n: 8, find: 'role="switch"', tag: "button", all: true },
+    { n: 9, find: 'data-node="referencePicker.filterSheet.foot.reset"', tag: "button" },
+    { n: 10, find: 'data-node="referencePicker.filterSheet.foot.done"', tag: "button" },
+    { n: 11, find: 'class="cg-scrim-in"', tag: "div" },
+    // The `fault` state's Retry (round 25, the fault family), appended.
+    { n: 12, find: 'data-node="referencePicker.fault.retry"', tag: "button" },
   ],
   /* A reference row per V1.0 kind, each its own edge to its own board (readme
      §13, the V1.0 scope cut): the person, the posts, the comment, numbered in
@@ -606,6 +629,31 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">License terms</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Report</button>", tag: "button" },
+  ],
+  // The own menu off the detail (seam 248, RM-G9): `RemoveMenu`'s sheet on the
+  // feed, scanExempt like it, numbered as it numbers its rows; the confirm on
+  // the same host numbered as `RemoveConfirm`. The removed card is an
+  // exemplar of the feed's shell: only its own controls carry numbers.
+  FeedPostMenuOwn: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Edit</button>", tag: "button" },
+    { n: 3, find: ">Mark as sensitive</button>", tag: "button" },
+    { n: 4, find: ">Remove</button>", tag: "button" },
+    { n: 5, find: ">License terms</button>", tag: "button" },
+    { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+  ],
+  FeedRemoveConfirm: [
+    { n: 1, find: ">Remove</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  FeedRemoved: [
+    { n: 1, find: '<a href="/u/sol', tag: "a" },
+    { n: 2, find: 'aria-label="Your opinion on this post', tag: "button" },
+    { n: 3, find: ">Feed score</span>", tag: "button" },
+    { n: 4, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 5, find: 'aria-label="Share ', tag: "button" },
   ],
   // The feed-hosted report confirm and license sheet (FC-G10): scanExempt
   // like the detail's, numbered as ReportConfirm and PostLicense number them.
@@ -1065,9 +1113,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
-    { n: 11, find: "signing 3 things", tag: "button" },
-    // The `upload` chip's footer, counting the new cover's record.
-    { n: 11, find: "signing 4 things", tag: "button" },
+    // Both `upload` copies count alike: a new face rides the Edit record (seam 248).
+    { n: 11, find: "signing 3 things", tag: "button", all: true },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on CommentEdit.
@@ -1087,14 +1134,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'data-field="Description"', tag: "div" },
     { n: 9, find: 'aria-label="Remove #coastroad"', tag: "button" },
     { n: 10, find: "+ Add a tag", tag: "button" },
-    { n: 11, find: "signing 4 things", tag: "button" },
-    // The `upload` chip's footer, counting the new cover's record.
-    { n: 11, find: "signing 5 things", tag: "button" },
+    // Both `upload` copies count alike: a new face rides the Edit record (seam 248).
+    { n: 11, find: "signing 4 things", tag: "button", all: true },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on EditCompose.
     { n: 15, find: 'aria-label="Undo withdrawing #photography"', tag: "button" },
     { n: 16, find: ">Adjust</button>", tag: "button" },
+    // The References block (seam 248), the next free number.
+    { n: 17, find: "+ Cite something", tag: "button" },
   ],
   ComposeUploading: [
     { n: 12, find: "aria-label=\"#tidemarket — set how it relates\"", tag: "button" },
@@ -1772,7 +1820,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: 'aria-label="Share ', tag: "button", all: true },
     { n: 10, find: ">See all profiles</button>", tag: "button" },
     { n: 11, find: ">Low tide at six tomorrow", tag: "a", all: true },
-    { n: 11, find: ">Salt maps of the coast road", tag: "a" },
+    // #midsummer's empty face (seam 248): the card's door is its one line.
+    { n: 11, find: ">Nothing carries this tag right now.", tag: "a" },
     { n: 12, find: 'aria-label="Give your opinion on #', tag: "button", all: true },
     { n: 12, find: ">Choose your opinion on #", tag: "button", all: true },
     { n: 13, find: 'aria-label="Tag a new post with it"', tag: "button", all: true },
@@ -2464,6 +2513,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: ">@kel closed your application<", tag: "button" },
     // The tenth, the opinion row's sibling (PR-72), the next free number.
     { n: 16, find: ">@sol walked back their opinion on you<", tag: "button" },
+    // The `load` chip's two Retries (seam 248), the next free numbers.
+    { n: 17, find: 'data-node="notifications.list.moreFault.retry"', tag: "button" },
+    { n: 18, find: 'data-node="notifications.list.fault.retry"', tag: "button" },
   ],
   /* ── The Feed score’s drill-down (backlog item 13) ─────────────────────
      The path rows and the step rows carry one number each: they are one control
@@ -2661,7 +2713,7 @@ const BAND_CHATS = {
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
   FeedGallery: 15, FeedCover: 17, FeedWordsSensitive: 16,
-  WalletComingSoon: 6, ExploreComingSoon: 6,
+  WalletComingSoon: 6,
 };
 for (const [board, n] of Object.entries(BAND_CHATS)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Chats"', tag: "button" });
@@ -2680,7 +2732,7 @@ const BAND_BELL = {
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
   FeedCover: 19, FeedWordsSensitive: 18,
-  WalletComingSoon: 7, ExploreComingSoon: 7,
+  WalletComingSoon: 7,
   Profile: 15, ProfileApplicant: 15,
 };
 for (const [board, n] of Object.entries(BAND_BELL)) {
@@ -2794,6 +2846,8 @@ Object.assign(FLOW_MARKERS, {
     // via renumbers.
     { n: 6, find: 'aria-label="Remove saltmarsh"', tag: "button" },
     { n: 6, find: 'aria-label="Remove saltflats"', tag: "button" },
+    // The `fault` state's Retry (round 25, the fault family), appended.
+    { n: 7, find: 'data-node="tagPicker.fault.retry"', tag: "button" },
   ],
   TagPickerTyping: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
@@ -2903,6 +2957,12 @@ Object.assign(FLOW_MARKERS, {
     // The kept approval's row (the `kept` chip), head of Applications.
     { n: 9, find: ">@noor<", tag: "button" },
     { n: 5, find: 'aria-label="Close @noor&#x27;s application"', tag: "button" },
+    // Seam 248's chips: the deleted asker's row (the `asker` chip) answers as
+    // any row still waiting on its applicant and closes as any row does; the
+    // failed copy's Retry (the `copy` chip) takes the next free number.
+    { n: 3, find: ">Deleted account<", tag: "button" },
+    { n: 5, find: 'aria-label="Close a deleted account&#x27;s application"', tag: "button" },
+    { n: 10, find: ">Retry</button>", tag: "button" },
   ],
   RejectAllConfirm: [
     { n: 1, find: ">Close them</button>", tag: "button" },
@@ -3013,7 +3073,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your picks are kept"', tag: "button" },
     { n: 3, find: 'aria-label="How signing works"', tag: "button" },
-    { n: 4, find: ">Sign the opinions</button>", tag: "button" },
+    { n: 4, find: ">Sign the picks</button>", tag: "button" },
     { n: 5, find: ">Back</button>", tag: "button" },
     { n: 6, find: ">Open Invites</button>", tag: "button" },
   ],

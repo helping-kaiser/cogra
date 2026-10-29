@@ -2,23 +2,33 @@
 
 ALWAYS a kept pick is signed only from the review's own seal, together with every other pick still in the review
 
-ALWAYS the review lists plain opinions only
+ALWAYS the review lists plain picks only, opinions and feelings
+
+ALWAYS keptPicks.announcement is a polite status message mounted at rest, saying nothing and drawing nothing until a drop
+
+ALWAYS a feeling kept on a topic's pad joins the review as a plain pick, its row reading Topic under the topic's name and its pair spoken in the Affinity pad's axis words, How much you like it and How close you want to be
 
 ALWAYS a kept vouch-back or approval never joins the review
 
 ALWAYS a kept pick whose target was removed or redacted keeps its row, wearing the removed-mark face in place of a live preview, and still signs
 
+ALWAYS each kept pick's row reads its target's kind under the name: Post, Comment, Person or Topic
+
+ALWAYS a kept pick whose target's read gets no answer keeps its row, named by its kind alone, A post, A comment or A person, over its kind word, and still signs
+
+ALWAYS a kept pick on a comment with no words of its own is named A comment
+
 ALWAYS a kept pick that would net its bundle to nothing states that consequence on its own row
 
 WHEN the key is restored GIVEN picks are kept pending on this device -> the kept picks' review opens AND NEVER a kept pick is signed
 
-WHEN tap the remove control of a kept pick GIVEN more than one pick is in the review -> the pick is dropped from this device AND its row leaves the review AND the drop is announced as Removed — N picks left. AND focus moves to the next row AND NEVER a confirmation is asked AND NEVER an undo is offered
+WHEN tap the remove control of a kept pick GIVEN more than one pick is in the review -> the pick is dropped from this device AND its row leaves the review AND keptPicks.announcement says Removed — N picks left. AND focus moves to the next row AND NEVER a confirmation is asked AND NEVER an undo is offered
 
 WHEN tap the remove control of a kept pick GIVEN it is the last pick in the review -> the pick is dropped from this device AND the review closes to where it was opened from AND the snackbar reads Nothing left to sign.
 
 WHEN tap Sign them -> the seal opens with every pick in the review as its acts AND NEVER a pick is signed
 
-WHEN press Sign the opinions GIVEN a pick in the batch would net its bundle to nothing -> the batch signs AND NEVER a severance confirmation is asked
+WHEN press Sign the picks GIVEN a pick in the batch would net its bundle to nothing -> the batch signs AND NEVER a severance confirmation is asked
 
 WHEN the write rule refuses the batch -> the notice's fact ends your picks are still kept. AND its way out reads Not now AND NEVER a pick is dropped
 

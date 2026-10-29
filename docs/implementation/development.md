@@ -54,6 +54,7 @@ over file values.
 | `DOCKER_COMPOSE` | `docker compose -f docker/docker-compose.yml` | Compose command the make targets drive (make-only; the binaries never read it) — override to use another compose-compatible runtime, e.g. `wsl.exe -d claude-podman --cd /mnt/c/Users/<name>/dev/cogra -- podman compose -f docker/docker-compose.yml`. `make init` probes this command rather than a binary name, so the check is right on every runtime |
 | `COMPOSE_PROJECT` | `gnp` | Container-name prefix (compose-only). The default is what the `docker exec` recipes below name; set it, and move the ports, to run a second checkout's stack beside the first |
 | `WAIT_TIMEOUT` | `300` | Seconds `make wait-db` and `make wait-media` allow before failing with a message (make-only) |
+| `CONTAINER` | `podman` | The container CLI `make deploy-images` builds the production images with (make-only) — override like `DOCKER_COMPOSE`, e.g. `wsl.exe -d claude-podman --cd /mnt/c/Users/<name>/dev/cogra -- podman` ([deployment.md "Images"](deployment.md#images)) |
 | `POSTGRES_USER` | `gnp` | Postgres username (used by Docker and Makefile) |
 | `POSTGRES_PASSWORD` | `gnp_secret` | Postgres password |
 | `POSTGRES_DB` | `gnp_db` | Postgres database name |
@@ -61,11 +62,15 @@ over file values.
 | `API_HOST` | `0.0.0.0` | API bind address |
 | `API_PORT` | `8080` | API bind port |
 | `L1_INGEST_INTERVAL_SECS` | `2` | Mirror-ingestion poll interval of the API server |
-| `L1_EPOCH_CLOSE_INTERVAL_SECS` | *(unset)* | Dev epoch clock: the API host closes a stand-in epoch on this interval, so writes land without a manual `l1-dev close`; unset, epochs close only on `l1-dev close` and nothing a client writes lands |
+| `L1_EPOCH_CLOSE_INTERVAL_SECS` | *(unset)* | The stand-in's epoch clock: the API host closes an epoch on this interval, so writes land without a manual `l1-dev close`; unset, an epoch closes only on `l1-dev close` or at the stand-in's 10,000-act budget, so a small instance's writes wait indefinitely. Production on the stand-in sets it too ([deployment.md "Configuration"](deployment.md#configuration)) |
 | `STAGED_WRITE_GC_EPOCHS` | `8` | Epochs before an unlanded staged write is collected ([data-model.md "Staged writes"](data-model.md#staged-writes)) |
 | `L1_STANDIN_SETTLEMENT_DELAY_EPOCHS` | `0` | Epoch closes a stand-in admission burn waits before it settles; `0` settles at the request. Above zero it opens the pending window a real realization's settlement depth has — the applicant's Registration then reads `RELAYING` until the burn settles ([auth.md "Approval and landing"](auth.md#approval-and-landing)) |
 | `SESSION_SIGNING_SEED` | *(unset)* | 32-byte hex seed of the Ed25519 session-signing key ([auth.md](auth.md#tokens)); unset in dev, an ephemeral key is generated and sessions die with the process |
 | `DEV_MAILER_LOG` | *(unset)* | Dev mailer log file (`tmp_dev/mailer.log` in `.env.example`, gitignored): every outbound message is also appended there, so hand tests read out-of-band secrets from one file; unset, no file logging |
+| `MAILER` | `dev` | Outbound mail: `dev` logs every message and sends none; `smtp` delivers through `SMTP_URL` from `MAIL_FROM`, outside the request, and logs the recipient's domain and the subject but never the body. Any other value refuses to start, and so does `SMTP_URL` set while `MAILER` is `dev` |
+| `SMTP_URL` | *(unset)* | The SMTP server, in lettre's URL form `scheme://user:pass@host:port/ehlo-name?tls=…` with the user and password percent-encoded. `smtps://` is TLS from the first byte (default port 465), `smtp://…?tls=required` is STARTTLS or no session (587). `smtp://…?tls=opportunistic` (587) and bare `smtp://` (25) are refused with credentials, which would cross the link unencrypted. Certificates are checked against the OS trust store, so the host needs its CA bundle. A secret: it carries the provider's password, and the server never prints it |
+| `MAIL_FROM` | *(unset)* | The sender every message carries: an address with an optional display name, `CoGra <no-reply@example.org>` (quoted whole in `.env`, which needs quotes around a space). Required with `MAILER=smtp` |
+| `SMTP_TIMEOUT_SECS` | `30` | The bound on one delivery, the connection and every SMTP command included; past it the send is logged as failed. Provisional until the first production send is measured |
 | `WEB_ORIGIN` | `http://localhost:3000` | The per-environment web origin emailed links ride on ([auth.md "Link URLs"](auth.md#link-urls)) |
 | `ADMISSION_BURN_MICRO` | `100000000` | The community-funded admission burn per approved applicant, micro-units — operational until the economics slice wires the subsidy machinery |
 | `ACCOUNT_REAPER_INTERVAL_SECS` | `600` | Sweep interval of the account reaper — never-verified accounts past their 7-day bound are deleted whole ([auth.md](auth.md#account-lifecycle)) |
@@ -98,6 +103,10 @@ over file values.
 | `MEDIA_BUCKET` | `cogra-media` | The live bucket, world-readable by design; created by the `media-init` one-shot |
 | `MEDIA_CARRIED_BUCKET` | `cogra-media-carried` | The carried area's bucket — an applicant's media waits here until the landing publishes it; no anonymous policy, no proxy route ([data-model.md "Media areas"](data-model.md#media-areas)) |
 | `MEDIA_HELD_BUCKET` | `cogra-media-held` | The held area's bucket — the operator-only store a deleted asset's bytes leave the live bucket for; no anonymous policy, no proxy route, reached from the host alone |
+| `MEDIA_HELD_S3_ENDPOINT` | `MEDIA_S3_ENDPOINT` | The held store's own service. Unset, the held bucket sits on the live service, as in compose; production runs a separate store on no published port ([deployment.md "The held store"](deployment.md#the-held-store)). Set, it needs both keys below, or the API refuses to start |
+| `MEDIA_HELD_ACCESS_KEY_ID` | `MEDIA_ACCESS_KEY_ID` | The held service's access key |
+| `MEDIA_HELD_SECRET_ACCESS_KEY` | `MEDIA_SECRET_ACCESS_KEY` | The held service's secret key |
+| `MEDIA_HELD_REGION` | `MEDIA_REGION` | The region held-store requests are signed for |
 | `MEDIA_ACCESS_KEY_ID` | `cogra_media` | Media store access key (also the store's root user in compose) |
 | `MEDIA_SECRET_ACCESS_KEY` | `cogra_media_secret` | Media store secret key |
 | `MEDIA_REGION` | `us-east-1` | S3 region the requests are signed for; any value the store accepts |

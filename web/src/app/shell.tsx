@@ -29,6 +29,7 @@ import { Suspense, useRef, type ReactNode } from "react";
 import { announceFeedReselect } from "@/lib/feed/feed-reselect";
 import { notificationsOrigin } from "@/lib/notifications/origin";
 import type { BellRoot } from "@/lib/notifications/row-content";
+import { parseOpinionsOrigin } from "@/lib/profile/opinions-route";
 import { useAuthPhase } from "@/lib/session/provider";
 import { KeptPicksNavigation } from "@/lib/stance/kept-picks-route";
 import { BottomNav, type NavSlot } from "@/lib/ui/bottom-nav";
@@ -53,12 +54,19 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
  * Profile stack (`from=saved`, `from=history`, `from=profile`); a search
  * result belongs to Explore's (`from=search`, BottomNav.prompt.md: "opened
  * from Explore lights Explore"); anything else — the feed, a link, a
- * notification — lights the Feed, where author chips and links land.
+ * notification — lights the Feed, where author chips and links land. A row
+ * on your own opinions page belongs to the Profile stack too
+ * (`from=opinions`, ProfileStances.md:27).
  */
 export function detailRoot(from: string | null): NavSlot {
   if (from === "search") return "search";
+  const opinions = parseOpinionsOrigin(from);
+  if (opinions !== null) return opinions.handle === null ? "profile" : "feed";
   return from === "saved" || from === "history" || from === "profile" ? "profile" : "feed";
 }
+
+/** A person's opinions page under their drill-in (`ProfileStances`; `opinions-route.ts`). */
+const OPINIONS_DRILL_IN = /^\/u\/[^/]+\/opinions$/;
 
 /** The tab roots whose own slot, tapped there, the shell answers (the ladder). */
 const ROOT_OF: Partial<Record<string, NavSlot>> = {
@@ -94,10 +102,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     // The own profile is a gated read surface: its frame waits for the
     // gate, which replaces a signed-out arrival with /login.
     (signedIn && pathname === "/profile") ||
+    // The own opinions page rides the same gate (`ProfileStances`).
+    (signedIn && pathname === "/profile/opinions") ||
     (signedIn && pathname === "/saved") ||
     (signedIn && pathname === "/history") ||
     (signedIn && pathname === "/notifications");
   const showBar = phase !== "resolving" && readSurface;
+  // THE STREAM DRAWS ITS OWN BAR (Reel.jsx:147-149): the bar is inline on the
+  // stream's dark ground, over the clip's frame, so the shell's is not drawn —
+  // but a bar still stands beneath, and the pad parks above it.
+  const streaming = pathname.startsWith("/reel/");
   // SAVED AND HISTORY KEEP PROFILE LIT (Saved.md, design digest item 51;
   // History.md:121: the originating root stays lit on a drill-in) — their one
   // door is the reader's own profile.
@@ -109,7 +123,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         ? "search"
         : pathname === "/wallet"
           ? "wallet"
-          : pathname === "/profile" || pathname === "/saved" || pathname === "/history"
+          : pathname === "/profile" ||
+              pathname === "/profile/opinions" ||
+              pathname === "/saved" ||
+              pathname === "/history"
             ? "profile"
             : pathname === "/notifications"
               ? ROOT_SLOT[notificationsOrigin(null)]
@@ -143,7 +160,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // The score's trace is one too: it keeps lit the root its score was
   // tapped under (History and Saved keep Profile, the rest the Feed).
   const drillIn =
-    screen === "postDetail" || screen === "feedEntry" || (screen === "profile" && pathname !== "/profile");
+    screen === "postDetail" ||
+    screen === "feedEntry" ||
+    (screen === "profile" && pathname !== "/profile") ||
+    // Someone's opinions page keeps lit what their profile did: its `from`
+    // is the profile's own (ProfileStances.md:27). Unregistered, so the bar
+    // keeps its own ids.
+    OPINIONS_DRILL_IN.test(pathname);
   const scroller = useRef<HTMLDivElement>(null);
   const rootSlot = ROOT_OF[pathname];
   const reselectRoot = () => {
@@ -172,7 +195,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           end by leaving confirm on the surface they land on (`carried-snackbar`). */}
       <KeptPicksNavigation navigate={router.push}>
       <ScrollHostProvider value={scroller}>
-        <PadParkingProvider value={showBar}>
+        <PadParkingProvider value={showBar || streaming}>
         <div
           ref={scroller}
           data-testid="app-scroller"

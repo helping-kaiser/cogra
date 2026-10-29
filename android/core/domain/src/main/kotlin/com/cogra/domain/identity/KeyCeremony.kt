@@ -21,6 +21,7 @@ import com.cogra.domain.map
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
+import com.cogra.domain.search.ExploreDeviceStore
 import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.LockCustodyStore
@@ -274,9 +275,14 @@ class SignOut @Inject constructor(
     private val tokens: TokenStore,
     private val device: DeviceData,
     private val deviceLock: DeviceLock,
+    private val explore: ExploreDeviceStore,
 ) {
     suspend fun signOut() {
         val forget = identity.forgetOnSignOut()
+        // The leaving account's recent searches go with its session
+        // (Explore.md:31): a shared device never shows the next reader what
+        // the last one looked for.
+        tokens.current()?.accountId?.let { explore.forgetRecents(it) }
         // The opt-in's lock ends with the slot it guarded (sign-out-custody
         // §3.3): its server half discarded while a session still names it.
         if (forget) discardLock()

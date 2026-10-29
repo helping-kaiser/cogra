@@ -11,9 +11,10 @@ import { CgtMark } from "../core/MoneyFigure.jsx";
    (`ComingSoonCard`, readme §13 *The V1.0 scope cut*), without the coin: a
    door is the whole of its page's moment, and it is not money's. */
 
-export function WashCard({ ghost = true, style, children }) {
+export function WashCard({ ghost = true, style, children, node }) {
   return (
     <div
+      data-node={node}
       style={{
         position: "relative",
         margin: "0 var(--space-4)",

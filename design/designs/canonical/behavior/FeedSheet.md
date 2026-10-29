@@ -1,6 +1,6 @@
 # FeedSheet · `spec:design:behavior-feed-sheet`
 
-WHEN the filter sheet opens -> it stands at 88% of the screen's height
+WHEN feed.filterSheet opens -> it stands at 88% of the screen's height
 
 ALWAYS the filter's kinds are the kinds V1.0 serves: Posts, Comments, Profiles and Tags
 
@@ -10,21 +10,21 @@ ALWAYS the form chips combine
 
 ALWAYS the order is Ranked or Newest, never both
 
-ALWAYS the People section holds the rows Everyone and Your people, one on and never both
+ALWAYS feed.filterSheet.people holds the rows feed.filterSheet.people.everyone and feed.filterSheet.people.yourPeople, one on and never both
 
-ALWAYS Your people narrows the feed to the people the reader holds an opinion of, whichever way it points, over the same rank
+ALWAYS feed.filterSheet.people.yourPeople narrows the feed to the people the reader holds an opinion of, whichever way it points, over the same rank
 
-WHEN tap Everyone or Your people -> the choice is staged AND NEVER the feed behind the sheet moves before Done
+WHEN tap feed.filterSheet.people.everyone or feed.filterSheet.people.yourPeople -> the choice is staged AND NEVER the feed behind the sheet moves before Done
 
-ALWAYS the sign row stands under Your people as one line of three words, For · Against · Either, the chosen word in primary ink and never a pill GIVEN Your people is on
+ALWAYS feed.filterSheet.people.sign stands under feed.filterSheet.people.yourPeople as one line of three words, For · Against · Either, the chosen word in primary ink and never a pill GIVEN feed.filterSheet.people.yourPeople is on
 
-ALWAYS no sign row stands GIVEN Everyone is on
+ALWAYS no feed.filterSheet.people.sign stands GIVEN feed.filterSheet.people.everyone is on
 
-ALWAYS For narrows Your people to the people the reader is for, Against to the people the reader is against, and Either to both
+ALWAYS feed.filterSheet.people.sign.for narrows feed.filterSheet.people.yourPeople to the people the reader is for, feed.filterSheet.people.sign.against to the people the reader is against, and feed.filterSheet.people.sign.either to both
 
-WHEN tap For, Against or Either -> that word is chosen, staged AND NEVER the feed behind the sheet moves before Done
+WHEN tap feed.filterSheet.people.sign.for, feed.filterSheet.people.sign.against or feed.filterSheet.people.sign.either -> that word is chosen, staged AND NEVER the feed behind the sheet moves before Done
 
-WHEN tap Everyone GIVEN Your people is on -> the sign row goes AND its chosen word is kept for Your people's return
+WHEN tap feed.filterSheet.people.everyone GIVEN feed.filterSheet.people.yourPeople is on -> feed.filterSheet.people.sign goes AND its chosen word is kept for feed.filterSheet.people.yourPeople's return
 
 ALWAYS the filter's topic chips are the topics the reader holds an opinion for
 
@@ -62,13 +62,19 @@ ALWAYS the reader's default is the one they set GIVEN the reader has set a defau
 
 WHEN tap Reset -> the sheet stages the reader's default AND NEVER the feed re-queries
 
+ALWAYS a filter committed with Done lasts on this device until the reader changes it, through a reload, a restart and a cold launch alike, and the feed opens with it
+
+ALWAYS a filter committed with Done never travels to another device and never changes the reader's saved default in Settings
+
 ALWAYS the trigger speaks only the deviations from the reader's default
 
 ALWAYS the trigger speaks a deviation back toward the app's default like any other GIVEN the reader's own default differs from the app's
 
 ALWAYS the trigger speaks each departing axis's state, never the direction it departs in
 
-ALWAYS the trigger reads your people among its deviations, as your people, for or your people, against GIVEN Your people is on and For or Against is chosen
+ALWAYS feed.band.filterTrigger reads feed.filterSheet.people.yourPeople.label's words in lowercase among its deviations, then a comma and the chosen sign's word in lowercase, GIVEN feed.filterSheet.people.yourPeople is on and feed.filterSheet.people.sign.for or feed.filterSheet.people.sign.against is chosen
+
+ALWAYS feed.band.filterTrigger reads everyone among its deviations GIVEN the reader's saved default narrows the feed to their own people and feed.filterSheet.people.everyone is on
 
 ALWAYS the filter's "?" says Reset brings back your defaults, to change them go to settings.
 
@@ -76,7 +82,7 @@ ALWAYS the feed filter's "?" says What you've already seen waits below the Alrea
 
 WHEN the last kind chip is switched off -> NEVER the chip refuses the tap
 
-WHEN pull down inside the filter sheet -> NEVER the feed refreshes
+WHEN pull down inside feed.filterSheet -> NEVER the feed refreshes
 
 ALWAYS the trigger's spoken name is its reading followed by what your feed shows
 
@@ -95,6 +101,10 @@ ALWAYS Order's line reads Ranked puts what's closest to @mira first — the view
 ALWAYS the topic chips are the topics the borrowed view's account holds and is for, under Topics @mira holds and is for. A topic @mira holds against stays a record — it just never narrows a feed. GIVEN the feed borrows a view
 
 ALWAYS Show what you've already seen, the kinds, the kinds of post, Also show, Reset and the "?" keep the reader's own first person GIVEN the feed borrows a view
+
+ALWAYS All your topics keeps its words and opens the reader's own Your topics, never the borrowed view's account's list GIVEN the feed borrows a view
+
+ALWAYS the topic section does not stand GIVEN the feed borrows a view and the borrowed view's account holds no topic it is for
 
 WHEN tap Done GIVEN the staged filter changes Kinds or the topic -> the sheet closes AND the feed re-queries once AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the message draws anything
 

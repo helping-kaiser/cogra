@@ -35,6 +35,7 @@ import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.history.TagCardTopic
 import com.cogra.domain.removal.RemovedMarks
+import com.cogra.domain.topics.HeldTopic
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.InMemoryCommittedFilterStore
@@ -42,7 +43,7 @@ import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.RecordingHiddenRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ScriptedFeedRepository
-import com.cogra.domain.testing.ScriptedFeedTopics
+import com.cogra.domain.testing.ScriptedHeldTopicsRepository
 import com.cogra.domain.testing.ScriptedSeenHistory
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.entry
@@ -82,7 +83,7 @@ class FeedFilterViewModelTest {
 
     private val feed = ScriptedFeedRepository()
     private val defaults = InMemoryReaderDefaultStore()
-    private val heldTopics = ScriptedFeedTopics()
+    private val heldTopics = ScriptedHeldTopicsRepository()
     private val removedMarks = RemovedMarks()
     private val committedFilters = InMemoryCommittedFilterStore()
     private val seenRecord by lazy { SeenRecord(records, server, session, appScope) }
@@ -401,17 +402,20 @@ class FeedFilterViewModelTest {
         feed.answer = Outcome.Success(rankingOf("p1"))
         val vm = viewModel()
         settle()
-        heldTopics.answer = Outcome.Success(listOf(FeedTopic("t1", "saltmaps")))
+        heldTopics.topics = listOf(
+            HeldTopic("saltmaps", 0.6, 0.2, pending = false, id = "t1"),
+            HeldTopic("spam", -0.3, 0.1, pending = false, id = "t9"),
+        )
 
         vm.onSheetOpened()
         settle()
         assertThat(vm.state.value.heldTopics).containsExactly(FeedTopic("t1", "saltmaps"))
 
-        heldTopics.answer = Outcome.Success(emptyList())
+        heldTopics.topics = emptyList()
         vm.onSheetOpened()
         settle()
         assertThat(vm.state.value.heldTopics).isEmpty()
-        assertThat(heldTopics.reads).isEqualTo(2)
+        assertThat(heldTopics.pageReads).hasSize(2)
     }
 
     @Test
@@ -425,7 +429,7 @@ class FeedFilterViewModelTest {
 
         vm.onSheetOpened()
         settle()
-        assertThat(heldTopics.reads).isEqualTo(0)
+        assertThat(heldTopics.pageReads).isEmpty()
         assertThat(vm.state.value.heldTopics).isEmpty()
     }
 

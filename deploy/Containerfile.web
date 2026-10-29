@@ -1,0 +1,52 @@
+# The cogra-web image (deployment.md "Images"). Build from the repository
+# root with this file's own ignore list, which admits only web/, the
+# GraphQL contract codegen reads, and deploy/web/:
+#
+#   podman build -f deploy/Containerfile.web --ignorefile deploy/web.containerignore \
+#     --build-arg GIT_SHA=$(git rev-parse HEAD) -t cogra-web:$(git rev-parse --short=12 HEAD) .
+#
+# `next build`, then `next start` — what the app ships as. TLS is the
+# proxy's (deploy/proxy/Caddyfile); web/scripts/prod.mjs is the dev
+# machine's TLS front and has no place here.
+#
+# The rewrites in next.config.ts are compiled into the build, so the
+# build is given the production upstreams: in production the proxy routes
+# /graphql, /media/uploads and /media before Next sees them, and the baked
+# rewrites are only a correct fallback. Server rendering reads GRAPHQL_URL
+# at runtime too (src/lib/graphql-uri.ts), from the unit's env file.
+
+FROM docker.io/library/node:24.18.0-bookworm-slim AS build
+ENV NEXT_TELEMETRY_DISABLED=1
+WORKDIR /src/web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+COPY schema.graphql /src/schema.graphql
+COPY web/ ./
+ARG GRAPHQL_URL=http://cogra-api:8080/graphql
+ARG MEDIA_ORIGIN=http://cogra-media:9000/cogra-media
+# `npm run build`, not `next build`: npm sets npm_package_version, which
+# next.config.ts inlines as the version Settings shows.
+RUN GRAPHQL_URL=${GRAPHQL_URL} MEDIA_ORIGIN=${MEDIA_ORIGIN} npm run codegen \
+    && GRAPHQL_URL=${GRAPHQL_URL} MEDIA_ORIGIN=${MEDIA_ORIGIN} npm run build \
+    && npm prune --omit=dev \
+    && rm -rf .next/cache
+
+FROM docker.io/library/node:24.18.0-bookworm-slim
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
+WORKDIR /app
+COPY --from=build /src/web/package.json /src/web/next.config.ts ./
+COPY --from=build /src/web/node_modules ./node_modules
+COPY --from=build /src/web/public ./public
+# Next writes its runtime cache under .next, so the server user owns it.
+COPY --from=build --chown=node:node /src/web/.next ./.next
+COPY deploy/web/healthcheck.mjs /app/healthcheck.mjs
+ARG GIT_SHA=unknown
+LABEL org.opencontainers.image.title="cogra-web" \
+      org.opencontainers.image.source="https://github.com/helping-kaiser/cogra" \
+      org.opencontainers.image.licenses="AGPL-3.0-only" \
+      org.opencontainers.image.revision="${GIT_SHA}"
+USER node
+EXPOSE 3000
+# Node itself, not npm, as the process: signals reach the server directly.
+ENTRYPOINT ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0", "--port", "3000"]

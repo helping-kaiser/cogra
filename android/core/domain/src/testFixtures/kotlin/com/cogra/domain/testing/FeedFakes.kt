@@ -9,8 +9,6 @@ import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
 import com.cogra.domain.feed.FeedRepository
-import com.cogra.domain.feed.FeedTopic
-import com.cogra.domain.feed.FeedTopicsRepository
 import com.cogra.domain.feed.PeopleMark
 import com.cogra.domain.feed.RankedEntry
 import com.cogra.domain.feed.ReaderDefaultStore
@@ -103,17 +101,6 @@ class InMemoryReaderDefaultStore : ReaderDefaultStore {
 
     override suspend fun save(account: String, filter: FeedFilter) {
         saved.update { it + (account to filter) }
-    }
-}
-
-/** The held-for topics, scripted; every read is counted. */
-class ScriptedFeedTopics : FeedTopicsRepository {
-    var answer: Outcome<List<FeedTopic>> = Outcome.Success(emptyList())
-    var reads = 0
-
-    override suspend fun heldFor(): Outcome<List<FeedTopic>> {
-        reads += 1
-        return answer
     }
 }
 

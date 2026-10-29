@@ -39,16 +39,23 @@
    NO ACTION, so no "keep browsing" (the audit's F38 finding). A door has
    nothing a reader can do in it, and the bar is already the way on; were an
    action ever added, on a tab root it would select Feed's root rather than pop
-   history, which on the web can leave the site entirely. */
+   history, which on the web can leave the site entirely.
+
+   REGISTERED under the `wallet` prefix (seam 248): `band`, the card
+   `comingSoonCard`, and `bottomBar`, a tab root's three names. The card is
+   not `comingSoon`: a node by that name would forbid its own blessed words,
+   `Wallet — coming soon`, in the sidecar (check-behavior reads a compound
+   name's plain words as the node). */
+export const NODE = "wallet";
 export function Screen() {
   return (
     <>
-      <CograBand />
+      <CograBand node="band" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 0 0" }}>
-        <ComingSoonCard thing="Wallet" line="Your earnings will be here." />
+        <ComingSoonCard thing="Wallet" line="Your earnings will be here." node="comingSoonCard" />
         <div style={{ flex: 1 }} />
       </div>
-      <BottomNav active="wallet" slots={ALL_SLOTS} inline />
+      <BottomNav active="wallet" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

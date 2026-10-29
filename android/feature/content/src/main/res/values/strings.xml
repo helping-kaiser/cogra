@@ -14,6 +14,11 @@
     <string name="content_chats_back_feed">Back to feed</string>
     <string name="content_chats_back_own_profile">Back to your profile</string>
     <string name="content_chats_back_profile">Back to the profile</string>
+    <string name="content_chats_back_explore">Back to Explore</string>
+    <string name="content_chats_back_wallet">Back to Wallet</string>
+    <!-- The wallet slot's door (WalletComingSoon.jsx; copy-voice, the coming-soon surfaces, blessed 2026-09-25). -->
+    <string name="content_wallet_coming_soon">Wallet — coming soon</string>
+    <string name="content_wallet_line">Your earnings will be here.</string>
     <string name="content_feed_compose">Write a post</string>
     <string name="content_feed_load_more">Load more</string>
     <string name="content_compose_title">New post</string>
@@ -267,6 +272,7 @@
     <!-- A Saved row's post reads its origin (the origin-naming table). -->
     <string name="content_back_saved">Back to Saved</string>
     <string name="content_back_notifications">Back to Notifications</string>
+    <string name="content_back_search">Back to the search</string>
     <string name="content_comment_edited">Edited</string>
     <string name="content_comment_reply">Reply</string>
     <string name="content_comment_edit_save">Save</string>

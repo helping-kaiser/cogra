@@ -4,6 +4,10 @@ WHEN tap a group's Close all on Invites -> the dialog Close all 4 applications f
 
 ALWAYS the count counts only applications still waiting on the link, never one already closed and never one approved
 
+ALWAYS the first sentence opens Both leave your list and both people are told. and the second reads vouch either of them in GIVEN two applications wait on the link
+
+ALWAYS the first sentence reads All four leave your list and all four people are told. with the waiting count in both places, spelled through nine and in digits from 10, as in All 12, GIVEN three or more applications wait on the link
+
 ALWAYS the dialog names no handles
 
 ALWAYS Close all is named in full for the accessibility tree, as Close all 4 applications from this link

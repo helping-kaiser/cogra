@@ -22,19 +22,26 @@
    edge of the picture meets the cut's — 1 % a press, 10 % with Shift (jakob
    2026-10-05). On a device with no touch to pinch the note's second sentence
    reads `Drag or use the arrow keys to move, the slider to zoom.` (new,
-   flagged for blessing; copy-voice, *The crops' how-to line*). */
+   flagged for blessing; copy-voice, *The crops' how-to line*).
+
+   REGISTERED under its own `composeCrop` prefix (seam 248): `header`, the
+   `shapes` chips (`tallChip`, `squareChip`, `wideChip`, a filter's
+   `<value>Chip` naming), the `viewport`, the `zoom` slider, the `howTo` line,
+   the `pictures` strip with one `thumb` per picture keyed by its place, and
+   `next`. */
+export const NODE = "composeCrop";
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Crop" />
+      <WizardHeader title="Crop" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
-        <div style={{ display: "flex", gap: 8 }}>
-          <Chip label="Tall 4:5" selected onToggle={() => {}} />
-          <Chip label="Square 1:1" onToggle={() => {}} />
-          <Chip label="Wide 1.91:1" onToggle={() => {}} />
+        <div style={{ display: "flex", gap: 8 }} data-node="shapes">
+          <Chip label="Tall 4:5" selected onToggle={() => {}} node="tallChip" />
+          <Chip label="Square 1:1" onToggle={() => {}} node="squareChip" />
+          <Chip label="Wide 1.91:1" onToggle={() => {}} node="wideChip" />
         </div>
 
-        <div tabIndex={0} role="group" aria-label={CROP_PAN_NAME} className="cg-focus" style={{ position: "relative", width: 390, height: 488, margin: "0 -24px", overflow: "hidden", flex: "none" }}>
+        <div tabIndex={0} role="group" aria-label={CROP_PAN_NAME} className="cg-focus" style={{ position: "relative", width: 390, height: 488, margin: "0 -24px", overflow: "hidden", flex: "none" }} data-node="viewport">
           <img
             src="post-photo.jpg"
             alt=""
@@ -47,22 +54,22 @@ export function Screen() {
           <span aria-hidden="true" style={{ position: "absolute", top: "66.66%", left: 0, right: 0, height: 1, background: "rgba(255,255,255,0.55)" }} />
         </div>
 
-        <CropZoom scale={1.15} />
+        <CropZoom scale={1.15} node="zoom" />
 
-        <QuietNote>One shape for the whole post. Drag to move, pinch to zoom.</QuietNote>
+        <QuietNote node="howTo">One shape for the whole post. Drag to move, pinch to zoom.</QuietNote>
 
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }} data-node="pictures">
           <span style={{ display: "inline-flex", flex: "none", borderRadius: "var(--radius-small)", outline: "2px solid var(--primary)", outlineOffset: 1 }}>
-            <MediaThumb src="post-photo.jpg" />
+            <MediaThumb src="post-photo.jpg" node="thumb" nodeKey="1" />
           </span>
           <span style={{ display: "inline-flex", flex: "none", opacity: 0.65 }}>
-            <MediaThumb src="inviter.jpg" />
+            <MediaThumb src="inviter.jpg" node="thumb" nodeKey="2" />
           </span>
         </div>
 
         <div style={{ flex: 1 }} />
 
-        <Button style={{ width: "100%" }}>Next</Button>
+        <Button style={{ width: "100%" }} node="next">Next</Button>
       </div>
     </>
   );

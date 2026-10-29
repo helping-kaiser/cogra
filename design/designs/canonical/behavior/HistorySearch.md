@@ -43,3 +43,5 @@ WHEN tap the back arrow -> the reader's own profile comes back, in the state it 
 ALWAYS the back arrow reads Back to your profile
 
 ALWAYS history.bottomBar keeps lit the slot of the root History was opened from, history.bottomBar.profileSlot
+
+ALWAYS a seen tag that nothing carries keeps its card and its why-line, history.tagCard.nothing reading Nothing carries this tag right now. in the glimpse's place, with no age

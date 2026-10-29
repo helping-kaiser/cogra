@@ -996,3 +996,54 @@ describe("History — the reads' faults", () => {
     expect(reads.map((read) => read.query)).toEqual([null, "long", "long"]);
   });
 });
+
+// THE STREAM FROM HISTORY (Reel.md:3, RL-G1: "the list it was opened from
+// narrowed to them in that list's order — … History's rows"; graph.json
+// History via 15, «a portrait clip — the stream opens»).
+describe("the stream opened from History (RL-3)", () => {
+  const clip = (id: string, ratio: string) => ({
+    ...postNode(id, `Clip ${id}`),
+    attachments: [
+      {
+        __typename: "MediaAttachment",
+        id: `${id}-m`,
+        url: `https://media.test/${id}.mp4`,
+        altText: null,
+        status: "NORMAL",
+        mimeType: "video/mp4",
+        options: { __typename: "MediaOptions", aspectRatio: ratio, durationMs: 9_000 },
+        coverMedia: null,
+        coverTaken: false,
+      },
+    ],
+  });
+
+  it("the_stream_from_history_narrows_historys_rows_in_their_order, its way back reading Back to History", async () => {
+    const { forgetStream, heldStream, streamBack } = await import("@/lib/reel/stream-session");
+    forgetStream();
+    serveHistory(() =>
+      page(
+        [
+          { node: clip("v1", "9:16"), firstSeenAt: seenOn(0, 12) },
+          { node: clip("w1", "16:9"), firstSeenAt: seenOn(0, 11) },
+          POST,
+          { node: clip("v2", "3:4"), firstSeenAt: seenOn(0, 9) },
+        ],
+        { hasNextPage: true, endCursor: "c3" },
+      ),
+    );
+    render();
+    await screen.findByTestId("history-list");
+    // The wide clip's tap opens the post; the portrait ones open the stream.
+    expect(screen.queryByTestId("history-post-w1-stream-link")).toBeNull();
+    const door = screen.getByTestId("history-post-v2-stream-link");
+    expect(door).toHaveAttribute("href", "/reel/v2");
+    fireEvent.click(door);
+    const stream = heldStream();
+    expect(stream?.snapshot.clips.map((row) => row.id)).toEqual(["v1", "v2"]);
+    expect(stream?.snapshot.index).toBe(1);
+    expect(stream?.snapshot.hasMore).toBe(true);
+    expect(streamBack(stream!.snapshot.origin)).toEqual({ href: "/history", label: "Back to History" });
+    forgetStream();
+  });
+});

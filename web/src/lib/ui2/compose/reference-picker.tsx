@@ -27,7 +27,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import { fetchReferenceCandidates } from "@/lib/api/references-api";
+import type { NodeKind } from "@/__generated__/graphql";
+import { CANDIDATE_LIMIT, fetchReferenceCandidates } from "@/lib/api/references-api";
 import type { ReferenceDraft, ReferenceTargetView } from "@/lib/references/draft";
 import { isQueryable, REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import { PICK_ADDED, PICK_REMOVED } from "@/lib/topics/picker";
@@ -55,10 +56,10 @@ const NODE: DataNode = { path: "referencePicker" };
 
 /** The three citable kinds, as the search filter names them (`FEED_KINDS`). */
 export const CITABLE_KINDS = [
-  { value: "posts", label: "Posts", kind: "Post" },
-  { value: "comments", label: "Comments", kind: "Comment" },
-  { value: "profiles", label: "Profiles", kind: "User" },
-] as const;
+  { value: "posts", label: "Posts", kind: "POST" },
+  { value: "comments", label: "Comments", kind: "COMMENT" },
+  { value: "profiles", label: "Profiles", kind: "USER" },
+] as const satisfies readonly { value: string; label: string; kind: NodeKind }[];
 
 export type CitableKind = (typeof CITABLE_KINDS)[number]["value"];
 
@@ -131,7 +132,11 @@ export function ReferencePicker({
   const [help, setHelp] = useState(false);
   const [kinds, setKinds] = useState<readonly CitableKind[]>([]);
   const [staging, setStaging] = useState<readonly CitableKind[] | null>(null);
-  const [answer, setAnswer] = useState<{ query: string; candidates: readonly ReferenceDraft[] } | null>(null);
+  const [answer, setAnswer] = useState<{
+    query: string;
+    narrowing: string;
+    candidates: readonly ReferenceDraft[];
+  } | null>(null);
   const field = useRef<HTMLInputElement | null>(null);
 
   // ReferencePicker.md: WHEN the picker opens -> the search field takes focus
@@ -142,34 +147,37 @@ export function ReferencePicker({
 
   const trimmed = query.trim();
   const queryable = isQueryable(query);
+  // THE FILTER NARROWS ON THE SERVER (references.graphql: `kinds` subtract;
+  // null narrows nothing), so a narrowed answer is a whole answer of its
+  // kinds, never a 10-row answer trimmed here. The committed kinds key the
+  // lookup as the query does: an answer stands only for what it was asked.
+  const narrowing = CITABLE_KINDS.filter((entry) => kinds.includes(entry.value))
+    .map((entry) => entry.kind)
+    .join(",");
 
   useEffect(() => {
     if (!queryable) return;
     let cancelled = false;
+    const wire = narrowing === "" ? null : (narrowing.split(",") as NodeKind[]);
     const timer = setTimeout(() => {
-      void fetchReferenceCandidates(client, trimmed).then((outcome) => {
-        if (!cancelled) setAnswer({ query: trimmed, candidates: outcome.kind === "success" ? outcome.value : [] });
+      void fetchReferenceCandidates(client, trimmed, CANDIDATE_LIMIT, wire).then((outcome) => {
+        if (!cancelled) {
+          setAnswer({ query: trimmed, narrowing, candidates: outcome.kind === "success" ? outcome.value : [] });
+        }
       });
     }, debounceMs);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [client, trimmed, queryable, debounceMs]);
+  }, [client, trimmed, queryable, narrowing, debounceMs]);
 
   const stagedIds = new Set(references.map((reference) => reference.targetId));
   const atCap = cap !== null && references.length >= cap;
-  const narrowed = new Set<string>(
-    CITABLE_KINDS.filter((entry) => kinds.includes(entry.value)).map((entry) => entry.kind),
-  );
   // ALWAYS a staged reference stands only in the staged section above the results.
   const results =
-    queryable && answer !== null && answer.query === trimmed
-      ? answer.candidates.filter(
-          (candidate) =>
-            !stagedIds.has(candidate.targetId) &&
-            (narrowed.size === 0 || (candidate.target.kind !== null && narrowed.has(candidate.target.kind))),
-        )
+    queryable && answer !== null && answer.query === trimmed && answer.narrowing === narrowing
+      ? answer.candidates.filter((candidate) => !stagedIds.has(candidate.targetId))
       : [];
 
   const stage = (candidate: ReferenceDraft) => {

@@ -407,6 +407,12 @@ rendering is acceptable as a platform habit. Where a platform genuinely
 cannot — a capability the other has and this one does not — the
 difference is *presented*, deliberately and per case, the way `Back is
 the platform's` already is. The test is capability, never convention.
+**A house control is the design on both platforms, never the kit's
+stock one** (seam 248): where the master departs from M3 on purpose,
+Android draws the master, because drawing it is a capability Compose has.
+The `Checkbox` is the worked case — the master's 18px box with the one
+1px hairline is the Android box too, never M3's 20dp control with its
+2dp stroke, which §4's one-weight rule refuses.
 
 ### Corner radii and cards
 
@@ -2287,7 +2293,9 @@ entry first". What stands:
   (path, key), never DOM order. A copy a board's tweak chip draws once
   per value is one element in several states: it keeps one path and
   carries the chip's value as its key (`history.searchField` under
-  `search` and under `kinds`; jakob 2026-10-06, seam 069). Every
+  `search` and under `kinds`; jakob 2026-10-06, seam 069); an element
+  two chips draw keys each copy by its own chip's value, and its rule
+  names both chips (`postEdit.sign`; seam 248). Every
   other board renders the annotations stripped, so a name reaches a built board only once it
   is registered in `designs/canonical/nodes.json`, which the render
   writes. **Registered paths are append-only**: a collision fails the
@@ -10150,7 +10158,7 @@ Saved and History:
 - **Saved and History search everything kept or seen**, never only the
   cards already loaded — the one place the server-side matcher shows.
 - **The results are sectioned.** The people stand first under
-  `SectionLabel`'s `People` (the caption Explore's `Recent` wears),
+  `SectionLabel`'s `Profiles` (the caption Explore's `Recent` wears),
   capped at **three**; `See all profiles`, a text button on its own line,
   closes the section when more match, and the content follows by the
   surface's own order with no caption of its own. The door opens the
@@ -10515,6 +10523,150 @@ marked *merged under the autonomy order, review pending*.
   `New post` (`publish-a-post`, `publish-words`, `publish-a-video`,
   `publish-a-vertical-video`: 60 → 61 origins). The registry holds at
   **100 screens**; the new board is unregistered.
+
+### Round 23, the registration sweep — 2026-10-28
+
+Seam 248's registrations and mechanical fixes, under the same autonomy
+order. Explore shipped on both clients, so `ExploreComingSoon` is gone
+from the tree and the bar's Explore slot opens `Explore`.
+
+- **The registry's new prefixes** are one per surface, as before:
+  `postEdit`, `commentEdit`, `composeCrop`, `coverCrop`, `tagPicker`,
+  `referencePicker`, `keptPicks`, `keptPicksSeal`, `wallet`, `yourTopics`.
+  The removal pair, the opinions and cited-by sheets join `postDetail`;
+  Invites' empty, create, link and expiry boards join `invites`; the
+  key-away plates, `FeedSheet`, `FeedNothing` and `FeedKinds` join
+  `feed`; `ComposeDetailsReused` joins `composeDetails`.
+- **A repeated row keys by its content where it has one**: the opinions
+  sheet's `opinion` by the holder's handle, Your topics' `heldTopic`
+  and the tag picker's rows by the name. Where content cannot tell two
+  rows apart, by place: `citation` (newest first), `pick`, `actRow`,
+  `picture`, the picker's `result`.
+- **A master keeps one name across surfaces**: the post card's removal
+  mark is `removalMark`, as the profile's is; the reference picker's
+  staged row is `stagedReference`, as the composer's is.
+- **A path follows the drawing.** The already-published marker stands
+  under the media row, so it is `composeDetails.published`, beside
+  `mediaRow`. The feed's filter sheet is drawn beside the band on
+  `FeedSheet`, so it is `feed.filterSheet`.
+- **A name never forbids its own words**: the wallet's door is
+  `comingSoonCard`, because a node named `comingSoon` would bar its
+  blessed `Wallet — coming soon` from the sidecar.
+- **An element two chips draw** keeps one path, each copy keyed by the
+  value of the chip that draws it, and its rule names both chips
+  (`postEdit.sign`: the `signing` chip's `none` and `slow`, the `upload`
+  chip's `failed`; `_build/node-paths.mjs`).
+- **The dialog shell draws what the clients build**: border-box, so the
+  20rem clamp is the surface's whole width (320 on a 412 frame, 296 on a
+  360 one, measured), and the title sets headline-small's tracking.
+- **Fixed to the sidecars**: a failed removal keeps its dialog, Retry in
+  it; `FeedNothing`'s trigger reads `Nothing`; @rafa's application group
+  comes through a used single-use link, never the live one; `Removed`'s
+  arrow returns to where the post was opened from.
+- **The gate**: edges **2135 → 2128** (`ExploreComingSoon`'s seven);
+  flows hold at **227**, four re-blessed back to 60 `New post` origins.
+  The registry grows **100 → 132 screens**, **3983 → 5142** board paths,
+  **1081 → 1538** distinct.
+
+### Round 24, the drawn gaps — 2026-10-29
+
+Seam 248's undrawn states, under the same autonomy order: built, merged,
+reviewed by jakob after his hand test. Every new string is in its board's
+docblock and sidecar, *merged under the autonomy order, review pending*.
+
+- **The thread is named.** `CommentsThreadSheet` registers as
+  `postDetail.threadSheet` — its `title` and one `commentCard` per top-level
+  comment, keyed by handle, with `authorChip`, `menu`, `removalMark`,
+  `reply` and `edit`. The comment menus and the removal confirm are raised
+  over it, never inside it, so they keep `postDetail.menuSheet` (item 64)
+  and `postDetail.dialog`; `CommentRemoveConfirm` and `CommentRemoved`
+  register.
+- **A removal that gets no answer** keeps its dialog: `That didn't send.
+  Try again.` in `DialogSurface`'s new `line` slot above the pair, `Remove`
+  reading `Retry` — `RemoveConfirm`'s and `CommentRemoveConfirm`'s `answer`
+  chip.
+- **The own menu off the detail** is the detail's own sheet on its host:
+  `FeedPostMenuOwn`, `FeedRemoveConfirm`, and `FeedRemoved`, where the card
+  stands as its mark in place until the feed's next derive, which the
+  `Removed`-off filter cuts it from.
+- **The pickers' states.** The citation picker's filter sheet holds the
+  kinds only — Posts, Comments, Profiles — and its foot; at the batch's ten
+  both pickers dim their rows under `Up to 10 citations per post.` / `Up
+  to 10 tags per post.` (`per comment` from a reply); a read with no answer
+  says the house line where the rows were; an empty or in-flight list says
+  nothing. A clip's tiles keep their fixed boxes on every details stage.
+- **The key away in the alternates** carries `PadKeyAbsent`'s notice and
+  `Keep it pending, restore later` (the alternates card). **A kept topic
+  pick** reads back on its seal as a `Feeling`, in the Affinity pad's axis
+  words; the fixture keeps four picks, the settings row counting them.
+- **Invites' halves stand when empty** (the sidecar's law over the built
+  hiding): `No applications waiting.` · `No live links.`; a deleted asker's
+  row wears the removal mark (`redactedApplication`, keyed by actor id —
+  the API does not serve the signal yet); a failed copy says `That didn't
+  go through.` with `Retry` on its card.
+- **Notifications' reads**: `Loading…`, `Can't reach the server —
+  notifications can't load right now.` over `Retry`, and `Couldn't load
+  more — Retry`.
+- **Explore.** The answer is sectioned — people, topics, content — and
+  under Ranked each section closes its head with its own seam, keyed by
+  the section; a guest's filter sheet has no order section; Comments beside
+  another kind with nothing else found shows the scope line alone; the
+  search field's clear × is `SearchBar`'s `onClear`, `Clear search`.
+- **A new cover rides the Edit record** (the contract's `coverMediaId`):
+  the video edits' feet hold at 4 and 3, and `Cover changed` is no row. A
+  clip post's edit carries its References block.
+- **The empty and removed faces.** History's tag card that nothing carries,
+  Your topics empty (`0 held` on the door, no second line before the count
+  arrives) and a held topic whose name was removed (`Removed under the
+  platform's rules`, opening nothing), the post-scale opinions and cited-by
+  sheets empty, and the kept picks' spoken drop's region.
+- **The gate**: edges **2128 → 2155**; flows hold at **227**, six
+  re-blessed for their origin counts. The registry grows **132 → 137
+  screens**, **5142 → 5515** board paths, **1538 → 1629** distinct.
+
+### Round 25, the wordings and the policy answers — 2026-10-29
+
+Seam 248's wordings, sidecar confirms and contradictions, under the same
+autonomy order: built, merged, reviewed by jakob after his hand test.
+Every new string is in copy-voice, *merged under the autonomy order,
+review pending*.
+
+- **The words.** The kept picks' seal commits `Sign the picks` — its
+  batch can hold a feeling; `A post` · `A comment` · `A person` name a
+  target no read reached, and `Topic` (the review) and `Feeling` (the
+  seal) name two things, what a pick is on and what it signs. The
+  close-all dialog at two reads `Both leave…` and `either of them`; the
+  trigger's move back from a Your-people default reads `everyone`; a
+  sentence counts citations, a label names references.
+- **One fault shape.** A read with nothing loaded says the house line's
+  noun form over an outlined `Retry` — the two pickers (`tags`,
+  `results`, a Retry drawn where none stood), search, Notifications,
+  the deletion landing; the long line never stands beside a control that
+  tries again. A cap dims, a standing refusal shown, and its rows take no
+  tap.
+- **A video picked at an edit** is staged (staged-surfaces) under `A
+  video can't join an edit yet — post it on its own.`; the drawn path is
+  the cover step, and a words comment's edit goes to jakob (backlog 148).
+- **The sidecars say what they meant.** A push notification lights Feed,
+  a Notifications row the bell's root; a cold mail link's `Back to
+  settings` lands Settings over the own profile, Profile lit. A filter
+  committed in a feed lasts on the device until changed — the help's and
+  the Reading footnote's words — and the saved default opens a feed with
+  none (`SettingsReading.md` had read "every feed opens with" it). Cited
+  by's settling row is gone: a lane's drawing, and no read serves a
+  pending inbound citation.
+- **Measured.** A sheet's height class is its whole height (border-box):
+  the 88% filter drew 774.72px on an 844 frame (91.8%), the tallest
+  sheet 804px, its top 40px under the 72px sliver; now 742.72 and 772.
+  The sign row's 14px (ruling 92) is the people rows' own gap, the board
+  unchanged at 14.
+- **Parity.** The brand wash is one token of three stops, carried whole
+  on Android; the house checkbox is Android's box too (§4).
+- **The gate**: edges **2155 → 2157** (the pickers' two `Retry`s); flows
+  hold at **227**, one re-blessed for `Sign the picks`
+  (`sign-the-picks-kept-while-the-key-was-away`). The registry holds at
+  **137 screens**, **5515 → 5517** board paths, **1629 → 1631** distinct
+  (`tagPicker.fault.retry`, `referencePicker.fault.retry`).
 
 ---
 

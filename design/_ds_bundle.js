@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_SUMMARY","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_DETENT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"WRITE_RULE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_LANDING_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"fc4b6cba1d23","components/compose/ActsFooter.jsx":"e61cf3a09d3b","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"7a44b02ca249","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"048c1dccb391","components/compose/PickedRow.jsx":"f76887e19622","components/compose/PickedSheet.jsx":"ae8d93d994e5","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"92f8711c1dd7","components/compose/StagedReference.jsx":"ecbf0ea4a732","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"fbb646ecfc48","components/compose/UploadNotice.jsx":"183be9f6882c","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"1f9cf2f64b7c","components/content/CommentCard.jsx":"ba6c2b294956","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"03398f19f306","components/content/PostCard.jsx":"e1fae194e841","components/content/ReferenceRow.jsx":"a574dc59b721","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"c79cb9fa78f7","components/content/TopicsLine.jsx":"6d8718e249f2","components/core/BottomSheet.jsx":"fb331d05687d","components/core/Button.jsx":"7b79b1f87f0a","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"bc8d42f30ec4","components/core/ContentRow.jsx":"cf105ca3125d","components/core/FactRow.jsx":"595bc54eadf6","components/core/HelpDot.jsx":"0cc2d5d3fcaf","components/core/JoinPrompt.jsx":"4aff76ab6646","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6a5b54419cab","components/core/QuotedRow.jsx":"37e6dc79dbbb","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"e4c5a20b69d2","components/core/Snackbar.jsx":"c36839b728ef","components/forms/Checkbox.jsx":"058742547c9f","components/forms/LicenseChooser.jsx":"3bc4228de7ad","components/forms/PasswordField.jsx":"caaf3deb600d","components/forms/RecoveryCode.jsx":"807de4c04d05","components/forms/SearchBar.jsx":"ef9a9dc56c68","components/forms/TextField.jsx":"95a0bb442204","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"6d2b95913097","components/honesty/SensitiveVeil.jsx":"6ed9dd71e3fe","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/DetailClip.jsx":"604997e28cad","components/media/MediaAttachment.jsx":"4e954bd8dc14","components/media/MediaViewer.jsx":"2872a69c9ca5","components/media/ReelCaption.jsx":"5a78543cef0e","components/media/ReelRail.jsx":"ea1d8eb6e4a2","components/media/VideoControls.jsx":"e112d1eb1f77","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"403adfe920e8","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"def628da34f1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"a343fb0a5638","components/navigation/FeedFilter.jsx":"1119ebc2ed05","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"22433a18dd55","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"d7fcc2d71e96","components/people/ActorChip.jsx":"6e65598c2801","components/people/ProfileHeader.jsx":"e96d65ecd2fb","components/people/StanceRow.jsx":"464878b5e295","components/proposed/ExplainableNumber.jsx":"851eaf2760cf","components/stance/EmptySignConfirm.jsx":"257bd87a382d","components/stance/SeveranceConfirm.jsx":"bb05602b7ff8","components/stance/StanceAlternates.jsx":"9035c0d752df","components/stance/StanceControl.jsx":"30b05cfcc88a","components/stance/StancePad.jsx":"317581838256","components/stance/StanceReadout.jsx":"df7840d16aea","components/stance/StanceSlider.jsx":"b7e1d2f10fc6","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ee17e47230be","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"eac455a8e445","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"snapAttachment","sourcePath":"components/stance/StancePad.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_SUMMARY","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_DETENT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"WRITE_RULE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_LANDING_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"958c33a5add2","components/compose/ActsFooter.jsx":"ba6714642972","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"c4b931d32ceb","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"acdba3ea73e0","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"048c1dccb391","components/compose/PickedRow.jsx":"f76887e19622","components/compose/PickedSheet.jsx":"8df6f492a2b4","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"97932e0f0739","components/compose/StagedReference.jsx":"a15c120d2183","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"fbb646ecfc48","components/compose/UploadNotice.jsx":"d53dff3a0dc7","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"f9a75ee47314","components/content/CommentCard.jsx":"e945fc4d214f","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"03398f19f306","components/content/PostCard.jsx":"ed8b4aa333a3","components/content/ReferenceRow.jsx":"2cc1bbc1b1a5","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"c79cb9fa78f7","components/content/TopicsLine.jsx":"6d8718e249f2","components/core/BottomSheet.jsx":"9e0102744c04","components/core/Button.jsx":"a8359b22860b","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"e43ba48979a2","components/core/ContentRow.jsx":"cf105ca3125d","components/core/FactRow.jsx":"595bc54eadf6","components/core/HelpDot.jsx":"0cc2d5d3fcaf","components/core/JoinPrompt.jsx":"2978abad1edf","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6a5b54419cab","components/core/QuotedRow.jsx":"37e6dc79dbbb","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"e4c5a20b69d2","components/core/Snackbar.jsx":"c36839b728ef","components/forms/Checkbox.jsx":"058742547c9f","components/forms/LicenseChooser.jsx":"3bc4228de7ad","components/forms/PasswordField.jsx":"caaf3deb600d","components/forms/RecoveryCode.jsx":"807de4c04d05","components/forms/SearchBar.jsx":"459124ae37da","components/forms/TextField.jsx":"95a0bb442204","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"c82d7addab50","components/honesty/SensitiveVeil.jsx":"6ed9dd71e3fe","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/DetailClip.jsx":"604997e28cad","components/media/MediaAttachment.jsx":"4e954bd8dc14","components/media/MediaViewer.jsx":"2872a69c9ca5","components/media/ReelCaption.jsx":"5a78543cef0e","components/media/ReelRail.jsx":"ea1d8eb6e4a2","components/media/VideoControls.jsx":"e112d1eb1f77","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"403adfe920e8","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"def628da34f1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"a343fb0a5638","components/navigation/FeedFilter.jsx":"f271258f1d81","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"22433a18dd55","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"d7fcc2d71e96","components/people/ActorChip.jsx":"6e65598c2801","components/people/ProfileHeader.jsx":"e96d65ecd2fb","components/people/StanceRow.jsx":"075ed5ae7b77","components/proposed/ExplainableNumber.jsx":"851eaf2760cf","components/stance/EmptySignConfirm.jsx":"257bd87a382d","components/stance/SeveranceConfirm.jsx":"bb05602b7ff8","components/stance/StanceAlternates.jsx":"7866b4d97e7e","components/stance/StanceControl.jsx":"a79e126088cb","components/stance/StancePad.jsx":"317581838256","components/stance/StanceReadout.jsx":"fb7148e73ced","components/stance/StanceSlider.jsx":"b7e1d2f10fc6","components/states/ComingSoonCard.jsx":"854240576390","components/states/EmptyState.jsx":"ee17e47230be","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"6e98a34f7be3","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"75438d50d294","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"snapAttachment","sourcePath":"components/stance/StancePad.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
 
 (() => {
 
@@ -172,7 +172,8 @@ function InlineAction({
   ariaLabel,
   className,
   style,
-  node
+  node,
+  nodeKey
 }) {
   const rung = INLINE_SIZES[size] ?? INLINE_SIZES.lg;
   return /*#__PURE__*/React.createElement("button", {
@@ -199,7 +200,8 @@ function InlineAction({
       flex: size === "sm" ? undefined : "none",
       ...style
     },
-    "data-node": node
+    "data-node": node,
+    "data-node-key": node && nodeKey
   }, busy && busyLabel ? busyLabel : children);
 }
 
@@ -1106,11 +1108,15 @@ function signedLine(standing, records, severed, targetLabel, names = STANCE_AXIS
    twin. A one-axis readout draws a shorter number, not a different shape — so
    the markup is written once and the two readouts differ only in what they
    hand it. */
+/* `node` is the data-node name its placer gives the readout (seam 248): the
+   line takes it, the face `face` and the digits `exact`, as `StanceValue`
+   names its own. Given none, it renders exactly as before. */
 function ReadoutLine({
   emoji,
   exact,
   spoken,
-  style
+  style,
+  node
 }) {
   return /*#__PURE__*/React.createElement("span", {
     style: {
@@ -1119,9 +1125,11 @@ function ReadoutLine({
       gap: "var(--space-2)",
       flex: "none",
       ...style
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true"
+    "aria-hidden": "true",
+    "data-node": node && "face"
   }, emoji), /*#__PURE__*/React.createElement("span", {
     className: "cg-exact",
     "aria-hidden": "true",
@@ -1129,7 +1137,8 @@ function ReadoutLine({
       fontSize: "var(--text-body-small)",
       color: "var(--text-secondary)",
       whiteSpace: "nowrap"
-    }
+    },
+    "data-node": node && "exact"
   }, exact), /*#__PURE__*/React.createElement("span", {
     style: SR_ONLY
   }, spoken));
@@ -1141,14 +1150,16 @@ function StanceReadout({
   kind = "pick",
   zeroLabel = SEVERED_LABEL,
   names = STANCE_AXIS_NAMES,
-  style
+  style,
+  node
 }) {
   const readout = bundleReadout(pair, kind === "standing" ? zeroLabel : EMPTY_PICK_LABEL);
   return /*#__PURE__*/React.createElement(ReadoutLine, {
     emoji: readout.emoji,
     exact: formatStancePair(pair),
     spoken: `${readout.label}, ${formatStanceWords(pair, names)}`,
-    style: style
+    style: style,
+    node: node
   });
 }
 
@@ -1163,7 +1174,8 @@ function StanceReadout({
    other. Backing is the authoring bundle; opinion is the face's. */
 function AttachmentReadout({
   pDirected,
-  style
+  style,
+  node
 }) {
   const band = nearestValenceAnchor(pDirected);
   const exact = formatDimension(pDirected);
@@ -1171,7 +1183,8 @@ function AttachmentReadout({
     emoji: band.emoji,
     exact: exact,
     spoken: `${band.label}, ${DIRECTED_LABEL} ${exact}`,
-    style: style
+    style: style,
+    node: node
   });
 }
 
@@ -1808,6 +1821,9 @@ function Ring({
    waiting on one picture says so: at a `total` of one the line reads
    `…signing waits for the picture.`, and `the pictures` from two up. The
    video and the cover are one thing already, so their nouns never change. */
+/* `node` is the data-node name its placer gives the line (seam 248): the line
+   takes it, and names its parts — uploading, `line`; failed, `message`,
+   `wait` and `retry`. Given none, it renders exactly as before. */
 function UploadStatusLine({
   done,
   total,
@@ -1815,7 +1831,8 @@ function UploadStatusLine({
   media = "pictures",
   failed = false,
   message = "One picture didn't upload.",
-  onRetry
+  onRetry,
+  node
 }) {
   if (failed) {
     return /*#__PURE__*/React.createElement("p", {
@@ -1824,21 +1841,25 @@ function UploadStatusLine({
         textAlign: "center",
         fontSize: "var(--text-body-medium)",
         lineHeight: "var(--text-body-medium--line-height)"
-      }
+      },
+      "data-node": node
     }, /*#__PURE__*/React.createElement("span", {
       style: {
         color: "var(--error)"
-      }
+      },
+      "data-node": node && "message"
     }, message), " ", /*#__PURE__*/React.createElement("span", {
       style: {
         color: "var(--text-secondary)"
-      }
+      },
+      "data-node": node && "wait"
     }, "Signing waits for it."), " ", /*#__PURE__*/React.createElement(InlineAction, {
       size: "lg",
       onClick: onRetry,
       style: {
         display: "inline"
-      }
+      },
+      node: node && "retry"
     }, "Retry"));
   }
   return /*#__PURE__*/React.createElement("div", {
@@ -1847,10 +1868,12 @@ function UploadStatusLine({
       alignItems: "center",
       justifyContent: "center",
       gap: "var(--space-2)"
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement(Ring, {
     progress: progress ?? (total ? done / total : 0.5)
   }), /*#__PURE__*/React.createElement("span", {
+    "data-node": node && "line",
     style: {
       fontSize: "var(--text-body-medium)",
       lineHeight: "var(--text-body-medium--line-height)",
@@ -1858,10 +1881,14 @@ function UploadStatusLine({
     }
   }, "Uploading ", done, " of ", total, " \u2014 signing waits for the ", media === "video" || media === "cover" ? media : total === 1 ? "picture" : "pictures", "."));
 }
+
+/* `node` names the line where its placer gives one (seam 248): `message`,
+   `retry` and `remove` inside it. */
 function UploadErrorLine({
   message = "One picture didn't upload.",
   onRetry,
-  onRemove
+  onRemove,
+  node
 }) {
   return /*#__PURE__*/React.createElement("p", {
     style: {
@@ -1869,21 +1896,25 @@ function UploadErrorLine({
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
       letterSpacing: "var(--text-label-small--letter-spacing)"
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--error)"
-    }
+    },
+    "data-node": node && "message"
   }, message), " ", onRetry && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(InlineAction, {
     size: "sm",
-    onClick: onRetry
+    onClick: onRetry,
+    node: node && "retry"
   }, "Retry"), " ", /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--text-secondary)"
     }
   }, "\xB7"), " "), /*#__PURE__*/React.createElement(InlineAction, {
     size: "sm",
-    onClick: onRemove
+    onClick: onRemove,
+    node: node && "remove"
   }, "Remove it"));
 }
 __ds_scope.UploadStatusLine = UploadStatusLine;
@@ -1893,6 +1924,7 @@ __ds_scope.UploadErrorLine = UploadErrorLine;
 // components/compose/ActsCard.jsx
 try { (() => {
 const { InlineAction, BUTTON_CLASS, SR_ONLY, UploadErrorLine } = __ds_scope;
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The seal's acts card (media slice, 2026-08-31 — extracted the moment a
    second seal needed it: the profile-picture seal joined the post's and the
    reply's). The container-highest card listing what one signature commits:
@@ -2004,25 +2036,40 @@ const DOOR = {
    "1 more" is already words, and says itself. */
 function Count({
   count,
-  noun
+  noun,
+  node
 }) {
   if (!noun) return /*#__PURE__*/React.createElement("span", {
-    style: COUNT
+    style: COUNT,
+    "data-node": node
   }, count);
   return /*#__PURE__*/React.createElement("span", {
-    style: COUNT
+    style: COUNT,
+    "data-node": node
   }, /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true"
   }, count), /*#__PURE__*/React.createElement("span", {
     style: SR_ONLY
   }, `${count} ${count === "1" ? noun : `${noun}s`}`));
 }
+
+/* `node` is the data-node name its placer gives the card (seam 248). Given one,
+   every row is an `actRow` keyed by its place in the card, counted from 1, with
+   its `label`, `value` (an action row's `action`) and `count`; the closing
+   line is `total` and its subline `note`. Given none, the card renders exactly
+   as before. */
 function ActsCard({
   rows = [],
   total,
   note,
-  noteTone = "quiet"
+  noteTone = "quiet",
+  node
 }) {
+  const named = index => node ? {
+    "data-node": "actRow",
+    "data-node-key": String(index + 1)
+  } : null;
+  const part = name => node && name;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -2030,7 +2077,8 @@ function ActsCard({
       borderRadius: "var(--radius-medium)",
       background: "var(--surface-container-highest)",
       padding: "4px var(--space-4)"
-    }
+    },
+    "data-node": node
   }, rows.map((row, index) => row.action ? /*#__PURE__*/React.createElement(InlineAction, {
     key: index,
     size: "sm",
@@ -2038,50 +2086,61 @@ function ActsCard({
     style: {
       ...ROW,
       textAlign: "left"
-    }
+    },
+    node: node && "actRow",
+    nodeKey: node && String(index + 1)
   }, /*#__PURE__*/React.createElement("span", {
-    style: LABEL
+    style: LABEL,
+    "data-node": part("label")
   }, row.label), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
       minWidth: 0,
       whiteSpace: "nowrap"
-    }
+    },
+    "data-node": part("action")
   }, row.action), /*#__PURE__*/React.createElement(Count, {
     count: row.count,
-    noun: row.countNoun
-  })) : row.onOpen ? /*#__PURE__*/React.createElement("button", {
+    noun: row.countNoun,
+    node: part("count")
+  })) : row.onOpen ? /*#__PURE__*/React.createElement("button", _extends({
     key: index,
     type: "button",
     onClick: row.onOpen,
     "aria-label": row.openLabel,
     className: BUTTON_CLASS,
     style: DOOR
-  }, /*#__PURE__*/React.createElement("span", {
-    style: LABEL
+  }, named(index)), /*#__PURE__*/React.createElement("span", {
+    style: LABEL,
+    "data-node": part("label")
   }, row.label), /*#__PURE__*/React.createElement("span", {
-    style: VALUE
+    style: VALUE,
+    "data-node": part("value")
   }, row.value), /*#__PURE__*/React.createElement(Count, {
     count: row.count,
-    noun: row.countNoun
-  })) : row.fault ? /*#__PURE__*/React.createElement("div", {
+    noun: row.countNoun,
+    node: part("count")
+  })) : row.fault ? /*#__PURE__*/React.createElement("div", _extends({
     key: index,
     style: {
       borderBottom: ROW.borderBottom,
       paddingBottom: "var(--space-2)"
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, named(index)), /*#__PURE__*/React.createElement("div", {
     style: {
       ...ROW,
       borderBottom: 0
     }
   }, /*#__PURE__*/React.createElement("span", {
-    style: LABEL
+    style: LABEL,
+    "data-node": part("label")
   }, row.label), /*#__PURE__*/React.createElement("span", {
-    style: VALUE
+    style: VALUE,
+    "data-node": part("value")
   }, row.value), /*#__PURE__*/React.createElement(Count, {
     count: row.count,
-    noun: row.countNoun
+    noun: row.countNoun,
+    node: part("count")
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       paddingLeft: `calc(${LABEL.width} + var(--space-2))`
@@ -2089,16 +2148,19 @@ function ActsCard({
   }, /*#__PURE__*/React.createElement(UploadErrorLine, {
     message: row.fault.message,
     onRemove: row.fault.onRemove
-  }))) : /*#__PURE__*/React.createElement("div", {
+  }))) : /*#__PURE__*/React.createElement("div", _extends({
     key: index,
     style: ROW
-  }, /*#__PURE__*/React.createElement("span", {
-    style: LABEL
+  }, named(index)), /*#__PURE__*/React.createElement("span", {
+    style: LABEL,
+    "data-node": part("label")
   }, row.label), /*#__PURE__*/React.createElement("span", {
-    style: VALUE
+    style: VALUE,
+    "data-node": part("value")
   }, row.value), /*#__PURE__*/React.createElement(Count, {
     count: row.count,
-    noun: row.countNoun
+    noun: row.countNoun,
+    node: part("count")
   }))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -2109,12 +2171,14 @@ function ActsCard({
       padding: "6px 0"
     }
   }, /*#__PURE__*/React.createElement("span", {
+    "data-node": part("total"),
     style: {
       fontSize: "var(--text-body-medium)",
       lineHeight: "var(--text-body-medium--line-height)",
       fontWeight: "var(--text-label-large--font-weight)"
     }
   }, total), note && /*#__PURE__*/React.createElement("span", {
+    "data-node": part("note"),
     role: noteTone === "slow" ? "status" : undefined,
     style: {
       fontSize: "var(--text-label-small)",
@@ -2415,10 +2479,69 @@ const { Icon, BUTTON_CLASS } = __ds_scope;
    name of what the button opens. Without a `subline` the footer is the line
    alone, exactly as drawn before. */
 
+/* `node` is the data-node name its placer gives the footer (seam 248). Given
+   one, the footer always stands in its column wrapper, which takes the name —
+   with or without the slow subline, so no state moves a path — and names its
+   parts: the count line `line` and the subline `slow`. Given none, it renders
+   exactly as before. */
 function ActsFooter({
   count,
   onOpen,
-  subline
+  subline,
+  node
+}) {
+  if (node) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "2px"
+      },
+      "data-node": node
+    }, /*#__PURE__*/React.createElement(ActsFooterLine, {
+      count: count,
+      onOpen: onOpen,
+      node: "line"
+    }), subline && /*#__PURE__*/React.createElement(ActsFooterSlow, {
+      subline: subline,
+      node: "slow"
+    }));
+  }
+  const foot = /*#__PURE__*/React.createElement(ActsFooterLine, {
+    count: count,
+    onOpen: onOpen
+  });
+  if (!subline) return foot;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "2px"
+    }
+  }, foot, /*#__PURE__*/React.createElement(ActsFooterSlow, {
+    subline: subline
+  }));
+}
+function ActsFooterSlow({
+  subline,
+  node
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    role: "status",
+    style: {
+      textAlign: "center",
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--tertiary)"
+    },
+    "data-node": node
+  }, subline);
+}
+function ActsFooterLine({
+  count,
+  onOpen,
+  node
 }) {
   const line = count === 0 ? "Nothing to sign yet" : count === 1 ? "You're signing 1 thing" : `You're signing ${count} things`;
   const style = {
@@ -2435,8 +2558,9 @@ function ActsFooter({
     letterSpacing: "var(--text-label-small--letter-spacing)",
     color: "var(--text-secondary)"
   };
-  const foot = count === 0 ? /*#__PURE__*/React.createElement("span", {
-    style: style
+  return count === 0 ? /*#__PURE__*/React.createElement("span", {
+    style: style,
+    "data-node": node
   }, line) : /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpen,
@@ -2444,7 +2568,8 @@ function ActsFooter({
     style: {
       ...style,
       cursor: "pointer"
-    }
+    },
+    "data-node": node
   }, line, /*#__PURE__*/React.createElement("span", {
     style: {
       display: "inline-flex"
@@ -2453,23 +2578,6 @@ function ActsFooter({
     name: "expand_more",
     size: 16
   })));
-  if (!subline) return foot;
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "2px"
-    }
-  }, foot, /*#__PURE__*/React.createElement("span", {
-    role: "status",
-    style: {
-      textAlign: "center",
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)",
-      color: "var(--tertiary)"
-    }
-  }, subline));
 }
 __ds_scope.ActsFooter = ActsFooter;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/ActsFooter.jsx", error: String((e && e.message) || e) }); }
@@ -2675,6 +2783,12 @@ function BottomSheet({
       background: stacked ? "var(--surface-container-highest)" : "var(--surface-dialog)",
       color: "var(--on-surface)",
       borderRadius: "var(--radius-extra-large) var(--radius-extra-large) 0 0",
+      /* BORDER-BOX: a height class is the surface's whole height, its
+         padding inside it (seam 248) — `DialogSurface`'s rule for its
+         width. Content-box drew 88% + 32px (91.8% of an 844 frame) and
+         put the tallest sheet's top edge 40px from the safe area, under
+         the 72px sliver. */
+      boxSizing: "border-box",
       padding: "var(--space-2) 0 calc(var(--space-6) + env(safe-area-inset-bottom, 0px))",
       // The surface takes focus only to hand it on; it is not a control.
       outline: "none",
@@ -3054,7 +3168,8 @@ function PendingMarker({
     with the pressed layer and the focus ring every control carries. */
 function EditedMarker({
   label = "Edited",
-  onInspect
+  onInspect,
+  node
 }) {
   if (!onInspect) {
     return /*#__PURE__*/React.createElement("p", {
@@ -3062,12 +3177,14 @@ function EditedMarker({
         margin: 0,
         fontSize: "var(--text-label-small)",
         color: "var(--text-secondary)"
-      }
+      },
+      "data-node": node
     }, label);
   }
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onInspect,
+    "data-node": node,
     className: "cg-state cg-focus cg-hit",
     style: {
       alignSelf: "flex-start",
@@ -3089,6 +3206,7 @@ __ds_scope.EditedMarker = EditedMarker;
 // components/content/ReferenceRow.jsx
 try { (() => {
 const { Icon, NODE_GLYPHS, MonogramAvatar, PendingMarker, bundleReadout, formatStancePair, formatTagPair, SR_ONLY, tagReadout } = __ds_scope;
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
    result-row shape search reuses: EVERY row is leading mark · name · value, so
    a heterogeneous list reads as one list.
@@ -3236,6 +3354,11 @@ function NodeMark({
    section): the moment a picker row is picked it stands above the results as
    a `StagedReference` with its ×, so a picker's list only ever holds rows
    still to add, each with the add mark on its edge. */
+/* `removed` IS A NAME THAT WENT (seam 248): the row keeps its place, its mark
+   and its value, and its name's place reads the removal mark in the system's
+   voice — `text-secondary` at the body's weight, the kept-picks rows' grammar
+   — and the row opens nothing, because the name was the page's address. It
+   renders as a plain row, never a control: a door to nowhere is a lie. */
 function ReferenceRow({
   kind = "post",
   name,
@@ -3247,10 +3370,17 @@ function ReferenceRow({
   rank,
   trailing,
   pending = false,
+  removed,
   onOpen,
   node,
   nodeKey
 }) {
+  const Row = removed ? "div" : "button";
+  const rowProps = removed ? {} : {
+    type: "button",
+    onClick: onOpen,
+    className: "cg-state cg-focus"
+  };
   const tagFamily = pairFamily === undefined ? kind === "topic" : pairFamily === "tag";
   const exact = pair ? tagFamily ? formatTagPair(pair) : formatStancePair(pair) : null;
   /* EVERY PAIR HAS A FACE TO FALL BACK TO (jakob's ruling, the geek round —
@@ -3269,10 +3399,7 @@ function ReferenceRow({
      for what it is rather than for which table it reads. */
   const anchor = pair ? tagFamily ? tagReadout(pair) : bundleReadout(pair) : null;
   const spokenWord = tagFamily || pairFamily === "stance";
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onOpen,
-    className: "cg-state cg-focus",
+  return /*#__PURE__*/React.createElement(Row, _extends({}, rowProps, {
     style: {
       display: "flex",
       alignItems: "center",
@@ -3282,14 +3409,17 @@ function ReferenceRow({
       border: 0,
       background: "none",
       padding: "var(--space-1) var(--space-6)",
-      cursor: "pointer",
+      cursor: removed ? "default" : "pointer",
+      ...(removed ? {
+        boxSizing: "border-box"
+      } : null),
       fontFamily: "var(--font-sans)",
       color: "var(--on-surface)",
       textAlign: "left"
     },
     "data-node": node,
     "data-node-key": node && nodeKey
-  }, /*#__PURE__*/React.createElement(NodeMark, {
+  }), /*#__PURE__*/React.createElement(NodeMark, {
     kind: kind,
     name: name,
     src: src,
@@ -3307,10 +3437,13 @@ function ReferenceRow({
       lineHeight: "var(--text-body-medium--line-height)",
       whiteSpace: "nowrap",
       overflow: "hidden",
-      textOverflow: "ellipsis"
+      textOverflow: "ellipsis",
+      ...(removed ? {
+        color: "var(--text-secondary)"
+      } : null)
     },
     "data-node": node && "name"
-  }, name), sub && /*#__PURE__*/React.createElement("span", {
+  }, removed || name), sub && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-body-small)",
       lineHeight: "var(--text-body-small--line-height)",
@@ -3466,11 +3599,12 @@ function Body({
   stance,
   removed,
   consequence,
+  axisNames,
   node
 }) {
   const exact = pair ? formatStancePair(pair) : null;
   const anchor = pair ? bundleReadout(pair, EMPTY_PICK_LABEL) : null;
-  const spoken = pair && stance ? `${anchor.label}, ${formatStanceWords(pair)}` : exact;
+  const spoken = pair && stance ? `${anchor.label}, ${formatStanceWords(pair, axisNames)}` : exact;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(NodeMark, {
     kind: kind,
     name: name,
@@ -3547,6 +3681,7 @@ function StagedReference({
   stance = false,
   removed,
   consequence,
+  axisNames,
   onRemove,
   onEdit,
   node,
@@ -3561,6 +3696,7 @@ function StagedReference({
     stance: stance,
     removed: removed,
     consequence: consequence,
+    axisNames: axisNames,
     node: node
   });
   // A removed target is named by its mark, never by the name it no longer shows.
@@ -3868,7 +4004,8 @@ function CropViewport({
   size = 390,
   inset = 24,
   height,
-  onPan
+  onPan,
+  node
 }) {
   const width = size - inset * 2;
   const windowHeight = height ?? width;
@@ -3897,7 +4034,8 @@ function CropViewport({
       margin: `0 -${inset}px`,
       overflow: "hidden",
       flex: "none"
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement("img", {
     src: src,
     alt: alt,
@@ -3939,18 +4077,22 @@ const CROP_ZOOM_NAME = "Zoom";
    the system's minimum. */
 function CropZoom({
   scale = CROP_ZOOM_MIN,
-  onChange
+  onChange,
+  node
 }) {
   return (
     /*#__PURE__*/
     // `data-field` for the flow badge, `TextField`'s reason: a range input is a
-    // replaced element and cannot host the badge's ::after.
+    // replaced element and cannot host the badge's ::after. `node` names the
+    // slider where a placer gives one (seam 248), its range `input`.
     React.createElement("div", {
       "data-field": CROP_ZOOM_NAME,
       style: {
         flex: "none"
-      }
+      },
+      "data-node": node
     }, /*#__PURE__*/React.createElement("input", {
+      "data-node": node && "input",
       type: "range",
       min: CROP_ZOOM_MIN,
       max: CROP_ZOOM_MAX,
@@ -4857,6 +4999,7 @@ function MediaThumb({
     type: "button",
     "aria-label": removeLabel,
     onClick: onRemove,
+    "data-node": node && "remove",
     className: "cg-state cg-focus cg-hit",
     style: {
       position: "absolute",
@@ -5199,20 +5342,30 @@ const { BottomSheet, SheetTitle, Button, InlineAction, Icon, MediaThumb } = __ds
    Rows are 56px thumbs with a name ("Cover — shown first", "Picture 2") so a
    screen-reader pass reads as a list of pictures, not a list of buttons. */
 
+/* `node` is the data-node name its placer gives the sheet (seam 248): the
+   sheet takes it, its `title`, one `picture` per row keyed by its place in the
+   media, counted from 1 — `reorder`, `thumb`, `label`, `described` or
+   `describe`, `makeCover`, `moveUp`, `moveDown`, `remove` — the `note` and
+   `done`. Given none, it renders exactly as before. */
 function PickedSheet({
   open = false,
   onClose,
   items = [],
   onDone,
-  inline = false
+  inline = false,
+  node
 }) {
+  const part = name => node && name;
   return /*#__PURE__*/React.createElement(BottomSheet, {
     open: open,
     onClose: onClose,
     ariaLabel: `Picked · ${items.length}`,
     inline: inline,
-    maxHeight: "88%"
-  }, /*#__PURE__*/React.createElement(SheetTitle, null, "Picked \xB7 ", items.length), /*#__PURE__*/React.createElement("div", {
+    maxHeight: "88%",
+    node: node
+  }, /*#__PURE__*/React.createElement(SheetTitle, {
+    node: part("title")
+  }, "Picked \xB7 ", items.length), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
@@ -5221,6 +5374,8 @@ function PickedSheet({
     }
   }, items.map((item, index) => /*#__PURE__*/React.createElement("div", {
     key: item.src ?? index,
+    "data-node": part("picture"),
+    "data-node-key": node && String(index + 1),
     style: {
       display: "flex",
       alignItems: "center",
@@ -5232,6 +5387,7 @@ function PickedSheet({
     type: "button",
     "aria-label": `Reorder ${index === 0 ? "the cover" : `picture ${index + 1}`}`,
     "aria-keyshortcuts": "ArrowUp ArrowDown",
+    "data-node": part("reorder"),
     className: "cg-state cg-focus cg-hit",
     style: {
       border: 0,
@@ -5249,7 +5405,8 @@ function PickedSheet({
     src: item.src,
     alt: item.alt,
     size: 56,
-    cover: index === 0
+    cover: index === 0,
+    node: part("thumb")
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
@@ -5263,7 +5420,8 @@ function PickedSheet({
       lineHeight: "var(--text-label-large--line-height)",
       fontWeight: "var(--text-label-large--font-weight)",
       letterSpacing: "var(--text-label-large--letter-spacing)"
-    }
+    },
+    "data-node": part("label")
   }, index === 0 ? "Cover — shown first" : `Picture ${index + 1}`), /*#__PURE__*/React.createElement("span", {
     style: {
       display: "flex",
@@ -5277,23 +5435,29 @@ function PickedSheet({
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
       color: "var(--text-secondary)"
-    }
+    },
+    "data-node": part("described")
   }, "Described") : /*#__PURE__*/React.createElement(InlineAction, {
     size: "sm",
-    onClick: item.onDescribe
+    onClick: item.onDescribe,
+    node: part("describe")
   }, "Describe"), index > 0 && /*#__PURE__*/React.createElement(InlineAction, {
     size: "sm",
-    onClick: item.onMakeCover
+    onClick: item.onMakeCover,
+    node: part("makeCover")
   }, "Make it the cover"), index > 0 && /*#__PURE__*/React.createElement(InlineAction, {
     size: "sm",
-    onClick: item.onMoveUp
+    onClick: item.onMoveUp,
+    node: part("moveUp")
   }, "Move up"), index < items.length - 1 && /*#__PURE__*/React.createElement(InlineAction, {
     size: "sm",
-    onClick: item.onMoveDown
+    onClick: item.onMoveDown,
+    node: part("moveDown")
   }, "Move down"))), /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-label": `Remove ${index === 0 ? "the cover" : `picture ${index + 1}`}`,
     onClick: item.onRemove,
+    "data-node": part("remove"),
     className: "cg-state cg-focus cg-hit",
     style: {
       border: 0,
@@ -5315,7 +5479,8 @@ function PickedSheet({
       lineHeight: "var(--text-label-small--line-height)",
       letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
-    }
+    },
+    "data-node": part("note")
   }, "The first one is the cover."), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -5324,7 +5489,8 @@ function PickedSheet({
     }
   }, /*#__PURE__*/React.createElement(Button, {
     variant: "text",
-    onClick: onDone ?? onClose
+    onClick: onDone ?? onClose,
+    node: part("done")
   }, "Done")));
 }
 __ds_scope.PickedSheet = PickedSheet;
@@ -5424,7 +5590,10 @@ const { Button } = __ds_scope;
    header's back arrow and X refuse a press, because leaving mid-sign would
    orphan the outcome. Everything above the foot stays as it was and
    readable: the fault, if one comes, takes the commit's place
-   (`NetworkError`), and a success leaves the seal. */
+   (`NetworkError`), and a success leaves the seal.
+
+   `node` is the data-node name its placer gives the foot (seam 248), as
+   `FilterFoot` takes one: the foot is it, the pair `sign` and `back`. */
 
 function SealFooter({
   signLabel,
@@ -5433,14 +5602,16 @@ function SealFooter({
   disabled = false,
   busy = false,
   onSign,
-  onBack
+  onBack,
+  node
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
       gap: 8
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement(Button, {
     disabled: disabled,
     busy: busy,
@@ -5448,13 +5619,15 @@ function SealFooter({
     onClick: onSign,
     style: {
       width: "100%"
-    }
+    },
+    node: node && "sign"
   }, signLabel), /*#__PURE__*/React.createElement(Button, {
     variant: "text",
     onClick: onBack,
     style: {
       width: "100%"
-    }
+    },
+    node: node && "back"
   }, backLabel));
 }
 __ds_scope.SealFooter = SealFooter;
@@ -5878,13 +6051,16 @@ function WizardHeader({
         lineHeight: "var(--text-label-small--line-height)",
         color: "var(--text-secondary)",
         whiteSpace: "nowrap"
-      }
+      },
+      "data-node": node && "stage"
     }, stageLabel), help && /*#__PURE__*/React.createElement(HelpDot, {
       ariaLabel: help,
-      onOpen: onHelp
+      onOpen: onHelp,
+      node: node && "help"
     })) : help && /*#__PURE__*/React.createElement(HelpDot, {
       ariaLabel: help,
-      onOpen: onHelp
+      onOpen: onHelp,
+      node: node && "help"
     }), action)
   });
 }
@@ -6419,10 +6595,13 @@ const { buttonStyle, BUTTON_CLASS, useModalFocus } = __ds_scope;
    answer — cancel, keep, stay, close — never the destructive act; Escape (and
    Android's Back) call it too. Focus moves into the dialog, stays inside it,
    and returns to what opened it (readme §10). */
+// The whole headline-small role, tracking included — left out, the title
+// inherited the body's 0.5px (seam 248; seam 245's ask-6/7 pattern).
 const DIALOG_TITLE_STYLE = {
   margin: 0,
   fontSize: "var(--text-headline-small)",
   lineHeight: "var(--text-headline-small--line-height)",
+  letterSpacing: "var(--text-headline-small--letter-spacing)",
   fontWeight: "var(--text-headline-small--font-weight)"
 };
 const DIALOG_BODY_STYLE = {
@@ -6434,6 +6613,13 @@ const DIALOG_BODY_STYLE = {
   letterSpacing: "var(--text-body-medium--letter-spacing)",
   color: "var(--text-secondary)"
 };
+const DIALOG_LINE_STYLE = {
+  margin: 0,
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  color: "var(--text-failure)"
+};
 const asParagraphs = body => (Array.isArray(body) ? body : [body]).map((part, index) => typeof part === "string" ? /*#__PURE__*/React.createElement("p", {
   key: index,
   style: {
@@ -6442,6 +6628,12 @@ const asParagraphs = body => (Array.isArray(body) ? body : [body]).map((part, in
 }, part) : /*#__PURE__*/React.createElement(React.Fragment, {
   key: index
 }, part));
+
+/* `line` IS THE FAULT THAT KEEPS A DIALOG UP (the failure pack's grammar, at
+   dialog scale; seam 248): one line in the failure register between the body
+   and the actions — `That didn't send. Try again.` — while the commitment's
+   own slot reads `Retry`. Its own slot rather than a body paragraph, so a
+   registered dialog names it `line` beside `title` and `body`. */
 function DialogSurface({
   children,
   ariaLabel,
@@ -6450,12 +6642,13 @@ function DialogSurface({
   width = "var(--dialog-max-width)",
   title,
   body,
+  line,
   actions,
   node
 }) {
   const surfaceRef = React.useRef(null);
   useModalFocus(surfaceRef, !inline, onScrimPress);
-  const slotted = title !== undefined || body !== undefined || actions !== undefined;
+  const slotted = title !== undefined || body !== undefined || line !== undefined || actions !== undefined;
   const surface = /*#__PURE__*/React.createElement("div", {
     ref: surfaceRef,
     tabIndex: inline ? undefined : -1,
@@ -6463,6 +6656,11 @@ function DialogSurface({
     "aria-modal": inline ? undefined : "true",
     "aria-label": ariaLabel ?? (typeof title === "string" ? title : undefined),
     style: {
+      /* BORDER-BOX: the clamp is the surface's whole width, padding inside it
+         (seam 248). Content-box drew 20rem + 48px = 368 on every frame and
+         broke the inset's own promise at a narrow phone; the clients build
+         the 320 the clamp names. */
+      boxSizing: "border-box",
       width: `min(calc(100vw - 2 * var(--dialog-inset)), ${width})`,
       borderRadius: "var(--radius-extra-large)",
       background: "var(--surface-dialog)",
@@ -6481,7 +6679,14 @@ function DialogSurface({
       marginTop: title !== undefined ? "var(--space-4)" : 0
     },
     "data-node": node && "body"
-  }, asParagraphs(body)), actions !== undefined && /*#__PURE__*/React.createElement("div", {
+  }, asParagraphs(body)), line !== undefined && /*#__PURE__*/React.createElement("p", {
+    role: "alert",
+    style: {
+      ...DIALOG_LINE_STYLE,
+      marginTop: title !== undefined || body !== undefined ? "var(--space-4)" : 0
+    },
+    "data-node": node && "line"
+  }, line), actions !== undefined && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexWrap: "wrap",
@@ -7613,7 +7818,13 @@ function StanceAlternates({
      where the landing line and the action row were, `PadWriteRule`'s shape,
      its own "?" by the stopper exception, and `Not now` the way out; no
      Retry. The legacy `busy` reads as `"busy"`. Dialog host only: a sheet
-     never signs. */
+     never signs.
+     `"keyAbsent"` (seam 248): the signing key is not on this device, so the
+     alternates carry the pad's notice exactly as `PadKeyAbsent` draws it —
+     `Your key isn't on this browser`, its two lines over `Restore the key`,
+     where the landing line and the action row were — and `Keep it pending,
+     restore later` the one way to keep the pick. No Cancel, no Walk it back
+     and no commit stand; the pick is still made. */
   signing,
   /* What the typed fields hold mid-typing, for a board (`{ pDirected:
      "1.5" }`): a state a click cannot reach. */
@@ -7769,7 +7980,42 @@ function StanceAlternates({
       display: "flex",
       flexDirection: "column"
     }
-  }, children, inputs, state !== "writeRule" && landing), state === "writeRule" ?
+  }, children, inputs, state !== "writeRule" && state !== "keyAbsent" && landing), state === "keyAbsent" ?
+  /*#__PURE__*/
+  /* The key away (`PadKeyAbsent`): the pad's notice where the landing
+     line and the action row were, and the one text button that keeps
+     the pick. A press outside drops it, as on the pad. */
+  React.createElement("div", {
+    style: {
+      marginTop: "var(--space-4)",
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-3)"
+    }
+  }, /*#__PURE__*/React.createElement(NoticePanel, {
+    title: "Your key isn't on this browser",
+    helpLabel: "Your key",
+    onHelp: () => {}
+  }, /*#__PURE__*/React.createElement(NoticeLine, null, "Signing needs your key, which isn't in this browser \u2014 the write waits as pending."), /*#__PURE__*/React.createElement(NoticeLine, null, "Restore the key with your recovery code to finish."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: BUTTON_CLASS,
+    style: {
+      ...buttonStyle({
+        variant: "inverse"
+      }),
+      width: "100%"
+    }
+  }, "Restore the key")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onCancel,
+    className: BUTTON_CLASS,
+    style: {
+      ...buttonStyle({
+        variant: "text"
+      }),
+      width: "100%"
+    }
+  }, "Keep it pending, restore later")) : state === "writeRule" ?
   /*#__PURE__*/
   /* The write rule's no (`PadWriteRule`): the notice where the landing
      line and the action row were, the readouts and the tracks above it
@@ -8798,7 +9044,8 @@ function StanceControl({
       fontFamily: "var(--font-sans)"
     }
   }, "Choose your opinion on ", targetLabel)), pendingPick && /*#__PURE__*/React.createElement(PendingMarker, {
-    label: pendingReview ? "Waiting for your review" : "Waiting for your key"
+    label: pendingReview ? "Waiting for your review" : "Waiting for your key",
+    node: node && "pending"
   }), rowSigning === "busy" && /*#__PURE__*/React.createElement(PendingMarker, {
     label: "Signing\u2026"
   }), rowSigning === "failed" && /*#__PURE__*/React.createElement(SigningPending, {
@@ -9429,11 +9676,13 @@ function Chip({
   disabled = false,
   size = "md",
   tone = "filter",
-  node
+  node,
+  nodeKey
 }) {
   if (tone === "readout") return /*#__PURE__*/React.createElement("span", {
     style: READOUT,
-    "data-node": node
+    "data-node": node,
+    "data-node-key": node && nodeKey
   }, label);
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -9443,6 +9692,7 @@ function Chip({
     disabled: disabled,
     onClick: onToggle,
     "data-node": node,
+    "data-node-key": node && nodeKey,
     className: "cg-state cg-focus cg-hit",
     style: {
       ...pill(size),
@@ -11302,8 +11552,12 @@ function CommentCard({
   onOpenScore,
   /* THE DATA-NODE NAME its placer gives this card (design ⇄ impl seam 002),
      keyed by the author's handle — `PostCard`'s rule. Given one, it names the
-     card's media too: `media`, `frame` per item, and a clip's `soundDisc`.
-     Given none, the card renders exactly as before. */
+     card's media too: `media`, `frame` per item, and a clip's `soundDisc`;
+     its author's `authorChip` and its ⋮ `menu` (as `PostCard` names them),
+     the mark a removed comment wears `removalMark` (as
+     `PostCard` names it), and the thread's text buttons `reply` and `edit`
+     (seam 248, the thread sheet named). Given none, the card renders exactly
+     as before. */
   node,
   children
 }) {
@@ -11397,7 +11651,9 @@ function CommentCard({
     ratio: media.length > 1 ? "square" : undefined,
     maxHeight: "220px"
   })));
-  const shown = redacted ? /*#__PURE__*/React.createElement(RedactedContent, redacted === true ? {} : redacted) : sensitive ? /*#__PURE__*/React.createElement(SensitiveVeil, {
+  const shown = redacted ? /*#__PURE__*/React.createElement(RedactedContent, _extends({}, redacted === true ? {} : redacted, {
+    node: node && "removalMark"
+  })) : sensitive ? /*#__PURE__*/React.createElement(SensitiveVeil, {
     kind: "compact",
     reason: sensitive.reason,
     source: sensitive.source
@@ -11413,7 +11669,8 @@ function CommentCard({
     }
   }, author && /*#__PURE__*/React.createElement(ActorChip, {
     handle: author.handle,
-    displayName: author.displayName
+    displayName: author.displayName,
+    node: node && "authorChip"
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -11428,7 +11685,8 @@ function CommentCard({
     }
   }, timestamp), /*#__PURE__*/React.createElement(OverflowMenu, {
     items: items,
-    ariaLabel: "More on this comment"
+    ariaLabel: "More on this comment",
+    node: node && "menu"
   }))), shown, !redacted && /*#__PURE__*/React.createElement(TopicsLine, {
     topics: topics,
     references: references,
@@ -11548,36 +11806,43 @@ function CommentCard({
       columnGap: "var(--space-2)",
       rowGap: "var(--space-1)",
       width: "100%"
-    }
+    },
+    "data-node": node && "actionRow"
   }, showStance && /*#__PURE__*/React.createElement(StanceControl, {
     targetLabel: targetLabel,
     bundle: bundle ?? undefined,
     signedIn: signedIn,
     taught: taught,
-    onCommit: onCommit
+    onCommit: onCommit,
+    node: node && "stance"
   }), score !== undefined && /*#__PURE__*/React.createElement(ExplainableNumber, {
     glyph: "graph",
     label: "Feed score",
     value: score,
-    onOpenDetail: onOpenScore ?? (() => {})
+    onOpenDetail: onOpenScore ?? (() => {}),
+    node: node && "score"
   }), signedIn && onReply && replyGlyph && /*#__PURE__*/React.createElement(GlyphAction, {
     glyph: "chat_bubble",
     label: author ? `Reply to @${author.handle}` : "Reply",
-    onPress: onReply
+    onPress: onReply,
+    node: node && "reply"
   }), signedIn && onReply && !replyGlyph && /*#__PURE__*/React.createElement(Button, {
     variant: "text",
     size: "sm",
     onClick: onReply,
     style: replyOpacity !== undefined ? {
       opacity: replyOpacity
-    } : undefined
+    } : undefined,
+    node: node && "reply"
   }, "Reply"), signedIn && own && onEdit && /*#__PURE__*/React.createElement(Button, {
     variant: "text",
     size: "sm",
-    onClick: onEdit
+    onClick: onEdit,
+    node: node && "edit"
   }, "Edit"), onShare && /*#__PURE__*/React.createElement(ShareButton, {
     targetLabel: targetLabel,
-    onShare: onShare
+    onShare: onShare,
+    node: node && "share"
   }), actions)), children, replyCount > 0 && replies.length === 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenReplies,
@@ -12220,7 +12485,9 @@ function PostCard({
     items: media,
     index: viewing,
     onClose: closeViewer
-  }), redacted ? /*#__PURE__*/React.createElement(RedactedContent, redacted === true ? {} : redacted) : linkedText, !redacted && opener, !redacted && /*#__PURE__*/React.createElement(TopicsLine, {
+  }), redacted ? /*#__PURE__*/React.createElement(RedactedContent, _extends({}, redacted === true ? {} : redacted, {
+    node: node && "removalMark"
+  })) : linkedText, !redacted && opener, !redacted && /*#__PURE__*/React.createElement(TopicsLine, {
     topics: topics,
     references: references,
     onOpen: detail ? onOpenReferences ?? (() => {}) : undefined,
@@ -13975,17 +14242,50 @@ const { Icon } = __ds_scope;
    static board draws the ring and the words and nothing else, which is the same
    bargain the caret already makes here. The ring is an inset `outline` rather than a border,
    because a border on a control whose height is fixed would push its own content
-   over by a pixel the moment the state arrived. */
+   over by a pixel the moment the state arrived.
+
+   `onClear` GIVES THE PILL ITS CLEAR × (seam 248), the search bar's standard
+   trailing affordance: while a query stands, a close glyph at the pill's end,
+   its 48px target reaching past the 20px mark, spoken `clearLabel` — `Clear
+   search` on Explore. It empties the query and keeps the field's focus; the
+   surface decides what an empty query shows. Without `onClear` the pill
+   carries none, as the two pickers do today. */
 
 function SearchBar({
   query = "",
   placeholder = "Search",
   ariaLabel = "Search",
   onChange,
+  onClear,
+  clearLabel = "Clear search",
   error = false,
   describedBy,
   node
 }) {
+  const clear = onClear && query ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": clearLabel,
+    onClick: onClear,
+    "data-node": node && "clear",
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      flex: "none",
+      display: "grid",
+      placeItems: "center",
+      width: "32px",
+      height: "32px",
+      marginRight: "-8px",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      color: "var(--text-secondary)",
+      padding: 0,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "close",
+    size: 20
+  })) : null;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "4px 16px 12px 16px"
@@ -14062,7 +14362,7 @@ function SearchBar({
       background: "var(--primary)",
       flex: "none"
     }
-  }))));
+  })), clear));
 }
 __ds_scope.SearchBar = SearchBar;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/SearchBar.jsx", error: String((e && e.message) || e) }); }
@@ -15671,7 +15971,9 @@ function FilterTrigger({
    the row spends as little height as its targets allow. It aligns with the
    rows' words, past the dot's column, and stands 14px under the row above
    so each word's 48px target grows invisibly without reaching it (ruling
-   92). Choosing `Everyone` hides it and keeps its word. */
+   92). The 14px is this master's own column gap, so the number in the code
+   is the number on the board, whatever section hosts it (seam 248).
+   Choosing `Everyone` hides it and keeps its word. */
 const SR_RADIO = {
   position: "absolute",
   opacity: 0,
@@ -15686,11 +15988,17 @@ function FeedPeopleRows({
   onSign,
   node
 }) {
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      flexBasis: "100%",
+      display: "flex",
+      flexDirection: "column",
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     role: "radiogroup",
     "aria-label": "People",
     style: {
-      flexBasis: "100%",
       display: "flex",
       flexDirection: "column",
       gap: 6
@@ -15757,11 +16065,9 @@ function FeedPeopleRows({
     role: "radiogroup",
     "aria-label": "Which of your people",
     style: {
-      flexBasis: "100%",
       display: "flex",
       alignItems: "center",
       gap: 6,
-      marginTop: 6,
       paddingLeft: 28,
       fontSize: "var(--text-body-medium)",
       lineHeight: "var(--text-body-medium--line-height)",
@@ -15834,8 +16140,10 @@ function FeedPeopleRows({
    (design ⇄ impl seam 002): the sections as the search and history sheets
    name theirs — `kinds`, `forms`, `order`, `also` — each chip `<value>Chip`,
    the corner "?" `help`, and `people` with its rows (`everyone`,
-   `yourPeople`) and its sign row (`sign`: `for`, `against`, `either`). The feed's own `FeedFilter` passes none, so its
-   sheet stays unnamed until a drawn feed-hosted state registers it. */
+   `yourPeople`) and its sign row (`sign`: `for`, `against`, `either`), and
+   `topic` with a `tag` chip per topic, keyed by its name, and `allTopics`.
+   The feed's own `FeedFilter` passes none: `FeedSheet` draws this sheet
+   beside the band, as `HistoryFilter` draws its own, and names it there. */
 function FeedFilterSheet({
   value = FEED_FILTER_DEFAULT,
   onChange,
@@ -15918,14 +16226,17 @@ function FeedFilterSheet({
     node: node
   })), topics.length > 0 && /*#__PURE__*/React.createElement(FilterSection, {
     label: "One topic",
-    hint: "Topics you hold and are for. A topic you hold against stays a record \u2014 it just never narrows a feed."
+    hint: "Topics you hold and are for. A topic you hold against stays a record \u2014 it just never narrows a feed.",
+    node: node && "topic"
   }, topics.map(topic => /*#__PURE__*/React.createElement(Chip, {
     key: topic,
     label: topic,
     selected: value.topic === topic,
     onToggle: () => set({
       topic: value.topic === topic ? null : topic
-    })
+    }),
+    node: node && "tag",
+    nodeKey: node && topic.replace(/^#/, "")
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       flexBasis: "100%"
@@ -15934,7 +16245,8 @@ function FeedFilterSheet({
     variant: "text",
     size: "sm",
     selfStart: true,
-    onClick: onOpenTopics
+    onClick: onOpenTopics,
+    node: node && "allTopics"
   }, "All your topics"))));
   return (
     /*#__PURE__*/
@@ -16584,6 +16896,7 @@ __ds_scope.ProfileHeader = ProfileHeader;
 // components/people/StanceRow.jsx
 try { (() => {
 const { MonogramAvatar, EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue } = __ds_scope;
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* A person on an opinions list (item 17, the conformance round): their face,
    their name, and THE STANCE THE ROW IS ABOUT (jakob 2026-09-01) — the
    record's own value, read-only.
@@ -16623,6 +16936,11 @@ const HISTORY_DOOR_LABEL = "See how this opinion built";
    spoken word differs — `Walked back` is false of the second. So the row
    carries the bundle's own `severed`: walked back speaks `Walked back`;
    absent or false, the (0, 0) `Says nothing`. */
+/* `node` / `nodeKey` are the data-node name and key its placer gives the row
+   (seam 248) — keyed by the holder's handle. The row takes them, and names
+   its parts `avatar`, `name`, `handle` and `value` (the readout's `face` and
+   `exact` inside it); the history door, where it stands, is `history`. Given
+   none, the row renders exactly as before. */
 function StanceRow({
   name,
   handle,
@@ -16631,7 +16949,9 @@ function StanceRow({
   pInterest,
   severed = false,
   onOpen,
-  onOpenHistory
+  onOpenHistory,
+  node,
+  nodeKey
 }) {
   const zeroLabel = severed ? SEVERED_LABEL : EMPTY_PICK_LABEL;
   const box = {
@@ -16649,7 +16969,11 @@ function StanceRow({
     color: "var(--on-surface)",
     textAlign: "left"
   };
-  const person = /*#__PURE__*/React.createElement("button", {
+  const named = own => own ? {
+    "data-node": node,
+    "data-node-key": node && nodeKey
+  } : null;
+  const person = /*#__PURE__*/React.createElement("button", _extends({
     type: "button",
     onClick: onOpen,
     className: "cg-state cg-focus",
@@ -16660,10 +16984,11 @@ function StanceRow({
       minWidth: 0,
       paddingRight: 0
     } : box
-  }, /*#__PURE__*/React.createElement(MonogramAvatar, {
+  }, named(!onOpenHistory)), /*#__PURE__*/React.createElement(MonogramAvatar, {
     name: name,
     size: 40,
-    src: src
+    src: src,
+    node: node && "avatar"
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
@@ -16676,26 +17001,29 @@ function StanceRow({
       fontSize: "var(--text-label-large)",
       lineHeight: "var(--text-label-large--line-height)",
       fontWeight: "var(--text-label-large--font-weight)"
-    }
+    },
+    "data-node": node && "name"
   }, name), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
       color: "var(--text-secondary)"
-    }
+    },
+    "data-node": node && "handle"
   }, "@", handle)), !onOpenHistory && /*#__PURE__*/React.createElement(StanceValue, {
     pDirected: pDirected,
     pInterest: pInterest,
-    zeroLabel: zeroLabel
+    zeroLabel: zeroLabel,
+    node: node && "value"
   }));
   if (!onOpenHistory) return person;
-  return /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", _extends({
     style: {
       ...box,
       padding: "0 16px 0 0",
       cursor: "default"
     }
-  }, person, /*#__PURE__*/React.createElement("button", {
+  }, named(true)), person, /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenHistory,
     "aria-label": HISTORY_DOOR_LABEL,
@@ -16711,11 +17039,13 @@ function StanceRow({
       cursor: "pointer",
       fontFamily: "var(--font-sans)",
       color: "var(--on-surface)"
-    }
+    },
+    "data-node": node && "history"
   }, /*#__PURE__*/React.createElement(StanceValue, {
     pDirected: pDirected,
     pInterest: pInterest,
-    zeroLabel: zeroLabel
+    zeroLabel: zeroLabel,
+    node: node && "value"
   })));
 }
 __ds_scope.HISTORY_DOOR_LABEL = HISTORY_DOOR_LABEL;
@@ -16738,9 +17068,11 @@ const { CgtMark } = __ds_scope;
 function WashCard({
   ghost = true,
   style,
-  children
+  children,
+  node
 }) {
   return /*#__PURE__*/React.createElement("div", {
+    "data-node": node,
     style: {
       position: "relative",
       margin: "0 var(--space-4)",
@@ -16809,13 +17141,19 @@ const { WashCard } = __ds_scope;
    It serves every reader state with one face (§13): a door has nothing in it
    that depends on who is looking. */
 
+/* `node` is the data-node name its placer gives the card (seam 248): the card
+   takes it, its headline `title` and its sentence `line`. Given none, the card
+   renders exactly as before. */
 function ComingSoonCard({
   thing,
-  line
+  line,
+  node
 }) {
   return /*#__PURE__*/React.createElement(WashCard, {
-    ghost: false
+    ghost: false,
+    node: node
   }, /*#__PURE__*/React.createElement("h2", {
+    "data-node": node && "title",
     style: {
       margin: 0,
       fontSize: "var(--text-headline-small)",
@@ -16824,6 +17162,7 @@ function ComingSoonCard({
       letterSpacing: "var(--text-headline-small--letter-spacing)"
     }
   }, thing, " \u2014 coming soon"), /*#__PURE__*/React.createElement("p", {
+    "data-node": node && "line",
     style: {
       margin: 0,
       fontSize: "var(--text-body-medium)",
@@ -17119,7 +17458,10 @@ function PayoutAddressRow({
    applicant's ask link, held by the card whose words explain what it is for.
    Only the fill and the inset go; the label, the copy control, the mono block
    and the caption are unchanged, because the reason they are shaped that way
-   does not depend on what is behind them. */
+   does not depend on what is behind them.
+
+   `children` STANDS UNDER THE CAPTION, the card's last line: the copy that did
+   not go through says so there, on the string's own card (seam 248). */
 
 function PayoutAddress({
   address,
@@ -17133,7 +17475,8 @@ function PayoutAddress({
   caption,
   bare = false,
   node,
-  nodeKey
+  nodeKey,
+  children
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -17209,7 +17552,7 @@ function PayoutAddress({
       color: "var(--text-secondary)"
     },
     "data-node": node && "caption"
-  }, caption));
+  }, caption), children);
 }
 __ds_scope.PayoutAddressRow = PayoutAddressRow;
 __ds_scope.PayoutAddress = PayoutAddress;

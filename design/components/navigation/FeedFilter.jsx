@@ -322,13 +322,15 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
    the row spends as little height as its targets allow. It aligns with the
    rows' words, past the dot's column, and stands 14px under the row above
    so each word's 48px target grows invisibly without reaching it (ruling
-   92). Choosing `Everyone` hides it and keeps its word. */
+   92). The 14px is this master's own column gap, so the number in the code
+   is the number on the board, whatever section hosts it (seam 248).
+   Choosing `Everyone` hides it and keeps its word. */
 const SR_RADIO = { position: "absolute", opacity: 0, width: "1px", height: "1px", margin: 0 };
 
 export function FeedPeopleRows({ people = "everyone", sign = "either", onPeople, onSign, node }) {
   return (
-    <>
-      <div role="radiogroup" aria-label="People" style={{ flexBasis: "100%", display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ flexBasis: "100%", display: "flex", flexDirection: "column", gap: 14 }}>
+      <div role="radiogroup" aria-label="People" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {FEED_PEOPLE.map((entry) => {
           const chosen = people === entry.value;
           return (
@@ -364,11 +366,9 @@ export function FeedPeopleRows({ people = "everyone", sign = "either", onPeople,
           role="radiogroup"
           aria-label="Which of your people"
           style={{
-            flexBasis: "100%",
             display: "flex",
             alignItems: "center",
             gap: 6,
-            marginTop: 6,
             paddingLeft: 28,
             fontSize: "var(--text-body-medium)",
             lineHeight: "var(--text-body-medium--line-height)",
@@ -400,7 +400,7 @@ export function FeedPeopleRows({ people = "everyone", sign = "either", onPeople,
           })}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -439,8 +439,10 @@ export function FeedPeopleRows({ people = "everyone", sign = "either", onPeople,
    (design ⇄ impl seam 002): the sections as the search and history sheets
    name theirs — `kinds`, `forms`, `order`, `also` — each chip `<value>Chip`,
    the corner "?" `help`, and `people` with its rows (`everyone`,
-   `yourPeople`) and its sign row (`sign`: `for`, `against`, `either`). The feed's own `FeedFilter` passes none, so its
-   sheet stays unnamed until a drawn feed-hosted state registers it. */
+   `yourPeople`) and its sign row (`sign`: `for`, `against`, `either`), and
+   `topic` with a `tag` chip per topic, keyed by its name, and `allTopics`.
+   The feed's own `FeedFilter` passes none: `FeedSheet` draws this sheet
+   beside the band, as `HistoryFilter` draws its own, and names it there. */
 export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot, topics = [], onOpenTopics, peopleRows, node }) {
   const set = (patch) => onChange && onChange({ ...value, ...patch });
   const toggle = (key, entry) => {
@@ -506,17 +508,19 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
 
           LAST IN THE BODY, because it is the section that grows. */}
       {topics.length > 0 && (
-        <FilterSection label="One topic" hint="Topics you hold and are for. A topic you hold against stays a record — it just never narrows a feed.">
+        <FilterSection label="One topic" hint="Topics you hold and are for. A topic you hold against stays a record — it just never narrows a feed." node={node && "topic"}>
           {topics.map((topic) => (
             <Chip
               key={topic}
               label={topic}
               selected={value.topic === topic}
               onToggle={() => set({ topic: value.topic === topic ? null : topic })}
+              node={node && "tag"}
+              nodeKey={node && topic.replace(/^#/, "")}
             />
           ))}
           <div style={{ flexBasis: "100%" }}>
-            <Button variant="text" size="sm" selfStart onClick={onOpenTopics}>All your topics</Button>
+            <Button variant="text" size="sm" selfStart onClick={onOpenTopics} node={node && "allTopics"}>All your topics</Button>
           </div>
         </FilterSection>
       )}

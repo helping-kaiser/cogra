@@ -56,8 +56,8 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- The canonical invite URL, the email change's new-address link
-                 and the account deletion's link (auth.md "Link URLs": Android
+            <!-- The canonical invite URL, the email change's new-address link,
+                 the account deletion's link and the ask link (auth.md "Link URLs": Android
                  App Links on the same paths). Verification needs the real
                  deployed origin serving assetlinks.json; in dev, drive links
                  via `adb shell am start`. -->
@@ -71,6 +71,7 @@
                     android:pathPrefix="/join" />
                 <data android:pathPrefix="/email-change" />
                 <data android:pathPrefix="/delete-account" />
+                <data android:pathPrefix="/vouch" />
             </intent-filter>
         </activity>
 

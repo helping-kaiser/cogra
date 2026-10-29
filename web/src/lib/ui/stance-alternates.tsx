@@ -29,6 +29,7 @@ import { severanceWords, STANCE_AXES, type StanceAxes } from "@/lib/ui/stance-fo
 import { alternatesHelp } from "@/lib/ui/stance-pad-help";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 import { TransportError } from "@/lib/ui/transport-error";
+import { WriteRuleNotice } from "@/lib/ui/write-rule-notice";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
 
 function DirectEntry({
@@ -43,6 +44,9 @@ function DirectEntry({
   testId: string;
 }) {
   const id = useId();
+  // What the reader typed, while they type — null once the field is left,
+  // when it reads the value the pick holds again.
+  const [draft, setDraft] = useState<string | null>(null);
   return (
     <div className="flex items-center justify-between gap-3">
       <label htmlFor={id} className="text-label-large">
@@ -56,9 +60,21 @@ function DirectEntry({
         min={-1}
         max={1}
         step={0.01}
-        value={value}
-        // A typed value lands on the hundredths grid, as a released drag does.
-        onChange={(event) => onChange(snapDimension(Number(event.target.value)))}
+        value={draft ?? value}
+        // A TYPED VALUE CLAMPS AS THE PAD CLAMPS (StanceAlternates.jsx, round
+        // 21; PadStanding.md): the pick takes the nearest value the bound
+        // allows, on the hundredths grid as a released drag lands, and the
+        // readout above says so before anything is signed — no refusal line.
+        // What does not parse — an emptied field, a lone minus — MOVES
+        // NOTHING: reading it as 0 would land a pick on the one number that
+        // means something of its own.
+        onChange={(event) => {
+          const raw = event.target.value;
+          setDraft(raw);
+          const parsed = raw.trim() === "" ? Number.NaN : Number(raw);
+          if (Number.isFinite(parsed)) onChange(snapDimension(parsed));
+        }}
+        onBlur={() => setDraft(null)}
         className="w-24 rounded-extra-small border border-outline bg-transparent p-2 text-body-medium text-on-surface"
       />
     </div>
@@ -74,7 +90,9 @@ export function StanceAlternates({
   onSever,
   axes = STANCE_AXES,
   busy = false,
+  slow = false,
   fault = null,
+  onWriteRuleHelp = () => {},
   helpLabel = "How opinions work",
   zeroHelp = null,
   onZeroBack,
@@ -95,9 +113,14 @@ export function StanceAlternates({
   onSever?: () => void;
   /** The record family's words — its tracks, poles and way out. */
   axes?: StanceAxes;
+  /** The commit's signing is in flight: it refuses a second press. */
   busy?: boolean;
+  /** …and has waited past 200ms: the commit reads `Signing…`. */
+  slow?: boolean;
   /** What did not go through when `Sign it` was pressed. */
   fault?: "failed" | "writeRule" | null;
+  /** The write rule notice's own "?" (`Why signing waits`). */
+  onWriteRuleHelp?: () => void;
   /** The pad's own `?` name (ruling A7). */
   helpLabel?: string;
   /** The unreachable landing's explanation, once its 🤔 is tapped. */
@@ -219,7 +242,7 @@ export function StanceAlternates({
           >
             {showing === "sliders" ? "Type exact values" : "Use sliders"}
           </button>
-          {keyNotice === null && landing}
+          {keyNotice === null && fault !== "writeRule" && landing}
         </div>
         {replaced !== null && (
           <div data-testid="stance-alt-explanation" className="flex flex-col gap-2 [grid-area:1/1]">
@@ -240,18 +263,33 @@ export function StanceAlternates({
         )}
       </div>
       {keyNotice !== null && <div className="mt-4 flex flex-col gap-3">{keyNotice}</div>}
+      {/* THE WRITE RULE'S NO (PadWriteRule.md, round 21): the pad's notice
+          where the landing line and the action row were, the readouts and
+          the tracks above it as they were, and `Not now` — the way out that
+          keeps nothing. No Retry, Sign it, Cancel or Walk it back. */}
+      {keyNotice === null && fault === "writeRule" && (
+        <div className="mt-4 flex flex-col gap-3">
+          <WriteRuleNotice testId="stance-alt-write-rule" onHelp={onWriteRuleHelp} />
+          <button
+            type="button"
+            data-testid="stance-alt-not-now"
+            onClick={onCancel}
+            className={`w-full ${buttonClassName({ variant: "text" })}`}
+          >
+            Not now
+          </button>
+        </div>
+      )}
+      {/* A signing that did not go through says so above the action row, in
+          the seal's words, and the commit's slot asks it again (PadFailed.md,
+          round 21). */}
       {keyNotice === null && fault === "failed" && (
         <div className="mt-4">
           <TransportError testId="stance-alt-failed" message="That didn't send. Try again." />
         </div>
       )}
-      {keyNotice === null && fault === "writeRule" && (
-        <p role="status" data-testid="stance-alt-write-rule" className="m-0 mt-4 text-body-medium text-on-surface-variant">
-          You can&apos;t sign right now.
-        </p>
-      )}
-      {keyNotice === null && (
-      <div className="mt-6 flex items-center justify-end gap-2">
+      {keyNotice === null && fault !== "writeRule" && (
+      <div className={`${fault === "failed" ? "mt-3" : "mt-6"} flex items-center justify-end gap-2`}>
         {onSever !== undefined && (
           <button
             type="button"
@@ -270,14 +308,20 @@ export function StanceAlternates({
         >
           Cancel
         </button>
+        {/* THE COMMIT WAITS AS SET DOES: inert from the press, `Signing…`
+            past 200ms, never dimmed; a fault turns its slot into the outlined
+            Retry. Cancel stays live and closes the dialog, never the act. */}
         <button
           type="button"
           data-testid="stance-alt-commit"
-          disabled={busy}
-          onClick={onCommit}
-          className={buttonClassName({ variant: "primary", size: "sm" })}
+          aria-disabled={busy || undefined}
+          aria-busy={slow || undefined}
+          onClick={() => {
+            if (!busy) onCommit();
+          }}
+          className={buttonClassName({ variant: fault === "failed" ? "outline" : "primary", size: "sm" })}
         >
-          Sign it
+          {slow ? "Signing…" : fault === "failed" ? "Retry" : "Sign it"}
         </button>
       </div>
       )}

@@ -86,6 +86,7 @@ const {
   TAG_RANGES,
   TaggedRow,
   TransportError,
+  SigningPending,
   NoticePanel,
   NoticeLine,
   SensitiveVeil,
@@ -176,13 +177,25 @@ function ExactTail({ exact, spoken }) {
    the visible confirmation, and a toast over a picker the reader is still
    working would cover the list they are picking from. A pick says `Added — in
    the staged list.`; the × says `Removed from the staged list.` */
-function PickAnnouncement({ said = "" }) {
+function PickAnnouncement({ said = "", node }) {
   return (
-    <div role="status" aria-live="polite" style={SR_ONLY}>
+    <div role="status" aria-live="polite" style={SR_ONLY} data-node={node}>
       {said}
     </div>
   );
 }
+
+/* THE PICKERS' CAP LINE (seam 248, GAP B): the batch's ten reached, said once
+   above the rows it stills — the naming rule's register under the field, a
+   fact and not a fault, so never `--error`. */
+const PICKER_NOTE = {
+  margin: 0,
+  padding: "8px 24px",
+  fontSize: "var(--text-body-small)",
+  lineHeight: "var(--text-body-small--line-height)",
+  letterSpacing: "var(--text-body-small--letter-spacing)",
+  color: "var(--text-secondary)",
+};
 
 /* An opinion of one gentle record — the vouch-back default made a bundle. */
 function mkBundle(pDirected, pInterest) {
@@ -673,20 +686,30 @@ const REMOVE_CONFIRM_COPY = {
 /* `overSheet` lifts the dialog above a sheet it is raised over — the comments
    thread — by `ReplyKeyAbsent`'s one layer of board glue: `DialogSurface` sits
    on the base wash layer and the sheet one above it, so the dialog is the
-   thing raised last. Over the post detail there is no sheet to clear. */
-function RemoveDialog({ kind, overSheet = false }) {
+   thing raised last. Over the post detail there is no sheet to clear.
+
+   `failed` IS THE REMOVAL THAT DID NOT GO THROUGH (seam 248, RM-G7; the
+   failure pack's grammar at dialog scale, `SeveranceConfirm`'s): the dialog
+   never closed — the act waits for its answer — so it stays up with its
+   pair, `That didn't send. Try again.` stands above it in the dialog's
+   `line` slot, and `Remove`'s own slot reads `Retry`, still a text button in
+   no colour. `Keep it` keeps its place: the way out is the way out it was.
+   One anatomy for both kinds, so the post and the comment fail alike. */
+function RemoveDialog({ kind, overSheet = false, failed = false, node }) {
   const { title, body } = REMOVE_CONFIRM_COPY[kind];
   const dialog = (
     <DialogSurface
       onScrimPress={() => {}}
       title={title}
       body={[body, "This is immediate and permanent."]}
+      line={failed ? "That didn't send. Try again." : undefined}
       actions={
         <>
-          <Button variant="text">Remove</Button>
-          <Button>Keep it</Button>
+          <Button variant="text" node={node && "remove"}>{failed ? "Retry" : "Remove"}</Button>
+          <Button node={node && "keep"}>Keep it</Button>
         </>
       }
+      node={node}
     />
   );
   return overSheet ? <div style={{ position: "fixed", inset: 0, zIndex: 43 }}>{dialog}</div> : dialog;
@@ -865,10 +888,16 @@ function SkyField({ height = 180 }) {
    hairline with its centred quiet label is the one list-splitting line the
    system draws, so the feed's `Already seen` separator is this drawing with
    its own words, never a second construction. `children` carries the words;
-   Explore's stay the default. */
-function Seam({ node, children = "Beyond your reach — newest first" }) {
+   Explore's stay the default.
+
+   ONE SEAM PER SECTION (seam 248). A search answer is sectioned — people,
+   then topics, then content — and each section stands its own ranked head
+   and then its own rest (api-spec, *Search*, Order), so under Ranked each
+   section that has an unscored rest closes its head with its own seam, keyed
+   by the section it splits: `people`, `topics`, `content`. */
+function Seam({ node, nodeKey, children = "Beyond your reach — newest first" }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }} data-node={node}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }} data-node={node} data-node-key={nodeKey}>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
       <span
         style={{
@@ -1507,8 +1536,8 @@ const SEAL_CITATIONS = [
 /* THE KEPT PICKS, written once (backlog item 113, the kept picks' review):
    the review that lists them and the seal that signs them are two boards of
    one batch, and a seal reading back a set the review disagreed with would
-   be the drift this constant exists to stop. Three, because the settings row
-   that reopens the review counts three. The first is `PadPending`'s own pick
+   be the drift this constant exists to stop — and the settings row that
+   reopens the review counts this list, so it cannot drift either. The first is `PadPending`'s own pick
    on @ada's post; a person among them on purpose, since every pad that meets
    the key's absence can keep its pick (`PadKeyAbsent` is the master for all
    of them). Each pair is read the readout's way on both boards — the face,
@@ -1522,12 +1551,24 @@ const SEAL_CITATIONS = [
    of what they had said — so its row carries `consequence`, the person's
    landing words. @juno's post was removed by its author while its pick
    waited, so its row carries `removed`, the target's removal mark, and both
-   boards draw the mark where the name stood. */
+   boards draw the mark where the name stood.
+
+   THE FOURTH IS A TOPIC (seam 248): a feeling about #saltmaps, kept from the
+   tag page's pad while the key was away — the Affinity family, which the
+   batch signs beside the opinions. Its pair is read in the Affinity pad's
+   own axis words, never an opinion's (`AFFINITY_AXES`, handed at render),
+   and the seal's acts row names its family as a feeling — the register the
+   trace's `How you feel about #saltmaps` speaks, never the word Affinity
+   (copy-voice). */
 const KEPT_PICKS = [
   { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 } },
   { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 }, consequence: "This takes you back to zero." },
   { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 }, removed: "Removed by its author" },
+  { kind: "topic", name: "saltmaps", sub: "Topic", pair: { pDirected: 0.6, pInterest: 0.35 } },
 ];
+/* The family word a kept pick's seal row names it by: an opinion on a post
+   or a person, a feeling about a topic. */
+const keptPickFamily = (pick) => (pick.kind === "topic" ? { label: "Feeling", countNoun: "feeling" } : { label: "Opinion", countNoun: "opinion" });
 
 /* A KEPT APPROVAL, NAMED BESIDE THE KEPT PICKS (jakob 2026-10-05, the B
    round's 7, amended: "maybe we should add a link/indicator from the held
@@ -1541,9 +1582,10 @@ const KEPT_PICKS = [
    approval waits for the reader, nothing signs it for them.
    `shown` is the boards' `approval` chip. The wording is jakob's own,
    blessed (jakob 2026-10-05). */
-function KeptApprovalLine({ shown }) {
+function KeptApprovalLine({ shown, node }) {
   return (
     <p
+      data-node={node}
       style={{
         display: shown,
         margin: 0,
@@ -1554,7 +1596,7 @@ function KeptApprovalLine({ shown }) {
       }}
     >
       An approval waits in your invites — go there to sign it.{" "}
-      <InlineAction size="sm" onClick={() => {}}>
+      <InlineAction size="sm" onClick={() => {}} node={node && "open"}>
         Open Invites
       </InlineAction>
     </p>
@@ -1926,13 +1968,16 @@ function KeyAbsentNotice({ line }) {
    the writing — `TextField`'s own `rows` rule — which is the reply composer's
    words, written above what they answer and the pictures that join them. The
    board draws the minimum, as every field does. */
-function WordsBody({ paragraphs, cap, used, error, rows }) {
+/* `node` names the body where a registered board places it (seam 248), in
+   `TextField`'s words: the box `input`, the counter `support`. */
+function WordsBody({ paragraphs, cap, used, error, rows, node }) {
   const spent = used ?? [...paragraphs.join("\n\n")].length;
   const over = cap != null && spent > cap;
   const sized = rows != null;
   return (
-    <div style={sized ? { flex: "none", display: "flex", flexDirection: "column", gap: "var(--space-1)" } : { flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-1)", minHeight: 0 }}>
+    <div style={sized ? { flex: "none", display: "flex", flexDirection: "column", gap: "var(--space-1)" } : { flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-1)", minHeight: 0 }} data-node={node}>
       <div
+        data-node={node && "input"}
         style={{
           flex: sized ? "none" : 1,
           minHeight: sized ? `calc(${rows} * var(--text-body-large--line-height) + 26px)` : undefined,
@@ -1956,7 +2001,7 @@ function WordsBody({ paragraphs, cap, used, error, rows }) {
           </p>
         ))}
       </div>
-      <FieldSupport error={error} cap={cap} used={spent} />
+      <FieldSupport error={error} cap={cap} used={spent} node={node && "support"} />
     </div>
   );
 }
@@ -2034,7 +2079,7 @@ function ComposeDetailsBody({
               onManage={() => {}}
               node="mediaRow"
             />
-            {publishedOn && <EditedMarker label={`Already in your post from ${publishedOn}.`} onInspect={() => {}} />}
+            {publishedOn && <EditedMarker label={`Already in your post from ${publishedOn}.`} onInspect={() => {}} node="published" />}
             <DescribeCounter described={0} total={2} onDescribe={() => {}} node="describeRow" />
           </>
         )}
@@ -2114,11 +2159,11 @@ function ComposeDetailsBody({
    the tag picker, or the same post in the reference picker, unstages its
    withdrawal rather than staging a second, cancelling record: one staged act
    per name (behavior/TagPicker.md, behavior/ReferencePicker.md). */
-function WithdrawnLine({ name }) {
+function WithdrawnLine({ name, node }) {
   return (
-    <QuietNote>
+    <QuietNote node={node}>
       Withdrawn: {name}{" "}
-      <InlineAction size="sm" ariaLabel={`Undo withdrawing ${name}`}>
+      <InlineAction size="sm" ariaLabel={`Undo withdrawing ${name}`} node={node && "undo"}>
         Undo
       </InlineAction>
     </QuietNote>
@@ -2155,15 +2200,25 @@ const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
      under the count, and `Sign the edit` reading `Signing the edit…`.
    `RefPairEdit` passes `targetHoles` alone: the standing citation's two
    faces, the sheet over it naming the same one. */
+/* THE EDITS' NAMES (seam 248): `postEdit` and `commentEdit` register these
+   bodies, and every other board they stand on renders them stripped. Where a
+   board's chip draws an element once per value, each copy is marked with its
+   chip and value (`chipCopy`), so the element keeps one path, keyed by the
+   value — `Sign the edit` under the `signing` chip's `none` and `slow` and the
+   `upload` chip's `failed`. The marks ride only with `holes`, the boards that
+   draw the chips; a copy is never marked on a board that draws one state. */
+const chipCopy = (chip, value) => ({ "data-node-chip": chip, "data-node-key": value });
+
 function EditCitationRow({ holes, removedProps, ...props }) {
-  if (!holes) return <StagedReference {...props} />;
+  const row = { ...props, node: "stagedReference", nodeKey: "1" };
+  if (!holes) return <StagedReference {...row} />;
   return (
     <>
-      <div style={{ display: "{{liveShown}}" }}>
-        <StagedReference {...props} />
+      <div style={{ display: "{{liveShown}}" }} {...chipCopy("target", "live")}>
+        <StagedReference {...row} />
       </div>
-      <div style={{ display: "{{removedShown}}" }}>
-        <StagedReference {...props} {...removedProps} removed="Removed by its author" />
+      <div style={{ display: "{{removedShown}}" }} {...chipCopy("target", "removed")}>
+        <StagedReference {...row} {...removedProps} removed="Removed by its author" />
       </div>
     </>
   );
@@ -2171,16 +2226,21 @@ function EditCitationRow({ holes, removedProps, ...props }) {
 
 function EditGate({ holes, faultHoles, done, total }) {
   if (!holes) return null;
+  if (!faultHoles) {
+    return (
+      <div style={{ display: "{{gateShown}}" }}>
+        <UploadStatusLine done={done} total={total} node="gate" />
+      </div>
+    );
+  }
   return (
     <>
-      <div style={{ display: "{{gateShown}}" }}>
-        <UploadStatusLine done={done} total={total} />
+      <div style={{ display: "{{gateShown}}" }} {...chipCopy("upload", "uploading")}>
+        <UploadStatusLine done={done} total={total} node="gate" />
       </div>
-      {faultHoles && (
-        <div style={{ display: "{{gateFailedShown}}" }}>
-          <UploadStatusLine failed onRetry={() => {}} />
-        </div>
-      )}
+      <div style={{ display: "{{gateFailedShown}}" }} {...chipCopy("upload", "failed")}>
+        <UploadStatusLine failed onRetry={() => {}} node="gate" />
+      </div>
     </>
   );
 }
@@ -2193,15 +2253,15 @@ function EditGate({ holes, faultHoles, done, total }) {
 const EDIT_PICTURES = [{ src: "post-photo.jpg" }, { src: "inviter.jpg" }];
 
 function EditPickedRow({ faultHoles }) {
-  const row = (items) => <PickedRow items={items} caption="2 pictures — the body" onManage={() => {}} />;
+  const row = (items) => <PickedRow items={items} caption="2 pictures — the body" onManage={() => {}} node="mediaRow" />;
   if (!faultHoles) return row(EDIT_PICTURES);
   return (
     <>
-      <div style={{ display: "{{rowShown}}" }}>{row(EDIT_PICTURES)}</div>
-      <div style={{ display: "{{rowUploadingShown}}" }}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], progress: 0.55 }])}</div>
-      <div style={{ display: "{{rowFailedShown}}" }}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], failed: true }])}</div>
+      <div style={{ display: "{{rowShown}}" }} {...chipCopy("upload", "none")}>{row(EDIT_PICTURES)}</div>
+      <div style={{ display: "{{rowUploadingShown}}" }} {...chipCopy("upload", "uploading")}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], progress: 0.55 }])}</div>
+      <div style={{ display: "{{rowFailedShown}}" }} {...chipCopy("upload", "failed")}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], failed: true }])}</div>
       <div style={{ display: "{{errorShown}}" }}>
-        <UploadErrorLine onRetry={() => {}} onRemove={() => {}} />
+        <UploadErrorLine onRetry={() => {}} onRemove={() => {}} node="uploadError" />
       </div>
     </>
   );
@@ -2211,33 +2271,36 @@ function EditPickedRow({ faultHoles }) {
    draw no chip render exactly as before: the count, and `Sign the edit`. With
    `faultHoles` the count also draws the slow subline under it, and the commit
    its in-flight and failed readings. The footer's wrappers are flex columns,
-   so the line's button stretches as it does standing alone. */
+   so the line's button stretches as it does standing alone. The count's two
+   copies are the `signing` chip's; `Sign the edit`'s rest and in-flight
+   copies are the `signing` chip's too, its disabled copy the `upload` chip's
+   `failed`, which overrides a slow signing (the board's VALS). */
 function editFootCount({ unchanged, faultHoles }) {
-  if (!faultHoles) return <ActsFooter count={unchanged ? 0 : 5} />;
+  if (!faultHoles) return <ActsFooter count={unchanged ? 0 : 5} node="acts" />;
   return (
     <>
-      <div style={{ display: "{{footQuietShown}}", flexDirection: "column" }}>
-        <ActsFooter count={5} />
+      <div style={{ display: "{{footQuietShown}}", flexDirection: "column" }} {...chipCopy("signing", "none")}>
+        <ActsFooter count={5} node="acts" />
       </div>
-      <div style={{ display: "{{footSlowShown}}", flexDirection: "column" }}>
-        <ActsFooter count={5} subline={SEAL_SLOW_LINE} />
+      <div style={{ display: "{{footSlowShown}}", flexDirection: "column" }} {...chipCopy("signing", "slow")}>
+        <ActsFooter count={5} subline={SEAL_SLOW_LINE} node="acts" />
       </div>
     </>
   );
 }
 
 function editFootSign({ unchanged, faultHoles }) {
-  if (!faultHoles) return <Button style={{ width: "100%" }} disabled={unchanged}>Sign the edit</Button>;
+  if (!faultHoles) return <Button style={{ width: "100%" }} disabled={unchanged} node="sign">Sign the edit</Button>;
   return (
     <>
-      <div style={{ display: "{{signRestShown}}" }}>
-        <Button style={{ width: "100%" }}>Sign the edit</Button>
+      <div style={{ display: "{{signRestShown}}" }} {...chipCopy("signing", "none")}>
+        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
       </div>
-      <div style={{ display: "{{signBusyShown}}" }}>
-        <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
+      <div style={{ display: "{{signBusyShown}}" }} {...chipCopy("signing", "slow")}>
+        <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…" node="sign">Sign the edit</Button>
       </div>
-      <div style={{ display: "{{signFailedShown}}" }}>
-        <Button style={{ width: "100%" }} disabled>Sign the edit</Button>
+      <div style={{ display: "{{signFailedShown}}" }} {...chipCopy("upload", "failed")}>
+        <Button style={{ width: "100%" }} disabled node="sign">Sign the edit</Button>
       </div>
     </>
   );
@@ -2256,25 +2319,41 @@ function editFootSign({ unchanged, faultHoles }) {
 const EDIT_BACKING = 0.1;
 
 function EditBackingRow() {
-  return <FactRow label="Your backing" value={<AttachmentReadout pDirected={EDIT_BACKING} />} action="Adjust" />;
+  return <FactRow label="Your backing" value={<AttachmentReadout pDirected={EDIT_BACKING} node="value" />} action="Adjust" node="backing" />;
+}
+
+/* The license row's lock, named `lock` where the row is named. */
+function LockedLicenseRow() {
+  return (
+    <FactRow
+      label="License"
+      value="Public domain"
+      action={
+        <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes" data-node="lock">
+          <Icon name="lock" size={16} />
+        </span>
+      }
+      node="license"
+    />
+  );
 }
 
 function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" />
+      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         {/* The fields scroll under the pinned foot, the wizard reading: a
             form taller than the phone runs on under it, and the foot stays
             whole. */}
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="body">
             <EditPickedRow faultHoles={holes} />
-            <InlineAction size="sm" selfStart>+ Add pictures · 2 of 10</InlineAction>
-            <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
+            <InlineAction size="sm" selfStart node="add">+ Add pictures · 2 of 10</InlineAction>
+            <QuietNote node="rule">A post&apos;s body is words or media, never both.</QuietNote>
           </div>
 
-          <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" />
+          <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" node="title" />
 
           <TextField
             label="Description"
@@ -2282,20 +2361,21 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
             rows={2}
             cap={500}
             value="Rubbings from three weekends at low tide — paper against the salt crust."
+            node="description"
           />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>Tags</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
+            <FieldLabel node="label">Tags</FieldLabel>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <TopicRemovable topic="fieldnotes" onEdit={() => {}} />
-              <TopicRemovable topic="saltmaps" onEdit={() => {}} />
+              <TopicRemovable topic="fieldnotes" onEdit={() => {}} node="tag" />
+              <TopicRemovable topic="saltmaps" onEdit={() => {}} node="tag" />
             </div>
-            <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-            {!unchanged && <WithdrawnLine name="#coastroad" />}
+            <InlineAction size="sm" selfStart node="add">+ Add a tag</InlineAction>
+            {!unchanged && <WithdrawnLine name="#coastroad" node="withdrawn" />}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>References</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="references">
+            <FieldLabel node="label">References</FieldLabel>
             {/* The composer's whole staged form, as `ComposeDetails` draws it:
                 the kind under the name, and the pair the citation signs. An edit
                 stages the same citation a first draft does, so it shows back the
@@ -2311,22 +2391,14 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
               pair={{ pDirected: 0.1, pInterest: 0.1 }}
               onEdit={() => {}}
             />
-            <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
-            {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />}
+            <InlineAction size="sm" selfStart node="add">+ Cite something</InlineAction>
+            {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} node="withdrawn" />}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <FactRow
-              label="License"
-              value="Public domain"
-              action={
-                <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-                  <Icon name="lock" size={16} />
-                </span>
-              }
-            />
+          <div style={{ display: "flex", flexDirection: "column" }} data-node="facts">
+            <LockedLicenseRow />
             <EditBackingRow />
-            <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+            <FactRow label="Sensitive" value="Not marked" action="Mark" last node="sensitive" />
           </div>
         </div>
 
@@ -2359,33 +2431,33 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
 function CommentEditBody({ holes = false } = {}) {
   return (
     <>
-      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" />
+      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
-          <QuietNote>Your comment on "The long way home".</QuietNote>
+          <QuietNote node="target">Your comment on "The long way home".</QuietNote>
 
-          <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." />
+          <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." node="words" />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>Pictures</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="pictures">
+            <FieldLabel node="label">Pictures</FieldLabel>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} />
-              <InlineAction size="sm">+ Add pictures · 1 of 4</InlineAction>
+              <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} node="thumb" nodeKey="1" />
+              <InlineAction size="sm" node="add">+ Add pictures · 1 of 4</InlineAction>
             </div>
-            <DescribeCounter described={1} total={1} onDescribe={() => {}} />
+            <DescribeCounter described={1} total={1} onDescribe={() => {}} node="describeRow" />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>Tags</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
+            <FieldLabel node="label">Tags</FieldLabel>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <TopicRemovable topic="glovebox" onEdit={() => {}} />
+              <TopicRemovable topic="glovebox" onEdit={() => {}} node="tag" />
             </div>
-            <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-            <WithdrawnLine name="#coastroad" />
+            <InlineAction size="sm" selfStart node="add">+ Add a tag</InlineAction>
+            <WithdrawnLine name="#coastroad" node="withdrawn" />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>References</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="references">
+            <FieldLabel node="label">References</FieldLabel>
             <EditCitationRow
               holes={holes}
               removedProps={{ src: undefined }}
@@ -2396,29 +2468,21 @@ function CommentEditBody({ holes = false } = {}) {
               pair={{ pDirected: 0.1, pInterest: 0.1 }}
               onEdit={() => {}}
             />
-            <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
-            <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />
+            <InlineAction size="sm" selfStart node="add">+ Cite something</InlineAction>
+            <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} node="withdrawn" />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <FactRow
-              label="License"
-              value="Public domain"
-              action={
-                <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-                  <Icon name="lock" size={16} />
-                </span>
-              }
-            />
-            <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+          <div style={{ display: "flex", flexDirection: "column" }} data-node="facts">
+            <LockedLicenseRow />
+            <FactRow label="Sensitive" value="Not marked" action="Mark" last node="sensitive" />
           </div>
         </div>
 
         {/* Five things: the edit, #glovebox added, #coastroad withdrawn, and the
             citation's withdrawal at its two counter-records (`CommentEditActs`). */}
         <EditGate holes={holes} done={0} total={1} />
-        <ActsFooter count={5} />
-        <Button style={{ width: "100%" }}>Sign the edit</Button>
+        <ActsFooter count={5} node="acts" />
+        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
       </div>
     </>
   );
@@ -2516,10 +2580,10 @@ function CommentComposerFoot({ fieldOpacity, shown }) {
    margin. */
 const COMMENTS_GAP = 12;
 
-function CommentsSheet({ children, scrolledBy = 0, footOpacity, shown }) {
+function CommentsSheet({ children, scrolledBy = 0, footOpacity, shown, node }) {
   return (
-    <BottomSheet open tallest ariaLabel="Comments">
-      <SheetTitle>Comments</SheetTitle>
+    <BottomSheet open tallest ariaLabel="Comments" node={node}>
+      <SheetTitle node={node && "title"}>Comments</SheetTitle>
       <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: COMMENTS_GAP, margin: 0, padding: "0 16px", listStyle: "none" }}>
         {scrolledBy > 0 && <li aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -(scrolledBy + COMMENTS_GAP) }} />}
         {children}
@@ -2642,8 +2706,22 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    own (jakob 2026-10-02), so in the applicant's reading the foot's face is
    @juno's and @sol's comment is someone else's: no `Edit`, the reader's ⋮.
    Each reading's copy of that comment stands in its own list item, the other
-   one hidden. */
-function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown }) {
+   one hidden.
+
+   `node` NAMES THE THREAD (seam 248, the debt seam 094 left: the sheet stood
+   unnamed until a board needed what is inside it). The sheet is the post
+   detail's thread, so a registered board places it as `threadSheet` under
+   `postDetail` — the surface that hosts every comment menu, confirm and mark
+   the thread raises. Its title is `title`, and each top-level comment
+   `commentCard`, keyed by its author's handle as every comment card is; a
+   branch's replies stay unnamed until a board needs them, named then as pure
+   addition. The comment menus and the removal confirm are raised OVER the
+   sheet, never inside it, so they keep their own names beside it
+   (`postDetail.menuSheet` — jakob's item 64: one path for every menu on the
+   detail, told apart by board — and `postDetail.dialog`). A board that names
+   the sheet draws one reader, so the `shown` pair stays unnamed. */
+function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, node }) {
+  const card = node && "commentCard";
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
       <CommentCard
@@ -2669,11 +2747,13 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
       onEdit={removed ? undefined : () => {}}
       menuItems={removed ? [] : OWN_THREAD_MENU}
       redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
+      node={shown ? undefined : card}
     />
   );
   return (
-    <CommentsSheet scrolledBy={scrolledBy} footOpacity={footOpacity} shown={shown}>
+    <CommentsSheet scrolledBy={scrolledBy} footOpacity={footOpacity} shown={shown} node={node}>
       <CommentCard
+        node={card}
         author={TOBIAS}
         content={TOBIAS_COMMENT}
         timestamp="1h"
@@ -2697,6 +2777,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
           comment-scale block, while the author, the timestamp and the
           opinion stay readable. */}
       <CommentCard
+        node={card}
         author={MIRA}
         content="The gulls had been at it before the tide came back. Two frames, both grim."
         timestamp="2h"
@@ -4701,7 +4782,7 @@ function PeopleCopies({ node }) {
    faces. The count on the post's line IS this list's length. */
 const CITING_ARTIFACTS = [
   { kind: "post", name: "Where the salt goes in winter", src: "post-photo.jpg", pair: { pDirected: 0.7, pInterest: 0.5 } },
-  { kind: "comment", name: "Answering the tide-market piece", pair: { pDirected: 0.4, pInterest: 0.65 }, pending: true },
+  { kind: "comment", name: "Answering the tide-market piece", pair: { pDirected: 0.4, pInterest: 0.65 } },
   { kind: "post", name: "Three mornings on the wall", pair: { pDirected: 0.15, pInterest: 0.9 } },
   { kind: "post", name: "A honey stand and a headland", pair: { pDirected: -0.3, pInterest: 0.35 } },
 ];
@@ -4720,8 +4801,25 @@ const CITING_ARTIFACTS = [
    door's tolerance for a bare one stays at the door, where a reader never has
    to think about it. */
 const SOL_INVITE_ID = "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15";
+/* The actor id of the asker who deleted their account (`Invites`' `asker`
+   chip): the lowercase UUID the wire carries, the row's only key left. */
+const DELETED_ASKER_ID = "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608";
+/* A section of Invites with nothing in it (`Invites`' `sections` chip): the
+   empty list's quiet register, at the rows' inset. */
+const INVITES_EMPTY_LINE = {
+  margin: 0,
+  padding: "0 24px 8px",
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  color: "var(--text-secondary)",
+};
 const SOL_INVITE_LINK = `https://cogra.social/join/${SOL_INVITE_ID}`;
 const SOL_INVITE_LINK_OPEN = "https://cogra.social/join/c47b19e0-3a52-4f68-b1d9-6e0a85f37c24";
+/* @rafa came through a single-use link sol issued before the fresh one. Using
+   it used it up, so it keys his group and never stands under Live links: a
+   link that no longer works is not live (Invites.md). */
+const SOL_INVITE_USED_ID = "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64";
 
 /* THE ASK LINK — the invite link's mirror, and shaped as its mirror: the same
    origin, its own path, one id. What it is NOT is the difference that matters.
@@ -4981,7 +5079,7 @@ const YOUR_VOUCH_BACK_HELP = [
    A KEPT APPROVAL SURFACES HERE AS ITS OWN CARD (jakob 2026-10-02, the
    fix-fix round's 22). An approval set while the key was elsewhere waits on
    the device as pending (`PadKeyAbsent`); once the key is back it never
-   joins the kept picks' batch — the review lists plain opinions only. It
+   joins the kept picks' batch — the review lists plain picks only. It
    surfaces on this page, where approving lives, with its ceremony kept: it
    signs through the approval pad, and the vouch lands and notifies them as
    any approval does. It is the kept vouch-back's twin, which surfaces as its
@@ -5026,8 +5124,30 @@ function KeptApprovalRow({ shown }) {
    head — and a group by the id of the link its applications came through. A
    live link's card is `link`, keyed by the same id; the `revoke` chip draws
    the first one twice, and each copy keeps the link's own key (jakob
-   2026-10-07, ruling 39: a chip copy of a keyed instance). */
-function InvitesBody({ approving = false, kept = "none", revoke }) {
+   2026-10-07, ruling 39: a chip copy of a keyed instance).
+
+   THREE MORE STATES, ONE CHIP EACH (seam 248), all `Invites`' own:
+   - `sections` — EITHER HALF CAN BE EMPTY, AND IT STILL STANDS. The page
+     reads Applications, then Live links, always (the sidecar's law): a half
+     with nothing in it keeps its label and says so in one quiet line,
+     `No applications waiting.` or `No live links.`, the empty list's calm
+     register at the list's own rung. Only both halves empty is
+     `InvitesEmpty`, the teaching state. `shown` holds the display holes.
+   - `asker` — THE ASKER WHO DELETED THEIR ACCOUNT. Their application keeps
+     its place and its age; the row reads by the removal mark's grammar —
+     the disc keeps its space and fills with nothing, `Deleted account` in
+     the system's voice where the handle stood (`ContentRow`'s `redacted`),
+     and its close is spoken `Close a deleted account's application`. The row
+     has no handle left to key by, so it is `redactedApplication`, keyed by
+     the asker's actor id, the hidden-accounts sheet's rule. The data does
+     not serve this yet: the application carries no redaction signal today
+     (seam 248, an API field owed by the implementation side).
+   - `copy` — A COPY THAT FAILED. Copying is a comfort, not a signature, so it
+     answers in the comfort's register on the link's own card: `That didn't
+     go through.` with `Retry`, the row line's vehicle (`RowSigning`'s),
+     where `Link copied` would have answered. The link stays whole on the
+     card, readable by hand. */
+function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
   return (
     <>
       <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -5050,8 +5170,15 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
         </div>
 
         <SectionLabel node="applicationsLabel">Applications</SectionLabel>
+        {shown && (
+          <div style={{ display: shown.applicationsEmpty }} data-node-chip="sections" data-node-key="no-applications">
+            <p style={INVITES_EMPTY_LINE} data-node="applicationsEmpty">
+              No applications waiting.
+            </p>
+          </div>
+        )}
         {kept !== "none" && <KeptApprovalRow shown={kept} />}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+        <div style={{ display: shown ? shown.applications : "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
           <ApplicationGroup label="Many uses" count={4} node="group" nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)} />
           <ContentRow
             variant="chronicle"
@@ -5089,19 +5216,36 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             node="application"
             nodeKey="vora82"
           />
-          <ContentRow
-            variant="chronicle"
-            chevron={false}
-            name="vora83"
-            title="@vora83"
-            second="Not fully registered yet"
-            trailing="1d"
-            action={<CloseApplication handle="@vora83" node="close" />}
-            onOpen={() => {}}
-            node="application"
-            nodeKey="vora83"
-          />
-          <ApplicationGroup label="Single use" count={1} node="group" nodeKey={SOL_INVITE_ID} />
+          <div style={{ display: shown ? shown.askerNamed : "flex", flexDirection: "column" }}>
+            <ContentRow
+              variant="chronicle"
+              chevron={false}
+              name="vora83"
+              title="@vora83"
+              second="Not fully registered yet"
+              trailing="1d"
+              action={<CloseApplication handle="@vora83" node="close" />}
+              onOpen={() => {}}
+              node="application"
+              nodeKey="vora83"
+            />
+          </div>
+          {shown && (
+            <div style={{ display: shown.askerDeleted, flexDirection: "column" }} data-node-chip="asker" data-node-key="deleted">
+              <ContentRow
+                variant="chronicle"
+                chevron={false}
+                redacted
+                second="Not fully registered yet"
+                trailing="1d"
+                action={<CloseApplication handle="a deleted account" node="close" />}
+                onOpen={() => {}}
+                node="redactedApplication"
+                nodeKey={DELETED_ASKER_ID}
+              />
+            </div>
+          )}
+          <ApplicationGroup label="Single use" count={1} node="group" nodeKey={SOL_INVITE_USED_ID} />
           <ContentRow
             variant="chronicle"
             chevron={false}
@@ -5132,7 +5276,14 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
         </div>
 
         <SectionLabel node="linksLabel">Live links</SectionLabel>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+        {shown && (
+          <div style={{ display: shown.linksEmpty }} data-node-chip="sections" data-node-key="no-links">
+            <p style={INVITES_EMPTY_LINE} data-node="linksEmpty">
+              No live links.
+            </p>
+          </div>
+        )}
+        <div style={{ display: shown ? shown.links : "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
           {/* REVOKE WAITS (the check round's Q10, jakob 2026-10-06): a revoke is
               a consequential write, so the card holds while it is in flight and,
               past 200ms, its word reads `Revoking…`, inert and never dimmed. The
@@ -5150,7 +5301,15 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
               caption="Expires in 7 days · 22.09.2026"
               node="link"
               nodeKey={SOL_INVITE_ID}
-            />
+            >
+              {shown && (
+                <div style={{ display: shown.copyFailed }} data-node-chip="copy" data-node-key="failed">
+                  <div data-node="copyFault">
+                    <SigningPending row message="That didn't go through." onRetry={() => {}} />
+                  </div>
+                </div>
+              )}
+            </PayoutAddress>
           </div>
           {revoke && (
             <div style={{ display: revoke.busy }} data-node-chip="revoke" data-node-key="waiting">
@@ -5205,18 +5364,20 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
    SINGLE USE IS THE DEFAULT. A targeted invite is the ordinary one and the safe
    one — a leaked link stages at most one stranger (`invitations.md` §6) — so the
    default sits where a reader who changes nothing is least exposed. */
+/* Named under `invites` (seam 248): the sheet `createSheet`, its two rows
+   `singleUse` and `expiry` in the `options` group, and `create`. */
 function NewInviteSheet() {
   return (
-    <BottomSheet open ariaLabel="New invite">
-      <SheetTitle>New invite</SheetTitle>
+    <BottomSheet open ariaLabel="New invite" node="createSheet">
+      <SheetTitle node="title">New invite</SheetTitle>
       <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px" }}>
-        <SettingsGroup footnote="With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time.">
-          <SettingsRow label="Only one person can use it" checked onOpen={() => {}} />
-          <SettingsRow label="Expires after" value="7 days" onOpen={() => {}} />
+        <SettingsGroup footnote="With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time." node="options">
+          <SettingsRow label="Only one person can use it" checked onOpen={() => {}} node="singleUse" />
+          <SettingsRow label="Expires after" value="7 days" onOpen={() => {}} node="expiry" />
         </SettingsGroup>
 
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <Button>Create invite</Button>
+          <Button node="create">Create invite</Button>
         </div>
       </div>
     </BottomSheet>

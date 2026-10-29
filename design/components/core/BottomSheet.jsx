@@ -158,6 +158,12 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
         background: stacked ? "var(--surface-container-highest)" : "var(--surface-dialog)",
         color: "var(--on-surface)",
         borderRadius: "var(--radius-extra-large) var(--radius-extra-large) 0 0",
+        /* BORDER-BOX: a height class is the surface's whole height, its
+           padding inside it (seam 248) — `DialogSurface`'s rule for its
+           width. Content-box drew 88% + 32px (91.8% of an 844 frame) and
+           put the tallest sheet's top edge 40px from the safe area, under
+           the 72px sliver. */
+        boxSizing: "border-box",
         padding: "var(--space-2) 0 calc(var(--space-6) + env(safe-area-inset-bottom, 0px))",
         // The surface takes focus only to hand it on; it is not a control.
         outline: "none",

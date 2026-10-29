@@ -42,27 +42,41 @@
    as `ExploreSearch` names its rows: each is a `result`, keyed by its position
    in the results, the content counting on after the people. The caption is
    `profilesLabel`, as Explore's recents' is `recentLabel`; the door is
-   `profilesDoor`. */
+   `profilesDoor`.
+
+   EVERY SECTION STANDS ITS OWN RANKED HEAD, THEN ITS OWN REST (seam 248;
+   api-spec, *Search*, Order). The answer is people, then topics, then
+   content, and under Ranked each section that has an unscored rest closes
+   its head with its own seam, keyed by the section: Salome Ward stands past
+   the people's seam, unranked and bare-edged, before the door; `saltcrust`
+   past the topics'; the 2024 rubbing past the content's, wearing its date.
+   The topics section takes no caption, as the content takes none: the
+   people's door is the one section end the reader acts on. */
 export const NODE = "explore";
 export function Screen() {
   return (
     <>
       <div style={{ flex: "none", paddingTop: 12 }}>
-        <SearchBar query="sal" node="searchField" />
+        <SearchBar query="sal" onClear={() => {}} node="searchField" />
         <SearchTriggerRow reading="Everything" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <SectionLabel node="profilesLabel">Profiles</SectionLabel>
         <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" rank="4.20" onOpen={() => {}} node="result" nodeKey="1" />
         <ReferenceRow kind="person" name="Ines Salas" sub="@inesalas" rank="3.10" onOpen={() => {}} node="result" nodeKey="2" />
-        <ReferenceRow kind="person" name="Salome Ward" sub="@salome" rank="2.60" onOpen={() => {}} node="result" nodeKey="3" />
+        <Seam node="seam" nodeKey="people" />
+        <ReferenceRow kind="person" name="Salome Ward" sub="@salome" onOpen={() => {}} node="result" nodeKey="3" />
         <div style={{ display: "flex", padding: "0 8px 8px" }}>
           <Button variant="text" size="sm" node="profilesDoor">
             See all profiles
           </Button>
         </div>
-        <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="4" />
-        <ReferenceRow kind="topic" name="saltmaps" rank="3.40" onOpen={() => {}} node="result" nodeKey="5" />
+        <ReferenceRow kind="topic" name="saltmaps" rank="3.40" onOpen={() => {}} node="result" nodeKey="4" />
+        <Seam node="seam" nodeKey="topics" />
+        <ReferenceRow kind="topic" name="saltcrust" onOpen={() => {}} node="result" nodeKey="5" />
+        <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="6" />
+        <Seam node="seam" nodeKey="content" />
+        <ReferenceRow kind="post" name="First try at a rubbing" value="06.09.2024" onOpen={() => {}} node="result" nodeKey="7" />
       </div>
       <BottomNav active="search" slots={ALL_SLOTS} inline node="bottomBar" />
     </>

@@ -20,6 +20,12 @@ WHEN tap the notice's ? -> the dialog Your key opens with Your key lives where y
 
 ALWAYS the pad's Your key dialog says only what the notice does not, and never repeats that signing needs the key or that the recovery code restores it
 
+WHEN the alternates open GIVEN the signing key is not on this device -> the alternates carry the pad's key notice where the landing line and the action row were, Your key isn't on this browser over its two lines and Restore the key, with Keep it pending, restore later under it AND NEVER Sign it, Cancel or Walk it back stands
+
+WHEN press Keep it pending, restore later in the alternates -> the alternates close AND the pick waits on this device as the pad keeps one AND NEVER anything is staged or signed
+
+WHEN press outside the alternates or press the system's Back GIVEN the signing key is not on this device -> the alternates close AND the pick is dropped AND NEVER the pick is kept
+
 WHEN press Restore the key -> the key's restore opens
 
 WHEN press Keep it pending, restore later -> the pad closes AND the pick waits on this device AND the target's anchor wears the kept pick's face with Waiting for your key under it AND NEVER anything is staged or signed
@@ -44,7 +50,7 @@ WHEN the reader signs out of an account set to forget this device GIVEN this dev
 
 WHEN the session is ended from elsewhere -> every kept pick stays on this device, sealed and unusable until this device signs in again online with the account's current credentials AND NEVER a kept pick is destroyed
 
-WHEN the key is restored GIVEN plain opinions are kept pending -> they sign together in one batch the reader reviews first AND NEVER a kept pick is signed silently
+WHEN the key is restored GIVEN plain picks, opinions or feelings, are kept pending -> they sign together in one batch the reader reviews first AND NEVER a kept pick is signed silently
 
 ALWAYS a kept vouch-back or approval never joins the kept picks' batch: it surfaces as its own card and signs through its own pad, its ceremony kept
 

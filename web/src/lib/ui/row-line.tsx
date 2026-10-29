@@ -20,6 +20,7 @@
 import type { DataNode } from "./data-node";
 import { testAttributes } from "./data-node";
 import { InlineAction } from "@/lib/ui2/inline-action";
+import { PLATE_CLASS, PLATE_STYLE } from "@/lib/ui2/media/reel-plate";
 
 /** The hold's wait, once 200ms pass without an answer. */
 export const SIGNING_ROW = "Signing…";
@@ -44,12 +45,40 @@ export function RowLine({
   state,
   testId,
   node,
+  plate = false,
 }: {
   state: RowLineState;
   testId: string;
   /** The registered slot the line stands in, where its board names one. */
   node?: DataNode;
+  /**
+   * THE STREAM'S FORM (Reel.md:65-69; ReelRail.jsx `stanceLine`): over a clip
+   * there is no row, so the same line stands on the stream's plate — the
+   * words in their own registers, the plate only their ground.
+   */
+  plate?: boolean;
 }) {
+  if (plate) {
+    const quiet = state.kind === "signing" || state.kind === "writeRule";
+    return (
+      <p role={quiet ? "status" : "alert"} {...testAttributes(node, testId)} className={PLATE_CLASS} style={PLATE_STYLE}>
+        {quiet ? (
+          <span className="text-on-surface-variant">
+            {state.kind === "signing" ? SIGNING_ROW : WRITE_RULE_ROW}
+          </span>
+        ) : (
+          <>
+            <span className="text-error">
+              {state.kind === "didntSign" ? DIDNT_SIGN_ROW : DIDNT_GO_THROUGH_ROW}
+            </span>
+            <InlineAction size="sm" onClick={state.onRetry} testId={`${testId}-retry`}>
+              Retry
+            </InlineAction>
+          </>
+        )}
+      </p>
+    );
+  }
   if (state.kind === "signing" || state.kind === "writeRule") {
     return (
       <p

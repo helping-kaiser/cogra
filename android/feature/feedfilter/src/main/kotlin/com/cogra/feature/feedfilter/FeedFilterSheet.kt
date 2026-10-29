@@ -573,10 +573,8 @@ private fun TopicSection(
             )
         }
         Box(Modifier.fillMaxWidth()) {
-            // DRIFT (feed-filter lane a-f): `All your topics` opens YourTopics,
-            // which this app does not draw on main yet (it rides the Explore
-            // lane) — the door stands, inert, until it does (introduced-but-
-            // inert law), as web's did.
+            // `All your topics` opens the reader's own Your topics — everything
+            // held, the topics held against included (FeedSheet.md).
             CograButton(
                 text = stringResource(R.string.feedfilter_all_topics),
                 onClick = onOpenTopics ?: {},

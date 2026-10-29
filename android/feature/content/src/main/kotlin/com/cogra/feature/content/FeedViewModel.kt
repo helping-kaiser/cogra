@@ -18,18 +18,19 @@ import com.cogra.domain.feed.FeedRanking
 import com.cogra.domain.feed.FeedRepository
 import com.cogra.domain.feed.FeedRow
 import com.cogra.domain.feed.FeedTopic
-import com.cogra.domain.feed.FeedTopicsRepository
 import com.cogra.domain.feed.FeedViewer
 import com.cogra.domain.feed.FilterChange
 import com.cogra.domain.feed.MAX_CARDS_WINDOW
 import com.cogra.domain.feed.ReaderDefaults
 import com.cogra.domain.feed.changeTo
+import com.cogra.domain.feed.heldFor
 import com.cogra.domain.feed.derive
 import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.hidden.HiddenStatus
 import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.removal.RemovedMarks
+import com.cogra.domain.topics.HeldTopicsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
@@ -137,7 +138,7 @@ class FeedViewModel @Inject constructor(
     private val seenTracker: SeenTracker,
     private val hidden: HiddenSet,
     private val readerDefaults: ReaderDefaults,
-    private val topics: FeedTopicsRepository,
+    private val topics: HeldTopicsRepository,
     private val removedMarks: RemovedMarks,
     private val committed: CommittedFeedFilter,
 ) : ViewModel() {

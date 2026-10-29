@@ -51,10 +51,13 @@ import { useModalFocus } from "./BottomSheet.jsx";
    answer — cancel, keep, stay, close — never the destructive act; Escape (and
    Android's Back) call it too. Focus moves into the dialog, stays inside it,
    and returns to what opened it (readme §10). */
+// The whole headline-small role, tracking included — left out, the title
+// inherited the body's 0.5px (seam 248; seam 245's ask-6/7 pattern).
 const DIALOG_TITLE_STYLE = {
   margin: 0,
   fontSize: "var(--text-headline-small)",
   lineHeight: "var(--text-headline-small--line-height)",
+  letterSpacing: "var(--text-headline-small--letter-spacing)",
   fontWeight: "var(--text-headline-small--font-weight)",
 };
 const DIALOG_BODY_STYLE = {
@@ -65,6 +68,13 @@ const DIALOG_BODY_STYLE = {
   lineHeight: "var(--text-body-medium--line-height)",
   letterSpacing: "var(--text-body-medium--letter-spacing)",
   color: "var(--text-secondary)",
+};
+const DIALOG_LINE_STYLE = {
+  margin: 0,
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  color: "var(--text-failure)",
 };
 const asParagraphs = (body) =>
   (Array.isArray(body) ? body : [body]).map((part, index) =>
@@ -77,10 +87,15 @@ const asParagraphs = (body) =>
     ),
   );
 
-export function DialogSurface({ children, ariaLabel, inline = false, onScrimPress, width = "var(--dialog-max-width)", title, body, actions, node }) {
+/* `line` IS THE FAULT THAT KEEPS A DIALOG UP (the failure pack's grammar, at
+   dialog scale; seam 248): one line in the failure register between the body
+   and the actions — `That didn't send. Try again.` — while the commitment's
+   own slot reads `Retry`. Its own slot rather than a body paragraph, so a
+   registered dialog names it `line` beside `title` and `body`. */
+export function DialogSurface({ children, ariaLabel, inline = false, onScrimPress, width = "var(--dialog-max-width)", title, body, line, actions, node }) {
   const surfaceRef = React.useRef(null);
   useModalFocus(surfaceRef, !inline, onScrimPress);
-  const slotted = title !== undefined || body !== undefined || actions !== undefined;
+  const slotted = title !== undefined || body !== undefined || line !== undefined || actions !== undefined;
   const surface = (
     <div
       ref={surfaceRef}
@@ -89,6 +104,11 @@ export function DialogSurface({ children, ariaLabel, inline = false, onScrimPres
       aria-modal={inline ? undefined : "true"}
       aria-label={ariaLabel ?? (typeof title === "string" ? title : undefined)}
       style={{
+        /* BORDER-BOX: the clamp is the surface's whole width, padding inside it
+           (seam 248). Content-box drew 20rem + 48px = 368 on every frame and
+           broke the inset's own promise at a narrow phone; the clients build
+           the 320 the clamp names. */
+        boxSizing: "border-box",
         width: `min(calc(100vw - 2 * var(--dialog-inset)), ${width})`,
         borderRadius: "var(--radius-extra-large)",
         background: "var(--surface-dialog)",
@@ -103,6 +123,11 @@ export function DialogSurface({ children, ariaLabel, inline = false, onScrimPres
         <>
           {title !== undefined && <h2 style={DIALOG_TITLE_STYLE} data-node={node && "title"}>{title}</h2>}
           {body !== undefined && <div style={{ ...DIALOG_BODY_STYLE, marginTop: title !== undefined ? "var(--space-4)" : 0 }} data-node={node && "body"}>{asParagraphs(body)}</div>}
+          {line !== undefined && (
+            <p role="alert" style={{ ...DIALOG_LINE_STYLE, marginTop: title !== undefined || body !== undefined ? "var(--space-4)" : 0 }} data-node={node && "line"}>
+              {line}
+            </p>
+          )}
           {actions !== undefined && (
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center", gap: "var(--space-2)", marginTop: "var(--space-6)" }}>{actions}</div>
           )}

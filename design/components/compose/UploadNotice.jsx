@@ -63,22 +63,26 @@ function Ring({ progress = 0.55, size = 18 }) {
    waiting on one picture says so: at a `total` of one the line reads
    `…signing waits for the picture.`, and `the pictures` from two up. The
    video and the cover are one thing already, so their nouns never change. */
-export function UploadStatusLine({ done, total, progress, media = "pictures", failed = false, message = "One picture didn't upload.", onRetry }) {
+/* `node` is the data-node name its placer gives the line (seam 248): the line
+   takes it, and names its parts — uploading, `line`; failed, `message`,
+   `wait` and `retry`. Given none, it renders exactly as before. */
+export function UploadStatusLine({ done, total, progress, media = "pictures", failed = false, message = "One picture didn't upload.", onRetry, node }) {
   if (failed) {
     return (
-      <p style={{ margin: 0, textAlign: "center", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-        <span style={{ color: "var(--error)" }}>{message}</span>{" "}
-        <span style={{ color: "var(--text-secondary)" }}>Signing waits for it.</span>{" "}
-        <InlineAction size="lg" onClick={onRetry} style={{ display: "inline" }}>
+      <p style={{ margin: 0, textAlign: "center", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node}>
+        <span style={{ color: "var(--error)" }} data-node={node && "message"}>{message}</span>{" "}
+        <span style={{ color: "var(--text-secondary)" }} data-node={node && "wait"}>Signing waits for it.</span>{" "}
+        <InlineAction size="lg" onClick={onRetry} style={{ display: "inline" }} node={node && "retry"}>
           Retry
         </InlineAction>
       </p>
     );
   }
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-2)" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-2)" }} data-node={node}>
       <Ring progress={progress ?? (total ? done / total : 0.5)} />
       <span
+        data-node={node && "line"}
         style={{
           fontSize: "var(--text-body-medium)",
           lineHeight: "var(--text-body-medium--line-height)",
@@ -91,19 +95,21 @@ export function UploadStatusLine({ done, total, progress, media = "pictures", fa
   );
 }
 
-export function UploadErrorLine({ message = "One picture didn't upload.", onRetry, onRemove }) {
+/* `node` names the line where its placer gives one (seam 248): `message`,
+   `retry` and `remove` inside it. */
+export function UploadErrorLine({ message = "One picture didn't upload.", onRetry, onRemove, node }) {
   return (
-    <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }}>
-      <span style={{ color: "var(--error)" }}>{message}</span>{" "}
+    <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }} data-node={node}>
+      <span style={{ color: "var(--error)" }} data-node={node && "message"}>{message}</span>{" "}
       {onRetry && (
         <>
-          <InlineAction size="sm" onClick={onRetry}>
+          <InlineAction size="sm" onClick={onRetry} node={node && "retry"}>
             Retry
           </InlineAction>{" "}
           <span style={{ color: "var(--text-secondary)" }}>·</span>{" "}
         </>
       )}
-      <InlineAction size="sm" onClick={onRemove}>
+      <InlineAction size="sm" onClick={onRemove} node={node && "remove"}>
         Remove it
       </InlineAction>
     </p>

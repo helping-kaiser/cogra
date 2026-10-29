@@ -18,6 +18,14 @@ data object FeedTab
 @Serializable
 data object ProfileTab
 
+/** The Explore tab's nested graph: Explore and every screen a search or its door opens. */
+@Serializable
+data object ExploreTab
+
+/** The Wallet tab's nested graph: today its coming-soon door, and what its band opens. */
+@Serializable
+data object WalletTab
+
 // The destinations (type-safe routes, Navigation 2.8+).
 @Serializable
 data class InviteEntry(val inviteId: String? = null)
@@ -39,6 +47,18 @@ data object KeyCeremony
 
 @Serializable
 data object Feed
+
+/** Explore — the bar's search slot (Explore.md); searching is a state of this root, never a route. */
+@Serializable
+data object Explore
+
+/** The Wallet tab's root: the coming-soon door (WalletComingSoon.md). */
+@Serializable
+data object Wallet
+
+/** Every topic the reader holds, behind Explore's door (YourTopics.md). */
+@Serializable
+data object YourTopics
 
 /**
  * The composer. [postId] names an edit target; [referenceTargetId]
@@ -130,8 +150,21 @@ data object ProfileEdit
 @Serializable
 data class AvatarFlow(val uri: String, val fromEdit: Boolean)
 
+/**
+ * Invites (Invites.md). [from] names the door it was opened from, which the
+ * back arrow reads (`notifications`, `kept-picks`; the reader's own profile
+ * otherwise — Invites.md:97).
+ */
 @Serializable
-data object Invites
+data class Invites(val from: String? = null)
+
+/**
+ * The ask link's landing (`VouchAsk`; auth.md "Link URLs": `/vouch/<link-id>`).
+ * A root-level destination, like the mailed links' landings: it is reached
+ * from outside, with nothing of its own beneath it.
+ */
+@Serializable
+data class VouchAsk(val askLinkId: String)
 
 @Serializable
 data object Settings
@@ -210,6 +243,9 @@ internal const val EMAIL_CHANGE_PATH = "/email-change"
 
 /** The account deletion's link path (auth.md "Link URLs"), claimed beside `/join`. */
 internal const val DELETE_ACCOUNT_PATH = "/delete-account"
+
+/** The ask link's path (auth.md "Link URLs"), claimed beside `/join`. */
+internal const val VOUCH_PATH = "/vouch"
 
 /** What `ManageSpaceActivity` relays the system storage screen's "Manage space" as. */
 const val ACTION_MANAGE_SPACE = "com.cogra.app.action.MANAGE_SPACE"

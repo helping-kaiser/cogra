@@ -8,6 +8,8 @@ ALWAYS the settings header and its back arrow stay pinned while the page scrolls
 
 WHEN press the header back arrow -> the reader's own profile returns, where the gear was
 
+WHEN settings opens from a mail landing's Back to settings GIVEN the app was opened cold by the mail's link -> settings stands over the reader's own profile as the Profile tab's root AND the bottom bar lights Profile AND the header back arrow returns that profile
+
 ALWAYS an applicant reads the same settings page as a member, every row open to them
 
 ALWAYS no row on settings carries a leading icon
@@ -70,7 +72,7 @@ WHEN tap Your key in a browser GIVEN the seed is sealed behind the backup -> the
 
 WHEN tap Your key GIVEN the key is elsewhere -> the key-absent screen opens AND NEVER an unlock is asked for
 
-ALWAYS the row 3 kept picks waiting stands last in the Key backup group, reading 1 kept pick waiting in the singular, GIVEN picks kept with the key elsewhere wait unsigned, the key is here, and their review was left unsigned
+ALWAYS the row 4 kept picks waiting stands last in the Key backup group, reading 1 kept pick waiting in the singular, GIVEN picks kept with the key elsewhere wait unsigned, the key is here, and their review was left unsigned
 
 ALWAYS no kept-picks row stands in the Key backup group GIVEN no kept pick waits for its review
 

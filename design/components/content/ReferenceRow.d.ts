@@ -94,6 +94,11 @@ export interface ReferenceRowProps {
    * chip on a card shows nothing pending.
    */
   pending?: boolean;
+  /** The removal mark that stands in the name's place when the name went
+   *  (`Removed under the platform's rules`): the row keeps its mark and its
+   *  value, reads the mark in the system's voice, and opens nothing — it
+   *  renders as a plain row, never a control (seam 248). */
+  removed?: string;
   /** The row navigates to the node it names. */
   onOpen?: () => void;
   /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `mark`, `name`, `sub`, and its edge as `rank` (the drawn rank and its glyph), `value` (the plain value, the pair, the pending marker) or `trailing`. */

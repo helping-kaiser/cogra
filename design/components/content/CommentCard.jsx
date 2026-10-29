@@ -158,8 +158,12 @@ export function CommentCard({
   onOpenScore,
   /* THE DATA-NODE NAME its placer gives this card (design ⇄ impl seam 002),
      keyed by the author's handle — `PostCard`'s rule. Given one, it names the
-     card's media too: `media`, `frame` per item, and a clip's `soundDisc`.
-     Given none, the card renders exactly as before. */
+     card's media too: `media`, `frame` per item, and a clip's `soundDisc`;
+     its author's `authorChip` and its ⋮ `menu` (as `PostCard` names them),
+     the mark a removed comment wears `removalMark` (as
+     `PostCard` names it), and the thread's text buttons `reply` and `edit`
+     (seam 248, the thread sheet named). Given none, the card renders exactly
+     as before. */
   node,
   children,
 }) {
@@ -254,7 +258,7 @@ export function CommentCard({
     </>
   );
   const shown = redacted ? (
-    <RedactedContent {...(redacted === true ? {} : redacted)} />
+    <RedactedContent {...(redacted === true ? {} : redacted)} node={node && "removalMark"} />
   ) : sensitive ? (
     <SensitiveVeil kind="compact" reason={sensitive.reason} source={sensitive.source}>
       {body}
@@ -267,10 +271,10 @@ export function CommentCard({
   const ownPart = (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
-        {author && <ActorChip handle={author.handle} displayName={author.displayName} />}
+        {author && <ActorChip handle={author.handle} displayName={author.displayName} node={node && "authorChip"} />}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
           {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{timestamp}</span>}
-          <OverflowMenu items={items} ariaLabel="More on this comment" />
+          <OverflowMenu items={items} ariaLabel="More on this comment" node={node && "menu"} />
         </div>
       </div>
       {shown}
@@ -381,26 +385,27 @@ export function CommentCard({
             the same way, every control on a 48px target (jakob's ruling, the
             geek round). */}
         {(showStance || score !== undefined || (signedIn && (onReply || (own && onEdit))) || onShare || actions) && (
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }}>
-          {/* Owned by the shell — see PostCard. */}
-          {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />}
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }} data-node={node && "actionRow"}>
+          {/* Owned by the shell — see PostCard. Named as PostCard names its
+              row (seam 248): `stance`, `score`, `reply`, `share`. */}
+          {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} node={node && "stance"} />}
           {score !== undefined && (
-            <ExplainableNumber glyph="graph" label="Feed score" value={score} onOpenDetail={onOpenScore ?? (() => {})} />
+            <ExplainableNumber glyph="graph" label="Feed score" value={score} onOpenDetail={onOpenScore ?? (() => {})} node={node && "score"} />
           )}
           {signedIn && onReply && replyGlyph && (
-            <GlyphAction glyph="chat_bubble" label={author ? `Reply to @${author.handle}` : "Reply"} onPress={onReply} />
+            <GlyphAction glyph="chat_bubble" label={author ? `Reply to @${author.handle}` : "Reply"} onPress={onReply} node={node && "reply"} />
           )}
           {signedIn && onReply && !replyGlyph && (
-            <Button variant="text" size="sm" onClick={onReply} style={replyOpacity !== undefined ? { opacity: replyOpacity } : undefined}>
+            <Button variant="text" size="sm" onClick={onReply} style={replyOpacity !== undefined ? { opacity: replyOpacity } : undefined} node={node && "reply"}>
               Reply
             </Button>
           )}
           {signedIn && own && onEdit && (
-            <Button variant="text" size="sm" onClick={onEdit}>
+            <Button variant="text" size="sm" onClick={onEdit} node={node && "edit"}>
               Edit
             </Button>
           )}
-          {onShare && <ShareButton targetLabel={targetLabel} onShare={onShare} />}
+          {onShare && <ShareButton targetLabel={targetLabel} onShare={onShare} node={node && "share"} />}
           {actions}
         </div>
         )}

@@ -10,18 +10,24 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.UserProfile
+import com.cogra.domain.invites.ApplicantApplication
+import com.cogra.domain.invites.MyApplication
 import com.cogra.domain.signing.RegistrationProgress
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.time.Instant
 
 @RunWith(RobolectricTestRunner::class)
 class StatusBannersTest {
@@ -29,7 +35,11 @@ class StatusBannersTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private fun render(state: HomeUiState) {
+    private fun render(
+        state: HomeUiState,
+        surface: ApplicationSurface = ApplicationSurface.FEED,
+        onPutAway: () -> Unit = {},
+    ) {
         compose.setContent {
             StatusBanners(
                 state = state,
@@ -37,9 +47,9 @@ class StatusBannersTest {
                 onVerify = {},
                 onResendEmailChange = {},
                 onResend = {},
-                onDismissWaitingHint = {},
                 onResumePending = {},
                 onStartKeyCeremony = {},
+                application = ApplicationCardActions(surface = surface, onPutAway = onPutAway),
             )
         }
     }
@@ -60,14 +70,27 @@ class StatusBannersTest {
         }
     }
 
-    private fun applicant(progress: RegistrationProgress?, dismissed: Boolean = false) =
-        HomeUiState(
-            loading = false,
-            applicant = true,
-            profile = UserProfile("u", "joiner", null, AccountState.APPLICANT, false, null),
-            progress = progress,
-            waitingHintDismissed = dismissed,
-        )
+    private fun applicant(
+        progress: RegistrationProgress?,
+        putAway: Boolean = false,
+        closed: Boolean = false,
+    ) = HomeUiState(
+        loading = false,
+        applicant = true,
+        profile = UserProfile("u", "joiner", null, AccountState.APPLICANT, false, null),
+        progress = progress,
+        application = MyApplication(
+            askLink = "5d9e7a41-b062-4c38-8e5f-1a4703cbd926",
+            application = ApplicantApplication(
+                id = "application-1",
+                approvedAt = null,
+                rejectedAt = if (closed) Instant.EPOCH else null,
+                landedAt = null,
+                approver = ActorRef("actor-mira", "mira"),
+            ),
+        ),
+        cardPutAway = putAway,
+    )
 
     private fun awaiting(
         emailVerified: Boolean = true,
@@ -247,7 +270,7 @@ class StatusBannersTest {
         render(applicant(awaiting(keyAttached = false, keyOnDevice = true)))
         compose.onNodeWithTag("home_key_elsewhere").assertExists()
         compose.onNodeWithTag("home_fresh_key").assertExists()
-        compose.onNodeWithTag("home_waiting").assertDoesNotExist()
+        compose.onNodeWithTag("feed.application").assertDoesNotExist()
         compose.onNodeWithTag("home_create_key").assertDoesNotExist()
     }
 
@@ -265,20 +288,60 @@ class StatusBannersTest {
         render(applicant(awaiting(keyAttached = true, keyOnDevice = false)))
         compose.onNodeWithTag("home_restore").assertDoesNotExist()
         compose.onNodeWithTag("home_create_key").assertDoesNotExist()
-        compose.onNodeWithTag("home_waiting").assertDoesNotExist()
+        compose.onNodeWithTag("feed.application").assertDoesNotExist()
     }
 
     @Test
-    fun theWaitingHintShowsAndDismisses() {
-        render(applicant(awaiting()))
-        compose.onNodeWithTag("home_waiting").assertExists()
-        compose.onNodeWithTag("home_waiting_dismiss").assertExists()
+    fun theWaitingCardNamesTheApproverAndHoldsTheAskLink() {
+        // ApplicantWaiting.md:5, :11 — the member whose approval is in play,
+        // never the role inviter; the ask link whole with its caption.
+        var putAway = 0
+        render(applicant(awaiting()), onPutAway = { putAway++ })
+        compose.onNodeWithTag("feed.application.title").assertTextEquals("All set — waiting on @mira")
+        compose.onNodeWithText("inviter", substring = true).assertDoesNotExist()
+        compose.onNodeWithTag("feed.application.link.address")
+            .assertTextEquals("https://cogra.social/vouch/5d9e7a41-b062-4c38-8e5f-1a4703cbd926")
+        compose.onNodeWithTag("feed.application.link.caption").assertTextEquals("It does not expire.")
+        compose.onNodeWithContentDescription("Copy your ask link").assertExists()
+        // :15 — Got it puts it away.
+        compose.onNodeWithTag("feed.application.dismiss").performClick()
+        assertThat(putAway).isEqualTo(1)
     }
 
     @Test
-    fun aDismissedWaitingHintLeavesTheBannerAreaQuiet() {
-        render(applicant(awaiting(), dismissed = true))
-        compose.onNodeWithTag("home_waiting").assertDoesNotExist()
+    fun aPutAwayWaitingCardLeavesTheBannerAreaQuiet() {
+        render(applicant(awaiting(), putAway = true))
+        compose.onNodeWithTag("feed.application").assertDoesNotExist()
+    }
+
+    @Test
+    fun theWaitingCardWaitsForEveryOwedStep() {
+        // ApplicantWaiting.md:3 — every owed step done.
+        render(applicant(awaiting(emailVerified = false)))
+        compose.onNodeWithTag("feed.application").assertDoesNotExist()
+    }
+
+    @Test
+    fun theClosedCardStandsWhateverWasPutAwayOrOwed() {
+        // ApplicantWaiting.md:19; ApplicantRejected.md:5-9 — titled by the
+        // member who closed it, no way to put it away.
+        render(applicant(awaiting(emailVerified = false), putAway = true, closed = true))
+        compose.onNodeWithTag("feed.application.title").assertTextEquals("@mira closed your application")
+        compose.onNodeWithTag("feed.application.link.label")
+            .assertTextEquals("Ask someone you know to vouch for you")
+        compose.onNodeWithTag("feed.application.dismiss").assertDoesNotExist()
+    }
+
+    @Test
+    fun theProfileCardSaysItInTheProfilesWordsAndIsNeverPutAway() {
+        // ProfileApplicant.md:5, :9, :14.
+        render(applicant(awaiting(), putAway = true), surface = ApplicationSurface.PROFILE)
+        compose.onNodeWithTag("profile.application.title").assertTextEquals("Waiting on @mira")
+        compose.onNodeWithTag("profile.application.link.caption")
+            .assertTextEquals(
+                "It does not expire. Anyone who holds your ask can let you in — the first vouch lands it.",
+            )
+        compose.onNodeWithTag("profile.application.dismiss").assertDoesNotExist()
     }
 
     @Test

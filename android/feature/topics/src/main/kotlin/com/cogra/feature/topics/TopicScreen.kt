@@ -71,10 +71,16 @@ import com.cogra.domain.TaggedContentView
 /** The `from` a History tag card opens a topic with (`Back to History`). */
 const val TOPIC_FROM_HISTORY = "history"
 
+/** The `from` a search result opens a topic with (`Back to the search`, TagPage.md:35). */
+const val TOPIC_FROM_SEARCH = "search"
+
+/** The `from` a Your-topics row opens a topic with (`Back to Your topics`, TagPage.md:35). */
+const val TOPIC_FROM_YOUR_TOPICS = "yourTopics"
+
 @Composable
 fun TopicRoute(
     name: String,
-    /** Where the page was opened from; `history` names the way back `Back to History` (History.md:57). */
+    /** Where the page was opened from; it names the way back (TagPage.md:35). */
     from: String? = null,
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
@@ -98,8 +104,17 @@ fun TopicRoute(
         onCardEdgesSeen = viewModel::onCardEdgesSeen,
         onSeenCheckpoint = viewModel::onSeenCheckpoint,
         deletionBand = deletionBand,
-        backDescription = if (from == TOPIC_FROM_HISTORY) stringResource(R.string.topics_back_history) else null,
+        backDescription = topicBack(from),
     )
+}
+
+/** The back arrow's origin noun (TagPage.md:35); null is the plain `Back`. */
+@Composable
+private fun topicBack(from: String?): String? = when (from) {
+    TOPIC_FROM_HISTORY -> stringResource(R.string.topics_back_history)
+    TOPIC_FROM_SEARCH -> stringResource(R.string.topics_back_search)
+    TOPIC_FROM_YOUR_TOPICS -> stringResource(R.string.topics_back_your_topics)
+    else -> null
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

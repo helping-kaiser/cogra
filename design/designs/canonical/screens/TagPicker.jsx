@@ -91,37 +91,78 @@
    (readme §4, *Navigation*; the K13 round): `Back to the post` from a post's
    composer or its edit — the state drawn here — and `Back to the comment` from
    a reply's composer or a comment's edit. The "?" is named by the dialog it
-   opens, `Tagging`. Both rules hold on every state of both pickers. */
+   opens, `Tagging`. Both rules hold on every state of both pickers.
+
+   REGISTERED under its own `tagPicker` prefix (seam 248), with
+   `TagPickerTyping` and `TagPickerRefused`: `header` (its "?" `help`), the
+   field `nameField`, the naming `rule`, the `staged` section with one `tag`
+   per staged name, a result row `tag` keyed by its name, the `footnote`, the
+   `announcement` and `done`.
+
+   THE `state` CHIP DRAWS THE BATCH AT ITS CAP AND THE READ THAT FAILED (seam
+   248, GAPS B–C; `ReferencePicker`'s chip, the shared anatomy). `cap` is the
+   composer holding its ten tags: `Up to 10 tags per post.` stands above the
+   list — `per comment` from a reply's composer — and every row under it,
+   the typed name's included, is dimmed and takes no tap, the keyboard's
+   action key staging nothing; the staged rows' × still un-stage. `fault` is
+   the candidates' read that got no answer: the typed name's row still
+   stands, because it is the field's own words and needs no read, and the
+   house line's noun form takes the candidates' place, `Can't reach the
+   server — tags can't load right now.`, over an outlined `Retry` — the
+   fault family's one shape (`ProfileUnreachable`, `Notifications`;
+   copy-voice, *Faults by code*): the long line ends in "try again", which
+   beside a Retry says it twice. An empty list and the read in
+   flight stay silent — the typed name's row is already the answer. */
+export const NODE = "tagPicker";
+export const PROPS = { state: { editor: "enum", options: ["picking", "cap", "fault"], default: "picking" } };
+export const VALS = `capShown: this.props.state === "cap" ? "block" : "none", faultShown: this.props.state === "fault" ? "block" : "none", candidatesShown: this.props.state === "fault" ? "none" : "flex", rowsOpacity: this.props.state === "cap" ? "var(--state-disabled)" : "1"`;
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" />} />
+      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" node="help" />} node="header" />
       <div style={{ flex: "none" }}>
-        <SearchBar query="salt" placeholder="Name a tag" ariaLabel="Name a tag" />
+        <SearchBar query="salt" placeholder="Name a tag" ariaLabel="Name a tag" node="nameField" />
         {/* The naming rule stands under the field at rest too (copy-voice; the
             gate is stated, not discovered — `TagPickerTyping`). */}
         <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
-          <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+          <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="rule">
             Letters, digits, dot, dash and underscore. Capitals become lowercase.
           </p>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }}>
-          <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} />
-          <StagedReference kind="topic" name="saltflats" onRemove={() => {}} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }} data-node="staged">
+          <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} node="tag" nodeKey="saltmarsh" />
+          <StagedReference kind="topic" name="saltflats" onRemove={() => {}} node="tag" nodeKey="saltflats" />
         </div>
-        <PickAnnouncement said="Added — in the staged list." />
+        <PickAnnouncement said="Added — in the staged list." node="announcement" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <div style={{ display: "{{capShown}}" }} data-node-chip="state" data-node-key="cap">
+          <p style={PICKER_NOTE} data-node="cap">
+            Up to 10 tags per post.
+          </p>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", opacity: "{{rowsOpacity}}" }}>
+          <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="salt" />
+          <div style={{ display: "{{candidatesShown}}", flexDirection: "column" }}>
+            <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltmaps" />
+            <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltcrust" />
+          </div>
+        </div>
+        <div style={{ display: "{{faultShown}}", padding: "8px 24px" }} data-node-chip="state" data-node-key="fault">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)" }} data-node="fault">
+            <TransportError message="Can't reach the server — tags can't load right now." />
+            <Button variant="outline" size="sm" selfStart node="retry">
+              Retry
+            </Button>
+          </div>
+        </div>
         <div style={{ flex: 1 }} />
-        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="footnote">
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
         </p>
       </div>
       <div style={{ flex: "none", padding: "0 24px 24px" }}>
-        <Button style={{ width: "100%" }}>Done</Button>
+        <Button style={{ width: "100%" }} node="done">Done</Button>
       </div>
     </>
   );

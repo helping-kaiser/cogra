@@ -8,6 +8,7 @@
     <string name="profile_back_topic">Back to #%1$s</string>
     <string name="profile_back_saved">Back to Saved</string>
     <string name="profile_back_history">Back to History</string>
+    <string name="profile_back_search">Back to the search</string>
     <!-- The edit screen's arrow (ProfileEdit, outside the profile boards). -->
     <string name="profile_back">Back</string>
     <string name="profile_back_notifications">Back to Notifications</string>

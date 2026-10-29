@@ -107,6 +107,15 @@ class FeedFilterReadingTest {
         assertThat(feedFilterSummary(yours.copy(peopleSign = PeopleSign.AGAINST))).isEqualTo("Posts · 1 change")
     }
 
+    // FeedSheet.md (round 25): "reads everyone among its deviations GIVEN the
+    // reader's saved default narrows the feed to their own people and Everyone is on".
+    @Test
+    fun `reads everyone back toward the whole feed under a Your-people default`() {
+        val readers = default.copy(people = PeopleScope.YOUR_PEOPLE)
+        assertThat(feedFilterSummary(default, readers)).isEqualTo("Posts · everyone")
+        assertThat(feedFilterSummary(readers, readers)).isEqualTo("Posts")
+    }
+
     @Test
     fun `speaks no sign kept under Everyone (FeedSheet md 27)`() {
         assertThat(feedFilterSummary(default.copy(peopleSign = PeopleSign.AGAINST))).isEqualTo("Posts")

@@ -24,14 +24,15 @@ const cssVar = (role: string): string => `--${kebab(role)}`;
 /**
  * A theme's role block: `light` is the bare `:root`, `auto-dark` the one
  * nested in the dark media query (Auto on a dark device), `chosen-dark` the
- * `[data-theme="dark"]` one (Dark chosen in Settings).
+ * `[data-theme="dark"]` one (Dark chosen in Settings, and any container wearing
+ * the attribute — the stream's dark ground).
  */
 function declarations(block: "light" | "auto-dark" | "chosen-dark"): Map<string, string> {
   const media = CSS.indexOf("@media (prefers-color-scheme: dark)");
   const pattern = {
     light: /:root\s*\{([^}]*)\}/,
     "auto-dark": /:root:not\(\[data-theme="light"\]\)\s*\{([^}]*)\}/,
-    "chosen-dark": /:root\[data-theme="dark"\]\s*\{([^}]*)\}/,
+    "chosen-dark": /:root\[data-theme="dark"\],\s*\[data-theme="dark"\]\s*\{([^}]*)\}/,
   }[block];
   const source = block === "light" ? CSS.slice(0, media) : CSS.slice(media);
   const found = source.match(pattern);

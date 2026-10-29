@@ -44,7 +44,7 @@ import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.RecordingHiddenRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ScriptedFeedRepository
-import com.cogra.domain.testing.ScriptedFeedTopics
+import com.cogra.domain.testing.ScriptedHeldTopicsRepository
 import com.cogra.domain.testing.ScriptedSeenHistory
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.entry
@@ -89,7 +89,7 @@ class FeedViewModelTest {
 
     /** The reader defaults this device holds, per account; none unless a test saves one. */
     private val defaults = InMemoryReaderDefaultStore()
-    private val heldTopics = ScriptedFeedTopics()
+    private val heldTopics = ScriptedHeldTopicsRepository()
     private val removedMarks = RemovedMarks()
     private val committedFilters = InMemoryCommittedFilterStore()
 

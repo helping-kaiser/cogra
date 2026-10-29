@@ -98,54 +98,8 @@ query HistoryPage($query: String, $kinds: [NodeKind!], $after: String) {
             ...ProfileFields
           }
           ... on Hashtag {
-            id
-            name {
-              value
-              status
-            }
-            # The tag card's glimpse: the newest three things carrying it.
-            taggedContent(limit: 3, includePending: true) {
-              node {
-                __typename
-                ... on Post {
-                  id
-                  title {
-                    value
-                    status
-                  }
-                  content {
-                    value
-                    status
-                  }
-                  attachments {
-                    url
-                    status
-                    mimeType
-                    coverMedia {
-                      url
-                      status
-                    }
-                  }
-                  author {
-                    id
-                    handle
-                  }
-                  createdAt
-                }
-                ... on Comment {
-                  id
-                  content {
-                    value
-                    status
-                  }
-                  author {
-                    id
-                    handle
-                  }
-                  createdAt
-                }
-              }
-            }
+            # The tag card, as the feed's draws it (`feed.graphql` `TagCardFields`).
+            ...TagCardFields
           }
         }
       }

@@ -126,7 +126,14 @@ export function NodeMark({ kind, name, src, onCard = false, redacted = false, si
    section): the moment a picker row is picked it stands above the results as
    a `StagedReference` with its ×, so a picker's list only ever holds rows
    still to add, each with the add mark on its edge. */
-export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, value, rank, trailing, pending = false, onOpen, node, nodeKey }) {
+/* `removed` IS A NAME THAT WENT (seam 248): the row keeps its place, its mark
+   and its value, and its name's place reads the removal mark in the system's
+   voice — `text-secondary` at the body's weight, the kept-picks rows' grammar
+   — and the row opens nothing, because the name was the page's address. It
+   renders as a plain row, never a control: a door to nowhere is a lie. */
+export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, value, rank, trailing, pending = false, removed, onOpen, node, nodeKey }) {
+  const Row = removed ? "div" : "button";
+  const rowProps = removed ? {} : { type: "button", onClick: onOpen, className: "cg-state cg-focus" };
   const tagFamily = pairFamily === undefined ? kind === "topic" : pairFamily === "tag";
   const exact = pair ? (tagFamily ? formatTagPair(pair) : formatStancePair(pair)) : null;
   /* EVERY PAIR HAS A FACE TO FALL BACK TO (jakob's ruling, the geek round —
@@ -147,10 +154,8 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
   const anchor = pair ? (tagFamily ? tagReadout(pair) : bundleReadout(pair)) : null;
   const spokenWord = tagFamily || pairFamily === "stance";
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="cg-state cg-focus"
+    <Row
+      {...rowProps}
       style={{
         display: "flex",
         alignItems: "center",
@@ -160,7 +165,8 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
         border: 0,
         background: "none",
         padding: "var(--space-1) var(--space-6)",
-        cursor: "pointer",
+        cursor: removed ? "default" : "pointer",
+        ...(removed ? { boxSizing: "border-box" } : null),
         fontFamily: "var(--font-sans)",
         color: "var(--on-surface)",
         textAlign: "left",
@@ -177,10 +183,11 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
+            ...(removed ? { color: "var(--text-secondary)" } : null),
           }}
           data-node={node && "name"}
         >
-          {name}
+          {removed || name}
         </span>
         {sub && (
           <span
@@ -258,6 +265,6 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
           </span>
         )
       )}
-    </button>
+    </Row>
   );
 }

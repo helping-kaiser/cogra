@@ -36,9 +36,41 @@ import { Icon } from "../navigation/Icon.jsx";
    static board draws the ring and the words and nothing else, which is the same
    bargain the caret already makes here. The ring is an inset `outline` rather than a border,
    because a border on a control whose height is fixed would push its own content
-   over by a pixel the moment the state arrived. */
+   over by a pixel the moment the state arrived.
 
-export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Search", onChange, error = false, describedBy, node }) {
+   `onClear` GIVES THE PILL ITS CLEAR × (seam 248), the search bar's standard
+   trailing affordance: while a query stands, a close glyph at the pill's end,
+   its 48px target reaching past the 20px mark, spoken `clearLabel` — `Clear
+   search` on Explore. It empties the query and keeps the field's focus; the
+   surface decides what an empty query shows. Without `onClear` the pill
+   carries none, as the two pickers do today. */
+
+export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Search", onChange, onClear, clearLabel = "Clear search", error = false, describedBy, node }) {
+  const clear = onClear && query ? (
+    <button
+      type="button"
+      aria-label={clearLabel}
+      onClick={onClear}
+      data-node={node && "clear"}
+      className="cg-state cg-focus cg-hit"
+      style={{
+        flex: "none",
+        display: "grid",
+        placeItems: "center",
+        width: "32px",
+        height: "32px",
+        marginRight: "-8px",
+        border: 0,
+        background: "none",
+        borderRadius: "var(--radius-full)",
+        color: "var(--text-secondary)",
+        padding: 0,
+        cursor: "pointer",
+      }}
+    >
+      <Icon name="close" size={20} />
+    </button>
+  ) : null;
   return (
     <div style={{ padding: "4px 16px 12px 16px" }}>
       <div
@@ -108,6 +140,7 @@ export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Sea
             {query && <span aria-hidden="true" style={{ marginLeft: "auto", width: "2px", height: "22px", background: "var(--primary)", flex: "none" }} />}
           </>
         )}
+        {clear}
       </div>
     </div>
   );
