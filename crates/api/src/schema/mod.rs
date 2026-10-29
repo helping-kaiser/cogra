@@ -81,8 +81,8 @@ pub struct ApiContext {
 /// posture stops admitting one, and re-measures the corpus by bisection
 /// so a document growing into the headroom fails before it grows past
 /// the ceiling. The heaviest operation either client sends is the
-/// Android post-detail read at **46 427** complexity and **9** levels
-/// — 3 573 under the guard's 1.4×-headroom limit of 50 000; the standard
+/// Android post-detail read at **49 671** complexity and **9** levels
+/// — 329 under the guard's 1.4×-headroom limit of 50 000; the standard
 /// introspection query is cheap (181) but deep (13).
 #[derive(Debug, Clone, Copy)]
 pub struct QueryBudgets {
@@ -95,9 +95,9 @@ impl QueryBudgets {
     /// The production posture: introspection off — the schema is
     /// already public as the checked-in `schema.graphql`.
     ///
-    /// 70 000 clears the heaviest client operation (46 427) with 1.5×
-    /// headroom — the smallest round ten-thousand above the required
-    /// 1.4× (65 998) — and 15 levels clear the deepest content read (9)
+    /// 70 000 clears the heaviest client operation (49 671) as the
+    /// smallest round ten-thousand above the required 1.4× (69 540) —
+    /// and 15 levels clear the deepest content read (9)
     /// with six to spare.
     pub fn release() -> Self {
         Self {
