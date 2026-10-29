@@ -138,7 +138,9 @@ class FeedFilterScreenTest {
         assertThat(applied).containsExactly(FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST))
         compose.onAllNodesWithTag("feed.filterSheet", useUnmergedTree = true).assertCountEquals(0)
         node(FEED_FILTER_STATUS).assert(spoken("Posts · newest, what your feed shows"))
-        trigger.assertIsFocused()
+        // The focus lands on the control the trigger is — its 48dp target, named by
+        // its reading (the host here holds its filter, so it still reads Posts).
+        compose.onNode(spoken("Posts, what your feed shows")).assertIsFocused()
     }
 
     // FeedSheet.md:83 — "WHEN tap Done GIVEN … nothing changed -> … NEVER the feed re-queries".
