@@ -194,7 +194,7 @@ class HistoryScreenTest {
         compose.onNodeWithText("Mira Voss").performClick()
         compose.onNodeWithTag("history.tagCard:saltmaps").performClick()
         compose.onNodeWithTag("history_comment_c1_head", useUnmergedTree = true).performClick()
-        compose.onNodeWithTag("history_comment_c1_reply", useUnmergedTree = true).performClick()
+        compose.onNodeIn("history.commentCard:c1", "history.commentCard.actionRow.reply", useUnmergedTree = true).performClick()
         assertThat(calls).containsExactly(
             "actor:mira",
             "topic:saltmaps",
