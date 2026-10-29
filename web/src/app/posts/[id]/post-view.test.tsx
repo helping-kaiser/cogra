@@ -1216,9 +1216,13 @@ describe("PostView", () => {
       });
       const dialog = await raiseRemove();
       fireEvent.click(screen.getByTestId("postDetail.dialog.remove"));
-      expect(await screen.findByTestId("postDetail.dialog.line")).toHaveTextContent(
-        "That didn't send. Try again.",
-      );
+      const line = await screen.findByTestId("postDetail.dialog.line");
+      expect(line).toHaveTextContent("That didn't send. Try again.");
+      // The line is the surface's own slot, between the body and the pair —
+      // never a paragraph of the body (DialogSurface's `line`, seam 248).
+      expect(screen.getByTestId("postDetail.dialog.body")).not.toContainElement(line);
+      expect(line.parentElement).toBe(dialog);
+      expect(screen.getByTestId("postDetail.dialog.remove")).toHaveTextContent("Retry");
       expect(dialog.open).toBe(true);
       expect(screen.getByTestId(byNode("postDetail.card.body"))).toHaveTextContent("The body");
       expect(screen.queryByTestId(byNode("postDetail.card.removalMark"))).not.toBeInTheDocument();

@@ -27,6 +27,8 @@ export function DialogSurface({
   locked = false,
   node,
   testId,
+  line,
+  lineTestId,
   children,
 }: {
   title: string;
@@ -44,6 +46,16 @@ export function DialogSurface({
   node?: DataNode;
   /** The dialog's own test id, where no registered node names it. */
   testId?: string;
+  /**
+   * THE FAULT THAT KEEPS A DIALOG UP (the master's `line`, seam 248): one line
+   * in the failure register between the body and the answers — `That didn't
+   * send. Try again.` — while the commitment's own slot reads `Retry`. Its own
+   * slot rather than a body paragraph, so a registered dialog names it `line`
+   * beside `title` and `body`.
+   */
+  line?: string;
+  /** The line's test id, where no registered node names it. */
+  lineTestId?: string;
   /** Anything the dialog says in itself beyond its body (an offline line). */
   children?: ReactNode;
 }) {
@@ -100,6 +112,15 @@ export function DialogSurface({
           ),
         )}
       </div>
+      {line !== undefined && (
+        <p
+          role="alert"
+          className="m-0 mt-4 text-body-medium text-error"
+          {...testAttributes(part(node, "line"), lineTestId)}
+        >
+          {line}
+        </p>
+      )}
       {children}
       <div className="mt-6 flex flex-wrap items-center justify-end gap-2">{actions}</div>
     </dialog>

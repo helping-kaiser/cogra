@@ -19,8 +19,9 @@
 // `Remove` reading `Retry`. Any non-success is that one state: the client
 // never sends a refusable removal of its own content, so a refusal and a lost
 // answer are told apart by nothing a reader could act on (the packet's
-// residual flag). The comment's confirm carries the line too — RM-G7's build
-// word, the nouns-swap rule over its sidecar's silence.
+// residual flag). The line is `DialogSurface`'s own `line` slot, and every
+// host draws it — the detail (RemoveConfirm.md:13), the thread
+// (CommentRemoveConfirm.md:13) and the feed (FeedRemoveConfirm.md:13).
 //
 // TAKEN, THE NODE NEVER STANDS UNMARKED (RemoveConfirm.md:11). The dialog holds
 // `Removing…` through the node's own re-read, hands the host the mark, and
@@ -94,23 +95,11 @@ export function RemoveDialog({
       onDismiss={onClose}
       node={node}
       testId={testId}
-      body={[
-        copy.body,
-        REMOVE_PERMANENT,
-        // ABOVE THE PAIR, where SeveranceConfirm stands its fault line.
-        ...(failed
-          ? [
-              <p
-                key="failed"
-                role="alert"
-                className="m-0 text-error"
-                {...testAttributes(part(node, "line"), `${testId}-failed`)}
-              >
-                {REMOVE_NOT_SENT}
-              </p>,
-            ]
-          : []),
-      ]}
+      body={[copy.body, REMOVE_PERMANENT]}
+      // ABOVE THE PAIR, in the surface's own `line` slot (the master's
+      // `RemoveDialog`: `line={failed ? … : undefined}`).
+      line={failed ? REMOVE_NOT_SENT : undefined}
+      lineTestId={`${testId}-failed`}
       actions={
         <>
           <button
