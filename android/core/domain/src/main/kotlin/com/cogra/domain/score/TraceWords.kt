@@ -51,7 +51,8 @@ private const val LIMIT = 1.0
 private const val LIMIT_EPSILON = 1e-9
 
 private val NUMBER_WORDS = listOf("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
-private val ORDINALS = listOf("first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth")
+private val ORDINALS =
+    listOf("first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth")
 
 /** `two` — the boards' own counts are words (`two opinions`, `two steps`). */
 fun countWord(n: Int): String = NUMBER_WORDS.getOrNull(n) ?: n.toString()
@@ -111,7 +112,9 @@ fun TracePath.steps(): List<TraceStep> {
     while (at < hops.size) {
         val start = at
         val through = mutableListOf<Int>()
-        while (at + 1 < hops.size && at + 1 < last && !nodes[at + 1].isPerson() && shareARecord(hops[at], hops[at + 1])) {
+        while (
+            at + 1 < hops.size && at + 1 < last && !nodes[at + 1].isPerson() && shareARecord(hops[at], hops[at + 1])
+        ) {
             through += at + 1
             at += 1
         }
@@ -143,7 +146,9 @@ private fun handleOf(person: TracePerson?): String = if (person == null) "Delete
 private fun thingName(path: TracePath, index: Int, context: TraceContext): String {
     if (index == path.nodes.size - 1) return "it"
     val node = path.nodes[index]
-    if (node.isTopic()) return if (node.graphId.startsWith("name:")) "#${node.graphId.removePrefix("name:")}" else "a topic"
+    if (node.isTopic()) {
+        return if (node.graphId.startsWith("name:")) "#${node.graphId.removePrefix("name:")}" else "a topic"
+    }
     if (node.isPerson()) return personAt(path, index)?.let { "@${it.handle}" } ?: "someone"
     return when (val named = node.id?.let(context.named::get)) {
         is TraceNamed.Post -> when {
@@ -176,8 +181,10 @@ fun stepTitle(path: TracePath, step: TraceStep, context: TraceContext): String {
     val carrier = step.through.firstOrNull()?.let { thingName(path, it, context) }
     return when (step.family()) {
         TraceFamily.AFFINITY -> if (own) "How you feel about $thing" else "How $who feels about $thing"
-        TraceFamily.PUBLISH ->
-            if (thing == "it" && context.targetKind == TraceThingKind.COMMENT) "$who wrote it" else "$who published $thing"
+        TraceFamily.PUBLISH -> {
+            val ownWriting = thing == "it" && context.targetKind == TraceThingKind.COMMENT
+            if (ownWriting) "$who wrote it" else "$who published $thing"
+        }
         TraceFamily.REVIEW -> "$who replied to $thing"
         TraceFamily.REFERENCE -> if (carrier == null) "$who cited $thing" else "$who cited $thing in $carrier"
         TraceFamily.TAG -> if (carrier == null) "$who tagged $thing" else "$who tagged $thing $carrier"
@@ -233,8 +240,10 @@ fun pathPeople(path: TracePath): List<TracePerson?> =
     (0 until path.nodes.size - 1).filter { path.nodes[it].isPerson() }.map { personAt(path, it) }
 
 /** `and`-joined handles: `@ada`, `@kel and @wren`, `@a, @b and @c`. */
-private fun joined(names: List<String>): String =
-    if (names.size <= 1) names.firstOrNull().orEmpty() else "${names.dropLast(1).joinToString(", ")} and ${names.last()}"
+private fun joined(names: List<String>): String = when {
+    names.size <= 1 -> names.firstOrNull().orEmpty()
+    else -> "${names.dropLast(1).joinToString(", ")} and ${names.last()}"
+}
 
 /**
  * The row's words (`Through @ada`, `Through @kel and @wren`): who the path ran

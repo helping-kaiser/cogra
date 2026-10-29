@@ -59,9 +59,15 @@ object TraceCast {
         legs = listOf(TraceLeg(TraceLegRole.A, "addr:${author.id}", to, pair.first, pair.second)),
     )
 
-    private fun opinion(from: TracePerson, to: TracePerson, pairs: List<Pair<Double, Double>>, ages: List<Long>): TraceHop {
+    private fun opinion(
+        from: TracePerson,
+        to: TracePerson,
+        pairs: List<Pair<Double, Double>>,
+        ages: List<Long>,
+    ): TraceHop {
         val records = pairs.mapIndexed { index, pair ->
-            record("act:${from.id}:$index:opinion:${to.id}", from, TraceFamily.OPINION, pair, ago(ages[index]), "prof:${to.id}")
+            val id = "act:${from.id}:$index:opinion:${to.id}"
+            record(id, from, TraceFamily.OPINION, pair, ago(ages[index]), "prof:${to.id}")
         }
         fun sum(axis: (Pair<Double, Double>) -> Double) = pairs.sumOf(axis).coerceIn(-1.0, 1.0)
         return TraceHop(sum { it.first }, sum { it.second }, records)
@@ -70,13 +76,17 @@ object TraceCast {
     private fun publish(author: TracePerson) = TraceHop(
         0.1,
         0.1,
-        listOf(record("act:${author.id}:1:publish", author, TraceFamily.PUBLISH, 0.1 to 0.1, POST_CREATED, TARGET.graphId)),
+        listOf(
+            record("act:${author.id}:1:publish", author, TraceFamily.PUBLISH, 0.1 to 0.1, POST_CREATED, TARGET.graphId),
+        ),
     )
 
     private fun opinionOfPost(author: TracePerson) = TraceHop(
         0.5,
         0.3,
-        listOf(record("act:${author.id}:9:opinion:post", author, TraceFamily.OPINION, 0.5 to 0.3, ago(2), TARGET.graphId)),
+        listOf(
+            record("act:${author.id}:9:opinion:post", author, TraceFamily.OPINION, 0.5 to 0.3, ago(2), TARGET.graphId),
+        ),
     )
 
     private fun path(
@@ -126,7 +136,8 @@ object TraceCast {
     )
 
     /** A step whose records add up past the limit (RankHop.md:13). */
-    fun clippedAnswer() = TraceAnswer(score = 2.0, paths = listOf(path(listOf(SOL, ADA), 2.0, listOf(0.8 to 0.2, 0.7 to 0.1))))
+    fun clippedAnswer() =
+        TraceAnswer(score = 2.0, paths = listOf(path(listOf(SOL, ADA), 2.0, listOf(0.8 to 0.2, 0.7 to 0.1))))
 
     /** A comment @ada wrote in reply to @tobias's post: one record, two legs (SR-G4). */
     fun reviewPath(): TracePath {

@@ -37,7 +37,8 @@ class OpenTraceTest {
         val read = open(TraceCast.POST_ID, viewer = "u-lender")
         assertThat(traces.traced).containsExactly("u-lender" to TraceCast.POST_ID)
         assertThat(read).isInstanceOf(TraceRead.Answered::class.java)
-        assertThat(standings.state.value.of("u-sol", TraceCast.POST_ID, pending = false)).isEqualTo(Standing.Figure(14.7))
+        assertThat(standings.state.value.of("u-sol", TraceCast.POST_ID, pending = false))
+            .isEqualTo(Standing.Figure(14.7))
         assertThat(session.heldFor(TraceCast.POST_ID)?.answer?.score).isEqualTo(14.7)
     }
 
@@ -72,7 +73,8 @@ class OpenTraceTest {
         assertThat(open(TraceCast.POST_ID, "u-sol")).isEqualTo(TraceRead.Offline)
         traces.answers += TraceFetch.Fault
         assertThat(open(TraceCast.POST_ID, "u-sol")).isEqualTo(TraceRead.Fault)
-        assertThat(standings.state.value.of("u-sol", TraceCast.POST_ID, pending = false)).isEqualTo(Standing.Figure(1.0))
+        assertThat(standings.state.value.of("u-sol", TraceCast.POST_ID, pending = false))
+            .isEqualTo(Standing.Figure(1.0))
     }
 
     @Test

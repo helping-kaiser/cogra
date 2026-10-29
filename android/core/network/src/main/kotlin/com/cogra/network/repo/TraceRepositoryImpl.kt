@@ -86,7 +86,8 @@ private fun FeedTraceQuery.FeedTrace.toAnswer() = TraceAnswer(
                             },
                             landedAt = record.landedAt,
                             legs = record.legs.map { leg ->
-                                TraceLeg(leg.role.toTraceRole(), leg.sourceId, leg.targetId, leg.pDirected, leg.pInterest)
+                                val role = leg.role.toTraceRole()
+                                TraceLeg(role, leg.sourceId, leg.targetId, leg.pDirected, leg.pInterest)
                             },
                         )
                     },

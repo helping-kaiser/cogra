@@ -74,7 +74,8 @@ class TraceRepositoryTest {
                "sign":1,"contribution":6.8,
                "hops":[{"__typename":"RankHop","pDirected":0.55,"pInterest":0.2,"records":[
                  {"__typename":"Record","id":"act:1","family":"OPINION",
-                  "author":{"__typename":"User","id":"u-sol","handle":"sol","displayName":{"__typename":"ModeratedText","value":"Sol"},
+                  "author":{"__typename":"User","id":"u-sol","handle":"sol",
+                            "displayName":{"__typename":"ModeratedText","value":"Sol"},
                             "avatar":{"__typename":"MediaAttachment","url":"https://m/sol.jpg"}},
                   "landedAt":"2026-10-20T10:00:00Z",
                   "legs":[{"__typename":"RecordLeg","role":"BINARY","sourceId":"addr:u-sol","targetId":"mint:p",
@@ -105,7 +106,9 @@ class TraceRepositoryTest {
                                             family = TraceFamily.OPINION,
                                             author = TracePerson("u-sol", "sol", "Sol", "https://m/sol.jpg"),
                                             landedAt = Instant.parse("2026-10-20T10:00:00Z"),
-                                            legs = listOf(TraceLeg(TraceLegRole.BINARY, "addr:u-sol", "mint:p", 0.55, 0.2)),
+                                            legs = listOf(
+                                                TraceLeg(TraceLegRole.BINARY, "addr:u-sol", "mint:p", 0.55, 0.2),
+                                            ),
                                         ),
                                     ),
                                 ),

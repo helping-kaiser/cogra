@@ -98,7 +98,8 @@ class TraceWordsTest {
 
     @Test
     fun `a borrowed trace leads with the lender's handle, never You`() {
-        assertThat(spokenTrace(borrowedAnswer().paths[0], borrowed)).isEqualTo("@mira, then @ada, then what reached you")
+        assertThat(spokenTrace(borrowedAnswer().paths[0], borrowed))
+            .isEqualTo("@mira, then @ada, then what reached you")
     }
 
     // ── Level two ────────────────────────────────────────────────────────
@@ -191,7 +192,8 @@ class TraceWordsTest {
     @Test
     fun `the records open under the line naming their step`() {
         assertThat(recordsNote("Your opinion of @ada", 2)).isEqualTo("The two records behind your opinion of @ada.")
-        assertThat(recordsNote("@mira's opinion of @ada", 2)).isEqualTo("The two records behind @mira's opinion of @ada.")
+        assertThat(recordsNote("@mira's opinion of @ada", 2))
+            .isEqualTo("The two records behind @mira's opinion of @ada.")
         assertThat(recordsNote("Your opinion of @ada", 1)).isEqualTo("The record behind your opinion of @ada.")
     }
 

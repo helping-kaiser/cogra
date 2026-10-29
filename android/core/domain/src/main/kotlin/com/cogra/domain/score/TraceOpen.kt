@@ -118,7 +118,8 @@ class OpenTrace @Inject constructor(
     private val feedViewer: FeedViewer,
 ) {
     suspend operator fun invoke(targetId: String, viewer: String?): TraceRead {
-        val view = viewer ?: standings.state.value.viewerFor(feedViewer.reader()) ?: when (val read = feedViewer.resolve()) {
+        val held = standings.state.value.viewerFor(feedViewer.reader())
+        val view = viewer ?: held ?: when (val read = feedViewer.resolve()) {
             is Outcome.Success -> read.value ?: return TraceRead.Fault
             is Outcome.Refused -> return TraceRead.Fault
             is Outcome.Failed -> return TraceRead.Offline
