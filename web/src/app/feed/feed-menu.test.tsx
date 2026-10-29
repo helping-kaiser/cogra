@@ -225,14 +225,13 @@ describe("the feed's post menu", () => {
     expect(screen.getByTestId("feed.menuSheet.report")).toHaveTextContent("Report");
   });
 
-  // An author's own rows on the feed have no drawn board, so they keep their
-  // own ids rather than wear a path the registry does not hold — and carry no
-  // Report.
+  // An author's own rows on the feed wear FeedPostMenuOwn's paths — and carry
+  // no Report.
   it("the_authors_own_menu_on_the_feed_carries_no_report", async () => {
     server.use(...rankedFeed([post("p1", "acct-1")]));
     renderWithProviders(<FeedView />, { store: signedInStore() });
     await openMenu();
-    expect(screen.getByTestId("feed-menu-edit")).toHaveTextContent("Edit");
+    expect(screen.getByTestId("feed.menuSheet.edit")).toHaveTextContent("Edit");
     expect(screen.queryByTestId("feed.menuSheet.report")).not.toBeInTheDocument();
     expect(screen.queryByTestId("feed.menuSheet.hide")).not.toBeInTheDocument();
   });
@@ -437,11 +436,11 @@ describe("the feed's post menu", () => {
     );
     renderWithProviders(<FeedView />, { store: signedInStore() });
     await openMenu();
-    fireEvent.click(screen.getByTestId("feed-menu-remove"));
-    fireEvent.click(await screen.findByTestId("feed-menu-remove-confirm-remove"));
-    const mark = await screen.findByTestId(byNode("feed.card.removed", "p1"));
+    fireEvent.click(screen.getByTestId("feed.menuSheet.remove"));
+    fireEvent.click(await screen.findByTestId("feed.dialog.remove"));
+    const mark = await screen.findByTestId(byNode("feed.card.removalMark", "p1"));
     expect(mark).toHaveTextContent("Removed by its author");
-    expect(screen.getByTestId(byNode("feed.card.removed.when", "p1"))).toHaveTextContent("1m");
+    expect(screen.getByTestId(byNode("feed.card.removalMark.when", "p1"))).toHaveTextContent("1m");
     expect(removals).toEqual(["rec-genesis"]);
     // In place: the card stands where it stood, its neighbour untouched.
     const cards = screen.getAllByTestId(byNode("feed.card"));

@@ -84,7 +84,7 @@ const stagedNames = () =>
     .queryAllByTestId(byNode("tagPicker.staged.tag"))
     .map((row) => row.getAttribute("data-testid-key"));
 const rowNames = () =>
-  screen.queryAllByTestId(byNode("tagPicker.row")).map((row) => row.getAttribute("data-testid-key"));
+  screen.queryAllByTestId(byNode("tagPicker.tag")).map((row) => row.getAttribute("data-testid-key"));
 
 /** Let the zero-wait index answer. */
 async function settle() {
@@ -103,8 +103,10 @@ describe("TagPicker", () => {
     // its second line; a name in use that IS the typed name stands as the
     // first row alone, never listed twice; the index's rows under it.
     expect(rowNames()).toEqual(["saltmaps", "saltcrust"]);
-    const first = screen.getAllByTestId(byNode("tagPicker.row"))[0]!;
+    const first = screen.getAllByTestId(byNode("tagPicker.tag"))[0]!;
     expect(within(first).getByText("Signs as #saltmaps")).toBeInTheDocument();
+    // The mark node is the 32px tile itself, its ground and corner (TagPicker's `tag.mark`).
+    expect(within(first).getByTestId(byNode("tagPicker.tag.mark", "saltmaps")).style.width).toBe("32px");
   });
 
   it("follows the name as it is typed", async () => {
@@ -165,7 +167,7 @@ describe("TagPicker", () => {
     renderWithProviders(<Host spy={spy} />);
     type("salt");
     await settle();
-    fireEvent.click(screen.getByTestId(byNode("tagPicker.row", "saltcrust")));
+    fireEvent.click(screen.getByTestId(byNode("tagPicker.tag", "saltcrust")));
     expect(spy).toHaveBeenLastCalledWith([draft("saltcrust")]);
     expect(stagedNames()).toEqual(["saltcrust"]);
     expect(rowNames()).toEqual(["salt", "saltmaps"]);

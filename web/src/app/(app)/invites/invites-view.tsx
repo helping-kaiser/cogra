@@ -243,7 +243,7 @@ export function InvitesView({
       const target = items[Math.min(wanted.index, items.length - 1)];
       const focusable =
         target?.querySelector<HTMLElement>("button, a") ??
-        document.querySelector<HTMLElement>('[data-testid="invites-empty-create"], [data-testid="invites.create"]');
+        document.querySelector<HTMLElement>('[data-testid="invites.empty.create"], [data-testid="invites.create"]');
       focusable?.focus();
     }
     const at = standAt.current;
@@ -355,14 +355,15 @@ export function InvitesView({
         // INVITESEMPTY (InvitesEmpty.md): the calm line, and the page's one
         // committing control under it at the column's full width — no error
         // colour, no bar.
-        <div className="flex flex-col px-6 pb-8 pt-4" data-testid="invites-empty">
+        <div className="flex flex-col px-6 pb-8 pt-4">
           <EmptyState
             title={INVITES_EMPTY}
             testId="invites-empty-state"
+            node={part(ROOT, "empty")}
             action={
               <button
                 type="button"
-                data-testid="invites-empty-create"
+                {...testAttributes(part(ROOT, "empty.create"))}
                 onClick={openSheet}
                 className={`w-full ${buttonClassName({ variant: "primary" })}`}
               >

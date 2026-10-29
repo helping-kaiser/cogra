@@ -45,35 +45,37 @@ describe("CitedBySheet", () => {
   it("is titled Cited by, and names every citing artifact in the order handed", () => {
     render(<CitedBySheet open onClose={() => {}} artifacts={ARTIFACTS} node={NODE} />);
     expect(screen.getByRole("dialog", { name: "Cited by" })).toBeInTheDocument();
-    const rows = screen.getAllByTestId(byNode("postDetail.citedBySheet.row"));
+    const rows = screen.getAllByTestId(byNode("postDetail.citedBySheet.citation"));
     expect(rows.map((r) => r.querySelector('[data-testid$=".name"]')?.textContent)).toEqual([
       "Where the salt goes in winter",
       "Answering the tide-market piece",
       "Three mornings on the wall",
     ]);
+    // Keyed by place, newest first (nodes.json `postDetail.citedBySheet.citation`).
+    expect(rows.map((r) => r.getAttribute("data-testid-key"))).toEqual(["1", "2", "3"]);
   });
 
   it("names no kind in words — the leading mark says it (ReferenceRow)", () => {
     render(<CitedBySheet open onClose={() => {}} artifacts={ARTIFACTS} node={NODE} />);
-    const first = screen.getAllByTestId(byNode("postDetail.citedBySheet.row"))[0]!;
+    const first = screen.getAllByTestId(byNode("postDetail.citedBySheet.citation"))[0]!;
     expect(first).not.toHaveTextContent("Post");
-    expect(first.querySelector('[data-testid="postDetail.citedBySheet.row.mark"]')).toHaveTextContent("T");
+    expect(first.querySelector('[data-testid="postDetail.citedBySheet.citation.mark"]')).toHaveTextContent("T");
   });
 
   it("carries the pair its author signed, face through the choke point and the digits as the geek reading", () => {
     render(<CitedBySheet open onClose={() => {}} artifacts={ARTIFACTS} node={NODE} />);
-    const value = screen.getAllByTestId(byNode("postDetail.citedBySheet.row.value"))[0]!;
-    const exact = value.querySelector('[data-testid="postDetail.citedBySheet.row.value.exact"]')!;
+    const value = screen.getAllByTestId(byNode("postDetail.citedBySheet.citation.value"))[0]!;
+    const exact = value.querySelector('[data-testid="postDetail.citedBySheet.citation.value.exact"]')!;
     expect(exact).toHaveTextContent("+0.70 / +0.50");
     expect(exact.className).toContain("cg-exact");
-    expect(value.querySelector('[data-testid="postDetail.citedBySheet.row.value.face"]')).toHaveTextContent("🤩");
+    expect(value.querySelector('[data-testid="postDetail.citedBySheet.citation.value.face"]')).toHaveTextContent("🤩");
     // The spoken twin is the pair itself: a citation's anchor word is withheld.
     expect(value.querySelector(".sr-only")).toHaveTextContent("+0.70 / +0.50");
   });
 
   it("sends a citing comment to the thread it answers, and a citing post to itself", () => {
     render(<CitedBySheet open onClose={() => {}} artifacts={ARTIFACTS} node={NODE} />);
-    const [salt, tide] = screen.getAllByTestId(byNode("postDetail.citedBySheet.row"));
+    const [salt, tide] = screen.getAllByTestId(byNode("postDetail.citedBySheet.citation"));
     expect(salt).toHaveAttribute("href", "/posts/p-salt");
     expect(tide).toHaveAttribute("href", "/posts/p-root");
   });
@@ -81,7 +83,7 @@ describe("CitedBySheet", () => {
   it("drops itself as a row is followed, so Back lands on the detail", () => {
     const onClose = vi.fn();
     render(<CitedBySheet open onClose={onClose} artifacts={ARTIFACTS} node={NODE} />);
-    fireEvent.click(screen.getAllByTestId(byNode("postDetail.citedBySheet.row"))[0]!);
+    fireEvent.click(screen.getAllByTestId(byNode("postDetail.citedBySheet.citation"))[0]!);
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -103,9 +105,9 @@ describe("CitedBySheet", () => {
         node={NODE}
       />,
     );
-    const only = screen.getByTestId(byNode("postDetail.citedBySheet.row"));
+    const only = screen.getByTestId(byNode("postDetail.citedBySheet.citation"));
     expect(only).toHaveTextContent("Removed by its author");
-    expect(only.querySelector('[data-testid="postDetail.citedBySheet.row.mark"]')).toBeEmptyDOMElement();
+    expect(only.querySelector('[data-testid="postDetail.citedBySheet.citation.mark"]')).toBeEmptyDOMElement();
   });
 
   it("says the empty line rather than nothing — the comment's door is the only way here", () => {

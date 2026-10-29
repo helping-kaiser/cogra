@@ -172,9 +172,9 @@ async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
 /// stored parameter rows are reloaded only for keys, and the Charter
 /// about to be sealed is built wholly from the current input — so
 /// without a check the immutable record would permanently contradict the
-/// rows already committed. `guidelines_hash` is recomputed from a file on
-/// every invocation, which is how the values genuinely differ across
-/// runs in production.
+/// rows already committed. `guidelines_hash` is the digest of the
+/// document the binary was built with, so a repair run by a newer build
+/// than the first run is how the values genuinely differ in production.
 ///
 /// A repair run whose genesis input disagrees with what the first run committed is refused rather than sealing the contradiction.
 /// ´claim:bootstrap:a-changed-genesis-input-is-refused-on-repair´

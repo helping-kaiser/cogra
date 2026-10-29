@@ -28,7 +28,13 @@
    `PostDetailVideoSensitive`, the same post still veiled.
 
    Every outcome above follows from the recorded veil and stage laws, and
-   `behavior/ReelSensitive.md` holds them as lines. */
+   `behavior/ReelSensitive.md` holds them as lines.
+
+   ONE SURFACE, TWO STATES, ONE PREFIX (round 26, seam 250): registered under
+   `reel`, as every state board of a surface joins its surface's prefix. The
+   veil's face is `stage.veil`, a leaf beside the clip it covers; the caption's
+   `Show` is `caption.show`. */
+export const NODE = "reel";
 
 const SENSITIVE_MIRA_CLIP = { reason: "One rubbing includes a dead seabird." };
 
@@ -36,10 +42,10 @@ export function Screen() {
   return (
     <div data-theme="dark" style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden" }}>
       <SensitiveScope>
-        <div style={{ position: "absolute", inset: 0, display: "grid" }}>
+        <div style={{ position: "absolute", inset: 0, display: "grid" }} data-node="stage">
           {/* The face's words keep clear of the rail the way the caption does
               (its right edge at 76px), on both sides so the face stays centred. */}
-          <SensitiveVeil kind="media" reason={SENSITIVE_MIRA_CLIP.reason} faceGutter="76px">
+          <SensitiveVeil kind="media" reason={SENSITIVE_MIRA_CLIP.reason} faceGutter="76px" node="veil">
             <img
               src="clip-lakeside.jpg"
               alt="A man standing at the edge of a lake as the light drops."
@@ -52,21 +58,25 @@ export function Screen() {
         <div
           aria-hidden="true"
           style={{ position: "absolute", left: 0, right: 0, top: 0, height: 140, background: "linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0))", pointerEvents: "none" }}
+          data-node="washTop"
         />
         <div
           aria-hidden="true"
           style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 260, background: "linear-gradient(to top, rgba(0,0,0,0.62), rgba(0,0,0,0))", pointerEvents: "none" }}
+          data-node="washBottom"
         />
 
-        <MediaDisc label="Back to feed" glyph="arrow_back" corner="top-left" onClick={() => {}} />
+        <MediaDisc label="Back to feed" glyph="arrow_back" corner="top-left" onClick={() => {}} node="backDisc" />
 
         <ReelRail
+          node="rail"
           author={{ handle: MIRA.handle, displayName: MIRA.displayName, src: "inviter.jpg" }}
           score={MIRA_CLIP_POST.score}
           comments={MIRA_CLIP_POST.comments}
           bottom={BAND_HEIGHT + 96}
         />
         <ReelCaption
+          node="caption"
           handle={MIRA.handle}
           title={MIRA_CLIP_POST.title}
           description={MIRA_CLIP_POST.description}
@@ -75,7 +85,7 @@ export function Screen() {
         />
 
         <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, zIndex: 4 }}>
-          <BottomNav active="feed" slots={ALL_SLOTS} inline />
+          <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
         </div>
       </SensitiveScope>
     </div>

@@ -165,6 +165,67 @@ async fn graphql_refuses_a_body_past_the_route_limit(pool: PgPool) {
     assert_eq!(body_json(streamed).await["code"], "PAYLOAD_TOO_LARGE");
 }
 
+/// Behind the proxy the API reads the client from the rightmost
+/// `X-Forwarded-For` hop, and a request that reaches it without one —
+/// a server-side render dialling the API directly — is refused as the
+/// caller's fault: a 400 `BAD_INPUT` in the transport-fault shape, never
+/// a 500, and never a fall back to the socket peer. A malformed header is
+/// refused the same way, and a request through the proxy is served.
+///
+/// A request the forwarded-header source names no client address for is refused as BAD_INPUT, never answered as a server fault.
+/// ´claim:server:a-missing-forwarded-address-is-bad-input´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_request_without_the_forwarded_header_is_bad_input(pool: PgPool) {
+    let (ctx, auth) = rig::api_context(
+        pool,
+        Arc::new(api::mailer::DevMailer::new(None)),
+        api::ratelimit::RateLimitConfig::unlimited(),
+    );
+    let uploads = rig::upload_routing(&ctx);
+    let app = api::app(
+        api::schema::build(ctx),
+        auth,
+        axum_client_ip::ClientIpSource::RightmostXForwardedFor,
+        uploads,
+    )
+    .layer(axum::Extension(axum::extract::ConnectInfo(
+        std::net::SocketAddr::from(([10, 89, 0, 7], 41000)),
+    )));
+    let query = r#"{"query":"{ __typename }"}"#;
+    let request = |forwarded: Option<&str>| {
+        let mut builder = Request::builder()
+            .method("POST")
+            .uri("/graphql")
+            .header("content-type", "application/json");
+        if let Some(value) = forwarded {
+            builder = builder.header("x-forwarded-for", value);
+        }
+        builder.body(Body::from(query)).expect("request")
+    };
+
+    for forwarded in [None, Some("not-an-address")] {
+        let response = app
+            .clone()
+            .oneshot(request(forwarded))
+            .await
+            .expect("response");
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST, "{forwarded:?}");
+        let json = body_json(response).await;
+        assert_eq!(
+            json["errors"][0]["extensions"]["code"], "BAD_INPUT",
+            "{json}"
+        );
+        assert!(json["data"].is_null(), "{json}");
+    }
+
+    let served = app
+        .oneshot(request(Some("203.0.113.9, 10.89.0.2")))
+        .await
+        .expect("response");
+    assert_eq!(served.status(), StatusCode::OK);
+    assert_eq!(body_json(served).await["data"]["__typename"], "Query");
+}
+
 /// Executes one anonymous GraphQL query and returns the `data` object.
 async fn gql(app: axum::Router, query: String) -> serde_json::Value {
     let body = serde_json::json!({ "query": query }).to_string();

@@ -47,7 +47,7 @@ import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
-import type { DataNode } from "@/lib/ui/data-node";
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import type { License } from "@/lib/license";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { useMeasureEffect } from "@/lib/ui/measure-effect";
@@ -79,7 +79,7 @@ import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
 import { OpinionsSheet } from "@/lib/ui2/opinions-sheet";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
-import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
+import { MenuSheet, OverflowTrigger, type MenuItem } from "@/lib/ui2/overflow-menu";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { commentTarget, ReplyWizard } from "@/app/posts/[id]/reply/reply-wizard-view";
 import { CommentEditor } from "@/app/posts/[id]/edit/comment-editor";
@@ -176,7 +176,15 @@ export function CommentsSheet({
   refreshToken = 0,
   landOn = null,
   aimReply = false,
+  node,
 }: {
+  /**
+   * The registered thread on a registered screen (`postDetail.threadSheet`,
+   * round 24): the sheet, each comment a `commentCard` keyed by the comment's
+   * id, and the ONE menu sheet every comment's ⋮ raises, which wears the
+   * detail's `postDetail.menuSheet` (seam 094 item 64).
+   */
+  node?: DataNode;
   open: boolean;
   /**
    * Raised and dropped. The sheet drives this itself as well as the surface
@@ -261,6 +269,9 @@ export function CommentsSheet({
   // THE OWN COMMENT'S THINK-TWICE DIALOG (CommentRemoveConfirm), raised by its
   // menu's Remove over the thread, the thread still where the menu was opened.
   const [removing, setRemoving] = useState<ThreadComment | null>(null);
+  // THE ONE MENU SHEET: every comment's ⋮ raises the same sheet, holding the
+  // rows of the comment it was raised for (seam 094 item 64).
+  const [menuFor, setMenuFor] = useState<ThreadComment | null>(null);
   // Stable, so the snackbar's own timer is not restarted by every render of
   // the thread underneath it.
   const dismissCommentSigned = useCallback(() => setCommentSigned(false), []);
@@ -741,6 +752,7 @@ export function CommentsSheet({
     // left and no Edit — nothing of it is left to save, cite, license or edit —
     // while Reply and the face stay, and its replies stay under it.
     const removed = payloadIsRedacted(comment);
+    const card = node === undefined ? undefined : instance(node, "commentCard", comment.id);
     return (
       <li
         key={comment.id}
@@ -752,7 +764,7 @@ export function CommentsSheet({
         className="flex flex-col gap-3"
         style={{ marginLeft: `${Math.min(depth, MAX_INDENT_DEPTH) * 12}px` }}
       >
-        <Card>
+        <Card node={card}>
           {/* THE HEADER LINE: the author left, the age right — the same shape
               the post card wears (`CommentCard.jsx:149-155`). Both apps read
               `createdAt` for the Edited comparison and drew none of it. */}
@@ -763,6 +775,7 @@ export function CommentsSheet({
                 displayName={comment.author.displayName.value}
                 avatarUrl={comment.author.avatar?.url}
                 testId={`comment-author-${comment.id}`}
+                node={part(card, "authorChip")}
               />
             )}
             {/* THE AGE AND THE ⋮ STAND TOGETHER at the line's end, 12px apart
@@ -788,13 +801,13 @@ export function CommentsSheet({
                   thread already lives in a sheet, so this menu is a sheet on a
                   sheet (design/readme.md:2364). A REMOVED COMMENT HAS NO MENU
                   LEFT (`_shared.jsx`, `menuItems={removed ? [] : …}`). */}
-              {!removed && (
-                <OverflowMenu
-                  items={menuRowsOf(comment, isOwn)}
+              {!removed && menuRowsOf(comment, isOwn).length > 0 && (
+                <OverflowTrigger
                   ariaLabel="More on this comment"
-                  sheetLabel="Comment actions"
                   testId={`comment-menu-${comment.id}`}
-                  stacked
+                  node={part(card, "menu")}
+                  expanded={menuFor?.id === comment.id}
+                  onOpen={() => setMenuFor(comment)}
                 />
               )}
             </div>
@@ -808,6 +821,7 @@ export function CommentsSheet({
               when={removalWhen(comment)}
               note={removalReason(comment) === "author" ? REMOVED_COMMENT_NOTE : undefined}
               testId={`comment-${comment.id}-removed`}
+              node={part(card, "removalMark")}
             />
           ) : (
           /* A comment is text PLUS optional media — the XOR is the post's
@@ -880,11 +894,51 @@ export function CommentsSheet({
               testIdPrefix={`comment-${comment.id}`}
             />
           )}
-          {/* The comment carries its own stance control (design.md §6). */}
-          <StanceControl
-            target={{ id: comment.id, kind: "comment", label: "this comment" }}
-            testIdPrefix={`comment-stance-${comment.id}`}
-          />
+          {/* ONE ACTION ROW (the thread's CommentCard, CommentRemoved): the
+              comment's own stance control (design.md §6) leads and Reply and
+              Edit stand at the row's far end — one spread row, as the feed's
+              comment card draws it. */}
+          <div
+            className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1"
+            {...testAttributes(part(card, "actionRow"))}
+          >
+            <StanceControl
+              target={{ id: comment.id, kind: "comment", label: "this comment" }}
+              testIdPrefix={`comment-stance-${comment.id}`}
+              node={part(card, "actionRow.stance")}
+            />
+            <div className="flex gap-2">
+              {phase === "signedIn" && (
+                <Button
+                  testId={`comment-reply-${comment.id}`}
+                  node={part(card, "actionRow.reply")}
+                  variant="text"
+                  size="sm"
+                  onClick={() => {
+                    // ReplyEntry via=5: the composer, PRE-TARGETED at this
+                    // comment. The other door — "Add a comment" at the foot of
+                    // the thread — pins the post instead.
+                    openComposer(commentTarget(comment));
+                  }}
+                >
+                  Reply
+                </Button>
+              )}
+              {/* The removed comment keeps `own` but loses Edit with its payload
+                  (`_shared.jsx`: `onEdit={removed ? undefined : …}`). */}
+              {isOwn && !removed && (
+                <Button
+                  testId={`comment-edit-${comment.id}`}
+                  node={part(card, "actionRow.edit")}
+                  variant="text"
+                  size="sm"
+                  onClick={() => openEditor(comment, parentId)}
+                >
+                  Edit
+                </Button>
+              )}
+            </div>
+          </div>
           {/* THE ROW LINE under the face (RowSigning.md): a save or unsave of
               this comment that did not go through. */}
           {writes.failure(comment.id) !== null && (
@@ -896,35 +950,6 @@ export function CommentsSheet({
               testId={`comment-${comment.id}-row-line`}
             />
           )}
-          <div className="flex gap-2">
-            {phase === "signedIn" && (
-              <Button
-                testId={`comment-reply-${comment.id}`}
-                variant="text"
-                size="sm"
-                onClick={() => {
-                  // ReplyEntry via=5: the composer, PRE-TARGETED at this
-                  // comment. The other door — "Add a comment" at the foot of
-                  // the thread — pins the post instead.
-                  openComposer(commentTarget(comment));
-                }}
-              >
-                Reply
-              </Button>
-            )}
-            {/* The removed comment keeps `own` but loses Edit with its payload
-                (`_shared.jsx`: `onEdit={removed ? undefined : …}`). */}
-            {isOwn && !removed && (
-              <Button
-                testId={`comment-edit-${comment.id}`}
-                variant="text"
-                size="sm"
-                onClick={() => openEditor(comment, parentId)}
-              >
-                Edit
-              </Button>
-            )}
-          </div>
         </Card>
         {replies.length > 0 && (
           <ul className="flex flex-col gap-3">
@@ -988,6 +1013,7 @@ export function CommentsSheet({
         tallest
         bodyRef={bodyRef}
         testId="comments-sheet"
+        node={node}
         // THE THREAD HANDS THE SCREEN TO ITS COMPOSER WITHOUT A GAP. The sheet
         // drops as the wizard or the editor rises, and rises again as it
         // leaves; holding the sheet's cover through the takeover is what
@@ -1159,8 +1185,8 @@ export function CommentsSheet({
           lifts it (`overSheet`). The thread beneath is untouched, still where
           the menu was opened (CommentRemoveConfirm.md:3). The comment's
           confirm carries the post's fault line too (RM-G7's build word).
-          UNREGISTERED: the thread sheet is deliberately unnamed (seam 094), so
-          the dialog keeps its test ids. */}
+          On the detail it is the detail's one `postDetail.dialog`
+          (CommentRemoveConfirm, round 24). */}
       {removing !== null && (
         <RemoveConfirm
           kind="comment"
@@ -1169,6 +1195,21 @@ export function CommentsSheet({
           onClose={() => setRemoving(null)}
           onRemoved={(removal) => markRemoved(removing.id, removal)}
           testId="comment-remove-confirm"
+          node={node === undefined ? undefined : { path: "postDetail.dialog" }}
+        />
+      )}
+      {/* THE ONE MENU SHEET over the thread — a sheet on a sheet
+          (`CommentMenu.jsx:18-23`, design/readme.md:2364), mounted while a ⋮
+          holds it open. */}
+      {menuFor !== null && (
+        <MenuSheet
+          open
+          onClose={() => setMenuFor(null)}
+          items={menuRowsOf(menuFor, viewerId !== null && menuFor.author?.id === viewerId)}
+          ariaLabel="Comment actions"
+          testId={`comment-menu-${menuFor.id}-sheet`}
+          node={node === undefined ? undefined : { path: "postDetail.menuSheet" }}
+          stacked
         />
       )}
       {/* The wizard is a surface OVER the thread, and every way out of it

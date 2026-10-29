@@ -1204,7 +1204,10 @@ The client IP is the socket peer address by default. Behind a
 reverse proxy that is the sole ingress, `CLIENT_IP_SOURCE`
 switches derivation to the proxy-set header (rightmost
 `X-Forwarded-For` hop — [development.md](development.md));
-forwarded headers are never trusted otherwise.
+forwarded headers are never trusted otherwise. Under a header source,
+a request without a usable header is refused as `BAD_INPUT`: the
+socket peer is then the proxy or a sibling service, and keying budgets
+by it would pool every such caller into one budget.
 
 Abuse mitigation lives at the API edge, not in the graph primitives — same
 framing as [moderation.md](../instances/moderation.md).

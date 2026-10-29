@@ -97,6 +97,8 @@ import {
 } from "@/lib/compose/post-edit";
 import { EDIT_LEAVE_LABEL, PostEditView } from "./post-edit-view";
 import { CropStep } from "./wizard/crop-step";
+import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
+import { TagPicker } from "@/lib/ui2/compose/tag-picker";
 
 /** How long a signing may go unanswered before the foot says the network is slow. */
 export const SLOW_SIGNING_MS = SLOW_NETWORK_MS;
@@ -177,6 +179,11 @@ export function PostEditRoute({
   // Files the add control turned away, standing on the media row until dismissed.
   const [refusals, setRefusals] = useState<readonly PickRefusal[]>([]);
   const [cropping, setCropping] = useState<Cropping | null>(null);
+  // THE EDIT ADDS THROUGH THE PICKERS, as the composer does (EditCompose draws
+  // `+ Add a tag` and `+ Cite something`, the quiet doors, under the staged
+  // chips): a task page in the edit's place, every pick applied to the batch
+  // the moment it is made, so Done and the arrow have nothing left to apply.
+  const [picking, setPicking] = useState<"tags" | "references" | null>(null);
   // Which uploads have been started, so a re-render never starts one twice
   // and React's double mount in development never sends the bytes twice.
   const started = useRef(new Set<string>());
@@ -544,6 +551,8 @@ export function PostEditRoute({
           onLeave={leave}
           leaveLabel={EDIT_LEAVE_LABEL}
           testId="post-edit-crop-header"
+          // The registered ComposeCrop and CoverCrop screens name their band.
+          node={{ path: cropping.kind === "pictures" ? "composeCrop.header" : "coverCrop.header" }}
         />
         {cropping.kind === "pictures" ? (
           <CropStep
@@ -567,6 +576,7 @@ export function PostEditRoute({
               setCropping(null);
             }}
             testIdPrefix="post-edit"
+            node={{ path: "composeCrop" }}
           />
         ) : (
           <CoverCrop
@@ -586,9 +596,35 @@ export function PostEditRoute({
       </main>
     );
 
+  const pickerScreen =
+    picking === null ? null : (
+      <main
+        data-testid="post-edit-picker"
+        className="mx-auto flex h-dvh w-full max-w-2xl flex-col bg-surface text-on-surface"
+      >
+        {picking === "tags" ? (
+          <TagPicker
+            tags={state.tags}
+            onTags={(tags) => dispatch({ type: "tags", tags })}
+            onDone={() => setPicking(null)}
+            origin="post"
+            cap={null}
+          />
+        ) : (
+          <ReferencePicker
+            references={state.references}
+            onReferences={(references) => dispatch({ type: "references", references })}
+            onDone={() => setPicking(null)}
+            origin="post"
+            cap={null}
+          />
+        )}
+      </main>
+    );
+
   return (
     <>
-      {cropScreen ?? (
+      {cropScreen ?? pickerScreen ?? (
         <PostEditView
           state={state}
           previews={previews}
@@ -609,6 +645,8 @@ export function PostEditRoute({
           onWords={(words) => dispatch({ type: "words", words })}
           onTags={(tags) => dispatch({ type: "tags", tags })}
           onReferences={(references) => dispatch({ type: "references", references })}
+          onOpenTagPicker={() => setPicking("tags")}
+          onOpenReferencePicker={() => setPicking("references")}
           onUndoTag={(name) =>
             dispatch({ type: "tags", tags: undoTagWithdrawal(state.loadedTags, state.tags, name) })
           }
@@ -694,6 +732,7 @@ export function PostEditRoute({
         }}
         onMove={(from, to) => dispatch({ type: "movePicture", from, to })}
         testId="post-edit-picked-sheet"
+        node={{ path: "postEdit.pickedSheet" }}
       />
       <DescribeSheet
         open={describingPicture !== undefined}

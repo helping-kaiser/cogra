@@ -114,7 +114,9 @@ async fn submit(standin: &StandIn, actor: &ActorKey, args: SubmitArgs) -> anyhow
 /// the usage list rather than failing, since this is a hand tool.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv().ok();
+    if let Some(problem) = api::dotenv::read().problem() {
+        eprintln!("warning: {problem}");
+    }
     let args: Vec<String> = std::env::args().skip(1).collect();
     let cmd = args.first().map(String::as_str).unwrap_or("help");
     match cmd {

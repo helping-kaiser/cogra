@@ -55,10 +55,11 @@ const RAIL_SHADOW = "drop-shadow(0 1px 6px rgba(0,0,0,0.75))";
    until it is answered and never fades on a timer (the row line's law). The
    words keep their own registers — the failure ink, the quiet secondary, the
    bare `Retry` — the plate only gives them ground. */
-export function ReelPlate({ children, role = "status" }) {
+export function ReelPlate({ children, role = "status", node }) {
   return (
     <p
       role={role}
+      data-node={node}
       style={{
         margin: 0,
         display: "inline-flex",
@@ -87,37 +88,32 @@ export function ReelPlate({ children, role = "status" }) {
    pending mark under it, and the door stays: the score is the stream's only
    way into the post, and a settling clip has a post like any other. A dash
    where that fetch found no paths — no computed figure — and the door
-   stays then too. The bare slot is settling's alone; zero is severance's. */
-export function ReelRailScore({ score, settling = false, onOpen }) {
-  const door = (
-    <ExplainableNumber glyph="graph" label="Feed score" value={settling ? undefined : score} onOpenDetail={onOpen ?? (() => {})} overMedia />
-  );
-  if (!settling) return door;
+   stays then too. The bare slot is settling's alone; zero is severance's.
+
+   THE WHOLE FACE IS THE DOOR (round 26, seam 250): `Still settling` stands
+   inside it, under the bare glyph, because the face the score wears is the
+   door whichever face it is — so the line is the door's `settling` part. */
+export function ReelRailScore({ score, settling = false, onOpen, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-      {door}
-      <span
-        style={{
-          maxWidth: 56,
-          textAlign: "center",
-          fontSize: "var(--text-label-small)",
-          lineHeight: "var(--text-label-small--line-height)",
-          fontWeight: "var(--text-label-small--font-weight)",
-          color: "#fff",
-        }}
-      >
-        Still settling
-      </span>
-    </div>
+    <ExplainableNumber
+      glyph="graph"
+      label="Feed score"
+      value={settling ? undefined : score}
+      pending={settling ? "Still settling" : undefined}
+      onOpenDetail={onOpen ?? (() => {})}
+      overMedia
+      node={node}
+    />
   );
 }
 
-export function ReelRailItem({ label, glyph, count, onClick }) {
+export function ReelRailItem({ label, glyph, count, onClick, node }) {
   return (
     <button
       type="button"
       aria-label={label}
       onClick={onClick ?? (() => {})}
+      data-node={node}
       className="cg-state cg-focus"
       style={{
         display: "flex",
@@ -155,9 +151,15 @@ export function ReelRail({
   onOpenComments,
   onShare,
   onOpenScore,
+  node,
 }) {
+  /* NAMED ONLY WHEN PLACED NAMED (readme §13, the data-node join): the rail is
+     `rail`, its author `author`, the system's opinion control `stance`, the
+     two glyph controls `comments` and `share`, the door `score`. The face's row
+     line is the placer's own (`stanceLine`, on its plate), beside the face. */
   return (
     <div
+      data-node={node}
       style={{
         position: "absolute",
         right: 4,
@@ -176,6 +178,7 @@ export function ReelRail({
           aria-label={author.displayName}
           onClick={onOpenProfile}
           style={{ display: "block", textDecoration: "none" }}
+          data-node={node && "author"}
         >
           <MonogramAvatar name={author.displayName} size={44} src={author.src} />
         </a>
@@ -183,7 +186,7 @@ export function ReelRail({
       {/* The face's row line has no row to stand under here, so it stands
           beside the face, on the stream's plate, reading leftward. */}
       <div style={{ position: "relative" }}>
-        <StanceControl targetLabel="this post" overMedia />
+        <StanceControl targetLabel="this post" overMedia node={node && "stance"} />
         {stanceLine && (
           <div style={{ position: "absolute", right: "calc(100% + 8px)", top: "50%", transform: "translateY(-50%)" }}>
             {stanceLine}
@@ -196,10 +199,11 @@ export function ReelRail({
           glyph="chat_bubble"
           count={comments}
           onClick={onOpenComments}
+          node={node && "comments"}
         />
       )}
-      <ReelRailItem label="Share this post" glyph="share" onClick={onShare} />
-      {scoreSlot ?? ((score !== undefined || settling) && <ReelRailScore score={score} settling={settling} onOpen={onOpenScore} />)}
+      <ReelRailItem label="Share this post" glyph="share" onClick={onShare} node={node && "share"} />
+      {scoreSlot ?? ((score !== undefined || settling) && <ReelRailScore score={score} settling={settling} onOpen={onOpenScore} node={node && "score"} />)}
     </div>
   );
 }

@@ -70,45 +70,36 @@ pub enum BootstrapError {
     Relay(String),
     #[error("operator login: {0}")]
     OperatorLogin(String),
-    #[error("the platform-guidelines document could not be read from {path}: {source}")]
-    Guidelines {
-        path: String,
-        source: std::io::Error,
-    },
 }
 
-/// The canonical platform-guidelines document, located relative to this
-/// crate at compile time.
-const GUIDELINES_PATH: &str = concat!(
+/// The canonical platform-guidelines document, compiled into the binary.
+///
+/// Embedded rather than read at run time so the pin cannot depend on
+/// where the binary runs: a production image carries no source tree,
+/// and the bytes hashed are exactly the document of the commit the
+/// binary was built from. `include_bytes!` also makes the document a
+/// build input, so an edit to it rebuilds the crate.
+///
+/// An empty document is refused at compile time, by the assertion
+/// beneath: it would pin the digest of the empty input — a pin that is
+/// simply wrong, committed permanently to an L1 record that is never
+/// deletable, with nothing afterwards to verify it — so no binary that
+/// could commit it exists.
+const GUIDELINES: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../docs/instances/platform-guidelines.md"
+));
+
+const _: () = assert!(
+    !GUIDELINES.is_empty(),
+    "the platform-guidelines document is empty"
 );
 
 /// SHA-256 hex digest of the canonical version-1 platform-guidelines
 /// document, pinned into the Charter payload (network.md §3).
-///
-/// A read failure is fatal, on the posture `DATABASE_URL` already takes
-/// and `ingest_or_refuse` already states. The digest goes into an L1
-/// record that is never deletable, and the value substituted when the
-/// file is missing — the digest of the empty input — is a pin that is
-/// simply wrong, committed permanently, with nothing afterwards to
-/// verify it. A deployment running the binary without the source tree at
-/// this path should get an error, not an instance whose Charter pins
-/// nothing.
-pub fn guidelines_hash() -> Result<String, BootstrapError> {
-    digest_of(std::path::Path::new(GUIDELINES_PATH))
-}
-
-/// The hex SHA-256 of a file, or the reason it could not be read. Split
-/// out from [`guidelines_hash`] so the failure path is reachable from a
-/// test: the compile-time path exists whenever the tests run.
-pub fn digest_of(path: &std::path::Path) -> Result<String, BootstrapError> {
+pub fn guidelines_hash() -> String {
     use sha2::{Digest, Sha256};
-    let bytes = std::fs::read(path).map_err(|source| BootstrapError::Guidelines {
-        path: path.display().to_string(),
-        source,
-    })?;
-    Ok(format!("{:x}", Sha256::digest(&bytes)))
+    format!("{:x}", Sha256::digest(GUIDELINES))
 }
 
 impl From<l1_standin::StandInError> for BootstrapError {
@@ -724,27 +715,31 @@ async fn custodied_seed(pool: &PgPool, handle: &str) -> Result<[u8; 32], Bootstr
 
 #[cfg(test)]
 mod tests {
-    use super::{BootstrapError, digest_of, guidelines_hash};
+    use super::guidelines_hash;
 
-    /// The pin is the digest of the document itself, and an unreadable
-    /// document is an error rather than the empty-input digest — which
-    /// would be a wrong pin, committed permanently, with nothing
+    /// The pin is the digest of the committed document itself — the
+    /// bytes compiled into the binary are the file in the tree, so an
+    /// image needs no copy of it — and never the empty-input digest,
+    /// which would be a wrong pin committed permanently with nothing
     /// afterwards to verify it.
     ///
-    /// The guidelines pin is the document's own digest, and an unreadable document refuses instead of pinning the empty digest.
-    /// ´claim:bootstrap:the-guidelines-pin-is-read-or-refused´
+    /// The guidelines pin is the digest of the committed document compiled into the binary, never the empty-input digest.
+    /// ´claim:bootstrap:the-guidelines-pin-is-the-embedded-document´
     #[test]
-    fn the_guidelines_pin_is_read_or_refused() {
-        let hash = guidelines_hash().expect("the document ships with the crate");
+    fn the_guidelines_pin_is_the_embedded_document() {
+        use sha2::{Digest, Sha256};
+        let committed = std::fs::read(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../docs/instances/platform-guidelines.md"
+        ))
+        .expect("the document is committed");
+        let hash = guidelines_hash();
+        assert_eq!(hash, format!("{:x}", Sha256::digest(&committed)));
         assert_eq!(hash.len(), 64, "a hex SHA-256");
         assert_ne!(
             hash, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "never the empty-input digest"
         );
-        assert!(matches!(
-            digest_of(std::path::Path::new("no/such/guidelines.md")),
-            Err(BootstrapError::Guidelines { .. })
-        ));
     }
 }
 

@@ -23,6 +23,7 @@ import {
   CURRENT_BACKING_LABEL,
 } from "@/lib/stance/backing";
 import { nearestValenceAnchor, PICK_LABEL, VALENCE_LABEL } from "@/lib/stance/valence";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { formatDimension } from "@/lib/ui/stance-format";
 
 /**
@@ -65,12 +66,29 @@ function useSettled(value: string, ms = SETTLE_MS): string {
  * The face and the one number, as a settings row reads them back — the seal's
  * and the edit's `Your backing` row.
  */
-export function AttachmentReadout({ pDirected, testId }: { pDirected: number; testId: string }) {
+export function AttachmentReadout({
+  pDirected,
+  testId,
+  node,
+}: {
+  pDirected: number;
+  testId: string;
+  /** The registered readout (`postEdit.facts.backing.value`): its `face` and its `exact`. It names them instead of `testId`. */
+  node?: DataNode;
+}) {
   const band = nearestValenceAnchor(pDirected);
   return (
-    <span className="inline-flex flex-none items-baseline gap-2" data-testid={testId}>
-      <span aria-hidden="true">{band.emoji}</span>
-      <span aria-hidden="true" className="whitespace-nowrap text-body-small text-on-surface-variant">
+    <span className="inline-flex flex-none items-baseline gap-2" {...testAttributes(node, testId)}>
+      <span aria-hidden="true" {...testAttributes(part(node, "face"))}>
+        {band.emoji}
+      </span>
+      <span
+        aria-hidden="true"
+        // The number is geek mode's (StanceReadout.jsx `ReadoutLine`: a `cg-exact`
+        // span); the spoken reading below carries it in both modes.
+        className="cg-exact whitespace-nowrap text-body-small text-on-surface-variant"
+        {...testAttributes(part(node, "exact"))}
+      >
         {formatDimension(pDirected)}
       </span>
       <span className="sr-only">{attachmentWords(pDirected)}</span>

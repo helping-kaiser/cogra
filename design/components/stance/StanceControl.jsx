@@ -603,8 +603,11 @@ export function StanceControl({
             /* OVER MEDIA THE UNSET STATE IS A LINE FACE, not a muted emoji: on
                photography "quiet" and "invisible" are the same thing, and the
                glyph says "no opinion yet" by being the empty face rather than
-               by being faint. */
-            <Icon name="sentiment_neutral" size={28} />
+               by being faint. Still the anchor's `face` (round 26: the stream's
+               `rail.stance.anchor.face`). */
+            <span aria-hidden="true" style={{ display: "inline-flex" }} data-node={node && "face"}>
+              <Icon name="sentiment_neutral" size={28} />
+            </span>
           ) : lineFaceInk && restingFace === null ? (
             /* The card's unset state: the same line face, in the host's ink,
                and still the anchor's `face`. */

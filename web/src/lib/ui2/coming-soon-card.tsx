@@ -7,23 +7,32 @@
 //
 // The master spells the promise itself, so no door can phrase it differently.
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 export function ComingSoonCard({
   thing,
   line,
   testId,
+  node,
 }: {
   thing: string;
   line: string;
   testId?: string;
+  /** The registered card node on a registered screen (`wallet.comingSoonCard`). */
+  node?: DataNode;
 }) {
   return (
     <div
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       className="relative mx-4 flex flex-none flex-col gap-2 overflow-hidden rounded-large p-5"
       style={{ background: "var(--surface-hero)" }}
     >
-      <h2 className="m-0 text-headline-small">{thing} — coming soon</h2>
-      <p className="m-0 text-body-medium">{line}</p>
+      <h2 className="m-0 text-headline-small" {...testAttributes(part(node, "title"))}>
+        {thing} — coming soon
+      </h2>
+      <p className="m-0 text-body-medium" {...testAttributes(part(node, "line"))}>
+        {line}
+      </p>
     </div>
   );
 }
