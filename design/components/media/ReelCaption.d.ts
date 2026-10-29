@@ -24,6 +24,8 @@ export interface ReelCaptionProps {
   sensitive?: boolean;
   /** The stream's own line — the last clip's, or the load that did not come — on a `ReelPlate` at the caption's head. */
   notice?: React.ReactNode;
+  /** The data-node name its placer gives the caption (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `handle`, `title`, `description`, `show` (the veil's control) and `more`. */
+  node?: string;
 }
 
 export declare function ReelCaption(props: ReelCaptionProps): JSX.Element;

@@ -43,6 +43,8 @@ export interface ReelRailProps {
   onOpenComments?: () => void;
   onShare?: () => void;
   onOpenScore?: () => void;
+  /** The data-node name its placer gives the rail (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `author`, `stance`, `comments`, `share`, `score`. */
+  node?: string;
 }
 
 export declare function ReelRail(props: ReelRailProps): JSX.Element;
@@ -54,15 +56,19 @@ export interface ReelRailItemProps {
   glyph: string;
   count?: number;
   onClick?: () => void;
+  /** The data-node name its placer gives the control. */
+  node?: string;
 }
 
 export declare function ReelRailItem(props: ReelRailItemProps): JSX.Element;
 
-/** The rail's score door in its three faces: the figure, the dash, and settling's bare glyph over `Still settling`. */
+/** The rail's score door in its three faces: the figure, the dash, and settling's bare glyph over `Still settling` — the line inside the door, the whole face being the door. */
 export interface ReelRailScoreProps {
   score?: string;
   settling?: boolean;
   onOpen?: () => void;
+  /** The data-node name its placer gives the door; its parts are `ExplainableNumber`'s, `value` and `settling`. */
+  node?: string;
 }
 
 export declare function ReelRailScore(props: ReelRailScoreProps): JSX.Element;
@@ -76,6 +82,8 @@ export declare function ReelRailScore(props: ReelRailScoreProps): JSX.Element;
 export interface ReelPlateProps {
   children: React.ReactNode;
   role?: "status" | "alert";
+  /** The data-node name its placer gives the line (`notice`, `stanceLine`). */
+  node?: string;
 }
 
 export declare function ReelPlate(props: ReelPlateProps): JSX.Element;
