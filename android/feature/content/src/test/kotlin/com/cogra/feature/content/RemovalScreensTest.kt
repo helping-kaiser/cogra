@@ -294,11 +294,11 @@ class RemovalScreensTest {
         compose.waitForIdle()
 
         compose.onNodeWithTag("postDetail.dialog").assertExists()
-        compose.onNodeWithTag("postDetail.dialog.line").assertTextEquals(NOT_SENT)
+        compose.onNodeWithTag("postDetail.dialog.line:failed").assertTextEquals(NOT_SENT)
         compose.onNodeWithTag("postDetail.dialog.remove").assertTextEquals("Retry")
         compose.onNodeWithTag("postDetail.dialog.keep").assertExists()
         // The line stands above the pair (SeveranceConfirm's placement).
-        val line = compose.onNodeWithTag("postDetail.dialog.line").getUnclippedBoundsInRoot()
+        val line = compose.onNodeWithTag("postDetail.dialog.line:failed").getUnclippedBoundsInRoot()
         val keep = compose.onNodeWithTag("postDetail.dialog.keep").getUnclippedBoundsInRoot()
         assertThat(line.bottom).isAtMost(keep.top)
         assertThat(marks.marks.value).isEmpty()
@@ -449,7 +449,7 @@ class RemovalScreensTest {
 
         compose.onNodeWithTag("postDetail.dialog").assertExists()
         compose.onNodeWithTag("postDetail.dialog.remove").assertTextEquals("Retry")
-        compose.onNodeWithTag("postDetail.dialog.line").assertTextEquals(NOT_SENT)
+        compose.onNodeWithTag("postDetail.dialog.line:failed").assertTextEquals(NOT_SENT)
         compose.onNodeWithText("Comment c1").assertExists()
         compose.onNodeWithText(AUTHOR_MARK).assertDoesNotExist()
     }
@@ -489,9 +489,9 @@ class RemovalScreensTest {
             }
         }
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_remove").performClick()
+        compose.onNodeWithTag("feed.menuSheet.remove").performClick()
         compose.waitForIdle()
-        compose.onNodeWithTag("feed_p1_remove_confirm_remove").performClick()
+        compose.onNodeWithTag("feed.dialog.remove").performClick()
         compose.waitForIdle()
 
         compose.onNodeWithTag(feedCard("p1")).assertExists()

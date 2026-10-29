@@ -921,12 +921,13 @@ internal data class CardPlacement(
     val licenseSheet: DataNode?,
     val tag: String,
     val menuRows: Set<PostMenuRow>,
+    /** The own menu's think-twice dialog, where the surface's board registers one (`feed.dialog`). */
+    val dialog: DataNode? = null,
 )
 
 /**
- * The rows FeedPostMenu registers (`feed.menuSheet.*`) — the reader menu's.
- * The author's own rows on the feed have no drawn board, so they keep their
- * own tags rather than wear a path the registry does not hold.
+ * The rows the feed's menus register (`feed.menuSheet.*`): the reader's
+ * (FeedPostMenu) and the author's own (FeedPostMenuOwn).
  */
 private val FEED_MENU_ROWS = setOf(
     PostMenuRow.Save,
@@ -934,6 +935,9 @@ private val FEED_MENU_ROWS = setOf(
     PostMenuRow.Hide,
     PostMenuRow.License,
     PostMenuRow.Report,
+    PostMenuRow.Edit,
+    PostMenuRow.MarkSensitive,
+    PostMenuRow.Remove,
 )
 
 internal val FEED_PLACEMENT = CardPlacement(
@@ -942,6 +946,7 @@ internal val FEED_PLACEMENT = CardPlacement(
     licenseSheet = FEED / "licenseSheet",
     tag = "feed",
     menuRows = FEED_MENU_ROWS,
+    dialog = FEED / "dialog",
 )
 
 @Composable
@@ -1161,6 +1166,7 @@ private fun CardMenuHeader(
             record = post.genesisRecordId,
             onClose = { removeOpen = false },
             testTag = "${tag}_remove_confirm",
+            node = placement.dialog,
         )
     }
 }

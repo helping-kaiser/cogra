@@ -548,8 +548,8 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed.menuSheet.cite").assertExists()
         compose.onNodeWithTag("feed.menuSheet.hide").assertExists()
         compose.onNodeWithTag("feed.menuSheet.license").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_edit").assertDoesNotExist()
-        compose.onNodeWithTag("feed_p1_menu_remove").assertDoesNotExist()
+        compose.onNodeWithTag("feed.menuSheet.edit").assertDoesNotExist()
+        compose.onNodeWithTag("feed.menuSheet.remove").assertDoesNotExist()
     }
 
     /**
@@ -568,16 +568,16 @@ class ContentScreensTest {
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed.menuSheet.save").assertExists()
         compose.onNodeWithTag("feed.menuSheet.cite").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_sensitive").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_remove").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.markSensitive").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.remove").assertExists()
         compose.onNodeWithTag("feed.menuSheet.license").assertExists()
         compose.onNodeWithTag("feed.menuSheet.hide").assertDoesNotExist()
 
         val save = compose.onNodeWithTag("feed.menuSheet.save").getUnclippedBoundsInRoot().top
         val cite = compose.onNodeWithTag("feed.menuSheet.cite").getUnclippedBoundsInRoot().top
-        val edit = compose.onNodeWithTag("feed_p1_menu_edit").getUnclippedBoundsInRoot().top
-        val sensitive = compose.onNodeWithTag("feed_p1_menu_sensitive").getUnclippedBoundsInRoot().top
-        val remove = compose.onNodeWithTag("feed_p1_menu_remove").getUnclippedBoundsInRoot().top
+        val edit = compose.onNodeWithTag("feed.menuSheet.edit").getUnclippedBoundsInRoot().top
+        val sensitive = compose.onNodeWithTag("feed.menuSheet.markSensitive").getUnclippedBoundsInRoot().top
+        val remove = compose.onNodeWithTag("feed.menuSheet.remove").getUnclippedBoundsInRoot().top
         val license = compose.onNodeWithTag("feed.menuSheet.license").getUnclippedBoundsInRoot().top
         assertThat(save.value).isLessThan(cite.value)
         assertThat(cite.value).isLessThan(edit.value)
@@ -585,7 +585,7 @@ class ContentScreensTest {
         assertThat(sensitive.value).isLessThan(remove.value)
         assertThat(remove.value).isLessThan(license.value)
 
-        compose.onNodeWithTag("feed_p1_menu_edit").performClick()
+        compose.onNodeWithTag("feed.menuSheet.edit").performClick()
         assertThat(editing).isEqualTo("p1")
     }
 
@@ -601,7 +601,7 @@ class ContentScreensTest {
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed.menuSheet.cite").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_edit").assertDoesNotExist()
+        compose.onNodeWithTag("feed.menuSheet.edit").assertDoesNotExist()
     }
 
     /** The menu's navigating rows work from the feed as from the detail. */

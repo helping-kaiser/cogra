@@ -173,10 +173,10 @@ private fun RemovalKind.bodyRes() = when (this) {
  *   hold, locked and never dimmed (the walk-back's rule, one family of confirm).
  * @param failed the last removal did not go through: the line stands above the
  *   pair and Remove reads Retry.
- * @param node the dialog's node: RemoveConfirm registers `postDetail.dialog`
- *   and its `title`, `body`, `keep` and `remove`; the thread's confirm
- *   (CommentRemoveConfirm, unregistered) wears the same path, and the failed
- *   state's `line` is undrawn, so it stays an evident part.
+ * @param node the dialog's node: `postDetail.dialog` (RemoveConfirm and the
+ *   thread's CommentRemoveConfirm) or `feed.dialog` (FeedRemoveConfirm), its
+ *   `title`, `body`, `keep` and `remove`, and the failed state's `line`
+ *   keyed `failed`.
  */
 @Composable
 internal fun RemoveDialog(
@@ -208,7 +208,7 @@ internal fun RemoveDialog(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier
                         .semantics { liveRegion = LiveRegionMode.Assertive }
-                        .then(partTag(node, "line", "${testTag}_failed")),
+                        .then(partTag(node, "line", "${testTag}_failed", key = "failed")),
                 )
             }
         },
@@ -235,9 +235,16 @@ internal fun RemoveDialog(
     )
 }
 
-/** A part's registered tag inside a registered dialog, else the [fallback] the tests bind to. */
-private fun partTag(node: DataNode?, part: String, fallback: String): Modifier =
-    if (node != null) Modifier.dataNode(node / part) else Modifier.testTag(fallback)
+/**
+ * A part's registered tag inside a registered dialog, else the [fallback] the
+ * tests bind to. A part the board draws once per state carries that state as
+ * its [key] (`postDetail.dialog.line:failed`).
+ */
+private fun partTag(node: DataNode?, part: String, fallback: String, key: String? = null): Modifier = when {
+    node == null -> Modifier.testTag(fallback)
+    key != null -> Modifier.dataNode((node / part).keyed(key))
+    else -> Modifier.dataNode(node / part)
+}
 
 /**
  * The dialog, driving the removal of one node through the destination's
