@@ -1,0 +1,18 @@
+# The web image's build context (deploy/Containerfile.web): everything is
+# excluded, then the three inputs it reads are let back in. The repository's
+# own .containerignore excludes web/ for the Rust images, so this list is a
+# separate file, passed with --ignorefile.
+*
+!schema.graphql
+!web/
+!deploy/web/
+# Build output and machine-local files inside web/ never enter the context:
+# the image installs its own dependencies and runs its own codegen.
+web/node_modules
+web/.next
+web/src/__generated__
+web/certificates
+web/public/downloads
+web/.env*
+web/next-env.d.ts
+web/*.tsbuildinfo

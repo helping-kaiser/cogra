@@ -1,0 +1,3 @@
+# Postgres's data directory: the mirror, the overlays, L2 and the stand-in's l1_* tables — the substrate's only copy (deployment.md "Backups").
+[Volume]
+VolumeName=cogra-postgres

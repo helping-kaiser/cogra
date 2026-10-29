@@ -30,7 +30,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate wait-db wait-media api ranker api-release bootstrap release-publish run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema ranker-schema vectors constants fold-vectors intent-vectors envelope-vectors ranker-vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
+.PHONY: help init up down reset-db migrate wait-db wait-media api ranker api-release bootstrap release-publish run ci ci-all lint lint-corpus regenerate fmt test build deploy-images logs dev docs-link-check schema ranker-schema vectors constants fold-vectors intent-vectors envelope-vectors ranker-vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -203,6 +203,20 @@ docs-link-check: ## Check markdown link targets + anchors (mirrors docs-ci.yml; 
 
 build: ## Build all crates
 	$(CARGO) build --all
+
+# The production images (deployment.md "Images"), tagged with the commit
+# they are built from — the tag a deploy names (deploy/scripts/deploy.sh).
+# A dirty tree would ship code no commit names, so it refuses one.
+CONTAINER ?= podman
+DEPLOY_REV  = $(shell git rev-parse HEAD)
+DEPLOY_TAG  = $(shell git rev-parse --short=12 HEAD)
+
+deploy-images: ## Build the production images: cogra-api, cogra-web, cogra-ranker, tagged with the commit (needs podman)
+	@test -z "$$(git status --porcelain)" || { echo "Error: commit or stash first — an image is tagged with the commit it was built from"; exit 1; }
+	$(CONTAINER) build -f deploy/Containerfile.api --build-arg GIT_SHA=$(DEPLOY_REV) -t cogra-api:$(DEPLOY_TAG) .
+	$(CONTAINER) build -f deploy/Containerfile.web --ignorefile deploy/web.containerignore --build-arg GIT_SHA=$(DEPLOY_REV) -t cogra-web:$(DEPLOY_TAG) .
+	$(CONTAINER) build -f crates/ranker-server/Containerfile --label org.opencontainers.image.revision=$(DEPLOY_REV) -t cogra-ranker:$(DEPLOY_TAG) .
+	@echo "Built cogra-{api,web,ranker}:$(DEPLOY_TAG). Ship them: $(CONTAINER) save -m cogra-api:$(DEPLOY_TAG) cogra-web:$(DEPLOY_TAG) cogra-ranker:$(DEPLOY_TAG) | ssh <host> podman load"
 
 # The audit-phase fuzz lane (docs/design.md preview:xchg:fuzz-plan).
 # cargo-fuzz needs the nightly compiler's -Zsanitizer, so this is a

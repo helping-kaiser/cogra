@@ -1,0 +1,37 @@
+# The web app (deployment.md "Topology"): `next start` behind the proxy.
+# Its server-side renders reach GraphQL through the proxy's in-cluster
+# listener (GRAPHQL_URL in web.env), never the API directly — see the
+# Caddyfile's :8081 block for why.
+[Unit]
+Description=CoGra web
+OnFailure=cogra-alert@%n.service
+Wants=cogra-api.service
+After=cogra-api.service
+
+[Container]
+ContainerName=cogra-web
+Image=localhost/cogra-web:deployed
+Pull=never
+EnvironmentFile=/etc/cogra/web.env
+Network=cogra-edge.network
+HealthCmd=node /app/healthcheck.mjs
+HealthInterval=10s
+HealthTimeout=10s
+HealthRetries=3
+HealthStartPeriod=60s
+HealthOnFailure=kill
+# A real init as PID 1 reaps whatever Node's children leave behind.
+RunInit=true
+NoNewPrivileges=true
+DropCapability=ALL
+PidsLimit=2048
+PodmanArgs=--memory=2g --stop-timeout=20
+
+[Service]
+Restart=always
+RestartSec=5
+TimeoutStartSec=300
+ExecStartPost=/usr/bin/podman wait --condition=healthy cogra-web
+
+[Install]
+WantedBy=multi-user.target

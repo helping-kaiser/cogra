@@ -1,0 +1,33 @@
+# One-shot provisioning of the live store (deploy/media/provision.sh live):
+# the live and carried buckets, the live bucket's anonymous object reads,
+# and the API's own key, scoped to the two buckets. Idempotent; it runs on
+# every boot before the API.
+[Unit]
+Description=CoGra media store provisioning (live)
+OnFailure=cogra-alert@%n.service
+Requires=cogra-media.service
+After=cogra-media.service
+
+[Container]
+ContainerName=cogra-media-init
+Image=docker.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+Pull=never
+PodmanArgs=--entrypoint=/bin/sh
+Exec=/provision.sh live
+Volume=/usr/local/lib/cogra/media-provision.sh:/provision.sh:ro
+EnvironmentFile=/etc/cogra/buckets.env
+Environment=STORE_URL=http://cogra-media:9000
+Secret=cogra-media-root-user,type=env,target=MINIO_ROOT_USER
+Secret=cogra-media-root-password,type=env,target=MINIO_ROOT_PASSWORD
+Secret=cogra-media-api-key,type=env,target=API_ACCESS_KEY
+Secret=cogra-media-api-secret,type=env,target=API_SECRET_KEY
+Network=cogra-internal.network
+NoNewPrivileges=true
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

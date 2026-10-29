@@ -1,7 +1,9 @@
 # What a container build from the repository root never needs: build
 # output, the clients, the design tree, and the working notes. The Rust
-# images (crates/*/Containerfile) read the workspace manifests, crates/,
-# the checked-in GraphQL contracts and the toolchain pin.
+# images (crates/*/Containerfile, deploy/Containerfile.api) read the
+# workspace manifests, crates/, migrations/, the .sqlx/ offline metadata,
+# the checked-in GraphQL contracts and the toolchain pin. The web image
+# reads a different set and names it in deploy/web.containerignore.
 target/
 android/
 web/
@@ -9,3 +11,8 @@ design/
 tmp_dev/
 tmp_research_files/
 .git/
+# A checkout's .env holds its credentials and a DATABASE_URL the sqlx
+# macros would dial at compile time; the builds are offline by design.
+.env
+# Claude Code's worktrees live here: whole checkouts, gigabytes of them.
+.claude/

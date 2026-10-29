@@ -1,0 +1,3 @@
+# The live media store's objects: the live and carried buckets.
+[Volume]
+VolumeName=cogra-media
