@@ -327,7 +327,9 @@ describe("the reply wizard", () => {
 
     it("names the comment it answers when the reply was pre-targeted", async () => {
       draw({ target: COMMENT_TARGET });
-      await toSeal();
+      await toSeal("Four");
+      // ReplySealComment.md:3 — the read-back names the comment by its author's handle.
+      expect(screen.getByTestId("reply-seal-summary")).toHaveTextContent("Reply to @tobias — 4 characters.");
       expect(screen.getByTestId("reply-act-comment")).toHaveTextContent(
         "Reply to @tobias's comment",
       );
@@ -616,7 +618,9 @@ describe("the reply wizard", () => {
       ]);
     });
 
-    it("holds the seal while a picture is still on its way, and says so", async () => {
+    // ReplySealUploading.md:3,7 — the line stands above the commit, and the
+    // commit stays enabled through the gate.
+    it("says the seal waits while a picture is still on its way, Sign comment still enabled", async () => {
       // No upload handler that ever resolves: the gate is what is under test.
       server.use(
         gqlLink.mutation("UploadMedia", async () => {
@@ -629,8 +633,10 @@ describe("the reply wizard", () => {
       await pick(["a.jpg"]);
       fireEvent.click(screen.getByTestId("reply-next"));
       await screen.findByTestId("reply-seal");
-      expect(screen.getByTestId("reply-sign")).toBeDisabled();
-      expect(screen.getByTestId("reply-seal-blocked")).toBeInTheDocument();
+      expect(screen.getByTestId("reply-seal-blocked")).toHaveTextContent(
+        "Uploading 0 of 1 — signing waits for the picture.",
+      );
+      expect(screen.getByTestId("reply-sign")).not.toBeDisabled();
     });
 
     it("says a refused tag on its own row of the acts card, with Remove it", async () => {
@@ -662,7 +668,10 @@ describe("the reply wizard", () => {
       fireEvent.click(screen.getByTestId("reply-sign"));
       const fault = await screen.findByTestId("reply-seal-tags-fault");
       expect(within(fault).getByRole("button", { name: "Remove #reserved" })).toBeInTheDocument();
-      expect(screen.getByTestId("reply-refused")).toBeInTheDocument();
+      // Said on its row alone: no fault at the foot, and the commit stays
+      // (SealFaultRow.md, the row's rule read for a tag).
+      expect(screen.queryByTestId("reply-refused")).toBeNull();
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
       expect(onSigned).not.toHaveBeenCalled();
       // Removing it retires the refusal said against it.
       fireEvent.click(within(fault).getByRole("button", { name: "Remove #reserved" }));
@@ -670,12 +679,166 @@ describe("the reply wizard", () => {
       expect(screen.queryByTestId("reply-seal-tags")).toBeNull();
     });
 
-    it("surfaces a submit that never reached the server", async () => {
+    // ReplySeal.md:19 — the fault line and Retry IN THE FOOT, in Sign
+    // comment's place; Retry is the same signing, asked again.
+    it("surfaces a submit that never reached the server in the foot, and Retry asks again", async () => {
+      server.use(gqlLink.mutation("PrepareComment", () => HttpResponse.error()));
+      const { onSigned } = draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const line = await screen.findByTestId("reply-transport-error");
+      expect(line).toHaveTextContent("That didn't send. Try again.");
+      expect(within(screen.getByTestId("reply-seal")).getByTestId("reply-transport-error")).toBe(line);
+      expect(screen.queryByTestId("reply-sign")).toBeNull();
+      server.use(prepareOk("comment-9"));
+      fireEvent.click(screen.getByTestId("reply-retry"));
+      await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-9"));
+    });
+
+    it("SealSigning.md: going a stage back and returning shows the plain commit again", async () => {
       server.use(gqlLink.mutation("PrepareComment", () => HttpResponse.error()));
       draw();
       await toSeal();
       fireEvent.click(screen.getByTestId("reply-sign"));
-      expect(await screen.findByTestId("reply-transport-error")).toBeInTheDocument();
+      await screen.findByTestId("reply-transport-error");
+      fireEvent.click(screen.getByTestId("reply-back"));
+      fireEvent.click(await screen.findByTestId("reply-next"));
+      await screen.findByTestId("reply-seal");
+      expect(screen.queryByTestId("reply-transport-error")).toBeNull();
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
+    });
+
+    it("ReplySeal.md:21 the write rule's notice says the reply is still here, its ? the reply's clause, Not now gives the seal back", async () => {
+      server.use(
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: {
+              prepareComment: {
+                __typename: "PrepareContentPayload",
+                node: null,
+                writes: null,
+                userErrors: [{ __typename: "UserError", message: "no", code: "WRITE_RULE_FAILED", field: null }],
+              },
+            },
+          }),
+        ),
+      );
+      const { onSigned } = draw();
+      await toSeal("Still here.");
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const notice = await screen.findByTestId("reply-write-rule");
+      expect(notice).toHaveTextContent("Nothing was signed or spent — your reply is still here.");
+      expect(screen.queryByTestId("reply-retry")).toBeNull();
+      fireEvent.click(screen.getByTestId("reply-write-rule-help"));
+      expect(await screen.findByTestId("reply-help-dialog")).toHaveTextContent(
+        "Nothing was signed or spent, and your reply is still here. Try again in a little while.",
+      );
+      fireEvent.click(screen.getByTestId("reply-not-now"));
+      expect(screen.queryByTestId("reply-write-rule")).toBeNull();
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
+      expect(onSigned).not.toHaveBeenCalled();
+      // WriteRuleFailed.md:29 — the words still in its composer.
+      fireEvent.click(screen.getByTestId("reply-back"));
+      expect(await screen.findByTestId("reply-words")).toHaveValue("Still here.");
+    });
+
+    // ReplySealComment.md:9 — a citation of a post that never landed: its row
+    // says so with Remove it, Sign comment stays, no Retry anywhere.
+    it("says a cited post that never landed on its row, and Remove it readies the seal again", async () => {
+      server.use(
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: {
+              prepareComment: {
+                __typename: "PrepareContentPayload",
+                node: null,
+                writes: null,
+                userErrors: [
+                  { __typename: "UserError", message: "gone", code: "NOT_FOUND", field: ["references", "0", "target"] },
+                ],
+              },
+            },
+          }),
+        ),
+      );
+      server.use(
+        gqlLink.query("ReferenceCandidates", () =>
+          HttpResponse.json({
+            data: {
+              referenceCandidates: [
+                {
+                  __typename: "ReferenceCandidate",
+                  targetId: "u-sal",
+                  target: {
+                    __typename: "User",
+                    id: "u-sal",
+                    handle: "saltorres",
+                    displayName: { __typename: "ModeratedText", value: "Sal Torres" },
+                  },
+                },
+              ],
+            },
+          }),
+        ),
+      );
+      draw();
+      await toSeal();
+      // `+ Cite something`: the one candidate staged, Done gives the seal back.
+      fireEvent.click(screen.getByTestId("reply-open-references"));
+      fireEvent.change(await screen.findByRole("searchbox", { name: "Cite something" }), {
+        target: { value: "sal" },
+      });
+      fireEvent.click(await screen.findByTestId(byNode("referencePicker.result", "1")));
+      fireEvent.click(screen.getByTestId(byNode("referencePicker.done")));
+      await screen.findByTestId("reply-cited-repair");
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const line = await screen.findByTestId("reply-seal-reference-fault");
+      expect(line).toHaveTextContent("This post didn't land, so it can't be cited.");
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
+      expect(screen.queryByTestId("reply-retry")).toBeNull();
+      expect(screen.queryByTestId("reply-seal-bug")).toBeNull();
+      fireEvent.click(within(line).getByRole("button", { name: /Remove/ }));
+      expect(screen.queryByTestId("reply-seal-reference")).toBeNull();
+      expect(screen.getByTestId("reply-seal-acts-total")).toHaveTextContent("1 thing, signed");
+    });
+
+    // ReplySealComment.md:11,13 — a refused act whose target landed: the bug
+    // notice in Sign comment's place, and its discard asks first.
+    it("puts the bug notice in the foot for any other refused act, its Discard the reply asking first", async () => {
+      server.use(prepareOk("comment-9"));
+      const signer = fakeWriteSigner({
+        signStaged: vi.fn(async () => ({
+          kind: "refused" as const,
+          id: "w1",
+          errors: [{ message: "no", code: "BAD_INPUT" as const, field: null }],
+        })),
+      });
+      const onLeave = vi.fn();
+      renderWithProviders(
+        <ReplyWizard
+          target={POST_TARGET}
+          store={fakeIdentityStore({ keyOnDevice: true })}
+          onLeave={onLeave}
+          onSigned={vi.fn()}
+        />,
+        { store: signedInStore(), writeSigner: signer },
+      );
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const notice = await screen.findByTestId("reply-seal-bug");
+      expect(notice).toHaveTextContent("This shouldn't have happened");
+      expect(screen.queryByTestId("reply-sign")).toBeNull();
+      fireEvent.click(screen.getByTestId("reply-discard"));
+      const dialog = screen.getByTestId("reply-discard-confirm");
+      await waitFor(() => expect(dialog).toHaveAttribute("open"));
+      expect(dialog).toHaveTextContent("Discard this reply?");
+      expect(dialog).toHaveTextContent("Nothing is kept.");
+      expect(onLeave).not.toHaveBeenCalled();
+      // SealFaultBug.md: Try again asks the same signing again.
+      fireEvent.click(screen.getByTestId("reply-discard-confirm-keep"));
+      fireEvent.click(screen.getByTestId("reply-try-again"));
+      await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
+      expect(await screen.findByTestId("reply-seal-bug")).toBeInTheDocument();
     });
 
     it("tells a keyless browser to restore rather than offering a dead button", async () => {
@@ -688,15 +851,165 @@ describe("the reply wizard", () => {
     });
   });
 
+  // THE HELD PRESS (ReplySealUploading.md, ReplySealUploadFailed.md:15-19):
+  // the reply's own gate, driven through the wizard with the uploads latched.
+  describe("signing while the uploads run", () => {
+    function latchedUploads() {
+      const latches: { release: (outcome: "land" | "fail") => void }[] = [];
+      let next = 0;
+      server.use(
+        gqlLink.mutation("UploadMedia", async () => {
+          const outcome = await new Promise<"land" | "fail">((resolve) => latches.push({ release: resolve }));
+          if (outcome === "fail") return HttpResponse.error();
+          return HttpResponse.json({
+            data: {
+              uploadMedia: { __typename: "UploadMediaPayload", media: echoedMedia(`up-${next++}`), userErrors: [] },
+            },
+          });
+        }),
+      );
+      return {
+        async answer(outcome: "land" | "fail" = "land") {
+          await waitFor(() => expect(latches.length).toBeGreaterThan(0));
+          latches.shift()!.release(outcome);
+        },
+      };
+    }
+
+    function preparedCount() {
+      const calls = { count: 0 };
+      server.use(
+        gqlLink.mutation("PrepareComment", () => {
+          calls.count += 1;
+          return HttpResponse.json({
+            data: {
+              prepareComment: {
+                __typename: "PrepareContentPayload",
+                node: "comment-9",
+                writes: [
+                  { __typename: "PreparedWrite", id: "w1", family: "REVIEW", canonicalProposal: "AA==", gcAfterEpochs: 3 },
+                ],
+                userErrors: [],
+              },
+            },
+          });
+        }),
+      );
+      return calls;
+    }
+
+    async function toGatedSeal() {
+      write("With a picture.");
+      await pick(["a.jpg"]);
+      fireEvent.click(screen.getByTestId("reply-next"));
+      await screen.findByTestId("reply-seal");
+    }
+
+    it("ReplySealUploading.md:9,15 a press is held, signs nothing before the bytes land, then signs with no second press", async () => {
+      const bytes = latchedUploads();
+      const prepared = preparedCount();
+      const { onSigned } = draw();
+      await toGatedSeal();
+      const sign = screen.getByTestId("reply-sign");
+      fireEvent.click(sign);
+      fireEvent.click(sign);
+      expect(sign).not.toBeDisabled();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(prepared.count).toBe(0);
+      await bytes.answer("land");
+      await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-9"));
+      expect(prepared.count).toBe(1);
+    });
+
+    it("ReplySealUploading.md:11 past 200ms the held press reads Signing comment… and the header's arrow, Back and X refuse", async () => {
+      latchedUploads();
+      const { onLeave } = draw();
+      await toGatedSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      await waitFor(() => expect(screen.getByTestId("reply-sign")).toHaveTextContent("Signing comment…"), {
+        timeout: 1000,
+      });
+      fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("header-back"));
+      fireEvent.click(screen.getByTestId("reply-back"));
+      expect(screen.getByTestId("reply-seal")).toBeInTheDocument();
+      expect(screen.getByTestId("reply-discard-confirm")).not.toHaveAttribute("open");
+      expect(onLeave).not.toHaveBeenCalled();
+      // The header's ? stays live (SealSigning.md).
+      fireEvent.click(screen.getByRole("button", { name: "How signing works" }));
+      expect(await screen.findByTestId("reply-help-dialog")).toBeInTheDocument();
+    });
+
+    it("ReplySealUploading.md:17 a failed upload drops the held press: the fault reading, Sign comment again, the ways out answer", async () => {
+      const bytes = latchedUploads();
+      const prepared = preparedCount();
+      draw();
+      await toGatedSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      await bytes.answer("fail");
+      await waitFor(() =>
+        expect(screen.getByTestId("reply-seal-blocked")).toHaveTextContent(
+          "One picture didn't upload. Signing waits for it.",
+        ),
+      );
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
+      expect(screen.getByTestId("reply-sign")).toBeDisabled();
+      expect(prepared.count).toBe(0);
+      fireEvent.click(screen.getByTestId("header-leave"));
+      await waitFor(() => expect(screen.getByTestId("reply-discard-confirm")).toHaveAttribute("open"));
+    });
+
+    it("ReplySealUploading.md:19 Retry runs the gate again, and nothing signs until Sign comment is pressed again", async () => {
+      const bytes = latchedUploads();
+      const prepared = preparedCount();
+      const { onSigned } = draw();
+      await toGatedSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      await bytes.answer("fail");
+      fireEvent.click(await screen.findByTestId("reply-seal-blocked-retry"));
+      // ReplySealUploadFailed.md:17 — the line returns to its running reading, the commit enabled.
+      await waitFor(() =>
+        expect(screen.getByTestId("reply-seal-blocked")).toHaveTextContent("Uploading 0 of 1"),
+      );
+      expect(screen.getByTestId("reply-sign")).not.toBeDisabled();
+      await bytes.answer("land");
+      await waitFor(() => expect(screen.queryByTestId("reply-seal-blocked")).toBeNull());
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(prepared.count).toBe(0);
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      await waitFor(() => expect(onSigned).toHaveBeenCalled());
+    });
+
+    it("ReplySealUploading.md:21 the last upload landing unpressed takes the line away and leaves Sign comment as it was", async () => {
+      const bytes = latchedUploads();
+      const prepared = preparedCount();
+      draw();
+      await toGatedSeal();
+      await bytes.answer("land");
+      await waitFor(() => expect(screen.queryByTestId("reply-seal-blocked")).toBeNull());
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
+      expect(screen.getByTestId("reply-sign")).not.toBeDisabled();
+      expect(prepared.count).toBe(0);
+    });
+  });
+
   describe("leaving", () => {
     // NO COMMENT DRAFTS (jakob 2026-09-01): the X discards, so the label must
     // not promise the post wizard's kept draft.
-    it("says the comment is discarded rather than kept", () => {
+    it("says the reply is discarded rather than kept, as every reply board's header does", () => {
       draw();
       expect(screen.getByTestId("header-leave")).toHaveAttribute(
         "aria-label",
-        "Leave — this comment is discarded",
+        "Leave — the reply is discarded",
       );
+    });
+
+    it("ReplySeal: the seal's header carries Last step and the one ? as WizardHeader's pair", async () => {
+      draw();
+      await toSeal();
+      expect(screen.getByTestId("header-stage")).toHaveTextContent("Last step");
+      fireEvent.click(screen.getByRole("button", { name: "How signing works" }));
+      expect(await screen.findByTestId("reply-help-dialog")).toBeInTheDocument();
     });
 
     it("asks before discarding from the seal, where words certainly exist", async () => {
