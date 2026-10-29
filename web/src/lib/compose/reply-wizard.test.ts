@@ -14,7 +14,9 @@ import {
   replyActLabel,
   replyReducer,
   replySummary,
+  sealClosed,
   sealGate,
+  sealUploads,
   signedActions,
   type ReplyAction,
   type ReplyState,
@@ -418,5 +420,55 @@ describe("the seal's words", () => {
 
   it("names the comment it answers when the reply was pre-targeted", () => {
     expect(replyActLabel(COMMENT_TARGET)).toBe("Reply to @tobias's comment");
+  });
+});
+
+// THE SEAL'S GATE AS THE BOARDS READ IT (ReplySealUploading.md:3-7,
+// ReplySealUploadFailed.md:3-9): a wait never closes the commit; a failure,
+// or anything the seal refuses before the wait, does.
+describe("sealUploads and sealClosed", () => {
+  const uploading = () => reduce(withWords(), { type: "pick", assets: picked(2) }, {
+    type: "upload",
+    id: "asset-0",
+    upload: { kind: "done", mediaId: "m1" },
+  });
+
+  it("counts the pictures still moving, and leaves the commit open while they do", () => {
+    const state = uploading();
+    expect(sealUploads(state)).toEqual({ pending: 1, failed: 0, done: 1, total: 2, video: false });
+    expect(sealClosed(state)).toBeNull();
+  });
+
+  it("closes the commit on a failed picture, in the gate's own words", () => {
+    const state = reduce(uploading(), {
+      type: "upload",
+      id: "asset-1",
+      upload: { kind: "failed", message: "no", retryable: true },
+    });
+    expect(sealUploads(state)).toMatchObject({ pending: 0, failed: 1 });
+    expect(sealClosed(state)).toBe("One picture didn't upload.");
+  });
+
+  it("still closes the commit for a refusal that comes before the wait", () => {
+    const state = reduce(
+      uploading(),
+      { type: "sensitive", sensitive: true },
+      { type: "sensitiveReason", reason: "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1) },
+    );
+    expect(sealClosed(state)).toMatch(/too long/i);
+  });
+
+  it("reads a clip as one thing to wait for, naming the video", () => {
+    const state = reduce(withWords(), {
+      type: "pick",
+      assets: [{ id: "clip", file: new Blob(["x"], { type: "video/mp4" }), kind: "video" }],
+    });
+    expect(sealUploads(state)).toEqual({ pending: 1, failed: 0, done: 0, total: 1, video: true });
+    expect(sealClosed(state)).toBeNull();
+  });
+
+  it("opens with nothing to wait for", () => {
+    expect(sealUploads(withWords())).toEqual({ pending: 0, failed: 0, done: 0, total: 0, video: false });
+    expect(sealClosed(withWords())).toBeNull();
   });
 });
