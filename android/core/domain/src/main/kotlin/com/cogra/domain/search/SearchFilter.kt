@@ -7,13 +7,17 @@
 // means every kind (:7), where the feed's empty set means nothing.
 //
 // THE ORDER AND THE SEEN TOGGLE ARE THE READER'S DEFAULT (:11-15, the one
-// default object): set in Settings, the app's until the reader sets their own.
-// Settings draws no Reading editor yet, so the reader's default IS the app's —
-// Ranked, seen off — and [READER_SEARCH_DEFAULT] says so in one place.
+// default object; SettingsReading.md: "search's order and its already-seen
+// toggle follow the reader's saved default, and search's kinds stay search's
+// own"): set in Settings' What your feed shows, the app's until the reader
+// sets their own — [READER_SEARCH_DEFAULT] is the app's, [searchDefault] the
+// reader's.
 
 package com.cogra.domain.search
 
+import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedKind
+import com.cogra.domain.feed.FeedOrder
 
 /** The search filter: what the search shows. */
 data class SearchFilter(
@@ -35,6 +39,15 @@ val SEARCH_KINDS: List<FeedKind> = listOf(FeedKind.POST, FeedKind.COMMENT, FeedK
 
 /** CoGra's own default for search's shared axes (ExploreFilter.md:15): Ranked, seen off. */
 val READER_SEARCH_DEFAULT: SearchFilter = SearchFilter()
+
+/** The reader's saved feed default as search reads it: its order and seen toggle, search's own kinds (none). */
+fun FeedFilter.searchDefault(): SearchFilter = SearchFilter(
+    order = when (order) {
+        FeedOrder.RANKED -> SearchOrder.RANKED
+        FeedOrder.NEWEST -> SearchOrder.NEWEST
+    },
+    seen = showSeen,
+)
 
 /**
  * A GUEST'S SEARCH (ExploreSearch.md:65; ExploreFilter.md:41): newest first,

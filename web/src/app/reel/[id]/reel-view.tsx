@@ -66,13 +66,13 @@ import { useAuthPhase } from "@/lib/session/provider";
 import { BottomNav } from "@/lib/ui/bottom-nav";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
-import { bodyIsSensitive, galleryItems, payloadIsRedacted } from "@/lib/ui/post-media";
+import { bodyIsSensitive, galleryItems, payloadIsRedacted, veilReason, veilSource } from "@/lib/ui/post-media";
 import { useShareCapable } from "@/lib/ui/share-button";
 import { LINK_COPIED, shareLink } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { InlineAction } from "@/lib/ui2/inline-action";
-import { VeilContext, VisibilityGlyph } from "@/lib/ui2/media/body-veil";
+import { VeilContext, VisibilityGlyph, veilSourceLine } from "@/lib/ui2/media/body-veil";
 import { ReelCaption } from "@/lib/ui2/media/reel-caption";
 import { ReelPlate } from "@/lib/ui2/media/reel-plate";
 import { ReelRail } from "@/lib/ui2/media/reel-rail";
@@ -82,9 +82,8 @@ import { VideoPlayer } from "@/lib/ui2/media/video-player";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
 
 /**
- * The stream's nodes. REEL IS NOT REGISTERED in `nodes.json` yet (design's
- * registration sweep, rounds 23–25): every path below is the board's evident
- * one, minted here and reported for registration.
+ * The stream's nodes, registered as `reel` (nodes.json, round 26 — `Reel` and
+ * `ReelSensitive`, one surface in two states, one prefix).
  */
 const REEL: DataNode = { path: "reel" };
 const STAGE = part(REEL, "stage");
@@ -97,7 +96,6 @@ export const COULDNT_LOAD_MORE = "Couldn't load more";
 
 /** The veil's face (`SensitiveVeil` media face; copy-voice.md:3100-3107). */
 const VEIL_LABEL = "Sensitive — tap to view";
-const VEIL_SOURCE = { author: "The author's warning", platform: "The platform's verdict" } as const;
 
 /**
  * Where the stream's stacked chrome stands above the screen's foot: the bar's
@@ -335,7 +333,10 @@ function Clip({
   const author = post.author;
   const title = post.title.value ?? null;
   const description = post.description.value ?? null;
-  const source = post.moderationStatus === "SENSITIVE" ? VEIL_SOURCE.platform : VEIL_SOURCE.author;
+  // WHOSE MARK THE VEIL IS: the author's mark alone says (`veilSource`) — every
+  // status, `moderationStatus` included, reads the OR of the two marks — and
+  // the reason follows it where there is one (ReelSensitive.md:9).
+  const source = veilSourceLine(veilSource(post), veilReason(post));
 
   const notice = atTheEnd(state) ? (
     <ReelPlate node={part(CAPTION, "notice")}>
@@ -361,12 +362,9 @@ function Clip({
           the veil it stays mounted and blurred in place, so the unveil moves
           nothing and is an eligibility change on the same element
           (ReelSensitive.jsx:24-28; `body-veil.tsx`). */}
-      <div
-        {...testAttributes(STAGE, undefined)}
-        aria-hidden={veiled ? "true" : undefined}
-        className="absolute inset-0 overflow-hidden"
-      >
+      <div {...testAttributes(STAGE, undefined)} className="absolute inset-0 overflow-hidden">
         <div
+          aria-hidden={veiled ? "true" : undefined}
           className="absolute inset-0"
           style={veiled ? { filter: "blur(24px)", transform: "scale(1.06)" } : undefined}
         >
@@ -392,31 +390,34 @@ function Clip({
             )}
           </VeilContext.Provider>
         </div>
-      </div>
-      {veiled && (
-        // THE STANDARD VEIL'S MEDIA FACE over the whole frame (ReelSensitive.jsx
-        // :42-48): the mark, whose mark it is, and the face's words kept clear
-        // of the rail on both sides (`faceGutter="76px"`) so they stay centred.
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            reveal();
-          }}
-          aria-label={`${VEIL_LABEL}. ${source}`}
-          {...testAttributes(part(STAGE, "veil"))}
-          className="cg-focus absolute inset-0 grid cursor-pointer place-items-center border-0 p-0"
-          style={{ background: "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)", zIndex: 1 }}
-        >
-          <span className="flex flex-col items-center gap-2 text-center" style={{ padding: "0 76px", color: "#fff" }}>
-            <VisibilityGlyph />
-            <span className="text-label-large">{VEIL_LABEL}</span>
-            <span className="text-body-small" style={{ opacity: 0.85 }}>
-              {source}
+        {veiled && (
+          // THE STANDARD VEIL'S MEDIA FACE over the whole frame (ReelSensitive.jsx
+          // :42-48): the mark, whose mark it is, and the face's words kept clear
+          // of the rail on both sides (`faceGutter="76px"`) so they stay centred.
+          // A LEAF INSIDE THE STAGE beside the clip it covers (`stage.veil`,
+          // the data-node join's wrapper rule), so only the clip beneath is
+          // hidden from assistive tech, never the veil's own control.
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              reveal();
+            }}
+            aria-label={`${VEIL_LABEL}. ${source}`}
+            {...testAttributes(part(STAGE, "veil"))}
+            className="cg-focus absolute inset-0 grid cursor-pointer place-items-center border-0 p-0"
+            style={{ background: "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)", zIndex: 1 }}
+          >
+            <span className="flex flex-col items-center gap-2 text-center" style={{ padding: "0 76px", color: "#fff" }}>
+              <VisibilityGlyph />
+              <span className="text-label-large">{VEIL_LABEL}</span>
+              <span className="text-body-small" style={{ opacity: 0.85 }}>
+                {source}
+              </span>
             </span>
-          </span>
-        </button>
-      )}
+          </button>
+        )}
+      </div>
       {/* THE TWO WASHES (Reel.jsx:66-74): chrome over photography needs its own
           contrast, and a gradient does it without drawing a bar. Inert, so a
           veil beneath keeps the whole frame as its tap (ReelSensitive.jsx:54). */}
@@ -457,6 +458,9 @@ function Clip({
             target={{ id: post.id, kind: "post", label: "this post" }}
             testIdPrefix="reel-stance"
             node={part(RAIL, "stance")}
+            // The face's line is the rail's own `stanceLine`, beside the face
+            // (ReelRail.jsx: the placer's, never the stance node's part).
+            lineNode={part(RAIL, "stanceLine")}
           />
         }
         comments={comments}

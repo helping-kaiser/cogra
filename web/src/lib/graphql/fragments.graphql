@@ -106,10 +106,17 @@ fragment MediaFields on MediaAttachment {
 # gallery is a bounded fold list rather than a connection, so it prices
 # at its cap; `digest` is deliberately unread, because checking the
 # transitive witness is not what a render does and the field would cost
-# its bound on every node. `sensitiveSelfMark` is likewise absent: it is
-# the author's own mark, which only an edit surface opens, and the
-# detail read adds it beside this spread rather than paying for it on
-# every feed card.
+# its bound on every node.
+#
+# WHOSE MARK A VEIL IS RIDES EVERY CARD (LadderStates.md: the veil names its
+# source, The author's warning or The platform's verdict, with the reason
+# after it, on every veil that stands; round 26, Q47). Every SENSITIVE status
+# is the OR of the author's mark and a moderator's verdict (api-spec.md,
+# "Content authoring"), so the statuses alone cannot say whose it is:
+# `sensitiveSelfMark` is the author's mark alone, and `sensitiveReason` the
+# author's own line. Two scalars a node — the smallest read that answers the
+# veil — and the same two the edit switch binds to, which reads the author's
+# mark and never the OR.
 fragment PostFields on Post {
   id
   title {
@@ -146,6 +153,9 @@ fragment PostFields on Post {
     state
   }
   moderationStatus
+  # Whose mark a veil is, and the author's line on it (above).
+  sensitiveSelfMark
+  sensitiveReason
   # THE NODE'S MARK (api-spec.md `Post.removal`): when and by whom the
   # payload went. The card's RedactedContent reads it — `by` picks the mark,
   # `at` is its `when` — and the feed's device-side Removed filter keys on
@@ -220,6 +230,10 @@ fragment CommentFields on Comment {
     state
   }
   moderationStatus
+  # Whose mark a veil is, and the author's line on it (`PostFields`): the
+  # comment's compact veil names its source too.
+  sensitiveSelfMark
+  sensitiveReason
   # The comment's mark, as the post's (`Comment.removal`): its replies keep
   # their parent and stay readable beneath it.
   removal {

@@ -46,25 +46,78 @@ describe("BodyVeil", () => {
     expect(screen.queryByTestId("body-veil-reveal")).toBeNull();
   });
 
-  it("carries the author's reason on the veil and in its accessible name", () => {
+  // THE SOURCE LINE RIDES EVERY VEIL (Q47; LadderStates.md, round 26): whose
+  // mark it is, the reason after it where there is one.
+  it("names whose mark it is, the author's reason after it, on the face and in its name", () => {
     render(
       <BodyVeil reason="Injured seabird">
         <p>Body</p>
       </BodyVeil>,
     );
-    expect(screen.getByText("Injured seabird")).toBeInTheDocument();
+    expect(screen.getByTestId("body-veil-source")).toHaveTextContent("The author's warning — Injured seabird");
     expect(
-      screen.getByRole("button", { name: "Sensitive — tap to view — Injured seabird" }),
+      screen.getByRole("button", { name: "Sensitive — tap to view. The author's warning — Injured seabird" }),
     ).toBeInTheDocument();
   });
 
-  it("names itself plainly when there is no reason", () => {
+  it("names the source even with no reason — an unnamed source would read as the other one", () => {
     render(
       <BodyVeil>
         <p>Body</p>
       </BodyVeil>,
     );
-    expect(screen.getByRole("button", { name: "Sensitive — tap to view" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sensitive — tap to view. The author's warning" })).toBeInTheDocument();
+  });
+
+  it("names the platform's verdict as its own source", () => {
+    render(
+      <BodyVeil source="platform">
+        <p>Body</p>
+      </BodyVeil>,
+    );
+    expect(screen.getByTestId("body-veil-source")).toHaveTextContent("The platform's verdict");
+  });
+
+  it("a words-only post's text face blurs the words in place with Show and names the source under them (FeedWordsSensitive.md)", () => {
+    render(
+      <BodyVeil face="text" reason="Grief">
+        <p>The salt crust reaches the road by March.</p>
+      </BodyVeil>,
+    );
+    const show = screen.getByRole("button", { name: "Show" });
+    expect(show).toHaveTextContent("Show");
+    expect(screen.getByText("The salt crust reaches the road by March.").closest("[aria-hidden]")).toHaveStyle({ filter: "blur(6px)" });
+    expect(screen.getByTestId("body-veil-source")).toHaveTextContent("The author's warning — Grief");
+    fireEvent.click(show);
+    // WHEN tap Show -> the words unveil in place AND the source line goes.
+    expect(screen.queryByTestId("body-veil-source")).toBeNull();
+    expect(screen.getByText("The salt crust reaches the road by March.").closest("[aria-hidden]")).toBeNull();
+  });
+
+  it("a text face under a veiled clip leaves the line to the clip's face — once per post", () => {
+    render(
+      <BodyVeil face="text" named={false}>
+        <p>Words</p>
+      </BodyVeil>,
+    );
+    expect(screen.getByRole("button", { name: "Show" })).toBeInTheDocument();
+    expect(screen.queryByTestId("body-veil-source")).toBeNull();
+  });
+
+  it("a comment's compact face is one block naming the source, in the theme's type (CommentCard.jsx)", () => {
+    render(
+      <BodyVeil face="compact" source="platform">
+        <p>Comment words</p>
+      </BodyVeil>,
+    );
+    const block = screen.getByRole("button", { name: "Sensitive — tap to view. The platform's verdict" });
+    expect(block).toHaveTextContent("Sensitive — tap to view");
+    expect(screen.getByTestId("body-veil-source")).toHaveTextContent("The platform's verdict");
+    expect(block.className).toContain("text-on-surface");
+    // The body stays mounted beneath, out of view.
+    expect(screen.getByText("Comment words")).toBeInTheDocument();
+    fireEvent.click(block);
+    expect(screen.getByText("Comment words")).toBeVisible();
   });
 
   it("does not use the failure role — a veiled post is not an error", () => {

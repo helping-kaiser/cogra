@@ -51,8 +51,13 @@ class ScriptedHeldTopicsRepository : HeldTopicsRepository {
         return failure ?: Outcome.Success(topics.size)
     }
 
-    override suspend fun heldPage(after: String?): Outcome<HeldTopicsPage?> =
-        failure ?: Outcome.Success(HeldTopicsPage(topics, endCursor = null, hasNextPage = false))
+    /** Every page read asked for, in call order. */
+    val pageReads = mutableListOf<String?>()
+
+    override suspend fun heldPage(after: String?): Outcome<HeldTopicsPage?> {
+        pageReads += after
+        return failure ?: Outcome.Success(HeldTopicsPage(topics, endCursor = null, hasNextPage = false))
+    }
 }
 
 /** Explore's device memory, in memory; null keys are the guest's. */

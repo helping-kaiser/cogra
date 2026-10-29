@@ -2,13 +2,21 @@ package com.cogra.domain.testing
 
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
+import com.cogra.domain.feed.CommittedFilterStore
+import com.cogra.domain.feed.FeedCard
+import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
 import com.cogra.domain.feed.FeedRepository
 import com.cogra.domain.feed.PeopleMark
 import com.cogra.domain.feed.RankedEntry
+import com.cogra.domain.feed.ReaderDefaultStore
 import com.cogra.domain.feed.SettlingRow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 
 /**
  * The ranked feed over a scriptable pod: [answer] is what every
@@ -31,6 +39,12 @@ open class ScriptedFeedRepository : FeedRepository {
     /** When set, every window answers this instead. */
     var windowAnswer: Outcome<List<PostView>>? = null
 
+    /** The other kinds' cards a `FeedCards` read hydrates, by id. */
+    val cardsById = mutableMapOf<String, FeedCard>()
+
+    /** Every `FeedCards` read asked for, in call order. */
+    val cardReads = mutableListOf<List<String>>()
+
     override suspend fun ranking(viewer: String, args: FeedRankArgs): Outcome<FeedRanking?> {
         rankings += viewer to args
         return answer
@@ -40,6 +54,11 @@ open class ScriptedFeedRepository : FeedRepository {
         windows += ids
         windowAnswer?.let { return it }
         return Outcome.Success(ids.mapNotNull { posts[it] ?: defaultPost(it) })
+    }
+
+    override suspend fun cards(ids: List<String>): Outcome<List<FeedCard>> {
+        cardReads += ids
+        return Outcome.Success(ids.mapNotNull { cardsById[it] })
     }
 
     /** What an id hydrates to when [posts] names nothing for it; a plain post by default. */
@@ -73,3 +92,29 @@ fun rankingOf(ids: List<String>, asOfEpoch: Int = 7): FeedRanking = FeedRanking(
     entries = ids.mapIndexed { i, id -> entry(id, newestIndex = ids.size - 1 - i) },
     settling = emptyList(),
 )
+
+/** The reader defaults on this device, in memory: one value per account. */
+class InMemoryReaderDefaultStore : ReaderDefaultStore {
+    val saved = MutableStateFlow<Map<String, FeedFilter>>(emptyMap())
+
+    override fun watch(account: String): Flow<FeedFilter?> = saved.map { it[account] }
+
+    override suspend fun save(account: String, filter: FeedFilter) {
+        saved.update { it + (account to filter) }
+    }
+}
+
+/** The committed feed filters on this device, in memory: one per account, the guest's under null. */
+class InMemoryCommittedFilterStore : CommittedFilterStore {
+    val stored = mutableMapOf<String?, FeedFilter>()
+
+    override suspend fun committed(account: String?): FeedFilter? = stored[account]
+
+    override suspend fun commit(account: String?, filter: FeedFilter) {
+        stored[account] = filter
+    }
+
+    override suspend fun forget(account: String?) {
+        stored.remove(account)
+    }
+}
