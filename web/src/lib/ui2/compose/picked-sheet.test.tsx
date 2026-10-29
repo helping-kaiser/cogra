@@ -51,7 +51,8 @@ describe("PickedSheet", () => {
     const note = screen.getByText("The first one is the cover.");
     expect(note.className).toMatch(/\bpx-6\b/);
     expect(note.className).toMatch(/\bpt-3\b/);
-    expect(note.className).not.toMatch(/\bm[xl]?-/);
+    // No margin of its own beyond the reset `m-0`.
+    expect(note.className.split(/\s+/).filter((cls) => /^-?m[xytrbl]?-/.test(cls))).toEqual(["m-0"]);
     const list = screen.getByTestId("picked-sheet-row-0").parentElement!;
     expect(list.className).toMatch(/\bpx-6\b/);
     expect(list.className).toContain("border-t");
