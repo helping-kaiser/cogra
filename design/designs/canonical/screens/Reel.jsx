@@ -1,7 +1,10 @@
 /* THE STREAM (readme §13, the reel round, jakob 2026-09-03). A portrait clip's
    tap opens this: the list it was tapped in — the reader's OWN ranked feed, the
-   one the board draws, or History's rows, or a profile's posts — narrowed to
-   clips taller than they are wide, in that list's order (jakob 2026-10-12).
+   one the board draws, or Saved's cards, or History's rows, or a profile's
+   posts — narrowed to clips taller than they are wide, in that list's order
+   (jakob 2026-10-12; Saved, History's sibling, since round 26). A post's
+   clip detail is no list, so it opens no stream: its clip tap only returns
+   into a stream the reader came from, whose way back keeps its list's noun.
    Same graph, same order, a mechanical filter —
    there is no second algorithm here, and no header says otherwise, because a
    label announcing "your feed" is the kind of reassurance only a product that

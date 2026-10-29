@@ -2711,8 +2711,9 @@ item 33, jakob's rulings the same day).
 - **The stream carries portrait clips only** — clips taller than they
   are wide. Square and landscape clips keep the ordinary grammar, a
   tap to their post. **It is the list it was opened from narrowed to
-  them**, in that list's order — the feed, History's rows, a profile's
-  posts (jakob 2026-10-12): the same graph, the same order, a mechanical
+  them**, in that list's order — the feed, Saved's cards, History's rows,
+  a profile's posts (jakob 2026-10-12; Saved, History's sibling, round
+  26): the same graph, the same order, a mechanical
   filter, and **no second algorithm**. Nothing labels it, because a header saying "your feed"
   is the reassurance only a product that ranks two ways needs. What
   says it instead is the **score on the rail** — the reader's own
@@ -8508,10 +8509,12 @@ as the board's own; the back edge in `graph.json` carries the table.
   profile` from another's posts, `Back to your profile` from the
   reader's own, `Back to History` from History (jakob 2026-10-05).
 - **The stream** (`Reel`, `ReelSensitive`): `Back to feed` from the feed
-  it narrowed (drawn), `Back to the post` from a post's clip detail,
+  it narrowed (drawn), `Back to Saved` from Saved (round 26),
   `Back to the profile` from another's posts, `Back to your profile`
   from the reader's own, `Back to History` from History (jakob
-  2026-10-05).
+  2026-10-05). A post's clip detail opens no stream — its clip tap
+  returns into the one the reader came from, which keeps its list's
+  noun (round 26).
 - **The opinions page** (`ProfileStances`): `Back to the profile`
   (drawn; another's profile) or `Back to your profile` (the reader's
   own). It drew a bare `Back`.

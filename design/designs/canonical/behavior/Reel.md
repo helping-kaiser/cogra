@@ -1,6 +1,6 @@
 # Reel · `spec:design:behavior-reel`
 
-ALWAYS the stream carries only clips taller than they are wide, from the list it was opened from narrowed to them in that list's order — the feed it narrowed, History's rows or the profile's posts — and by no ranking of its own
+ALWAYS the stream carries only clips taller than they are wide, from the list it was opened from narrowed to them in that list's order — the feed it narrowed, Saved's cards, History's rows or the profile's posts — and by no ranking of its own
 
 ALWAYS no header labels the stream
 
@@ -82,4 +82,6 @@ WHEN press reel.backDisc GIVEN the stream was opened from the feed it narrowed -
 
 WHEN press reel.backDisc GIVEN the stream was opened from anywhere else -> the stream closes onto where it was opened, the state the reader left exactly
 
-ALWAYS reel.backDisc reads Back to feed from the feed it narrowed, Back to the post from a post's clip detail, Back to the profile from another's posts, Back to your profile from the reader's own and Back to History from History
+ALWAYS reel.backDisc reads Back to feed from the feed it narrowed, Back to Saved from Saved, Back to History from History, Back to the profile from another's posts and Back to your profile from the reader's own
+
+ALWAYS reel.backDisc names the list the stream was opened from GIVEN the reader came back into the stream from a post's clip detail, the post never being where the stream was opened
