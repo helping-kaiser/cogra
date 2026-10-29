@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PostView } from "@/lib/api/content-api";
@@ -513,6 +513,70 @@ describe("PostCard's veil faces", () => {
   it("a verdict alone names the platform's verdict", () => {
     mount(marked({ sensitiveSelfMark: false }));
     expect(screen.getByTestId("card-veil-source")).toHaveTextContent("The platform's verdict");
+  });
+
+  // THE CAPTION VEIL SPLIT (seam 253; PostCard.jsx: the media's face, each
+  // caption paragraph's text veil, one SensitiveScope): the media face lies
+  // over the media alone, and the caption blurs in place with its own Show.
+  it("a picture post's caption blurs in place with Show, outside the media face, the source named once", () => {
+    mount(
+      marked({
+        content: moderated(null),
+        description: moderated("Rubbings from three weekends", "SENSITIVE"),
+        attachments: [picture()],
+        sensitiveSelfMark: true,
+        sensitiveReason: "Grief",
+      }),
+    );
+    const face = screen.getByTestId("card-veil");
+    expect(face).toContainElement(screen.getByTestId("card-media"));
+    expect(face).not.toContainElement(screen.getByTestId("card-description"));
+    const caption = screen.getByTestId("card-description-veil");
+    expect(caption).toContainElement(screen.getByTestId("card-description"));
+    expect(within(caption).getByRole("button", { name: "Show" })).toBeInTheDocument();
+    // One source line per post: the media face carries it, the caption leaves it.
+    expect(screen.getAllByTestId(/-veil-source$/)).toHaveLength(1);
+    expect(within(face).getByTestId("card-veil-source")).toHaveTextContent("The author's warning — Grief");
+    // The title stays readable, outside every veil.
+    expect(face).not.toContainElement(screen.getByTestId("card-title"));
+    expect(caption).not.toContainElement(screen.getByTestId("card-title"));
+  });
+
+  it("one Show on the caption lifts the media face too: one reveal for the post", () => {
+    mount(
+      marked({
+        content: moderated(null),
+        description: moderated("Rubbings from three weekends", "SENSITIVE"),
+        attachments: [picture()],
+        sensitiveSelfMark: true,
+      }),
+    );
+    fireEvent.click(within(screen.getByTestId("card-description-veil")).getByRole("button", { name: "Show" }));
+    expect(screen.queryByTestId("card-veil")).toBeNull();
+    expect(screen.queryByTestId("card-description-veil")).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Sensitive — tap to view/ })).toBeNull();
+  });
+
+  it("the media face's tap lifts the caption's veil too", () => {
+    mount(
+      marked({
+        content: moderated(null),
+        description: moderated("Rubbings from three weekends", "SENSITIVE"),
+        attachments: [picture()],
+        sensitiveSelfMark: true,
+      }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /^Sensitive — tap to view/ }));
+    expect(screen.queryByTestId("card-description-veil")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Show" })).toBeNull();
+  });
+
+  it("a words-only post's title stays readable outside the veil (FeedWordsSensitive.md:9)", () => {
+    mount(marked({ sensitiveSelfMark: true }));
+    const veil = screen.getByTestId("card-veil");
+    expect(veil).toContainElement(screen.getByTestId("card-body"));
+    expect(veil).not.toContainElement(screen.getByTestId("card-title"));
+    expect(screen.getByTestId("card-title").closest("[aria-hidden='true']")).toBeNull();
   });
 
   it("a picture post wears the media face, naming the source once", () => {

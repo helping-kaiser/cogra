@@ -326,9 +326,46 @@ export function BodyRegion({
   /** Its sensitive state, so an old reveal does not cover a new mark. */
   signature?: string;
 }) {
+  return (
+    <VeilPart veiled={veiled} marks={marks} face={face} named={named} testId={testId} nodeId={nodeId} signature={signature}>
+      <div className="flex flex-col gap-2">{children}</div>
+    </VeilPart>
+  );
+}
+
+/**
+ * ONE PART of a body that veils as one — the media under its face, or one
+ * paragraph blurred in place with its `Show` (`PostCard.jsx`: the media's
+ * `SensitiveVeil kind="media"`, each caption paragraph's `kind="text"`, all
+ * inside one `SensitiveScope`). Every part of a node keys the same reveal
+ * (`nodeId` + `signature`, `reveal.ts`), so one tap on any of them lifts
+ * them all: one decision, however many faces stand (readme §9; seam 253,
+ * the caption veil). It draws no box of its own, so the part lays out where
+ * its host puts it, veiled or not.
+ */
+export function VeilPart({
+  children,
+  veiled,
+  marks,
+  face = "media",
+  named = true,
+  testId,
+  nodeId,
+  signature,
+}: {
+  children: React.ReactNode;
+  veiled: boolean;
+  /** The node whose mark the veil is (`BodyRegion`). */
+  marks?: { sensitiveSelfMark?: boolean | null; sensitiveReason?: string | null };
+  face?: VeilFace;
+  /** A text face names the source only as the post's only face (`BodyVeil`). */
+  named?: boolean;
+  testId?: string;
+  nodeId?: string;
+  signature?: string;
+}) {
   const alwaysUnveil = useAlwaysUnveil();
-  const body = <div className="flex flex-col gap-2">{children}</div>;
-  if (!veiled || alwaysUnveil) return body;
+  if (!veiled || alwaysUnveil) return <>{children}</>;
   return (
     <SharedVeil
       nodeId={nodeId}
@@ -339,7 +376,7 @@ export function BodyRegion({
       named={named}
       testId={testId}
     >
-      {body}
+      {children}
     </SharedVeil>
   );
 }
