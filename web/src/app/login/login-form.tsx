@@ -1,8 +1,12 @@
 "use client";
 
-// Login (Android's LoginScreen/LoginViewModel). Success only writes the
-// token store (phase flips navigate: web.md "Routes") — the signed-in
-// redirect below covers a fresh login and an already-signed-in visit.
+// SIGN IN (design/designs/canonical/screens/SignIn.jsx; behavior/SignIn.md,
+// SignInError.md, SignInLimited.md) on the task page's anatomy — Back to the
+// bare view, the welcome lead, the fields, the commit that waits, and the link
+// stack flush with the gutter (Android's LoginScreen/LoginViewModel). Success
+// only writes the token store (phase flips navigate: web.md "Routes") — the
+// signed-in redirect below covers a fresh login and an already-signed-in
+// visit.
 //
 // THE DEVICE LOCK'S LEG RIDES INSIDE THE PRESS (sign-out-custody §3.5). The
 // fresh session is held, NOT committed, while the leg runs: a locked slot of
@@ -13,7 +17,6 @@
 // keeps the session and says the drawn no-answer line; the retry press runs
 // the leg again without a second login (SignIn.md:71).
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
@@ -28,10 +31,11 @@ import { afterSignIn } from "@/lib/session/held-link";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { useDeviceLock } from "@/lib/session/runtime";
 import { securityNotices, type SecurityNotices } from "@/lib/session/security-notices";
-import { Button } from "@/lib/ui/button";
-import { PasswordField } from "@/lib/ui/password-field";
-import { TextField } from "@/lib/ui/text-field";
-import { TransportError } from "@/lib/ui/transport-error";
+import { Checkbox } from "@/lib/ui2/checkbox";
+import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
+import { LinkRow, LinkStack } from "@/lib/ui2/link-stack";
+import { TaskPage } from "@/lib/ui2/task-page";
+import { WaitingCommit } from "@/lib/ui2/waiting-commit";
 
 // Where `make web-apk` stages the Android debug APK (development.md
 // "Reaching the web dev server from the phone").
@@ -44,6 +48,10 @@ function loginMessage(code: ErrorCode): string {
   switch (code) {
     case "INVALID_CREDENTIALS":
       return "That email and password don't match.";
+    // The login backoff (SignInLimited.md): no figure, no countdown, the same
+    // whether or not the email has an account.
+    case "RATE_LIMITED":
+      return "Too many tries in a row. Wait a moment, then try again.";
     default:
       return fallbackMessage(code);
   }
@@ -83,12 +91,7 @@ export function LoginForm({
     if (phase === "signedIn") router.replace(afterSignIn());
   }, [phase, router]);
 
-  const canSubmit = email.trim() !== "" && password !== "" && !inProgress;
-
-  const clearErrors = () => {
-    setError(null);
-    setTransportFailed(false);
-  };
+  const canSubmit = email !== "" && password !== "" && !inProgress;
 
   /** Credentials changed: a session held for the old ones is not this sign-in's. */
   const dropHeld = () => {
@@ -99,7 +102,10 @@ export function LoginForm({
     event.preventDefault();
     if (!canSubmit) return;
     setInProgress(true);
-    clearErrors();
+    // A line the server answered stands until this press, never cleared by
+    // typing (SignIn.md: only a local format line re-checks live).
+    setError(null);
+    setTransportFailed(false);
     let grant = held.current;
     if (grant === null) {
       const outcome = await logIn(client, email.trim(), password, deviceLabel());
@@ -144,90 +150,78 @@ export function LoginForm({
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6 py-12">
-      <h1 className="text-headline-small">Sign in to CoGra</h1>
-      <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-        <TextField
+    <TaskPage
+      backHref="/feed"
+      backLabel="Back"
+      title="Sign in to CoGra"
+      lead="Welcome back — your feed is where you left it."
+    >
+      <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4" noValidate>
+        <FormTextField
           label="Email"
+          kind="email"
+          autoComplete="username"
           value={email}
           onChange={(value) => {
             setEmail(value);
             dropHeld();
-            clearErrors();
           }}
-          type="email"
-          autoComplete="email"
           testId="login_email"
         />
-        <PasswordField
-          id="password"
+        <FormPasswordField
           label="Password"
           value={password}
           onChange={(value) => {
             setPassword(value);
             dropHeld();
-            clearErrors();
           }}
           autoComplete="current-password"
           testId="login_password"
         />
-        <label htmlFor="dont-remember" className="flex items-center gap-2 text-body-medium">
-          <input
-            id="dont-remember"
-            data-testid="login_dont_remember"
-            type="checkbox"
-            checked={dontRemember}
-            onChange={(event) => setDontRemember(event.target.checked)}
-            className="h-4 w-4 accent-primary"
-          />
-          Don&apos;t remember this account on this device
-        </label>
+        <Checkbox
+          label="Don't remember this account on this device"
+          checked={dontRemember}
+          onChange={setDontRemember}
+          testId="login_dont_remember"
+        />
+        {/* THE ONE FAULT SLOT, right above Sign in (SignInError.jsx): the
+            refusal, the backoff and the no-answer line all stand here, each
+            until the next press. */}
         {error !== null && (
-          <p role="alert" data-testid="login_error" className="text-body-medium text-error">
+          <p role="alert" data-testid="login_error" className="m-0 text-body-medium text-error">
             {loginMessage(error)}
           </p>
         )}
-        {transportFailed && <TransportError testId="login_transport_error" message={NO_ANSWER} />}
-        {inProgress && (
-          <p role="status" data-testid="login_progress" className="text-body-medium text-on-surface-variant">
-            Signing in…
+        {transportFailed && (
+          <p role="alert" data-testid="login_transport_error" className="m-0 text-body-medium text-error">
+            {NO_ANSWER}
           </p>
         )}
-        <Button type="submit" testId="login_submit" disabled={!canSubmit}>
-          Sign in
-        </Button>
+        <WaitingCommit
+          label="Sign in"
+          busyLabel="Signing in…"
+          reason="Waiting for your email and password"
+          waiting={email === "" || password === ""}
+          busy={inProgress}
+          testId="login_submit"
+        />
       </form>
-      <Link
-        href="/reset"
-        data-testid="login_forgot"
-        className="text-body-medium text-on-surface-variant underline"
-      >
-        Forgot password?
-      </Link>
-      <Link
-        href="/join"
-        data-testid="login_join"
-        className="text-body-medium text-on-surface-variant underline"
-      >
-        New here? Enter your invite
-      </Link>
-      <Link
-        href="/feed"
-        data-testid="login_browse"
-        className="text-body-medium text-on-surface-variant underline"
-      >
-        Just looking? Browse the feed →
-      </Link>
-      {/* A static file under public/, staged by `make web-apk` — a plain
-          anchor, not next/link, since it leaves the router entirely. */}
-      <a
-        href={APK_HREF}
-        download
-        data-testid="login_android_apk"
-        className="text-body-medium text-on-surface-variant underline"
-      >
-        On Android? Download the app (APK)
-      </a>
-    </main>
+      <LinkStack>
+        <LinkRow href="/reset" testId="login_forgot">
+          Forgot password?
+        </LinkRow>
+        <LinkRow href="/join" testId="login_join">
+          New here? Enter your invite
+        </LinkRow>
+        <LinkRow href="/feed" testId="login_browse">
+          Just looking? Browse the feed →
+        </LinkRow>
+        {/* A static file under public/, staged by `make web-apk` — a plain
+            anchor, since it leaves the router entirely. */}
+        <LinkRow href={APK_HREF} download testId="login_android_apk">
+          On Android? Download the app (APK)
+        </LinkRow>
+      </LinkStack>
+    </TaskPage>
   );
 }

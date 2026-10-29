@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { delay } from "msw/utils/delay";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -180,13 +181,16 @@ describe("LoginForm", () => {
     expect(screen.queryByTestId("login_transport_error")).not.toBeInTheDocument();
   });
 
-  it("clears the refusal when the user types again", async () => {
+  it("a refusal stands while typing, until the next press of Sign in", async () => {
     server.use(loginRefused);
     renderWithProviders(<LoginForm />);
     fillAndSubmit();
     await screen.findByTestId("login_error");
     fireEvent.change(screen.getByTestId("login_email"), { target: { value: "b@c.d" } });
-    expect(screen.queryByTestId("login_error")).not.toBeInTheDocument();
+    // SignInError.md: typing in either field never takes the line away.
+    expect(screen.getByTestId("login_error")).toHaveTextContent("That email and password don't match.");
+    expect(screen.getByTestId("login_email")).not.toHaveAttribute("aria-invalid");
+    expect(screen.getByTestId("login_password")).not.toHaveAttribute("aria-invalid");
   });
 
   it("keeps transport failures in their own slot", async () => {
@@ -210,7 +214,7 @@ describe("LoginForm", () => {
     renderWithProviders(<LoginForm />);
     fillAndSubmit();
     expect(await screen.findByTestId("login_error")).toHaveTextContent(
-      "Too many attempts — wait a moment and try again.",
+      "Too many tries in a row. Wait a moment, then try again.",
     );
     expect(screen.queryByTestId("login_transport_error")).not.toBeInTheDocument();
   });
@@ -322,5 +326,82 @@ describe("LoginForm", () => {
     renderWithProviders(<LoginForm />, { store });
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/email-change"));
     window.sessionStorage.clear();
+  });
+});
+
+// SignIn.jsx / SignIn.md: the drawn anatomy, line for line.
+describe("the sign-in screen (SignIn)", () => {
+  it("heads with Back to the bare view, the title and the welcome line", () => {
+    renderWithProviders(<LoginForm />);
+    const back = screen.getByRole("link", { name: "Back" });
+    expect(back).toHaveAttribute("href", "/feed");
+    expect(screen.getByRole("heading", { level: 1, name: "Sign in to CoGra" })).toBeInTheDocument();
+    expect(screen.getByText("Welcome back — your feed is where you left it.")).toBeInTheDocument();
+  });
+
+  it("sign_in_stands_disabled_with_its_waiting_line_until_both_fields_hold_a_character", () => {
+    renderWithProviders(<LoginForm />);
+    expect(screen.getByText("Waiting for your email and password")).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("login_email"), { target: { value: "a" } });
+    expect(screen.getByText("Waiting for your email and password")).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("login_password"), { target: { value: "p" } });
+    expect(screen.queryByText("Waiting for your email and password")).not.toBeInTheDocument();
+    expect(screen.getByTestId("login_submit")).toBeEnabled();
+  });
+
+  it("don't_remember_stands_unticked_and_flips_alone", () => {
+    renderWithProviders(<LoginForm />);
+    const box = screen.getByLabelText("Don't remember this account on this device");
+    expect(box).not.toBeChecked();
+    fireEvent.click(box);
+    expect(box).toBeChecked();
+    expect(screen.getByTestId("login_submit")).toBeDisabled();
+  });
+
+  it("the_reveal_control_names_what_it_does", () => {
+    renderWithProviders(<LoginForm />);
+    const reveal = screen.getByRole("button", { name: "Show password" });
+    fireEvent.click(reveal);
+    expect(screen.getByRole("button", { name: "Hide password" })).toBeInTheDocument();
+    expect(screen.getByTestId("login_password")).toHaveAttribute("type", "text");
+  });
+
+  it("the_link_stack_reads_in_order_with_its_doors", () => {
+    renderWithProviders(<LoginForm />);
+    const rows = ["login_forgot", "login_join", "login_browse", "login_android_apk"].map((id) =>
+      screen.getByTestId(id),
+    );
+    expect(rows.map((row) => row.textContent)).toEqual([
+      "Forgot password?",
+      "New here? Enter your invite",
+      "Just looking? Browse the feed →",
+      "On Android? Download the app (APK)",
+    ]);
+    expect(rows.map((row) => row.getAttribute("href"))).toEqual([
+      "/reset",
+      "/join",
+      "/feed",
+      "/downloads/app-debug.apk",
+    ]);
+  });
+
+  it("sign_in_reads_signing_in_after_200ms_and_never_spins", async () => {
+    server.use(
+      gqlLink.mutation("LogIn", async () => {
+        await delay(400);
+        return HttpResponse.error();
+      }),
+    );
+    renderWithProviders(<LoginForm />);
+    fillAndSubmit();
+    const submit = screen.getByTestId("login_submit");
+    // Never within 200ms.
+    expect(submit).toHaveTextContent("Sign in");
+    await waitFor(() => expect(submit).toHaveTextContent("Signing in…"));
+    expect(submit).toBeEnabled();
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("login_transport_error")).toHaveTextContent(
+      "That didn't send. Try again.",
+    );
   });
 });
