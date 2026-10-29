@@ -11,6 +11,7 @@ import {
   MyProfileDocument,
   PrepareProfileUpdateDocument,
   ProfileFiguresDocument,
+  ProfilePostsDocument,
   UserProfileDocument,
   type AuthorRecordsQuery,
   type RecordFamily,
@@ -18,7 +19,7 @@ import {
 } from "@/__generated__/graphql";
 import { fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
-import type { Page } from "./content-api";
+import type { Page, PostView } from "./content-api";
 
 export type ProfileView = NonNullable<UserProfileQuery["user"]>;
 
@@ -28,8 +29,13 @@ export type ProfileView = NonNullable<UserProfileQuery["user"]>;
  */
 export type ChronicleFilter = "posts" | "comments" | "everything";
 
-const FILTER_FAMILY: Record<ChronicleFilter, RecordFamily | null> = {
-  posts: "PUBLISH",
+/**
+ * The tabs the chronicle stands on. The Posts tab is no chronicle: it lists
+ * the person's posts as post cards (ProfilePosts.md:3, `fetchProfilePosts`).
+ */
+export type ChronicleTab = Exclude<ChronicleFilter, "posts">;
+
+const FILTER_FAMILY: Record<ChronicleTab, RecordFamily | null> = {
   comments: "REVIEW",
   everything: null,
 };
@@ -134,6 +140,38 @@ export async function fetchProfileFigures(
     posts: user.posts.totalCount ?? null,
     opinionsOn: user.opinionsOn.totalCount ?? null,
     opinionsBy: user.opinionsBy.totalCount ?? null,
+  });
+}
+
+/**
+ * THE POSTS VIEW'S PAGE (ProfilePosts.md:3): the person's posts as the feed
+ * card draws them, newest first by landing — the records the `Posts` figure
+ * counts, so the list and the figure agree. Ten a page, the document's own
+ * literal (`profile.graphql`); a record whose post CoGra does not carry is
+ * skipped, never drawn as a blank card.
+ */
+export async function fetchProfilePosts(
+  client: ApolloClient,
+  id: string,
+  after: string | null = null,
+): Promise<Outcome<Page<PostView>>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: ProfilePostsDocument,
+      variables: { id, after },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  const posts = fetched.value.user?.posts;
+  if (posts === undefined) return success({ items: [], endCursor: null, hasNextPage: false });
+  return success({
+    items: posts.edges.flatMap((edge) => {
+      const target = edge.node.target;
+      return target?.__typename === "Post" ? [target] : [];
+    }),
+    endCursor: posts.pageInfo.endCursor ?? null,
+    hasNextPage: posts.pageInfo.hasNextPage,
   });
 }
 
@@ -284,7 +322,7 @@ function toRow(node: RecordNode, own: boolean): RecordRow {
 export async function fetchAuthorRecords(
   client: ApolloClient,
   authorId: string,
-  filter: ChronicleFilter,
+  filter: ChronicleTab,
   after: string | null = null,
   /** The reader's own chronicle, whose profile updates say `your`. */
   own = false,

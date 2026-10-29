@@ -166,6 +166,38 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
   }
 }
 
+# THE POSTS VIEW (ProfilePosts.md:3: "the posts view lists the person's
+# posts as post cards, never as chronicle entries"): the records the
+# header's `Posts` figure counts — the person's posts' own Publish records,
+# never an edit (`genesis: true`) — in the mirror's own order, newest first
+# by landing, each carrying the post as the feed card draws it (`FeedPost`).
+# One filter for the figure and the list, so "a count and the rows it
+# counts never disagree" (api-spec.md, `Record.act`). A page of TEN, Saved's size and for
+# Saved's reason: every edge carries a whole card. The page size is a
+# literal so the client-operation guard prices the call the device makes.
+query ProfilePosts($id: UUID!, $after: String, $includePending: Boolean! = true) {
+  user(id: $id) {
+    id
+    posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 10, after: $after) {
+      edges {
+        node {
+          id
+          target {
+            __typename
+            ... on Post {
+              ...FeedPost
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
 # The header's three figures (ProfileHeader; open-questions.md Q35):
 # record counts, each labelled and never merged, each a `totalCount`
 # with `first: 0` — the number without a page. `Posts` counts the

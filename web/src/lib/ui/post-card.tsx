@@ -184,6 +184,7 @@ export function PostCard({
   mediaAbove = false,
   onOpenMedia,
   stream,
+  authorHere = false,
   onOpenMenu,
   menuOpen = false,
   node,
@@ -283,12 +284,18 @@ export function PostCard({
   onOpenMedia?: (index: number) => void;
   /**
    * THE STREAM THIS CARD'S SURFACE OPENS (Reel.md:3): where the card stands in
-   * a list the stream narrows — the feed, Saved, History — a portrait clip's
-   * tap opens the stream on it, `onOpen` handing the session the surface's
-   * list first. Absent, every media tap opens the post, as on surfaces that
-   * draw no stream case (TagPage's; graph.json).
+   * a list the stream narrows — the feed, Saved, History, a profile's posts — a
+   * portrait clip's tap opens the stream on it, `onOpen` handing the session
+   * the surface's list first. Absent, every media tap opens the post, as on
+   * surfaces that draw no stream case (TagPage's; graph.json).
    */
   stream?: { readonly href: string; readonly onOpen: () => void };
+  /**
+   * The card stands on its author's own profile (the posts view), where the
+   * author chip would open the page it is on: the chip is drawn inert
+   * (ProfilePosts.md:25, `ActorChip`'s `here`).
+   */
+  authorHere?: boolean;
 }) {
   const detail = variant === "detail";
   const router = useRouter();
@@ -447,6 +454,7 @@ export function PostCard({
             avatarUrl={post.author.avatar?.url}
             testId={authorTestId}
             node={part(node, "authorChip")}
+            here={authorHere}
           />
         )}
         <div className="flex flex-none items-center gap-3">

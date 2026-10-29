@@ -5,6 +5,7 @@ import { setupServer } from "msw/node";
 import type { RequestHandler } from "msw";
 import { afterAll, afterEach, beforeAll } from "vitest";
 
+import { QUIET_CHROME } from "./chrome";
 import { settleFetches } from "./fetch";
 import { GRAPH_IDS } from "./graph-ids";
 import { NOTHING_HELD } from "./held";
@@ -23,6 +24,7 @@ export function startMswServer(...handlers: RequestHandler[]) {
     ...NOTHING_PUBLISHED,
     ...NOTHING_INBOUND,
     ...NOTHING_HELD,
+    ...QUIET_CHROME,
   );
   beforeAll(() => server.listen({ onUnhandledFrame: "error" }));
   // A request the test left in flight is answered by its own handlers, not

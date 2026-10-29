@@ -44,6 +44,7 @@ export function ActorChip({
   avatarUrl,
   testId,
   node,
+  here = false,
 }: {
   handle: string;
   displayName: string | null | undefined;
@@ -51,8 +52,42 @@ export function ActorChip({
   testId?: string;
   /** The registered chip node (`….authorChip`); its avatar, name and handle are its parts. */
   node?: DataNode;
+  /**
+   * The chip stands on the actor's own profile, where its door would open the
+   * page it is on: "WHEN tap the author chip on one of the person's own cards
+   * -> NEVER anything changes" (ProfilePosts.md:25). It is then the same chip,
+   * inert — no link, no state layer, nothing to focus.
+   */
+  here?: boolean;
 }) {
   const name = displayName?.trim() ? displayName : handle;
+  const parts = (
+    <>
+      <MonogramAvatar name={name} src={avatarUrl} node={part(node, "avatar")} />
+      <span
+        className="min-w-0 shrink-[999] truncate text-label-large"
+        {...testAttributes(part(node, "name"))}
+      >
+        {name}
+      </span>
+      <span
+        className="min-w-0 shrink truncate text-[length:var(--text-label-medium)] text-on-surface-variant"
+        {...testAttributes(part(node, "handle"))}
+      >
+        @{handle}
+      </span>
+    </>
+  );
+  if (here) {
+    return (
+      <span
+        {...testAttributes(node, testId)}
+        className="inline-flex min-h-6 min-w-0 items-center gap-2 rounded-full text-on-surface"
+      >
+        {parts}
+      </span>
+    );
+  }
   // THE ROW NEVER WRAPS AND NEVER CROWDS (`ActorChip.jsx`, jakob's ruling
   // 2026-09-23). A name too long for the room ELLIPSIZES; the handle is the
   // identity and stays whole until it alone cannot fit, and only then
@@ -69,19 +104,7 @@ export function ActorChip({
       {...testAttributes(node, testId)}
       className="cg-state cg-focus inline-flex min-h-6 min-w-0 items-center gap-2 rounded-full text-on-surface"
     >
-      <MonogramAvatar name={name} src={avatarUrl} node={part(node, "avatar")} />
-      <span
-        className="min-w-0 shrink-[999] truncate text-label-large"
-        {...testAttributes(part(node, "name"))}
-      >
-        {name}
-      </span>
-      <span
-        className="min-w-0 shrink truncate text-[length:var(--text-label-medium)] text-on-surface-variant"
-        {...testAttributes(part(node, "handle"))}
-      >
-        @{handle}
-      </span>
+      {parts}
     </Link>
   );
 }
