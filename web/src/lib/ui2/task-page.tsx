@@ -22,6 +22,7 @@ export function TaskPage({
   node,
   backHref,
   backLabel = "Back",
+  bandOnly = false,
   headerAction,
   title,
   lead,
@@ -36,6 +37,11 @@ export function TaskPage({
   node?: DataNode;
   /** Omitted on a mail link's landing, which carries no header. */
   backHref?: string;
+  /**
+   * The header keeps its band and offers no way out (RecoveryCode.md: the
+   * typed-back confirm is the screen's only exit).
+   */
+  bandOnly?: boolean;
   backLabel?: string;
   /** The header's trailing control (Join's "?"). */
   headerAction?: ReactNode;
@@ -47,12 +53,12 @@ export function TaskPage({
   /** `false` on the one page the deletion band steps aside on (DeleteAccountPending.md:9). */
   deletionBand?: false;
 }) {
-  const headed = backHref !== undefined;
+  const headed = backHref !== undefined || bandOnly;
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
       {headed && (
         <PageHeader
-          backHref={backHref}
+          backHref={bandOnly ? undefined : backHref}
           backLabel={backLabel}
           action={headerAction}
           node={part(node, "header")}

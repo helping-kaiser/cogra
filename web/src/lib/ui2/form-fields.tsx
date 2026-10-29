@@ -45,6 +45,13 @@ export const FIELD_KINDS = {
     autoCorrect: "off",
     autoComplete: "off",
   },
+  code: {
+    type: "text",
+    inputMode: "text",
+    autoCapitalize: "characters",
+    autoCorrect: "off",
+    autoComplete: "one-time-code",
+  },
   digits: {
     type: "text",
     inputMode: "numeric",
@@ -94,6 +101,7 @@ export function FormTextField({
   mono = false,
   enterKeyHint = "next",
   autoComplete,
+  placeholder,
   node,
   inputRef,
   testId,
@@ -108,6 +116,7 @@ export function FormTextField({
   enterKeyHint?: "next" | "go";
   /** Overrides the kind's autofill where a form names its account (`username`). */
   autoComplete?: string;
+  placeholder?: string;
   node?: DataNode;
   inputRef?: Ref<HTMLInputElement>;
   /** The input's own test id, on a screen that registers no node. */
@@ -136,6 +145,7 @@ export function FormTextField({
         autoComplete={autoComplete ?? semantics.autoComplete}
         spellCheck={false}
         enterKeyHint={enterKeyHint}
+        placeholder={placeholder}
         value={value}
         aria-invalid={error ? true : undefined}
         aria-describedby={described}

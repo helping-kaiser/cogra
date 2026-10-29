@@ -1,52 +1,56 @@
 "use client";
 
-// THE RECOVERY CODE, MADE LATE OR REPLACED — an interim home.
+// THE RECOVERY CODE, MADE LATE OR REPLACED (design/designs/canonical/screens/
+// SettingsBackupNone.jsx, SettingsBackup.jsx, SettingsBackupError.jsx,
+// SettingsBackupKeyAbsent.jsx; their behavior sidecars). Settings' `Recovery
+// code` row opens one of three screens, by what this browser holds:
 //
-// DRIFT (the YourKey-and-backup-replacement packet): the drawn destinations
-// of Settings' `Recovery code` row are `SettingsBackup` and
-// `SettingsBackupNone`, built by that packet. Until they are, this page holds
-// the flows that used to stand inline on the settings page — create from the
-// retained seed, replace with the current code, or nothing to back up here —
-// moved off the page unchanged so the rows can be the drawn rows without
-// taking the only way to make a code away.
+// - the retained seed and no code yet → MAKE A RECOVERY CODE: no code field,
+//   because no current code exists to prove;
+// - the key behind its backup → A NEW RECOVERY CODE: the current code proves
+//   the replace, and the old one keeps working until the new one is typed
+//   back;
+// - no key here → the same heading under the key-absent notice, with no field
+//   and no commit — making a code needs the key itself.
+//
+// A made code is shown once, behind its typed-back gate (`RecoveryCode`), and
+// settings returns with `Your key is backed up with the new code.`
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
+import { fetchSettingsAccount } from "@/lib/api/settings-api";
+import { RecoveryCode as RecoveryCodeCodec } from "@/lib/crypto/key-backup";
 import { createBackupManager, type BackupManager } from "@/lib/identity/backup";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useAuthGuard } from "@/lib/session/runtime";
-import { Button } from "@/lib/ui/button";
+import { buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { fallbackMessage } from "@/lib/ui/error-messages";
-import { PageHeader } from "@/lib/ui/page-header";
 import { RecoveryCode } from "@/lib/ui/recovery-code";
+import { dateline } from "@/lib/ui/timestamp";
+import { FormTextField } from "@/lib/ui2/form-fields";
+import { HelpDialog, HELP_TOPICS } from "@/lib/ui2/help-dialog";
+import { NoticeLine, NoticePanel } from "@/lib/ui2/notice-panel";
+import { pillClassName } from "@/lib/ui2/pill-button";
+import { QuietNote } from "@/lib/ui2/quiet-note";
+import { NO_ANSWER, TaskPage } from "@/lib/ui2/task-page";
+import { WaitingCommit, useSlowAnswer } from "@/lib/ui2/waiting-commit";
 
-/** Enable-late from the retained seed, replace via the current code, or nothing to back up here. */
+/** Enable-late from the retained seed, replace via the current code, or no key here. */
 type BackupMode = "create" | "rekey" | "none";
 
-type Feedback =
-  | { kind: "backup"; result: "malformedCode" | "wrongCode" | "noBackup" }
-  | { kind: "refused"; message: string }
-  | { kind: "transport" };
+const WRONG_CODE = "That code doesn't check out.";
+const CODE_LENGTH = "A recovery code is 26 characters.";
+const NO_BACKUP = "There's no backup on the server to replace.";
 
-function feedbackMessage(feedback: Feedback): string {
-  switch (feedback.kind) {
-    case "refused":
-      return feedback.message;
-    case "transport":
-      return "Can't reach the server. Check your connection and try again.";
-    case "backup":
-      switch (feedback.result) {
-        case "malformedCode":
-          return "A recovery code is 26 letters and digits — check for missing ones.";
-        case "wrongCode":
-          return "That code doesn't open your backup. Check it and try again.";
-        case "noBackup":
-          return "There's no backup on the server to replace.";
-      }
-  }
+/** The replace screen's lead, naming the day the current code was made once it is read. */
+function replaceLead(madeAt: string | null): string {
+  const lead =
+    "A new code re-encrypts your key and replaces the old backup — recovery always uses the newest one.";
+  return madeAt === null ? lead : `${lead} Your current code was made on ${dateline(madeAt)}.`;
 }
 
 export function BackupView({
@@ -59,14 +63,20 @@ export function BackupView({
 } = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
+  const router = useRouter();
   const [builtBackup] = useState<BackupManager>(() => createBackupManager({ client, guard, store }));
   const backup = injectedBackup ?? builtBackup;
 
   const [mode, setMode] = useState<BackupMode | null>(null);
+  const [madeAt, setMadeAt] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [newCode, setNewCode] = useState<string | null>(null);
-  const [rekeyCode, setRekeyCode] = useState("");
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [current, setCurrent] = useState("");
+  /** `length` re-checks live; `wrong` stands until the next press. */
+  const [fieldLine, setFieldLine] = useState<{ kind: "length" | "wrong"; text: string } | null>(null);
+  const [fault, setFault] = useState<string | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const slow = useSlowAnswer(busy);
 
   const readCustody = useCallback(() => {
     return Promise.all([store.actorSeed(), store.actorKey()]).then(([seed, key]) => {
@@ -78,125 +88,193 @@ export function BackupView({
     void readCustody();
   }, [readCustody]);
 
+  useEffect(() => {
+    void guard.run(() => fetchSettingsAccount(client)).then((outcome) => {
+      if (outcome.kind === "success") setMadeAt(outcome.value.keyBackupCreatedAt ?? null);
+    });
+  }, [client, guard]);
+
   const onCreate = async () => {
     if (busy) return;
     setBusy(true);
-    setFeedback(null);
+    setFault(null);
     const result = await backup.enable();
     setBusy(false);
     if (result.kind === "created") {
       setNewCode(result.code);
     } else if (result.kind === "refused") {
-      setFeedback({ kind: "refused", message: fallbackMessage(result.errors[0].code) });
+      setFault(fallbackMessage(result.errors[0].code));
     } else {
       // noSeed means custody moved under us; re-reading flips the mode.
-      setFeedback({ kind: "transport" });
+      setFault(NO_ANSWER);
       await readCustody();
     }
   };
 
+  const onCurrent = (value: string) => {
+    setCurrent(value);
+    if (fieldLine?.kind === "length" && RecoveryCodeCodec.normalize(value).length === 26) setFieldLine(null);
+  };
+
   const onRekey = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (busy || rekeyCode.trim() === "") return;
+    if (busy || current === "") return;
+    setFieldLine(null);
+    setFault(null);
+    if (RecoveryCodeCodec.normalize(current).length !== 26) {
+      setFieldLine({ kind: "length", text: CODE_LENGTH });
+      return;
+    }
     setBusy(true);
-    setFeedback(null);
-    const result = await backup.rekey(rekeyCode);
+    const result = await backup.rekey(current);
     setBusy(false);
     switch (result.kind) {
       case "created":
         setNewCode(result.code);
-        setRekeyCode("");
+        setCurrent("");
         break;
       case "malformedCode":
+        setFieldLine({ kind: "length", text: CODE_LENGTH });
+        break;
       case "wrongCode":
+        setFieldLine({ kind: "wrong", text: WRONG_CODE });
+        break;
       case "noBackup":
-        setFeedback({ kind: "backup", result: result.kind });
+        setFault(NO_BACKUP);
         break;
       case "refused":
-        setFeedback({ kind: "refused", message: fallbackMessage(result.errors[0].code) });
+        setFault(fallbackMessage(result.errors[0].code));
         break;
       default:
-        setFeedback({ kind: "transport" });
+        setFault(NO_ANSWER);
         break;
     }
   };
 
-  return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 pb-12 pt-3">
-      <PageHeader title="Recovery code" backHref="/settings" backLabel="Back to settings" inGutter />
-      <Card testId="settings_backup_card">
-        {newCode !== null ? (
-          <RecoveryCode
-            testId="settings_backup_code"
-            code={newCode}
-            explainer="Write this code down somewhere safe. It is shown only this once; any older code stops working."
-            onConfirmed={async () => {
-              setNewCode(null);
-              await readCustody();
-            }}
-          />
-        ) : mode === "create" ? (
-          <>
-            <p className="text-body-medium text-on-surface-variant">
-              Create your recovery code. It re-encrypts your key on this browser and backs it up —
-              without one, losing this browser loses the actor.
+  if (newCode !== null) {
+    return (
+      <TaskPage bandOnly title="Your recovery code">
+        <div className="mt-6">
+          <Card>
+            <RecoveryCode
+              testId="settings_backup_code"
+              code={newCode}
+              explainer="This is the only way to restore your key. It is shown once and never stored — keep it offline, written down, somewhere safe."
+              onConfirmed={() => {
+                setNewCode(null);
+                router.push("/settings?done=backup");
+              }}
+            />
+          </Card>
+        </div>
+      </TaskPage>
+    );
+  }
+
+  if (mode === "create") {
+    return (
+      <TaskPage
+        backHref="/settings"
+        backLabel="Back to settings"
+        title="Make a recovery code"
+        lead="Without a recovery code, losing this device means losing your key. Your sign-in survives, but no one — including CoGra — can bring the key back."
+      >
+        <div className="mt-8 flex flex-col gap-2">
+          {fault !== null && (
+            <p role="alert" data-testid="settings_feedback" className="m-0 text-body-medium text-error">
+              {fault}
             </p>
-            <Button testId="settings_backup_create" size="sm" selfStart onClick={onCreate} disabled={busy}>
-              Create a recovery code
-            </Button>
-          </>
-        ) : mode === "rekey" ? (
-          <form onSubmit={onRekey} className="flex flex-col gap-3" noValidate>
-            <p className="text-body-medium text-on-surface-variant">
-              A new code re-encrypts your key and replaces the old backup — recovery always uses
-              the newest one. Enter your current code to replace it.
-            </p>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="rekey-code" className="text-label-large">
-                Current recovery code
-              </label>
-              <input
-                id="rekey-code"
-                data-testid="settings_rekey_code"
-                type="text"
-                value={rekeyCode}
-                onChange={(event) => setRekeyCode(event.target.value)}
-                autoComplete="off"
-                spellCheck={false}
-                className="rounded-extra-small border border-outline bg-transparent px-3 py-2 font-mono"
-              />
-            </div>
-            <Button
-              type="submit"
+          )}
+          <button
+            type="button"
+            data-testid="settings_backup_create"
+            onClick={() => void onCreate()}
+            aria-busy={busy || undefined}
+            aria-disabled={busy || undefined}
+            className={`${buttonClassName({ variant: "primary" })} w-full`}
+          >
+            {slow ? "Creating your recovery code…" : "Create my recovery code"}
+          </button>
+        </div>
+        <p className="m-0 mt-6 text-body-small text-on-surface-variant">
+          The code is shown once and never stored. Have somewhere to write it down before you go on.
+        </p>
+      </TaskPage>
+    );
+  }
+
+  if (mode === "none") {
+    return (
+      <TaskPage backHref="/settings" backLabel="Back to settings">
+        <NoticePanel
+          title="Your key isn't on this browser"
+          help={{ label: "Your key", onOpen: () => setHelpOpen(true) }}
+          corner="large"
+          testId="settings_backup_no_actor"
+        >
+          <NoticeLine>Making a new code needs the key itself. Your current recovery code keeps working.</NoticeLine>
+          <Link
+            href="/restore"
+            data-testid="settings_backup_restore"
+            className={pillClassName({ variant: "inverse", full: true })}
+          >
+            Restore the key
+          </Link>
+        </NoticePanel>
+        <h1 className="m-0 mt-6 text-headline-small">A new recovery code</h1>
+        <p className="m-0 mt-2 text-body-medium text-on-surface-variant">{replaceLead(madeAt)}</p>
+        <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} topic={HELP_TOPICS.yourKey} />
+      </TaskPage>
+    );
+  }
+
+  if (mode === "rekey") {
+    return (
+      <TaskPage
+        backHref="/settings"
+        backLabel="Back to settings"
+        title="A new recovery code"
+        lead={replaceLead(madeAt)}
+      >
+        <form onSubmit={onRekey} className="flex flex-col" noValidate>
+          <div className="mt-8">
+            <FormTextField
+              label="Current recovery code"
+              kind="code"
+              mono
+              placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX"
+              enterKeyHint="go"
+              value={current}
+              onChange={onCurrent}
+              error={fieldLine?.text ?? null}
+              testId="settings_rekey_code"
+            />
+          </div>
+          <div className="mt-2">
+            <QuietNote>
+              Lost it? This browser can&apos;t make a new code without the current one. If the Android app holds
+              your key, make the new code there.
+            </QuietNote>
+          </div>
+          <div className="mt-4">
+            <WaitingCommit
+              label="Create a new recovery code"
+              busyLabel="Creating a new recovery code…"
+              reason="Waiting for your current recovery code"
+              waiting={current === ""}
+              busy={busy}
+              fault={fault}
               testId="settings_backup_rekey"
-              size="sm"
-              selfStart
-              disabled={rekeyCode.trim() === "" || busy}
-            >
-              Replace the recovery code
-            </Button>
-          </form>
-        ) : mode === "none" ? (
-          <>
-            <p data-testid="settings_backup_no_actor" className="text-body-medium text-on-surface-variant">
-              Your actor key isn&apos;t on this browser, so there&apos;s nothing to back up. Restore it
-              first with your recovery code.
-            </p>
-            <Link
-              href="/restore"
-              data-testid="settings_backup_restore"
-              className="self-start text-body-medium text-on-surface-variant underline"
-            >
-              Restore the key
-            </Link>
-          </>
-        ) : null}
-        {feedback !== null && (
-          <p role="alert" data-testid="settings_feedback" className="text-body-medium text-error">
-            {feedbackMessage(feedback)}
-          </p>
-        )}
-      </Card>
-    </main>
-  );
+            />
+          </div>
+        </form>
+        <p className="m-0 mt-6 text-body-small text-on-surface-variant">
+          The new code is shown once and never stored. Have somewhere to write it down before you go on — the old
+          code keeps working until the new one is confirmed.
+        </p>
+      </TaskPage>
+    );
+  }
+
+  return <TaskPage backHref="/settings" backLabel="Back to settings">{null}</TaskPage>;
 }
