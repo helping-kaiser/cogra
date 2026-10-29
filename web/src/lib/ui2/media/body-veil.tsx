@@ -38,6 +38,24 @@ import { createContext, useContext, useState, type CSSProperties, type ReactNode
  */
 export const VeilContext = createContext(false);
 
+/**
+ * WHOSE MARK THIS IS (`SensitiveVeil.jsx` `SOURCES`, Q47): the author's own
+ * warning and the platform's verdict are two independent states that read back
+ * as the same veil, so every face says which one a reader met — unconditionally,
+ * because an unnamed source would read as the other one.
+ */
+export type VeilSource = "author" | "platform";
+
+export const VEIL_SOURCES: Readonly<Record<VeilSource, string>> = {
+  author: "The author's warning",
+  platform: "The platform's verdict",
+};
+
+/** The face's second line: the source, and the reason after it where there is one. */
+export function veilSourceLine(source: VeilSource, reason?: string | null): string {
+  return reason ? `${VEIL_SOURCES[source]} — ${reason}` : VEIL_SOURCES[source];
+}
+
 /** The nearest enclosing `BodyVeil`'s state, or `false` outside one. */
 export function useVeiled(): boolean {
   return useContext(VeilContext);

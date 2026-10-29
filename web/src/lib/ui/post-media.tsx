@@ -25,7 +25,7 @@ import type React from "react";
 import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { ladderAge } from "@/lib/ui/timestamp";
 import { parseAspectRatio, tileRatio } from "@/lib/ui2/media/aspect";
-import { BodyVeil } from "@/lib/ui2/media/body-veil";
+import { BodyVeil, type VeilSource } from "@/lib/ui2/media/body-veil";
 import { MediaGallery, type GalleryItem, type PlayerSurface } from "@/lib/ui2/media/media-gallery";
 import { RemovedPlaceholder, type RemovalReason } from "@/lib/ui2/media/removed-placeholder";
 import { useAlwaysUnveil } from "@/lib/settings/sensitive-content";
@@ -107,6 +107,30 @@ export function payloadIsRedacted(node: Payload): boolean {
 /** Whether the body region is veiled — one state for media, words and description. */
 export function bodyIsSensitive(node: Bearer): boolean {
   return node.attachmentsStatus === "SENSITIVE" || node.moderationStatus === "SENSITIVE";
+}
+
+/** What says whose mark a veil is: the author's mark alone, and the author's own line. */
+type Sourced = { sensitiveSelfMark?: boolean | null; sensitiveReason?: string | null };
+
+/**
+ * WHOSE MARK THE VEIL IS (Q47; LadderStates.md). Every SENSITIVE status is the
+ * OR of the author's mark and a moderator's verdict, so no status can say which
+ * one a reader met; `sensitiveSelfMark` is the author's mark alone (api-spec.md,
+ * "Content authoring"). Where it stands, the veil is the author's warning; a
+ * sensitive node without it can only be the platform's verdict.
+ */
+export function veilSource(node: Sourced): VeilSource {
+  return node.sensitiveSelfMark === true ? "author" : "platform";
+}
+
+/**
+ * The reason the veil carries after its source, where there is one: the
+ * author's own line (`sensitiveReason`), which rides only their own mark — a
+ * verdict reads none. A blank reason is no reason.
+ */
+export function veilReason(node: Sourced): string | null {
+  const reason = node.sensitiveReason?.trim() ?? "";
+  return node.sensitiveSelfMark === true && reason !== "" ? reason : null;
 }
 
 /**

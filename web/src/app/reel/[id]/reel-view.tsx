@@ -66,13 +66,13 @@ import { useAuthPhase } from "@/lib/session/provider";
 import { BottomNav } from "@/lib/ui/bottom-nav";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
-import { bodyIsSensitive, galleryItems, payloadIsRedacted } from "@/lib/ui/post-media";
+import { bodyIsSensitive, galleryItems, payloadIsRedacted, veilSource } from "@/lib/ui/post-media";
 import { useShareCapable } from "@/lib/ui/share-button";
 import { LINK_COPIED, shareLink } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { InlineAction } from "@/lib/ui2/inline-action";
-import { VeilContext, VisibilityGlyph } from "@/lib/ui2/media/body-veil";
+import { VEIL_SOURCES, VeilContext, VisibilityGlyph } from "@/lib/ui2/media/body-veil";
 import { ReelCaption } from "@/lib/ui2/media/reel-caption";
 import { ReelPlate } from "@/lib/ui2/media/reel-plate";
 import { ReelRail } from "@/lib/ui2/media/reel-rail";
@@ -96,7 +96,6 @@ export const COULDNT_LOAD_MORE = "Couldn't load more";
 
 /** The veil's face (`SensitiveVeil` media face; copy-voice.md:3100-3107). */
 const VEIL_LABEL = "Sensitive — tap to view";
-const VEIL_SOURCE = { author: "The author's warning", platform: "The platform's verdict" } as const;
 
 /**
  * Where the stream's stacked chrome stands above the screen's foot: the bar's
@@ -334,7 +333,9 @@ function Clip({
   const author = post.author;
   const title = post.title.value ?? null;
   const description = post.description.value ?? null;
-  const source = post.moderationStatus === "SENSITIVE" ? VEIL_SOURCE.platform : VEIL_SOURCE.author;
+  // WHOSE MARK THE VEIL IS: the author's mark alone says (`veilSource`) — every
+  // status, `moderationStatus` included, reads the OR of the two marks.
+  const source = VEIL_SOURCES[veilSource(post)];
 
   const notice = atTheEnd(state) ? (
     <ReelPlate node={part(CAPTION, "notice")}>

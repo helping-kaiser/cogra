@@ -95,7 +95,15 @@ function signedInStore() {
   return store;
 }
 
-const SENSITIVE = { attachmentsStatus: "SENSITIVE" };
+/**
+ * An author's own mark as the read serves it: every status reads the OR of
+ * the author's mark and a verdict, so `moderationStatus` reads SENSITIVE too,
+ * and only `sensitiveSelfMark` says whose it is (api-spec.md, "Content
+ * authoring").
+ */
+const SENSITIVE = { attachmentsStatus: "SENSITIVE", moderationStatus: "SENSITIVE", sensitiveSelfMark: true };
+/** A moderator's verdict alone: the same statuses, the author's mark unset. */
+const VERDICT = { attachmentsStatus: "SENSITIVE", moderationStatus: "SENSITIVE", sensitiveSelfMark: false };
 
 /** Open a stream over `rows` on `startId`, then mount the screen there. */
 function mountStream({
@@ -795,8 +803,15 @@ describe("the veiled stream (ReelSensitive.md)", () => {
   });
 
   it("the platform's verdict names its own source on the face", () => {
-    mountStream({ rows: [reelPost("s1", "9:16", { moderationStatus: "SENSITIVE" })], startId: "s1" });
+    mountStream({ rows: [reelPost("s1", "9:16", VERDICT)], startId: "s1" });
     expect(screen.getByTestId(byNode("reel.stage.veil"))).toHaveTextContent("The platform's verdict");
+  });
+
+  it("an author's own mark names the author's warning, though moderationStatus reads SENSITIVE with it (#336 defect)", () => {
+    mountStream({ rows: [reelPost("s1", "9:16", SENSITIVE)], startId: "s1" });
+    const veil = screen.getByTestId(byNode("reel.stage.veil"));
+    expect(veil).toHaveTextContent("The author's warning");
+    expect(veil).not.toHaveTextContent("The platform's verdict");
   });
 });
 
