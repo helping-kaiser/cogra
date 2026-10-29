@@ -752,7 +752,7 @@ describe("PostEditRoute — the body (EditWords, EditPicked)", () => {
     );
     draw();
     fireEvent.click(await screen.findByLabelText("Manage the 2 pictures"));
-    fireEvent.click(await screen.findByTestId("post-edit-picked-sheet-make-cover-1"));
+    fireEvent.click(await screen.findByTestId(byNode("postEdit.pickedSheet.picture.makeCover", "2")));
     fireEvent.click(screen.getByTestId("postEdit.pickedSheet.done"));
     expect(footer()).toHaveTextContent("You're signing 1 thing");
     fireEvent.click(sign());
@@ -775,7 +775,7 @@ describe("PostEditRoute — the body (EditWords, EditPicked)", () => {
     draw();
     expect(await screen.findByTestId("postEdit.description.input")).toHaveValue("Rubbings at low tide.");
     fireEvent.click(screen.getByLabelText("Manage the picture"));
-    fireEvent.click(await screen.findByTestId("post-edit-picked-sheet-remove-0"));
+    fireEvent.click(await screen.findByTestId(byNode("postEdit.pickedSheet.picture.remove", "1")));
     // The sheet closes onto the words edit, the field empty and no description.
     const words = await screen.findByTestId("postEdit.body.words.input");
     expect(words).toHaveValue("");

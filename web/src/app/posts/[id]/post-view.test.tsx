@@ -2569,7 +2569,7 @@ describe("PostView", () => {
       });
       await addTagThroughPicker("rust");
       // Drop the tag the comment came with.
-      fireEvent.click(screen.getByTestId("commentEdit.tags.tag.remove"));
+      fireEvent.click(screen.getByTestId(byNode("commentEdit.tags.tag.remove", "wasm")));
       fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(3));
