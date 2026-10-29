@@ -21,6 +21,17 @@ class FeedViewer @Inject constructor(
     private val tokens: TokenStore,
 ) {
     /** The viewer id; Success(null) when there is no view to rank at all. */
-    suspend fun resolve(): Outcome<String?> =
-        account.borrowedView().map { lender -> lender?.id ?: tokens.current()?.accountId }
+    suspend fun resolve(): Outcome<String?> = view().map { it?.viewer }
+
+    /**
+     * The view and, where it is borrowed, whose: the sheet and the trigger
+     * speak a borrowed view's people in that account's name (FeedSheet.md,
+     * "GIVEN the feed borrows a view").
+     */
+    suspend fun view(): Outcome<FeedView?> = account.borrowedView().map { lender ->
+        lender?.let { FeedView(it.id, it.handle) } ?: tokens.current()?.accountId?.let { FeedView(it, null) }
+    }
 }
+
+/** Whose view the feed ranks, and the borrowed view's account's handle where it is not the reader's own. */
+data class FeedView(val viewer: String, val borrowedHandle: String?)

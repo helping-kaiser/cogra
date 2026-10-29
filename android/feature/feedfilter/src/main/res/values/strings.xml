@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The feed filter sheet's own words (copy-voice *The filter pill's state
+     words* and *Reading*; FeedFilter.jsx). The chips' words are the filter's
+     own labels (core:domain `FeedFilterReading`), shared with the trigger's
+     reading so the pill and the sheet never say different things. -->
+<resources>
+    <!-- The sheet's accessible name and title, and the trigger's purpose. -->
+    <string name="feedfilter_purpose">What your feed shows</string>
+    <!-- A "?" is named by the dialog it opens (copy-voice). -->
+    <string name="feedfilter_help">How the filter works</string>
+    <!-- The settings sheet's note under its title (SettingsReading.jsx). -->
+    <string name="feedfilter_note">Every feed starts from this.</string>
+
+    <string name="feedfilter_kinds">Kinds</string>
+    <string name="feedfilter_kinds_hint">Everything that can reach your feed. Combine as many as you like.</string>
+    <string name="feedfilter_forms">Kinds of post</string>
+    <string name="feedfilter_forms_hint_on">Combine them: photos and video with no text posts is a legitimate feed.</string>
+    <string name="feedfilter_forms_hint_off">Applies once posts or comments are in.</string>
+    <string name="feedfilter_order">Order</string>
+    <string name="feedfilter_order_hint">Ranked puts what\'s closest to you first — your view, no one else\'s. Newest ignores it and lists by time.</string>
+    <string name="feedfilter_order_hint_borrowed">Ranked puts what\'s closest to @%1$s first — the view you\'re browsing from. Newest ignores it and lists by time.</string>
+    <string name="feedfilter_seen">Show what you\'ve already seen</string>
+    <string name="feedfilter_also">Also show</string>
+    <string name="feedfilter_also_hint">How sensitive content is veiled is set in Settings.</string>
+    <string name="feedfilter_also_sensitive">Sensitive</string>
+    <string name="feedfilter_also_removed">Removed</string>
+    <!-- The chip's label is the pending marker's own words (FEED_ALSO). -->
+    <string name="feedfilter_also_settling">Still settling</string>
+    <string name="feedfilter_people">People</string>
+    <string name="feedfilter_people_hint">Whose things reach this feed.</string>
+    <string name="feedfilter_everyone">Everyone</string>
+    <string name="feedfilter_everyone_hint">The whole feed, as far as your eyes reach.</string>
+    <string name="feedfilter_everyone_hint_borrowed">The whole feed, as far as @%1$s\'s eyes reach.</string>
+    <string name="feedfilter_your_people">Your people</string>
+    <string name="feedfilter_your_people_borrowed">@%1$s\'s people</string>
+    <string name="feedfilter_your_people_hint">Only the people you hold an opinion of — the same rank, narrowed to them.</string>
+    <string name="feedfilter_your_people_hint_borrowed">Only the people @%1$s holds an opinion of — the same rank, narrowed to them.</string>
+    <string name="feedfilter_sign_name">Which of your people</string>
+    <string name="feedfilter_sign_name_borrowed">Which of @%1$s\'s people</string>
+    <string name="feedfilter_topic">One topic</string>
+    <string name="feedfilter_topic_hint">Topics you hold and are for. A topic you hold against stays a record — it just never narrows a feed.</string>
+    <string name="feedfilter_topic_hint_borrowed">Topics @%1$s holds and is for. A topic @%1$s holds against stays a record — it just never narrows a feed.</string>
+    <string name="feedfilter_all_topics">All your topics</string>
+    <string name="feedfilter_reset">Reset</string>
+    <string name="feedfilter_done">Done</string>
+</resources>

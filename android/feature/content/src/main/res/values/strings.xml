@@ -1,5 +1,8 @@
 <resources>
     <string name="content_feed_empty">Nothing here yet — write the first post.</string>
+    <!-- FeedNothing.md:5, :7: every kind switched off, and the way back. -->
+    <string name="content_feed_nothing">Your feed is showing nothing — everything is switched off.</string>
+    <string name="content_feed_show_posts_again">Show posts again</string>
     <!-- feed.seenSeparator.label (FeedSeenTail.md: "feed.seenSeparator.label reads Already seen"). -->
     <string name="content_feed_seen_separator">Already seen</string>
     <!-- The blessed line (design/guidelines/copy-voice.md "The coming-soon

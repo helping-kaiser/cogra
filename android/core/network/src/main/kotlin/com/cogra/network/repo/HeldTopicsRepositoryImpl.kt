@@ -38,7 +38,8 @@ class HeldTopicsRepositoryImpl @Inject constructor(
                 HeldTopicsPage(
                     topics = held.edges.mapNotNull { edge ->
                         edge.node.hashtagFields.name.value?.let { name ->
-                            HeldTopic(name, edge.pDirected, edge.pInterest, edge.pending)
+                            val id = edge.node.hashtagFields.id
+                            HeldTopic(name, edge.pDirected, edge.pInterest, edge.pending, id = id)
                         }
                     },
                     endCursor = held.pageInfo.endCursor,

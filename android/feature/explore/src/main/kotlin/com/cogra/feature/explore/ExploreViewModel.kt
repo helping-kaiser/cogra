@@ -25,6 +25,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.Outcome
 import com.cogra.domain.feed.FeedKind
+import com.cogra.domain.feed.ReaderDefaults
 import com.cogra.domain.search.ExploreDeviceStore
 import com.cogra.domain.search.READER_SEARCH_DEFAULT
 import com.cogra.domain.search.SearchAsk
@@ -34,6 +35,7 @@ import com.cogra.domain.search.SearchOrder
 import com.cogra.domain.search.SearchRepository
 import com.cogra.domain.search.guestSearchFilter
 import com.cogra.domain.search.onlyUnscopedComments
+import com.cogra.domain.search.searchDefault
 import com.cogra.domain.search.unscopedComments
 import com.cogra.domain.store.TokenStore
 import com.cogra.domain.topics.HeldTopicsRepository
@@ -89,12 +91,17 @@ data class ExploreUiState(
     val recents: List<String> = emptyList(),
     /** How many topics the reader holds; null until read, and for a guest. */
     val heldCount: Int? = null,
+    /**
+     * THE READER'S DEFAULT AS SEARCH READS IT (SettingsReading.md): the order
+     * and seen toggle of the feed default saved in Settings, search's own kinds.
+     */
+    val readerDefault: SearchFilter = READER_SEARCH_DEFAULT,
 ) {
     val guest: Boolean get() = resolved && reader == null
     val searching: Boolean get() = query.isNotBlank()
 
     /** The default the trigger and Reset read against: the reader's, or a guest's newest. */
-    val defaultFilter: SearchFilter get() = if (guest) guestSearchFilter() else READER_SEARCH_DEFAULT
+    val defaultFilter: SearchFilter get() = if (guest) guestSearchFilter() else readerDefault
 
     /** Loading… stands in the rows' place once an ask outran the ladder. */
     val rowsShown: Boolean get() = results != null && !(slow && pending)
@@ -124,6 +131,7 @@ class ExploreViewModel @Inject constructor(
     private val device: ExploreDeviceStore,
     tokens: TokenStore,
     private val saved: SavedStateHandle,
+    private val readerDefaults: ReaderDefaults,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExploreUiState(query = saved[QUERY] ?: ""))
@@ -142,6 +150,12 @@ class ExploreViewModel @Inject constructor(
         viewModelScope.launch {
             readers.collect { reader -> onReader(reader) }
         }
+        // The default stays current as Settings saves it: the trigger and Reset read it.
+        viewModelScope.launch {
+            readerDefaults.current.collect { default ->
+                _state.update { it.copy(readerDefault = default.searchDefault()) }
+            }
+        }
         viewModelScope.launch {
             readers.flatMapLatest { device.recents(it) }.collect { list -> _state.update { it.copy(recents = list) } }
         }
@@ -152,7 +166,7 @@ class ExploreViewModel @Inject constructor(
         val filter = if (reader == null) {
             guestSearchFilter(device.committedFilter(null)?.kinds.orEmpty())
         } else {
-            device.committedFilter(reader) ?: READER_SEARCH_DEFAULT
+            device.committedFilter(reader) ?: readerDefaults.now().searchDefault()
         }
         val first = !_state.value.resolved
         _state.update {
