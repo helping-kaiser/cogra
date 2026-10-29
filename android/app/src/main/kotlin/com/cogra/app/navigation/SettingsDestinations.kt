@@ -171,6 +171,7 @@ private fun ShellScope.SettingsDestination(entry: NavBackStackEntry) {
             },
             onOpenAbout = { navController.navigate(About) },
             onOpenWhatsNew = { navController.navigate(WhatsNew) },
+            onOpenKeptPicks = { navController.navigate(KeptPicks) },
             onOpenDeletion = { door ->
                 navController.navigate(
                     when (door) {

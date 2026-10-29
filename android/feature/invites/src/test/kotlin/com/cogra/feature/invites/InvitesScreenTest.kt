@@ -95,6 +95,30 @@ class InvitesScreenTest {
     }
 
     @Test
+    fun invites87_91_aKeptApprovalReadsWaitingForYourKeyUntilTheKeyIsBack() {
+        val kept = mapOf("application-imke" to com.cogra.domain.stance.StancePair(0.3, 0.2))
+        var state by mutableStateOf(
+            read(listOf(row("imke", ready = false), row("rafa"))).copy(keptApprovals = kept, keyAbsent = true),
+        )
+        compose.setContent {
+            InvitesScreen(
+                state = state,
+                door = InvitesDoor.PROFILE,
+                actions = InvitesActions(),
+                now = now,
+                joinUrl = { "" },
+            )
+        }
+        compose.onNodeWithText("Waiting for your key").assertIsDisplayed()
+        compose.onAllNodesWithText("Not fully registered yet").assertCountEquals(0)
+
+        // Back, it reads as its asker stands (:89, :91).
+        state = state.copy(keyAbsent = false)
+        compose.onNodeWithText("Not fully registered yet").assertIsDisplayed()
+        compose.onAllNodesWithText("Waiting for your key").assertCountEquals(0)
+    }
+
+    @Test
     fun aRowWearsTheHandleAloneAndTheReadersFactNeverTheMissingProof() {
         // Invites.md:19, :21, :23.
         render(read(listOf(row("imke", ready = false), row("rafa"))))

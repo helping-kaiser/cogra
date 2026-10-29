@@ -37,9 +37,13 @@ import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.stanceRecord
+import com.cogra.domain.stance.KeptFamily
+import com.cogra.domain.stance.KeptPickStore
 import com.cogra.domain.stance.StanceInputMode
+import com.cogra.domain.stance.StanceKind
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceSignals
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.isWriteRule
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.store.IdentityStore
@@ -131,6 +135,13 @@ class ApprovalPad(
     private val signals: StanceSignals,
     val source: ApprovalSource,
     private val onOutcome: (ApprovalOutcome) -> Unit,
+    /** Where a vouch kept for the key waits (PadKeyAbsent.md:27, VouchAskPad.md:29). */
+    private val kept: KeptPickStore,
+    /**
+     * A vouch already kept toward this application: the pad opens holding it,
+     * as a kept pick's face does (Invites.md:93, :95).
+     */
+    private val held: StancePair? = null,
 ) {
     private val _state = MutableStateFlow(ApprovalPadState())
     val state: StateFlow<ApprovalPadState> = _state.asStateFlow()
@@ -159,7 +170,7 @@ class ApprovalPad(
             _state.update {
                 it.copy(
                     pad = shown,
-                    pick = StancePair.TapDefault,
+                    pick = held ?: StancePair.TapDefault,
                     failed = false,
                     writeRule = false,
                     keyAbsent = !keyHere,
@@ -170,6 +181,34 @@ class ApprovalPad(
     }
 
     fun pick(pick: StancePair) = _state.update { it.copy(pick = pick) }
+
+    /**
+     * `Keep it pending, restore later` (PadKeyAbsent.md:27; VouchAskPad.md:29):
+     * the pad closes and the vouch waits on this device as a kept approval —
+     * the ask link stages the asker first, so the kept vouch waits on Invites
+     * as that application's own row. Nothing is signed or spent, and it never
+     * joins the kept picks (KeptPicksReview.md:9).
+     */
+    fun keep() {
+        val pick = _state.value.pick
+        _state.update { ApprovalPadState(inputMode = it.inputMode) }
+        scope.launch {
+            when (val resolved = resolve()) {
+                is Resolved.Row -> keepFor(resolved.application, pick)
+                is Resolved.Detour -> when (val outcome = resolved.outcome) {
+                    is ApprovalOutcome.NotRegistered -> keepFor(outcome.application, pick)
+                    // The link changed under the ask: the host re-reads it (VouchAskPad.md:27).
+                    else -> onOutcome(outcome)
+                }
+                // The stage got no answer: nothing is kept, and the pad's next
+                // open asks again.
+                Resolved.Fault -> Unit
+            }
+        }
+    }
+
+    private suspend fun keepFor(application: ApplicationInfo, pick: StancePair) =
+        kept.keep(approvalTarget(application.id), pick, KeptFamily.APPROVAL, StanceKind.PERSON)
 
     /** Cancel, the wash, Back: the pad closes and nothing is signed (:29, :31). */
     fun dismiss() = _state.update {
@@ -238,6 +277,8 @@ class ApprovalPad(
         val application = when (val resolved = resolve()) {
             is Resolved.Row -> resolved.application
             is Resolved.Detour -> {
+                // Staged, the vouch kept, nothing signed or spent (VouchAskPad.md:33).
+                (resolved.outcome as? ApprovalOutcome.NotRegistered)?.let { keepFor(it.application, pick) }
                 onOutcome(resolved.outcome)
                 return Ended.Detoured
             }
@@ -274,9 +315,11 @@ class ApprovalPad(
         return finish(application, pick, results)
     }
 
-    private fun finish(application: ApplicationInfo, pick: StancePair, results: List<WriteResult>): Ended {
+    private suspend fun finish(application: ApplicationInfo, pick: StancePair, results: List<WriteResult>): Ended {
         if (results.all { it is WriteResult.Done }) {
             signals.announceSigned()
+            // A kept vouch signed through this pad is kept no longer (ApprovePad.md:41).
+            kept.drop(listOf(approvalTarget(application.id)), KeptFamily.APPROVAL)
             onOutcome(ApprovalOutcome.Signed(application, pick))
             return Ended.Taken
         }
@@ -318,3 +361,10 @@ class ApprovalPad(
             Resolved.Row(application)
         }
 }
+
+/**
+ * The target a vouch toward [applicationId] is kept under: the application, as
+ * the web keeps it (`approvalTarget`) — an application id names no node, and
+ * the APPROVAL family keeps it apart from any kept opinion besides.
+ */
+fun approvalTarget(applicationId: String): StanceTarget = StanceTarget.Node(applicationId)

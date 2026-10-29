@@ -5,7 +5,7 @@
 // compose_draft:<id>").
 //
 // THE CUSTODY SET of an account is its whole identity slot (`acct:<id>:`),
-// its draft (`compose_draft:<id>`) and the draft's sealed copies — the set
+// its draft (`compose_draft:<id>`), the draft's sealed copies and the kept picks (`kept_picks:<id>`) — the set
 // the explicit sign-out's purge removes (`purgeCustodySet`). A lock writes
 // each of them as a device-lock record under `locked:<id>:<name>`, bound to
 // the account and the name, and removes the plaintext in the same edit. A
@@ -54,6 +54,7 @@ class LockCustodyStoreImpl @Inject constructor(private val store: EncryptedStore
     private fun EncryptedStore.Editor.custodyNames(account: String): List<String> =
         names(slot(account)).filterNot { isControl(account, it) } +
             listOfNotNull(composeDraftKey(account).takeIf { it in this }) +
+            listOfNotNull(keptPicksKey(account).takeIf { it in this }) +
             names(composeSealedPrefix(account))
 
     /** Draft rows lock as `draft`; everything in the identity slot as `identity`. */
@@ -173,6 +174,7 @@ class LockCustodyStoreImpl @Inject constructor(private val store: EncryptedStore
             if (names(lockedPrefix(account)).isEmpty()) return@edit
             remove(composeDraftKey(account))
             names(composeSealedPrefix(account)).forEach(::remove)
+            remove(keptPicksKey(account))
         }
     }
 

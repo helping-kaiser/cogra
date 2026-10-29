@@ -16,8 +16,13 @@ import com.cogra.domain.signing.RegistrationFlow
 import com.cogra.domain.signing.RegistrationProgress
 import com.cogra.domain.signing.RegistrationSigner
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.stance.KeptFamily
+import com.cogra.domain.stance.StanceKind
+import com.cogra.domain.stance.StancePair
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.ScriptedInvitesRepository
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
@@ -140,6 +145,8 @@ class HomeViewModelTest {
         slowDelayMs = SLOW_DELAY_MS,
     )
 
+    private val kept = InMemoryKeptPickStore()
+
     private fun viewModel(registration: RegistrationFlow = registrationFlow()) =
         HomeViewModel(
             account,
@@ -149,6 +156,7 @@ class HomeViewModelTest {
             registration,
             invites,
             "https://cogra.example",
+            kept,
         )
 
     private fun applicationView(
@@ -233,6 +241,18 @@ class HomeViewModelTest {
         val next = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(next.state.value.vouchCardStands).isFalse()
+    }
+
+    /** VouchBack.md:52 — `Got it` drops a kept vouch-back, as Cancel drops one. */
+    @Test
+    fun gotItDropsAKeptVouchBack() = homeTest {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        val voucher = checkNotNull(vm.state.value.vouchVoucher)
+        kept.keep(StanceTarget.Node(voucher.id), StancePair(0.3, 0.2), KeptFamily.VOUCH_BACK, StanceKind.PERSON)
+        vm.onPutAway()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(kept.picks.value).isEmpty()
     }
 
     /** VouchBack.md:39, :41 — ruling 44: the failure reverts and says so. */

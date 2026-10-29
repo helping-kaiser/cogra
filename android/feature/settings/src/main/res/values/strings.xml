@@ -72,6 +72,11 @@
     <string name="settings_backup_recovery_made">Last created %1$s</string>
     <string name="settings_backup_not_made">Not made yet</string>
     <string name="settings_backup_key">Your key</string>
+    <!-- The kept picks' row, last in the group (Settings.md:75; copy-voice *The key's lifecycle*). -->
+    <plurals name="settings_backup_kept">
+        <item quantity="one">%1$d kept pick waiting</item>
+        <item quantity="other">%1$d kept picks waiting</item>
+    </plurals>
     <string name="settings_backup_footnote_made">Your key signs everything you publish and lives only in this app. Your recovery code is the only way back.</string>
     <string name="settings_backup_footnote_none">Your key signs everything you publish and lives only in this app. Until you make a recovery code, it can\'t be brought back.</string>
 

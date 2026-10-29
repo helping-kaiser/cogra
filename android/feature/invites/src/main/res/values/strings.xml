@@ -16,6 +16,8 @@
     <string name="invites_live_links">Live links</string>
     <string name="invites_ready">Ready for your approval</string>
     <string name="invites_not_registered">Not fully registered yet</string>
+    <!-- A kept approval with the key elsewhere (Invites.md:87; the kept pick's own line). -->
+    <string name="invites_waiting_key">Waiting for your key</string>
     <string name="invites_close_all">Close all</string>
     <string name="invites_close_all_label">Close all %1$d applications from this link</string>
     <string name="invites_group_single">Single use · %1$d waiting</string>

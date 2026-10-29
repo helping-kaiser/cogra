@@ -13,9 +13,12 @@ import com.cogra.domain.invites.AskLinkCheck
 import com.cogra.domain.invites.AskLinkUnusableReason
 import com.cogra.domain.invites.MyApplication
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.stance.KeptFamily
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceSignals
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.ScriptedInvitesRepository
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
@@ -62,8 +65,10 @@ class VouchAskViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
+    private val kept = InMemoryKeptPickStore()
+
     private fun viewModel() =
-        VouchAskViewModel(invites, account, WriteSigner(writes, identity), identity, StanceSignals())
+        VouchAskViewModel(invites, account, WriteSigner(writes, identity), identity, StanceSignals(), kept)
 
     private fun noor(ready: Boolean = true) = ApplicationInfo(
         id = "noor",
@@ -197,6 +202,34 @@ class VouchAskViewModelTest {
         assertThat(invites.approved).isEmpty()
         assertThat(writes.staged).isEmpty()
         assertThat(vm.state.value.exit).isEqualTo(AskExit.Invites(InvitesNotice.NotRegistered("noor")))
+        // The modest positive is kept as a kept approval, waiting on its row (VouchAsk.md:27).
+        val keptVouch = kept.picks.value.single()
+        assertThat(keptVouch.family).isEqualTo(KeptFamily.APPROVAL)
+        assertThat(keptVouch.target).isEqualTo(StanceTarget.Node("noor"))
+        assertThat(keptVouch.pick).isEqualTo(StancePair(0.1, 0.1))
+    }
+
+    @Test
+    fun withTheKeyElsewhereKeepItPendingStagesTheAskerAndKeepsTheVouchForInvites() = runTest(dispatcher) {
+        // VouchAskPad.md:29: kept as a kept approval, never joining the kept picks.
+        identity.seed = null
+        invites.askLinks[ASK] = AskLinkCheck(true, "noor", null)
+        invites.stageable[ASK] = noor()
+        val vm = viewModel()
+        vm.load(ASK, signedIn = true)
+        advanceUntilIdle()
+        val pad = checkNotNull(vm.approvalPad())
+        pad.open()
+        advanceUntilIdle()
+        pad.pick(StancePair(0.3, 0.2))
+
+        pad.keep()
+        advanceUntilIdle()
+
+        assertThat(invites.staged).containsExactly(ASK)
+        assertThat(invites.approved).isEmpty()
+        assertThat(kept.picks.value.single().family).isEqualTo(KeptFamily.APPROVAL)
+        assertThat(kept.picks.value.single().pick).isEqualTo(StancePair(0.3, 0.2))
     }
 
     @Test

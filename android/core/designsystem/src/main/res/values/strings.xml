@@ -275,6 +275,18 @@
          waits for the restore. -->
     <string name="stance_key_absent_help_where">Your key lives where you made it or last restored it, never held by CoGra — nothing is signed in your name without it.</string>
     <string name="stance_key_absent_help_waits">Your recovery code brings it here. A pick you keep waits in this app until then, and you review every kept pick before it\'s signed.</string>
+    <!-- The one way a pick is kept (PadKeyAbsent.md:27; the board's text button). -->
+    <string name="stance_keep_pending">Keep it pending, restore later</string>
+    <!-- The no-backup sentence, the same on every key-absent notice
+         (KeyElsewhereNoBackup.md:7, :13). -->
+    <string name="stance_key_absent_no_backup">This account has no backup, so the key can\'t be brought here yet. Make a recovery code on the device that holds it, then restore it here. Until then, anything you sign waits as pending.</string>
+    <!-- A kept pick's quiet line under its face (PadPending.md:5, PadPendingReview.md:5). -->
+    <string name="stance_kept_waiting_key">Waiting for your key</string>
+    <string name="stance_kept_waiting_review">Waiting for your review</string>
+    <!-- A kept pick's face, named (StanceControl.jsx `pendingPick`'s aria-label):
+         %1$s the target, %2$s the kept pick's word, %3$s its pair. -->
+    <string name="stance_target_kept_key">Your opinion on %1$s, waiting for your key: %2$s, %3$s.</string>
+    <string name="stance_target_kept_review">Your opinion on %1$s, waiting for your review: %2$s, %3$s.</string>
 
     <!-- The walk-back, the PERSON family's words (copy-voice *The
          walk-back*; StanceReadout.jsx `STANCE_SEVERANCE_WORDS`). A topic
