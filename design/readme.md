@@ -10715,6 +10715,78 @@ pending*.
   registry grows **137 → 140 screens**, **5517 → 5599** board paths,
   **1631 → 1689** distinct.
 
+### Round 27, the night-2 batch — 2026-10-29
+
+Seam 252's registrations, rulings, geometry and undrawn states, under the
+same autonomy order: built, merged, reviewed by jakob after his hand test.
+Every new string is in its board's docblock and copy-voice, *merged under
+the autonomy order, review pending*.
+
+- **A kept pick stands on every host.** The stance control's `pending` line
+  registers wherever the control does: a `pick` chip (`none` · `key` ·
+  `review`, `_shared.jsx`'s `PickCopies`) draws one card per host three times
+  — `PostDetail`, the thread, `History` and `Saved`, post and comment cards —
+  each copy keeping the card's own key. `CommentCard` passes the pick through
+  as `PostCard` does. The kept picks' review carries no stance control, so
+  nothing registers there.
+- **The thread at rest registers** (`ReplyEntry` under `postDetail`, as
+  `CommentMenu` names it), its two readings the `reader` chip's copies of
+  one card.
+- **The feed's failed removal** takes `RemoveConfirm`'s `answer` chip, so
+  `feed.dialog.line` registers as the detail's twin.
+- **A sheet's hidden heading stays unregistered.** The feed's filter sheet
+  draws no title — its name is the sheet's own (`What your feed shows`), as
+  every sheet without a drawn title is named; a heading the board does not
+  draw has nothing for the differ to hold. `feed.filterSheet.title` is not a
+  path.
+- **A tab of a page takes the page's prefix.** The profile's posts and
+  comments views are `profile.posts` and `profile.comments` (the web's ids,
+  kept), because their header, identity and tab row are the profile's; the
+  opinions page, a page with its own header and way back, took its own
+  (`profileStances`). One author's cards share a handle, so there a card keys
+  by the wire id — a path's own rule beside its segment's
+  (`node-paths.mjs`' `PATH_KEY_RULES`; a registered rule is never reworded).
+  The posts view's empty line is drawn (`posts` chip).
+- **The path names the sheet, not the host.** The thread is drawn once and
+  every host's comment count lands on it, so it is `postDetail.threadSheet`
+  wherever it is raised, and what it raises is the detail's
+  (`postDetail.menuSheet`, `.licenseSheet`, `.dialog`) — item 64's reasoning.
+  A sheet a host's own card raises is drawn over that host and takes its
+  prefix (`feed.menuSheet`, `feed.licenseSheet`).
+- **A deleted holder's row** is `profileStances.list.redactedRow`, keyed by
+  the actor's id, as `redactedAccount` is: `StanceRow`'s `redacted`, the
+  reserved disc and `Deleted account`, no handle line, a door to the husk.
+- **Both marks name both.** The veil's line reads the author's warning with
+  its reason, then `Also veiled by the platform's verdict` (the edit's
+  blessed words); naming one would let the other hide behind it
+  (`LadderStates`' `source` chip). The server enum that tells a client which
+  case it is is the contract ask; until it lands, the author's line alone.
+- **A return keeps the list and re-reads the header.** "Never reloads" kept
+  the reader's place; the re-read keeps a signed edit and a handle change
+  true. `Profile.md` and the re-tap ladder now say both.
+- **`FeedNothing` was fixed at round 23** and not regressed: the only
+  commits touching its `seen` are 2e254affd (set) and 909fdf3ab (cleared);
+  the android lane read a base older than the round-23 merge.
+- **Measured.** `PickedSheet`'s note box spans the sheet, its 24px its own
+  padding, as `SheetTitle`'s is (x 0, w 390 on the 390 frame; the rows
+  x 24, w 342): the master is drawn truth, the web's inset box the bite.
+  The profile's figures set their roles whole: the labels measure 27.2 →
+  29.7, 88 → 96 and 87.7 → 95.7px at 0.5px tracking (backlog 147, closed
+  there).
+- **The caption veil is the master's split** (§9, *the whole body veils as
+  one*): the media face on the media, the words blurred in place with
+  `Show`, one reveal for the post.
+- **Undrawn, drawn.** A second clip on a comment is refused, `A comment
+  carries one video.`, never swapped in (`ReplyVideo`'s `batch` chip). The
+  reply composer already opens the pickers (`ReplySeal` → `TagPicker`,
+  `ReferencePicker`, their per-comment caps). The deletion landing's fault
+  face is the family's — the noun line or the budget line over an outlined
+  `Try again` (`DeleteAccountConfirmed`'s `answer` chip).
+- **The gate**: edges **2157 → 2159** (the refused clip's `Remove it`, the
+  landing's `Try again`); flows hold at **227**, none re-blessed. The
+  registry grows **140 → 143 screens**, **5599 → 5775** board paths,
+  **1689 → 1750** distinct.
+
 ---
 
 ## 14. The canvases
