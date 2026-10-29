@@ -23,7 +23,7 @@
 // Done and discarded on every other way out; the edit surfaces keep their
 // inline sliders until their own sheet (`RefPairEdit`) is built.
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { type ReferenceDraft } from "@/lib/references/draft";
 import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
@@ -44,7 +44,13 @@ export function ReferenceEntryField({
   node,
   pairs = "inline",
   onOpenPicker,
+  after,
 }: {
+  /**
+   * What the section holds under its own controls: the edit's `Withdrawn:`
+   * lines, which the edit boards draw inside the section (`postEdit.references.withdrawn`).
+   */
+  after?: ReactNode;
   /**
    * The composer's `+ Cite something` (ComposeDetails:
    * "composeDetails.references.add"): given, the door opens the citation
@@ -182,6 +188,7 @@ export function ReferenceEntryField({
           Up to {cap} references per post.
         </p>
       )}
+      {after}
       {finding && (
         <ReferenceFinder
           onPick={add}

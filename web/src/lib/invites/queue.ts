@@ -252,6 +252,14 @@ export const EXPIRY_CHOICES: readonly ExpiryChoice[] = [
 /** The sheet opens at 7 days (InviteNew.md:9). */
 export const DEFAULT_EXPIRY = EXPIRY_CHOICES[1];
 
+/**
+ * A length's registered key (nodes.json `invites.expirySheet.expiryOption`):
+ * its row's words, lowercased, each run of other characters one `-`.
+ */
+export function expiryKey(choice: ExpiryChoice): string {
+  return choice.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
 // ── Where Invites was opened from (Invites.md:95-97) ───────────────────────
 
 export type InvitesOrigin = { readonly href: string; readonly label: string };

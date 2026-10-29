@@ -11,6 +11,7 @@
 // only open an empty list is a tap spent on nothing. The line still speaks —
 // a foot gone silent would read as a fault.
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
 import {
@@ -31,19 +32,29 @@ export function ActsFooter({
   count,
   onOpen,
   subline = null,
+  sublineIsSlow = false,
   testId,
+  node,
 }: {
   count: number;
   onOpen: () => void;
   /** The slow line or the count line, standing under the count. */
   subline?: string | null;
+  /** The subline is the slow line (the registered `slow`), not the count's. */
+  sublineIsSlow?: boolean;
   testId: string;
+  /**
+   * The registered foot on a registered screen (`postEdit.acts`): the count's
+   * `line` and the `slow` line. It names them instead of `testId`.
+   */
+  node?: DataNode;
 }) {
   const line = actsFooterLine(count);
+  const lineIds = testAttributes(part(node, "line"), testId);
   const foot =
     count === 0 ? (
       <span
-        data-testid={testId}
+        {...lineIds}
         className="flex items-center justify-center text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)] text-on-surface-variant"
       >
         {line}
@@ -51,7 +62,7 @@ export function ActsFooter({
     ) : (
       <button
         type="button"
-        data-testid={testId}
+        {...lineIds}
         onClick={onOpen}
         className="cg-state cg-focus cg-hit flex items-center justify-center gap-1 border-0 bg-transparent p-0 text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)] text-on-surface-variant"
       >
@@ -60,12 +71,14 @@ export function ActsFooter({
       </button>
     );
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex flex-col gap-0.5" {...testAttributes(node)}>
       {foot}
       {subline !== null && (
         <span
           role="status"
-          data-testid={`${testId}-subline`}
+          {...(sublineIsSlow && node !== undefined
+            ? testAttributes(part(node, "slow"))
+            : { "data-testid": `${testId}-subline` })}
           className="text-center text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)] text-tertiary"
         >
           {subline}
@@ -144,19 +157,31 @@ export function WithdrawnLine({
   name,
   onUndo,
   testId,
+  node,
 }: {
   name: string;
   onUndo: () => void;
   testId: string;
+  /**
+   * The registered line on a registered screen (`postEdit.tags.withdrawn`):
+   * the line is the node and its `undo` a part. It names them instead of `testId`.
+   */
+  node?: DataNode;
 }) {
   return (
-    <p className="m-0 flex flex-wrap items-center gap-1 text-body-small text-on-surface-variant">
-      <span data-testid={testId}>Withdrawn: {name}</span>
-      <span aria-label={`Undo withdrawing ${name}`} className="inline-flex">
-        <TextAction testId={`${testId}-undo`} onClick={onUndo}>
-          Undo
-        </TextAction>
-      </span>
+    <p
+      className="m-0 flex flex-wrap items-center gap-1 text-body-small text-on-surface-variant"
+      {...testAttributes(node)}
+    >
+      <span data-testid={node === undefined ? testId : undefined}>Withdrawn: {name}</span>
+      <TextAction
+        testId={`${testId}-undo`}
+        node={part(node, "undo")}
+        ariaLabel={`Undo withdrawing ${name}`}
+        onClick={onUndo}
+      >
+        Undo
+      </TextAction>
     </p>
   );
 }

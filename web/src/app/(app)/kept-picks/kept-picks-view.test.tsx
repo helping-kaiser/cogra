@@ -11,6 +11,7 @@ import { useSettling } from "@/lib/stance/settling";
 import { createStubStanceData, type StubStanceOptions } from "@/lib/stance/stub-stance-data";
 import { createTokenStore } from "@/lib/session/token-store";
 import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
+import { byNode } from "@/test/data-node";
 import { renderWithProviders } from "@/test/providers";
 import { KeptPicksView, NOTHING_LEFT } from "./kept-picks-view";
 
@@ -96,10 +97,18 @@ describe("the kept picks' review", () => {
     ).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText("The long way home — @ada")).toBeInTheDocument());
     expect(screen.getByText("Mira Voss")).toBeInTheDocument();
+    // Each pick keyed by its place in the review (nodes.json KeptPicksReview).
+    expect(screen.getAllByTestId("keptPicks.pick").map((pick) => pick.getAttribute("data-testid-key"))).toEqual([
+      "1",
+      "2",
+      "3",
+    ]);
     expect(screen.getAllByTestId("keptPicks.pick")).toHaveLength(3);
     // The pair spoken as the readout speaks it (`stance`).
     expect(screen.getByText("Nice, For or against +0.10, How much reaches you +0.10")).toBeInTheDocument();
     expect(screen.getByTestId("keptPicks.sign")).toHaveTextContent("Sign them");
+    // KeptPicksReview: the pinned foot keeps the screen's 24px under the commit.
+    expect(screen.getByTestId("keptPicks.sign").parentElement?.className).toContain("pb-6");
   });
 
   it("lists plain opinions only: a kept vouch-back or approval never joins", async () => {
@@ -216,16 +225,23 @@ describe("the kept picks' seal", () => {
     await keepTheBoardsPicks();
     mount();
     await openSeal();
-    expect(screen.getByTestId("header-stage")).toHaveTextContent("Last step");
+    expect(screen.getByTestId("keptPicksSeal.header.stage")).toHaveTextContent("Last step");
     expect(screen.getByRole("button", { name: "How signing works" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Leave — your picks are kept" })).toBeInTheDocument();
     const acts = screen.getByTestId("keptPicksSeal.acts");
     expect(within(acts).getAllByText("Opinion")).toHaveLength(3);
     expect(within(acts).getAllByText("1 opinion")).toHaveLength(3);
-    expect(screen.getByTestId("keptPicksSeal.acts-total")).toHaveTextContent("3 things, signed together");
-    expect(screen.getByTestId("keptPicksSeal.acts-note")).toHaveTextContent("They land together, or none does.");
-    expect(screen.getByTestId("keptPicksSeal.sign")).toHaveTextContent("Sign the opinions");
-    expect(screen.getByTestId("keptPicksSeal.back")).toHaveTextContent("Back");
+    expect(
+      within(acts)
+        .getAllByTestId("keptPicksSeal.acts.actRow")
+        .map((row) => row.getAttribute("data-testid-key")),
+    ).toEqual(["1", "2", "3"]);
+    expect(screen.getByTestId("keptPicksSeal.header.help")).toHaveAccessibleName("How signing works");
+    expect(screen.getByTestId("keptPicksSeal.foot")).toContainElement(screen.getByTestId("keptPicksSeal.foot.sign"));
+    expect(screen.getByTestId("keptPicksSeal.acts.total")).toHaveTextContent("3 things, signed together");
+    expect(screen.getByTestId("keptPicksSeal.acts.note")).toHaveTextContent("They land together, or none does.");
+    expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Sign the opinions");
+    expect(screen.getByTestId("keptPicksSeal.foot.back")).toHaveTextContent("Back");
     // Nothing on the seal is removable.
     expect(screen.queryByRole("button", { name: /^Remove/ })).toBeNull();
   });
@@ -235,7 +251,8 @@ describe("the kept picks' seal", () => {
     mount();
     await waitFor(() => expect(screen.getByText("Removed by its author")).toBeInTheDocument());
     await openSeal();
-    expect(screen.getByTestId("keptPicksSeal.act-post:post-juno-name")).toHaveTextContent(
+    // @juno's post is the third pick kept, so the seal's third row.
+    expect(screen.getByTestId(byNode("keptPicksSeal.acts.actRow.value", "3"))).toHaveTextContent(
       "Removed by its author",
     );
     // A pick that nets to nothing reads its pair and nothing more here.
@@ -248,7 +265,7 @@ describe("the kept picks' seal", () => {
     const data = mount();
     await openSeal();
     await act(async () => {
-      fireEvent.click(screen.getByTestId("keptPicksSeal.sign"));
+      fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));
     });
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/feed"));
     expect(data.batches).toEqual([
@@ -272,10 +289,10 @@ describe("the kept picks' seal", () => {
     await screen.findByTestId("keptPicks.sign");
     fireEvent.click(screen.getByTestId("keptPicks.sign"));
     await act(async () => {
-      fireEvent.click(await screen.findByTestId("keptPicksSeal.sign"));
+      fireEvent.click(await screen.findByTestId("keptPicksSeal.foot.sign"));
     });
     expect(await screen.findByTestId("keptPicksSeal.fault")).toHaveTextContent("That didn't send. Try again.");
-    expect(screen.getByTestId("keptPicksSeal.sign")).toHaveTextContent("Retry");
+    expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Retry");
     expect((await listKeptPicks("u1")).length).toBe(3);
   });
 
@@ -285,7 +302,7 @@ describe("the kept picks' seal", () => {
     mount({ refuse: "WRITE_RULE_FAILED" });
     await openSeal();
     await act(async () => {
-      fireEvent.click(screen.getByTestId("keptPicksSeal.sign"));
+      fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));
     });
     const notice = await screen.findByTestId("keptPicksSeal.writeRule");
     expect(notice).toHaveTextContent("You can't sign right now");
@@ -304,7 +321,7 @@ describe("the kept picks' seal", () => {
     mount({ refuse: "BAD_INPUT" });
     await openSeal();
     await act(async () => {
-      fireEvent.click(screen.getByTestId("keptPicksSeal.sign"));
+      fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));
     });
     const notice = await screen.findByTestId("keptPicksSeal.bug");
     expect(notice).toHaveTextContent("This shouldn't have happened");
@@ -324,7 +341,7 @@ describe("the kept picks' seal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Back a step" }));
     expect(await screen.findByText("Kept picks")).toBeInTheDocument();
     await openSeal();
-    fireEvent.click(screen.getByTestId("keptPicksSeal.back"));
+    fireEvent.click(screen.getByTestId("keptPicksSeal.foot.back"));
     expect(await screen.findByText("Kept picks")).toBeInTheDocument();
     expect(screen.getAllByTestId("keptPicks.pick")).toHaveLength(3);
   });
@@ -357,7 +374,7 @@ describe("the kept picks' seal", () => {
       "An approval waits in your invites — go there to sign it.",
     );
     await act(async () => {
-      fireEvent.click(screen.getByTestId("keptPicksSeal.sign"));
+      fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));
     });
     await waitFor(() => expect(data.batches).toHaveLength(1));
     expect(data.batches[0]!.map((entry) => entry.target)).toEqual(["post-ada"]);
@@ -368,8 +385,8 @@ describe("the kept picks' seal", () => {
     await keepPick("u1", ADA, { pDirected: 0.1, pInterest: 0.1 });
     mount();
     await openSeal();
-    expect(screen.getByTestId("keptPicksSeal.acts-total")).toHaveTextContent("1 thing, signed");
-    expect(screen.queryByTestId("keptPicksSeal.acts-note")).toBeNull();
+    expect(screen.getByTestId("keptPicksSeal.acts.total")).toHaveTextContent("1 thing, signed");
+    expect(screen.queryByTestId("keptPicksSeal.acts.note")).toBeNull();
   });
 });
 
@@ -389,12 +406,12 @@ describe("the seal while the signing waits", () => {
       });
     renderWithProviders(<KeptPicksView />, { store: signedIn(), stanceData: data });
     await openSeal();
-    fireEvent.click(screen.getByTestId("keptPicksSeal.sign"));
+    fireEvent.click(screen.getByTestId("keptPicksSeal.foot.sign"));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(250);
     });
-    expect(screen.getByTestId("keptPicksSeal.sign")).toHaveTextContent("Signing the opinions…");
-    expect(screen.getByTestId("keptPicksSeal.sign")).not.toBeDisabled();
+    expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Signing the opinions…");
+    expect(screen.getByTestId("keptPicksSeal.foot.sign")).not.toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Back a step" }));
     fireEvent.click(screen.getByRole("button", { name: "Leave — your picks are kept" }));
     expect(screen.getByText("What you sign")).toBeInTheDocument();
@@ -402,7 +419,7 @@ describe("the seal while the signing waits", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(5000);
     });
-    expect(screen.getByTestId("keptPicksSeal.acts-note")).toHaveTextContent(
+    expect(screen.getByTestId("keptPicksSeal.acts.note")).toHaveTextContent(
       "Still signing — the network is slow right now.",
     );
     await act(async () => {

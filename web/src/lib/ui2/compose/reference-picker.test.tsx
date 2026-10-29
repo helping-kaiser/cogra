@@ -81,11 +81,17 @@ function Host({
 const field = () => screen.getByRole("searchbox", { name: "Cite something" });
 const type = (value: string) => fireEvent.change(field(), { target: { value } });
 const status = () => screen.getByTestId(byNode("referencePicker.announcement"));
+// A result is keyed by its place (nodes.json `referencePicker.result`), so the
+// rows are told apart by the name they read.
+const resultRows = () => screen.queryAllByTestId(byNode("referencePicker.result"));
+const NAMES: Record<string, string> = { "u-sal": "Sal Torres", "p-salt": "Salt maps of the coast road" };
 const results = () =>
-  screen
-    .queryAllByTestId(byNode("referencePicker.result"))
-    .map((row) => row.getAttribute("data-testid-key"));
-const staged = () => screen.queryAllByTestId(byNode("referencePicker.staged.reference"));
+  resultRows().map((row) => {
+    const name = row.querySelector('[data-testid="referencePicker.result.name"]')?.textContent;
+    return Object.keys(NAMES).find((id) => NAMES[id] === name) ?? name;
+  });
+const result = (id: string) => resultRows()[results().indexOf(id)]!;
+const staged = () => screen.queryAllByTestId(byNode("referencePicker.staged.stagedReference"));
 
 async function settle() {
   await act(async () => {
@@ -105,8 +111,9 @@ describe("ReferencePicker", () => {
     type("salt");
     await settle();
     expect(results()).toEqual(["u-sal", "p-salt"]);
+    expect(resultRows().map((row) => row.getAttribute("data-testid-key"))).toEqual(["1", "2"]);
 
-    fireEvent.click(screen.getByTestId(byNode("referencePicker.result", "p-salt")));
+    fireEvent.click(result("p-salt"));
     expect(spy).toHaveBeenLastCalledWith([expect.objectContaining({ targetId: "p-salt", relevance: 0.1, support: 0.1 })]);
     expect(results()).toEqual(["u-sal"]);
     expect(staged()).toHaveLength(1);
@@ -209,10 +216,10 @@ describe("ReferencePicker — the filter", () => {
     type("salt");
     await settle();
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterTrigger")));
-    fireEvent.click(screen.getByTestId("reference-picker-filter-profiles"));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.profilesChip")));
     // Staged, not applied: the results do not move under the sheet.
     expect(results()).toEqual(["u-sal", "p-salt"]);
-    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.done")));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.foot.done")));
     // The server narrows: the picker asks again with the committed kinds.
     await settle();
     expect(results()).toEqual(["u-sal"]);
@@ -231,9 +238,9 @@ describe("ReferencePicker — the filter", () => {
     type("salt");
     await settle();
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterTrigger")));
-    fireEvent.click(screen.getByTestId("reference-picker-filter-posts"));
-    fireEvent.click(screen.getByTestId("reference-picker-filter-profiles"));
-    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.done")));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.postsChip")));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.profilesChip")));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.foot.done")));
     await settle();
     expect(asked).toEqual([
       { query: "salt", limit: 10 },
@@ -247,7 +254,7 @@ describe("ReferencePicker — the filter", () => {
     type("salt");
     await settle();
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterTrigger")));
-    fireEvent.click(screen.getByTestId("reference-picker-filter-posts"));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.postsChip")));
     const sheet = screen.getByTestId(byNode("referencePicker.filterSheet")) as HTMLDialogElement;
     // Escape and system Back reach a modal dialog as a close request.
     act(() => sheet.close());

@@ -103,9 +103,12 @@ export function MediaThumb({
   removeLabel = "Remove this picture",
   testId,
   node,
+  removeNode,
 }: {
   /** The registered node the tile is; it then names the tile instead of `testId`. */
   node?: DataNode;
+  /** The registered remove control, where the board names it (`postEdit.video.thumb.remove`). */
+  removeNode?: DataNode;
   src?: string | null;
   altText?: string | null;
   size?: number;
@@ -270,7 +273,7 @@ export function MediaThumb({
         <button
           type="button"
           aria-label={removeLabel}
-          data-testid={testId ? `${testId}-remove` : undefined}
+          {...testAttributes(removeNode, testId ? `${testId}-remove` : undefined)}
           onClick={onRemove}
           // Inline, because `.cg-state` (unlayered) sets `position: relative`
           // and would win over the `absolute` utility — the X would drop into

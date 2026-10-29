@@ -19,6 +19,10 @@ import { PillButton } from "@/lib/ui2/pill-button";
 import { CropFrame } from "@/lib/ui2/media/crop-frame";
 import { useCanPinch } from "@/lib/ui2/media/touch";
 import type { Crop } from "@/lib/ui2/media/crop";
+import { part, type DataNode } from "@/lib/ui/data-node";
+
+/** The registered CoverCrop screen (nodes.json, round 23). */
+const NODE: DataNode = { path: "coverCrop" };
 
 /** The cover's how-to and what-for lines (copy-voice, *The crops' how-to line*, *The cover's own words*). */
 export const COVER_CROP_TOUCH = "Drag to move, pinch to zoom.";
@@ -53,13 +57,16 @@ export function CoverCrop({
         onChange={onCrop}
         zoomSlider
         testId={`${testIdPrefix}-cover-crop-frame`}
+        node={NODE}
       />
-      <QuietNote testId={`${testIdPrefix}-cover-crop-how`}>
+      <QuietNote testId={`${testIdPrefix}-cover-crop-how`} node={part(NODE, "howTo")}>
         {canPinch ? COVER_CROP_TOUCH : COVER_CROP_NO_TOUCH}
       </QuietNote>
-      <QuietNote testId={`${testIdPrefix}-cover-crop-why`}>{COVER_CROP_WHY}</QuietNote>
+      <QuietNote testId={`${testIdPrefix}-cover-crop-why`} node={part(NODE, "shapeNote")}>
+        {COVER_CROP_WHY}
+      </QuietNote>
       <div className="flex-1" />
-      <PillButton testId={`${testIdPrefix}-cover-crop-next`} full onClick={onNext}>
+      <PillButton testId={`${testIdPrefix}-cover-crop-next`} node={part(NODE, "next")} full onClick={onNext}>
         Next
       </PillButton>
     </div>

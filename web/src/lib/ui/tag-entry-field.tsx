@@ -24,7 +24,7 @@
 // surfaces keep their inline sliders until their own sheet (`TagPad`, with
 // its `Un-tag`) is built.
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { newTagDraft, type TagDraft } from "@/lib/topics/draft";
 import { previewTagName, TAG_BATCH_CAP } from "@/lib/topics/normalize";
@@ -44,7 +44,13 @@ export function TagEntryField({
   node,
   pairs = "inline",
   onOpenPicker,
+  after,
 }: {
+  /**
+   * What the section holds under its own controls: the edit's `Withdrawn:`
+   * lines, which the edit boards draw inside the section (`postEdit.tags.withdrawn`).
+   */
+  after?: ReactNode;
   /**
    * The composer's `+ Add a tag` (ComposeDetails: "composeDetails.tags.add"):
    * given, the section adds through the tag picker (`TagPicker`) instead of
@@ -249,6 +255,7 @@ export function TagEntryField({
           )}
         </>
       )}
+      {after}
       {sheetTag !== undefined && (
         <PairSheet
           open={adjusting !== null}

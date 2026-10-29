@@ -1214,7 +1214,7 @@ describe("the kept picks in settings", () => {
     await keepPick("acct-1", POST, PICK);
     await keepPick("acct-1", { kind: "post", id: "post-2" }, PICK);
     renderSettings();
-    const row = await screen.findByTestId("settings.backup.keptPicks");
+    const row = await screen.findByTestId("settings.backup.kept");
     expect(row).toHaveTextContent("2 kept picks waiting");
     const group = screen.getByTestId("settings.backup");
     const rows = within(group).getAllByRole("button");
@@ -1226,14 +1226,14 @@ describe("the kept picks in settings", () => {
   it("reads 1 kept pick waiting in the singular", async () => {
     await keepPick("acct-1", POST, PICK);
     renderSettings();
-    expect(await screen.findByTestId("settings.backup.keptPicks")).toHaveTextContent("1 kept pick waiting");
+    expect(await screen.findByTestId("settings.backup.kept")).toHaveTextContent("1 kept pick waiting");
   });
 
   it("stands no kept-picks row while the key is elsewhere, nor when none waits", async () => {
     await keepPick("acct-1", POST, PICK);
     renderSettings({ keyOnDevice: false });
     await screen.findByTestId("settings.backup.recovery.status");
-    expect(screen.queryByTestId("settings.backup.keptPicks")).toBeNull();
+    expect(screen.queryByTestId("settings.backup.kept")).toBeNull();
   });
 
   it("keeps every kept pick on a remembered sign-out", async () => {

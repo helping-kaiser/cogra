@@ -113,9 +113,8 @@ export function CitedBySheet({
   /** The comment path opens this over the thread's own sheet. */
   stacked?: boolean;
   /**
-   * The sheet's node on the detail (`postDetail.citedBySheet`) — UNREGISTERED:
-   * the CitedBy board names no node, so this is the path it evidently takes,
-   * reported to design.
+   * The sheet's node on the detail (`postDetail.citedBySheet`, nodes.json
+   * CitedBy): each row a `citation` keyed by its place, newest first, from 1.
    */
   node?: DataNode;
   testId?: string;
@@ -155,7 +154,7 @@ export function CitedBySheet({
             // The chronicle serves ordered fact only (api-spec.md: "the record
             // set has no pending namespace"), so a row read from it has landed.
             pending={false}
-            node={instance(node, "row", String(index + 1))}
+            node={instance(node, "citation", String(index + 1))}
             testId={`${testId}-row-${index + 1}`}
           />
         );
