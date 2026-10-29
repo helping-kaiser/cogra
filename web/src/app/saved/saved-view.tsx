@@ -46,6 +46,9 @@ import type { PostView } from "@/lib/api/content-api";
 import { appendDeduped } from "@/lib/api/pagination";
 import { fetchSavedPage, type SavedEntry, type SavedPost } from "@/lib/api/saved-api";
 import { useSavedWrites } from "@/lib/saved/provider";
+import { savedOrigin } from "@/lib/reel/origins";
+import { openStream } from "@/lib/reel/stream-session";
+import { streamHref } from "@/lib/reel/stream-origin";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { Button } from "@/lib/ui/button";
@@ -260,6 +263,24 @@ export function SavedScreen({
     target?.focus();
   }, [shownIds, writes]);
 
+  // A PORTRAIT CLIP'S TAP OPENS THE STREAM OVER SAVED'S CARDS (Saved.md: "the
+  // stream opens on that clip, Saved's cards narrowed to their portrait clips
+  // in Saved's order"; Reel.md:3), the cards on screen first and past them
+  // Saved's own next pages under the query this list answers — never a
+  // ranking. Its way back reads `Back to Saved` (`streamBack`).
+  const openSavedStream = (startId: string) => {
+    openStream({
+      origin: { kind: "saved" },
+      rows: shown.map((entry) => entry.node).filter((node): node is SavedPost => node.__typename === "Post"),
+      startId,
+      more:
+        endCursor === null
+          ? null
+          : savedOrigin({ client, guard, after: endCursor, query: listQueryRef.current ?? "" }),
+      hasMore: hasNextPage,
+    });
+  };
+
   const nothingShown = !loading && !failed && shown.length === 0 && !hasNextPage && !loadingMore;
   // SAVEDEMPTY is the whole list holding nothing, and draws no field: it
   // arrives with the first thing saved. A query still standing keeps the
@@ -382,6 +403,7 @@ export function SavedScreen({
                     setMenuOpen(true);
                   }}
                   menuOpenFor={menuOpen ? (menuPost?.id ?? null) : null}
+                  onOpenStream={openSavedStream}
                 />
                 </div>
               </li>
@@ -457,6 +479,7 @@ function SavedCard({
   onOpenComments,
   onOpenMenu,
   menuOpenFor,
+  onOpenStream,
 }: {
   entry: Entry;
   notify: ReturnType<typeof useHostSnack>["notify"];
@@ -464,6 +487,8 @@ function SavedCard({
   onOpenComments: (post: SavedPost) => void;
   onOpenMenu: (post: SavedPost) => void;
   menuOpenFor: string | null;
+  /** A portrait clip's tap: the stream over Saved's cards, opened on this one. */
+  onOpenStream: (startId: string) => void;
 }) {
   const node = entry.node;
   const copied = () => notify(LINK_COPIED);
@@ -478,6 +503,7 @@ function SavedCard({
           scoreOrigin={SAVED_ORIGIN}
           href={`/posts/${node.id}?from=${FROM}`}
           shareHref={`/posts/${node.id}`}
+          stream={{ href: streamHref(node.id), onOpen: () => onOpenStream(node.id) }}
           testId={`saved-post-${node.id}`}
           authorTestId={`saved-author-${node.id}`}
           stanceTestId={`saved-stance-${node.id}`}

@@ -9,6 +9,16 @@
 // reader's own, `opinions:<handle>` · `opinions.by:<handle>` for anyone's. The
 // grammar is closed and parsed here, so the profile's arrow and the shell's
 // lit slot read the one table.
+//
+// ANOTHER'S PAGE CHAINS ITS OWN ORIGIN (readme §4, BottomNav: "a stack is where
+// a screen was opened FROM"; ProfileStances.md:51, round 26). The page under
+// someone's drill-in was opened from wherever their profile was, so its rows'
+// `from` carries that origin after a slash — `opinions:ada/saved` — and the
+// person a row opens keeps the root the page's stack began in, never Feed by
+// default. The chain nests as deep as the reader walks (a handle never holds
+// a slash, `registration-rules.ts`), and every way back unwinds it one screen
+// at a time. The reader's own root (`/profile/opinions`) is the Profile
+// stack's by itself and carries none.
 
 /** The page's two directions (`ProfileStances`: `On them` · `By them`). */
 export type OpinionDirection = "on" | "by";
@@ -37,20 +47,30 @@ export function opinionsHref(
   return search === "" ? path : `${path}?${search}`;
 }
 
-/** The `from` a row on the page carries to the profile it opens. */
-export function opinionsOrigin(handle: string | null, direction: OpinionDirection): string {
+/**
+ * The `from` a row on the page carries to the profile it opens: the page, and
+ * under someone's drill-in the origin the page itself was opened with.
+ */
+export function opinionsOrigin(
+  handle: string | null,
+  direction: OpinionDirection,
+  from: string | null = null,
+): string {
   const page = direction === "by" ? "opinions.by" : "opinions";
-  return handle === null ? page : `${page}:${handle}`;
+  if (handle === null) return page;
+  return from === null || from === "" ? `${page}:${handle}` : `${page}:${handle}/${from}`;
 }
 
-const ORIGIN = /^opinions(\.by)?(?::(.+))?$/;
+const ORIGIN = /^opinions(\.by)?(?::([^/]+)(?:\/(.+))?)?$/;
 
-/** The page a `from` names, or null where it names none. */
-export function parseOpinionsOrigin(
-  from: string | null | undefined,
-): { readonly handle: string | null; readonly direction: OpinionDirection } | null {
+/** The page a `from` names, with the origin it was opened with, or null where it names none. */
+export function parseOpinionsOrigin(from: string | null | undefined): {
+  readonly handle: string | null;
+  readonly direction: OpinionDirection;
+  readonly from: string | null;
+} | null {
   if (from === null || from === undefined) return null;
   const match = ORIGIN.exec(from);
   if (match === null) return null;
-  return { handle: match[2] ?? null, direction: match[1] === undefined ? "on" : "by" };
+  return { handle: match[2] ?? null, direction: match[1] === undefined ? "on" : "by", from: match[3] ?? null };
 }

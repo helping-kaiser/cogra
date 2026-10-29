@@ -17,7 +17,9 @@ import { writeStanceTaught } from "@/lib/stance/stance-coach";
 import type { StanceTargetRef } from "@/lib/stance/stance-data";
 import { createStubStanceData, type StubStanceOptions } from "@/lib/stance/stub-stance-data";
 import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
+import { byNode } from "@/test/data-node";
 import { renderWithProviders } from "@/test/providers";
+import type { DataNode } from "./data-node";
 import { PAD_PARK_INSET_PX, PadParkingProvider } from "./pad-parking";
 import { NO_STANDING_LABEL, SEVERED_LABEL } from "./stance-readout";
 import { LONG_PRESS_MS, SETTING_AFTER_MS, StanceControl } from "./stance-control";
@@ -65,6 +67,7 @@ function mount(
     barBeneath = false,
     mode = "pad",
     overMedia = false,
+    lineNode,
   }: {
     signedIn?: boolean;
     target?: StanceTargetRef;
@@ -72,6 +75,7 @@ function mount(
     barBeneath?: boolean;
     mode?: StanceInputMode;
     overMedia?: boolean;
+    lineNode?: DataNode;
   } = {},
 ) {
   if (mode !== "pad") writeStanceInputMode(mode);
@@ -79,7 +83,7 @@ function mount(
   renderWithProviders(
     <KeptPicksNavigation navigate={(href) => navigated.push(href)}>
       <PadParkingProvider value={barBeneath}>
-        <StanceControl target={target} testIdPrefix={PREFIX} axes={axes} overMedia={overMedia} />
+        <StanceControl target={target} testIdPrefix={PREFIX} axes={axes} overMedia={overMedia} lineNode={lineNode} />
       </PadParkingProvider>
     </KeptPicksNavigation>,
     {
@@ -3200,6 +3204,17 @@ describe("the stance control over media (the stream's rail)", () => {
     expect(plate()).toHaveAttribute("role", "status");
     expect(plate().querySelector(".text-on-surface-variant")).not.toBeNull();
     expect(screen.queryByTestId(`${PREFIX}-row-line-retry`)).toBeNull();
+  });
+
+  it("the plate line and its Retry wear the stream's registered stanceLine (nodes.json reel.rail.stanceLine, round 26)", async () => {
+    const data = mount({}, { overMedia: true, lineNode: { path: "reel.rail.stanceLine" } });
+    await settle();
+    data.commit = createStubStanceData({ offline: true }).commit;
+    await hold();
+    await settle();
+    expect(screen.getByTestId(byNode("reel.rail.stanceLine"))).toHaveTextContent("That didn't sign.");
+    expect(screen.getByTestId(byNode("reel.rail.stanceLine.retry"))).toHaveTextContent("Retry");
+    expect(screen.queryByTestId(`${PREFIX}-row-line`)).toBeNull();
   });
 
   it("a_plate_line_stands_until_answered_and_never_fades_on_a_timer", async () => {
