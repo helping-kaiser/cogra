@@ -254,6 +254,8 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     serve(editablePost(), { backing: 0.1 });
     draw();
     expect(await screen.findByTestId("postEdit.facts.backing.value")).toHaveTextContent("+0.10");
+    // The number is geek mode's (StanceReadout.jsx `ReadoutLine`): a `cg-exact` span.
+    expect(screen.getByTestId("postEdit.facts.backing.value.exact").className).toContain("cg-exact");
     expect(screen.queryByTestId("post-edit-backing-unread")).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId("postEdit.facts.backing.action"));
     fireEvent.keyDown(await screen.findByTestId("post-edit-backing-pad-field-strip"), {

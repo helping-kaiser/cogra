@@ -84,7 +84,9 @@ export function AttachmentReadout({
       </span>
       <span
         aria-hidden="true"
-        className="whitespace-nowrap text-body-small text-on-surface-variant"
+        // The number is geek mode's (StanceReadout.jsx `ReadoutLine`: a `cg-exact`
+        // span); the spoken reading below carries it in both modes.
+        className="cg-exact whitespace-nowrap text-body-small text-on-surface-variant"
         {...testAttributes(part(node, "exact"))}
       >
         {formatDimension(pDirected)}
