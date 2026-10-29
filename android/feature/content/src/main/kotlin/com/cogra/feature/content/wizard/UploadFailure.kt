@@ -50,6 +50,13 @@ enum class UploadFailure {
     /** Pictures and a clip in one body: a post carries one or the other. */
     POST_MIXED_BODY,
 
+    /**
+     * A second clip — one more in a photos-app batch, or one picked while a
+     * clip is staged: a post carries one video, the batch's first (round 22,
+     * seam 245 ask 13 H; ComposePick.md).
+     */
+    POST_ONE_VIDEO,
+
     /** A fifth picture: a comment carries four (copy-voice "Refused files"). */
     COMMENT_PICTURE_COUNT,
 

@@ -113,6 +113,11 @@ data class TargetStance(
      * not a fault — nothing staged, signed or spent.
      */
     val writeRule: Boolean = false,
+    /**
+     * The last pick sent to be signed, so the row's Retry asks that act again
+     * (the master's `sent`; round 21, ask 16).
+     */
+    val sent: StancePair? = null,
 )
 
 /**
@@ -134,12 +139,16 @@ data class SeveranceState(
     val fromPick: Boolean,
     val working: Boolean = false,
     val failed: Boolean = false,
+    /** The write rule refused the walk-back: a notice, not a fault (round 21, ask 15). */
+    val writeRule: Boolean = false,
 )
 
 /** An open empty-sign ask and its one signing's progress. */
 data class EmptySignState(
     val working: Boolean = false,
     val failed: Boolean = false,
+    /** The write rule refused the empty sign — [SeveranceState.writeRule]'s state. */
+    val writeRule: Boolean = false,
 )
 
 data class StanceUiState(
@@ -233,18 +242,30 @@ class StanceViewModel @Inject constructor(
      * without opening anything (design/guidelines/stance-control.md "The
      * gesture" — the shortcut that signs takes a held finger).
      */
-    fun onHoldDefault(target: StanceTarget) {
+    fun onHoldDefault(target: StanceTarget) = signFromRow(target, StancePair.TapDefault)
+
+    /**
+     * THE ROW'S RETRY ASKS THE ACT THAT WAS SENT (round 21, seam 245 ask 16;
+     * PadFailed.md): the hold's default after a hold, the pick after a Set
+     * whose pad was cancelled while it signed — never the hold's +0.10 /
+     * +0.10 in a cancelled pick's place.
+     */
+    fun onRetrySigning(target: StanceTarget) =
+        signFromRow(target, _state.value.targets[target]?.sent ?: StancePair.TapDefault)
+
+    /** A signing the target's row sends — the hold, or its Retry — checked like Set. */
+    private fun signFromRow(target: StanceTarget, pick: StancePair) {
         // With the key elsewhere a hold opens the pad carrying the key
         // notice, as a tap does, and signs nothing (PadKeyAbsent.md:5).
         if (_state.value.keyAbsent) return onOpenPad(target)
         // THE HOLD IS CHECKED LIKE SET (the master's `commitChecked(TAP_DEFAULT)`):
         // a default that nets the bundle to (0, 0) asks before it signs.
-        val landed = _state.value.targets[target]?.landingFor(StancePair.TapDefault)
+        val landed = _state.value.targets[target]?.landingFor(pick)
         if (landed?.severance == true) {
-            update(target) { it.copy(pick = StancePair.TapDefault, landing = landed) }
+            update(target) { it.copy(pick = pick, landing = landed) }
             return askAtZero(target)
         }
-        commit(target, StancePair.TapDefault)
+        commit(target, pick)
     }
 
     /**
@@ -406,13 +427,16 @@ class StanceViewModel @Inject constructor(
      */
     fun onConfirmEmptySign(target: StanceTarget) {
         val open = _state.value.targets[target]?.emptySign ?: return
-        if (open.working) return
+        if (open.working || open.writeRule) return
         update(target) { it.copy(emptySign = EmptySignState(working = true)) }
         val pick = _state.value.targets[target]?.pick ?: return
         viewModelScope.launch {
             when (sign(target, pick)) {
                 Signed.Done -> taken(target, pick)
-                else -> update(target) { it.copy(emptySign = EmptySignState(failed = true)) }
+                // The write rule's no is a notice (EmptySignConfirm.md, round 21):
+                // the act dims and no Retry is offered.
+                Signed.WriteRule -> update(target) { it.copy(emptySign = EmptySignState(writeRule = true)) }
+                is Signed.Failed -> update(target) { it.copy(emptySign = EmptySignState(failed = true)) }
             }
         }
     }
@@ -420,11 +444,18 @@ class StanceViewModel @Inject constructor(
     /** The route for the reader who came to sever (design.md §8.5). */
     fun onOpenSeverance(target: StanceTarget) = openSeverance(target, fromPick = false)
 
-    fun onDismissSeverance(target: StanceTarget) = update(target) { it.copy(severance = null) }
+    /**
+     * `Keep it`, the scrim or Back on the walk-back: the pad keeps its pick —
+     * and, like `Keep it`, it waits while the dialog's act signs
+     * (SeveranceConfirm.md; the master's Escape lock, round 21).
+     */
+    fun onDismissSeverance(target: StanceTarget) = update(target) {
+        if (it.severance?.working == true) it else it.copy(severance = null)
+    }
 
     fun onConfirmSeverance(target: StanceTarget) {
         val open = _state.value.targets[target]?.severance ?: return
-        if (open.working) return
+        if (open.working || open.writeRule) return
         update(target) { it.copy(severance = open.copy(working = true, failed = false)) }
         // THE PICK ROUTE SIGNS EXACTLY ONE RECORD — the pick itself (jakob
         // 2026-10-05, P5; StanceControl.jsx `commitChecked`): it nets the
@@ -435,50 +466,70 @@ class StanceViewModel @Inject constructor(
             viewModelScope.launch {
                 when (sign(target, pick)) {
                     Signed.Done -> taken(target, pick)
-                    else -> failSeverance(target)
+                    Signed.WriteRule -> severanceWriteRule(target)
+                    is Signed.Failed -> failSeverance(target)
                 }
             }
             return
         }
         viewModelScope.launch {
-            // The walk-back is checked against the quote the reader
-            // confirmed: toward the node the read named, netting exactly
-            // the raw sums shown, in exactly the records its cost stated.
-            val graphId = when (val read = stances.targetGraphId(target)) {
-                is Outcome.Success -> read.value
-                else -> return@launch failSeverance(target)
-            }
             val quote = open.quote
-            val expected = Expectation(
-                writes = emptyList(),
-                netting = listOf(severance(graphId, quote.raw.pDirected, quote.raw.pInterest, quote.records)),
+            when (signWalkBack(target, quote)) {
+                Signed.WriteRule -> severanceWriteRule(target)
+                is Signed.Failed -> failSeverance(target)
+                Signed.Done -> walkedBackAll(target, quote.records)
+            }
+        }
+    }
+
+    /** The explicit walk-back taken: the pad closes, and the snackbar counts what it signed. */
+    private suspend fun walkedBackAll(target: StanceTarget, records: Int) {
+        signals.announceSigned()
+        update(target) {
+            it.copy(
+                severance = null,
+                pad = PadMode.CLOSED,
+                pick = StancePair.Origin,
+                landing = null,
+                // `Signed 3 things, still settling. You've walked …
+                // back to nothing.` (SeveranceConfirm.md).
+                walkedBack = records,
             )
-            val prepared = when (val outcome = stances.prepareSeverance(target)) {
-                is Outcome.Success -> outcome.value
-                else -> return@launch failSeverance(target)
-            }
-            val results = try {
-                signer.sign(prepared, expected)
-            } catch (_: NoActorKeyException) {
-                return@launch failSeverance(target)
-            }
-            if (results.all { it is WriteResult.Done }) {
-                signals.announceSigned()
-                update(target) {
-                    it.copy(
-                        severance = null,
-                        pad = PadMode.CLOSED,
-                        pick = StancePair.Origin,
-                        landing = null,
-                        // `Signed 3 things, still settling. You've walked …
-                        // back to nothing.` (SeveranceConfirm.md).
-                        walkedBack = quote.records,
-                    )
-                }
-                readStanding(target)
+        }
+        readStanding(target)
+    }
+
+    /**
+     * Signs the explicit walk-back's batch, checked against the quote the
+     * reader confirmed: toward the node the read named, netting exactly the
+     * raw sums shown, in exactly the records its cost stated. The write rule
+     * refuses at staging as well as at the signer — a notice, not a fault.
+     */
+    private suspend fun signWalkBack(target: StanceTarget, quote: SeveranceQuote): Signed {
+        val graphId = (stances.targetGraphId(target) as? Outcome.Success)?.value
+            ?: return Signed.Failed(needsKey = false)
+        val expected = Expectation(
+            writes = emptyList(),
+            netting = listOf(severance(graphId, quote.raw.pDirected, quote.raw.pInterest, quote.records)),
+        )
+        val prepared = when (val outcome = stances.prepareSeverance(target)) {
+            is Outcome.Success -> outcome.value
+            is Outcome.Refused -> return if (outcome.errors.any { it.code in WRITE_RULE_CODES }) {
+                Signed.WriteRule
             } else {
-                failSeverance(target)
+                Signed.Failed(needsKey = false)
             }
+            else -> return Signed.Failed(needsKey = false)
+        }
+        val results = try {
+            signer.sign(prepared, expected)
+        } catch (_: NoActorKeyException) {
+            return Signed.Failed(needsKey = false)
+        }
+        return when {
+            results.any { it.rateLimited() } -> Signed.WriteRule
+            results.all { it is WriteResult.Done } -> Signed.Done
+            else -> Signed.Failed(needsKey = false)
         }
     }
 
@@ -509,7 +560,8 @@ class StanceViewModel @Inject constructor(
     private fun commit(target: StanceTarget, pick: StancePair) {
         val entry = _state.value.targets[target]
         if (entry?.busy == true) return
-        update(target) { it.copy(busy = true, failed = false, needsKey = false) }
+        // The act sent, kept for the row's Retry once its pad is gone.
+        update(target) { it.copy(busy = true, failed = false, needsKey = false, sent = pick) }
         viewModelScope.launch {
             when (val signed = sign(target, pick)) {
                 Signed.Done -> taken(target, pick)
@@ -555,15 +607,16 @@ class StanceViewModel @Inject constructor(
             // key, not on time passing.
             return Signed.Failed(needsKey = true)
         }
-        val writeRule = results.any { result ->
-            result is WriteResult.Refused && result.errors.any { it.code in WRITE_RULE_CODES }
-        }
         return when {
             results.all { it is WriteResult.Done } -> Signed.Done
-            writeRule -> Signed.WriteRule
+            results.any { it.rateLimited() } -> Signed.WriteRule
             else -> Signed.Failed(needsKey = false)
         }
     }
+
+    /** The write rule refused this result (`WRITE_RULE_CODES`): a notice, not a fault. */
+    private fun WriteResult.rateLimited(): Boolean =
+        this is WriteResult.Refused && errors.any { it.code in WRITE_RULE_CODES }
 
     /**
      * THE SIGNATURE IS TAKEN — and only now does the opinion move (the
@@ -670,6 +723,11 @@ class StanceViewModel @Inject constructor(
 
     private fun failSeverance(target: StanceTarget) = update(target) {
         it.copy(severance = it.severance?.copy(working = false, failed = true))
+    }
+
+    /** The write rule's no on the walk-back: the dialog stays, the act dims, no Retry (round 21, ask 15). */
+    private fun severanceWriteRule(target: StanceTarget) = update(target) {
+        it.copy(severance = it.severance?.copy(working = false, failed = false, writeRule = true))
     }
 
     private fun update(target: StanceTarget, block: (TargetStance) -> TargetStance) {

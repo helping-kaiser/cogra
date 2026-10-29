@@ -41,6 +41,35 @@ class CoverRowTest {
         )
     }
 
+    // ComposeCover.md (round 22): the strip's caption reads Reading the video…
+    // once the frames are 200ms late, and never a spinner.
+    @Test
+    fun saysReadingTheVideoOnceTheFramesAre200msLate() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            Cogra2PreviewTheme {
+                CoverRow(
+                    frames = emptyList(),
+                    picked = CoverPick.None,
+                    onPickFrame = {},
+                    onPickOwnPicture = {},
+                    testTagPrefix = "test",
+                    framesRead = false,
+                )
+            }
+        }
+        compose.mainClock.advanceTimeBy(150)
+        compose.onNodeWithTag("test_note").assertTextEquals("A frame, or a picture of your own.")
+        compose.mainClock.advanceTimeBy(100)
+        compose.onNodeWithTag("test_note").assertTextEquals("Reading the video…")
+    }
+
+    @Test
+    fun theReadingLineIsTheLaws() {
+        val law = java.io.File("../../../design/designs/canonical/behavior/ComposeCover.md").readText()
+        assertThat(law).contains("the strip's caption reads Reading the video… once the frames are 200ms late")
+    }
+
     @Test
     fun keepsTheDefaultCaptionWhenFramesExist() {
         compose.setContent {

@@ -290,6 +290,9 @@ private fun UploadGate(state: ComposeWizardState, onRetryUploads: () -> Unit) {
         state.uploadsFailed -> UploadGateFailedLine(
             onRetry = onRetryUploads,
             media = media,
+            // From two up the gate reads the plural, `2 pictures didn't
+            // upload. Signing waits for them.` (round 22, ask 13 G).
+            failed = state.picked.count { it.upload is AssetUpload.Failed },
             modifier = Modifier.fillMaxWidth(),
             testTag = "wizard_seal_upload_failed",
         )

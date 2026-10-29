@@ -71,6 +71,7 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.abs
 
 /** The strip's height: the knob's pressed layer with the square's breathing room (`ATTACHMENT_FIELD_HEIGHT_PX`). */
 internal val ATTACHMENT_FIELD_HEIGHT = 56.dp
@@ -101,18 +102,26 @@ internal fun attachmentExtent(widthPx: Float, insetPx: Float): Float = (widthPx 
  * zero extent — an unmeasured field — keeps the base rather than dividing
  * by zero. A negative zero normalizes to zero (the PR-91 rider: clients
  * normalize −0 → +0 at authoring), so a drag that never moved authors +0.
+ *
+ * THE ZERO HAIRLINE IS A DETENT (jakob 2026-10-20; the master builds it
+ * since round 20 — `ATTACHMENT_DETENT_PX`, the knob's radius): while the
+ * knob's centre would stand within [detentPx] of the hairline the pick is
+ * exactly 0, so `No side yet` is a place a drag rests on purpose.
  */
-internal fun attachmentFrom(base: Double, travelX: Float, extentPx: Float): Double {
+internal fun attachmentFrom(base: Double, travelX: Float, extentPx: Float, detentPx: Float = 0f): Double {
     val picked = if (extentPx <= 0f) base else base + travelX / extentPx
-    return picked.coerceIn(-1.0, 1.0) + 0.0
+    val raw = picked.coerceIn(-1.0, 1.0) + 0.0
+    // One unit of the axis is [extentPx] of travel, so the knob's centre
+    // stands |raw| × extent from the hairline; inside the detent it holds on it.
+    return if (extentPx > 0f && abs(raw) * extentPx <= detentPx) 0.0 else raw
 }
 
 /**
  * Where a drag of this much travel PARKS the pick once the finger lifts: the
  * travelled value on the nearest hundredth.
  */
-internal fun attachmentReleased(base: Double, travelX: Float, extentPx: Float): Double =
-    hundredth(attachmentFrom(base, travelX, extentPx))
+internal fun attachmentReleased(base: Double, travelX: Float, extentPx: Float, detentPx: Float = 0f): Double =
+    hundredth(attachmentFrom(base, travelX, extentPx, detentPx))
 
 /** Where the knob's centre sits for [value], offset from the strip's centre. */
 internal fun attachmentKnobOffset(value: Double, extentPx: Float): Float =
@@ -272,6 +281,9 @@ private fun Modifier.attachmentGesture(
             // back into it.
             val base = value.value
             val extentPx = attachmentExtent(size.width.toFloat(), inset.toPx())
+            // THE ZERO HAIRLINE IS A DETENT (round 20; ComposePad.md): within the
+            // knob's own radius of it the knob holds on it and the pick reads 0.00.
+            val detentPx = KNOB_RADIUS.toPx()
             var travelX = 0f
             var travelled = false
             try {
@@ -279,12 +291,12 @@ private fun Modifier.attachmentGesture(
                     travelX += change.positionChange().x
                     change.consume()
                     travelled = true
-                    onValueChange.value(attachmentFrom(base, travelX, extentPx))
+                    onValueChange.value(attachmentFrom(base, travelX, extentPx, detentPx))
                 }
                 // The lift — or a lost pointer, which parks the same way —
                 // lands the pick on the nearest hundredth. A tap that never
                 // travelled moves nothing, not even onto the grid.
-                if (travelled) onValueChange.value(attachmentReleased(base, travelX, extentPx))
+                if (travelled) onValueChange.value(attachmentReleased(base, travelX, extentPx, detentPx))
             } finally {
                 held.value = false
             }

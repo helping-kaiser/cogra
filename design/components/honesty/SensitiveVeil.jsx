@@ -94,7 +94,12 @@ export function SensitiveVeil({
   radius,
   faceGutter = "var(--space-6)",
   named = false,
+  node,
 }) {
+  /* NAMED AS A LEAF (the data-node join's wrapper rule): `node` names the
+     veil's one control — the face over media, the compact block, the text
+     veil's `Show` — and never the region it covers, so what it covers keeps
+     its paths whether the veil stands or not. */
   const scope = React.useContext(RevealContext);
   const [local, setLocal] = React.useState(false);
   const revealed = scope ? scope.revealed : local;
@@ -138,6 +143,7 @@ export function SensitiveVeil({
         onClick={reveal}
         aria-label={`${label}. ${sourceLine}`}
         className="cg-state cg-focus"
+        data-node={node}
         style={{
           display: "flex",
           flexDirection: "column",
@@ -186,6 +192,7 @@ export function SensitiveVeil({
           type="button"
           onClick={reveal}
           className="cg-state cg-focus cg-hit"
+          data-node={node}
           style={{
             flex: "none",
             border: 0,
@@ -228,6 +235,7 @@ export function SensitiveVeil({
         onClick={reveal}
         aria-label={`${label}. ${sourceLine}`}
         className="cg-focus"
+        data-node={node}
         style={{
           position: "absolute",
           inset: 0,

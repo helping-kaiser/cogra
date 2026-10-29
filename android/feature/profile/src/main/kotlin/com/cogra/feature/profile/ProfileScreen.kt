@@ -483,6 +483,8 @@ private fun ProfileList(
                     }
                 },
                 under = { savedHost?.comfortLine(profile.id)?.let { RowLine(it, "profile_row_line") } },
+                figures = state.figures,
+                own = state.own,
             )
         }
         item(key = "tabs") { ChronicleTabRow(state.filter, actions.onFilterChange) }
@@ -510,26 +512,22 @@ private fun ProfileList(
 }
 
 /**
- * The chronicle with nothing in it. The applicant's is drawn
- * (ProfileApplicant.md:22, `EmptyState`); a member's is not, and keeps its
- * bare line (a design gap, as on the web).
+ * The chronicle with nothing in it, at `EmptyState`. The applicant's says
+ * what fills it and when (ProfileApplicant.md:22), because that is new; a
+ * member's reads `Nothing here yet.`, the line alone (Profile.md, round 22;
+ * `ProfileComments`' `comments` chip) — a member knows why their own is
+ * empty, and another's needs no reason.
  */
 @Composable
 private fun ChronicleEmpty(applicant: Boolean, chronicle: DataNode) {
-    if (applicant) {
-        EmptyState(
-            testTag = (chronicle / "empty").tag,
-            title = stringResource(R.string.profile_chronicle_empty_applicant),
-            modifier = Modifier.padding(horizontal = Space.x4),
-            registered = true,
-        )
-    } else {
-        Text(
-            text = stringResource(R.string.profile_chronicle_empty),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = Space.x4).testTag("profile_chronicle_empty"),
-        )
-    }
+    EmptyState(
+        testTag = (chronicle / "empty").tag,
+        title = stringResource(
+            if (applicant) R.string.profile_chronicle_empty_applicant else R.string.profile_chronicle_empty,
+        ),
+        modifier = Modifier.padding(horizontal = Space.x4),
+        registered = true,
+    )
 }
 
 /**

@@ -14,6 +14,7 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.crypto.Family
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.ModeratedField
+import com.cogra.domain.ProfileFigures
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordOpinion
 import com.cogra.domain.RecordRow
@@ -276,10 +277,48 @@ class ProfileScreensTest {
             .assert(hasText("Nothing here yet. Your posts and opinions show up here once you're in."))
     }
 
+    // ProfileHeader (Q35 closed toward the drawn figures): three figures, each
+    // labelled, never merged — another's `Opinions on them` · `Opinions by them`.
     @Test
-    fun aMembersEmptyChronicleKeepsTheBareLine() {
+    fun anothersHeaderCarriesItsThreeFiguresLabelled() {
+        render(loaded().copy(figures = ProfileFigures(posts = 12, opinionsOn = 48, opinionsBy = 7)))
+        val figures = DataNode("profile") / "identity" / "figures"
+        for ((node, value, label) in listOf(
+            Triple("posts", "12", "Posts"),
+            Triple("stancesOn", "48", "Opinions on them"),
+            Triple("stancesTaken", "7", "Opinions by them"),
+        )) {
+            compose.onNodeWithTag((figures / node / "value").tag, useUnmergedTree = true).assertTextEquals(value)
+            compose.onNodeWithTag((figures / node / "label").tag, useUnmergedTree = true).assertTextEquals(label)
+        }
+    }
+
+    @Test
+    fun onesOwnFiguresReadYou() {
+        render(loaded(own = true).copy(figures = ProfileFigures(posts = 5, opinionsOn = 9, opinionsBy = 4)))
+        val figures = DataNode("profile") / "identity" / "figures"
+        compose.onNodeWithTag((figures / "stancesOn" / "label").tag, useUnmergedTree = true)
+            .assertTextEquals("Opinions on you")
+        compose.onNodeWithTag((figures / "stancesTaken" / "label").tag, useUnmergedTree = true)
+            .assertTextEquals("Opinions by you")
+    }
+
+    // A count the server did not serve is no figure at all, never a false zero.
+    @Test
+    fun anUnservedFigureIsNotDrawn() {
+        render(loaded().copy(figures = ProfileFigures(posts = 3, opinionsOn = null, opinionsBy = null)))
+        val figures = DataNode("profile") / "identity" / "figures"
+        compose.onNodeWithTag((figures / "posts" / "value").tag, useUnmergedTree = true).assertTextEquals("3")
+        compose.onNodeWithTag((figures / "stancesOn").tag, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    // Profile.md (round 22): a tab with nothing in it reads Nothing here yet.
+    // below the tab row, the line alone, at `EmptyState`.
+    @Test
+    fun aMembersEmptyChronicleReadsNothingHereYetAlone() {
         render(loaded())
-        compose.onNodeWithTag("profile_chronicle_empty").assertExists()
+        compose.onNodeWithTag("profile.chronicle.empty").assert(hasText("Nothing here yet."))
+        compose.onNodeWithTag("profile.chronicle.empty.title", useUnmergedTree = true).assertExists()
     }
 
     // ProfileDeleted.md: the reserved disc, `Deleted account`, no handle

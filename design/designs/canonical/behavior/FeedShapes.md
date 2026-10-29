@@ -11,3 +11,5 @@ ALWAYS a clip in a feed card fills its frame and is never letterboxed
 ALWAYS a clip's stored still crops exactly as its clip does
 
 ALWAYS nothing but the 4:5 clamp bounds a clip's height in a feed card
+
+ALWAYS a clip taller than wide is its card's door to the stream, named Open the stream, and never by the clip's alt text

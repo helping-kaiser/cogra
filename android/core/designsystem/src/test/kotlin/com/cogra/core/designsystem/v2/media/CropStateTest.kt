@@ -121,6 +121,19 @@ class CropStateTest {
         assertThat(window.height).isAtLeast(CropWindowMath.MIN_WINDOW - TOLERANCE)
     }
 
+    // ComposeCrop.md (round 22): where the whole picture shows under a movable
+    // window, an arrow moves the window the arrow's way, never past the edge.
+    @Test
+    fun anArrowMovesTheWindowItsWayAndNeverPastThePicturesEdge() {
+        val state = CropState(centred)
+        state.panBy(-0.01f, 0f)
+        assertThat(state.framing.left).isWithin(TOLERANCE).of(0.24f)
+        state.panBy(0f, 0.1f)
+        assertThat(state.framing.top).isWithin(TOLERANCE).of(0.35f)
+        repeat(TOO_MANY_STEPS) { state.panBy(0.1f, 0f) }
+        assertThat(state.framing.right).isWithin(TOLERANCE).of(1f)
+    }
+
     // -- The state's own reporting --
 
     @Test

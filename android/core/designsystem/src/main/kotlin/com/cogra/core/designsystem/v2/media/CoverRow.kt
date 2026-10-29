@@ -12,6 +12,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +38,7 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 import com.cogra.core.designsystem.v2.token.TypeTokens
+import kotlinx.coroutines.delay
 
 /**
  * Which cover the author settled on, as the row draws it.
@@ -140,18 +146,31 @@ fun CoverRow(
                 testTag = testTagPrefix?.let { "${it}_picture" },
             )
         }
+        // THE FRAMES ARE BEING READ (round 22, seam 245 ask 13 G;
+        // ComposeCover.md): once they are 200ms late the caption says what is
+        // happening — `Reading the video…`, never a spinner (readme §4,
+        // *Loading*).
+        val reading = frames.isEmpty() && !framesRead
+        var late by remember { mutableStateOf(false) }
+        LaunchedEffect(reading) {
+            late = false
+            if (reading) {
+                delay(READING_AFTER_MS)
+                late = true
+            }
+        }
         Text(
             // NO FRAMES IS A STATE THE ROW HOLDS (video-cover round,
             // 2026-09-10): extraction is a thing a device can fail at, and
-            // an empty `frames` here means it already has — not that
-            // capture is still running, which the caller holds off drawing
-            // this row for at all. The terminal answer says why the choice
-            // is smaller than it was rather than leaving four empty tiles
-            // to offer pictures that do not exist.
-            text = if (frames.isEmpty() && framesRead) {
-                "This clip gave no frames — choose a picture of your own, or leave it without one."
-            } else {
-                "A frame, or a picture of your own."
+            // an empty `frames` once it answered means it already has. The
+            // terminal answer says why the choice is smaller than it was
+            // rather than leaving four empty tiles to offer pictures that do
+            // not exist.
+            text = when {
+                frames.isEmpty() && framesRead ->
+                    "This clip gave no frames — choose a picture of your own, or leave it without one."
+                reading && late -> "Reading the video…"
+                else -> "A frame, or a picture of your own."
             },
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -246,6 +265,9 @@ object CoverRowDefaults {
 
 /** The dashed edge's dash and gap. */
 private val DASH = 4.dp
+
+/** How late the frames may be before the caption says they are being read (readme §4, *Loading*). */
+private const val READING_AFTER_MS = 200L
 
 @ThemePreviews
 @Composable
