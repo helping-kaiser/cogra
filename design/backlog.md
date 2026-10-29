@@ -5189,6 +5189,10 @@ The fix is round 20's: each site sets its role whole, measured headless
 on the built boards with Figtree loaded, and the boards' geometry diffed
 before and after.
 
+- **Closed in round 27** (seam 252, item 12; found by android): ~~`ProfileHeader`'s
+  figures — the label set label-small without its tracking, the value
+  title-medium without its tracking~~. Both now set the role whole.
+
 ### 148 · Does a words comment's edit take a video? · *design* · **filed 2026-10-29**
 
 Round 25 (seam 248, VIDEO_AT_EDIT). A words post's edit takes a clip
@@ -5203,3 +5207,19 @@ cover row; (b) a comment's edit adds pictures only, its row reading `+ Add
 pictures`, and a clip is refused by a rule of its own. Until ruled, the
 comment edit says the staged line, `A video can't join an edit yet — post
 it on its own.`
+
+### 149 · What round 27's registrations left undrawn · *system* · **filed 2026-10-29**
+
+Round 27 (seam 252, items 1 and 5) registered what the asks named and
+stopped there. Two families stay unregistered until a board draws them:
+
+- **A kept pick on the other cards**: the stance control's `pending` line
+  stands on post and comment cards (`PickCopies`); `ProfileFeedCard`,
+  `TagFeedCard`, the profile's own anchor (`profile.identity.actionRow`),
+  the stream's rail and the tag page pass no pick through yet. The fix is
+  `CommentCard`'s: an additive pass-through, then the host's `pick` chip.
+- **A host card's own sheets off the feed**: by the round's law a card's ⋮
+  and the sheets its rows open take their host's prefix — `history.menuSheet`,
+  `saved.menuSheet`, `profile.menuSheet` from the posts view (told apart from
+  the profile's own menu by board, item 64) — and only the feed's are
+  drawn (`FeedPostMenu`, `FeedPostLicense`).

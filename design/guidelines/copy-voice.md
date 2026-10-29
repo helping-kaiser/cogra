@@ -573,7 +573,8 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
 - `That's more than a comment carries — up to four pictures.`
 - `A post carries one video.` — a second clip in one photos-app batch, or
   one dropped while a clip is staged; the batch's first clip is the body.
-  `A comment carries one video.` is its comment-scale twin. (Seam 245,
+  `A comment carries one video.` is its comment-scale twin, drawn on
+  `ReplyVideo`'s `batch` chip (round 27): refused, never swapped in. (Seam 245,
   ask 13 H; *merged under the autonomy order, 2026-10-28; review pending*.)
 
 - `A video can't join an edit yet — post it on its own.` — a video picked
@@ -3551,6 +3552,14 @@ every card and detail already draws:
   (`PostDetailVideoSensitive`, `ReelSensitive`). The words-only veil
   carries the same source line on its plate (jakob 2026-10-06, the check
   round's 5) — no new words.
+- **Both marks at once** (round 27, seam 252) — *merged under the autonomy
+  order, review pending*. Where the author's warning and the platform's
+  verdict both stand, the line names both, the author's first with its
+  reason, then the verdict in the edit's blessed words: `The author's
+  warning — One rubbing includes a dead seabird. Also veiled by the
+  platform's verdict`, the verdict's own reason after an em dash where it
+  carries one. Naming one alone would let the other hide behind it
+  (`LadderStates`' `source` chip draws all three).
 - **A folded body** opens with `More` (`Feed` and every card whose body
   is clamped).
 - **The tags line** (`TopicsLine`) states in words what its chips do not

@@ -83,6 +83,12 @@ export function CommentCard({
      three opinion faces would be drawing one fact three times. */
   showStance = true,
   onCommit,
+  /* A PICK KEPT PENDING ON THE COMMENT — `PostCard`'s `stancePendingPick` and
+     `stancePendingReview`, passed through to `StanceControl` the same way, so
+     the control's `pending` line stands on a comment as it does on a post
+     (round 27, seam 252). Additive: absent, the card renders as before. */
+  stancePendingPick,
+  stancePendingReview,
   onReply,
   onEdit,
   own = false,
@@ -165,6 +171,11 @@ export function CommentCard({
      (seam 248, the thread sheet named). Given none, the card renders exactly
      as before. */
   node,
+  /* THE CARD'S KEY WHERE ITS AUTHOR CANNOT TELL IT APART (round 27) — a
+     profile's comments view lists one author's comments, so its placer keys
+     each by the comment's id (`PATH_KEY_RULES`). `PostCard`'s `nodeKey`.
+     Given none, the author's handle keys the card. */
+  nodeKey,
   children,
 }) {
   // Same rule as PostCard: the license is a rare read, so it arrives from the
@@ -260,7 +271,7 @@ export function CommentCard({
   const shown = redacted ? (
     <RedactedContent {...(redacted === true ? {} : redacted)} node={node && "removalMark"} />
   ) : sensitive ? (
-    <SensitiveVeil kind="compact" reason={sensitive.reason} source={sensitive.source}>
+    <SensitiveVeil kind="compact" reason={sensitive.reason} source={sensitive.source} verdictReason={sensitive.verdictReason}>
       {body}
     </SensitiveVeil>
   ) : (
@@ -295,7 +306,7 @@ export function CommentCard({
     >
       {/* `attach` squares the top-left corner so a row flag (TaggedRow) fuses
           with the card (jakob's review, the tag round). */}
-      <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={Boolean(onOpen)} node={node} nodeKey={node && author?.handle}>
+      <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={Boolean(onOpen)} node={node} nodeKey={node && (nodeKey ?? author?.handle)}>
         {/* The comment's TARGET pointer (jakob 2026-09-01): where a comment
             shows OUT of its thread — the profile's comments view, a search
             result — the card leads with what it answers, one line, one tap to
@@ -388,7 +399,7 @@ export function CommentCard({
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }} data-node={node && "actionRow"}>
           {/* Owned by the shell — see PostCard. Named as PostCard names its
               row (seam 248): `stance`, `score`, `reply`, `share`. */}
-          {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} node={node && "stance"} />}
+          {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} pendingPick={stancePendingPick} pendingReview={stancePendingReview} node={node && "stance"} />}
           {score !== undefined && (
             <ExplainableNumber glyph="graph" label="Feed score" value={score} onOpenDetail={onOpenScore ?? (() => {})} node={node && "score"} />
           )}
