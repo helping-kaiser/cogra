@@ -35,7 +35,7 @@ import { NOTIFICATIONS_EMPTY, notificationRow, ROOTS } from "@/lib/notifications
 import { useAuthGuard } from "@/lib/session/runtime";
 import { Button } from "@/lib/ui/button";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
-import { instance, type DataNode } from "@/lib/ui/data-node";
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { EmptyState } from "@/lib/ui/empty-state";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { PageHeader } from "@/lib/ui/page-header";
@@ -43,9 +43,12 @@ import { useScrollHost } from "@/lib/ui/scroll-host";
 import { ladderAge } from "@/lib/ui/timestamp";
 import { TransportError } from "@/lib/ui/transport-error";
 import { ContentRow } from "@/lib/ui2/content-row";
+import { InlineAction } from "@/lib/ui2/inline-action";
 
 /** The chronicle's load-more fault (design digest item 57; copy-voice). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
+/** The first read with no answer: the house line's noun form (copy-voice *Faults by code*, round 25). */
+export const NOTIFICATIONS_FAULT = "Can't reach the server — notifications can't load right now.";
 
 const LIST: DataNode = { path: "notifications.list" };
 
@@ -149,27 +152,6 @@ export function NotificationsScreen({ from }: { from: string | null }) {
           node={{ path: "notifications.header" }}
         />
       </CollapsingTop>
-      {loading && rows.length === 0 && (
-        <p role="status" aria-live="polite" data-testid="notifications-loading" className="px-4 pt-2 text-body-medium text-on-surface-variant">
-          Loading…
-        </p>
-      )}
-      {failed && rows.length === 0 && !loading && (
-        <div className="flex items-center gap-3 px-4 pt-2">
-          <TransportError testId="notifications-transport-error" />
-          <Button
-            testId="notifications-retry"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setLoading(true);
-              read();
-            }}
-          >
-            Retry
-          </Button>
-        </div>
-      )}
       {empty && (
         // NOTIFICATIONSEMPTY: the kinds named in words — no action button,
         // no error colour; the list fills when somebody else acts. The shared
@@ -182,46 +164,87 @@ export function NotificationsScreen({ from }: { from: string | null }) {
           />
         </div>
       )}
-      {visible.length > 0 && (
-        <ul data-testid="notifications.list" className="m-0 flex list-none flex-col gap-2 px-4 pt-2">
-          {visible.map((row, index) => {
-            const content = notificationRow(row);
-            // Keyed by place in the list, newest first (the board's key rule).
-            const node = instance(LIST, "notification", String(index + 1));
-            return (
-              <li key={row.id} ref={index === tailIndex ? tailRef : undefined} data-notification-id={row.id}>
-                <ContentRow
-                  variant="chronicle"
-                  title={content.title}
-                  sentence={content.deleted}
-                  second={content.second}
-                  trailing={ladderAge(row.createdAt)}
-                  disc={content.disc}
-                  unread={row.readAt === null && !opened.has(row.id)}
-                  href={content.href ?? undefined}
-                  onOpen={() => open(row)}
-                  node={node}
-                  testId={`notification-${row.id}`}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      {moreFailed && (
-        <div className="flex items-center gap-3 px-4 pt-3" role="alert">
-          <span className="text-body-medium text-on-surface-variant" data-testid="notifications-more-failed">
-            {COULDNT_LOAD_MORE}
-          </span>
-          <Button testId="notifications-more-retry" variant="text" size="sm" onClick={() => void loadMore()}>
-            Retry
-          </Button>
+      {!empty && (
+        // THE LIST (`ChronicleList`: 8px 16px 0, the rows 8 apart) holds the
+        // read's other moments in its own place — the `load` chip (round 24).
+        <div {...testAttributes(LIST)} className="flex flex-col gap-2 px-4 pt-2">
+          {/* Notifications.md:57 — the first read in flight: `Loading…` in the
+              list's place, no skeleton and no spinner. */}
+          {loading && rows.length === 0 && (
+            <div {...testAttributes(part(LIST, "loading"))}>
+              <p role="status" aria-live="polite" className="m-0 text-body-medium text-on-surface-variant">
+                Loading…
+              </p>
+            </div>
+          )}
+          {/* Notifications.md:59 — the first read with no answer: the house
+              line's noun form over an outlined Retry, never the error dialog. */}
+          {failed && rows.length === 0 && !loading && (
+            <div className="flex flex-col items-start gap-3 p-2" {...testAttributes(part(LIST, "fault"))}>
+              <TransportError testId="notifications-transport-error" message={NOTIFICATIONS_FAULT} />
+              <Button
+                testId="notifications-retry"
+                variant="outline"
+                size="sm"
+                node={part(part(LIST, "fault"), "retry")}
+                onClick={() => {
+                  // Notifications.md:61 — Loading… stands until the list arrives.
+                  setFailed(false);
+                  setLoading(true);
+                  read();
+                }}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+          {visible.length > 0 && (
+            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+              {visible.map((row, index) => {
+                const content = notificationRow(row);
+                // Keyed by place in the list, newest first (the board's key rule).
+                const node = instance(LIST, "notification", String(index + 1));
+                return (
+                  <li key={row.id} ref={index === tailIndex ? tailRef : undefined} data-notification-id={row.id}>
+                    <ContentRow
+                      variant="chronicle"
+                      title={content.title}
+                      sentence={content.deleted}
+                      second={content.second}
+                      trailing={ladderAge(row.createdAt)}
+                      disc={content.disc}
+                      unread={row.readAt === null && !opened.has(row.id)}
+                      href={content.href ?? undefined}
+                      onOpen={() => open(row)}
+                      node={node}
+                      testId={`notification-${row.id}`}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {/* Notifications.md:63 — the next page that did not come while rows
+              stand: `Couldn't load more — Retry` ending the list in its quiet
+              register (`ProfileMoreFailed`'s row), never the error colour. */}
+          {moreFailed && (
+            <p
+              role="alert"
+              className="m-0 px-1 pb-4 pt-2 text-body-medium text-on-surface-variant"
+              {...testAttributes(part(LIST, "moreFault"))}
+            >
+              {COULDNT_LOAD_MORE} <span aria-hidden="true">—</span>{" "}
+              <InlineAction size="sm" onClick={() => void loadMore()} node={part(part(LIST, "moreFault"), "retry")}>
+                Retry
+              </InlineAction>
+            </p>
+          )}
+          {loadingMore && (
+            <p role="status" aria-live="polite" data-testid="notifications-loading-more" className="m-0 pt-1 text-body-medium text-on-surface-variant">
+              Loading…
+            </p>
+          )}
         </div>
-      )}
-      {loadingMore && (
-        <p role="status" aria-live="polite" data-testid="notifications-loading-more" className="px-4 pt-3 text-body-medium text-on-surface-variant">
-          Loading…
-        </p>
       )}
     </main>
   );
