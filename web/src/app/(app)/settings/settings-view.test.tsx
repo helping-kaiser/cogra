@@ -1223,7 +1223,7 @@ describe("the kept picks in settings", () => {
     expect(push).toHaveBeenCalledWith("/kept-picks?from=%2Fsettings");
   });
 
-  // Settings.md:73 (round 24's fixture: four picks, a feeling among them) — a
+  // Settings.md:75 (round 24's fixture: four picks, a feeling among them) — a
   // feeling kept on a topic's pad is a kept pick, and the row counts it.
   it("counts a kept feeling with the opinions, as 4 kept picks waiting", async () => {
     await keepPick("acct-1", POST, PICK);
