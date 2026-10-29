@@ -82,9 +82,8 @@ import { VideoPlayer } from "@/lib/ui2/media/video-player";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
 
 /**
- * The stream's nodes. REEL IS NOT REGISTERED in `nodes.json` yet (design's
- * registration sweep, rounds 23–25): every path below is the board's evident
- * one, minted here and reported for registration.
+ * The stream's nodes, registered as `reel` (nodes.json, round 26 — `Reel` and
+ * `ReelSensitive`, one surface in two states, one prefix).
  */
 const REEL: DataNode = { path: "reel" };
 const STAGE = part(REEL, "stage");
@@ -457,6 +456,9 @@ function Clip({
             target={{ id: post.id, kind: "post", label: "this post" }}
             testIdPrefix="reel-stance"
             node={part(RAIL, "stance")}
+            // The face's line is the rail's own `stanceLine`, beside the face
+            // (ReelRail.jsx: the placer's, never the stance node's part).
+            lineNode={part(RAIL, "stanceLine")}
           />
         }
         comments={comments}

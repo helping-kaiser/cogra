@@ -328,7 +328,15 @@ export function StanceControl({
   vouchesIn = false,
   wide = false,
   overMedia = false,
+  lineNode,
 }: {
+  /**
+   * The registered node of the row line this control raises, where its board
+   * names one (`reel.rail.stanceLine`, ReelRail.jsx: the face's line is the
+   * placer's own, a sibling of the stance node — never its part). Its Retry
+   * is the line's `retry`.
+   */
+  lineNode?: DataNode;
   /**
    * THE MEDIA DRESS (`StanceControl.jsx` `overMedia`; the stream's rail): the
    * anchor is the rail's white 56 × 44 slot, the unset state a line face, and
@@ -1473,14 +1481,14 @@ export function StanceControl({
         <PendingMarker testId={`${testIdPrefix}-settling`} />
       )}
       {anchored && rowState !== null && !overMedia && (
-        <RowLine state={rowState} testId={`${testIdPrefix}-row-line`} />
+        <RowLine state={rowState} node={lineNode} testId={`${testIdPrefix}-row-line`} />
       )}
       {/* OVER MEDIA THE LINE STANDS BESIDE THE FACE, on the stream's plate,
           reading leftward (ReelRail.jsx:178-186; Reel.md:65-69): the row the
           card would carry it on does not exist over a clip. */}
       {anchored && rowState !== null && overMedia && (
         <div className="absolute top-1/2 -translate-y-1/2" style={{ right: "calc(100% + 8px)" }}>
-          <RowLine plate state={rowState} testId={`${testIdPrefix}-row-line`} />
+          <RowLine plate state={rowState} node={lineNode} testId={`${testIdPrefix}-row-line`} />
         </div>
       )}
 

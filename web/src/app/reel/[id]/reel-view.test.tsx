@@ -283,11 +283,16 @@ describe("the rail's score (Reel.md:21-29)", () => {
     expect(value()).toHaveTextContent("8.20");
   });
 
-  it("a_settling_clips_rail_score_is_the_bare_glyph_over_still_settling (Reel.md:25)", () => {
+  it("a_settling_clips_rail_score_is_the_bare_glyph_over_still_settling, inside the door (Reel.md:25; round 26)", () => {
     holdRanking(null, answerOf({}, ["p1"]), "viewer");
     mountStream();
     expect(screen.queryByTestId(byNode("reel.rail.score.value"))).toBeNull();
-    expect(screen.getByTestId(byNode("reel.rail.score.settling"))).toHaveTextContent(STILL_SETTLING);
+    const settling = screen.getByTestId(byNode("reel.rail.score.settling"));
+    expect(settling).toHaveTextContent(STILL_SETTLING);
+    // THE WHOLE FACE IS THE DOOR: the line is the door's own part, and the
+    // door's name says it.
+    expect(door()).toContainElement(settling);
+    expect(door()).toHaveAccessibleName(`Feed score ${STILL_SETTLING}`);
     expect(rail()).not.toHaveTextContent(/^0$|—/);
   });
 

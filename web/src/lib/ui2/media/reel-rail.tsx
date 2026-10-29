@@ -70,7 +70,9 @@ export function ReelRailItem({
  * The score door in its three faces (ReelRail.jsx `ReelRailScore`). Settling,
  * the glyph stands bare with the pending mark under it, and the door stays:
  * "the score is the stream's only way into the post, and a settling clip has a
- * post like any other" (ReelRail.jsx:82-87).
+ * post like any other" (ReelRail.jsx:82-87). THE WHOLE FACE IS THE DOOR (round
+ * 26, seam 250): `Still settling` stands inside it, the door's `settling`
+ * part — `ExplainableNumber`'s pending face.
  */
 export function ReelRailScore({
   value,
@@ -88,30 +90,18 @@ export function ReelRailScore({
   node?: DataNode;
   testId?: string;
 }) {
-  const door = (
+  return (
     <ExplainableNumber
       glyph="graph"
       label="Feed score"
       value={settling ? undefined : value}
+      pending={settling ? STILL_SETTLING : undefined}
       href={href}
       onOpen={onOpen}
       overMedia
       node={node}
       testId={testId}
     />
-  );
-  if (!settling) return door;
-  return (
-    <div className="flex flex-col items-center" style={{ gap: 2 }}>
-      {door}
-      <span
-        {...testAttributes(part(node, "settling"), testId ? `${testId}-settling` : undefined)}
-        className="text-center text-label-small"
-        style={{ maxWidth: 56, color: "#fff" }}
-      >
-        {STILL_SETTLING}
-      </span>
-    </div>
   );
 }
 
