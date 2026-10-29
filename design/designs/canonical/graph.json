@@ -2426,6 +2426,8 @@
     { "from": "Notifications", "via": 13, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "Notifications", "via": 14, "kind": "advance", "label": "an application of yours became approvable", "to": [{ "board": "Invites", "case": "the queue, where the approving happens — a row kept after the application moved on lands here all the same, the application in its current state or gone, with no special notice" }] },
     { "from": "Notifications", "via": 16, "kind": "advance", "label": "an opinion on your profile walked back", "to": [{ "board": "ProfileOther", "case": "the person who walked it back" }] },
+    { "from": "Notifications", "via": 17, "kind": "advance", "label": "Retry (the next page that did not come)", "to": [{ "terminal": "self", "case": "the next page is asked again — the rows on screen stay, and the line gives way to what arrives (the load chip's more)" }] },
+    { "from": "Notifications", "via": 18, "kind": "advance", "label": "Retry (the read that got no answer)", "to": [{ "terminal": "self", "case": "the list is read again — Loading… in its place until it arrives (the load chip's failed)" }] },
     { "from": "Notifications", "via": 15, "kind": "advance", "label": "an inviter closed your application", "to": [{ "board": "ApplicantRejected", "case": "the shell it happened in, where the ask link stands" }] },
 
     { "from": "NotificationsEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to the root the bell was tapped on — the layer law: the state they left, exactly — and the label names that root (readme §13, *The nav-noun sweep*): `Back to feed`, the state the boards draw, `Back to Explore`, `Back to Wallet` or `Back to your profile`" }] },

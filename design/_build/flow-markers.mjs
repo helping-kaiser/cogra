@@ -2495,6 +2495,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: ">@kel closed your application<", tag: "button" },
     // The tenth, the opinion row's sibling (PR-72), the next free number.
     { n: 16, find: ">@sol walked back their opinion on you<", tag: "button" },
+    // The `load` chip's two Retries (seam 248), the next free numbers.
+    { n: 17, find: 'data-node="notifications.list.moreFault.retry"', tag: "button" },
+    { n: 18, find: 'data-node="notifications.list.fault.retry"', tag: "button" },
   ],
   /* ── The Feed score’s drill-down (backlog item 13) ─────────────────────
      The path rows and the step rows carry one number each: they are one control

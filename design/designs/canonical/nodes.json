@@ -7375,6 +7375,9 @@
     "Notifications": {
       "prefix": "notifications",
       "keys": {
+        "notifications.list.fault": "the load chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "notifications.list.loading": "the load chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "notifications.list.moreFault": "the load chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "notifications.list.notification": "the notification's position in the list, newest first, counted from 1 (Notifications)"
       },
       "nodes": {
@@ -7388,6 +7391,21 @@
         "notifications.header.back": [],
         "notifications.header.title": [],
         "notifications.list": [],
+        "notifications.list.fault": [
+          "failed"
+        ],
+        "notifications.list.fault.retry": [
+          "failed"
+        ],
+        "notifications.list.loading": [
+          "loading"
+        ],
+        "notifications.list.moreFault": [
+          "more"
+        ],
+        "notifications.list.moreFault.retry": [
+          "more"
+        ],
         "notifications.list.notification": [
           "1",
           "2",
