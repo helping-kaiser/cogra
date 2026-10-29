@@ -31,6 +31,7 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.Page
 import com.cogra.domain.UserProfile
+import com.cogra.domain.score.FeedStandings
 import com.cogra.domain.score.TraceAnswer
 import com.cogra.domain.score.TraceFetch
 import com.cogra.domain.testing.FakeIdentityStore
@@ -71,6 +72,8 @@ class ScoreTraceNavigationTest {
     @Inject lateinit var profiles: ScriptedProfileRepository
 
     @Inject lateinit var traces: FakeTraceRepository
+
+    @Inject lateinit var standings: FeedStandings
 
     private lateinit var navController: TestNavHostController
 
@@ -132,8 +135,11 @@ class ScoreTraceNavigationTest {
 
         tapTheScore()
 
-        // ONE LIVE FETCH, in the view the card's figure was computed in (CD-SR1, CD-SR2).
-        assertThat(traces.traced).containsExactly("u1" to "p1")
+        // ONE LIVE FETCH, in the view the card's figure was computed in (CD-SR1,
+        // CD-SR2) — the feed's own ranked view, the borrowed vantage here.
+        val walked = standings.state.value.viewerFor("u1")
+        assertThat(walked).isNotNull()
+        assertThat(traces.traced).containsExactly(walked to "p1")
         compose.onNodeWithTag("feedEntry.header.back").assertContentDescriptionEquals("Back to feed")
         compose.onNodeWithTag("feedEntry.header.title", useUnmergedTree = true).assertTextEquals("Why this reached you")
         // THE ORIGINATING ROOT STAYS LIT on the drill-in (BottomNav.prompt.md).
