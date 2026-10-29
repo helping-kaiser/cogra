@@ -172,7 +172,7 @@ async fn nodes_serves_a_repeated_id_in_each_slot(pool: PgPool) {
     assert_eq!(got[2]["id"], author.to_string());
 }
 
-/// `node` resolves a user id, and null for an id naming nothing.
+/// The single-node accessor resolves a user id, and null for an id naming nothing.
 /// ´claim:nodes:node-resolves-a-user´
 #[sqlx::test(migrations = "../../migrations")]
 async fn node_resolves_a_user(pool: PgPool) {
@@ -188,8 +188,8 @@ async fn node_resolves_a_user(pool: PgPool) {
     assert!(none["node"].is_null());
 }
 
-/// A deleted account resolves through `node` and `nodes` as its husk — the
-/// name gone, the mark standing — exactly as `user` serves it.
+/// A deleted account resolves through the node accessors as its husk — the
+/// name gone, the mark standing — exactly as the user lookup serves it.
 /// ´claim:nodes:a-deleted-user-reads-as-its-husk-through-node´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_deleted_user_reads_as_its_husk_through_node(pool: PgPool) {
