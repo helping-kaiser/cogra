@@ -92,7 +92,7 @@ export function PickedSheet({
   } | null>(null);
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={`Picked · ${items.length}`} testId={testId} node={node}>
+    <BottomSheet open={open} onClose={onClose} title={`Picked · ${items.length}`} testId={testId} node={node} flush>
       <ul className="m-0 flex list-none flex-col border-t border-outline-variant p-0">
         {items.map((item, index) => {
           const lifted = drag !== null && drag.from === index;
