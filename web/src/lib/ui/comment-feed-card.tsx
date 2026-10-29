@@ -517,7 +517,11 @@ export function CommentFeedCard({
           className="cg-state cg-focus cg-hit flex max-w-full items-center gap-2 rounded-small text-left text-on-surface-variant"
         >
           <Icon name={head.kind === "comment" ? "chat_bubble" : "dynamic_feed"} size={14} />
-          <span className="truncate text-label-small">On {head.label}</span>
+          {/* The label-small SIZE in the reading weight: the master sets the size
+              and line alone, so the pointer reads quieter than a label. */}
+          <span className="truncate text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)]">
+            On {head.label}
+          </span>
         </Link>
       )}
       {!line && head !== null && headHref !== null ? (

@@ -683,106 +683,112 @@ export function ProfileScreen({
             data-testid={
               filter === "posts" ? POSTS_NODE : filter === "comments" ? COMMENTS_NODE : "profile.chronicle"
             }
-            className={`flex flex-col gap-2 pt-2 ${cardView ? "" : "px-4"}`}
+            // A CARD VIEW'S NODE IS THE VIEW, its list 8px under the tab row
+            // inside it (the ProfilePosts and ProfileComments boards, round 27:
+            // `profile.posts` / `profile.comments` wrap the `8px 0 0` list); the
+            // chronicle is its own padded list (`8px 16px 0`).
+            className={cardView ? "flex flex-col" : "flex flex-col gap-2 px-4 pt-2"}
           >
-            {/* NOTHING PUBLISHED: the line alone (ProfilePosts.md:5). */}
-            {filter === "posts" && posts.length === 0 && !rowsLoading && !pageFailed && (
-              <div className={lineGutter}>
-                <EmptyState
-                  testId="profile-posts-empty"
-                  node={{ path: `${POSTS_NODE}.empty` }}
-                  title="Nothing here yet."
+            <div className={cardView ? "flex flex-col gap-2 pt-2" : "contents"}>
+              {/* NOTHING PUBLISHED: the line alone (ProfilePosts.md:5). */}
+              {filter === "posts" && posts.length === 0 && !rowsLoading && !pageFailed && (
+                <div className={lineGutter}>
+                  <EmptyState
+                    testId="profile-posts-empty"
+                    node={{ path: `${POSTS_NODE}.empty` }}
+                    title="Nothing here yet."
+                  />
+                </div>
+              )}
+              {filter === "posts" && posts.length > 0 && scoreOrigin !== null && origin !== null && (
+                <ProfilePostsList
+                  posts={posts}
+                  from={origin}
+                  scoreOrigin={scoreOrigin}
+                  notify={notify}
+                  onOpenStream={openPostsStream}
+                  // The author's own Remove from a card's ⋮: the card stands as
+                  // its mark where it stood (RM-G9's build word).
+                  onRemoved={(removed) =>
+                    setPosts((current) => current.map((post) => (post.id === removed.id ? removed : post)))
+                  }
+                  tailIndex={tailIndex}
+                  tailRef={tailRef}
                 />
-              </div>
-            )}
-            {filter === "posts" && posts.length > 0 && scoreOrigin !== null && origin !== null && (
-              <ProfilePostsList
-                posts={posts}
-                from={origin}
-                scoreOrigin={scoreOrigin}
-                notify={notify}
-                onOpenStream={openPostsStream}
-                // The author's own Remove from a card's ⋮: the card stands as
-                // its mark where it stood (RM-G9's build word).
-                onRemoved={(removed) =>
-                  setPosts((current) => current.map((post) => (post.id === removed.id ? removed : post)))
-                }
-                tailIndex={tailIndex}
-                tailRef={tailRef}
-              />
-            )}
-            {/* NO COMMENT WRITTEN: the line alone (ProfileComments.md:7). */}
-            {filter === "comments" && comments.length === 0 && !rowsLoading && !pageFailed && (
-              <div className={lineGutter}>
-                <EmptyState
-                  testId="profile-comments-empty"
-                  node={{ path: `${COMMENTS_NODE}.empty` }}
-                  title="Nothing here yet."
+              )}
+              {/* NO COMMENT WRITTEN: the line alone (ProfileComments.md:7). */}
+              {filter === "comments" && comments.length === 0 && !rowsLoading && !pageFailed && (
+                <div className={lineGutter}>
+                  <EmptyState
+                    testId="profile-comments-empty"
+                    node={{ path: `${COMMENTS_NODE}.empty` }}
+                    title="Nothing here yet."
+                  />
+                </div>
+              )}
+              {filter === "comments" && comments.length > 0 && origin !== null && (
+                <ProfileCommentsList
+                  comments={comments}
+                  from={origin}
+                  reply={reply}
+                  notify={notify}
+                  // The author's own Remove from a card's ⋮: the card stands as
+                  // its mark where it stood (RM-G9's build word), here and in the
+                  // view held for a return.
+                  onRemoved={(id, removal) =>
+                    setComments((current) =>
+                      current.map((comment) => (comment.id === id ? withRemoval(comment, removal) : comment)),
+                    )
+                  }
+                  tailIndex={tailIndex}
+                  tailRef={tailRef}
                 />
-              </div>
-            )}
-            {filter === "comments" && comments.length > 0 && origin !== null && (
-              <ProfileCommentsList
-                comments={comments}
-                from={origin}
-                reply={reply}
-                notify={notify}
-                // The author's own Remove from a card's ⋮: the card stands as
-                // its mark where it stood (RM-G9's build word), here and in the
-                // view held for a return.
-                onRemoved={(id, removal) =>
-                  setComments((current) =>
-                    current.map((comment) => (comment.id === id ? withRemoval(comment, removal) : comment)),
-                  )
-                }
-                tailIndex={tailIndex}
-                tailRef={tailRef}
-              />
-            )}
-            {filter === "everything" && rows.length === 0 && !rowsLoading && !pageFailed && (
-              <EmptyState
-                testId="profile-chronicle-empty"
-                node={applicant && own ? { path: "profile.chronicle.empty" } : undefined}
-                title={applicant && own ? APPLICANT_CHRONICLE_EMPTY : "Nothing here yet."}
-              />
-            )}
-            {filter === "everything" && rows.length > 0 && (
-              <ul className="m-0 flex list-none flex-col gap-2 p-0" data-testid="profile-chronicle">
-                {rows.map((row, index) => (
-                  <li key={row.id} ref={index === tailIndex ? tailRef : undefined}>
-                    <ChronicleAct row={row} position={index + 1} origin={origin} />
-                  </li>
-                ))}
-              </ul>
-            )}
-            {rowsLoading && listed === 0 && (
-              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
-                Loading…
-              </p>
-            )}
-            {loadingShown && (
-              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
-                Loading…
-              </p>
-            )}
-            {/* THE PAGE THAT DID NOT ARRIVE (Profile.md:35): the quiet line and
-                Retry where the next page would have stood — never the error
-                colour. */}
-            {pageFailed && (
-              <div className={`flex items-center gap-3 ${lineGutter}`} role="alert">
-                <span className="text-body-medium text-on-surface-variant" data-testid="profile-rows-failed">
-                  {COULDNT_LOAD_MORE}
-                </span>
-                <Button
-                  testId="profile-rows-retry"
-                  variant="text"
-                  size="sm"
-                  onClick={() => profile && void loadRows(profile.id, filter, endCursor, own)}
-                >
-                  Retry
-                </Button>
-              </div>
-            )}
+              )}
+              {filter === "everything" && rows.length === 0 && !rowsLoading && !pageFailed && (
+                <EmptyState
+                  testId="profile-chronicle-empty"
+                  node={applicant && own ? { path: "profile.chronicle.empty" } : undefined}
+                  title={applicant && own ? APPLICANT_CHRONICLE_EMPTY : "Nothing here yet."}
+                />
+              )}
+              {filter === "everything" && rows.length > 0 && (
+                <ul className="m-0 flex list-none flex-col gap-2 p-0" data-testid="profile-chronicle">
+                  {rows.map((row, index) => (
+                    <li key={row.id} ref={index === tailIndex ? tailRef : undefined}>
+                      <ChronicleAct row={row} position={index + 1} origin={origin} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {rowsLoading && listed === 0 && (
+                <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
+                  Loading…
+                </p>
+              )}
+              {loadingShown && (
+                <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
+                  Loading…
+                </p>
+              )}
+              {/* THE PAGE THAT DID NOT ARRIVE (Profile.md:35): the quiet line and
+                  Retry where the next page would have stood — never the error
+                  colour. */}
+              {pageFailed && (
+                <div className={`flex items-center gap-3 ${lineGutter}`} role="alert">
+                  <span className="text-body-medium text-on-surface-variant" data-testid="profile-rows-failed">
+                    {COULDNT_LOAD_MORE}
+                  </span>
+                  <Button
+                    testId="profile-rows-retry"
+                    variant="text"
+                    size="sm"
+                    onClick={() => profile && void loadRows(profile.id, filter, endCursor, own)}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
