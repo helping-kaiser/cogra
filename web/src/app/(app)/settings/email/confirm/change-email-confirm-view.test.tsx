@@ -121,14 +121,14 @@ describe("ChangeEmailConfirm", () => {
   it("code_confirmed_reads_the_interim_line_with_the_new_address (seam 115.3)", async () => {
     server.use(account(pending({ codeConfirmed: true })));
     rendered();
-    const line = await screen.findByTestId("changeEmail.codeDone");
-    expect(line.textContent).toBe(`Done on this side — now open the link at ${NEW}`);
+    const line = await screen.findByTestId("changeEmail.interim");
+    expect(line.textContent).toBe(`Done on this side — now open the link at ${NEW}.`);
   });
 
   it("the interim line is absent while the code is still owed", async () => {
     rendered();
     await screen.findByTestId("changeEmail.code.input");
-    expect(screen.queryByTestId("changeEmail.codeDone")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("changeEmail.interim")).not.toBeInTheDocument();
   });
 
   it("right_code_with_link_done_moves_the_address_with_snackbar", async () => {
@@ -158,8 +158,8 @@ describe("ChangeEmailConfirm", () => {
       expect(screen.getByTestId("changeEmail.pair.codeSide")).toHaveTextContent(`${OLD} — confirmed`),
     );
     expect(screen.queryByTestId("changeEmail.code.input")).not.toBeInTheDocument();
-    expect(screen.getByTestId("changeEmail.codeDone").textContent).toBe(
-      `Done on this side — now open the link at ${NEW}`,
+    expect(screen.getByTestId("changeEmail.interim").textContent).toBe(
+      `Done on this side — now open the link at ${NEW}.`,
     );
     expect(push).not.toHaveBeenCalled();
   });

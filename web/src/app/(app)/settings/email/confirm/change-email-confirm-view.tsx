@@ -240,7 +240,7 @@ export function ChangeEmailConfirmView() {
 
           {pending.requiresCode && pending.codeConfirmed && (
             <div className="mt-6">
-              <QuietNote node={node("codeDone")}>{`Done on this side — now open the link at ${pending.newEmail}`}</QuietNote>
+              <QuietNote node={node("interim")}>{`Done on this side — now open the link at ${pending.newEmail}.`}</QuietNote>
             </div>
           )}
 
