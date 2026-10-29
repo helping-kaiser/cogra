@@ -20,6 +20,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.cogra.core.designsystem.LocalShowExactValues
 import com.cogra.domain.score.TraceAnswer
 import com.cogra.domain.score.TraceContext
@@ -134,7 +135,8 @@ class TraceScreenTest {
     @Test
     fun tap_morePaths_unfolds_the_weakest_paths_in_place_and_never_opens_a_page() {
         render(answered())
-        compose.onNodeWithTag("feedEntry.morePaths").performClick()
+        // The quiet row stands under four path rows: brought into the viewport first.
+        compose.onNodeWithTag("feedEntry.morePaths").performScrollTo().performClick()
         assertThat(unfolds).isEqualTo(1)
         assertThat(opened).isEmpty()
     }
