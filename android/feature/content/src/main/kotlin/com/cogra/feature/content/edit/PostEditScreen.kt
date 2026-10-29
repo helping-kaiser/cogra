@@ -58,10 +58,16 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.feature.content.BackingEdit
 import com.cogra.feature.content.BackingPad
+import com.cogra.feature.content.InertReferencePicker
+import com.cogra.feature.content.InertTagPicker
 import com.cogra.feature.content.ParkedPadWash
+import com.cogra.feature.content.PickerInPlace
+import com.cogra.feature.content.PickerOrigin
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
+import com.cogra.feature.content.ReferencePickerHandlers
+import com.cogra.feature.content.TagPickerHandlers
 import com.cogra.feature.content.TopicEntry
 import com.cogra.feature.content.parkedPadPlacement
 import com.cogra.feature.content.toItem
@@ -184,6 +190,8 @@ private fun PostEditActions.withSections(viewModel: PostEditViewModel) = copy(
     onTagRelevanceChange = viewModel::onTagRelevanceChange,
     onTagConfidenceChange = viewModel::onTagConfidenceChange,
     onUndoTagWithdrawal = viewModel::onUndoTagWithdrawal,
+    tagPicker = viewModel.tagPicker,
+    referencePicker = viewModel.referencePicker,
     onOpenFinder = viewModel::onOpenFinder,
     onCloseFinder = viewModel::onCloseFinder,
     onFinderQueryChange = viewModel::onFinderQueryChange,
@@ -252,6 +260,10 @@ data class PostEditActions(
     val onTagRelevanceChange: (String, Double) -> Unit = { _, _ -> },
     val onTagConfidenceChange: (String, Double) -> Unit = { _, _ -> },
     val onUndoTagWithdrawal: (String) -> Unit = {},
+    /** `+ Add a tag`: the tag picker in the edit's place (TagPicker; web #341). */
+    val tagPicker: TagPickerHandlers = InertTagPicker,
+    /** `+ Cite something`: the citation picker in the edit's place (ReferencePicker). */
+    val referencePicker: ReferencePickerHandlers = InertReferencePicker,
     val onOpenFinder: () -> Unit = {},
     val onCloseFinder: () -> Unit = {},
     val onFinderQueryChange: (String) -> Unit = {},
@@ -300,6 +312,28 @@ fun PostEditScreen(
     keyCard: @Composable () -> Unit = {},
     /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
     deletionBand: @Composable () -> Unit = {},
+) {
+    // `+ Add a tag` and `+ Cite something` open their pickers in the edit's
+    // place (web #341), each pick staged straight into the edit's batch; the
+    // edit underneath keeps every word.
+    val picking = PickerInPlace(
+        tags = state.tagSection,
+        references = state.referenceSection,
+        origin = PickerOrigin.Post,
+        tagPicker = actions.tagPicker,
+        referencePicker = actions.referencePicker,
+    )
+    if (!picking) PostEditStage(state, actions, modifier, keyCard, deletionBand)
+}
+
+/** The edit itself, one screen and one batch (EditCompose). */
+@Composable
+private fun PostEditStage(
+    state: PostEditUiState,
+    actions: PostEditActions,
+    modifier: Modifier,
+    keyCard: @Composable () -> Unit,
+    deletionBand: @Composable () -> Unit,
 ) {
     // The 200ms label swap counts from the press, held at the upload gate or
     // not; while it stands the back arrow and the X refuse a press and never
@@ -617,6 +651,7 @@ private fun TagsAndReferences(state: PostEditUiState, actions: PostEditActions) 
             onTagRelevanceChange = actions.onTagRelevanceChange,
             onTagConfidenceChange = actions.onTagConfidenceChange,
             showHeading = false,
+            onOpenPicker = actions.tagPicker::onOpenTagPicker,
         )
         state.tagSection.withdrawn().forEach { name ->
             WithdrawnLine(
@@ -641,6 +676,7 @@ private fun TagsAndReferences(state: PostEditUiState, actions: PostEditActions) 
             onReferenceRelevanceChange = actions.onReferenceRelevanceChange,
             onReferenceSupportChange = actions.onReferenceSupportChange,
             showHeading = false,
+            onOpenPicker = actions.referencePicker::onOpenReferencePicker,
         )
         state.referenceSection.withdrawn().forEach { row ->
             WithdrawnLine(

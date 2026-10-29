@@ -45,9 +45,13 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.feature.content.CitedSheet
 import com.cogra.feature.content.ParkedPadWash
+import com.cogra.feature.content.PickerInPlace
+import com.cogra.feature.content.PickerOrigin
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
+import com.cogra.feature.content.ReferencePickerHandlers
+import com.cogra.feature.content.TagPickerHandlers
 import com.cogra.feature.content.TagsSheet
 import com.cogra.feature.content.TopicEntry
 import com.cogra.feature.content.UnreachableStartConfirm
@@ -71,6 +75,8 @@ fun ComposeWizardRoute(
     onExpired: (label: String) -> Unit,
     onLeave: () -> Unit,
     onRestoreKey: () -> Unit,
+    /** The already-published marker's door: the post it names opens over the composer, the draft kept. */
+    onOpenPost: (String) -> Unit,
     /**
      * The husk banner the shell rides above every write surface until
      * the key is restored. The seal's own `ComposeKeyAbsent` card is
@@ -210,6 +216,12 @@ fun ComposeWizardRoute(
         onDoneTuningReference = viewModel::onDoneTuningReference,
         onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
         onReferenceSupportChange = viewModel::onReferenceSupportChange,
+        tagPicker = viewModel.tagPicker,
+        referencePicker = viewModel.referencePicker,
+        onOpenPublished = { postId ->
+            viewModel.persistNow()
+            onOpenPost(postId)
+        },
         keyBanner = keyBanner,
         deletionBand = deletionBand,
     )
@@ -293,6 +305,9 @@ internal fun ComposeWizardScreen(
     onDoneTuningReference: () -> Unit,
     onReferenceRelevanceChange: (String, Double) -> Unit,
     onReferenceSupportChange: (String, Double) -> Unit,
+    tagPicker: TagPickerHandlers,
+    referencePicker: ReferencePickerHandlers,
+    onOpenPublished: (String) -> Unit,
     keyBanner: @Composable () -> Unit = {},
     modifier: Modifier = Modifier,
     deletionBand: @Composable () -> Unit = {},
@@ -302,6 +317,11 @@ internal fun ComposeWizardScreen(
     // first stage, where there is no earlier stage to reach; the draft
     // survives either way, being written continuously rather than on exit.
     BackHandler(onBack = onBack)
+
+    // `+ Add a tag` and `+ Cite something` open their pickers in the details
+    // stage's place (TagPicker, ReferencePicker), every staged pick applied to
+    // the draft the moment it is made; the arrow names the post's composer.
+    if (PickerInPlace(state.tagSection, state.referenceSection, PickerOrigin.Post, tagPicker, referencePicker)) return
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().testTag("compose_wizard").dataNodeSurface()) {
@@ -422,6 +442,7 @@ internal fun ComposeWizardScreen(
                             // The door opens the step a vertical clip
                             // skipped (`give-a-vertical-clip-a-cover`).
                             onCover = onOpenCoverStep,
+                            onOpenPublished = onOpenPublished,
                             topics = {
                                 // The 2.3 section, embedded rather than
                                 // rebuilt: only its surroundings changed.
@@ -439,6 +460,7 @@ internal fun ComposeWizardScreen(
                                     pairSheet = true,
                                     staged = true,
                                     node = COMPOSE_DETAILS / "tags",
+                                    onOpenPicker = tagPicker::onOpenTagPicker,
                                 )
                             },
                             references = {
@@ -458,6 +480,7 @@ internal fun ComposeWizardScreen(
                                     pairSheet = true,
                                     staged = true,
                                     node = COMPOSE_DETAILS / "references",
+                                    onOpenPicker = referencePicker::onOpenReferencePicker,
                                 )
                             },
                         )

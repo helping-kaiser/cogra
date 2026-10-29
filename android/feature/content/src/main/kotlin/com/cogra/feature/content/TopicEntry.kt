@@ -21,6 +21,8 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.TagParameterSliders
 import com.cogra.core.designsystem.TopicChip
 import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.InlineSize
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.topics.TagNameProblem
 import com.cogra.domain.topics.canonicalTagName
@@ -69,6 +71,13 @@ internal fun TopicEntry(
      * preview and the refusals are not drawn on the board and keep their
      * [testTagPrefix] tags.
      */
+    /**
+     * `+ Add a tag` opens the tag picker in the composer's place (TagPicker;
+     * web #312/#341): given a door, the section draws it — always, the cap
+     * being the picker's own line — in place of the free-text field. Null
+     * keeps the field, on the surfaces whose boards draw no picker yet.
+     */
+    onOpenPicker: (() -> Unit)? = null,
     node: DataNode? = null,
 ) {
     val tagInput = section.input
@@ -107,7 +116,14 @@ internal fun TopicEntry(
                 }
             }
         }
-        if (section.capReached) {
+        if (onOpenPicker != null) {
+            InlineAction(
+                text = "+ Add a tag",
+                onClick = onOpenPicker,
+                size = InlineSize.Small,
+                testTag = node?.div("add")?.tag ?: "${testTagPrefix}_tag_add",
+            )
+        } else if (section.capReached) {
             Text(
                 stringResource(R.string.content_topics_cap_reached, MAX_TAGS),
                 style = MaterialTheme.typography.bodySmall,

@@ -206,3 +206,28 @@ internal suspend fun SearchRepository.tagNames(canonical: String): Outcome<List<
         ),
         after = null,
     ).map { page -> page.hits.mapNotNull { (it.node as? SearchNode.Tag)?.name } }
+
+/**
+ * A tag picker that answers nothing: the default of a host's action bundle
+ * (`PostEditActions`, `CommentEditActions`), whose route always hands the
+ * view model's own.
+ */
+internal object InertTagPicker : TagPickerHandlers {
+    override fun onOpenTagPicker() = Unit
+    override fun onCloseTagPicker() = Unit
+    override fun onTagPickerQueryChange(query: String) = Unit
+    override fun onRetryTagIndex() = Unit
+    override fun onStageTag(name: String) = Unit
+    override fun onUnstageTag(name: String) = Unit
+}
+
+/** The citation picker's twin of [InertTagPicker]. */
+internal object InertReferencePicker : ReferencePickerHandlers {
+    override fun onOpenReferencePicker() = Unit
+    override fun onCloseReferencePicker() = Unit
+    override fun onReferencePickerQueryChange(query: String) = Unit
+    override fun onReferenceKindsChange(kinds: Set<FeedKind>) = Unit
+    override fun onRetryCandidates() = Unit
+    override fun onStageReference(row: ReferenceCandidateRow) = Unit
+    override fun onUnstageReference(targetId: String) = Unit
+}

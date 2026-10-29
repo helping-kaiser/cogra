@@ -50,6 +50,8 @@ import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
+import com.cogra.feature.content.RecordingReferencePicker
+import com.cogra.feature.content.RecordingTagPicker
 import com.cogra.feature.content.ReferenceRow
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagRow
@@ -107,6 +109,9 @@ class ComposeWizardScreenTest {
     private var setUnreachable = 0
     private var referenceRemovals = mutableListOf<String>()
     private var referenceTunings = mutableListOf<String>()
+    private val tagPicker = RecordingTagPicker()
+    private val referencePicker = RecordingReferencePicker()
+    private val publishedOpens = mutableListOf<String>()
 
     @Composable
     private fun Wizard(
@@ -186,6 +191,9 @@ class ComposeWizardScreenTest {
             onDoneTuningReference = {},
             onReferenceRelevanceChange = { _, _ -> },
             onReferenceSupportChange = { _, _ -> },
+            tagPicker = tagPicker,
+            referencePicker = referencePicker,
+            onOpenPublished = { publishedOpens += it },
         )
     }
 
@@ -231,6 +239,7 @@ class ComposeWizardScreenTest {
                 override suspend fun defaultLicense(): com.cogra.domain.Outcome<com.cogra.domain.LicenseChoice?> =
                     com.cogra.domain.Outcome.Success(null)
             },
+            search = com.cogra.domain.testing.ScriptedSearchRepository(),
         )
     }
 
@@ -521,7 +530,7 @@ class ComposeWizardScreenTest {
         )
         compose.setContent { Wizard(withVideoCover) }
 
-        compose.onNodeWithTag("wizard_video_tile").assertIsDisplayed()
+        compose.onNodeWithTag(CLIP_TILE_NODE.tag).assertIsDisplayed()
         compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("wizard_cover_door").assertDoesNotExist()
         compose.onNodeWithTag("wizard_cover_face", useUnmergedTree = true).assertDoesNotExist()

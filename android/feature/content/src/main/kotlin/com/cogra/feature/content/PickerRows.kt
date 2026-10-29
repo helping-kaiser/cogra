@@ -314,3 +314,28 @@ internal fun PickerHelp(topic: HelpTopic, onClose: () -> Unit) {
         testTag = "picker_help_${topic.name.lowercase()}",
     )
 }
+
+/**
+ * THE PICKERS DRAW IN THE COMPOSER'S PLACE (web's wizard, post edit and
+ * comment editor alike): while either is open it stands where the stage
+ * stood, its own system Back closing it, and the composer underneath keeps
+ * every word. Says whether one is drawn, so the host draws nothing else.
+ */
+@Composable
+internal fun PickerInPlace(
+    tags: TagSectionState,
+    references: ReferenceSectionState,
+    origin: PickerOrigin,
+    tagPicker: TagPickerHandlers,
+    referencePicker: ReferencePickerHandlers,
+): Boolean = when {
+    tags.picker != null -> {
+        TagPicker(tags, origin, tagPicker)
+        true
+    }
+    references.picker != null -> {
+        ReferencePicker(references, origin, referencePicker)
+        true
+    }
+    else -> false
+}

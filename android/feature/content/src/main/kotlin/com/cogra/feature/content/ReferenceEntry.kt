@@ -92,6 +92,13 @@ internal fun ReferenceEntry(
      * and the add action then wear the registered paths. The finder and the
      * refusals keep their [testTagPrefix] tags.
      */
+    /**
+     * `+ Cite something` opens the citation picker in the composer's place
+     * (ReferencePicker; web #312/#341): given a door, the section draws it —
+     * always, the cap being the picker's own line — and never the finder.
+     * Null keeps the finder, on the surfaces whose boards draw no picker yet.
+     */
+    onOpenPicker: (() -> Unit)? = null,
     node: DataNode? = null,
 ) {
     Column(
@@ -135,7 +142,14 @@ internal fun ReferenceEntry(
                 }
             }
         }
-        if (section.capReached) {
+        if (onOpenPicker != null) {
+            InlineAction(
+                text = "+ Cite something",
+                onClick = onOpenPicker,
+                size = InlineSize.Small,
+                testTag = node?.div("add")?.tag ?: "${testTagPrefix}_reference_add",
+            )
+        } else if (section.capReached) {
             Text(
                 stringResource(R.string.content_references_cap_reached, MAX_REFERENCES),
                 style = MaterialTheme.typography.bodySmall,

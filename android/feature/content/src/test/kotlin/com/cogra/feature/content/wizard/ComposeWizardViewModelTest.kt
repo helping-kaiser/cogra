@@ -324,6 +324,7 @@ class ComposeWizardViewModelTest {
         signer = WriteSigner(sealer, identity),
         stagedWrites = sealer,
         settings = settings,
+        search = com.cogra.domain.testing.ScriptedSearchRepository(),
     )
 
     /** SettingsLicense.md: "a new post starts from the account's default license". */
@@ -886,6 +887,7 @@ class ComposeWizardViewModelTest {
             signer = WriteSigner(LandingAtOnce(sealer), identity),
             stagedWrites = sealer,
             settings = settings,
+            search = com.cogra.domain.testing.ScriptedSearchRepository(),
         )
         vm.signWords()
         assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Landed(TEST_NODE_ID))

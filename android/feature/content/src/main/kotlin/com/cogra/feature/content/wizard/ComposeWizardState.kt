@@ -18,6 +18,7 @@ import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.signing.KnownMedia
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
+import java.time.Instant
 
 /**
  * The wizard's stages, in the order the canonical boards draw them:
@@ -480,9 +481,22 @@ data class ComposeWizardState(
     /** `Discard your draft?`, raised by a tap on the dimmed roll (ComposeDraftDiscard). */
     val askingDraftDiscard: Boolean = false,
     val outcome: WizardOutcome? = null,
+    /**
+     * The already-published marker's last answer (ComposeDetailsReused.md),
+     * TAGGED with the uploads it was asked for — see [publishedMarker].
+     */
+    val published: PublishedMarker? = null,
 ) {
     /** Every pick that has an id on the server. */
     val uploadedIds: List<String> get() = picked.mapNotNull { it.mediaId }
+
+    /**
+     * The marker the details stage draws: the answer for the media on the
+     * stage NOW, so an answer for media since removed or added to is never
+     * read (a fresh read follows every change). Null draws the stage at rest.
+     */
+    val publishedMarker: PublishedMarker?
+        get() = published?.takeIf { mode == BodyMode.Media && it.mediaIds == uploadedIds }
 
     /**
      * The opinion pad is parked over the page, not a drawer.
@@ -1008,3 +1022,9 @@ fun ComposeWizardState.afterRemoval(): ComposeWizardState {
         (sheet == SealSheet.Cited && referenceSection.references.isEmpty())
     return copy(fault = null, sheet = if (emptied) SealSheet.None else sheet)
 }
+
+/**
+ * The earliest of the author's own published posts carrying media on the
+ * stage (`ownPublishedPlacement`), keyed by the [mediaIds] it answered.
+ */
+data class PublishedMarker(val mediaIds: List<String>, val postId: String, val publishedAt: Instant)

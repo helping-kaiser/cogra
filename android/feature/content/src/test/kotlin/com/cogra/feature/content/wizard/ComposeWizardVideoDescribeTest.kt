@@ -11,6 +11,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import com.cogra.feature.content.RecordingReferencePicker
+import com.cogra.feature.content.RecordingTagPicker
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -111,6 +113,9 @@ class ComposeWizardVideoDescribeTest {
             onDoneTuningReference = {},
             onReferenceRelevanceChange = { _, _ -> },
             onReferenceSupportChange = { _, _ -> },
+            tagPicker = RecordingTagPicker(),
+            referencePicker = RecordingReferencePicker(),
+            onOpenPublished = {},
         )
     }
 
@@ -150,7 +155,7 @@ class ComposeWizardVideoDescribeTest {
     fun theVideoTileCarriesNoManagerAndOpensNoSheet() {
         compose.setContent { Wizard(onVideoDetails) }
 
-        compose.onNodeWithTag("wizard_video_tile").assertHasNoClickAction()
+        compose.onNodeWithTag(CLIP_TILE_NODE.tag).assertHasNoClickAction()
     }
 
     // Finding 7 (`ComposeDetailsVideo.jsx` lines 23-32): the tile's only
