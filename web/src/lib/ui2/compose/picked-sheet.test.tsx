@@ -42,6 +42,24 @@ describe("PickedSheet", () => {
     expect(screen.getByTestId("picked-sheet-body").className).not.toContain("pt-2");
   });
 
+  // Round 27 (seam 253, measured): the note box spans the sheet and its 24px is
+  // its own PADDING; the list's hairline spans the sheet over padded rows.
+  it("spans the sheet with the note box and the list, each part carrying its own inset", () => {
+    open();
+    const body = screen.getByTestId("picked-sheet-body").className;
+    expect(body).not.toMatch(/\bpx-6\b/);
+    const note = screen.getByText("The first one is the cover.");
+    expect(note.className).toMatch(/\bpx-6\b/);
+    expect(note.className).toMatch(/\bpt-3\b/);
+    // No margin of its own beyond the reset `m-0`.
+    expect(note.className.split(/\s+/).filter((cls) => /^-?m[xytrbl]?-/.test(cls))).toEqual(["m-0"]);
+    const list = screen.getByTestId("picked-sheet-row-0").parentElement!;
+    expect(list.className).toMatch(/\bpx-6\b/);
+    expect(list.className).toContain("border-t");
+    // Done stands 16px from the sheet's edge (8 · 16 · 8).
+    expect(screen.getByTestId("picked-sheet-done").parentElement!.className).toMatch(/\bpx-4\b/);
+  });
+
   it("shows the quiet word instead of the link once a picture is described", () => {
     open();
     expect(screen.getByTestId("picked-sheet-described-0")).toHaveTextContent("Described");

@@ -656,7 +656,6 @@ export function CommentEditor({
               onTags={(tags) => update(() => ({ tags }))}
               onDone={() => setPicking(null)}
               origin="comment"
-              cap={null}
             />
           ) : picking === "references" ? (
             <ReferencePicker
@@ -664,7 +663,6 @@ export function CommentEditor({
               onReferences={(references) => update(() => ({ references }))}
               onDone={() => setPicking(null)}
               origin="comment"
-              cap={null}
             />
           ) : null
         }

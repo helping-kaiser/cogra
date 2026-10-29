@@ -604,6 +604,26 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     expect(footer()).toHaveTextContent("You're signing 1 thing");
   });
 
+  // TagPicker.md:27 / ReferencePicker.md:35: the cap reads per post "from a
+  // post's composer or its edit" (W-EDIT-PICKER-CAP).
+  it("TagPicker.md:27 the edit's tag picker holds at ten, Up to 10 tags per post.", async () => {
+    serve(editablePost({ topics: Array.from({ length: 10 }, (_, i) => topicClaim(`tag${i}`)) }));
+    draw();
+    fireEvent.click(await screen.findByTestId("postEdit.tags.add"));
+    await screen.findByRole("searchbox", { name: "Name a tag" });
+    expect(screen.getByTestId("tagPicker.cap")).toHaveTextContent("Up to 10 tags per post.");
+  });
+
+  it("ReferencePicker.md:35 the edit's citation picker holds at ten, Up to 10 citations per post.", async () => {
+    serve(
+      editablePost({ references: Array.from({ length: 10 }, (_, i) => referenceClaim(`u-${i}`, `person${i}`)) }),
+    );
+    draw();
+    fireEvent.click(await screen.findByTestId("postEdit.references.add"));
+    await screen.findByRole("searchbox", { name: "Cite something" });
+    expect(screen.getByTestId("referencePicker.cap")).toHaveTextContent("Up to 10 citations per post.");
+  });
+
   it("cites through the citation picker, in the edit's place", async () => {
     serve(editablePost());
     draw();

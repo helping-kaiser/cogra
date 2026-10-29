@@ -18,6 +18,7 @@ import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { whenObserved } from "@/test/media-env";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
+import { keepPick } from "@/lib/stance/kept-picks";
 import { PostView } from "./post-view";
 import { byNode } from "@/test/data-node";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
@@ -359,6 +360,22 @@ describe("PostView", () => {
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toHaveTextContent("The body");
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
     expect(screen.queryByTestId("post-no-comments")).not.toBeInTheDocument();
+  });
+
+  // ROUND 27 REGISTERS `stance.pending` on the detail and the thread: a pick
+  // kept pending wears its waiting line under the face, by the shared control.
+  it("wears postDetail.card.actionRow.stance.pending and the thread's under a kept pick", async () => {
+    await keepPick("u2", { kind: "post", id: "p1" }, { pDirected: 0.4, pInterest: 0.2 });
+    await keepPick("u2", { kind: "comment", id: "c1" }, { pDirected: 0.3, pInterest: 0.1 });
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, { store: storeFor("u2"), writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId(byNode("postDetail.card.actionRow.stance.pending"))).toHaveTextContent(
+      /^Waiting for your (review|key)$/,
+    );
+    await openComments();
+    expect(
+      await screen.findByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.stance.pending", "c1")),
+    ).toHaveTextContent(/^Waiting for your (review|key)$/);
   });
 
   it("carries a stance control on the post and on every comment", async () => {

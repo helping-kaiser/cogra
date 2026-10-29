@@ -33,6 +33,8 @@ import { hiddenHandlers, hiddenLog, hiddenPage } from "@/test/hidden";
 import { intersect } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { fakeWriteSigner } from "@/test/registration";
+import { keepPick } from "@/lib/stance/kept-picks";
 import { stanceHandlers } from "@/test/stance";
 import {
   HISTORY_EMPTY,
@@ -294,6 +296,21 @@ function render(options: { debounce?: number } = {}) {
 }
 
 describe("History — the seen-list as a feed (History.md)", () => {
+  // ROUND 27 REGISTERS `stance.pending` on history's cards: a pick kept
+  // pending wears its waiting line under the face, by the shared control.
+  it("wears history.card and history.commentCard's actionRow.stance.pending under a kept pick", async () => {
+    await keepPick("me", { kind: "post", id: "p1" }, { pDirected: 0.4, pInterest: 0.2 });
+    await keepPick("me", { kind: "comment", id: "c1" }, { pDirected: 0.3, pInterest: 0.1 });
+    serveHistory(() => page(ALL));
+    renderWithProviders(<HistoryScreen searchDebounceMs={0} />, { store: signedIn(), writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId(byNode("history.card.actionRow.stance.pending", "p1"))).toHaveTextContent(
+      /^Waiting for your (review|key)$/,
+    );
+    expect(await screen.findByTestId(byNode("history.commentCard.actionRow.stance.pending", "c1"))).toHaveTextContent(
+      /^Waiting for your (review|key)$/,
+    );
+  });
+
   it("history_is_a_feed_of_every_kind_each_as_its_own_feed_card_newest_seen_first", async () => {
     // History.md:3, :19, :21, :23.
     serveHistory(() => page(ALL));

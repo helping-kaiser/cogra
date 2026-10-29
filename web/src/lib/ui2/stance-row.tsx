@@ -70,6 +70,7 @@ export function StanceValue({
 export function StanceRow({
   name,
   handle,
+  opens = handle,
   src = null,
   redacted = false,
   pair,
@@ -80,10 +81,17 @@ export function StanceRow({
   testId,
 }: {
   name: string;
-  /** The handle line, and the profile the row opens; null draws a row that opens nothing. */
+  /** The handle line; null draws none. */
   handle: string | null;
+  /**
+   * The handle of the profile the row opens — the handle line's by default.
+   * A deleted account's row prints no handle and still opens its page
+   * (`StanceRow.jsx`: "The row is still a door"), so its placer names the
+   * route apart from the line. Null draws a row that opens nothing.
+   */
+  opens?: string | null;
   src?: string | null;
-  /** A deleted account: the reserved disc. */
+  /** A deleted account: the reserved disc, and the name in the system's voice. */
   redacted?: boolean;
   pair: StancePair;
   severed?: boolean;
@@ -98,12 +106,18 @@ export function StanceRow({
     <>
       <MonogramAvatar name={name} src={src} size={40} redacted={redacted} node={part(node, "avatar")} />
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-label-large" {...testAttributes(part(node, "name"))}>
+        {/* A DELETED ACCOUNT'S NAME speaks in the system's voice,
+            `text-secondary` (`StanceRow.jsx`; `ActorChip`'s law), and stands
+            alone: printing a handle would invent one the reader could try. */}
+        <span
+          className={`truncate text-label-large ${redacted ? "text-on-surface-variant" : ""}`}
+          {...testAttributes(part(node, "name"))}
+        >
           {name}
         </span>
         {/* The master sets the handle's size and leading alone: the
             label-small ROLE would bring its 500 weight, which is the name's. */}
-        {handle !== null && (
+        {handle !== null && !redacted && (
           <span
             className="truncate text-[length:var(--text-label-small)] [line-height:var(--text-label-small--line-height)] text-on-surface-variant"
             {...testAttributes(part(node, "handle"))}
@@ -122,16 +136,17 @@ export function StanceRow({
   );
   const className =
     "cg-state cg-focus box-border flex min-h-14 w-full items-center gap-3 border-0 bg-transparent px-4 py-1.5 text-left font-sans text-on-surface no-underline";
-  if (handle === null) {
+  if (opens === null) {
     return (
       <div className={className} {...testAttributes(node, testId)}>
         {inner}
       </div>
     );
   }
+  const path = `/u/${encodeURIComponent(opens)}`;
   return (
     <Link
-      href={from === undefined ? `/u/${handle}` : `/u/${handle}?from=${encodeURIComponent(from)}`}
+      href={from === undefined ? path : `${path}?from=${encodeURIComponent(from)}`}
       onClick={onOpen}
       className={className}
       {...testAttributes(node, testId)}
