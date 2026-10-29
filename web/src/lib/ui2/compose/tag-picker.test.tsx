@@ -105,6 +105,8 @@ describe("TagPicker", () => {
     expect(rowNames()).toEqual(["saltmaps", "saltcrust"]);
     const first = screen.getAllByTestId(byNode("tagPicker.tag"))[0]!;
     expect(within(first).getByText("Signs as #saltmaps")).toBeInTheDocument();
+    // The mark node is the 32px tile itself, its ground and corner (TagPicker's `tag.mark`).
+    expect(within(first).getByTestId(byNode("tagPicker.tag.mark", "saltmaps")).style.width).toBe("32px");
   });
 
   it("follows the name as it is typed", async () => {

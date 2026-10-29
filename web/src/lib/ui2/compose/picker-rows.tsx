@@ -49,11 +49,13 @@ function PickerMark({
   node?: DataNode;
 }) {
   return (
-    <span className="flex flex-none" {...testAttributes(node)}>
+    // The node is the TILE itself (TagPicker, ReferencePicker: the 32px mark
+    // with its ground and its corner), never a box around it.
+    <span className="flex flex-none">
       {kind === "person" ? (
-        <MonogramAvatar name={name} src={src} size={32} />
+        <MonogramAvatar name={name} src={src} size={32} node={node} />
       ) : (
-        <NodeMark kind={kind} src={src} onCard={onCard} />
+        <NodeMark kind={kind} src={src} onCard={onCard} node={node} />
       )}
     </span>
   );
