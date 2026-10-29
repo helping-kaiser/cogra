@@ -220,7 +220,7 @@ class NotificationsScreenTest {
     fun `the empty list names the kinds with no action and no error colour`() {
         render(NotificationsUiState(loading = false))
         compose.onNodeWithText(NOTIFICATIONS_EMPTY).assertIsDisplayed()
-        assertThat(compose.onAllNodesWithTag("notifications_retry").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithTag("notifications.list.fault.retry").fetchSemanticsNodes()).isEmpty()
     }
 
     @Test
@@ -228,7 +228,7 @@ class NotificationsScreenTest {
         var retried = 0
         render(NotificationsUiState(loading = false, failed = true), onRetry = { retried += 1 })
         compose.onNodeWithText("Can't reach the server. Check your connection and try again.").assertIsDisplayed()
-        compose.onNodeWithTag("notifications_retry").performClick()
+        compose.onNodeWithTag("notifications.list.fault.retry").performClick()
         assertThat(retried).isEqualTo(1)
     }
 
@@ -240,7 +240,7 @@ class NotificationsScreenTest {
             onLoadMore = { asked += 1 },
         )
         compose.onNodeWithText("Couldn't load more").assertIsDisplayed()
-        compose.onNodeWithTag("notifications_more_retry").performClick()
+        compose.onNodeWithTag("notifications.list.moreFault.retry").performClick()
         assertThat(asked).isAtLeast(1)
     }
 

@@ -152,8 +152,9 @@ internal fun PostBody(
      * The card's data-node on a registered screen (`feed.card`): the words,
      * the description, the opener and the gallery then wear its `body`,
      * `description`, `opener` and `media` parts in place of the
-     * [testTagPrefix] tags. The veil and the removal placeholder are not
-     * drawn on a registered board, so they keep theirs.
+     * [testTagPrefix] tags, and a removed body its `removalMark`
+     * (`postDetail.card.removalMark`, Removed). The veil is not drawn on a
+     * registered board, so it keeps its tag.
      */
     node: DataNode? = null,
     /**
@@ -164,7 +165,7 @@ internal fun PostBody(
     wordsClampLines: Int = TEXT_BODY_CLAMP_LINES,
 ) {
     if (removal != null || isRemoved(content, attachments, attachmentsStatus)) {
-        RemovedBody(removal, moderation, surface, testTagPrefix, modifier)
+        RemovedBody(removal, moderation, surface, testTagPrefix, modifier, node)
         return
     }
 
@@ -445,6 +446,7 @@ private fun RemovedBody(
     surface: BodySurface,
     testTagPrefix: String,
     modifier: Modifier,
+    node: DataNode?,
 ) {
     val reason = removalReason(removal, moderation)
     // A comment's mark swaps the noun in the author's second line
@@ -456,6 +458,7 @@ private fun RemovedBody(
         timestamp = removal?.let { ageLadder(it.at, Instant.now()) },
         note = if (commentNote) stringResource(R.string.content_removed_comment_note) else null,
         testTag = "${testTagPrefix}_removed",
+        node = node?.div("removalMark"),
     )
 }
 

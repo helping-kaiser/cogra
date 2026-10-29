@@ -88,12 +88,12 @@ class CommentEditTest {
     fun theEditDrawsTheWholeCommentOnOneScreen() {
         compose.setContent { Edit(edited()) }
 
-        compose.onNodeWithTag("comment_edit_caption").assertIsDisplayed()
-        compose.onNodeWithTag("comment_edit_body").assertIsDisplayed()
-        compose.onNodeWithTag("comment_edit_add").assertExists()
-        compose.onNodeWithTag("comment_edit_license").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("comment_edit_acts_footer").assertIsDisplayed()
-        compose.onNodeWithTag("comment_edit_sign").assertIsDisplayed()
+        compose.onNodeWithTag("commentEdit.target").assertIsDisplayed()
+        compose.onNodeWithTag("commentEdit.words.input").assertIsDisplayed()
+        compose.onNodeWithTag("commentEdit.pictures.add").assertExists()
+        compose.onNodeWithTag("commentEdit.facts.license").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("commentEdit.acts.line").assertIsDisplayed()
+        compose.onNodeWithTag("commentEdit.sign").assertIsDisplayed()
     }
 
     /**
@@ -105,8 +105,8 @@ class CommentEditTest {
     fun theEditDrawsTheSensitiveRowBesideTheLockedLicense() {
         compose.setContent { Edit(edited()) }
 
-        compose.onNodeWithTag("comment_edit_sensitive").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("comment_edit_sensitive_action").assertExists()
+        compose.onNodeWithTag("commentEdit.facts.sensitive").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("commentEdit.facts.sensitive.action").assertExists()
     }
 
     /** Mark opens the one sensitive sheet, at this surface's tags. */
@@ -114,7 +114,7 @@ class CommentEditTest {
     fun markOpensTheSensitiveSheet() {
         compose.setContent { Edit(edited()) }
 
-        compose.onNodeWithTag("comment_edit_sensitive_action").performScrollTo().performClick()
+        compose.onNodeWithTag("commentEdit.facts.sensitive.action").performScrollTo().performClick()
 
         assertThat(sensitiveOpens).isEqualTo(1)
     }
@@ -141,7 +141,7 @@ class CommentEditTest {
     fun theLicenseIsShownLocked() {
         compose.setContent { Edit(edited()) }
 
-        compose.onNodeWithTag("comment_edit_license").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("commentEdit.facts.license").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("comment_edit_license_action").assertDoesNotExist()
     }
 
@@ -150,7 +150,7 @@ class CommentEditTest {
     fun theEditCarriesTheEditingHelp() {
         compose.setContent { Edit(edited()) }
 
-        compose.onNodeWithTag("comment_edit_header_help").performClick()
+        compose.onNodeWithTag("commentEdit.header.help").performClick()
 
         assertThat(helps).containsExactly(HelpTopic.Editing)
     }
@@ -160,7 +160,7 @@ class CommentEditTest {
     fun addOpensThePlatformPicker() {
         compose.setContent { Edit(edited()) }
 
-        compose.onNodeWithTag("comment_edit_add").performClick()
+        compose.onNodeWithTag("commentEdit.pictures.add").performClick()
 
         assertThat(pickerOpens).isEqualTo(1)
     }
@@ -170,8 +170,8 @@ class CommentEditTest {
     fun theTrayRemovesAndDescribes() {
         compose.setContent { Edit(edited().copy(gallery = EditGallery.of(listOf(kept())))) }
 
-        compose.onNodeWithTag("comment_edit_tray_0_remove").performClick()
-        compose.onNodeWithTag("comment_edit_describe_counter").performClick()
+        compose.onNodeWithTag("commentEdit.pictures.thumb.remove").performClick()
+        compose.onNodeWithTag("commentEdit.pictures.describeRow.describe").performClick()
 
         assertThat(removals).containsExactly(0)
         assertThat(describes).isEqualTo(1)
@@ -182,7 +182,7 @@ class CommentEditTest {
     fun theActsFooterOpensTheSheet() {
         compose.setContent { Edit(edited()) }
 
-        compose.onNodeWithTag("comment_edit_acts_footer").performClick()
+        compose.onNodeWithTag("commentEdit.acts.line").performClick()
 
         assertThat(actsOpens).isEqualTo(1)
     }
@@ -211,8 +211,8 @@ class CommentEditTest {
         compose.setContent { Edit(untouched()) }
 
         compose.onNodeWithText("Nothing to sign yet").assertIsDisplayed()
-        compose.onNodeWithTag("comment_edit_acts_footer").assertHasNoClickAction()
-        compose.onNodeWithTag("comment_edit_sign").assertIsDisplayed().assertIsNotEnabled()
+        compose.onNodeWithTag("commentEdit.acts.line").assertHasNoClickAction()
+        compose.onNodeWithTag("commentEdit.sign").assertIsDisplayed().assertIsNotEnabled()
     }
 
     /** A tag the comment carried, taken off, reads back under its block with Undo. */
@@ -223,7 +223,7 @@ class CommentEditTest {
             Edit(untouched().copy(tagSection = TagSectionState(tags = emptyList(), loaded = listOf(loaded))))
         }
 
-        compose.onNodeWithTag("comment_edit_withdrawn_tag_glovebox").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("commentEdit.tags.withdrawn").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Withdrawn: #glovebox").assertExists()
         compose.onNodeWithText("You're signing 1 thing").assertExists()
     }
@@ -233,7 +233,7 @@ class CommentEditTest {
     fun theEditSigns() {
         compose.setContent { Edit(edited()) }
 
-        compose.onNodeWithTag("comment_edit_sign").assertIsEnabled().performClick()
+        compose.onNodeWithTag("commentEdit.sign").assertIsEnabled().performClick()
 
         assertThat(signs).isEqualTo(1)
     }
@@ -243,7 +243,7 @@ class CommentEditTest {
     fun anUntouchedEditCannotSign() {
         compose.setContent { Edit(untouched()) }
 
-        compose.onNodeWithTag("comment_edit_sign").assertIsNotEnabled()
+        compose.onNodeWithTag("commentEdit.sign").assertIsNotEnabled()
     }
 
     /** Leaving discards — comments keep no drafts (jakob 2026-09-01). */
@@ -251,7 +251,7 @@ class CommentEditTest {
     fun theHeaderLeaves() {
         compose.setContent { Edit(edited()) }
 
-        compose.onNodeWithTag("comment_edit_header_leave").performClick()
+        compose.onNodeWithTag("commentEdit.header.leave").performClick()
 
         assertThat(leaves).isEqualTo(1)
     }
@@ -333,7 +333,9 @@ class CommentEditTest {
 
         assertThat(full.canAddPicture).isTrue()
         compose.setContent { Edit(full) }
-        compose.onNodeWithTag("comment_edit_add").assertTextContains("+ Add pictures · 4 of 4").assertIsEnabled()
+        compose.onNodeWithTag("commentEdit.pictures.add")
+            .assertTextContains("+ Add pictures · 4 of 4")
+            .assertIsEnabled()
     }
 
     /** CommentEdit.md: Sign the edit is enabled GIVEN an upload is running — a press there is held. */
@@ -344,9 +346,9 @@ class CommentEditTest {
         )
         compose.setContent { Edit(state) }
 
-        compose.onNodeWithTag("comment_edit_gate").assertExists()
+        compose.onNodeWithTag("commentEdit.gate").assertExists()
         compose.onNodeWithText("Uploading 0 of 1 — signing waits for the picture.").assertExists()
-        compose.onNodeWithTag("comment_edit_sign").assertIsEnabled()
+        compose.onNodeWithTag("commentEdit.sign").assertIsEnabled()
     }
 
     /** CommentEdit.md: a failed picture marks its tile, lines the pictures, and disables Sign. */
@@ -358,9 +360,9 @@ class CommentEditTest {
         compose.onNodeWithTag("comment_edit_upload_error")
             .assertTextContains("One picture didn't upload.", substring = true)
             .assertTextContains("Remove it", substring = true)
-        compose.onNodeWithTag("comment_edit_gate")
+        compose.onNodeWithTag("commentEdit.gate")
             .assertTextContains("One picture didn't upload. Signing waits for it.", substring = true)
-        compose.onNodeWithTag("comment_edit_sign").assertIsNotEnabled()
+        compose.onNodeWithTag("commentEdit.sign").assertIsNotEnabled()
     }
 
     /** A fifth picture, refused in the copy-voice line under the pictures. */
@@ -405,7 +407,7 @@ class CommentEditTest {
         compose.onNodeWithText("You can't sign right now").assertExists()
         compose.onNodeWithText(EDIT_WRITE_RULE_FACT).assertExists()
         compose.onNodeWithText("Retry").assertDoesNotExist()
-        compose.onNodeWithTag("comment_edit_sign").assertDoesNotExist()
+        compose.onNodeWithTag("commentEdit.sign").assertDoesNotExist()
         compose.onNodeWithTag("comment_edit_not_now").performClick()
         assertThat(notNow).isEqualTo(1)
     }
@@ -455,8 +457,8 @@ class CommentEditTest {
 
         compose.onNodeWithText("Video").assertExists()
         compose.onNodeWithText("Describe the video").assertExists()
-        compose.onNodeWithTag("comment_edit_change_cover").assertTextContains("Change the cover")
-        compose.onNodeWithTag("comment_edit_add").assertDoesNotExist()
+        compose.onNodeWithTag("commentEdit.cover.change").assertTextContains("Change the cover")
+        compose.onNodeWithTag("commentEdit.pictures.add").assertDoesNotExist()
         // No "a video is the whole comment" line: the labelled fields say it.
         compose.onNodeWithText("A video is the whole", substring = true).assertDoesNotExist()
         compose.onNodeWithContentDescription("Remove this video").performClick()
@@ -467,9 +469,9 @@ class CommentEditTest {
     fun aClipWithNoCoverShowsAddACoverAndNoPicture() {
         compose.setContent { Edit(edited().copy(gallery = EditGallery.of(listOf(fakeUpload("v1"))))) }
 
-        compose.onNodeWithTag("comment_edit_add_cover").assertTextContains("Add a cover")
-        compose.onNodeWithTag("comment_edit_cover").assertDoesNotExist()
-        compose.onNodeWithTag("comment_edit_cover_note").assertDoesNotExist()
+        compose.onNodeWithTag("commentEdit.cover.add").assertTextContains("Add a cover")
+        compose.onNodeWithTag("commentEdit.cover.thumb").assertDoesNotExist()
+        compose.onNodeWithTag("commentEdit.cover.note").assertDoesNotExist()
     }
 
     @Test
@@ -478,9 +480,9 @@ class CommentEditTest {
             .withNewCover(PickedAsset("face.jpg", upload = AssetUpload.Running))
         compose.setContent { Edit(edited().copy(gallery = gallery)) }
 
-        compose.onNodeWithTag("comment_edit_gate").assertExists()
+        compose.onNodeWithTag("commentEdit.gate").assertExists()
         compose.onNodeWithText("Uploading 0 of 1 — signing waits for the cover.").assertExists()
-        compose.onNodeWithTag("comment_edit_sign").assertIsEnabled()
+        compose.onNodeWithTag("commentEdit.sign").assertIsEnabled()
     }
 
     /** CoverCrop.md: the comment's crop is locked to the square, no chips; its X is the edit's own. */
@@ -497,7 +499,7 @@ class CommentEditTest {
 
         compose.onNodeWithText("The cover").assertExists()
         compose.onNodeWithText("The cover takes the video's shape.").assertExists()
-        compose.onNodeWithTag("comment_edit_crop_shapes").assertDoesNotExist()
+        compose.onNodeWithTag("composeCrop.shapes").assertDoesNotExist()
         compose.onNodeWithContentDescription(COMMENT_EDIT_LEAVE_LABEL).performClick()
         assertThat(leaves).isEqualTo(1)
     }

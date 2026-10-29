@@ -13,7 +13,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.R
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Space
 
 /**
@@ -79,13 +81,18 @@ fun EmptyState(
     onAction: (() -> Unit)? = null,
     /** The registered state (`profile.chronicle.empty`): [testTag] is its tag, and the title wears `.title`. */
     registered: Boolean = false,
+    /**
+     * The registered state as a node, where the board keys it (`yourTopics.empty`
+     * keyed `empty`): it replaces [testTag], and its title wears the bare `title`.
+     */
+    node: DataNode? = null,
 ) {
     Column(
         // Merged, so the tag names one unit for a test to assert on — the
         // title's own text and, once there is one, the action's — rather
         // than a bare container a text assertion can't see into.
         modifier = modifier
-            .testTag(testTag)
+            .testTag(node?.tag ?: testTag)
             .semantics(mergeDescendants = true) {}
             // The master's own `8 0` (`EmptyState.jsx`).
             .padding(vertical = Space.x2),
@@ -95,7 +102,11 @@ fun EmptyState(
             text = title,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = if (registered) Modifier.testTag("$testTag.title") else Modifier,
+            modifier = when {
+                node != null -> Modifier.dataNode(node / "title")
+                registered -> Modifier.testTag("$testTag.title")
+                else -> Modifier
+            },
         )
         when {
             action != null -> action()

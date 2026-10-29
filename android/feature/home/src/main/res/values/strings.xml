@@ -2,9 +2,9 @@
 <resources>
     <string name="home_title">CoGra</string>
     <string name="home_greeting">Hello, @%1$s</string>
-    <string name="home_husk_title">Your key isn\'t on this phone</string>
-    <string name="home_husk_body">Restore it with your recovery code to post, vouch, and act.</string>
-    <string name="home_husk_restore">Restore with recovery code</string>
+    <string name="home_husk_title">Your key isn\'t in this app</string>
+    <string name="home_husk_body">Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending.</string>
+    <string name="home_husk_restore">Restore the key</string>
     <string name="home_actor_restored">Your actor is back on this phone.</string>
     <!-- The vouch card (VouchBack.md:5-11, :37-41; copy-voice.md, the
          applicant remainder). The web's twin is `lib/vouch/vouch-back.ts`. -->

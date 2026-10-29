@@ -612,8 +612,8 @@ private fun LazyListScope.resultItem(item: ResultItem, doors: ExploreDoors, acti
             }
         }
         is ResultItem.Seam -> item(key = "seam-${item.section}") {
-            // The registry names the seam unkeyed (nodes.json `explore.seam`); each section stands its own.
-            Seam(stringResource(R.string.explore_seam), node = EXPLORE / "seam")
+            // Each section stands its own seam, keyed by the section (nodes.json `explore.seam`).
+            Seam(stringResource(R.string.explore_seam), node = (EXPLORE / "seam").keyed(item.section.name.lowercase()))
         }
         is ResultItem.Row -> item(key = "row-${item.kind}-${item.id}") {
             ReferenceRow(
