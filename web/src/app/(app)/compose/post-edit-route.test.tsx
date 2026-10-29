@@ -730,6 +730,13 @@ describe("PostEditRoute — the body (EditWords, EditPicked)", () => {
     draw();
     expect(await screen.findByTestId("postEdit.body.words.input")).toHaveValue("Old body");
     expect(screen.queryByTestId("postEdit.description.input")).not.toBeInTheDocument();
+    // EditWords: the words are the body and take the room — `WordsBody` at flex 1,
+    // 12px inside its edge, labelled as the body.
+    const box = screen.getByTestId("postEdit.body.words.input");
+    expect(box).toHaveAccessibleName("What do you want to publish?");
+    expect(box.className).toContain("flex-1");
+    expect(box.className).toContain("p-3");
+    expect(screen.getByTestId("postEdit.body").className).toContain("flex-1");
     expect(screen.getByText("A post’s body is words or media, never both.")).toBeInTheDocument();
   });
 

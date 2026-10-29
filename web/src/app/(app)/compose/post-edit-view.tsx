@@ -36,7 +36,7 @@
 // chip-keyed states (`postEdit.sign` under `none`/`slow`/`failed`) once per
 // value; the web shows one at a time, so those nodes carry no key.
 
-import { useRef, type ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
@@ -47,7 +47,7 @@ import { FactRow } from "@/lib/ui2/fact-row";
 import { InlineAction } from "@/lib/ui2/inline-action";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { QuietNote } from "@/lib/ui2/quiet-note";
-import { TextField } from "@/lib/ui2/text-field";
+import { countReading, FieldCount, TextField } from "@/lib/ui2/text-field";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { DescribeCounter, PickedRow, type PickedThumb } from "@/lib/ui2/compose/picked-row";
 import { RefusedFileRow } from "@/lib/ui2/compose/refused-file";
@@ -333,19 +333,11 @@ export function PostEditView({
             </QuietNote>
           </div>
         ) : (
-          <div className="flex flex-col gap-1.5" {...testAttributes(BODY)}>
-            <TextField
-              label="What do you want to publish?"
-              value={state.words}
-              onChange={onWords}
-              multiline
-              rows={6}
-              cap={BODY_MAX_CHARS}
-              error={wordsProblem(state.words) ?? undefined}
-              testId="post-edit-words"
-              labelNode={part(BODY, "label")}
-              boxNode={part(BODY, "words")}
-            />
+          // THE WORDS ARE THE BODY, AND THE BODY TAKES THE ROOM (EditWords:
+          // `WordsBody` at flex 1, as the composer's words stage draws it) — the
+          // post, not a field on a form.
+          <div className="flex min-h-0 flex-1 flex-col gap-1.5" {...testAttributes(BODY)}>
+            <WordsField words={state.words} onWords={onWords} />
             <Refusals refusals={refusals} onDismiss={onDismissRefusal} />
             <AddControl
               label="+ Add pictures or a video"
@@ -489,7 +481,9 @@ export function PostEditView({
           />
         </div>
 
-        <div className="flex-1" />
+        {/* A media body stands at its own height and the foot keeps the
+            screen's bottom; a words body takes the slack itself. */}
+        {media && <div className="flex-1" />}
 
         {refusal && (
           <p role="alert" data-testid="post-edit-refused" className="m-0 text-body-medium text-error">
@@ -557,6 +551,47 @@ export function PostEditView({
         )}
       </div>
     </main>
+  );
+}
+
+/**
+ * The words body (`WordsBody`, EditWords' `body.words`): the label, then the
+ * one box filling the room, 12px inside its edge, and the supporting row —
+ * the late counter and the cap's refusal — under it.
+ */
+function WordsField({ words, onWords }: { words: string; onWords: (words: string) => void }) {
+  const id = useId();
+  const problem = wordsProblem(words);
+  const errorId = `${id}-error`;
+  return (
+    <>
+      <label htmlFor={id} className="text-label-large" {...testAttributes(part(BODY, "label"))}>
+        What do you want to publish?
+      </label>
+      <div className="flex min-h-40 flex-1 flex-col gap-1" {...testAttributes(part(BODY, "words"))}>
+        <textarea
+          id={id}
+          value={words}
+          onChange={(event) => onWords(event.target.value)}
+          aria-invalid={problem ? true : undefined}
+          aria-describedby={problem ? errorId : undefined}
+          {...testAttributes(part(BODY, "words.input"))}
+          className={`min-h-0 flex-1 resize-none rounded-extra-small border bg-transparent p-3 text-body-large text-on-surface ${
+            problem ? "border-error" : "border-outline"
+          }`}
+        />
+        {(problem !== null || countReading(words, BODY_MAX_CHARS)) && (
+          <div className="flex items-baseline gap-2">
+            {problem !== null && (
+              <p id={errorId} role="alert" className="m-0 text-body-small text-error">
+                {problem}
+              </p>
+            )}
+            <FieldCount value={words} cap={BODY_MAX_CHARS} />
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
