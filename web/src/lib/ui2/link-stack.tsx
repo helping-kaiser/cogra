@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
 import { BUTTON_CLASS } from "@/lib/ui/button";
 
 /** The text button with its padding dropped and its label at the start. */
-export const LINK_ROW = `${BUTTON_CLASS} box-border inline-flex min-h-10 w-full items-center justify-start gap-2 rounded-full border border-solid border-transparent py-[9px] text-label-large text-primary`;
+export const LINK_ROW = `${BUTTON_CLASS} box-border inline-flex min-h-10 w-full items-center justify-start gap-2 rounded-full border border-solid border-transparent p-0 text-label-large text-primary`;
 
 export function LinkStack({ children }: { children: ReactNode }) {
   return <div className="mt-6 flex flex-col">{children}</div>;
