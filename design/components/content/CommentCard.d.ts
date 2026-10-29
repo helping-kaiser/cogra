@@ -55,6 +55,16 @@ export interface CommentCardProps {
   showStance?: boolean;
   /** Fires when a stance on this comment is signed. */
   onCommit?: (pick: import("../stance/StanceReadout").StancePair, bundle: StanceBundle) => void;
+  /**
+   * A pick kept pending with the key elsewhere — `PostCard`'s prop of the same
+   * name. Pass-through to `StanceControl`'s `pendingPick`.
+   */
+  stancePendingPick?: { pDirected: number; pInterest: number };
+  /**
+   * The key is back and the kept picks' review waits unsigned. Pass-through
+   * to `StanceControl`'s `pendingReview`.
+   */
+  stancePendingReview?: boolean;
   onReply?: () => void;
   onEdit?: () => void;
   /** The viewer authored this comment, so the edit affordance shows. */

@@ -83,6 +83,12 @@ export function CommentCard({
      three opinion faces would be drawing one fact three times. */
   showStance = true,
   onCommit,
+  /* A PICK KEPT PENDING ON THE COMMENT — `PostCard`'s `stancePendingPick` and
+     `stancePendingReview`, passed through to `StanceControl` the same way, so
+     the control's `pending` line stands on a comment as it does on a post
+     (round 27, seam 252). Additive: absent, the card renders as before. */
+  stancePendingPick,
+  stancePendingReview,
   onReply,
   onEdit,
   own = false,
@@ -388,7 +394,7 @@ export function CommentCard({
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }} data-node={node && "actionRow"}>
           {/* Owned by the shell — see PostCard. Named as PostCard names its
               row (seam 248): `stance`, `score`, `reply`, `share`. */}
-          {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} node={node && "stance"} />}
+          {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} pendingPick={stancePendingPick} pendingReview={stancePendingReview} node={node && "stance"} />}
           {score !== undefined && (
             <ExplainableNumber glyph="graph" label="Feed score" value={score} onOpenDetail={onOpenScore ?? (() => {})} node={node && "score"} />
           )}
