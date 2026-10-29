@@ -283,8 +283,10 @@ describe("ProfilePosts — the posts view (ProfilePosts.md)", () => {
     servePosts({ "": { posts: [adas("p2"), adas("p1")], next: null } });
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
     await openPostsTab();
-    expect(screen.getByTestId(byNode("profile.posts.card.actionRow.score", "p2"))).toHaveTextContent("15.20");
-    expect(screen.getByTestId(byNode("profile.posts.card.actionRow.score", "p1"))).toHaveTextContent("—");
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("profile.posts.card.actionRow.score.value", "p2"))).toHaveTextContent("15.20"),
+    );
+    expect(screen.getByTestId(byNode("profile.posts.card.actionRow.score.value", "p1"))).toHaveTextContent("—");
   });
 
   it("a_cards_feed_score_opens_its_trace_back_to_the_profile_or_back_to_your_profile", async () => {
