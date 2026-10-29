@@ -67,6 +67,7 @@ export function WaitingCommit({
   onCommit,
   node,
   type = "submit",
+  testId,
 }: {
   label: string;
   busyLabel: string;
@@ -79,6 +80,8 @@ export function WaitingCommit({
   onCommit?: () => void;
   node?: DataNode;
   type?: "submit" | "button";
+  /** The commit's own test id, on a screen that registers no node. */
+  testId?: string;
 }) {
   const id = useId();
   const slow = useSlowAnswer(busy);
@@ -112,7 +115,7 @@ export function WaitingCommit({
           onCommit?.();
         }}
         className={`${buttonClassName({ variant: "primary" })} w-full`}
-        {...testAttributes(part(node, "action"))}
+        {...testAttributes(part(node, "action"), testId)}
       >
         {slow ? busyLabel : label}
       </button>

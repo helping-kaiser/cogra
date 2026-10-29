@@ -30,9 +30,9 @@ import { useActiveAccountId } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
-import { Icon } from "@/lib/ui/icons";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { AddressCard } from "@/lib/ui2/address-card";
+import { TaskCard } from "@/lib/ui2/task-card";
 
 export const COPY_YOUR_ASK_LINK = "Copy your ask link";
 export const YOUR_ASK_LINK = "Your ask link";
@@ -156,25 +156,12 @@ export function ApplicationCard({
   const words = WAITING[surface];
 
   return (
-    <section
-      {...testAttributes(node)}
-      className="flex flex-none flex-col gap-3 rounded-medium p-4"
-      // `TaskCard` (ApplicantWaiting.jsx, ApplicantRejected.jsx): the task
-      // ring around the card's ground — the feed card's tone while waiting,
-      // the account-notice olive once closed, every ink then the panel's own.
-      style={taskCardStyle(closed)}
+    <TaskCard
+      tone={closed ? "notice" : undefined}
+      title={closed ? closedTitle(card.approver) : words.title(card.approver)}
+      body={closed ? closedBody(card.approver) : words.body}
+      node={node}
     >
-      <div className="flex items-start justify-between gap-3">
-        <h2 {...testAttributes(part(node, "title"))} className="m-0 text-title-medium">
-          {closed ? closedTitle(card.approver) : words.title(card.approver)}
-        </h2>
-        <span className="flex-none text-primary">
-          <Icon name="mark" size={20} pickColor="var(--primary-container)" />
-        </span>
-      </div>
-      <p {...testAttributes(part(node, "body"))} className="m-0 text-body-medium text-on-surface-variant">
-        {closed ? closedBody(card.approver) : words.body}
-      </p>
       <AddressCard
         bare
         address={url}
@@ -202,32 +189,6 @@ export function ApplicationCard({
         token={copied?.token}
         onDismiss={dismissCopied}
       />
-    </section>
+    </TaskCard>
   );
-}
-
-/**
- * `TaskCard`'s ground under the task ring: the feed card's tone, or the
- * account-notice olive — where every ink, the ask link's block and the
- * outlined button included, is scoped to the panel's own pair (the reason
- * `inverse` exists, carried to the rest; `_shared.jsx` `TaskCard`).
- */
-function taskCardStyle(notice: boolean): React.CSSProperties {
-  const ground = notice ? "var(--tertiary-container)" : "var(--surface-card)";
-  const ink = notice ? "var(--on-tertiary-container)" : "var(--on-surface)";
-  const scoped: Record<string, string> = notice
-    ? {
-        "--primary": ink,
-        "--outline": ink,
-        "--on-surface": ink,
-        "--on-surface-variant": ink,
-        "--text-secondary": ink,
-      }
-    : {};
-  return {
-    border: "var(--ring-task-width) solid transparent",
-    background: `linear-gradient(${ground}, ${ground}) padding-box, var(--ring-task) border-box`,
-    color: ink,
-    ...scoped,
-  };
 }

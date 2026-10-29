@@ -17,7 +17,7 @@ import { fetchSettingsAccount } from "@/lib/api/settings-api";
 import { useAuthGuard } from "@/lib/session/runtime";
 import type { DataNode } from "@/lib/ui/data-node";
 
-import { TaskPage } from "../../task-page";
+import { TaskPage } from "@/lib/ui2/task-page";
 import { EmailRequestForm } from "../email-request-form";
 
 const NODE: DataNode = { path: "changeEmail" };

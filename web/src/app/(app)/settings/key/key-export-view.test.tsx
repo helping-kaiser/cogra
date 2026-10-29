@@ -43,18 +43,11 @@ function renderExport({
 }
 
 describe("KeyExportView", () => {
-  it("shows nothing until the reveal is asked for", async () => {
-    renderExport({ seed: new Uint8Array(32) });
-    await screen.findByTestId("key_export_reveal");
-    expect(screen.queryByTestId("key_export_pem")).toBeNull();
-    expect(screen.queryByTestId("key_export_hex")).toBeNull();
-  });
-
-  it("a retained seed reveals without asking for a code", async () => {
+  // YourKey.md: a browser that still keeps the seed opens the key, asking nothing first.
+  it("a retained seed reveals at once without asking for a code", async () => {
     const { backup } = renderExport({ seed: new Uint8Array(32) });
     expect(screen.queryByTestId("key_export_code")).toBeNull();
-
-    fireEvent.click(await screen.findByTestId("key_export_reveal"));
+    expect(screen.queryByTestId("key_export_reveal")).toBeNull();
 
     expect(await screen.findByTestId("key_export_pem")).toHaveTextContent("BEGIN PRIVATE KEY");
     expect(screen.getByTestId("key_export_hex")).toHaveTextContent("d4ee72db");
@@ -76,12 +69,15 @@ describe("KeyExportView", () => {
       revealFromBackup: vi.fn(() => Promise.resolve({ kind: "wrongCode" } as RevealResult)),
     });
     renderExport({ keyOnDevice: true, backup });
-    fireEvent.change(await screen.findByTestId("key_export_code"), { target: { value: "nope" } });
+    fireEvent.change(await screen.findByTestId("key_export_code"), {
+      target: { value: "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE" },
+    });
     fireEvent.click(screen.getByTestId("key_export_reveal"));
 
-    expect(await screen.findByTestId("key_export_error")).toHaveTextContent(
-      "That code doesn't open your backup",
-    );
+    // YourKeyGate.md: the field's own line, and the field keeps what was typed.
+    expect(await screen.findByText("That code doesn't check out.")).toBeInTheDocument();
+    expect(screen.getByTestId("key_export_code")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByTestId("key_export_code")).toHaveValue("AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE");
     expect(screen.queryByTestId("key_export_pem")).toBeNull();
   });
 
@@ -90,6 +86,7 @@ describe("KeyExportView", () => {
     expect(await screen.findByTestId("key_export_no_actor")).toBeInTheDocument();
     expect(screen.getByTestId("key_export_restore")).toHaveAttribute("href", "/restore");
     expect(screen.queryByTestId("key_export_reveal")).toBeNull();
+    expect(screen.getByTestId("key_export_no_actor")).toHaveTextContent("There is no key on this browser to show.");
   });
 
   it("the entered code does not linger after the reveal", async () => {
@@ -105,5 +102,68 @@ describe("KeyExportView", () => {
   it("the header returns to settings", async () => {
     renderExport({ seed: new Uint8Array(32) });
     expect(await screen.findByTestId("key_export_back")).toHaveAttribute("href", "/settings");
+  });
+
+  // YourKey.jsx: the lead, the key card with both encodings and their copies, the quiet note.
+  it("the shown key reads the drawn words and copies each encoding", async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    renderExport({ seed: new Uint8Array(32) });
+    await screen.findByTestId("key_export_pem");
+    expect(
+      screen.getByText(
+        "This key signs everything you publish, and it lives only in this browser. Store a copy somewhere safe and you keep it whatever happens to CoGra. Anyone who has a copy can act as you.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Nothing here is sent anywhere — the key is read from this browser and shown.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your actor key" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Copy the PEM block" }));
+    expect(writeText).toHaveBeenCalledWith(SECRETS[0].pem);
+    expect(await screen.findByText("Copied")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Copy the raw hex" }));
+    expect(writeText).toHaveBeenCalledWith(SECRETS[0].hex);
+  });
+
+  // YourKeyGate.jsx / .md
+  it("the gate waits for the code, and a short one answers on the field and re-checks live", async () => {
+    const { backup } = renderExport({ keyOnDevice: true });
+    expect(
+      await screen.findByText(
+        "On this browser your key is sealed inside its backup. Enter your recovery code to open it and see the key.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Waiting for your recovery code")).toBeInTheDocument();
+    expect(screen.getByTestId("key_export_reveal")).toBeDisabled();
+    fireEvent.change(screen.getByTestId("key_export_code"), { target: { value: "AAAAA" } });
+    fireEvent.click(screen.getByTestId("key_export_reveal"));
+    expect(await screen.findByText("A recovery code is 26 characters.")).toBeInTheDocument();
+    expect(backup.revealFromBackup).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByTestId("key_export_code"), { target: { value: "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE" } });
+    expect(screen.queryByText("A recovery code is 26 characters.")).not.toBeInTheDocument();
+  });
+
+  it("a gate press without an answer says so above the commit", async () => {
+    const backup = fakeBackup({
+      revealFromBackup: vi.fn(() => Promise.resolve({ kind: "failed", cause: new Error("net") } as RevealResult)),
+    });
+    renderExport({ keyOnDevice: true, backup });
+    fireEvent.change(await screen.findByTestId("key_export_code"), {
+      target: { value: "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE" },
+    });
+    fireEvent.click(screen.getByTestId("key_export_reveal"));
+    expect(await screen.findByRole("alert")).toHaveTextContent("That didn't send. Try again.");
+  });
+
+  // YourKeyAbsent.jsx / .md
+  it("with no key here the notice leads, no key card is drawn, and the paragraph names the device", async () => {
+    renderExport();
+    await screen.findByTestId("key_export_no_actor");
+    expect(screen.getByRole("button", { name: "Your key" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Your actor key" })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This key signs everything you publish, and it lives only on the device it was made on. Store a copy somewhere safe and you keep it whatever happens to CoGra. Anyone who has a copy can act as you.",
+      ),
+    ).toBeInTheDocument();
   });
 });

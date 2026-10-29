@@ -24,7 +24,7 @@ import type { DataNode } from "@/lib/ui/data-node";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
 import { WaitingCommit } from "@/lib/ui2/waiting-commit";
 
-import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE } from "../task-page";
+import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE } from "@/lib/ui2/task-page";
 
 const MALFORMED = "That doesn't look like an email address.";
 const WRONG_PASSWORD = "That password isn't right.";
