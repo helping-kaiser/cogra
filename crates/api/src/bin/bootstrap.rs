@@ -23,10 +23,11 @@ use l1_standin::{StandIn, StandInConfig};
 /// account roughly 1893 acts at the reference θ.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv().ok();
+    let dotenv = api::dotenv::read();
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
+    dotenv.report();
 
     let database_url =
         std::env::var("DATABASE_URL").context("DATABASE_URL must be set (see .env.example)")?;

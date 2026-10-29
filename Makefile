@@ -4,6 +4,10 @@ export
 # ?= so a machine-local .env can point at another compose runtime
 # (e.g. podman in a WSL toolbox — development.md "Environment Variables").
 DOCKER_COMPOSE ?= docker compose -f docker/docker-compose.yml
+# A value with spaces is double-quoted in .env, the only form dotenvy (the
+# binaries read the same file) parses; make keeps the quotes as part of the
+# value, so they are taken off the two command overrides here.
+DOCKER_COMPOSE := $(subst ",,$(DOCKER_COMPOSE))
 CARGO          = cargo
 
 # The bucket the media one-shot provisions, so `wait-media` can probe the
@@ -208,6 +212,7 @@ build: ## Build all crates
 # they are built from — the tag a deploy names (deploy/scripts/deploy.sh).
 # A dirty tree would ship code no commit names, so it refuses one.
 CONTAINER ?= podman
+CONTAINER := $(subst ",,$(CONTAINER))
 DEPLOY_REV  = $(shell git rev-parse HEAD)
 DEPLOY_TAG  = $(shell git rev-parse --short=12 HEAD)
 

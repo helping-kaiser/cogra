@@ -53,7 +53,8 @@ fn auth_config() -> anyhow::Result<AuthConfig> {
 ///
 /// `.env` is read before anything else, so a plain `cargo run` matches the
 /// make targets; real environment variables still win, because dotenvy
-/// never overrides. Every knob read here is an operational parameter
+/// never overrides. A line it cannot parse ends its read there, which is
+/// logged as soon as the subscriber is up. Every knob read here is an operational parameter
 /// documented in development.md, and each has a deployable default except
 /// where absence is itself the setting: an unset
 /// `L1_EPOCH_CLOSE_INTERVAL_SECS` leaves epochs to close on the act budget
@@ -62,10 +63,11 @@ fn auth_config() -> anyhow::Result<AuthConfig> {
 /// requirements").
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv().ok();
+    let dotenv = api::dotenv::read();
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
+    dotenv.report();
 
     let database_url =
         std::env::var("DATABASE_URL").context("DATABASE_URL must be set (see .env.example)")?;
