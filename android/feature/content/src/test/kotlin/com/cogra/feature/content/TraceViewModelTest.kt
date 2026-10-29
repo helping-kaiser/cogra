@@ -42,8 +42,7 @@ class TraceViewModelTest {
         level: TraceLevel = TraceLevel.Entry,
         settling: Boolean = false,
         origin: TraceOrigin = TraceOrigin.Feed,
-    ) =
-        TraceArgs(TraceCast.POST_ID, TraceThingKind.POST, origin, settling, TraceCast.SOL.id, cover = null, level = level)
+    ) = TraceArgs(TraceCast.POST_ID, TraceThingKind.POST, origin, settling, TraceCast.SOL.id, null, level)
 
     private fun settle() = dispatcher.scheduler.advanceUntilIdle()
 
