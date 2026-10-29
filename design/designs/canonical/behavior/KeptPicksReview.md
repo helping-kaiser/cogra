@@ -4,6 +4,8 @@ ALWAYS a kept pick is signed only from the review's own seal, together with ever
 
 ALWAYS the review lists plain opinions only
 
+ALWAYS keptPicks.announcement is a polite status message mounted at rest, saying nothing and drawing nothing until a drop
+
 ALWAYS a feeling kept on a topic's pad joins the review as a plain pick, its row reading Topic under the topic's name and its pair spoken in the Affinity pad's axis words, How much you like it and How close you want to be
 
 ALWAYS a kept vouch-back or approval never joins the review
@@ -14,7 +16,7 @@ ALWAYS a kept pick that would net its bundle to nothing states that consequence 
 
 WHEN the key is restored GIVEN picks are kept pending on this device -> the kept picks' review opens AND NEVER a kept pick is signed
 
-WHEN tap the remove control of a kept pick GIVEN more than one pick is in the review -> the pick is dropped from this device AND its row leaves the review AND the drop is announced as Removed — N picks left. AND focus moves to the next row AND NEVER a confirmation is asked AND NEVER an undo is offered
+WHEN tap the remove control of a kept pick GIVEN more than one pick is in the review -> the pick is dropped from this device AND its row leaves the review AND keptPicks.announcement says Removed — N picks left. AND focus moves to the next row AND NEVER a confirmation is asked AND NEVER an undo is offered
 
 WHEN tap the remove control of a kept pick GIVEN it is the last pick in the review -> the pick is dropped from this device AND the review closes to where it was opened from AND the snackbar reads Nothing left to sign.
 

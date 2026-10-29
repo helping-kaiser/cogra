@@ -17,3 +17,13 @@ ALWAYS yourTopics.heldTopic offers no removal of its own
 ALWAYS Your topics carries no bottom bar
 
 ALWAYS the word follow appears nowhere on Your topics
+
+ALWAYS yourTopics.empty alone reads No topics yet — say how you feel about one from its page. GIVEN the reader holds no topic
+
+ALWAYS a topic the reader holds whose name was removed stands as yourTopics.redactedTopic in its place in the order, keeping its mark and its Affinity pair, yourTopics.redactedTopic.name reading Removed under the platform's rules in the system's voice
+
+WHEN tap yourTopics.redactedTopic -> NEVER anything opens
+
+ALWAYS yourTopics.redactedTopic counts toward the held count on Explore's door, as every yourTopics.heldTopic does
+
+ALWAYS Your topics lists the topics the reader holds, never the ones the borrowed view's account holds, GIVEN the feed borrows a view

@@ -1818,7 +1818,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: 'aria-label="Share ', tag: "button", all: true },
     { n: 10, find: ">See all profiles</button>", tag: "button" },
     { n: 11, find: ">Low tide at six tomorrow", tag: "a", all: true },
-    { n: 11, find: ">Salt maps of the coast road", tag: "a" },
+    // #midsummer's empty face (seam 248): the card's door is its one line.
+    { n: 11, find: ">Nothing carries this tag right now.", tag: "a" },
     { n: 12, find: 'aria-label="Give your opinion on #', tag: "button", all: true },
     { n: 12, find: ">Choose your opinion on #", tag: "button", all: true },
     { n: 13, find: 'aria-label="Tag a new post with it"', tag: "button", all: true },

@@ -15,3 +15,5 @@ ALWAYS a citing row still settling says so
 WHEN tap a citing comment's row -> the thread opens on the post the comment answers
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND the post stands open beneath it as it was
+
+ALWAYS postDetail.citedBySheet.empty alone reads Nothing cites this yet — yours would be the first. GIVEN the sheet's read finds nothing citing the post, as when the count it was opened from has gone stale

@@ -107,6 +107,11 @@ export function Screen() {
             <StagedReference key={pick.name} {...pick} stance axisNames={pick.kind === "topic" ? AFFINITY_AXES : undefined} onRemove={() => {}} node="pick" nodeKey={String(index + 1)} />
           ))}
         </div>
+        {/* THE SPOKEN DROP'S REGION (seam 248): the pickers' polite status
+            message, mounted whether or not it has anything to say, so the ×'s
+            `Removed — 2 picks left.` reaches an ear (copy-voice, the kept
+            picks' rulings). At rest it says nothing and draws nothing. */}
+        <PickAnnouncement node="announcement" />
         <div style={{ flex: 1 }} />
         <Button style={{ width: "100%" }} node="sign">Sign them</Button>
       </div>
