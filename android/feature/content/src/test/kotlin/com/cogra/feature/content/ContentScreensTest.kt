@@ -748,7 +748,7 @@ class ContentScreensTest {
             },
         )
         compose.onNodeWithTag("key_banner").assertExists()
-        compose.onNodeWithTag("post_edit_sign").assertDoesNotExist()
+        compose.onNode(isNode("postEdit.sign")).assertDoesNotExist()
     }
 
     /**
@@ -776,20 +776,20 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("post_edit_picked").performScrollTo().assertExists()
-        compose.onNodeWithTag("post_edit_body_rule").performScrollTo().assertExists()
-        compose.onNodeWithTag("post_edit_description").performScrollTo().assertExists()
-        compose.onNodeWithTag("post_edit_words").assertDoesNotExist()
+        compose.onNode(isNode("postEdit.body.mediaRow")).performScrollTo().assertExists()
+        compose.onNodeWithTag("postEdit.body.rule").performScrollTo().assertExists()
+        compose.onNodeWithTag("postEdit.description.input").performScrollTo().assertExists()
+        compose.onNodeWithTag("postEdit.body.words.input").assertDoesNotExist()
     }
 
     /** EditWords.md:7 — a words post keeps its field, and carries no description field. */
     @Test
     fun theWordsEditCarriesATitleAndNoDescriptionField() {
         renderComposer(PostEditUiState(postId = "p1", body = "Salt maps", description = "left over"))
-        compose.onNodeWithTag("post_edit_words").assertExists()
-        compose.onNodeWithTag("post_edit_title").assertExists()
-        compose.onNodeWithTag("post_edit_description").assertDoesNotExist()
-        compose.onNodeWithTag("post_edit_picked").assertDoesNotExist()
+        compose.onNodeWithTag("postEdit.body.words.input").assertExists()
+        compose.onNodeWithTag("postEdit.title.input").assertExists()
+        compose.onNodeWithTag("postEdit.description.input").assertDoesNotExist()
+        compose.onNode(isNode("postEdit.body.mediaRow")).assertDoesNotExist()
     }
 
     /** EditWords.md: past 5,000 characters the board's own line stands under the body. */
@@ -797,7 +797,7 @@ class ContentScreensTest {
     fun theWordsCapLineStandsUnderTheBody() {
         renderComposer(PostEditUiState(postId = "p1", body = "x".repeat(5001), recordStaged = true))
         compose.onNodeWithText(WORDS_OVER_CAP_LINE).performScrollTo().assertExists()
-        compose.onNodeWithTag("post_edit_sign").assertIsNotEnabled()
+        compose.onNode(isNode("postEdit.sign")).assertIsNotEnabled()
     }
 
     // THE EDIT SURFACE'S OWN SENSITIVE ROW (`_shared.jsx:1390`), where the
@@ -805,7 +805,7 @@ class ContentScreensTest {
     @Test
     fun theSensitiveRowReadsTheMarkItStands() {
         renderComposer(PostEditUiState(postId = "p1", body = "Salt maps"))
-        compose.onNodeWithTag("post_edit_sensitive").performScrollTo().assertExists()
+        compose.onNodeWithTag("postEdit.facts.sensitive").performScrollTo().assertExists()
         compose.onNodeWithText("Sensitive").assertExists()
         compose.onNodeWithText("Not marked").assertExists()
         compose.onNodeWithText("Mark").assertExists()
@@ -814,7 +814,7 @@ class ContentScreensTest {
     @Test
     fun aMarkedPostsRowSaysSoAndOffersTheChange() {
         renderComposer(PostEditUiState(postId = "p1", body = "Salt maps", sensitive = true))
-        compose.onNodeWithTag("post_edit_sensitive").performScrollTo().assertExists()
+        compose.onNodeWithTag("postEdit.facts.sensitive").performScrollTo().assertExists()
         compose.onNodeWithText("Marked").assertExists()
         compose.onNodeWithText("Change").assertExists()
     }
@@ -842,7 +842,7 @@ class ContentScreensTest {
         renderComposer(
             PostEditUiState(postId = "p1", body = "Salt maps", license = LicenseChoice(1.0, 0.0)),
         )
-        compose.onNodeWithTag("post_edit_license_value").performScrollTo()
+        compose.onNodeWithTag("postEdit.facts.license.value").performScrollTo()
             .assertTextContains("Credit always · Not logged")
         compose.onNodeWithContentDescription("The license never changes").assertExists()
         compose.onNodeWithTag("license_attribution_none").assertDoesNotExist()
@@ -871,7 +871,7 @@ class ContentScreensTest {
         assertThat(EDIT_WRITE_RULE_FACT).endsWith("Nothing was signed or spent — your edit is still here.")
         compose.onNodeWithTag("post_edit_not_now").assertTextContains("Not now")
         compose.onNodeWithText("draft", substring = true).assertDoesNotExist()
-        compose.onNodeWithTag("post_edit_sign").assertDoesNotExist()
+        compose.onNode(isNode("postEdit.sign")).assertDoesNotExist()
         compose.onNodeWithText("Retry").assertDoesNotExist()
     }
 
@@ -883,7 +883,7 @@ class ContentScreensTest {
             PostEditUiState(postId = "p1", body = "b", recordStaged = true, submitting = true),
             onSubmit = { signs++ },
         )
-        compose.onNodeWithTag("post_edit_sign").assertIsEnabled().performClick()
+        compose.onNode(isNode("postEdit.sign")).assertIsEnabled().performClick()
         assertThat(signs).isEqualTo(0)
     }
 
@@ -2875,14 +2875,14 @@ class ContentScreensTest {
     @Test
     fun stagedTagsRenderAsRemovableChips() {
         renderComposer(PostEditUiState(tagSection = TagSectionState(tags = tagRows("rust", "kotlin"))))
-        compose.onNodeWithTag("post_edit_tag_rust").assertExists()
-        compose.onNodeWithTag("post_edit_tag_kotlin").assertExists()
+        compose.onNodeWithTag("postEdit.tags.tag:rust").assertExists()
+        compose.onNodeWithTag("postEdit.tags.tag:kotlin").assertExists()
     }
 
     @Test
     fun aStagedChipOffersARemoveAffordance() {
         renderComposer(PostEditUiState(tagSection = TagSectionState(tags = tagRows("rust"))))
-        compose.onNodeWithTag("post_edit_tag_rust_remove")
+        compose.onNodeIn("postEdit.tags.tag:rust", "postEdit.tags.tag.remove")
             .assertExists()
             .assert(hasClickAction())
     }
@@ -2903,7 +2903,7 @@ class ContentScreensTest {
     fun theEditScreenCarriesTheTagsSection() {
         renderComposer(PostEditUiState(postId = "p1", tagSection = TagSectionState(tags = tagRows("rust"))))
         compose.onNodeWithTag("post_edit_tags").assertExists()
-        compose.onNodeWithTag("post_edit_tag_rust").assertExists()
+        compose.onNodeWithTag("postEdit.tags.tag:rust").assertExists()
         compose.onNodeWithTag("post_edit_tag_input").assertExists()
     }
 
@@ -2911,7 +2911,7 @@ class ContentScreensTest {
     @Test
     fun anIllegalNameDisablesAddAndSaysWhy() {
         renderComposer(PostEditUiState(tagSection = TagSectionState(input = "two words")))
-        compose.onNodeWithTag("post_edit_tag_add").assertIsNotEnabled()
+        compose.onNodeWithTag("postEdit.tags.add").assertIsNotEnabled()
         compose.onNodeWithTag("post_edit_tag_illegal").assertExists()
         compose.onNodeWithTag("post_edit_tag_preview").assertDoesNotExist()
     }
@@ -2919,14 +2919,14 @@ class ContentScreensTest {
     @Test
     fun aNonAsciiNameIsRefusedAtInputTime() {
         renderComposer(PostEditUiState(tagSection = TagSectionState(input = "café")))
-        compose.onNodeWithTag("post_edit_tag_add").assertIsNotEnabled()
+        compose.onNodeWithTag("postEdit.tags.add").assertIsNotEnabled()
         compose.onNodeWithTag("post_edit_tag_illegal").assertExists()
     }
 
     @Test
     fun aLegalNameEnablesAdd() {
         renderComposer(PostEditUiState(tagSection = TagSectionState(input = "#Rust")))
-        compose.onNodeWithTag("post_edit_tag_add").assertIsEnabled()
+        compose.onNodeWithTag("postEdit.tags.add").assertIsEnabled()
         compose.onNodeWithTag("post_edit_tag_illegal").assertDoesNotExist()
     }
 
@@ -2980,7 +2980,7 @@ class ContentScreensTest {
         renderComposer(
             PostEditUiState(postId = "p1", body = "b", tagSection = TagSectionState(tags = tagRows("rust", "kotlin"))),
         )
-        compose.onNodeWithTag("post_edit_acts_footer").assertTextContains("You're signing 2 things")
+        compose.onNodeWithTag("postEdit.acts.line").assertTextContains("You're signing 2 things")
     }
 
     /** EditComposeUnchanged.md: an empty batch leaves Sign inert and the foot no control. */
@@ -2988,8 +2988,8 @@ class ContentScreensTest {
     fun anEmptyBatchLeavesSignInertAndTheFooterNotAControl() {
         renderComposer(PostEditUiState(postId = "p1", body = "same"))
         compose.onNodeWithText("Nothing to sign yet").assertExists()
-        compose.onNodeWithTag("post_edit_acts_footer").assertHasNoClickAction()
-        compose.onNodeWithTag("post_edit_sign").assertIsDisplayed().assertIsNotEnabled()
+        compose.onNodeWithTag("postEdit.acts.line").assertHasNoClickAction()
+        compose.onNode(isNode("postEdit.sign")).assertIsDisplayed().assertIsNotEnabled()
     }
 
     /** A typed-then-reverted field keeps its act staged, so Sign the edit answers. */
@@ -2997,8 +2997,8 @@ class ContentScreensTest {
     fun aStagedRecordSignsEvenWithTheFieldsAsTheyStood() {
         var signs = 0
         renderComposer(PostEditUiState(postId = "p1", body = "same", recordStaged = true), onSubmit = { signs++ })
-        compose.onNodeWithTag("post_edit_acts_footer").assertTextContains("You're signing 1 thing")
-        compose.onNodeWithTag("post_edit_sign").assertIsEnabled().performClick()
+        compose.onNodeWithTag("postEdit.acts.line").assertTextContains("You're signing 1 thing")
+        compose.onNode(isNode("postEdit.sign")).assertIsEnabled().performClick()
         assertThat(signs).isEqualTo(1)
     }
 
@@ -3015,7 +3015,7 @@ class ContentScreensTest {
             ),
             onOpenActs = { opened++ },
         )
-        compose.onNodeWithTag("post_edit_acts_footer").performClick()
+        compose.onNodeWithTag("postEdit.acts.line").performClick()
         assertThat(opened).isEqualTo(1)
     }
 
@@ -3040,7 +3040,7 @@ class ContentScreensTest {
     @Test
     fun theSlowLineStandsUnderTheCount() {
         renderComposer(PostEditUiState(postId = "p1", body = "b", recordStaged = true, submitting = true, slow = true))
-        compose.onNodeWithTag("post_edit_acts_footer_subline").assertTextContains(EDIT_SLOW_LINE)
+        compose.onNodeWithTag("postEdit.acts.slow").assertTextContains(EDIT_SLOW_LINE)
     }
 
     /** EditCompose.md: a prepared count that changed drops the held press and says so. */
@@ -3091,7 +3091,7 @@ class ContentScreensTest {
     fun theComposerOpensTheFinderFromItsAddAction() {
         var opened = false
         renderComposer(PostEditUiState(), onOpenFinder = { opened = true })
-        compose.onNodeWithTag("post_edit_reference_add").performScrollTo().performClick()
+        compose.onNodeWithTag("postEdit.references.add").performScrollTo().performClick()
         assertThat(opened).isTrue()
     }
 
@@ -3152,7 +3152,7 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("post_edit_references_cap").assertExists()
-        compose.onNodeWithTag("post_edit_reference_add").assertDoesNotExist()
+        compose.onNodeWithTag("postEdit.references.add").assertDoesNotExist()
     }
 
     /** Verbatim, on the chip the server named. */
@@ -3195,9 +3195,9 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithText("You're signing 3 things").assertExists()
-        compose.onNodeWithTag("post_edit_withdrawn_reference_u1").performScrollTo()
+        compose.onNodeWithTag("postEdit.references.withdrawn").performScrollTo()
             .assertTextContains("Withdrawn: @ada")
-        compose.onNodeWithTag("post_edit_withdrawn_reference_u1_undo").assertExists()
+        compose.onNodeWithTag("postEdit.references.withdrawn.undo").assertExists()
         assertThat(undone).isNull()
     }
 

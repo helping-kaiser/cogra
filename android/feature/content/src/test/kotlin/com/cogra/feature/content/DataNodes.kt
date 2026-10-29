@@ -37,3 +37,13 @@ internal fun SemanticsNodeInteractionsProvider.onAllNodesIn(
 internal fun isDetailCard(): SemanticsMatcher = SemanticsMatcher("is the detail's card") { node ->
     node.config.getOrNull(SemanticsProperties.TestTag)?.startsWith("postDetail.card:") == true
 }
+
+/**
+ * The node at [path], keyed or not: a part the board draws once per state
+ * (`postEdit.sign:none`, `postEdit.sign:slow`) is found whichever state it
+ * stands in.
+ */
+internal fun isNode(path: String): SemanticsMatcher = SemanticsMatcher("is the node $path") { node ->
+    val tag = node.config.getOrNull(SemanticsProperties.TestTag)
+    tag == path || tag?.startsWith("$path:") == true
+}

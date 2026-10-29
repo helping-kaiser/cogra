@@ -93,10 +93,12 @@ internal fun ReferenceEntry(
      * refusals keep their [testTagPrefix] tags.
      */
     node: DataNode? = null,
+    /** False where the host's own group wears [node] — its label and lines beside the section (the edit). */
+    wearsRoot: Boolean = true,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(sectionGap(staged)),
-        modifier = Modifier.fillMaxWidth().dataNode(node),
+        modifier = Modifier.fillMaxWidth().dataNode(node.takeIf { wearsRoot }),
     ) {
         if (showHeading) {
             SectionHeading(stringResource(R.string.content_references_heading), staged, node?.div("label"))

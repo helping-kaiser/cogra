@@ -70,11 +70,13 @@ internal fun TopicEntry(
      * [testTagPrefix] tags.
      */
     node: DataNode? = null,
+    /** False where the host's own group wears [node] — its label and lines beside the section (the edit). */
+    wearsRoot: Boolean = true,
 ) {
     val tagInput = section.input
     Column(
         verticalArrangement = Arrangement.spacedBy(sectionGap(staged)),
-        modifier = Modifier.fillMaxWidth().dataNode(node),
+        modifier = Modifier.fillMaxWidth().dataNode(node.takeIf { wearsRoot }),
     ) {
         if (showHeading) {
             SectionHeading(

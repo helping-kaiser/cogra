@@ -31,6 +31,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.AttachmentReadout
 import com.cogra.core.designsystem.BACKING_UNREAD_MARK
 import com.cogra.core.designsystem.BackingValue
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.CograTextField
@@ -391,7 +394,8 @@ private fun PostEditColumn(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .testTag("post_edit"),
+            .testTag("post_edit")
+            .dataNodeSurface(),
     ) {
         WizardHeader(
             title = "Edit post",
@@ -403,6 +407,7 @@ private fun PostEditColumn(
             helpContentDescription = HelpTopic.Editing.title,
             titleFocus = heading,
             testTag = "post_edit_header",
+            node = POST_EDIT / "header",
         )
         // Directly under the header (FeedDeleting.md:5).
         deletionBand()
@@ -440,11 +445,21 @@ private fun EditFoot(
     keyCard: @Composable () -> Unit,
     onHelp: (HelpTopic) -> Unit,
 ) {
-    EditUploadGate(state.gallery, onRetry = actions.onRetryUploads, testTag = "post_edit_gate")
+    EditUploadGate(
+        gallery = state.gallery,
+        onRetry = actions.onRetryUploads,
+        testTag = "post_edit_gate",
+        node = POST_EDIT / "gate",
+        // EditCompose draws the pictures' gate once per upload state; the
+        // clip's (EditComposeVideo) is drawn once.
+        keyByState = state.gallery.clip == null,
+    )
     ActsFooter(
         count = state.signedActionCount,
         onOpen = actions.onOpenActs,
         testTag = "post_edit_acts_footer",
+        node = (POST_EDIT / "acts").keyed(state.actsKey()),
+        sublinePart = "slow".takeIf { state.slow },
         subline = when {
             state.slow -> EDIT_SLOW_LINE
             state.countChanged -> EDIT_COUNT_CHANGED_LINE
@@ -470,7 +485,7 @@ private fun EditFoot(
             onClick = { if (!state.pressed) actions.onSign() },
             enabled = state.canSign || state.pressed,
             modifier = Modifier.fillMaxWidth(),
-            testTag = "post_edit_sign",
+            testTag = (POST_EDIT / "sign").keyed(state.signKey()).tag,
         )
     }
 }
@@ -496,6 +511,7 @@ private fun WordsOrMedia(state: PostEditUiState, actions: PostEditActions, words
                 onDescribe = { actions.onDescribePicture(0) },
                 testTagPrefix = "post_edit",
                 note = CLIP_WHOLE_POST_LINE,
+                node = POST_EDIT / "video",
             )
             CoverField(
                 gallery = state.gallery,
@@ -504,6 +520,7 @@ private fun WordsOrMedia(state: PostEditUiState, actions: PostEditActions, words
                 onRemoveCover = actions.onRemoveCover,
                 testTagPrefix = "post_edit",
                 doorNote = true,
+                node = POST_EDIT / "cover",
             )
         }
         state.mediaBody -> PicturesBody(state, actions)
@@ -518,7 +535,8 @@ private fun WordsOrMedia(state: PostEditUiState, actions: PostEditActions, words
  */
 @Composable
 private fun PicturesBody(state: PostEditUiState, actions: PostEditActions) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    val body = POST_EDIT / "body"
+    Column(Modifier.fillMaxWidth().dataNode(body), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         val count = state.gallery.size
         PickedRow(
             pictures = state.gallery.pickedPictures(),
@@ -526,12 +544,14 @@ private fun PicturesBody(state: PostEditUiState, actions: PostEditActions) {
             onManage = actions.onOpenPicked,
             manageLabel = if (count == 1) "Manage the picture" else "Manage the $count pictures",
             testTag = "post_edit_picked",
+            node = (body / "mediaRow").keyed(state.gallery.uploadKey()),
         )
         EditUploadErrorLine(
             gallery = state.gallery,
             onRetry = actions.onRetryUploads,
             onRemove = actions.onRemoveFailed,
             testTag = "post_edit_upload_error",
+            node = body / "uploadError",
         )
         RefusedFileRows(state.refused, actions.onDismissRefusal, testTagPrefix = "post_edit")
         InlineAction(
@@ -539,15 +559,17 @@ private fun PicturesBody(state: PostEditUiState, actions: PostEditActions) {
             onClick = actions.onAddMedia,
             size = InlineSize.Small,
             testTag = "post_edit_add_pictures",
+            node = body / "add",
         )
-        BodyRule()
+        BodyRule(body)
     }
 }
 
 /** `EditWords`' body: the words, and the way back to a media body under them. */
 @Composable
 private fun WordsBody(state: PostEditUiState, actions: PostEditActions, words: FocusRequester) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    val body = POST_EDIT / "body"
+    Column(Modifier.fillMaxWidth().dataNode(body), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         CograTextField(
             value = state.body,
             onValueChange = actions.onBodyChange,
@@ -559,6 +581,7 @@ private fun WordsBody(state: PostEditUiState, actions: PostEditActions, words: F
             error = WORDS_OVER_CAP_LINE.takeIf { state.bodyTooLong },
             focusRequester = words,
             testTag = "post_edit_words",
+            node = body / "words",
         )
         RefusedFileRows(state.refused, actions.onDismissRefusal, testTagPrefix = "post_edit")
         InlineAction(
@@ -567,7 +590,7 @@ private fun WordsBody(state: PostEditUiState, actions: PostEditActions, words: F
             size = InlineSize.Small,
             testTag = "post_edit_add_media",
         )
-        BodyRule()
+        BodyRule(body)
     }
 }
 
@@ -582,6 +605,7 @@ private fun TitleAndDescription(state: PostEditUiState, actions: PostEditActions
         cap = MAX_TITLE_CHARS,
         error = stringResource(R.string.content_error_title_too_long).takeIf { state.titleTooLong },
         testTag = "post_edit_title",
+        node = POST_EDIT / "title",
     )
 
     // THE WORDS EDIT CARRIES NO DESCRIPTION (EditWords.md:7; K8.1/D4): a
@@ -599,16 +623,20 @@ private fun TitleAndDescription(state: PostEditUiState, actions: PostEditActions
             error = stringResource(R.string.content_error_description_too_long)
                 .takeIf { state.descriptionTooLong },
             testTag = "post_edit_description",
+            node = POST_EDIT / "description",
         )
     }
 }
 
 @Composable
 private fun TagsAndReferences(state: PostEditUiState, actions: PostEditActions) {
-    EditFieldGroup(label = "Tags") {
+    val tags = POST_EDIT / "tags"
+    EditFieldGroup(label = "Tags", node = tags) {
         TopicEntry(
             section = state.tagSection,
             testTagPrefix = "post_edit",
+            node = tags,
+            wearsRoot = false,
             onTagInputChange = actions.onTagInputChange,
             onAddTag = actions.onAddTag,
             onRemoveTag = actions.onRemoveTag,
@@ -623,14 +651,18 @@ private fun TagsAndReferences(state: PostEditUiState, actions: PostEditActions) 
                 name = "#$name",
                 onUndo = { actions.onUndoTagWithdrawal(name) },
                 testTag = "post_edit_withdrawn_tag_$name",
+                node = tags / "withdrawn",
             )
         }
     }
 
-    EditFieldGroup(label = "References") {
+    val references = POST_EDIT / "references"
+    EditFieldGroup(label = "References", node = references) {
         ReferenceEntry(
             section = state.referenceSection,
             testTagPrefix = "post_edit",
+            node = references,
+            wearsRoot = false,
             onOpenFinder = actions.onOpenFinder,
             onCloseFinder = actions.onCloseFinder,
             onFinderQueryChange = actions.onFinderQueryChange,
@@ -647,6 +679,7 @@ private fun TagsAndReferences(state: PostEditUiState, actions: PostEditActions) 
                 name = row.label(),
                 onUndo = { actions.onUndoReferenceWithdrawal(row.targetId) },
                 testTag = "post_edit_withdrawn_reference_${row.targetId}",
+                node = references / "withdrawn",
             )
         }
     }
@@ -658,9 +691,35 @@ private fun TagsAndReferences(state: PostEditUiState, actions: PostEditActions) 
  */
 @Composable
 private fun Terms(state: PostEditUiState, actions: PostEditActions) {
+    val facts = POST_EDIT / "facts"
+    // The three rows are one block on the board (`facts`), stacked in the
+    // edit's own field rhythm.
+    Column(
+        modifier = Modifier.fillMaxWidth().dataNode(facts),
+        verticalArrangement = Arrangement.spacedBy(FIELD_GAP),
+    ) {
+        FactRows(state, actions, facts)
+    }
+
+    state.problem()?.let { message ->
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("post_edit_problem")
+                .semantics { liveRegion = LiveRegionMode.Assertive },
+        )
+    }
+}
+
+@Composable
+private fun FactRows(state: PostEditUiState, actions: PostEditActions, facts: DataNode) {
     LockedLicenseRow(
         name = licenseName(state.license.attribution, state.license.provenance),
         testTag = "post_edit_license",
+        node = facts / "license",
     )
     // `Your backing` — one number: where the post's backing stands WITH the
     // edit (EditCompose.md). The edit's record is an ordinary-role Publish,
@@ -672,9 +731,14 @@ private fun Terms(state: PostEditUiState, actions: PostEditActions) {
         actionText = "Adjust",
         onAction = actions.onOpenBackingPad,
         testTag = "post_edit_backing",
+        node = facts / "backing",
     ) {
         when (val withEdit = state.backingWithEdit) {
-            is BackingValue.Read -> AttachmentReadout(pDirected = withEdit.value, testTag = "post_edit_backing_value")
+            is BackingValue.Read -> AttachmentReadout(
+                pDirected = withEdit.value,
+                testTag = "post_edit_backing_value",
+                node = facts / "backing" / "value",
+            )
             // The backing read served none or failed: the row draws it
             // unread rather than guess.
             BackingValue.Unread -> Text(
@@ -691,26 +755,15 @@ private fun Terms(state: PostEditUiState, actions: PostEditActions) {
         actionText = if (state.sensitive) "Change" else "Mark",
         onAction = actions.onOpenSensitive,
         testTag = "post_edit_sensitive",
+        node = facts / "sensitive",
     )
     Hairline()
-
-    state.problem()?.let { message ->
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("post_edit_problem")
-                .semantics { liveRegion = LiveRegionMode.Assertive },
-        )
-    }
 }
 
 /** The body's rule in the quiet voice (`QuietNote`, `_shared.jsx` `EditComposeBody`). */
 @Composable
-private fun BodyRule() {
-    QuietNote(text = BODY_RULE_LINE, modifier = Modifier.testTag("post_edit_body_rule"))
+private fun BodyRule(body: DataNode) {
+    QuietNote(text = BODY_RULE_LINE, modifier = Modifier.dataNode(body / "rule"))
 }
 
 /** Every drawer the edit can open — one at a time, in the one sheet host. */
@@ -738,6 +791,7 @@ private fun PostEditSheets(state: PostEditUiState, actions: PostEditActions, onH
                 onMove = actions.onMovePicture,
                 onDone = actions.onCloseSheet,
                 testTag = "post_edit_picked_sheet",
+                node = POST_EDIT / "pickedSheet",
             )
             state.actsOpen -> ActsSheet(rows = state.actRows, onDone = actions.onCloseSheet, testTag = "post_edit_acts")
             state.sensitiveOpen -> SensitiveSheet(
@@ -769,6 +823,33 @@ internal fun PostEditUiState.problem(): String? = when {
     transportFailed -> "Can't reach the server. Check the connection and retry."
     signingFailed -> "Signing did not finish — the write stays pending."
     else -> null
+}
+
+/** `EditCompose`'s registered prefix: every post edit board (seam 248). */
+internal val POST_EDIT = DataNode("postEdit")
+
+/** The board's `upload` chip value for what the edit is uploading. */
+internal fun EditGallery.uploadKey(): String = when {
+    uploadsFailed > 0 -> "failed"
+    uploadsPending > 0 -> "uploading"
+    else -> "none"
+}
+
+/**
+ * The foot's key: EditCompose draws it once per `signing` value, and
+ * EditComposeVideo once per `upload` value while the clip's cover goes up.
+ */
+private fun PostEditUiState.actsKey(): String = when {
+    slow -> "slow"
+    gallery.clip != null && gallery.uploadsPending > 0 -> "uploading"
+    else -> "none"
+}
+
+/** The commit's key: EditCompose draws it at rest, slow, and disabled by a failed upload. */
+private fun PostEditUiState.signKey(): String = when {
+    slow -> "slow"
+    gallery.uploadsFailed > 0 -> "failed"
+    else -> "none"
 }
 
 /** The edit's fields stand 14 apart (`EditComposeBody`, `CommentEditBody`: `gap: 14`). */
