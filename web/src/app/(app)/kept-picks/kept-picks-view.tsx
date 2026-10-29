@@ -102,6 +102,11 @@ export function signedBatchLine(count: number): string {
 
 const keyOf = (target: StanceTarget) => `${target.kind}:${target.id}`;
 
+/** The seal's row label and count noun, by the family the pick signs (`_shared.jsx` `keptPickFamily`). */
+function keptPickFamily(target: StanceTarget): { label: string; countNoun: string } {
+  return target.kind === "topic" ? { label: "Feeling", countNoun: "feeling" } : { label: "Opinion", countNoun: "opinion" };
+}
+
 /** A topic's pick is an Affinity, and speaks in its family's words. */
 function axesOf(target: StanceTarget): StanceAxes {
   return target.kind === "topic" ? AFFINITY_AXES : STANCE_AXES;
@@ -322,8 +327,10 @@ export function KeptPicksView() {
     const preview = previewOf(kept);
     const face = bundleReadout(kept.pick, EMPTY_PICK_LABEL);
     return {
-      label: "Opinion",
-      countNoun: "opinion",
+      // KeptPicksSeal.md:7 — the row names what is SIGNED, the record's
+      // family: a pick on a post or a person is an Opinion, a pick on a topic
+      // a Feeling (copy-voice, seam 248: `Topic` on the review, `Feeling` here).
+      ...keptPickFamily(kept.target),
       count: 1,
       key: keyOf(kept.target),
       value: (

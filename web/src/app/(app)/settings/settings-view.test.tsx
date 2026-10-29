@@ -1223,6 +1223,17 @@ describe("the kept picks in settings", () => {
     expect(push).toHaveBeenCalledWith("/kept-picks?from=%2Fsettings");
   });
 
+  // Settings.md:73 (round 24's fixture: four picks, a feeling among them) — a
+  // feeling kept on a topic's pad is a kept pick, and the row counts it.
+  it("counts a kept feeling with the opinions, as 4 kept picks waiting", async () => {
+    await keepPick("acct-1", POST, PICK);
+    await keepPick("acct-1", { kind: "post", id: "post-2" }, PICK);
+    await keepPick("acct-1", { kind: "profile", id: "user-3" }, PICK);
+    await keepPick("acct-1", { kind: "topic", id: "saltmarsh" }, PICK);
+    renderSettings();
+    expect(await screen.findByTestId("settings.backup.kept")).toHaveTextContent("4 kept picks waiting");
+  });
+
   it("reads 1 kept pick waiting in the singular", async () => {
     await keepPick("acct-1", POST, PICK);
     renderSettings();

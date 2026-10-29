@@ -246,6 +246,31 @@ describe("the kept picks' seal", () => {
     expect(screen.queryByRole("button", { name: /^Remove/ })).toBeNull();
   });
 
+  // KeptPicksSeal.md:7 ALWAYS a pick on a post or a person reads Opinion, and
+  // a pick on a topic reads Feeling, its name the topic's with its # and its
+  // pair spoken in the Affinity pad's axis words.
+  it("reads a kept topic pick as a Feeling, #named, spoken in the Affinity words", async () => {
+    await keepPick("u1", ADA, { pDirected: 0.1, pInterest: 0.1 });
+    await keepPick("u1", { kind: "topic", id: "saltmarsh" }, { pDirected: 0.6, pInterest: 0.4 });
+    mount();
+    // KeptPicksReview.md:9 — on the review the same pick reads Topic under its name.
+    const reviewRow = await screen.findByTestId(byNode("keptPicks.pick", "2"));
+    expect(reviewRow).toHaveTextContent("#saltmarsh");
+    expect(reviewRow).toHaveTextContent("Topic");
+    await openSeal();
+    const acts = screen.getByTestId("keptPicksSeal.acts");
+    const rows = within(acts).getAllByTestId("keptPicksSeal.acts.actRow");
+    expect(rows[0]).toHaveTextContent("Opinion");
+    expect(rows[0]).toHaveTextContent("1 opinion");
+    expect(rows[1]).toHaveTextContent("Feeling");
+    expect(rows[1]).toHaveTextContent("1 feeling");
+    expect(rows[1]).not.toHaveTextContent("Opinion");
+    const value = screen.getByTestId(byNode("keptPicksSeal.acts.actRow.value", "2"));
+    expect(value).toHaveTextContent("#saltmarsh");
+    expect(value).toHaveTextContent(/How much you like it .*, How close you want to be /);
+    expect(screen.getByTestId("keptPicksSeal.acts.total")).toHaveTextContent("2 things, signed together");
+  });
+
   it("reads a removed target back by its mark, over the pair it still signs", async () => {
     await keepTheBoardsPicks();
     mount();
