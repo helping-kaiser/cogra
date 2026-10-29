@@ -618,7 +618,9 @@ describe("the reply wizard", () => {
       ]);
     });
 
-    it("holds the seal while a picture is still on its way, and says so", async () => {
+    // ReplySealUploading.md:3,7 — the line stands above the commit, and the
+    // commit stays enabled through the gate.
+    it("says the seal waits while a picture is still on its way, Sign comment still enabled", async () => {
       // No upload handler that ever resolves: the gate is what is under test.
       server.use(
         gqlLink.mutation("UploadMedia", async () => {
@@ -631,8 +633,10 @@ describe("the reply wizard", () => {
       await pick(["a.jpg"]);
       fireEvent.click(screen.getByTestId("reply-next"));
       await screen.findByTestId("reply-seal");
-      expect(screen.getByTestId("reply-sign")).toBeDisabled();
-      expect(screen.getByTestId("reply-seal-blocked")).toBeInTheDocument();
+      expect(screen.getByTestId("reply-seal-blocked")).toHaveTextContent(
+        "Uploading 0 of 1 — signing waits for the picture.",
+      );
+      expect(screen.getByTestId("reply-sign")).not.toBeDisabled();
     });
 
     it("says a refused tag on its own row of the acts card, with Remove it", async () => {
@@ -687,6 +691,148 @@ describe("the reply wizard", () => {
       expect(screen.queryByTestId("reply-sign")).not.toBeInTheDocument();
       fireEvent.click(screen.getByTestId("reply-restore-key"));
       expect(push).toHaveBeenCalledWith("/restore");
+    });
+  });
+
+  // THE HELD PRESS (ReplySealUploading.md, ReplySealUploadFailed.md:15-19):
+  // the reply's own gate, driven through the wizard with the uploads latched.
+  describe("signing while the uploads run", () => {
+    function latchedUploads() {
+      const latches: { release: (outcome: "land" | "fail") => void }[] = [];
+      let next = 0;
+      server.use(
+        gqlLink.mutation("UploadMedia", async () => {
+          const outcome = await new Promise<"land" | "fail">((resolve) => latches.push({ release: resolve }));
+          if (outcome === "fail") return HttpResponse.error();
+          return HttpResponse.json({
+            data: {
+              uploadMedia: { __typename: "UploadMediaPayload", media: echoedMedia(`up-${next++}`), userErrors: [] },
+            },
+          });
+        }),
+      );
+      return {
+        async answer(outcome: "land" | "fail" = "land") {
+          await waitFor(() => expect(latches.length).toBeGreaterThan(0));
+          latches.shift()!.release(outcome);
+        },
+      };
+    }
+
+    function preparedCount() {
+      const calls = { count: 0 };
+      server.use(
+        gqlLink.mutation("PrepareComment", () => {
+          calls.count += 1;
+          return HttpResponse.json({
+            data: {
+              prepareComment: {
+                __typename: "PrepareContentPayload",
+                node: "comment-9",
+                writes: [
+                  { __typename: "PreparedWrite", id: "w1", family: "REVIEW", canonicalProposal: "AA==", gcAfterEpochs: 3 },
+                ],
+                userErrors: [],
+              },
+            },
+          });
+        }),
+      );
+      return calls;
+    }
+
+    async function toGatedSeal() {
+      write("With a picture.");
+      await pick(["a.jpg"]);
+      fireEvent.click(screen.getByTestId("reply-next"));
+      await screen.findByTestId("reply-seal");
+    }
+
+    it("ReplySealUploading.md:9,15 a press is held, signs nothing before the bytes land, then signs with no second press", async () => {
+      const bytes = latchedUploads();
+      const prepared = preparedCount();
+      const { onSigned } = draw();
+      await toGatedSeal();
+      const sign = screen.getByTestId("reply-sign");
+      fireEvent.click(sign);
+      fireEvent.click(sign);
+      expect(sign).not.toBeDisabled();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(prepared.count).toBe(0);
+      await bytes.answer("land");
+      await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-9"));
+      expect(prepared.count).toBe(1);
+    });
+
+    it("ReplySealUploading.md:11 past 200ms the held press reads Signing comment… and the header's arrow, Back and X refuse", async () => {
+      latchedUploads();
+      const { onLeave } = draw();
+      await toGatedSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      await waitFor(() => expect(screen.getByTestId("reply-sign")).toHaveTextContent("Signing comment…"), {
+        timeout: 1000,
+      });
+      fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("header-back"));
+      fireEvent.click(screen.getByTestId("reply-back"));
+      expect(screen.getByTestId("reply-seal")).toBeInTheDocument();
+      expect(screen.getByTestId("reply-discard-confirm")).not.toHaveAttribute("open");
+      expect(onLeave).not.toHaveBeenCalled();
+      // The header's ? stays live (SealSigning.md).
+      fireEvent.click(screen.getByRole("button", { name: "How signing works" }));
+      expect(await screen.findByTestId("reply-help-dialog")).toBeInTheDocument();
+    });
+
+    it("ReplySealUploading.md:17 a failed upload drops the held press: the fault reading, Sign comment again, the ways out answer", async () => {
+      const bytes = latchedUploads();
+      const prepared = preparedCount();
+      draw();
+      await toGatedSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      await bytes.answer("fail");
+      await waitFor(() =>
+        expect(screen.getByTestId("reply-seal-blocked")).toHaveTextContent(
+          "One picture didn't upload. Signing waits for it.",
+        ),
+      );
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
+      expect(screen.getByTestId("reply-sign")).toBeDisabled();
+      expect(prepared.count).toBe(0);
+      fireEvent.click(screen.getByTestId("header-leave"));
+      await waitFor(() => expect(screen.getByTestId("reply-discard-confirm")).toHaveAttribute("open"));
+    });
+
+    it("ReplySealUploading.md:19 Retry runs the gate again, and nothing signs until Sign comment is pressed again", async () => {
+      const bytes = latchedUploads();
+      const prepared = preparedCount();
+      const { onSigned } = draw();
+      await toGatedSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      await bytes.answer("fail");
+      fireEvent.click(await screen.findByTestId("reply-seal-blocked-retry"));
+      // ReplySealUploadFailed.md:17 — the line returns to its running reading, the commit enabled.
+      await waitFor(() =>
+        expect(screen.getByTestId("reply-seal-blocked")).toHaveTextContent("Uploading 0 of 1"),
+      );
+      expect(screen.getByTestId("reply-sign")).not.toBeDisabled();
+      await bytes.answer("land");
+      await waitFor(() => expect(screen.queryByTestId("reply-seal-blocked")).toBeNull());
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(prepared.count).toBe(0);
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      await waitFor(() => expect(onSigned).toHaveBeenCalled());
+    });
+
+    it("ReplySealUploading.md:21 the last upload landing unpressed takes the line away and leaves Sign comment as it was", async () => {
+      const bytes = latchedUploads();
+      const prepared = preparedCount();
+      draw();
+      await toGatedSeal();
+      await bytes.answer("land");
+      await waitFor(() => expect(screen.queryByTestId("reply-seal-blocked")).toBeNull());
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
+      expect(screen.getByTestId("reply-sign")).not.toBeDisabled();
+      expect(prepared.count).toBe(0);
     });
   });
 

@@ -54,7 +54,8 @@ import {
   isVideoReply,
   replyHasContent,
   replyReducer,
-  sealGate,
+  sealClosed,
+  sealUploads,
   stepIndex,
   type ReplyAction,
   type ReplyState,
@@ -71,6 +72,7 @@ import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
 import { TagPicker } from "@/lib/ui2/compose/tag-picker";
 import { COVER_FROM_PICTURE, effectiveCover } from "@/lib/compose/wizard";
 import { TransportError } from "@/lib/ui/transport-error";
+import { SLOW_NETWORK_MS, useSlowAnswer, useWaitedPast } from "@/lib/ui2/waiting-commit";
 import { ReplyComposeStep } from "./reply-compose-step";
 import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
 
@@ -134,6 +136,13 @@ export function ReplyWizard({
   const [describing, setDescribing] = useState<string | null>(null);
   const [help, setHelp] = useState<HelpTopic | null>(null);
   const [busy, setBusy] = useState(false);
+  // A press made while the reply's bytes still move is HELD and signs the
+  // moment the last one lands (ReplySealUploading.md:9-15); the commit is
+  // inert from the press either way, and both clocks count from it.
+  const [held, setHeld] = useState(false);
+  const signing = busy || held;
+  const swapped = useSlowAnswer(signing);
+  const slow = useWaitedPast(signing, SLOW_NETWORK_MS);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [transportFailed, setTransportFailed] = useState(false);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
@@ -417,6 +426,7 @@ export function ReplyWizard({
 
   const submit = async () => {
     setBusy(true);
+    setHeld(false);
     setRefusal(null);
     setTagErrors({});
     setReferenceErrors({});
@@ -514,9 +524,54 @@ export function ReplyWizard({
     );
   };
 
+  // ---- the gate ------------------------------------------------------------
+
+  const uploads = sealUploads(state);
+  // A HELD PRESS signs the moment the last upload lands, with no second press;
+  // an upload that fails drops it, and the commit reads `Sign comment` again
+  // (ReplySealUploading.md:15-17). The drop happens during render, the state
+  // an upload's own outcome leaves behind (React, "adjusting some state when
+  // a prop changes").
+  if (held && uploads.failed > 0) setHeld(false);
+  // Signing is the side effect: the last upload landing releases the press
+  // into `submit`, which takes the press over as `busy` (it clears `held`).
+  useEffect(() => {
+    if (!held || uploads.pending > 0 || uploads.failed > 0) return;
+    const release = setTimeout(() => void submit(), 0);
+    return () => clearTimeout(release);
+    // `submit` reads the state it is handed this render; the press is the
+    // trigger, and the upload counts are what release it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [held, uploads.pending, uploads.failed]);
+
+  const sign = () => {
+    if (signing) return;
+    if (uploads.pending > 0) setHeld(true);
+    else void submit();
+  };
+
+  // The failed upload's Retry re-runs the gate; nothing signs until Sign
+  // comment is pressed again (ReplySealUploading.md:19). A clip's retry takes
+  // its face with it, the two going up as one sequence.
+  const retryUploads = () => {
+    if (video !== undefined) {
+      retry(video.id);
+      return;
+    }
+    for (const asset of state.media) {
+      if (asset.upload.kind === "failed") retry(asset.id);
+    }
+  };
+
+  // WHILE IT SIGNS, THE SEAL HOLDS THE READER (`ReplySeal.jsx`, jakob
+  // 2026-10-01): past the label swap the header's arrow and X refuse a press
+  // and keep their face, because leaving mid-sign would orphan the outcome
+  // (ReplySealUploading.md:11, SealSigning.md).
+  const locked = state.step === "seal" && swapped;
+
   // ---- the frame -----------------------------------------------------------
 
-  const blocked = sealGate(state);
+  const blocked = sealClosed(state);
   // The composer's own Next, gated the way PickStep/CoverStep already gate
   // the post wizard's — the reducer already refuses to advance past this
   // (`advanceGate`'s existing check), so this only makes that refusal visible.
@@ -570,8 +625,12 @@ export function ReplyWizard({
             // the asymmetry means the arrow can still lose a written comment
             // silently, which is the exact thing the confirm exists to prevent, so
             // it is reported rather than quietly patched.
-            onBack={stepBack}
-            onLeave={leave}
+            onBack={() => {
+              if (!locked) stepBack();
+            }}
+            onLeave={() => {
+              if (!locked) leave();
+            }}
             leaveLabel={LEAVE_LABEL}
             // `WizardHeader`'s own pair on the seal (`ReplySealBody`): the
             // stage's name, then the screen's one "?" as `HelpDot`.
@@ -624,8 +683,11 @@ export function ReplyWizard({
               state={state}
               sheet={sheet}
               stagedStance={stagedStance}
-              blocked={blocked.ok ? null : blocked.reason}
-              busy={busy}
+              blocked={blocked}
+              uploads={uploads}
+              signing={signing}
+              swapped={swapped}
+              slow={slow}
               keyOnDevice={keyOnDevice}
               refusal={refusal}
               tagErrors={tagErrors}
@@ -658,7 +720,8 @@ export function ReplyWizard({
               onSensitiveReason={(reason) => dispatch({ type: "sensitiveReason", reason })}
               onSensitiveHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
               onKeyHelp={() => setHelp(HELP_TOPICS.yourKey)}
-              onSign={() => void submit()}
+              onSign={sign}
+              onRetryUploads={retryUploads}
               onBack={() => dispatch({ type: "back" })}
               onDiscard={leave}
               onRestoreKey={() => router.push("/restore")}

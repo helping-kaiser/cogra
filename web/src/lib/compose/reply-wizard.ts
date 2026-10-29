@@ -209,6 +209,72 @@ export function sealGate(state: ReplyState): Gate {
   return commentGate(state.words, state.media, effectiveCover(state.cover, state.autoCover));
 }
 
+/** What the seal's gate line reads: how far the reply's bytes have come. */
+export type SealUploads = {
+  /** Still moving — a press made now is held until they land. */
+  readonly pending: number;
+  /** Did not land — the one thing that closes the commit. */
+  readonly failed: number;
+  readonly done: number;
+  readonly total: number;
+  /** The clip's gate names the video, a gallery's the pictures. */
+  readonly video: boolean;
+};
+
+function moving(upload: AssetUpload): boolean {
+  return (
+    upload.kind === "waiting" ||
+    upload.kind === "encoding" ||
+    upload.kind === "uploading" ||
+    upload.kind === "processing"
+  );
+}
+
+/**
+ * The gate line's reading (ReplySealUploading.md:3-5, ReplySealUploadFailed.md).
+ * A clip counts as ONE thing to wait for, its face included — the line says
+ * `Uploading 0 of 1 — signing waits for the video.` until both have landed,
+ * because the video cannot be created without the face it rides with.
+ */
+export function sealUploads(state: ReplyState): SealUploads {
+  if (isVideoReply(state)) {
+    const face = effectiveCover(state.cover, state.autoCover);
+    const legs = face === null ? state.media.map((a) => a.upload) : [...state.media.map((a) => a.upload), face.upload];
+    const failed = legs.some((upload) => upload.kind === "failed") ? 1 : 0;
+    const pending = failed === 0 && legs.some(moving) ? 1 : 0;
+    return { pending, failed, done: 1 - pending - failed, total: 1, video: true };
+  }
+  const pending = state.media.filter((asset) => moving(asset.upload)).length;
+  const failed = state.media.filter((asset) => asset.upload.kind === "failed").length;
+  return { pending, failed, done: state.media.length - pending - failed, total: state.media.length, video: false };
+}
+
+/**
+ * Why the seal's commit is CLOSED, or null when it may be pressed.
+ *
+ * BYTES STILL ON THEIR WAY NEVER CLOSE IT (ReplySealUploading.md:7): Sign
+ * comment stays enabled and a press is held until the last upload lands. So
+ * a refusal of `sealGate` that is only the wait reads as open here; a failed
+ * upload, an over-long body or reason, still closes it.
+ */
+export function sealClosed(state: ReplyState): string | null {
+  const gate = sealGate(state);
+  if (gate.ok) return null;
+  const uploads = sealUploads(state);
+  if (uploads.failed === 0 && uploads.pending > 0) {
+    // `commentGate` asks about the uploads last: with what is still moving set
+    // aside, the seal opens unless something before the wait refuses.
+    const settled = sealGate({
+      ...state,
+      media: state.media.filter((asset) => !moving(asset.upload)),
+      cover: null,
+      autoCover: null,
+    });
+    return settled.ok ? null : settled.reason;
+  }
+  return gate.reason;
+}
+
 /** Whether the composer is standing in ReplyVideo rather than ReplyPicturesWeb. */
 export function isVideoReply(state: ReplyState): boolean {
   return isVideoComment(state.media);
