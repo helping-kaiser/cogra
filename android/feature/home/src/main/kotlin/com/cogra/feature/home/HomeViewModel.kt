@@ -15,6 +15,9 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.signing.RegistrationFlow
 import com.cogra.domain.signing.RegistrationProgress
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.stance.KeptFamily
+import com.cogra.domain.stance.KeptPickStore
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -128,6 +131,8 @@ class HomeViewModel @Inject constructor(
     private val registration: RegistrationFlow,
     private val invites: InvitesRepository,
     @WebOrigin private val webOrigin: String,
+    /** A vouch-back kept for the key, which `Got it` drops as Cancel drops one (VouchBack.md:52). */
+    private val keptPicks: KeptPickStore,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeUiState())
@@ -331,6 +336,9 @@ class HomeViewModel @Inject constructor(
         if (_state.value.vouchPutAway == VouchPutAway.ASKING) return
         _state.update { it.copy(vouchPutAway = VouchPutAway.ASKING) }
         viewModelScope.launch {
+            _state.value.vouchVoucher?.let { voucher ->
+                keptPicks.drop(listOf(StanceTarget.Node(voucher.id)), KeptFamily.VOUCH_BACK)
+            }
             val kept = account.dismissVouchBack() is Outcome.Success
             _state.update {
                 it.copy(vouchPutAway = if (kept) VouchPutAway.AWAY else VouchPutAway.FAILED)

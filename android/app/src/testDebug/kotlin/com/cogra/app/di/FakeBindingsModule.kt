@@ -66,6 +66,8 @@ import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.removal.RemovalRepository
+import com.cogra.domain.stance.KeptPickStore
+import com.cogra.domain.stance.KeptPreviewRepository
 import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.score.TraceRepository
@@ -103,6 +105,8 @@ import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.FakeTraceRepository
 import com.cogra.domain.testing.InMemoryAnnouncedReleaseStore
 import com.cogra.domain.testing.InMemoryCommittedFilterStore
+import com.cogra.domain.testing.InMemoryKeptPickStore
+import com.cogra.domain.testing.ScriptedKeptPreviewRepository
 import com.cogra.domain.testing.InMemoryComposeDraftStore
 import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.InMemorySealedDraftStore
@@ -826,6 +830,20 @@ object FakeBindingsModule {
 
     @Provides
     fun committedFilterStore(fake: InMemoryCommittedFilterStore): CommittedFilterStore = fake
+
+    @Provides
+    @Singleton
+    fun inMemoryKeptPickStore(): InMemoryKeptPickStore = InMemoryKeptPickStore()
+
+    @Provides
+    fun keptPickStore(fake: InMemoryKeptPickStore): KeptPickStore = fake
+
+    @Provides
+    @Singleton
+    fun scriptedKeptPreviewRepository(): ScriptedKeptPreviewRepository = ScriptedKeptPreviewRepository()
+
+    @Provides
+    fun keptPreviewRepository(fake: ScriptedKeptPreviewRepository): KeptPreviewRepository = fake
 
     // A member with nothing standing, by default: no band, and the row opens
     // the request screen. Tests script the grace or the applicant's path.

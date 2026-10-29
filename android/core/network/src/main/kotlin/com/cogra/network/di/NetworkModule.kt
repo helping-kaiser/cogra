@@ -33,6 +33,8 @@ import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.release.AnnouncedReleaseStore
 import com.cogra.domain.release.ReleaseRegistry
 import com.cogra.domain.removal.RemovalRepository
+import com.cogra.domain.stance.KeptPickStore
+import com.cogra.domain.stance.KeptPreviewRepository
 import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.hidden.HiddenRepository
 import com.cogra.domain.invites.InvitesRepository
@@ -66,6 +68,7 @@ import com.cogra.network.repo.StanceRepositoryImpl
 import com.cogra.network.repo.ReferenceRepositoryImpl
 import com.cogra.network.repo.ReleaseRegistryImpl
 import com.cogra.network.repo.RemovalRepositoryImpl
+import com.cogra.network.repo.KeptPreviewRepositoryImpl
 import com.cogra.network.repo.ReportRepositoryImpl
 import com.cogra.network.repo.HiddenRepositoryImpl
 import com.cogra.network.repo.InvitesRepositoryImpl
@@ -79,6 +82,7 @@ import com.cogra.network.repo.ViewHistoryRepositoryImpl
 import com.cogra.network.repo.FeedRepositoryImpl
 import com.cogra.network.repo.TraceRepositoryImpl
 import com.cogra.network.store.CommittedFilterStoreImpl
+import com.cogra.network.store.KeptPickStoreImpl
 import com.cogra.network.store.ReaderDefaultStoreImpl
 import com.cogra.network.store.ExploreDeviceStoreImpl
 import com.cogra.network.store.SeenRecordStoreImpl
@@ -268,6 +272,12 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun committedFilterStore(impl: CommittedFilterStoreImpl): CommittedFilterStore
+
+    @Binds
+    abstract fun keptPickStore(impl: KeptPickStoreImpl): KeptPickStore
+
+    @Binds
+    abstract fun keptPreviewRepository(impl: KeptPreviewRepositoryImpl): KeptPreviewRepository
 
     @Binds
     abstract fun accountDeletionRepository(impl: AccountDeletionRepositoryImpl): AccountDeletionRepository

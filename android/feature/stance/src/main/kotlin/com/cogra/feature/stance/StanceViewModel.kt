@@ -32,6 +32,9 @@ import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.severance
 import com.cogra.domain.signing.stanceRecord
+import com.cogra.domain.stance.KeptFamily
+import com.cogra.domain.stance.KeptPick
+import com.cogra.domain.stance.KeptPickStore
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
@@ -40,6 +43,7 @@ import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.WRITE_RULE_CODES
 import com.cogra.domain.stance.isEmptySign
+import com.cogra.domain.stance.keptFor
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -118,6 +122,11 @@ data class TargetStance(
      * (the master's `sent`; round 21, ask 16).
      */
     val sent: StancePair? = null,
+    /**
+     * What a pick kept here signs as (KeptPicksReview.md:9): a vouch-back's pad
+     * keeps a vouch-back, every other control a plain pick. Set by the route.
+     */
+    val family: KeptFamily = KeptFamily.OPINION,
 )
 
 /**
@@ -173,6 +182,17 @@ data class StanceUiState(
      * anyway, carrying the key notice in place of its actions.
      */
     val keyAbsent: Boolean = false,
+    /** The account's kept picks, every family, oldest first (PadPending.md). */
+    val kept: List<KeptPick> = emptyList(),
+    /**
+     * A kept pick's face was tapped or held with the key here: the kept picks'
+     * review opens (PadPendingReview.md:11). A one-shot naming the control that
+     * asked, so of every control the screen holds only that one routes;
+     * consumed by [StanceViewModel.onReviewOpened].
+     */
+    val reviewFrom: StanceTarget? = null,
+    /** The kept picks just signed, until their records are ordered (PadPendingReview.md:21). */
+    val settling: Set<StanceTarget> = emptySet(),
 )
 
 @HiltViewModel
@@ -184,6 +204,8 @@ class StanceViewModel @Inject constructor(
     private val signals: StanceSignals,
     /** Whether the reader still borrows a view — `borrowedView`, the band's own read. */
     private val account: AccountRepository,
+    /** The picks kept on this device while the key was elsewhere (PadKeyAbsent.md:27). */
+    private val keptPicks: KeptPickStore,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StanceUiState())
@@ -200,6 +222,9 @@ class StanceViewModel @Inject constructor(
      */
     private var taught: Boolean? = null
 
+    /** The settling targets this holder has already re-read. */
+    private val settled = mutableSetOf<StanceTarget>()
+
     init {
         // Collected, not read once: choosing an alternate in Settings has
         // to reach controls already composed here (design.md §8.6).
@@ -208,6 +233,84 @@ class StanceViewModel @Inject constructor(
                 _state.update { it.copy(inputMode = mode) }
             }
         }
+        // Collected, so a pick kept, dropped or signed anywhere reaches every
+        // anchor already composed (PadPending.md:3; KeptPicksReview.md:19).
+        viewModelScope.launch {
+            keptPicks.watch().collect { kept -> _state.update { it.copy(kept = kept) } }
+        }
+        viewModelScope.launch {
+            signals.settling.collect { settling ->
+                _state.update { it.copy(settling = settling) }
+                settling.filter { it in _state.value.targets && settled.add(it) }.forEach(::settle)
+            }
+        }
+    }
+
+    /**
+     * A KEPT PICK JUST SIGNED FROM THE SEAL (PadPendingReview.md:21): the
+     * standing is read again, counting the record still being signed, and
+     * one ordered read then says whether it is in the order yet — `Still
+     * settling` stands until then. One read, not a poll (the web's own reading,
+     * named in its PR as a deviation candidate).
+     */
+    private fun settle(target: StanceTarget) {
+        viewModelScope.launch {
+            readStanding(target)
+            val pending = _state.value.targets[target]?.standingRecords ?: return@launch
+            val ordered = stances.standing(target, includePending = false)
+            if (ordered is Outcome.Success && ordered.value.records >= pending) signals.settled(target)
+        }
+    }
+
+    /**
+     * The destination came back (ON_RESUME): whether the key is here is read
+     * again, so a restore taken on its own screen reaches every anchor — a kept
+     * pick's line turns from `Waiting for your key` to `Waiting for your review`
+     * (PadPending.md:15), and back should the key go (PadPendingReview.md:19).
+     */
+    fun onResume() {
+        viewModelScope.launch {
+            val keyHere = identity.actorSeed() != null
+            _state.update { it.copy(keyAbsent = !keyHere) }
+        }
+    }
+
+    /** The pick [target]'s control keeps, in its own family; null where none waits. */
+    private fun keptFor(target: StanceTarget): KeptPick? {
+        val family = _state.value.targets[target]?.family ?: KeptFamily.OPINION
+        return _state.value.kept.keptFor(target, family)
+    }
+
+    /**
+     * A KEPT PLAIN PICK WITH THE KEY HERE waits on the reader, not the key: its
+     * face's tap and its hold both open the kept picks' review, never the key
+     * notice and never a pad (PadPendingReview.md:11, :13). A kept vouch-back or
+     * approval signs through its own pad instead (VouchBackPad.md:49).
+     */
+    private fun opensReview(target: StanceTarget): Boolean {
+        val kept = keptFor(target) ?: return false
+        return kept.family == KeptFamily.OPINION && !_state.value.keyAbsent
+    }
+
+    /** The route has opened the review the one-shot asked for. */
+    fun onReviewOpened() = _state.update { it.copy(reviewFrom = null) }
+
+    /**
+     * `Keep it pending, restore later` (PadKeyAbsent.md:27, :21): the pad or the
+     * alternates close, and the pick waits on this device — replacing whatever
+     * was kept on the target (:29). Nothing is staged or signed.
+     */
+    fun onKeepPending(target: StanceTarget) {
+        val entry = _state.value.targets[target] ?: return
+        val pick = entry.pick
+        update(target) { it.copy(pad = PadMode.CLOSED, pick = StancePair.Origin, landing = null) }
+        viewModelScope.launch { keptPicks.keep(target, pick, entry.family, stances.kindOf(target)) }
+    }
+
+    /** What a pick kept on [target] signs as — set once by the route, before anything is kept. */
+    fun setFamily(target: StanceTarget, family: KeptFamily) {
+        if ((_state.value.targets[target]?.family ?: KeptFamily.OPINION) == family) return
+        update(target) { it.copy(family = family) }
     }
 
     /**
@@ -234,6 +337,7 @@ class StanceViewModel @Inject constructor(
             _state.update { it.copy(keyAbsent = !keyHere) }
             readStanding(target)
             reading.remove(target)
+            if (target in _state.value.settling && settled.add(target)) settle(target)
         }
     }
 
@@ -255,6 +359,9 @@ class StanceViewModel @Inject constructor(
 
     /** A signing the target's row sends — the hold, or its Retry — checked like Set. */
     private fun signFromRow(target: StanceTarget, pick: StancePair) {
+        // A kept plain pick with the key here: the hold opens the review, as
+        // the tap does, and never signs (PadPendingReview.md:13).
+        if (opensReview(target)) return askForReview(target)
         // With the key elsewhere a hold opens the pad carrying the key
         // notice, as a tap does, and signs nothing (PadKeyAbsent.md:5).
         if (_state.value.keyAbsent) return onOpenPad(target)
@@ -280,6 +387,7 @@ class StanceViewModel @Inject constructor(
      * let a restart teach twice.
      */
     fun onOpenPad(target: StanceTarget) {
+        if (opensReview(target)) return askForReview(target)
         // A reader who chose sliders or typed values meets the alternates
         // wherever the pad would bloom: the choice replaces the pad
         // everywhere (stance-control.md *Alternate and accessible inputs*).
@@ -340,6 +448,7 @@ class StanceViewModel @Inject constructor(
      * considered route has met the gesture — without drawing the lines.
      */
     fun onOpenAlternates(target: StanceTarget) {
+        if (opensReview(target)) return askForReview(target)
         open(target, PadMode.ALTERNATES)
         if (taught != true) {
             taught = true
@@ -347,13 +456,20 @@ class StanceViewModel @Inject constructor(
         }
     }
 
-    /** Opens [target]'s considered route at the default, and asks whether the reader still borrows a view. */
+    private fun askForReview(target: StanceTarget) = _state.update { it.copy(reviewFrom = target) }
+
+    /**
+     * Opens [target]'s considered route at the default — or HOLDING THE KEPT
+     * PICK where one waits (PadKeyAbsent.md:29, VouchBack.md:40) — and asks
+     * whether the reader still borrows a view.
+     */
     private fun open(target: StanceTarget, mode: PadMode) {
+        val at = keptFor(target)?.pick ?: StancePair.TapDefault
         update(target) {
             it.copy(
                 pad = mode,
-                pick = StancePair.TapDefault,
-                landing = it.landingFor(StancePair.TapDefault),
+                pick = at,
+                landing = it.landingFor(at),
                 failed = false,
                 writeRule = false,
             )
@@ -629,6 +745,9 @@ class StanceViewModel @Inject constructor(
      */
     private suspend fun taken(target: StanceTarget, pick: StancePair) {
         signals.announceSigned()
+        // A kept vouch-back signed through its own pad is kept no longer
+        // (VouchBackPad.md:49): what waited has been said.
+        keptFor(target)?.let { keptPicks.drop(listOf(target), it.family) }
         showPendingStanding(target, pick)
         update(target) {
             it.copy(

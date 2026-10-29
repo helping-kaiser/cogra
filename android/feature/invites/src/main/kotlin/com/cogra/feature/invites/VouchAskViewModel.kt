@@ -27,6 +27,7 @@ import com.cogra.domain.invites.AskLinkUnusableReason
 import com.cogra.domain.invites.InvitesRepository
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.stance.KeptPickStore
 import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -81,6 +82,7 @@ class VouchAskViewModel @Inject constructor(
     private val signer: WriteSigner,
     private val identity: IdentityStore,
     private val signals: StanceSignals,
+    private val kept: KeptPickStore,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(VouchAskUiState())
@@ -161,6 +163,7 @@ class VouchAskViewModel @Inject constructor(
                     signals = signals,
                     source = ApprovalSource.Ask(checkNotNull(askLinkId)),
                     onOutcome = { outcome -> onOutcome(handle, outcome) },
+                    kept = kept,
                 )
                 _state.update { it.copy(landing = AskLanding.Ask(handle)) }
             }

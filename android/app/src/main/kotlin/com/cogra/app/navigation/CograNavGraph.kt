@@ -54,6 +54,7 @@ import com.cogra.app.ui.DeviceLockKeeper
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.LocalOnOpenKeptPicks
 import com.cogra.core.designsystem.LocalOnRestoreKey
 import com.cogra.core.designsystem.LocalPadBottomInset
 import com.cogra.core.designsystem.LocalSnackbarHostState
@@ -123,6 +124,8 @@ fun CograNavGraph(
         LocalPadBottomInset provides if (barShown) PAD_ABOVE_BAR else PAD_OFF_EDGE,
         // The pad's key notice opens the app's own restore (PadKeyAbsent.md).
         LocalOnRestoreKey provides { navController.navigate(Restore) },
+        // A kept pick's face with the key here opens the kept picks' review (PadPendingReview.md:11).
+        LocalOnOpenKeptPicks provides { navController.navigate(KeptPicks) },
     ) {
         CograNavGraphContent(navController, shellSnackbar, onBarShown = { barShown = it })
     }
