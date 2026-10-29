@@ -389,21 +389,13 @@ private fun FocusFollowsRemoval(
     createFocus: FocusRequester,
     onMoved: () -> Unit,
 ) {
-    val rows = state.layout.rows
     LaunchedEffect(state.read, state.focusAfter, state.standAt) {
         if (state.read == null) return@LaunchedEffect
         val wanted = state.focusAfter
         val standAt = state.standAt
         if (wanted == null && standAt == null) return@LaunchedEffect
         withFrameNanos { }
-        val target: String? = when {
-            standAt != null -> rows.firstOrNull { it.handle == standAt }?.id
-            wanted?.section == FocusAfter.Section.APPLICATION && rows.isNotEmpty() ->
-                rows[wanted.index.coerceAtMost(rows.lastIndex)].id
-            wanted?.section == FocusAfter.Section.LINK && state.links.isNotEmpty() ->
-                LINK_FOCUS_PREFIX + state.links[wanted.index.coerceAtMost(state.links.lastIndex)].id
-            else -> null
-        }
+        val target = focusTargetOf(state)
         val visible = target != null && list.layoutInfo.visibleItemsInfo.any { it.key == target }
         if (target != null && !visible) {
             // Off screen: bring it into view first, then focus it.
@@ -419,6 +411,24 @@ private fun FocusFollowsRemoval(
 }
 
 private const val LINK_FOCUS_PREFIX = "link:"
+
+/**
+ * The item focus moves to: the row an arrival stands at, else the next row or
+ * card, else the previous; null is the empty state's create.
+ */
+private fun focusTargetOf(state: InvitesUiState): String? {
+    val rows = state.layout.rows
+    val links = state.links
+    val wanted = state.focusAfter
+    return when {
+        state.standAt != null -> rows.firstOrNull { it.handle == state.standAt }?.id
+        wanted?.section == FocusAfter.Section.APPLICATION && rows.isNotEmpty() ->
+            rows[wanted.index.coerceAtMost(rows.lastIndex)].id
+        wanted?.section == FocusAfter.Section.LINK && links.isNotEmpty() ->
+            LINK_FOCUS_PREFIX + links[wanted.index.coerceAtMost(links.lastIndex)].id
+        else -> null
+    }
+}
 
 /** Where [key] stands in the lazy list — the same order [InvitesBody] emits. */
 private fun itemPosition(state: InvitesUiState, key: String): Int {

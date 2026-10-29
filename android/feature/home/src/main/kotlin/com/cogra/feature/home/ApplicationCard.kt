@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
@@ -72,6 +73,34 @@ fun cardOf(mine: MyApplication?): ApplicationCardState? {
     )
 }
 
+/** The card's words, per state and surface (copy-voice *The reject extension's lines*). */
+private data class CardWords(val title: String, val body: String, val label: String, val caption: String)
+
+@Composable
+private fun cardWords(card: ApplicationCardState, surface: ApplicationSurface): CardWords {
+    val approver = "@${card.approver}"
+    return when {
+        card.closed -> CardWords(
+            title = stringResource(R.string.application_closed_title, approver),
+            body = stringResource(R.string.application_closed_body, approver),
+            label = stringResource(R.string.application_ask_someone),
+            caption = stringResource(R.string.application_ask_someone_caption),
+        )
+        surface == ApplicationSurface.FEED -> CardWords(
+            title = stringResource(R.string.application_waiting_feed_title, approver),
+            body = stringResource(R.string.application_waiting_feed_body),
+            label = stringResource(R.string.application_your_ask_link),
+            caption = stringResource(R.string.application_waiting_feed_caption),
+        )
+        else -> CardWords(
+            title = stringResource(R.string.application_waiting_profile_title, approver),
+            body = stringResource(R.string.application_waiting_profile_body),
+            label = stringResource(R.string.application_your_ask_link),
+            caption = stringResource(R.string.application_waiting_profile_caption),
+        )
+    }
+}
+
 @Composable
 fun ApplicationCard(
     card: ApplicationCardState,
@@ -81,8 +110,7 @@ fun ApplicationCard(
     onPutAway: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val approver = "@${card.approver}"
-    val feed = surface == ApplicationSurface.FEED
+    val words = cardWords(card, surface)
     val base = DataNode("${surface.path}.application")
     // The profile's card is a chip-drawn duplicate on its board, keyed by state.
     val node = if (surface == ApplicationSurface.PROFILE) base.keyed(if (card.closed) "closed" else "waiting") else base
@@ -91,8 +119,7 @@ fun ApplicationCard(
     // account-notice olive once closed, every ink then the panel's own.
     val colors = MaterialTheme.colorScheme
     val ground = if (card.closed) colors.tertiaryContainer else colors.surfaceContainerHighest
-    val ink = if (card.closed) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurface
-    val quiet = if (card.closed) ink else MaterialTheme.colorScheme.onSurfaceVariant
+    val ink = if (card.closed) colors.onTertiaryContainer else colors.onSurface
     Column(
         verticalArrangement = Arrangement.spacedBy(Space.x3),
         modifier = modifier
@@ -104,51 +131,25 @@ fun ApplicationCard(
             // The ring's 2dp stands inside the card's own 16 (`--ring-task-width`).
             .padding(Space.x4 + 2.dp),
     ) {
-        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.x3)) {
-            Text(
-                text = when {
-                    card.closed -> stringResource(R.string.application_closed_title, approver)
-                    feed -> stringResource(R.string.application_waiting_feed_title, approver)
-                    else -> stringResource(R.string.application_waiting_profile_title, approver)
-                },
-                style = MaterialTheme.typography.titleMedium,
-                color = ink,
-                modifier = Modifier
-                    .weight(1f)
-                    .dataNode(base / "title"),
-            )
-            CograMark(
-                size = 20.dp,
-                tint = if (card.closed) ink else MaterialTheme.colorScheme.primary,
-            )
-        }
+        CardTitle(words.title, ink, mark = if (card.closed) ink else colors.primary, node = base / "title")
         Text(
-            text = when {
-                card.closed -> stringResource(R.string.application_closed_body, approver)
-                feed -> stringResource(R.string.application_waiting_feed_body)
-                else -> stringResource(R.string.application_waiting_profile_body)
-            },
+            text = words.body,
             style = MaterialTheme.typography.bodyMedium,
-            color = quiet,
+            color = if (card.closed) ink else colors.onSurfaceVariant,
             modifier = Modifier.dataNode(base / "body"),
         )
         AddressCard(
             address = askUrl,
-            label = stringResource(
-                if (card.closed) R.string.application_ask_someone else R.string.application_your_ask_link,
-            ),
+            label = words.label,
             copyLabel = stringResource(R.string.application_copy_ask_link),
             onCopy = onCopy,
-            caption = when {
-                card.closed -> stringResource(R.string.application_ask_someone_caption)
-                feed -> stringResource(R.string.application_waiting_feed_caption)
-                else -> stringResource(R.string.application_waiting_profile_caption)
-            },
+            caption = words.caption,
             bare = true,
             ink = if (card.closed) ink else null,
             node = base / "link",
         )
-        if (!card.closed && feed) {
+        // Only the feed's waiting card is put away (ApplicantWaiting.md:15; ProfileApplicant.md:14).
+        if (!card.closed && surface == ApplicationSurface.FEED) {
             CograButton(
                 text = stringResource(R.string.application_got_it),
                 onClick = onPutAway,
@@ -156,6 +157,22 @@ fun ApplicationCard(
                 testTag = (base / "dismiss").tag,
             )
         }
+    }
+}
+
+/** The title, and the mark in the trailing seat (`TaskCard`). */
+@Composable
+private fun CardTitle(title: String, ink: Color, mark: Color, node: DataNode) {
+    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.x3)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = ink,
+            modifier = Modifier
+                .weight(1f)
+                .dataNode(node),
+        )
+        CograMark(size = 20.dp, tint = mark)
     }
 }
 
@@ -169,7 +186,9 @@ fun ApplicationCard(
 internal fun ApplicationCardSlot(state: HomeUiState, stepsDone: Boolean, actions: ApplicationCardActions) {
     val card = cardOf(state.application) ?: return
     val feed = actions.surface == ApplicationSurface.FEED
-    if (!card.closed && feed && (!stepsDone || state.cardPutAway)) return
+    // The waiting card waits for every owed step, and stays away once put away here.
+    val waitingHidden = !stepsDone || state.cardPutAway
+    if (!card.closed && feed && waitingHidden) return
     val url = actions.askUrl(card.askLink)
     ApplicationCard(
         card = card,

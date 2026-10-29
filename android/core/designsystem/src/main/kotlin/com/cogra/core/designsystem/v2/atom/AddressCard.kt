@@ -46,16 +46,6 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Space
 
-/** The card's one inline word (`Revoke`), waiting as the pill does: inert from the press, its participle past 200ms. */
-data class AddressAction(
-    val label: String,
-    val onClick: () -> Unit,
-    /** In flight: the word refuses a second press and is never dimmed. */
-    val inFlight: Boolean = false,
-    /** What the word reads once the wait passes the participle delay (`Revoking…`). */
-    val busyLabel: String? = null,
-)
-
 @Composable
 fun AddressCard(
     address: String,
@@ -80,16 +70,7 @@ fun AddressCard(
         modifier = modifier
             .fillMaxWidth()
             .then(if (node != null) Modifier.dataNode(node) else Modifier.optionalTag(testTag))
-            .then(
-                if (bare) {
-                    Modifier
-                } else {
-                    Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                        .padding(horizontal = Space.x4, vertical = Space.x3)
-                },
-            ),
+            .then(if (bare) Modifier else Modifier.addressGround()),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
             Text(
@@ -101,52 +82,11 @@ fun AddressCard(
                     .dataNode(node?.div("label")),
             )
             if (onCopy != null) {
-                // 32dp of ink answering at 48 (`cg-hit`), without growing the row.
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .hitTarget(
-                            interactive = Modifier
-                                .clip(CircleShape)
-                                .clickable(role = Role.Button, onClick = onCopy)
-                                .semantics { contentDescription = copyLabel },
-                            drawnWidth = COPY_SIZE,
-                            drawnHeight = COPY_SIZE,
-                        )
-                        .size(COPY_SIZE),
-                ) {
-                    // The tag names the drawn 32 — its own layout node — not the 48 it answers at.
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .matchParentSize()
-                            .then(
-                                if (node != null) {
-                                    Modifier.dataNode(node / "copy")
-                                } else {
-                                    Modifier.optionalTag(testTag?.let { "${it}_copy" })
-                                },
-                            ),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.ContentCopy,
-                            contentDescription = null,
-                            tint = quiet,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
-                }
+                val tag = node?.let { Modifier.dataNode(it / "copy") }
+                    ?: Modifier.optionalTag(testTag?.let { "${it}_copy" })
+                CopyControl(onCopy, copyLabel, quiet, tag)
             }
-            if (action != null) {
-                val slow = rememberParticiple(action.inFlight)
-                InlineAction(
-                    text = if (slow && action.busyLabel != null) action.busyLabel else action.label,
-                    onClick = { if (!action.inFlight) action.onClick() },
-                    size = InlineSize.Large,
-                    node = node?.div("action"),
-                    testTag = testTag?.let { "${it}_action" },
-                )
-            }
+            if (action != null) ActionWord(action, node?.div("action"), testTag?.let { "${it}_action" })
         }
         Text(
             text = address,
@@ -168,6 +108,54 @@ fun AddressCard(
             )
         }
     }
+}
+
+/** The card's own ground: the card fill at the medium rung, `12 16` inside. */
+@Composable
+private fun Modifier.addressGround(): Modifier = this
+    .clip(RoundedCornerShape(12.dp))
+    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+    .padding(horizontal = Space.x4, vertical = Space.x3)
+
+/** 32dp of ink answering at 48 (`cg-hit`), without growing the row. */
+@Composable
+private fun CopyControl(onCopy: () -> Unit, copyLabel: String, tint: Color, tag: Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .hitTarget(
+                interactive = Modifier
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onCopy)
+                    .semantics { contentDescription = copyLabel },
+                drawnWidth = COPY_SIZE,
+                drawnHeight = COPY_SIZE,
+            )
+            .size(COPY_SIZE),
+    ) {
+        // The tag names the drawn 32 — its own layout node — not the 48 it answers at.
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.matchParentSize().then(tag)) {
+            Icon(
+                imageVector = Icons.Outlined.ContentCopy,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
+/** The one inline word: inert from the press, its participle past 200ms, never dimmed. */
+@Composable
+private fun ActionWord(action: AddressAction, node: DataNode?, testTag: String?) {
+    val slow = rememberParticiple(action.inFlight)
+    InlineAction(
+        text = if (slow && action.busyLabel != null) action.busyLabel else action.label,
+        onClick = { if (!action.inFlight) action.onClick() },
+        size = InlineSize.Large,
+        node = node,
+        testTag = testTag,
+    )
 }
 
 private val COPY_SIZE = 32.dp

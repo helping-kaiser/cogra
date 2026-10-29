@@ -122,6 +122,7 @@ data class ApprovalPadState(
  * host's view-model scope; [onOutcome] hears every commit that ended other
  * than in a fault or a notice.
  */
+@Suppress("TooManyFunctions") // one entry per gesture the control raises, plus the seam's roads to the act
 class ApprovalPad(
     private val scope: CoroutineScope,
     private val invites: InvitesRepository,

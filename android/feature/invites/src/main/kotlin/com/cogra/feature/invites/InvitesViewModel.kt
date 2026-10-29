@@ -40,11 +40,15 @@ import java.time.Duration
 import java.time.Instant
 import javax.inject.Inject
 
+private const val DAY_HOURS = 24L
+private const val WEEK_DAYS = 7L
+private const val MONTH_DAYS = 30L
+
 /** The three lengths, and no custom date (InviteExpiry.md:5). */
 enum class ExpiryChoice(val lifetime: Duration) {
-    HOURS_24(Duration.ofHours(24)),
-    DAYS_7(Duration.ofDays(7)),
-    DAYS_30(Duration.ofDays(30)),
+    HOURS_24(Duration.ofHours(DAY_HOURS)),
+    DAYS_7(Duration.ofDays(WEEK_DAYS)),
+    DAYS_30(Duration.ofDays(MONTH_DAYS)),
     ;
 
     companion object {
