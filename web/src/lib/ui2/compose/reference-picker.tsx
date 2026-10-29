@@ -42,8 +42,8 @@ import { shortTimestamp } from "@/lib/ui/timestamp";
 
 import { BottomSheet } from "../bottom-sheet";
 import { Chip } from "../chip";
+import { FilterFoot, FilterSection } from "../filter-sheet";
 import { HelpDialog, HELP_TOPICS } from "../help-dialog";
-import { PillButton } from "../pill-button";
 import { SearchBar } from "../search-bar";
 import {
   PickerFault,
@@ -61,6 +61,10 @@ import {
 export const PICKER_DEBOUNCE_MS = 250;
 
 const NODE: DataNode = { path: "referencePicker" };
+const FILTER_SHEET = part(NODE, "filterSheet");
+
+/** The kinds section's words (ReferencePicker.jsx, the search filter's own). */
+const KINDS_HINT = "Combine as many as you like. All, until you narrow it.";
 
 /** The three citable kinds, as the search filter names them (`FEED_KINDS`). */
 export const CITABLE_KINDS = [
@@ -302,66 +306,41 @@ export function ReferencePicker({
           </>
         }
       />
+      {/* THE FILTER SHEET IS THE SEARCH FILTER'S ANATOMY (ReferencePicker.jsx:
+          `SheetTitle`, `FilterSection` Kinds, `FilterFoot`): a sheet of rows,
+          each section carrying its own 24px gutter, the foot ending the
+          content rather than pinned under a scroll — Explore's own sheet. */}
       <BottomSheet
         open={staging !== null}
         // The scrim, a swipe down, system Back and Escape drop what was staged.
         onClose={() => setStaging(null)}
         title="What the search shows"
-        node={part(NODE, "filterSheet")}
-        foot={
-          <div className="px-6">
-            <div
-              className="flex items-center gap-2 border-t border-outline-variant pt-2.5"
-              {...testAttributes(part(part(NODE, "filterSheet"), "foot"))}
-            >
-              <PillButton
-                testId="reference-picker-filter-reset"
-                variant="text"
-                onClick={() => setStaging([])}
-                node={part(part(NODE, "filterSheet"), "foot.reset")}
-              >
-                Reset
-              </PillButton>
-              <span className="flex-1" />
-              <PillButton
-                testId="reference-picker-filter-done"
-                onClick={() => {
-                  // Done commits the staged kinds: the results narrow once.
-                  if (staging !== null) setKinds(staging);
-                  setStaging(null);
-                }}
-                node={part(part(NODE, "filterSheet"), "foot.done")}
-              >
-                Done
-              </PillButton>
-            </div>
-          </div>
-        }
+        node={FILTER_SHEET}
+        rows
       >
-        <div className="flex flex-col gap-2 px-6 pb-4" {...testAttributes(part(part(NODE, "filterSheet"), "kinds"))}>
-          <span className="text-label-large" {...testAttributes(part(part(NODE, "filterSheet"), "kinds.label"))}>
-            Kinds
-          </span>
-          <span
-            className="text-body-small text-on-surface-variant"
-            {...testAttributes(part(part(NODE, "filterSheet"), "kinds.hint"))}
-          >
-            Combine as many as you like. All, until you narrow it.
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {CITABLE_KINDS.map((entry) => (
-              <Chip
-                key={entry.value}
-                testId={`reference-picker-filter-${entry.value}`}
-                node={part(part(NODE, "filterSheet"), `kinds.${entry.value}Chip`)}
-                selected={(staging ?? kinds).includes(entry.value)}
-                onClick={() => toggle(entry.value)}
-              >
-                {entry.label}
-              </Chip>
-            ))}
-          </div>
-        </div>
+        <FilterSection label="Kinds" hint={KINDS_HINT} node={part(FILTER_SHEET, "kinds")}>
+          {CITABLE_KINDS.map((entry) => (
+            <Chip
+              key={entry.value}
+              testId={`reference-picker-filter-${entry.value}`}
+              node={part(FILTER_SHEET, `kinds.${entry.value}Chip`)}
+              selected={(staging ?? kinds).includes(entry.value)}
+              onClick={() => toggle(entry.value)}
+            >
+              {entry.label}
+            </Chip>
+          ))}
+        </FilterSection>
+        <FilterFoot
+          node={part(FILTER_SHEET, "foot")}
+          testId="reference-picker-filter"
+          onReset={() => setStaging([])}
+          onDone={() => {
+            // Done commits the staged kinds: the results narrow once.
+            if (staging !== null) setKinds(staging);
+            setStaging(null);
+          }}
+        />
       </BottomSheet>
       <HelpDialog open={help} onClose={() => setHelp(false)} topic={HELP_TOPICS.citing} testId="reference-picker-help" />
     </>
