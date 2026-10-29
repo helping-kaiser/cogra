@@ -794,3 +794,13 @@ describe("the veiled stream (ReelSensitive.md)", () => {
     expect(screen.getByTestId(byNode("reel.stage.veil"))).toHaveTextContent("The platform's verdict");
   });
 });
+
+describe("the rail over History's rows (PR-40)", () => {
+  it("a_rail_opened_from_history_wears_the_history_cards_looked_up_figure (Reel.md:21; History.md:29)", () => {
+    // History's card looks its figure up in the reader's last feed fetch, and
+    // the rail over History's rows wears that same figure.
+    holdRanking(null, answerOf({ p2: 4.25 }), "viewer");
+    mountStream({ origin: { kind: "history" }, startId: "p2" });
+    expect(screen.getByTestId(byNode("reel.rail.score.value"))).toHaveTextContent("4.25");
+  });
+});
