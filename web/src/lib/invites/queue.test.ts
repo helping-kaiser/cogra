@@ -97,6 +97,21 @@ describe("the batch dialog's words (RejectAllConfirm.md:3-9)", () => {
       "All four leave your list and all four people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
     );
   });
+
+  it(":7 at two the count is a pair — Both leave… and either of them", () => {
+    expect(rejectAllBody(2)).toEqual([
+      "Both leave your list and both people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
+      "This is your call and nobody else's. Any member can still vouch either of them in, and each gets a link to ask with.",
+    ]);
+  });
+
+  it(":9 from three the count is spelled through nine and in digits from 10", () => {
+    expect(rejectAllBody(3)[0]).toMatch(/^All three leave your list and all three people are told\./);
+    expect(rejectAllBody(9)[0]).toMatch(/^All nine leave your list and all nine people are told\./);
+    expect(rejectAllBody(10)[0]).toMatch(/^All 10 leave your list and all 10 people are told\./);
+    expect(rejectAllBody(12)[0]).toMatch(/^All 12 leave your list and all 12 people are told\./);
+    expect(rejectAllBody(3)[1]).toContain("vouch any of them in");
+  });
 });
 
 describe("the back arrow names its door (Invites.md:97)", () => {

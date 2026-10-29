@@ -45,7 +45,13 @@ export function ReferenceEntryField({
   pairs = "inline",
   onOpenPicker,
   after,
+  scale = "post",
 }: {
+  /**
+   * What the batch is, for the cap's sentence: `Up to 10 citations per post.`
+   * or `per comment` from a reply (copy-voice, *The pickers at the batch's ten*).
+   */
+  scale?: "post" | "comment";
   /**
    * What the section holds under its own controls: the edit's `Withdrawn:`
    * lines, which the edit boards draw inside the section (`postEdit.references.withdrawn`).
@@ -185,7 +191,8 @@ export function ReferenceEntryField({
           data-testid={`${testIdPrefix}-reference-cap`}
           className="text-body-small text-on-surface-variant"
         >
-          Up to {cap} references per post.
+          {/* A sentence counts citations; a label names references (copy-voice, seam 248). */}
+          Up to {cap} citations per {scale}.
         </p>
       )}
       {after}

@@ -220,7 +220,7 @@ describe("the kept picks' review", () => {
 });
 
 describe("the kept picks' seal", () => {
-  it("is the standard seal: What you sign, Last step, the ?, the acts card, Sign the opinions over Back", async () => {
+  it("is the standard seal: What you sign, Last step, the ?, the acts card, Sign the picks over Back", async () => {
     // KeptPicksSeal.md:3-7.
     await keepTheBoardsPicks();
     mount();
@@ -240,7 +240,7 @@ describe("the kept picks' seal", () => {
     expect(screen.getByTestId("keptPicksSeal.foot")).toContainElement(screen.getByTestId("keptPicksSeal.foot.sign"));
     expect(screen.getByTestId("keptPicksSeal.acts.total")).toHaveTextContent("3 things, signed together");
     expect(screen.getByTestId("keptPicksSeal.acts.note")).toHaveTextContent("They land together, or none does.");
-    expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Sign the opinions");
+    expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Sign the picks");
     expect(screen.getByTestId("keptPicksSeal.foot.back")).toHaveTextContent("Back");
     // Nothing on the seal is removable.
     expect(screen.queryByRole("button", { name: /^Remove/ })).toBeNull();
@@ -259,7 +259,7 @@ describe("the kept picks' seal", () => {
     expect(screen.queryByText("This takes you back to zero.")).toBeNull();
   });
 
-  it("signs the batch on Sign the opinions, with no severance dialog, and leaves with the batch snackbar", async () => {
+  it("signs the batch on Sign the picks, with no severance dialog, and leaves with the batch snackbar", async () => {
     // KeptPicksSeal.md:19,25.
     await keepTheBoardsPicks();
     const data = mount();
@@ -395,7 +395,7 @@ describe("the seal while the signing waits", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 
-  it("reads Signing the opinions… past 200ms, the ways out refusing a press; the slow line past 5s", async () => {
+  it("reads Signing the picks… past 200ms, the ways out refusing a press; the slow line past 5s", async () => {
     // KeptPicksSeal.md:19-23.
     await keepTheBoardsPicks();
     let release: () => void = () => {};
@@ -410,7 +410,7 @@ describe("the seal while the signing waits", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(250);
     });
-    expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Signing the opinions…");
+    expect(screen.getByTestId("keptPicksSeal.foot.sign")).toHaveTextContent("Signing the picks…");
     expect(screen.getByTestId("keptPicksSeal.foot.sign")).not.toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Back a step" }));
     fireEvent.click(screen.getByRole("button", { name: "Leave — your picks are kept" }));

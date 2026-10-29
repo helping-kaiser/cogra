@@ -178,8 +178,17 @@ describe("ReferenceEntryField", () => {
     renderSection(full);
     expect(screen.getByTestId("compose-reference-add")).toBeDisabled();
     expect(screen.getByTestId("compose-reference-cap")).toHaveTextContent(
-      "Up to 10 references per post",
+      "Up to 10 citations per post.",
     );
+    expect(screen.queryByText(/references per/)).not.toBeInTheDocument();
+  });
+
+  it("says per comment at a reply's cap", () => {
+    const full = Array.from({ length: 10 }, (_, i) => mention(`u-${i}`, `u${i}`));
+    render(
+      <ReferenceEntryField references={full} onChange={vi.fn()} cap={10} scale="comment" testIdPrefix="reply" />,
+    );
+    expect(screen.getByTestId("reply-reference-cap")).toHaveTextContent("Up to 10 citations per comment.");
   });
 
   it("carries no cap where the references are not one batch", () => {
