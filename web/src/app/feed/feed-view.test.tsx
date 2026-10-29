@@ -665,7 +665,7 @@ describe("FeedView", () => {
     renderWithProviders(<FeedView store={fakeIdentityStore({})} />, {
       store: signedInStore(),
     });
-    const restore = await screen.findByTestId("home_restore");
+    const restore = await screen.findByTestId("feed.keyCard.restore");
     expect(screen.getByTestId("collapsing-top")).toContainElement(restore);
   });
 
@@ -1032,7 +1032,7 @@ describe("FeedView", () => {
       });
       expect(await screen.findByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
       await waitFor(() =>
-        expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument(),
+        expect(screen.queryByTestId("feed.keyCard.restore")).not.toBeInTheDocument(),
       );
     });
 
@@ -1043,14 +1043,14 @@ describe("FeedView", () => {
         keyAttached: true,
         keyOnDevice: false,
       });
-      expect(await screen.findByTestId("home_restore")).toHaveAttribute("href", "/restore");
+      expect(await screen.findByTestId("feed.keyCard.restore")).toHaveAttribute("href", "/restore");
     });
 
     // A member's loop never reports, so a null progress must not withhold the
     // one card that tells them why they cannot act.
     it("keeps asking a member with no key here, progress or none", async () => {
       renderFeed(null);
-      expect(await screen.findByTestId("home_restore")).toBeInTheDocument();
+      expect(await screen.findByTestId("feed.keyCard.restore")).toBeInTheDocument();
     });
   });
 

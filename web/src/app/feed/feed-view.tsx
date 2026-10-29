@@ -907,7 +907,7 @@ export function FeedView({
               full width, 8px under the band), so it keeps no gutter. */}
           {phase === "signedIn" && keyOnDevice === false && !noKeyYet && (
             <div className="flex flex-col pt-2">
-              <RestoreCard />
+              <RestoreCard node={{ path: "feed.keyCard" }} />
             </div>
           )}
         </CograBand>

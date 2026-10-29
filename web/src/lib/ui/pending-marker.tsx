@@ -9,12 +9,17 @@
 // pick waits on the reader's key — `Waiting for your key` (PadPending.md) —
 // and never reads `Still settling`, which is a signed record's.
 
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 export function PendingMarker({
   testId,
   inline = false,
   label = "Still settling",
+  node,
 }: {
   testId: string;
+  /** The registered marker (`feed.card.actionRow.stance.pending`); it then names the line instead of `testId`. */
+  node?: DataNode;
   /**
    * The phrasing form, for a marker that lands inside a row which is itself a
    * button — the references sheet's rows (`PendingMarker.jsx`: "a `<button>`
@@ -30,13 +35,13 @@ export function PendingMarker({
   const ink = "text-[length:var(--text-label-small)] text-on-surface-variant";
   if (inline) {
     return (
-      <span data-testid={testId} className={ink}>
+      <span {...testAttributes(node, testId)} className={ink}>
         {label}
       </span>
     );
   }
   return (
-    <p data-testid={testId} className={ink}>
+    <p {...testAttributes(node, testId)} className={ink}>
       {label}
     </p>
   );
