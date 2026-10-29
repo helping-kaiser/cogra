@@ -572,7 +572,11 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     expect(screen.getByTestId("postEdit.tags.withdrawn")).toHaveTextContent(
       "Withdrawn: #coastroad",
     );
-    expect(screen.getByLabelText("Undo withdrawing #coastroad")).toBeInTheDocument();
+    // The undo is NAMED by what it undoes (EditCompose's `withdrawn.undo`): the
+    // name rides the button itself, never a wrapper the button does not take.
+    expect(screen.getByRole("button", { name: "Undo withdrawing #coastroad" })).toBe(
+      screen.getByTestId("postEdit.tags.withdrawn.undo"),
+    );
     expect(footer()).toHaveTextContent("You're signing 1 thing");
 
     fireEvent.click(screen.getByTestId("postEdit.tags.withdrawn.undo"));

@@ -174,11 +174,14 @@ export function WithdrawnLine({
       {...testAttributes(node)}
     >
       <span data-testid={node === undefined ? testId : undefined}>Withdrawn: {name}</span>
-      <span aria-label={`Undo withdrawing ${name}`} className="inline-flex">
-        <TextAction testId={`${testId}-undo`} node={part(node, "undo")} onClick={onUndo}>
-          Undo
-        </TextAction>
-      </span>
+      <TextAction
+        testId={`${testId}-undo`}
+        node={part(node, "undo")}
+        ariaLabel={`Undo withdrawing ${name}`}
+        onClick={onUndo}
+      >
+        Undo
+      </TextAction>
     </p>
   );
 }
