@@ -17,14 +17,12 @@
 //
 // THE FILTER (the trigger reads `Everything`) holds the three citable kinds —
 // Posts, Comments, Profiles — that combine, staged in its sheet and committed
-// by `Done`, the search filter's law (ExploreFilter.md). What the open sheet
-// looks like on THIS surface is not drawn; it is built from `ExploreFilter`'s
-// kinds section and foot, and reported as a design gap.
+// by `Done`, the search filter's law (ExploreFilter.md).
 //
 // REGISTERED (nodes.json ReferencePicker, round 23): a result is
 // `referencePicker.result` and a staged row `referencePicker.staged.stagedReference`,
-// each keyed by its place from 1. The open filter sheet is not drawn on this
-// surface, so its parts keep the evident `referencePicker.filterSheet` paths.
+// each keyed by its place from 1. Its filter sheet is the board's `filter` state,
+// `referencePicker.filterSheet` (round 24).
 
 import { useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
@@ -280,12 +278,15 @@ export function ReferencePicker({
         node={part(NODE, "filterSheet")}
         foot={
           <div className="px-6">
-            <div className="flex items-center gap-2 border-t border-outline-variant pt-2.5">
+            <div
+              className="flex items-center gap-2 border-t border-outline-variant pt-2.5"
+              {...testAttributes(part(part(NODE, "filterSheet"), "foot"))}
+            >
               <PillButton
                 testId="reference-picker-filter-reset"
                 variant="text"
                 onClick={() => setStaging([])}
-                node={part(part(NODE, "filterSheet"), "reset")}
+                node={part(part(NODE, "filterSheet"), "foot.reset")}
               >
                 Reset
               </PillButton>
@@ -297,7 +298,7 @@ export function ReferencePicker({
                   if (staging !== null) setKinds(staging);
                   setStaging(null);
                 }}
-                node={part(part(NODE, "filterSheet"), "done")}
+                node={part(part(NODE, "filterSheet"), "foot.done")}
               >
                 Done
               </PillButton>
@@ -306,8 +307,13 @@ export function ReferencePicker({
         }
       >
         <div className="flex flex-col gap-2 px-6 pb-4" {...testAttributes(part(part(NODE, "filterSheet"), "kinds"))}>
-          <span className="text-label-large">Kinds</span>
-          <span className="text-body-small text-on-surface-variant">
+          <span className="text-label-large" {...testAttributes(part(part(NODE, "filterSheet"), "kinds.label"))}>
+            Kinds
+          </span>
+          <span
+            className="text-body-small text-on-surface-variant"
+            {...testAttributes(part(part(NODE, "filterSheet"), "kinds.hint"))}
+          >
             Combine as many as you like. All, until you narrow it.
           </span>
           <div className="flex flex-wrap gap-2">
@@ -315,6 +321,7 @@ export function ReferencePicker({
               <Chip
                 key={entry.value}
                 testId={`reference-picker-filter-${entry.value}`}
+                node={part(part(NODE, "filterSheet"), `kinds.${entry.value}Chip`)}
                 selected={(staging ?? kinds).includes(entry.value)}
                 onClick={() => toggle(entry.value)}
               >

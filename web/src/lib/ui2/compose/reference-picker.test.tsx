@@ -216,10 +216,10 @@ describe("ReferencePicker — the filter", () => {
     type("salt");
     await settle();
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterTrigger")));
-    fireEvent.click(screen.getByTestId("reference-picker-filter-profiles"));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.profilesChip")));
     // Staged, not applied: the results do not move under the sheet.
     expect(results()).toEqual(["u-sal", "p-salt"]);
-    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.done")));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.foot.done")));
     // The server narrows: the picker asks again with the committed kinds.
     await settle();
     expect(results()).toEqual(["u-sal"]);
@@ -238,9 +238,9 @@ describe("ReferencePicker — the filter", () => {
     type("salt");
     await settle();
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterTrigger")));
-    fireEvent.click(screen.getByTestId("reference-picker-filter-posts"));
-    fireEvent.click(screen.getByTestId("reference-picker-filter-profiles"));
-    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.done")));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.postsChip")));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.profilesChip")));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.foot.done")));
     await settle();
     expect(asked).toEqual([
       { query: "salt", limit: 10 },
@@ -254,7 +254,7 @@ describe("ReferencePicker — the filter", () => {
     type("salt");
     await settle();
     fireEvent.click(screen.getByTestId(byNode("referencePicker.filterTrigger")));
-    fireEvent.click(screen.getByTestId("reference-picker-filter-posts"));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.filterSheet.kinds.postsChip")));
     const sheet = screen.getByTestId(byNode("referencePicker.filterSheet")) as HTMLDialogElement;
     // Escape and system Back reach a modal dialog as a close request.
     act(() => sheet.close());
