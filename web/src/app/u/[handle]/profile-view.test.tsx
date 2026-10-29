@@ -4,6 +4,7 @@ import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
+import { forgetAllProfilePosts } from "@/lib/profile/profile-memory";
 import { createTokenStore } from "@/lib/session/token-store";
 import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
@@ -134,6 +135,7 @@ function recordsHandler(
 beforeEach(() => {
   window.localStorage.clear();
   resetSeenQueueForTests();
+  forgetAllProfilePosts();
   marked = [];
 });
 
@@ -890,8 +892,8 @@ describe("ProfileScreen", () => {
     await screen.findByTestId(byNode("profile.identity.name"));
     // Every visitor lands on Everything, as every profile board draws it.
     await waitFor(() => expect(families).toEqual([null]));
-    fireEvent.click(screen.getByTestId(byNode("profile.tabRow.postsTab")));
-    await waitFor(() => expect(families).toEqual([null, "PUBLISH"]));
+    fireEvent.click(screen.getByTestId(byNode("profile.tabRow.commentsTab")));
+    await waitFor(() => expect(families).toEqual([null, "REVIEW"]));
   });
 
   // THE PAGE THAT DID NOT ARRIVE (Profile.md:35): the quiet line and Retry

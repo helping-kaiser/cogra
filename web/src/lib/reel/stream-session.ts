@@ -40,7 +40,18 @@ export type StreamOrigin =
   | { readonly kind: "feed" }
   | { readonly kind: "saved" }
   | { readonly kind: "history" }
-  | { readonly kind: "profile"; readonly handle: string; readonly own: boolean };
+  | {
+      readonly kind: "profile";
+      readonly handle: string;
+      readonly own: boolean;
+      /**
+       * Where someone's profile was itself opened from, which the way back
+       * hands it again: the profile keeps its own back arrow and the root its
+       * stack began in (ProfilePosts.md:51, :59; readme §4, "a stack is where a
+       * screen was opened FROM").
+       */
+      readonly from?: string | null;
+    };
 
 /** The way back, by the stream's noun table (Reel.md:79; readme §13, the nav-noun sweep). */
 export function streamBack(origin: StreamOrigin): { readonly href: string; readonly label: string } {
@@ -54,7 +65,10 @@ export function streamBack(origin: StreamOrigin): { readonly href: string; reado
     case "profile":
       return origin.own
         ? { href: "/profile", label: "Back to your profile" }
-        : { href: `/u/${encodeURIComponent(origin.handle)}`, label: "Back to the profile" };
+        : {
+            href: `/u/${encodeURIComponent(origin.handle)}${origin.from ? `?from=${encodeURIComponent(origin.from)}` : ""}`,
+            label: "Back to the profile",
+          };
   }
 }
 
