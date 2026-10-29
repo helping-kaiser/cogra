@@ -327,10 +327,10 @@ class SettingsScreenTest {
             SettingsUiState(
                 account = account(),
                 now = NOW,
-                readerDefault = FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST, stillSettling = false),
+                readerDefault = FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST),
             ),
         )
-        node("settings.reading.feed.value").assertTextEquals("Posts · newest · settled only")
+        node("settings.reading.feed.value").assertTextEquals("Posts · newest")
     }
 
     // SettingsReading.md:3 — "WHEN tap What your feed shows -> the filter sheet
