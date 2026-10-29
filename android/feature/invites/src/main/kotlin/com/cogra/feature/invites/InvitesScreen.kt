@@ -72,6 +72,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -470,7 +471,8 @@ private fun LazyListScope.applications(
     val layout = state.layout
     if (layout.isEmpty) return
     item(key = "applicationsLabel") {
-        SectionLabel(stringResource(R.string.invites_applications), INVITES / "applicationsLabel")
+        // 4 of its 12 already stand under New invite's ink, inside the pill's 48.
+        SectionLabel(stringResource(R.string.invites_applications), INVITES / "applicationsLabel", top = Space.x2)
     }
     val row: @Composable (ApplicationInfo) -> Unit = { application ->
         val focus = remember(application.id) { FocusRequester() }
@@ -503,7 +505,7 @@ private fun LazyListScope.applications(
 
 /** A quiet section caption (`SectionLabel.jsx`): label-small, secondary ink, `12 24 4`. */
 @Composable
-private fun SectionLabel(text: String, node: DataNode) {
+private fun SectionLabel(text: String, node: DataNode, top: Dp = Space.x3) {
     // A block at the column's width, its own `12 24 4` inside it.
     Text(
         text = text,
@@ -512,7 +514,7 @@ private fun SectionLabel(text: String, node: DataNode) {
         modifier = Modifier
             .fillMaxWidth()
             .dataNode(node)
-            .padding(start = Space.x6, end = Space.x6, top = Space.x3, bottom = Space.x1),
+            .padding(start = Space.x6, end = Space.x6, top = top, bottom = Space.x1),
     )
 }
 
@@ -622,16 +624,22 @@ private fun CloseGlyph(handle: String, onClose: () -> Unit) {
                 drawnWidth = CLOSE_SIZE,
                 drawnHeight = CLOSE_SIZE,
             )
-            // The tag names the drawn 40, not the 48 it answers at.
-            .dataNode(INVITES / "application" / "close")
             .size(CLOSE_SIZE),
     ) {
-        Icon(
-            Icons.Filled.Close,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp),
-        )
+        // The tag names the drawn 40 — its own layout node — not the 48 it answers at.
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .matchParentSize()
+                .dataNode(INVITES / "application" / "close"),
+        ) {
+            Icon(
+                Icons.Filled.Close,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp),
+            )
+        }
     }
 }
 

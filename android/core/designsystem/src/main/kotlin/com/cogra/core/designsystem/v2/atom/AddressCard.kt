@@ -113,22 +113,28 @@ fun AddressCard(
                             drawnWidth = COPY_SIZE,
                             drawnHeight = COPY_SIZE,
                         )
-                        // The tag names the drawn 32, not the 48 it answers at.
-                        .then(
-                            if (node != null) {
-                                Modifier.dataNode(node / "copy")
-                            } else {
-                                Modifier.optionalTag(testTag?.let { "${it}_copy" })
-                            },
-                        )
                         .size(COPY_SIZE),
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.ContentCopy,
-                        contentDescription = null,
-                        tint = quiet,
-                        modifier = Modifier.size(18.dp),
-                    )
+                    // The tag names the drawn 32 — its own layout node — not the 48 it answers at.
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .matchParentSize()
+                            .then(
+                                if (node != null) {
+                                    Modifier.dataNode(node / "copy")
+                                } else {
+                                    Modifier.optionalTag(testTag?.let { "${it}_copy" })
+                                },
+                            ),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ContentCopy,
+                            contentDescription = null,
+                            tint = quiet,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
             }
             if (action != null) {
