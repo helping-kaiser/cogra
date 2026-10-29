@@ -172,7 +172,7 @@ async function openCommentsTab() {
 }
 
 const cardIds = () =>
-  screen.getAllByTestId(byNode("profile.comments.card")).map((card) => card.getAttribute("data-testid-key"));
+  screen.getAllByTestId(byNode("profile.comments.commentCard")).map((card) => card.getAttribute("data-testid-key"));
 
 const replies = (count: number) => ({ replies: { __typename: "CommentConnection", totalCount: count } });
 
@@ -194,11 +194,11 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     expect(cardIds()).toEqual(["c2", "c1"]);
     // The comment card, live: its words, its opinion, its ⋮ — and its thread
     // one tap away.
-    const card = screen.getByTestId(byNode("profile.comments.card", "c2"));
+    const card = screen.getByTestId(byNode("profile.comments.commentCard", "c2"));
     expect(card).toHaveTextContent("Words of c2");
-    expect(screen.getByTestId(byNode("profile.comments.card.actionRow.stance", "c2"))).toBeInTheDocument();
-    expect(screen.getByTestId(byNode("profile.comments.card.menu", "c2"))).toBeInTheDocument();
-    expect(screen.getByTestId(byNode("profile.comments.card.target", "c2"))).toHaveAttribute(
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.actionRow.stance", "c2"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.menu", "c2"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.target", "c2"))).toHaveAttribute(
       "href",
       "/posts/p1?comment=c2&from=u%3Aada",
     );
@@ -222,11 +222,11 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     });
     renderWithProviders(<ProfileScreen handle="ada" />);
     await openCommentsTab();
-    const card = screen.getByTestId(byNode("profile.comments.card", "c2"));
-    const pointer = screen.getByTestId(byNode("profile.comments.card.target", "c2"));
+    const card = screen.getByTestId(byNode("profile.comments.commentCard", "c2"));
+    const pointer = screen.getByTestId(byNode("profile.comments.commentCard.target", "c2"));
     expect(card.firstElementChild).toBe(pointer);
     expect(pointer).toHaveTextContent(/^On “The long way home” — @ada$/);
-    expect(screen.getByTestId(byNode("profile.comments.card.target", "c1"))).toHaveTextContent(/^On @sol's comment$/);
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.target", "c1"))).toHaveTextContent(/^On @sol's comment$/);
     expect(screen.queryByTestId("profile-comment-c2-head")).toBeNull();
   });
 
@@ -275,7 +275,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     serveComments({ "": { comments: [profileComment("c1")], next: null } });
     renderWithProviders(<ProfileScreen handle="ada" />);
     await openCommentsTab();
-    const chip = screen.getByTestId(byNode("profile.comments.card.authorChip", "c1"));
+    const chip = screen.getByTestId(byNode("profile.comments.commentCard.authorChip", "c1"));
     expect(chip.tagName).not.toBe("A");
     expect(chip.closest("a")).toBeNull();
     expect(chip).toHaveTextContent("@ada");
@@ -303,20 +303,20 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
     await openCommentsTab();
     const href = (path: string, key: string) => screen.getByTestId(byNode(path, key)).getAttribute("href");
-    expect(href("profile.comments.card.target", "c2")).toBe("/posts/p1?comment=c2&from=u%3Aada");
-    expect(href("profile.comments.card.target", "c1")).toBe("/posts/p1?comment=c0&from=u%3Aada");
+    expect(href("profile.comments.commentCard.target", "c2")).toBe("/posts/p1?comment=c2&from=u%3Aada");
+    expect(href("profile.comments.commentCard.target", "c1")).toBe("/posts/p1?comment=c0&from=u%3Aada");
     await waitFor(() =>
-      expect(screen.getByTestId(byNode("profile.comments.card.actionRow.reply", "c2"))).toHaveTextContent("Reply"),
+      expect(screen.getByTestId(byNode("profile.comments.commentCard.actionRow.reply", "c2"))).toHaveTextContent("Reply"),
     );
-    expect(href("profile.comments.card.actionRow.reply", "c2")).toBe("/posts/p1?comment=c2&from=u%3Aada&reply=1");
-    const line = screen.getByTestId(byNode("profile.comments.card.viewReplies", "c2"));
+    expect(href("profile.comments.commentCard.actionRow.reply", "c2")).toBe("/posts/p1?comment=c2&from=u%3Aada&reply=1");
+    const line = screen.getByTestId(byNode("profile.comments.commentCard.viewReplies", "c2"));
     expect(line).toHaveTextContent(/^View 2 replies$/);
     expect(line).toHaveAttribute("href", "/posts/p1?comment=c2&from=u%3Aada");
-    expect(screen.getByTestId(byNode("profile.comments.card.viewReplies", "c1"))).toHaveTextContent(/^View 1 reply$/);
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.viewReplies", "c1"))).toHaveTextContent(/^View 1 reply$/);
     // No replies, no line.
-    expect(screen.queryByTestId(byNode("profile.comments.card.viewReplies", "c9"))).toBeNull();
+    expect(screen.queryByTestId(byNode("profile.comments.commentCard.viewReplies", "c9"))).toBeNull();
     // The line stands under the card, not in it.
-    expect(screen.getByTestId(byNode("profile.comments.card", "c2")).contains(line)).toBe(false);
+    expect(screen.getByTestId(byNode("profile.comments.commentCard", "c2")).contains(line)).toBe(false);
   });
 
   it("the_doors_name_your_profile_from_your_own_root", async () => {
@@ -326,7 +326,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     serveComments({ "": { comments: [profileComment("c1")], next: null } });
     renderWithProviders(<ProfileScreen handle={null} />, { store: signedIn("u-ada") });
     await openCommentsTab();
-    expect(screen.getByTestId(byNode("profile.comments.card.target", "c1"))).toHaveAttribute(
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.target", "c1"))).toHaveAttribute(
       "href",
       "/posts/p1?comment=c1&from=profile",
     );
@@ -340,9 +340,9 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     serveComments({ "": { comments: [profileComment("c1")], next: null } });
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
     await openCommentsTab();
-    const reply = await screen.findByTestId(byNode("profile.comments.card.actionRow.reply", "c1"));
+    const reply = await screen.findByTestId(byNode("profile.comments.commentCard.actionRow.reply", "c1"));
     await waitFor(() => expect(reply.tagName).toBe("BUTTON"));
-    const locked = screen.getByTestId(byNode("profile.comments.card.actionRow.reply", "c1"));
+    const locked = screen.getByTestId(byNode("profile.comments.commentCard.actionRow.reply", "c1"));
     expect(locked).not.toHaveAttribute("href");
     expect(locked.className).toContain("opacity-[var(--state-disabled)]");
     fireEvent.click(locked);
@@ -357,9 +357,9 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     serveComments({ "": { comments: [profileComment("c1")], next: null } });
     renderWithProviders(<ProfileScreen handle="ada" />);
     await openCommentsTab();
-    expect(screen.queryByTestId(byNode("profile.comments.card.actionRow.reply", "c1"))).toBeNull();
+    expect(screen.queryByTestId(byNode("profile.comments.commentCard.actionRow.reply", "c1"))).toBeNull();
     // The thread is still in reach through the pointer.
-    expect(screen.getByTestId(byNode("profile.comments.card.target", "c1"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.target", "c1"))).toBeInTheDocument();
   });
 
   it("the_menu_of_your_own_comment_carries_remove_and_anothers_does_not", async () => {
@@ -369,7 +369,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     serveComments({ "": { comments: [profileComment("c1")], next: null } });
     const own = renderWithProviders(<ProfileScreen handle={null} />, { store: signedIn("u-ada") });
     await openCommentsTab();
-    fireEvent.click(screen.getByTestId(byNode("profile.comments.card.menu", "c1")));
+    fireEvent.click(screen.getByTestId(byNode("profile.comments.commentCard.menu", "c1")));
     const mine = within(screen.getByTestId("profile-comment-c1-menu-sheet")).getAllByRole("button");
     expect(mine.map((row) => row.textContent)).toContain("Remove");
     own.unmount();
@@ -378,7 +378,7 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     serveAda();
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedIn() });
     await openCommentsTab();
-    fireEvent.click(screen.getByTestId(byNode("profile.comments.card.menu", "c1")));
+    fireEvent.click(screen.getByTestId(byNode("profile.comments.commentCard.menu", "c1")));
     const theirs = within(screen.getByTestId("profile-comment-c1-menu-sheet")).getAllByRole("button");
     expect(theirs.map((row) => row.textContent)).toContain("Opinions on this");
     expect(theirs.map((row) => row.textContent)).not.toContain("Remove");
@@ -401,9 +401,9 @@ describe("ProfileComments — the comments view (ProfileComments.md)", () => {
     });
     renderWithProviders(<ProfileScreen handle="ada" />);
     await openCommentsTab();
-    expect(screen.getByTestId(byNode("profile.comments.card.removalMark", "c1"))).toBeInTheDocument();
-    expect(screen.queryByTestId(byNode("profile.comments.card.menu", "c1"))).toBeNull();
-    expect(screen.getByTestId(byNode("profile.comments.card.target", "c1"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.removalMark", "c1"))).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("profile.comments.commentCard.menu", "c1"))).toBeNull();
+    expect(screen.getByTestId(byNode("profile.comments.commentCard.target", "c1"))).toBeInTheDocument();
   });
 
   it("the_way_back_returns_to_the_comments_view_in_the_state_it_was_left", async () => {

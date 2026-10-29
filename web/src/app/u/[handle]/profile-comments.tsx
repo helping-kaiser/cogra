@@ -28,7 +28,7 @@ import { ANCHOR_ATTRIBUTE } from "@/lib/ui/scroll-pin";
 import { useScrollHost } from "@/lib/ui/scroll-host";
 import { LINK_COPIED } from "@/lib/ui/share";
 
-/** The comments view's list and its cards (unregistered: ProfileComments exports no NODE). */
+/** The comments view's list and its cards (`profile.comments.commentCard[commentId]`, design round 27). */
 export const COMMENTS_NODE = "profile.comments";
 
 export function ProfileCommentsList({
@@ -76,7 +76,7 @@ export function ProfileCommentsList({
             from={from}
             // Each card keyed by its comment: every card here is the same
             // author's, so the handle the thread keys by names none apart.
-            node={{ path: `${COMMENTS_NODE}.card`, key: comment.id }}
+            node={{ path: `${COMMENTS_NODE}.commentCard`, key: comment.id }}
             testId={`profile-comment-${comment.id}`}
             authorHere
             reply={reply}

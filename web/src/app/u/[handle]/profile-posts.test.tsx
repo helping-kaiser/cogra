@@ -249,7 +249,7 @@ describe("ProfilePosts — the posts view (ProfilePosts.md)", () => {
       ),
     );
     fireEvent.click(screen.getByTestId(byNode("profile.tabRow.commentsTab")));
-    expect(await screen.findByTestId(byNode("profile.comments.card", "c1"))).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("profile.comments.commentCard", "c1"))).toBeInTheDocument();
     expect(screen.queryByTestId("profile-posts")).toBeNull();
     expect(screen.getByTestId(byNode("profile.identity.name"))).toBe(name);
     // :21 — Everything: the chronicle.
