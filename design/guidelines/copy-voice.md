@@ -2221,7 +2221,8 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
 - The review's title, `Kept picks`, and its one line: `These waited on
   this device for your key, and nothing is signed yet. Remove any you no
   longer mean — the rest sign together.` Each row's kind reads `Post` or
-  `Person`, the staged citations' words; its × keeps `StagedReference`'s
+  `Person`, the staged citations' words — `Comment` and `Topic` the same
+  family's other two (seam 248); its × keeps `StagedReference`'s
   `Remove <name>`.
 - The commit, `Sign them` (the ruling's own words).
 - The last pick dropped: the snackbar `Nothing left to sign.` (a draft,
@@ -2229,7 +2230,11 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
 - The seal keeps the standard seal's words — `What you sign`, `Last step`,
   `3 things, signed together`, `They land together, or none does.` — and
   adds its own: each row's label `Opinion`, the X's name `Leave — your
-  picks are kept`, and the commit `Sign the opinions`.
+  picks are kept`, and the commit `Sign the picks` (`Signing the
+  picks…` in flight). The commit names the batch by the review's own
+  word, because the batch can hold a feeling beside the opinions (seam
+  248; *new 2026-10-29, merged under the autonomy order, review
+  pending*).
 - Signed: the settled snackbar in its batch form, `Signed 3 things, still
   settling.` — the signed-opinion snackbar's own opening, without a
   `Current opinion`, since a batch holds more than one target.
@@ -2251,6 +2256,20 @@ The kept-picks rulings (jakob 2026-10-02) add these, each *new
   topic).
 - The write rule at this scale: the fact ends `Nothing was signed or
   spent — your picks are still kept.`, and the way out reads `Not now`.
+- **A target with nothing to be named by is named by its kind** (seam
+  248; *new 2026-10-29, merged under the autonomy order, review
+  pending*): `A post`, `A comment`, `A person` — the row's name where the
+  target's read got no answer, the review's and the seal's alike, and
+  `A comment` for a comment with no words of its own. The row still
+  signs, because the pick is real; a topic needs no read, its `#name`
+  being its own. A removed target is not one of these: it wears its
+  removal mark.
+- **One record, two words, by what each surface names.** A kept feeling
+  reads `Topic` on the review and `Feeling` on the seal, and the two
+  agree: the review's second line names what the pick is ON — the
+  target's kind, beside `Post` and `Person` — and the seal's row label
+  names what is SIGNED — the record's family, beside `Opinion` (seam
+  248). *Topic* there is the held-position word of *Your topics*.
 - A kept approval beside the picks (jakob 2026-10-05, the B round's 7,
   amended): the review and its seal each carry one quiet line, `An
   approval waits in your invites — go there to sign it.`, ending in the

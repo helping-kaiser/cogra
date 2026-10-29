@@ -1,6 +1,6 @@
 # KeptPicksSeal · `spec:design:behavior-kept-picks-seal`
 
-ALWAYS the kept picks' seal is the standard seal: What you sign and Last step in the header, the header's ?, the acts card, and Sign the opinions over Back
+ALWAYS the kept picks' seal is the standard seal: What you sign and Last step in the header, the header's ?, the acts card, and Sign the picks over Back
 
 ALWAYS the acts card reads one row per pick still in the review, each with what it is on and its pair, and a count of 1
 
@@ -12,15 +12,17 @@ ALWAYS nothing on the seal is removable
 
 ALWAYS a pick whose target was removed reads back by its removal mark where the name stood, Removed by its author in the system's voice, over the pair it still signs
 
+ALWAYS a pick whose target's read gets no answer reads back by its kind alone where the name stood, A post, A comment or A person, over the pair it still signs
+
 ALWAYS a pick that nets its bundle to nothing reads its pair and nothing more on the seal
 
 ALWAYS a kept vouch-back or approval never stands on this seal
 
 ALWAYS the picks on the seal sign together or none of them signs
 
-WHEN press Sign the opinions -> Sign the opinions refuses a second press until the signing answers AND NEVER a severance confirmation is asked AND NEVER Sign the opinions dims
+WHEN press Sign the picks -> Sign the picks refuses a second press until the signing answers AND NEVER a severance confirmation is asked AND NEVER Sign the picks dims
 
-WHEN the signing has not answered 200ms after the press -> Sign the opinions reads Signing the opinions… AND the header back arrow, Back and the header X refuse a press AND NEVER they dim AND NEVER a spinner appears
+WHEN the signing has not answered 200ms after the press -> Sign the picks reads Signing the picks… AND the header back arrow, Back and the header X refuse a press AND NEVER they dim AND NEVER a spinner appears
 
 WHEN the signing has not answered 5s after the press -> the subline under the total reads Still signing — the network is slow right now. AND NEVER a progress indicator appears
 

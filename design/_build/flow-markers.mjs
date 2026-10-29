@@ -3069,7 +3069,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your picks are kept"', tag: "button" },
     { n: 3, find: 'aria-label="How signing works"', tag: "button" },
-    { n: 4, find: ">Sign the opinions</button>", tag: "button" },
+    { n: 4, find: ">Sign the picks</button>", tag: "button" },
     { n: 5, find: ">Back</button>", tag: "button" },
     { n: 6, find: ">Open Invites</button>", tag: "button" },
   ],

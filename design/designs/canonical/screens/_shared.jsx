@@ -5079,7 +5079,7 @@ const YOUR_VOUCH_BACK_HELP = [
    A KEPT APPROVAL SURFACES HERE AS ITS OWN CARD (jakob 2026-10-02, the
    fix-fix round's 22). An approval set while the key was elsewhere waits on
    the device as pending (`PadKeyAbsent`); once the key is back it never
-   joins the kept picks' batch — the review lists plain opinions only. It
+   joins the kept picks' batch — the review lists plain picks only. It
    surfaces on this page, where approving lives, with its ceremony kept: it
    signs through the approval pad, and the vouch lands and notifies them as
    any approval does. It is the kept vouch-back's twin, which surfaces as its

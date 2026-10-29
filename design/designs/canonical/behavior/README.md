@@ -85,7 +85,7 @@ Where each sidecar's words come from:
   picks' review*): one batch, signed only from its seal; the × that drops
   a pick with no confirm and no undo, and the last drop's exit; leaving
   unsigned keeps every pick. And the kept-picks rulings (readme §13, *The
-  kept picks and the pads, ruled*): plain opinions only, the removed-mark
+  kept picks and the pads, ruled*): plain picks only, the removed-mark
   face, the severance said on its row with Sign as the confirmation, the
   write rule's `Not now` back to the review, the spoken drop, the anchor's
   `Waiting for your review` and the settings row's conditions.
