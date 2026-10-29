@@ -30,7 +30,7 @@ WHEN tap Reset -> CoGra's own default is staged AND NEVER the reader's own defau
 
 WHEN press Done -> the sheet closes AND the staged filter is saved as the reader's own default AND the What your feed shows row reads it back in the filter pill's words AND focus returns to the row
 
-ALWAYS every feed opens with the reader's saved default
+ALWAYS a feed opens with the reader's saved default GIVEN no filter committed inside that feed stands on this device
 
 ALWAYS search's order and its already-seen toggle follow the reader's saved default, and search's kinds stay search's own
 

@@ -40,7 +40,9 @@ ALWAYS every referencePicker.result is dimmed and takes no tap GIVEN the compose
 
 WHEN tap the remove control of a staged row GIVEN the composer holds ten citations -> the row's target is unstaged AND referencePicker.cap leaves AND the results take taps again
 
-WHEN the results' read gets no answer GIVEN no result has loaded for the query -> referencePicker.fault reads Can't reach the server. Check your connection and try again. where the results were AND referencePicker.searchField keeps the query
+WHEN the results' read gets no answer GIVEN no result has loaded for the query -> referencePicker.fault reads Can't reach the server — results can't load right now. over referencePicker.fault.retry, outlined, where the results were AND referencePicker.searchField keeps the query AND NEVER the line says try again
+
+WHEN tap referencePicker.fault.retry -> the results are read again for the query in referencePicker.searchField
 
 WHEN the query changes GIVEN referencePicker.fault stands -> the results read again
 

@@ -107,7 +107,11 @@
    action key staging nothing; the staged rows' × still un-stage. `fault` is
    the candidates' read that got no answer: the typed name's row still
    stands, because it is the field's own words and needs no read, and the
-   house line takes the candidates' place. An empty list and the read in
+   house line's noun form takes the candidates' place, `Can't reach the
+   server — tags can't load right now.`, over an outlined `Retry` — the
+   fault family's one shape (`ProfileUnreachable`, `Notifications`;
+   copy-voice, *Faults by code*): the long line ends in "try again", which
+   beside a Retry says it twice. An empty list and the read in
    flight stay silent — the typed name's row is already the answer. */
 export const NODE = "tagPicker";
 export const PROPS = { state: { editor: "enum", options: ["picking", "cap", "fault"], default: "picking" } };
@@ -145,8 +149,11 @@ export function Screen() {
           </div>
         </div>
         <div style={{ display: "{{faultShown}}", padding: "8px 24px" }} data-node-chip="state" data-node-key="fault">
-          <div data-node="fault">
-            <TransportError />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)" }} data-node="fault">
+            <TransportError message="Can't reach the server — tags can't load right now." />
+            <Button variant="outline" size="sm" selfStart node="retry">
+              Retry
+            </Button>
           </div>
         </div>
         <div style={{ flex: 1 }} />

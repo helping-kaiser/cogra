@@ -14,6 +14,10 @@ WHEN tap a picture's remove control -> the picture leaves the batch
 
 WHEN tap + Add pictures -> the platform's own picker opens AND NEVER a pick stage opens
 
+WHEN a video is picked at the edit GIVEN the comment holds no picture and no clip and the edit's video path is still staged -> the refusal A video can't join an edit yet — post it on its own. stands under commentEdit.pictures with Remove it alone AND NEVER the video is taken AND NEVER a dialog opens
+
+WHEN a video is picked at the edit GIVEN the comment holds pictures -> the refusal A comment carries pictures or one video, not both. stands under commentEdit.pictures with Remove it alone AND NEVER the video is taken
+
 WHEN tap the × of a tag the comment already carries -> the withdrawal of that tag is staged in the batch AND the chip leaves the row for the line Withdrawn: under the tags AND the footer counts one more AND NEVER a dialog asks
 
 WHEN tap the × of a citation the comment already carries -> the withdrawal of that citation is staged in the batch AND the row leaves for the line Withdrawn: under the references AND the footer counts the withdrawal's counter-records, possibly more than one AND NEVER a dialog asks

@@ -4782,7 +4782,7 @@ function PeopleCopies({ node }) {
    faces. The count on the post's line IS this list's length. */
 const CITING_ARTIFACTS = [
   { kind: "post", name: "Where the salt goes in winter", src: "post-photo.jpg", pair: { pDirected: 0.7, pInterest: 0.5 } },
-  { kind: "comment", name: "Answering the tide-market piece", pair: { pDirected: 0.4, pInterest: 0.65 }, pending: true },
+  { kind: "comment", name: "Answering the tide-market piece", pair: { pDirected: 0.4, pInterest: 0.65 } },
   { kind: "post", name: "Three mornings on the wall", pair: { pDirected: 0.15, pInterest: 0.9 } },
   { kind: "post", name: "A honey stand and a headland", pair: { pDirected: -0.3, pInterest: 0.35 } },
 ];
@@ -5079,7 +5079,7 @@ const YOUR_VOUCH_BACK_HELP = [
    A KEPT APPROVAL SURFACES HERE AS ITS OWN CARD (jakob 2026-10-02, the
    fix-fix round's 22). An approval set while the key was elsewhere waits on
    the device as pending (`PadKeyAbsent`); once the key is back it never
-   joins the kept picks' batch — the review lists plain opinions only. It
+   joins the kept picks' batch — the review lists plain picks only. It
    surfaces on this page, where approving lives, with its ceremony kept: it
    signs through the approval pad, and the vouch lands and notifies them as
    any approval does. It is the kept vouch-back's twin, which surfaces as its

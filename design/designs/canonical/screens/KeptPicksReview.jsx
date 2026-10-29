@@ -18,9 +18,10 @@
    geek mode and the anchor's word spoken (`stance`). One pick per target, so
    one row per target.
 
-   PLAIN OPINIONS ONLY (jakob 2026-10-02, kept picks 4). A kept vouch-back or
-   approval never joins the batch: the review lists plain opinions and
-   nothing else, and a kept vouch-back surfaces as its own card, keeping its
+   PLAIN PICKS ONLY (jakob 2026-10-02, kept picks 4; a feeling is one, seam
+   248). A kept vouch-back or approval never joins the batch: the review
+   lists plain picks, opinions and feelings, and nothing else, and a kept
+   vouch-back surfaces as its own card, keeping its
    ceremony (`VouchedIn`). A kept approval is its twin: its own card on
    Invites, where approving lives, signed through `ApprovePad` (jakob
    2026-10-02, the fix-fix round's 22).
