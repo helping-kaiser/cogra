@@ -39,7 +39,7 @@ describe("PickedSheet", () => {
   // PickedSheet.jsx: the list opens right under the title, its rule the first line.
   it("stands the list right under the title, with no body padding of its own above it", () => {
     open();
-    expect(screen.getByTestId("picked-sheet-body").className).not.toMatch(/pt-2/);
+    expect(screen.getByTestId("picked-sheet-body").className).not.toContain("pt-2");
   });
 
   it("shows the quiet word instead of the link once a picture is described", () => {

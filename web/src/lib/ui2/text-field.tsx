@@ -77,18 +77,16 @@ function GrowingBox({
   disabled,
   error,
   children,
-  node,
 }: {
   value: string;
   minRows: number;
   disabled: boolean;
   error: boolean;
   children: ReactNode;
-  node?: DataNode;
 }) {
   return (
     <div
-      {...testAttributes(node, "growing-box")}
+      data-testid="growing-box"
       data-min-rows={minRows}
       // `rows` IS THE MINIMUM, AND THE LAYOUT HAS TO SAY SO (jakob's
       // round-three hand test, 2026-09-22). `minRows` reached this box as a
@@ -219,8 +217,6 @@ export function TextField({
   used,
   error,
   node,
-  labelNode,
-  boxNode,
 }: {
   label: string;
   value: string;
@@ -233,13 +229,6 @@ export function TextField({
    * parts — the input then carries the node id instead of `testId`.
    */
   node?: DataNode;
-  /**
-   * A board that draws the label and the box apart, as siblings in a block of
-   * their own (EditWords' `postEdit.body.label` and `postEdit.body.words`): the
-   * label's node, and the multiline box's, whose `input` the control then is.
-   */
-  labelNode?: DataNode;
-  boxNode?: DataNode;
   optional?: boolean;
   optionalLabel?: string;
   placeholder?: string;
@@ -269,7 +258,7 @@ export function TextField({
         <label
           htmlFor={id}
           className={`flex-1 text-label-large ${error ? "text-error" : "text-on-surface"}`}
-          {...testAttributes(labelNode ?? part(node, "label"))}
+          {...testAttributes(part(node, "label"))}
         >
           {label}
         </label>
@@ -285,10 +274,10 @@ export function TextField({
         )}
       </div>
       {multiline ? (
-        <GrowingBox value={value} minRows={rows} disabled={disabled} error={Boolean(error)} node={boxNode}>
+        <GrowingBox value={value} minRows={rows} disabled={disabled} error={Boolean(error)}>
           <textarea
             id={id}
-            {...testAttributes(boxNode === undefined ? part(node, "input") : part(boxNode, "input"), testId)}
+            {...testAttributes(part(node, "input"), testId)}
             value={value}
             rows={rows}
             placeholder={placeholder}
