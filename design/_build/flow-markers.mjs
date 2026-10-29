@@ -526,6 +526,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Describe the video</button>", tag: "button" },
     { n: 7, find: 'class="cg-cover-frame"', tag: "div", all: true },
     { n: 8, find: 'class="cg-cover-own"', tag: "div" },
+    // The `batch` chip's second clip, refused (round 27): its one way out.
+    { n: 9, find: ">Remove it</button>", tag: "button" },
   ],
   ReplyMediaErrors: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -2196,6 +2198,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Also remove what I posted</span>", tag: "label" },
     { n: 2, find: ">Add it to the deletion</button>", tag: "button" },
     { n: 3, find: ">Go to the feed</button>", tag: "button" },
+    // The `answer` chip's fault and budget copies (round 27): one Try again.
+    { n: 4, find: ">Try again</button>", tag: "button", all: true },
   ],
   SettingsDeleting: [
     { n: 1, find: ">Cancel</button>", tag: "button" },
