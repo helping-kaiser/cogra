@@ -412,8 +412,32 @@ internal fun ReferenceClaimFields.toDomain(): ReferenceClaimView = ReferenceClai
  * Null for a candidate whose class this build cannot render — the
  * finder never offers it rather than showing a chip with no far end.
  */
-internal fun ReferenceCandidatesQuery.ReferenceCandidate.toDomain(): ReferenceCandidateView? =
-    target.referenceTargetFields.toDomain()?.let { ReferenceCandidateView(it, targetId) }
+internal fun ReferenceCandidatesQuery.ReferenceCandidate.toDomain(): ReferenceCandidateView? {
+    val view = when (val base = target.referenceTargetFields.toDomain()) {
+        // The picker's row reads the age and, for a post, the cover its
+        // mark wears (ReferencePicker.jsx) — selected by this lookup only.
+        is ReferenceTargetView.Content -> base.copy(
+            createdAt = target.onPost?.createdAt ?: target.onComment?.createdAt,
+            coverUrl = target.onPost?.cover(),
+        )
+        else -> base
+    } ?: return null
+    return ReferenceCandidateView(view, targetId)
+}
+
+private const val NORMAL_STATUS = "NORMAL"
+
+/**
+ * A candidate post's cover, unless its media is classified: then the text
+ * tile, as a search row reads it (`SearchRepositoryImpl`). A clip shows its
+ * still; a picture itself.
+ */
+private fun ReferenceCandidatesQuery.OnPost.cover(): String? {
+    if (attachmentsStatus.rawValue != NORMAL_STATUS) return null
+    val first = attachments.firstOrNull()?.takeIf { it.status.rawValue == NORMAL_STATUS } ?: return null
+    first.coverMedia?.let { cover -> return cover.url.takeIf { cover.status.rawValue == NORMAL_STATUS } }
+    return first.url.takeIf { first.mimeType.startsWith("image/") }
+}
 
 /** An unknown state is never presented as pending. */
 internal fun com.cogra.network.graphql.type.LandingState.toDomain(): LandingState =

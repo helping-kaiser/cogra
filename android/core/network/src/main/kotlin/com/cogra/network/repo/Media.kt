@@ -17,6 +17,7 @@ import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.PartFailure
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.PublishedPlacement
 import com.cogra.domain.media.RESUMABLE_THRESHOLD_BYTES
 import com.cogra.domain.media.UploadEchoMismatchException
 import com.cogra.domain.media.UploadProgress
@@ -26,6 +27,7 @@ import com.cogra.network.graphql.AbortMediaUploadMutation
 import com.cogra.network.graphql.BeginMediaUploadMutation
 import com.cogra.network.graphql.CompleteMediaUploadMutation
 import com.cogra.network.graphql.MediaAttachmentQuery
+import com.cogra.network.graphql.OwnPublishedPlacementQuery
 import com.cogra.network.graphql.UploadMediaMutation
 import com.cogra.network.graphql.type.MediaScale
 import com.cogra.network.graphql.type.MediaUploadKind
@@ -226,7 +228,22 @@ class MediaRepositoryImpl @Inject constructor(
     override suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?> = guard.run {
         client.query(MediaAttachmentQuery(id = id)).fetch().map { it.mediaAttachment?.toDomain() }
     }
+
+    // The marker asks with every landed upload on the stage; none asks nothing
+    // (the server answers null for an empty list too). A gallery holds ten,
+    // and more is BAD_INPUT, so the ask never names more than a post carries.
+    override suspend fun ownPublishedPlacement(mediaIds: List<String>): Outcome<PublishedPlacement?> {
+        if (mediaIds.isEmpty()) return Outcome.Success(null)
+        return guard.run {
+            client.query(OwnPublishedPlacementQuery(mediaIds = mediaIds.take(MAX_GALLERY_IDS)))
+                .fetch()
+                .map { data -> data.ownPublishedPlacement?.let { PublishedPlacement(it.id, it.createdAt) } }
+        }
+    }
 }
+
+/** A post's gallery cap (post.md §1), the most ids the marker's read accepts. */
+private const val MAX_GALLERY_IDS = 10
 
 /**
  * A single-shot upload, sent once more when the first try died in transport.

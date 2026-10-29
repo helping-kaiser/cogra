@@ -111,6 +111,26 @@ query ReferenceCandidates($query: String!, $kinds: [NodeKind!], $limit: Int) {
   referenceCandidates(query: $query, kinds: $kinds, limit: $limit) {
     target {
       ...ReferenceTargetFields
+      # The citation picker's row (ReferencePicker.jsx): its age, and for
+      # a post the cover its mark wears — a veiled or removed gallery reads
+      # the text tile instead. web's twin selects the same.
+      ... on Post {
+        createdAt
+        attachmentsStatus
+        attachments {
+          id
+          url
+          status
+          mimeType
+          coverMedia {
+            url
+            status
+          }
+        }
+      }
+      ... on Comment {
+        createdAt
+      }
     }
     targetId
   }

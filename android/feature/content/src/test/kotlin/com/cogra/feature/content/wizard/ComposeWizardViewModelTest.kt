@@ -119,6 +119,7 @@ class ComposeWizardViewModelTest {
         override suspend fun referenceCandidates(
             query: String,
             limit: Int?,
+            kinds: Set<com.cogra.domain.feed.FeedKind>,
         ): Outcome<List<com.cogra.domain.ReferenceCandidateView>> = Outcome.Success(emptyList())
     }
 

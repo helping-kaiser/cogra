@@ -76,4 +76,32 @@ class TagNameTest {
         assertThat(TAG_DEFAULT_RELEVANCE).isEqualTo(0.1)
         assertThat(TAG_DEFAULT_CONFIDENCE).isEqualTo(1.0)
     }
+
+    /** TagPickerTyping.md: the first row is the typed name, one leading # stripped and lowercased. */
+    @Test
+    fun thePickerReadsALegalNameAsItsCanonicalForm() {
+        assertThat(readTagName("#SaltMaps")).isEqualTo(TagNameReading.Legal("saltmaps"))
+        assertThat(readTagName("salt")).isEqualTo(TagNameReading.Legal("salt"))
+    }
+
+    @Test
+    fun anEmptyFieldOrABareHashOffersNothingYet() {
+        assertThat(readTagName("")).isEqualTo(TagNameReading.Empty)
+        assertThat(readTagName("#")).isEqualTo(TagNameReading.Empty)
+    }
+
+    /** TagPickerRefused.md: a character no name may carry, a space included, is the charset refusal. */
+    @Test
+    fun aCharacterNoNameMayCarryIsTheCharsetRefusal() {
+        assertThat(readTagName("#salt maps")).isEqualTo(TagNameReading.Refused(TagNameRefusal.CHARSET))
+        assertThat(readTagName("salt/maps")).isEqualTo(TagNameReading.Refused(TagNameRefusal.CHARSET))
+    }
+
+    /** TagPickerRefused.md: longer than 128 is the length refusal — unless a bad character leads. */
+    @Test
+    fun aNamePastTheAtomIsTheLengthRefusalAndTheCharsetOneLeads() {
+        assertThat(readTagName("a".repeat(129))).isEqualTo(TagNameReading.Refused(TagNameRefusal.LENGTH))
+        assertThat(readTagName("a".repeat(128))).isEqualTo(TagNameReading.Legal("a".repeat(128)))
+        assertThat(readTagName("a".repeat(129) + "/")).isEqualTo(TagNameReading.Refused(TagNameRefusal.CHARSET))
+    }
 }

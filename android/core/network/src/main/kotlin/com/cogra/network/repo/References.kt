@@ -14,7 +14,9 @@ import com.apollographql.apollo.api.Optional
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ReferenceCandidateView
+import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.map
+import com.cogra.domain.references.CITABLE_KINDS
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
@@ -37,9 +39,18 @@ class ReferenceRepositoryImpl @Inject constructor(
     override suspend fun referenceCandidates(
         query: String,
         limit: Int?,
+        kinds: Set<FeedKind>,
     ): Outcome<List<ReferenceCandidateView>> = guard.run {
         client.query(
-            ReferenceCandidatesQuery(query = query, limit = Optional.presentIfNotNull(limit)),
+            ReferenceCandidatesQuery(
+                query = query,
+                // In the filter's own order, so one filter is always one request;
+                // none narrows nothing (null, every citable kind).
+                kinds = Optional.presentIfNotNull(
+                    CITABLE_KINDS.filter { it in kinds }.map { it.toWire() }.takeIf { it.isNotEmpty() },
+                ),
+                limit = Optional.presentIfNotNull(limit),
+            ),
         ).fetch().map { data -> data.referenceCandidates.mapNotNull { it.toDomain() } }
     }
 
