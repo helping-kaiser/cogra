@@ -374,6 +374,12 @@ export function ProfileScreen({
   const scoreOrigin: TraceOrigin | null =
     origin === "profile" ? { kind: "profile" } : profile ? { kind: "person", handle: profile.handle } : null;
 
+  // THE CARDS STAND EDGE TO EDGE, as the feed's do (ProfilePosts board: the
+  // list's `padding: 8px 0 0`, Feed's and History's own); the chronicle keeps
+  // its 16px gutter (`profile.chronicle`: `8px 16px 0`). The lines that stand
+  // where cards would keep the gutter either way.
+  const lineGutter = filter === "posts" ? "px-4" : "";
+
   // THE POSTS VIEW IS KEPT AS IT STANDS (`profile-memory.ts`) — written from
   // an effect rather than from each read, so no path can change it and forget
   // to record it. Only a view with something to come back to is kept.
@@ -636,15 +642,17 @@ export function ProfileScreen({
               first, each keyed by its position). */}
           <div
             data-testid={filter === "posts" ? POSTS_NODE : "profile.chronicle"}
-            className="flex flex-col gap-2 px-4 pt-2"
+            className={`flex flex-col gap-2 pt-2 ${filter === "posts" ? "" : "px-4"}`}
           >
             {/* NOTHING PUBLISHED: the line alone (ProfilePosts.md:5). */}
             {filter === "posts" && posts.length === 0 && !rowsLoading && !pageFailed && (
-              <EmptyState
-                testId="profile-posts-empty"
-                node={{ path: `${POSTS_NODE}.empty` }}
-                title="Nothing here yet."
-              />
+              <div className={lineGutter}>
+                <EmptyState
+                  testId="profile-posts-empty"
+                  node={{ path: `${POSTS_NODE}.empty` }}
+                  title="Nothing here yet."
+                />
+              </div>
             )}
             {filter === "posts" && posts.length > 0 && scoreOrigin !== null && origin !== null && (
               <ProfilePostsList
@@ -679,12 +687,12 @@ export function ProfileScreen({
               </ul>
             )}
             {rowsLoading && listed === 0 && (
-              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className="py-2">
+              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
                 Loading…
               </p>
             )}
             {loadingShown && (
-              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className="py-2">
+              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
                 Loading…
               </p>
             )}
@@ -692,7 +700,7 @@ export function ProfileScreen({
                 Retry where the next page would have stood — never the error
                 colour. */}
             {pageFailed && (
-              <div className="flex items-center gap-3" role="alert">
+              <div className={`flex items-center gap-3 ${lineGutter}`} role="alert">
                 <span className="text-body-medium text-on-surface-variant" data-testid="profile-rows-failed">
                   {COULDNT_LOAD_MORE}
                 </span>
