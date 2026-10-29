@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
 import com.cogra.domain.Outcome
+import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.history.SeenTracker
@@ -53,6 +54,12 @@ data class ProfileUiState(
     val pageFailed: Boolean = false,
     val endCursor: String? = null,
     val hasMore: Boolean = false,
+    /**
+     * The header's figures (`ProfileFigures`; Q35 closed toward the drawn
+     * figures, jakob's confirmation pending); null until read, and kept
+     * through a failed re-read.
+     */
+    val figures: ProfileFigures? = null,
 )
 
 private const val PAGE = 20
@@ -99,7 +106,9 @@ class ProfileViewModel @Inject constructor(
         // rule this mirrors).
         _state.update { it.copy(loading = it.profile == null, refreshing = true) }
         viewModelScope.launch {
-            if (readProfile() != null) loadRows(reset = true)
+            val read = readProfile() ?: return@launch
+            loadRows(reset = true)
+            loadFigures(read.id)
         }
     }
 
@@ -163,6 +172,18 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onLoadMore() = loadRows(reset = false)
+
+    /**
+     * The header's figures, read beside the chronicle. A failed read leaves
+     * the figures as they were: the header draws what it has, never a false
+     * zero.
+     */
+    private fun loadFigures(actorId: String) {
+        viewModelScope.launch {
+            val figures = (profiles.figures(actorId) as? Outcome.Success)?.value ?: return@launch
+            _state.update { it.copy(figures = figures) }
+        }
+    }
 
     private fun loadRows(reset: Boolean) {
         val s = _state.value

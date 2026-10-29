@@ -3,7 +3,6 @@ package com.cogra.feature.content.wizard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -14,10 +13,10 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Icon
@@ -28,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -225,14 +225,15 @@ internal fun ColumnScope.PickStage(
  *
  * **The tray is the board's, tile for tile** (`ComposePick`): the first
  * picture wears the "Cover" badge — the first one IS the cover, and the
- * badge travels with reorder — and every tile carries its × (the law's
- * "tap a tray thumbnail's remove control"; the cover's own × is design gap
- * GAP-B, drawn here as `ComposePickedErrors` draws it, on every tile).
- * Order, describe and the rest still live in `PickedSheet`.
+ * badge travels with reorder — and every tile carries its ×, the cover's
+ * included (ComposePick.md, round 22): removing the cover makes the next
+ * picture the cover. Reorder lives in `PickedSheet` (Show all), never as a
+ * drag in the tray — that law is gone (round 22).
  *
  * **"The first one is the cover." rides beside the tiles while they leave it
- * room** (`ComposePick` draws it at two; GAP-C): past that the row scrolls
- * and the sheet is where the rule is read.
+ * its one line** (`ComposePick` draws it at two; round 22, ask 13 C): past
+ * that the tiles stand alone, clipped at the band's edge and never
+ * scrolled, and `Show all` is the way to the rest.
  *
  * **A STAGED CLIP** (`ComposePickVideo`). A video takes the body whole, so
  * there is no set left for `Show all` to reorder — the button drops and the
@@ -324,10 +325,21 @@ private fun PictureTrayRow(state: ComposeWizardState, onRemove: (String) -> Unit
         val count = state.picked.size
         val tiles = Layout.ThumbSize * count + Space.x2 * count
         val fits = maxWidth - tiles >= captionWidth
+        // PAST THE CAPTION'S ROOM THE TILES STAND ALONE, CLIPPED AT THE BAND'S
+        // EDGE AND NEVER SCROLLED (round 22, seam 245 ask 13 C; ComposePick.md):
+        // `Show all` is the way to the rest.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .then(if (fits) Modifier else Modifier.horizontalScroll(rememberScrollState())),
+                .then(
+                    if (fits) {
+                        Modifier
+                    } else {
+                        Modifier
+                            .clipToBounds()
+                            .wrapContentWidth(Alignment.Start, unbounded = true)
+                    },
+                ),
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
             verticalAlignment = Alignment.CenterVertically,
         ) {

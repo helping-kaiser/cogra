@@ -854,9 +854,9 @@ fun ComposeWizardState.withMode(next: BodyMode): ComposeWizardState =
  * - A clip beside pictures, or a picture beside a staged clip: `A post
  *   carries pictures or one video, not both.` — the pictures (or the clip)
  *   stay. A body is a video *or* a gallery, never a mixture.
- * - A clip over a staged clip has no refusal in the vocabulary and stays the
- *   one the author picked last: the grid is dead then, so only a photos-app
- *   batch carrying two clips reaches this.
+ * - A clip over a staged clip: `A post carries one video.` — the staged clip
+ *   stays (round 22, ask 13 H). The grid is dead then, so only a photos-app
+ *   batch carrying two clips reaches this, and its first clip is the body.
  */
 fun ComposeWizardState.togglePick(
     uri: String,
@@ -866,7 +866,8 @@ fun ComposeWizardState.togglePick(
     if (picked.any { it.uri == uri }) return removePick(uri)
     val picking = PickedAsset(uri, sourceRatio, durationMs = durationMs)
     return when {
-        picking.isVideo && (picked.isEmpty() || isVideoPost) -> copy(picked = listOf(picking)).clearedCover()
+        picking.isVideo && picked.isEmpty() -> copy(picked = listOf(picking)).clearedCover()
+        picking.isVideo && isVideoPost -> refusing(uri, UploadFailure.POST_ONE_VIDEO, true)
         picking.isVideo || isVideoPost -> refusing(uri, UploadFailure.POST_MIXED_BODY, picking.isVideo)
         picked.size >= ComposeWizardState.MAX_POST_ASSETS -> refusing(uri, UploadFailure.POST_PICTURE_COUNT, false)
         else -> copy(picked = picked + picking)

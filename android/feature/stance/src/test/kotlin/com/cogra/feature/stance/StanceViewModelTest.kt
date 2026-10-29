@@ -1034,6 +1034,134 @@ class StanceViewModelTest {
         assertThat(entry(vm).confirmation).isNull()
     }
 
+    // EmptySignConfirm.md (round 21): the write rule's no keeps the dialog up,
+    // dims the act and offers no Retry — never a fault.
+    @Test
+    fun theWriteRulesNoOnTheEmptySignIsANoticeNotAFault() = runTest(dispatcher) {
+        stances.records = 0
+        stances.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "slow down")))
+        val vm = viewModel()
+        pressSetAt(vm, StancePair.Origin)
+
+        vm.onConfirmEmptySign(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(entry(vm).emptySign).isEqualTo(EmptySignState(writeRule = true))
+
+        // The act is dimmed: pressing it again asks nothing.
+        stances.prepareOutcome = null
+        vm.onConfirmEmptySign(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(stances.staged).hasSize(1)
+        // Keep it returns to the pick on the pad.
+        vm.onDismissEmptySign(TARGET)
+        assertThat(entry(vm).emptySign).isNull()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
+    }
+
+    // SeveranceConfirm.md (round 21): the write rule's no on the walk-back.
+    @Test
+    fun theWriteRulesNoOnTheWalkBackIsANoticeNotAFault() = runTest(dispatcher) {
+        stances.net = StancePair(0.5, 0.5)
+        stances.records = 3
+        stances.severanceOutcome = Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "slow down")))
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenSeverance(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onConfirmSeverance(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        val open = entry(vm).severance
+        assertThat(open?.writeRule).isTrue()
+        assertThat(open?.failed).isFalse()
+        assertThat(open?.working).isFalse()
+
+        vm.onConfirmSeverance(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(stances.severanceCalls).isEqualTo(1)
+    }
+
+    // PadFailed.md (round 21): Cancel while Set signs closes the pad, never the
+    // act; the wait passes to the row, and the row's Retry signs the same pick.
+    @Test
+    fun cancelWhileSetSignsLeavesTheSigningToTheRowWhoseRetrySignsTheSentPick() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        stances.net = StancePair(0.4, 0.4)
+        stances.records = 1
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenPad(TARGET)
+        val picked = StancePair(0.3, 0.2)
+        vm.onPick(TARGET, picked)
+        stances.gate = CompletableDeferred()
+        stances.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.INTERNAL, "not now")))
+        vm.onCommit(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onDismissPad(TARGET)
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+        assertThat(entry(vm).busy).isTrue()
+        // The anchor refuses a second hold while the sent act signs.
+        vm.onHoldDefault(TARGET)
+
+        stances.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(entry(vm).failed).isTrue()
+        assertThat(entry(vm).standing).isEqualTo(StancePair(0.4, 0.4))
+
+        stances.gate = null
+        stances.prepareOutcome = null
+        vm.onRetrySigning(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(stances.staged).containsExactly(picked, picked).inOrder()
+        assertThat(entry(vm).failed).isFalse()
+    }
+
+    @Test
+    fun aHoldsRetrySignsTheHoldsDefault() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        stances.net = StancePair(0.4, 0.4)
+        stances.records = 1
+        stances.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.INTERNAL, "not now")))
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onHoldDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        stances.prepareOutcome = null
+        vm.onRetrySigning(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(stances.staged).containsExactly(StancePair.TapDefault, StancePair.TapDefault).inOrder()
+    }
+
+    // SeveranceConfirm.md: Keep it, the scrim and Back wait while Walk it back signs.
+    @Test
+    fun theWalkBacksWaysOutWaitWhileItSigns() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        stances.net = StancePair(0.8, 0.8)
+        stances.records = 2
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenPad(TARGET)
+        vm.onPick(TARGET, StancePair(-0.8, -0.8))
+        vm.onCommit(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        stances.gate = CompletableDeferred()
+
+        vm.onConfirmSeverance(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDismissSeverance(TARGET)
+        assertThat(entry(vm).severance?.working).isTrue()
+
+        stances.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(entry(vm).severance).isNull()
+    }
+
     @Test
     fun keepItReturnsToThePickAsItWas() = runTest(dispatcher) {
         stances.records = 0

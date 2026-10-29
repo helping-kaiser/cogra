@@ -167,6 +167,12 @@ data class StanceLanding(
     val inertDirected: Boolean,
     val inertInterest: Boolean,
     val severance: Boolean,
+    /**
+     * A `(0, 0)` landing over a bundle where nothing stands — no record ever,
+     * or already walked back (`localLanding`'s `nothingStands`): the empty
+     * sign's, never a walk-back. It reads `Resulting opinion 🤷 Says nothing.`
+     */
+    val empty: Boolean = false,
 )
 
 /**
@@ -199,6 +205,12 @@ data class SeverancePrompt(
      * still something said.
      */
     val bundleRecords: Int,
+    /**
+     * The write rule refused the walk-back (round 21, ask 15): a notice, not a
+     * fault — the quiet line where the fault line would stand, the act dimmed,
+     * no Retry; `Keep it` returns to the pick.
+     */
+    val writeRule: Boolean = false,
 )
 
 /**
@@ -210,6 +222,8 @@ data class SeverancePrompt(
 data class EmptySignPrompt(
     val working: Boolean = false,
     val failed: Boolean = false,
+    /** The write rule refused the empty sign — [SeverancePrompt.writeRule]'s state. */
+    val writeRule: Boolean = false,
 )
 
 @Immutable
@@ -513,6 +527,12 @@ fun StanceControl(
      * out cut off. Off by default; every other host asks the ordinary way.
      */
     vouchesIn: Boolean = false,
+    /**
+     * The row's Retry after a signing that did not go through: it asks the act
+     * that was SENT — the hold's default, or a cancelled Set's pick (round 21,
+     * PadFailed.md). Defaults to the hold, for a host with no other route.
+     */
+    onRetrySigning: () -> Unit = onHoldDefault,
 ) {
     val target = targetWords(targetLabel)
     val chooseLabel = stringResource(R.string.stance_target_choose, target)
@@ -640,9 +660,11 @@ fun StanceControl(
 
         // THE ROW LINE (vehicle (b), the failure pack): the hold's wait,
         // quiet, and its failure, in the failure voice with the way to ask
-        // again. With the pad open, the pad's own commit row carries both.
+        // again. With the pad open, the pad's own commit row carries both. A Set
+        // whose pad was cancelled while it signed passes its wait here too —
+        // Cancel closes the pad, never the act (round 21, ask 16).
         if (state.pad == StancePadMode.CLOSED && !padOnly) {
-            HoldRowLine(state, onRetry = onHoldDefault, testTagPrefix = testTagPrefix)
+            HoldRowLine(state, onRetry = onRetrySigning, testTagPrefix = testTagPrefix)
         }
 
         state.severance?.let { prompt ->
@@ -1222,7 +1244,7 @@ private fun SetButton(state: StanceControlState, explaining: Boolean, onCommit: 
  * once meets the same answer.
  */
 @Composable
-private fun WriteRuleNotice(onNotNow: () -> Unit, testTagPrefix: String, padNode: DataNode?) {
+internal fun WriteRuleNotice(onNotNow: () -> Unit, testTagPrefix: String, padNode: DataNode?) {
     var explaining by remember { mutableStateOf(false) }
     NoticePanel(
         title = stringResource(R.string.stance_write_rule_title),
@@ -1283,7 +1305,10 @@ private fun KeyAbsentNotice(testTagPrefix: String) {
     if (explaining) {
         HelpDialog(
             title = stringResource(R.string.stance_key_absent_help),
-            paragraphs = listOf(stringResource(R.string.stance_key_absent_help_body)),
+            paragraphs = listOf(
+                stringResource(R.string.stance_key_absent_help_where),
+                stringResource(R.string.stance_key_absent_help_waits),
+            ),
             onClose = { explaining = false },
             testTag = "${testTagPrefix}_stance_key_dialog",
         )
