@@ -1523,20 +1523,25 @@ private fun CardMenuHeader(
     licenseShown?.let { license ->
         LicenseSheet(license = license, onDismiss = { licenseShown = null }, node = placement.licenseSheet)
     }
-    // THE OWN MENU OFF THE DETAIL (RM-G9, undrawn): the same confirm as the
-    // detail's, over the surface the menu was opened from. Taken, the card
-    // stands as its mark in place — NEVER the post leaves without a mark
-    // (RemoveConfirm.md:11) — and the menu goes with the payload.
-    if (removeOpen) {
-        RemoveConfirm(
-            kind = RemovalKind.Post,
-            nodeId = post.id,
-            record = post.genesisRecordId,
-            onClose = { removeOpen = false },
-            testTag = "${tag}_remove_confirm",
-            node = placement.dialog,
-        )
-    }
+    if (removeOpen) CardRemoveConfirm(post, placement, tag, onClose = { removeOpen = false })
+}
+
+/**
+ * THE OWN MENU OFF THE DETAIL (RM-G9; FeedRemoveConfirm on the feed): the same
+ * confirm as the detail's, over the surface the menu was opened from. Taken,
+ * the card stands as its mark in place — NEVER the post leaves without a mark
+ * (RemoveConfirm.md:11) — and the menu goes with the payload.
+ */
+@Composable
+private fun CardRemoveConfirm(post: PostView, placement: CardPlacement, tag: String, onClose: () -> Unit) {
+    RemoveConfirm(
+        kind = RemovalKind.Post,
+        nodeId = post.id,
+        record = post.genesisRecordId,
+        onClose = onClose,
+        testTag = "${tag}_remove_confirm",
+        node = placement.dialog,
+    )
 }
 
 /**

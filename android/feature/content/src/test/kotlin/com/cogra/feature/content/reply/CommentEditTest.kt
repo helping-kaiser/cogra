@@ -334,7 +334,9 @@ class CommentEditTest {
 
         assertThat(full.canAddPicture).isTrue()
         compose.setContent { Edit(full) }
-        compose.onNodeWithTag("commentEdit.pictures.add").assertTextContains("+ Add pictures · 4 of 4").assertIsEnabled()
+        compose.onNodeWithTag("commentEdit.pictures.add")
+            .assertTextContains("+ Add pictures · 4 of 4")
+            .assertIsEnabled()
     }
 
     /** CommentEdit.md: Sign the edit is enabled GIVEN an upload is running — a press there is held. */

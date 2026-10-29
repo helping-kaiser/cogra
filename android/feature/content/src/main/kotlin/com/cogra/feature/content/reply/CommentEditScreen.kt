@@ -483,6 +483,13 @@ private fun PictureMedia(state: CommentEditState, actions: CommentEditActions) {
 
 @Composable
 private fun Sections(state: CommentEditState, actions: CommentEditActions) {
+    Tags(state, actions)
+    References(state, actions)
+}
+
+/** The comment's tags, and a line under them for each one withdrawn. */
+@Composable
+private fun Tags(state: CommentEditState, actions: CommentEditActions) {
     val tags = COMMENT_EDIT / "tags"
     EditFieldGroup(label = "Tags", node = tags) {
         TopicEntry(
@@ -510,7 +517,11 @@ private fun Sections(state: CommentEditState, actions: CommentEditActions) {
             )
         }
     }
+}
 
+/** The comment's citations, the unlanded one's line, and a line for each one withdrawn. */
+@Composable
+private fun References(state: CommentEditState, actions: CommentEditActions) {
     val references = COMMENT_EDIT / "references"
     EditFieldGroup(label = "References", node = references) {
         ReferenceEntry(

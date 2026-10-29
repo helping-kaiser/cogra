@@ -104,7 +104,8 @@ class SubpageScreensTest {
     fun `dialog_focus_moves_to_title_and_stays_inside`() {
         handle(ChangeHandleUiState(current = "sol", handle = "solferreira", dialogOpen = true))
         node("changeHandle.dialog.title").assertTextEquals("Change your handle to @solferreira?")
-        dialogBody("changeHandle.dialog.body",
+        dialogBody(
+            "changeHandle.dialog.body",
             "Links to @sol stop working the moment it changes, and anyone can claim @sol afterwards.",
         )
         node("changeHandle.dialog.title").assertIsFocused()
