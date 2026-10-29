@@ -824,6 +824,12 @@ DO, the way the sound toggle already does:
   alike — and it is the cold entry's label on a post, a comment or a
   profile, whose root is Feed (readme §4, *Navigation*).
 - `Close` — the viewer's X, which IS shutting a layer.
+- `Open the stream` — a portrait clip's door on a card, the one media door
+  that leads somewhere other than its post: the verb and the stream's own
+  common noun (`Back to the stream`'s), one control one verb. Never the
+  clip's alt text, which says what the clip shows and not what the tap
+  does (round 26, seam 250; *merged under the autonomy order, review
+  pending*).
 
 **The way back names where it goes** (readme §4, *Navigation*): on a
 read drill-in the arrow's name is its origin's noun, from the screen's
