@@ -1,9 +1,10 @@
 // THE SHELL'S QUIET READS, answered by default: the release registry
 // (`AppVersions`, read by the cold-open announcer), the bell's dot
-// (`NotificationBell`), whether a recovery backup exists (`KeyBackupState`)
+// (`NotificationBell`), whether a recovery backup exists (`KeyBackupState`,
+// answered: one does, so a key-absent notice offers Restore)
 // and the composer's starting license (`DefaultLicense`). Screens ask them
 // on arrival whatever the test is about, so each answers the state that
-// draws nothing: no releases, nothing unread, no backup, no license set (the
+// draws nothing: no releases, nothing unread, no license set (the
 // composer then starts at public domain). A test of any answers it with its
 // own.
 
@@ -26,7 +27,7 @@ export const QUIET_CHROME = [
     HttpResponse.json({ data: { me: { __typename: "User", id: "u-viewer", hasUnreadNotifications: false } } }),
   ),
   gqlLink.query("KeyBackupState", () =>
-    HttpResponse.json({ data: { me: { __typename: "User", id: "u-viewer", keyBackupCreatedAt: null } } }),
+    HttpResponse.json({ data: { me: { __typename: "User", id: "u-viewer", keyBackupCreatedAt: "2026-01-01T00:00:00.000Z" } } }),
   ),
   gqlLink.query("DefaultLicense", () =>
     HttpResponse.json({
