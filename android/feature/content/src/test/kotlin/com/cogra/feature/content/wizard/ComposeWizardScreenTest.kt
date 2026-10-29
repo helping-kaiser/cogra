@@ -22,6 +22,7 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -52,8 +53,10 @@ import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
 import com.cogra.feature.content.RecordingReferencePicker
 import com.cogra.feature.content.RecordingTagPicker
+import com.cogra.feature.content.ReferencePickerState
 import com.cogra.feature.content.ReferenceRow
 import com.cogra.feature.content.ReferenceSectionState
+import com.cogra.feature.content.TagPickerState
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.UNREACHABLE_BODY
@@ -837,6 +840,106 @@ class ComposeWizardScreenTest {
 
         compose.onNodeWithTag("composeDetails.title", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("composeDetails.description", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    // -- The pickers' doors (ComposeDetails.md; TagPicker, ReferencePicker) --
+
+    /** `+ Add a tag` opens the tag picker — never an inline field on the stage. */
+    @Test
+    fun addATagOpensThePicker() {
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
+        compose.onNodeWithTag("wizard_tag_input").assertDoesNotExist()
+        compose.onNodeWithTag("composeDetails.tags.add").performScrollTo().performClick()
+        assertThat(tagPicker.calls).containsExactly("open")
+    }
+
+    /** ComposeDetails.md: WHEN tap composeDetails.references.add -> the citation picker opens. */
+    @Test
+    fun citeSomethingOpensThePicker() {
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
+        compose.onNodeWithTag("composeDetails.references.add").performScrollTo().performClick()
+        assertThat(referencePicker.calls).containsExactly("open")
+    }
+
+    /** The open picker stands in the stage's place, its arrow naming the post's composer. */
+    @Test
+    fun anOpenPickerStandsInTheStagesPlace() {
+        val picking = withPicks.copy(
+            step = WizardStep.Details,
+            tagSection = TagSectionState(tags = listOf(TagRow("fieldnotes")), picker = TagPickerState()),
+        )
+        compose.setContent { Wizard(picking) }
+        compose.onNodeWithTag("tagPicker").assertExists()
+        compose.onNodeWithTag("tagPicker.staged.tag:fieldnotes").assertExists()
+        compose.onNodeWithTag("composeDetails.next").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Back to the post").assertExists()
+    }
+
+    @Test
+    fun anOpenCitationPickerStandsInTheStagesPlace() {
+        val picking = withPicks.copy(
+            step = WizardStep.Details,
+            referenceSection = ReferenceSectionState(picker = ReferencePickerState()),
+        )
+        compose.setContent { Wizard(picking) }
+        compose.onNodeWithTag("referencePicker").assertExists()
+        compose.onNodeWithTag("composeDetails.next").assertDoesNotExist()
+    }
+
+    // -- ComposeDetailsReused --
+
+    private val landed = withPicks.copy(
+        step = WizardStep.Details,
+        picked = listOf(
+            PickedAsset("a", 1f, upload = AssetUpload.Done("m1")),
+            PickedAsset("b", 1f, upload = AssetUpload.Done("m2")),
+        ),
+    )
+
+    /**
+     * ALWAYS composeDetails.published, Already in your post from <date>., stands under
+     * composeDetails.mediaRow GIVEN the stage's media matches a published post of the author;
+     * the date is day and month, the year only when it differs; its name is its own words.
+     */
+    @Test
+    fun theMarkerNamesThePostsDatelineAndOpensIt() {
+        val now = java.time.Instant.now()
+        val publishedAt = now.minusSeconds(86_400L * 400)
+        compose.setContent {
+            Wizard(landed.copy(published = PublishedMarker(listOf("m1", "m2"), "p-old", publishedAt)))
+        }
+        val words = "Already in your post from ${com.cogra.domain.datelineWords(publishedAt, now)}."
+        assertThat(words).endsWith("${publishedAt.atZone(java.time.ZoneId.systemDefault()).year}.")
+        compose.onNodeWithTag("composeDetails.published").performScrollTo().assertTextEquals(words)
+
+        // WHEN tap composeDetails.published -> the post it names opens AND NEVER a dialog opens.
+        compose.onNodeWithTag("composeDetails.published").performClick()
+        assertThat(publishedOpens).containsExactly("p-old")
+        // ALWAYS the line never blocks: Next stays as live as at rest.
+        compose.onNodeWithTag("composeDetails.next").assertIsEnabled()
+    }
+
+    /** An answer for media the stage no longer holds is never read: the stage at rest. */
+    @Test
+    fun aMarkerForOtherMediaIsNeverDrawn() {
+        compose.setContent {
+            Wizard(landed.copy(published = PublishedMarker(listOf("m1"), "p-old", java.time.Instant.now())))
+        }
+        compose.onNodeWithTag("composeDetails.published").assertDoesNotExist()
+    }
+
+    /** ComposeDetailsVideo: the clip's block is this path's media row, its tile the row's first thumb. */
+    @Test
+    fun theClipsBlockIsTheMediaRow() {
+        val clip = ComposeWizardState(
+            mode = BodyMode.Media,
+            step = WizardStep.Details,
+            picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+            coverChoice = CoverChoice.FirstFrame,
+        )
+        compose.setContent { Wizard(clip) }
+        compose.onNodeWithTag("composeDetails.mediaRow").assertExists()
+        compose.onNodeWithTag(CLIP_TILE_NODE.tag).assertExists()
     }
 
     @Test

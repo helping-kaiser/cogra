@@ -456,6 +456,35 @@ class ComposeWizardViewModelTest {
     }
 
     /**
+     * ComposeDetails.md: WHEN media attaches GIVEN it matches media in a published
+     * post of the author -> the marker shows; the read asks with the landed ids
+     * (`ownPublishedPlacement`), and a later change of media is asked again.
+     */
+    @Test
+    fun aLandedUploadAsksWhetherItIsAlreadyPublishedAndTheAnswerMarksTheStage() = runTest(dispatcher) {
+        val publishedAt = java.time.Instant.parse("2026-09-12T08:00:00Z")
+        media.placement = Outcome.Success(com.cogra.domain.media.PublishedPlacement("p-old", publishedAt))
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.placementAsks).containsExactly(listOf("m1"))
+        assertThat(vm.state.value.publishedMarker).isEqualTo(PublishedMarker(listOf("m1"), "p-old", publishedAt))
+
+        // ComposeDetails.md: NEVER the marker shows for media matching nothing of the author's.
+        media.placement = Outcome.Success(null)
+        vm.onRemovePickAt(0)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.publishedMarker).isNull()
+    }
+
+    /**
      * A PROCESSING asset the server only refused after accepting the
      * bytes surfaces through the existing failure line, worded with the
      * server's own reason — and offers no retry, because the identical
