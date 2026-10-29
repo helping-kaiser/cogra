@@ -52,8 +52,8 @@ internal interface ShellScope {
     /** The bar's slot of [tab] re-tapped over the tab's own root, counted: the root answers each one. */
     fun reselects(tab: TopLevelTab): Int
 
-    /** The key card under the header, signed in only. */
-    val keyBanner: @Composable () -> Unit
+    /** The key card under the header, signed in only, wearing [node] where the board registers it (`feed.keyCard`). */
+    fun keyBanner(node: DataNode?): @Composable () -> Unit
 
     /** The band that says whose view a reader is borrowing (guest and member alike). */
     val borrowedViewBand: @Composable () -> Unit
@@ -143,9 +143,9 @@ internal class Shell(
     // The slots every destination that has them draws the same way, written
     // once here, where the session and the controller are in hand, rather
     // than copied into each destination.
-    override val keyBanner: @Composable () -> Unit = {
+    override fun keyBanner(node: DataNode?): @Composable () -> Unit = {
         if (signedIn == true) {
-            KeyRestoreBannerRoute(onRestoreActor = { navController.navigate(Restore) })
+            KeyRestoreBannerRoute(onRestoreActor = { navController.navigate(Restore) }, node = node)
         }
     }
 

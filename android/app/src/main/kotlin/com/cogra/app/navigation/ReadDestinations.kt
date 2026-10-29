@@ -163,7 +163,7 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
         bell = bellFor("feed"),
         refreshSignal = signedResult,
         onRefreshSignalConsumed = consumeSigned,
-        keyBanner = keyBanner,
+        keyBanner = keyBanner(DataNode("feed") / "keyCard"),
         borrowedViewBand = borrowedViewBand,
         deletionBand = deletionBand(DataNode("feed") / "deletionBand"),
         banners = { statusBanners(actorRestored, consumeRestored) },
@@ -296,7 +296,7 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
         onBack = if (route.handle == null) null else ({ navController.navigateUp() }),
         // Only the reader's own profile carries the shell
         // banners: another actor's is a drill-in.
-        keyBanner = { if (route.handle == null) keyBanner() },
+        keyBanner = { if (route.handle == null) keyBanner(null)() },
         deletionBand = deletionBand(node = null),
         banners = {
             if (route.handle == null) statusBanners(actorRestored, consumeRestored)

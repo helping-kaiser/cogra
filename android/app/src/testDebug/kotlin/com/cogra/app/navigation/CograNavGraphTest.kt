@@ -826,8 +826,8 @@ class CograNavGraphTest {
         render()
 
         // The husk state offers restore; take it.
-        waitForTag("home_restore")
-        compose.onNodeWithTag("home_restore").performClick()
+        waitForTag("feed.keyCard.restore")
+        compose.onNodeWithTag("feed.keyCard.restore").performClick()
         compose.waitForIdle()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Restore>()).isTrue()
 
@@ -841,7 +841,7 @@ class CograNavGraphTest {
         // before a poll can catch it here.)
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Feed>() == true &&
-                compose.onAllNodesWithTag("home_restore").fetchSemanticsNodes().isEmpty()
+                compose.onAllNodesWithTag("feed.keyCard.restore").fetchSemanticsNodes().isEmpty()
         }
         assertThat(identity.seed).isEqualTo(actor.seed())
     }

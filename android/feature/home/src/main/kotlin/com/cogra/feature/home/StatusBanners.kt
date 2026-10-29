@@ -31,7 +31,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.dataNode
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.signing.RegistrationProgress
 
@@ -133,15 +135,17 @@ fun StatusBannerOneShots(
 fun KeyRestoreBannerRoute(
     onRestoreActor: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
+    /** The card's data-node where its board registers it (`feed.keyCard`). */
+    node: DataNode? = null,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    KeyRestoreBanner(state, onRestoreActor)
+    KeyRestoreBanner(state, onRestoreActor, node)
 }
 
 @Composable
-fun KeyRestoreBanner(state: HomeUiState, onRestoreActor: () -> Unit) {
+fun KeyRestoreBanner(state: HomeUiState, onRestoreActor: () -> Unit, node: DataNode? = null) {
     if (state.loading || !state.keyElsewhere) return
-    RestoreCard(onRestoreActor)
+    RestoreCard(onRestoreActor, node)
 }
 
 /**
@@ -331,17 +335,18 @@ private fun KeyElsewhereCard(onStartKeyCeremony: () -> Unit) {
 
 /** The actor key lives elsewhere — restore brings it to this device. */
 @Composable
-private fun RestoreCard(onRestoreActor: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+private fun RestoreCard(onRestoreActor: () -> Unit, node: DataNode?) {
+    Card(modifier = Modifier.fillMaxWidth().dataNode(node)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = stringResource(R.string.home_husk_title),
                 style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.dataNode(node?.div("title")),
             )
-            Text(stringResource(R.string.home_husk_body))
+            Text(stringResource(R.string.home_husk_body), modifier = Modifier.dataNode(node?.div("body")))
             Button(
                 onClick = onRestoreActor,
-                modifier = Modifier.testTag("home_restore"),
+                modifier = Modifier.testTag(node?.div("restore")?.tag ?: "home_restore"),
             ) {
                 Text(stringResource(R.string.home_husk_restore))
             }
