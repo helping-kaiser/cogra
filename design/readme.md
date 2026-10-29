@@ -379,7 +379,7 @@ never leave mid-task. Per surface:
 
 | Collapses | Pins |
 |---|---|
-| feed · search results · topic page · profile · saved · notifications · history · invites list · the chats list, both faces | post detail · every compose and edit stage · settings · the ceremonies · a chat's thread · About |
+| feed · search results · topic page · profile · the opinions page · saved · notifications · history · invites list · the chats list, both faces | post detail · every compose and edit stage · settings · the ceremonies · a chat's thread · About |
 
 On web, **pinned means `position: sticky`** — the bar rides the page's
 edge and never hides — and the collapsing surfaces adopt `CollapsingTop`
