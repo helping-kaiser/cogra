@@ -9003,12 +9003,57 @@
     "ReferencePicker": {
       "prefix": "referencePicker",
       "keys": {
+        "referencePicker.cap": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "referencePicker.fault": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "referencePicker.filterSheet": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "referencePicker.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
         "referencePicker.staged.stagedReference": "the reference's position in the staged set, counted from 1 (the screen that stages it)"
       },
       "nodes": {
         "referencePicker.announcement": [],
+        "referencePicker.cap": [
+          "cap"
+        ],
         "referencePicker.done": [],
+        "referencePicker.fault": [
+          "fault"
+        ],
+        "referencePicker.filterSheet": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.dragHandle": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.foot": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.foot.done": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.foot.reset": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds.commentsChip": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds.hint": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds.label": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds.postsChip": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.kinds.profilesChip": [
+          "filter"
+        ],
+        "referencePicker.filterSheet.title": [
+          "filter"
+        ],
         "referencePicker.filterTrigger": [],
         "referencePicker.header": [],
         "referencePicker.header.back": [],
@@ -11701,12 +11746,20 @@
     "TagPicker": {
       "prefix": "tagPicker",
       "keys": {
+        "tagPicker.cap": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "tagPicker.fault": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "tagPicker.staged.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "tagPicker.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "tagPicker.announcement": [],
+        "tagPicker.cap": [
+          "cap"
+        ],
         "tagPicker.done": [],
+        "tagPicker.fault": [
+          "fault"
+        ],
         "tagPicker.footnote": [],
         "tagPicker.header": [],
         "tagPicker.header.back": [],

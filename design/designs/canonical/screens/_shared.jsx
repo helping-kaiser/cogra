@@ -184,6 +184,18 @@ function PickAnnouncement({ said = "", node }) {
   );
 }
 
+/* THE PICKERS' CAP LINE (seam 248, GAP B): the batch's ten reached, said once
+   above the rows it stills — the naming rule's register under the field, a
+   fact and not a fault, so never `--error`. */
+const PICKER_NOTE = {
+  margin: 0,
+  padding: "8px 24px",
+  fontSize: "var(--text-body-small)",
+  lineHeight: "var(--text-body-small--line-height)",
+  letterSpacing: "var(--text-body-small--letter-spacing)",
+  color: "var(--text-secondary)",
+};
+
 /* An opinion of one gentle record — the vouch-back default made a bundle. */
 function mkBundle(pDirected, pInterest) {
   const pair = { pDirected, pInterest };

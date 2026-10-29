@@ -547,6 +547,13 @@ Object.assign(FLOW_MARKERS, {
     // The staged section's × (the closing batch, 2026-10-01), appended so no
     // via renumbers.
     { n: 7, find: 'aria-label="Remove Salt maps of the coast road"', tag: "button" },
+    // The `filter` state's kinds-only sheet (seam 248, GAP A), appended: the
+    // kind chips share one via, as `ExploreFilter`'s do, then the foot's pair
+    // and the scrim.
+    { n: 8, find: 'role="switch"', tag: "button", all: true },
+    { n: 9, find: 'data-node="referencePicker.filterSheet.foot.reset"', tag: "button" },
+    { n: 10, find: 'data-node="referencePicker.filterSheet.foot.done"', tag: "button" },
+    { n: 11, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   /* A reference row per V1.0 kind, each its own edge to its own board (readme
      §13, the V1.0 scope cut): the person, the posts, the comment, numbered in
