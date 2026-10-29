@@ -32,15 +32,20 @@ Gradle modules mirror the backend's crate discipline; each unit-tests in
 isolation. Today's modules: `app` (shell, navigation, theme, the
 endpoint/web-origin build config), `core:crypto`, `core:designsystem`,
 `core:domain` (with shared test fixtures under `testFixtures/`),
-`core:network`, the slice-1 feature surfaces `feature:onboarding`,
-`feature:auth`, `feature:home` (the shell's account-status
-banners), `feature:invites`, `feature:settings`, slice 2's
-`feature:content`, slice 2.1's `feature:profile`, slice 2.2's
-`feature:stance` (the stance control, embedded in post cards,
-comments, and profiles), and slice 2.3's `feature:topics` (the topic
-screen — name and tagged content; following a topic is a slice-3
-surface).
-`core:ranker` arrives with slice 3.
+`core:media` (on-device media: the media-store picker and the image
+and video processors), `core:network`, and the feature surfaces
+`feature:onboarding`, `feature:auth`, `feature:home` (the shell's
+account-status banners), `feature:invites` (the approval queue,
+invite creation, and the ask-link landing), `feature:settings`,
+`feature:content` (feed, detail, comments, composer, History),
+`feature:profile`, `feature:stance` (the stance control, embedded in
+post cards, comments, and profiles), `feature:topics` (the topic
+screen — name, tagged content, and the topic affinity),
+`feature:saved` (Saved and the hidden-actor hosts),
+`feature:notifications` (the list behind the bell),
+`feature:explore` (Explore and Your topics), and `feature:feedfilter`
+(the feed filter sheet, hosted by the feed and by Settings).
+`core:ranker` arrives with the on-device ranker stage.
 
 The split:
 
