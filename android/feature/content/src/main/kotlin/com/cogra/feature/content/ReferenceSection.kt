@@ -86,6 +86,8 @@ data class ReferenceSectionState(
     val tuning: String? = null,
     /** The finder, while it is open. */
     val finder: ReferenceFinderState? = null,
+    /** The citation picker, while it is open (`+ Cite something`); null when it is closed. */
+    val picker: ReferencePickerState? = null,
 ) {
     /** The per-kind batch cap (D7) — the section blocks the 11th chip itself. */
     val capReached: Boolean get() = references.size >= MAX_REFERENCES
@@ -129,6 +131,20 @@ data class ReferenceSectionState(
         if (capReached || references.any { it.targetId == targetId }) return this
         return copy(references = references + ReferenceRow(targetId, target))
     }
+
+    /**
+     * The picker's pick (ReferencePicker.md): the candidate joins the staged
+     * citations, capped at ten and never twice. A target the edit WITHDREW
+     * comes back as it stood — the loaded claim, its own pair — so the
+     * withdrawal unstages and no second record is staged for it.
+     */
+    fun staged(row: ReferenceCandidateRow): ReferenceSectionState {
+        if (capReached || references.any { it.targetId == row.targetId }) return this
+        val restored = loaded.firstOrNull { it.targetId == row.targetId }
+        return copy(references = references + (restored ?: ReferenceRow(row.targetId, row.target)))
+    }
+
+    fun withPicker(state: ReferencePickerState?) = copy(picker = state)
 
     fun removed(targetId: String) = copy(
         references = references.filterNot { it.targetId == targetId },
