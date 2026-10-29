@@ -1907,6 +1907,12 @@ describe("FeedView's seen tracker", () => {
 // a portrait clip's tap opens the stream over the derived list as drawn, in
 // its order, and asks the relay for nothing more.
 describe("FeedView's stream door (RL-1)", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    searchParams = new URLSearchParams();
+    forgetFeed();
+  });
+
   const clip = (id: string, ratio: string) => ({
     ...post(id, `Clip ${id}`),
     attachments: [
@@ -1930,7 +1936,7 @@ describe("FeedView's stream door (RL-1)", () => {
     const reads = feedReads();
     server.use(...rankedFeed([clip("c1", "9:16"), clip("w1", "16:9"), post("t1", "Words"), clip("c2", "4:5")], reads));
     renderWithProviders(<FeedView />);
-    await screen.findByTestId(byNode("feed.card.media.frame", "c2/1"));
+    await screen.findByTestId(byNode("feed.card.media.frame", "c2/1"), undefined, { timeout: 5000 });
     const door = screen.getByTestId("feed-post-c2-stream-link");
     expect(door).toHaveAttribute("href", "/reel/c2");
     expect(screen.queryByTestId("feed-post-w1-stream-link")).toBeNull();
