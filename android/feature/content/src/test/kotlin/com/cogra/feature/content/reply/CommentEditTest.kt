@@ -22,7 +22,6 @@ import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.edit.EDIT_WRITE_RULE_FACT
 import com.cogra.feature.content.edit.EditCrop
 import com.cogra.feature.content.edit.EditGallery
-import com.cogra.feature.content.onNodeIn
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.RefusedPick
@@ -171,7 +170,7 @@ class CommentEditTest {
     fun theTrayRemovesAndDescribes() {
         compose.setContent { Edit(edited().copy(gallery = EditGallery.of(listOf(kept())))) }
 
-        compose.onNodeIn("commentEdit.pictures.thumb:1", "commentEdit.pictures.thumb.remove").performClick()
+        compose.onNodeWithTag("commentEdit.pictures.thumb.remove").performClick()
         compose.onNodeWithTag("commentEdit.pictures.describeRow.describe").performClick()
 
         assertThat(removals).containsExactly(0)

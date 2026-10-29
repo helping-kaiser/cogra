@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -25,6 +26,7 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -35,6 +37,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -1871,8 +1874,8 @@ class ContentScreensTest {
             viewerId = "viewer",
         )
         openComments()
-        compose.onNodeWithTag("comment_edit_mine").assertExists()
-        compose.onNodeWithTag("comment_edit_theirs").assertDoesNotExist()
+        compose.onNodeIn(threadCard("mine"), threadPart("actionRow.edit")).assertExists()
+        compose.onNodeIn(threadCard("theirs"), threadPart("actionRow.edit")).assertDoesNotExist()
     }
 
     @Test
@@ -1903,7 +1906,7 @@ class ContentScreensTest {
             onEditComment = { editing = it },
         )
         openComments()
-        compose.onNodeWithTag("comment_edit_mine").performScrollTo().performClick()
+        compose.onNodeIn(threadCard("mine"), threadPart("actionRow.edit")).performScrollTo().performClick()
         assertThat(editing?.id).isEqualTo("mine")
     }
 
@@ -2958,7 +2961,8 @@ class ContentScreensTest {
             PostEditUiState(tagSection = TagSectionState(tags = tagRows("rust"))),
             onTuneTag = { tuned = it },
         )
-        compose.onNodeWithTag("post_edit_tag_rust_open").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("#rust — set how it relates").performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
         assertThat(tuned).isEqualTo("rust")
     }
 
@@ -3196,7 +3200,8 @@ class ContentScreensTest {
         )
         compose.onNodeWithText("You're signing 3 things").assertExists()
         compose.onNodeWithTag("postEdit.references.withdrawn").performScrollTo()
-            .assertTextContains("Withdrawn: @ada")
+        compose.onNode(hasText("Withdrawn: @ada") and hasAnyAncestor(hasTestTag("postEdit.references.withdrawn")))
+            .assertExists()
         compose.onNodeWithTag("postEdit.references.withdrawn.undo").assertExists()
         assertThat(undone).isNull()
     }
