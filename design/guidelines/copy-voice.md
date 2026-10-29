@@ -573,7 +573,8 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
 - `That's more than a comment carries — up to four pictures.`
 - `A post carries one video.` — a second clip in one photos-app batch, or
   one dropped while a clip is staged; the batch's first clip is the body.
-  `A comment carries one video.` is its comment-scale twin. (Seam 245,
+  `A comment carries one video.` is its comment-scale twin, drawn on
+  `ReplyVideo`'s `batch` chip (round 27): refused, never swapped in. (Seam 245,
   ask 13 H; *merged under the autonomy order, 2026-10-28; review pending*.)
 
 - `A video can't join an edit yet — post it on its own.` — a video picked
