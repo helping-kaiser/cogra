@@ -179,7 +179,8 @@ internal fun ColumnScope.ReplySealActions(
  * The board draws the two declaring rows as **offers** — "+ Add a tag …
  * 1 more", "+ Cite something" — on every state of the seal (ReplySeal.md,
  * ReplyCitedMany.md), each opening its picker in the reply's place, and what
- * is already declared reads back above them. A gallery adds no row either way: attaching media mints nothing, which
+ * is already declared reads back above them. A gallery adds no row either
+ * way: attaching media mints nothing, which
  * is why the board reads "1 signed action" beside two pictures.
  *
  * EVERY TRAILING COUNT IS A BARE NUMBER, as `ActsCard` draws it. The
