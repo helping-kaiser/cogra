@@ -58,6 +58,9 @@ describe("AppShell", () => {
     ["/u/alice", "profile.bottomBar"],
     // History.md:121: the bar keeps lit the root History was opened from.
     ["/history", "history.bottomBar"],
+    // The opinions page under either root (nodes.json `profileStances`, round 26).
+    ["/profile/opinions", "profileStances.bottomBar"],
+    ["/u/ada/opinions", "profileStances.bottomBar"],
     // WalletComingSoon registers its bar (round 23).
     ["/wallet", "wallet.bottomBar"],
   ])("names the bar on the registered screen %s after it", async (path, bar) => {
@@ -105,8 +108,7 @@ describe("AppShell", () => {
   });
 
   // THE OPINIONS PAGE KEEPS LIT THE ROOT ITS PROFILE WAS OPENED FROM
-  // (ProfileStances.md:27, Feed from the feed); unregistered, so the bar keeps
-  // its own ids.
+  // (ProfileStances.md:49, Feed from the feed).
   it.each([
     ["/profile/opinions", "", "/profile"],
     ["/u/ada/opinions", "", "/feed"],
@@ -114,7 +116,15 @@ describe("AppShell", () => {
     ["/u/ada/opinions", "from=search", "/explore"],
     // A row's person opened from the reader's own page stays in the Profile stack.
     ["/u/tobias", "from=opinions", "/profile"],
+    // Someone's page opened with no origin of its own is Feed's.
     ["/u/tobias", "from=opinions.by%3Aada", "/feed"],
+    // STACK OWNERSHIP (readme §4; ProfileStances.md:51, round 26): a person
+    // opened from someone else's opinions page keeps the root that page's
+    // stack began in — never Feed by default.
+    ["/u/tobias", "from=opinions%3Aada%2Fsaved", "/profile"],
+    ["/u/tobias", "from=opinions.by%3Aada%2Fsearch", "/explore"],
+    ["/u/tobias", "from=opinions%3Amira%2Fopinions.by%3Aada%2Fhistory", "/profile"],
+    ["/u/ada/opinions", "from=opinions%3Amira%2Fsaved", "/profile"],
   ])("lights the root on %s?%s whose slot goes to %s", async (path, query, root) => {
     pathname = path;
     search = query;

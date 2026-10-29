@@ -35,6 +35,12 @@ describe("backFor", () => {
     expect(backFor("opinions.by")).toEqual({ href: "/profile/opinions?tab=by", label: "Back to the opinions" });
     expect(backFor("opinions:ada")).toEqual({ href: "/u/ada/opinions", label: "Back to the opinions" });
     expect(backFor("opinions.by:ada")).toEqual({ href: "/u/ada/opinions?tab=by", label: "Back to the opinions" });
+    // The page comes back as it was opened, its own origin and all (round 26).
+    expect(backFor("opinions:ada/saved")).toEqual({ href: "/u/ada/opinions?from=saved", label: "Back to the opinions" });
+    expect(backFor("opinions.by:mira/opinions:ada/search")).toEqual({
+      href: "/u/mira/opinions?tab=by&from=opinions%3Aada%2Fsearch",
+      label: "Back to the opinions",
+    });
   });
 
   // TagPage.md:35: Back to Your topics from Your topics.

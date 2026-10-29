@@ -18,7 +18,7 @@
 // the same anchor, or the surface's next fresh load — never on a timer.
 
 import type { DataNode } from "./data-node";
-import { testAttributes } from "./data-node";
+import { part, testAttributes } from "./data-node";
 import { InlineAction } from "@/lib/ui2/inline-action";
 import { PLATE_CLASS, PLATE_STYLE } from "@/lib/ui2/media/reel-plate";
 
@@ -71,7 +71,7 @@ export function RowLine({
             <span className="text-error">
               {state.kind === "didntSign" ? DIDNT_SIGN_ROW : DIDNT_GO_THROUGH_ROW}
             </span>
-            <InlineAction size="sm" onClick={state.onRetry} testId={`${testId}-retry`}>
+            <InlineAction size="sm" onClick={state.onRetry} node={part(node, "retry")} testId={`${testId}-retry`}>
               Retry
             </InlineAction>
           </>
@@ -99,7 +99,7 @@ export function RowLine({
       <span className="text-error">
         {state.kind === "didntSign" ? DIDNT_SIGN_ROW : DIDNT_GO_THROUGH_ROW}
       </span>{" "}
-      <InlineAction size="sm" onClick={state.onRetry} testId={`${testId}-retry`}>
+      <InlineAction size="sm" onClick={state.onRetry} node={part(node, "retry")} testId={`${testId}-retry`}>
         Retry
       </InlineAction>
     </p>

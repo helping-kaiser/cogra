@@ -33,6 +33,8 @@ export function reelPost(
     content: moderated(null),
     attachments: [clipAttachment(id, ratio)],
     attachmentsStatus: "NORMAL",
+    sensitiveSelfMark: false,
+    sensitiveReason: null,
     author: {
       __typename: "User",
       id: "u-mira",

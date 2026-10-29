@@ -829,6 +829,10 @@ export function CommentsSheet({
               body when the comment is marked. */
           <BodyRegion
             veiled={bodyIsSensitive(comment)}
+            // THE COMMENT-SCALE FACE (CommentCard.jsx `kind="compact"`): one
+            // block in the body's place, naming whose mark it is.
+            marks={comment}
+            face="compact"
             testId={`comment-${comment.id}`}
             nodeId={comment.id}
             signature={sensitiveSignature(comment)}
