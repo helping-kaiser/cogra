@@ -261,7 +261,7 @@ export function KeptPicksView() {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
         <PageHeader title={KEPT_PICKS_TITLE} backHref={from} backLabel="Back" node={part(REVIEW, "header")} />
-        <div className="flex flex-1 flex-col gap-4 px-6 pb-6 pt-2">
+        <div className="flex flex-1 flex-col gap-4 px-6 pt-2">
           <p className="m-0 text-body-medium text-on-surface-variant" {...testAttributes(part(REVIEW, "intro"))}>
             {KEPT_PICKS_INTRO}
           </p>
@@ -308,7 +308,7 @@ export function KeptPicksView() {
           <div className="flex-1" />
           {/* THE FOOT IS PINNED (ruling A2's wizard reading), as `Save` is on
               the profile's edit: the commit leads to the seal. */}
-          <div className="sticky bottom-0 bg-surface pb-2 pt-2">
+          <div className="sticky bottom-0 bg-surface pb-6 pt-2">
             <PillButton testId="keptPicks.sign" node={part(REVIEW, "sign")} full onClick={() => setStage("seal")}>
               Sign them
             </PillButton>

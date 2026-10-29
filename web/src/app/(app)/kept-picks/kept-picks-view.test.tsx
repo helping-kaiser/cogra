@@ -107,6 +107,8 @@ describe("the kept picks' review", () => {
     // The pair spoken as the readout speaks it (`stance`).
     expect(screen.getByText("Nice, For or against +0.10, How much reaches you +0.10")).toBeInTheDocument();
     expect(screen.getByTestId("keptPicks.sign")).toHaveTextContent("Sign them");
+    // KeptPicksReview: the pinned foot keeps the screen's 24px under the commit.
+    expect(screen.getByTestId("keptPicks.sign").parentElement?.className).toContain("pb-6");
   });
 
   it("lists plain opinions only: a kept vouch-back or approval never joins", async () => {
