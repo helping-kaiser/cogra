@@ -44,6 +44,21 @@ export type ActsRow = {
   key?: string;
 };
 
+/**
+ * AN ACTION ROW (`ActsCard.jsx` `row.action`): what could still be added,
+ * lined up with what has been — the reply seal's `+ Add a tag` and `+ Cite
+ * something`. The whole row is the control, the master's small
+ * `InlineAction` at the row's geometry, its count already words (`1 more`)
+ * that say themselves. An action row has no value slot to clip.
+ */
+export type ActsAction = {
+  action: string;
+  /** The count slot's words, `1 more`. */
+  count: string;
+  onAct: () => void;
+  testId?: string;
+};
+
 const ROW = "flex min-h-11 items-center gap-2";
 const HAIRLINE = "border-0 border-b border-solid border-outline-variant";
 const LABEL = "w-19 flex-none text-label-small text-on-surface-variant";
@@ -117,6 +132,29 @@ function Row({ row, node }: { row: ActsRow; node?: DataNode }) {
   );
 }
 
+function ActionRow({ row, node }: { row: ActsAction; node?: DataNode }) {
+  return (
+    <button
+      type="button"
+      onClick={row.onAct}
+      {...(node === undefined ? { "data-testid": row.testId } : testAttributes(node))}
+      className={`cg-state cg-focus cg-hit ${ROW} ${HAIRLINE} w-full cursor-pointer bg-transparent p-0 text-left font-sans ${SMALL_GROUND} [font-weight:var(--text-label-small--font-weight)] text-primary`}
+    >
+      <span className={LABEL} {...testAttributes(part(node, "label"))} />
+      <span className="min-w-0 flex-1 whitespace-nowrap" {...testAttributes(part(node, "action"))}>
+        {row.action}
+      </span>
+      <span className={`flex-none ${SMALL_GROUND} text-on-surface-variant`} {...testAttributes(part(node, "count"))}>
+        {row.count}
+      </span>
+    </button>
+  );
+}
+
+function isAction(row: ActsRow | ActsAction): row is ActsAction {
+  return "action" in row;
+}
+
 export function ActsCard({
   rows,
   total,
@@ -125,7 +163,7 @@ export function ActsCard({
   testId,
   node,
 }: {
-  rows: readonly ActsRow[];
+  rows: readonly (ActsRow | ActsAction)[];
   total: string;
   /** The all-or-nothing line, or past 5s of signing the slow line. */
   note?: string | null;
@@ -145,9 +183,13 @@ export function ActsCard({
       {...testAttributes(node, testId)}
       className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1"
     >
-      {rows.map((row, index) => (
-        <Row key={row.key ?? row.label} row={row} node={instance(node, "actRow", String(index + 1))} />
-      ))}
+      {rows.map((row, index) =>
+        isAction(row) ? (
+          <ActionRow key={row.action} row={row} node={instance(node, "actRow", String(index + 1))} />
+        ) : (
+          <Row key={row.key ?? row.label} row={row} node={instance(node, "actRow", String(index + 1))} />
+        ),
+      )}
       {/* 48px of CONTENT plus 6px above and below, as the master's inline style
           measures it (content-box: 60px in all). */}
       <div className="box-content flex min-h-12 flex-col justify-center gap-0.5 py-1.5">
