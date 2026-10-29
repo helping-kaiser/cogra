@@ -85,17 +85,21 @@ import { StanceControl } from "../stance/StanceControl.jsx";
 const UNDER = `{ .cg-profile-grid { grid-template-areas: "avatar name" "figures figures" !important } .cg-profile-name { align-self: center !important } .cg-profile-figures { margin-top: var(--space-3) !important } }`;
 const PROFILE_TOP_CSS = `@container cg-profile-other (width < calc(96px + 15.5rem)) ${UNDER} @container cg-profile-own (width < calc(96px + 14.5rem)) ${UNDER}`;
 
+/* EACH LINE SETS ITS ROLE WHOLE (round 27, seam 252; backlog 147's family,
+   rounds 20/23/25): size, leading, tracking and weight, so a client
+   conforming to the master measures off the role's tokens rather than an
+   inherited tracking. */
 function Figure({ value, label, node }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }} data-node={node}>
       <span
-        style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}
+        style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", letterSpacing: "var(--text-title-medium--letter-spacing)", fontWeight: "var(--text-title-medium--font-weight)" }}
         data-node={node && "value"}
       >
         {value}
       </span>
       <span
-        style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: 500, color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+        style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
         data-node={node && "label"}
       >
         {label}

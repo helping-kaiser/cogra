@@ -5189,6 +5189,10 @@ The fix is round 20's: each site sets its role whole, measured headless
 on the built boards with Figtree loaded, and the boards' geometry diffed
 before and after.
 
+- **Closed in round 27** (seam 252, item 12; found by android): ~~`ProfileHeader`'s
+  figures — the label set label-small without its tracking, the value
+  title-medium without its tracking~~. Both now set the role whole.
+
 ### 148 · Does a words comment's edit take a video? · *design* · **filed 2026-10-29**
 
 Round 25 (seam 248, VIDEO_AT_EDIT). A words post's edit takes a clip
