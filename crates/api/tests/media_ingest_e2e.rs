@@ -1049,6 +1049,98 @@ async fn an_abandoned_job_is_picked_up_again_until_it_gives_up(pool: PgPool) {
     );
 }
 
+/// The lease and attempt counter a job's row carries.
+async fn lease_of(pool: &PgPool, id: &str) -> (i32, bool) {
+    sqlx::query_as::<_, (i32, bool)>(
+        "SELECT attempts, lease_until IS NOT NULL FROM media_attachments WHERE id = $1::uuid",
+    )
+    .bind(id)
+    .fetch_one(pool)
+    .await
+    .expect("the job's row")
+}
+
+/// A worker that stops mid-job hands the job back instead of leaving its
+/// lease to lapse: the next process claims it at once, and the attempt
+/// it was on is refunded — a deploy is not the file failing, and enough
+/// restarts during one long encode must never fail an upload for good.
+/// A stopping worker claims nothing new.
+///
+/// A stopping ingest worker claims nothing new and hands its job back at once, the attempt refunded.
+/// ´claim:media:a-stopping-worker-hands-its-job-back´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_stopping_worker_hands_its_job_back(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let id = rig.upload(&token, &h264_movie(2560, 1440, 2_500)).await["id"]
+        .as_str()
+        .expect("id")
+        .to_string();
+
+    let stop = tokio_util::sync::CancellationToken::new();
+    stop.cancel();
+    tokio::time::timeout(
+        Duration::from_secs(5),
+        ingest::ingest_loop(
+            rig.pool.clone(),
+            rig.blobs.clone(),
+            rig.media.clone(),
+            None,
+            stop,
+            Duration::from_secs(20),
+        ),
+    )
+    .await
+    .expect("a stopped worker returns at once");
+    assert_eq!(
+        lease_of(&rig.pool, &id).await,
+        (0, false),
+        "nothing was claimed"
+    );
+
+    let job = postgres_store::media::claim_ingest(&rig.pool, 60.0)
+        .await
+        .expect("claim")
+        .expect("the waiting job");
+    assert_eq!(job.attempts, 1);
+    postgres_store::media::hand_back_ingest(&rig.pool, job.id)
+        .await
+        .expect("hand back");
+    let again = postgres_store::media::claim_ingest(&rig.pool, 60.0)
+        .await
+        .expect("claim")
+        .expect("claimable at once, inside what was a live lease");
+    assert_eq!(again.id, job.id);
+    assert_eq!(again.attempts, 1, "the interrupted attempt was refunded");
+
+    let Some(ffmpeg) = ffmpeg_or_skip("a_stopping_worker_hands_its_job_back").await else {
+        return;
+    };
+    sqlx::query("UPDATE media_attachments SET lease_until = NULL, attempts = 0")
+        .execute(&rig.pool)
+        .await
+        .expect("release the manual claim");
+    let settled = ingest::ingest_once_until(
+        &rig.pool,
+        rig.blobs.as_ref(),
+        &rig.media,
+        Some(&ffmpeg),
+        rig.settings(),
+        std::future::ready(()),
+    )
+    .await
+    .expect("an ingest pass");
+    assert_eq!(settled, Settled::HandedBack);
+    assert_eq!(
+        lease_of(&rig.pool, &id).await,
+        (0, false),
+        "handed back, refunded"
+    );
+    let polled = rig.media_attachment(&token, &id).await;
+    assert_eq!(polled["state"], "PROCESSING", "still the queue's");
+}
+
 /// The whole re-encode, with a real encoder: a 1440p camera original
 /// becomes a 1080p rendition, H.264 + AAC, fast-start, carrying none of
 /// the source's metadata; the published digest is the digest of the

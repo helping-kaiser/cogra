@@ -11,6 +11,7 @@
 
 pub mod api;
 pub mod schema;
+pub mod shutdown;
 
 use std::time::Duration;
 

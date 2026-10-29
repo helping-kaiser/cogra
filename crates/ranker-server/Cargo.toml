@@ -24,6 +24,7 @@ path = "src/bin/export-ranker-schema.rs"
 [dependencies]
 ranker             = { path = "../ranker" }
 tokio              = { workspace = true }
+tokio-util         = { workspace = true }
 axum               = { workspace = true }
 async-graphql      = { workspace = true, features = ["chrono", "uuid"] }
 async-graphql-axum = { workspace = true }

@@ -126,7 +126,7 @@ variable.
 | `MEDIA_FFMPEG` | `ffmpeg` | The ffmpeg the ingest worker drives — a name looked up on `PATH`, or a path. Probed once at startup for an H.264 and an AAC encoder, and for the HDR tone map's filters |
 | `MEDIA_TRANSCODE_TIMEOUT_SECS` | `1800` | The longest one re-encode may run before ffmpeg is killed and the job retried; a job is failed after its third attempt |
 | `MEDIA_INGEST_POLL_SECS` | `2` | How long an idle ingest worker waits before looking for a `processing` asset again. A worker that just settled one claims the next at once |
-| `MEDIA_INGEST_LEASE_SECS` | `60` | How long a worker's claim on a job holds without renewal; renewed every third of itself while the job runs. The most a restart delays the job that was in flight. At least 3 |
+| `MEDIA_INGEST_LEASE_SECS` | `60` | How long a worker's claim on a job holds without renewal; renewed every third of itself while the job runs. The most a crash delays the job that was in flight; a graceful stop hands it back at once. At least 3 |
 | `MEDIA_INGEST_WORKERS` | `1` | Ingest workers in this process. Each runs one ffmpeg at a time and ffmpeg spreads an encode over every core, so more only help once uploads queue behind each other |
 | `MEDIA_STALE_UPLOADS_EXPIRY` | `24h` | The store-side backstop, for the uploads a crash orphans before their session row exists (compose-only). MinIO implements it as a server setting, not as an S3 `AbortIncompleteMultipartUpload` lifecycle rule — it rejects such a rule — and the expiry matches the TTL above: the same abandoned upload, seen from both sides. Another store needs the lifecycle rule instead |
 | `MEDIA_STALE_UPLOADS_CLEANUP_INTERVAL` | `6h` | How often the store looks for them (compose-only) |

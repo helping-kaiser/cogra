@@ -271,11 +271,16 @@ A unit counts as started only once its container is healthy: each
 long-running unit's `ExecStartPost` waits for `podman wait
 --condition=healthy` (podman 4.9 predates `Notify=healthy`); the
 application probes run every ten seconds, so the gate costs a deploy
-seconds rather than a probe interval. The API and the ranker run under
-an init (`RunInit=true`): neither binary installs a SIGTERM handler,
-and as PID 1 a process ignores a signal it does not handle, so a stop
-would wait out its timeout and end in SIGKILL. Ordering
-follows from that: the API starts after Postgres answers and both
+seconds rather than a probe interval. The API and the ranker stop
+gracefully on SIGTERM within a grace below their unit's stop timeout
+(20 of 30 seconds, 7 of 10): open requests finish, and the API's
+ingest workers stop claiming and finish the job in flight or hand it
+back, its attempt refunded, for the next process. Both still run under
+an init (`RunInit=true`): the API installs its handlers only once
+startup is done, and as PID 1 a process ignores a signal it does not
+handle, so without the init a stop during migrations would end in
+SIGKILL. Start ordering:
+the API starts after Postgres answers and both
 stores are provisioned; web and ranker after the API; the proxy last.
 Every unit restarts always and starts at boot, and a unit that fails
 outright triggers `cogra-alert@`, an ntfy alert.

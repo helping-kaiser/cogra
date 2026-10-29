@@ -31,6 +31,7 @@ pub mod removal;
 pub mod report;
 pub mod schema;
 pub mod search;
+pub mod shutdown;
 pub mod stance;
 pub mod topics;
 
