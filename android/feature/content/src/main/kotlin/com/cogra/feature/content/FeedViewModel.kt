@@ -30,6 +30,7 @@ import com.cogra.domain.hidden.HiddenStatus
 import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.removal.RemovedMarks
+import com.cogra.domain.score.FeedStandings
 import com.cogra.domain.topics.HeldTopicsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CompletableDeferred
@@ -141,6 +142,7 @@ class FeedViewModel @Inject constructor(
     private val topics: HeldTopicsRepository,
     private val removedMarks: RemovedMarks,
     private val committed: CommittedFeedFilter,
+    private val standings: FeedStandings,
 ) : ViewModel() {
 
     /** Whether the reader's hidden set takes [card] out of the feed (hidden-actors §4.3). */
@@ -235,7 +237,13 @@ class FeedViewModel @Inject constructor(
             when {
                 ranked is Outcome.Success && setKnown -> {
                     hydrated.clear()
-                    if (ranked.value.resolved) _state.update { it.copy(borrowedHandle = ranked.value.borrowedHandle) }
+                    if (ranked.value.resolved) {
+                        _state.update { it.copy(borrowedHandle = ranked.value.borrowedHandle) }
+                        // THE FETCH IS THE LOOKUP SOURCE (CD-9, CD-SR5): every score
+                        // slot reads its thing's figure here, and this answer replaces
+                        // every trace's adoption. A local re-derive never reaches here.
+                        standings.hold(viewer.reader(), ranked.value.ranking, ranked.value.viewer)
+                    }
                     install(ranked.value.ranking)
                 }
                 // A failed refresh keeps the held snapshot on screen; the
@@ -393,7 +401,13 @@ class FeedViewModel @Inject constructor(
  * A ranking, and whose view it was ranked from — [resolved] false where no
  * view was asked for (every kind off), so the borrowed name stands as it was.
  */
-private data class Ranked(val ranking: FeedRanking, val resolved: Boolean, val borrowedHandle: String?)
+private data class Ranked(
+    val ranking: FeedRanking,
+    val resolved: Boolean,
+    val borrowedHandle: String?,
+    /** Whose view [ranking] walked from; null where none was ranked. */
+    val viewer: String? = null,
+)
 
 /**
  * The ranking for [filter]'s pod-side axes, of the view [viewer] resolves
@@ -408,7 +422,9 @@ private suspend fun FeedRepository.rank(viewer: FeedViewer, filter: FeedFilter):
             val view = who.value ?: return Outcome.Success(Ranked(FeedRanking.EMPTY, resolved = true, null))
             when (val answer = ranking(view.viewer, filter.rankArgs)) {
                 is Outcome.Success -> {
-                    Outcome.Success(Ranked(answer.value ?: FeedRanking.EMPTY, resolved = true, view.borrowedHandle))
+                    val ranking = answer.value ?: FeedRanking.EMPTY
+                    val walked = view.viewer.takeIf { answer.value != null }
+                    Outcome.Success(Ranked(ranking, resolved = true, view.borrowedHandle, walked))
                 }
                 is Outcome.Refused -> answer
                 is Outcome.Failed -> answer

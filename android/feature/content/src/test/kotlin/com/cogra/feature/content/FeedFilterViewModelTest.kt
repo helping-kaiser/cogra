@@ -35,6 +35,7 @@ import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.history.TagCardTopic
 import com.cogra.domain.removal.RemovedMarks
+import com.cogra.domain.score.FeedStandings
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.InMemoryCommittedFilterStore
@@ -86,6 +87,7 @@ class FeedFilterViewModelTest {
     private val heldTopics = ScriptedHeldTopicsRepository()
     private val removedMarks = RemovedMarks()
     private val committedFilters = InMemoryCommittedFilterStore()
+    private val standings = FeedStandings()
     private val seenRecord by lazy { SeenRecord(records, server, session, appScope) }
     private val seenTracker by lazy { SeenTracker(history, session, appScope, seenRecord) }
     private val hidden by lazy { HiddenSet(RecordingHiddenRepository(), session, appScope) }
@@ -104,6 +106,7 @@ class FeedFilterViewModelTest {
         heldTopics,
         removedMarks,
         CommittedFeedFilter(committedFilters, session),
+        standings,
     )
 
     private fun FeedViewModel.ids() = state.value.cards.map { it.id }

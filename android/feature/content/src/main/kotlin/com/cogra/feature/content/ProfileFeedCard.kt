@@ -8,9 +8,8 @@
 // text post with only a body. The card opens the profile.
 //
 // THE ROW READS OPINION · SCORE · SHARE (FeedKinds.md): the kind's own act is
-// the chat glyph, and its slot waits for chats. The score slot waits with the
-// post card's: no field carries a card's score until the ranker's figure
-// reaches the contract.
+// the chat glyph, and its slot waits for chats. The score is the person's own
+// standing in the reader's view (`ScoreSlot`).
 //
 // ITS ⋮ IS THE PROFILE'S OWN MENU, less the share the row carries: Save ·
 // Mention · Hide for a person; Save · Hide · Report for a deleted account.
@@ -56,6 +55,7 @@ import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.ProfileView
 import com.cogra.domain.hidden.HiddenPerson
+import com.cogra.domain.score.TraceThingKind
 import com.cogra.feature.saved.LocalSavedHost
 
 /** The lead's picture: the profile header's compact shape at card scale. */
@@ -176,7 +176,7 @@ private fun RowScope.ProfileLead(profile: ProfileView, card: DataNode) {
     }
 }
 
-/** Opinion · (score, waiting) · share — the act's slot waits for chats. */
+/** Opinion · score · share — the act's slot waits for chats (FeedKinds.md:5). */
 @Composable
 private fun ProfileRow(
     profile: ProfileView,
@@ -191,6 +191,14 @@ private fun ProfileRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         stanceControl(profile.id, testTagPrefix, card / "actionRow" / "stance")
+        ScoreSlot(
+            targetId = profile.id,
+            kind = TraceThingKind.PERSON,
+            pending = false,
+            cover = personCover(profile),
+            node = card / "actionRow" / "score",
+            testTag = "${testTagPrefix}_score",
+        )
         GlyphAffordance(
             icon = Icons.Filled.Share,
             description = if (profile.deleted) {

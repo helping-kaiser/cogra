@@ -39,6 +39,8 @@ import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.history.StoredSeenRecord
 import com.cogra.domain.removal.RemovedMarks
+import com.cogra.domain.score.FeedStandings
+import com.cogra.domain.score.Standing
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.InMemoryCommittedFilterStore
@@ -95,6 +97,9 @@ class FeedViewModelTest {
     private val removedMarks = RemovedMarks()
     private val committedFilters = InMemoryCommittedFilterStore()
 
+    /** The process's standings: what every score slot reads (CD-SR5). */
+    private val standings = FeedStandings()
+
     /** The process's record and tracker — built lazily, so a test can script the store first. */
     private val seenRecord by lazy { SeenRecord(records, server, session, appScope) }
     private val seenTracker by lazy { SeenTracker(history, session, appScope, seenRecord) }
@@ -117,6 +122,7 @@ class FeedViewModelTest {
         heldTopics,
         removedMarks,
         CommittedFeedFilter(committedFilters, session),
+        standings,
     )
 
     private fun FeedViewModel.ids() = state.value.posts.map { it.id }
@@ -144,6 +150,48 @@ class FeedViewModelTest {
         assertThat(feed.rankings).containsExactly("u1" to FeedRankArgs(setOf(FeedKind.POST), null))
         assertThat(vm.state.value.loading).isFalse()
         assertThat(vm.ids()).containsExactly("p1", "p2").inOrder()
+    }
+
+    // ── THE STANDINGS (CD-9, CD-SR5) ─────────────────────────────────────
+
+    /** FeedKinds.md:7: a feed fetch is the figure every score slot reads, in the view it walked. */
+    @Test
+    fun aFeedFetchHoldsItsAnswerForEveryScoreSlot() = runTest(dispatcher) {
+        feed.answer = Outcome.Success(FeedRanking(4, listOf(entry("p1", newestIndex = 0, score = 15.2)), emptyList()))
+        viewModel()
+        settle()
+
+        val held = standings.state.value
+        assertThat(held.of("u1", "p1", pending = false)).isEqualTo(Standing.Figure(15.2))
+        assertThat(held.viewerFor("u1")).isEqualTo("u1")
+    }
+
+    /** FeedKinds.md:13; CD-9: a local re-derive keeps the adoptions, the next fetch replaces them. */
+    @Test
+    fun onlyAFetchReplacesWhatTheTraceAdopted() = runTest(dispatcher) {
+        feed.answer = Outcome.Success(FeedRanking(4, listOf(entry("p1", newestIndex = 0, score = 15.2)), emptyList()))
+        val vm = viewModel()
+        settle()
+        standings.adopt("p1", null)
+
+        vm.applyFilter(vm.state.value.filter.copy(order = FeedOrder.NEWEST))
+        settle()
+        assertThat(standings.state.value.of("u1", "p1", pending = false)).isEqualTo(Standing.Dash)
+
+        vm.refresh()
+        settle()
+        assertThat(standings.state.value.of("u1", "p1", pending = false)).isEqualTo(Standing.Figure(15.2))
+    }
+
+    /** A borrowed view's figures are the lender's walk: the held view is the lender (CD-5, CD-SR1). */
+    @Test
+    fun aBorrowedFeedHoldsTheLendersView() = runTest(dispatcher) {
+        account.lender = Outcome.Success(ActorRef("lender-id", "mira"))
+        feed.answer = Outcome.Success(rankingOf("p1"))
+        viewModel()
+        settle()
+
+        assertThat(standings.state.value.viewerFor("u1")).isEqualTo("lender-id")
     }
 
     /**
