@@ -175,8 +175,7 @@ private fun RemovalKind.bodyRes() = when (this) {
  *   pair and Remove reads Retry.
  * @param node the dialog's node: `postDetail.dialog` (RemoveConfirm and the
  *   thread's CommentRemoveConfirm) or `feed.dialog` (FeedRemoveConfirm), its
- *   `title`, `body`, `keep` and `remove`, and the failed state's `line`
- *   keyed `failed`.
+ *   `title`, `body`, `keep` and `remove`, and the failed answer's `line`.
  */
 @Composable
 internal fun RemoveDialog(
@@ -187,6 +186,8 @@ internal fun RemoveDialog(
     onKeep: () -> Unit,
     testTag: String,
     node: DataNode? = null,
+    /** The board draws the dialog once per answer, keyed by it (`postDetail.dialog`: `asking`, `failed`). */
+    answerKeyed: Boolean = false,
 ) {
     val slow = rememberParticiple(busy)
     // A dialog over a surface suspends its stage (Feed.md:31).
@@ -197,7 +198,7 @@ internal fun RemoveDialog(
         paragraphs = listOf(stringResource(kind.bodyRes()), stringResource(R.string.content_remove_permanent)),
         onScrimPress = keep,
         testTag = testTag,
-        node = node,
+        node = if (answerKeyed) node?.keyed(if (failed && !busy) "failed" else "asking") else node,
         // ABOVE THE PAIR, where SeveranceConfirm stands its fault line — the
         // failure voice, announced.
         extra = {
@@ -208,7 +209,7 @@ internal fun RemoveDialog(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier
                         .semantics { liveRegion = LiveRegionMode.Assertive }
-                        .then(partTag(node, "line", "${testTag}_failed", key = "failed")),
+                        .then(partTag(node, "line", "${testTag}_failed")),
                 )
             }
         },
@@ -235,16 +236,9 @@ internal fun RemoveDialog(
     )
 }
 
-/**
- * A part's registered tag inside a registered dialog, else the [fallback] the
- * tests bind to. A part the board draws once per state carries that state as
- * its [key] (`postDetail.dialog.line:failed`).
- */
-private fun partTag(node: DataNode?, part: String, fallback: String, key: String? = null): Modifier = when {
-    node == null -> Modifier.testTag(fallback)
-    key != null -> Modifier.dataNode((node / part).keyed(key))
-    else -> Modifier.dataNode(node / part)
-}
+/** A part's registered tag inside a registered dialog, else the [fallback] the tests bind to. */
+private fun partTag(node: DataNode?, part: String, fallback: String): Modifier =
+    if (node != null) Modifier.dataNode(node / part) else Modifier.testTag(fallback)
 
 /**
  * The dialog, driving the removal of one node through the destination's
@@ -263,6 +257,7 @@ internal fun RemoveConfirm(
     onClose: () -> Unit,
     testTag: String,
     node: DataNode? = null,
+    answerKeyed: Boolean = false,
 ) {
     val removal = LocalRemoval.current
     val state by (removal?.state ?: remember { MutableStateFlow(RemoveUiState()) }).collectAsState()
@@ -288,6 +283,7 @@ internal fun RemoveConfirm(
         },
         testTag = testTag,
         node = node,
+        answerKeyed = answerKeyed,
     )
 }
 

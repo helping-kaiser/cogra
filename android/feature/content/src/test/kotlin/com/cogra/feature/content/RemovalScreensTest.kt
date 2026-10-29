@@ -141,7 +141,7 @@ class RemovalScreensTest {
     /** The colour a text was laid out in — what the reader sees, whatever role named it. */
     private fun inkOf(text: String): Color {
         val node = compose.onNode(
-            hasText(text) and hasAnyAncestor(hasTestTag("postDetail.dialog")),
+            hasText(text) and hasAnyAncestor(isNode("postDetail.dialog")),
             useUnmergedTree = true,
         ).fetchSemanticsNode()
         val results = mutableListOf<TextLayoutResult>()
@@ -159,7 +159,7 @@ class RemovalScreensTest {
         renderDetail()
         openPostConfirm()
 
-        compose.onNodeWithTag("postDetail.dialog").assertExists()
+        compose.onNode(isNode("postDetail.dialog")).assertExists()
         compose.onNodeWithTag("postDetail.dialog.title").assertExists()
         compose.onNodeWithText("Remove this post?").assertExists()
         compose.onNodeWithText("This is immediate and permanent.").assertExists()
@@ -206,16 +206,16 @@ class RemovalScreensTest {
         compose.mainClock.advanceTimeBy(100)
 
         assertThat(repo.records).containsExactly("rec:p1")
-        compose.onNodeWithTag("postDetail.dialog").assertExists()
+        compose.onNode(isNode("postDetail.dialog")).assertExists()
         // The ways out hold while it is in flight: Keep it does nothing.
         press("keep")
         compose.mainClock.advanceTimeBy(100)
-        compose.onNodeWithTag("postDetail.dialog").assertExists()
+        compose.onNode(isNode("postDetail.dialog")).assertExists()
 
         hold.complete(Unit)
         compose.mainClock.autoAdvance = true
         compose.waitForIdle()
-        compose.onNodeWithTag("postDetail.dialog").assertDoesNotExist()
+        compose.onNode(isNode("postDetail.dialog")).assertDoesNotExist()
     }
 
     /**
@@ -229,7 +229,7 @@ class RemovalScreensTest {
         press("remove")
         compose.waitForIdle()
 
-        compose.onNodeWithTag("postDetail.dialog").assertDoesNotExist()
+        compose.onNode(isNode("postDetail.dialog")).assertDoesNotExist()
         compose.onNode(isDetailCard()).assertExists()
         compose.onNodeWithText(AUTHOR_MARK).assertExists()
         compose.onNodeWithText(POST_DETAIL_LINE).assertExists()
@@ -293,12 +293,12 @@ class RemovalScreensTest {
         press("remove")
         compose.waitForIdle()
 
-        compose.onNodeWithTag("postDetail.dialog").assertExists()
-        compose.onNodeWithTag("postDetail.dialog.line:failed").assertTextEquals(NOT_SENT)
+        compose.onNode(isNode("postDetail.dialog")).assertExists()
+        compose.onNodeWithTag("postDetail.dialog.line").assertTextEquals(NOT_SENT)
         compose.onNodeWithTag("postDetail.dialog.remove").assertTextEquals("Retry")
         compose.onNodeWithTag("postDetail.dialog.keep").assertExists()
         // The line stands above the pair (SeveranceConfirm's placement).
-        val line = compose.onNodeWithTag("postDetail.dialog.line:failed").getUnclippedBoundsInRoot()
+        val line = compose.onNodeWithTag("postDetail.dialog.line").getUnclippedBoundsInRoot()
         val keep = compose.onNodeWithTag("postDetail.dialog.keep").getUnclippedBoundsInRoot()
         assertThat(line.bottom).isAtMost(keep.top)
         assertThat(marks.marks.value).isEmpty()
@@ -318,7 +318,7 @@ class RemovalScreensTest {
         press("keep")
         compose.waitForIdle()
 
-        compose.onNodeWithTag("postDetail.dialog").assertDoesNotExist()
+        compose.onNode(isNode("postDetail.dialog")).assertDoesNotExist()
         compose.onNodeWithText("Body p1").assertExists()
         assertThat(repo.records).isEmpty()
     }
@@ -337,7 +337,7 @@ class RemovalScreensTest {
         }
         compose.waitForIdle()
 
-        compose.onNodeWithTag("postDetail.dialog").assertDoesNotExist()
+        compose.onNode(isNode("postDetail.dialog")).assertDoesNotExist()
         assertThat(repo.records).isEmpty()
     }
 
@@ -419,7 +419,7 @@ class RemovalScreensTest {
         val before = compose.onNodeWithTag(threadCard("c1")).getUnclippedBoundsInRoot().top
         removeOwnComment()
 
-        compose.onNodeWithTag("postDetail.dialog").assertDoesNotExist()
+        compose.onNode(isNode("postDetail.dialog")).assertDoesNotExist()
         compose.onNodeWithText(AUTHOR_MARK).assertExists()
         compose.onNodeWithText(COMMENT_LINE).assertExists()
         compose.onNodeWithText("Comment c1").assertDoesNotExist()
@@ -447,9 +447,9 @@ class RemovalScreensTest {
         openThread()
         removeOwnComment()
 
-        compose.onNodeWithTag("postDetail.dialog").assertExists()
+        compose.onNode(isNode("postDetail.dialog")).assertExists()
         compose.onNodeWithTag("postDetail.dialog.remove").assertTextEquals("Retry")
-        compose.onNodeWithTag("postDetail.dialog.line:failed").assertTextEquals(NOT_SENT)
+        compose.onNodeWithTag("postDetail.dialog.line").assertTextEquals(NOT_SENT)
         compose.onNodeWithText("Comment c1").assertExists()
         compose.onNodeWithText(AUTHOR_MARK).assertDoesNotExist()
     }
@@ -464,7 +464,7 @@ class RemovalScreensTest {
         press("keep")
         compose.waitForIdle()
 
-        compose.onNodeWithTag("postDetail.dialog").assertDoesNotExist()
+        compose.onNode(isNode("postDetail.dialog")).assertDoesNotExist()
         compose.onNodeWithText("Comment c1").assertExists()
         compose.onNodeIn(threadCard("c1"), threadPart("menu")).assertExists()
         assertThat(repo.records).isEmpty()

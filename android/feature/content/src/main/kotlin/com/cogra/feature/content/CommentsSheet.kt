@@ -359,6 +359,7 @@ private fun CommentRemoveConfirm(comment: CommentView, onClose: () -> Unit) {
         onClose = onClose,
         testTag = "comment_remove_confirm",
         node = POST_DETAIL / "dialog",
+        answerKeyed = true,
     )
 }
 

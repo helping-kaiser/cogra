@@ -624,6 +624,7 @@ private fun DetailRemoveConfirm(post: PostView?, onClose: () -> Unit) {
         onClose = onClose,
         testTag = "post_remove_confirm",
         node = POST_DETAIL / "dialog",
+        answerKeyed = true,
     )
 }
 
