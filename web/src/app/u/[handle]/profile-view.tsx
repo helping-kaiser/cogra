@@ -13,8 +13,10 @@
 // - Under it the compact `ProfileHeader` and its one actions row: Edit
 //   profile, Invites and the ⋮ on your own page; the wide opinion, Message and
 //   the ⋮ on someone else's; the opinion and the ⋮ on a deleted account's.
-// - Then the chronicle's tab row and the chronicle, one act to a card,
-//   newest first, the next page arriving as the reader keeps going.
+// - Then the tab row and the list below it, the next page arriving as the
+//   reader keeps going: on Posts the person's posts as post cards
+//   (`profile-posts.tsx`, ProfilePosts.md), on Comments and Everything the
+//   chronicle, one act to a card, newest first.
 //
 // THE COLUMN SPENDS NO GAP. A flex gap is spent on every child, CollapsingTop's
 // zero-height sentinel and the empty slots included, which put 16px of
@@ -32,16 +34,29 @@ import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { RestoreCard } from "@/app/applicant-status";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
+import type { PostView } from "@/lib/api/content-api";
 import {
   fetchAuthorRecords,
   fetchMyProfile,
   fetchProfileByHandle,
   fetchProfileFigures,
+  fetchProfilePosts,
   type ChronicleFilter,
   type ProfileFigures,
   type ProfileView as Profile,
   type RecordRow,
 } from "@/lib/api/profile-api";
+import {
+  forgetProfilePosts,
+  recallProfilePosts,
+  rememberProfilePlace,
+  rememberProfilePosts,
+} from "@/lib/profile/profile-memory";
+import { profileOrigin } from "@/lib/reel/origins";
+import { openStream } from "@/lib/reel/stream-session";
+import type { TraceOrigin } from "@/lib/score/trace-session";
+import { usePinnedPlace, type ScrollPlace } from "@/lib/ui/scroll-pin";
+import { POSTS_NODE, ProfilePostsList } from "./profile-posts";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { StatusBanners } from "@/app/status-banners";
@@ -94,6 +109,14 @@ const CHRONICLE: DataNode = { path: "profile.chronicle" };
 const IDENTITY: DataNode = { path: "profile.identity" };
 const ROW = (name: string): DataNode => ({ path: `profile.identity.actionRow.${name}` });
 
+/**
+ * WHAT AN ARRIVAL DOES WITH THE LIST BELOW THE TAB ROW. A first arrival lands
+ * on Everything and reads it; a return keeps the posts view it came back to as
+ * it was left; a pull re-reads the tab on screen and keeps it (Profile.md:69 —
+ * the profile refreshes; nothing says the tab moves).
+ */
+type ListArrival = "land" | "keep" | ChronicleFilter;
+
 export function ProfileScreen({
   handle,
   store = identityStore,
@@ -124,29 +147,40 @@ export function ProfileScreen({
   useFreshRootBell(reader, freshRoot);
   const bellIsLit = useBellLit(reader);
 
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [own, setOwn] = useState(false);
-  const [applicant, setApplicant] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // THE WAY BACK LANDS WHERE THE READER LEFT (Reel.md:83; ProfilePosts.md:51):
+  // a profile left from its posts view — through the stream, a card's post or
+  // its trace — comes back on that view, its cards, its paging and its place,
+  // and its own back arrow keeps the origin it was opened with
+  // (`profile-memory.ts`). Read once, at mount.
+  const memoryReader = phase === "signedIn" ? account : null;
+  const [returned] = useState(() => recallProfilePosts(memoryReader, handle, from));
+  const openedFrom = from ?? returned?.from ?? null;
+
+  const [profile, setProfile] = useState<Profile | null>(returned?.profile ?? null);
+  const [own, setOwn] = useState(returned?.own ?? false);
+  const [applicant, setApplicant] = useState(returned?.applicant ?? false);
+  const [loading, setLoading] = useState(returned === null);
   const [notFound, setNotFound] = useState(false);
   const [transportFailed, setTransportFailed] = useState(false);
   // Every profile board draws the reader landing on Everything.
-  const [filter, setFilter] = useState<ChronicleFilter>("everything");
+  const [filter, setFilter] = useState<ChronicleFilter>(returned === null ? "everything" : "posts");
   const [rows, setRows] = useState<readonly RecordRow[]>([]);
+  // THE POSTS VIEW'S CARDS (ProfilePosts.md:3), in the order the read serves.
+  const [posts, setPosts] = useState<readonly PostView[]>(returned?.posts ?? []);
   const [rowsLoading, setRowsLoading] = useState(false);
-  // Which read the chronicle last asked for, as state the render can read.
+  // Which read the list last asked for, as state the render can read.
   const [pageAsk, setPageAsk] = useState(0);
   const [pageFailed, setPageFailed] = useState(false);
-  const [endCursor, setEndCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
+  const [endCursor, setEndCursor] = useState<string | null>(returned?.endCursor ?? null);
+  const [hasMore, setHasMore] = useState(returned?.hasNextPage ?? false);
   const [joinOpen, setJoinOpen] = useState(false);
   // The viewer's own read, kept for the one profile it changes: the member
   // who vouched them in, whose anchor opens the vouch-back.
-  const [viewer, setViewer] = useState<MeUser | null>(null);
+  const [viewer, setViewer] = useState<MeUser | null>(returned?.viewer ?? null);
   // THE HEADER'S FIGURES (`ProfileFigures`), read beside the profile: until
   // they answer — or where the read fails — the header draws no figures cell
   // rather than a number it does not have.
-  const [figures, setFigures] = useState<ProfileFigures | null>(null);
+  const [figures, setFigures] = useState<ProfileFigures | null>(returned?.figures ?? null);
 
   // OPENING SOMEONE'S PROFILE ADDS THE PROFILE TO HISTORY (History.md:11) —
   // the profile alone; its posts join only as the reader's lists see them.
@@ -167,6 +201,22 @@ export function ProfileScreen({
       setPageAsk(request);
       setRowsLoading(true);
       setPageFailed(false);
+      if (which === "posts") {
+        // THE POSTS VIEW pages the same way the chronicle does, on its own read.
+        const outcome = await fetchProfilePosts(client, authorId, after);
+        if (request !== rowsRequest.current) return;
+        setRowsLoading(false);
+        if (outcome.kind === "success") {
+          setPosts((current) =>
+            after === null ? outcome.value.items : appendDeduped(current, outcome.value.items),
+          );
+          setEndCursor(outcome.value.endCursor);
+          setHasMore(outcome.value.hasNextPage);
+        } else {
+          setPageFailed(true);
+        }
+        return;
+      }
       const outcome = await fetchAuthorRecords(client, authorId, which, after, mine);
       if (request !== rowsRequest.current) return;
       setRowsLoading(false);
@@ -187,7 +237,7 @@ export function ProfileScreen({
     [client],
   );
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback((list: ListArrival) => {
     let cancelled = false;
     void (async () => {
       const viewer =
@@ -212,8 +262,12 @@ export function ProfileScreen({
         setViewer(me);
         setOwn(mine);
         setApplicant(me?.accountState === "APPLICANT");
-        setFilter("everything");
-        void loadRows(loaded.id, "everything", null, mine);
+        if (list === "land") {
+          setFilter("everything");
+          void loadRows(loaded.id, "everything", null, mine);
+        } else if (list !== "keep") {
+          void loadRows(loaded.id, list, null, mine);
+        }
         void fetchProfileFigures(client, loaded.id).then((counted) => {
           if (!cancelled) setFigures(counted.kind === "success" ? counted.value : null);
         });
@@ -234,7 +288,10 @@ export function ProfileScreen({
   // resolving phase would misread the viewer as anonymous.
   useEffect(() => {
     if (phase === "resolving") return;
-    const stop = refresh();
+    // An arrival that is no return opens this profile afresh: a view held
+    // from an earlier visit is not the one this reader is now looking at.
+    if (returned === null) forgetProfilePosts(memoryReader, handle);
+    const stop = refresh(returned === null ? "land" : "keep");
     return () => {
       // `refresh`'s own cancellation does not reach the `loadRows` it launches,
       // so the request counter is bumped here too: a read still in flight
@@ -242,23 +299,37 @@ export function ProfileScreen({
       rowsRequest.current += 1;
       stop();
     };
-  }, [refresh, phase]);
+  }, [refresh, phase, returned, memoryReader, handle]);
 
   // Pull-down at the top is one of the surfaces the pull-to-refresh
   // ruling names (design/readme.md, "The pull-down lives on every
   // full-screen scrolling root", ruled 2026-09-10). It goes through
   // the same fetch the first arrival takes, so a fault it raises
   // surfaces in the same place.
+  //
+  // THE PLACE, held against everything that lands late (`scroll-pin.ts`): a
+  // return lands where the reader left the posts view, and a first arrival at
+  // the top. Asking for fresh content is a move, so the place stops being held.
+  const [returnedPlace] = useState<ScrollPlace | null>(() => returned?.place ?? null);
+  const recordPlace = useCallback(
+    (place: ScrollPlace) => rememberProfilePlace(memoryReader, handle, place),
+    [memoryReader, handle],
+  );
+  const { release: releasePin } = usePinnedPlace({ host, place: returnedPlace, record: recordPlace });
   const onPull = useCallback(() => {
+    releasePin();
     setLoading(true);
-    refresh();
-  }, [refresh]);
+    refresh(filter);
+  }, [refresh, filter, releasePin]);
   usePullToRefresh({ host, onPull });
 
   const onFilter = (next: ChronicleFilter) => {
     if (next === filter || profile === null) return;
+    // Off the posts view, the profile's landing is the tab's own again.
+    if (next !== "posts") forgetProfilePosts(memoryReader, handle);
     setFilter(next);
     setRows([]);
+    setPosts([]);
     setEndCursor(null);
     setHasMore(false);
     void loadRows(profile.id, next, null, own);
@@ -275,12 +346,14 @@ export function ProfileScreen({
     onReach: nextPage,
     enabled: hasMore && !pageFailed && !rowsLoading,
   });
-  const tailIndex = tailIndexOf(rows.length);
+  // The list below the tab row: the posts view's cards, or the chronicle's acts.
+  const listed = filter === "posts" ? posts.length : rows.length;
+  const tailIndex = tailIndexOf(listed);
   // `Loading…` stands only once a next page is 200ms late (Profile.md:33):
   // the timer marks the read it was started for, so an answered read — or the
   // next one — is never shown late.
   const [lateRead, setLateRead] = useState<number | null>(null);
-  const paging = rowsLoading && rows.length > 0;
+  const paging = rowsLoading && listed > 0;
   useEffect(() => {
     if (!paging) return;
     const timer = window.setTimeout(() => setLateRead(pageAsk), LOADING_AFTER_MS);
@@ -292,13 +365,69 @@ export function ProfileScreen({
   // item 19): the wire serves null values and the mark.
   const deleted = profile?.displayName.status === "REDACTED";
   const comfort = useComfortLine(profile?.id ?? "");
-  const back = backFor(from);
+  const back = backFor(openedFrom);
   // Where a chronicle card's post, and the chats, say they were opened from.
   const origin = own && handle === null ? "profile" : profile ? personOrigin(profile.handle) : null;
+  // What a posts-view card's score names on its trace's way back
+  // (ProfilePosts.md:39-41): `Back to your profile` from your own root,
+  // `Back to the profile` from a profile by its handle.
+  const scoreOrigin: TraceOrigin | null =
+    origin === "profile" ? { kind: "profile" } : profile ? { kind: "person", handle: profile.handle } : null;
+
+  // THE CARDS STAND EDGE TO EDGE, as the feed's do (ProfilePosts board: the
+  // list's `padding: 8px 0 0`, Feed's and History's own); the chronicle keeps
+  // its 16px gutter (`profile.chronicle`: `8px 16px 0`). The lines that stand
+  // where cards would keep the gutter either way.
+  const lineGutter = filter === "posts" ? "px-4" : "";
+
+  // THE POSTS VIEW IS KEPT AS IT STANDS (`profile-memory.ts`) — written from
+  // an effect rather than from each read, so no path can change it and forget
+  // to record it. Only a view with something to come back to is kept.
+  useEffect(() => {
+    if (profile === null || filter !== "posts" || (rowsLoading && posts.length === 0)) return;
+    rememberProfilePosts({
+      reader: memoryReader,
+      route: handle,
+      from: openedFrom,
+      profile,
+      figures,
+      viewer,
+      own,
+      applicant,
+      posts,
+      endCursor,
+      hasNextPage: hasMore,
+    });
+  }, [memoryReader, handle, openedFrom, profile, figures, viewer, own, applicant, filter, rowsLoading, posts, endCursor, hasMore]);
+
+  // A PORTRAIT CLIP'S TAP OPENS THE STREAM OVER THE POSTS VIEW (Reel.md:3,
+  // ProfilePosts.md:43-45), in its order, and past the page on screen through
+  // the view's own next pages — never a ranking. Its back disc names this
+  // profile by the stream's noun table (Reel.md:85) and returns to its route,
+  // handing the profile the origin it was opened with.
+  const openPostsStream = (startId: string) => {
+    if (profile === null) return;
+    openStream({
+      origin:
+        origin === "profile"
+          ? { kind: "profile", handle: profile.handle, own: true }
+          : { kind: "profile", handle: handle ?? profile.handle, own: false, from: openedFrom },
+      rows: posts,
+      startId,
+      more:
+        endCursor === null ? null : profileOrigin({ client, authorId: profile.id, after: endCursor }),
+      hasMore,
+    });
+  };
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col pb-2">
-      <CollapsingTop flush>
+      <CollapsingTop
+        flush
+        // A return lands scrolled where it was left: the header is collapsed
+        // there, as it was (scroll-pin's "nothing is anchored at the origin").
+        initiallyHidden={returnedPlace !== null && returnedPlace.offset > 0}
+      >
         {handle === null ? (
           // THE OWN PROFILE ROOT WEARS THE BAND (`ProfileBand`, Profile.md:3):
           // the gear, then chats, then the bell — and no ⋮, which closes the
@@ -375,7 +504,7 @@ export function ProfileScreen({
             size="sm"
             onClick={() => {
               setLoading(true);
-              refresh();
+              refresh("land");
             }}
           >
             Retry
@@ -397,7 +526,7 @@ export function ProfileScreen({
               // THE FIGURES OPEN THE OPINIONS PAGE (graph.json `the figures row`),
               // under this profile, carrying its own origin so the page lights
               // the root this profile did and returns to it as it was opened.
-              figuresHref={opinionsHref(handle, "on", from)}
+              figuresHref={opinionsHref(handle, "on", openedFrom)}
               own={own}
               // The handle repeats only where the bar does not carry it: the
               // own root's band carries none.
@@ -508,17 +637,48 @@ export function ProfileScreen({
             node={{ path: "profile.tabRow" }}
             testId="profile-tabs"
           />
-          {/* THE CHRONICLE (`ChronicleList`): one act to a card on 8px of
-              surface, newest first, each keyed by its position. */}
-          <div data-testid="profile.chronicle" className="flex flex-col gap-2 px-4 pt-2">
-            {rows.length === 0 && !rowsLoading && !pageFailed && (
+          {/* THE LIST BELOW THE TAB ROW: the posts view's cards on the Posts
+              tab (ProfilePosts.md:3), the chronicle on the others
+              (`ChronicleList`: one act to a card on 8px of surface, newest
+              first, each keyed by its position). */}
+          <div
+            data-testid={filter === "posts" ? POSTS_NODE : "profile.chronicle"}
+            className={`flex flex-col gap-2 pt-2 ${filter === "posts" ? "" : "px-4"}`}
+          >
+            {/* NOTHING PUBLISHED: the line alone (ProfilePosts.md:5). */}
+            {filter === "posts" && posts.length === 0 && !rowsLoading && !pageFailed && (
+              <div className={lineGutter}>
+                <EmptyState
+                  testId="profile-posts-empty"
+                  node={{ path: `${POSTS_NODE}.empty` }}
+                  title="Nothing here yet."
+                />
+              </div>
+            )}
+            {filter === "posts" && posts.length > 0 && scoreOrigin !== null && origin !== null && (
+              <ProfilePostsList
+                posts={posts}
+                from={origin}
+                scoreOrigin={scoreOrigin}
+                notify={notify}
+                onOpenStream={openPostsStream}
+                // The author's own Remove from a card's ⋮: the card stands as
+                // its mark where it stood (RM-G9's build word).
+                onRemoved={(removed) =>
+                  setPosts((current) => current.map((post) => (post.id === removed.id ? removed : post)))
+                }
+                tailIndex={tailIndex}
+                tailRef={tailRef}
+              />
+            )}
+            {filter !== "posts" && rows.length === 0 && !rowsLoading && !pageFailed && (
               <EmptyState
                 testId="profile-chronicle-empty"
                 node={applicant && own ? { path: "profile.chronicle.empty" } : undefined}
                 title={applicant && own ? APPLICANT_CHRONICLE_EMPTY : "Nothing here yet."}
               />
             )}
-            {rows.length > 0 && (
+            {filter !== "posts" && rows.length > 0 && (
               <ul className="m-0 flex list-none flex-col gap-2 p-0" data-testid="profile-chronicle">
                 {rows.map((row, index) => (
                   <li key={row.id} ref={index === tailIndex ? tailRef : undefined}>
@@ -527,13 +687,13 @@ export function ProfileScreen({
                 ))}
               </ul>
             )}
-            {rowsLoading && rows.length === 0 && (
-              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className="py-2">
+            {rowsLoading && listed === 0 && (
+              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
                 Loading…
               </p>
             )}
             {loadingShown && (
-              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className="py-2">
+              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className={`py-2 ${lineGutter}`}>
                 Loading…
               </p>
             )}
@@ -541,7 +701,7 @@ export function ProfileScreen({
                 Retry where the next page would have stood — never the error
                 colour. */}
             {pageFailed && (
-              <div className="flex items-center gap-3" role="alert">
+              <div className={`flex items-center gap-3 ${lineGutter}`} role="alert">
                 <span className="text-body-medium text-on-surface-variant" data-testid="profile-rows-failed">
                   {COULDNT_LOAD_MORE}
                 </span>
