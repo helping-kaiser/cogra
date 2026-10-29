@@ -186,7 +186,8 @@ certificate, the shape both clients are built on.
 
 **In-cluster GraphQL goes through the proxy.** The API's
 `RightmostXForwardedFor` refuses a request that carries no
-`X-Forwarded-For` — and the web server's server-side renders and the
+`X-Forwarded-For` (400 `BAD_INPUT`; the socket peer is never taken
+for the client) — and the web server's server-side renders and the
 ranker's slice reads are such requests when they dial the API
 directly. The Caddyfile's second site, plain HTTP on `:8081`,
 published by no unit, proxies `/graphql` alone and sets the header

@@ -123,9 +123,13 @@ struct AppState {
 /// an extractor.
 async fn graphql_handler(
     State(state): State<AppState>,
-    ClientIp(ip): ClientIp,
+    client_ip: Result<ClientIp, axum_client_ip::Rejection>,
     req: Request,
 ) -> axum::response::Response {
+    let ip = match client_ip {
+        Ok(ClientIp(ip)) => ip,
+        Err(rejection) => return client_ip_refusal(rejection),
+    };
     let (parts, body) = req.into_parts();
     let viewer: Option<Viewer> = parts
         .headers
@@ -167,6 +171,56 @@ async fn graphql_handler(
         response.extensions_mut().insert(NeverCompress);
     }
     response
+}
+
+/// The answer to a request the configured `CLIENT_IP_SOURCE` names no
+/// client address for (auth.md "Rate limiting").
+///
+/// A header source that is absent or malformed — under
+/// `RightmostXForwardedFor`, a request that did not come through the
+/// proxy the deployment trusts — is the request's fault, so it is refused
+/// as a 400 `BAD_INPUT` transport fault, in the shape every other one
+/// takes. The crate's own rejection answers 500 ("Proxy Server
+/// Misconfiguration"), which reads as the server breaking and teaches a
+/// caller nothing.
+///
+/// The socket peer is never substituted. A deployment that names a
+/// forwarded header has said the peer is the proxy, not the client: a
+/// fallback would key every such request's rate-limit budget by the
+/// proxy's or a sibling container's address, one shared budget an
+/// attacker could exhaust for everyone, and would hide a proxy that
+/// stopped setting the header instead of saying so.
+///
+/// A missing request extension — no source configured, or `ConnectInfo`
+/// absent under the socket-peer source — is the router built wrong, a
+/// server fault that stays `INTERNAL`, logged as an error.
+fn client_ip_refusal(rejection: axum_client_ip::Rejection) -> axum::response::Response {
+    let (status, code, message) = match rejection {
+        axum_client_ip::Rejection::ClientIp(e) => {
+            tracing::warn!(error = %e, "refused a request with no client address in the configured source");
+            (
+                StatusCode::BAD_REQUEST,
+                "BAD_INPUT",
+                format!("the request names no client address in the configured source: {e}"),
+            )
+        }
+        other => {
+            tracing::error!(error = %other, "client-IP extraction is misconfigured");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "INTERNAL",
+                "internal error".to_owned(),
+            )
+        }
+    };
+    (
+        status,
+        Json(json!({
+            "data": null,
+            "errors": [{ "message": message, "extensions": { "code": code } }],
+        })),
+    )
+        .into_response()
 }
 
 /// Marks a `/graphql` answer the compression layer must leave as it is.
