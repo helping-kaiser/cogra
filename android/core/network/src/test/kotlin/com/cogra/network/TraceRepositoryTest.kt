@@ -5,6 +5,11 @@
 package com.cogra.network
 
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.api.http.HttpRequest
+import com.apollographql.apollo.api.http.HttpResponse
+import com.apollographql.apollo.exception.ApolloNetworkException
+import com.apollographql.apollo.network.http.HttpInterceptor
+import com.apollographql.apollo.network.http.HttpInterceptorChain
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.score.TraceAnswer
 import com.cogra.domain.score.TraceFamily
@@ -30,8 +35,15 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 import java.time.Instant
 import javax.inject.Provider
+
+/** A network that never answers: every send dies in transport. */
+private object Unreachable : HttpInterceptor {
+    override suspend fun intercept(request: HttpRequest, chain: HttpInterceptorChain): HttpResponse =
+        throw ApolloNetworkException("unreachable", IOException("unreachable"))
+}
 
 class TraceRepositoryTest {
 
@@ -136,8 +148,12 @@ class TraceRepositoryTest {
     fun anErrorAnswerIsTheFaultAndNoAnswerIsOffline() = runTest {
         enqueue("""{"data":null,"errors":[{"message":"ranker unavailable","extensions":{"code":"INTERNAL"}}]}""")
         assertThat(repo().trace("u-sol", "p1")).isEqualTo(TraceFetch.Fault)
-        // Nothing listens on port 1: the read never reaches a server.
-        val nowhere = ApolloClient.Builder().serverUrl("http://127.0.0.1:1/graphql").build()
+        // The connection dies before any answer, as Apollo reports a dropped
+        // network (the house's transport double, `MediaUploadTest`).
+        val nowhere = ApolloClient.Builder()
+            .serverUrl(server.url("/graphql").toString())
+            .addHttpInterceptor(Unreachable)
+            .build()
         val offline = TraceRepositoryImpl(
             nowhere,
             AuthGuard(
