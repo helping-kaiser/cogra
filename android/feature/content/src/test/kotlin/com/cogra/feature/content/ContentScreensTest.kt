@@ -38,7 +38,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
-import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
@@ -2859,23 +2858,6 @@ class ContentScreensTest {
     }
 
     @Test
-    fun theComposerPreviewsTheNormalizedName() {
-        // Stateless by design (android/CLAUDE.md "Stateless screens"): the
-        // preview reads straight off state.tagInput, so a state carrying
-        // the raw text is enough to assert the normalization it renders.
-        renderComposer(PostEditUiState(tagSection = TagSectionState(input = "#Rust")))
-        compose.onNodeWithTag("post_edit_tag_preview").assertTextContains("rust", substring = true)
-    }
-
-    @Test
-    fun typingIntoTheTagFieldReportsTheRawText() {
-        var input: String? = null
-        renderComposer(PostEditUiState(), onTagInputChange = { input = it })
-        compose.onNodeWithTag("post_edit_tag_input").performTextInput("Rust")
-        assertThat(input).isEqualTo("Rust")
-    }
-
-    @Test
     fun stagedTagsRenderAsRemovableChips() {
         renderComposer(PostEditUiState(tagSection = TagSectionState(tags = tagRows("rust", "kotlin"))))
         compose.onNodeWithTag("postEdit.tags.tag:rust").assertExists()
@@ -2891,14 +2873,15 @@ class ContentScreensTest {
     }
 
     @Test
-    fun reachingTheCapHidesTheEntryFieldAndShowsTheLimit() {
+    fun atTheCapTheDoorStaysForThePickerToSayTheLimit() {
         renderComposer(
             PostEditUiState(
                 tagSection = TagSectionState(tags = tagRows(*(1..10).map { "tag$it" }.toTypedArray())),
             ),
         )
+        // The cap is the picker's own line (TagPicker.md); the edit keeps its door.
         compose.onNodeWithTag("post_edit_tag_input").assertDoesNotExist()
-        compose.onNodeWithTag("post_edit_tags_cap").assertExists()
+        compose.onNodeWithTag("postEdit.tags.add").assertExists()
     }
 
     /** F3: tag editing moved ONTO the edit screen — it is no longer hidden there. */
@@ -2907,30 +2890,7 @@ class ContentScreensTest {
         renderComposer(PostEditUiState(postId = "p1", tagSection = TagSectionState(tags = tagRows("rust"))))
         compose.onNodeWithTag("post_edit_tags").assertExists()
         compose.onNodeWithTag("postEdit.tags.tag:rust").assertExists()
-        compose.onNodeWithTag("post_edit_tag_input").assertExists()
-    }
-
-    /** F1: the Add action refuses a name L1's atom rule cannot carry. */
-    @Test
-    fun anIllegalNameDisablesAddAndSaysWhy() {
-        renderComposer(PostEditUiState(tagSection = TagSectionState(input = "two words")))
-        compose.onNodeWithTag("postEdit.tags.add").assertIsNotEnabled()
-        compose.onNodeWithTag("post_edit_tag_illegal").assertExists()
-        compose.onNodeWithTag("post_edit_tag_preview").assertDoesNotExist()
-    }
-
-    @Test
-    fun aNonAsciiNameIsRefusedAtInputTime() {
-        renderComposer(PostEditUiState(tagSection = TagSectionState(input = "café")))
-        compose.onNodeWithTag("postEdit.tags.add").assertIsNotEnabled()
-        compose.onNodeWithTag("post_edit_tag_illegal").assertExists()
-    }
-
-    @Test
-    fun aLegalNameEnablesAdd() {
-        renderComposer(PostEditUiState(tagSection = TagSectionState(input = "#Rust")))
-        compose.onNodeWithTag("postEdit.tags.add").assertIsEnabled()
-        compose.onNodeWithTag("post_edit_tag_illegal").assertDoesNotExist()
+        compose.onNodeWithTag("postEdit.tags.add").assertExists()
     }
 
     /** F2: the server's own words, on the chip it named. */
@@ -3092,14 +3052,6 @@ class ContentScreensTest {
     }
 
     @Test
-    fun theComposerOpensTheFinderFromItsAddAction() {
-        var opened = false
-        renderComposer(PostEditUiState(), onOpenFinder = { opened = true })
-        compose.onNodeWithTag("postEdit.references.add").performScrollTo().performClick()
-        assertThat(opened).isTrue()
-    }
-
-    @Test
     fun theFinderListsWhatResolvedAndPicksOnTap() {
         val picked = mutableListOf<String>()
         renderComposer(
@@ -3147,7 +3099,7 @@ class ContentScreensTest {
     }
 
     @Test
-    fun theComposerRefusesTheEleventhReferenceInWords() {
+    fun atTenCitationsTheDoorStaysForThePickerToSayTheLimit() {
         renderComposer(
             PostEditUiState(
                 referenceSection = ReferenceSectionState(
@@ -3155,8 +3107,8 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("post_edit_references_cap").assertExists()
-        compose.onNodeWithTag("postEdit.references.add").assertDoesNotExist()
+        // The cap is the picker's own line (ReferencePicker.md); the edit keeps its door.
+        compose.onNodeWithTag("postEdit.references.add").assertExists()
     }
 
     /** Verbatim, on the chip the server named. */

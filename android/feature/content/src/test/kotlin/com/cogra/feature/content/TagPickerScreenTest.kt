@@ -17,6 +17,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performTextInput
 import com.cogra.domain.topics.TagNameRefusal
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -233,6 +234,23 @@ class TagPickerScreenTest {
         compose.onNodeWithTag("tagPicker.rule").assertDoesNotExist()
         compose.onNodeWithTag("tagPicker.tag:salt").assertDoesNotExist()
         compose.onNodeWithTag("tagPicker.tag:saltmaps").assertDoesNotExist()
+    }
+
+    /** A letter outside the ASCII atom (`café`) names no Type: the charset refusal, nothing to stage. */
+    @Test
+    fun aNonAsciiNameIsRefused() {
+        render("café")
+        compose.onNodeWithTag("tagPicker.refusal").assertTextEquals(TagNameRefusal.CHARSET.words())
+        compose.onNodeWithTag("tagPicker.nameField.input").performImeAction()
+        assertThat(handlers.calls).isEmpty()
+    }
+
+    /** WHEN typing -> the raw text is reported as typed; the canonical form is the row's, not the field's. */
+    @Test
+    fun typingReportsTheRawText() {
+        render("")
+        compose.onNodeWithTag("tagPicker.nameField.input").performTextInput("Rust")
+        assertThat(handlers.calls).containsExactly("query:Rust")
     }
 
     @Test
