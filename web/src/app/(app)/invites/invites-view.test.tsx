@@ -389,6 +389,10 @@ describe("the create sheet (behavior/InviteNew.md, InviteExpiry.md, InviteCreate
         .getAllByTestId("invites.expirySheet.expiryOption")
         .map((option) => option.getAttribute("data-testid-key")),
     ).toEqual(["24-hours", "7-days", "30-days"]);
+    // InviteNew and InviteExpiry: the content stands right under the title, and
+    // the lengths are a sheet of rows in their own 8px inset.
+    expect(screen.getByTestId("invites-sheet-body").className).not.toMatch(/pt-2/);
+    expect(screen.getByTestId("invites-expiry-body").className).not.toMatch(/px-6/);
     expect(radios.filter((r) => (r as HTMLInputElement).checked)).toHaveLength(1);
     expect(within(chooser).queryByText("Done")).not.toBeInTheDocument();
     fireEvent.click(radios[2]);

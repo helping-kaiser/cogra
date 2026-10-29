@@ -137,6 +137,9 @@ export function InviteSheet({
         title={created === null ? NEW_INVITE : YOUR_INVITE_LINK}
         testId="invites-sheet"
         node={created === null ? CREATE_SHEET : LINK_SHEET}
+        // The content stands right under the title (InviteNew, InviteCreated:
+        // the options open 0px under the heading row).
+        flush
       >
         {created === null ? (
           <div className="flex flex-col gap-4">
@@ -198,6 +201,9 @@ export function InviteSheet({
         stacked
         testId="invites-expiry"
         node={EXPIRY_SHEET}
+        // A sheet of rows (InviteExpiry): the choices in their own 8px inset,
+        // edge to edge of the sheet's body, right under the title.
+        rows
       >
         <div className="flex flex-col px-2" role="radiogroup" aria-label={EXPIRES_AFTER}>
           {EXPIRY_CHOICES.map((choice) => (
