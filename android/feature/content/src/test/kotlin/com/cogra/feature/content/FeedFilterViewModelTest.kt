@@ -53,7 +53,6 @@ import com.cogra.domain.testing.testPost
 import com.cogra.domain.testing.testProfile
 import com.cogra.domain.topics.HeldTopic
 import com.google.common.truth.Truth.assertThat
-import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -64,6 +63,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FeedFilterViewModelTest {

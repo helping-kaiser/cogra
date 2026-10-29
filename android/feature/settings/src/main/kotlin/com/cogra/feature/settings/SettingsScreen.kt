@@ -212,8 +212,8 @@ fun SettingsScreen(
     val sessionFocus = remember { HashMap<String, FocusRequester>() }
     val signOutFocus = remember { FocusRequester() }
     val eraseFocus = remember { FocusRequester() }
-    val licenseFocus = remember { FocusRequester() }
-    val readingFocus = remember { FocusRequester() }
+    // The rows a sheet returns focus to: the default license, What your feed shows.
+    val (licenseFocus, readingFocus) = remember { FocusRequester() to FocusRequester() }
     SettingsEffects(
         events,
         snackbar,
@@ -255,9 +255,8 @@ fun SettingsScreen(
         }
     }
 
-    SettingsDialogs(state, actions)
+    SettingsDialogs(state, actions, readingFocus)
     HiddenAccountsSheet(hiddenAccounts)
-    SettingsReadingSheet(state, actions, readingFocus)
     state.licenseSheet?.let { staged ->
         SettingsLicenseSheet(
             staged = staged,
@@ -271,9 +270,13 @@ fun SettingsScreen(
     }
 }
 
-/** The two think-twice dialogs over the page: the sign-out ask and the erase (`SettingsOverlays.kt`). */
+/**
+ * The overlays over the page: What your feed shows, then the two think-twice
+ * dialogs — the sign-out ask and the erase (`SettingsOverlays.kt`).
+ */
 @Composable
-private fun SettingsDialogs(state: SettingsUiState, actions: SettingsActions) {
+private fun SettingsDialogs(state: SettingsUiState, actions: SettingsActions, readingFocus: FocusRequester) {
+    SettingsReadingSheet(state, actions, readingFocus)
     if (state.signOutConfirmOpen) {
         SignOutConfirm(
             onMakeRecoveryCode = actions.onMakeRecoveryCode,

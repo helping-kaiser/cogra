@@ -224,10 +224,7 @@ fun FeedRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    consumeRefreshSignal(refreshSignal, onRefreshSignalConsumed, viewModel::refresh)
-    // THE FEED IS BACK IN VIEW: its held pages come back wearing any removal
-    // taken meanwhile, re-cut under the filter they were made under (CD-4).
-    LaunchedEffect(viewModel) { viewModel.onShown() }
+    FeedRouteEffects(viewModel, refreshSignal, onRefreshSignalConsumed)
     // THE FEED'S REMOVAL, for every own card's ⋮ and the thread a count raises:
     // a card removed here stands as its mark in place (RM-G9).
     ProvideRemoval {
@@ -285,6 +282,18 @@ fun FeedRoute(
             kinds = kindHooks(viewModel, kindDoors, onOpenPost) { url -> context.sharePost(url) },
         )
     }
+}
+
+/**
+ * What the route does on its own: a signed act the shell reported reads the
+ * feed again, once; and THE FEED IS BACK IN VIEW — its held pages come back
+ * wearing any removal taken meanwhile, re-cut under the filter they were made
+ * under (CD-4).
+ */
+@Composable
+private fun FeedRouteEffects(viewModel: FeedViewModel, refreshSignal: Boolean, consume: () -> Unit) {
+    consumeRefreshSignal(refreshSignal, consume, viewModel::refresh)
+    LaunchedEffect(viewModel) { viewModel.onShown() }
 }
 
 /** The doors the other kinds' cards and the filter sheet open, routed by the app. */
@@ -943,13 +952,6 @@ private val FILTER_SHEET = FEED / "filterSheet"
 private val NOTHING = FEED / "nothing"
 
 /**
- * FEEDNOTHING (FeedNothing.md; `EmptyState.jsx`): every kind switched off —
- * allowed at the chip, answered here: the line says what is off and `Show
- * posts again` is the way back, an outlined small button. It stands alone:
- * no seen separator, no seen rows. The status banners still ride it, as every
- * branch of the feed carries them.
- */
-/**
  * THE EMPTY FEED: FeedNothing where every kind is off (the client never
  * ranked), else the feed's own nothing-yet line — the status banners and the
  * vouch card riding either, as every branch of the feed carries them.
@@ -982,6 +984,13 @@ private fun FeedEmpty(
     }
 }
 
+/**
+ * FEEDNOTHING (FeedNothing.md; `EmptyState.jsx`): every kind switched off —
+ * allowed at the chip, answered here: the line says what is off and `Show
+ * posts again` is the way back, an outlined small button. It stands alone:
+ * no seen separator, no seen rows. The status banners still ride it, as every
+ * branch of the feed carries them.
+ */
 @Composable
 private fun FeedNothing(
     banners: @Composable () -> Unit,
