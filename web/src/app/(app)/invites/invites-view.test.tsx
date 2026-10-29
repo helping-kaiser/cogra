@@ -201,6 +201,67 @@ describe("Invites (behavior/Invites.md)", () => {
     expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/join/${SINGLE.id}`);
   });
 
+  // :9 ALWAYS both sections stand whenever one of them holds something, a
+  // section with nothing in it keeping its label; :11 invites.applicationsEmpty
+  // reads No applications waiting. under invites.applicationsLabel GIVEN no
+  // application waits and a link is live; :15 the quiet register, never the
+  // error colour.
+  it(":9 :11 :15 with no application waiting the half stands, its label over No applications waiting.", async () => {
+    show({ queue: [] });
+    const label = await screen.findByTestId("invites.applicationsLabel");
+    expect(label).toHaveTextContent("Applications");
+    const line = screen.getByTestId("invites.applicationsEmpty");
+    expect(line).toHaveTextContent("No applications waiting.");
+    expect(line).toHaveClass("text-body-medium", "text-on-surface-variant");
+    expect(line.className).not.toContain("error");
+    expect(label.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(line.compareDocumentPosition(screen.getByTestId("invites.linksLabel")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getAllByTestId("invites.link")).toHaveLength(2);
+    expect(screen.queryByTestId("invites.linksEmpty")).toBeNull();
+    expect(screen.queryByTestId("invites.empty")).toBeNull();
+  });
+
+  // :13 invites.linksEmpty reads No live links. under invites.linksLabel GIVEN
+  // no link is live and an application waits.
+  it(":9 :13 :15 with no live link the half stands, its label over No live links.", async () => {
+    show({ links: [inviteLink({ id: "dead", usable: false })] });
+    const label = await screen.findByTestId("invites.linksLabel");
+    expect(label).toHaveTextContent("Live links");
+    const line = screen.getByTestId("invites.linksEmpty");
+    expect(line).toHaveTextContent("No live links.");
+    expect(line).toHaveClass("text-body-medium", "text-on-surface-variant");
+    expect(label.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByTestId("invites.link")).toBeNull();
+    expect(screen.queryByTestId("invites.applicationsEmpty")).toBeNull();
+    expect(rows()).toHaveLength(5);
+  });
+
+  // :59 WHEN tap a link's copy control GIVEN the copy does not go through ->
+  // invites.link.copyFault reads That didn't go through. with Retry at its end,
+  // the line last on that link's card AND the link stays whole AND NEVER Link
+  // copied AND NEVER a dialog or notice; :61 WHEN tap its Retry -> the copy is
+  // asked again AND the line leaves once the link lands.
+  it(":59 :61 a copy that does not go through says so on its card, and Retry copies again", async () => {
+    let fail = true;
+    const writeText = vi.fn(() => (fail ? Promise.reject(new Error("denied")) : Promise.resolve()));
+    Object.assign(navigator, { clipboard: { writeText } });
+    show();
+    const cards = await screen.findAllByTestId("invites.link");
+    fireEvent.click(within(cards[0]).getByTestId("invites.link.copy"));
+    const fault = await within(cards[0]).findByTestId("invites.link.copyFault");
+    expect(fault).toHaveTextContent("That didn't go through. Retry");
+    expect(cards[0].lastElementChild).toBe(fault);
+    expect(within(cards[0]).getByTestId("invites.link.address")).toHaveTextContent(`/join/${SINGLE.id}`);
+    expect(within(cards[1]).queryByTestId("invites.link.copyFault")).toBeNull();
+    expect(screen.queryByTestId("invites-snackbar")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fail = false;
+    fireEvent.click(within(fault).getByTestId("invites-copy-fault-retry"));
+    await waitFor(() => expect(within(cards[0]).queryByTestId("invites.link.copyFault")).toBeNull());
+    expect(writeText).toHaveBeenCalledTimes(2);
+    expect(await screen.findByTestId("invites-snackbar")).toHaveTextContent("Link copied");
+  });
+
   it(":49-:53 revoke asks nothing, waits as Revoking… past 200ms, then the card leaves with Invite revoked", async () => {
     let calls = 0;
     const { state } = show();

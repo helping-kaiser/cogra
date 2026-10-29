@@ -14,6 +14,9 @@ export const CREATE_INVITE = "Create invite";
 export const CREATING_INVITE = "Creating invite…";
 export const APPLICATIONS_LABEL = "Applications";
 export const LIVE_LINKS_LABEL = "Live links";
+/** Invites' empty halves (copy-voice; Invites.md:11, :13): a half with nothing in it still stands. */
+export const NO_APPLICATIONS_WAITING = "No applications waiting.";
+export const NO_LIVE_LINKS = "No live links.";
 export const READY = "Ready for your approval";
 export const NOT_REGISTERED = "Not fully registered yet";
 export const WAITING_FOR_KEY = "Waiting for your key";

@@ -11,7 +11,10 @@
 // through the reader's ask-link door head the list, every other row stands
 // grouped by the link it came through, by age and never by readiness
 // (`layoutQueue`). Each row carries its own close; a group carries `Close
-// all` past one waiting.
+// all` past one waiting. Both halves stand whenever one holds something, an
+// empty half keeping its label over `No applications waiting.` or `No live
+// links.` (:9-15); a copy that did not go through says `That didn't go
+// through.` with Retry as the link card's last line (:59-61).
 //
 // APPROVING IS VOUCHING (ApprovePad.md:5): a ready row's tap blooms the
 // ordinary opinion pad from an anchor that takes the close's slot, over the
@@ -66,6 +69,8 @@ import {
   KEEP_THEM,
   LINK_COPIED,
   LIVE_LINKS_LABEL,
+  NO_APPLICATIONS_WAITING,
+  NO_LIVE_LINKS,
   NEW_INVITE,
   REVOKE,
   REVOKING,
@@ -103,6 +108,7 @@ import { EmptyState } from "@/lib/ui/empty-state";
 import { Icon } from "@/lib/ui/icons";
 import { PageHeader } from "@/lib/ui/page-header";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
+import { RowLine } from "@/lib/ui/row-line";
 import { useScrollHost } from "@/lib/ui/scroll-host";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceControl } from "@/lib/ui/stance-control";
@@ -163,6 +169,8 @@ export function InvitesView({
   const [closing, setClosing] = useState<Closing | null>(null);
   const [revoking, setRevoking] = useState<{ id: string; slow: boolean } | null>(null);
   const [revokeFailed, setRevokeFailed] = useState(false);
+  // The link whose copy did not go through: its card carries the line (Invites.md:59).
+  const [copyFailed, setCopyFailed] = useState<string | null>(null);
   // What an ask link handed over on the way here: its snackbar, and the row
   // to stand at (VouchAsk.md:17, :27, :31). Read in the first render, taken
   // once the page stands.
@@ -387,59 +395,80 @@ export function InvitesView({
             </button>
           </div>
 
-          {(layout.head.length > 0 || layout.groups.length > 0) && (
-            <>
-              <SectionLabel node={part(ROOT, "applicationsLabel")}>{APPLICATIONS_LABEL}</SectionLabel>
-              {layout.head.length > 0 && (
-                <div className="flex flex-col gap-2 px-4 pb-2">{layout.head.map(rowFor)}</div>
-              )}
-              <div className="flex flex-col gap-2 px-4">
-                {layout.groups.map((group) => (
-                  <GroupBlock
-                    key={group.linkId}
-                    group={group}
-                    onCloseAll={() => setClosing({ kind: "all", group })}
-                  >
-                    {group.rows.map(rowFor)}
-                  </GroupBlock>
-                ))}
-              </div>
-            </>
+          {/* BOTH HALVES STAND WHENEVER ONE HOLDS SOMETHING (Invites.md:9): a
+              half with nothing in it keeps its label and says so in one quiet
+              line (:11, :13, :15) — only both empty is InvitesEmpty. */}
+          <SectionLabel node={part(ROOT, "applicationsLabel")}>{APPLICATIONS_LABEL}</SectionLabel>
+          {layout.head.length === 0 && layout.groups.length === 0 && (
+            <EmptyHalf node={part(ROOT, "applicationsEmpty")}>{NO_APPLICATIONS_WAITING}</EmptyHalf>
+          )}
+          {layout.head.length > 0 && (
+            <div className="flex flex-col gap-2 px-4 pb-2">{layout.head.map(rowFor)}</div>
+          )}
+          {layout.groups.length > 0 && (
+            <div className="flex flex-col gap-2 px-4">
+              {layout.groups.map((group) => (
+                <GroupBlock
+                  key={group.linkId}
+                  group={group}
+                  onCloseAll={() => setClosing({ kind: "all", group })}
+                >
+                  {group.rows.map(rowFor)}
+                </GroupBlock>
+              ))}
+            </div>
           )}
 
+          <SectionLabel node={part(ROOT, "linksLabel")}>{LIVE_LINKS_LABEL}</SectionLabel>
+          {links.length === 0 && <EmptyHalf node={part(ROOT, "linksEmpty")}>{NO_LIVE_LINKS}</EmptyHalf>}
           {links.length > 0 && (
-            <>
-              <SectionLabel node={part(ROOT, "linksLabel")}>{LIVE_LINKS_LABEL}</SectionLabel>
-              <div className="flex flex-col gap-2 px-4">
-                {links.map((link, index) => {
-                  const url = joinUrl(window.location.origin, link.id);
-                  return (
-                    <AddressCard
-                      key={link.id}
-                      address={url}
-                      label={linkLabel(link)}
-                      copyLabel={COPY_THE_LINK}
-                      onCopy={() => void copyLink(url).then((copied) => copied && notify(LINK_COPIED))}
-                      action={{
-                        label: REVOKE,
-                        busyLabel: REVOKING,
-                        // Inert from the press, `Revoking…` past 200ms,
-                        // never dimmed and never a spinner (:49-51).
-                        busy: revoking?.id === link.id && revoking.slow,
-                        onClick: () => void onRevoke(link, index),
-                      }}
-                      caption={linkCaption(link, now())}
-                      node={instance(ROOT, "link", link.id)}
-                    />
-                  );
-                })}
-              </div>
-              {revokeFailed && (
-                <div className="px-6 pt-2">
-                  <TransportError testId="invites-revoke-failed" />
-                </div>
-              )}
-            </>
+            <div className="flex flex-col gap-2 px-4">
+              {links.map((link, index) => {
+                const url = joinUrl(window.location.origin, link.id);
+                const card = instance(ROOT, "link", link.id);
+                const copy = () =>
+                  void copyLink(url).then((copied) => {
+                    if (copied) {
+                      setCopyFailed((current) => (current === link.id ? null : current));
+                      notify(LINK_COPIED);
+                    } else {
+                      // Invites.md:59 — the comfort's line on the link's own
+                      // card, never `Link copied`, never a dialog.
+                      setCopyFailed(link.id);
+                    }
+                  });
+                return (
+                  <AddressCard
+                    key={link.id}
+                    address={url}
+                    label={linkLabel(link)}
+                    copyLabel={COPY_THE_LINK}
+                    onCopy={copy}
+                    action={{
+                      label: REVOKE,
+                      busyLabel: REVOKING,
+                      // Inert from the press, `Revoking…` past 200ms,
+                      // never dimmed and never a spinner (:49-51).
+                      busy: revoking?.id === link.id && revoking.slow,
+                      onClick: () => void onRevoke(link, index),
+                    }}
+                    caption={linkCaption(link, now())}
+                    node={card}
+                  >
+                    {copyFailed === link.id && (
+                      <div {...testAttributes(part(card, "copyFault"))}>
+                        <RowLine state={{ kind: "didntGoThrough", onRetry: copy }} testId="invites-copy-fault" />
+                      </div>
+                    )}
+                  </AddressCard>
+                );
+              })}
+            </div>
+          )}
+          {revokeFailed && (
+            <div className="px-6 pt-2">
+              <TransportError testId="invites-revoke-failed" />
+            </div>
           )}
         </div>
       )}
@@ -482,6 +511,18 @@ export function InvitesView({
         onDismiss={dismissSnack}
       />
     </main>
+  );
+}
+
+/**
+ * An empty half's one line (`INVITES_EMPTY_LINE`: body-medium, secondary,
+ * 0 24px 8px) — the empty list's calm register, never the error colour.
+ */
+function EmptyHalf({ children, node }: { children: string; node: DataNode }) {
+  return (
+    <p {...testAttributes(node)} className="m-0 px-6 pb-2 text-body-medium text-on-surface-variant">
+      {children}
+    </p>
   );
 }
 
