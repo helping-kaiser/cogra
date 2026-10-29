@@ -9156,6 +9156,9 @@
         "referencePicker.fault": [
           "fault"
         ],
+        "referencePicker.fault.retry": [
+          "fault"
+        ],
         "referencePicker.filterSheet": [
           "filter"
         ],
@@ -11896,6 +11899,9 @@
         ],
         "tagPicker.done": [],
         "tagPicker.fault": [
+          "fault"
+        ],
+        "tagPicker.fault.retry": [
           "fault"
         ],
         "tagPicker.footnote": [],

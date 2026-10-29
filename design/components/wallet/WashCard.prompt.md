@@ -9,6 +9,6 @@ Use `WashCard` for a wallet screen's ONE moment — the hero (via `WalletBalance
 
 What holds:
 
-- **The charter**: `--surface-hero` is the system's one decorative gradient surface (blessed 2026-08-31 as the first move of the brand-feel push). It marks the places a page IS its moment; overuse turns the brand wash into wallpaper.
+- **The charter**: `--surface-hero` is the system's one decorative gradient surface (blessed 2026-08-31 as the first move of the brand-feel push). It marks the places a page IS its moment; overuse turns the brand wash into wallpaper. It is one token of three stops, carried whole on every client — never rebuilt from two colour roles, which drops its middle stop (`tokens/colors.css`).
 - The ghosted coin is texture, not a second logo — aria-hidden, cropped by the edge. Content that must sit above it in stacking order takes `position: relative`.
 - Both wash stops are existing palette values (light and dark recipes in tokens/colors.css); no new colours ride in through this component.

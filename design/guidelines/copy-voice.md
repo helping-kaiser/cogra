@@ -301,7 +301,11 @@ departs, in lowercase after a `·`:
   so it has no word for its absence.
 - **People**: `your people` (jakob 2026-10-09, ruling 77 — the label
   `Your people` blessed; the trigger's lowercase state word follows the
-  axis rule). `Everyone` is the default and has no word. Under `Your
+  axis rule). `Everyone` is the app's default and has no word there; a
+  reader whose saved default is `Your people` reads the move back as
+  `everyone` — the row's label in lowercase, the axis rule's own state
+  word (seam 248; *new 2026-10-29, merged under the autonomy order,
+  review pending*). Under `Your
   people`, a sign off its `Either` default joins the same extra:
   `your people, for`, `your people, against` (*drafted 2026-10-12 —
   jakob's at review*; the `against` reading outgrows the 154px budget
@@ -571,6 +575,17 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
   one dropped while a clip is staged; the batch's first clip is the body.
   `A comment carries one video.` is its comment-scale twin. (Seam 245,
   ask 13 H; *merged under the autonomy order, 2026-10-28; review pending*.)
+
+- `A video can't join an edit yet — post it on its own.` — a video picked
+  at an edit while the edit's video path is staged (`EditWords`' `+ Add
+  pictures or a video`, a words comment's edit; staged-surfaces, *Waiting
+  on a slice inside v1.0.0*). It is not a cap: the drawn path takes the
+  clip through the cover step (`EditWords.md`), and the line says so
+  honestly in the meantime — *yet* is load-bearing, the way out is a post
+  of its own, and *join* is the composer's own verb (`a video can join
+  them`). `Remove it` alone, as every refusal. (Seam 248; *new
+  2026-10-29, merged under the autonomy order, review pending*; it leaves
+  with its staged row.)
 
 **The empty pick step says nothing.** With nothing picked, Next stays
 inert and no line asks for a pick: a refusal answers a file, never the
@@ -1259,6 +1274,15 @@ it counts ("6 things, signed together"). An act count dressed as
 "3 actions" in a row whose label already said what it counts is the same
 number said twice.
 
+**A sentence counts citations; a label names references** (seam 248,
+recorded for both clients' conform). The act is *to cite*, so every
+sentence that counts or speaks of the act says **citation** — `Up to 10
+citations per post.`, `Your citation didn't land`, `3 cited`, `+ Cite
+something`. **References** stays a label only: the block that holds them
+and the seal's row (`Reference`, `References`, `Tags & references`).
+Never `Up to 10 references per post.` (*new 2026-10-29, merged under the
+autonomy order, review pending*.)
+
 **`Cited · 3`** — the staged-citations sheet's title, `Picked · 3`'s
 shape for the same job: a staged collection named by what it is and how
 many. `Done` closes it, as it closes the picked sheet.
@@ -1332,9 +1356,18 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
   2026-10-05).
 - A hold's row: `That didn't sign.` with `Retry`. **Drawn** on
   `RowSigning`.
-- A read with nothing loaded: `Can't reach the server. Check your
-  connection and try again.` A read with content on screen is written
-  per surface (*Missing and unreachable*).
+- A read with nothing loaded: the house line's noun form, `Can't reach
+  the server — {what} can't load right now.`, over an outlined `Retry`
+  — `this profile`, `notifications`, `tags`, `results` (one rule, round
+  25: `ProfileUnreachable`, `Notifications`, the two pickers, search);
+  the deletion mail's landing, whose act is a confirm, says `Can't reach
+  the server — the deletion can't be confirmed right now.` over its `Try
+  again` (`DeleteAccountConfirmed`). A
+  fault line never says "try again" beside a control that does it, so the
+  long line, `Can't reach the server. Check your connection and try
+  again.`, is `TransportError`'s fallback for a surface that names no
+  noun and carries no Retry; no board draws it. A read with content on
+  screen is written per surface (*Missing and unreachable*).
 
 **A slow answer** (not a code, and not yet a fault): a signing past 5s
 keeps `Signing and publishing…` on its commit, and the subline under the
@@ -2208,7 +2241,8 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
 - The review's title, `Kept picks`, and its one line: `These waited on
   this device for your key, and nothing is signed yet. Remove any you no
   longer mean — the rest sign together.` Each row's kind reads `Post` or
-  `Person`, the staged citations' words; its × keeps `StagedReference`'s
+  `Person`, the staged citations' words — `Comment` and `Topic` the same
+  family's other two (seam 248); its × keeps `StagedReference`'s
   `Remove <name>`.
 - The commit, `Sign them` (the ruling's own words).
 - The last pick dropped: the snackbar `Nothing left to sign.` (a draft,
@@ -2216,7 +2250,11 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
 - The seal keeps the standard seal's words — `What you sign`, `Last step`,
   `3 things, signed together`, `They land together, or none does.` — and
   adds its own: each row's label `Opinion`, the X's name `Leave — your
-  picks are kept`, and the commit `Sign the opinions`.
+  picks are kept`, and the commit `Sign the picks` (`Signing the
+  picks…` in flight). The commit names the batch by the review's own
+  word, because the batch can hold a feeling beside the opinions (seam
+  248; *new 2026-10-29, merged under the autonomy order, review
+  pending*).
 - Signed: the settled snackbar in its batch form, `Signed 3 things, still
   settling.` — the signed-opinion snackbar's own opening, without a
   `Current opinion`, since a batch holds more than one target.
@@ -2238,6 +2276,20 @@ The kept-picks rulings (jakob 2026-10-02) add these, each *new
   topic).
 - The write rule at this scale: the fact ends `Nothing was signed or
   spent — your picks are still kept.`, and the way out reads `Not now`.
+- **A target with nothing to be named by is named by its kind** (seam
+  248; *new 2026-10-29, merged under the autonomy order, review
+  pending*): `A post`, `A comment`, `A person` — the row's name where the
+  target's read got no answer, the review's and the seal's alike, and
+  `A comment` for a comment with no words of its own. The row still
+  signs, because the pick is real; a topic needs no read, its `#name`
+  being its own. A removed target is not one of these: it wears its
+  removal mark.
+- **One record, two words, by what each surface names.** A kept feeling
+  reads `Topic` on the review and `Feeling` on the seal, and the two
+  agree: the review's second line names what the pick is ON — the
+  target's kind, beside `Post` and `Person` — and the seal's row label
+  names what is SIGNED — the record's family, beside `Opinion` (seam
+  248). *Topic* there is the held-position word of *Your topics*.
 - A kept approval beside the picks (jakob 2026-10-05, the B round's 7,
   amended): the review and its seal each carry one quiet line, `An
   approval waits in your invites — go there to sign it.`, ending in the
@@ -3772,6 +3824,17 @@ Their accounts stay exactly as they are — signed in, and free to keep
 reading.` and `This is your call and nobody else's. Any member can still
 vouch any of them in, and each gets a link to ask with.`
 
+The count is the sentence's, so it takes the count's English (seam 248;
+*new 2026-10-29, merged under the autonomy order, review pending*). A
+group never holds `Close all` below two, so two is the smallest the
+dialog meets, and two is a pair: `Both leave your list and both people
+are told.` and `…Any member can still vouch either of them in, and each
+gets a link to ask with.` From three, `All {N} leave your list and all
+{N} people are told.`, the number spelled through nine (`All four`) and
+in digits from 10 (`All 12`), the common style rule; the title keeps its
+digits throughout (`Close all 2 applications from this link?`), as every
+count on a control does.
+
 **A live link's label is what it is, and its caption is when it dies.**
 `Single use · not used yet` and `Many uses`; the slot state rides the
 single-use label only, because a multi-use link has no slot to be in a
@@ -4180,10 +4243,17 @@ reuses a blessed line, which is named:
 - **The pickers at the batch's ten**: `Up to 10 citations per post.` ·
   `Up to 10 citations per comment.` · `Up to 10 tags per post.` · `Up to
   10 tags per comment.` — above the dimmed rows, a fact in the quiet
-  register (`ReferencePicker`, `TagPicker`, the `state` chip's `cap`). A
-  picker's read with no answer says the blessed house line, `Can't reach
-  the server. Check your connection and try again.`; an empty list and a
-  read in flight say nothing.
+  register (`ReferencePicker`, `TagPicker`, the `state` chip's `cap`).
+  **A cap dims** (round 25): it is a standing refusal, and a standing
+  refusal is shown — the locked look's visible half (round 16), where an
+  in-flight wait never dims (*In-flight labels*). The dimmed rows take no
+  tap, because the line above them already says why; the staged rows' ×
+  stays live, which is how room comes back. A picker's read with no
+  answer says the house line's noun form over `Retry`, `Can't reach the
+  server — tags can't load right now.` (`TagPicker`) and `Can't reach the
+  server — results can't load right now.` (`ReferencePicker`), *new
+  2026-10-29, merged under the autonomy order, review pending*; an empty
+  list and a read in flight say nothing.
 - **Invites' empty halves**: `No applications waiting.` · `No live links.`
   (`Invites`' `sections` chip). A copy that failed says the comfort's
   blessed `That didn't go through.` with `Retry` on the link's card.

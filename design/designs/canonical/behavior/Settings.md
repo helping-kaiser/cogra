@@ -8,6 +8,8 @@ ALWAYS the settings header and its back arrow stay pinned while the page scrolls
 
 WHEN press the header back arrow -> the reader's own profile returns, where the gear was
 
+WHEN settings opens from a mail landing's Back to settings GIVEN the app was opened cold by the mail's link -> settings stands over the reader's own profile as the Profile tab's root AND the bottom bar lights Profile AND the header back arrow returns that profile
+
 ALWAYS an applicant reads the same settings page as a member, every row open to them
 
 ALWAYS no row on settings carries a leading icon

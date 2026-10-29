@@ -8,7 +8,7 @@ ALWAYS the heading's days left round to the nearest whole day while 24 hours or 
 
 WHEN the deletion mail's link is opened GIVEN the deletion was canceled -> the spent link's landing opens, This link doesn't work anymore AND NEVER the deletion is confirmed again
 
-WHEN the deletion mail's link is opened GIVEN no answer reaches the device -> the landing holds the house fault, Can't reach the server. Check your connection and try again., over Try again AND NEVER the deletion is confirmed AND NEVER the grace starts
+WHEN the deletion mail's link is opened GIVEN no answer reaches the device -> the landing holds the house fault's noun form, Can't reach the server — the deletion can't be confirmed right now., over Try again AND NEVER the deletion is confirmed AND NEVER the grace starts
 
 WHEN the deletion mail's link is opened GIVEN the confirm is refused by its budget -> the line Too many tries. Wait a little, then try again. stands in the fault's place, over the same Try again AND NEVER the deletion is confirmed AND NEVER the grace starts
 

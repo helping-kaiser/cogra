@@ -407,6 +407,12 @@ rendering is acceptable as a platform habit. Where a platform genuinely
 cannot — a capability the other has and this one does not — the
 difference is *presented*, deliberately and per case, the way `Back is
 the platform's` already is. The test is capability, never convention.
+**A house control is the design on both platforms, never the kit's
+stock one** (seam 248): where the master departs from M3 on purpose,
+Android draws the master, because drawing it is a capability Compose has.
+The `Checkbox` is the worked case — the master's 18px box with the one
+1px hairline is the Android box too, never M3's 20dp control with its
+2dp stroke, which §4's one-weight rule refuses.
 
 ### Corner radii and cards
 
@@ -10617,6 +10623,50 @@ docblock and sidecar, *merged under the autonomy order, review pending*.
 - **The gate**: edges **2128 → 2155**; flows hold at **227**, six
   re-blessed for their origin counts. The registry grows **132 → 137
   screens**, **5142 → 5515** board paths, **1538 → 1629** distinct.
+
+### Round 25, the wordings and the policy answers — 2026-10-29
+
+Seam 248's wordings, sidecar confirms and contradictions, under the same
+autonomy order: built, merged, reviewed by jakob after his hand test.
+Every new string is in copy-voice, *merged under the autonomy order,
+review pending*.
+
+- **The words.** The kept picks' seal commits `Sign the picks` — its
+  batch can hold a feeling; `A post` · `A comment` · `A person` name a
+  target no read reached, and `Topic` (the review) and `Feeling` (the
+  seal) name two things, what a pick is on and what it signs. The
+  close-all dialog at two reads `Both leave…` and `either of them`; the
+  trigger's move back from a Your-people default reads `everyone`; a
+  sentence counts citations, a label names references.
+- **One fault shape.** A read with nothing loaded says the house line's
+  noun form over an outlined `Retry` — the two pickers (`tags`,
+  `results`, a Retry drawn where none stood), search, Notifications,
+  the deletion landing; the long line never stands beside a control that
+  tries again. A cap dims, a standing refusal shown, and its rows take no
+  tap.
+- **A video picked at an edit** is staged (staged-surfaces) under `A
+  video can't join an edit yet — post it on its own.`; the drawn path is
+  the cover step, and a words comment's edit goes to jakob (backlog 148).
+- **The sidecars say what they meant.** A push notification lights Feed,
+  a Notifications row the bell's root; a cold mail link's `Back to
+  settings` lands Settings over the own profile, Profile lit. A filter
+  committed in a feed lasts on the device until changed — the help's and
+  the Reading footnote's words — and the saved default opens a feed with
+  none (`SettingsReading.md` had read "every feed opens with" it). Cited
+  by's settling row is gone: a lane's drawing, and no read serves a
+  pending inbound citation.
+- **Measured.** A sheet's height class is its whole height (border-box):
+  the 88% filter drew 774.72px on an 844 frame (91.8%), the tallest
+  sheet 804px, its top 40px under the 72px sliver; now 742.72 and 772.
+  The sign row's 14px (ruling 92) is the people rows' own gap, the board
+  unchanged at 14.
+- **Parity.** The brand wash is one token of three stops, carried whole
+  on Android; the house checkbox is Android's box too (§4).
+- **The gate**: edges **2155 → 2157** (the pickers' two `Retry`s); flows
+  hold at **227**, one re-blessed for `Sign the picks`
+  (`sign-the-picks-kept-while-the-key-was-away`). The registry holds at
+  **137 screens**, **5515 → 5517** board paths, **1629 → 1631** distinct
+  (`tagPicker.fault.retry`, `referencePicker.fault.retry`).
 
 ---
 
