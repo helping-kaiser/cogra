@@ -62,6 +62,10 @@ ALWAYS the reader's default is the one they set GIVEN the reader has set a defau
 
 WHEN tap Reset -> the sheet stages the reader's default AND NEVER the feed re-queries
 
+ALWAYS a filter committed with Done lasts on this device until the reader changes it, through a reload, a restart and a cold launch alike, and the feed opens with it
+
+ALWAYS a filter committed with Done never travels to another device and never changes the reader's saved default in Settings
+
 ALWAYS the trigger speaks only the deviations from the reader's default
 
 ALWAYS the trigger speaks a deviation back toward the app's default like any other GIVEN the reader's own default differs from the app's
