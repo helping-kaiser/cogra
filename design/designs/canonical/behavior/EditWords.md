@@ -38,6 +38,8 @@ WHEN pictures picked from + Add pictures or a video break the cap of ten or come
 
 WHEN a video is picked from + Add pictures or a video -> its face is chosen on the cover step before the edit takes it
 
+WHEN a video is picked from + Add pictures or a video GIVEN the edit's cover step is still staged -> the refusal A video can't join an edit yet — post it on its own. stands under postEdit.body.add with Remove it alone AND NEVER the video is taken AND NEVER a dialog opens
+
 WHEN tap the × of a tag the post already carries -> the withdrawal of that tag is staged in the batch AND the chip leaves the row for the line Withdrawn: under the tags AND the footer counts one more AND NEVER a dialog asks
 
 WHEN tap the × of a tag picked in this same edit -> the pick is unstaged AND the chip leaves the row AND the footer counts one fewer AND NEVER a withdrawal is staged AND NEVER a dialog asks
