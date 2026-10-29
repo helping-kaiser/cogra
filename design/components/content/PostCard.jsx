@@ -161,7 +161,7 @@ export function PostCard({
   // DESCRIPTION while the title stays readable, and the veil names whose mark it
   // is — the author's warning or the platform's verdict — with the reason after
   // it. One reveal answers for the whole card (SensitiveScope).
-  const veil = !redacted && sensitive ? { reason: sensitive.reason ?? sensitive.label, source: sensitive.source } : null;
+  const veil = !redacted && sensitive ? { reason: sensitive.reason ?? sensitive.label, source: sensitive.source, verdictReason: sensitive.verdictReason } : null;
   // REDACTION IS RECORD-GRANULAR. An illegal verdict removes the payload, so
   // every authored field goes at once — there is no redacted title beside a
   // surviving body. The card renders its skeleton instead: author, timestamp,
@@ -243,7 +243,7 @@ export function PostCard({
   // itself (`named`); a media post's caption leaves that to the media face.
   const veiledParagraph = (node, named = false) =>
     veil ? (
-      <SensitiveVeil kind="text" named={named} reason={veil.reason} source={veil.source}>
+      <SensitiveVeil kind="text" named={named} reason={veil.reason} source={veil.source} verdictReason={veil.verdictReason}>
         {node}
       </SensitiveVeil>
     ) : (
@@ -367,7 +367,7 @@ export function PostCard({
           data-node={node && "media"}
         >
           {veil ? (
-            <SensitiveVeil kind="media" reason={veil.reason} source={veil.source} radius="0px">
+            <SensitiveVeil kind="media" reason={veil.reason} source={veil.source} verdictReason={veil.verdictReason} radius="0px">
               <MediaGallery items={media} radius="0px" onOpen={detail ? openViewer : undefined} node={node && "media"} />
             </SensitiveVeil>
           ) : (

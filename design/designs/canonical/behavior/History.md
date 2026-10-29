@@ -125,3 +125,7 @@ ALWAYS history.bottomBar keeps lit the slot of the root History was opened from,
 WHEN tap the back arrow -> the reader's own profile comes back, in the state it was left
 
 ALWAYS the back arrow reads Back to your profile
+
+ALWAYS history.card.actionRow.stance.pending and history.commentCard.actionRow.stance.pending read Waiting for your key under the kept pick's face GIVEN a pick is kept pending on the card's thing and the key is not on this device
+
+ALWAYS history.card.actionRow.stance.pending and history.commentCard.actionRow.stance.pending read Waiting for your review under the kept pick's face GIVEN the key is on this device and the kept picks' review was left unsigned

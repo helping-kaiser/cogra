@@ -50,7 +50,7 @@ export function DetailClip({ item, elapsed, duration, progress, playing = true, 
   return (
     <div style={{ flex: "none", background: "#000" }}>
       {sensitive ? (
-        <SensitiveVeil kind="media" reason={sensitive.reason} source={sensitive.source} radius="0px">
+        <SensitiveVeil kind="media" reason={sensitive.reason} source={sensitive.source} verdictReason={sensitive.verdictReason} radius="0px">
           {clip}
         </SensitiveVeil>
       ) : (

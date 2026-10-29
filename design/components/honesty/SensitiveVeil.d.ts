@@ -31,7 +31,13 @@ export interface SensitiveVeilProps {
    * Named unconditionally on the smaller second line: the two states read back
    * as the same veil, so an unnamed source would read as the other one.
    */
-  source?: "author" | "platform";
+  source?: "author" | "platform" | "both";
+  /**
+   * The verdict's own reason where both marks stand (`source: "both"`): the
+   * line reads the author's warning and its `reason`, then `Also veiled by the
+   * platform's verdict` and this, after an em dash.
+   */
+  verdictReason?: string;
   revealLabel?: string;
   /**
    * The `text` kind as the post's only face — a words-only post: the source
@@ -56,6 +62,9 @@ export interface SensitiveVeilProps {
 }
 
 export declare function SensitiveVeil(props: SensitiveVeilProps): JSX.Element;
+
+/** The veil's source line: whose mark, then the reason; both marks read the author's first, then the verdict's. */
+export declare function sensitiveSourceLine(source?: "author" | "platform" | "both", reason?: string, verdictReason?: string): string;
 
 export interface RedactedContentProps {
   /**

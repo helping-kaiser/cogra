@@ -148,7 +148,7 @@ export interface PostCardProps {
    * warning or the platform's verdict — and carries `reason` after it. One
    * reveal answers for the whole card.
    */
-  sensitive?: { reason?: string; source?: "author" | "platform" };
+  sensitive?: { reason?: string; source?: "author" | "platform" | "both"; verdictReason?: string };
   /**
    * Topic names, with or without the `#`. One line with the citation count at
    * its end, clipped on both variants (readme §13's collapse order) — the

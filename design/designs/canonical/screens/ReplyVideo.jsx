@@ -37,7 +37,17 @@
    THE ADD CONTROL IS GONE AND A LINE SAYS WHY (jakob 2026-09-03): "A video is
    the whole comment. Give it a cover below." An absent control explains
    nothing on its own, and the reader who came to add a second thing deserves
-   the reason plus what to do next, in the space the control left. */
+   the reason plus what to do next, in the space the control left.
+
+   A SECOND CLIP IS REFUSED, NEVER SWAPPED IN (round 27, seam 252; the post's
+   law at comment scale — `ComposePick`'s batch rule). The `batch` chip's `two`
+   draws a photos-app batch that held two clips and no picture: the batch's
+   first clip is the comment, and the other stands under it refused, `A
+   comment carries one video.`, with `Remove it` alone, as every refusal
+   (copy-voice, *Refused files*). There is no replace-the-first rule: the
+   reader removes the clip they have to put another in its place. */
+export const PROPS = { batch: { editor: "enum", options: ["one", "two"], default: "one" } };
+export const VALS = `secondShown: this.props.batch === "two" ? "flex" : "none"`;
 
 const CLIP_FRAMES = [
   { src: "comment-camera.jpg" },
@@ -71,6 +81,10 @@ export function Screen() {
           onRemove={() => {}}
           removeLabel="Remove this video"
         />
+
+        <div style={{ display: "{{secondShown}}", flexDirection: "column", gap: 10 }}>
+          <RefusedFile src="clip-lakeside.jpg" video message="A comment carries one video." />
+        </div>
 
         <QuietNote>A video is the whole comment. Give it a cover below.</QuietNote>
 

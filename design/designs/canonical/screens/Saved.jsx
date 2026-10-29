@@ -56,9 +56,16 @@
    the name and key its kind has on the feed — `card` and `commentCard` by
    their author, `profileCard` by the person — because each is the feed's own
    card; the list holding them is the feed's, unnamed there and here. The
-   field is `searchField`. */
+   field is `searchField`.
+
+   THE `pick` CHIP DRAWS A KEPT PICK on the first post card and the comment
+   card (round 27, seam 252; `PickCopies`): `key` and `review` add the stance
+   control's `pending` line to `card` and `commentCard` as the feed's
+   `PadPending` and `PadPendingReview` draw it. */
 export const NODE = "saved";
 export const FRAME = { width: 390, height: 1370 };
+export const PROPS = PICK_CHIP;
+export const VALS = PICK_VALS;
 
 export function Screen() {
   return (
@@ -68,15 +75,20 @@ export function Screen() {
         <SearchBar placeholder="Search what you saved" ariaLabel="Search what you saved" node="searchField" />
       </div>
       <FeedList>
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
-        <CommentFeedCard
-          author={TOBIAS}
-          content={TOBIAS_COMMENT}
-          timestamp="1h"
-          parent={ADA_POST}
-          topics={["glovebox", "coastroad"]}
-          score="12.40"
-          node="commentCard"
+        <PickCopies draw={(pick) => <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} {...pick} node="card" />} />
+        <PickCopies
+          draw={(pick) => (
+            <CommentFeedCard
+              author={TOBIAS}
+              content={TOBIAS_COMMENT}
+              timestamp="1h"
+              parent={ADA_POST}
+              topics={["glovebox", "coastroad"]}
+              score="12.40"
+              {...pick}
+              node="commentCard"
+            />
+          )}
         />
         <ProfileFeedCard
           person={MIRA}

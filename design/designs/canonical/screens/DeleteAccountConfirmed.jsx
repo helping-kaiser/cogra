@@ -31,11 +31,42 @@
 
    REGISTERED under the `deleteAccount` prefix (design ⇄ impl seam 080, the
    deletion packet): the request screen's sweep, its checkbox and its line,
-   keep their names here, and the way on is `onward`. */
+   keep their names here, and the way on is `onward`.
+
+   THE LINK THAT GETS NO ANSWER (round 27, seam 252; the `answer` chip). The
+   landing states a confirmation, so with no answer there is nothing to state:
+   the page holds the fault family's one shape in its place (round 25,
+   `ProfileUnreachable`, the pickers, `Notifications`) — the house line's noun
+   form, `Can't reach the server — the deletion can't be confirmed right
+   now.`, over an OUTLINED control, sized to its word and leading the column.
+   Its word is `Try again`, not the reads' `Retry`, because the act is the
+   link's confirm checked again, not a read (copy-voice, *No answer at all*);
+   the shape is the family's, since the word is the only thing this surface's
+   register changes. `limited` is the confirm refused by its budget: `Too many
+   tries. Wait a little, then try again.` in the line's place, over the same
+   control. Neither starts the grace. Named `fault` and its `retry`, as the
+   pickers' are; each copy keyed by the chip's value. */
 export const NODE = "deleteAccount";
+export const PROPS = { answer: { editor: "enum", options: ["confirmed", "fault", "limited"], default: "confirmed" } };
+export const VALS = `confirmedShown: this.props.answer === "confirmed" ? "flex" : "none", faultShown: this.props.answer === "fault" ? "block" : "none", limitedShown: this.props.answer === "limited" ? "block" : "none"`;
+const FAULT = (message) => (
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)" }} data-node="fault">
+    <TransportError message={message} />
+    <Button variant="outline" size="sm" selfStart node="retry">
+      Try again
+    </Button>
+  </div>
+);
 export function Screen() {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "32px 24px", overflow: "hidden" }}>
+      <div style={{ display: "{{faultShown}}" }} data-node-chip="answer" data-node-key="fault">
+        {FAULT("Can't reach the server — the deletion can't be confirmed right now.")}
+      </div>
+      <div style={{ display: "{{limitedShown}}" }} data-node-chip="answer" data-node-key="limited">
+        {FAULT("Too many tries. Wait a little, then try again.")}
+      </div>
+      <div style={{ display: "{{confirmedShown}}", flexDirection: "column" }}>
       <h1
         style={{
           margin: 0,
@@ -88,6 +119,7 @@ export function Screen() {
         <Button variant="text" style={{ width: "100%" }} node="onward">
           Go to the feed
         </Button>
+      </div>
       </div>
     </div>
   );
