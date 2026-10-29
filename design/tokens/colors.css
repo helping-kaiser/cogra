@@ -49,8 +49,15 @@
   /* THE BRAND WASH (decided 2026-08-31, the wallet's hero): the one
      decorative gradient surface — a warm sweep from the secondary fill into
      the surface, for the few places a figure is a trophy, never a default
-     card fill. Both stops are existing palette values; the recipe is the
-     only new thing. */
+     card fill. Its ends are palette roles — `secondary-container` into
+     `surface` — and its middle stop (#ffddc9 at 46%; #3a2417 at 52% in the
+     dark) is the recipe's own, a hand-tuned bend that holds the warmth
+     longer and no role carries. So the wash is ONE TOKEN, never two roles
+     (seam 248): `tokens.json` pins all three stops, and each client carries
+     `--surface-hero` whole as a theme-level gradient of its own — on
+     android a brush beside the colour scheme, since M3's `ColorScheme`
+     holds roles, never stops. A two-role sweep drops the bend and does not
+     conform. */
   --surface-hero: linear-gradient(140deg, #feaa81 0%, #ffddc9 46%, #fff8f6 100%);
   --surface-container: #ffeae1;
   --surface-container-high: #fbe3d9;

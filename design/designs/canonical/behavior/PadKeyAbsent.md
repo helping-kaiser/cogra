@@ -50,7 +50,7 @@ WHEN the reader signs out of an account set to forget this device GIVEN this dev
 
 WHEN the session is ended from elsewhere -> every kept pick stays on this device, sealed and unusable until this device signs in again online with the account's current credentials AND NEVER a kept pick is destroyed
 
-WHEN the key is restored GIVEN plain opinions are kept pending -> they sign together in one batch the reader reviews first AND NEVER a kept pick is signed silently
+WHEN the key is restored GIVEN plain picks, opinions or feelings, are kept pending -> they sign together in one batch the reader reviews first AND NEVER a kept pick is signed silently
 
 ALWAYS a kept vouch-back or approval never joins the kept picks' batch: it surfaces as its own card and signs through its own pad, its ceremony kept
 

@@ -34,6 +34,8 @@ WHEN press the keyboard's action key GIVEN the composer holds ten tags -> NEVER 
 
 WHEN tap the remove control of a staged row GIVEN the composer holds ten tags -> the row's name is unstaged AND tagPicker.cap leaves AND the list takes taps again
 
-WHEN the candidates' read gets no answer -> the typed name's row still stands first AND tagPicker.fault reads Can't reach the server. Check your connection and try again. where the candidates were
+WHEN the candidates' read gets no answer -> the typed name's row still stands first AND tagPicker.fault reads Can't reach the server — tags can't load right now. over tagPicker.fault.retry, outlined, where the candidates were AND NEVER the line says try again
+
+WHEN tap tagPicker.fault.retry -> the candidates are read again for the typed name AND the typed name's row stays first
 
 ALWAYS no line stands where the candidates are GIVEN the candidates' read is in flight or found nothing

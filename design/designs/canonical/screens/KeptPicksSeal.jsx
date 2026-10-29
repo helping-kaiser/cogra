@@ -30,7 +30,7 @@
    review with every pick still in it.
 
    NO SEVERANCE STEP. A pick that nets its bundle to nothing said so on its
-   review row, and `Sign the opinions` is its confirmation (kept picks 3);
+   review row, and `Sign the picks` is its confirmation (kept picks 3);
    the seal raises no `SeveranceConfirm`. Mira's row here reads its pair and
    nothing more.
 
@@ -92,7 +92,10 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <SealFooter signLabel="Sign the opinions" node="foot" />
+        {/* `Sign the picks`: the batch can hold a feeling beside the
+            opinions (seam 248), and a pick is the review's own word for each
+            of its rows (copy-voice, the kept picks' review). */}
+        <SealFooter signLabel="Sign the picks" node="foot" />
       </div>
     </>
   );

@@ -48,9 +48,11 @@
    under it are dimmed and take no tap — a true refusal, so it dims — while
    the staged rows' × still un-stage, which is how room comes back; from a
    reply's composer it reads `per comment`. `fault` is the results' read
-   that got no answer, nothing loaded: the house line, `Can't reach the
-   server. Check your connection and try again.`, where the rows were, the
-   field still holding the query, a changed query reading again. An empty
+   that got no answer, nothing loaded: the house line's noun form, `Can't
+   reach the server — results can't load right now.`, over an outlined
+   `Retry`, where the rows were — the fault family's one shape
+   (`TagPicker`) — the field still holding the query, a changed query
+   reading again as well. An empty
    result and the read in flight stay SILENT — the list is simply empty
    until rows arrive, the field already saying what was asked. */
 export const NODE = "referencePicker";
@@ -78,8 +80,11 @@ export function Screen() {
           </p>
         </div>
         <div style={{ display: "{{faultShown}}", padding: "8px 24px" }} data-node-chip="state" data-node-key="fault">
-          <div data-node="fault">
-            <TransportError />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)" }} data-node="fault">
+            <TransportError message="Can't reach the server — results can't load right now." />
+            <Button variant="outline" size="sm" selfStart node="retry">
+              Retry
+            </Button>
           </div>
         </div>
         <div style={{ display: "{{rowsShown}}", flexDirection: "column", opacity: "{{rowsOpacity}}" }}>

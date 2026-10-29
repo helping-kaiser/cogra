@@ -62,6 +62,10 @@ ALWAYS the reader's default is the one they set GIVEN the reader has set a defau
 
 WHEN tap Reset -> the sheet stages the reader's default AND NEVER the feed re-queries
 
+ALWAYS a filter committed with Done lasts on this device until the reader changes it, through a reload, a restart and a cold launch alike, and the feed opens with it
+
+ALWAYS a filter committed with Done never travels to another device and never changes the reader's saved default in Settings
+
 ALWAYS the trigger speaks only the deviations from the reader's default
 
 ALWAYS the trigger speaks a deviation back toward the app's default like any other GIVEN the reader's own default differs from the app's
@@ -69,6 +73,8 @@ ALWAYS the trigger speaks a deviation back toward the app's default like any oth
 ALWAYS the trigger speaks each departing axis's state, never the direction it departs in
 
 ALWAYS feed.band.filterTrigger reads feed.filterSheet.people.yourPeople.label's words in lowercase among its deviations, then a comma and the chosen sign's word in lowercase, GIVEN feed.filterSheet.people.yourPeople is on and feed.filterSheet.people.sign.for or feed.filterSheet.people.sign.against is chosen
+
+ALWAYS feed.band.filterTrigger reads everyone among its deviations GIVEN the reader's saved default narrows the feed to their own people and feed.filterSheet.people.everyone is on
 
 ALWAYS the filter's "?" says Reset brings back your defaults, to change them go to settings.
 

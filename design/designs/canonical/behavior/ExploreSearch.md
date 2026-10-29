@@ -66,7 +66,7 @@ WHEN the refine has not answered 200ms after the keystroke -> Loading… shows, 
 
 WHEN a refine fails GIVEN rows are on screen -> the rows stay AND Couldn't load more with Retry stands at the head of the results
 
-WHEN a read fails GIVEN nothing is loaded -> Can't reach the server. Check your connection and try again. with Retry stands in the results' place
+WHEN a read fails GIVEN nothing is loaded -> Can't reach the server — results can't load right now. over an outlined Retry stands in the results' place AND NEVER the line says try again
 
 WHEN tap Retry -> the failed read is asked again
 

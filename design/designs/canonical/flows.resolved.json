@@ -2422,7 +2422,7 @@
         "start · KeyElsewhere · 2 «Restore the key» → Restore",
         "Restore · 4 «Restore the key» → KeptPicksReview — key restored, with picks kept pending — the kept picks' review opens, the restore's snackbar riding in over it; they sign together, in one batch the reader looks over first",
         "KeptPicksReview · 3 «Sign them» → KeptPicksSeal — the standard seal, the kept picks its what-you-sign list",
-        "end · KeptPicksSeal · 4 «Sign the opinions» → back — signed, all together — back where the review was opened from, with the snackbar Signed 3 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone"
+        "end · KeptPicksSeal · 4 «Sign the picks» → back — signed, all together — back where the review was opened from, with the snackbar Signed 3 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone"
       ],
       "boards": [
         "KeyElsewhere",
