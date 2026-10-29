@@ -35,14 +35,28 @@ describe("the opinions page as an origin", () => {
       ["ada", "on"],
       ["ada", "by"],
     ] as const) {
-      expect(parseOpinionsOrigin(opinionsOrigin(handle, direction))).toEqual({ handle, direction });
+      expect(parseOpinionsOrigin(opinionsOrigin(handle, direction))).toEqual({ handle, direction, from: null });
     }
     expect(opinionsOrigin(null, "on")).toBe("opinions");
     expect(opinionsOrigin("ada", "by")).toBe("opinions.by:ada");
   });
 
+  // THE STACK IS WHERE A SCREEN WAS OPENED FROM (readme §4, BottomNav;
+  // ProfileStances.md:51, round 26): another's page carries the origin its
+  // profile was opened with, so a row's person keeps the root the page's
+  // stack began in, and every way back returns the screen it left as it was.
+  it("chains the page's own origin through its rows' origin, nested as deep as the stack runs", () => {
+    expect(opinionsOrigin("ada", "on", "saved")).toBe("opinions:ada/saved");
+    expect(parseOpinionsOrigin("opinions:ada/saved")).toEqual({ handle: "ada", direction: "on", from: "saved" });
+    const nested = opinionsOrigin("mira", "by", opinionsOrigin("ada", "on", "search"));
+    expect(nested).toBe("opinions.by:mira/opinions:ada/search");
+    expect(parseOpinionsOrigin(nested)).toEqual({ handle: "mira", direction: "by", from: "opinions:ada/search" });
+    // The reader's own root is the Profile stack's by itself: it carries none.
+    expect(opinionsOrigin(null, "on", "saved")).toBe("opinions");
+  });
+
   it("names no page for any other origin, nor for an empty handle", () => {
-    for (const from of [null, undefined, "", "profile", "u:ada", "opinions:", "opinions.on", "xopinions"]) {
+    for (const from of [null, undefined, "", "profile", "u:ada", "opinions:", "opinions.on", "xopinions", "opinions:/saved", "opinions:ada/"]) {
       expect(parseOpinionsOrigin(from)).toBeNull();
     }
   });

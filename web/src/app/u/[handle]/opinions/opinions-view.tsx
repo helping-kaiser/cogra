@@ -66,7 +66,7 @@ export function rowKey(opinion: HeldOpinionView): string {
  * The tab row (ProfileStances.jsx): the choice is named `Which direction`.
  * Another's page and a deleted account's read `On them` · `By them`; the
  * reader's own speaks in the own figures' second person, `On you` · `By
- * you` (ProfileStances.md:7-9; copy-voice, *The opinions page*).
+ * you` (ProfileStances.md:9-11; copy-voice, *The opinions page*).
  */
 export function directionTabs(own: boolean): readonly Tab<OpinionDirection>[] {
   return own ? OWN_TABS : THEIR_TABS;
@@ -84,7 +84,7 @@ export const DIRECTION_TABS_LABEL = "Which direction";
 /**
  * The empty list's line, per tab and whose page it is: the figure's own noun
  * at zero, in the empty sheet's calm register, never the error colour
- * (ProfileStances.md:31-41; copy-voice, *The opinions page*). Another's
+ * (ProfileStances.md:27-39; copy-voice, *The opinions page*). Another's
  * `On them` keeps the opinions sheet's `No opinions yet — yours would be the
  * first.`; a deleted account, which will give none again, says so in the past.
  */
@@ -184,11 +184,11 @@ export function OpinionsScreen({
     return refresh();
   }, [refresh, phase]);
 
-  // THE PULL-DOWN AT THE TOP REFRESHES (ProfileStances.md:29; readme, the
+  // THE PULL-DOWN AT THE TOP REFRESHES (ProfileStances.md:55; readme, the
   // pull-down on every full-screen scrolling root), through the first read.
   usePullToRefresh({ host, onPull: refresh });
 
-  // A TAB TAP SWAPS THE LIST IN PLACE (ProfileStances.md:13-15) and writes the
+  // A TAB TAP SWAPS THE LIST IN PLACE (ProfileStances.md:23-25) and writes the
   // direction into the address without a new history entry, so a way back to
   // the page lands on the tab it was left on (Next: the native History API
   // integrates with the router — linking-and-navigating.md).
@@ -203,7 +203,7 @@ export function OpinionsScreen({
 
   const deleted = profile?.displayName.status === "REDACTED";
   const whose = own ? "own" : deleted ? "deleted" : "other";
-  // THE WAY BACK NAMES WHOSE PROFILE (ProfileStances.md:23-25): `Back to your
+  // THE WAY BACK NAMES WHOSE PROFILE (ProfileStances.md:45-47): `Back to your
   // profile` from the reader's own, `Back to the profile` from another's —
   // returning it as it was opened, its own `from` and all.
   const back =
@@ -218,7 +218,9 @@ export function OpinionsScreen({
   // its page is titled with what it holds alone.
   const title =
     profile === null ? undefined : deleted ? "Opinions" : `@${profile.handle} · Opinions`;
-  const rowOrigin = opinionsOrigin(handle, direction);
+  // A ROW'S PERSON KEEPS THE PAGE'S ROOT (ProfileStances.md:51): the rows
+  // carry the origin this page was opened with, chained (`opinions-route.ts`).
+  const rowOrigin = opinionsOrigin(handle, direction, from);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col pb-2">

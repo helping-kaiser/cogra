@@ -198,6 +198,15 @@ describe("OpinionsScreen", () => {
     );
   });
 
+  it("carries the page's own origin on its rows, so the person keeps the page's root (:51; round 26)", async () => {
+    server.use(theirProfile(), userOpinions("on", [theBoardsFive()]));
+    renderWithProviders(<OpinionsScreen handle="ada" from="saved" />);
+    expect(await screen.findByTestId(byNode("profileStances.list.row", "tobias"))).toHaveAttribute(
+      "href",
+      "/u/tobias?from=opinions%3Aada%2Fsaved",
+    );
+  });
+
   it("reads Back to the profile from another's, back to it as it was opened (:23, :25)", async () => {
     server.use(theirProfile(), userOpinions("on", [[]]));
     renderWithProviders(<OpinionsScreen handle="ada" from="saved" />);
@@ -328,7 +337,7 @@ describe("OpinionsScreen", () => {
     );
   });
 
-  it("names the reader's own tabs On you and By you (ProfileStances.md:9)", async () => {
+  it("names the reader's own tabs On you and By you (ProfileStances.md:11)", async () => {
     server.use(me("u-me", "me"), myProfile(), userOpinions("on", [[]]));
     renderWithProviders(<OpinionsScreen handle={null} />, { store: signedInStore() });
     await screen.findByTestId(byNode("profileStances.empty.title"));
@@ -343,7 +352,7 @@ describe("OpinionsScreen", () => {
     expect(screen.getByTestId(byNode("profileStances.tabRow.byTab"))).toHaveTextContent("By you");
   });
 
-  it("keeps On them and By them on a deleted account's page, and says its empty lists (:7, :37, :39)", async () => {
+  it("keeps On them and By them on a deleted account's page, and says its empty lists (:9, :37, :39)", async () => {
     server.use(theirProfile("u-gone", "gone", true), userOpinions("on", [[]]), userOpinions("by", [[]]));
     renderWithProviders(<OpinionsScreen handle="gone" />);
     expect(await screen.findByTestId(byNode("profileStances.empty.title"))).toHaveTextContent(
