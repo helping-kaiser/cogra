@@ -92,8 +92,12 @@ export function PickedSheet({
   } | null>(null);
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={`Picked · ${items.length}`} testId={testId} node={node} maxHeight={SHEET_RAISED}>
-      <ul className="m-0 flex list-none flex-col border-t border-outline-variant p-0">
+    // EDGE TO EDGE, EACH PART ITS OWN INSET (PickedSheet.jsx): the list's
+    // hairline spans the sheet over rows carrying the 24px gutter as padding,
+    // and the note box spans the sheet too, its 12 · 24 inset its own padding
+    // (round 27, seam 253: "the 24px is its own PADDING").
+    <BottomSheet open={open} onClose={onClose} title={`Picked · ${items.length}`} testId={testId} node={node} maxHeight={SHEET_RAISED} rows>
+      <ul className="m-0 flex list-none flex-col border-t border-outline-variant px-6 py-0">
         {items.map((item, index) => {
           const lifted = drag !== null && drag.from === index;
           const picture = instance(node, "picture", String(index + 1));
@@ -236,10 +240,10 @@ export function PickedSheet({
       {/* PickedSheet.jsx: the footnote at the body's weight, then the Done row
           on its own 8 · 16 · 8 inset — 16 from the sheet's edge, not the
           column's 24. */}
-      <p className={`m-0 pt-3 ${LABEL_SMALL_PLAIN} text-on-surface-variant`} {...testAttributes(part(node, "note"))}>
+      <p className={`m-0 px-6 pt-3 ${LABEL_SMALL_PLAIN} text-on-surface-variant`} {...testAttributes(part(node, "note"))}>
         The first one is the cover.
       </p>
-      <div className="-mr-2 flex justify-end py-2">
+      <div className="flex justify-end px-4 py-2">
         <PillButton testId={`${testId}-done`} node={part(node, "done")} variant="text" onClick={onClose}>
           Done
         </PillButton>
