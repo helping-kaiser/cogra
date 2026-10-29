@@ -25,6 +25,7 @@ import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedOrder
 import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
+import com.cogra.domain.feed.FeedTopic
 import com.cogra.domain.feed.FeedViewer
 import com.cogra.domain.feed.PeopleMark
 import com.cogra.domain.feed.PeopleScope
