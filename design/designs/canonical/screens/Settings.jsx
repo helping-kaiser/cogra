@@ -106,7 +106,7 @@
    `accountDeletion`'s (`SettingsDeleting`).
 
    THE KEPT PICKS' ROW IS DRAWN PRESENT, to show where it stands (backlog item
-   113, jakob's ruling B3): `3 kept picks waiting`, last in the Key backup
+   113, jakob's ruling B3): `4 kept picks waiting` (`KEPT_PICKS`, counted), last in the Key backup
    group, opening `KeptPicksReview` again. It is there only while picks kept
    with the key elsewhere wait, the key is back, and their review was left
    unsigned — the page's one row that comes and goes. If the key goes again,
@@ -124,5 +124,5 @@ export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"
 export const VALS = `deleteFootnote: this.props.reader === "applicant" ? "Nothing is deleted here. The next screen says what goes and what stays." : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."`;
 
 export function Screen() {
-  return <SettingsBody keptPicks={3} deleteFootnote="{{deleteFootnote}}" />;
+  return <SettingsBody keptPicks={KEPT_PICKS.length} deleteFootnote="{{deleteFootnote}}" />;
 }

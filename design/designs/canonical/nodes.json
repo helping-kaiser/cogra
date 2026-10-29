@@ -7028,7 +7028,8 @@
         "keptPicks.pick": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.consequence": [
           "2"
@@ -7036,37 +7037,44 @@
         "keptPicks.pick.kind": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.mark": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.name": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.pair": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.pair.exact": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.pair.face": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.pick.remove": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicks.sign": []
       }
@@ -7081,22 +7089,26 @@
         "keptPicksSeal.acts.actRow": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicksSeal.acts.actRow.count": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicksSeal.acts.actRow.label": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicksSeal.acts.actRow.value": [
           "1",
           "2",
-          "3"
+          "3",
+          "4"
         ],
         "keptPicksSeal.acts.note": [],
         "keptPicksSeal.acts.total": [],

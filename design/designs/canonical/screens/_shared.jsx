@@ -1529,8 +1529,8 @@ const SEAL_CITATIONS = [
 /* THE KEPT PICKS, written once (backlog item 113, the kept picks' review):
    the review that lists them and the seal that signs them are two boards of
    one batch, and a seal reading back a set the review disagreed with would
-   be the drift this constant exists to stop. Three, because the settings row
-   that reopens the review counts three. The first is `PadPending`'s own pick
+   be the drift this constant exists to stop — and the settings row that
+   reopens the review counts this list, so it cannot drift either. The first is `PadPending`'s own pick
    on @ada's post; a person among them on purpose, since every pad that meets
    the key's absence can keep its pick (`PadKeyAbsent` is the master for all
    of them). Each pair is read the readout's way on both boards — the face,
@@ -1544,12 +1544,24 @@ const SEAL_CITATIONS = [
    of what they had said — so its row carries `consequence`, the person's
    landing words. @juno's post was removed by its author while its pick
    waited, so its row carries `removed`, the target's removal mark, and both
-   boards draw the mark where the name stood. */
+   boards draw the mark where the name stood.
+
+   THE FOURTH IS A TOPIC (seam 248): a feeling about #saltmaps, kept from the
+   tag page's pad while the key was away — the Affinity family, which the
+   batch signs beside the opinions. Its pair is read in the Affinity pad's
+   own axis words, never an opinion's (`AFFINITY_AXES`, handed at render),
+   and the seal's acts row names its family as a feeling — the register the
+   trace's `How you feel about #saltmaps` speaks, never the word Affinity
+   (copy-voice). */
 const KEPT_PICKS = [
   { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 } },
   { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 }, consequence: "This takes you back to zero." },
   { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 }, removed: "Removed by its author" },
+  { kind: "topic", name: "saltmaps", sub: "Topic", pair: { pDirected: 0.6, pInterest: 0.35 } },
 ];
+/* The family word a kept pick's seal row names it by: an opinion on a post
+   or a person, a feeling about a topic. */
+const keptPickFamily = (pick) => (pick.kind === "topic" ? { label: "Feeling", countNoun: "feeling" } : { label: "Opinion", countNoun: "opinion" });
 
 /* A KEPT APPROVAL, NAMED BESIDE THE KEPT PICKS (jakob 2026-10-05, the B
    round's 7, amended: "maybe we should add a link/indicator from the held

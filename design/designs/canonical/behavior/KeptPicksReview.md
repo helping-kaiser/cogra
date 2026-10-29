@@ -4,6 +4,8 @@ ALWAYS a kept pick is signed only from the review's own seal, together with ever
 
 ALWAYS the review lists plain opinions only
 
+ALWAYS a feeling kept on a topic's pad joins the review as a plain pick, its row reading Topic under the topic's name and its pair spoken in the Affinity pad's axis words, How much you like it and How close you want to be
+
 ALWAYS a kept vouch-back or approval never joins the review
 
 ALWAYS a kept pick whose target was removed or redacted keeps its row, wearing the removed-mark face in place of a live preview, and still signs

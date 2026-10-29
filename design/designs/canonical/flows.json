@@ -720,7 +720,7 @@
     {
       "name": "take-a-stance-without-the-key",
       "description": "The stance face, tapped or held where the key is elsewhere, opens the pad carrying the key notice; Keep it pending keeps the pick on this device, and the post's anchor wears it.",
-      "start": { "board": "KeyElsewhere", "via": 9 },
+      "start": { "board": "KeyElsewhere", "via": 9, "to": "PadKeyAbsent" },
       "end": { "board": "PadKeyAbsent", "via": 3 }
     },
     {

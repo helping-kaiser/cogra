@@ -104,7 +104,7 @@ export function Screen() {
         <KeptApprovalLine shown="{{approvalShown}}" node="approval" />
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {KEPT_PICKS.map((pick, index) => (
-            <StagedReference key={pick.name} {...pick} stance onRemove={() => {}} node="pick" nodeKey={String(index + 1)} />
+            <StagedReference key={pick.name} {...pick} stance axisNames={pick.kind === "topic" ? AFFINITY_AXES : undefined} onRemove={() => {}} node="pick" nodeKey={String(index + 1)} />
           ))}
         </div>
         <div style={{ flex: 1 }} />

@@ -224,7 +224,13 @@ export function StanceAlternates({
      where the landing line and the action row were, `PadWriteRule`'s shape,
      its own "?" by the stopper exception, and `Not now` the way out; no
      Retry. The legacy `busy` reads as `"busy"`. Dialog host only: a sheet
-     never signs. */
+     never signs.
+     `"keyAbsent"` (seam 248): the signing key is not on this device, so the
+     alternates carry the pad's notice exactly as `PadKeyAbsent` draws it —
+     `Your key isn't on this browser`, its two lines over `Restore the key`,
+     where the landing line and the action row were — and `Keep it pending,
+     restore later` the one way to keep the pick. No Cancel, no Walk it back
+     and no commit stand; the pick is still made. */
   signing,
   /* What the typed fields hold mid-typing, for a board (`{ pDirected:
      "1.5" }`): a state a click cannot reach. */
@@ -363,10 +369,26 @@ export function StanceAlternates({
         <div ref={slotRef} style={{ display: "flex", flexDirection: "column" }}>
           {children}
           {inputs}
-          {state !== "writeRule" && landing}
+          {state !== "writeRule" && state !== "keyAbsent" && landing}
         </div>
       )}
-      {state === "writeRule" ? (
+      {state === "keyAbsent" ? (
+        /* The key away (`PadKeyAbsent`): the pad's notice where the landing
+           line and the action row were, and the one text button that keeps
+           the pick. A press outside drops it, as on the pad. */
+        <div style={{ marginTop: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+          <NoticePanel title="Your key isn't on this browser" helpLabel="Your key" onHelp={() => {}}>
+            <NoticeLine>Signing needs your key, which isn&apos;t in this browser — the write waits as pending.</NoticeLine>
+            <NoticeLine>Restore the key with your recovery code to finish.</NoticeLine>
+            <button type="button" className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "inverse" }), width: "100%" }}>
+              Restore the key
+            </button>
+          </NoticePanel>
+          <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text" }), width: "100%" }}>
+            Keep it pending, restore later
+          </button>
+        </div>
+      ) : state === "writeRule" ? (
         /* The write rule's no (`PadWriteRule`): the notice where the landing
            line and the action row were, the readouts and the tracks above it
            as they were, and `Not now` — the way out that keeps nothing. */
