@@ -134,7 +134,7 @@ export function ProfileFeedCard({
       )}
       <div
         {...testAttributes(part(node, "actionRow"), `${testId}-affordances`)}
-        className="flex min-w-0 flex-nowrap items-center gap-2"
+        className="flex w-full min-w-0 flex-nowrap items-center justify-between gap-2"
       >
         <StanceControl
           target={{ id: person.id, kind: "profile", label }}

@@ -286,6 +286,8 @@ describe("SavedScreen — a feed of kept things", () => {
     expect(reply).toHaveAccessibleName("Reply to @tobias");
     // Its row spreads across the card, as the post card's does (CommentCard.jsx).
     expect(screen.getByTestId(byNode("saved.commentCard.actionRow", "c1")).className).toContain("justify-between");
+    // So does the person card's (FeedKinds: the opinion leads, the score mid-row, share at the end).
+    expect(screen.getByTestId(byNode("saved.profileCard.actionRow", "u3")).className).toContain("justify-between");
     expect(screen.getByTestId("saved-person-u3-link")).toHaveAttribute("href", "/u/mira?from=saved");
   });
 
