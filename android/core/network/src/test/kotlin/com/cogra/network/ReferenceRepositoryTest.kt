@@ -9,6 +9,7 @@ import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.Outcome
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
+import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.references.REFERENCE_DEFAULT_RELEVANCE
 import com.cogra.domain.references.REFERENCE_DEFAULT_SUPPORT
@@ -84,7 +85,8 @@ class ReferenceRepositoryTest {
             "title":{"__typename":"ModeratedText","value":"On latency","status":"VISIBLE"},
             "content":{"__typename":"ModeratedText","value":"Body","status":"VISIBLE"},
             "author":{"__typename":"User","id":"u1","handle":"ada",
-            "displayName":{"__typename":"ModeratedText","value":"Ada"}}},
+            "displayName":{"__typename":"ModeratedText","value":"Ada"}},
+            "createdAt":"2026-10-25T10:00:00Z","attachmentsStatus":"NORMAL","attachments":[]},
             "targetId":"p1"}]}}""",
         )
         val outcome = repo().referenceCandidates("p1")
@@ -109,7 +111,7 @@ class ReferenceRepositoryTest {
             "content":{"__typename":"ModeratedText","value":"A remark","status":"VISIBLE"},
             "author":{"__typename":"User","id":"u1","handle":"ada",
             "displayName":{"__typename":"ModeratedText","value":"Ada"}},
-            "target":{"__typename":"Post","id":"p1"}},
+            "target":{"__typename":"Post","id":"p1"},"createdAt":"2026-10-25T10:00:00Z"},
             "targetId":"c1"}]}}""",
         )
         val outcome = repo().referenceCandidates("c1")
@@ -128,7 +130,7 @@ class ReferenceRepositoryTest {
             "content":{"__typename":"ModeratedText","value":"A reply","status":"VISIBLE"},
             "author":null,
             "target":{"__typename":"Comment","id":"c1",
-            "target":{"__typename":"Post","id":"p1"}}},
+            "target":{"__typename":"Post","id":"p1"}},"createdAt":"2026-10-25T10:00:00Z"},
             "targetId":"c2"}]}}""",
         )
         val outcome = repo().referenceCandidates("c2")
@@ -147,6 +149,71 @@ class ReferenceRepositoryTest {
         enqueue("""{"data":{"referenceCandidates":[]}}""")
         val outcome = repo().referenceCandidates("ad")
         assertThat((outcome as Outcome.Success).value).isEmpty()
+    }
+
+    private fun postCandidate(attachmentsStatus: String, attachments: String) =
+        """{"data":{"referenceCandidates":[{"__typename":"ReferenceCandidate",
+        "target":{"__typename":"Post","id":"p1",
+        "title":{"__typename":"ModeratedText","value":"Salt maps","status":"VISIBLE"},
+        "content":{"__typename":"ModeratedText","value":null,"status":"VISIBLE"},
+        "author":{"__typename":"User","id":"u1","handle":"sol",
+        "displayName":{"__typename":"ModeratedText","value":"Sol"}},
+        "createdAt":"2026-10-25T10:00:00Z","attachmentsStatus":"$attachmentsStatus",
+        "attachments":$attachments},
+        "targetId":"p1"}]}}"""
+
+    /** ReferencePicker.jsx: the picker row reads the post's age and wears its cover. */
+    @Test
+    fun thePickerReadsAPostsAgeAndItsPictureAsTheCover() = runTest {
+        enqueue(
+            postCandidate(
+                "NORMAL",
+                """[{"__typename":"MediaAttachment","id":"m1","url":"https://media/p.webp",
+                "status":"NORMAL","mimeType":"image/webp","coverMedia":null}]""",
+            ),
+        )
+        val content = (repo().referenceCandidates("salt") as Outcome.Success).value.single().target
+            as ReferenceTargetView.Content
+        assertThat(content.createdAt).isEqualTo(java.time.Instant.parse("2026-10-25T10:00:00Z"))
+        assertThat(content.coverUrl).isEqualTo("https://media/p.webp")
+    }
+
+    @Test
+    fun aClipsStillIsItsCoverAndAVeiledGalleryHasNone() = runTest {
+        enqueue(
+            postCandidate(
+                "NORMAL",
+                """[{"__typename":"MediaAttachment","id":"m1","url":"https://media/c.mp4",
+                "status":"NORMAL","mimeType":"video/mp4",
+                "coverMedia":{"__typename":"MediaAttachment","url":"https://media/c.webp","status":"NORMAL"}}]""",
+            ),
+        )
+        val clip = (repo().referenceCandidates("salt") as Outcome.Success).value.single().target
+            as ReferenceTargetView.Content
+        assertThat(clip.coverUrl).isEqualTo("https://media/c.webp")
+
+        enqueue(
+            postCandidate(
+                "SENSITIVE",
+                """[{"__typename":"MediaAttachment","id":"m1","url":"https://media/p.webp",
+                "status":"NORMAL","mimeType":"image/webp","coverMedia":null}]""",
+            ),
+        )
+        val veiled = (repo().referenceCandidates("salt") as Outcome.Success).value.single().target
+            as ReferenceTargetView.Content
+        assertThat(veiled.coverUrl).isNull()
+    }
+
+    /** ReferencePicker.md: Done re-queries "with the staged kinds"; none narrows nothing. */
+    @Test
+    fun theFiltersKindsRideTheWireAndNoneSendsNone() = runTest {
+        enqueue("""{"data":{"referenceCandidates":[]}}""")
+        repo().referenceCandidates("salt", kinds = setOf(FeedKind.PROFILE, FeedKind.POST))
+        assertThat(server.takeRequest().body.readUtf8()).contains("\"kinds\":[\"POST\",\"USER\"]")
+
+        enqueue("""{"data":{"referenceCandidates":[]}}""")
+        repo().referenceCandidates("salt")
+        assertThat(server.takeRequest().body.readUtf8()).doesNotContain("\"kinds\"")
     }
 
     @Test

@@ -61,6 +61,7 @@ import com.cogra.domain.TaggedContentView
 import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.UserProfile
+import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.MediaProcessor
@@ -68,6 +69,7 @@ import com.cogra.domain.media.MediaReadiness
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.PublishedPlacement
 import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.media.VideoInfo
@@ -944,6 +946,22 @@ open class ThrowingMediaRepository : MediaRepository {
 
     override suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?> =
         throw UnsupportedOperationException()
+
+    /** Every id list the already-published marker asked with, in call order. */
+    val placementAsks = mutableListOf<List<String>>()
+
+    /** What the marker's read answers: none unless a test seeds it. */
+    var placement: Outcome<PublishedPlacement?> = Outcome.Success(null)
+
+    /**
+     * Answered rather than thrown, as [abortUpload] is recorded: the marker
+     * is a hint the details stage asks for whenever an upload lands, and a
+     * test about something else must not crash on it.
+     */
+    override suspend fun ownPublishedPlacement(mediaIds: List<String>): Outcome<PublishedPlacement?> {
+        placementAsks += mediaIds
+        return placement
+    }
 }
 
 /** Media-processor base: the pipeline throws until a test scripts it. */
@@ -990,6 +1008,7 @@ open class ThrowingReferenceRepository : ReferenceRepository {
     override suspend fun referenceCandidates(
         query: String,
         limit: Int?,
+        kinds: Set<FeedKind>,
     ): Outcome<List<ReferenceCandidateView>> = throw UnsupportedOperationException()
     override suspend fun prepareReference(
         artifact: String,

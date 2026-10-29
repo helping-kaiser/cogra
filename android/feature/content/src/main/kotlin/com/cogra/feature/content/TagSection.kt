@@ -48,6 +48,8 @@ data class TagSectionState(
     val loaded: List<TagRow> = emptyList(),
     /** Which chip has its parameter sliders open; null when none. */
     val tuning: String? = null,
+    /** The tag picker, while it is open (`+ Add a tag`); null when it is closed. */
+    val picker: TagPickerState? = null,
 ) {
     /** The batch cap (D18) — the section blocks the 11th chip itself. */
     val capReached: Boolean get() = tags.size >= MAX_TAGS

@@ -43,6 +43,7 @@ class SectionsEditorTest {
         override suspend fun referenceCandidates(
             query: String,
             limit: Int?,
+            kinds: Set<com.cogra.domain.feed.FeedKind>,
         ): Outcome<List<ReferenceCandidateView>> {
             asked += query
             gates[query]?.await()

@@ -203,6 +203,7 @@ class PostDetailViewModelTest {
         override suspend fun referenceCandidates(
             query: String,
             limit: Int?,
+            kinds: Set<com.cogra.domain.feed.FeedKind>,
         ): Outcome<List<ReferenceCandidateView>> = Outcome.Success(candidates)
 
         override suspend fun prepareReference(

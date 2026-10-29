@@ -21,6 +21,8 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.TagParameterSliders
 import com.cogra.core.designsystem.TopicChip
 import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.InlineSize
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.topics.TagNameProblem
 import com.cogra.domain.topics.canonicalTagName
@@ -39,8 +41,10 @@ import com.cogra.domain.topics.tagNameProblem
 internal fun TopicEntry(
     section: TagSectionState,
     testTagPrefix: String,
-    onTagInputChange: (String) -> Unit,
-    onAddTag: () -> Unit,
+    /** The free-text field's typing; unused where [onOpenPicker] gives the section its door. */
+    onTagInputChange: (String) -> Unit = {},
+    /** The free-text field's add; unused where [onOpenPicker] gives the section its door. */
+    onAddTag: () -> Unit = {},
     onRemoveTag: (String) -> Unit,
     onTuneTag: (String) -> Unit,
     onDoneTuningTag: () -> Unit,
@@ -70,6 +74,13 @@ internal fun TopicEntry(
      * [testTagPrefix] tags.
      */
     node: DataNode? = null,
+    /**
+     * `+ Add a tag` opens the tag picker in the composer's place (TagPicker;
+     * web #312/#341): given a door, the section draws it — always, the cap
+     * being the picker's own line — in place of the free-text field. Null
+     * keeps the field, on the surfaces whose boards draw no picker yet.
+     */
+    onOpenPicker: (() -> Unit)? = null,
     /** False where the host's own group wears [node] — its label and lines beside the section (the edit). */
     wearsRoot: Boolean = true,
 ) {
@@ -109,7 +120,14 @@ internal fun TopicEntry(
                 }
             }
         }
-        if (section.capReached) {
+        if (onOpenPicker != null) {
+            InlineAction(
+                text = "+ Add a tag",
+                onClick = onOpenPicker,
+                size = InlineSize.Small,
+                testTag = node?.div("add")?.tag ?: "${testTagPrefix}_tag_add",
+            )
+        } else if (section.capReached) {
             Text(
                 stringResource(R.string.content_topics_cap_reached, MAX_TAGS),
                 style = MaterialTheme.typography.bodySmall,

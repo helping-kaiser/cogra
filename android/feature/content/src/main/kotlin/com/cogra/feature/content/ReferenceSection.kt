@@ -86,6 +86,8 @@ data class ReferenceSectionState(
     val tuning: String? = null,
     /** The finder, while it is open. */
     val finder: ReferenceFinderState? = null,
+    /** The citation picker, while it is open (`+ Cite something`); null when it is closed. */
+    val picker: ReferencePickerState? = null,
 ) {
     /** The per-kind batch cap (D7) — the section blocks the 11th chip itself. */
     val capReached: Boolean get() = references.size >= MAX_REFERENCES

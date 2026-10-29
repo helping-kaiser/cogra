@@ -221,6 +221,7 @@ class PostEditViewModelTest {
                 media,
                 pictures,
                 ScriptedClips(),
+                com.cogra.domain.testing.ScriptedSearchRepository(),
             )
         vm.start(TEST_POST_ID)
         dispatcher.scheduler.advanceUntilIdle()
