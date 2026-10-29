@@ -1,0 +1,6 @@
+# The edge network (deployment.md "Topology"): the proxy, the web server and
+# the API — the members that need a route out (ACME, SMTP, the breach
+# check) or take the proxy's traffic. Nothing on it is published but the
+# proxy's own ports.
+[Network]
+NetworkName=cogra-edge

@@ -54,6 +54,7 @@ over file values.
 | `DOCKER_COMPOSE` | `docker compose -f docker/docker-compose.yml` | Compose command the make targets drive (make-only; the binaries never read it) — override to use another compose-compatible runtime, e.g. `wsl.exe -d claude-podman --cd /mnt/c/Users/<name>/dev/cogra -- podman compose -f docker/docker-compose.yml`. `make init` probes this command rather than a binary name, so the check is right on every runtime |
 | `COMPOSE_PROJECT` | `gnp` | Container-name prefix (compose-only). The default is what the `docker exec` recipes below name; set it, and move the ports, to run a second checkout's stack beside the first |
 | `WAIT_TIMEOUT` | `300` | Seconds `make wait-db` and `make wait-media` allow before failing with a message (make-only) |
+| `CONTAINER` | `podman` | The container CLI `make deploy-images` builds the production images with (make-only) — override like `DOCKER_COMPOSE`, e.g. `wsl.exe -d claude-podman --cd /mnt/c/Users/<name>/dev/cogra -- podman` ([deployment.md "Images"](deployment.md#images)) |
 | `POSTGRES_USER` | `gnp` | Postgres username (used by Docker and Makefile) |
 | `POSTGRES_PASSWORD` | `gnp_secret` | Postgres password |
 | `POSTGRES_DB` | `gnp_db` | Postgres database name |
@@ -61,7 +62,7 @@ over file values.
 | `API_HOST` | `0.0.0.0` | API bind address |
 | `API_PORT` | `8080` | API bind port |
 | `L1_INGEST_INTERVAL_SECS` | `2` | Mirror-ingestion poll interval of the API server |
-| `L1_EPOCH_CLOSE_INTERVAL_SECS` | *(unset)* | Dev epoch clock: the API host closes a stand-in epoch on this interval, so writes land without a manual `l1-dev close`; unset, epochs close only on `l1-dev close` and nothing a client writes lands |
+| `L1_EPOCH_CLOSE_INTERVAL_SECS` | *(unset)* | The stand-in's epoch clock: the API host closes an epoch on this interval, so writes land without a manual `l1-dev close`; unset, an epoch closes only on `l1-dev close` or at the stand-in's 10,000-act budget, so a small instance's writes wait indefinitely. Production on the stand-in sets it too ([deployment.md "Configuration"](deployment.md#configuration)) |
 | `STAGED_WRITE_GC_EPOCHS` | `8` | Epochs before an unlanded staged write is collected ([data-model.md "Staged writes"](data-model.md#staged-writes)) |
 | `L1_STANDIN_SETTLEMENT_DELAY_EPOCHS` | `0` | Epoch closes a stand-in admission burn waits before it settles; `0` settles at the request. Above zero it opens the pending window a real realization's settlement depth has — the applicant's Registration then reads `RELAYING` until the burn settles ([auth.md "Approval and landing"](auth.md#approval-and-landing)) |
 | `SESSION_SIGNING_SEED` | *(unset)* | 32-byte hex seed of the Ed25519 session-signing key ([auth.md](auth.md#tokens)); unset in dev, an ephemeral key is generated and sessions die with the process |
@@ -102,6 +103,10 @@ over file values.
 | `MEDIA_BUCKET` | `cogra-media` | The live bucket, world-readable by design; created by the `media-init` one-shot |
 | `MEDIA_CARRIED_BUCKET` | `cogra-media-carried` | The carried area's bucket — an applicant's media waits here until the landing publishes it; no anonymous policy, no proxy route ([data-model.md "Media areas"](data-model.md#media-areas)) |
 | `MEDIA_HELD_BUCKET` | `cogra-media-held` | The held area's bucket — the operator-only store a deleted asset's bytes leave the live bucket for; no anonymous policy, no proxy route, reached from the host alone |
+| `MEDIA_HELD_S3_ENDPOINT` | `MEDIA_S3_ENDPOINT` | The held store's own service. Unset, the held bucket sits on the live service, as in compose; production runs a separate store on no published port ([deployment.md "The held store"](deployment.md#the-held-store)). Set, it needs both keys below, or the API refuses to start |
+| `MEDIA_HELD_ACCESS_KEY_ID` | `MEDIA_ACCESS_KEY_ID` | The held service's access key |
+| `MEDIA_HELD_SECRET_ACCESS_KEY` | `MEDIA_SECRET_ACCESS_KEY` | The held service's secret key |
+| `MEDIA_HELD_REGION` | `MEDIA_REGION` | The region held-store requests are signed for |
 | `MEDIA_ACCESS_KEY_ID` | `cogra_media` | Media store access key (also the store's root user in compose) |
 | `MEDIA_SECRET_ACCESS_KEY` | `cogra_media_secret` | Media store secret key |
 | `MEDIA_REGION` | `us-east-1` | S3 region the requests are signed for; any value the store accepts |

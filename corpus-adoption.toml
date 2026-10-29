@@ -1353,6 +1353,16 @@ extensions = [".html", ".css", ".xml", ".cddl", ".pro", ".bat", ".lock"]
 names      = ["Makefile", "gradlew", ".gitattributes", ".gitignore", ".editorconfig", ".env.example", "Containerfile", ".containerignore"]
 reason     = "comment-bearing formats with no frontend; ARCH dec:linter:ast-frontends forbids analysing them as raw text. Files stay in the carrier and stay owned, carrying no occurrences"
 
+# ADDED 2026-10-28 with the production deploy tree (deploy/,
+# docs/implementation/deployment.md): Quadlet and systemd units, the
+# proxy's Caddyfile, env-file templates, a journald drop-in, and the two
+# image definitions and the web image's ignore list named by role.
+[[scanned-regions.none]]
+languages  = ["quadlet", "systemd-unit", "caddyfile", "env-template", "journald-conf"]
+extensions = [".container", ".network", ".volume", ".service", ".timer", ".env.example", ".conf", ".containerignore"]
+names      = ["Caddyfile", "Containerfile.api", "Containerfile.web"]
+reason     = "comment-bearing formats with no frontend; ARCH dec:linter:ast-frontends forbids analysing them as raw text. Files stay in the carrier and stay owned, carrying no occurrences"
+
 # ADDED 2026-09-24: formats with no comment form at all.
 [[scanned-regions.none]]
 languages  = ["text", "jpeg", "png", "ico", "truetype", "version-pin"]
