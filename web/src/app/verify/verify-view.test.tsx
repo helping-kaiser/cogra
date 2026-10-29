@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
+import { StrictMode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
@@ -115,6 +116,18 @@ describe("VerifyView", () => {
     expect(screen.queryByTestId("verify_transport_error")).not.toBeInTheDocument();
     // The token may still be good — the retry stays available.
     expect(screen.getByTestId("verify_retry")).toBeInTheDocument();
+  });
+
+  // A dev double-invoke re-runs the effect without a second request; the one
+  // answer must still land (it stood on Verifying… for ever).
+  it("the_one_answer_lands_under_strict_mode", async () => {
+    server.use(verifyInvalid);
+    renderWithProviders(
+      <StrictMode>
+        <VerifyView />
+      </StrictMode>,
+    );
+    expect(await screen.findByTestId("verify.title")).toHaveTextContent("This link doesn't work anymore");
   });
 
   it("treats a missing token as a dead link", () => {

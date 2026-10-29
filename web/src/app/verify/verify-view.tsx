@@ -58,15 +58,26 @@ export function VerifyView() {
   // React's double-invoked dev effects from burning it twice.
   const fired = useRef<string | null>(null);
 
+  // THE ANSWER IS KEPT WHILE THE PAGE STANDS, not per effect run: the one
+  // request a token gets must still land when the effect re-runs without
+  // firing again (React's dev double-invoke, a new `flow`), so liveness is
+  // the page's, never the run's.
+  const live = useRef(true);
+  useEffect(() => {
+    live.current = true;
+    return () => {
+      live.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (token === null) return;
     const attemptKey = `${token}:${attempt}`;
     if (fired.current === attemptKey) return;
     fired.current = attemptKey;
-    let cancelled = false;
     setState("verifying");
     void verifyEmail(client, token).then((outcome) => {
-      if (cancelled) return;
+      if (!live.current || fired.current !== attemptKey) return;
       if (outcome.kind === "success") {
         setState("verified");
         flow.ensureAdvancing();
@@ -78,9 +89,6 @@ export function VerifyView() {
         setState("transportFailed");
       }
     });
-    return () => {
-      cancelled = true;
-    };
   }, [client, token, attempt, flow]);
 
   if (state === "verified") return <Verified />;
