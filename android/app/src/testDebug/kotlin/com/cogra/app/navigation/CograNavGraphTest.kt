@@ -169,9 +169,9 @@ class CograNavGraphTest {
         }
     }
 
-    private fun waitFor(matcher: SemanticsMatcher) {
+    private fun waitFor(matcher: SemanticsMatcher, unmerged: Boolean = false) {
         compose.waitUntil(timeoutMillis = 30_000) {
-            compose.onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodes(matcher, useUnmergedTree = unmerged).fetchSemanticsNodes().isNotEmpty()
         }
     }
 
@@ -1229,7 +1229,8 @@ class CograNavGraphTest {
         // The face's tap opens the kept picks' review, never a pad, never the key notice.
         keepAPick()
         feedWithAPost()
-        waitForTag("feed.card.actionRow.stance.pending")
+        // The card's opener merges its body, so the line is read off the unmerged tree.
+        waitFor(hasTestTag("feed.card.actionRow.stance.pending"), unmerged = true)
 
         stanceTarget().performClick()
         compose.waitForIdle()
