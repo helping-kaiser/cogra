@@ -15,7 +15,6 @@ import com.cogra.domain.CommentForEdit
 import com.cogra.domain.CommentPage
 import com.cogra.domain.CommentView
 import com.cogra.domain.InviteCheck
-import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.LoginGrant
 import com.cogra.domain.MediaFieldUpdate
@@ -48,7 +47,6 @@ import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
 import com.cogra.network.graphql.ApplicationStatusQuery
 import com.cogra.network.graphql.ApproveActsMutation
-import com.cogra.network.graphql.ApproveApplicantsMutation
 import com.cogra.network.graphql.AttachActorKeyMutation
 import com.cogra.network.graphql.AuthorRecordsQuery
 import com.cogra.network.graphql.BorrowedViewQuery
@@ -59,12 +57,10 @@ import com.cogra.network.graphql.CommentParentQuery
 import com.cogra.network.graphql.CommentRepliesQuery
 import com.cogra.network.graphql.ConfirmPasswordResetMutation
 import com.cogra.network.graphql.ContentGraphIdsQuery
-import com.cogra.network.graphql.CreateInviteLinkMutation
 import com.cogra.network.graphql.CreateKeyBackupChallengeMutation
 import com.cogra.network.graphql.DismissVouchBackMutation
 import com.cogra.network.graphql.HostPublicKeyQuery
 import com.cogra.network.graphql.InviteLinkCheckQuery
-import com.cogra.network.graphql.InviteLinksQuery
 import com.cogra.network.graphql.KeyBackupQuery
 import com.cogra.network.graphql.LogInMutation
 import com.cogra.network.graphql.MeQuery
@@ -82,7 +78,6 @@ import com.cogra.network.graphql.PrepareStanceMutation
 import com.cogra.network.graphql.RegisterMutation
 import com.cogra.network.graphql.RequestPasswordResetMutation
 import com.cogra.network.graphql.ResendVerificationEmailMutation
-import com.cogra.network.graphql.RevokeInviteLinkMutation
 import com.cogra.network.graphql.RevokeOtherSessionsMutation
 import com.cogra.network.graphql.RevokeSessionMutation
 import com.cogra.network.graphql.StagedWriteQuery
@@ -91,16 +86,13 @@ import com.cogra.network.graphql.UploadKeyBackupMutation
 import com.cogra.network.graphql.UserByHandleQuery
 import com.cogra.network.graphql.UserGraphIdQuery
 import com.cogra.network.graphql.VerifyEmailMutation
-import com.cogra.network.graphql.type.ApplicationApprovalInput
 import com.cogra.network.graphql.type.ApprovalSignatureInput
 import com.cogra.network.graphql.type.ApproveActsInput
-import com.cogra.network.graphql.type.ApproveApplicantsInput
 import com.cogra.network.graphql.type.AttachActorKeyInput
 import com.cogra.network.graphql.type.AttachmentInput
 import com.cogra.network.graphql.type.ChangeHandleInput
 import com.cogra.network.graphql.type.ChangePasswordInput
 import com.cogra.network.graphql.type.ConfirmPasswordResetInput
-import com.cogra.network.graphql.type.CreateInviteLinkInput
 import com.cogra.network.graphql.type.LogInInput
 import com.cogra.network.graphql.type.PrepareCommentEditInput
 import com.cogra.network.graphql.type.PrepareCommentInput
@@ -113,7 +105,6 @@ import com.cogra.network.graphql.type.ReferenceInput
 import com.cogra.network.graphql.type.RegisterInput
 import com.cogra.network.graphql.type.RequestPasswordResetInput
 import com.cogra.network.graphql.type.ResendVerificationEmailInput
-import com.cogra.network.graphql.type.RevokeInviteLinkInput
 import com.cogra.network.graphql.type.RevokeSessionInput
 import com.cogra.network.graphql.type.SubmitProposalsInput
 import com.cogra.network.graphql.type.TagInput
@@ -122,11 +113,9 @@ import com.cogra.network.graphql.type.VerifyEmailInput
 import com.cogra.network.payload
 import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
-import com.cogra.network.toInfo
 import com.cogra.network.toInput
 import com.cogra.network.toView
 import com.cogra.network.unauthenticatedRefusal
-import java.time.Instant
 import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -425,73 +414,6 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
         ).payloadOutcome({ it.confirmPasswordReset.userErrors.map { e -> e.userErrorFields } }) {
             if (it.confirmPasswordReset.ok == true) Unit else null
         }
-
-    override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = guard.run {
-        client.query(InviteLinksQuery()).fetch().flatMap { data ->
-            val me = data.me ?: return@flatMap unauthenticatedRefusal()
-            val links = me.inviteLinks?.edges?.map { it.node } ?: return@flatMap unauthenticatedRefusal()
-            Outcome.Success(
-                links.map { link ->
-                    InviteLinkInfo(
-                        id = link.id,
-                        singleUse = link.singleUse,
-                        createdAt = link.createdAt,
-                        expiresAt = link.expiresAt,
-                        revokedAt = link.revokedAt,
-                        applications = link.applications.edges.map { edge ->
-                            edge.node.applicationFields.toInfo()
-                        },
-                    )
-                },
-            )
-        }
-    }
-
-    override suspend fun createInviteLink(
-        expiresAt: Instant,
-        singleUse: Boolean,
-    ): Outcome<InviteLinkInfo> = guard.run {
-        client.mutation(
-            CreateInviteLinkMutation(
-                CreateInviteLinkInput(
-                    expiresAt = expiresAt,
-                    singleUse = Optional.present(singleUse),
-                ),
-            ),
-        ).payloadOutcome({ it.createInviteLink.userErrors.map { e -> e.userErrorFields } }) {
-            it.createInviteLink.inviteLink?.let { link ->
-                InviteLinkInfo(
-                    id = link.id,
-                    singleUse = link.singleUse,
-                    createdAt = link.createdAt,
-                    expiresAt = link.expiresAt,
-                    revokedAt = link.revokedAt,
-                    applications = emptyList(),
-                )
-            }
-        }
-    }
-
-    override suspend fun revokeInviteLink(id: String): Outcome<Unit> = guard.run {
-        client.mutation(RevokeInviteLinkMutation(RevokeInviteLinkInput(id)))
-            .payloadOutcome({ it.revokeInviteLink.userErrors.map { e -> e.userErrorFields } }) {
-                it.revokeInviteLink.inviteLink?.let { Unit }
-            }
-    }
-
-    override suspend fun approveApplication(
-        applicationId: String,
-        pDirected: Double,
-        pInterest: Double,
-    ): Outcome<List<PreparedWriteView>> = guard.run {
-        client.mutation(
-            ApproveApplicantsMutation(
-                ApproveApplicantsInput(listOf(ApplicationApprovalInput(applicationId, pDirected, pInterest))),
-            ),
-        ).payloadOutcome({ it.approveApplicants.userErrors.map { e -> e.userErrorFields } }) {
-            it.approveApplicants.writes?.map { w -> w.preparedWriteFields.toDomain() }
-        }
-    }
 }
 
 @Singleton

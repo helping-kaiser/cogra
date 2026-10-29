@@ -78,6 +78,9 @@ import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { Chip } from "@/lib/ui2/chip";
 import { FilterFoot, FilterSection, FilterTrigger, triggerName } from "@/lib/ui2/filter-sheet";
 import { StageHost } from "@/lib/ui2/media/stage-host";
+import { historyOrigin } from "@/lib/reel/origins";
+import { openStream } from "@/lib/reel/stream-session";
+import { streamHref } from "@/lib/reel/stream-origin";
 import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 import { SearchBar } from "@/lib/ui2/search-bar";
 import { SectionLabel } from "@/lib/ui2/section-label";
@@ -372,6 +375,31 @@ export function HistoryScreen({
 
   // The tail is watched on the approaching end of the list as served: the
   // sections keep the served order, so one index counts across them.
+  // A PORTRAIT CLIP'S TAP OPENS THE STREAM OVER HISTORY'S ROWS (Reel.md:3,
+  // RL-G1: "the list it was opened from narrowed … History's rows"), in their
+  // order, and past the page on screen through History's own next pages with
+  // the narrowing this list answered — never a ranking.
+  const openHistoryStream = (startId: string) => {
+    const continued = listAskRef.current ?? { query: "", kinds: [] };
+    openStream({
+      origin: { kind: "history" },
+      rows: entries.map((entry) => entry.node).filter((node): node is HistoryPost => node.__typename === "Post"),
+      startId,
+      more:
+        endCursor === null
+          ? null
+          : historyOrigin({
+              client,
+              guard,
+              after: endCursor,
+              query: continued.query,
+              kinds: nodeKindsOf(continued.kinds),
+              admits: (entry) => entriesOf([entry], hidden).length > 0,
+            }),
+      hasMore: hasNextPage,
+    });
+  };
+
   const renderEntry = (entry: Entry) => (
     <li key={entry.id} data-history-id={entry.id} ref={entries.indexOf(entry) === tailIndex ? tailRef : undefined}>
       <HistoryCard
@@ -387,6 +415,7 @@ export function HistoryScreen({
           setMenuOpen(true);
         }}
         menuOpenFor={menuOpen ? (menuPost?.id ?? null) : null}
+        onOpenStream={openHistoryStream}
       />
     </li>
   );
@@ -663,6 +692,7 @@ function HistoryCard({
   onOpenComments,
   onOpenMenu,
   menuOpenFor,
+  onOpenStream,
 }: {
   entry: Entry;
   notify: ReturnType<typeof useHostSnack>["notify"];
@@ -670,6 +700,8 @@ function HistoryCard({
   onOpenComments: (post: HistoryPost) => void;
   onOpenMenu: (post: HistoryPost) => void;
   menuOpenFor: string | null;
+  /** A portrait clip's tap: the stream over History's rows, opened on this one. */
+  onOpenStream: (startId: string) => void;
 }) {
   const node = entry.node;
   const copied = () => notify(LINK_COPIED);
@@ -684,6 +716,7 @@ function HistoryCard({
           scoreOrigin={HISTORY_ORIGIN}
           href={`/posts/${node.id}?from=${FROM}`}
           shareHref={`/posts/${node.id}`}
+          stream={{ href: streamHref(node.id), onOpen: () => onOpenStream(node.id) }}
           testId={`history-post-${node.id}`}
           authorTestId={`history-author-${node.id}`}
           stanceTestId={`history-stance-${node.id}`}

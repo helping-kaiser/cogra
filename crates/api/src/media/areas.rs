@@ -52,7 +52,8 @@ pub struct MediaAreas {
 }
 
 impl MediaAreas {
-    /// The three buckets of one media service, as configured.
+    /// The three buckets, as configured: live and carried on the media
+    /// service, held on its own service where the deployment runs one.
     pub fn s3(config: &MediaConfig) -> Result<Self, BlobError> {
         let bucket = |name: &str| -> Result<Arc<dyn BlobStore>, BlobError> {
             Ok(Arc::new(blob::s3(&S3Config {
@@ -63,7 +64,7 @@ impl MediaAreas {
         Ok(Self {
             live: bucket(&config.s3.bucket)?,
             carried: bucket(&config.carried_bucket)?,
-            held: bucket(&config.held_bucket)?,
+            held: Arc::new(blob::s3(&config.held)?),
         })
     }
 

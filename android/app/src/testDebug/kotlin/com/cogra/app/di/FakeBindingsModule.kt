@@ -45,6 +45,7 @@ import com.cogra.domain.history.HistoryRepository
 import com.cogra.domain.history.SeenHistorySource
 import com.cogra.domain.history.SeenRecordStore
 import com.cogra.domain.history.ViewHistoryRepository
+import com.cogra.domain.invites.InvitesRepository
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.notifications.NotificationsRepository
@@ -106,6 +107,7 @@ import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.cogra.domain.testing.ScriptedHeldTopicsRepository
 import com.cogra.domain.testing.ScriptedHistoryRepository
+import com.cogra.domain.testing.ScriptedInvitesRepository
 import com.cogra.domain.testing.ScriptedReleaseRegistry
 import com.cogra.domain.testing.ScriptedRemovalRepository
 import com.cogra.domain.testing.ScriptedSearchRepository
@@ -708,6 +710,16 @@ object FakeBindingsModule {
 
     @Provides
     fun savedRepository(fake: RecordingSavedRepository): SavedRepository = fake
+
+    // Invites reads an empty queue and no links unless a test scripts them;
+    // an approval stages its vouch through the sealing write repository.
+    @Provides
+    @Singleton
+    fun scriptedInvitesRepository(writes: WriteRepository): ScriptedInvitesRepository =
+        ScriptedInvitesRepository(writes as? SealingWriteRepository)
+
+    @Provides
+    fun invitesRepository(fake: ScriptedInvitesRepository): InvitesRepository = fake
 
     // History reads empty unless a test scripts a page.
     @Provides

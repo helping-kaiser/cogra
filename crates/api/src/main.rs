@@ -154,7 +154,8 @@ async fn main() -> anyhow::Result<()> {
         endpoint = %media.s3.endpoint,
         bucket = %media.s3.bucket,
         carried_bucket = %media.carried_bucket,
-        held_bucket = %media.held_bucket,
+        held_endpoint = %media.held.endpoint,
+        held_bucket = %media.held.bucket,
         base_url = %media.base_url,
         "media service configured"
     );

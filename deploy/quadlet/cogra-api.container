@@ -1,0 +1,59 @@
+# The API (deployment.md "Topology"): GraphQL, the upload-part route, the
+# background loops, and the migrations it applies at start. One instance —
+# the epoch clock and the reapers assume it (deployment.md "Scaling").
+#
+# The image is whatever `localhost/cogra-api:deployed` points at: a deploy
+# retags a loaded git-hash image and restarts this unit
+# (deploy/scripts/deploy.sh), so this file never changes per release.
+[Unit]
+Description=CoGra API
+OnFailure=cogra-alert@%n.service
+Requires=cogra-postgres.service cogra-media-init.service cogra-media-held-init.service
+After=cogra-postgres.service cogra-media-init.service cogra-media-held-init.service
+
+[Container]
+ContainerName=cogra-api
+Image=localhost/cogra-api:deployed
+Pull=never
+EnvironmentFile=/etc/cogra/buckets.env
+EnvironmentFile=/etc/cogra/api.env
+# DATABASE_URL in api.env names no password; libpq's PGPASSWORD supplies
+# it (sqlx reads the PG* variables under the URL), so the one secret
+# Postgres is created with is the one the API dials with.
+Secret=cogra-postgres-password,type=env,target=PGPASSWORD
+Secret=cogra-media-api-key,type=env,target=MEDIA_ACCESS_KEY_ID
+Secret=cogra-media-api-secret,type=env,target=MEDIA_SECRET_ACCESS_KEY
+Secret=cogra-held-api-key,type=env,target=MEDIA_HELD_ACCESS_KEY_ID
+Secret=cogra-held-api-secret,type=env,target=MEDIA_HELD_SECRET_ACCESS_KEY
+Secret=cogra-session-signing-seed,type=env,target=SESSION_SIGNING_SEED
+Secret=cogra-smtp-url,type=env,target=SMTP_URL
+# Internal for Postgres, the stores and the ranker; edge for the proxy's
+# traffic and the way out (SMTP submission, the HIBP range API).
+Network=cogra-internal.network
+Network=cogra-edge.network
+HealthCmd=/usr/local/bin/http-health 8080 /health
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=3
+# Generous: a deploy that carries migrations applies them before listening.
+HealthStartPeriod=300s
+HealthOnFailure=kill
+# The binary installs no SIGTERM handler, and PID 1 ignores a signal it
+# has no handler for: without an init the stop waits out the timeout and
+# ends in SIGKILL. catatonit forwards the signal to a process that obeys it.
+RunInit=true
+NoNewPrivileges=true
+DropCapability=ALL
+PidsLimit=4096
+# ffmpeg spreads one encode over every core and the memory it needs; the
+# limit is provisional until the first production transcode is measured.
+PodmanArgs=--memory=8g --stop-timeout=30
+
+[Service]
+Restart=always
+RestartSec=5
+TimeoutStartSec=900
+ExecStartPost=/usr/bin/podman wait --condition=healthy cogra-api
+
+[Install]
+WantedBy=multi-user.target

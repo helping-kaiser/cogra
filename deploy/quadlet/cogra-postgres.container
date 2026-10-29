@@ -1,0 +1,45 @@
+# CoGra's one store (deployment.md "Topology"). The engine pin is dev's and
+# CI's (docker/docker-compose.yml, ci.yml); a major upgrade is a dump and
+# restore, never a tag bump in place (deployment.md "Postgres upgrades").
+[Unit]
+Description=CoGra Postgres
+OnFailure=cogra-alert@%n.service
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+ContainerName=cogra-postgres
+Image=docker.io/library/postgres:18-alpine
+# Images arrive by hand at bring-up and deploy, never on a boot.
+Pull=never
+EnvironmentFile=/etc/cogra/postgres.env
+Secret=cogra-postgres-password,type=env,target=POSTGRES_PASSWORD
+# postgres:18 declares /var/lib/postgresql (PGDATA lives in a versioned
+# directory inside it), as docker-compose.yml records.
+Volume=cogra-postgres.volume:/var/lib/postgresql
+Network=cogra-internal.network
+# Over TCP, so the probe sees the final server and not the init script's
+# socket-only one.
+HealthCmd=pg_isready -h 127.0.0.1 -p 5432
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=5
+HealthStartPeriod=60s
+NoNewPrivileges=true
+ShmSize=256m
+PidsLimit=2048
+# A clean shutdown checkpoints; ten seconds (podman's default) can cut it.
+PodmanArgs=--memory=4g --stop-timeout=60
+
+[Service]
+Restart=always
+RestartSec=5
+TimeoutStartSec=300
+TimeoutStopSec=90
+# The unit is started only once the server answers: everything ordered
+# After= it (the API) starts against a ready database. Podman 4.9 has no
+# Notify=healthy; this is the same gate.
+ExecStartPost=/usr/bin/podman wait --condition=healthy cogra-postgres
+
+[Install]
+WantedBy=multi-user.target

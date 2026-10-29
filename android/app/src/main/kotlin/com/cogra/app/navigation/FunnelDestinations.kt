@@ -14,6 +14,7 @@ import com.cogra.app.BuildConfig
 import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
 import com.cogra.feature.auth.RestoreRoute
+import com.cogra.feature.invites.VouchAskRoute
 import com.cogra.feature.onboarding.ApplyRoute
 import com.cogra.feature.onboarding.InviteEntryRoute
 import com.cogra.feature.onboarding.KeyCeremonyRoute
@@ -103,6 +104,57 @@ internal fun NavGraphBuilder.linkLandings(shell: ShellScope) {
             navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}$EMAIL_CHANGE_PATH?token={token}" },
         ),
     ) { entry -> shell.ChangeEmailLinkedDestination(entry) }
+    composable<VouchAsk>(
+        deepLinks = listOf(
+            // The ask link (auth.md "Link URLs": `/vouch/<link-id>`), on the
+            // same host rules as /join; the id is a path segment.
+            navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}$VOUCH_PATH/{askLinkId}" },
+        ),
+    ) { entry -> shell.VouchAskDestination(entry) }
+}
+
+/**
+ * THE ASK LINK'S LANDING (VouchAsk.md). Who opened it decides where it lands:
+ * the asker and any applicant at app-open with their own snackbar, a member
+ * already holding the asker on Invites at that row, everyone else on the
+ * ask. Back and `Not now` return to the state the link opened over, or the
+ * feed's root when it opened the app cold (:41-47).
+ */
+@Composable
+private fun ShellScope.VouchAskDestination(entry: NavBackStackEntry) {
+    val askLinkId = entry.toRoute<VouchAsk>().askLinkId
+    VouchAskRoute(
+        askLinkId = askLinkId,
+        signedIn = signedIn,
+        onBack = { leaveLanding() },
+        onAppOpen = { line ->
+            navController.startOnFeedRoot()
+            announce(line)
+        },
+        // Invites joins the Profile tab, its home (`ProfileHeader`'s Invites).
+        onInvites = { notice ->
+            navController.popBackStack()
+            if (navController.currentBackStackEntry?.destination.tab() == null) navController.startOnFeedRoot()
+            navController.selectTab(TopLevelTab.PROFILE, onReselect = {})
+            navController.navigate(Invites())
+            navController.reportToCurrent(invitesNoticeKey, notice.encode())
+        },
+        onOpenProfile = { handle -> openFromLanding(Profile(handle)) },
+        onRequireAccount = {
+            holdAskLink(askLinkId)
+            requireJoin()
+        },
+        onRestoreKey = { navController.navigate(Restore) },
+    )
+}
+
+/** A landing's way back: over a tab, the state it opened over; cold, the feed's root. */
+private fun ShellScope.leaveLanding() {
+    if (navController.previousBackStackEntry?.destination.tab() != null) {
+        navController.popBackStack()
+    } else {
+        navController.startOnFeedRoot()
+    }
 }
 
 @Composable
