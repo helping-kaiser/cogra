@@ -309,6 +309,9 @@ describe("the feed filter", () => {
       server.use(...rankedFeed([post("p1")], reads()));
       renderFeed();
       await openSheet();
+      // FeedSheet.md:3 and BottomSheet.jsx (round 25): 88% of the screen, whole.
+      expect(sheet().style.height.startsWith("min(88dvh,")).toBe(true);
+      expect(sheet().style.height).not.toContain("32px");
       expect(trigger()).toHaveAttribute("aria-expanded", "true");
       const kinds = ["postsChip", "commentsChip", "profilesChip", "topicsChip"].map((id) => chip(`kinds.${id}`));
       expect(kinds.map((kind) => kind.textContent)).toEqual(["Posts", "Comments", "Profiles", "Tags"]);
@@ -575,7 +578,7 @@ describe("the feed filter", () => {
       const empty = await screen.findByTestId(byNode("feed.nothing"));
       expect(empty).toHaveTextContent(SHOWING_NOTHING);
       // In the list's own column, 8px under the band (FeedNothing.jsx `8px 24px`).
-      expect(empty.parentElement?.className).toBe("px-6 py-2");
+      expect(empty.parentElement?.className).toBe("px-6 pb-2");
       expect(trigger()).toHaveTextContent(/^Nothing$/);
       expect(screen.queryByTestId(byNode("feed.seenSeparator"))).toBeNull();
       expect(screen.queryByTestId(byNode("feed.card"))).toBeNull();
