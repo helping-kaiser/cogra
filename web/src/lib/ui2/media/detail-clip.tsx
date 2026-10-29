@@ -51,6 +51,10 @@
 // autoplay and never otherwise (PostDetailVideoSensitive.md:15/17) — the veil
 // is an eligibility change on the one element, which the veil keeps mounted.
 
+import { ViewTransition } from "react";
+
+import { reelClipName } from "@/lib/reel/squish";
+
 import { MediaTile } from "./media-tile";
 import { useVeiled } from "./body-veil";
 import { StageHost } from "./stage-host";
@@ -65,6 +69,7 @@ export function DetailClip({
   mediaId,
   behindViewer = false,
   onOpenViewer,
+  onReturnToStream,
   testId = "detail-clip",
 }: {
   src: string;
@@ -84,17 +89,19 @@ export function DetailClip({
   sourceRatio?: number | null;
   durationMs?: number | null;
   /**
-   * Where the clip's own tap goes (`DetailClip.jsx:28-29` — "the tap on it is
-   * the surface's to wire: back into the stream where the reader came from it,
-   * and into the fullscreen viewer everywhere else").
-   *
-   * THE STREAM HALF IS THE REEL PACKET'S (feed-card-rework BX-2). `Reel` is not
-   * built, so PostDetailVideo.md:33 ("GIVEN the reader came from the stream …
-   * the clip expands back into the stream") has no origin to come from yet;
-   * every reader comes from "anywhere else" (:35), so the viewer half is the
-   * whole of the wiring today, and the stream half lands with the stream.
+   * The way into the fullscreen viewer: the transport's toggle, and the clip's
+   * own tap where the reader came from anywhere but the stream
+   * (`DetailClip.jsx:28-29`; PostDetailVideo.md:35, :37).
    */
   onOpenViewer?: () => void;
+  /**
+   * THE STREAM HALF of the clip's tap (feed-card-rework BX-2, the reel
+   * packet's BD-R2): "WHEN tap the clip GIVEN the reader came from the stream
+   * … -> the clip expands back into the stream AND the reader's place there is
+   * held" (PostDetailVideo.md:33). Given, the clip's tap takes it; the toggle
+   * still opens the viewer.
+   */
+  onReturnToStream?: () => void;
   testId?: string;
 }) {
   // Read off the nearest `BodyVeil`, if the caller put one around this clip
@@ -113,6 +120,11 @@ export function DetailClip({
       style={{ background: "#000" }}
     >
       <StageHost detail>
+        {/* THE SQUISH LANDS HERE (Reel.md:59; `squish.ts`): the stream's clip and
+            this one share a name, so the score door morphs the one into the
+            other, and the clip's tap from the stream morphs it back. */}
+        <ViewTransition name={reelClipName(mediaId ?? src)} share="cg-squish" default="none">
+        <div>
         <MediaTile
           src={src}
           mimeType={mimeType}
@@ -137,8 +149,11 @@ export function DetailClip({
           // around it to round against (`DetailClip.jsx:43` — `radius="0px"`).
           radius="0px"
           onOpen={onOpenViewer}
+          onClipTap={veiled ? undefined : onReturnToStream}
           testId={`${testId}-media`}
         />
+        </div>
+        </ViewTransition>
       </StageHost>
     </div>
   );

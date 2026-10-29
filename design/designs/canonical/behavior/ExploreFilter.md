@@ -38,4 +38,4 @@ WHEN swipe the sheet down, press system Back or press Escape -> the sheet closes
 
 ALWAYS a result counts as seen only once it is opened, never by standing in the viewport, and the opened thing then counts by History's own rules and never becomes a graph record
 
-ALWAYS the search filter carries no Show what you've already seen GIVEN the reader is a guest
+ALWAYS the search filter carries no explore.filterSheet.order, so no Ranked, no Newest and no Show what you've already seen, and holds explore.filterSheet.kinds and explore.filterSheet.foot alone GIVEN the reader is a guest

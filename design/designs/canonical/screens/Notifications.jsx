@@ -33,13 +33,35 @@
    REGISTERED under the `notifications` prefix (round 7): the list is `list`,
    each row a `notification` keyed by its place in the list, newest first —
    two rows can share an actor, so the place is the row's one stable key, as
-   the chronicle's acts are keyed. A row's quiet mark is `ContentRow`'s `dot`. */
+   the chronicle's acts are keyed. A row's quiet mark is `ContentRow`'s `dot`.
+
+   THE `load` CHIP DRAWS THE READ'S OTHER MOMENTS (seam 248), the house
+   pattern Saved keeps. `loading` is the first read in flight with nothing
+   to show: `LoadingState`'s `Loading…` in the list's place, no skeleton and
+   no spinner. `failed` is that read with no answer: the noun form of the
+   house line, `Can't reach the server — notifications can't load right
+   now.`, over an outlined `Retry` (`ProfileUnreachable`'s grammar). `more`
+   is the next page that did not come while rows stand: the list scrolled to
+   its foot, and `Couldn't load more — Retry` ending it at the list's own
+   rung, never `--error` (`ProfileMoreFailed`'s row). */
 export const NODE = "notifications";
+export const PROPS = { load: { editor: "enum", options: ["loaded", "loading", "failed", "more"], default: "loaded" } };
+export const VALS = `headShown: this.props.load === "loaded" ? "flex" : "none", footShown: this.props.load === "loaded" || this.props.load === "more" ? "flex" : "none", loadingShown: this.props.load === "loading" ? "block" : "none", failedShown: this.props.load === "failed" ? "block" : "none", moreShown: this.props.load === "more" ? "block" : "none"`;
+const NOTIFICATIONS_ROWS = { display: "flex", flexDirection: "column", gap: 8 };
+const NOTIFICATIONS_TAIL = {
+  margin: 0,
+  padding: "8px 4px 16px",
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  color: "var(--text-secondary)",
+};
 export function Screen() {
   return (
     <>
       <PageHeader title="Notifications" backHref="#" backLabel="Back to feed" node="header" />
       <ChronicleList node="list">
+        <div style={{ ...NOTIFICATIONS_ROWS, display: "{{headShown}}" }}>
         <ContentRow
           variant="chronicle"
           chevron={false}
@@ -113,6 +135,8 @@ export function Screen() {
           node="notification"
           nodeKey="5"
         />
+        </div>
+        <div style={{ ...NOTIFICATIONS_ROWS, display: "{{footShown}}" }}>
         <ContentRow
           variant="chronicle"
           chevron={false}
@@ -190,6 +214,25 @@ export function Screen() {
           node="notification"
           nodeKey="10"
         />
+        </div>
+        <div style={{ display: "{{moreShown}}" }} data-node-chip="load" data-node-key="more">
+          <p style={NOTIFICATIONS_TAIL} data-node="moreFault">
+            Couldn&apos;t load more <span aria-hidden="true">—</span> <InlineAction size="sm" node="retry">Retry</InlineAction>
+          </p>
+        </div>
+        <div style={{ display: "{{loadingShown}}" }} data-node-chip="load" data-node-key="loading">
+          <div data-node="loading">
+            <LoadingState />
+          </div>
+        </div>
+        <div style={{ display: "{{failedShown}}" }} data-node-chip="load" data-node-key="failed">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)", padding: "8px 8px" }} data-node="fault">
+            <TransportError message="Can't reach the server — notifications can't load right now." />
+            <Button variant="outline" size="sm" selfStart node="retry">
+              Retry
+            </Button>
+          </div>
+        </div>
       </ChronicleList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>

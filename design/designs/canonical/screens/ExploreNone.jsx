@@ -9,7 +9,7 @@ export function Screen() {
   return (
     <>
       <div style={{ flex: "none", paddingTop: 12 }}>
-        <SearchBar query="brackish cartography" node="searchField" />
+        <SearchBar query="brackish cartography" onClear={() => {}} node="searchField" />
         <SearchTriggerRow reading="Everything" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>

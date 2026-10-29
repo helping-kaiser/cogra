@@ -41,9 +41,26 @@ export const NODE = "invites";
 export const PROPS = {
   kept: { editor: "enum", options: ["none", "waiting"], default: "none" },
   revoke: { editor: "enum", options: ["rest", "waiting"], default: "rest" },
+  sections: { editor: "enum", options: ["both", "no-applications", "no-links"], default: "both" },
+  asker: { editor: "enum", options: ["named", "deleted"], default: "named" },
+  copy: { editor: "enum", options: ["rest", "failed"], default: "rest" },
 };
-export const VALS = `keptShown: this.props.kept === "waiting" ? "block" : "none", revokeRestShown: this.props.revoke === "waiting" ? "none" : "block", revokeBusyShown: this.props.revoke === "waiting" ? "block" : "none"`;
+export const VALS = `keptShown: this.props.kept === "waiting" ? "block" : "none", revokeRestShown: this.props.revoke === "waiting" ? "none" : "block", revokeBusyShown: this.props.revoke === "waiting" ? "block" : "none", applicationsShown: this.props.sections === "no-applications" ? "none" : "flex", applicationsEmptyShown: this.props.sections === "no-applications" ? "block" : "none", linksShown: this.props.sections === "no-links" ? "none" : "flex", linksEmptyShown: this.props.sections === "no-links" ? "block" : "none", askerNamedShown: this.props.asker === "deleted" ? "none" : "flex", askerDeletedShown: this.props.asker === "deleted" ? "flex" : "none", copyFailedShown: this.props.copy === "failed" ? "block" : "none"`;
 
 export function Screen() {
-  return <InvitesBody kept="{{keptShown}}" revoke={{ rest: "{{revokeRestShown}}", busy: "{{revokeBusyShown}}" }} />;
+  return (
+    <InvitesBody
+      kept="{{keptShown}}"
+      revoke={{ rest: "{{revokeRestShown}}", busy: "{{revokeBusyShown}}" }}
+      shown={{
+        applications: "{{applicationsShown}}",
+        applicationsEmpty: "{{applicationsEmptyShown}}",
+        links: "{{linksShown}}",
+        linksEmpty: "{{linksEmptyShown}}",
+        askerNamed: "{{askerNamedShown}}",
+        askerDeleted: "{{askerDeletedShown}}",
+        copyFailed: "{{copyFailedShown}}",
+      }}
+    />
+  );
 }

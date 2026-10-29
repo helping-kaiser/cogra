@@ -91,6 +91,8 @@ export type MediaTileProps = {
    */
   node?: DataNode;
   onOpen?: () => void;
+  /** A clip's own tap, where it is not the viewer (`VideoPlayer`'s `onClipTap`). */
+  onClipTap?: () => void;
 };
 
 export function MediaTile({
@@ -117,6 +119,7 @@ export function MediaTile({
   testId,
   node,
   onOpen,
+  onClipTap,
 }: MediaTileProps) {
   const probedRatio =
     typeof sourceRatio === "number" && Number.isFinite(sourceRatio) && sourceRatio > 0;
@@ -187,6 +190,7 @@ export function MediaTile({
         // fullscreen toggle and the clip's own tap — never a wrapper that eats
         // every press aimed at play or seek.
         onOpenViewer={onOpen}
+        onClipTap={onClipTap}
         testId={testId}
         soundNode={part(node, "soundDisc")}
         playNode={part(node, "playDisc")}

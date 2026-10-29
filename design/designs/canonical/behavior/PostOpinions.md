@@ -13,3 +13,5 @@ ALWAYS postDetail.opinionsSheet.opinion carries the person, postDetail.opinionsS
 ALWAYS postDetail.opinionsSheet.opinion.value.face is 🤔, spoken as the state, never a table face, GIVEN the row's opinion has exactly one number at zero
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND the post stands open beneath it as it was
+
+ALWAYS postDetail.opinionsSheet.empty alone reads No opinions yet — yours would be the first. GIVEN the sheet's read finds no opinion, as when the count it was opened from has gone stale

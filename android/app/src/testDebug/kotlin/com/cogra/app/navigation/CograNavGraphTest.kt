@@ -19,6 +19,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -48,6 +49,7 @@ import com.cogra.domain.identity.SecurityNotices
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.ScriptedInvitesRepository
 import com.cogra.feature.profile.FEED_ORIGIN
 import java.time.Instant
 import com.google.common.truth.Truth.assertThat
@@ -91,6 +93,8 @@ class CograNavGraphTest {
     @Inject lateinit var notices: SecurityNotices
 
     @Inject lateinit var storageHealth: FakeStorageHealth
+
+    @Inject lateinit var invites: ScriptedInvitesRepository
 
     /** The key the fake write repository seals against. */
     @Inject lateinit var actor: ActorKey
@@ -1016,7 +1020,7 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun anApplicantLandsInTheShellWithTheWaitingHint() {
+    fun anApplicantLandsInTheShellWithTheWaitingCard() {
         // Registration returned an ordinary session: the applicant is
         // simply signed in, and the feed tab is the root — never a
         // wall; the application rides along as shell banners.
@@ -1024,9 +1028,10 @@ class CograNavGraphTest {
         identity.seed = ActorKey.generate().seed()
         account.profile = applicant()
         onboarding.status = applicantStatus(keyAttached = true)
+        invites.myApplication = com.cogra.domain.Outcome.Success(waitingOnMira())
         render()
 
-        waitForTag("home_waiting")
+        waitForTag("feed.application")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
         // Only acting is gated: the bar stays, the shell stays open.
         assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
@@ -1267,5 +1272,173 @@ class CograNavGraphTest {
         assertThat(
             compose.onAllNodesWithText("Stance", useUnmergedTree = true).fetchSemanticsNodes(),
         ).isEmpty()
+    }
+
+    // ── The ask link's landing (VouchAsk.md) and Invites' doors (Invites.md:95-97) ──
+
+    private val askLinkId = "5d9e7a41-b062-4c38-8e5f-1a4703cbd926"
+
+    private fun waitingOnMira() = com.cogra.domain.invites.MyApplication(
+        askLink = askLinkId,
+        application = com.cogra.domain.invites.ApplicantApplication(
+            id = "application-1",
+            approvedAt = null,
+            rejectedAt = null,
+            landedAt = null,
+            approver = com.cogra.domain.ActorRef("actor-mira", "mira"),
+        ),
+    )
+
+    private fun askFrom(
+        handle: String,
+        reason: com.cogra.domain.invites.AskLinkUnusableReason? = null,
+    ) = com.cogra.domain.invites.AskLinkCheck(usable = reason == null, applicantHandle = handle, reason = reason)
+
+    private fun waitForText(text: String) {
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodesWithText(text, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    /** VouchAsk.md:11 — a member meets the ask, a root-level landing no tab owns. */
+    @Test
+    fun `an_ask_link_lands_a_member_on_the_ask`() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        invites.askLinks[askLinkId] = askFrom("noor")
+        render()
+        waitFor(barSlot("profile"))
+
+        assertThat(navController.handleDeepLink(joinIntent("/vouch/$askLinkId"))).isTrue()
+        waitForTag("vouchAsk.ask.title")
+        compose.onNodeWithTag("vouchAsk.ask.title").assertTextEquals("@noor is asking to be vouched in")
+        val landing = navController.currentBackStackEntry?.destination
+        assertThat(landing?.hasRoute<VouchAsk>()).isTrue()
+        assertThat(landing.tab()).isNull()
+        // Nothing is staged by the opening.
+        assertThat(invites.staged).isEmpty()
+    }
+
+    /** VouchAsk.md:17 — a member already holding the asker meets Invites, at that row. */
+    @Test
+    fun `an_ask_already_in_my_queue_opens_invites_with_its_line`() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        invites.askLinks[askLinkId] =
+            askFrom("noor", com.cogra.domain.invites.AskLinkUnusableReason.WAITING_ON_VIEWER)
+        invites.queue += com.cogra.domain.invites.ApplicationInfo(
+            id = "application-noor",
+            handle = "noor",
+            emailVerified = true,
+            keyAttached = true,
+            createdAt = Instant.EPOCH,
+        )
+        render()
+        waitFor(barSlot("profile"))
+
+        navController.handleDeepLink(joinIntent("/vouch/$askLinkId"))
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Invites>() == true
+        }
+        waitForText("@noor is already waiting in your invites.")
+        waitForTag("invites.application:noor")
+    }
+
+    /** VouchAsk.md:13 — an applicant lands where app-open lands for them, with their line. */
+    @Test
+    fun `an_applicant_opening_an_ask_link_lands_on_the_feed_with_its_line`() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = applicant()
+        onboarding.status = applicantStatus(keyAttached = true)
+        invites.askLinks[askLinkId] = askFrom("noor")
+        render()
+        waitFor(barSlot("profile"))
+
+        navController.handleDeepLink(joinIntent("/vouch/$askLinkId"))
+        waitForText("You can vouch once you're in.")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
+    /** VouchAsk.md:15 — the asker's own link lands at app-open with its line. */
+    @Test
+    fun `the_askers_own_link_lands_on_the_feed_with_its_line`() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = applicant()
+        onboarding.status = applicantStatus(keyAttached = true)
+        invites.myApplication = com.cogra.domain.Outcome.Success(waitingOnMira())
+        invites.askLinks[askLinkId] = askFrom("joiner")
+        render()
+        waitFor(barSlot("profile"))
+
+        navController.handleDeepLink(joinIntent("/vouch/$askLinkId"))
+        waitForText("That's your own ask link — send it to someone who's already in.")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
+    /** VouchAskInvalid.md:3 — an id resolving to nobody, signed out as well. */
+    @Test
+    fun `an_ask_link_naming_nobody_is_the_invalid_page`() {
+        render()
+        waitForTag("login_email")
+        navController.handleDeepLink(joinIntent("/vouch/$askLinkId"))
+        waitForTag("vouchAsk.title")
+        compose.onNodeWithTag("vouchAsk.title").assertTextEquals("This ask link doesn't work")
+    }
+
+    /** VouchAsk.md:21-23 — a guest meets the gate, and a sign-in from it brings the ask back. */
+    @Test
+    fun `a_guest_signing_in_from_the_ask_comes_back_to_it`() {
+        invites.askLinks[askLinkId] = askFrom("noor")
+        render()
+        waitForTag("login_email")
+        navController.handleDeepLink(joinIntent("/vouch/$askLinkId"))
+        waitForTag("vouchAsk.ask.stance.anchor")
+        compose.onNodeWithTag("vouchAsk.ask.stance.anchor").performClick()
+        waitForTag("join_prompt")
+        // Nothing is staged or signed by a guest's tap.
+        assertThat(invites.staged).isEmpty()
+        compose.onNodeWithTag("join_prompt_signin").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Login>() == true
+        }
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        signIn()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<VouchAsk>() == true
+        }
+        waitForTag("vouchAsk.ask.title")
+    }
+
+    /** Invites.md:97 — the back arrow names the door Invites came through. */
+    @Test
+    fun `invites_opened_from_notifications_names_its_door`() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        render()
+        waitFor(barSlot("profile"))
+        compose.runOnUiThread { navController.navigate(Invites(from = "notifications")) }
+        waitForTag("invites.header")
+        compose.onNodeWithContentDescription("Back to Notifications").assertExists()
+    }
+
+    /** ProfileApplicant.md:18 — Invites never stands for a reader who is not a member. */
+    @Test
+    fun `invites_never_stands_for_an_applicant`() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = applicant()
+        onboarding.status = applicantStatus(keyAttached = true)
+        render()
+        waitFor(barSlot("profile"))
+        compose.runOnUiThread { navController.navigate(Invites()) }
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Invites>() == false
+        }
     }
 }

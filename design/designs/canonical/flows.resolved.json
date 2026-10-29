@@ -217,6 +217,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -242,7 +243,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 34 boards → ReplyEntry",
+        "start · «comment count» on 35 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -263,6 +264,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -551,6 +553,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -569,7 +572,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 26 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 27 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -584,6 +587,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -1213,13 +1217,14 @@
         "ComposeDetailsWords",
         "EditCompose",
         "EditComposeUnchanged",
+        "EditComposeVideo",
         "ReplyCited",
         "ReplyCitedMany",
         "ReplySeal",
         "ReplySealComment"
       ],
       "steps": [
-        "start · «+ Cite something» on 14 boards → ReferencePicker",
+        "start · «+ Cite something» on 15 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → self — the pick stages in the composer's references — the row leaves the results for the staged section above them, wearing its ×, and the picker stays open for the next"
       ],
       "boards": [
@@ -1234,6 +1239,7 @@
         "ComposeDetailsWords",
         "EditCompose",
         "EditComposeUnchanged",
+        "EditComposeVideo",
         "ReplyCited",
         "ReplyCitedMany",
         "ReplySeal",
@@ -1540,6 +1546,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -1565,7 +1572,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 40 boards → ProfileOther",
+        "start · «author chip» on 41 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1587,6 +1594,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -1854,12 +1862,13 @@
         "CommentMenu",
         "CommentMenuOwn",
         "FeedPostMenu",
+        "FeedPostMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
         "RemoveMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 6 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 7 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1871,6 +1880,7 @@
         "CommentMenu",
         "CommentMenuOwn",
         "FeedPostMenu",
+        "FeedPostMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
         "RemoveMenu"
@@ -1932,6 +1942,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -1956,7 +1967,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» — to FeedEntry on 39 boards → FeedEntry",
+        "start · «Feed score» — to FeedEntry on 40 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1984,6 +1995,7 @@
         "FeedHidden",
         "FeedKinds",
         "FeedNarrowed",
+        "FeedRemoved",
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
@@ -5059,6 +5071,7 @@
     },
     "EditComposeVideo": {
       "flows": [
+        "cite-something",
         "edit-a-video-post"
       ],
       "endpoint": [
@@ -5419,6 +5432,21 @@
         "cite-a-post",
         "hide-someone-from-the-feed",
         "read-a-posts-license"
+      ],
+      "endpoint": []
+    },
+    "FeedPostMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "FeedRemoved": {
+      "flows": [
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author"
       ],
       "endpoint": []
     },

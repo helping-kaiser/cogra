@@ -38,9 +38,23 @@
     <string name="home_verify_resend">Resend the email</string>
     <string name="home_verify_resent">If an application holds that address, a fresh token is on its way.</string>
     <string name="home_verify_email">Email</string>
-    <string name="home_waiting_title">Waiting for your inviter\'s approval</string>
-    <string name="home_waiting_body">You can look around meanwhile — acting unlocks when you land. Close the app any time; we\'ll pick up right here.</string>
-    <string name="home_waiting_dismiss">Got it</string>
+    <!-- The applicant's own application card (ApplicantWaiting, ApplicantRejected,
+         ProfileApplicant; copy-voice *The reject extension's lines*). It names
+         the member whose approval is in play, never the role inviter. -->
+    <string name="application_waiting_feed_title">All set — waiting on %1$s</string>
+    <string name="application_waiting_feed_body">Their approval brings you in. Nothing else is needed from you.</string>
+    <string name="application_waiting_feed_caption">It does not expire.</string>
+    <string name="application_waiting_profile_title">Waiting on %1$s</string>
+    <string name="application_waiting_profile_body">Their approval brings you in. Until then, you can read everything.</string>
+    <string name="application_waiting_profile_caption">It does not expire. Anyone who holds your ask can let you in — the first vouch lands it.</string>
+    <string name="application_your_ask_link">Your ask link</string>
+    <string name="application_copy_ask_link">Copy your ask link</string>
+    <string name="application_got_it">Got it</string>
+    <string name="application_closed_title">%1$s closed your application</string>
+    <string name="application_closed_body">That was %1$s\'s call, and it is the only thing it decides. Your account stays exactly as it is, you can keep reading, and any member you know can vouch you in instead.</string>
+    <string name="application_ask_someone">Ask someone you know to vouch for you</string>
+    <string name="application_ask_someone_caption">Send it to anyone who is already in. It does not expire, and it works however many people you send it to.</string>
+    <string name="application_link_copied">Link copied</string>
     <string name="home_approved">Approved! Your Registration is signed and on its way onto the graph.</string>
     <string name="home_welcome">Welcome to CoGra.</string>
     <string name="home_application_rejected">Something didn\'t verify on this phone, so nothing was signed. Try again from a fresh approval.</string>

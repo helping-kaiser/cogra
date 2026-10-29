@@ -2,7 +2,9 @@
 
 ALWAYS the kept picks' seal is the standard seal: What you sign and Last step in the header, the header's ?, the acts card, and Sign the opinions over Back
 
-ALWAYS the acts card reads one Opinion row per pick still in the review, each with what it is on and its pair, and a count of 1
+ALWAYS the acts card reads one row per pick still in the review, each with what it is on and its pair, and a count of 1
+
+ALWAYS a pick on a post or a person reads Opinion, and a pick on a topic reads Feeling, its name the topic's with its # and its pair spoken in the Affinity pad's axis words, How much you like it and How close you want to be
 
 ALWAYS the acts card's total reads the number of picks as things, signed together, and its subline reads They land together, or none does. GIVEN the seal signs more than one pick
 

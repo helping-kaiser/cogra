@@ -10,7 +10,7 @@ WHEN the removal has not answered 200ms after the press -> postDetail.dialog.rem
 
 WHEN the removal is taken -> the post stands as its mark, Removed by its author AND NEVER the post leaves without a mark
 
-WHEN the removal does not go through -> postDetail.dialog stays up with its pair AND the line That didn't send. Try again. stands in it AND postDetail.dialog.remove reads Retry AND the post is not removed
+WHEN the removal does not go through -> postDetail.dialog stays up with its pair AND postDetail.dialog.line reads That didn't send. Try again. AND postDetail.dialog.remove reads Retry AND the post is not removed
 
 WHEN press postDetail.dialog.keep -> postDetail.dialog closes AND nothing is removed
 

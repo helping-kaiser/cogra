@@ -10,12 +10,15 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
 import com.cogra.domain.UserProfile
 import com.cogra.domain.identity.KeyCeremony
+import com.cogra.domain.invites.ApplicantApplication
+import com.cogra.domain.invites.MyApplication
 import com.cogra.domain.signing.RegistrationFlow
 import com.cogra.domain.signing.RegistrationProgress
 import com.cogra.domain.signing.RegistrationSigner
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.ScriptedInvitesRepository
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
@@ -91,6 +94,7 @@ class HomeViewModelTest {
     private val account = ScriptedAccount()
     private val writes = SealingWriteRepository(actor)
     private val onboarding = ScriptedOnboarding()
+    private val invites = ScriptedInvitesRepository()
 
     @Before
     fun setUp() {
@@ -137,7 +141,15 @@ class HomeViewModelTest {
     )
 
     private fun viewModel(registration: RegistrationFlow = registrationFlow()) =
-        HomeViewModel(account, WriteSigner(writes, identity), identity, onboarding, registration)
+        HomeViewModel(
+            account,
+            WriteSigner(writes, identity),
+            identity,
+            onboarding,
+            registration,
+            invites,
+            "https://cogra.example",
+        )
 
     private fun applicationView(
         verified: Boolean = true,
@@ -448,19 +460,51 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun theWaitingHintDismissalIsInMemoryOnly() = homeTest {
+    fun anApplicantReadsTheApplicationTheirCardNames() = homeTest {
+        // ApplicantWaiting.md:5 — the card names the member whose approval is
+        // in play, read from `User.application` with the ask link it holds.
         account.profile = applicant()
         onboarding.status = applicantStatus()
+        invites.myApplication = Outcome.Success(waitingOn("mira"))
         val vm = viewModel()
         dispatcher.scheduler.runCurrent()
-        assertThat(vm.state.value.progress)
-            .isInstanceOf(RegistrationProgress.AwaitingApproval::class.java)
-
-        vm.onDismissWaitingHint()
-        assertThat(vm.state.value.waitingHintDismissed).isTrue()
-        // Nothing was persisted — the hint returns with the next app run.
-        assertThat(account.dismissals).isEqualTo(0)
+        assertThat(vm.state.value.application?.application?.approver?.handle).isEqualTo("mira")
+        assertThat(vm.askUrl("ask-1")).isEqualTo("https://cogra.example/vouch/ask-1")
     }
+
+    @Test
+    fun theWaitingCardStaysAwayOnThisDevice() = homeTest {
+        // ApplicantWaiting.md:15 — `Got it` puts it away, and it stays away:
+        // a fresh holder on this device reads the put-away back.
+        account.profile = applicant()
+        onboarding.status = applicantStatus()
+        invites.myApplication = Outcome.Success(waitingOn("mira"))
+        val vm = viewModel()
+        dispatcher.scheduler.runCurrent()
+        assertThat(vm.state.value.cardPutAway).isFalse()
+
+        vm.onPutCardAway()
+        dispatcher.scheduler.runCurrent()
+        assertThat(vm.state.value.cardPutAway).isTrue()
+        assertThat(identity.applicationCardPutAway).isTrue()
+        // Account state, not this device's: nothing went to the server.
+        assertThat(account.dismissals).isEqualTo(0)
+
+        val again = viewModel()
+        dispatcher.scheduler.runCurrent()
+        assertThat(again.state.value.cardPutAway).isTrue()
+    }
+
+    private fun waitingOn(approver: String) = MyApplication(
+        askLink = "ask-1",
+        application = ApplicantApplication(
+            id = "application-1",
+            approvedAt = null,
+            rejectedAt = null,
+            landedAt = null,
+            approver = ActorRef("actor-", approver),
+        ),
+    )
 
     @Test
     fun theApprovalTransitionFiresItsOneShotOnce() = homeTest {

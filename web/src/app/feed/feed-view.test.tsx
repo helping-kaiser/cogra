@@ -1902,3 +1902,52 @@ describe("FeedView's seen tracker", () => {
     await waitFor(() => expect(marked).toEqual([["p1"]]));
   });
 });
+
+// THE STREAM ON THE FEED IT NARROWS (Reel.md:3; ranked-feed-api §4.12 BD-4):
+// a portrait clip's tap opens the stream over the derived list as drawn, in
+// its order, and asks the relay for nothing more.
+describe("FeedView's stream door (RL-1)", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    searchParams = new URLSearchParams();
+    forgetFeed();
+  });
+
+  const clip = (id: string, ratio: string) => ({
+    ...post(id, `Clip ${id}`),
+    attachments: [
+      {
+        __typename: "MediaAttachment",
+        id: `m-${id}`,
+        url: `https://media.test/${id}.mp4`,
+        altText: null,
+        status: "NORMAL",
+        mimeType: "video/mp4",
+        options: { __typename: "MediaOptions", aspectRatio: ratio, durationMs: 12_000 },
+        coverMedia: null,
+        coverTaken: false,
+      },
+    ],
+  });
+
+  it("a portrait clip's tap opens the stream over the feed's derived list, narrowed in order, never ranking again", async () => {
+    const { forgetStream, heldStream, streamBack } = await import("@/lib/reel/stream-session");
+    forgetStream();
+    const reads = feedReads();
+    server.use(...rankedFeed([clip("c1", "9:16"), clip("w1", "16:9"), post("t1", "Words"), clip("c2", "4:5")], reads));
+    renderWithProviders(<FeedView />);
+    await screen.findByTestId(byNode("feed.card.media.frame", "c2/1"), undefined, { timeout: 5000 });
+    const door = screen.getByTestId("feed-post-c2-stream-link");
+    expect(door).toHaveAttribute("href", "/reel/c2");
+    expect(screen.queryByTestId("feed-post-w1-stream-link")).toBeNull();
+    expect(screen.getByTestId("feed-post-w1-link")).toHaveAttribute("href", "/posts/w1");
+    const ranks = reads.ranks.length;
+    fireEvent.click(door);
+    const stream = heldStream();
+    expect(stream?.snapshot.clips.map((row) => row.id)).toEqual(["c1", "c2"]);
+    expect(stream?.snapshot.index).toBe(1);
+    expect(streamBack(stream!.snapshot.origin)).toEqual({ href: "/feed", label: "Back to feed" });
+    expect(reads.ranks.length).toBe(ranks);
+    forgetStream();
+  });
+});

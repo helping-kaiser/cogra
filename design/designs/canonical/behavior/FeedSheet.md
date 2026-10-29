@@ -96,6 +96,10 @@ ALWAYS the topic chips are the topics the borrowed view's account holds and is f
 
 ALWAYS Show what you've already seen, the kinds, the kinds of post, Also show, Reset and the "?" keep the reader's own first person GIVEN the feed borrows a view
 
+ALWAYS All your topics keeps its words and opens the reader's own Your topics, never the borrowed view's account's list GIVEN the feed borrows a view
+
+ALWAYS the topic section does not stand GIVEN the feed borrows a view and the borrowed view's account holds no topic it is for
+
 WHEN tap Done GIVEN the staged filter changes Kinds or the topic -> the sheet closes AND the feed re-queries once AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the message draws anything
 
 WHEN tap Done GIVEN every staged change is the device's own — the people row and its sign, the order, Show what you've already seen, the kinds of post, Sensitive, Removed or Still settling -> the sheet closes AND the feed re-derives on the device from what it already holds AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the feed re-queries AND NEVER the message draws anything
