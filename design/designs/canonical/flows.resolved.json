@@ -1217,13 +1217,14 @@
         "ComposeDetailsWords",
         "EditCompose",
         "EditComposeUnchanged",
+        "EditComposeVideo",
         "ReplyCited",
         "ReplyCitedMany",
         "ReplySeal",
         "ReplySealComment"
       ],
       "steps": [
-        "start · «+ Cite something» on 14 boards → ReferencePicker",
+        "start · «+ Cite something» on 15 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → self — the pick stages in the composer's references — the row leaves the results for the staged section above them, wearing its ×, and the picker stays open for the next"
       ],
       "boards": [
@@ -1238,6 +1239,7 @@
         "ComposeDetailsWords",
         "EditCompose",
         "EditComposeUnchanged",
+        "EditComposeVideo",
         "ReplyCited",
         "ReplyCitedMany",
         "ReplySeal",
@@ -5069,6 +5071,7 @@
     },
     "EditComposeVideo": {
       "flows": [
+        "cite-something",
         "edit-a-video-post"
       ],
       "endpoint": [

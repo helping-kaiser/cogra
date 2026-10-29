@@ -2866,8 +2866,10 @@ per item, each ending in `Undo`, spoken `Undo withdrawing #coastroad`.
 
 **The edit's acts, every kind.** The row labels: `Edit`, `Tags added`,
 `Tags withdrawn`, `Tags revised`, `Citations added`, `Citations
-revised`, `Citations withdrawn`, `Cover changed`. A row's count is the
-records it signs, heard as `2 things` where a withdrawal takes two.
+revised`, `Citations withdrawn`. A video edit's new face is no row of
+its own: it rides the `Edit` row, the edit's own record (seam 248). A
+row's count is the records it signs, heard as `2 things` where a
+withdrawal takes two.
 
 **The reply's gate, failed.** `One picture didn't upload. Signing waits
 for it.` with `Retry` — the fact in error ink, the consequence in the

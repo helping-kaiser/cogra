@@ -37,8 +37,10 @@
    2026-10-05) — and `Sign the edit` stays enabled; pressed, it reads
    `Signing the edit…` until the bytes land, a failed upload drops the held
    press, and the slow line counts from the press. The `upload` chip draws it:
-   the face in the cover row is the new one, and the foot counts its one
-   record (`Cover changed`, `CommentEditActs`).
+   the face in the cover row is the new one, and the foot's count holds: A
+   NEW FACE RIDES THE EDIT RECORD (seam 248, the contract's `coverMediaId` on
+   the edit), staging the Edit record when nothing has yet and adding nothing
+   when it is already staged, as here.
 
    REGISTERED under the `commentEdit` prefix (seam 248), `CommentEditBody`'s
    names; the clip's block is `video`, the cover's `cover`, and the count's
@@ -102,7 +104,7 @@ export function Screen() {
           <ActsFooter count={3} node="acts" />
         </div>
         <div style={{ display: "{{gateShown}}", flexDirection: "column" }} {...chipCopy("upload", "uploading")}>
-          <ActsFooter count={4} node="acts" />
+          <ActsFooter count={3} node="acts" />
         </div>
         <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
       </div>
