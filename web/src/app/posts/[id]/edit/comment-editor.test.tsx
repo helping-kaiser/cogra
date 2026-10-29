@@ -386,6 +386,22 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     ]);
   });
 
+  // CommentEditVideo (round 24): A NEW FACE RIDES THE EDIT RECORD — staging it
+  // when nothing has yet, adding nothing when it is already staged; `Cover
+  // changed` is no row.
+  it("adds nothing to the count when the edit's record is already staged", async () => {
+    uploads();
+    draw(comment([CLIP]));
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
+    expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent("You're signing 1 thing");
+    fireEvent.click(screen.getByTestId("commentEdit.cover.change"));
+    await pickInto("comment-edit-cover-input", [picture("face.jpg")]);
+    fireEvent.click(await screen.findByTestId("coverCrop.next"));
+    await screen.findByTestId("commentEdit.gate");
+    expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent("You're signing 1 thing");
+    expect(screen.queryByText("Cover changed")).not.toBeInTheDocument();
+  });
+
   it("the cover crop's back arrow gives the cover row back, the picture unused", async () => {
     draw(comment([CLIP]));
     await pickInto("comment-edit-cover-input", [picture("face.jpg")]);
