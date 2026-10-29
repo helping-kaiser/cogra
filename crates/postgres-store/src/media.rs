@@ -488,6 +488,24 @@ pub async fn release_ingest(
     Ok(())
 }
 
+/// Hands a job back unfinished because its worker is shutting down: the
+/// lease ends now, so the next process claims it at once, and the attempt
+/// it was on is refunded — a stop is not the file failing, and three
+/// deploys during one long encode must not fail an upload for good.
+/// Nothing happens to a row that is no longer `processing`.
+pub async fn hand_back_ingest(pool: &PgPool, id: Uuid) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "UPDATE media_attachments
+         SET lease_until = NULL,
+             attempts    = GREATEST(attempts - 1, 0)
+         WHERE id = $1 AND state = 'processing'",
+        id,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
 /// The final bytes of a re-encoded asset, as the row will describe them.
 #[derive(Debug, Clone, Copy)]
 pub struct Rendition<'a> {

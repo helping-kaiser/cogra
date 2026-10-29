@@ -188,7 +188,8 @@ pub struct MediaConfig {
     /// How long an idle ingest worker waits before looking for work.
     pub ingest_poll_secs: u64,
     /// How long a worker's claim on a job holds without renewal — the
-    /// most a restart delays the job that was in flight.
+    /// most a crash delays the job that was in flight (a graceful stop hands
+    /// it back at once).
     pub ingest_lease_secs: u64,
     /// How many ingest workers run in this process. Each drives one
     /// ffmpeg at a time, and ffmpeg spreads one encode over every core,

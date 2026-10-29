@@ -46,15 +46,18 @@ GraphQL playground: `http://localhost:8080/playground`.
 All variables are in `.env` (gitignored, copied from `.env.example`).
 Every binary loads `.env` at startup (dotenvy), so plain `cargo run`
 behaves like the make targets; variables already set in the shell win
-over file values.
+over file values. A value with spaces is double-quoted: dotenvy stops
+reading at the first line it cannot parse, leaving every later variable
+unset, and the binary logs an error at startup naming that line's
+variable.
 
 | Variable | Default | Description |
 |---|---|---|
 | `DATABASE_URL` | `postgres://gnp:gnp_secret@localhost:5432/gnp_db` | Full Postgres connection URL (used by sqlx-cli and the app) |
-| `DOCKER_COMPOSE` | `docker compose -f docker/docker-compose.yml` | Compose command the make targets drive (make-only; the binaries never read it) — override to use another compose-compatible runtime, e.g. `wsl.exe -d claude-podman --cd /mnt/c/Users/<name>/dev/cogra -- podman compose -f docker/docker-compose.yml`. `make init` probes this command rather than a binary name, so the check is right on every runtime |
+| `DOCKER_COMPOSE` | `docker compose -f docker/docker-compose.yml` | Compose command the make targets drive (make-only; the binaries never read it) — override to use another compose-compatible runtime, e.g. `"wsl.exe -d claude-podman --cd /mnt/c/Users/<name>/dev/cogra -- podman compose -f docker/docker-compose.yml"`. `make init` probes this command rather than a binary name, so the check is right on every runtime |
 | `COMPOSE_PROJECT` | `gnp` | Container-name prefix (compose-only). The default is what the `docker exec` recipes below name; set it, and move the ports, to run a second checkout's stack beside the first |
 | `WAIT_TIMEOUT` | `300` | Seconds `make wait-db` and `make wait-media` allow before failing with a message (make-only) |
-| `CONTAINER` | `podman` | The container CLI `make deploy-images` builds the production images with (make-only) — override like `DOCKER_COMPOSE`, e.g. `wsl.exe -d claude-podman --cd /mnt/c/Users/<name>/dev/cogra -- podman` ([deployment.md "Images"](deployment.md#images)) |
+| `CONTAINER` | `podman` | The container CLI `make deploy-images` builds the production images with (make-only) — override like `DOCKER_COMPOSE`, e.g. `"wsl.exe -d claude-podman --cd /mnt/c/Users/<name>/dev/cogra -- podman"` ([deployment.md "Images"](deployment.md#images)) |
 | `POSTGRES_USER` | `gnp` | Postgres username (used by Docker and Makefile) |
 | `POSTGRES_PASSWORD` | `gnp_secret` | Postgres password |
 | `POSTGRES_DB` | `gnp_db` | Postgres database name |
@@ -123,7 +126,7 @@ over file values.
 | `MEDIA_FFMPEG` | `ffmpeg` | The ffmpeg the ingest worker drives — a name looked up on `PATH`, or a path. Probed once at startup for an H.264 and an AAC encoder, and for the HDR tone map's filters |
 | `MEDIA_TRANSCODE_TIMEOUT_SECS` | `1800` | The longest one re-encode may run before ffmpeg is killed and the job retried; a job is failed after its third attempt |
 | `MEDIA_INGEST_POLL_SECS` | `2` | How long an idle ingest worker waits before looking for a `processing` asset again. A worker that just settled one claims the next at once |
-| `MEDIA_INGEST_LEASE_SECS` | `60` | How long a worker's claim on a job holds without renewal; renewed every third of itself while the job runs. The most a restart delays the job that was in flight. At least 3 |
+| `MEDIA_INGEST_LEASE_SECS` | `60` | How long a worker's claim on a job holds without renewal; renewed every third of itself while the job runs. The most a crash delays the job that was in flight; a graceful stop hands it back at once. At least 3 |
 | `MEDIA_INGEST_WORKERS` | `1` | Ingest workers in this process. Each runs one ffmpeg at a time and ffmpeg spreads an encode over every core, so more only help once uploads queue behind each other |
 | `MEDIA_STALE_UPLOADS_EXPIRY` | `24h` | The store-side backstop, for the uploads a crash orphans before their session row exists (compose-only). MinIO implements it as a server setting, not as an S3 `AbortIncompleteMultipartUpload` lifecycle rule — it rejects such a rule — and the expiry matches the TTL above: the same abandoned upload, seen from both sides. Another store needs the lifecycle rule instead |
 | `MEDIA_STALE_UPLOADS_CLEANUP_INTERVAL` | `6h` | How often the store looks for them (compose-only) |
