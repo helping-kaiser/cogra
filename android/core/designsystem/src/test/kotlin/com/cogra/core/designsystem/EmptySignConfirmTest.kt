@@ -1,6 +1,7 @@
 package com.cogra.core.designsystem
 
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -114,6 +115,21 @@ class EmptySignConfirmTest {
         compose.onNodeWithTag("${TAG}_empty_sign_failed").assertTextEquals("That didn't send. Try again.")
         compose.onNodeWithTag("${TAG}_empty_sign_confirm").assertTextEquals("Retry").performClick()
         assertThat(confirmed).isEqualTo(1)
+    }
+
+    // EmptySignConfirm.md (round 21): the write rule's no — the quiet line
+    // where the fault line would stand, Set it anyway dimmed, never a Retry.
+    @Test
+    fun theWriteRulesNoIsTheQuietLineTheActDimmedAndNoRetry() {
+        show(EmptySignPrompt(writeRule = true))
+        compose.onNodeWithTag("${TAG}_empty_sign_write_rule")
+            .assertTextEquals("You can't sign right now. Nothing was signed or spent.")
+        compose.onNodeWithTag("${TAG}_empty_sign_failed").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_empty_sign_confirm").assertTextEquals("Set it anyway").assertIsNotEnabled()
+            .performClick()
+        assertThat(confirmed).isEqualTo(0)
+        compose.onNodeWithTag("${TAG}_empty_sign_keep").performClick()
+        assertThat(dismissed).isEqualTo(1)
     }
 
     @Test

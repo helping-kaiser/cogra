@@ -294,6 +294,7 @@ internal fun StanceLandingLine(
     Column(verticalArrangement = Arrangement.spacedBy(Space.x1), modifier = modifier) {
         when {
             landing == null -> ReadoutSentence(stringResource(R.string.stance_landing_working), tag)
+            landing.empty -> EmptyLanding(tag)
             landing.severance -> ReadoutSentence(stringResource(zeroWords.reached), tag)
             landing.inertDirected || landing.inertInterest ->
                 UnreachableLanding(landing.net, tag, testTagPrefix, onExplainZero)
@@ -330,9 +331,33 @@ private fun UnreachableLanding(
     testTagPrefix: String,
     onExplainZero: (() -> Unit)?,
 ) {
-    val resulting = stringResource(R.string.stance_resulting)
     val head = unreachableHead(net)
     val words = stringResource(R.string.stance_unreachable_line, head, stringResource(R.string.stance_unreachable_tail))
+    val door = onExplainZero?.let { open -> ZeroDoor(head, "${testTagPrefix}_stance_landing_zero", open) }
+    WordsLanding(UNREACHABLE_EMOJI, words, tag, door)
+}
+
+/**
+ * A (0, 0) LANDING WITH NOTHING STANDING SAYS NOTHING (round 20, seam 245
+ * ask 20; EmptySignConfirm.md): over a bundle that holds no record, or one
+ * already walked back, the walk-back's `This takes you back to zero.` is
+ * false — there is nothing to go back from. It reads in the unreachable
+ * line's shape: `Resulting opinion`, the shrug, and `Says nothing.` — no
+ * door on the 🤷.
+ */
+@Composable
+private fun EmptyLanding(tag: String) {
+    val words = stringResource(R.string.stance_landing_empty, stringResource(EMPTY_PICK_LABEL))
+    WordsLanding(ZERO_BUNDLE_READOUT.emoji, words, tag, door = null)
+}
+
+/** The 🤔's door: named by the state it explains, its own test tag. */
+private class ZeroDoor(val name: String, val testTag: String, val onOpen: () -> Unit)
+
+/** `Resulting opinion` over a face and the state in words, where the pair would stand. */
+@Composable
+private fun WordsLanding(emoji: String, words: String, tag: String, door: ZeroDoor?) {
+    val resulting = stringResource(R.string.stance_resulting)
     val said = rememberSettled("$resulting: $words")
     Column(
         modifier = Modifier
@@ -345,7 +370,7 @@ private fun UnreachableLanding(
         ReadoutLabel(resulting)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
             val face = Modifier.then(
-                if (onExplainZero == null) {
+                if (door == null) {
                     Modifier.semantics { hideFromAccessibility() }
                 } else {
                     // The door, named by the state it explains; 48dp of aim
@@ -353,14 +378,14 @@ private fun UnreachableLanding(
                     // The name replaces the emoji's own ("thinking face").
                     Modifier
                         .semantics {
-                            contentDescription = head
-                            this.testTag = "${testTagPrefix}_stance_landing_zero"
+                            contentDescription = door.name
+                            this.testTag = door.testTag
                         }
                         .minimumInteractiveComponentSize()
-                        .clickable(role = Role.Button, onClick = onExplainZero)
+                        .clickable(role = Role.Button, onClick = door.onOpen)
                 },
             )
-            Text(text = UNREACHABLE_EMOJI, style = MaterialTheme.typography.titleMedium, modifier = face)
+            Text(text = emoji, style = MaterialTheme.typography.titleMedium, modifier = face)
             Text(
                 text = words,
                 style = MaterialTheme.typography.bodySmall,
@@ -419,15 +444,17 @@ internal fun padHelp(zeroWords: StanceZeroWords): List<String> = listOf(
 
 /**
  * What the 🤔 opens on an unreachable landing (`unreachableHelp`): still
- * held (a person stays under `Your people`), shaping no feed, and not the
- * family's way out.
+ * held, shaping no feed, and not the family's way out. The first line names
+ * the list the target stays on, by the label's kind (round 21, ask 18): a
+ * person under `Your people`, a topic on `Your topics`; a post or a comment
+ * sits on no list of the reader's, so its line stops at the opinion.
  */
 @Composable
 internal fun unreachableHelp(zeroWords: StanceZeroWords, targetLabel: String?): List<String> = listOf(
-    if (targetLabel?.startsWith("@") == true) {
-        stringResource(R.string.stance_zero_help_held_person, targetLabel)
-    } else {
-        stringResource(R.string.stance_zero_help_held)
+    when {
+        targetLabel?.startsWith("@") == true -> stringResource(R.string.stance_zero_help_held_person, targetLabel)
+        targetLabel?.startsWith("#") == true -> stringResource(R.string.stance_zero_help_held_topic, targetLabel)
+        else -> stringResource(R.string.stance_zero_help_held)
     },
     stringResource(R.string.stance_zero_help_feed),
     stringResource(R.string.stance_zero_help_way_out, stringResource(zeroWords.open)),

@@ -27,6 +27,9 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
@@ -35,6 +38,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.google.common.truth.Truth.assertThat
@@ -671,6 +675,23 @@ class StancePadTest {
         compose.onNodeWithTag("${TAG}_stance_landing").assertTextEquals("This takes you back to zero.")
     }
 
+    // EmptySignConfirm.md (round 20): the pad's landing under a pick that lands
+    // at (0, 0) with nothing standing reads Resulting opinion 🤷 Says nothing.
+    @Test
+    fun anEmptyLandingSaysNothingNeverBackToZero() {
+        val empty = StanceLanding(StancePoint.Origin, true, true, true, empty = true)
+        show(open.copy(pick = StancePoint.Origin, landing = empty))
+        compose.onNodeWithTag("${TAG}_stance_landing")
+            .assertContentDescriptionEquals("Resulting opinion: Says nothing.")
+        compose.onNodeWithText("Says nothing.", useUnmergedTree = true).assertExists()
+        // The landing's own shrug (the standing above wears one too).
+        compose.onNode(hasText("🤷") and hasAnyAncestor(hasTestTag("${TAG}_stance_landing")), useUnmergedTree = true)
+            .assertExists()
+        compose.onNodeWithText("This takes you back to zero.").assertDoesNotExist()
+        // The 🤷 opens nothing: the unreachable state's door is not the empty sign's.
+        compose.onNodeWithTag("${TAG}_stance_landing_zero", useUnmergedTree = true).assertDoesNotExist()
+    }
+
     @Test
     fun aTopicsLandingOnZeroReadsAsNoOpinion() {
         show(
@@ -704,6 +725,18 @@ class StancePadTest {
         compose.onNodeWithTag("${TAG}_stance_set").assertIsNotEnabled()
         compose.onNodeWithTag("${TAG}_stance_explain_back").performScrollTo().performClick()
         compose.field().assertExists()
+    }
+
+    // copy-voice *The unreachable landing* (round 21, ask 18): a topic stays on Your topics.
+    @Test
+    fun aTopicsUnreachableLandingSaysItStaysOnYourTopics() {
+        show(
+            open.copy(landing = StanceLanding(StancePoint(0.0, 0.4), true, false, false)),
+            targetLabel = "#saltmaps",
+            zeroWords = StanceZeroWords.Disconnected,
+        )
+        compose.onNodeWithTag("${TAG}_stance_landing_zero", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("It still counts among your opinions — #saltmaps stays on Your topics.").assertExists()
     }
 
     @Test
@@ -1209,6 +1242,24 @@ class StancePadTest {
         assertThat(committed).isEqualTo(0)
     }
 
+    // PadKeyAbsent.md (round 21): the pad's Your key dialog says only what the
+    // notice does not — never that signing needs the key, nor that the code restores it.
+    @Test
+    fun theKeyNoticesQuestionMarkSaysOnlyWhatTheNoticeDoesNot() {
+        show(open.copy(keyAbsent = true, standing = heldStanding))
+        compose.onNodeWithTag("${TAG}_stance_key_help").performScrollTo().performClick()
+        compose.onNodeWithTag("${TAG}_stance_key_dialog").assertExists()
+        compose.onNodeWithText(
+            "Your key lives where you made it or last restored it, never held by CoGra — " +
+                "nothing is signed in your name without it.",
+        ).assertExists()
+        compose.onNodeWithText(
+            "Your recovery code brings it here. A pick you keep waits in this app until then, " +
+                "and you review every kept pick before it's signed.",
+        ).assertExists()
+        compose.onNodeWithText("Restore it with your recovery code", substring = true).assertDoesNotExist()
+    }
+
     // -- The alternates (StanceAlternates.jsx; stance-control.md *Alternate and accessible inputs*) --
 
     private val alternates = StanceControlState(pad = StancePadMode.ALTERNATES, pick = StancePoint(0.1, 0.1))
@@ -1243,6 +1294,109 @@ class StancePadTest {
         show(alternates.copy(inputMode = StanceInputSurface.ENTRY))
         compose.onNodeWithTag("${TAG}_stance_entry_directed").assertExists()
         compose.onNodeWithTag("${TAG}_stance_slider_directed").assertDoesNotExist()
+    }
+
+    /** The alternates on typed values, the pick kept by a live holder as the route keeps it. */
+    private fun showTyping() {
+        compose.setContent {
+            var state by remember { mutableStateOf(alternates.copy(inputMode = StanceInputSurface.ENTRY)) }
+            StanceControl(
+                state = state,
+                onHoldDefault = {}, onOpenPad = {},
+                onPick = {
+                    picks += it
+                    state = state.copy(pick = it)
+                },
+                onCommit = {}, onDismissPad = {}, onOpenAlternates = {},
+                onOpenSeverance = {}, onConfirmSeverance = {}, onDismissSeverance = {},
+                onConfirmationShown = {},
+                testTagPrefix = TAG,
+            )
+        }
+    }
+
+    // PadStanding.md (round 21): a typed value past a field's bound picks the
+    // nearest value the bound allows, read back in Your pick, never a refusal line.
+    @Test
+    fun aTypedValuePastTheBoundClampsAndTheFieldKeepsWhatWasTyped() {
+        showTyping()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").performTextReplacement("1.5")
+        assertThat(picks.last()).isEqualTo(StancePoint(1.0, 0.1))
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").assertTextContains("1.5")
+        compose.onNodeWithTag("${TAG}_stance_entry_interest").performTextReplacement("-3")
+        assertThat(picks.last()).isEqualTo(StancePoint(1.0, -1.0))
+    }
+
+    // PadStanding.md (round 21): an emptied or numberless field moves nothing, never a 0.
+    @Test
+    fun anEmptiedOrNumberlessFieldMovesNothing() {
+        showTyping()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").performTextReplacement("")
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").performTextReplacement("-")
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").performTextReplacement("x")
+        assertThat(picks).isEmpty()
+    }
+
+    // PadStanding.md (round 21): when focus leaves a typed field, it reads the value the pick holds.
+    @Test
+    fun leavingATypedFieldRewritesItToThePick() {
+        showTyping()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").performClick().performTextReplacement("1.5")
+        compose.onNodeWithTag("${TAG}_stance_entry_interest").performClick()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").assertTextContains("1.00")
+    }
+
+    @Test
+    fun typedTextPicksTheClampedHundredthOrNothing() {
+        assertThat(typedPick("0.123")).isEqualTo(0.12)
+        assertThat(typedPick(" 2 ")).isEqualTo(1.0)
+        assertThat(typedPick("-1.5")).isEqualTo(-1.0)
+        assertThat(typedPick("")).isNull()
+        assertThat(typedPick("-")).isNull()
+        assertThat(typedPick("Infinity")).isNull()
+    }
+
+    // PadFailed.md (round 21): the alternates' commit waits as Set does.
+    @Test
+    fun theAlternatesCommitReadsSigningPast200msInertNeverDimmed() {
+        compose.mainClock.autoAdvance = false
+        show(alternates.copy(standing = heldStanding, busy = true))
+        compose.mainClock.advanceTimeBy(SETTING_AFTER_MS - 50)
+        compose.onNodeWithTag("${TAG}_stance_set").assertTextEquals("Sign it").assertIsEnabled()
+        compose.mainClock.advanceTimeBy(100)
+        compose.onNodeWithTag("${TAG}_stance_set").assertTextEquals("Signing…").assertIsEnabled().performClick()
+        assertThat(committed).isEqualTo(0)
+        // Cancel stays live: it closes the dialog, never the act.
+        compose.onNodeWithTag("${TAG}_stance_cancel").assertIsEnabled().performClick()
+        assertThat(dismissed).isEqualTo(1)
+    }
+
+    // PadFailed.md (round 21): a failed alternates signing stays up at the pick.
+    @Test
+    fun aFailedAlternatesSigningKeepsTheDialogWithTheFaultAndRetry() {
+        show(alternates.copy(standing = heldStanding, failed = true))
+        compose.onNodeWithTag("${TAG}_stance_failed").assertTextEquals("That didn't send. Try again.")
+        compose.onNodeWithTag("${TAG}_stance_set").assertTextEquals("Retry").performClick()
+        assertThat(committed).isEqualTo(1)
+        compose.onNodeWithTag("${TAG}_stance_cancel").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_sever").assertExists()
+    }
+
+    // PadWriteRule.md (round 21): the write rule's notice where the landing line
+    // and the action row were, with Not now; no Retry, Sign it, Cancel or Walk it back.
+    @Test
+    fun theWriteRulesNoInTheAlternatesIsTheNoticeAndNotNow() {
+        show(alternates.copy(standing = heldStanding, writeRule = true))
+        compose.onNodeWithTag("${TAG}_stance_write_rule").assertExists()
+        compose.onNodeWithText("You can't sign right now").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_write_rule_help").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_landing").assertDoesNotExist()
+        for (gone in listOf("set", "cancel", "sever")) {
+            compose.onNodeWithTag("${TAG}_stance_$gone").assertDoesNotExist()
+        }
+        compose.onNodeWithTag("${TAG}_stance_not_now").performScrollTo().performClick()
+        assertThat(dismissed).isEqualTo(1)
+        assertThat(committed).isEqualTo(0)
     }
 
     @Test

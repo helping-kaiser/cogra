@@ -235,6 +235,9 @@
     <string name="stance_unreachable_against">Against it, no interest either way</string>
     <string name="stance_unreachable_tail">this won\'t shape anyone\'s feed.</string>
     <string name="stance_unreachable_line">%1$s — %2$s</string>
+    <!-- The master's EMPTY_LANDING_WORDS (round 20, blessed round 21): a (0, 0)
+         landing where nothing stands reads `Resulting opinion 🤷 Says nothing.` -->
+    <string name="stance_landing_empty">%1$s.</string>
     <!-- The master's BORROWED_KEPT_LINE: under an unreachable or severed
          landing while the reader still borrows a view. Warns, never blocks. -->
     <string name="stance_borrowed_kept">You\'d keep your borrowed view — no feed of your own yet.</string>
@@ -255,6 +258,9 @@
     <string name="stance_write_rule_help_limit">There\'s a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You\'ve hit it for now.</string>
     <string name="stance_write_rule_help_later">Nothing was signed or spent. Try again in a little while.</string>
     <string name="stance_write_rule_row">You can\'t sign right now.</string>
+    <!-- In a dialog raised over the pad — the walk-back, the empty sign — where
+         the fault line would stand (round 21, seam 245 ask 15; WRITE_RULE_WORDS.dialog). -->
+    <string name="stance_write_rule_dialog">You can\'t sign right now. Nothing was signed or spent.</string>
     <string name="stance_write_rule_not_now">Not now</string>
     <!-- The key elsewhere, on the pad (PadKeyAbsent; copy-voice *Platform
          nouns*: "this app" on Android, never a bare "device"). -->
@@ -263,9 +269,12 @@
     <string name="stance_key_absent_restore_line">Restore the key with your recovery code to finish.</string>
     <string name="stance_key_absent_restore">Restore the key</string>
     <string name="stance_key_absent_help">Your key</string>
-    <!-- The notice's "?" — the key elsewhere's blessed body (copy-voice *The
-         key elsewhere*: KeyElsewhere, PadKeyAbsent, PadPending). -->
-    <string name="stance_key_absent_help_body">Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending.</string>
+    <!-- The pad's "?" says only what its notice does not (PadKeyAbsent.md,
+         round 21; copy-voice *The "?" dialogs*, `Your key`, the app's
+         "…waits in this app until then…"): where the key lives, and what
+         waits for the restore. -->
+    <string name="stance_key_absent_help_where">Your key lives where you made it or last restored it, never held by CoGra — nothing is signed in your name without it.</string>
+    <string name="stance_key_absent_help_waits">Your recovery code brings it here. A pick you keep waits in this app until then, and you review every kept pick before it\'s signed.</string>
 
     <!-- The walk-back, the PERSON family's words (copy-voice *The
          walk-back*; StanceReadout.jsx `STANCE_SEVERANCE_WORDS`). A topic
@@ -339,6 +348,8 @@
          unreachable landing*; `unreachableHelp`). -->
     <string name="stance_zero_help_held">It still counts among your opinions.</string>
     <string name="stance_zero_help_held_person">It still counts among your opinions — %1$s stays under Your people.</string>
+    <!-- A topic stays on its list too (round 21, seam 245 ask 18). -->
+    <string name="stance_zero_help_held_topic">It still counts among your opinions — %1$s stays on Your topics.</string>
     <string name="stance_zero_help_feed">It shapes no one\'s feed, earns nothing, and nothing passes on through you.</string>
     <string name="stance_zero_help_way_out">%1$s is different: its own act, confirmed and paid for, that leaves a clean slate.</string>
 
