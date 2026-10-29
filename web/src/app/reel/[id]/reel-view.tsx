@@ -362,12 +362,9 @@ function Clip({
           the veil it stays mounted and blurred in place, so the unveil moves
           nothing and is an eligibility change on the same element
           (ReelSensitive.jsx:24-28; `body-veil.tsx`). */}
-      <div
-        {...testAttributes(STAGE, undefined)}
-        aria-hidden={veiled ? "true" : undefined}
-        className="absolute inset-0 overflow-hidden"
-      >
+      <div {...testAttributes(STAGE, undefined)} className="absolute inset-0 overflow-hidden">
         <div
+          aria-hidden={veiled ? "true" : undefined}
           className="absolute inset-0"
           style={veiled ? { filter: "blur(24px)", transform: "scale(1.06)" } : undefined}
         >
@@ -393,31 +390,34 @@ function Clip({
             )}
           </VeilContext.Provider>
         </div>
-      </div>
-      {veiled && (
-        // THE STANDARD VEIL'S MEDIA FACE over the whole frame (ReelSensitive.jsx
-        // :42-48): the mark, whose mark it is, and the face's words kept clear
-        // of the rail on both sides (`faceGutter="76px"`) so they stay centred.
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            reveal();
-          }}
-          aria-label={`${VEIL_LABEL}. ${source}`}
-          {...testAttributes(part(STAGE, "veil"))}
-          className="cg-focus absolute inset-0 grid cursor-pointer place-items-center border-0 p-0"
-          style={{ background: "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)", zIndex: 1 }}
-        >
-          <span className="flex flex-col items-center gap-2 text-center" style={{ padding: "0 76px", color: "#fff" }}>
-            <VisibilityGlyph />
-            <span className="text-label-large">{VEIL_LABEL}</span>
-            <span className="text-body-small" style={{ opacity: 0.85 }}>
-              {source}
+        {veiled && (
+          // THE STANDARD VEIL'S MEDIA FACE over the whole frame (ReelSensitive.jsx
+          // :42-48): the mark, whose mark it is, and the face's words kept clear
+          // of the rail on both sides (`faceGutter="76px"`) so they stay centred.
+          // A LEAF INSIDE THE STAGE beside the clip it covers (`stage.veil`,
+          // the data-node join's wrapper rule), so only the clip beneath is
+          // hidden from assistive tech, never the veil's own control.
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              reveal();
+            }}
+            aria-label={`${VEIL_LABEL}. ${source}`}
+            {...testAttributes(part(STAGE, "veil"))}
+            className="cg-focus absolute inset-0 grid cursor-pointer place-items-center border-0 p-0"
+            style={{ background: "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)", zIndex: 1 }}
+          >
+            <span className="flex flex-col items-center gap-2 text-center" style={{ padding: "0 76px", color: "#fff" }}>
+              <VisibilityGlyph />
+              <span className="text-label-large">{VEIL_LABEL}</span>
+              <span className="text-body-small" style={{ opacity: 0.85 }}>
+                {source}
+              </span>
             </span>
-          </span>
-        </button>
-      )}
+          </button>
+        )}
+      </div>
       {/* THE TWO WASHES (Reel.jsx:66-74): chrome over photography needs its own
           contrast, and a gradient does it without drawing a bar. Inert, so a
           veil beneath keeps the whole frame as its tap (ReelSensitive.jsx:54). */}

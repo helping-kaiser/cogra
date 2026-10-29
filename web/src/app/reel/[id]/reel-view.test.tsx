@@ -367,6 +367,8 @@ describe("the swipe (Reel.md:31-47)", () => {
     expect(notice).toHaveTextContent(LAST_CLIP_HERE);
     // At the caption's head, before the handle.
     expect(caption().firstElementChild).toBe(notice);
+    // As wide as its words, never stretched across the caption (ReelRail.jsx `ReelPlate`).
+    expect(notice).toHaveStyle({ alignSelf: "flex-start" });
     swipe(-200);
     expect(screen.getByTestId(byNode("reel.caption.title"))).toHaveTextContent("Clip p3");
   });
@@ -800,6 +802,17 @@ describe("the veiled stream (ReelSensitive.md)", () => {
     expect(push).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.getByTestId(byNode("reel.stage.veil"))).toBeInTheDocument();
+  });
+
+  it("the veil's face is a leaf inside reel.stage, beside the clip it hides (nodes.json reel.stage.veil)", () => {
+    mountStream({ rows: [reelPost("s1", "9:16", SENSITIVE)], startId: "s1" });
+    const stageNode = screen.getByTestId(byNode("reel.stage"));
+    const veil = screen.getByTestId(byNode("reel.stage.veil"));
+    expect(stageNode).toContainElement(veil);
+    // Only the clip beneath is hidden from assistive tech, never the veil's control.
+    expect(stageNode).not.toHaveAttribute("aria-hidden");
+    expect(screen.getByRole("button", { name: /^Sensitive — tap to view/ })).toBe(veil);
+    expect(clip().closest("[aria-hidden=true]")).not.toBeNull();
   });
 
   it("the platform's verdict names its own source on the face", () => {
