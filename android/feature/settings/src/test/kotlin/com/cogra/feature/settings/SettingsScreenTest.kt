@@ -63,6 +63,10 @@ class SettingsScreenTest {
 
     private fun node(tag: String) = compose.onNodeWithTag(tag, useUnmergedTree = true)
 
+    /** The dialog body's paragraph [text] (`DialogSurface`'s body holds its paragraphs). */
+    private fun dialogBody(tag: String, text: String) =
+        compose.onNode(hasText(text) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true).assertExists()
+
     /** A part inside the keyed session row [key]. */
     private fun sessionPart(key: Int, part: String) = compose.onNode(
         hasTestTag("settings.sessions.session.$part") and
@@ -539,7 +543,7 @@ class SettingsScreenTest {
     fun `dialog_names_key_draft_and_kept_picks`() {
         render(SettingsUiState(account = account(keyBackupCreatedAt = null), now = NOW, signOutConfirmOpen = true))
         node("settings.dialog.title").assertTextEquals("Sign out without a backup?")
-        node("settings.dialog.body").assertTextEquals(
+        dialogBody("settings.dialog.body",
             "This app holds the only copy of your key. Signing out leaves your key, your draft and any opinions " +
                 "you kept pending here, locked until you sign in again. Erase them instead, and no " +
                 "one — including CoGra — can bring them back.",
@@ -610,7 +614,7 @@ class SettingsScreenTest {
         )
         node("settings.dialog.title").assertTextEquals("Erase everything from this app?")
         node("settings.dialog.title").assertIsFocused()
-        node("settings.dialog.body").assertTextEquals(
+        dialogBody("settings.dialog.body",
             "This app holds the only copy of your key, and it has no recovery code. Erase everything and your " +
                 "account is gone for good — no one, including CoGra, can bring it back. Your draft, any kept " +
                 "picks and the choices kept on this device go too, and you're signed out.",
@@ -631,7 +635,7 @@ class SettingsScreenTest {
             SettingsUiState(account = account(), now = NOW, eraseConfirmOpen = true),
             actions = SettingsActions(onEraseEverything = { erase++ }, onDismissEraseConfirm = { cancel++ }),
         )
-        node("settings.dialog.body").assertTextEquals(
+        dialogBody("settings.dialog.body",
             "Your key is erased with everything else, and only your recovery code can bring it back — without " +
                 "the code, your account is gone for good. Your draft, any kept picks and the choices kept on " +
                 "this device go too, and you're signed out. What you've seen comes back when you sign in.",

@@ -10,8 +10,10 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -29,6 +31,10 @@ class SubpageScreensTest {
     val compose = createComposeRule()
 
     private fun node(tag: String) = compose.onNodeWithTag(tag, useUnmergedTree = true)
+
+    /** The dialog body's paragraph [text] (`DialogSurface`'s body holds its paragraphs). */
+    private fun dialogBody(tag: String, text: String) =
+        compose.onNode(hasText(text) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true).assertExists()
 
     /** A button reads its label through its merged node. */
     private fun button(tag: String) = compose.onNodeWithTag(tag)
@@ -98,7 +104,7 @@ class SubpageScreensTest {
     fun `dialog_focus_moves_to_title_and_stays_inside`() {
         handle(ChangeHandleUiState(current = "sol", handle = "solferreira", dialogOpen = true))
         node("changeHandle.dialog.title").assertTextEquals("Change your handle to @solferreira?")
-        node("changeHandle.dialog.body").assertTextEquals(
+        dialogBody("changeHandle.dialog.body",
             "Links to @sol stop working the moment it changes, and anyone can claim @sol afterwards.",
         )
         node("changeHandle.dialog.title").assertIsFocused()
