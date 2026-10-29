@@ -264,15 +264,13 @@ export function ReplySealStep({
   // A CITED POST THAT NEVER LANDED is said on its row in its own words, with
   // `Remove it` and no Retry, and Sign comment stays (ReplySealComment.md:9,
   // SealFaultRow.md); any other refusal of a citation, in the server's.
-  const unlanded =
-    fault?.kind === "row"
-      ? state.references.find((reference) => reference.targetId === fault.targetId)
-      : undefined;
+  const unlandedId = fault?.kind === "row" ? fault.targetId : null;
+  const unlanded = state.references.find((reference) => reference.targetId === unlandedId);
   const refusedReference =
     unlanded !== undefined
       ? { item: unlanded, message: unlandedCitationLine(unlanded) }
       : firstRefused(state.references, referenceErrors);
-  const only =state.references.length === 1 ? state.references[0] : undefined;
+  const only = state.references.length === 1 ? state.references[0] : undefined;
   if (only !== undefined) {
     rows.push({
       label: "Reference",
