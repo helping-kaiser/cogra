@@ -38,6 +38,7 @@ import com.cogra.domain.hidden.HiddenRepository
 import com.cogra.domain.invites.InvitesRepository
 import com.cogra.domain.notifications.NotificationsRepository
 import com.cogra.domain.saved.SavedRepository
+import com.cogra.domain.score.TraceRepository
 import com.cogra.domain.search.ExploreDeviceStore
 import com.cogra.domain.search.SearchRepository
 import com.cogra.domain.settings.SettingsRepository
@@ -76,6 +77,7 @@ import com.cogra.network.repo.TopicRepositoryImpl
 import com.cogra.network.repo.HistoryRepositoryImpl
 import com.cogra.network.repo.ViewHistoryRepositoryImpl
 import com.cogra.network.repo.FeedRepositoryImpl
+import com.cogra.network.repo.TraceRepositoryImpl
 import com.cogra.network.store.CommittedFilterStoreImpl
 import com.cogra.network.store.ReaderDefaultStoreImpl
 import com.cogra.network.store.ExploreDeviceStoreImpl
@@ -257,6 +259,9 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun feedRepository(impl: FeedRepositoryImpl): FeedRepository
+
+    @Binds
+    abstract fun traceRepository(impl: TraceRepositoryImpl): TraceRepository
 
     @Binds
     abstract fun readerDefaultStore(impl: ReaderDefaultStoreImpl): ReaderDefaultStore

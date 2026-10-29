@@ -1,0 +1,76 @@
+# The score's trace (api-spec.md `feedTrace`; score-readout packet §7, X-SR1):
+# one LIVE read per trace open, the four levels drawn from its one answer
+# (CD-SR2). It carries no pin — paths are never stored, so every tap is a
+# real fetch, and the reader adopts the figure it finds (PR-39). The web's
+# twin is web/src/lib/graphql/trace.graphql.
+#
+# THE SELECTION IS WHAT THE BOARDS DRAW, and nothing the ranker keeps for
+# spot-checks: `weight`, `magnitude` and `recency` are never rendered
+# (RankPath.md: no step carries a number), so they are not asked for. The
+# people on a path are the authors of the records its hops fold — a hop
+# leaving a person is that person's own act — so each record's author carries
+# the face and handle the trace draws, and no second read is made for people.
+query FeedTrace($viewer: UUID!, $target: UUID!) {
+  feedTrace(viewer: $viewer, target: $target) {
+    score
+    paths {
+      nodes {
+        graphId
+        id
+        kind
+      }
+      sign
+      contribution
+      hops {
+        pDirected
+        pInterest
+        records {
+          id
+          family
+          author {
+            id
+            handle
+            displayName {
+              value
+            }
+            avatar {
+              url
+            }
+          }
+          landedAt
+          legs {
+            role
+            sourceId
+            targetId
+            pDirected
+            pInterest
+          }
+        }
+      }
+    }
+  }
+}
+
+# The posts and comments a trace's steps pass through, named once per open
+# (score-readout §7: "batched over the answer's distinct ids"): a post by its
+# title and author, a comment by its author (RankPath.md:15).
+query TraceNames($ids: [UUID!]!) {
+  nodes(ids: $ids) {
+    __typename
+    ... on Post {
+      id
+      title {
+        value
+      }
+      author {
+        handle
+      }
+    }
+    ... on Comment {
+      id
+      author {
+        handle
+      }
+    }
+  }
+}
