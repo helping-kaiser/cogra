@@ -58,6 +58,8 @@ function post(id: string, title: string, { hoursAgo = 72, cover = false, sensiti
         ]
       : [],
     attachmentsStatus: sensitive ? "SENSITIVE" : "NORMAL",
+    sensitiveSelfMark: false,
+    sensitiveReason: null,
   };
 }
 

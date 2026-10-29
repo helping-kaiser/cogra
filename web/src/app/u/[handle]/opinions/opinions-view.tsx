@@ -3,7 +3,8 @@
 // THE OPINIONS PAGE (design/designs/canonical/screens/ProfileStances.jsx;
 // behavior/ProfileStances.md; graph.json `ProfileStances`). Opened from any
 // profile's figures row: titled with the person's handle and `Opinions`, the
-// two directions on two tabs named in words — `On them` · `By them` — and
+// two directions on two tabs named in words — `On them` · `By them`, `On you` ·
+// `By you` on the reader's own — and
 // never one merged list. Each row is a person with the public opinion the row
 // is about (`StanceRow`), read-only, strongest first; tapping one opens their
 // profile, whose arrow reads `Back to the opinions`. A read drill-in: the back
@@ -20,8 +21,9 @@
 // is strongest first, and a bundle's place is not known until its last record
 // is. The list then stands whole, with nothing left to page in.
 //
-// UNREGISTERED: the board names no node, so the page tags itself with the path
-// it evidently takes (`profileStances.*`), reported to design.
+// REGISTERED AS `profileStances` (nodes.json, round 26): the rows stand in
+// `list`, each `list.row` keyed by the handle of the person it names — the
+// opinion's holder on On, the one it is held on on By — never by position.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
@@ -49,28 +51,50 @@ import { StanceRow } from "@/lib/ui2/stance-row";
 import { TabBar, type Tab } from "@/lib/ui2/tab-bar";
 
 const PAGE: DataNode = { path: "profileStances" };
+const LIST = part(PAGE, "list");
 
-/** The tab row (ProfileStances.jsx): the choice is named `Which direction`. */
-export const DIRECTION_TABS: readonly Tab<OpinionDirection>[] = [
+/**
+ * A row's key (nodes.json `profileStances.list.row`): the handle of the
+ * person the row names, without @. A deleted account's row has no handle left
+ * to name it, so its holder's address stands in — opaque, one per person.
+ */
+export function rowKey(opinion: HeldOpinionView): string {
+  return opinion.holder.handle ?? opinion.holderId;
+}
+
+/**
+ * The tab row (ProfileStances.jsx): the choice is named `Which direction`.
+ * Another's page and a deleted account's read `On them` · `By them`; the
+ * reader's own speaks in the own figures' second person, `On you` · `By
+ * you` (ProfileStances.md:9-11; copy-voice, *The opinions page*).
+ */
+export function directionTabs(own: boolean): readonly Tab<OpinionDirection>[] {
+  return own ? OWN_TABS : THEIR_TABS;
+}
+const THEIR_TABS: readonly Tab<OpinionDirection>[] = [
   { id: "on", label: "On them" },
   { id: "by", label: "By them" },
+];
+const OWN_TABS: readonly Tab<OpinionDirection>[] = [
+  { id: "on", label: "On you" },
+  { id: "by", label: "By you" },
 ];
 export const DIRECTION_TABS_LABEL = "Which direction";
 
 /**
- * The empty list's line, per tab and whose page it is. Calm, naming what
- * would fill it, never the error colour (copy-voice, *The empty sheet*).
- * Another's `On them` reads the opinions sheet's blessed line — the reader's
- * own opinion would be the first; the rest are this page's own, unblessed
- * (reported to design).
+ * The empty list's line, per tab and whose page it is: the figure's own noun
+ * at zero, in the empty sheet's calm register, never the error colour
+ * (ProfileStances.md:27-39; copy-voice, *The opinions page*). Another's
+ * `On them` keeps the opinions sheet's `No opinions yet — yours would be the
+ * first.`; a deleted account, which will give none again, says so in the past.
  */
 export function emptyLine(direction: OpinionDirection, whose: "own" | "other" | "deleted", handle: string): string {
   if (direction === "on") {
     if (whose === "other") return NO_OPINIONS;
-    return whose === "own" ? "No opinions on you yet." : "No opinions on this account.";
+    return whose === "own" ? "No opinions on you yet." : "No opinions on this account yet.";
   }
-  if (whose === "own") return "You haven't given an opinion on anyone yet.";
-  return whose === "other" ? `@${handle} hasn't given an opinion on anyone yet.` : "This account gave no opinions.";
+  if (whose === "own") return "No opinions by you yet.";
+  return whose === "other" ? `No opinions by @${handle} yet.` : "This account gave no opinions.";
 }
 
 type Rows = { readonly direction: OpinionDirection; readonly rows: readonly HeldOpinionView[] };
@@ -160,11 +184,11 @@ export function OpinionsScreen({
     return refresh();
   }, [refresh, phase]);
 
-  // THE PULL-DOWN AT THE TOP REFRESHES (ProfileStances.md:29; readme, the
+  // THE PULL-DOWN AT THE TOP REFRESHES (ProfileStances.md:55; readme, the
   // pull-down on every full-screen scrolling root), through the first read.
   usePullToRefresh({ host, onPull: refresh });
 
-  // A TAB TAP SWAPS THE LIST IN PLACE (ProfileStances.md:13-15) and writes the
+  // A TAB TAP SWAPS THE LIST IN PLACE (ProfileStances.md:23-25) and writes the
   // direction into the address without a new history entry, so a way back to
   // the page lands on the tab it was left on (Next: the native History API
   // integrates with the router — linking-and-navigating.md).
@@ -179,7 +203,7 @@ export function OpinionsScreen({
 
   const deleted = profile?.displayName.status === "REDACTED";
   const whose = own ? "own" : deleted ? "deleted" : "other";
-  // THE WAY BACK NAMES WHOSE PROFILE (ProfileStances.md:23-25): `Back to your
+  // THE WAY BACK NAMES WHOSE PROFILE (ProfileStances.md:45-47): `Back to your
   // profile` from the reader's own, `Back to the profile` from another's —
   // returning it as it was opened, its own `from` and all.
   const back =
@@ -189,12 +213,22 @@ export function OpinionsScreen({
           href: from === null ? `/u/${encodeURIComponent(handle)}` : `/u/${encodeURIComponent(handle)}?from=${encodeURIComponent(from)}`,
           label: own ? "Back to your profile" : "Back to the profile",
         };
-  const rows = listed !== null && listed.direction === direction ? listed.rows : null;
+  // THE READER IS NEVER A ROW ON THEIR OWN PAGE (ProfileStances.md:21; the
+  // board's own page drops @sol's row): an opinion the reader holds on
+  // themselves, on either tab, names the reader, who is the page.
+  const rows =
+    listed !== null && listed.direction === direction
+      ? own && profile !== null
+        ? listed.rows.filter((opinion) => opinion.holder.handle !== profile.handle)
+        : listed.rows
+      : null;
   // A deleted account's handle went with the rest (ProfileDeleted.md:11), so
   // its page is titled with what it holds alone.
   const title =
     profile === null ? undefined : deleted ? "Opinions" : `@${profile.handle} · Opinions`;
-  const rowOrigin = opinionsOrigin(handle, direction);
+  // A ROW'S PERSON KEEPS THE PAGE'S ROOT (ProfileStances.md:51): the rows
+  // carry the origin this page was opened with, chained (`opinions-route.ts`).
+  const rowOrigin = opinionsOrigin(handle, direction, from);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col pb-2">
@@ -211,7 +245,7 @@ export function OpinionsScreen({
             backTestId="opinions-back"
           />
           <TabBar
-            tabs={DIRECTION_TABS}
+            tabs={directionTabs(own)}
             value={direction}
             ariaLabel={DIRECTION_TABS_LABEL}
             onSelect={onDirection}
@@ -248,7 +282,7 @@ export function OpinionsScreen({
         </div>
       )}
       {rows !== null && rows.length > 0 && (
-        <div className="flex flex-col pt-1" {...testAttributes(part(PAGE, "list"))}>
+        <div className="flex flex-col pt-1" {...testAttributes(LIST)}>
           {rows.map((opinion, index) => (
             <StanceRow
               key={opinion.holderId}
@@ -259,7 +293,7 @@ export function OpinionsScreen({
               pair={opinion.pair}
               severed={opinion.severed}
               from={rowOrigin}
-              node={instance(PAGE, "row", String(index + 1))}
+              node={instance(LIST, "row", rowKey(opinion))}
               testId={`opinions-row-${index + 1}`}
             />
           ))}

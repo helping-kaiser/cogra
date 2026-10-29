@@ -49,7 +49,6 @@
 
     <string name="settings_reading">Reading</string>
     <string name="settings_reading_feed">What your feed shows</string>
-    <string name="settings_reading_feed_value">Posts</string>
     <string name="settings_reading_exact">Show exact values</string>
     <string name="settings_reading_exact_status">The number pairs behind the faces.</string>
     <string name="settings_reading_footnote">Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device.</string>

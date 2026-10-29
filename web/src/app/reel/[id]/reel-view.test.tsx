@@ -95,7 +95,15 @@ function signedInStore() {
   return store;
 }
 
-const SENSITIVE = { attachmentsStatus: "SENSITIVE" };
+/**
+ * An author's own mark as the read serves it: every status reads the OR of
+ * the author's mark and a verdict, so `moderationStatus` reads SENSITIVE too,
+ * and only `sensitiveSelfMark` says whose it is (api-spec.md, "Content
+ * authoring").
+ */
+const SENSITIVE = { attachmentsStatus: "SENSITIVE", moderationStatus: "SENSITIVE", sensitiveSelfMark: true };
+/** A moderator's verdict alone: the same statuses, the author's mark unset. */
+const VERDICT = { attachmentsStatus: "SENSITIVE", moderationStatus: "SENSITIVE", sensitiveSelfMark: false };
 
 /** Open a stream over `rows` on `startId`, then mount the screen there. */
 function mountStream({
@@ -283,11 +291,16 @@ describe("the rail's score (Reel.md:21-29)", () => {
     expect(value()).toHaveTextContent("8.20");
   });
 
-  it("a_settling_clips_rail_score_is_the_bare_glyph_over_still_settling (Reel.md:25)", () => {
+  it("a_settling_clips_rail_score_is_the_bare_glyph_over_still_settling, inside the door (Reel.md:25; round 26)", () => {
     holdRanking(null, answerOf({}, ["p1"]), "viewer");
     mountStream();
     expect(screen.queryByTestId(byNode("reel.rail.score.value"))).toBeNull();
-    expect(screen.getByTestId(byNode("reel.rail.score.settling"))).toHaveTextContent(STILL_SETTLING);
+    const settling = screen.getByTestId(byNode("reel.rail.score.settling"));
+    expect(settling).toHaveTextContent(STILL_SETTLING);
+    // THE WHOLE FACE IS THE DOOR: the line is the door's own part, and the
+    // door's name says it.
+    expect(door()).toContainElement(settling);
+    expect(door()).toHaveAccessibleName(`Feed score ${STILL_SETTLING}`);
     expect(rail()).not.toHaveTextContent(/^0$|—/);
   });
 
@@ -354,6 +367,8 @@ describe("the swipe (Reel.md:31-47)", () => {
     expect(notice).toHaveTextContent(LAST_CLIP_HERE);
     // At the caption's head, before the handle.
     expect(caption().firstElementChild).toBe(notice);
+    // As wide as its words, never stretched across the caption (ReelRail.jsx `ReelPlate`).
+    expect(notice).toHaveStyle({ alignSelf: "flex-start" });
     swipe(-200);
     expect(screen.getByTestId(byNode("reel.caption.title"))).toHaveTextContent("Clip p3");
   });
@@ -789,9 +804,34 @@ describe("the veiled stream (ReelSensitive.md)", () => {
     expect(screen.getByTestId(byNode("reel.stage.veil"))).toBeInTheDocument();
   });
 
+  it("the veil's face is a leaf inside reel.stage, beside the clip it hides (nodes.json reel.stage.veil)", () => {
+    mountStream({ rows: [reelPost("s1", "9:16", SENSITIVE)], startId: "s1" });
+    const stageNode = screen.getByTestId(byNode("reel.stage"));
+    const veil = screen.getByTestId(byNode("reel.stage.veil"));
+    expect(stageNode).toContainElement(veil);
+    // Only the clip beneath is hidden from assistive tech, never the veil's control.
+    expect(stageNode).not.toHaveAttribute("aria-hidden");
+    expect(screen.getByRole("button", { name: /^Sensitive — tap to view/ })).toBe(veil);
+    expect(clip().closest("[aria-hidden=true]")).not.toBeNull();
+  });
+
   it("the platform's verdict names its own source on the face", () => {
-    mountStream({ rows: [reelPost("s1", "9:16", { moderationStatus: "SENSITIVE" })], startId: "s1" });
+    mountStream({ rows: [reelPost("s1", "9:16", VERDICT)], startId: "s1" });
     expect(screen.getByTestId(byNode("reel.stage.veil"))).toHaveTextContent("The platform's verdict");
+  });
+
+  it("the stream's media face reads the source and the author's reason after it (ReelSensitive.md:9; round 26)", () => {
+    mountStream({ rows: [reelPost("s1", "9:16", { ...SENSITIVE, sensitiveReason: "One rubbing includes a dead seabird." })], startId: "s1" });
+    const veil = screen.getByTestId(byNode("reel.stage.veil"));
+    expect(veil).toHaveTextContent("The author's warning — One rubbing includes a dead seabird.");
+    expect(veil).toHaveAccessibleName("Sensitive — tap to view. The author's warning — One rubbing includes a dead seabird.");
+  });
+
+  it("an author's own mark names the author's warning, though moderationStatus reads SENSITIVE with it (#336 defect)", () => {
+    mountStream({ rows: [reelPost("s1", "9:16", SENSITIVE)], startId: "s1" });
+    const veil = screen.getByTestId(byNode("reel.stage.veil"));
+    expect(veil).toHaveTextContent("The author's warning");
+    expect(veil).not.toHaveTextContent("The platform's verdict");
   });
 });
 

@@ -120,6 +120,8 @@ describe("readCachedPost", () => {
       title: moderated(title),
       attachments: [],
       attachmentsStatus: "NORMAL",
+      sensitiveSelfMark: false,
+      sensitiveReason: null,
       author: {
         __typename: "User",
         id: "u1",

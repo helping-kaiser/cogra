@@ -95,7 +95,18 @@ interface FeedRepository {
      * skipped.
      */
     suspend fun window(ids: List<String>): Outcome<List<PostView>>
+
+    /**
+     * `FeedCards`: the comments, people and topics behind [ids], each as its
+     * own feed card draws it, in the order given — at most [MAX_CARDS_WINDOW]
+     * ids. An id that hydrates to nothing, or to a post, is skipped: posts
+     * ride [window].
+     */
+    suspend fun cards(ids: List<String>): Outcome<List<FeedCard>>
 }
 
 /** The most ids one `feed` hydration carries (the page budget, CD-2). */
 const val MAX_FEED_WINDOW = 100
+
+/** The most ids one `FeedCards` read carries (its literal `first: 10`). */
+const val MAX_CARDS_WINDOW = 10

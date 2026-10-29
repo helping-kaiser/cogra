@@ -381,6 +381,9 @@ export function PostView({
         {detailClip && (
           <BodyRegion
             veiled={sensitive}
+            // The clip's media face names whose mark it is (DetailClip.jsx);
+            // the card's words beneath leave the line to it, once per post.
+            marks={post}
             nodeId={post.id}
             signature={sensitiveSignature(post)}
             testId="post-detail-clip"

@@ -53,10 +53,13 @@ import com.cogra.core.designsystem.v2.compose.licenseName
 import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.ageLadder
 import com.cogra.domain.dateLine
+import com.cogra.domain.feed.FeedFilter
+import com.cogra.domain.feed.feedFilterSummary
 import com.cogra.domain.forwardLadder
 import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.ThemeChoice
+import com.cogra.feature.feedfilter.FeedFilterSheet
 import kotlinx.coroutines.launch
 
 /** The page's registered root (`nodes.json` "Settings", prefix `settings`). */
@@ -116,6 +119,11 @@ fun SettingsRoute(
             onLicenseDone = viewModel::onLicenseDone,
             onDismissLicense = viewModel::onDismissLicense,
             onRetryLicense = viewModel::onRetryLicense,
+            onOpenReading = viewModel::onOpenReading,
+            onStageReading = viewModel::onStageReading,
+            onResetReading = viewModel::onResetReading,
+            onReadingDone = viewModel::onReadingDone,
+            onDismissReading = viewModel::onDismissReading,
             onShowExactValues = viewModel::onShowExactValues,
             onAlwaysUnveil = viewModel::onAlwaysUnveil,
             onRevokeSession = viewModel::onRevokeSession,
@@ -159,6 +167,12 @@ data class SettingsActions(
     val onLicenseDone: () -> Unit = {},
     val onDismissLicense: () -> Unit = {},
     val onRetryLicense: () -> Unit = {},
+    /** What your feed shows (SettingsReading.md): the row opens the feed's own sheet over Settings. */
+    val onOpenReading: () -> Unit = {},
+    val onStageReading: (FeedFilter) -> Unit = {},
+    val onResetReading: () -> Unit = {},
+    val onReadingDone: () -> Unit = {},
+    val onDismissReading: () -> Unit = {},
     val onShowExactValues: () -> Unit = {},
     val onAlwaysUnveil: () -> Unit = {},
     val onRevokeSession: (String) -> Unit = {},
@@ -198,7 +212,8 @@ fun SettingsScreen(
     val sessionFocus = remember { HashMap<String, FocusRequester>() }
     val signOutFocus = remember { FocusRequester() }
     val eraseFocus = remember { FocusRequester() }
-    val licenseFocus = remember { FocusRequester() }
+    // The rows a sheet returns focus to: the default license, What your feed shows.
+    val (licenseFocus, readingFocus) = remember { FocusRequester() to FocusRequester() }
     SettingsEffects(
         events,
         snackbar,
@@ -227,7 +242,7 @@ fun SettingsScreen(
             ThemeGroup(state, actions)
             StanceGroup(state, actions)
             WritingGroup(state, actions, licenseFocus)
-            ReadingGroup(state, actions)
+            ReadingGroup(state, actions, readingFocus)
             PeopleGroup(hiddenAccounts)
             SensitiveGroup(state, actions)
             BackupGroup(state, doors)
@@ -240,7 +255,7 @@ fun SettingsScreen(
         }
     }
 
-    SettingsDialogs(state, actions)
+    SettingsDialogs(state, actions, readingFocus)
     HiddenAccountsSheet(hiddenAccounts)
     state.licenseSheet?.let { staged ->
         SettingsLicenseSheet(
@@ -255,9 +270,13 @@ fun SettingsScreen(
     }
 }
 
-/** The two think-twice dialogs over the page: the sign-out ask and the erase (`SettingsOverlays.kt`). */
+/**
+ * The overlays over the page: What your feed shows, then the two think-twice
+ * dialogs — the sign-out ask and the erase (`SettingsOverlays.kt`).
+ */
 @Composable
-private fun SettingsDialogs(state: SettingsUiState, actions: SettingsActions) {
+private fun SettingsDialogs(state: SettingsUiState, actions: SettingsActions, readingFocus: FocusRequester) {
+    SettingsReadingSheet(state, actions, readingFocus)
     if (state.signOutConfirmOpen) {
         SignOutConfirm(
             onMakeRecoveryCode = actions.onMakeRecoveryCode,
@@ -459,7 +478,7 @@ private fun WritingGroup(state: SettingsUiState, actions: SettingsActions, licen
 }
 
 @Composable
-private fun ReadingGroup(state: SettingsUiState, actions: SettingsActions) {
+private fun ReadingGroup(state: SettingsUiState, actions: SettingsActions, readingFocus: FocusRequester) {
     val group = Page / "reading"
     SettingsGroup(
         label = stringResource(R.string.settings_reading),
@@ -469,14 +488,13 @@ private fun ReadingGroup(state: SettingsUiState, actions: SettingsActions) {
             {
                 SettingsRow(
                     label = stringResource(R.string.settings_reading_feed),
-                    value = stringResource(R.string.settings_reading_feed_value),
+                    // THE ROW IS THE TRIGGER (SettingsReading.jsx): it reads the
+                    // saved default back in the pill's own words, against CoGra's.
+                    value = feedFilterSummary(state.readerDefault, FeedFilter.DEFAULT),
                     kind = SettingsRowKind.Opens,
-                    // DRIFT (feed-filter packet): SettingsReading's sheet
-                    // waits for a feed filter to own the reader's default.
-                    // The feed shows posts only, so the row reads true and
-                    // the tap opens nothing yet.
-                    onClick = {},
+                    onClick = actions.onOpenReading,
                     node = group / "feed",
+                    modifier = Modifier.focusRequester(readingFocus),
                 )
             },
             {
@@ -901,3 +919,28 @@ private fun EndingGroup(state: SettingsUiState, actions: SettingsActions) {
 
 /** The locked look's opacity — Material's disabled content alpha, the system's `disabled opacity`. */
 private const val DISABLED_ALPHA = 0.38f
+
+/**
+ * WHAT YOUR FEED SHOWS, over Settings (SettingsReading.md): the feed's own
+ * sheet, titled; Done saves the default and the row reads it back; every way
+ * out returns focus to the row. Nothing stands while no sheet is staged.
+ */
+@Composable
+private fun SettingsReadingSheet(state: SettingsUiState, actions: SettingsActions, readingFocus: FocusRequester) {
+    val staged = state.readingSheet ?: return
+    FeedFilterSheet(
+        staged = staged,
+        onStage = actions.onStageReading,
+        onReset = actions.onResetReading,
+        onDone = {
+            actions.onReadingDone()
+            runCatching { readingFocus.requestFocus() }
+        },
+        onDismiss = {
+            actions.onDismissReading()
+            runCatching { readingFocus.requestFocus() }
+        },
+        node = Page / "feedSheet",
+        titled = true,
+    )
+}

@@ -30,9 +30,9 @@ import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 
 private val HELD = listOf(
-    HeldTopic("saltmaps", 0.6, 0.35, pending = false),
-    HeldTopic("fieldnotes", 0.3, 0.15, pending = true),
-    HeldTopic("wellness", -0.65, -0.3, pending = false),
+    HeldTopic("saltmaps", 0.6, 0.35, pending = false, id = "h-saltmaps"),
+    HeldTopic("fieldnotes", 0.3, 0.15, pending = true, id = "h-fieldnotes"),
+    HeldTopic("wellness", -0.65, -0.3, pending = false, id = "h-wellness"),
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)

@@ -45,6 +45,8 @@ dependencies {
     // The stance control embeds in post cards and comments (design.md §6).
     implementation(project(":feature:stance"))
     implementation(project(":feature:saved"))
+    // The feed filter's sheet, which Settings' What your feed shows opens too.
+    implementation(project(":feature:feedfilter"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
