@@ -589,6 +589,7 @@ private fun WordsBody(state: PostEditUiState, actions: PostEditActions, words: F
             onClick = actions.onAddMedia,
             size = InlineSize.Small,
             testTag = "post_edit_add_media",
+            node = body / "add",
         )
         BodyRule(body)
     }
