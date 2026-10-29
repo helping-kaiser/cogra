@@ -80,7 +80,8 @@ export type SettingsNotice =
   | "email"
   | "canceled"
   | "applicantSent"
-  | "deletionCanceled";
+  | "deletionCanceled"
+  | "backup";
 
 export function settingsNoticeOf(value: string | null): SettingsNotice | null {
   switch (value) {
@@ -90,6 +91,7 @@ export function settingsNoticeOf(value: string | null): SettingsNotice | null {
     case "canceled":
     case "applicantSent":
     case "deletionCanceled":
+    case "backup":
       return value;
     default:
       return null;
@@ -115,6 +117,9 @@ export function noticeMessage(notice: SettingsNotice, account: SettingsAccount):
       const to = account.pendingEmailChange?.newEmail;
       return to ? `Sent — the link is on its way to ${to}.` : null;
     }
+    case "backup":
+      // A code made late or replaced, typed back (SettingsBackup.md, SettingsBackupNone.md).
+      return "Your key is backed up with the new code.";
     case "deletionCanceled":
       // The grace page's Cancel, answered where it returns (DeleteAccountPending.md:11).
       return CANCELED;

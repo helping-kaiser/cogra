@@ -193,6 +193,7 @@ class CommentEditViewModelTest {
             WriteSigner(sealer, identity),
             topics,
             ScriptedClips(),
+            com.cogra.domain.testing.ScriptedSearchRepository(),
         )
         vm.start(TEST_COMMENT_ID, "A post")
         dispatcher.scheduler.advanceUntilIdle()

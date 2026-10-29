@@ -12,6 +12,7 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
+import { extractInviteId } from "@/lib/onboarding/invite-input";
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 import { PageHeader } from "@/lib/ui/page-header";
@@ -93,7 +94,12 @@ export function topicKey(title: string): string {
 }
 
 export function AboutView() {
-  const fromSettings = useSearchParams().get("from") === "settings";
+  const params = useSearchParams();
+  const fromSettings = params.get("from") === "settings";
+  // The join form's "?" names its link, so Back returns to that form with
+  // its fields as they were (Join.md); only an id that reads as one is used.
+  const joinLink = params.get("from") === "join" ? extractInviteId(params.get("invite") ?? "") : null;
+  const backHref = fromSettings ? "/settings" : joinLink !== null ? `/join/${joinLink}` : "/";
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
 
   const toggle = (key: string) =>
@@ -109,7 +115,7 @@ export function AboutView() {
       <div className="sticky top-0 z-10 bg-surface">
         <PageHeader
           title="About CoGra"
-          backHref={fromSettings ? "/settings" : "/"}
+          backHref={backHref}
           backLabel={fromSettings ? "Back to settings" : "Back"}
           node={part(NODE, "header")}
         />

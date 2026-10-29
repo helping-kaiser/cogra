@@ -6,11 +6,10 @@
 
 package com.cogra.domain.history
 
+import com.cogra.domain.datelineWords
 import com.cogra.domain.feed.FeedKind
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.TextStyle
 import java.util.Locale
 
 /**
@@ -66,13 +65,8 @@ fun historyDayLabel(at: Instant, now: Instant, zone: ZoneId = ZoneId.systemDefau
     return when (day) {
         today -> TODAY
         today.minusDays(1) -> YESTERDAY
-        else -> dateWords(day, today)
+        else -> datelineWords(day, today)
     }
-}
-
-private fun dateWords(day: LocalDate, today: LocalDate): String {
-    val date = "${day.dayOfMonth} ${day.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}"
-    return if (day.year == today.year) date else "$date ${day.year}"
 }
 
 /** The divider's registered key (nodes.json `history.day`): its words lowercased, other runs one `-`. */

@@ -51,13 +51,12 @@ enum class ReplyStep { Compose, Seal }
  * built that face on 2026-09-02: "the reply-wizard lanes can implement
  * ReplySeal 1:1".
  *
- * [Topics] and [References] carry the sections the post wizard shows
- * inline on its details stage. The seal draws them as rows, and
- * `ReferencePicker` is the board behind "+ Cite something"; the topic
- * picker `graph.json` points at is **not boarded**, so the row opens the
- * topic entry the app already ships rather than a screen invented here.
+ * The seal's `+ Add a tag` and `+ Cite something` open no sheet: they open
+ * the TagPicker and the ReferencePicker in the reply's place (round 27).
+ * [Tags] is the staged tags' manager (`TagsSheet`, the post seal's own),
+ * behind the Tags row once a tag is staged; [Cited] the citations'.
  */
-enum class ReplySealSheet { None, License, Stance, Sensitive, Topics, References, Cited }
+enum class ReplySealSheet { None, License, Stance, Sensitive, Tags, Cited }
 
 /** Whether the reply answers the post itself or one of its comments. */
 enum class ReplyTargetKind { Post, Comment }

@@ -38,7 +38,7 @@ import { InlineAction } from "@/lib/ui2/inline-action";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { WaitingCommit } from "@/lib/ui2/waiting-commit";
 
-import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "../../task-page";
+import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "@/lib/ui2/task-page";
 
 const NODE: DataNode = { path: "changeEmail" };
 const node = (tail: string) => part(NODE, tail);
@@ -240,7 +240,7 @@ export function ChangeEmailConfirmView() {
 
           {pending.requiresCode && pending.codeConfirmed && (
             <div className="mt-6">
-              <QuietNote node={node("codeDone")}>{`Done on this side — now open the link at ${pending.newEmail}`}</QuietNote>
+              <QuietNote node={node("interim")}>{`Done on this side — now open the link at ${pending.newEmail}.`}</QuietNote>
             </div>
           )}
 

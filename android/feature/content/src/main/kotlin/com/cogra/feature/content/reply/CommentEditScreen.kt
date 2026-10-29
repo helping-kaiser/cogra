@@ -57,9 +57,15 @@ import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.content.MAX_COMMENT_BODY_CHARS
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
+import com.cogra.feature.content.InertReferencePicker
+import com.cogra.feature.content.InertTagPicker
+import com.cogra.feature.content.PickerInPlace
+import com.cogra.feature.content.PickerOrigin
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
+import com.cogra.feature.content.ReferencePickerHandlers
+import com.cogra.feature.content.TagPickerHandlers
 import com.cogra.feature.content.TopicEntry
 import com.cogra.feature.content.edit.ActsFooter
 import com.cogra.feature.content.edit.ActsSheet
@@ -189,6 +195,8 @@ private fun CommentEditActions.withSections(viewModel: CommentEditViewModel) = c
     onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
     onReferenceSupportChange = viewModel::onReferenceSupportChange,
     onUndoTagWithdrawal = viewModel::onUndoTagWithdrawal,
+    tagPicker = viewModel.tagPicker,
+    referencePicker = viewModel.referencePicker,
     onUndoReferenceWithdrawal = viewModel::onUndoReferenceWithdrawal,
 )
 
@@ -267,6 +275,10 @@ data class CommentEditActions(
     val onReferenceRelevanceChange: (String, Double) -> Unit = { _, _ -> },
     val onReferenceSupportChange: (String, Double) -> Unit = { _, _ -> },
     val onUndoTagWithdrawal: (String) -> Unit = {},
+    /** `+ Add a tag`: the tag picker in the edit's place (TagPicker; web #341). */
+    val tagPicker: TagPickerHandlers = InertTagPicker,
+    /** `+ Cite something`: the citation picker in the edit's place (ReferencePicker). */
+    val referencePicker: ReferencePickerHandlers = InertReferencePicker,
     val onUndoReferenceWithdrawal: (String) -> Unit = {},
 )
 
@@ -298,6 +310,17 @@ internal fun CommentEditScreen(
     BackHandler(onBack = leave)
     // Over the cover's crop, Back is the crop's own back arrow.
     BackHandler(enabled = state.cropping != null, onBack = actions.onCropBack)
+    // `+ Add a tag` and `+ Cite something` open their pickers in the edit's
+    // place (web #341), each pick staged straight into the edit's batch; the
+    // arrow names the comment's edit.
+    val picking = PickerInPlace(
+        tags = state.tagSection,
+        references = state.referenceSection,
+        origin = PickerOrigin.Comment,
+        tagPicker = actions.tagPicker,
+        referencePicker = actions.referencePicker,
+    )
+    if (picking) return
 
     if (state.confirmingDiscard) {
         DiscardConfirm(
@@ -507,6 +530,7 @@ private fun Tags(state: CommentEditState, actions: CommentEditActions) {
             onTagRelevanceChange = actions.onTagRelevanceChange,
             onTagConfidenceChange = actions.onTagConfidenceChange,
             showHeading = false,
+            onOpenPicker = actions.tagPicker::onOpenTagPicker,
         )
         state.tagSection.withdrawn().forEach { name ->
             WithdrawnLine(
@@ -541,6 +565,7 @@ private fun References(state: CommentEditState, actions: CommentEditActions) {
             onReferenceRelevanceChange = actions.onReferenceRelevanceChange,
             onReferenceSupportChange = actions.onReferenceSupportChange,
             showHeading = false,
+            onOpenPicker = actions.referencePicker::onOpenReferencePicker,
         )
         // CommentEdit.md: a staged citation whose cited post never landed
         // reads `This post didn't land, so it can't be cited.` followed by

@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -60,6 +62,7 @@ import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.token.StateTokens
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
 /** The kinds a row's mark tells apart (`NodeMark`'s `kind`). */
@@ -75,19 +78,30 @@ sealed interface RowEdge {
 
     /** An Affinity pair the reader signed (`pairFamily="stance"`): the face, the digits in geek mode. */
     data class Stance(val point: StancePoint) : RowEdge
+
+    /**
+     * The ADD mark, where the whole row's tap picks (`ReferenceRow`: "a
+     * picker's list only ever holds rows still to add, each with the add mark
+     * on its edge"): the 20dp `add` glyph, the act's, never a number.
+     */
+    data object Add : RowEdge
 }
 
 /** The mark's edge (`NodeMark`'s default 32). */
 private val MARK = 32.dp
 
+/** The add mark (`Icon name="add" size={20}`). */
+private val ADD_GLYPH = 20.dp
+
 /** The rank's graph glyph (`Icon name="graph" size={14}`). */
 private val RANK_GLYPH = 14.dp
 
 /**
- * A node kind's mark: an avatar for a person, else a [size] tile — the cover,
- * `T`, `#`, or the comment's glyph — on `surfaceContainerHighest`, or the
- * darker `surfaceContainerHigh` [onCard] (`NodeMark`'s `onCard`: a card's own
- * ground is the lighter tone, so a tile on it takes the darker one).
+ * A node kind's mark: an avatar for a person, else a [size] tile (32dp by
+ * default) — the cover, `T`, `#`, or the comment's glyph — on `surfaceContainerHighest`, or on
+ * `surfaceContainerHigh` [onCard] (`NodeMark`'s `onCard`: a mark standing on a
+ * staged row, whose own ground is the highest tone, would vanish into it).
+ * The score's trace draws it at its own sizes, 24 and 32.
  */
 @Composable
 fun NodeMark(
@@ -102,13 +116,13 @@ fun NodeMark(
         CograAvatar(name = name, size = size, url = src, modifier = modifier)
         return
     }
-    val colors = MaterialTheme.colorScheme
+    val ground = MaterialTheme.colorScheme.let { if (onCard) it.surfaceContainerHigh else it.surfaceContainerHighest }
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .size(size)
             .clip(MaterialTheme.shapes.small)
-            .background(if (onCard) colors.surfaceContainerHigh else colors.surfaceContainerHighest),
+            .background(ground),
     ) {
         when {
             kind == MarkKind.POST && src != null -> AsyncImage(
@@ -154,6 +168,11 @@ fun ReferenceRow(
     onOpen: (() -> Unit)? = null,
     node: DataNode? = null,
     testTag: String? = null,
+    /**
+     * False dims the row and takes its tap away — a picker's batch at its cap
+     * (TagPicker.md, ReferencePicker.md: "dimmed and takes no tap").
+     */
+    enabled: Boolean = true,
 ) {
     val part: (String) -> DataNode? = { node?.let { n -> DataNode("${n.path}.$it") } }
     Row(
@@ -161,7 +180,8 @@ fun ReferenceRow(
         horizontalArrangement = Arrangement.spacedBy(Space.x3),
         modifier = modifier
             .fillMaxWidth()
-            .then(if (onOpen != null) Modifier.clickable(onClick = onOpen) else Modifier)
+            .then(if (onOpen != null) Modifier.clickable(enabled = enabled, onClick = onOpen) else Modifier)
+            .alpha(if (enabled) 1f else StateTokens.DISABLED)
             .defaultMinSize(minHeight = Layout.TouchTargetMin)
             .then(if (node != null) Modifier.dataNode(node) else Modifier.dataNode(testTag?.let(::DataNode)))
             .padding(horizontal = Space.x6, vertical = Space.x1),
@@ -196,6 +216,12 @@ fun ReferenceRow(
 private fun RightEdge(edge: RowEdge?, pending: Boolean, part: (String) -> DataNode?) {
     val quiet = MaterialTheme.colorScheme.onSurfaceVariant
     when (edge) {
+        RowEdge.Add -> Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = null,
+            tint = quiet,
+            modifier = Modifier.size(ADD_GLYPH).dataNode(part("trailing")),
+        )
         is RowEdge.Rank -> Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.x1),

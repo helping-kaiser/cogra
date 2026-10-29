@@ -8,8 +8,11 @@ package com.cogra.domain
 
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 
 private const val MINUTES_PER_HOUR = 60L
 private const val MINUTES_PER_DAY = 60L * 24
@@ -19,6 +22,22 @@ private val DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
 /** The date form, `12.08.2026`, in [zone]. */
 fun dateLine(at: Instant, zone: ZoneId = ZoneId.systemDefault()): String = DATE.format(at.atZone(zone))
+
+/**
+ * THE DATELINE'S WORDS (copy-voice *Ages*: "The dateline form — `12
+ * September`, the year added only when it is not the current one"), where a
+ * date names a record rather than its age: History's day dividers and the
+ * already-published marker. Days are the reader's own, in [zone]; the words
+ * are English, as every age word is ([ageLadder]).
+ */
+fun datelineWords(at: Instant, now: Instant, zone: ZoneId = ZoneId.systemDefault()): String =
+    datelineWords(at.atZone(zone).toLocalDate(), now.atZone(zone).toLocalDate())
+
+/** [datelineWords] for a reader's own [day], seen on [today]. */
+fun datelineWords(day: LocalDate, today: LocalDate): String {
+    val date = "${day.dayOfMonth} ${day.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}"
+    return if (day.year == today.year) date else "$date ${day.year}"
+}
 
 /**
  * The age of [at] seen from [now]: `now` under a minute, then `Nm`, `Nh`,
