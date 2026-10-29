@@ -988,10 +988,19 @@ export function FeedView({
             Loading…
           </p>
         )}
-        {/* EVERY KIND OFF (FeedNothing.md): the empty state stands alone — no
-            seen separator, no rows — says what is off, and offers the way
-            back. The trigger reads `Nothing`. */}
-        {!loading && transportFault === null && filter.kinds.length === 0 && (
+        {!loading &&
+          transportFault === null &&
+          filter.kinds.length > 0 &&
+          shown.length === 0 &&
+          !hasNextPage && <p data-testid="feed-empty">Nothing here yet — write the first post.</p>}
+      </div>
+      {/* EVERY KIND OFF (FeedNothing.md): the empty state stands alone — no
+          seen separator, no rows — says what is off, and offers the way back.
+          The trigger reads `Nothing`. It stands in the list's own column,
+          8px under the band (FeedNothing.jsx: `8px 24px`), never in the
+          banners' slot. */}
+      {!loading && transportFault === null && filter.kinds.length === 0 && (
+        <div className="px-6 py-2">
           <EmptyState
             testId="feed-nothing"
             node={NOTHING}
@@ -999,13 +1008,8 @@ export function FeedView({
             actionLabel={SHOW_POSTS_AGAIN}
             onAction={showPostsAgain}
           />
-        )}
-        {!loading &&
-          transportFault === null &&
-          filter.kinds.length > 0 &&
-          shown.length === 0 &&
-          !hasNextPage && <p data-testid="feed-empty">Nothing here yet — write the first post.</p>}
-      </div>
+        </div>
+      )}
       {/* A FEED POST IS A FULL-WIDTH CONTAINER (design/readme.md, "Feed
           containers — rounded full-width cards"): the filled card keeps its
           corners, tone and 16px text inset but spans the screen edge to edge,

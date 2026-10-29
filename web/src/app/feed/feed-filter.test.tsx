@@ -574,6 +574,8 @@ describe("the feed filter", () => {
       done();
       const empty = await screen.findByTestId(byNode("feed.nothing"));
       expect(empty).toHaveTextContent(SHOWING_NOTHING);
+      // In the list's own column, 8px under the band (FeedNothing.jsx `8px 24px`).
+      expect(empty.parentElement?.className).toBe("px-6 py-2");
       expect(trigger()).toHaveTextContent(/^Nothing$/);
       expect(screen.queryByTestId(byNode("feed.seenSeparator"))).toBeNull();
       expect(screen.queryByTestId(byNode("feed.card"))).toBeNull();
