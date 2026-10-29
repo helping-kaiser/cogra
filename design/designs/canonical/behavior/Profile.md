@@ -64,8 +64,10 @@ WHEN tap profile.bottomBar.profileSlot GIVEN the profile is scrolled -> the prof
 
 WHEN tap profile.bottomBar.profileSlot GIVEN the profile stands at its top -> NEVER anything happens
 
-WHEN tap profile.bottomBar.profileSlot GIVEN a screen deeper in the Profile tab's stack is showing -> the profile comes back at the scroll it was left AND NEVER the profile reloads
+WHEN tap profile.bottomBar.profileSlot GIVEN a screen deeper in the Profile tab's stack is showing -> the profile comes back at the scroll it was left, its list as it was left AND the header's facts are read again beneath it AND NEVER the list reloads
 
 WHEN pull down GIVEN the profile stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
 
 ALWAYS the system draws no refresh indicator of its own
+
+ALWAYS a return to the profile keeps the list below profile.tabRow and its place as they were left, and reads profile.identity's facts again beneath them, so a signed edit or a changed handle shows on arrival, and the list never moves under the returning reader

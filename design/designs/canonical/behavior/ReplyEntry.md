@@ -43,3 +43,7 @@ WHEN the post wizard that Cite in a new post opened closes with its X -> the com
 WHEN tap the scrim, swipe the comments sheet down, press system Back or press Escape -> the comments sheet closes AND what it was opened over stands as it was
 
 WHEN Add a comment is pressed GIVEN the reader is a member -> the reply composer opens AND NEVER a text field takes focus in the comments sheet AND NEVER the keyboard rises over it
+
+ALWAYS postDetail.threadSheet.commentCard.actionRow.stance.pending reads Waiting for your key under the kept pick's face GIVEN a pick is kept pending on the comment and the key is not on this device
+
+ALWAYS postDetail.threadSheet.commentCard.actionRow.stance.pending reads Waiting for your review under the kept pick's face GIVEN the key is on this device and the kept picks' review was left unsigned

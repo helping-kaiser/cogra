@@ -1,5 +1,5 @@
 import React from "react";
-import { MonogramAvatar } from "./ActorChip.jsx";
+import { MonogramAvatar, REDACTED_ACTOR_NAME } from "./ActorChip.jsx";
 import { EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue } from "../stance/StanceReadout.jsx";
 
 /* A person on an opinions list (item 17, the conformance round): their face,
@@ -46,7 +46,17 @@ export const HISTORY_DOOR_LABEL = "See how this opinion built";
    its parts `avatar`, `name`, `handle` and `value` (the readout's `face` and
    `exact` inside it); the history door, where it stands, is `history`. Given
    none, the row renders exactly as before. */
-export function StanceRow({ name, handle, src, pDirected, pInterest, severed = false, onOpen, onOpenHistory, node, nodeKey }) {
+/* A DELETED ACCOUNT'S ROW (round 27, seam 252): `ActorChip`'s law at row
+   scale, as `ContentRow`'s `redacted` is — the reserved disc, `Deleted
+   account` in the system's voice in `text-secondary`, and no handle line,
+   since printing one would invent a handle the reader could try to reach. The
+   opinion it holds or is held by stays, read as any row's. The row is still a
+   door: a deleted account's page is reached by structure that still points at
+   it (`ProfileDeleted`). Its placer names it `redactedRow`, keyed by the
+   actor's id — `row`'s rule names the handle, and a registered rule is never
+   reworded (ruling 56(c), `redactedAccount`'s precedent). */
+export function StanceRow({ name: nameGiven, handle, src, redacted = false, pDirected, pInterest, severed = false, onOpen, onOpenHistory, node, nodeKey }) {
+  const name = redacted ? REDACTED_ACTOR_NAME : nameGiven;
   const zeroLabel = severed ? SEVERED_LABEL : EMPTY_PICK_LABEL;
   const box = { display: "flex", alignItems: "center", gap: 12, width: "100%", boxSizing: "border-box", minHeight: 56, border: 0, background: "none", padding: "6px 16px", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left" };
   const named = (own) => (own ? { "data-node": node, "data-node-key": node && nodeKey } : null);
@@ -58,10 +68,10 @@ export function StanceRow({ name, handle, src, pDirected, pInterest, severed = f
       style={onOpenHistory ? { ...box, width: "auto", flex: 1, minWidth: 0, paddingRight: 0 } : box}
       {...named(!onOpenHistory)}
     >
-      <MonogramAvatar name={name} size={40} src={src} node={node && "avatar"} />
+      <MonogramAvatar name={name} size={40} src={redacted ? undefined : src} redacted={redacted} node={node && "avatar"} />
       <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }} data-node={node && "name"}>{name}</span>
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>@{handle}</span>
+        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", ...(redacted ? { color: "var(--text-secondary)" } : null) }} data-node={node && "name"}>{name}</span>
+        {!redacted && <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>@{handle}</span>}
       </span>
       {!onOpenHistory && <StanceValue pDirected={pDirected} pInterest={pInterest} zeroLabel={zeroLabel} node={node && "value"} />}
     </button>

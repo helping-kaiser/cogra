@@ -20,6 +20,12 @@ ALWAYS the rows of profileStances.list stand strongest first, by the for-or-agai
 
 ALWAYS the reader is never a row on their own page
 
+ALWAYS profileStances.list.redactedRow stands for a person whose account was deleted, where its value puts it, profileStances.list.redactedRow.name reading Deleted account in the system's voice, with the reserved disc and no handle line
+
+ALWAYS profileStances.list.redactedRow keeps the opinion it holds or is held by, read as any row's
+
+WHEN tap profileStances.list.redactedRow -> the deleted account's page opens
+
 WHEN tap profileStances.tabRow.onTab -> the people holding an opinion on this person stand in profileStances.list
 
 WHEN tap profileStances.tabRow.byTab -> the people this person holds an opinion on stand in profileStances.list

@@ -55,6 +55,16 @@ export interface CommentCardProps {
   showStance?: boolean;
   /** Fires when a stance on this comment is signed. */
   onCommit?: (pick: import("../stance/StanceReadout").StancePair, bundle: StanceBundle) => void;
+  /**
+   * A pick kept pending with the key elsewhere — `PostCard`'s prop of the same
+   * name. Pass-through to `StanceControl`'s `pendingPick`.
+   */
+  stancePendingPick?: { pDirected: number; pInterest: number };
+  /**
+   * The key is back and the kept picks' review waits unsigned. Pass-through
+   * to `StanceControl`'s `pendingReview`.
+   */
+  stancePendingReview?: boolean;
   onReply?: () => void;
   onEdit?: () => void;
   /** The viewer authored this comment, so the edit affordance shows. */
@@ -133,6 +143,8 @@ export interface CommentCardProps {
   onOpenScore?: () => void;
   /** The data-node name its placer gives this card — keyed by the author's handle (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its media: `media` (`frame` per item, keyed by its position from 1, a clip's `soundDisc` or `playDisc`; `dots`) and its affordance row: `actionRow`, holding `stance`, `score`, `reply` (the glyph form, or the thread's text button), `edit` and `share`; its author's `authorChip` and its ⋮ `menu`; and a removed comment's mark `removalMark`, `RedactedContent`'s `line`, `detail` and `when` inside it. */
   node?: string;
+  /** The card's key where its author cannot tell it apart — a profile's comments view, keyed by the comment's id. Given none, the author's handle keys the card. */
+  nodeKey?: string;
   /** An open reply or edit composer, rendered between the card and its replies. */
   children?: React.ReactNode;
   /**

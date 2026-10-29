@@ -76,6 +76,28 @@ const SOURCES = {
   platform: "The platform's verdict",
 };
 
+/* BOTH MARKS STAND (round 27, seam 252, item 7). The two states are
+   independent (moderation.md, *Two independent states*): neither clears the
+   other, and the veil is their OR. Naming only the author's would let the
+   verdict hide behind the author's own decision — the collapse Q47 exists to
+   prevent — and naming only the verdict would drop the self-owned fact and its
+   reason. So the line names both, the author's first, with the author's reason
+   where one was given, then the verdict in the edit's blessed words (`Also
+   veiled by the platform's verdict`, `ComposeSensitive`), its own reason after
+   an em dash where the verdict carries one. One line, read and spoken whole:
+   `The author's warning — A dead seabird in the second frame. Also veiled by
+   the platform's verdict`. The server names the case (the `sensitiveSource`
+   ask, AUTHOR | PLATFORM | BOTH); until it does, a client reads the author's
+   line alone. */
+const ALSO_VERDICT = "Also veiled by the platform's verdict";
+export function sensitiveSourceLine(source = "author", reason, verdictReason) {
+  if (source === "both") {
+    const own = `${SOURCES.author}${reason ? ` — ${reason}` : ""}`;
+    return `${own}${/[.!?]$/.test(own) ? "" : "."} ${ALSO_VERDICT}${verdictReason ? ` — ${verdictReason}` : ""}`;
+  }
+  return `${SOURCES[source] ?? SOURCES.author}${reason ? ` — ${reason}` : ""}`;
+}
+
 /* The wash every veil face wears: the standard covering scrim at half strength,
    never an `error` colour. One expression, so the faces cannot drift apart. */
 const WASH = "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)";
@@ -90,6 +112,9 @@ export function SensitiveVeil({
   label = "Sensitive — tap to view",
   reason,
   source = "author",
+  /* The verdict's own reason, read only where `source` is `"both"` (the
+     author's `reason` leads; this follows the verdict's words). */
+  verdictReason,
   revealLabel = "Show",
   radius,
   faceGutter = "var(--space-6)",
@@ -121,7 +146,7 @@ export function SensitiveVeil({
 
   if (revealed) return veiled;
 
-  const sourceLine = `${SOURCES[source] ?? SOURCES.author}${reason ? ` — ${reason}` : ""}`;
+  const sourceLine = sensitiveSourceLine(source, reason, verdictReason);
 
   if (kind === "compact") {
     /* THE COMMENT-SCALE FACE. A comment is words first and its pictures join

@@ -122,6 +122,7 @@ internal fun CommentFeedCard(
             val ownPart: @Composable () -> Unit = {
                 OwnPart(
                     comment = comment,
+                    node = card,
                     testTagPrefix = testTagPrefix,
                     revealed = revealed,
                     onReveal = onReveal,
@@ -156,7 +157,7 @@ internal fun CommentFeedCard(
                 ownPart()
             }
             if (comment.landing.isPending) PendingMarker(testTag = "${testTagPrefix}_pending")
-            FeedCommentRow(comment, testTagPrefix, onReply, onShare, stanceControl)
+            FeedCommentRow(comment, testTagPrefix, onReply, onShare, stanceControl, card / "actionRow")
             // THE ROW LINE under the face (RowSigning.md): a save or unsave of
             // this comment that did not go through.
             ComfortLine(comment.id, "${testTagPrefix}_row_line")
@@ -172,25 +173,27 @@ private fun FeedCommentRow(
     onReply: () -> Unit,
     onShare: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
+    /** The row's registered node (`saved.commentCard.actionRow`): its stance, reply and share wear its parts. */
+    node: DataNode,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().testTag("${testTagPrefix}_affordances"),
+        modifier = Modifier.fillMaxWidth().dataNode(node),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CommentStanceTarget { stanceControl(comment.id, testTagPrefix, null) }
+        CommentStanceTarget { stanceControl(comment.id, testTagPrefix, node / "stance") }
         val handle = comment.author?.handle
         GlyphAffordance(
             icon = Icons.Filled.ChatBubble,
             description = handle?.let { stringResource(R.string.content_card_reply_to, "@$it") }
                 ?: stringResource(R.string.content_comment_reply),
-            testTag = "${testTagPrefix}_reply",
+            testTag = (node / "reply").tag,
             onClick = onReply,
         )
         GlyphAffordance(
             icon = Icons.Filled.Share,
             description = stringResource(R.string.content_share_comment),
-            testTag = "${testTagPrefix}_share",
+            testTag = (node / "share").tag,
             onClick = onShare,
         )
     }
@@ -299,6 +302,8 @@ internal fun NodeMark(comment: Boolean, coverUrl: String?, removed: Boolean, tes
 @Composable
 private fun OwnPart(
     comment: CommentView,
+    /** The card (`saved.commentCard`, keyed): its author chip, ⋮ and media wear its parts. */
+    node: DataNode,
     testTagPrefix: String,
     revealed: Boolean,
     onReveal: () -> Unit,
@@ -321,6 +326,7 @@ private fun OwnPart(
             commentMenuRows(comment = comment, onCite = onCite, onLicense = onLicense, onRemove = onRemove)
         },
         menuContentDescription = stringResource(R.string.content_menu_comment),
+        node = node,
     )
     // THE COMPACT VEIL TAKES THE WORDS (FeedCommentShapes.md); the head row
     // above stays readable.
@@ -339,6 +345,7 @@ private fun OwnPart(
         onReveal = onReveal,
         sensitiveSource = if (comment.sensitiveSelfMark) SensitiveSource.Author else SensitiveSource.Platform,
         sensitiveReason = comment.sensitiveReason,
+        node = node,
     )
     TopicsLine(
         topics = comment.topics,

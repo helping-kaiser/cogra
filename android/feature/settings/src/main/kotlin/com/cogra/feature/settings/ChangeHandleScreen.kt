@@ -7,14 +7,10 @@ package com.cogra.feature.settings
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,14 +22,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,6 +37,7 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograTextField
+import com.cogra.core.designsystem.v2.atom.DialogSurface
 import com.cogra.core.designsystem.v2.atom.QuietNote
 import com.cogra.core.designsystem.v2.atom.WaitingCommit
 import com.cogra.core.designsystem.v2.atom.rememberParticiple
@@ -247,68 +242,46 @@ private fun ChangeHandleConfirm(
     val titleFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { titleFocus.requestFocus() } }
     val late = rememberParticiple(state.inFlight)
-    AlertDialog(
-        onDismissRequest = onKeep,
-        properties = DialogProperties(
-            dismissOnBackPress = !state.inFlight,
-            dismissOnClickOutside = !state.inFlight,
-        ),
-        modifier = Modifier.dataNode(dialog),
-        title = {
-            Text(
-                text = stringResource(R.string.change_handle_dialog_title, state.handle),
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier
-                    .semantics { heading() }
-                    .focusRequester(titleFocus)
-                    .focusable()
-                    .dataNode(dialog / "title"),
+    // The house dialog (`DialogSurface`), 320 wide: in flight the scrim and
+    // Back are locked, never dimmed.
+    DialogSurface(
+        title = stringResource(R.string.change_handle_dialog_title, state.handle),
+        paragraphs = listOf(stringResource(R.string.change_handle_dialog_body, state.current)),
+        onScrimPress = { if (!state.inFlight) onKeep() },
+        node = dialog,
+        titleFocus = titleFocus,
+        extra = { if (state.dialogFault) HandleDialogFault() },
+        actions = {
+            CograButton(
+                text = stringResource(
+                    when {
+                        late -> R.string.change_handle_dialog_in_flight
+                        state.dialogFault -> R.string.retry
+                        else -> R.string.change_handle_dialog_change
+                    },
+                ),
+                onClick = onChangeIt,
+                kind = ButtonKind.Text,
+                modifier = Modifier.dataNode(dialog / "change"),
             )
-        },
-        text = { HandleDialogBody(state) },
-        confirmButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                CograButton(
-                    text = stringResource(
-                        when {
-                            late -> R.string.change_handle_dialog_in_flight
-                            state.dialogFault -> R.string.retry
-                            else -> R.string.change_handle_dialog_change
-                        },
-                    ),
-                    onClick = onChangeIt,
-                    kind = ButtonKind.Text,
-                    modifier = Modifier.dataNode(dialog / "change"),
-                )
-                CograButton(
-                    text = stringResource(R.string.change_handle_dialog_keep),
-                    onClick = onKeep,
-                    modifier = Modifier.dataNode(dialog / "keep"),
-                )
-            }
+            CograButton(
+                text = stringResource(R.string.change_handle_dialog_keep),
+                onClick = onKeep,
+                modifier = Modifier.dataNode(dialog / "keep"),
+            )
         },
     )
 }
 
-/** The cost, said unsoftened — and, with no answer, the dialog's own fault line (it answers in itself, K1). */
+/** With no answer, the dialog's own fault line, under the cost said unsoftened (it answers in itself, K1). */
 @Composable
-private fun HandleDialogBody(state: ChangeHandleUiState) {
-    val dialog = Page / "dialog"
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(
-            text = stringResource(R.string.change_handle_dialog_body, state.current),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.dataNode(dialog / "body"),
-        )
-        if (state.dialogFault) {
-            Text(
-                text = stringResource(R.string.network_error),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier
-                    .semantics { liveRegion = LiveRegionMode.Polite }
-                    .dataNode(DataNode("change_handle_dialog_fault")),
-            )
-        }
-    }
+private fun HandleDialogFault() {
+    Text(
+        text = stringResource(R.string.network_error),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.error,
+        modifier = Modifier
+            .semantics { liveRegion = LiveRegionMode.Polite }
+            .dataNode(DataNode("change_handle_dialog_fault")),
+    )
 }

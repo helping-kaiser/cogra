@@ -42,6 +42,10 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.RowLine
+import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.v2.atom.ButtonKind
+import com.cogra.core.designsystem.v2.atom.ButtonSize
+import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.LoadingState
@@ -115,7 +119,7 @@ fun CommentsSheetRoute(
      * is the surface saying its own read is stale, so the thread re-reads too.
      */
     refreshToken: Int = 0,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit = { _, _, _ -> },
     /** A comment to land on: the thread pages and unfolds until it stands, then scrolls to it. */
     landOn: String? = null,
     /** The guest gate a signed-out reader's Save opens; null when signed in. */
@@ -252,7 +256,7 @@ fun CommentsSheet(
     restoreTo: CommentsScroll? = null,
     onRestored: () -> Unit = {},
     /** The stance control the post and every comment carry (design.md §6). */
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit = { _, _, _ -> },
     /** The app's one Saved overlay, which the comments' menus save through; null stands their Save rows inert. */
     saved: SavedWrites? = null,
     /** The guest gate a signed-out reader's Save opens; null when signed in. */
@@ -297,10 +301,18 @@ fun CommentsSheet(
     // there collapses Material's expanded anchor and pins the sheet to the
     // top of the window, the very top of the glass included.
     CograSheetHost(onDismissRequest = onDismiss) {
-        CograSheetSurface(tallest = true, testTag = "comments_sheet") {
+        // THE THREAD SHEET IS ONE NAMED SHEET (`postDetail.threadSheet`), over
+        // the detail or over a list alike — as the detail's one menu sheet is.
+        CograSheetSurface(
+            tallest = true,
+            testTag = THREAD_SHEET.tag,
+            handleTestTag = (THREAD_SHEET / "dragHandle").tag,
+        ) {
             SheetTitle(
                 text = stringResource(R.string.content_comments_heading),
-                modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x1),
+                modifier = Modifier
+                    .padding(horizontal = Space.x6, vertical = Space.x1)
+                    .dataNode(THREAD_SHEET / "title"),
             )
             // The foot is drawn last and the list carries the weight, so a
             // foot that grows takes its room from the thread above it and the
@@ -350,6 +362,7 @@ private fun CommentRemoveConfirm(comment: CommentView, onClose: () -> Unit) {
         onClose = onClose,
         testTag = "comment_remove_confirm",
         node = POST_DETAIL / "dialog",
+        answerKeyed = true,
     )
 }
 
@@ -409,7 +422,7 @@ private fun CommentsList(
     onLicense: (LicenseChoice) -> Unit,
     /** An own comment's Remove row: the think-twice dialog over the thread. */
     onRemoveComment: (CommentView) -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // ONE STAGE FOR THE THREAD (the stage law, design/readme.md "The
@@ -636,7 +649,7 @@ private fun CommentThread(
     /** Raises the terms in the sheet the menu's License row opens. */
     onLicense: (LicenseChoice) -> Unit,
     onRemoveComment: (CommentView) -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
 ) {
     val indent = (minOf(depth, MAX_INDENT_DEPTH) * 12).dp
     Column(
@@ -701,18 +714,22 @@ private fun CommentCard(
     onReference: (String) -> Unit,
     onLicense: (LicenseChoice) -> Unit,
     onRemoveComment: (CommentView) -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
 ) {
+    // Keyed by the comment's id, as a feed card by its post's: the board keys
+    // its samples by handle, which one person's two comments would share.
+    val card = (THREAD_SHEET / "commentCard").keyed(comment.id)
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .testTag("detail_comment_${comment.id}"),
+            .dataNode(card),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+                // `Card.jsx`: `--card-padding` 16 and `--card-gap` 12, as the feed's cards.
+                .padding(Space.x4),
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
             // The picture the boards draw on a comment card (Q49),
             // and the age beside it. Null is the monogram — the
@@ -750,15 +767,18 @@ private fun CommentCard(
                 // the thread already lives in a sheet, so this menu is a
                 // sheet on a sheet (design/readme.md:2364).
                 stacked = true,
+                node = card,
             )
             CommentCardBody(
                 comment = comment,
                 state = state,
+                node = card,
                 onReveal = onReveal,
                 onOpenTopic = onOpenTopic,
             )
             CommentAffordances(
                 comment = comment,
+                node = card / "actionRow",
                 viewerId = viewerId,
                 signedIn = signedIn,
                 onReplyTo = onReplyTo,
@@ -779,6 +799,7 @@ private fun CommentCard(
 private fun CommentCardBody(
     comment: CommentView,
     state: CommentsUiState,
+    node: DataNode,
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenTopic: (String) -> Unit,
 ) {
@@ -795,6 +816,7 @@ private fun CommentCardBody(
         removal = comment.removal,
         testTagPrefix = "comment_${comment.id}",
         surface = BodySurface.Comment,
+        node = node,
         revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),
         onReveal = { onReveal(comment.id, comment.sensitiveMark()) },
         // The statuses are the veil — the OR of the author's
@@ -839,41 +861,46 @@ private fun CommentCardBody(
 @Composable
 private fun CommentAffordances(
     comment: CommentView,
+    /** The card's registered `actionRow`: its stance, reply and edit wear its parts. */
+    node: DataNode,
     viewerId: String?,
     signedIn: Boolean?,
     onReplyTo: (CommentView) -> Unit,
     onEditComment: (CommentView) -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
 ) {
     FlowRow(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().dataNode(node),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalArrangement = Arrangement.spacedBy(Space.x1),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         // A comment carries the control too (design.md §6), naming its
         // target `this comment` (`CommentCard.jsx`).
-        CommentStanceTarget { stanceControl(comment.id, "comment_${comment.id}") }
+        CommentStanceTarget { stanceControl(comment.id, "comment_${comment.id}", node / "stance") }
         if (signedIn == true) {
             // `ReplyEntry` 5 — the composer, pre-targeted.
-            TextButton(
+            // `Button variant="text" size="sm"` (`CommentCard.jsx`).
+            CograButton(
+                text = stringResource(R.string.content_comment_reply),
                 onClick = { onReplyTo(comment) },
-                modifier = Modifier.testTag("comment_reply_${comment.id}"),
-            ) {
-                Text(stringResource(R.string.content_comment_reply))
-            }
+                kind = ButtonKind.Text,
+                size = ButtonSize.Compact,
+                modifier = Modifier.dataNode(node / "reply"),
+            )
         }
         // `ReplyMedia` 6 — an own comment wears Edit, and it
         // opens `CommentEdit`. A REMOVED ONE LOSES IT WITH ITS PAYLOAD
         // (CommentRemoved.md:9; `_shared.jsx` `onEdit={removed ? undefined …}`):
         // there is nothing left on it to edit. Reply and the face stay.
         if (isOwn(comment, viewerId) && !comment.removed) {
-            TextButton(
+            CograButton(
+                text = stringResource(R.string.content_edit),
                 onClick = { onEditComment(comment) },
-                modifier = Modifier.testTag("comment_edit_${comment.id}"),
-            ) {
-                Text(stringResource(R.string.content_edit))
-            }
+                kind = ButtonKind.Text,
+                size = ButtonSize.Compact,
+                modifier = Modifier.dataNode(node / "edit"),
+            )
         }
     }
 }
@@ -905,7 +932,7 @@ private fun CommentBranch(
     onReference: (String) -> Unit,
     onLicense: (LicenseChoice) -> Unit,
     onRemoveComment: (CommentView) -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
 ) {
     val thread = state.replyThreads[comment.id]
     val replies = thread?.items.orEmpty()
@@ -961,3 +988,6 @@ private fun CommentBranch(
         }
     }
 }
+
+/** The thread's one sheet (`postDetail.threadSheet`), whichever surface raised it. */
+internal val THREAD_SHEET = POST_DETAIL / "threadSheet"

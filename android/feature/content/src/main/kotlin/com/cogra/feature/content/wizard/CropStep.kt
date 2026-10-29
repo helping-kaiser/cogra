@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.bleedHorizontally
 import com.cogra.core.designsystem.v2.media.CropFraming
 import com.cogra.core.designsystem.v2.media.CropShapeChips
@@ -58,6 +60,7 @@ internal fun ColumnScope.CropStepBody(
     onShapeChange = onShapeChange,
     onFrameAsset = onFrameAsset,
     onCropsChanged = onCropsChanged,
+    node = COMPOSE_CROP,
 )
 
 /**
@@ -77,6 +80,12 @@ internal fun ColumnScope.CropFrames(
     onCropsChanged: (Map<String, CropSpec>) -> Unit,
     locked: Boolean = false,
     testTagPrefix: String = "wizard",
+    /**
+     * The crop's data-node on a registered screen (`composeCrop`): the chips
+     * `shapes`, the cut's `viewport`, `zoom` and `howTo`, and the filmstrip
+     * `pictures` (its `thumb` keyed by place from 1).
+     */
+    node: DataNode? = null,
 ) {
     val mediaShape = shape.toMediaShape()
 
@@ -108,7 +117,8 @@ internal fun ColumnScope.CropFrames(
         CropShapeChips(
             selected = mediaShape,
             onSelect = { onShapeChange(it.toDraftShape()) },
-            modifier = Modifier.testTag("${testTagPrefix}_crop_shapes"),
+            modifier = if (node == null) Modifier.testTag("${testTagPrefix}_crop_shapes") else Modifier,
+            node = node?.div("shapes"),
         )
     }
 
@@ -121,6 +131,7 @@ internal fun ColumnScope.CropFrames(
         shape = mediaShape,
         state = framings.getValue(framed.uri),
         testTag = "${testTagPrefix}_crop",
+        node = node,
     )
 
     // No description field here: **never from the crop step** — a geometry
@@ -144,7 +155,8 @@ internal fun ColumnScope.CropFrames(
                 .bleedHorizontally(RING_ROOM)
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .padding(horizontal = RING_ROOM),
+                .padding(horizontal = RING_ROOM)
+                .dataNode(node?.div("pictures")),
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
             picked.forEachIndexed { index, asset ->
@@ -162,7 +174,8 @@ internal fun ColumnScope.CropFrames(
                     dimmed = index != framingIndex,
                     onClick = { onFrameAsset(index) },
                     contentDescription = stringResource(R.string.content_frame_picture_at, index + 1),
-                    testTag = "${testTagPrefix}_filmstrip_$index",
+                    testTag = node?.div("pictures")?.div("thumb")?.keyed("${index + 1}")?.tag
+                        ?: "${testTagPrefix}_filmstrip_$index",
                 )
             }
         }
@@ -199,3 +212,6 @@ internal fun MediaShape.toDraftShape(): DraftShape = when (this) {
 
 /** The selection ring's reach past its tile: 1dp offset + 2dp stroke. */
 private val RING_ROOM = 3.dp
+
+/** `ComposeCrop`'s registered prefix: the wizard's crop stage, and the crop an edit raises for added pictures. */
+internal val COMPOSE_CROP = DataNode("composeCrop")

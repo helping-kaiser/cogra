@@ -76,8 +76,7 @@ fun WizardHeader(
     /**
      * The header's data-node on a registered screen (`composeDetails.header`):
      * the header, its back arrow, title and X then wear the registered paths
-     * in place of the [testTag] ones. The help dot is not on a registered
-     * board, so it keeps its own.
+     * in place of the [testTag] ones, its stage note `stage` and its `?` `help`.
      */
     node: DataNode? = null,
     /**
@@ -174,7 +173,9 @@ fun WizardHeader(
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                modifier = Modifier.padding(start = Space.x2),
+                modifier = Modifier
+                    .padding(start = Space.x2)
+                    .dataNode(node?.div("stage")),
             )
         }
 
@@ -184,7 +185,7 @@ fun WizardHeader(
                 onHelp = onHelp,
                 contentDescription = helpContentDescription,
                 modifier = Modifier.padding(start = Space.x2),
-                testTag = testTag?.let { "${it}_help" } ?: "wizard_help",
+                testTag = node?.div("help")?.tag ?: testTag?.let { "${it}_help" } ?: "wizard_help",
             )
         }
     }

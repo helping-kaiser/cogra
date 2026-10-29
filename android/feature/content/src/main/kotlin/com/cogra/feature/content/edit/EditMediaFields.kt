@@ -22,6 +22,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.ButtonSize
 import com.cogra.core.designsystem.v2.atom.CograButton
@@ -54,6 +56,7 @@ import com.cogra.domain.media.CropWindow
 import com.cogra.feature.content.R
 import com.cogra.feature.content.toItem
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.COMPOSE_CROP
 import com.cogra.feature.content.wizard.CropFrames
 import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.WRITE_RULE_TITLE
@@ -79,17 +82,21 @@ const val CLIP_WHOLE_POST_LINE = "A video is the whole post."
 /** Under the cover field's door where a clip has no chosen face (copy-voice, the video-cover round). */
 const val COVER_DOOR_NOTE = "It plays the moment it is on screen, so it starts on its own first frame."
 
-/** One labelled group, as the boards stack them at 6dp under a `FieldLabel`. */
+/**
+ * One labelled group, as the boards stack them at 6dp under a `FieldLabel`;
+ * on a registered screen it wears [node] and its label `label`.
+ */
 @Composable
-internal fun EditFieldGroup(label: String, content: @Composable ColumnScope.() -> Unit) {
+internal fun EditFieldGroup(label: String, node: DataNode? = null, content: @Composable ColumnScope.() -> Unit) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().dataNode(node),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.dataNode(node?.div("label")),
         )
         content()
     }
@@ -118,8 +125,10 @@ internal fun ClipField(
     note: String? = null,
     /** The comment's tile is the 56 square, its picture contained (`CommentEditVideo`). */
     squareTile: Dp? = null,
+    /** The field's data-node on a registered screen (`postEdit.video`). */
+    node: DataNode? = null,
 ) {
-    EditFieldGroup(label = "Video") {
+    EditFieldGroup(label = "Video", node = node) {
         val (width, height) = clipBox(clip.asset.aspectRatio)
         MediaThumb(
             item = clip.asset.toItem(),
@@ -130,8 +139,8 @@ internal fun ClipField(
             duration = clip.asset.durationMs?.let { formatDuration(it) },
             onRemove = onRemove,
             removeLabel = REMOVE_VIDEO,
-            removeTestTag = "${testTagPrefix}_clip_remove",
-            testTag = "${testTagPrefix}_clip",
+            removeTestTag = node?.div("thumb")?.div("remove")?.tag ?: "${testTagPrefix}_clip_remove",
+            testTag = node?.div("thumb")?.tag ?: "${testTagPrefix}_clip",
         )
         DescribeCounter(
             described = if (clip.altText.isBlank()) 0 else 1,
@@ -139,9 +148,10 @@ internal fun ClipField(
             onDescribe = onDescribe,
             subject = DescribeSubject.Video,
             testTag = "${testTagPrefix}_describe_clip",
+            node = node?.div("describeRow"),
         )
         if (note != null) {
-            QuietNote(text = note, modifier = Modifier.testTag("${testTagPrefix}_clip_note"))
+            QuietNote(text = note, modifier = Modifier.testTag(node?.div("rule")?.tag ?: "${testTagPrefix}_clip_note"))
         }
     }
 }
@@ -165,9 +175,11 @@ internal fun CoverField(
     /** The post's door carries its quiet reason; the comment's draws none (CommentEditVideo.md). */
     doorNote: Boolean,
     squareTile: Dp? = null,
+    /** The field's data-node on a registered screen (`postEdit.cover`). */
+    node: DataNode? = null,
 ) {
     val clip = gallery.clip ?: return
-    EditFieldGroup(label = "Cover") {
+    EditFieldGroup(label = "Cover", node = node) {
         if (gallery.coverChosen) {
             val face = gallery.newCover
             val (width, height) = clipBox(clip.asset.aspectRatio)
@@ -186,14 +198,14 @@ internal fun CoverField(
                     badge = ThumbBadge.Failed.takeIf { drawn?.failed == true },
                     uploading = drawn?.uploading ?: false,
                     progress = drawn?.progress,
-                    testTag = "${testTagPrefix}_cover",
+                    testTag = node?.div("thumb")?.tag ?: "${testTagPrefix}_cover",
                 )
                 CograButton(
                     text = "Change the cover",
                     onClick = onPick,
                     kind = ButtonKind.Text,
                     size = ButtonSize.Compact,
-                    testTag = "${testTagPrefix}_change_cover",
+                    testTag = node?.div("change")?.tag ?: "${testTagPrefix}_change_cover",
                 )
             }
         } else {
@@ -201,9 +213,14 @@ internal fun CoverField(
                 text = "Add a cover",
                 onClick = onPick,
                 size = InlineSize.Small,
-                testTag = "${testTagPrefix}_add_cover",
+                testTag = node?.div("add")?.tag ?: "${testTagPrefix}_add_cover",
             )
-            if (doorNote) QuietNote(text = COVER_DOOR_NOTE, modifier = Modifier.testTag("${testTagPrefix}_cover_note"))
+            if (doorNote) {
+                QuietNote(
+                    text = COVER_DOOR_NOTE,
+                    modifier = Modifier.testTag(node?.div("note")?.tag ?: "${testTagPrefix}_cover_note"),
+                )
+            }
         }
         if (gallery.newCover?.upload is AssetUpload.Failed) {
             UploadErrorLine(
@@ -224,7 +241,14 @@ internal fun CoverField(
  * one failed, the line takes its fault reading with `Retry`, Sign disabled.
  */
 @Composable
-internal fun EditUploadGate(gallery: EditGallery, onRetry: () -> Unit, testTag: String) {
+internal fun EditUploadGate(
+    gallery: EditGallery,
+    onRetry: () -> Unit,
+    testTag: String,
+    node: DataNode? = null,
+    /** The board draws the gate once per upload state, keyed by it (`EditCompose`'s `upload` chip). */
+    keyByState: Boolean = false,
+) {
     val media = if (gallery.clip != null) UploadMedia.Cover else UploadMedia.Pictures
     when {
         gallery.uploadsFailed > 0 -> UploadGateFailedLine(
@@ -233,6 +257,7 @@ internal fun EditUploadGate(gallery: EditGallery, onRetry: () -> Unit, testTag: 
             failed = gallery.uploadsFailed,
             modifier = Modifier.fillMaxWidth(),
             testTag = testTag,
+            node = if (keyByState) node?.keyed("failed") else node,
         )
         gallery.uploadsPending > 0 -> UploadStatusLine(
             done = gallery.uploadsDone,
@@ -240,6 +265,7 @@ internal fun EditUploadGate(gallery: EditGallery, onRetry: () -> Unit, testTag: 
             media = media,
             modifier = Modifier.fillMaxWidth(),
             testTag = testTag,
+            node = if (keyByState) node?.keyed("uploading") else node,
         )
         else -> Unit
     }
@@ -252,7 +278,13 @@ internal fun EditUploadGate(gallery: EditGallery, onRetry: () -> Unit, testTag: 
  * `Retry` and `Remove it` / `Remove them`.
  */
 @Composable
-internal fun EditUploadErrorLine(gallery: EditGallery, onRetry: () -> Unit, onRemove: () -> Unit, testTag: String) {
+internal fun EditUploadErrorLine(
+    gallery: EditGallery,
+    onRetry: () -> Unit,
+    onRemove: () -> Unit,
+    testTag: String,
+    node: DataNode? = null,
+) {
     val failed = gallery.pictures.count { it is EditPicture.Added && it.asset.upload is AssetUpload.Failed }
     if (failed == 0) return
     UploadErrorLine(
@@ -261,6 +293,7 @@ internal fun EditUploadErrorLine(gallery: EditGallery, onRetry: () -> Unit, onRe
         onRemove = onRemove,
         removeLabel = removeFailedLabel(failed),
         testTag = testTag,
+        node = node,
     )
 }
 
@@ -344,6 +377,9 @@ internal data class EditCropActions(
  */
 @Composable
 internal fun EditCropStage(crop: EditCrop, actions: EditCropActions, testTagPrefix: String) {
+    // The two crops are registered boards of their own: `ComposeCrop` for
+    // pictures on their way in, `CoverCrop` for a clip's face.
+    val node = if (crop is EditCrop.Cover) COVER_CROP else COMPOSE_CROP
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -356,6 +392,7 @@ internal fun EditCropStage(crop: EditCrop, actions: EditCropActions, testTagPref
             onLeave = actions.onLeave,
             leaveContentDescription = EDIT_LEAVE_LABEL,
             testTag = "${testTagPrefix}_crop_header",
+            node = node / "header",
         )
         when (crop) {
             is EditCrop.Pictures -> WizardBody(scrollable = true, bottom = 0.dp) {
@@ -369,6 +406,7 @@ internal fun EditCropStage(crop: EditCrop, actions: EditCropActions, testTagPref
                     onCropsChanged = actions.onCropsChanged,
                     locked = crop.locked,
                     testTagPrefix = testTagPrefix,
+                    node = COMPOSE_CROP,
                 )
             }
             // `CoverCrop`: the column stands `8px 24px` under the header, 12 apart.
@@ -381,7 +419,7 @@ internal fun EditCropStage(crop: EditCrop, actions: EditCropActions, testTagPref
                 text = "Next",
                 onClick = actions.onNext,
                 modifier = Modifier.fillMaxWidth(),
-                testTag = "${testTagPrefix}_crop_next",
+                testTag = (node / "next").tag,
             )
         }
     }
@@ -401,5 +439,9 @@ private fun CoverCropBody(crop: EditCrop.Cover, onChanged: (CropSpec) -> Unit, t
         state = state,
         notes = listOf(CROP_HOW_TO_LINE, COVER_CROP_LINE),
         testTag = "${testTagPrefix}_cover_crop_view",
+        node = COVER_CROP,
     )
 }
+
+/** `CoverCrop`'s registered prefix: the step every flow that crops a clip's cover shares. */
+internal val COVER_CROP = DataNode("coverCrop")

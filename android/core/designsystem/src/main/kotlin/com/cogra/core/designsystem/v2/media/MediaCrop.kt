@@ -31,6 +31,8 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.canhub.cropper.CropImageView
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.CograChip
 import com.cogra.core.designsystem.v2.atom.QuietNote
 import com.cogra.core.designsystem.v2.atom.bleedHorizontally
@@ -81,17 +83,22 @@ fun MediaCrop(
      */
     bleed: Dp = Layout.ScreenGutter,
     testTag: String? = null,
+    /**
+     * The crop's data-node on a registered screen (`composeCrop`): its
+     * `viewport`, `zoom` (with its `input`) and `howTo` line wear its parts.
+     */
+    node: DataNode? = null,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        CropViewport(item, shape.ratio, shape.cropAspect, state, mask, bleed, testTag)
+        CropViewport(item, shape.ratio, shape.cropAspect, state, mask, bleed, node?.div("viewport")?.tag ?: testTag)
 
-        CropZoom(state = state, testTag = testTag?.let { "${it}_zoom" })
+        CropZoom(state = state, testTag = testTag?.let { "${it}_zoom" }, node = node?.div("zoom"))
 
         // `QuietNote` (ComposeCrop.jsx:63): what the crop decides and how it moves.
-        QuietNote(text = caption)
+        QuietNote(text = caption, modifier = Modifier.fillMaxWidth().dataNode(node?.div("howTo")))
     }
 }
 
@@ -116,16 +123,29 @@ fun LockedCrop(
     modifier: Modifier = Modifier,
     bleed: Dp = Layout.ScreenGutter,
     testTag: String? = null,
+    /**
+     * The crop's data-node on a registered screen (`coverCrop`): its
+     * `viewport` and `zoom` (with its `input`) wear its parts, and each of
+     * [notes] the part [noteParts] names in its place.
+     */
+    node: DataNode? = null,
+    noteParts: List<String> = listOf("howTo", "shapeNote"),
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        CropViewport(item, frameRatio = 1f, window = window, state, CropMask.Thirds, bleed, testTag)
+        val viewportTag = node?.div("viewport")?.tag ?: testTag
+        CropViewport(item, frameRatio = 1f, window = window, state, CropMask.Thirds, bleed, viewportTag)
 
-        CropZoom(state = state, testTag = testTag?.let { "${it}_zoom" })
+        CropZoom(state = state, testTag = testTag?.let { "${it}_zoom" }, node = node?.div("zoom"))
 
-        notes.forEach { QuietNote(text = it) }
+        notes.forEachIndexed { index, note ->
+            QuietNote(
+                text = note,
+                modifier = Modifier.fillMaxWidth().dataNode(noteParts.getOrNull(index)?.let { node?.div(it) }),
+            )
+        }
     }
 }
 
@@ -348,7 +368,14 @@ private fun panByKey(event: KeyEvent, state: CropState): Boolean {
  * the slider, the slider moves the window.
  */
 @Composable
-private fun CropZoom(state: CropState, testTag: String?) {
+private fun CropZoom(state: CropState, testTag: String?, node: DataNode? = null) {
+    // The board's zoom is a box around its range input; the slider is both,
+    // so the box wears the node and the slider its `input`.
+    Box(Modifier.dataNode(node)) { ZoomSlider(state, node?.div("input")?.tag ?: testTag) }
+}
+
+@Composable
+private fun ZoomSlider(state: CropState, testTag: String?) {
     Slider(
         value = state.zoom,
         onValueChange = state::zoomTo,
@@ -367,9 +394,12 @@ fun CropShapeChips(
     selected: MediaShape,
     onSelect: (MediaShape) -> Unit,
     modifier: Modifier = Modifier,
+    /** The chips' data-node on a registered screen (`composeCrop.shapes`): each chip its `<shape>Chip`. */
+    node: DataNode? = null,
 ) {
     Row(
-        modifier = modifier,
+        // The chips' row is the column's full width, the chips at its start (ComposeCrop.jsx).
+        modifier = modifier.fillMaxWidth().dataNode(node),
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
         MediaShape.entries.forEach { shape ->
@@ -377,7 +407,7 @@ fun CropShapeChips(
                 label = shape.label,
                 selected = shape == selected,
                 onClick = { onSelect(shape) },
-                testTag = "crop_shape_${shape.name.lowercase()}",
+                testTag = node?.div("${shape.name.lowercase()}Chip")?.tag ?: "crop_shape_${shape.name.lowercase()}",
             )
         }
     }

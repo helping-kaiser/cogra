@@ -117,7 +117,7 @@ fun NotificationsScreen(
         when {
             shown.loading && shown.notifications.isEmpty() -> Text(
                 stringResource(com.cogra.core.designsystem.R.string.loading_state),
-                modifier = Modifier.padding(16.dp).testTag("notifications_loading"),
+                modifier = Modifier.padding(16.dp).dataNode((NOTIFICATIONS / "list" / "loading").keyed("loading")),
             )
 
             shown.failed && shown.notifications.isEmpty() -> LoadFailed(onRetry)
@@ -179,13 +179,18 @@ private fun NotificationList(
 
 @Composable
 private fun LoadFailed(onRetry: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(16.dp)) {
+    // The board draws the list's load states once per `load` value, keyed by it.
+    val fault = NOTIFICATIONS / "list" / "fault"
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(16.dp).dataNode(fault.keyed("failed")),
+    ) {
         Text(
             stringResource(R.string.notifications_load_failed),
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.weight(1f).testTag("notifications_transport_error"),
         )
-        TextButton(onClick = onRetry, modifier = Modifier.testTag("notifications_retry")) {
+        TextButton(onClick = onRetry, modifier = Modifier.dataNode(fault / "retry")) {
             Text(stringResource(R.string.notifications_retry))
         }
     }
@@ -207,13 +212,14 @@ private fun Empty() {
 /** The chronicle's load-more fault, quiet (design digest item 57). */
 @Composable
 private fun MoreFailed(onLoadMore: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    val fault = NOTIFICATIONS / "list" / "moreFault"
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.dataNode(fault.keyed("more"))) {
         Text(
             stringResource(R.string.notifications_more_failed),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("notifications_more_failed"),
         )
-        TextButton(onClick = onLoadMore, modifier = Modifier.testTag("notifications_more_retry")) {
+        TextButton(onClick = onLoadMore, modifier = Modifier.dataNode(fault / "retry")) {
             Text(stringResource(R.string.notifications_retry))
         }
     }
