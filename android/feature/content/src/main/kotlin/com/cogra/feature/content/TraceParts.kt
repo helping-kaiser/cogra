@@ -176,10 +176,11 @@ internal fun PathTrace(
     size: Dp = TRACE_FACE,
     onCard: Boolean = false,
     node: DataNode? = null,
+    modifier: Modifier = Modifier,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.clearAndSetSemantics {
+        modifier = modifier.clearAndSetSemantics {
             contentDescription = spoken
             node?.let { testTag = it.tag }
         },

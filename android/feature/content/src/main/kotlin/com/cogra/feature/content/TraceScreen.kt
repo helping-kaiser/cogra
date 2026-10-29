@@ -165,7 +165,7 @@ fun TraceScreen(
             when (val view = state.view) {
                 TraceView.Settling -> QuietNote(
                     stringResource(R.string.content_trace_settling),
-                    Modifier.dataNode(FEED_ENTRY / "note"),
+                    Modifier.fillMaxWidth().dataNode(FEED_ENTRY / "note"),
                 )
                 TraceView.Offline, TraceView.Fault -> TraceFault(offline = view == TraceView.Offline, onRetry = onRetry)
                 TraceView.Loading -> Text(
@@ -230,7 +230,7 @@ private fun Levels(
 ) {
     // NO PATHS: the moved-on line, no action, no empty state (FeedEntryMoved.md:3, :11).
     if (answer.paths.isEmpty()) {
-        QuietNote(stringResource(R.string.content_trace_moved), Modifier.dataNode(FEED_ENTRY / "note"))
+        QuietNote(stringResource(R.string.content_trace_moved), Modifier.fillMaxWidth().dataNode(FEED_ENTRY / "note"))
         return
     }
     when (shown) {
@@ -261,7 +261,7 @@ private fun EntryLevel(
 ) {
     val level = answer.levelOne(unfolded)
     val lender = answer.paths.firstOrNull()?.let(::pathPeople)?.firstOrNull()?.handle
-    QuietNote(levelOneNote(context, lender), Modifier.dataNode(FEED_ENTRY / "note"))
+    QuietNote(levelOneNote(context, lender), Modifier.fillMaxWidth().dataNode(FEED_ENTRY / "note"))
     SectionLabel(stringResource(R.string.content_trace_strongest), node = FEED_ENTRY / "pathsLabel")
     Column(verticalArrangement = Arrangement.spacedBy(Space.x2)) {
         level.drawn.forEach { drawn ->
@@ -279,6 +279,8 @@ private fun EntryLevel(
                     spoken = spokenTrace(path, context),
                     onCard = true,
                     node = DataNode("feedEntry.path.trace"),
+                    // The row's column stretches its trace across it (PathRow's flex column).
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
@@ -356,7 +358,8 @@ private fun StepLevel(
     Box(Modifier.fillMaxWidth().padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
         PathTrace(people, end, spokenPeople(people, context), size = 32.dp, node = FEED_ENTRY / "trace")
     }
-    QuietNote(placeNote(stepTitle(path, step, context), place, steps.size), Modifier.dataNode(FEED_ENTRY / "note"))
+    val placeLine = placeNote(stepTitle(path, step, context), place, steps.size)
+    QuietNote(placeLine, Modifier.fillMaxWidth().dataNode(FEED_ENTRY / "note"))
     Column {
         SettingRow(label = stringResource(R.string.content_trace_carries), node = FEED_ENTRY / "carries") {
             StanceValue(StancePoint(hop.pDirected, hop.pInterest), node = FEED_ENTRY / "carries" / "value")
@@ -375,7 +378,7 @@ private fun StepLevel(
         )
         Hairline()
     }
-    QuietNote(foldNote(path, step, context), Modifier.dataNode(FEED_ENTRY / "foldNote"))
+    QuietNote(foldNote(path, step, context), Modifier.fillMaxWidth().dataNode(FEED_ENTRY / "foldNote"))
 }
 
 /** Level four, the floor: the signed records behind one step, inert, each with its key. */
@@ -384,7 +387,7 @@ private fun RecordsLevel(path: TracePath, step: TraceStep, context: TraceContext
     val title = stepTitle(path, step, context)
     val pairs = memberPairs(path, step)
     val sum = memberSum(path, step)
-    QuietNote(recordsNote(title, pairs.size), Modifier.dataNode(FEED_ENTRY / "note"))
+    QuietNote(recordsNote(title, pairs.size), Modifier.fillMaxWidth().dataNode(FEED_ENTRY / "note"))
     Column(verticalArrangement = Arrangement.spacedBy(Space.x2)) {
         pairs.forEach { member ->
             RecordRow(
@@ -397,11 +400,11 @@ private fun RecordsLevel(path: TracePath, step: TraceStep, context: TraceContext
         }
     }
     if (sum.clipped) {
-        QuietNote(CLIPPED_RECORDS, Modifier.dataNode(DataNode("feedEntry_clipped")))
+        QuietNote(CLIPPED_RECORDS, Modifier.fillMaxWidth().dataNode(DataNode("feedEntry_clipped")))
         val carried = step.carrying
         UnclippedSum(StancePoint(sum.pDirected, sum.pInterest), StancePoint(carried.pDirected, carried.pInterest))
     }
-    QuietNote(PUBLIC_SUM_LINE, Modifier.dataNode(FEED_ENTRY / "closingNote"))
+    QuietNote(PUBLIC_SUM_LINE, Modifier.fillMaxWidth().dataNode(FEED_ENTRY / "closingNote"))
 }
 
 /** The fault (SR-G16's build reading, §5.6): the house line and its way back, never a substituted figure. */

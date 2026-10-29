@@ -38,7 +38,11 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
-/** The row's own minimum (`minHeight: 56px`). */
+/**
+ * The row's own minimum (`minHeight: 56px`), on its CONTENT box: the boards
+ * measure the quote 72dp tall — 56 inside the 8dp padding (FeedEntry, the
+ * score's cover).
+ */
 private val MIN_HEIGHT = 56.dp
 
 /** The quoted person's disc (`MonogramAvatar size={32}`). */
@@ -68,11 +72,11 @@ fun QuotedRow(
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = MIN_HEIGHT)
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             .dataNode(node)
-            .padding(horizontal = Space.x3, vertical = Space.x2),
+            .padding(horizontal = Space.x3, vertical = Space.x2)
+            .defaultMinSize(minHeight = MIN_HEIGHT),
     ) {
         if (mark != null) {
             mark()
