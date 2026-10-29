@@ -24,6 +24,7 @@ import { CropFrame } from "@/lib/ui2/media/crop-frame";
 import { POST_SHAPES, POST_SHAPE_ORDER, type PostShape } from "@/lib/ui2/media/aspect";
 import type { Crop } from "@/lib/ui2/media/crop";
 import type { PickedAsset } from "@/lib/compose/wizard";
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
 export function CropStep({
   assets,
@@ -36,6 +37,7 @@ export function CropStep({
   onCrop,
   onNext,
   testIdPrefix = "wizard",
+  node,
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
@@ -53,6 +55,8 @@ export function CropStep({
   onCrop: (id: string, crop: Crop) => void;
   onNext: () => void;
   testIdPrefix?: string;
+  /** The registered ComposeCrop screen (`composeCrop`), naming its shapes, viewport, zoom, how-to, pictures and Next. */
+  node?: DataNode;
 }) {
   const canPinch = useCanPinch();
   const asset = assets[focused];
@@ -64,11 +68,17 @@ export function CropStep({
           radiogroup: a radiogroup whose children are not radios lies to a
           screen reader about what it will find inside. */}
       {!locked && (
-        <div className="flex gap-2" role="group" aria-label="The post's shape">
+        <div
+          className="flex gap-2"
+          role="group"
+          aria-label="The post's shape"
+          {...testAttributes(part(node, "shapes"))}
+        >
           {POST_SHAPE_ORDER.map((option) => (
             <Chip
               key={option}
               testId={`${testIdPrefix}-shape-${option}`}
+              node={part(node, `shapes.${option}Chip`)}
               selected={option === shape}
               onClick={() => onShape(option)}
             >
@@ -85,24 +95,28 @@ export function CropStep({
         onChange={(next) => onCrop(asset.id, next)}
         zoomSlider
         testId={`${testIdPrefix}-crop-frame`}
+        node={node}
       />
 
       {/* The QuietNote under the zoom (ComposeCrop.jsx), its second sentence
           naming the gestures this device has (ComposeCrop.md; copy-voice,
           *The crops' how-to line*). */}
-      <QuietNote testId={`${testIdPrefix}-crop-note`}>
+      <QuietNote testId={`${testIdPrefix}-crop-note`} node={part(node, "howTo")}>
         {canPinch
           ? "One shape for the whole post. Drag to move, pinch to zoom."
           : "One shape for the whole post. Drag or use the arrow keys to move, the slider to zoom."}
       </QuietNote>
 
       {assets.length > 1 && (
-        <ul className="m-0 flex list-none gap-2 overflow-x-auto p-0">
+        <ul className="m-0 flex list-none gap-2 overflow-x-auto p-0" {...testAttributes(part(node, "pictures"))}>
           {assets.map((each, index) => (
             <li key={each.id} className="flex-none">
               <button
                 type="button"
-                data-testid={`${testIdPrefix}-crop-pick-${index}`}
+                {...testAttributes(
+                  instance(part(node, "pictures"), "thumb", String(index + 1)),
+                  `${testIdPrefix}-crop-pick-${index}`,
+                )}
                 aria-label={`Frame picture ${index + 1} of ${assets.length}`}
                 aria-current={index === focused}
                 onClick={() => onFocus(index)}
@@ -123,7 +137,7 @@ export function CropStep({
       {/* THE FORWARD ACTION IS AT THE BOTTOM, on every stage (jakob 2026-09-01):
           the top-right corner used to mean Next here and X later, and an author
           trained on the corner left the flow by accident. */}
-      <PillButton testId={`${testIdPrefix}-next`} full onClick={onNext}>
+      <PillButton testId={`${testIdPrefix}-next`} node={part(node, "next")} full onClick={onNext}>
         Next
       </PillButton>
     </div>

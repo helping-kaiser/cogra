@@ -51,6 +51,8 @@ export interface SensitiveVeilProps {
    * chrome over the veil (the stream's rail) widens it to keep the words clear.
    */
   faceGutter?: string;
+  /** The data-node name its placer gives the veil's one control — the media face, the compact block, or the text veil's `Show` — a leaf beside what it covers (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function SensitiveVeil(props: SensitiveVeilProps): JSX.Element;

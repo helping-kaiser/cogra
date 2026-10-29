@@ -33,8 +33,10 @@
 // edit stays visible and inert (EditComposeUnchanged: the guard is the
 // family's, and it is the acts batch, never a byte comparison).
 //
-// UNREGISTERED: no CommentEdit* board is in nodes.json yet, so this surface
-// carries test ids, not node paths.
+// REGISTERED (nodes.json CommentEdit, CommentEditVideo; round 23): every part
+// wears its `commentEdit.*` path; a picture is `commentEdit.pictures.thumb`,
+// keyed by its place from 1. The board's chip-keyed states (`commentEdit.acts`
+// under `none`/`uploading`) show one at a time here, so they carry no key.
 
 import { useRef, type ReactNode } from "react";
 
@@ -87,6 +89,14 @@ import { COMMENT_BODY_MAX_CHARS, commentBodyProblem } from "@/lib/compose/reply-
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import { unlandedCitationLine } from "@/app/(app)/compose/wizard/seal-step";
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+
+/** The registered comment edit (`commentEdit`), and the parts its blocks hang off. */
+const NODE: DataNode = { path: "commentEdit" };
+const PICTURES = part(NODE, "pictures");
+const VIDEO = part(NODE, "video");
+const COVER = part(NODE, "cover");
+const FACTS = part(NODE, "facts");
 
 /** The header X's accessible name: the edit keeps no draft (CommentEditVideo, WizardHeader boards). */
 export const COMMENT_EDIT_LEAVE_LABEL = "Leave — the edit is discarded";
@@ -99,8 +109,12 @@ const COUNT_CHANGED_LINE = "The count changed while you were editing — check i
 const COMMENT_TILE = 56;
 
 /** A group's caption — the board's own label rung. */
-function FieldLabel({ children }: { children: string }) {
-  return <span className="text-label-large">{children}</span>;
+function FieldLabel({ children, node }: { children: string; node?: DataNode }) {
+  return (
+    <span className="text-label-large" {...testAttributes(node)}>
+      {children}
+    </span>
+  );
 }
 
 /** The cover's crop, raised over the edit for a picture the picker handed back. */
@@ -153,6 +167,9 @@ export function CommentEditView({
   onRemoveCover = () => {},
   onTags,
   onReferences,
+  onOpenTagPicker,
+  onOpenReferencePicker,
+  picker = null,
   onUndoTag,
   onUndoReference,
   onActs,
@@ -202,6 +219,12 @@ export function CommentEditView({
   refusals?: readonly PickRefusal[];
   /** The cover's crop, standing in the edit's place while it is up. */
   cropping?: CommentCoverCropping | null;
+  /**
+   * A picker raised over the edit (`+ Add a tag`, `+ Cite something`): the
+   * task page stands in the edit's place inside the dialog, as the cover's
+   * crop does, and Done gives the edit back with the pick staged.
+   */
+  picker?: ReactNode;
   refusal: string | null;
   failed: boolean;
   onWords: (words: string) => void;
@@ -223,6 +246,10 @@ export function CommentEditView({
   onRemoveCover?: () => void;
   onTags: (tags: readonly TagDraft[]) => void;
   onReferences: (references: readonly ReferenceDraft[]) => void;
+  /** `+ Add a tag` (CommentEdit's `tags.add`): the tag picker over the edit. */
+  onOpenTagPicker: () => void;
+  /** `+ Cite something` (CommentEdit's `references.add`): the citation picker over the edit. */
+  onOpenReferencePicker: () => void;
   onUndoTag: (name: string) => void;
   onUndoReference: (targetId: string) => void;
   onActs: (open: boolean) => void;
@@ -278,6 +305,7 @@ export function CommentEditView({
     commit = (
       <PillButton
         testId="comment-edit-save"
+        node={part(NODE, "sign")}
         full
         disabled={
           count === 0 ||
@@ -316,6 +344,7 @@ export function CommentEditView({
             onLeave={leave}
             leaveLabel={COMMENT_EDIT_LEAVE_LABEL}
             testId="comment-edit-crop-header"
+            node={{ path: "coverCrop.header" }}
           />
           <div data-testid="comment-edit-cover-crop" className="flex min-h-0 flex-1 flex-col">
             <CoverCrop
@@ -328,6 +357,10 @@ export function CommentEditView({
             />
           </div>
         </>
+      ) : picker !== null ? (
+        <div data-testid="comment-edit-picker" className="flex min-h-0 flex-1 flex-col">
+          {picker}
+        </div>
       ) : (
         <>
           <HeaderBar
@@ -336,12 +369,15 @@ export function CommentEditView({
             onBack={leave}
             onLeave={leave}
             leaveLabel={COMMENT_EDIT_LEAVE_LABEL}
-            help={<HelpDot ariaLabel="Editing" onOpen={onHelp} testId="header-help" />}
+            help={<HelpDot ariaLabel="Editing" onOpen={onHelp} node={part(NODE, "header.help")} />}
             focusTitle
+            node={part(NODE, "header")}
           />
 
           <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto px-6 pb-4 pt-3">
-            <QuietNote testId="comment-edit-lede">Your comment on &ldquo;{targetLabel}&rdquo;.</QuietNote>
+            <QuietNote testId="comment-edit-lede" node={part(NODE, "target")}>
+              Your comment on &ldquo;{targetLabel}&rdquo;.
+            </QuietNote>
 
             <TextField
               label="Words"
@@ -350,14 +386,15 @@ export function CommentEditView({
               multiline
               rows={clip !== undefined ? 2 : 3}
               testId="comment-edit-input"
+              node={part(NODE, "words")}
               cap={COMMENT_BODY_MAX_CHARS}
               error={wordsIssue ?? undefined}
             />
 
             {clip !== undefined ? (
               <>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel>Video</FieldLabel>
+                <div className="flex flex-col gap-1.5" {...testAttributes(VIDEO)}>
+                  <FieldLabel node={part(VIDEO, "label")}>Video</FieldLabel>
                   <div className="flex items-center gap-2">
                     <MediaThumb
                       src={clip.coverUrl}
@@ -369,6 +406,8 @@ export function CommentEditView({
                       onRemove={() => onRemovePicture(clip.mediaId)}
                       removeLabel="Remove this video"
                       testId="comment-edit-clip"
+                      node={part(VIDEO, "thumb")}
+                      removeNode={part(VIDEO, "thumb.remove")}
                     />
                   </div>
                   {/* One description for the clip, none for its cover. */}
@@ -378,11 +417,12 @@ export function CommentEditView({
                     total={1}
                     onDescribe={() => onDescribe(clip.mediaId)}
                     testId="comment-edit-describe-counter"
+                    node={part(VIDEO, "describeRow")}
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel>Cover</FieldLabel>
+                <div className="flex flex-col gap-1.5" {...testAttributes(COVER)}>
+                  <FieldLabel node={part(COVER, "label")}>Cover</FieldLabel>
                   {coverChosen(clip) ? (
                     <div className="flex items-center gap-2">
                       <MediaThumb
@@ -393,11 +433,13 @@ export function CommentEditView({
                         crop={clip.newCover?.crop ?? null}
                         {...coverThumbState(clip.newCover)}
                         testId="comment-edit-cover"
+                        node={part(COVER, "thumb")}
                       />
                       <PillButton
                         variant="text"
                         size="sm"
                         testId="comment-edit-change-cover"
+                        node={part(COVER, "change")}
                         onClick={() => coverInput.current?.click()}
                       >
                         Change the cover
@@ -441,11 +483,12 @@ export function CommentEditView({
                 </div>
               </>
             ) : (
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel>Pictures</FieldLabel>
+              <div className="flex flex-col gap-1.5" {...testAttributes(PICTURES)}>
+                <FieldLabel node={part(PICTURES, "label")}>Pictures</FieldLabel>
                 <div className="flex flex-wrap items-center gap-2">
-                  {gallery.map((picture) => {
+                  {gallery.map((picture, index) => {
                     const id = pictureId(picture);
+                    const thumb = instance(PICTURES, "thumb", String(index + 1));
                     const upload = picture.kind === "added" ? picture.asset.upload : null;
                     return (
                       <MediaThumb
@@ -467,6 +510,8 @@ export function CommentEditView({
                         failed={upload?.kind === "failed"}
                         onRemove={() => onRemovePicture(id)}
                         testId={`comment-edit-media-${id}`}
+                        node={thumb}
+                        removeNode={part(thumb, "remove")}
                       />
                     );
                   })}
@@ -476,6 +521,7 @@ export function CommentEditView({
                   <InlineAction
                     size="sm"
                     testId="comment-edit-add-media"
+                    node={part(PICTURES, "add")}
                     onClick={() => pickInput.current?.click()}
                   >
                     + Add pictures · {gallery.length} of {COMMENT_ATTACHMENT_CAP}
@@ -528,6 +574,7 @@ export function CommentEditView({
                       if (first !== undefined) onDescribe(pictureId(first));
                     }}
                     testId="comment-edit-describe-counter"
+                    node={part(PICTURES, "describeRow")}
                   />
                 )}
               </div>
@@ -538,60 +585,70 @@ export function CommentEditView({
                 (CommentEdit.md). The edit stages a separate act per change,
                 so there is no batch cap here — that is the creation
                 gesture's rule. */}
-            <div className="flex flex-col gap-1.5">
-              <TagEntryField
-                tags={tags}
-                onChange={onTags}
-                fieldErrors={tagErrors}
-                cap={null}
-                testIdPrefix="comment-edit"
-                pairs="sheet"
-              />
-              {withdrawnTags(loadedTags, tags).map((tag) => (
+            <TagEntryField
+              tags={tags}
+              onChange={onTags}
+              fieldErrors={tagErrors}
+              cap={null}
+              testIdPrefix="comment-edit"
+              pairs="sheet"
+              onOpenPicker={onOpenTagPicker}
+              node={part(NODE, "tags")}
+              after={withdrawnTags(loadedTags, tags).map((tag) => (
                 <WithdrawnLine
                   key={tag.name}
                   name={`#${tag.name}`}
                   onUndo={() => onUndoTag(tag.name)}
                   testId={`comment-edit-withdrawn-tag-${tag.name}`}
+                  node={part(NODE, "tags.withdrawn")}
                 />
               ))}
-            </div>
+            />
 
-            <div className="flex flex-col gap-1.5">
-              <ReferenceEntryField
-                references={references}
-                onChange={onReferences}
-                fieldErrors={referenceErrors}
-                cap={null}
-                testIdPrefix="comment-edit"
-                pairs="sheet"
-              />
-              {/* CommentEdit.md: a citation whose target never landed reads
-                  why, followed by Remove it — never Retry. */}
-              {refusedCitation !== undefined && (
-                <UploadErrorLine
-                  message={unlandedCitationLine(refusedCitation)}
-                  onRemove={() => onRemoveRefusedCitation(refusedCitation.targetId)}
-                  testId="comment-edit-citation-fault"
-                />
-              )}
-              {withdrawnReferences(loadedReferences, references).map((reference) => (
-                <WithdrawnLine
-                  key={reference.targetId}
-                  name={reference.target.label}
-                  onUndo={() => onUndoReference(reference.targetId)}
-                  testId={`comment-edit-withdrawn-reference-${reference.targetId}`}
-                />
-              ))}
-            </div>
+            <ReferenceEntryField
+              references={references}
+              onChange={onReferences}
+              fieldErrors={referenceErrors}
+              cap={null}
+              testIdPrefix="comment-edit"
+              pairs="sheet"
+              onOpenPicker={onOpenReferencePicker}
+              node={part(NODE, "references")}
+              after={
+                <>
+                  {/* CommentEdit.md: a citation whose target never landed reads
+                      why, followed by Remove it — never Retry. */}
+                  {refusedCitation !== undefined && (
+                    <UploadErrorLine
+                      message={unlandedCitationLine(refusedCitation)}
+                      onRemove={() => onRemoveRefusedCitation(refusedCitation.targetId)}
+                      testId="comment-edit-citation-fault"
+                    />
+                  )}
+                  {withdrawnReferences(loadedReferences, references).map((reference) => (
+                    <WithdrawnLine
+                      key={reference.targetId}
+                      name={reference.target.label}
+                      onUndo={() => onUndoReference(reference.targetId)}
+                      testId={`comment-edit-withdrawn-reference-${reference.targetId}`}
+                      node={part(NODE, "references.withdrawn")}
+                    />
+                  ))}
+                </>
+              }
+            />
 
             {/* The two term rows the board draws shut: the licence, stated and
                 locked, then the author's own mark — FactRow's seal emphasis. */}
-            <div className="flex flex-col">
+            <div className="flex flex-col" {...testAttributes(FACTS)}>
               <FactRow
                 label="License"
+                node={part(FACTS, "license")}
                 value={
-                  <span className="text-body-medium text-on-surface-variant" data-testid="comment-edit-license">
+                  <span
+                    className="text-body-medium text-on-surface-variant"
+                    {...testAttributes(part(FACTS, "license.value"))}
+                  >
                     {licenseName(license)}
                   </span>
                 }
@@ -599,7 +656,7 @@ export function CommentEditView({
                   <span
                     className="inline-flex text-on-surface-variant"
                     aria-label="The license never changes"
-                    data-testid="comment-edit-license-locked"
+                    {...testAttributes(part(FACTS, "license.lock"))}
                   >
                     <LockGlyph />
                   </span>
@@ -607,10 +664,11 @@ export function CommentEditView({
               />
               <FactRow
                 label="Sensitive"
+                node={part(FACTS, "sensitive")}
                 value={
                   <span
                     className="text-body-medium text-on-surface-variant"
-                    data-testid="comment-edit-sensitive-value"
+                    {...testAttributes(part(FACTS, "sensitive.value"))}
                   >
                     {sensitive ? "Marked" : "Not marked"}
                   </span>
@@ -643,6 +701,7 @@ export function CommentEditView({
                 message={failedUploadLine(faulted)}
                 onRetry={onRetryUploads}
                 testId="comment-edit-gate"
+                node={part(NODE, "gate")}
               />
             ) : (
               pending > 0 && (
@@ -651,6 +710,7 @@ export function CommentEditView({
                   total={editUploads(gallery).length}
                   media={clip !== undefined ? "cover" : "pictures"}
                   testId="comment-edit-gate"
+                  node={part(NODE, "gate")}
                 />
               )
             )}
@@ -661,6 +721,7 @@ export function CommentEditView({
               onOpen={() => onActs(true)}
               subline={subline}
               testId="comment-edit-signed-actions"
+              node={part(NODE, "acts")}
             />
 
             {commit}

@@ -27,11 +27,11 @@ describe("RemovedPlaceholder", () => {
 
   // Round 20 (seam 245 ask 6): each line sets its whole role.
   it("sets each line in its whole type role, and names its parts", () => {
-    render(<RemovedPlaceholder reason="author" when="2h" node={{ path: "postDetail.card.removed", key: "p1" }} />);
-    expect(screen.getByTestId("postDetail.card.removed.line").className).toContain("text-body-medium");
-    expect(screen.getByTestId("postDetail.card.removed.detail").className).toContain("text-body-small");
-    expect(screen.getByTestId("postDetail.card.removed.when")).toHaveTextContent("2h");
-    expect(screen.getByTestId("postDetail.card.removed.when").className).toContain("text-label-small");
+    render(<RemovedPlaceholder reason="author" when="2h" node={{ path: "postDetail.card.removalMark", key: "p1" }} />);
+    expect(screen.getByTestId("postDetail.card.removalMark.line").className).toContain("text-body-medium");
+    expect(screen.getByTestId("postDetail.card.removalMark.detail").className).toContain("text-body-small");
+    expect(screen.getByTestId("postDetail.card.removalMark.when")).toHaveTextContent("2h");
+    expect(screen.getByTestId("postDetail.card.removalMark.when").className).toContain("text-label-small");
   });
 
   it("says a platform removal as the public verdict it is", () => {

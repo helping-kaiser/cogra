@@ -42,7 +42,12 @@ const SR_ONLY = {
    else. A Feed score has no glyph that carries its magnitude, so hiding the
    digits would leave the `graph` mark saying only "there is a score", which is
    the black box §7 exists to refuse. */
-export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, overMedia = false, node }) {
+/* A PENDING MARK UNDER THE GLYPH, INSIDE THE DOOR (round 26, seam 250): the
+   stream's settling face is the bare glyph with `Still settling` under it, and
+   the whole face is the door. `pending` carries those words; the door then
+   stacks them under its glyph row, which keeps the 48px it stood in, so the
+   glyph does not move. Its part is `settling`. */
+export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, overMedia = false, pending, node }) {
   return (
     <button
       type="button"
@@ -52,8 +57,7 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, ove
         flex: "none",
         display: "inline-flex",
         alignItems: "center",
-        gap: "6px",
-        minHeight: "var(--touch-target-min)",
+        ...(pending ? { flexDirection: "column", gap: 2 } : { gap: "6px", minHeight: "var(--touch-target-min)" }),
         border: 0,
         background: "none",
         borderRadius: "var(--radius-full)",
@@ -68,12 +72,33 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, ove
       }}
       data-node={node}
     >
+      {pending ? (
+        <>
+          <span style={{ display: "inline-flex", alignItems: "center", minHeight: "var(--touch-target-min)" }}>
+            {glyph && <Icon name={glyph} size={18} />}
+            <span style={SR_ONLY}>{label}</span>
+          </span>
+          <span
+            style={{
+              maxWidth: 56,
+              textAlign: "center",
+              fontSize: "var(--text-label-small)",
+              lineHeight: "var(--text-label-small--line-height)",
+              fontWeight: "var(--text-label-small--font-weight)",
+              color: overMedia ? "#fff" : "var(--text-secondary)",
+            }}
+            data-node={node && "settling"}
+          >
+            {pending}
+          </span>
+        </>
+      ) : null}
       {/* A GLYPH, NOT AN EMOJI. The product's only emoji vocabulary is the stance
           readout, and a face on a post card already means "your opinion" — a second
           face meaning something else would make both unreadable. The label lives
           in the accessibility tree instead, which also keeps the affordance row on
           one line. */}
-      {glyph ? (
+      {pending ? null : glyph ? (
         <>
           <Icon name={glyph} size={18} />
           <span style={SR_ONLY}>{label}</span>
@@ -90,7 +115,7 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, ove
           place — a 0, a dash — would say something false. The glyph stands
           bare and the door still opens. A DASH is a value, passed as one: the
           figure that is not computed (the trace found no paths). */}
-      {value !== undefined && value !== null && (
+      {!pending && value !== undefined && value !== null && (
         <span style={{ color: overMedia ? "#fff" : "var(--on-surface)", fontWeight: 500 }} data-node={node && "value"}>
           {value}
           {unit ? <span style={{ color: "var(--text-secondary)", fontWeight: 400 }}>{unit}</span> : null}

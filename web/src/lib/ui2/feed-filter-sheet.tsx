@@ -37,7 +37,7 @@ import {
 import type { FeedPeople, FeedPeopleSign } from "@/lib/feed/derive";
 import { Button } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
-import { BottomSheet } from "./bottom-sheet";
+import { BottomSheet, SHEET_RAISED } from "./bottom-sheet";
 import { Chip } from "./chip";
 import { FilterFoot, FilterSection, OrderSection } from "./filter-sheet";
 import { HelpDot } from "./help-dot";
@@ -270,12 +270,10 @@ export function FeedFilterSheet({
       titleHidden={!titled}
       titleTrailing={titled ? help : undefined}
       focusTitle={titled}
-      // 88% OF THE SCREEN, AS THE BUILT BOARD MEASURES IT (FeedSheet.md:3): the
-      // master's surface takes `height: 88%` and lays its 8px top and 24px
-      // bottom padding OUTSIDE it, so the drawn sheet stands 32px taller than
-      // 88% (837 of 915 at the harness's viewport). This sheet's grip margin
-      // and foot padding sit inside its height, so they are added back here.
-      height="calc(88dvh + 32px)"
+      // 88% OF THE SCREEN, WHOLE (FeedSheet.md:3; BottomSheet.jsx: a height
+      // class is the surface's whole height, the grip strip and the bottom
+      // inset inside it — 805 of 915 at the harness's viewport).
+      height={SHEET_RAISED}
       rows
       bodyRef={bodyRef}
       node={node}
@@ -364,7 +362,7 @@ export function FeedFilterSheet({
             <Chip
               key={topic.id}
               testId={`${testId}-topic-${topic.name}`}
-              node={node === undefined ? undefined : { path: `${node.path}.topic.chip`, key: topic.name }}
+              node={node === undefined ? undefined : { path: `${node.path}.topic.tag`, key: topic.name }}
               selected={staged.topic?.id === topic.id}
               onClick={() => set({ topic: staged.topic?.id === topic.id ? null : topic })}
             >

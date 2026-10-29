@@ -8895,6 +8895,88 @@
         "profile.tabRow.postsTab": []
       }
     },
+    "ProfileStances": {
+      "prefix": "profileStances",
+      "keys": {
+        "profileStances.list.row": "the handle of the person the row names, without @ — the opinion's holder on the On tab, the one it is held on on the By tab (the opinions page)",
+        "profileStances.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "profileStances.bottomBar": [],
+        "profileStances.bottomBar.composeSlot": [],
+        "profileStances.bottomBar.feedSlot": [],
+        "profileStances.bottomBar.profileSlot": [],
+        "profileStances.bottomBar.searchSlot": [],
+        "profileStances.bottomBar.walletSlot": [],
+        "profileStances.empty": [],
+        "profileStances.empty.title": [],
+        "profileStances.header": [],
+        "profileStances.header.back": [],
+        "profileStances.header.title": [],
+        "profileStances.list": [],
+        "profileStances.list.row": [
+          "tobias",
+          "sol",
+          "mira",
+          "kel",
+          "juno"
+        ],
+        "profileStances.list.row.avatar": [
+          "tobias",
+          "sol",
+          "mira",
+          "kel",
+          "juno"
+        ],
+        "profileStances.list.row.handle": [
+          "tobias",
+          "sol",
+          "mira",
+          "kel",
+          "juno"
+        ],
+        "profileStances.list.row.name": [
+          "tobias",
+          "sol",
+          "mira",
+          "kel",
+          "juno"
+        ],
+        "profileStances.list.row.value": [
+          "tobias",
+          "sol",
+          "mira",
+          "kel",
+          "juno"
+        ],
+        "profileStances.list.row.value.exact": [
+          "tobias",
+          "sol",
+          "mira",
+          "kel",
+          "juno"
+        ],
+        "profileStances.list.row.value.face": [
+          "tobias",
+          "sol",
+          "mira",
+          "kel",
+          "juno"
+        ],
+        "profileStances.tabRow": [
+          "on",
+          "by"
+        ],
+        "profileStances.tabRow.byTab": [
+          "on",
+          "by"
+        ],
+        "profileStances.tabRow.onTab": [
+          "on",
+          "by"
+        ]
+      }
+    },
     "RankHop": {
       "prefix": "feedEntry",
       "keys": {},
@@ -9136,6 +9218,101 @@
         "postDetail.menuSheet.license": [],
         "postDetail.menuSheet.report": [],
         "postDetail.menuSheet.save": []
+      }
+    },
+    "Reel": {
+      "prefix": "reel",
+      "keys": {
+        "reel.caption.notice": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.rail.score": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "reel.rail.stanceLine": "the state chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "reel.backDisc": [],
+        "reel.bottomBar": [],
+        "reel.bottomBar.composeSlot": [],
+        "reel.bottomBar.feedSlot": [],
+        "reel.bottomBar.profileSlot": [],
+        "reel.bottomBar.searchSlot": [],
+        "reel.bottomBar.walletSlot": [],
+        "reel.caption": [],
+        "reel.caption.description": [],
+        "reel.caption.handle": [],
+        "reel.caption.more": [],
+        "reel.caption.notice": [
+          "end",
+          "fault"
+        ],
+        "reel.caption.notice.retry": [
+          "fault"
+        ],
+        "reel.caption.title": [],
+        "reel.playDisc": [],
+        "reel.rail": [],
+        "reel.rail.author": [],
+        "reel.rail.comments": [],
+        "reel.rail.score": [
+          "playing",
+          "settling",
+          "moved"
+        ],
+        "reel.rail.score.settling": [
+          "settling"
+        ],
+        "reel.rail.score.value": [
+          "playing",
+          "moved"
+        ],
+        "reel.rail.share": [],
+        "reel.rail.stance": [],
+        "reel.rail.stance.anchor": [],
+        "reel.rail.stance.anchor.face": [],
+        "reel.rail.stanceLine": [
+          "unsigned",
+          "refused"
+        ],
+        "reel.rail.stanceLine.retry": [
+          "unsigned"
+        ],
+        "reel.seekLine": [],
+        "reel.snackbar": [],
+        "reel.snackbar.message": [],
+        "reel.soundDisc": [],
+        "reel.stage": [],
+        "reel.washBottom": [],
+        "reel.washTop": []
+      }
+    },
+    "ReelSensitive": {
+      "prefix": "reel",
+      "keys": {},
+      "nodes": {
+        "reel.backDisc": [],
+        "reel.bottomBar": [],
+        "reel.bottomBar.composeSlot": [],
+        "reel.bottomBar.feedSlot": [],
+        "reel.bottomBar.profileSlot": [],
+        "reel.bottomBar.searchSlot": [],
+        "reel.bottomBar.walletSlot": [],
+        "reel.caption": [],
+        "reel.caption.description": [],
+        "reel.caption.handle": [],
+        "reel.caption.more": [],
+        "reel.caption.show": [],
+        "reel.caption.title": [],
+        "reel.rail": [],
+        "reel.rail.author": [],
+        "reel.rail.comments": [],
+        "reel.rail.score": [],
+        "reel.rail.score.value": [],
+        "reel.rail.share": [],
+        "reel.rail.stance": [],
+        "reel.rail.stance.anchor": [],
+        "reel.rail.stance.anchor.face": [],
+        "reel.stage": [],
+        "reel.stage.veil": [],
+        "reel.washBottom": [],
+        "reel.washTop": []
       }
     },
     "ReferencePicker": {

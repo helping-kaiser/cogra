@@ -24,9 +24,10 @@ HealthTimeout=5s
 HealthRetries=3
 HealthStartPeriod=30s
 HealthOnFailure=kill
-# The binary installs no SIGTERM handler, and PID 1 ignores a signal it
-# has no handler for: without an init the stop waits out the timeout and
-# ends in SIGKILL. catatonit forwards the signal to a process that obeys it.
+# The binary drains on SIGTERM within 7 of the 10 stop-timeout seconds
+# (crates/ranker-server/src/shutdown.rs); before its handlers exist PID 1
+# would ignore the signal, and catatonit forwards it to a process that
+# takes the default action.
 RunInit=true
 NoNewPrivileges=true
 DropCapability=ALL

@@ -11,6 +11,8 @@
 // `UploadErrorLine` is the failure's words — the tile wears the badge, this
 // line carries the ways out: error colour for the fact, primary for the exits.
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 import { InlineAction } from "../inline-action";
 
 function Ring({ progress, size = 18 }: { progress: number; size?: number }) {
@@ -44,6 +46,7 @@ export function UploadStatusLine({
   failedCount = 1,
   onRetry,
   testId = "upload-status",
+  node,
 }: {
   done: number;
   total: number;
@@ -60,14 +63,24 @@ export function UploadStatusLine({
   failedCount?: number;
   onRetry?: () => void;
   testId?: string;
+  /**
+   * The registered gate on a registered screen (`postEdit.gate`): in flight its
+   * `line`; failed its `message`, `wait` and `retry`. It names them instead of
+   * `testId`.
+   */
+  node?: DataNode;
 }) {
   if (failed) {
     return (
-      <p data-testid={testId} role="status" className="m-0 text-center text-body-medium">
-        <span className="text-error">{message}</span>{" "}
-        <span className="text-on-surface-variant">{failedCount > 1 ? "Signing waits for them." : "Signing waits for it."}</span>{" "}
+      <p {...testAttributes(node, testId)} role="status" className="m-0 text-center text-body-medium">
+        <span className="text-error" {...testAttributes(part(node, "message"))}>
+          {message}
+        </span>{" "}
+        <span className="text-on-surface-variant" {...testAttributes(part(node, "wait"))}>
+          {failedCount > 1 ? "Signing waits for them." : "Signing waits for it."}
+        </span>{" "}
         {onRetry && (
-          <InlineAction testId={`${testId}-retry`} onClick={onRetry}>
+          <InlineAction testId={`${testId}-retry`} node={part(node, "retry")} onClick={onRetry}>
             Retry
           </InlineAction>
         )}
@@ -84,14 +97,14 @@ export function UploadStatusLine({
   const waitsFor = media === "video" || media === "cover" ? media : total === 1 ? "picture" : "pictures";
   return (
     <div
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       // The seal's gate is a status, not an alert: it says why the commit
       // waits without interrupting what the reader is doing.
       role="status"
       className="flex items-center justify-center gap-2"
     >
       <Ring progress={progress ?? (total > 0 ? done / total : 0.5)} />
-      <span className="text-body-medium text-on-surface-variant">
+      <span className="text-body-medium text-on-surface-variant" {...testAttributes(part(node, "line"))}>
         Uploading {done} of {total} — signing waits for the {waitsFor}.
       </span>
     </div>
@@ -114,6 +127,7 @@ export function UploadErrorLine({
   removeLabel,
   count = 1,
   testId = "upload-error",
+  node,
 }: {
   message?: string;
   onRetry?: () => void;
@@ -126,19 +140,31 @@ export function UploadErrorLine({
   /** The spoken name of Remove it, where the line stands under a count rather than the thing it names. */
   removeLabel?: string;
   testId?: string;
+  /**
+   * The registered line on a registered screen (`postEdit.body.uploadError`):
+   * its `message`, `retry` and `remove`. It names them instead of `testId`.
+   */
+  node?: DataNode;
 }) {
   const link = "cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary";
   // The line takes label-small's size at the ground's weight (`UploadNotice.jsx`);
   // its two words are the master's small InlineActions.
   return (
     <p
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       className="m-0 text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)]"
     >
-      <span className="text-error">{message}</span>{" "}
+      <span className="text-error" {...testAttributes(part(node, "message"))}>
+        {message}
+      </span>{" "}
       {onRetry && (
         <>
-          <button type="button" data-testid={`${testId}-retry`} onClick={onRetry} className={link}>
+          <button
+            type="button"
+            {...testAttributes(part(node, "retry"), `${testId}-retry`)}
+            onClick={onRetry}
+            className={link}
+          >
             Retry
           </button>{" "}
           <span className="text-on-surface-variant">·</span>{" "}
@@ -146,7 +172,7 @@ export function UploadErrorLine({
       )}
       <button
         type="button"
-        data-testid={`${testId}-remove`}
+        {...testAttributes(part(node, "remove"), `${testId}-remove`)}
         aria-label={removeLabel}
         onClick={onRemove}
         className={link}

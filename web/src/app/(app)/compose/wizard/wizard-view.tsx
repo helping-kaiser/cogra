@@ -1026,9 +1026,16 @@ export function ComposeWizard({
         // for Next hit the X instead. Every stage's forward action now sits at
         // the bottom of its own content column.
         testId="wizard-header"
-        // The registered ComposeDetails screen names its band; the other
-        // stages' boards are not registered yet and keep the wizard's ids.
-        node={state.step === "details" ? { path: "composeDetails.header" } : undefined}
+        // The registered ComposeDetails and ComposeCrop screens name their
+        // band; the other stages' boards are not registered yet and keep the
+        // wizard's ids.
+        node={
+          state.step === "details"
+            ? { path: "composeDetails.header" }
+            : state.step === "crop"
+              ? { path: "composeCrop.header" }
+              : undefined
+        }
       />
 
       {offered !== null && (
@@ -1151,6 +1158,7 @@ export function ComposeWizard({
           onFocus={(index) => dispatch({ type: "focus", index })}
           onCrop={(id, crop) => dispatch({ type: "crop", id, crop })}
           onNext={() => dispatch({ type: "advance" })}
+          node={{ path: "composeCrop" }}
         />
       )}
 

@@ -43,6 +43,7 @@ use std::time::Duration;
 
 use postgres_store::PgPool;
 use postgres_store::media as store;
+use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
 use super::transcode::{self, Ffmpeg, TranscodeError, Transfer, VideoPlan, video_bps_for};
@@ -124,6 +125,9 @@ pub enum Settled {
     /// The row stopped being `processing` while the job ran — swept, or
     /// settled elsewhere — and the job's output was discarded.
     Abandoned,
+    /// The process is stopping and the job was handed back unfinished,
+    /// its attempt refunded, for the next process to claim at once.
+    HandedBack,
 }
 
 /// Why one job did not produce a rendition.
@@ -134,33 +138,60 @@ enum JobError {
     Transient(String),
     /// The row was no longer ours to settle.
     Gone,
+    /// The process is stopping and the grace is over.
+    Interrupted,
 }
 
 /// The worker loop, spawned once per worker at startup.
 ///
 /// A job that settles is followed straight by the next claim, so a queue
 /// drains without waiting out the poll; only an empty queue sleeps.
+///
+/// **Shutdown** (`crate::shutdown`): once `stop` is cancelled no new job
+/// is claimed. A job in flight keeps running until `grace` after the
+/// cancellation; one that settles by then settles as usual, and one that
+/// does not is handed back ([`Settled::HandedBack`]) rather than left to
+/// lapse — the restarted process claims it at once instead of after the
+/// lease, and the stop does not count against its attempts.
 pub async fn ingest_loop(
     pool: PgPool,
     blobs: Arc<dyn BlobStore>,
     config: MediaConfig,
     ffmpeg: Option<Arc<Ffmpeg>>,
+    stop: CancellationToken,
+    grace: Duration,
 ) {
     let settings = IngestSettings::from_config(&config);
     let mut ticker = tokio::time::interval(settings.poll);
     ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
-    loop {
-        match ingest_once(&pool, blobs.as_ref(), &config, ffmpeg.as_deref(), settings).await {
-            Ok(Settled::Idle) => {
-                ticker.tick().await;
-            }
-            Ok(_) => {}
+    while !stop.is_cancelled() {
+        let deadline = crate::shutdown::deadline(stop.clone(), grace);
+        let pass = ingest_once_until(
+            &pool,
+            blobs.as_ref(),
+            &config,
+            ffmpeg.as_deref(),
+            settings,
+            deadline,
+        )
+        .await;
+        let idle = match pass {
+            Ok(Settled::Idle) => true,
+            Ok(Settled::HandedBack) => break,
+            Ok(_) => false,
             Err(e) => {
                 tracing::warn!(error = %e, "media ingest claim failed");
-                ticker.tick().await;
+                true
+            }
+        };
+        if idle {
+            tokio::select! {
+                _ = ticker.tick() => {}
+                () = stop.cancelled() => {}
             }
         }
     }
+    tracing::info!("media ingest worker stopped");
 }
 
 /// Claims one job, if there is one, and settles it.
@@ -176,6 +207,30 @@ pub async fn ingest_once(
     ffmpeg: Option<&Ffmpeg>,
     settings: IngestSettings,
 ) -> Result<Settled, sqlx::Error> {
+    ingest_once_until(
+        pool,
+        blobs,
+        config,
+        ffmpeg,
+        settings,
+        std::future::pending::<()>(),
+    )
+    .await
+}
+
+/// [`ingest_once`], with a job in flight let go when `deadline` resolves:
+/// its work is dropped — the ffmpeg child is spawned `kill_on_drop` —
+/// whatever rendition it wrote is deleted, and the job is handed back.
+/// The wait is biased toward the work, so a job that finishes in the same
+/// instant the grace ends is settled rather than thrown away.
+pub async fn ingest_once_until(
+    pool: &PgPool,
+    blobs: &dyn BlobStore,
+    config: &MediaConfig,
+    ffmpeg: Option<&Ffmpeg>,
+    settings: IngestSettings,
+    deadline: impl Future<Output = ()>,
+) -> Result<Settled, sqlx::Error> {
     let lease_secs = settings.lease.as_secs_f64();
     let Some(job) = store::claim_ingest(pool, lease_secs).await? else {
         return Ok(Settled::Idle);
@@ -188,12 +243,15 @@ pub async fn ingest_once(
     let rendition_key = storage_key(Uuid::new_v4(), video::MIME);
     let work = run_job(blobs, config, ffmpeg, settings, &job, &rendition_key);
     tokio::pin!(work);
+    tokio::pin!(deadline);
     let mut renew = tokio::time::interval(settings.lease / 3);
     renew.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     renew.tick().await;
     let outcome = loop {
         tokio::select! {
+            biased;
             outcome = &mut work => break outcome,
+            () = &mut deadline => break Err(JobError::Interrupted),
             _ = renew.tick() => match store::renew_ingest_lease(pool, job.id, lease_secs).await {
                 Ok(true) => {}
                 Ok(false) => break Err(JobError::Gone),
@@ -213,6 +271,12 @@ pub async fn ingest_once(
         Err(JobError::Gone) => {
             discard(blobs, &rendition_key).await;
             Ok(Settled::Abandoned)
+        }
+        Err(JobError::Interrupted) => {
+            discard(blobs, &rendition_key).await;
+            store::hand_back_ingest(pool, job.id).await?;
+            tracing::info!(id = %job.id, "media ingest job handed back for the next process");
+            Ok(Settled::HandedBack)
         }
     }
 }

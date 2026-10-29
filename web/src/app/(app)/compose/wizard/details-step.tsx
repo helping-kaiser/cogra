@@ -358,7 +358,7 @@ function BodyStrip({
         <button
           type="button"
           onClick={() => onOpenPublished(published.postId)}
-          data-testid="composeDetails.mediaRow.published"
+          data-testid="composeDetails.published"
           className="cg-state cg-focus cg-hit cursor-pointer self-start border-0 bg-transparent p-0 text-left font-sans text-[length:var(--text-label-small)] text-on-surface-variant underline"
         >
           {publishedMarkerText(published.date)}

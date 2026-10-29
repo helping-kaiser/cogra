@@ -38,6 +38,9 @@ export function graphIdOf(handle: string): string {
 
 export const MANY = { id: "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24", singleUse: false };
 export const SINGLE = { id: "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15", singleUse: true };
+// A spent single-use link: @rafa came through it, so it keys his group and never
+// stands under Live links (the board's re-keyed `invites.group`, design round 23).
+export const USED = { id: "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64", singleUse: true };
 
 export function application(overrides: Partial<ApplicationFixture> = {}): ApplicationFixture {
   const handle = overrides.handle ?? "rafa";

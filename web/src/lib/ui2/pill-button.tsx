@@ -119,18 +119,25 @@ export function TextAction({
   testId,
   disabled = false,
   onClick,
+  node,
+  ariaLabel,
 }: {
   children: ReactNode;
   testId: string;
   disabled?: boolean;
   onClick?: () => void;
+  /** The action's spoken name, where its word alone would not say what it acts on. */
+  ariaLabel?: string;
+  /** The registered node this action is (`postEdit.tags.withdrawn.undo`); it then names it instead of `testId`. */
+  node?: DataNode;
 }) {
   return (
     <button
       type="button"
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       disabled={disabled}
       onClick={onClick}
+      aria-label={ariaLabel}
       className="cg-state cg-focus cg-hit relative inline-flex items-center rounded-extra-small text-label-medium text-primary disabled:opacity-[var(--state-disabled)]"
     >
       {children}

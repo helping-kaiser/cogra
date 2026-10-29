@@ -54,6 +54,8 @@
 import { useCallback, useEffect, useRef } from "react";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 import { CENTERED, clampZoom, MAX_ZOOM, MIN_ZOOM, sameCrop, usableArea, type Crop } from "./crop";
 import { AVATAR_RATIO, cssRatio, POST_SHAPES, type PostShape } from "./aspect";
 
@@ -99,6 +101,7 @@ export function CropFrame({
   alt = "",
   zoomSlider = false,
   testId = "crop-frame",
+  node,
 }: {
   src: string;
   shape: CropFrameShape | LockedRatio;
@@ -108,6 +111,11 @@ export function CropFrame({
   /** Draws `CropZoom` under the cut (ComposeCrop: "the zoom slider stands under the crop on both platforms"). */
   zoomSlider?: boolean;
   testId?: string;
+  /**
+   * The registered crop screen (`composeCrop`, `coverCrop`): the frame is its
+   * `viewport`, the slider's row its `zoom` and the slider `zoom.input`.
+   */
+  node?: DataNode;
 }) {
   // The library reports position, zoom, and the framed area through three
   // separate callbacks that can fire in one tick. Each merges into the newest
@@ -202,7 +210,7 @@ export function CropFrame({
           the library draws the round crop area and the scrim around it, which
           is what AvatarCrop boards. */}
       <div
-        data-testid={testId}
+        {...testAttributes(part(node, "viewport"), testId)}
         style={{ aspectRatio: cssRatio(typeof shape === "string" ? SHAPE_RATIO[shape] : 1) }}
         className="relative -mx-6 overflow-hidden bg-surface-container-high"
         onKeyDown={onKeyDown}
@@ -245,17 +253,19 @@ export function CropFrame({
           column's width, 48px tall so the thumb's target is the minimum, no
           words beside it — its name says what it does. */}
       {zoomSlider && (
-        <input
-          type="range"
-          data-testid={`${testId}-zoom`}
-          min={MIN_ZOOM}
-          max={MAX_ZOOM}
-          step={0.01}
-          value={clampZoom(crop.zoom)}
-          aria-label={CROP_ZOOM_NAME}
-          onChange={(event) => emit({ zoom: clampZoom(Number(event.target.value)) })}
-          className="cg-focus m-0 block h-12 w-full flex-none accent-primary"
-        />
+        <div className="flex-none" {...testAttributes(part(node, "zoom"))}>
+          <input
+            type="range"
+            {...testAttributes(part(node, "zoom.input"), `${testId}-zoom`)}
+            min={MIN_ZOOM}
+            max={MAX_ZOOM}
+            step={0.01}
+            value={clampZoom(crop.zoom)}
+            aria-label={CROP_ZOOM_NAME}
+            onChange={(event) => emit({ zoom: clampZoom(Number(event.target.value)) })}
+            className="cg-focus m-0 block h-12 w-full flex-none accent-primary"
+          />
+        </div>
       )}
     </>
   );
