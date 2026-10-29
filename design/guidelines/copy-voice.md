@@ -1345,9 +1345,18 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
   2026-10-05).
 - A hold's row: `That didn't sign.` with `Retry`. **Drawn** on
   `RowSigning`.
-- A read with nothing loaded: `Can't reach the server. Check your
-  connection and try again.` A read with content on screen is written
-  per surface (*Missing and unreachable*).
+- A read with nothing loaded: the house line's noun form, `Can't reach
+  the server — {what} can't load right now.`, over an outlined `Retry`
+  — `this profile`, `notifications`, `tags`, `results` (one rule, round
+  25: `ProfileUnreachable`, `Notifications`, the two pickers, search);
+  the deletion mail's landing, whose act is a confirm, says `Can't reach
+  the server — the deletion can't be confirmed right now.` over its `Try
+  again` (`DeleteAccountConfirmed`). A
+  fault line never says "try again" beside a control that does it, so the
+  long line, `Can't reach the server. Check your connection and try
+  again.`, is `TransportError`'s fallback for a surface that names no
+  noun and carries no Retry; no board draws it. A read with content on
+  screen is written per surface (*Missing and unreachable*).
 
 **A slow answer** (not a code, and not yet a fault): a signing past 5s
 keeps `Signing and publishing…` on its commit, and the subline under the
@@ -4223,10 +4232,17 @@ reuses a blessed line, which is named:
 - **The pickers at the batch's ten**: `Up to 10 citations per post.` ·
   `Up to 10 citations per comment.` · `Up to 10 tags per post.` · `Up to
   10 tags per comment.` — above the dimmed rows, a fact in the quiet
-  register (`ReferencePicker`, `TagPicker`, the `state` chip's `cap`). A
-  picker's read with no answer says the blessed house line, `Can't reach
-  the server. Check your connection and try again.`; an empty list and a
-  read in flight say nothing.
+  register (`ReferencePicker`, `TagPicker`, the `state` chip's `cap`).
+  **A cap dims** (round 25): it is a standing refusal, and a standing
+  refusal is shown — the locked look's visible half (round 16), where an
+  in-flight wait never dims (*In-flight labels*). The dimmed rows take no
+  tap, because the line above them already says why; the staged rows' ×
+  stays live, which is how room comes back. A picker's read with no
+  answer says the house line's noun form over `Retry`, `Can't reach the
+  server — tags can't load right now.` (`TagPicker`) and `Can't reach the
+  server — results can't load right now.` (`ReferencePicker`), *new
+  2026-10-29, merged under the autonomy order, review pending*; an empty
+  list and a read in flight say nothing.
 - **Invites' empty halves**: `No applications waiting.` · `No live links.`
   (`Invites`' `sections` chip). A copy that failed says the comfort's
   blessed `That didn't go through.` with `Retry` on the link's card.
