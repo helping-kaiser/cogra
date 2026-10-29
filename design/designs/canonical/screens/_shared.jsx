@@ -2750,6 +2750,17 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    (`postDetail.menuSheet` — jakob's item 64: one path for every menu on the
    detail, told apart by board — and `postDetail.dialog`).
 
+   THE PATH NAMES THE SHEET, NOT THE HOST IT IS RAISED OVER (round 27, seam
+   252, item 5). The thread is drawn once — `ReplyEntry`, where every host's
+   comment count lands in the graph, the feed's, History's, Saved's, a
+   profile's posts — so it is `postDetail.threadSheet` wherever it is raised,
+   and what is raised from inside it is the detail's too: a comment's menu
+   `postDetail.menuSheet`, its terms `postDetail.licenseSheet`
+   (`CommentLicense`), its removal `postDetail.dialog`. Item 64's reasoning,
+   one step on. A sheet a host's OWN card raises — the card's ⋮ and the rows it
+   opens — is drawn over that host and takes its prefix (`feed.menuSheet`,
+   `feed.licenseSheet`, `FeedPostLicense`).
+
    A BOARD THAT NAMES THE SHEET AND DRAWS BOTH READERS (`ReplyEntry`, round 27)
    marks the `shown` pair as its `reader` chip's copies: @sol's comment is one
    card in two readings, so each copy names it `commentCard` under its own
