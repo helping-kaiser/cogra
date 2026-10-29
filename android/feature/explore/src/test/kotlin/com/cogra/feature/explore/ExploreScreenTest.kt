@@ -170,17 +170,17 @@ class ExploreScreenTest {
         )
         compose.onNodeWithTag("explore.result:1", useUnmergedTree = true).assertExists()
         compose.onNodeWithText("9.10", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("explore.seam", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("explore.seam:content", useUnmergedTree = true).assertExists()
         compose.onNodeWithText("Beyond your reach — newest first", useUnmergedTree = true).assertExists()
         compose.onNodeWithText("2h", useUnmergedTree = true).assertExists()
-        assertThat(top("explore.seam")).isLessThan(top("explore.result:2"))
+        assertThat(top("explore.seam:content")).isLessThan(top("explore.result:2"))
     }
 
     @Test
     fun `a guest's results carry ages, no rank and no seam`() {
         val filter = SearchFilter(order = SearchOrder.NEWEST, seen = true)
         render(guest.copy(query = "salt", filter = filter, results = results("salt", filter, post("p1", "Salt maps"))))
-        compose.onNodeWithTag("explore.seam", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("explore.seam:content", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithText("2h", useUnmergedTree = true).assertExists()
     }
 

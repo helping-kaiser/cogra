@@ -173,10 +173,9 @@ private fun RemovalKind.bodyRes() = when (this) {
  *   hold, locked and never dimmed (the walk-back's rule, one family of confirm).
  * @param failed the last removal did not go through: the line stands above the
  *   pair and Remove reads Retry.
- * @param node the dialog's node where its board is registered — RemoveConfirm
- *   and CommentRemoveConfirm are drawn and unregistered, so the detail and the
- *   thread name it by the board's evident path (`postDetail.dialog`); parts
- *   `title`, `body`, `remove`, `keep`, `line`.
+ * @param node the dialog's node: `postDetail.dialog` (RemoveConfirm and the
+ *   thread's CommentRemoveConfirm) or `feed.dialog` (FeedRemoveConfirm), its
+ *   `title`, `body`, `keep` and `remove`, and the failed answer's `line`.
  */
 @Composable
 internal fun RemoveDialog(
@@ -187,6 +186,8 @@ internal fun RemoveDialog(
     onKeep: () -> Unit,
     testTag: String,
     node: DataNode? = null,
+    /** The board draws the dialog once per answer, keyed by it (`postDetail.dialog`: `asking`, `failed`). */
+    answerKeyed: Boolean = false,
 ) {
     val slow = rememberParticiple(busy)
     // A dialog over a surface suspends its stage (Feed.md:31).
@@ -197,7 +198,7 @@ internal fun RemoveDialog(
         paragraphs = listOf(stringResource(kind.bodyRes()), stringResource(R.string.content_remove_permanent)),
         onScrimPress = keep,
         testTag = testTag,
-        node = node,
+        node = if (answerKeyed) node?.keyed(if (failed && !busy) "failed" else "asking") else node,
         // ABOVE THE PAIR, where SeveranceConfirm stands its fault line — the
         // failure voice, announced.
         extra = {
@@ -256,6 +257,7 @@ internal fun RemoveConfirm(
     onClose: () -> Unit,
     testTag: String,
     node: DataNode? = null,
+    answerKeyed: Boolean = false,
 ) {
     val removal = LocalRemoval.current
     val state by (removal?.state ?: remember { MutableStateFlow(RemoveUiState()) }).collectAsState()
@@ -281,6 +283,7 @@ internal fun RemoveConfirm(
         },
         testTag = testTag,
         node = node,
+        answerKeyed = answerKeyed,
     )
 }
 

@@ -18,6 +18,8 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
@@ -40,6 +42,8 @@ fun SettingRow(
     onAction: (() -> Unit)? = null,
     showDivider: Boolean = true,
     testTag: String? = null,
+    /** The row's data-node on a registered screen: its `label`, `value` and `action` wear its parts. */
+    node: DataNode? = null,
 ) {
     SettingRow(
         label = label,
@@ -48,12 +52,13 @@ fun SettingRow(
         onAction = onAction,
         showDivider = showDivider,
         testTag = testTag,
+        node = node,
     ) {
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = if (testTag != null) Modifier.testTag("${testTag}_value") else Modifier,
+            modifier = partTag(node, testTag, "value"),
         )
     }
 }
@@ -80,6 +85,8 @@ fun SettingRow(
     onAction: (() -> Unit)? = null,
     showDivider: Boolean = true,
     testTag: String? = null,
+    /** The row's data-node on a registered screen; [value] tags its own value as `value`. */
+    node: DataNode? = null,
     value: @Composable () -> Unit,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -88,7 +95,7 @@ fun SettingRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = FACT_ROW_MIN_HEIGHT)
-                .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+                .then(rowTag(node, testTag)),
             label = {
                 Text(
                     text = label,
@@ -96,7 +103,7 @@ fun SettingRow(
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     softWrap = false,
-                    modifier = if (testTag != null) Modifier.testTag("${testTag}_label") else Modifier,
+                    modifier = partTag(node, testTag, "label"),
                 )
             },
             value = value,
@@ -108,7 +115,7 @@ fun SettingRow(
                         text = actionText,
                         onClick = onAction,
                         size = InlineSize.Large,
-                        testTag = testTag?.let { "${it}_action" },
+                        testTag = node?.div("action")?.tag ?: testTag?.let { "${it}_action" },
                     )
                 }
             },
@@ -243,4 +250,18 @@ private fun RowVariants() {
             }
         }
     }
+}
+
+/** A part's tag: the registered `node.part`, else `<testTag>_<part>`, else none. */
+private fun partTag(node: DataNode?, testTag: String?, part: String): Modifier = when {
+    node != null -> Modifier.dataNode(node / part)
+    testTag != null -> Modifier.testTag("${testTag}_$part")
+    else -> Modifier
+}
+
+/** The row's own tag: its registered node, else [testTag], else none. */
+private fun rowTag(node: DataNode?, testTag: String?): Modifier = when {
+    node != null -> Modifier.dataNode(node)
+    testTag != null -> Modifier.testTag(testTag)
+    else -> Modifier
 }

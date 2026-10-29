@@ -1,5 +1,6 @@
 package com.cogra.core.designsystem.v2.atom
 
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -18,8 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -77,6 +81,12 @@ fun DialogSurface(
     testTag: String? = null,
     /** The dialog's registered node, where its board registers one; it names its parts `title` and `body`. */
     node: DataNode? = null,
+    /**
+     * Where the dialog lands its opening focus on its title (EraseConfirm.md,
+     * SignOutConfirm.md, ChangeHandleConfirm.md: "focus lands on the title"):
+     * the title then reads as the heading it is and takes focus.
+     */
+    titleFocus: FocusRequester? = null,
 ) {
     BasicAlertDialog(
         onDismissRequest = onScrimPress,
@@ -100,7 +110,17 @@ fun DialogSurface(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.dataNode(node?.div("title")),
+                    modifier = Modifier
+                        // A block across the surface, as the master's heading is.
+                        .fillMaxWidth()
+                        .then(
+                            if (titleFocus != null) {
+                                Modifier.semantics { heading() }.focusRequester(titleFocus).focusable()
+                            } else {
+                                Modifier
+                            },
+                        )
+                        .dataNode(node?.div("title")),
                 )
                 Column(
                     modifier = Modifier

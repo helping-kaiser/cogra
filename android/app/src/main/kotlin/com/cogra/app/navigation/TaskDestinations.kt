@@ -121,7 +121,7 @@ private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
             },
             onLeave = { navController.navigateUp() },
             onRestoreKey = { navController.navigate(Restore) },
-            keyBanner = keyBanner,
+            keyBanner = keyBanner(node = null),
             deletionBand = deletionBand(node = null),
         )
         return
@@ -136,7 +136,7 @@ private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
             navController.popBackStack()
         },
         onBack = { navController.navigateUp() },
-        keyCard = keyBanner,
+        keyCard = keyBanner(node = null),
         deletionBand = deletionBand(node = null),
     )
 }
@@ -174,7 +174,7 @@ private fun ShellScope.ReplyDestination(entry: NavBackStackEntry) {
         // (jakob 2026-09-01).
         onLeave = { navController.navigateUp() },
         onRestoreKey = { navController.navigate(Restore) },
-        keyBanner = keyBanner,
+        keyBanner = keyBanner(node = null),
     )
 }
 

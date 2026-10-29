@@ -93,10 +93,12 @@ internal fun ReferenceEntry(
      * refusals keep their [testTagPrefix] tags.
      */
     node: DataNode? = null,
+    /** False where the host's own group wears [node] — its label and lines beside the section (the edit). */
+    wearsRoot: Boolean = true,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(sectionGap(staged)),
-        modifier = Modifier.fillMaxWidth().dataNode(node),
+        modifier = Modifier.fillMaxWidth().dataNode(node.takeIf { wearsRoot }),
     ) {
         if (showHeading) {
             SectionHeading(stringResource(R.string.content_references_heading), staged, node?.div("label"))
@@ -111,6 +113,7 @@ internal fun ReferenceEntry(
                     testTag = "${testTagPrefix}_reference_${row.targetId}",
                 )
             }
+            ReferenceErrors(section, testTagPrefix)
         } else if (section.references.isNotEmpty()) {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -128,12 +131,7 @@ internal fun ReferenceEntry(
                     )
                 }
             }
-            // Verbatim, on the chip the server named.
-            section.references.forEach { row ->
-                row.error?.let { message ->
-                    ErrorLine(message, "${testTagPrefix}_reference_error_${row.targetId}")
-                }
-            }
+            ReferenceErrors(section, testTagPrefix)
         }
         if (section.capReached) {
             Text(
@@ -369,4 +367,14 @@ internal fun referenceRoute(target: ReferenceTargetView?): ReferenceDestination?
 internal sealed interface ReferenceDestination {
     data class Profile(val handle: String) : ReferenceDestination
     data class Post(val id: String) : ReferenceDestination
+}
+
+/** Verbatim, under the citations, on the one the server named — staged or as chips. */
+@Composable
+private fun ReferenceErrors(section: ReferenceSectionState, testTagPrefix: String) {
+    section.references.forEach { row ->
+        row.error?.let { message ->
+            ErrorLine(message, "${testTagPrefix}_reference_error_${row.targetId}")
+        }
+    }
 }

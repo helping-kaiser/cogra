@@ -331,9 +331,8 @@ private fun kindHooks(
 )
 
 /** The thread's stance control over the feed: the live control on the node. */
-private val threadStanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { target, tag ->
-    StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
-}
+private val threadStanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit =
+    { target, tag, node -> StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node) }
 
 /**
  * The band's filter and its sheet, hoisted ([FeedViewModel]): Done's commit,
@@ -1290,12 +1289,13 @@ internal data class CardPlacement(
     val licenseSheet: DataNode?,
     val tag: String,
     val menuRows: Set<PostMenuRow>,
+    /** The own menu's think-twice dialog, where the surface's board registers one (`feed.dialog`). */
+    val dialog: DataNode? = null,
 )
 
 /**
- * The rows FeedPostMenu registers (`feed.menuSheet.*`) — the reader menu's.
- * The author's own rows on the feed have no drawn board, so they keep their
- * own tags rather than wear a path the registry does not hold.
+ * The rows the feed's menus register (`feed.menuSheet.*`): the reader's
+ * (FeedPostMenu) and the author's own (FeedPostMenuOwn).
  */
 private val FEED_MENU_ROWS = setOf(
     PostMenuRow.Save,
@@ -1303,6 +1303,9 @@ private val FEED_MENU_ROWS = setOf(
     PostMenuRow.Hide,
     PostMenuRow.License,
     PostMenuRow.Report,
+    PostMenuRow.Edit,
+    PostMenuRow.MarkSensitive,
+    PostMenuRow.Remove,
 )
 
 internal val FEED_PLACEMENT = CardPlacement(
@@ -1311,6 +1314,7 @@ internal val FEED_PLACEMENT = CardPlacement(
     licenseSheet = FEED / "licenseSheet",
     tag = "feed",
     menuRows = FEED_MENU_ROWS,
+    dialog = FEED / "dialog",
 )
 
 @Composable
@@ -1519,19 +1523,25 @@ private fun CardMenuHeader(
     licenseShown?.let { license ->
         LicenseSheet(license = license, onDismiss = { licenseShown = null }, node = placement.licenseSheet)
     }
-    // THE OWN MENU OFF THE DETAIL (RM-G9, undrawn): the same confirm as the
-    // detail's, over the surface the menu was opened from. Taken, the card
-    // stands as its mark in place — NEVER the post leaves without a mark
-    // (RemoveConfirm.md:11) — and the menu goes with the payload.
-    if (removeOpen) {
-        RemoveConfirm(
-            kind = RemovalKind.Post,
-            nodeId = post.id,
-            record = post.genesisRecordId,
-            onClose = { removeOpen = false },
-            testTag = "${tag}_remove_confirm",
-        )
-    }
+    if (removeOpen) CardRemoveConfirm(post, placement, tag, onClose = { removeOpen = false })
+}
+
+/**
+ * THE OWN MENU OFF THE DETAIL (RM-G9; FeedRemoveConfirm on the feed): the same
+ * confirm as the detail's, over the surface the menu was opened from. Taken,
+ * the card stands as its mark in place — NEVER the post leaves without a mark
+ * (RemoveConfirm.md:11) — and the menu goes with the payload.
+ */
+@Composable
+private fun CardRemoveConfirm(post: PostView, placement: CardPlacement, tag: String, onClose: () -> Unit) {
+    RemoveConfirm(
+        kind = RemovalKind.Post,
+        nodeId = post.id,
+        record = post.genesisRecordId,
+        onClose = onClose,
+        testTag = "${tag}_remove_confirm",
+        node = placement.dialog,
+    )
 }
 
 /**

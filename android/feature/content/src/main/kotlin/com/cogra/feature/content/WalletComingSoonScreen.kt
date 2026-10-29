@@ -5,8 +5,7 @@
 // on the brand wash, no back arrow and no action. One face for every reader
 // state. web's twin is `web/src/app/wallet/wallet-view.tsx`.
 //
-// UNREGISTERED: nodes.json carries no `WalletComingSoon`; the screen wears
-// its evident prefix, `wallet`, until design registers it.
+// REGISTERED as `WalletComingSoon` (prefix `wallet`, design round 23).
 
 package com.cogra.feature.content
 
@@ -34,7 +33,7 @@ import com.cogra.core.designsystem.v2.atom.ComingSoonCard
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 
-/** The screen's evident prefix (unregistered). */
+/** The screen's registered prefix (nodes.json `WalletComingSoon`). */
 val WALLET = DataNode("wallet")
 
 @Composable
@@ -52,10 +51,11 @@ fun WalletComingSoonScreen(
     val band = WALLET / "band"
     Column(modifier.fillMaxSize().dataNodeSurface()) {
         Row(
+            // The band's node is the full-width bar, its 16 inside it (`CograBand.jsx`).
             modifier = Modifier
+                .dataNode(band)
                 .defaultMinSize(minHeight = Layout.TopBarHeight)
-                .padding(horizontal = Space.x4)
-                .dataNode(band),
+                .padding(horizontal = Space.x4),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
@@ -71,7 +71,7 @@ fun WalletComingSoonScreen(
                 ComingSoonCard(
                     headline = stringResource(R.string.content_wallet_coming_soon),
                     line = stringResource(R.string.content_wallet_line),
-                    node = WALLET / "comingSoon",
+                    node = WALLET / "comingSoonCard",
                 )
             }
         }
