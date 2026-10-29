@@ -55,6 +55,14 @@ describe("CitedBySheet", () => {
     expect(rows.map((r) => r.getAttribute("data-testid-key"))).toEqual(["1", "2", "3"]);
   });
 
+  // Round 25 (W-CITEDBY-SETTLING): Cited by's settling row is gone — no read
+  // serves a pending inbound citation, so no row ever says it is settling.
+  it("draws no row as settling — every citing row read has landed", () => {
+    render(<CitedBySheet open onClose={() => {}} artifacts={ARTIFACTS} node={NODE} />);
+    expect(screen.queryAllByTestId(byNode("postDetail.citedBySheet.citation.pending"))).toHaveLength(0);
+    expect(screen.getByRole("dialog", { name: "Cited by" })).not.toHaveTextContent(/settling/i);
+  });
+
   it("names no kind in words — the leading mark says it (ReferenceRow)", () => {
     render(<CitedBySheet open onClose={() => {}} artifacts={ARTIFACTS} node={NODE} />);
     const first = screen.getAllByTestId(byNode("postDetail.citedBySheet.citation"))[0]!;

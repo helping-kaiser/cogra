@@ -32,23 +32,32 @@
 
    A CALIBRATION SCREEN (design ⇄ impl seam 002): `NODE` registers the board,
    so its named elements carry `postDetail.…` data-node paths into the built
-   board and `nodes.json`. The line is `newerVersion`. */
+   board and `nodes.json`. The line is `newerVersion`.
+
+   THE `pick` CHIP DRAWS A KEPT PICK on the post (round 27, seam 252;
+   `PickCopies`): `key` and `review` add the stance control's `pending` line
+   to `card` as the feed's `PadPending` and `PadPendingReview` draw it. */
 export const NODE = "postDetail";
-export const PROPS = { read: { editor: "enum", options: ["as-opened", "changed"], default: "as-opened" } };
-export const VALS = `newerVersion: this.props.read === "changed" ? "block" : "none"`;
+export const PROPS = { read: { editor: "enum", options: ["as-opened", "changed"], default: "as-opened" }, ...PICK_CHIP };
+export const VALS = `newerVersion: this.props.read === "changed" ? "block" : "none", ${PICK_VALS}`;
 export function Screen() {
   return (
     <>
       <DetailHeader items={READER_POST_MENU} node="header" />
       <DetailColumn>
         <EditedSinceLine node="newerVersion" display="{{newerVersion}}" />
-        <PostCard
-          {...MIRA_GALLERY_POST}
-          variant="detail"
-          onOpenOpinions={() => {}}
-          citedBy={CITING_ARTIFACTS.length}
-          onOpenCitedBy={() => {}}
-          node="card"
+        <PickCopies
+          draw={(pick) => (
+            <PostCard
+              {...MIRA_GALLERY_POST}
+              variant="detail"
+              onOpenOpinions={() => {}}
+              citedBy={CITING_ARTIFACTS.length}
+              onOpenCitedBy={() => {}}
+              {...pick}
+              node="card"
+            />
+          )}
         />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />

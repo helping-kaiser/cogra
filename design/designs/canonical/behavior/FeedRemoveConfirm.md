@@ -10,7 +10,7 @@ WHEN the removal has not answered 200ms after the press -> feed.dialog.remove re
 
 WHEN the removal is taken -> feed.dialog closes AND the card stands in its place in the feed as its mark, Removed by its author AND NEVER the card leaves the feed without a mark
 
-WHEN the removal does not go through -> feed.dialog stays up with its pair AND the line That didn't send. Try again. stands above it AND feed.dialog.remove reads Retry AND the post is not removed
+WHEN the removal does not go through -> feed.dialog stays up with its pair AND feed.dialog.line reads That didn't send. Try again. AND feed.dialog.remove reads Retry AND the post is not removed
 
 WHEN press feed.dialog.keep -> feed.dialog closes AND nothing is removed
 

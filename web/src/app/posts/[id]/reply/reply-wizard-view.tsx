@@ -66,6 +66,8 @@ import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
+import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
+import { TagPicker } from "@/lib/ui2/compose/tag-picker";
 import { COVER_FROM_PICTURE, effectiveCover } from "@/lib/compose/wizard";
 import { TransportError } from "@/lib/ui/transport-error";
 import { ReplyComposeStep } from "./reply-compose-step";
@@ -121,6 +123,11 @@ export function ReplyWizard({
   );
 
   const [sheet, setSheet] = useState<ReplySheet>("none");
+  // THE PICKERS STAND IN THE COMPOSER'S PLACE (round 27, seam 253; TagPicker.md,
+  // ReferencePicker.md): `+ Add a tag` and `+ Cite something` on the seal raise
+  // them, and every pick lands in the reply the moment it is made, so Done,
+  // the arrow and the browser's Back have nothing left to apply.
+  const [picking, setPicking] = useState<"tags" | "references" | null>(null);
   // The pad's own pick, staged until Set — Cancel and the scrim stage nothing.
   const [stagedStance, setStagedStance] = useState<StancePair>(state.stance);
   const [describing, setDescribing] = useState<string | null>(null);
@@ -361,10 +368,17 @@ export function ReplyWizard({
   // one more: a Back press on the composer reaches the thread through the
   // arrow's own leave — asking first when something is written — rather
   // than taking the reader off the page the thread is on.
+  // A picker belongs to the seal that opened it; a step back leaves it unshown.
+  const pickerOpen = picking !== null && state.step === "seal";
   useStageHistory({
     surface: "reply",
-    level: stepIndex(state) + 1,
-    onBack: stepBack,
+    // A picker rides an entry above its stage, so the browser's Back closes it
+    // the way its own arrow does (the post wizard's rule).
+    level: stepIndex(state) + 1 + (pickerOpen ? 1 : 0),
+    onBack: () => {
+      if (pickerOpen) setPicking(null);
+      else stepBack();
+    },
     onForward: () => dispatch({ type: "advance" }),
   });
 
@@ -454,10 +468,8 @@ export function ReplyWizard({
             ? "Something in the details was refused."
             : "The server refused this write."),
       );
-      // The refused chip lives in the seal's own sheet, so the sheet is
-      // reopened on it rather than the reader hunting for what was refused.
-      if (Object.keys(partition.perTag).length > 0) setSheet("topics");
-      else if (Object.keys(partition.perReference).length > 0) setSheet("references");
+      // A refused tag or citation is said on its own acts-card row, with
+      // `Remove it` (`ActsCard`'s fault row), where the seal reads it back.
       return;
     }
 
@@ -518,98 +530,141 @@ export function ReplyWizard({
       aria-label={title}
       className="fixed inset-0 z-40 flex flex-col bg-surface text-on-surface"
     >
-      <HeaderBar
-        title={title}
-        backLabel={state.step === "compose" ? "Back to the thread" : "Back a step"}
-        // IT ASKS NOTHING, because the boards do not: every reply board carries
-        // the confirm on its "X — leave" edge (via 2) and none carries it on
-        // the back arrow (via 1), which is drawn as a plain cancel to
-        // ReplyEntry. Followed as drawn rather than made symmetric here — but
-        // the asymmetry means the arrow can still lose a written comment
-        // silently, which is the exact thing the confirm exists to prevent, so
-        // it is reported rather than quietly patched.
-        onBack={stepBack}
-        onLeave={leave}
-        leaveLabel={LEAVE_LABEL}
-        action={
-          state.step === "seal" ? (
-            <span className="flex items-center gap-2">
-              <span className="whitespace-nowrap text-label-small text-on-surface-variant">
-                Last step
-              </span>
-              <HelpButton
-                label="How signing works"
-                onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)}
-              />
-            </span>
-          ) : undefined
-        }
-      />
-
-      {transportFailed && (
-        <div className="px-6">
-          <TransportError testId="reply-transport-error" />
+      {pickerOpen ? (
+        // THE PICKER IS A TASK PAGE inside the reply's dialog, with its own
+        // header and foot (`TagPicker.jsx`, `ReferencePicker.jsx`): its arrow
+        // reads `Back to the comment`, and the cap reads per comment.
+        <div data-testid="reply-picker" className="flex min-h-0 flex-1 flex-col">
+          {picking === "tags" ? (
+            <TagPicker
+              tags={state.tags}
+              onTags={(tags) => {
+                setTagErrors({});
+                dispatch({ type: "tags", tags });
+              }}
+              onDone={() => setPicking(null)}
+              origin="comment"
+            />
+          ) : (
+            <ReferencePicker
+              references={state.references}
+              onReferences={(references) => {
+                setReferenceErrors({});
+                dispatch({ type: "references", references });
+              }}
+              onDone={() => setPicking(null)}
+              origin="comment"
+            />
+          )}
         </div>
-      )}
-
-      {state.step === "compose" ? (
-        <ReplyComposeStep
-          state={state}
-          previews={previews}
-          framePreviews={framePreviews}
-          clipFace={clipFace}
-          capturing={capturing}
-          durationMs={durationMs}
-          refusals={refusals}
-          bodyError={commentBodyProblem(state.words)}
-          onWords={(words) => dispatch({ type: "words", words })}
-          onPick={(files) => void pick(files)}
-          onRemove={(id) => dispatch({ type: "unpick", id })}
-          onRetry={retry}
-          onDescribe={() => setDescribing(state.media[0]?.id ?? null)}
-          onPickFrame={(index) => {
-            const frame = mine?.frames[index];
-            if (frame) chooseCover(frame, index);
-          }}
-          onPickCover={(file) => chooseCover(file, COVER_FROM_PICTURE)}
-          onDismissRefusal={(id) =>
-            setRefusals((current) => current.filter((refusal) => refusal.id !== id))
-          }
-          onNext={() => dispatch({ type: "advance" })}
-          blocked={!composeGate.ok}
-        />
       ) : (
-        <ReplySealStep
-          state={state}
-          sheet={sheet}
-          stagedStance={stagedStance}
-          blocked={blocked.ok ? null : blocked.reason}
-          busy={busy}
-          keyOnDevice={keyOnDevice}
-          refusal={refusal}
-          tagErrors={tagErrors}
-          referenceErrors={referenceErrors}
-          onSheet={(next) => {
-            // Opening the pad starts it from the stance that is standing, so
-            // Cancel can put it back exactly.
-            if (next === "stance") setStagedStance(state.stance);
-            setSheet(next);
-          }}
-          onLicense={(license) => dispatch({ type: "license", license })}
-          onStagedStance={setStagedStance}
-          onSetStance={() => {
-            dispatch({ type: "stance", stance: stagedStance });
-            setSheet("none");
-          }}
-          onTags={(tags) => dispatch({ type: "tags", tags })}
-          onReferences={(references) => dispatch({ type: "references", references })}
-          onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
-          onSensitiveReason={(reason) => dispatch({ type: "sensitiveReason", reason })}
-          onSensitiveHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
-          onSign={() => void submit()}
-          onBack={() => dispatch({ type: "back" })}
-          onRestoreKey={() => router.push("/restore")}
-        />
+        <>
+          <HeaderBar
+            title={title}
+            backLabel={state.step === "compose" ? "Back to the thread" : "Back a step"}
+            // IT ASKS NOTHING, because the boards do not: every reply board carries
+            // the confirm on its "X — leave" edge (via 2) and none carries it on
+            // the back arrow (via 1), which is drawn as a plain cancel to
+            // ReplyEntry. Followed as drawn rather than made symmetric here — but
+            // the asymmetry means the arrow can still lose a written comment
+            // silently, which is the exact thing the confirm exists to prevent, so
+            // it is reported rather than quietly patched.
+            onBack={stepBack}
+            onLeave={leave}
+            leaveLabel={LEAVE_LABEL}
+            action={
+              state.step === "seal" ? (
+                <span className="flex items-center gap-2">
+                  <span className="whitespace-nowrap text-label-small text-on-surface-variant">
+                    Last step
+                  </span>
+                  <HelpButton
+                    label="How signing works"
+                    onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)}
+                  />
+                </span>
+              ) : undefined
+            }
+          />
+
+          {transportFailed && (
+            <div className="px-6">
+              <TransportError testId="reply-transport-error" />
+            </div>
+          )}
+
+          {state.step === "compose" ? (
+            <ReplyComposeStep
+              state={state}
+              previews={previews}
+              framePreviews={framePreviews}
+              clipFace={clipFace}
+              capturing={capturing}
+              durationMs={durationMs}
+              refusals={refusals}
+              bodyError={commentBodyProblem(state.words)}
+              onWords={(words) => dispatch({ type: "words", words })}
+              onPick={(files) => void pick(files)}
+              onRemove={(id) => dispatch({ type: "unpick", id })}
+              onRetry={retry}
+              onDescribe={() => setDescribing(state.media[0]?.id ?? null)}
+              onPickFrame={(index) => {
+                const frame = mine?.frames[index];
+                if (frame) chooseCover(frame, index);
+              }}
+              onPickCover={(file) => chooseCover(file, COVER_FROM_PICTURE)}
+              onDismissRefusal={(id) =>
+                setRefusals((current) => current.filter((refusal) => refusal.id !== id))
+              }
+              onNext={() => dispatch({ type: "advance" })}
+              blocked={!composeGate.ok}
+            />
+          ) : (
+            <ReplySealStep
+              state={state}
+              sheet={sheet}
+              stagedStance={stagedStance}
+              blocked={blocked.ok ? null : blocked.reason}
+              busy={busy}
+              keyOnDevice={keyOnDevice}
+              refusal={refusal}
+              tagErrors={tagErrors}
+              referenceErrors={referenceErrors}
+              onSheet={(next) => {
+                // Opening the pad starts it from the stance that is standing, so
+                // Cancel can put it back exactly.
+                if (next === "stance") setStagedStance(state.stance);
+                setSheet(next);
+              }}
+              onLicense={(license) => dispatch({ type: "license", license })}
+              onStagedStance={setStagedStance}
+              onSetStance={() => {
+                dispatch({ type: "stance", stance: stagedStance });
+                setSheet("none");
+              }}
+              // A change to the staged set retires the refusal said against it:
+              // its words named an item by its place, which has moved.
+              onTags={(tags) => {
+                setTagErrors({});
+                dispatch({ type: "tags", tags });
+              }}
+              onReferences={(references) => {
+                setReferenceErrors({});
+                dispatch({ type: "references", references });
+              }}
+              onOpenTagPicker={() => setPicking("tags")}
+              onOpenReferencePicker={() => setPicking("references")}
+              onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
+              onSensitiveReason={(reason) => dispatch({ type: "sensitiveReason", reason })}
+              onSensitiveHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
+              onKeyHelp={() => setHelp(HELP_TOPICS.yourKey)}
+              onSign={() => void submit()}
+              onBack={() => dispatch({ type: "back" })}
+              onDiscard={leave}
+              onRestoreKey={() => router.push("/restore")}
+            />
+          )}
+        </>
       )}
 
       {/* Mounted at the flow level, keyed by ASSET ID rather than index, so a

@@ -1,7 +1,8 @@
 // THE READER'S DEFAULT (SettingsReading.md; FeedSheet.md:59-61; FeedFilter.jsx
-// "THE DEFAULT IS THE READER'S"): the filter every feed opens with, set in
-// Settings' What your feed shows sheet — CoGra's own (`FEED_FILTER_DEFAULT`)
-// until the reader sets theirs.
+// "THE DEFAULT IS THE READER'S"): the filter a feed opens with where no filter
+// committed inside it stands on this device (SettingsReading.md:33;
+// `committed-filter.ts`), set in Settings' What your feed shows sheet —
+// CoGra's own (`FEED_FILTER_DEFAULT`) until the reader sets theirs.
 //
 // IT STAYS ON THIS DEVICE (SettingsReading.md: "ALWAYS the reader's saved
 // default stays on this device"; ranked-feed packet CD-6: "The default lives

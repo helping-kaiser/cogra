@@ -3,12 +3,16 @@
    `RemoveDialog`, the post's nouns, the safe answer filled and `Remove` a
    text button in no colour — over the feed the tap was made in, @sol's card
    still whole beneath it. A removal that gets no answer fails here as it does
-   on the detail (`RemoveConfirm`'s `answer` chip draws it): the dialog stays,
-   `That didn't send. Try again.` above the pair, `Remove` reading `Retry`.
+   on the detail, and the same `answer` chip draws it here (round 27, seam
+   252): the dialog stays, `That didn't send. Try again.` in its `line` above
+   the pair, `Remove` reading `Retry`, the card beneath not removed.
 
    REGISTERED under the `feed` prefix: the page as `Feed` names it, the dialog
-   `dialog` as every confirm names it. */
+   `dialog` as every confirm names it, its failed line `dialog.line` — the
+   detail's `postDetail.dialog.line` on its second host. */
 export const NODE = "feed";
+export const PROPS = { answer: { editor: "enum", options: ["asking", "failed"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "failed" ? "none" : "block", failedShown: this.props.answer === "failed" ? "block" : "none"`;
 const OWN_CARD_ROWS = OWN_POST_MENU.filter((row) => row !== LICENSE_ROW);
 export function Screen() {
   return (
@@ -20,7 +24,12 @@ export function Screen() {
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
-      <RemoveDialog kind="post" node="dialog" />
+      <div style={{ display: "{{askingShown}}" }} data-node-chip="answer" data-node-key="asking">
+        <RemoveDialog kind="post" node="dialog" />
+      </div>
+      <div style={{ display: "{{failedShown}}" }} data-node-chip="answer" data-node-key="failed">
+        <RemoveDialog kind="post" failed node="dialog" />
+      </div>
     </>
   );
 }

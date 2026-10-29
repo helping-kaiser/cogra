@@ -35,7 +35,16 @@
    (its `onTab` and `byTab`, one copy per `tab` value), `list` and in it a
    `row` per person, keyed by the handle of the person it names — the path
    follows the drawing, as `notifications.list.notification` does — and
-   `empty` in the list's place. The page
+   `empty` in the list's place.
+
+   A DELETED ACCOUNT'S ROW (round 27, seam 252) stands in the list as any
+   other, where its value puts it — `StanceRow`'s `redacted`: the reserved
+   disc, `Deleted account`, no handle line, the opinion read as any row's,
+   the row a door to the deleted account's page. It has no handle to key by,
+   so it is its own node, `redactedRow`, keyed by the actor's id, the
+   lowercase UUID the wire carries — `row`'s rule names the handle, and a
+   registered rule is never reworded (`redactedAccount`, ruling 56(c)). The
+   page
    browses — the header and the tabs collapse with the scroll (readme §4,
    *Browse collapses, task pins*). */
 export const NODE = "profileStances";
@@ -67,6 +76,7 @@ export function Screen() {
           <StanceRow name="Sol Ferreira" handle="sol" pDirected={0.6} pInterest={0.3} node="row" nodeKey="sol" />
         </div>
         <StanceRow name="Mira Voss" handle="mira" src="inviter.jpg" pDirected={0.4} pInterest={0.5} node="row" nodeKey="mira" />
+        <StanceRow redacted pDirected={0.2} pInterest={0.2} node="redactedRow" nodeKey="9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98" />
         <StanceRow name="Kel Moreau" handle="kel" pDirected={0} pInterest={0.35} node="row" nodeKey="kel" />
         <StanceRow name="Juno Baptiste" handle="juno" pDirected={-0.2} pInterest={0.1} node="row" nodeKey="juno" />
       </div>

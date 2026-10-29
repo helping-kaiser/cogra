@@ -145,7 +145,10 @@ export function PairSheet({
   onDone,
   onDiscard,
   testId,
+  maxHeight,
 }: {
+  /** The height class its board draws: `RefPairEdit` asks the raised 88%; the composer's default. */
+  maxHeight?: string;
   open: boolean;
   /** What the sheet edits — the tag (`#name`) or the citation's label. */
   title: string;
@@ -181,6 +184,7 @@ export function PairSheet({
       title={title}
       testId={testId}
       initialFocus={routeRef}
+      maxHeight={maxHeight}
     >
       <div className="flex flex-col gap-4 pb-1">
         <button

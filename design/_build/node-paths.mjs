@@ -109,6 +109,7 @@ export const KEY_RULES = {
   redactedAccount: "the deleted account's actor id, the lowercase UUID the wire carries (the hidden-accounts sheet, where a deleted account has no handle left to key by)",
   redactedTopic: "the held topic's id, as the wire carries it (Your topics, where a name moderation took away leaves no name to key by)",
   redactedApplication: "the deleted asker's actor id, the lowercase UUID the wire carries (Invites' applications, where an asker who deleted their account has no handle left to key by)",
+  redactedRow: "the deleted account's actor id, the lowercase UUID the wire carries (the opinions page, where a person who deleted their account has no handle left to key by)",
   release: "the release's version, lowercased, each run of other characters one - (What's new's release cards)",
   row: "the handle of the person the row names, without @ — the opinion's holder on the On tab, the one it is held on on the By tab (the opinions page)",
   result: "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
@@ -121,6 +122,18 @@ export const KEY_RULES = {
   session: "the session's position in the list, this device first, counted from 1 (Settings' sessions)",
   stagedReference: "the reference's position in the staged set, counted from 1 (the screen that stages it)",
   step: "the step's position along its path, from the path's start, counted from 1 (the score's trace)",
+};
+
+// A PATH'S OWN RULE, where its segment's rule cannot tell its instances apart
+// (round 27, seam 252). A profile's posts view lists one author's posts, so
+// `card`'s rule — the author's handle — gives every card the same key; there
+// the card keys by what does tell them apart, the post's id as the wire
+// carries it (the web's minted ids, kept). A registered rule is never
+// reworded, so the segment keeps its rule everywhere else and this table names
+// the one path that differs. Keyed by full path; it wins over `KEY_RULES`.
+export const PATH_KEY_RULES = {
+  "profile.posts.card": "the post's id, the lowercase UUID the wire carries (a profile's posts view, where every card has the one author)",
+  "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (a profile's comments view, where every card has the one author)",
 };
 
 // The key rule of a chip-drawn state duplicate (above): one rule for every
@@ -195,7 +208,8 @@ export function joinNodePaths(markup, prefix, board, chips = null) {
       if (seg === undefined) fail(`<${tag}> carries data-node-key="${key}" and no data-node`);
       if (!SEGMENT.test(seg)) fail(`data-node="${seg}" is not one camelCase segment`);
       if (key !== undefined && !KEY.test(key)) fail(`data-node-key="${key}" on ${seg} — a key is lowercase letters, digits, - and _`);
-      if (key !== undefined && !(seg in KEY_RULES)) fail(`${seg} is keyed but KEY_RULES names no rule for it`);
+      const segRule = PATH_KEY_RULES[[...parent.path, seg].join(".")] ?? KEY_RULES[seg];
+      if (key !== undefined && segRule === undefined) fail(`${seg} is keyed but KEY_RULES names no rule for it`);
       // A keyed instance directly in a chip copy keeps its own key, not the
       // chip's value (ruling 39, above).
       const ownKeyed = key !== undefined && parent.chipRule !== null;
@@ -219,7 +233,7 @@ export function joinNodePaths(markup, prefix, board, chips = null) {
       } else {
         seen.set(identity, ownCopy === null ? null : { chip: ownCopy.chip, values: new Set([ownCopy.value]) });
       }
-      nodes.push({ path: full, key: chain || null, rule: key === undefined ? parent.chipRule : KEY_RULES[seg] });
+      nodes.push({ path: full, key: chain || null, rule: key === undefined ? parent.chipRule : segRule });
       const rest = attrs.replace(STRIP, "");
       const rewritten = `<${tag}${rest} data-node="${full}"${chain ? ` data-node-key="${chain}"` : ""}${selfClose ? "/" : ""}>`;
       out += markup.slice(last, m.index) + rewritten;

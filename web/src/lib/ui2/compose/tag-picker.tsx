@@ -24,6 +24,13 @@
 // `Done` AND THE HEADER BACK ARE ONE LEAVE: both return to the composer with
 // every staged tag kept, and neither stages the typed name.
 //
+// THE `state` CHIP (rounds 24-25): at the batch's ten, `Up to 10 tags per
+// post.` stands above the list and every row under it is dimmed and takes no
+// tap, the action key staging nothing; the staged ×s still un-stage. A
+// candidates' read with no answer keeps the typed name's row and says `Can't
+// reach the server — tags can't load right now.` over `Retry` where the
+// candidates were; an empty answer and a read in flight say nothing.
+//
 // REGISTERED (nodes.json TagPicker, TagPickerTyping, TagPickerRefused; round
 // 23): a result row is `tagPicker.tag` and a staged one `tagPicker.staged.tag`,
 // each keyed by the tag's name without #.
@@ -47,8 +54,11 @@ import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-nod
 import { HelpDialog, HELP_TOPICS } from "../help-dialog";
 import { SearchBar } from "../search-bar";
 import {
+  PickerFault,
   PickerFrame,
+  PickerNote,
   PickerRow,
+  PickerRows,
   PickerStagedRow,
   StagedSection,
   type PickerOrigin,
@@ -88,7 +98,9 @@ export function TagPicker({
   // The index's last answer, TAGGED with the name it answered, so a stale
   // answer never reads as the rows for what is typed now (and nothing has to
   // be reset as the reader types).
-  const [index, setIndex] = useState<{ name: string; names: readonly string[] } | null>(null);
+  const [index, setIndex] = useState<{ name: string; names: readonly string[]; failed: boolean } | null>(null);
+  // Retry's count: a press asks the index again for the same typed name.
+  const [attempt, setAttempt] = useState(0);
   const field = useRef<HTMLInputElement | null>(null);
 
   // TagPicker.md: WHEN the picker opens -> the name field takes focus AND the
@@ -106,24 +118,30 @@ export function TagPicker({
     const timer = setTimeout(() => {
       void fetchTagNames(client, canonical).then((outcome) => {
         // A miss or a fault leaves the first row alone to carry the pick —
-        // the index only ever adds names, it never gates one.
-        if (!cancelled) setIndex({ name: canonical, names: outcome.kind === "success" ? outcome.value : [] });
+        // the index only ever adds names, it never gates one. A fault says so
+        // where the candidates were (TagPicker.md: the read that got no answer).
+        if (cancelled) return;
+        setIndex(
+          outcome.kind === "success"
+            ? { name: canonical, names: outcome.value, failed: false }
+            : { name: canonical, names: [], failed: true },
+        );
       });
     }, debounceMs);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [client, canonical, debounceMs]);
+  }, [client, canonical, debounceMs, attempt]);
 
   const staged = new Set(tags.map((tag) => tag.name));
   const atCap = cap !== null && tags.length >= cap;
   // ALWAYS a staged tag stands only in the staged section above the list.
   const first = canonical !== null && !staged.has(canonical) ? canonical : null;
-  const indexed =
-    canonical !== null && index !== null && index.name === canonical
-      ? index.names.filter((name) => name !== canonical && !staged.has(name))
-      : [];
+  const answered = canonical !== null && index !== null && index.name === canonical ? index : null;
+  const indexed = answered === null ? [] : answered.names.filter((name) => name !== canonical && !staged.has(name));
+  // The read in flight and an empty answer say nothing; only a fault speaks.
+  const fault = answered?.failed === true;
 
   const stage = (name: string) => {
     if (staged.has(name) || atCap) return;
@@ -202,32 +220,50 @@ export function TagPicker({
         }
         list={
           <>
-            {first !== null && (
-              <PickerRow
-                kind="topic"
-                name={first}
-                sub={signsAs(first)}
-                onPick={() => stage(first)}
-                disabled={atCap}
-                node={instance(NODE, "tag", first)}
-              />
-            )}
-            {indexed.map((name) => (
-              <PickerRow
-                key={name}
-                kind="topic"
-                name={name}
-                onPick={() => stage(name)}
-                disabled={atCap}
-                node={instance(NODE, "tag", name)}
-              />
-            ))}
-            <div className="flex-1" />
+            {/* THE CAP (TagPicker.md): its line above the list, every row
+                under it — the typed name's included — dimmed and inert. */}
             {atCap && (
-              <p className="m-0 px-6 pb-2 text-body-small text-on-surface-variant" {...testAttributes(part(NODE, "cap"))}>
+              <PickerNote node={part(NODE, "cap")}>
                 Up to {cap} tags per {origin}.
-              </p>
+              </PickerNote>
             )}
+            <PickerRows dimmed={atCap}>
+              {first !== null && (
+                <PickerRow
+                  kind="topic"
+                  name={first}
+                  sub={signsAs(first)}
+                  onPick={() => stage(first)}
+                  disabled={atCap}
+                  node={instance(NODE, "tag", first)}
+                />
+              )}
+              {indexed.map((name) => (
+                <PickerRow
+                  key={name}
+                  kind="topic"
+                  name={name}
+                  onPick={() => stage(name)}
+                  disabled={atCap}
+                  node={instance(NODE, "tag", name)}
+                />
+              ))}
+            </PickerRows>
+            {/* THE FAULT: the typed name's row still stands — it is the
+                field's own words and needs no read — and the line takes the
+                candidates' place. */}
+            {fault && (
+              <PickerFault
+                message="Can't reach the server — tags can't load right now."
+                onRetry={() => {
+                  // The read in flight says nothing, so the line goes with the press.
+                  setIndex(null);
+                  setAttempt((n) => n + 1);
+                }}
+                node={part(NODE, "fault")}
+              />
+            )}
+            <div className="flex-1" />
             <p
               className="m-0 px-6 pb-4 pt-2 text-body-small text-on-surface-variant"
               {...testAttributes(part(NODE, "footnote"))}

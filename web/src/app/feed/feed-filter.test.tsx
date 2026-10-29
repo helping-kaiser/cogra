@@ -322,6 +322,14 @@ describe("the feed filter", () => {
       expect(kinds.map((kind) => kind.getAttribute("aria-checked"))).toEqual(["true", "false", "false", "false"]);
     });
 
+    it("carries no visible title and no title node; its aria-label is its name (round 27: feed.filterSheet.title dropped)", async () => {
+      server.use(...rankedFeed([post("p1")], reads()));
+      renderFeed();
+      await openSheet();
+      expect(within(sheet()).queryByTestId(byNode("feed.filterSheet.title"))).toBeNull();
+      expect(sheet()).toHaveAccessibleName("What your feed shows");
+    });
+
     it("stands at its default: Ranked, Everyone, seen off, Still settling on, Sensitive and Removed off", async () => {
       server.use(...rankedFeed([post("p1")], reads()));
       renderFeed();
@@ -710,6 +718,90 @@ describe("the feed filter", () => {
       expect(within(sheet()).getByRole("radiogroup", { name: "Which of @mira's people" })).toBeInTheDocument();
       done();
       await waitFor(() => expect(trigger()).toHaveTextContent(/^Posts · @mira's people$/));
+    });
+  });
+
+  // Round 25's ruling: the committed filter lasts on the device.
+  describe("a committed filter lasts on this device (FeedSheet.md:65-67, SettingsReading.md:33)", () => {
+    /** The page load ends: the feed's memory goes, the device's storage stays. */
+    function reload(unmount: () => void) {
+      unmount();
+      forgetFeed();
+    }
+
+    // FeedSheet.md:65 ALWAYS a filter committed with Done lasts on this device
+    // until the reader changes it, through a reload, a restart and a cold
+    // launch alike, and the feed opens with it.
+    it(":65 a Done's filter stands through a reload, and the feed opens ranked under it", async () => {
+      const r = reads();
+      server.use(...rankedFeed([post("p1"), comment("c1")], r));
+      const first = renderFeed();
+      await screen.findByTestId(byNode("feed.card", "p1"));
+      await openSheet();
+      fireEvent.click(chip("kinds.commentsChip"));
+      done();
+      await waitFor(() => expect(trigger()).toHaveTextContent(/^2 kinds$/));
+      reload(first.unmount);
+      const before = r.ranks.length;
+      renderFeed();
+      await waitFor(() => expect(r.ranks.length).toBe(before + 1));
+      expect(r.ranks[before]!.kinds).toEqual(["POST", "COMMENT"]);
+      expect(trigger()).toHaveTextContent(/^2 kinds$/);
+    });
+
+    // FeedSheet.md:67 ALWAYS a filter committed with Done never travels to
+    // another device and never changes the reader's saved default in Settings.
+    it(":67 the commit never changes the saved default", async () => {
+      server.use(...rankedFeed([post("p1"), comment("c1")], reads()));
+      renderFeed();
+      await screen.findByTestId(byNode("feed.card", "p1"));
+      await openSheet();
+      fireEvent.click(chip("kinds.commentsChip"));
+      done();
+      await waitFor(() => expect(trigger()).toHaveTextContent(/^2 kinds$/));
+      expect(window.localStorage.getItem("cogra.feed.default.acct-1")).toBeNull();
+      expect(window.localStorage.getItem("cogra.feed.committed.acct-1")).not.toBeNull();
+    });
+
+    // SettingsReading.md:33 ALWAYS a feed opens with the reader's saved default
+    // GIVEN no filter committed inside that feed stands on this device — and,
+    // one standing, a default saved later does not displace it.
+    it("SettingsReading.md:33 the saved default opens a feed with none committed, never over one", async () => {
+      const r = reads();
+      server.use(...rankedFeed([post("p1"), comment("c1"), person("u3", "mira")], r));
+      writeReaderDefault("acct-1", { ...FEED_FILTER_DEFAULT, kinds: ["posts", "profiles"] });
+      const first = renderFeed();
+      await waitFor(() => expect(r.ranks).toHaveLength(1));
+      expect([...(r.ranks[0]!.kinds as string[])].sort()).toEqual(["POST", "USER"]);
+      await openSheet();
+      fireEvent.click(chip("kinds.commentsChip"));
+      done();
+      await waitFor(() => expect(r.ranks).toHaveLength(2));
+      writeReaderDefault("acct-1", { ...FEED_FILTER_DEFAULT, kinds: ["posts"] });
+      reload(first.unmount);
+      renderFeed();
+      await waitFor(() => expect(r.ranks).toHaveLength(3));
+      expect([...(r.ranks[2]!.kinds as string[])].sort()).toEqual(["COMMENT", "POST", "USER"]);
+    });
+
+    // FeedNothing.md:7 — Show posts again returns the filter to its default:
+    // the committed filter is let go, so a reload follows the default again.
+    it("Show posts again lets the committed filter go", async () => {
+      const r = reads();
+      server.use(...rankedFeed([post("p1")], r));
+      const first = renderFeed();
+      await screen.findByTestId(byNode("feed.card", "p1"));
+      await openSheet();
+      fireEvent.click(chip("kinds.postsChip"));
+      done();
+      const empty = await screen.findByTestId(byNode("feed.nothing"));
+      fireEvent.click(within(empty).getByRole("button", { name: SHOW_POSTS_AGAIN }));
+      expect(await screen.findByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
+      expect(window.localStorage.getItem("cogra.feed.committed.acct-1")).toBeNull();
+      reload(first.unmount);
+      renderFeed();
+      expect(await screen.findByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
+      expect(trigger()).toHaveTextContent(/^Posts$/);
     });
   });
 

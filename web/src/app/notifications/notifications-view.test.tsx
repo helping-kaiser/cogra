@@ -140,7 +140,7 @@ describe("NotificationsScreen", () => {
   it("the_list_is_flat_and_newest_first", async () => {
     serve(THREE);
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    await screen.findByTestId("notifications.list");
+    await screen.findAllByTestId("notifications.list.notification");
     expect(rows().map((r) => r.getAttribute("data-testid-key"))).toEqual(["1", "2", "3"]);
     expect(rows().map((r) => within(r).getByTestId("notifications.list.notification.title").textContent)).toEqual([
       "@ada commented on your post",
@@ -154,7 +154,7 @@ describe("NotificationsScreen", () => {
   it("comment_and_reply_rows_carry_the_words_that_arrived", async () => {
     serve(THREE);
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    await screen.findByTestId("notifications.list");
+    await screen.findAllByTestId("notifications.list.notification");
     expect(within(rows()[0]!).getByTestId("notifications.list.notification.second")).toHaveTextContent(
       "The third headland light is real",
     );
@@ -167,7 +167,7 @@ describe("NotificationsScreen", () => {
   it("an_unopened_row_wears_the_dot_spoken_new", async () => {
     serve(THREE);
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    await screen.findByTestId("notifications.list");
+    await screen.findAllByTestId("notifications.list.notification");
     expect(within(rows()[0]!).getByRole("img", { name: "New" })).toBeInTheDocument();
     expect(within(rows()[2]!).queryByRole("img", { name: "New" })).not.toBeInTheDocument();
   });
@@ -175,7 +175,7 @@ describe("NotificationsScreen", () => {
   it("there_is_no_mark_all_control", async () => {
     serve(THREE);
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    await screen.findByTestId("notifications.list");
+    await screen.findAllByTestId("notifications.list.notification");
     expect(screen.queryByRole("button", { name: /mark/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/mark all/i)).not.toBeInTheDocument();
   });
@@ -185,7 +185,7 @@ describe("NotificationsScreen", () => {
     setBell("me", true);
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
     expect(bellLit("me")).toBe(false);
-    await screen.findByTestId("notifications.list");
+    await screen.findAllByTestId("notifications.list.notification");
     // The server's pointer moves to the newest row this read holds.
     await waitFor(() => expect(marks.seen).toEqual([THREE[0]!.createdAt]));
   });
@@ -193,7 +193,7 @@ describe("NotificationsScreen", () => {
   it("opening_keeps_row_dots_and_a_tap_clears_one", async () => {
     const marks = serve(THREE);
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    await screen.findByTestId("notifications.list");
+    await screen.findAllByTestId("notifications.list.notification");
     expect(within(rows()[0]!).getByRole("img", { name: "New" })).toBeInTheDocument();
     expect(within(rows()[1]!).getByRole("img", { name: "New" })).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("notification-n1-open"));
@@ -205,7 +205,7 @@ describe("NotificationsScreen", () => {
   it("a_comment_row_lands_on_its_comment_in_the_thread", async () => {
     serve(THREE);
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    await screen.findByTestId("notifications.list");
+    await screen.findAllByTestId("notifications.list.notification");
     expect(screen.getByTestId("notification-n1-open")).toHaveAttribute(
       "href",
       "/posts/p1?comment=c1&from=notifications",
@@ -223,7 +223,7 @@ describe("NotificationsScreen", () => {
       }),
     ]);
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    await screen.findByTestId("notifications.list");
+    await screen.findAllByTestId("notifications.list.notification");
     const [withdrawn] = rows();
     expect(within(withdrawn!).getByTestId("notifications.list.notification.title")).toHaveTextContent(
       "@sol walked back their opinion on you",
@@ -246,11 +246,18 @@ describe("NotificationsScreen", () => {
     expect(screen.getByTestId("notifications.header").closest(".sticky")).not.toHaveClass("pb-2");
   });
 
-  it("the_loading_line_sets_the_body_medium_role_in_the_secondary_colour", () => {
+  // Notifications.md:57 WHEN the list is first read GIVEN nothing has loaded
+  // yet -> notifications.list.loading reads Loading… in the list's place AND
+  // NEVER a skeleton or a spinner appears.
+  it(":57 the_first_read_in_flight_reads_loading_in_the_lists_place", () => {
     serve(THREE);
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    const loading = screen.getByTestId("notifications-loading");
-    expect(loading).toHaveClass("text-body-medium", "text-on-surface-variant");
+    const loading = screen.getByTestId("notifications.list.loading");
+    expect(screen.getByTestId("notifications.list")).toContainElement(loading);
+    expect(loading).toHaveTextContent("Loading…");
+    const line = within(loading).getByRole("status");
+    expect(line).toHaveClass("text-body-medium", "text-on-surface-variant");
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 
   it("the_empty_list_names_the_kinds_with_no_action_and_no_error_colour", async () => {
@@ -265,16 +272,61 @@ describe("NotificationsScreen", () => {
     expect(marks.seen).toEqual([]);
   });
 
-  it("a_list_that_cannot_load_says_it_cannot_reach_the_server", async () => {
+  // Notifications.md:59 WHEN the first read gets no answer ->
+  // notifications.list.fault reads Can't reach the server — notifications
+  // can't load right now. over notifications.list.fault.retry, outlined, in the
+  // list's place AND NEVER the error dialog is raised.
+  it(":59 a_list_that_cannot_load_says_the_noun_line_over_an_outlined_retry", async () => {
     server.use(gqlLink.query("Notifications", () => HttpResponse.error()));
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    expect(await screen.findByTestId("notifications-transport-error")).toHaveTextContent(
-      "Can't reach the server. Check your connection and try again.",
-    );
-    expect(screen.getByTestId("notifications-retry")).toBeInTheDocument();
+    const fault = await screen.findByTestId("notifications.list.fault");
+    expect(screen.getByTestId("notifications.list")).toContainElement(fault);
+    expect(fault).toHaveTextContent("Can't reach the server — notifications can't load right now.");
+    expect(fault.textContent).not.toMatch(/try again/i);
+    const retry = within(fault).getByTestId("notifications.list.fault.retry");
+    expect(retry).toHaveTextContent("Retry");
+    expect(retry.className).toContain("border-outline");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("notifications.list.loading")).not.toBeInTheDocument();
   });
 
-  it("a_failed_next_page_offers_couldnt_load_more_and_retry", async () => {
+  // Notifications.md:61 WHEN tap notifications.list.fault.retry -> the list is
+  // read again AND notifications.list.loading stands until it arrives.
+  it(":61 retry_reads_the_list_again_with_loading_standing_until_it_arrives", async () => {
+    let reads = 0;
+    let answer: (() => void) | null = null;
+    server.use(
+      gqlLink.query("Notifications", async () => {
+        reads += 1;
+        if (reads === 1) return HttpResponse.error();
+        await new Promise<void>((resolve) => {
+          answer = resolve;
+        });
+        return HttpResponse.json({ data: page(THREE) });
+      }),
+      gqlLink.mutation("MarkNotificationsSeen", () =>
+        HttpResponse.json({ data: { markNotificationsSeen: { hasUnreadNotifications: false, userErrors: [] } } }),
+      ),
+    );
+    renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
+    fireEvent.click(await screen.findByTestId("notifications.list.fault.retry"));
+    expect(screen.getByTestId("notifications.list.loading")).toHaveTextContent("Loading…");
+    expect(screen.queryByTestId("notifications.list.fault")).not.toBeInTheDocument();
+    await waitFor(() => expect(answer).not.toBeNull());
+    answer!();
+    await screen.findAllByTestId("notifications.list.notification");
+    expect(rows()).toHaveLength(3);
+    expect(screen.queryByTestId("notifications.list.loading")).not.toBeInTheDocument();
+    expect(reads).toBe(2);
+  });
+
+  // Notifications.md:63 WHEN the next page does not arrive GIVEN rows stand ->
+  // the rows on screen stay AND notifications.list.moreFault reads Couldn't
+  // load more with notifications.list.moreFault.retry at its end, ending the
+  // list, in the list's quiet register AND NEVER the error colour.
+  // :65 WHEN tap notifications.list.moreFault.retry -> the next page is asked
+  // again AND the rows on screen stay.
+  it(":63 :65 a_failed_next_page_ends_the_list_with_couldnt_load_more_and_retry", async () => {
     let reads = 0;
     server.use(
       gqlLink.query("Notifications", ({ variables }) => {
@@ -296,12 +348,20 @@ describe("NotificationsScreen", () => {
       </ScrollHostProvider>,
       { store: signedIn() },
     );
-    await screen.findByTestId("notifications.list");
+    await screen.findAllByTestId("notifications.list.notification");
     intersect(true);
-    expect(await screen.findByTestId("notifications-more-failed")).toHaveTextContent("Couldn't load more");
+    const more = await screen.findByTestId("notifications.list.moreFault");
+    expect(more).toHaveTextContent("Couldn't load more — Retry");
+    expect(more).toHaveClass("text-on-surface-variant");
+    expect(more.className).not.toContain("error");
+    // It ends the list: the last thing inside notifications.list.
+    expect(screen.getByTestId("notifications.list").lastElementChild).toBe(more);
+    const retry = within(more).getByTestId("notifications.list.moreFault.retry");
+    expect(retry).toHaveTextContent("Retry");
     expect(rows()).toHaveLength(3);
-    fireEvent.click(screen.getByTestId("notifications-more-retry"));
+    fireEvent.click(retry);
     await waitFor(() => expect(reads).toBe(3));
+    expect(rows()).toHaveLength(3);
     scroller.remove();
   });
 
@@ -334,8 +394,8 @@ describe("NotificationsScreen", () => {
         </ScrollHostProvider>,
         { store: signedIn() },
       );
-      const list = await screen.findByTestId("notifications.list");
-      const items = Array.from(list.querySelectorAll("li"));
+      await screen.findAllByTestId("notifications.list.notification");
+      const items = Array.from(screen.getByTestId("notifications.list").querySelectorAll("li"));
       const watching = () =>
         made.filter((observer) =>
           items.some((item) => (observer as unknown as { targets: Set<Element> }).targets.has(item)),

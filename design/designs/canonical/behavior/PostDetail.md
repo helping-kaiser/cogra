@@ -59,3 +59,7 @@ ALWAYS postDetail.bottomBar keeps lit the slot of the root the post was opened f
 ALWAYS postDetail.bottomBar lights postDetail.bottomBar.feedSlot GIVEN the post was opened from outside the app, by a link or a push notification
 
 ALWAYS postDetail.bottomBar keeps lit the slot of the root the bell was tapped on GIVEN the post was opened from a row of Notifications, postDetail.bottomBar.feedSlot from the feed's bell and postDetail.bottomBar.profileSlot from the profile's
+
+ALWAYS postDetail.card.actionRow.stance.pending reads Waiting for your key under the kept pick's face GIVEN a pick is kept pending on the post and the key is not on this device
+
+ALWAYS postDetail.card.actionRow.stance.pending reads Waiting for your review under the kept pick's face GIVEN the key is on this device and the kept picks' review was left unsigned

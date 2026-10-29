@@ -14,7 +14,7 @@ function held(
 ): HeldOpinionView {
   return {
     holderId: `addr-${handle ?? name}`,
-    holder: { name, handle, avatarUrl: null, redacted: extra.redacted ?? false },
+    holder: { name, handle, avatarUrl: null, redacted: extra.redacted ?? false, actorId: null, door: handle },
     pair: { pDirected, pInterest },
     severed: false,
     ...extra,

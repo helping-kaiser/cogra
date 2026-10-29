@@ -18,6 +18,10 @@
 // taken back off unstages itself rather than staging a second, cancelling one.
 // A citation's withdrawal counts its real counter-records
 // (`ReferenceClaim.withdrawalCost`), never one per gesture.
+//
+// A VIDEO EDIT'S NEW FACE IS NO ROW (EditActs.jsx, round 24): it rides the
+// edit record — the contract's `coverMediaId` on the edit — staging it when
+// nothing has yet and adding nothing when it is already staged.
 
 import {
   referenceChanges,
@@ -34,8 +38,7 @@ export type EditActKind =
   | "tagsRevised"
   | "citationsAdded"
   | "citationsRevised"
-  | "citationsWithdrawn"
-  | "coverChanged";
+  | "citationsWithdrawn";
 
 /** One row of the acts card: a kind, what it names, and the records it signs. */
 export type EditActRow = {
@@ -55,7 +58,6 @@ const LABELS: Readonly<Record<EditActKind, string>> = {
   citationsAdded: "Citations added",
   citationsRevised: "Citations revised",
   citationsWithdrawn: "Citations withdrawn",
-  coverChanged: "Cover changed",
 };
 
 const ORDER: readonly EditActKind[] = [
@@ -66,7 +68,6 @@ const ORDER: readonly EditActKind[] = [
   "citationsAdded",
   "citationsRevised",
   "citationsWithdrawn",
-  "coverChanged",
 ];
 
 export type EditBatchInput = {
@@ -78,8 +79,6 @@ export type EditBatchInput = {
   readonly tags: readonly TagDraft[];
   readonly loadedReferences: readonly ReferenceDraft[];
   readonly references: readonly ReferenceDraft[];
-  /** A clip's new face — the video edit's own kind. */
-  readonly coverChanged?: boolean;
 };
 
 function hashtag(name: string): string {
@@ -114,7 +113,6 @@ export function editActRows(input: EditBatchInput): readonly EditActRow[] {
       add("citationsAdded", name, 1, "citation");
     }
   }
-  if (input.coverChanged === true) add("coverChanged", "The clip's cover", 1, "cover");
 
   return ORDER.flatMap((kind) => {
     const row = rows.get(kind);

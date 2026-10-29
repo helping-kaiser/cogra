@@ -106,8 +106,11 @@ describe("the edit batch", () => {
     expect(editActRows(batch({ references: back }))).toEqual([]);
   });
 
-  it("a cover change is its own row", () => {
-    const rows = editActRows(batch({ coverChanged: true }));
-    expect(rows.map((row) => [row.label, row.count])).toEqual([["Cover changed", 1]]);
+  // EditActs.jsx (round 24): a video edit's new face is no row — it rides the
+  // Edit record, so a batch holding one reads the Edit row alone.
+  it("a new face rides the Edit row and is no row of its own", () => {
+    const rows = editActRows(batch({ recordStaged: true }));
+    expect(rows.map((row) => [row.label, row.count])).toEqual([["Edit", 1]]);
+    expect(rows.some((row) => row.label === "Cover changed")).toBe(false);
   });
 });

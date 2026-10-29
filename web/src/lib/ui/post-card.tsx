@@ -36,7 +36,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, ViewTransition } from "react";
+import { useState, ViewTransition, type ReactNode } from "react";
 
 import { isPending, type PostView } from "@/lib/api/content-api";
 import { postCover } from "@/lib/score/cover";
@@ -64,7 +64,7 @@ import { useComfortLine } from "@/lib/saved/comfort-line";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { saveRow, type Notify } from "@/lib/saved/save-row";
 import {
-  BodyRegion,
+  VeilPart,
   PostMedia,
   bodyIsSensitive,
   hasMedia,
@@ -401,42 +401,74 @@ export function PostCard({
       </h2>
     );
 
+  const hasWords = words !== null && words !== "";
+  const hasDescription = description !== null && description !== "";
+  // THE VEIL COVERS THE BODY PART BY PART, AS ONE (`PostCard.jsx`; readme §9;
+  // seam 253, the caption veil): the media wears the media face, each
+  // paragraph — the words, the description under a picture — blurs IN PLACE
+  // with its `Show`, and the title stays outside, readable. Every part keys
+  // the post's one reveal (`VeilPart`), so one tap lifts them all. The source
+  // line stands once per post: on the media face where the card draws one,
+  // else on the first paragraph of a words-only post (FeedWordsSensitive.md;
+  // LadderStates.md), and words under a clip lifted above the card leave it
+  // to that clip's face. The first face keeps the card's `-veil` id.
+  const firstFace = drawsMedia ? "media" : hasWords ? "words" : "description";
+  const veilPart = (child: ReactNode, face: "media" | "text", named: boolean, which: typeof firstFace) => (
+    <VeilPart
+      veiled={veiled}
+      marks={post}
+      face={face}
+      named={named}
+      testId={which === firstFace ? testId : `${testId}-${which}`}
+      nodeId={post.id}
+      signature={sensitiveSignature(post)}
+    >
+      {child}
+    </VeilPart>
+  );
   const bodyText = (
     <>
       {!media && heading}
-      {words !== null && words !== "" && (
-        <p
-          {...testAttributes(part(node, "body"), `${testId}-body`)}
-          className={
-            detail
-              ? "whitespace-pre-wrap text-body-large"
-              : `text-body-medium ${open ? "" : "line-clamp-[18]"}`
-          }
-        >
-          {words}
-        </p>
-      )}
-      {description !== null && description !== "" && (
-        <p
-          {...testAttributes(part(node, "description"), `${testId}-description`)}
-          className={`text-body-medium text-on-surface-variant ${
-            detail || open ? "" : "line-clamp-2"
-          }`}
-        >
-          {description}
-        </p>
-      )}
+      {hasWords &&
+        veilPart(
+          <p
+            {...testAttributes(part(node, "body"), `${testId}-body`)}
+            className={
+              detail
+                ? "whitespace-pre-wrap text-body-large"
+                : `text-body-medium ${open ? "" : "line-clamp-[18]"}`
+            }
+          >
+            {words}
+          </p>,
+          "text",
+          !media,
+          "words",
+        )}
+      {hasDescription &&
+        veilPart(
+          <p
+            {...testAttributes(part(node, "description"), `${testId}-description`)}
+            className={`text-body-medium text-on-surface-variant ${
+              detail || open ? "" : "line-clamp-2"
+            }`}
+          >
+            {description}
+          </p>,
+          "text",
+          !media && !hasWords,
+          "description",
+        )}
     </>
   );
+  // The media under its face, which always names the source (Q47).
+  const veiledMedia = (child: ReactNode) => veilPart(child, "media", true, "media");
   // TITLE · BODY · DESCRIPTION STAND 4px APART (`PostCard.jsx` `textBlock`,
   // `--space-1`: "two fields, one visible join"), and the block stands the
   // card's 12px under the media, as its own child of the card does on the
   // board. With nothing in it, nothing is drawn — an empty block would still
   // spend that 12px.
-  const hasText =
-    (!media && heading !== null) ||
-    (words !== null && words !== "") ||
-    (description !== null && description !== "");
+  const hasText = (!media && heading !== null) || hasWords || hasDescription;
   const textBlock = hasText ? <div className="flex flex-col gap-1">{bodyText}</div> : null;
 
   return (
@@ -537,23 +569,13 @@ export function PostCard({
           testId={`${testId}-removed`}
         />
       ) : (
-        <BodyRegion
-          veiled={veiled}
-          marks={post}
-          // THE FACE THE CARD'S MASTER DRAWS (PostCard.jsx): the media face over
-          // pictures or a clip; a words-only post's words blurred in place with
-          // their Show, naming the source itself as the post's only face
-          // (FeedWordsSensitive.md); and words under a clip lifted above the
-          // card (the detail's) leave the line to the clip's face — once per post.
-          face={drawsMedia ? "media" : "text"}
-          named={!media}
-          testId={testId}
-          nodeId={post.id}
-          signature={sensitiveSignature(post)}
-        >
-          {detail ? (
-            <div className="flex flex-col gap-3">
-              {drawsMedia && (
+        // THE BODY'S PARTS VEIL AS ONE (`veilPart` above): no wrapper stands
+        // around them, so revealing moves nothing and the doors stay where
+        // the card puts them.
+        detail ? (
+          <div className="flex flex-col gap-3">
+            {drawsMedia &&
+              veiledMedia(
                 <PostMedia
                   node={post}
                   testId={`${testId}-media`}
@@ -561,62 +583,62 @@ export function PostCard({
                   preloadLead
                   // THE POST'S TAP OPENS THE FRAME (`ViewerPicture.jsx:2-3`).
                   onOpen={onOpenMedia}
-                />
+                />,
               )}
-              {textBlock}
+            {textBlock}
+          </div>
+        ) : (
+          /* TAPPING THE CARD OPENS THE POST — one link over the whole body,
+             media included, so there is one tab stop rather than two to the
+             same destination. Anything with its own meaning (the author chip,
+             the affordance row, the opener) stands outside it. It is the
+             card's DOOR (`cg-door`): hovered or pressed, the whole card takes
+             the layer (`Card.jsx`, the K13 round). A veil's own controls ride
+             inside it as the media discs do, each keeping its tap to itself
+             (`BodyVeil`'s reveal stops the press, as `PostCard.jsx` draws). */
+          streamsOnTap ? (
+            /* A PORTRAIT CLIP'S TAP OPENS THE STREAM; any other media's tap
+               opens the post (graph.json «post media»: "a portrait clip — the
+               stream opens"; readme §13, the reel round). So the clip is its
+               own door, to the stream, and the words below it keep the
+               card's door to the post — two destinations, two tab stops.
+               The clip is the shape the stream's entrance carries over
+               (`squish.ts`; the packet's RL-G15 reading). */
+            <div className="flex flex-col gap-3">
+              <Link
+                href={stream.href}
+                onClick={stream.onOpen}
+                // NAMED FOR ITS ACT, never by the clip's alt text, which
+                // says what the clip shows and not what the tap does
+                // (FeedShapes.md; copy-voice, *The stream and the viewer*).
+                aria-label={OPEN_THE_STREAM}
+                data-testid={`${testId}-stream-link`}
+                className="cg-focus cg-door block"
+              >
+                <ViewTransition name={reelClipName(streamClipId)} share="cg-squish" default="none">
+                  <div>
+                    {veiledMedia(<PostMedia node={post} testId={`${testId}-media`} dataNode={part(node, "media")} />)}
+                  </div>
+                </ViewTransition>
+              </Link>
+              {textBlock !== null && (
+                <Link href={href} data-testid={`${testId}-link`} className="cg-focus cg-door flex flex-col gap-3">
+                  {textBlock}
+                </Link>
+              )}
             </div>
           ) : (
-            /* TAPPING THE CARD OPENS THE POST — one link over the whole body,
-               media included, so there is one tab stop rather than two to the
-               same destination. Anything with its own meaning (the author chip,
-               the affordance row, the opener) stands outside it. It is the
-               card's DOOR (`cg-door`): hovered or pressed, the whole card takes
-               the layer (`Card.jsx`, the K13 round). */
-            streamsOnTap ? (
-              /* A PORTRAIT CLIP'S TAP OPENS THE STREAM; any other media's tap
-                 opens the post (graph.json «post media»: "a portrait clip — the
-                 stream opens"; readme §13, the reel round). So the clip is its
-                 own door, to the stream, and the words below it keep the
-                 card's door to the post — two destinations, two tab stops.
-                 The clip is the shape the stream's entrance carries over
-                 (`squish.ts`; the packet's RL-G15 reading). */
-              <div className="flex flex-col gap-3">
-                <Link
-                  href={stream.href}
-                  onClick={stream.onOpen}
-                  // NAMED FOR ITS ACT, never by the clip's alt text, which
-                  // says what the clip shows and not what the tap does
-                  // (FeedShapes.md; copy-voice, *The stream and the viewer*).
-                  aria-label={OPEN_THE_STREAM}
-                  data-testid={`${testId}-stream-link`}
-                  className="cg-focus cg-door block"
-                >
-                  <ViewTransition name={reelClipName(streamClipId)} share="cg-squish" default="none">
-                    <div>
-                      <PostMedia node={post} testId={`${testId}-media`} dataNode={part(node, "media")} />
-                    </div>
-                  </ViewTransition>
-                </Link>
-                {textBlock !== null && (
-                  <Link href={href} data-testid={`${testId}-link`} className="cg-focus cg-door flex flex-col gap-3">
-                    {textBlock}
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <Link
-                href={href}
-                data-testid={`${testId}-link`}
-                className="cg-focus cg-door flex flex-col gap-3"
-              >
-                {drawsMedia && (
-                  <PostMedia node={post} testId={`${testId}-media`} dataNode={part(node, "media")} />
-                )}
-                {textBlock}
-              </Link>
-            )
-          )}
-        </BodyRegion>
+            <Link
+              href={href}
+              data-testid={`${testId}-link`}
+              className="cg-focus cg-door flex flex-col gap-3"
+            >
+              {drawsMedia &&
+                veiledMedia(<PostMedia node={post} testId={`${testId}-media`} dataNode={part(node, "media")} />)}
+              {textBlock}
+            </Link>
+          )
+        )
       )}
       {/* `More` is a text control, not a link: it opens the text in place and
           never navigates, so it stands outside the link region. */}
