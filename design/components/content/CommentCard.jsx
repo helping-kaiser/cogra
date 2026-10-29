@@ -271,7 +271,7 @@ export function CommentCard({
   const shown = redacted ? (
     <RedactedContent {...(redacted === true ? {} : redacted)} node={node && "removalMark"} />
   ) : sensitive ? (
-    <SensitiveVeil kind="compact" reason={sensitive.reason} source={sensitive.source}>
+    <SensitiveVeil kind="compact" reason={sensitive.reason} source={sensitive.source} verdictReason={sensitive.verdictReason}>
       {body}
     </SensitiveVeil>
   ) : (
