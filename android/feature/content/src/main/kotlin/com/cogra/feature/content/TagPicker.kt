@@ -228,6 +228,7 @@ private fun NameLine(refusal: String?) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier
+                    .fillMaxWidth()
                     .dataNode(TAG_PICKER / "refusal")
                     .semantics { liveRegion = LiveRegionMode.Assertive },
             )
@@ -236,7 +237,7 @@ private fun NameLine(refusal: String?) {
                 text = TAG_NAME_RULE,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.dataNode(TAG_PICKER / "rule"),
+                modifier = Modifier.fillMaxWidth().dataNode(TAG_PICKER / "rule"),
             )
         }
     }

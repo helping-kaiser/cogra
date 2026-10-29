@@ -205,7 +205,7 @@ internal fun PickerStagedRow(
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.dataNode(node / "name"),
+                modifier = Modifier.fillMaxWidth().dataNode(node / "name"),
             )
             sub?.let {
                 // The composer's StagedRow names this line its `kind`.
@@ -215,7 +215,7 @@ internal fun PickerStagedRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.dataNode(node / "kind"),
+                    modifier = Modifier.fillMaxWidth().dataNode(node / "kind"),
                 )
             }
         }
