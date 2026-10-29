@@ -20,12 +20,20 @@
 // THE MOVE IS SPOKEN (`PickAnnouncement`): a polite status region mounted
 // with the screen, because assistive technology announces only changes to a
 // region it was already watching; it draws nothing.
+//
+// THE `state` CHIP'S TWO STATES, shared (TagPicker.jsx, ReferencePicker.jsx;
+// round 24, round 25): `PickerNote` is the cap's line above the list, and
+// `PickerRows` the list itself, dimmed whole at the cap — a standing refusal
+// is shown, and its rows take no tap. `PickerFault` is the read that got no
+// answer: the house line's noun form over an outlined `Retry`, where the
+// rows were.
 
 import type { ReactNode } from "react";
 
 import { Icon } from "@/lib/ui/icons";
 import { NodeMark } from "@/lib/ui/node-mark";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { TransportError } from "@/lib/ui/transport-error";
 
 import { HeaderBar } from "../header-bar";
 import { HelpDot } from "../help-dot";
@@ -105,7 +113,10 @@ export function PickerRow({
   sub?: string;
   src?: string | null;
   onPick: () => void;
-  /** At the composer's cap no further row can stage. */
+  /**
+   * At the composer's cap no further row can stage. The row takes no tap; the
+   * dimming is the list's (`PickerRows`), drawn once over every row.
+   */
   disabled?: boolean;
   node?: DataNode;
 }) {
@@ -115,7 +126,7 @@ export function PickerRow({
       onClick={onPick}
       disabled={disabled}
       {...testAttributes(node)}
-      className="cg-state cg-focus flex min-h-12 w-full cursor-pointer items-center gap-3 border-0 bg-transparent px-6 py-1 text-left text-on-surface [font:inherit] disabled:cursor-default disabled:opacity-[var(--state-disabled)]"
+      className="cg-state cg-focus flex min-h-12 w-full cursor-pointer items-center gap-3 border-0 bg-transparent px-6 py-1 text-left text-on-surface [font:inherit] disabled:cursor-default"
     >
       <PickerMark kind={kind} name={name} src={src} onCard={false} node={part(node, "mark")} />
       <RowText name={name} sub={sub} node={node} />
@@ -232,6 +243,45 @@ export function PickerFrame({
       <div className={`flex-none px-6 pb-6 ${footSpaced ? "pt-2" : "pt-0"}`}>
         <PillButton testId={`${node.path}-done`} full onClick={onLeave} node={part(node, "done")}>
           Done
+        </PillButton>
+      </div>
+    </div>
+  );
+}
+
+/** The cap's line above the list, in the quiet register (`PICKER_NOTE`: 8px 24px, body-small, secondary). */
+export function PickerNote({ children, node }: { children: ReactNode; node?: DataNode }) {
+  return (
+    <p className="m-0 px-6 py-2 text-body-small text-on-surface-variant" {...testAttributes(node)}>
+      {children}
+    </p>
+  );
+}
+
+/**
+ * The result rows. `dimmed` is the cap (the `state` chip's `rowsOpacity`):
+ * the whole list at `--state-disabled`, one layer, the rows inside it inert.
+ */
+export function PickerRows({ children, dimmed }: { children: ReactNode; dimmed: boolean }) {
+  return (
+    <div className={`flex flex-col ${dimmed ? "opacity-[var(--state-disabled)]" : ""}`} data-dimmed={dimmed || undefined}>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The read that got no answer (copy-voice *Faults by code*, round 25): the
+ * house line's noun form over an outlined `Retry`, where the rows were. The
+ * line never says "try again" — the control beside it does.
+ */
+export function PickerFault({ message, onRetry, node }: { message: string; onRetry: () => void; node: DataNode }) {
+  return (
+    <div className="px-6 py-2">
+      <div className="flex flex-col items-start gap-3" {...testAttributes(node)}>
+        <TransportError testId={`${node.path}-line`} message={message} />
+        <PillButton testId={`${node.path}-retry`} variant="outlined" size="sm" onClick={onRetry} node={part(node, "retry")}>
+          Retry
         </PillButton>
       </div>
     </div>

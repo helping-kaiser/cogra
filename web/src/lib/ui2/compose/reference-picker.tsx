@@ -19,6 +19,11 @@
 // Posts, Comments, Profiles — that combine, staged in its sheet and committed
 // by `Done`, the search filter's law (ExploreFilter.md).
 //
+// THE `state` CHIP (rounds 24-25): at the batch's ten, `Up to 10 citations
+// per post.` stands above the results, which dim and take no tap; a read with
+// no answer says `Can't reach the server — results can't load right now.` over
+// `Retry` where the results were, the field keeping the query.
+//
 // REGISTERED (nodes.json ReferencePicker, round 23): a result is
 // `referencePicker.result` and a staged row `referencePicker.staged.stagedReference`,
 // each keyed by its place from 1. Its filter sheet is the board's `filter` state,
@@ -41,8 +46,11 @@ import { HelpDialog, HELP_TOPICS } from "../help-dialog";
 import { PillButton } from "../pill-button";
 import { SearchBar } from "../search-bar";
 import {
+  PickerFault,
   PickerFrame,
+  PickerNote,
   PickerRow,
+  PickerRows,
   PickerStagedRow,
   StagedSection,
   type PickerKind,
@@ -136,7 +144,10 @@ export function ReferencePicker({
     query: string;
     narrowing: string;
     candidates: readonly ReferenceDraft[];
+    failed: boolean;
   } | null>(null);
+  // Retry's count: a press reads the results again for the query as it stands.
+  const [attempt, setAttempt] = useState(0);
   const field = useRef<HTMLInputElement | null>(null);
 
   // ReferencePicker.md: WHEN the picker opens -> the search field takes focus
@@ -161,24 +172,29 @@ export function ReferencePicker({
     const wire = narrowing === "" ? null : (narrowing.split(",") as NodeKind[]);
     const timer = setTimeout(() => {
       void fetchReferenceCandidates(client, trimmed, CANDIDATE_LIMIT, wire).then((outcome) => {
-        if (!cancelled) {
-          setAnswer({ query: trimmed, narrowing, candidates: outcome.kind === "success" ? outcome.value : [] });
-        }
+        if (cancelled) return;
+        setAnswer(
+          outcome.kind === "success"
+            ? { query: trimmed, narrowing, candidates: outcome.value, failed: false }
+            : { query: trimmed, narrowing, candidates: [], failed: true },
+        );
       });
     }, debounceMs);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [client, trimmed, queryable, narrowing, debounceMs]);
+  }, [client, trimmed, queryable, narrowing, debounceMs, attempt]);
 
   const stagedIds = new Set(references.map((reference) => reference.targetId));
   const atCap = cap !== null && references.length >= cap;
   // ALWAYS a staged reference stands only in the staged section above the results.
-  const results =
-    queryable && answer !== null && answer.query === trimmed && answer.narrowing === narrowing
-      ? answer.candidates.filter((candidate) => !stagedIds.has(candidate.targetId))
-      : [];
+  const answered =
+    queryable && answer !== null && answer.query === trimmed && answer.narrowing === narrowing ? answer : null;
+  const results = answered === null ? [] : answered.candidates.filter((candidate) => !stagedIds.has(candidate.targetId));
+  // ReferencePicker.md: the fault stands only where no result loaded for the
+  // query; a read in flight and an empty answer say nothing.
+  const fault = answered?.failed === true;
 
   const stage = (candidate: ReferenceDraft) => {
     if (stagedIds.has(candidate.targetId) || atCap) return;
@@ -253,20 +269,36 @@ export function ReferencePicker({
         }
         list={
           <>
-            {results.map((candidate, index) => (
-              <PickerRow
-                key={candidate.targetId}
-                {...pickerRowOf(candidate.target)}
-                onPick={() => stage(candidate)}
-                disabled={atCap}
-                node={instance(NODE, "result", String(index + 1))}
-              />
-            ))}
+            {/* THE CAP (ReferencePicker.md): its line above the results, every
+                result dimmed and taking no tap; the staged ×s stay live. */}
             {atCap && (
-              <p className="m-0 px-6 pt-2 text-body-small text-on-surface-variant" {...testAttributes(part(NODE, "cap"))}>
+              <PickerNote node={part(NODE, "cap")}>
                 Up to {cap} citations per {origin}.
-              </p>
+              </PickerNote>
             )}
+            {/* THE FAULT, where the results were; the field keeps the query. */}
+            {fault && (
+              <PickerFault
+                message="Can't reach the server — results can't load right now."
+                onRetry={() => {
+                  // The read in flight says nothing, so the line goes with the press.
+                  setAnswer(null);
+                  setAttempt((n) => n + 1);
+                }}
+                node={part(NODE, "fault")}
+              />
+            )}
+            <PickerRows dimmed={atCap}>
+              {results.map((candidate, index) => (
+                <PickerRow
+                  key={candidate.targetId}
+                  {...pickerRowOf(candidate.target)}
+                  onPick={() => stage(candidate)}
+                  disabled={atCap}
+                  node={instance(NODE, "result", String(index + 1))}
+                />
+              ))}
+            </PickerRows>
           </>
         }
       />
