@@ -154,28 +154,9 @@ fun TraceScreen(
 ) {
     val answered = state.view as? TraceView.Answered
     val shown = if (answered == null) TraceLevel.Entry else shownLevel(args, answered.held.answer)
-    val title = stringResource(
-        when (shown) {
-            TraceLevel.Entry -> R.string.content_trace_title_entry
-            is TraceLevel.Path -> R.string.content_trace_title_path
-            is TraceLevel.Step -> R.string.content_trace_title_step
-            is TraceLevel.Records -> R.string.content_trace_title_records
-        },
-    )
-    val back = when (shown) {
-        TraceLevel.Entry -> traceBackLabel(args.origin)
-        is TraceLevel.Path -> stringResource(R.string.content_trace_back_paths)
-        is TraceLevel.Step -> stringResource(R.string.content_trace_back_path)
-        is TraceLevel.Records -> stringResource(R.string.content_trace_back_step)
-    }
-    // THE FLAG: the signed figure the trace's own fetch found, the dash where it
-    // found none or the thing still settles; bare while nothing has answered —
-    // a failed read never substitutes a figure (score-readout §5.6).
-    val figure = when (val view = state.view) {
-        TraceView.Settling -> SCORE_DASH
-        is TraceView.Answered -> flagFigure(view.held.answer.score)
-        else -> null
-    }
+    val title = levelTitle(shown)
+    val back = levelBack(shown, args.origin)
+    val figure = flagOf(state.view)
     val end = TraceEnd(args.kind, args.cover?.markSrc, args.cover?.title.orEmpty())
     Column(modifier.fillMaxSize().dataNodeSurface()) {
         PageHeader(title = title, onBack = onBack, backContentDescription = back, node = FEED_ENTRY / "header")
@@ -205,6 +186,36 @@ fun TraceScreen(
             }
         }
     }
+}
+
+@Composable
+private fun levelTitle(shown: TraceLevel): String = stringResource(
+    when (shown) {
+        TraceLevel.Entry -> R.string.content_trace_title_entry
+        is TraceLevel.Path -> R.string.content_trace_title_path
+        is TraceLevel.Step -> R.string.content_trace_title_step
+        is TraceLevel.Records -> R.string.content_trace_title_records
+    },
+)
+
+/** The back arrow's words: the origin on level one, the level above on every other. */
+@Composable
+private fun levelBack(shown: TraceLevel, origin: TraceOrigin): String = when (shown) {
+    TraceLevel.Entry -> traceBackLabel(origin)
+    is TraceLevel.Path -> stringResource(R.string.content_trace_back_paths)
+    is TraceLevel.Step -> stringResource(R.string.content_trace_back_path)
+    is TraceLevel.Records -> stringResource(R.string.content_trace_back_step)
+}
+
+/**
+ * THE FLAG: the signed figure the trace's own fetch found, the dash where it
+ * found none or the thing still settles; bare while nothing has answered — a
+ * failed read never substitutes a figure (score-readout §5.6).
+ */
+private fun flagOf(view: TraceView): String? = when (view) {
+    TraceView.Settling -> SCORE_DASH
+    is TraceView.Answered -> flagFigure(view.held.answer.score)
+    else -> null
 }
 
 @Composable
