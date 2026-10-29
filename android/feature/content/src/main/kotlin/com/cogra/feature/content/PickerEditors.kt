@@ -214,20 +214,31 @@ internal suspend fun SearchRepository.tagNames(canonical: String): Outcome<List<
  */
 internal object InertTagPicker : TagPickerHandlers {
     override fun onOpenTagPicker() = Unit
+
     override fun onCloseTagPicker() = Unit
+
     override fun onTagPickerQueryChange(query: String) = Unit
+
     override fun onRetryTagIndex() = Unit
+
     override fun onStageTag(name: String) = Unit
+
     override fun onUnstageTag(name: String) = Unit
 }
 
 /** The citation picker's twin of [InertTagPicker]. */
 internal object InertReferencePicker : ReferencePickerHandlers {
     override fun onOpenReferencePicker() = Unit
+
     override fun onCloseReferencePicker() = Unit
+
     override fun onReferencePickerQueryChange(query: String) = Unit
+
     override fun onReferenceKindsChange(kinds: Set<FeedKind>) = Unit
+
     override fun onRetryCandidates() = Unit
+
     override fun onStageReference(row: ReferenceCandidateRow) = Unit
+
     override fun onUnstageReference(targetId: String) = Unit
 }

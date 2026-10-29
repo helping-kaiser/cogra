@@ -49,22 +49,22 @@ class ReferencePickerScreenTest {
         ),
     )
 
+    /** The board's query, `salt`, answered with [rows] under the default filter (or no answer). */
+    private fun answered(vararg rows: ReferenceCandidateRow, failed: Boolean = false) =
+        CandidateAnswer("salt", emptySet(), rows.toList(), failed)
+
     private fun render(
-        query: String = "salt",
         staged: List<ReferenceCandidateRow> = emptyList(),
-        results: List<ReferenceCandidateRow>? = listOf(sal),
-        failed: Boolean = false,
+        answer: CandidateAnswer? = answered(sal),
         kinds: Set<FeedKind> = emptySet(),
         origin: PickerOrigin = PickerOrigin.Post,
         stagedCount: Int? = null,
     ) {
         val references = stagedCount?.let { n -> (1..n).map { ReferenceRow("r$it", null) } }
             ?: staged.map { ReferenceRow(it.targetId, it.target) }
-        val answer = results?.let { CandidateAnswer(query.trim(), kinds, it, failed) }
-            ?: if (failed) CandidateAnswer(query.trim(), kinds, failed = true) else null
         val section = ReferenceSectionState(
             references = references,
-            picker = ReferencePickerState(query = query, kinds = kinds, answer = answer),
+            picker = ReferencePickerState(query = "salt", kinds = kinds, answer = answer),
         )
         compose.setContent { ReferencePicker(section, origin, handlers, now) }
     }
@@ -74,7 +74,7 @@ class ReferencePickerScreenTest {
     /** ALWAYS referencePicker.staged.stagedReference stands only in the staged section above the results. */
     @Test
     fun aStagedCitationStandsOnlyInTheStagedSection() {
-        render(staged = listOf(saltMaps), results = listOf(saltMaps, sal))
+        render(staged = listOf(saltMaps), answer = answered(saltMaps, sal))
         compose.onNodeWithTag("referencePicker.staged.stagedReference:1").assertExists()
         result(1).assertExists()
         result(2).assertDoesNotExist()
@@ -131,7 +131,7 @@ class ReferencePickerScreenTest {
     /** A person is their name over their handle; a post its words over `@author · age`. */
     @Test
     fun theRowsReadThePersonAndThePost() {
-        render(results = listOf(sal))
+        render(answer = answered(sal))
         compose.onNodeWithTag("referencePicker.result.name", useUnmergedTree = true).assertTextEquals("Sal Torres")
         compose.onNodeWithTag("referencePicker.result.sub", useUnmergedTree = true).assertTextEquals("@saltorres")
         compose.onNodeWithTag("referencePicker.result.trailing", useUnmergedTree = true).assertExists()
@@ -215,7 +215,7 @@ class ReferencePickerScreenTest {
     /** WHEN the read gets no answer GIVEN nothing loaded -> the noun line over Retry; the field keeps the query. */
     @Test
     fun aFaultPutsTheLineOverRetryAndTheFieldKeepsTheQuery() {
-        render(results = null, failed = true)
+        render(answer = answered(failed = true))
         compose.onNodeWithTag("referencePicker.fault").assertExists()
         compose.onNodeWithTag("referencePicker.searchField.input").assertTextEquals("salt")
         compose.onNodeWithTag("referencePicker.fault.retry").performClick()
@@ -226,14 +226,14 @@ class ReferencePickerScreenTest {
     /** ALWAYS no line stands where the results are GIVEN the read is in flight or found nothing. */
     @Test
     fun aReadInFlightStandsSilent() {
-        render(results = null)
+        render(answer = null)
         compose.onNodeWithTag("referencePicker.fault").assertDoesNotExist()
         result(1).assertDoesNotExist()
     }
 
     @Test
     fun aReadThatFoundNothingStandsSilent() {
-        render(results = emptyList())
+        render(answer = answered())
         compose.onNodeWithTag("referencePicker.fault").assertDoesNotExist()
     }
 
