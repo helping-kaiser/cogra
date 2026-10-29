@@ -23,9 +23,7 @@ package com.cogra.feature.stance
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
-import com.cogra.domain.has
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.signing.Expectation
@@ -40,6 +38,7 @@ import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.domain.stance.WRITE_RULE_CODES
 import com.cogra.domain.stance.isEmptySign
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.store.IdentityStore
@@ -490,7 +489,7 @@ class StanceViewModel @Inject constructor(
                 is Outcome.Success -> outcome.value
                 // The write rule refuses at staging as well as at the signer.
                 is Outcome.Refused ->
-                    return@launch if (outcome.has(ErrorCode.RATE_LIMITED)) {
+                    return@launch if (outcome.errors.any { it.code in WRITE_RULE_CODES }) {
                         severanceWriteRule(target)
                     } else {
                         failSeverance(target)
@@ -583,7 +582,7 @@ class StanceViewModel @Inject constructor(
         val prepared = when (val outcome = stances.prepareStance(target, pick)) {
             is Outcome.Success -> outcome.value
             // The write rule refuses at staging as well as at the signer.
-            is Outcome.Refused -> return if (outcome.has(ErrorCode.RATE_LIMITED)) {
+            is Outcome.Refused -> return if (outcome.errors.any { it.code in WRITE_RULE_CODES }) {
                 Signed.WriteRule
             } else {
                 Signed.Failed(needsKey = false)
@@ -604,9 +603,9 @@ class StanceViewModel @Inject constructor(
         }
     }
 
-    /** The write rule refused this result: a notice, not a fault. */
+    /** The write rule refused this result (`WRITE_RULE_CODES`): a notice, not a fault. */
     private fun WriteResult.rateLimited(): Boolean =
-        this is WriteResult.Refused && errors.any { it.code == ErrorCode.RATE_LIMITED }
+        this is WriteResult.Refused && errors.any { it.code in WRITE_RULE_CODES }
 
     /**
      * THE SIGNATURE IS TAKEN — and only now does the opinion move (the

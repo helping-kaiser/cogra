@@ -36,6 +36,10 @@ ALWAYS explore.band stands bare, with no explore.band.bell, GIVEN the reader is 
 
 ALWAYS no explore.topics stands GIVEN the reader is a guest
 
+ALWAYS explore.topics reads Your topics alone, with no second line, GIVEN the held count has not arrived
+
+ALWAYS explore.topics reads the held count under Your topics, as 5 held, and 0 held GIVEN the reader holds no topic
+
 ALWAYS an applicant's Explore reads as a member's
 
 ALWAYS Your topics' second line counts the topics the reader holds, the length of the list it opens

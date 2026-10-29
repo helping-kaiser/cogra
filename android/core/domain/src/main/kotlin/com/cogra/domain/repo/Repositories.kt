@@ -14,7 +14,6 @@ import com.cogra.domain.CommentPage
 import com.cogra.domain.CommentView
 import com.cogra.domain.HashtagView
 import com.cogra.domain.InviteCheck
-import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.LoginGrant
 import com.cogra.domain.MediaFieldUpdate
@@ -39,7 +38,6 @@ import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.topics.TagClaim
-import java.time.Instant
 
 /**
  * The joining flow (auth.md "Application"): registration creates the
@@ -116,7 +114,7 @@ interface WriteRepository {
     suspend fun stagedWrite(id: String): Outcome<StagedWriteView?>
 }
 
-/** The viewer's own account: profile, key backup, credentials, invites. */
+/** The viewer's own account: profile, key backup, credentials. */
 interface AccountRepository {
     /** Null when the session is gone. */
     suspend fun me(): Outcome<UserProfile?>
@@ -152,23 +150,6 @@ interface AccountRepository {
     suspend fun requestPasswordReset(email: String): Outcome<Unit>
 
     suspend fun confirmPasswordReset(resetToken: String, newPassword: String): Outcome<Unit>
-
-    // The inviter surface.
-    suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>>
-
-    suspend fun createInviteLink(
-        expiresAt: Instant,
-        singleUse: Boolean,
-    ): Outcome<InviteLinkInfo>
-
-    suspend fun revokeInviteLink(id: String): Outcome<Unit>
-
-    /** The priced vouch; returns the inviter's own Opinion writes to sign. */
-    suspend fun approveApplication(
-        applicationId: String,
-        pDirected: Double,
-        pInterest: Double,
-    ): Outcome<List<PreparedWriteView>>
 }
 
 /**

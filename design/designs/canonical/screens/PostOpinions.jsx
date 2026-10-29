@@ -27,7 +27,14 @@
    REGISTERED under the `postDetail` prefix (seam 248): the sheet is
    `opinionsSheet`, each row an `opinion` keyed by its holder's handle — a
    person is content, so the row keys by who, never by position. */
+/* THE `list` CHIP DRAWS THE SHEET EMPTY AT POST SCALE (seam 248). The count
+   line drops away at zero, so a post's sheet meets nothing only when the
+   count it was opened from had gone stale — every opinion walked back since
+   — and then it says so in the comment sheet's words (`CommentOpinionsEmpty`):
+   `No opinions yet — yours would be the first.`, the line alone, as `empty`. */
 export const NODE = "postDetail";
+export const PROPS = { list: { editor: "enum", options: ["rows", "empty"], default: "rows" } };
+export const VALS = `rowsShown: this.props.list === "empty" ? "none" : "flex", emptyShown: this.props.list === "empty" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
@@ -39,10 +46,13 @@ export function Screen() {
 
       <BottomSheet open ariaLabel="Opinions on this post" maxHeight="88%" node="opinionsSheet">
         <SheetTitle node="title">Opinions on this post</SheetTitle>
-        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ display: "{{rowsShown}}", flexDirection: "column", overflow: "hidden" }}>
           {POST_OPINION_HOLDERS.map((holder) => (
             <StanceRow key={holder.handle} {...holder} onOpen={() => {}} node="opinion" nodeKey={holder.handle} />
           ))}
+        </div>
+        <div style={{ display: "{{emptyShown}}", padding: "0 24px 8px" }} data-node-chip="list" data-node-key="empty">
+          <EmptyState title="No opinions yet — yours would be the first." node="empty" />
         </div>
       </BottomSheet>
     </>

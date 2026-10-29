@@ -318,6 +318,12 @@ data class StancePadVariant(
     val help: List<String>,
     /** The line the variant carries on every open, above the coaching (:13). */
     val note: String,
+    /**
+     * A second line under [note], on every open too: the approval pads carry
+     * two — what Set does, and that the act is theirs to answer
+     * (ApprovePad.md:17, VouchAskPad.md:11).
+     */
+    val noteSecond: String? = null,
     /** The registered pad (`<host>.stance.pad`, ruling 40); its parts wear its paths. */
     val padNode: DataNode? = null,
     /** 16dp above the bar (`--bottom-bar-height` 64 + 16, :3). */
@@ -1147,6 +1153,13 @@ private fun PadNote(variant: StancePadVariant?, coaching: Boolean, testTagPrefix
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        variant.noteSecond?.let { second ->
+            Text(
+                text = second,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         if (coaching) StanceCoaching(testTagPrefix)
     }
 }
@@ -1492,6 +1505,24 @@ private fun StanceConfirmation(
                 host?.showSnackbar(shown)
             }
     }
+}
+
+/**
+ * THE SIGNED LINE, SAID BY A HOST WHOSE CONTROL HAS GONE: an approval's row
+ * leaves the queue the moment its vouch is taken (ApprovePad.md:37), so the
+ * page says `Signed, still settling. Current opinion …` itself, through the
+ * same one-shot the control uses.
+ */
+@Composable
+fun StanceSignedSnackbar(confirmation: StancePoint?, onShown: () -> Unit) {
+    StanceConfirmation(
+        confirmation = confirmation,
+        walkedBack = null,
+        target = targetWords(null),
+        axes = StanceAxes.Opinion,
+        zeroWords = StanceZeroWords.Severed,
+        onShown = onShown,
+    )
 }
 
 /**

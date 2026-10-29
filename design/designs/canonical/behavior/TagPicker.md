@@ -23,3 +23,17 @@ WHEN press the keyboard's action key GIVEN the typed name is withdrawn in the ed
 ALWAYS the back arrow reads Back to the post from a post's composer or its edit, and Back to the comment from a reply's composer or a comment's edit
 
 WHEN the picker opens -> tagPicker.nameField takes focus AND the keyboard rises
+
+ALWAYS tagPicker.cap reads Up to 10 tags per post. above the list GIVEN the composer holds ten tags and was opened from a post's composer or its edit
+
+ALWAYS tagPicker.cap reads Up to 10 tags per comment. above the list GIVEN the composer holds ten tags and was opened from a reply's composer or a comment's edit
+
+ALWAYS every row in the list, the typed name's included, is dimmed and takes no tap GIVEN the composer holds ten tags
+
+WHEN press the keyboard's action key GIVEN the composer holds ten tags -> NEVER a tag is staged
+
+WHEN tap the remove control of a staged row GIVEN the composer holds ten tags -> the row's name is unstaged AND tagPicker.cap leaves AND the list takes taps again
+
+WHEN the candidates' read gets no answer -> the typed name's row still stands first AND tagPicker.fault reads Can't reach the server. Check your connection and try again. where the candidates were
+
+ALWAYS no line stands where the candidates are GIVEN the candidates' read is in flight or found nothing

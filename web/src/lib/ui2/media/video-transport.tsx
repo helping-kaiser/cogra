@@ -128,6 +128,7 @@ export function Timeline({
   duration,
   thin = false,
   hitBelow = false,
+  hitAbove = false,
   onSeek,
   testId = "video-timeline",
 }: {
@@ -145,6 +146,14 @@ export function Timeline({
    * clip's own tap above it stays whole. The ink does not move."
    */
   hitBelow?: boolean;
+  /**
+   * The 48px target RISES from the track's foot instead (`VideoControls.jsx`
+   * `hitAbove`, RL-G11 under rulings 92 and 101): the stream's seek line sits
+   * directly on the bottom bar, "whose slots own everything below it", so the
+   * target grows up into the clip and the caption stands clear above it
+   * (Reel.md:15). The 3px ink never moves.
+   */
+  hitAbove?: boolean;
   /** Where the reader put it, as a fraction of the clip. */
   onSeek?: (fraction: number) => void;
   testId?: string;
@@ -216,6 +225,14 @@ export function Timeline({
           aria-hidden="true"
           data-testid={`${testId}-target`}
           className="absolute inset-x-0 top-0"
+          style={{ height: "var(--touch-target-min)" }}
+        />
+      )}
+      {hitAbove && (
+        <span
+          aria-hidden="true"
+          data-testid={`${testId}-target`}
+          className="absolute inset-x-0 bottom-0"
           style={{ height: "var(--touch-target-min)" }}
         />
       )}

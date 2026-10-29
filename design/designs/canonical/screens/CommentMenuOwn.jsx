@@ -17,7 +17,7 @@ export function Screen() {
   return (
     <>
       <ThreadDetail />
-      <CommentsThreadSheet scrolledBy={REMOVED_COMMENT_SCROLL} />
+      <CommentsThreadSheet scrolledBy={REMOVED_COMMENT_SCROLL} node="threadSheet" />
 
       <BottomSheet open stacked ariaLabel="Comment actions" node="menuSheet">
         {OWN_COMMENT_MENU.map((item) => (

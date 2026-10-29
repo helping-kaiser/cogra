@@ -93,6 +93,13 @@ private fun IntArray?.asCommentsScroll(): CommentsScroll? =
  */
 internal val contentExpiredKey = NavResultKey<String?>("content_expired", null)
 
+/**
+ * The VouchAsk→Invites result key: what Invites says on arrival from an ask
+ * link — its snackbar and the row to stand at (VouchAsk.md:17, :27, :31) —
+ * as `InvitesNotice.encode()` carries it.
+ */
+internal val invitesNoticeKey = NavResultKey<String?>("invites_notice", null)
+
 /** The ProfileEdit→Profile result key: the update signed, re-read. */
 internal val profileSavedKey = NavResultKey("profile_saved", false)
 

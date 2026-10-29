@@ -108,6 +108,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     (signedIn && pathname === "/history") ||
     (signedIn && pathname === "/notifications");
   const showBar = phase !== "resolving" && readSurface;
+  // THE STREAM DRAWS ITS OWN BAR (Reel.jsx:147-149): the bar is inline on the
+  // stream's dark ground, over the clip's frame, so the shell's is not drawn —
+  // but a bar still stands beneath, and the pad parks above it.
+  const streaming = pathname.startsWith("/reel/");
   // SAVED AND HISTORY KEEP PROFILE LIT (Saved.md, design digest item 51;
   // History.md:121: the originating root stays lit on a drill-in) — their one
   // door is the reader's own profile.
@@ -191,7 +195,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           end by leaving confirm on the surface they land on (`carried-snackbar`). */}
       <KeptPicksNavigation navigate={router.push}>
       <ScrollHostProvider value={scroller}>
-        <PadParkingProvider value={showBar}>
+        <PadParkingProvider value={showBar || streaming}>
         <div
           ref={scroller}
           data-testid="app-scroller"

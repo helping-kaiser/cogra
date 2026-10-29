@@ -19,14 +19,28 @@
    name — the filter's own reading rule (`feedFilterSummary`).
 
    REGISTERED under the `explore` prefix (design ⇄ impl seam 062/063), named
-   as `ExploreNone` is: the line stands in the same place, as `empty`. */
+   as `ExploreNone` is: the line stands in the same place, as `empty`.
+
+   THE `kinds` CHIP DRAWS THE MIXED SEARCH THAT FOUND NOTHING ELSE (seam
+   248). Comments beside Profiles, a bare query no person answers: no row
+   stands, and the region says only the way to the comments — the scope line
+   alone, never `ExploreNone`'s line beside it, because the one honest
+   reason nothing stands is the one the scope line names. Only the trigger
+   moves, reading the two kinds as `2 kinds` (the filter's reading rule). */
 export const NODE = "explore";
+export const PROPS = { kinds: { editor: "enum", options: ["comments", "mixed"], default: "comments" } };
+export const VALS = `commentsShown: this.props.kinds === "mixed" ? "none" : "block", mixedShown: this.props.kinds === "mixed" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
       <div style={{ flex: "none", paddingTop: 12 }}>
-        <SearchBar query="salt flats" node="searchField" />
-        <SearchTriggerRow reading="Comments" />
+        <SearchBar query="salt flats" onClear={() => {}} node="searchField" />
+        <div style={{ display: "{{commentsShown}}" }} data-node-chip="kinds" data-node-key="comments">
+          <SearchTriggerRow reading="Comments" />
+        </div>
+        <div style={{ display: "{{mixedShown}}" }} data-node-chip="kinds" data-node-key="mixed">
+          <SearchTriggerRow reading="2 kinds" />
+        </div>
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
         <EmptyState title="Found through people and tags — start with @handle or #tag." node="empty" />

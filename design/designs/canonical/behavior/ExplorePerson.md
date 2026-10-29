@@ -10,6 +10,12 @@ ALWAYS no explore.profilesDoor stands GIVEN three people or fewer match
 
 ALWAYS the content after the people section stands by the search's own order, its full matches first and its seam where the order is Ranked, and never under a caption of its own
 
+ALWAYS the topics stand as their own section between the people and the content, under no caption of their own
+
+ALWAYS explore.seam stands once in each section that has an unscored rest, keyed by the section, the people's before explore.profilesDoor, GIVEN the order is Ranked
+
+ALWAYS a person past the people's seam carries nothing on its right edge and still counts toward the section's three
+
 WHEN tap explore.profilesDoor -> Profiles alone becomes the search filter's kind AND the search re-queries once AND explore.filterTrigger reads Profiles
 
 ALWAYS only the people stand, every one the query matches, with no explore.profilesLabel and no explore.profilesDoor, GIVEN Profiles alone is the search filter's kind

@@ -149,21 +149,49 @@ dialog.cg-sheet-out::backdrop {
   animation: cg-fade-out var(--duration-scrim) linear both;
 }
 
+/* THE STREAM'S PAGE (Reel.md:31: "the stream pages vertically, a swipe up
+   bringing the next clip and a swipe down the one before"): the incoming clip
+   arrives from the edge the swipe pulled it from, at the forward move's
+   duration and easing. */
+@keyframes cg-reel-next { from { transform: translateY(100%) } to { transform: none } }
+@keyframes cg-reel-previous { from { transform: translateY(-100%) } to { transform: none } }
+.cg-reel-next { animation: cg-reel-next var(--duration-nav-forward) var(--ease-emphasized-decelerate) both }
+.cg-reel-previous { animation: cg-reel-previous var(--duration-nav-forward) var(--ease-emphasized-decelerate) both }
+
+/* THE REEL'S SQUISH (the motion table: "a shared element, 300ms, never a page
+   sliding in"): the clip's named `<ViewTransition>` group (`squish.ts`) moves
+   and resizes over 300ms on M3's container-transform easing, while the screen
+   around it crossfades. */
+::view-transition-group(.cg-squish) {
+  animation-duration: var(--duration-nav-forward);
+  animation-timing-function: var(--ease-emphasized-decelerate);
+}
+
 /* Reduced motion: the swap still happens, it just does not travel or fade. A
    transition is an explanation, and a reader who has asked for stillness has
    declined the explanation, not the navigation. */
 @media (prefers-reduced-motion: reduce) {
   .cg-nav-in, .cg-nav-out, .cg-nav-back-in, .cg-nav-back-out,
-  .cg-sheet-in, .cg-sheet-out, .cg-dialog-in, .cg-scrim-in, .cg-scrim-out { animation: none }
+  .cg-sheet-in, .cg-sheet-out, .cg-dialog-in, .cg-scrim-in, .cg-scrim-out,
+  .cg-reel-next, .cg-reel-previous { animation: none }
   dialog.cg-dialog-in::backdrop, dialog.cg-sheet-in::backdrop, dialog.cg-sheet-out::backdrop { animation: none }
+  ::view-transition-group(.cg-squish),
+  ::view-transition-old(.cg-squish),
+  ::view-transition-new(.cg-squish) { animation: none }
 }
 
 /* --------------------------------------------------------------- semantic --
  * Aliases naming where a role is SPENT (design.md §2.4) rather than a second
  * colour vocabulary — every one resolves to a role globals.css already
  * defines, and a component may read either.
+ *
+ * Declared again on a `[data-theme="dark"]` container (the stream's ground,
+ * globals.css): a custom property's `var()` resolves where it is declared, so
+ * aliases resolved once at `:root` would keep the light roles inside a dark
+ * subtree.
  */
-:root {
+:root,
+[data-theme="dark"] {
   --surface-page: var(--surface);
   --surface-card: var(--surface-container-highest);
   --surface-dialog: var(--surface-container-high);
@@ -185,6 +213,10 @@ dialog.cg-sheet-out::backdrop {
   --border-hairline: var(--outline-variant);
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
+
+  /* An opinion's face over media — the stream rail's stance anchor
+     (design/tokens/semantic.css `--size-face-over-media`). */
+  --size-face-over-media: 26px;
 
   /* The ring the SYSTEM wears on a card it put in front of a reader (jakob
      2026-09-15; design/tokens/semantic.css): the ground stays the card's own

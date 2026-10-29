@@ -18,6 +18,10 @@ WHEN tap Change the cover -> the platform's own picker opens AND NEVER the clip'
 
 WHEN a picture comes back from the picker -> it passes through the cover's crop, locked to the comment's square, before it lands on the edit
 
+WHEN a new cover lands on the edit GIVEN the edit's own record is not yet staged -> the edit's own record is staged AND the footer counts it once
+
+WHEN a new cover lands on the edit GIVEN the edit's own record is already staged -> NEVER the footer's count moves AND NEVER a record of the cover's own is staged
+
 WHEN the edit with a new cover is signed -> the clip's attachment points at the new picture AND NEVER the clip itself changes
 
 ALWAYS the line Uploading N of M — signing waits for the cover. stands above the acts footer GIVEN the cover the edit set is uploading

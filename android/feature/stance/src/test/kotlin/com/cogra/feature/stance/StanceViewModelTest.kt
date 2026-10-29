@@ -688,6 +688,26 @@ class StanceViewModelTest {
     }
 
     @Test
+    fun theContractsWriteRuleRefusalIsTheNoticeNotAFault() = runTest(dispatcher) {
+        // `WRITE_RULE_FAILED` is the contract's own code for the prepare
+        // pre-check (schema.graphql ErrorCode); it reads as the notice too.
+        identity.stancePadTaught = true
+        stances.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.WRITE_RULE_FAILED, "solvency")))
+        stances.net = StancePair(0.4, 0.4)
+        stances.records = 1
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenPad(TARGET)
+        vm.onCommit(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).writeRule).isTrue()
+        assertThat(entry(vm).failed).isFalse()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
+    }
+
+    @Test
     fun aHoldWithTheKeyElsewhereOpensThePadAndSignsNothing() = runTest(dispatcher) {
         identity.stancePadTaught = true
         identity.seed = null

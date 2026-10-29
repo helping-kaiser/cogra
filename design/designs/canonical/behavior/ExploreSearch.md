@@ -6,6 +6,14 @@ ALWAYS full matches stand before partial matches, a full match being a name or t
 
 ALWAYS what the ranker cannot score stands behind a visible seam, newest first GIVEN the order is Ranked
 
+ALWAYS the results stand in the search's sections, people, then topics, then content, under either order
+
+ALWAYS each section stands its own ranked head and then its own rest, and explore.seam closes the head of each section that has a rest, one per section, keyed people, topics or content GIVEN the order is Ranked
+
+ALWAYS explore.searchField.clear stands at the field's end, spoken Clear search, GIVEN a query stands in explore.searchField
+
+WHEN tap explore.searchField.clear -> the query empties AND explore.searchField keeps the focus AND Explore at rest stands again with its recent searches
+
 ALWAYS a row past the seam but a tag or a person shows its age in place of its rank, in the one age ladder: now, 35m, 2h, 3d up to 30 days, then the date as 06.09.2024
 
 ALWAYS a tag or a person row past the seam carries nothing on its right edge

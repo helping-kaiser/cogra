@@ -206,34 +206,6 @@ data class PreparedWriteView(
     override fun hashCode(): Int = id.hashCode()
 }
 
-/** An invite link as its issuer sees it. */
-data class InviteLinkInfo(
-    val id: String,
-    val singleUse: Boolean,
-    val createdAt: Instant,
-    val expiresAt: Instant,
-    val revokedAt: Instant?,
-    /** The issuer's approval queue. */
-    val applications: List<ApplicationInfo>,
-)
-
-/** An application in the inviter's queue. */
-data class ApplicationInfo(
-    val id: String,
-    val handle: String,
-    val emailVerified: Boolean,
-    val keyAttached: Boolean,
-    val approvedAt: Instant?,
-    val landedAt: Instant?,
-    /**
-     * The applicant's raw L1 identifier, `prof:<address>` — the node an
-     * approval's vouch points at, which the device checks the vouch it
-     * signs against (signing/Intent.kt). Null before the key is attached,
-     * when nothing is approvable.
-     */
-    val graphId: String? = null,
-)
-
 /** Client mirror of the server's minimum handle length (auth.md "Application"). */
 const val MIN_HANDLE_LENGTH = 3
 

@@ -68,9 +68,12 @@ export function PayoutAddressRow({ address, onOpen }) {
    applicant's ask link, held by the card whose words explain what it is for.
    Only the fill and the inset go; the label, the copy control, the mono block
    and the caption are unchanged, because the reason they are shaped that way
-   does not depend on what is behind them. */
+   does not depend on what is behind them.
 
-export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", changeBusy = false, changeBusyLabel, caption, bare = false, node, nodeKey }) {
+   `children` STANDS UNDER THE CAPTION, the card's last line: the copy that did
+   not go through says so there, on the string's own card (seam 248). */
+
+export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", changeBusy = false, changeBusyLabel, caption, bare = false, node, nodeKey, children }) {
   return (
     <div
       style={{
@@ -150,6 +153,7 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, copy
           {caption}
         </span>
       )}
+      {children}
     </div>
   );
 }

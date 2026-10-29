@@ -12,7 +12,8 @@
    THE DOORS ARE THE OPINIONS ROUND'S TWO, for its reasons: a count line on the
    post's detail (`Cited by 4`), absent at zero, and the comment's ⋮ row, which
    stands whatever the count is because a comment has no detail surface of its
-   own. The empty state is reachable only from the second, which is why it has
+   own. The empty state is reachable by design only from the second (a post's
+   sheet meets it only past a stale count — the `list` chip below), which is why it has
    a board of its own and this one does not need to draw it.
 
    NEWEST FIRST, AND THAT IS A DEPARTURE. The opinions sheet is strongest-first,
@@ -38,8 +39,15 @@
    REGISTERED under the `postDetail` prefix (seam 248): the sheet is
    `citedBySheet`, each row a `citation` keyed by its place in the list,
    newest first — the list is a chronicle, as Notifications is, and two
-   citing things can share a name. */
+   citing things can share a name.
+
+   THE `list` CHIP DRAWS THE SHEET EMPTY AT POST SCALE (seam 248): reached
+   only when the count it was opened from had gone stale, it says so in the
+   comment sheet's words (`CommentCitedByEmpty`), `Nothing cites this yet —
+   yours would be the first.`, the line alone, as `empty`. */
 export const NODE = "postDetail";
+export const PROPS = { list: { editor: "enum", options: ["rows", "empty"], default: "rows" } };
+export const VALS = `rowsShown: this.props.list === "empty" ? "none" : "flex", emptyShown: this.props.list === "empty" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
@@ -51,10 +59,13 @@ export function Screen() {
 
       <BottomSheet open ariaLabel="Cited by" maxHeight="88%" node="citedBySheet">
         <SheetTitle node="title">Cited by</SheetTitle>
-        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ display: "{{rowsShown}}", flexDirection: "column", overflow: "hidden" }}>
           {CITING_ARTIFACTS.map((artifact, index) => (
             <ReferenceRow key={artifact.name} {...artifact} onOpen={() => {}} node="citation" nodeKey={String(index + 1)} />
           ))}
+        </div>
+        <div style={{ display: "{{emptyShown}}", padding: "0 24px 8px" }} data-node-chip="list" data-node-key="empty">
+          <EmptyState title="Nothing cites this yet — yours would be the first." node="empty" />
         </div>
       </BottomSheet>
     </>

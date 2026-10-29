@@ -6,6 +6,14 @@ ALWAYS New invite heads the column, a filled button at the column's full width
 
 ALWAYS the page reads Applications, then Live links, in that order
 
+ALWAYS both sections stand whenever one of them holds something, a section with nothing in it keeping its label
+
+ALWAYS invites.applicationsEmpty reads No applications waiting. under invites.applicationsLabel GIVEN no application waits and a link is live
+
+ALWAYS invites.linksEmpty reads No live links. under invites.linksLabel GIVEN no link is live and an application waits
+
+ALWAYS the empty lines wear the empty list's quiet register and never the error colour
+
 ALWAYS applications stand grouped by the link they came through, each group labelled with its link and its waiting count, as Many uses · 4 waiting
 
 ALWAYS the groups stand by their oldest waiting application and the rows by age inside them, so the oldest application in the queue is the first row under any kept approval
@@ -23,6 +31,8 @@ ALWAYS an application's second line reads Ready for your approval GIVEN the read
 ALWAYS every application's row carries its own close, the close glyph alone, spoken with the handle it closes, as Close @imke's application
 
 ALWAYS an application's row names the asker Deleted account, and its close's spoken name and every snackbar naming the asker say a deleted account in the handle's place, as Close a deleted account's application GIVEN the asker's account was deleted
+
+ALWAYS invites.redactedApplication keeps its place and its age in its group, its disc keeping its space and filled with nothing, invites.redactedApplication.title reading Deleted account in the system's voice and no handle under it GIVEN the asker's account was deleted
 
 ALWAYS a live link's card holds the link whole, never truncated, labelled Single use · not used yet or Many uses, captioned with when it expires, with its copy control and Revoke
 
@@ -45,6 +55,10 @@ WHEN tap an application's close -> the dialog asking to close that application o
 WHEN tap a group's Close all -> the dialog asking to close all of that group's waiting applications opens
 
 WHEN tap a link's copy control -> the link lands on the clipboard AND the snackbar reads Link copied
+
+WHEN tap a link's copy control GIVEN the copy does not go through -> invites.link.copyFault reads That didn't go through. with Retry at its end, the line last on that link's card AND the link stays whole on the card AND NEVER the snackbar reads Link copied AND NEVER the error dialog or a notice is raised
+
+WHEN tap the Retry of invites.link.copyFault -> the copy is asked again AND the line leaves the card once the link lands on the clipboard
 
 WHEN tap a link's Revoke -> the card holds until the revoke answers AND Revoke refuses a second press until the revoke answers AND NEVER a dialog asks AND NEVER Undo is offered
 

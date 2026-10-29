@@ -16,12 +16,17 @@
    removed by its author rather than lost.
 
    THE THREAD IS `_shared.jsx`'s, EXTENDED AND NOT FORKED (`ReplySettled`'s
-   rule): the sheet learned `removed`, and nothing here re-draws a comment. */
+   rule): the sheet learned `removed`, and nothing here re-draws a comment.
+
+   REGISTERED under the `postDetail` prefix (seam 248), once the thread was
+   named: the mark is `threadSheet.commentCard.removalMark` under @sol's key,
+   the post card's name for the same master. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
       <ThreadDetail />
-      <CommentsThreadSheet removed scrolledBy={REMOVED_COMMENT_SCROLL} />
+      <CommentsThreadSheet removed scrolledBy={REMOVED_COMMENT_SCROLL} node="threadSheet" />
     </>
   );
 }

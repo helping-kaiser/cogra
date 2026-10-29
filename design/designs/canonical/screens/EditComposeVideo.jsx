@@ -40,8 +40,10 @@
    `Signing the edit…` until the bytes land, a failed upload drops the held
    press, and the slow line counts from the press. The `upload` chip draws it:
    the cover row then holds the chosen face and `Change the cover`, the field's
-   other half (`CommentEditVideo`), and the foot counts the new face's one
-   record (`Cover changed`, `EditActs`).
+   other half (`CommentEditVideo`), and the foot's count holds: A NEW FACE
+   RIDES THE EDIT RECORD (seam 248, the contract's `coverMediaId` on the
+   edit), so it stages the Edit record when nothing has yet, and adds nothing
+   when the edit's record is already staged, as here.
 
    REGISTERED under the `postEdit` prefix (seam 248), `EditComposeBody`'s
    names; the clip's block is `video`, the cover's `cover` (its door `add` and
@@ -102,6 +104,14 @@ export function Screen() {
             <WithdrawnLine name="#photography" node="withdrawn" />
           </div>
 
+          {/* AN EDIT OF A CLIP POST TAKES CITATIONS LIKE ANY EDIT (seam 248):
+              the References block `CommentEditVideo` draws at comment scale,
+              here with nothing standing yet — its add opens the picker. */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="references">
+            <FieldLabel node="label">References</FieldLabel>
+            <InlineAction size="sm" selfStart node="add">+ Cite something</InlineAction>
+          </div>
+
           <div style={{ display: "flex", flexDirection: "column" }} data-node="facts">
             <LockedLicenseRow />
             <EditBackingRow />
@@ -118,7 +128,7 @@ export function Screen() {
           <ActsFooter count={4} node="acts" />
         </div>
         <div style={{ display: "{{gateShown}}", flexDirection: "column" }} {...chipCopy("upload", "uploading")}>
-          <ActsFooter count={5} node="acts" />
+          <ActsFooter count={4} node="acts" />
         </div>
         <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
       </div>
