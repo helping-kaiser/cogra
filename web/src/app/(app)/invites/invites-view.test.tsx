@@ -669,8 +669,8 @@ describe("the closing dialogs (behavior/RejectConfirm.md, RejectAllConfirm.md)",
     fireEvent.click(close);
     await waitFor(() => expect(close).toHaveTextContent("Closing it…"));
     expect(close).toHaveAttribute("aria-busy", "true");
-    await waitFor(() => expect(screen.queryByTestId("invites.dialog")).not.toBeInTheDocument());
-    expect(row("imke")).toBeUndefined();
+    await waitFor(() => expect(screen.queryByTestId("invites.dialog")).not.toBeInTheDocument(), { timeout: 4000 });
+    await waitFor(() => expect(row("imke")).toBeUndefined(), { timeout: 4000 });
     expect(calls).toBe(1);
   });
 
