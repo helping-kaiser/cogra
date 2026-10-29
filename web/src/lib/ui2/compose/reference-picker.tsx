@@ -19,6 +19,11 @@
 // Posts, Comments, Profiles — that combine, staged in its sheet and committed
 // by `Done`, the search filter's law (ExploreFilter.md).
 //
+// THE `state` CHIP (rounds 24-25): at the batch's ten, `Up to 10 citations
+// per post.` stands above the results, which dim and take no tap; a read with
+// no answer says `Can't reach the server — results can't load right now.` over
+// `Retry` where the results were, the field keeping the query.
+//
 // REGISTERED (nodes.json ReferencePicker, round 23): a result is
 // `referencePicker.result` and a staged row `referencePicker.staged.stagedReference`,
 // each keyed by its place from 1. Its filter sheet is the board's `filter` state,
@@ -37,12 +42,15 @@ import { shortTimestamp } from "@/lib/ui/timestamp";
 
 import { BottomSheet } from "../bottom-sheet";
 import { Chip } from "../chip";
+import { FilterFoot, FilterSection } from "../filter-sheet";
 import { HelpDialog, HELP_TOPICS } from "../help-dialog";
-import { PillButton } from "../pill-button";
 import { SearchBar } from "../search-bar";
 import {
+  PickerFault,
   PickerFrame,
+  PickerNote,
   PickerRow,
+  PickerRows,
   PickerStagedRow,
   StagedSection,
   type PickerKind,
@@ -53,6 +61,10 @@ import {
 export const PICKER_DEBOUNCE_MS = 250;
 
 const NODE: DataNode = { path: "referencePicker" };
+const FILTER_SHEET = part(NODE, "filterSheet");
+
+/** The kinds section's words (ReferencePicker.jsx, the search filter's own). */
+const KINDS_HINT = "Combine as many as you like. All, until you narrow it.";
 
 /** The three citable kinds, as the search filter names them (`FEED_KINDS`). */
 export const CITABLE_KINDS = [
@@ -136,7 +148,10 @@ export function ReferencePicker({
     query: string;
     narrowing: string;
     candidates: readonly ReferenceDraft[];
+    failed: boolean;
   } | null>(null);
+  // Retry's count: a press reads the results again for the query as it stands.
+  const [attempt, setAttempt] = useState(0);
   const field = useRef<HTMLInputElement | null>(null);
 
   // ReferencePicker.md: WHEN the picker opens -> the search field takes focus
@@ -161,24 +176,29 @@ export function ReferencePicker({
     const wire = narrowing === "" ? null : (narrowing.split(",") as NodeKind[]);
     const timer = setTimeout(() => {
       void fetchReferenceCandidates(client, trimmed, CANDIDATE_LIMIT, wire).then((outcome) => {
-        if (!cancelled) {
-          setAnswer({ query: trimmed, narrowing, candidates: outcome.kind === "success" ? outcome.value : [] });
-        }
+        if (cancelled) return;
+        setAnswer(
+          outcome.kind === "success"
+            ? { query: trimmed, narrowing, candidates: outcome.value, failed: false }
+            : { query: trimmed, narrowing, candidates: [], failed: true },
+        );
       });
     }, debounceMs);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [client, trimmed, queryable, narrowing, debounceMs]);
+  }, [client, trimmed, queryable, narrowing, debounceMs, attempt]);
 
   const stagedIds = new Set(references.map((reference) => reference.targetId));
   const atCap = cap !== null && references.length >= cap;
   // ALWAYS a staged reference stands only in the staged section above the results.
-  const results =
-    queryable && answer !== null && answer.query === trimmed && answer.narrowing === narrowing
-      ? answer.candidates.filter((candidate) => !stagedIds.has(candidate.targetId))
-      : [];
+  const answered =
+    queryable && answer !== null && answer.query === trimmed && answer.narrowing === narrowing ? answer : null;
+  const results = answered === null ? [] : answered.candidates.filter((candidate) => !stagedIds.has(candidate.targetId));
+  // ReferencePicker.md: the fault stands only where no result loaded for the
+  // query; a read in flight and an empty answer say nothing.
+  const fault = answered?.failed === true;
 
   const stage = (candidate: ReferenceDraft) => {
     if (stagedIds.has(candidate.targetId) || atCap) return;
@@ -253,83 +273,74 @@ export function ReferencePicker({
         }
         list={
           <>
-            {results.map((candidate, index) => (
-              <PickerRow
-                key={candidate.targetId}
-                {...pickerRowOf(candidate.target)}
-                onPick={() => stage(candidate)}
-                disabled={atCap}
-                node={instance(NODE, "result", String(index + 1))}
-              />
-            ))}
+            {/* THE CAP (ReferencePicker.md): its line above the results, every
+                result dimmed and taking no tap; the staged ×s stay live. */}
             {atCap && (
-              <p className="m-0 px-6 pt-2 text-body-small text-on-surface-variant" {...testAttributes(part(NODE, "cap"))}>
+              <PickerNote node={part(NODE, "cap")}>
                 Up to {cap} citations per {origin}.
-              </p>
+              </PickerNote>
             )}
+            {/* THE FAULT, where the results were; the field keeps the query. */}
+            {fault && (
+              <PickerFault
+                message="Can't reach the server — results can't load right now."
+                onRetry={() => {
+                  // The read in flight says nothing, so the line goes with the press.
+                  setAnswer(null);
+                  setAttempt((n) => n + 1);
+                }}
+                node={part(NODE, "fault")}
+              />
+            )}
+            <PickerRows dimmed={atCap}>
+              {results.map((candidate, index) => (
+                <PickerRow
+                  key={candidate.targetId}
+                  {...pickerRowOf(candidate.target)}
+                  onPick={() => stage(candidate)}
+                  disabled={atCap}
+                  node={instance(NODE, "result", String(index + 1))}
+                />
+              ))}
+            </PickerRows>
           </>
         }
       />
+      {/* THE FILTER SHEET IS THE SEARCH FILTER'S ANATOMY (ReferencePicker.jsx:
+          `SheetTitle`, `FilterSection` Kinds, `FilterFoot`): a sheet of rows,
+          each section carrying its own 24px gutter, the foot ending the
+          content rather than pinned under a scroll — Explore's own sheet. */}
       <BottomSheet
         open={staging !== null}
         // The scrim, a swipe down, system Back and Escape drop what was staged.
         onClose={() => setStaging(null)}
         title="What the search shows"
-        node={part(NODE, "filterSheet")}
-        foot={
-          <div className="px-6">
-            <div
-              className="flex items-center gap-2 border-t border-outline-variant pt-2.5"
-              {...testAttributes(part(part(NODE, "filterSheet"), "foot"))}
-            >
-              <PillButton
-                testId="reference-picker-filter-reset"
-                variant="text"
-                onClick={() => setStaging([])}
-                node={part(part(NODE, "filterSheet"), "foot.reset")}
-              >
-                Reset
-              </PillButton>
-              <span className="flex-1" />
-              <PillButton
-                testId="reference-picker-filter-done"
-                onClick={() => {
-                  // Done commits the staged kinds: the results narrow once.
-                  if (staging !== null) setKinds(staging);
-                  setStaging(null);
-                }}
-                node={part(part(NODE, "filterSheet"), "foot.done")}
-              >
-                Done
-              </PillButton>
-            </div>
-          </div>
-        }
+        node={FILTER_SHEET}
+        rows
       >
-        <div className="flex flex-col gap-2 px-6 pb-4" {...testAttributes(part(part(NODE, "filterSheet"), "kinds"))}>
-          <span className="text-label-large" {...testAttributes(part(part(NODE, "filterSheet"), "kinds.label"))}>
-            Kinds
-          </span>
-          <span
-            className="text-body-small text-on-surface-variant"
-            {...testAttributes(part(part(NODE, "filterSheet"), "kinds.hint"))}
-          >
-            Combine as many as you like. All, until you narrow it.
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {CITABLE_KINDS.map((entry) => (
-              <Chip
-                key={entry.value}
-                testId={`reference-picker-filter-${entry.value}`}
-                node={part(part(NODE, "filterSheet"), `kinds.${entry.value}Chip`)}
-                selected={(staging ?? kinds).includes(entry.value)}
-                onClick={() => toggle(entry.value)}
-              >
-                {entry.label}
-              </Chip>
-            ))}
-          </div>
-        </div>
+        <FilterSection label="Kinds" hint={KINDS_HINT} node={part(FILTER_SHEET, "kinds")}>
+          {CITABLE_KINDS.map((entry) => (
+            <Chip
+              key={entry.value}
+              testId={`reference-picker-filter-${entry.value}`}
+              node={part(FILTER_SHEET, `kinds.${entry.value}Chip`)}
+              selected={(staging ?? kinds).includes(entry.value)}
+              onClick={() => toggle(entry.value)}
+            >
+              {entry.label}
+            </Chip>
+          ))}
+        </FilterSection>
+        <FilterFoot
+          node={part(FILTER_SHEET, "foot")}
+          testId="reference-picker-filter"
+          onReset={() => setStaging([])}
+          onDone={() => {
+            // Done commits the staged kinds: the results narrow once.
+            if (staging !== null) setKinds(staging);
+            setStaging(null);
+          }}
+        />
       </BottomSheet>
       <HelpDialog open={help} onClose={() => setHelp(false)} topic={HELP_TOPICS.citing} testId="reference-picker-help" />
     </>

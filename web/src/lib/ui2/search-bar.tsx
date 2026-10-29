@@ -13,9 +13,12 @@
 // own (`onAction`): the tag picker's stages its first row. The platform's own
 // clear (the search input's ×) is not drawn: the master's pill carries none.
 //
-// A TRAILING × WHILE TEXT IS PRESENT, where a surface's sidecar asks for one
-// (`onClear`; Explore.md:11-13): it empties the field. The master draws no ×
-// yet, so its node is the field's evident part, `clear`.
+// A TRAILING × WHILE TEXT IS PRESENT, where a surface asks for one (`onClear`,
+// the master's clear × of seam 248; Explore.md:11-13, ExploreSearch.md): a
+// 32px close glyph at the pill's end, its 48px target reaching past it
+// (`cg-hit`), spoken `Clear search`. It empties the query and KEEPS THE
+// FIELD'S FOCUS — the × leaves with the query, so the press hands focus back
+// to the input rather than letting it fall to the page.
 //
 // `error` IS THE FIELD-ERROR STATE IN THE PILL'S IDIOM (the caps-affordance
 // round; `TagPickerRefused`): a 1px `--error` ring drawn INSIDE the pill's own
@@ -28,7 +31,7 @@ import type { Ref } from "react";
 import { Icon } from "@/lib/ui/icons";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
-/** The ×'s spoken name — undrawn; the house's plain verb for what it does. */
+/** The ×'s spoken name (SearchBar.jsx `clearLabel`, ExploreSearch.md). */
 export const CLEAR_SEARCH = "Clear search";
 
 export function SearchBar({
@@ -101,9 +104,14 @@ export function SearchBar({
           <button
             type="button"
             aria-label={CLEAR_SEARCH}
-            onClick={onClear}
+            onClick={(event) => {
+              // The pill's own input, its sibling: the focus goes back to it.
+              const field = event.currentTarget.parentElement?.querySelector("input");
+              onClear();
+              field?.focus();
+            }}
             {...testAttributes(part(node, "clear"))}
-            className="cg-state cg-focus cg-hit -mr-2 grid size-10 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-on-surface-variant"
+            className="cg-state cg-focus cg-hit -mr-2 grid size-8 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-on-surface-variant"
           >
             <Icon name="close" size={20} />
           </button>

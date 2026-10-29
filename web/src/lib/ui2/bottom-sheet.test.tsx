@@ -8,6 +8,8 @@ import {
   BottomSheet,
   SHEET_CEILING,
   SHEET_CEILING_SLIVER_PX,
+  SHEET_DEFAULT,
+  SHEET_RAISED,
   SheetItem,
 } from "./bottom-sheet";
 
@@ -122,13 +124,13 @@ describe("BottomSheet", () => {
       </BottomSheet>,
     );
     // Content-sized, held UNDER the ceiling rather than pinned at it: the
-    // 92dvh class stands and the ceiling clamps it (`BottomSheet.jsx`'s
-    // `min()`).
+    // master's 62% default class stands and the ceiling clamps it
+    // (`BottomSheet.jsx`'s `min()`).
     // jsdom re-prints `calc()` in its own normal form, so the pieces are what
     // is compared rather than the string — the exact spelling of the constant
     // is pinned on its own below.
     const capped = screen.getByTestId("bottom-sheet");
-    expect(capped.style.maxHeight).toMatch(/^min\(92dvh,/);
+    expect(capped.style.maxHeight).toMatch(/^min\(62dvh,/);
     expect(capped.style.maxHeight).toContain("100dvh");
     expect(capped.style.maxHeight).toContain("72px");
     expect(capped.style.maxHeight).toContain("env(safe-area-inset-top");
@@ -167,8 +169,40 @@ describe("BottomSheet", () => {
       </BottomSheet>,
     );
     const column = screen.getByTestId("bottom-sheet-column").style.maxHeight;
-    expect(column).toMatch(/^min\(92dvh,/);
+    expect(column).toMatch(/^min\(62dvh,/);
     expect(column).toBe(screen.getByTestId("bottom-sheet").style.maxHeight);
+  });
+
+  // SHEET-88 (round 25): A HEIGHT CLASS IS THE SURFACE'S WHOLE HEIGHT
+  // (`BottomSheet.jsx`: `boxSizing: "border-box"`) — the grip strip and the
+  // bottom inset inside it, never added on top. The surface carries no
+  // padding of its own, and its box is the border box, so 88% is 88%.
+  it("draws a height class whole: the raised class is 88dvh, nothing added", () => {
+    render(
+      <BottomSheet open onClose={() => {}} title="Cited by" maxHeight={SHEET_RAISED}>
+        <p>Body</p>
+      </BottomSheet>,
+    );
+    const surface = screen.getByTestId("bottom-sheet");
+    expect(SHEET_RAISED).toBe("88dvh");
+    expect(SHEET_DEFAULT).toBe("62dvh");
+    expect(surface.style.maxHeight).toMatch(/^min\(88dvh,/);
+    expect(surface.style.maxHeight).not.toMatch(/\+|32px/);
+    expect(surface.className).toContain("p-0");
+  });
+
+  // W-SHEET-PT2: the master's surface adds no gap between the title (its own
+  // 8px under it) and the content — a board that draws one carries it itself.
+  it("adds nothing above its content under the title", () => {
+    render(
+      <BottomSheet open onClose={() => {}} title="Report this post?">
+        <p>Body</p>
+      </BottomSheet>,
+    );
+    const body = screen.getByTestId("bottom-sheet-body");
+    expect(body.className).not.toMatch(/\bpt-/);
+    expect(body.className).toContain("px-6");
+    expect(screen.getByRole("heading", { name: "Report this post?" })).toHaveClass("pb-2");
   });
 
   // A sheet over a sheet takes the next tonal rung (design/readme.md:2364:

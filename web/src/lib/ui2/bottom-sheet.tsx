@@ -51,8 +51,9 @@ export const SHEET_CEILING_SLIVER_PX = 72;
  *
  * THE CEILING CAPS THE OTHER CLASSES RATHER THAN REPLACING THEM, which is why
  * it arrives inside a `min()` and not as the height itself: a content sheet
- * keeps its own 92dvh, and the ceiling only binds on a screen short enough
- * for that percentage to reach the sliver.
+ * keeps its class — the master's 62% default, the raised 88% where its board
+ * asks — and the ceiling only binds on a screen short enough for that
+ * percentage to reach the sliver.
  *
  * It is a style rather than a Tailwind class because Tailwind scans source
  * TEXT for class names — a class built from the sliver could never be
@@ -62,9 +63,6 @@ export const SHEET_CEILING_SLIVER_PX = 72;
  */
 export const SHEET_CEILING =
   `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px))`;
-
-/** The height class a content sheet keeps, held under the ceiling. */
-const CONTENT_MAX = "92dvh";
 
 /**
  * THE RAISED CLASS (`BottomSheet.jsx`: "the raised 88% class stays what a sheet
@@ -80,7 +78,7 @@ export const SHEET_RAISED = "88dvh";
 export const SHEET_DEFAULT = "62dvh";
 
 /** What a sheet's surface — and the column inside it — is bounded by. */
-function sheetHeight(tallest: boolean, height?: string, max: string = CONTENT_MAX): CSSProperties {
+function sheetHeight(tallest: boolean, height?: string, max: string = SHEET_DEFAULT): CSSProperties {
   if (height !== undefined) return { height: `min(${height}, ${SHEET_CEILING})` };
   return tallest
     ? { height: SHEET_CEILING }
@@ -105,25 +103,23 @@ export function BottomSheet({
   focusTitle = false,
   initialFocus,
   rows = false,
-  flush = false,
   maxHeight,
 }: {
   /**
    * The height class the board asks for (`BottomSheet.jsx` `maxHeight`), held
    * under the ceiling like every class — {@link SHEET_RAISED} for the boards
-   * drawn at 88%. Absent, the content sheet's own class.
+   * drawn at 88%. Absent, the master's 62% default ({@link SHEET_DEFAULT}).
    */
   maxHeight?: string;
-  /**
-   * The content starts right under the title, as the license and sensitive
-   * sheets draw it (`0 24px`): no 8px of body padding of its own.
-   */
-  flush?: boolean;
   /**
    * A SHEET OF ROWS (BottomSheet.jsx with `SheetItem`s, the ⋮'s menus): the
    * master's own geometry — 8px over the grip, 12 under it, rows edge to edge
    * carrying their own 24px gutter, and 24 under the last. A sheet that holds
-   * a title, fields or prose keeps the padded body.
+   * a title, fields or prose keeps the padded body — its 24px gutter, and
+   * NOTHING ABOVE ITS CONTENT: the master's surface adds no gap between the
+   * `SheetTitle` (its own 8px under it) and what follows, so a sheet whose
+   * board draws one (the staged lists' `8px 24px 0`) carries it itself
+   * (W-SHEET-PT2, round 25's re-measure).
    */
   rows?: boolean;
   /**
@@ -421,7 +417,7 @@ export function BottomSheet({
           // before the body starts scrolling, which is what puts the scroll
           // INSIDE the growing field rather than under the whole sheet. The
           // scroll stays as the fallback for content that cannot shrink.
-          className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${rows ? "pb-6" : `px-6 ${flush || titleHidden ? "" : "pt-2"} ${foot === undefined ? "pb-6" : "pb-3"}`}`}
+          className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${rows ? "pb-6" : `px-6 ${foot === undefined ? "pb-6" : "pb-3"}`}`}
         >
           {/* What the sheet holds stands ON the sheet: a stage inside it is
               covered only by a layer raised over the sheet, and its scroller

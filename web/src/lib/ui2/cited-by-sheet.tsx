@@ -152,7 +152,8 @@ export function CitedBySheet({
             onOpen={onClose}
             pair={artifact.pair}
             // The chronicle serves ordered fact only (api-spec.md: "the record
-            // set has no pending namespace"), so a row read from it has landed.
+            // set has no pending namespace"), so a row read from it has landed —
+            // and Cited by draws no settling row (round 25: the row is gone).
             pending={false}
             node={instance(node, "citation", String(index + 1))}
             testId={`${testId}-row-${index + 1}`}

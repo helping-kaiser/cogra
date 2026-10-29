@@ -23,7 +23,7 @@
 import { useState } from "react";
 
 import type { ReferenceDraft } from "@/lib/references/draft";
-import { BottomSheet } from "../bottom-sheet";
+import { BottomSheet, SHEET_RAISED } from "../bottom-sheet";
 import { PillButton } from "../pill-button";
 import { CITATION_FAMILY, PairSheet } from "./pair-sheet";
 import { StagedReference } from "./staged-reference";
@@ -52,8 +52,9 @@ export function CitedSheet({
 
   return (
     <>
-      <BottomSheet open={open} onClose={onClose} title={`Cited · ${items.length}`} testId={testId}>
-        <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+      <BottomSheet open={open} onClose={onClose} title={`Cited · ${items.length}`} testId={testId} maxHeight={SHEET_RAISED}>
+        {/* The list carries its own 8px under the title (CitedSheet.jsx `8px 24px 0`). */}
+        <ul className="m-0 flex list-none flex-col gap-1.5 p-0 pt-2">
           {items.map((item, index) => (
             <li key={item.targetId} data-testid={`${testId}-row-${index}`}>
               <StagedReference

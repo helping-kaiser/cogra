@@ -23,7 +23,7 @@ import { useState } from "react";
 
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
-import { BottomSheet } from "../bottom-sheet";
+import { BottomSheet, SHEET_RAISED } from "../bottom-sheet";
 import { InlineAction } from "../inline-action";
 import { PillButton } from "../pill-button";
 import { LABEL_SMALL_PLAIN } from "../plain-type";
@@ -92,7 +92,7 @@ export function PickedSheet({
   } | null>(null);
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={`Picked · ${items.length}`} testId={testId} node={node} flush>
+    <BottomSheet open={open} onClose={onClose} title={`Picked · ${items.length}`} testId={testId} node={node} maxHeight={SHEET_RAISED}>
       <ul className="m-0 flex list-none flex-col border-t border-outline-variant p-0">
         {items.map((item, index) => {
           const lifted = drag !== null && drag.from === index;
