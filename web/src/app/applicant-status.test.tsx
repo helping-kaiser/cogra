@@ -33,6 +33,29 @@ function myApplication(fields: { rejectedAt: string | null }) {
   );
 }
 
+function accountWithEmail(email: string) {
+  return gqlLink.query("SettingsAccount", () =>
+    HttpResponse.json({
+      data: {
+        me: {
+          __typename: "User",
+          id: "u1",
+          handle: "noor",
+          email,
+          emailVerified: false,
+          accountState: "APPLICANT",
+          actorPubkey: null,
+          passwordChangedAt: null,
+          keyBackupCreatedAt: null,
+          pendingEmailChange: null,
+          preferences: null,
+          sessions: [],
+        },
+      },
+    }),
+  );
+}
+
 function approval(overrides: Partial<{
   emailVerified: boolean;
   keyAttached: boolean;
@@ -70,9 +93,17 @@ describe("ApplicantStatus", () => {
     expect(screen.getByTestId("home_status_loading")).toBeInTheDocument();
   });
 
-  it("shows the landing line once approved", () => {
+  // ApplicantLanding.md: the landing card, titled, naming the approver, no control.
+  it("the_landing_card_stands_once_approved_and_carries_no_control", async () => {
+    server.use(myApplication({ rejectedAt: null }));
     renderStatus({ kind: "awaitingLanding" });
-    expect(screen.getByTestId("home_landing")).toBeInTheDocument();
+    expect(await screen.findByTestId("feed.application.title")).toHaveTextContent(
+      "Approved — your registration is landing",
+    );
+    expect(screen.getByTestId("feed.application.body")).toHaveTextContent(
+      "@mira approved your application. Nothing is needed from you while it lands.",
+    );
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
   it("leaves the restore prompt to the screen's collapsing top", () => {
@@ -91,33 +122,63 @@ describe("ApplicantStatus", () => {
     expect(screen.getByTestId(testId)).toBeInTheDocument();
   });
 
-  it("offers verification with a resend while the email proof is missing", async () => {
+  // ApplicantFeed.md: the verify card prints the address, beside Wrong address?
+  it("the_verify_card_prints_the_address_and_resends_to_it_with_the_sent_snackbar", async () => {
+    let sentTo: unknown = null;
     server.use(
-      gqlLink.mutation("ResendVerificationEmail", () =>
-        HttpResponse.json({
+      accountWithEmail("noor@fieldmail.org"),
+      gqlLink.mutation("ResendVerificationEmail", ({ variables }) => {
+        sentTo = variables;
+        return HttpResponse.json({
           data: {
             resendVerificationEmail: { __typename: "ResendVerificationEmailPayload", ok: true },
           },
-        }),
-      ),
+        });
+      }),
     );
     renderStatus(approval({ keyAttached: true, keyOnDevice: true }));
-    expect(screen.getByTestId("home_verify")).toBeInTheDocument();
-    fireEvent.change(screen.getByTestId("resend_email"), { target: { value: "a@b.c" } });
-    fireEvent.click(screen.getByTestId("verify_resend"));
-    expect(await screen.findByTestId("verify_resent")).toBeInTheDocument();
+    expect(screen.getByTestId("feed.verifyCard.title")).toHaveTextContent("Verify your email");
+    expect(screen.getByTestId("feed.verifyCard.body")).toHaveTextContent(
+      "We sent you a verification link — open it to prove this email is yours.",
+    );
+    expect(await screen.findByText("Sent to noor@fieldmail.org")).toBeInTheDocument();
+    expect(screen.getByTestId("feed.verifyCard.wrongAddress")).toHaveAttribute("href", "/settings/email/applicant");
+    expect(screen.getByTestId("feed.verifyCard.note")).toHaveTextContent(
+      "An account left unverified for seven days is removed — joining again then starts over.",
+    );
+    fireEvent.click(screen.getByTestId("feed.verifyCard.resend"));
+    expect(await screen.findByText("Sent — the link is on its way to noor@fieldmail.org.")).toBeInTheDocument();
+    expect(JSON.stringify(sentTo)).toContain("noor@fieldmail.org");
+    expect(screen.getByTestId("feed.verifyCard")).toBeInTheDocument();
   });
 
-  it("offers the ceremony when no key exists anywhere", () => {
+  it("a_resend_without_an_answer_says_the_network_error", async () => {
+    server.use(
+      accountWithEmail("noor@fieldmail.org"),
+      gqlLink.mutation("ResendVerificationEmail", () => HttpResponse.error()),
+    );
+    renderStatus(approval({ keyAttached: true, keyOnDevice: true }));
+    await screen.findByText("Sent to noor@fieldmail.org");
+    fireEvent.click(screen.getByTestId("feed.verifyCard.resend"));
+    expect(await screen.findByText("That didn't send. Try again.")).toBeInTheDocument();
+  });
+
+  it("offers the ceremony when no key exists anywhere", async () => {
+    server.use(myApplication({ rejectedAt: null }));
     renderStatus(approval());
-    expect(screen.getByTestId("home_create_key")).toHaveAttribute("href", "/key");
+    expect(await screen.findByTestId("feed.keyCard.create")).toHaveAttribute("href", "/key");
+    expect(screen.getByTestId("feed.keyCard.create")).toHaveTextContent("Create my key");
+    expect(screen.getByTestId("feed.keyCard.title")).toHaveTextContent("Create your key");
+    expect(screen.getByTestId("feed.keyCard.body")).toHaveTextContent(
+      "Your application needs a key on this browser before @mira can approve it.",
+    );
     expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument();
   });
 
   it("leaves the attached-elsewhere restore to the collapsing top", () => {
     renderStatus(approval({ keyAttached: true }));
     expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("home_create_key")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed.keyCard.create")).not.toBeInTheDocument();
   });
 
   it("names the foreign key when the browser's key was refused at the attach", () => {
@@ -126,7 +187,7 @@ describe("ApplicantStatus", () => {
     renderStatus(approval({ emailVerified: true, keyOnDevice: true }));
     expect(screen.getByTestId("home_key_elsewhere")).toBeInTheDocument();
     expect(screen.getByTestId("home_fresh_key")).toHaveAttribute("href", "/key");
-    expect(screen.queryByTestId("home_create_key")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed.keyCard.create")).not.toBeInTheDocument();
     expect(screen.queryByTestId("feed.application")).not.toBeInTheDocument();
   });
 

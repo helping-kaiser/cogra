@@ -16,9 +16,12 @@ export function NoticePanel({
   title,
   help,
   testId,
+  corner = "medium",
   children,
 }: {
   title: string;
+  /** The one thing the copies disagree on (NoticePanel.jsx): a page-leading panel is `large`. */
+  corner?: "medium" | "large";
   /** The stopper exception's own "?" — named by its dialog. */
   help?: { label: string; onOpen: () => void; testId?: string };
   testId?: string;
@@ -27,7 +30,7 @@ export function NoticePanel({
   return (
     <div
       data-testid={testId}
-      className="flex flex-col gap-3 rounded-medium bg-tertiary-container p-4 text-on-tertiary-container"
+      className={`flex flex-col gap-3 ${corner === "large" ? "rounded-large" : "rounded-medium"} bg-tertiary-container p-4 text-on-tertiary-container`}
     >
       <div className="flex items-center gap-2">
         <h2 className="m-0 flex-1 text-title-medium">{title}</h2>

@@ -66,7 +66,28 @@ describe("StatusBanners", () => {
   });
 
   it("starts the poll loop for an applicant and renders its progress", async () => {
-    server.use(meHandler("APPLICANT"));
+    server.use(
+      meHandler("APPLICANT"),
+      gqlLink.query("MyApplication", () =>
+        HttpResponse.json({
+          data: {
+            me: {
+              __typename: "User",
+              id: "u1",
+              askLink: null,
+              application: {
+                __typename: "Application",
+                id: "a1",
+                approvedAt: null,
+                rejectedAt: null,
+                landedAt: null,
+                approver: { __typename: "User", id: "u9", handle: "mira" },
+              },
+            },
+          },
+        }),
+      ),
+    );
     const { flow, emit } = fakeFlow();
     renderWithProviders(<StatusBanners />, { store: signedInStore(), flow });
     await waitFor(() => expect(flow.ensureAdvancing).toHaveBeenCalled());
@@ -75,8 +96,8 @@ describe("StatusBanners", () => {
     act(() => {
       emit({ kind: "awaitingApproval", emailVerified: false, keyAttached: false, keyOnDevice: false });
     });
-    expect(screen.getByTestId("home_verify")).toBeInTheDocument();
-    expect(screen.getByTestId("home_create_key")).toBeInTheDocument();
+    expect(screen.getByTestId("feed.verifyCard")).toBeInTheDocument();
+    expect(await screen.findByTestId("feed.keyCard.create")).toBeInTheDocument();
   });
 
   it("greets a watched landing once and re-reads the viewer", async () => {

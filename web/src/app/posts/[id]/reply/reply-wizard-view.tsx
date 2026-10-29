@@ -31,7 +31,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import { prepareComment } from "@/lib/api/content-api";
 import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
-import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
+import { writeRefusalMessage } from "@/lib/ui/error-messages";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
 import { commentExpectation } from "@/lib/compose/intent";
@@ -54,7 +54,8 @@ import {
   isVideoReply,
   replyHasContent,
   replyReducer,
-  sealGate,
+  sealClosed,
+  sealUploads,
   stepIndex,
   type ReplyAction,
   type ReplyState,
@@ -62,23 +63,25 @@ import {
 } from "@/lib/compose/reply-wizard";
 import type { StancePair } from "@/lib/stance/model";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
-import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
+import { HeaderBar } from "@/lib/ui2/header-bar";
+import { HelpDot } from "@/lib/ui2/help-dot";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
 import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
 import { TagPicker } from "@/lib/ui2/compose/tag-picker";
 import { COVER_FROM_PICTURE, effectiveCover } from "@/lib/compose/wizard";
-import { TransportError } from "@/lib/ui/transport-error";
+import { sealFaultOf, type SealFault } from "@/lib/compose/seal-fault";
+import { SLOW_NETWORK_MS, useSlowAnswer, useWaitedPast } from "@/lib/ui2/waiting-commit";
 import { ReplyComposeStep } from "./reply-compose-step";
 import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
 
 /**
- * The leave label. Nothing is kept — there are no comment drafts — and the
- * confirm is what stands between the author and that fact when they have
- * written something.
+ * The leave label, as every reply board's `WizardHeader` spells it. Nothing is
+ * kept — there are no comment drafts — and the confirm is what stands between
+ * the author and that fact when they have written something.
  */
-export const LEAVE_LABEL = "Leave — this comment is discarded";
+export const LEAVE_LABEL = "Leave — the reply is discarded";
 
 const NO_FRAMES: readonly Blob[] = [];
 const NO_URLS: readonly string[] = [];
@@ -133,8 +136,15 @@ export function ReplyWizard({
   const [describing, setDescribing] = useState<string | null>(null);
   const [help, setHelp] = useState<HelpTopic | null>(null);
   const [busy, setBusy] = useState(false);
-  const [refusal, setRefusal] = useState<string | null>(null);
-  const [transportFailed, setTransportFailed] = useState(false);
+  // A press made while the reply's bytes still move is HELD and signs the
+  // moment the last one lands (ReplySealUploading.md:9-15); the commit is
+  // inert from the press either way, and both clocks count from it.
+  const [held, setHeld] = useState(false);
+  const signing = busy || held;
+  const swapped = useSlowAnswer(signing);
+  const slow = useWaitedPast(signing, SLOW_NETWORK_MS);
+  // What became of the last press, when it did not leave the seal (`SealFault`).
+  const [fault, setFault] = useState<SealFault | null>(null);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
 
@@ -360,7 +370,22 @@ export function ReplyWizard({
    * The arrow: ONE STAGE BACK, and from the first stage that is the thread —
    * which discards the comment just as the X does.
    */
-  const stepBack = () => (state.step === "compose" ? leave() : dispatch({ type: "back" }));
+  const stepBack = () => (state.step === "compose" ? leave() : back());
+
+  /**
+   * A refusal reading is the seal's answer to ONE press (SealSigning.md): going
+   * a stage back, or changing a fact, shows the plain commit again until the
+   * next press.
+   */
+  const retire = () => {
+    setFault(null);
+    setTagErrors({});
+    setReferenceErrors({});
+  };
+  const back = () => {
+    retire();
+    dispatch({ type: "back" });
+  };
 
   // The browser's Back is the same arrow (design/readme.md: "the platform
   // back gesture does the same"). This surface is not a route, so being OPEN
@@ -416,10 +441,10 @@ export function ReplyWizard({
 
   const submit = async () => {
     setBusy(true);
-    setRefusal(null);
+    setHeld(false);
     setTagErrors({});
     setReferenceErrors({});
-    setTransportFailed(false);
+    setFault(null);
 
     // The L1 ids of the node answered and of every cited node, read before
     // anything is staged: the batch is checked against them before its
@@ -432,7 +457,7 @@ export function ReplyWizard({
     );
     if (graphIds.kind !== "success") {
       setBusy(false);
-      setTransportFailed(true);
+      setFault({ kind: "offline" });
       return;
     }
     // One request, read twice: once by the API layer and once by the payload
@@ -452,24 +477,32 @@ export function ReplyWizard({
 
     if (prepared.kind === "failed") {
       setBusy(false);
-      setTransportFailed(true);
+      setFault({ kind: "offline" });
       return;
     }
     if (prepared.kind === "refused") {
       setBusy(false);
+      // A refusal at prepare stages nothing, and the seal says it where it
+      // stands (the post seal's failure pack, at comment scale): the write
+      // rule's notice, or a cited post that never landed on its own row
+      // (ReplySeal.md:21, ReplySealComment.md:9).
+      const read = sealFaultOf(prepared.errors, state.references);
+      if (read.kind !== "bug") {
+        setFault(read);
+        return;
+      }
+      // A tag or citation the server named by its place is said on its own
+      // acts-card row with `Remove it` (`ActsCard`'s fault row) — no line at
+      // the foot, the commit staying. Anything else is the bug notice.
       const partition = partitionFieldErrors(prepared.errors, (error) =>
         writeRefusalMessage(error.code),
       );
-      setTagErrors(partition.perTag);
-      setReferenceErrors(partition.perReference);
-      setRefusal(
-        partition.general ??
-          (hasFieldErrors(partition)
-            ? "Something in the details was refused."
-            : "The server refused this write."),
-      );
-      // A refused tag or citation is said on its own acts-card row, with
-      // `Remove it` (`ActsCard`'s fault row), where the seal reads it back.
+      if (hasFieldErrors(partition)) {
+        setTagErrors(partition.perTag);
+        setReferenceErrors(partition.perReference);
+        return;
+      }
+      setFault(read);
       return;
     }
 
@@ -506,16 +539,65 @@ export function ReplyWizard({
     // so the reader stays on the seal with what they wrote still in front of
     // them, which is the only place the words survive.
     const refused = results.find((result) => result.kind === "refused");
-    setRefusal(
-      refused && refused.kind === "refused"
-        ? firstRefusalMessage(refused.errors, "The comment wasn't signed.")
-        : "The comment wasn't signed.",
-    );
+    if (refused === undefined || refused.kind !== "refused") {
+      // No answer reached the seal: the fault line and Retry, in the foot.
+      setFault({ kind: "offline" });
+      return;
+    }
+    // The write rule's notice; a cited post that never landed, on its row; any
+    // other refused act, whose target landed, the bug notice
+    // (ReplySealComment.md:9-11).
+    setFault(sealFaultOf(refused.errors, state.references));
   };
+
+  // ---- the gate ------------------------------------------------------------
+
+  const uploads = sealUploads(state);
+  // A HELD PRESS signs the moment the last upload lands, with no second press;
+  // an upload that fails drops it, and the commit reads `Sign comment` again
+  // (ReplySealUploading.md:15-17). The drop happens during render, the state
+  // an upload's own outcome leaves behind (React, "adjusting some state when
+  // a prop changes").
+  if (held && uploads.failed > 0) setHeld(false);
+  // Signing is the side effect: the last upload landing releases the press
+  // into `submit`, which takes the press over as `busy` (it clears `held`).
+  useEffect(() => {
+    if (!held || uploads.pending > 0 || uploads.failed > 0) return;
+    const release = setTimeout(() => void submit(), 0);
+    return () => clearTimeout(release);
+    // `submit` reads the state it is handed this render; the press is the
+    // trigger, and the upload counts are what release it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [held, uploads.pending, uploads.failed]);
+
+  const sign = () => {
+    if (signing) return;
+    if (uploads.pending > 0) setHeld(true);
+    else void submit();
+  };
+
+  // The failed upload's Retry re-runs the gate; nothing signs until Sign
+  // comment is pressed again (ReplySealUploading.md:19). A clip's retry takes
+  // its face with it, the two going up as one sequence.
+  const retryUploads = () => {
+    if (video !== undefined) {
+      retry(video.id);
+      return;
+    }
+    for (const asset of state.media) {
+      if (asset.upload.kind === "failed") retry(asset.id);
+    }
+  };
+
+  // WHILE IT SIGNS, THE SEAL HOLDS THE READER (`ReplySeal.jsx`, jakob
+  // 2026-10-01): past the label swap the header's arrow and X refuse a press
+  // and keep their face, because leaving mid-sign would orphan the outcome
+  // (ReplySealUploading.md:11, SealSigning.md).
+  const locked = state.step === "seal" && swapped;
 
   // ---- the frame -----------------------------------------------------------
 
-  const blocked = sealGate(state);
+  const blocked = sealClosed(state);
   // The composer's own Next, gated the way PickStep/CoverStep already gate
   // the post wizard's — the reducer already refuses to advance past this
   // (`advanceGate`'s existing check), so this only makes that refusal visible.
@@ -539,7 +621,7 @@ export function ReplyWizard({
             <TagPicker
               tags={state.tags}
               onTags={(tags) => {
-                setTagErrors({});
+                retire();
                 dispatch({ type: "tags", tags });
               }}
               onDone={() => setPicking(null)}
@@ -549,7 +631,7 @@ export function ReplyWizard({
             <ReferencePicker
               references={state.references}
               onReferences={(references) => {
-                setReferenceErrors({});
+                retire();
                 dispatch({ type: "references", references });
               }}
               onDone={() => setPicking(null)}
@@ -569,29 +651,26 @@ export function ReplyWizard({
             // the asymmetry means the arrow can still lose a written comment
             // silently, which is the exact thing the confirm exists to prevent, so
             // it is reported rather than quietly patched.
-            onBack={stepBack}
-            onLeave={leave}
+            onBack={() => {
+              if (!locked) stepBack();
+            }}
+            onLeave={() => {
+              if (!locked) leave();
+            }}
             leaveLabel={LEAVE_LABEL}
-            action={
+            // `WizardHeader`'s own pair on the seal (`ReplySealBody`): the
+            // stage's name, then the screen's one "?" as `HelpDot`.
+            stageLabel={state.step === "seal" ? "Last step" : undefined}
+            help={
               state.step === "seal" ? (
-                <span className="flex items-center gap-2">
-                  <span className="whitespace-nowrap text-label-small text-on-surface-variant">
-                    Last step
-                  </span>
-                  <HelpButton
-                    label="How signing works"
-                    onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)}
-                  />
-                </span>
+                <HelpDot
+                  ariaLabel="How signing works"
+                  onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)}
+                  testId="header-help"
+                />
               ) : undefined
             }
           />
-
-          {transportFailed && (
-            <div className="px-6">
-              <TransportError testId="reply-transport-error" />
-            </div>
-          )}
 
           {state.step === "compose" ? (
             <ReplyComposeStep
@@ -624,10 +703,13 @@ export function ReplyWizard({
               state={state}
               sheet={sheet}
               stagedStance={stagedStance}
-              blocked={blocked.ok ? null : blocked.reason}
-              busy={busy}
+              blocked={blocked}
+              uploads={uploads}
+              signing={signing}
+              swapped={swapped}
+              slow={slow}
               keyOnDevice={keyOnDevice}
-              refusal={refusal}
+              fault={fault}
               tagErrors={tagErrors}
               referenceErrors={referenceErrors}
               onSheet={(next) => {
@@ -636,30 +718,49 @@ export function ReplyWizard({
                 if (next === "stance") setStagedStance(state.stance);
                 setSheet(next);
               }}
-              onLicense={(license) => dispatch({ type: "license", license })}
+              onLicense={(license) => {
+                retire();
+                dispatch({ type: "license", license });
+              }}
               onStagedStance={setStagedStance}
               onSetStance={() => {
+                retire();
                 dispatch({ type: "stance", stance: stagedStance });
                 setSheet("none");
               }}
               // A change to the staged set retires the refusal said against it:
               // its words named an item by its place, which has moved.
               onTags={(tags) => {
-                setTagErrors({});
+                retire();
                 dispatch({ type: "tags", tags });
               }}
               onReferences={(references) => {
-                setReferenceErrors({});
+                retire();
                 dispatch({ type: "references", references });
               }}
               onOpenTagPicker={() => setPicking("tags")}
               onOpenReferencePicker={() => setPicking("references")}
-              onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
+              onSensitive={(sensitive) => {
+                retire();
+                dispatch({ type: "sensitive", sensitive });
+              }}
               onSensitiveReason={(reason) => dispatch({ type: "sensitiveReason", reason })}
               onSensitiveHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
               onKeyHelp={() => setHelp(HELP_TOPICS.yourKey)}
-              onSign={() => void submit()}
-              onBack={() => dispatch({ type: "back" })}
+              onSign={sign}
+              onRetry={() => {
+                // The same signing, asked again: Retry is the only re-send, and
+                // past 200ms its slot reads the commit's own in-flight label.
+                setFault(null);
+                void submit();
+              }}
+              onRetryUploads={retryUploads}
+              onWriteRuleHelp={() => setHelp(HELP_TOPICS.whySigningWaitsAtReply)}
+              onNotNow={() => setFault(null)}
+              // The report page Settings opens is not built on the web yet: the
+              // word stands where the board draws it, as on the post seal.
+              onReport={() => {}}
+              onBack={back}
               onDiscard={leave}
               onRestoreKey={() => router.push("/restore")}
             />

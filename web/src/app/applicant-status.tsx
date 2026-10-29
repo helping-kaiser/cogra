@@ -1,24 +1,67 @@
 "use client";
 
-// The applicant's cards in the member shell (auth.md "The applicant
-// experience"; Android's ApplicantStatus): per progress state, the one
-// thing that moves the application forward.
+// THE APPLICANT'S CARDS IN THE MEMBER SHELL (design/designs/canonical/screens/
+// ApplicantFeed.jsx, ApplicantLanding.jsx; their behavior sidecars; auth.md
+// "The applicant experience"; Android's ApplicantStatus): per progress state,
+// the one thing that moves the application forward, riding the feed as task
+// cards above the posts.
+//
+// - `feed.verifyCard` while the email is not verified: it PRINTS THE ADDRESS
+//   the link went to, beside `Wrong address?` (the applicant's own address
+//   change), says the seven-day consequence once, and resends to that
+//   address with the sent-shape snackbar naming it.
+// - `feed.keyCard` while no key is attached: `Create my key` in `inverse` on
+//   the account-notice olive, its body naming the approver.
+// - `feed.application` once approved and landing — the landing card, no
+//   control while the key is here.
+// - the waiting and closed cards are `ApplicationCard`'s.
+//
+// The approver's handle and the account's address come from the two reads
+// the cards already share (`MyApplication`, `SettingsAccount`); a card whose
+// words need one waits for it rather than printing a placeholder.
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
+import { fetchMyApplication } from "@/lib/api/invites-api";
 import { resendVerificationEmail } from "@/lib/api/onboarding-api";
+import { fetchSettingsAccount } from "@/lib/api/settings-api";
+import { useAuthGuard } from "@/lib/session/runtime";
 import { ApplicationCard, type ApplicationSurface } from "./application-card";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
-import { Button, buttonClassName } from "@/lib/ui/button";
-import { Card } from "@/lib/ui/card";
+import { buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { TransportError } from "@/lib/ui/transport-error";
 import { NO_BACKUP_LINE } from "@/lib/ui/key-absent-notice";
 import { Icon } from "@/lib/ui/icons";
+import { Snackbar } from "@/lib/ui/snackbar";
 import { pillClassName } from "@/lib/ui2/pill-button";
+import { TaskCard } from "@/lib/ui2/task-card";
+import { NO_ANSWER } from "@/lib/ui2/task-page";
 import { useOptionalStanceData } from "@/lib/stance/provider";
+
+const VERIFY: DataNode = { path: "feed.verifyCard" };
+const KEY: DataNode = { path: "feed.keyCard" };
+const LANDING: DataNode = { path: "feed.application" };
+
+/** The approver's `@handle`, read once from the application the cards share. */
+function useApprover(refreshKey: unknown): string | null {
+  const client = useApolloClient();
+  const guard = useAuthGuard();
+  const [approver, setApprover] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    void guard.run(() => fetchMyApplication(client)).then((outcome) => {
+      const handle = outcome.kind === "success" ? outcome.value.application?.approver?.handle : undefined;
+      if (live && handle !== undefined) setApprover(`@${handle}`);
+    });
+    return () => {
+      live = false;
+    };
+  }, [client, guard, refreshKey]);
+  return approver;
+}
 
 export function ApplicantStatus({
   progress,
@@ -28,6 +71,8 @@ export function ApplicantStatus({
   /** Which screen the stack rides: the feed, or the reader's own profile. */
   surface?: ApplicationSurface;
 }) {
+  const approver = useApprover(progress?.kind);
+
   if (progress === null) {
     return (
       <p role="status" data-testid="home_status_loading" className="text-body-medium text-on-surface-variant">
@@ -40,10 +85,13 @@ export function ApplicantStatus({
     case "member":
       return null;
     case "awaitingLanding":
-      return (
-        <p role="status" data-testid="home_landing" className="text-body-medium">
-          Approved! Your registration is landing — this usually takes a moment.
-        </p>
+      return approver === null ? null : (
+        <TaskCard
+          title="Approved — your registration is landing"
+          body={`${approver} approved your application. Nothing is needed from you while it lands.`}
+          node={LANDING}
+          testId="home_landing"
+        />
       );
     case "awaitingSigningKey":
       // The restore card rides the screen's collapsing top (the
@@ -72,9 +120,9 @@ export function ApplicantStatus({
     case "awaitingApproval": {
       const { emailVerified, keyAttached, keyOnDevice } = progress;
       return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           {!emailVerified && <VerifyCard />}
-          {!keyAttached && !keyOnDevice && <CeremonyCard />}
+          {!keyAttached && !keyOnDevice && approver !== null && <CeremonyCard approver={approver} />}
           {!keyAttached && keyOnDevice && <KeyElsewhereCard />}
           {/* keyAttached && !keyOnDevice: the restore ask rides the
               screen's collapsing top, not this stack. */}
@@ -93,94 +141,112 @@ export function ApplicantStatus({
 
 function VerifyCard() {
   const client = useApolloClient();
-  const [email, setEmail] = useState("");
+  const guard = useAuthGuard();
+  const [address, setAddress] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
-  const [resent, setResent] = useState(false);
+  const [snack, setSnack] = useState<{ message: string; token: number } | null>(null);
 
-  const onResend = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (email.trim() === "" || resending) return;
+  useEffect(() => {
+    let live = true;
+    void guard.run(() => fetchSettingsAccount(client)).then((outcome) => {
+      if (live && outcome.kind === "success") setAddress(outcome.value.email ?? null);
+    });
+    return () => {
+      live = false;
+    };
+  }, [client, guard]);
+
+  const say = (message: string) => setSnack((current) => ({ message, token: (current?.token ?? 0) + 1 }));
+
+  const onResend = async () => {
+    if (address === null || resending) return;
     setResending(true);
-    await resendVerificationEmail(client, email.trim());
+    const outcome = await resendVerificationEmail(client, address);
     setResending(false);
-    setResent(true);
+    say(outcome.kind === "failed" ? NO_ANSWER : `Sent — the link is on its way to ${address}.`);
   };
 
   return (
-    <Card>
-      <h2 className="text-title-medium">Verify your email</h2>
-      <p data-testid="home_verify" className="text-body-medium text-on-surface-variant">
-        We sent you a verification link — open it to prove this email is yours. An account left
-        unverified for seven days is removed — joining again then starts over.
-      </p>
-      <form onSubmit={onResend} className="flex flex-col gap-2" noValidate>
-        <label htmlFor="resend-email" className="text-label-large">
-          Didn&apos;t get it? Your email
-        </label>
-        <input
-          id="resend-email"
-          data-testid="resend_email"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          autoComplete="email"
-          className="rounded-extra-small border border-outline bg-transparent px-3 py-2"
-        />
-        <Button
-          type="submit"
-          testId="verify_resend"
-          variant="outline"
-          size="sm"
-          selfStart
-          disabled={email.trim() === "" || resending}
+    <TaskCard
+      tone="notice"
+      title="Verify your email"
+      body="We sent you a verification link — open it to prove this email is yours."
+      node={VERIFY}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="min-w-0 text-body-medium [overflow-wrap:anywhere]" {...testAttributes(part(VERIFY, "address"))}>
+          {address === null ? "" : `Sent to ${address}`}
+        </span>
+        <Link
+          href="/settings/email/applicant"
+          className="cg-state cg-focus cg-hit flex-none self-start font-sans text-label-small text-primary"
+          {...testAttributes(part(VERIFY, "wrongAddress"))}
         >
-          Resend the link
-        </Button>
-        {resent && (
-          <p role="status" data-testid="verify_resent" className="text-body-medium text-on-surface-variant">
-            If that email has a pending application, a fresh link is on its way.
-          </p>
-        )}
-      </form>
-    </Card>
+          Wrong address?
+        </Link>
+      </div>
+      <p className="m-0 text-body-small text-on-surface-variant" {...testAttributes(part(VERIFY, "note"))}>
+        An account left unverified for seven days is removed — joining again then starts over.
+      </p>
+      <button
+        type="button"
+        onClick={() => void onResend()}
+        aria-busy={resending || undefined}
+        aria-disabled={resending || undefined}
+        className={buttonClassName({ variant: "outline", selfStart: true })}
+        {...testAttributes(part(VERIFY, "resend"), "verify_resend")}
+      >
+        Resend the link
+      </button>
+      <Snackbar
+        testId="verify-card-snackbar"
+        message={snack?.message ?? null}
+        token={snack?.token}
+        onDismiss={() => setSnack(null)}
+      />
+    </TaskCard>
   );
 }
 
-function CeremonyCard() {
+function CeremonyCard({ approver }: { approver: string }) {
   return (
-    <Card>
-      <h2 className="text-title-medium">Create your key</h2>
-      <p className="text-body-medium text-on-surface-variant">
-        Your actor needs a signing key on this browser before your inviter can approve you.
-      </p>
+    <TaskCard
+      tone="notice"
+      title="Create your key"
+      body={`Your application needs a key on this browser before ${approver} can approve it.`}
+      node={KEY}
+    >
       <Link
         href="/key"
-        data-testid="home_create_key"
-        className={buttonClassName({ size: "sm", selfStart: true })}
+        className={`${pillClassName({ variant: "inverse" })} self-start`}
+        {...testAttributes(part(KEY, "create"), "home_create_key")}
       >
-        Create the key
+        Create my key
       </Link>
-    </Card>
+    </TaskCard>
   );
 }
 
+/**
+ * A key on this browser that belongs to another account — no board draws it.
+ * The olive task card, in the words it has always had.
+ */
 function KeyElsewhereCard() {
   return (
-    <Card>
-      <h2 className="text-title-medium">This browser&apos;s key belongs to another account</h2>
-      <p data-testid="home_key_elsewhere" className="text-body-medium text-on-surface-variant">
-        A signing key can only ever back one account, so this account needs its own. Creating a
-        fresh key replaces the stored one — the other account&apos;s key stays restorable with its
-        recovery code.
-      </p>
+    <TaskCard
+      tone="notice"
+      title="This browser's key belongs to another account"
+      body="A signing key can only ever back one account, so this account needs its own. Creating a fresh key replaces the stored one — the other account's key stays restorable with its recovery code."
+      testId="home_key_elsewhere"
+    >
       <Link
         href="/key"
         data-testid="home_fresh_key"
-        className={buttonClassName({ size: "sm", selfStart: true })}
+        className={`${pillClassName({ variant: "inverse" })} self-start`}
       >
         Create a fresh key
       </Link>
-    </Card>
+    </TaskCard>
   );
 }
 

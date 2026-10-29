@@ -328,6 +328,24 @@ describe("the settings page", () => {
     expect(window.localStorage.getItem("cogra.stanceInputMode")).toBe("sliders");
   });
 
+  it("the opinion group says the inverted gesture: a tap opens, a hold signs", async () => {
+    renderSettings();
+    await screen.findByTestId("settings.stance");
+    expect(screen.getByTestId("settings.stance.pad.status")).toHaveTextContent(
+      "A tap opens it; drift to where it feels right.",
+    );
+    expect(screen.getByTestId("settings.stance.footnote")).toHaveTextContent(
+      "A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot.",
+    );
+  });
+
+  it("the people footnote says opinions on a hidden account still count", async () => {
+    renderSettings();
+    expect(await screen.findByTestId("settings.people.footnote")).toHaveTextContent(
+      "Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking. Your opinions on them still count in your friends' feeds until you walk them back.",
+    );
+  });
+
   it("multi_action_switch_flips_without_a_dialog", async () => {
     renderSettings();
     const row = await screen.findByTestId("settings.writing.confirm");

@@ -108,18 +108,17 @@ export const CONTACT_ADDRESS = "hello@cogra.local";
 
 /** The registry's spelling of each stance input's row. */
 const STANCE_ROWS: readonly { mode: StanceInputMode; key: string; label: string; status: string }[] = [
-  // DRIFT (stance-pad packet): the drawn hint is `A tap opens it; drift to
-  // where it feels right.`, which describes the inverted gesture. Until that
-  // inversion ships the shipped line stays, because it is the true one
-  // (settings-surface §11.3).
-  { mode: "pad", key: "pad", label: "The pad", status: "Press and hold, then drift to where you stand." },
+  // The inverted gesture's hints (copy-voice *Giving an opinion*): a tap opens
+  // the input, a held press signs the small positive default
+  // (`stance-control.tsx` LONG_PRESS_MS).
+  { mode: "pad", key: "pad", label: "The pad", status: "A tap opens it; drift to where it feels right." },
   { mode: "sliders", key: "sliders", label: "Sliders", status: "One slider per side of the opinion." },
   { mode: "entry", key: "typed", label: "Typed values", status: "Type both numbers exactly." },
 ];
 
-/** DRIFT (stance-pad packet): the drawn footnote waits for the inverted gesture. */
+/** The one place the shortcut and its price are said together (copy-voice). */
 const STANCE_FOOTNOTE =
-  "A tap always adds a small positive one. This is what a longer press opens, everywhere.";
+  "A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot.";
 
 const THEME_OPTIONS = [
   { value: "light", label: "Light" },
@@ -644,7 +643,7 @@ export function SettingsView({
 
         <SettingsGroup
           label="People"
-          footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking."
+          footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking. Your opinions on them still count in your friends' feeds until you walk them back."
           node={node("people")}
         >
           {/* THE COUNT IS THE HIDDEN SET'S (hidden-actors §5.1). With nobody
