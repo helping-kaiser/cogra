@@ -274,6 +274,7 @@ private fun TitledLead(node: DataNode, onHelp: () -> Unit) {
         text = stringResource(R.string.feedfilter_note),
         modifier = Modifier
             .padding(start = Space.x6, end = Space.x6, bottom = Space.x4)
+            .fillMaxWidth()
             .dataNode(node / "note"),
     )
 }
@@ -498,13 +499,13 @@ private fun PeopleRow(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.onSurface,
-                modifier = Modifier.dataNode(parts / "label"),
+                modifier = Modifier.fillMaxWidth().dataNode(parts / "label"),
             )
             Text(
                 text = hint,
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant,
-                modifier = Modifier.dataNode(parts / "hint"),
+                modifier = Modifier.fillMaxWidth().dataNode(parts / "hint"),
             )
         }
     }
