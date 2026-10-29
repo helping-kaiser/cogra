@@ -457,6 +457,7 @@ export function PostView({
         refreshToken={threadToken}
         landOn={landOn}
         aimReply={aimReply}
+        node={{ path: "postDetail.threadSheet" }}
       />
       {/* THE POST'S MENU AND WHAT ITS ROWS RAISE, over this page
           (ReaderPostMenu, ReportConfirm). A removed post has no menu left, so
