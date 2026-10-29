@@ -569,6 +569,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: 'data-node="referencePicker.filterSheet.foot.reset"', tag: "button" },
     { n: 10, find: 'data-node="referencePicker.filterSheet.foot.done"', tag: "button" },
     { n: 11, find: 'class="cg-scrim-in"', tag: "div" },
+    // The `fault` state's Retry (round 25, the fault family), appended.
+    { n: 12, find: 'data-node="referencePicker.fault.retry"', tag: "button" },
   ],
   /* A reference row per V1.0 kind, each its own edge to its own board (readme
      §13, the V1.0 scope cut): the person, the posts, the comment, numbered in
@@ -2844,6 +2846,8 @@ Object.assign(FLOW_MARKERS, {
     // via renumbers.
     { n: 6, find: 'aria-label="Remove saltmarsh"', tag: "button" },
     { n: 6, find: 'aria-label="Remove saltflats"', tag: "button" },
+    // The `fault` state's Retry (round 25, the fault family), appended.
+    { n: 7, find: 'data-node="tagPicker.fault.retry"', tag: "button" },
   ],
   TagPickerTyping: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
