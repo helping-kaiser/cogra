@@ -143,6 +143,8 @@ export interface CommentCardProps {
   onOpenScore?: () => void;
   /** The data-node name its placer gives this card — keyed by the author's handle (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its media: `media` (`frame` per item, keyed by its position from 1, a clip's `soundDisc` or `playDisc`; `dots`) and its affordance row: `actionRow`, holding `stance`, `score`, `reply` (the glyph form, or the thread's text button), `edit` and `share`; its author's `authorChip` and its ⋮ `menu`; and a removed comment's mark `removalMark`, `RedactedContent`'s `line`, `detail` and `when` inside it. */
   node?: string;
+  /** The card's key where its author cannot tell it apart — a profile's comments view, keyed by the comment's id. Given none, the author's handle keys the card. */
+  nodeKey?: string;
   /** An open reply or edit composer, rendered between the card and its replies. */
   children?: React.ReactNode;
   /**
