@@ -296,6 +296,19 @@ async function openComments() {
   return sheet;
 }
 
+/**
+ * THE COMMENT EDIT ADDS A TAG THROUGH THE PICKER (CommentEdit's `+ Add a tag`):
+ * the door, the name typed, its row, Done — and the edit is back with the pick
+ * staged.
+ */
+async function addTagThroughPicker(name: string) {
+  fireEvent.click(screen.getByTestId("commentEdit.tags.add"));
+  fireEvent.change(await screen.findByRole("searchbox", { name: "Name a tag" }), { target: { value: name } });
+  fireEvent.click(await screen.findByTestId(byNode("tagPicker.tag", name)));
+  fireEvent.click(screen.getByTestId("tagPicker.done"));
+  await screen.findByTestId("commentEdit.header");
+}
+
 function storeFor(accountId: string) {
   const store = createTokenStore();
   store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId });
@@ -2554,8 +2567,7 @@ describe("PostView", () => {
       fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "better words" },
       });
-      fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("commentEdit.tags.add"));
+      await addTagThroughPicker("rust");
       // Drop the tag the comment came with.
       fireEvent.click(screen.getByTestId("commentEdit.tags.tag.remove"));
       fireEvent.click(screen.getByTestId("commentEdit.sign"));
@@ -2588,8 +2600,7 @@ describe("PostView", () => {
       });
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-      fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("commentEdit.tags.add"));
+      await addTagThroughPicker("rust");
       fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
@@ -2660,8 +2671,7 @@ describe("PostView", () => {
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.change(screen.getByTestId("commentEdit.words.input"), { target: { value: "moved" } });
-      fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "a-b" } });
-      fireEvent.click(screen.getByTestId("commentEdit.tags.add"));
+      await addTagThroughPicker("a-b");
       fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       expect(await screen.findByTestId("comment-edit-tag-error-0")).toHaveTextContent(
@@ -2721,8 +2731,7 @@ describe("PostView", () => {
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.change(screen.getByTestId("commentEdit.words.input"), { target: { value: "moved" } });
-      fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("commentEdit.tags.add"));
+      await addTagThroughPicker("rust");
       expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
         "You're signing 2 things",
       );

@@ -137,6 +137,8 @@ export function PostEditView({
   onWords,
   onTags,
   onReferences,
+  onOpenTagPicker,
+  onOpenReferencePicker,
   onUndoTag,
   onUndoReference,
   onManagePictures,
@@ -193,6 +195,10 @@ export function PostEditView({
   onWords: (words: string) => void;
   onTags: (tags: readonly TagDraft[]) => void;
   onReferences: (references: readonly ReferenceDraft[]) => void;
+  /** `+ Add a tag`: the tag picker in the edit's place (EditCompose's `tags.add`). */
+  onOpenTagPicker: () => void;
+  /** `+ Cite something`: the citation picker in the edit's place (EditCompose's `references.add`). */
+  onOpenReferencePicker: () => void;
   onUndoTag: (name: string) => void;
   onUndoReference: (targetId: string) => void;
   onManagePictures: () => void;
@@ -391,6 +397,7 @@ export function PostEditView({
           cap={null}
           testIdPrefix="post-edit"
           pairs="sheet"
+          onOpenPicker={onOpenTagPicker}
           node={part(NODE, "tags")}
           after={withdrawnTagList.map((tag) => (
             <WithdrawnLine
@@ -410,6 +417,7 @@ export function PostEditView({
           cap={null}
           testIdPrefix="post-edit"
           pairs="sheet"
+          onOpenPicker={onOpenReferencePicker}
           node={part(NODE, "references")}
           after={withdrawnRefList.map((reference) => (
             <WithdrawnLine

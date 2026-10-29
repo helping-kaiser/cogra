@@ -55,6 +55,8 @@ function draw(overrides: Partial<Parameters<typeof CommentEditView>[0]> = {}) {
     onDescribe: vi.fn(),
     onTags: vi.fn(),
     onReferences: vi.fn(),
+    onOpenTagPicker: vi.fn(),
+    onOpenReferencePicker: vi.fn(),
     onUndoTag: vi.fn(),
     onUndoReference: vi.fn(),
     onActs: vi.fn(),

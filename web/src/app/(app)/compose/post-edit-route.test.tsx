@@ -585,13 +585,43 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     expect(footer()).toHaveTextContent("Nothing to sign yet");
   });
 
+  // EditCompose draws `+ Add a tag` and `+ Cite something` — the composer's
+  // quiet doors — so the edit adds through the pickers, in the edit's place,
+  // and Done brings the edit back with the pick already staged.
+  it("adds a tag through the tag picker, in the edit's place, and Done returns to the edit", async () => {
+    serve(editablePost());
+    draw();
+    expect(await screen.findByTestId("postEdit.tags.add")).toHaveTextContent("+ Add a tag");
+    fireEvent.click(screen.getByTestId("postEdit.tags.add"));
+    const field = await screen.findByRole("searchbox", { name: "Name a tag" });
+    expect(screen.queryByTestId("post-edit")).not.toBeInTheDocument();
+    fireEvent.change(field, { target: { value: "saltmaps" } });
+    fireEvent.click(await screen.findByTestId(byNode("tagPicker.tag", "saltmaps")));
+    fireEvent.click(screen.getByTestId("tagPicker.done"));
+    expect(await screen.findByTestId(byNode("postEdit.tags.tag", "saltmaps"))).toBeInTheDocument();
+    expect(footer()).toHaveTextContent("You're signing 1 thing");
+  });
+
+  it("cites through the citation picker, in the edit's place", async () => {
+    serve(editablePost());
+    draw();
+    fireEvent.click(await screen.findByTestId("postEdit.references.add"));
+    expect(await screen.findByRole("searchbox", { name: "Cite something" })).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("referencePicker.done"));
+    expect(await screen.findByTestId("postEdit.header")).toBeInTheDocument();
+    expect(footer()).toHaveTextContent("Nothing to sign yet");
+  });
+
   it("unstages a tag picked in this same edit rather than withdrawing it", async () => {
     serve(editablePost());
     draw();
-    fireEvent.change(await screen.findByTestId("post-edit-tag-input"), {
+    fireEvent.click(await screen.findByTestId("postEdit.tags.add"));
+    fireEvent.change(await screen.findByRole("searchbox", { name: "Name a tag" }), {
       target: { value: "saltmaps" },
     });
-    fireEvent.click(screen.getByTestId("postEdit.tags.add"));
+    fireEvent.click(await screen.findByTestId(byNode("tagPicker.tag", "saltmaps")));
+    fireEvent.click(screen.getByTestId("tagPicker.done"));
+    await screen.findByTestId("postEdit.header");
     expect(footer()).toHaveTextContent("You're signing 1 thing");
     fireEvent.click(screen.getByTestId("postEdit.tags.tag.remove"));
     expect(screen.queryByText(/Withdrawn:/)).not.toBeInTheDocument();

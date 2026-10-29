@@ -167,6 +167,9 @@ export function CommentEditView({
   onRemoveCover = () => {},
   onTags,
   onReferences,
+  onOpenTagPicker,
+  onOpenReferencePicker,
+  picker = null,
   onUndoTag,
   onUndoReference,
   onActs,
@@ -216,6 +219,12 @@ export function CommentEditView({
   refusals?: readonly PickRefusal[];
   /** The cover's crop, standing in the edit's place while it is up. */
   cropping?: CommentCoverCropping | null;
+  /**
+   * A picker raised over the edit (`+ Add a tag`, `+ Cite something`): the
+   * task page stands in the edit's place inside the dialog, as the cover's
+   * crop does, and Done gives the edit back with the pick staged.
+   */
+  picker?: ReactNode;
   refusal: string | null;
   failed: boolean;
   onWords: (words: string) => void;
@@ -237,6 +246,10 @@ export function CommentEditView({
   onRemoveCover?: () => void;
   onTags: (tags: readonly TagDraft[]) => void;
   onReferences: (references: readonly ReferenceDraft[]) => void;
+  /** `+ Add a tag` (CommentEdit's `tags.add`): the tag picker over the edit. */
+  onOpenTagPicker: () => void;
+  /** `+ Cite something` (CommentEdit's `references.add`): the citation picker over the edit. */
+  onOpenReferencePicker: () => void;
   onUndoTag: (name: string) => void;
   onUndoReference: (targetId: string) => void;
   onActs: (open: boolean) => void;
@@ -344,6 +357,10 @@ export function CommentEditView({
             />
           </div>
         </>
+      ) : picker !== null ? (
+        <div data-testid="comment-edit-picker" className="flex min-h-0 flex-1 flex-col">
+          {picker}
+        </div>
       ) : (
         <>
           <HeaderBar
@@ -575,6 +592,7 @@ export function CommentEditView({
               cap={null}
               testIdPrefix="comment-edit"
               pairs="sheet"
+              onOpenPicker={onOpenTagPicker}
               node={part(NODE, "tags")}
               after={withdrawnTags(loadedTags, tags).map((tag) => (
                 <WithdrawnLine
@@ -594,6 +612,7 @@ export function CommentEditView({
               cap={null}
               testIdPrefix="comment-edit"
               pairs="sheet"
+              onOpenPicker={onOpenReferencePicker}
               node={part(NODE, "references")}
               after={
                 <>
