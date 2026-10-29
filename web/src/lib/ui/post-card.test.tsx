@@ -510,6 +510,15 @@ describe("PostCard's veil faces", () => {
     expect(screen.getByText("The title")).toBeInTheDocument();
   });
 
+  it("the author's mark reads the author's line alone until the wire names a verdict beside it (seam 253)", () => {
+    // A SENSITIVE status with the self-mark set may also carry a verdict, but
+    // nothing served says so yet (`sensitiveSource`, B-C1): the author's line
+    // alone, never a guessed second sentence.
+    mount(marked({ sensitiveSelfMark: true, sensitiveReason: "Grief" }));
+    expect(screen.getByTestId("card-veil-source")).toHaveTextContent(/^The author's warning — Grief$/);
+    expect(screen.getByTestId("card-veil-source")).not.toHaveTextContent("Also veiled");
+  });
+
   it("a verdict alone names the platform's verdict", () => {
     mount(marked({ sensitiveSelfMark: false }));
     expect(screen.getByTestId("card-veil-source")).toHaveTextContent("The platform's verdict");

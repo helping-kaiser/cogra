@@ -118,6 +118,12 @@ type Sourced = { sensitiveSelfMark?: boolean | null; sensitiveReason?: string | 
  * one a reader met; `sensitiveSelfMark` is the author's mark alone (api-spec.md,
  * "Content authoring"). Where it stands, the veil is the author's warning; a
  * sensitive node without it can only be the platform's verdict.
+ *
+ * BOTH MAY STAND AT ONCE, and the line then names both (round 27,
+ * `veilSourceLine`'s `both`) — but nothing on the wire says a verdict ALSO
+ * stands beside the author's mark until the `sensitiveSource` ask lands
+ * (seam 253, contract bite B-C1). Until then this reads the author's line
+ * alone, as the ruling says, and never answers `both`.
  */
 export function veilSource(node: Sourced): VeilSource {
   return node.sensitiveSelfMark === true ? "author" : "platform";
