@@ -7,12 +7,9 @@ package com.cogra.feature.settings
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,6 +33,7 @@ import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
+import com.cogra.core.designsystem.v2.atom.DialogSurface
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.HelpDialog
 import com.cogra.core.designsystem.v2.atom.HelpDot
@@ -62,7 +60,6 @@ private val LicenseSheet = DataNode("settings") / "licenseSheet"
  * packet's slice S (`settings.dialog.lock`), and shipping its label
  * without the lock behind it would promise a seal that does not exist.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun SignOutConfirm(
     onMakeRecoveryCode: () -> Unit,
@@ -71,46 +68,28 @@ internal fun SignOutConfirm(
 ) {
     val titleFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { titleFocus.requestFocus() } }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        modifier = Modifier.dataNode(Dialog),
-        title = {
-            Text(
-                text = stringResource(R.string.sign_out_confirm_title),
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier
-                    .semantics { heading() }
-                    .focusRequester(titleFocus)
-                    .focusable()
-                    .dataNode(Dialog / "title"),
-            )
-        },
-        text = {
-            Text(
-                text = stringResource(R.string.sign_out_confirm_body),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.dataNode(Dialog / "body"),
-            )
-        },
+    // The house dialog (`DialogSurface`): 320 wide, border-box, the title the
+    // whole headline-small role.
+    DialogSurface(
+        title = stringResource(R.string.sign_out_confirm_title),
+        paragraphs = listOf(stringResource(R.string.sign_out_confirm_body)),
+        onScrimPress = onDismiss,
+        node = Dialog,
+        titleFocus = titleFocus,
         // The board's order, which is the reading order: the filled answer
         // leads and the quiet one follows (SignOutConfirm.md :7).
-        confirmButton = {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                CograButton(
-                    text = stringResource(R.string.sign_out_confirm_recovery),
-                    onClick = onMakeRecoveryCode,
-                    modifier = Modifier.dataNode(Dialog / "recovery"),
-                )
-                CograButton(
-                    text = stringResource(R.string.sign_out_confirm_erase),
-                    onClick = onErase,
-                    kind = ButtonKind.Text,
-                    modifier = Modifier.dataNode(Dialog / "erase"),
-                )
-            }
+        actions = {
+            CograButton(
+                text = stringResource(R.string.sign_out_confirm_recovery),
+                onClick = onMakeRecoveryCode,
+                modifier = Modifier.dataNode(Dialog / "recovery"),
+            )
+            CograButton(
+                text = stringResource(R.string.sign_out_confirm_erase),
+                onClick = onErase,
+                kind = ButtonKind.Text,
+                modifier = Modifier.dataNode(Dialog / "erase"),
+            )
         },
     )
 }
@@ -126,7 +105,6 @@ internal fun SignOutConfirm(
  * on the title and stays inside; the scrim and system Back close it, still
  * signed in, nothing erased (`:25`, `:27`). Each answer wears its chip's key.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun EraseConfirm(
     backupMade: Boolean,
@@ -137,49 +115,29 @@ internal fun EraseConfirm(
     val titleFocus = remember { FocusRequester() }
     val chip = if (backupMade) "made" else "none"
     LaunchedEffect(Unit) { runCatching { titleFocus.requestFocus() } }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        modifier = Modifier.dataNode(Dialog),
-        title = {
-            Text(
-                text = stringResource(R.string.erase_confirm_title),
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier
-                    .semantics { heading() }
-                    .focusRequester(titleFocus)
-                    .focusable()
-                    .dataNode(Dialog / "title"),
-            )
-        },
-        text = {
-            Text(
-                text = stringResource(
-                    if (backupMade) R.string.erase_confirm_body_made else R.string.erase_confirm_body_none,
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.dataNode(Dialog / "body"),
-            )
-        },
-        confirmButton = {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                if (backupMade) {
-                    EraseAnswer(chip, onErase)
-                    CograButton(
-                        text = stringResource(R.string.erase_confirm_cancel),
-                        onClick = onDismiss,
-                        modifier = Modifier.dataNode((Dialog / "cancel").keyed(chip)),
-                    )
-                } else {
-                    CograButton(
-                        text = stringResource(R.string.sign_out_confirm_recovery),
-                        onClick = onMakeRecoveryCode,
-                        modifier = Modifier.dataNode((Dialog / "recovery").keyed(chip)),
-                    )
-                    EraseAnswer(chip, onErase)
-                }
+    DialogSurface(
+        title = stringResource(R.string.erase_confirm_title),
+        paragraphs = listOf(
+            stringResource(if (backupMade) R.string.erase_confirm_body_made else R.string.erase_confirm_body_none),
+        ),
+        onScrimPress = onDismiss,
+        node = Dialog,
+        titleFocus = titleFocus,
+        actions = {
+            if (backupMade) {
+                EraseAnswer(chip, onErase)
+                CograButton(
+                    text = stringResource(R.string.erase_confirm_cancel),
+                    onClick = onDismiss,
+                    modifier = Modifier.dataNode((Dialog / "cancel").keyed(chip)),
+                )
+            } else {
+                CograButton(
+                    text = stringResource(R.string.sign_out_confirm_recovery),
+                    onClick = onMakeRecoveryCode,
+                    modifier = Modifier.dataNode((Dialog / "recovery").keyed(chip)),
+                )
+                EraseAnswer(chip, onErase)
             }
         },
     )

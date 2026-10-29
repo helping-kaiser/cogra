@@ -132,19 +132,13 @@ query PostDetail(
   $includePending: Boolean! = true
 ) {
   post(id: $id) {
+    # `PostFields` carries the AUTHOR'S OWN mark and its reason, which the
+    # edit switch reads and nothing else (round 4): what a reader sees is the
+    # OR of the two marks and neither side can clear the other, so an edit
+    # that re-stated the OR would let a moderator's mark become the author's,
+    # and the edit contract is complete state, so a save that re-states the
+    # mark without its reason silently clears the line the veil shows.
     ...PostFields
-    # The AUTHOR'S OWN mark, which is not the same question as
-    # `moderationStatus` (round 4): what a reader sees is the OR of the two
-    # marks and neither side can clear the other, so an edit that re-stated the
-    # OR would let a moderator's mark become the author's. The edit switch reads
-    # this and nothing else. Selected here, on the single root post, and
-    # deliberately outside `PostFields`, where every feed card would pay for it.
-    #
-    # The reason rides beside it for the same reason the mark does: the edit
-    # contract is complete state, so a save that re-states the mark without its
-    # reason silently clears the line a reader was shown on the veil.
-    sensitiveSelfMark
-    sensitiveReason
     comments(
       first: $commentsFirst
       after: $commentsAfter
@@ -246,14 +240,10 @@ query CommentReplies(
   }
 }
 
-# THE COMMENT EDIT'S OWN READ, and the reason it is its own operation.
-#
-# The edit switch shows the AUTHOR'S own sensitive mark, never the OR a reader
-# sees (round 4). `sensitiveSelfMark` could have been selected on the comment
-# nodes inside `PostDetail` — but a detail read carries a page of comments each
-# carrying a page of replies, so one scalar there is paid for eighty-odd times
-# on every open of every post. Here it is paid for once, and only by the reader
-# who actually opened an editor.
+# THE COMMENT EDIT'S OWN READ. The edit switch shows the AUTHOR'S own
+# sensitive mark, never the OR a reader sees (round 4), and the edit contract
+# is complete state, so the editor reads the mark and its reason from the
+# record as it stands when it opens, never from the thread's copy of it.
 query CommentSelfMark($id: UUID!) {
   comment(id: $id) {
     id

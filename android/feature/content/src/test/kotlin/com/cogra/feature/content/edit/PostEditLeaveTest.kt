@@ -99,8 +99,8 @@ class PostEditLeaveTest {
     @Test
     fun anEmptyBatchLeavesAtOnceByTheXTheBackArrowAndThePlatformBack() {
         open()
-        compose.onNodeWithTag("post_edit_header_leave").performClick()
-        compose.onNodeWithTag("post_edit_header_back").performClick()
+        compose.onNodeWithTag("postEdit.header.leave").performClick()
+        compose.onNodeWithTag("postEdit.header.back").performClick()
         platformBack()
 
         assertThat(leaves).isEqualTo(3)
@@ -111,7 +111,7 @@ class PostEditLeaveTest {
     fun theXWithAnActInTheBatchAsksDiscardTheChangesAndLeavesNothingUnasked() {
         open()
         stage()
-        compose.onNodeWithTag("post_edit_header_leave").performClick()
+        compose.onNodeWithTag("postEdit.header.leave").performClick()
 
         assertThat(leaves).isEqualTo(0)
         compose.onNodeWithTag("post_edit_discard_confirm").assertIsDisplayed()
@@ -123,7 +123,7 @@ class PostEditLeaveTest {
     fun theBackArrowAndThePlatformBackAskTheSameWithAnActInTheBatch() {
         open()
         stage()
-        compose.onNodeWithTag("post_edit_header_back").performClick()
+        compose.onNodeWithTag("postEdit.header.back").performClick()
         compose.onNodeWithTag("post_edit_discard_confirm").assertIsDisplayed()
 
         compose.onNodeWithTag("post_edit_discard_confirm_keep").performClick()
@@ -138,13 +138,13 @@ class PostEditLeaveTest {
     fun keepWritingClosesTheAskOntoTheEditAsItWas() {
         open()
         stage()
-        compose.onNodeWithTag("post_edit_header_leave").performClick()
+        compose.onNodeWithTag("postEdit.header.leave").performClick()
         compose.onNodeWithTag("post_edit_discard_confirm_keep").performClick()
 
         compose.onNodeWithTag("post_edit_discard_confirm").assertDoesNotExist()
         assertThat(leaves).isEqualTo(0)
         assertThat(viewModel.state.value.title).isEqualTo("Retitled")
-        compose.onNodeWithTag("post_edit_acts_footer").assertIsDisplayed()
+        compose.onNodeWithTag("postEdit.acts.line").assertIsDisplayed()
     }
 
     /** EditCompose.md: 200ms into the signing, the back arrow and the X refuse a press. */
@@ -157,8 +157,8 @@ class PostEditLeaveTest {
             )
         }
         compose.mainClock.advanceTimeBy(SLOW_ANSWER_MS + 100)
-        compose.onNodeWithTag("post_edit_header_leave").performClick()
-        compose.onNodeWithTag("post_edit_header_back").performClick()
+        compose.onNodeWithTag("postEdit.header.leave").performClick()
+        compose.onNodeWithTag("postEdit.header.back").performClick()
 
         assertThat(leaves).isEqualTo(0)
     }
@@ -167,7 +167,7 @@ class PostEditLeaveTest {
     fun discardLeavesTheEditOnce() {
         open()
         stage()
-        compose.onNodeWithTag("post_edit_header_leave").performClick()
+        compose.onNodeWithTag("postEdit.header.leave").performClick()
         compose.onNodeWithTag("post_edit_discard_confirm_discard").performClick()
 
         assertThat(leaves).isEqualTo(1)

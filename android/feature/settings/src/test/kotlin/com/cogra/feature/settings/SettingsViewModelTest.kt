@@ -11,6 +11,7 @@ import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.deletion.AccountDeletion
 import com.cogra.domain.deletion.AccountDeletionState
 import com.cogra.domain.deletion.DeletionStanding
+import com.cogra.domain.feed.ReaderDefaults
 import com.cogra.domain.identity.BackupManager
 import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.cogra.domain.identity.DeviceLock
@@ -25,6 +26,7 @@ import com.cogra.domain.testing.FakeExploreDeviceStore
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
@@ -79,6 +81,7 @@ class SettingsViewModelTest {
         sensitive,
         deletionState,
         deviceLock,
+        ReaderDefaults(InMemoryReaderDefaultStore(), tokens),
     ).also {
         it.clock = { NOW }
         it.refresh()

@@ -7,6 +7,7 @@ package com.cogra.network
 
 import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.Outcome
+import com.cogra.domain.feed.FeedCard
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
@@ -141,6 +142,37 @@ class FeedRepositoryTest {
         val body = server.takeRequest().body.readUtf8()
         assertThat(body).contains("\"ids\":[\"p2\",\"t1\",\"p1\"]")
         assertThat(body).contains("\"first\":3")
+    }
+
+    /** A window's other kinds ride `FeedCards`, as their own feed cards read them; a post there is skipped. */
+    @Test
+    fun aCardsReadHydratesATopicAsTheTagCardsGlimpseInTheOrderHanded() = runTest {
+        enqueue(
+            """{"data":{"feed":{"__typename":"FeedConnection","edges":[
+               {"__typename":"FeedEdge","node":{"__typename":"Post"}},
+               {"__typename":"FeedEdge","node":{"__typename":"Hashtag","id":"h1",
+                 "name":{"__typename":"ModeratedText","value":"saltmaps","status":"NORMAL"},"taggedContent":[
+                 {"__typename":"TaggedContent","node":{"__typename":"Post","id":"p1",
+                   "title":{"__typename":"ModeratedText","value":"Low tide at six","status":"NORMAL"},
+                   "content":{"__typename":"ModeratedText","value":"words","status":"NORMAL"},
+                   "attachments":[],"author":{"__typename":"User","id":"u-t","handle":"tobias"},
+                   "createdAt":"2026-10-04T07:00:00Z"}}]}}]}}}""",
+        )
+
+        val cards = (repo().cards(listOf("p9", "h1")) as Outcome.Success).value
+
+        val topic = (cards.single() as FeedCard.Tag).topic
+        assertThat(topic.name.value).isEqualTo("saltmaps")
+        assertThat(topic.tagged.single().authorHandle).isEqualTo("tobias")
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"ids\":[\"p9\",\"h1\"]")
+        assertThat(body).contains("\"operationName\":\"FeedCards\"")
+    }
+
+    @Test
+    fun anEmptyCardsReadMakesNoCall() = runTest {
+        assertThat(repo().cards(emptyList())).isEqualTo(Outcome.Success(emptyList<Any>()))
+        assertThat(server.requestCount).isEqualTo(0)
     }
 
     @Test

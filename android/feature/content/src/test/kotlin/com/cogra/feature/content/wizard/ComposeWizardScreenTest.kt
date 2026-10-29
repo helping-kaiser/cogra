@@ -310,8 +310,8 @@ class ComposeWizardScreenTest {
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
 
         compose.onNodeWithTag("wizard_header_action").assertDoesNotExist()
-        compose.onNodeWithTag("wizard_crop_next").assertIsDisplayed()
-        compose.onNodeWithTag("wizard_header_leave").assertIsDisplayed()
+        compose.onNodeWithTag("composeCrop.next").assertIsDisplayed()
+        compose.onNodeWithTag("composeCrop.header.leave").assertIsDisplayed()
     }
 
     @Test
@@ -722,14 +722,14 @@ class ComposeWizardScreenTest {
     @Test
     fun theCropStageOffersTheThreeShapesAndANonDragRoute() {
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
-        compose.onNodeWithTag("crop_shape_tall").assertIsDisplayed()
-        compose.onNodeWithTag("crop_shape_square").assertIsDisplayed()
-        compose.onNodeWithTag("crop_shape_wide").assertIsDisplayed()
+        compose.onNodeWithTag("composeCrop.shapes.tallChip").assertIsDisplayed()
+        compose.onNodeWithTag("composeCrop.shapes.squareChip").assertIsDisplayed()
+        compose.onNodeWithTag("composeCrop.shapes.wideChip").assertIsDisplayed()
 
         // D17: completable without a gesture. The board draws no controls
         // under the crop, so the route is named actions in the semantics
         // tree — nothing visible to scroll to.
-        val actions = compose.onNodeWithTag("wizard_crop")
+        val actions = compose.onNodeWithTag("composeCrop.viewport")
             .fetchSemanticsNode()
             .config[SemanticsActions.CustomActions]
             .map { it.label }
@@ -760,14 +760,14 @@ class ComposeWizardScreenTest {
         // the fold is a screen-height question the hand test answers,
         // and the claim here is that a second picture puts it there at
         // all.
-        compose.onNodeWithTag("wizard_filmstrip_1").assertExists()
+        compose.onNodeWithTag("composeCrop.pictures.thumb:2").assertExists()
     }
 
     @Test
     fun oneAloneNeedsNoFilmstrip() {
         val single = withPicks.copy(step = WizardStep.Crop, picked = withPicks.picked.take(1))
         compose.setContent { Wizard(single) }
-        compose.onNodeWithTag("wizard_filmstrip_0").assertDoesNotExist()
+        compose.onNodeWithTag("composeCrop.pictures.thumb:1").assertDoesNotExist()
     }
 
     // -- The details stage --

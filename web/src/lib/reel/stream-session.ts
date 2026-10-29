@@ -3,8 +3,8 @@
 //
 // WHAT IT HOLDS. "ALWAYS the stream carries only clips taller than they are
 // wide, from the list it was opened from narrowed to them in that list's order
-// — the feed it narrowed, History's rows or the profile's posts — and by no
-// ranking of its own" (Reel.md:3). So a session is that ORIGIN, the origin's
+// — the feed it narrowed, Saved's cards, History's rows or the profile's posts
+// — and by no ranking of its own" (Reel.md:3). So a session is that ORIGIN, the origin's
 // rows narrowed by the one predicate (`stream-clip.ts`), the clip on screen,
 // and the origin's own way to its next page. Nothing here ranks, sorts or
 // compares: rows enter in the origin's order and stay in it.
@@ -38,20 +38,37 @@ import { isStreamClip } from "./stream-clip";
 /** Where the stream was opened from — what it narrows, and where back goes. */
 export type StreamOrigin =
   | { readonly kind: "feed" }
+  | { readonly kind: "saved" }
   | { readonly kind: "history" }
-  | { readonly kind: "profile"; readonly handle: string; readonly own: boolean };
+  | {
+      readonly kind: "profile";
+      readonly handle: string;
+      readonly own: boolean;
+      /**
+       * Where someone's profile was itself opened from, which the way back
+       * hands it again: the profile keeps its own back arrow and the root its
+       * stack began in (ProfilePosts.md:51, :59; readme §4, "a stack is where a
+       * screen was opened FROM").
+       */
+      readonly from?: string | null;
+    };
 
 /** The way back, by the stream's noun table (Reel.md:79; readme §13, the nav-noun sweep). */
 export function streamBack(origin: StreamOrigin): { readonly href: string; readonly label: string } {
   switch (origin.kind) {
     case "feed":
       return { href: "/feed", label: "Back to feed" };
+    case "saved":
+      return { href: "/saved", label: "Back to Saved" };
     case "history":
       return { href: "/history", label: "Back to History" };
     case "profile":
       return origin.own
         ? { href: "/profile", label: "Back to your profile" }
-        : { href: `/u/${encodeURIComponent(origin.handle)}`, label: "Back to the profile" };
+        : {
+            href: `/u/${encodeURIComponent(origin.handle)}${origin.from ? `?from=${encodeURIComponent(origin.from)}` : ""}`,
+            label: "Back to the profile",
+          };
   }
 }
 

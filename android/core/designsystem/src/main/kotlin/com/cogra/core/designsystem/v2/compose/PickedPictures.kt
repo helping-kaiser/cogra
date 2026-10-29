@@ -303,6 +303,12 @@ fun PickedSheet(
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
     testTag: String? = null,
+    /**
+     * The sheet's data-node on a registered screen (`postEdit.pickedSheet`):
+     * its title, handle, rows (`picture`, keyed by place from 1), note and Done
+     * then wear its parts in place of the [testTag] ones.
+     */
+    node: DataNode? = null,
 ) {
     // Each handle's focus, so a keyboard move can hand focus to the row the
     // picture moved to ("focus rides along").
@@ -314,8 +320,17 @@ fun PickedSheet(
     }
     val drag = remember { RowDrag() }
     val view = LocalView.current
-    CograSheetSurface(modifier = modifier, testTag = testTag, gap = 0.dp) {
-        SheetTitle(text = "Picked · ${pictures.size}", modifier = Modifier.padding(bottom = Space.x2))
+    val tags = SheetTags(node, testTag)
+    CograSheetSurface(
+        modifier = modifier,
+        testTag = tags.self,
+        handleTestTag = tags.nodePart("dragHandle"),
+        gap = 0.dp,
+    ) {
+        SheetTitle(
+            text = "Picked · ${pictures.size}",
+            modifier = Modifier.padding(bottom = Space.x2).tagged(tags.nodePart("title")),
+        )
         Column(Modifier.fillMaxWidth()) {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             pictures.forEachIndexed { index, picture ->
@@ -341,23 +356,23 @@ fun PickedSheet(
                     ),
                     lift = drag.offsetFor(index),
                     onPlaced = { height -> drag.measure(index, height) },
-                    testTag = testTag?.let { "${it}_row_$index" },
+                    tags = tags.row(index),
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
         }
-        PickedSheetFoot(onDone = onDone, testTag = testTag)
+        PickedSheetFoot(onDone = onDone, tags = tags)
     }
 }
 
 /** The footnote `12 24 0` and Done's row `8 16 8` (`PickedSheet.jsx:134-150`). */
 @Composable
-private fun PickedSheetFoot(onDone: () -> Unit, testTag: String?) {
+private fun PickedSheetFoot(onDone: () -> Unit, tags: SheetTags) {
     Text(
         text = "The first one is the cover.",
         style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(top = Space.x3),
+        modifier = Modifier.padding(top = Space.x3).tagged(tags.nodePart("note")),
     )
     Row(
         Modifier
@@ -372,7 +387,7 @@ private fun PickedSheetFoot(onDone: () -> Unit, testTag: String?) {
             text = "Done",
             onClick = onDone,
             kind = ButtonKind.Text,
-            testTag = testTag?.let { "${it}_done" },
+            testTag = tags.part("done", "done"),
         )
     }
 }
@@ -460,7 +475,7 @@ private fun PickedSheetRow(
     handle: HandleWiring,
     lift: Float,
     onPlaced: (Int) -> Unit,
-    testTag: String?,
+    tags: SheetTags,
 ) {
     val cover = index == 0
     val name = if (cover) "the cover" else "picture ${index + 1}"
@@ -475,12 +490,18 @@ private fun PickedSheetRow(
             // A minimum, as the master draws it (`minHeight: 68px`): a row whose
             // move twins wrap grows rather than clipping them.
             .heightIn(min = Layout.PickedRowHeight)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+            .tagged(tags.self)
             .semantics { customActions = moves },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x4),
     ) {
-        ReorderHandle(name = name, index = index, total = total, wiring = handle, testTag = testTag)
+        ReorderHandle(
+            name = name,
+            index = index,
+            total = total,
+            wiring = handle,
+            testTag = tags.part("reorder", "handle"),
+        )
         MediaThumb(
             item = picture.item,
             size = Layout.ThumbSizeSheet,
@@ -488,15 +509,16 @@ private fun PickedSheetRow(
             uploading = picture.uploading,
             progress = picture.progress,
             contentDescription = null,
-            testTag = testTag?.let { "${it}_thumb" },
+            testTag = tags.part("thumb", "thumb"),
         )
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = if (cover) "Cover — shown first" else "Picture ${index + 1}",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.tagged(tags.nodePart("label")),
             )
-            RowActions(picture, index, total, name, onDescribe, onMove, testTag)
+            RowActions(picture, index, total, name, onDescribe, onMove, tags)
         }
         // The ×: an 18dp glyph answering at 48 (`cg-hit`), named for its
         // picture (`Remove the cover`, `Remove picture 2`).
@@ -510,7 +532,7 @@ private fun PickedSheetRow(
                         .clip(CircleShape)
                         .clickable(role = Role.Button, onClick = onRemove)
                         .semantics { contentDescription = "Remove $name" }
-                        .then(if (testTag != null) Modifier.testTag("${testTag}_remove") else Modifier),
+                        .tagged(tags.part("remove", "remove")),
                     drawnWidth = REMOVE_GLYPH,
                     drawnHeight = REMOVE_GLYPH,
                 )
@@ -556,7 +578,7 @@ private fun ReorderHandle(name: String, index: Int, total: Int, wiring: HandleWi
                         }
                     }
                     .semantics { contentDescription = "Reorder $name" }
-                    .then(if (testTag != null) Modifier.testTag("${testTag}_handle") else Modifier),
+                    .tagged(testTag),
                 drawnWidth = HANDLE_GLYPH,
                 drawnHeight = HANDLE_GLYPH,
             )
@@ -606,7 +628,7 @@ private fun RowActions(
     name: String,
     onDescribe: () -> Unit,
     onMove: (Int, Int) -> Unit,
-    testTag: String?,
+    tags: SheetTags,
 ) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(Space.x3),
@@ -617,16 +639,17 @@ private fun RowActions(
                 text = "Described",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.tagged(tags.nodePart("described")),
             )
         } else {
-            RowAction("Describe", "Describe $name", onDescribe, testTag?.let { "${it}_describe" })
+            RowAction("Describe", "Describe $name", onDescribe, tags.part("describe", "describe"))
         }
         if (index > 0) {
-            RowAction("Make it the cover", null, { onMove(index, 0) }, testTag?.let { "${it}_make_cover" })
-            RowAction("Move up", null, { onMove(index, index - 1) }, testTag?.let { "${it}_up" })
+            RowAction("Make it the cover", null, { onMove(index, 0) }, tags.part("makeCover", "make_cover"))
+            RowAction("Move up", null, { onMove(index, index - 1) }, tags.part("moveUp", "up"))
         }
         if (index < total - 1) {
-            RowAction("Move down", null, { onMove(index, index + 1) }, testTag?.let { "${it}_down" })
+            RowAction("Move down", null, { onMove(index, index + 1) }, tags.part("moveDown", "down"))
         }
     }
 }
@@ -681,3 +704,25 @@ private fun PickedSheetPreview() {
 
 /** `DescribeCounter`'s label-small line. */
 private val DESCRIBE_LINE = 16.dp
+
+/**
+ * The picked sheet's tags: its registered node's parts on a registered screen,
+ * else the `<testTag>_<legacy>` ones the unregistered hosts' tests bind to.
+ */
+private class SheetTags(private val node: DataNode?, private val testTag: String?) {
+    /** The tag the sheet (or a row) itself wears. */
+    val self: String? get() = node?.tag ?: testTag
+
+    /** A part both naming schemes tag. */
+    fun part(part: String, legacy: String): String? = node?.div(part)?.tag ?: testTag?.let { "${it}_$legacy" }
+
+    /** A part only the registered screen names. */
+    fun nodePart(part: String): String? = node?.div(part)?.tag
+
+    /** Row [index]'s tags: `picture` keyed by its place, counted from 1. */
+    fun row(index: Int): SheetTags =
+        SheetTags(node?.div("picture")?.keyed("${index + 1}"), testTag?.let { "${it}_row_$index" })
+}
+
+/** Wears [tag] where there is one. */
+private fun Modifier.tagged(tag: String?): Modifier = if (tag != null) testTag(tag) else this

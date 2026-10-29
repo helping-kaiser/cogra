@@ -10,7 +10,6 @@ package com.cogra.feature.content
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.cogra.feature.content.edit.PostEditActions
@@ -50,14 +49,14 @@ class EditPickersTest {
     fun thePostEditsAddATagOpensThePicker() {
         compose.setContent { PostEditScreen(state = post, actions = postActions) }
         compose.onNodeWithTag("post_edit_tag_input").assertDoesNotExist()
-        compose.onNodeWithText("+ Add a tag").performScrollTo().performClick()
+        compose.onNodeWithTag("postEdit.tags.add").performScrollTo().performClick()
         assertThat(tags.calls).containsExactly("open")
     }
 
     @Test
     fun thePostEditsCiteSomethingOpensThePicker() {
         compose.setContent { PostEditScreen(state = post, actions = postActions) }
-        compose.onNodeWithText("+ Cite something").performScrollTo().performClick()
+        compose.onNodeWithTag("postEdit.references.add").performScrollTo().performClick()
         assertThat(references.calls).containsExactly("open")
     }
 
@@ -67,15 +66,15 @@ class EditPickersTest {
         compose.setContent { PostEditScreen(state = picking, actions = postActions) }
         compose.onNodeWithTag("tagPicker").assertExists()
         compose.onNodeWithContentDescription("Back to the post").assertExists()
-        compose.onNodeWithText("+ Cite something").assertDoesNotExist()
+        compose.onNodeWithTag("postEdit.references.add").assertDoesNotExist()
     }
 
     @Test
     fun theCommentEditsDoorsOpenThePickers() {
         compose.setContent { CommentEditScreen(state = comment, actions = commentActions) }
         compose.onNodeWithTag("comment_edit_tag_input").assertDoesNotExist()
-        compose.onNodeWithText("+ Add a tag").performScrollTo().performClick()
-        compose.onNodeWithText("+ Cite something").performScrollTo().performClick()
+        compose.onNodeWithTag("commentEdit.tags.add").performScrollTo().performClick()
+        compose.onNodeWithTag("commentEdit.references.add").performScrollTo().performClick()
         assertThat(tags.calls).containsExactly("open")
         assertThat(references.calls).containsExactly("open")
     }

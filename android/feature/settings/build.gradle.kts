@@ -29,6 +29,8 @@ dependencies {
     implementation(project(":core:domain"))
     // The hide row's words and snackbar, which Hidden accounts' unhide shares.
     implementation(project(":feature:saved"))
+    // What your feed shows opens the feed's own filter sheet (SettingsReading.md).
+    implementation(project(":feature:feedfilter"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

@@ -30,6 +30,7 @@ export function ExplainableNumber({
   href,
   onOpen,
   overMedia = false,
+  pending,
   node,
   testId,
 }: {
@@ -47,32 +48,62 @@ export function ExplainableNumber({
   /** The explanation's screen. */
   href: string;
   onOpen?: () => void;
-  /** The registered slot (`feed.card.actionRow.score`); its figure is `value`. */
+  /**
+   * A PENDING MARK'S WORDS UNDER THE BARE GLYPH, INSIDE THE DOOR
+   * (`ExplainableNumber.jsx` `pending`, round 26, seam 250): the stream's
+   * settling face is the glyph with `Still settling` under it, and the whole
+   * face is the door. The glyph row keeps the 48px it stood in, so the glyph
+   * does not move; the words are the node's `settling` part. Given, no figure
+   * is drawn. A client face — no field on the wire says it.
+   */
+  pending?: string;
+  /** The registered slot (`feed.card.actionRow.score`); its figure is `value`, its pending mark `settling`. */
   node?: DataNode;
   testId?: string;
 }) {
+  const figure = pending === undefined ? value : undefined;
   return (
     <Link
       href={href}
       onClick={onOpen}
-      // THE NAME SPEAKS THE FIGURE (`Feed score 15.20`): the label lives in
-      // the accessibility tree, and a sr-only span beside the digits would
-      // run the two together (`Feed score15.20`) in the computed name.
-      aria-label={value === undefined ? label : `${label} ${value}`}
+      // THE NAME SPEAKS THE FIGURE (`Feed score 15.20`), or the pending mark
+      // (`Feed score Still settling`): the label lives in the accessibility
+      // tree, and a sr-only span beside the digits would run the two together
+      // (`Feed score15.20`) in the computed name.
+      aria-label={pending !== undefined ? `${label} ${pending}` : figure === undefined ? label : `${label} ${figure}`}
       {...testAttributes(node, testId)}
-      className="cg-state cg-focus cg-hit -mx-2 inline-flex min-h-12 flex-none items-center gap-1.5 rounded-full px-2 text-[length:var(--text-body-small)] [line-height:normal] text-on-surface-variant"
+      className={
+        pending === undefined
+          ? "cg-state cg-focus cg-hit -mx-2 inline-flex min-h-12 flex-none items-center gap-1.5 rounded-full px-2 text-[length:var(--text-body-small)] [line-height:normal] text-on-surface-variant"
+          : "cg-state cg-focus cg-hit -mx-2 inline-flex flex-none flex-col items-center gap-0.5 rounded-full px-2 text-[length:var(--text-body-small)] [line-height:normal] text-on-surface-variant"
+      }
       // A literal, as the master's: the media dress reads over any frame in
       // both themes (`ExplainableNumber.jsx:65-67`).
       style={overMedia ? { color: "#fff", filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))" } : undefined}
     >
-      <Icon name={glyph} size={18} />
-      {value !== undefined && (
+      {pending !== undefined ? (
+        <>
+          <span className="inline-flex min-h-12 items-center">
+            <Icon name={glyph} size={18} />
+          </span>
+          <span
+            className="text-center text-label-small"
+            style={{ maxWidth: 56, ...(overMedia ? { color: "#fff" } : undefined) }}
+            {...testAttributes(part(node, "settling"), testId === undefined ? undefined : `${testId}-settling`)}
+          >
+            {pending}
+          </span>
+        </>
+      ) : (
+        <Icon name={glyph} size={18} />
+      )}
+      {figure !== undefined && (
         <span
           className="text-on-surface [font-weight:500]"
           style={overMedia ? { color: "#fff" } : undefined}
           {...testAttributes(part(node, "value"))}
         >
-          {value}
+          {figure}
         </span>
       )}
     </Link>

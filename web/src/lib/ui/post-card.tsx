@@ -162,6 +162,9 @@ function CommentCount({
   );
 }
 
+/** A portrait clip's door on a card, the one media door that leads elsewhere (copy-voice). */
+export const OPEN_THE_STREAM = "Open the stream";
+
 export function PostCard({
   post: given,
   variant = "summary",
@@ -181,6 +184,7 @@ export function PostCard({
   mediaAbove = false,
   onOpenMedia,
   stream,
+  authorHere = false,
   onOpenMenu,
   menuOpen = false,
   node,
@@ -280,12 +284,18 @@ export function PostCard({
   onOpenMedia?: (index: number) => void;
   /**
    * THE STREAM THIS CARD'S SURFACE OPENS (Reel.md:3): where the card stands in
-   * a list the stream narrows — the feed, History — a portrait clip's tap
-   * opens the stream on it, `onOpen` handing the session the surface's list
-   * first. Absent, every media tap opens the post, as on surfaces that draw
-   * no stream case (Saved's, TagPage's; graph.json).
+   * a list the stream narrows — the feed, Saved, History, a profile's posts — a
+   * portrait clip's tap opens the stream on it, `onOpen` handing the session
+   * the surface's list first. Absent, every media tap opens the post, as on
+   * surfaces that draw no stream case (TagPage's; graph.json).
    */
   stream?: { readonly href: string; readonly onOpen: () => void };
+  /**
+   * The card stands on its author's own profile (the posts view), where the
+   * author chip would open the page it is on: the chip is drawn inert
+   * (ProfilePosts.md:25, `ActorChip`'s `here`).
+   */
+  authorHere?: boolean;
 }) {
   const detail = variant === "detail";
   const router = useRouter();
@@ -444,6 +454,7 @@ export function PostCard({
             avatarUrl={post.author.avatar?.url}
             testId={authorTestId}
             node={part(node, "authorChip")}
+            here={authorHere}
           />
         )}
         <div className="flex flex-none items-center gap-3">
@@ -528,6 +539,14 @@ export function PostCard({
       ) : (
         <BodyRegion
           veiled={veiled}
+          marks={post}
+          // THE FACE THE CARD'S MASTER DRAWS (PostCard.jsx): the media face over
+          // pictures or a clip; a words-only post's words blurred in place with
+          // their Show, naming the source itself as the post's only face
+          // (FeedWordsSensitive.md); and words under a clip lifted above the
+          // card (the detail's) leave the line to the clip's face — once per post.
+          face={drawsMedia ? "media" : "text"}
+          named={!media}
           testId={testId}
           nodeId={post.id}
           signature={sensitiveSignature(post)}
@@ -565,6 +584,10 @@ export function PostCard({
                 <Link
                   href={stream.href}
                   onClick={stream.onOpen}
+                  // NAMED FOR ITS ACT, never by the clip's alt text, which
+                  // says what the clip shows and not what the tap does
+                  // (FeedShapes.md; copy-voice, *The stream and the viewer*).
+                  aria-label={OPEN_THE_STREAM}
                   data-testid={`${testId}-stream-link`}
                   className="cg-focus cg-door block"
                 >

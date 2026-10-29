@@ -19,6 +19,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.testing.fakeUpload
+import com.cogra.feature.content.isNode
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.RefusedPick
@@ -62,7 +63,7 @@ class PostEditAddPathsScreenTest {
         val landed = PickedAsset("a.jpg", upload = AssetUpload.Done("m-a"))
         render(edit(pictures(landed)), PostEditActions(onAddMedia = { opened++ }))
 
-        compose.onNodeWithTag("post_edit_add_pictures").performScrollTo()
+        compose.onNodeWithTag("postEdit.body.add").performScrollTo()
             .assertTextContains("+ Add pictures · 2 of 10")
             .performClick()
         assertThat(opened).isEqualTo(1)
@@ -76,16 +77,16 @@ class PostEditAddPathsScreenTest {
         val landed = PickedAsset("a.jpg", upload = AssetUpload.Done("m-a"))
         render(edit(pictures(landed, PickedAsset("b.jpg", upload = AssetUpload.Running))))
 
-        compose.onNodeWithTag("post_edit_gate").assertExists()
+        compose.onNode(isNode("postEdit.gate")).assertExists()
         compose.onNodeWithText("Uploading 1 of 2 — signing waits for the pictures.").assertExists()
-        compose.onNodeWithTag("post_edit_sign").assertIsEnabled()
+        compose.onNode(isNode("postEdit.sign")).assertIsEnabled()
     }
 
     @Test
     fun aGateOnOnePictureNamesThePicture() {
         render(edit(pictures(PickedAsset("a.jpg", upload = AssetUpload.Running))))
 
-        compose.onNodeWithTag("post_edit_gate").assertExists()
+        compose.onNode(isNode("postEdit.gate")).assertExists()
         compose.onNodeWithText("Uploading 0 of 1 — signing waits for the picture.").assertExists()
     }
 
@@ -93,13 +94,13 @@ class PostEditAddPathsScreenTest {
     fun aFailedPictureIsMarkedLinedUnderTheRowAndSignIsDisabled() {
         render(edit(pictures(PickedAsset("a.jpg", upload = AssetUpload.Failed(UploadFailure.TRANSPORT)))))
 
-        compose.onNodeWithTag("post_edit_upload_error").performScrollTo()
+        compose.onNodeWithTag("postEdit.body.uploadError").performScrollTo()
             .assertTextContains("One picture didn't upload.", substring = true)
             .assertTextContains("Retry", substring = true)
             .assertTextContains("Remove it", substring = true)
-        compose.onNodeWithTag("post_edit_gate")
+        compose.onNode(isNode("postEdit.gate"))
             .assertTextContains("One picture didn't upload. Signing waits for it.", substring = true)
-        compose.onNodeWithTag("post_edit_sign").assertIsNotEnabled()
+        compose.onNode(isNode("postEdit.sign")).assertIsNotEnabled()
     }
 
     @Test
@@ -107,10 +108,10 @@ class PostEditAddPathsScreenTest {
         val failed = AssetUpload.Failed(UploadFailure.TRANSPORT)
         render(edit(pictures(PickedAsset("a.jpg", upload = failed), PickedAsset("b.jpg", upload = failed))))
 
-        compose.onNodeWithTag("post_edit_upload_error").performScrollTo()
+        compose.onNodeWithTag("postEdit.body.uploadError").performScrollTo()
             .assertTextContains("2 pictures didn't upload.", substring = true)
             .assertTextContains("Remove them", substring = true)
-        compose.onNodeWithTag("post_edit_gate")
+        compose.onNode(isNode("postEdit.gate"))
             .assertTextContains("2 pictures didn't upload. Signing waits for them.", substring = true)
     }
 
@@ -135,8 +136,8 @@ class PostEditAddPathsScreenTest {
         )
         compose.mainClock.advanceTimeBy(SLOW_ANSWER_MS + 100)
 
-        compose.onNodeWithTag("post_edit_sign").assertTextContains("Signing the edit…").assertIsEnabled()
-        compose.onNodeWithTag("post_edit_header_leave").performClick()
+        compose.onNode(isNode("postEdit.sign")).assertTextContains("Signing the edit…").assertIsEnabled()
+        compose.onNodeWithTag("postEdit.header.leave").performClick()
         assertThat(leaves).isEqualTo(0)
     }
 
@@ -154,8 +155,8 @@ class PostEditAddPathsScreenTest {
         var opened = 0
         render(PostEditUiState(postId = "p1", body = "Salt maps"), PostEditActions(onAddMedia = { opened++ }))
 
-        compose.onNodeWithTag("post_edit_words").assertIsFocused()
-        compose.onNodeWithTag("post_edit_add_media").assertTextContains("+ Add pictures or a video").performClick()
+        compose.onNodeWithTag("postEdit.body.words.input").assertIsFocused()
+        compose.onNodeWithTag("postEdit.body.add").assertTextContains("+ Add pictures or a video").performClick()
         assertThat(opened).isEqualTo(1)
     }
 
@@ -182,8 +183,8 @@ class PostEditAddPathsScreenTest {
 
         compose.onNodeWithText("Video").assertExists()
         compose.onNodeWithText("Describe the video").assertExists()
-        compose.onNodeWithTag("post_edit_clip_note").assertTextContains("A video is the whole post.")
-        compose.onNodeWithTag("post_edit_add_pictures").assertDoesNotExist()
+        compose.onNodeWithTag("postEdit.video.rule").assertTextContains("A video is the whole post.")
+        compose.onNodeWithTag("postEdit.body.add").assertDoesNotExist()
         compose.onNodeWithContentDescription("Remove this video").performClick()
         assertThat(removed).isEqualTo(0)
     }
@@ -194,10 +195,10 @@ class PostEditAddPathsScreenTest {
         val taken = clip.copy(cover = fakeUpload("p9"), coverTaken = true)
         render(edit(EditGallery.of(listOf(taken))), PostEditActions(onPickCover = { picked++ }))
 
-        compose.onNodeWithTag("post_edit_cover_note").performScrollTo()
+        compose.onNodeWithTag("postEdit.cover.note").performScrollTo()
             .assertTextContains("It plays the moment it is on screen, so it starts on its own first frame.")
-        compose.onNodeWithTag("post_edit_change_cover").assertDoesNotExist()
-        compose.onNodeWithTag("post_edit_add_cover").assertTextContains("Add a cover").performClick()
+        compose.onNodeWithTag("postEdit.cover.change").assertDoesNotExist()
+        compose.onNodeWithTag("postEdit.cover.add").assertTextContains("Add a cover").performClick()
         assertThat(picked).isEqualTo(1)
     }
 
@@ -206,9 +207,9 @@ class PostEditAddPathsScreenTest {
         val chosen = clip.copy(cover = fakeUpload("p8"), coverTaken = false)
         render(edit(EditGallery.of(listOf(chosen))))
 
-        compose.onNodeWithTag("post_edit_cover").assertExists()
-        compose.onNodeWithTag("post_edit_change_cover").assertTextContains("Change the cover")
-        compose.onNodeWithTag("post_edit_add_cover").assertDoesNotExist()
+        compose.onNodeWithTag("postEdit.cover.thumb").assertExists()
+        compose.onNodeWithTag("postEdit.cover.change").assertTextContains("Change the cover")
+        compose.onNodeWithTag("postEdit.cover.add").assertDoesNotExist()
     }
 
     @Test
@@ -216,9 +217,9 @@ class PostEditAddPathsScreenTest {
         val gallery = EditGallery.of(listOf(clip)).withNewCover(PickedAsset("face.jpg", upload = AssetUpload.Running))
         render(edit(gallery))
 
-        compose.onNodeWithTag("post_edit_gate").assertExists()
+        compose.onNode(isNode("postEdit.gate")).assertExists()
         compose.onNodeWithText("Uploading 0 of 1 — signing waits for the cover.").assertExists()
-        compose.onNodeWithTag("post_edit_sign").assertIsEnabled()
+        compose.onNode(isNode("postEdit.sign")).assertIsEnabled()
     }
 
     @Test
@@ -230,7 +231,7 @@ class PostEditAddPathsScreenTest {
 
         compose.onNodeWithTag("post_edit_cover_error").performScrollTo()
             .assertTextContains("One picture didn't upload.", substring = true)
-        compose.onNodeWithTag("post_edit_sign").assertIsNotEnabled()
+        compose.onNode(isNode("postEdit.sign")).assertIsNotEnabled()
     }
 
     // -- The crops (ComposeCrop.md, CoverCrop.md) --
@@ -244,7 +245,7 @@ class PostEditAddPathsScreenTest {
         )
 
         compose.onNodeWithText("Crop").assertExists()
-        compose.onNodeWithTag("post_edit_crop_shapes").assertDoesNotExist()
+        compose.onNodeWithTag("composeCrop.shapes").assertDoesNotExist()
         compose.onNodeWithContentDescription("Back to the edit").assertExists()
         compose.onNodeWithContentDescription(EDIT_LEAVE_LABEL).assertExists()
     }
@@ -259,7 +260,7 @@ class PostEditAddPathsScreenTest {
             ),
         )
 
-        compose.onNodeWithTag("post_edit_crop_shapes").assertExists()
+        compose.onNodeWithTag("composeCrop.shapes").assertExists()
     }
 
     @Test
@@ -274,8 +275,8 @@ class PostEditAddPathsScreenTest {
         compose.onNodeWithText("The cover").assertExists()
         compose.onNodeWithText(CROP_HOW_TO_LINE).assertExists()
         compose.onNodeWithText(COVER_CROP_LINE).assertExists()
-        compose.onNodeWithTag("post_edit_crop_shapes").assertDoesNotExist()
-        compose.onNodeWithTag("post_edit_crop_next").performClick()
+        compose.onNodeWithTag("composeCrop.shapes").assertDoesNotExist()
+        compose.onNodeWithTag("coverCrop.next").performClick()
         compose.onNodeWithContentDescription("Back to the edit").performClick()
         assertThat(next).isEqualTo(1)
         assertThat(back).isEqualTo(1)

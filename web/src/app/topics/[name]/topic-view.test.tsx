@@ -49,6 +49,8 @@ function postNode(id: string, title: string) {
     content: moderated(`body of ${id}`),
     attachments: [],
     attachmentsStatus: "NORMAL",
+    sensitiveSelfMark: false,
+    sensitiveReason: null,
     author: {
       __typename: "User",
       id: "u1",

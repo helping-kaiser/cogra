@@ -34,6 +34,8 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.deletion.AccountDeletion
 import com.cogra.domain.deletion.DeletionStanding
+import com.cogra.domain.feed.FeedFilter
+import com.cogra.domain.feed.FeedOrder
 import com.cogra.domain.stance.StanceInputMode
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -60,6 +62,10 @@ class SettingsScreenTest {
     }
 
     private fun node(tag: String) = compose.onNodeWithTag(tag, useUnmergedTree = true)
+
+    /** The dialog body's paragraph [text] (`DialogSurface`'s body holds its paragraphs). */
+    private fun dialogBody(tag: String, text: String) =
+        compose.onNode(hasText(text) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true).assertExists()
 
     /** A part inside the keyed session row [key]. */
     private fun sessionPart(key: Int, part: String) = compose.onNode(
@@ -317,6 +323,48 @@ class SettingsScreenTest {
         node("settings.reading.feed.value").assertTextEquals("Posts")
     }
 
+    // SettingsReading.md: "WHEN press Done -> ... the What your feed shows row
+    // reads it back in the filter pill's words" — against CoGra's default.
+    @Test
+    fun theReadingRowReadsTheSavedDefaultInThePillsWords() {
+        render(
+            SettingsUiState(
+                account = account(),
+                now = NOW,
+                readerDefault = FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST),
+            ),
+        )
+        node("settings.reading.feed.value").assertTextEquals("Posts · newest")
+    }
+
+    // SettingsReading.md:3 — "WHEN tap What your feed shows -> the filter sheet
+    // opens over settings, titled What your feed shows".
+    @Test
+    fun theReadingRowOpensTheSheet() {
+        var opened = 0
+        render(actions = SettingsActions(onOpenReading = { opened++ }))
+        node("settings.reading.feed").performScrollTo().performClick()
+        assertThat(opened).isEqualTo(1)
+    }
+
+    @Test
+    fun theSheetOverSettingsIsTitledWithItsNoteAndItsDoneCommits() {
+        var done = 0
+        render(
+            SettingsUiState(account = account(), now = NOW, readingSheet = FeedFilter.DEFAULT),
+            actions = SettingsActions(onReadingDone = { done++ }),
+        )
+        node("settings.feedSheet").assertExists()
+        compose.onNode(
+            hasText("What your feed shows") and hasAnyAncestor(hasTestTag("settings.feedSheet.title")),
+            useUnmergedTree = true,
+        ).assertExists()
+        node("settings.feedSheet.title.help").assertExists()
+        node("settings.feedSheet.note").assertTextEquals("Every feed starts from this.")
+        node("settings.feedSheet.foot.done").performClick()
+        assertThat(done).isEqualTo(1)
+    }
+
     @Test
     fun theRecoveryRowReadsTheDateItWasMade() {
         render()
@@ -495,7 +543,8 @@ class SettingsScreenTest {
     fun `dialog_names_key_draft_and_kept_picks`() {
         render(SettingsUiState(account = account(keyBackupCreatedAt = null), now = NOW, signOutConfirmOpen = true))
         node("settings.dialog.title").assertTextEquals("Sign out without a backup?")
-        node("settings.dialog.body").assertTextEquals(
+        dialogBody(
+            "settings.dialog.body",
             "This app holds the only copy of your key. Signing out leaves your key, your draft and any opinions " +
                 "you kept pending here, locked until you sign in again. Erase them instead, and no " +
                 "one — including CoGra — can bring them back.",
@@ -566,7 +615,8 @@ class SettingsScreenTest {
         )
         node("settings.dialog.title").assertTextEquals("Erase everything from this app?")
         node("settings.dialog.title").assertIsFocused()
-        node("settings.dialog.body").assertTextEquals(
+        dialogBody(
+            "settings.dialog.body",
             "This app holds the only copy of your key, and it has no recovery code. Erase everything and your " +
                 "account is gone for good — no one, including CoGra, can bring it back. Your draft, any kept " +
                 "picks and the choices kept on this device go too, and you're signed out.",
@@ -587,7 +637,8 @@ class SettingsScreenTest {
             SettingsUiState(account = account(), now = NOW, eraseConfirmOpen = true),
             actions = SettingsActions(onEraseEverything = { erase++ }, onDismissEraseConfirm = { cancel++ }),
         )
-        node("settings.dialog.body").assertTextEquals(
+        dialogBody(
+            "settings.dialog.body",
             "Your key is erased with everything else, and only your recovery code can bring it back — without " +
                 "the code, your account is gone for good. Your draft, any kept picks and the choices kept on " +
                 "this device go too, and you're signed out. What you've seen comes back when you sign in.",

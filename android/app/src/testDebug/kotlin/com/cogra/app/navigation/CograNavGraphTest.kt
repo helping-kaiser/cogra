@@ -101,6 +101,8 @@ class CograNavGraphTest {
 
     @Inject lateinit var reveals: com.cogra.domain.content.SensitiveReveals
 
+    @Inject lateinit var readerDefaults: com.cogra.domain.testing.InMemoryReaderDefaultStore
+
     private lateinit var navController: TestNavHostController
 
     @Before
@@ -242,7 +244,7 @@ class CograNavGraphTest {
         // count raises (`ReplyEntry`).
         waitForTag("postDetail.card.actionRow.comments")
         compose.onNodeWithTag("postDetail.card.actionRow.comments").performClick()
-        waitForTag("detail_comment_c1")
+        waitForTag("postDetail.threadSheet.commentCard:c1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
 
         // A read drill-in keeps the frame and carries its own back arrow
@@ -458,6 +460,11 @@ class CograNavGraphTest {
             post = post,
             comments = com.cogra.domain.Page(emptyList(), null, hasNextPage = false),
         )
+        // A sensitive body reaches the feed only with Also show's Sensitive on
+        // (FeedSheet.md:43: off by default) — so this reader set it in Settings.
+        runBlocking {
+            readerDefaults.save("u1", com.cogra.domain.feed.FeedFilter.DEFAULT.copy(showSensitive = true))
+        }
         reveals.reveal(
             "p1",
             com.cogra.domain.content.SensitiveMark(
@@ -830,8 +837,8 @@ class CograNavGraphTest {
         render()
 
         // The husk state offers restore; take it.
-        waitForTag("home_restore")
-        compose.onNodeWithTag("home_restore").performClick()
+        waitForTag("feed.keyCard.restore")
+        compose.onNodeWithTag("feed.keyCard.restore").performClick()
         compose.waitForIdle()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Restore>()).isTrue()
 
@@ -845,7 +852,7 @@ class CograNavGraphTest {
         // before a poll can catch it here.)
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Feed>() == true &&
-                compose.onAllNodesWithTag("home_restore").fetchSemanticsNodes().isEmpty()
+                compose.onAllNodesWithTag("feed.keyCard.restore").fetchSemanticsNodes().isEmpty()
         }
         assertThat(identity.seed).isEqualTo(actor.seed())
     }

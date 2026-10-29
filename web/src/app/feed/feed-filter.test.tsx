@@ -65,6 +65,8 @@ function post(id: string, change: Record<string, unknown> = {}): Node {
     content: moderated(`body of ${id}`),
     attachments: [],
     attachmentsStatus: "NORMAL",
+    sensitiveSelfMark: false,
+    sensitiveReason: null,
     author: {
       __typename: "User",
       id: "u1",
@@ -95,6 +97,8 @@ function comment(id: string): Node {
     content: moderated("The third headland light is real"),
     attachments: [],
     attachmentsStatus: "NORMAL",
+    sensitiveSelfMark: false,
+    sensitiveReason: null,
     author: { __typename: "User", id: "u2", handle: "tobias", displayName: moderated("Tobias"), avatar: null },
     createdAt: "2026-10-27T10:00:00Z",
     updatedAt: "2026-10-27T10:00:00Z",

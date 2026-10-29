@@ -56,12 +56,15 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
  * from Explore lights Explore"); anything else — the feed, a link, a
  * notification — lights the Feed, where author chips and links land. A row
  * on your own opinions page belongs to the Profile stack too
- * (`from=opinions`, ProfileStances.md:27).
+ * (`from=opinions`, ProfileStances.md:49, :51). A row on someone else's keeps the
+ * root that page's stack began in — the origin its token chains
+ * (`from=opinions:ada/saved`; ProfileStances.md:51; readme §4: "a stack is
+ * where a screen was opened FROM") — never Feed by default.
  */
 export function detailRoot(from: string | null): NavSlot {
   if (from === "search") return "search";
   const opinions = parseOpinionsOrigin(from);
-  if (opinions !== null) return opinions.handle === null ? "profile" : "feed";
+  if (opinions !== null) return opinions.handle === null ? "profile" : detailRoot(opinions.from);
   return from === "saved" || from === "history" || from === "profile" ? "profile" : "feed";
 }
 
@@ -135,7 +138,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // (`design/designs/canonical/nodes.json` registers `feed.bottomBar`,
   // `postDetail.bottomBar`, `profile.bottomBar`, `saved.bottomBar`,
   // `history.bottomBar` and `wallet.bottomBar`), so the registered screens name it by route. Your
-  // own profile and someone else's are one surface (`Profile`, `ProfileOther`: the `profile` prefix).
+  // own profile and someone else's are one surface (`Profile`, `ProfileOther`: the `profile` prefix),
+  // and the opinions page is one surface under either root (`profileStances`).
   const screen =
     pathname === "/feed"
       ? "feed"
@@ -148,6 +152,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               "feedEntry"
           : pathname === "/profile" || /^\/u\/[^/]+$/.test(pathname)
             ? "profile"
+            : pathname === "/profile/opinions" || OPINIONS_DRILL_IN.test(pathname)
+              ? "profileStances"
             : pathname === "/saved"
               ? "saved"
               : pathname === "/history"
@@ -166,8 +172,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     screen === "feedEntry" ||
     (screen === "profile" && pathname !== "/profile") ||
     // Someone's opinions page keeps lit what their profile did: its `from`
-    // is the profile's own (ProfileStances.md:27). Unregistered, so the bar
-    // keeps its own ids.
+    // is the profile's own (ProfileStances.md:49).
     OPINIONS_DRILL_IN.test(pathname);
   const scroller = useRef<HTMLDivElement>(null);
   const rootSlot = ROOT_OF[pathname];

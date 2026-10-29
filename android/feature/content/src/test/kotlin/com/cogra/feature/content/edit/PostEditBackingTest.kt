@@ -48,18 +48,18 @@ class PostEditBackingTest {
     @Test
     fun theBackingRowReadsOneNumberUnderTheLicense() {
         render(PostEditUiState(postId = "p1", body = "b", backing = standing))
-        compose.onNodeWithTag("post_edit_backing").performScrollTo()
-        compose.onNodeWithTag("post_edit_backing_label", useUnmergedTree = true).assertTextEquals("Your backing")
-        compose.onNodeWithTag("post_edit_backing_value")
+        compose.onNodeWithTag("postEdit.facts.backing").performScrollTo()
+        compose.onNodeWithTag("postEdit.facts.backing.label", useUnmergedTree = true).assertTextEquals("Your backing")
+        compose.onNodeWithTag("postEdit.facts.backing.value")
             .assertContentDescriptionEquals("Nice, For or against +0.10")
-        compose.onNodeWithTag("post_edit_backing_action").assertTextEquals("Adjust").performClick()
+        compose.onNodeWithTag("postEdit.facts.backing.action").assertTextEquals("Adjust").performClick()
         assertThat(calls).containsExactly("open")
     }
 
     @Test
     fun theRowReadsTheBackingAfterOnceAPickIsSet() {
         render(PostEditUiState(postId = "p1", body = "b", backing = standing, pick = 0.3))
-        compose.onNodeWithTag("post_edit_backing_value")
+        compose.onNodeWithTag("postEdit.facts.backing.value")
             .assertContentDescriptionEquals("Like this, For or against +0.40")
     }
 
@@ -67,7 +67,7 @@ class PostEditBackingTest {
     fun anUnservedBackingIsADashOnTheRow() {
         render(PostEditUiState(postId = "p1", body = "b"))
         compose.onNodeWithTag("post_edit_backing_unread").performScrollTo().assertTextEquals(BACKING_UNREAD_MARK)
-        compose.onNodeWithTag("post_edit_backing_value").assertDoesNotExist()
+        compose.onNodeWithTag("postEdit.facts.backing.value").assertDoesNotExist()
     }
 
     @Test

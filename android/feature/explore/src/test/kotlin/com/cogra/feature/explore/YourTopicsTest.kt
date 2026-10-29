@@ -30,9 +30,9 @@ import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 
 private val HELD = listOf(
-    HeldTopic("saltmaps", 0.6, 0.35, pending = false),
-    HeldTopic("fieldnotes", 0.3, 0.15, pending = true),
-    HeldTopic("wellness", -0.65, -0.3, pending = false),
+    HeldTopic("saltmaps", 0.6, 0.35, pending = false, id = "h-saltmaps"),
+    HeldTopic("fieldnotes", 0.3, 0.15, pending = true, id = "h-fieldnotes"),
+    HeldTopic("wellness", -0.65, -0.3, pending = false, id = "h-wellness"),
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -78,11 +78,11 @@ class YourTopicsScreenTest {
         render(YourTopicsUiState(loading = false, topics = HELD), onOpen = { opened += it })
         compose.onNodeWithText("#saltmaps", useUnmergedTree = true).assertExists()
         compose.onNodeWithText("#wellness", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("yourTopics.row:fieldnotes", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("yourTopics.heldTopic:fieldnotes", useUnmergedTree = true).assertExists()
         compose.onAllNodesWithText("Still settling", useUnmergedTree = true).fetchSemanticsNodes().let {
             assertThat(it).isNotEmpty()
         }
-        compose.onNodeWithTag("yourTopics.row:saltmaps", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("yourTopics.heldTopic:saltmaps", useUnmergedTree = true).performClick()
         assertThat(opened).containsExactly("saltmaps")
     }
 

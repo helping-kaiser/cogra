@@ -47,6 +47,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
@@ -93,11 +95,23 @@ const val EDIT_COUNT_CHANGED_LINE = "The count changed while you were editing �
  * `You're signing N things ⌄` — the whole line is the control, opening the
  * acts sheet; at zero it is `Nothing to sign yet`, plain text and no control.
  * [subline] stands under it: the slow line or the count line.
+ *
+ * On a registered screen the foot wears [node] (`postEdit.acts`, keyed by the
+ * state it draws), its line `line` and the subline [sublinePart] where the
+ * board names it (`slow`).
  */
 @Composable
-fun ActsFooter(count: Int, onOpen: () -> Unit, testTag: String, subline: String? = null) {
+fun ActsFooter(
+    count: Int,
+    onOpen: () -> Unit,
+    testTag: String,
+    subline: String? = null,
+    node: DataNode? = null,
+    sublinePart: String? = null,
+) {
+    val lineTag = node?.div("line")?.tag ?: testTag
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().dataNode(node),
         verticalArrangement = Arrangement.spacedBy(2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -107,7 +121,7 @@ fun ActsFooter(count: Int, onOpen: () -> Unit, testTag: String, subline: String?
                 text = line,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag(testTag),
+                modifier = Modifier.testTag(lineTag),
             )
         } else {
             Row(
@@ -117,7 +131,7 @@ fun ActsFooter(count: Int, onOpen: () -> Unit, testTag: String, subline: String?
                     // 14 over the commit as drawn rather than 48dp tall.
                     .hitTarget(
                         interactive = Modifier
-                            .testTag(testTag)
+                            .testTag(lineTag)
                             .clickable(role = Role.Button, onClick = onOpen),
                         drawnHeight = FOOT_LINE,
                     ),
@@ -144,7 +158,7 @@ fun ActsFooter(count: Int, onOpen: () -> Unit, testTag: String, subline: String?
                 color = MaterialTheme.colorScheme.tertiary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .testTag("${testTag}_subline")
+                    .testTag(sublinePart?.let { node?.div(it)?.tag } ?: "${testTag}_subline")
                     .semantics { liveRegion = LiveRegionMode.Polite },
             )
         }
@@ -216,11 +230,15 @@ private fun ActRow(row: EditActRow, testTag: String) {
     }
 }
 
-/** `Withdrawn: #coastroad  Undo` — one line per withdrawn item, under its block. */
+/**
+ * `Withdrawn: #coastroad  Undo` — one line per withdrawn item, under its block.
+ * On a registered screen the line wears [node] (`postEdit.tags.withdrawn`) and
+ * its Undo `undo`.
+ */
 @Composable
-fun WithdrawnLine(name: String, onUndo: () -> Unit, testTag: String) {
+fun WithdrawnLine(name: String, onUndo: () -> Unit, testTag: String, node: DataNode? = null) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().dataNode(node),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x1),
     ) {
@@ -228,13 +246,13 @@ fun WithdrawnLine(name: String, onUndo: () -> Unit, testTag: String) {
             text = "Withdrawn: $name",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.testTag(testTag),
+            modifier = if (node == null) Modifier.testTag(testTag) else Modifier,
         )
         InlineAction(
             text = "Undo",
             onClick = onUndo,
             modifier = Modifier.semantics { contentDescription = "Undo withdrawing $name" },
-            testTag = "${testTag}_undo",
+            testTag = node?.div("undo")?.tag ?: "${testTag}_undo",
         )
     }
 }
@@ -243,16 +261,18 @@ fun WithdrawnLine(name: String, onUndo: () -> Unit, testTag: String) {
  * The license as signed, and locked: the lock is a mark rather than an
  * action — a license is published with the content and never changes, so the
  * row shows what was declared and says why nothing can be done about it.
+ * On a registered screen the row wears [node] (`postEdit.facts.license`) and
+ * its parts `label`, `value` and `lock`.
  */
 @Composable
-fun LockedLicenseRow(name: String, testTag: String) {
+fun LockedLicenseRow(name: String, testTag: String, node: DataNode? = null) {
     Column(Modifier.fillMaxWidth()) {
         Hairline()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 44.dp)
-                .testTag(testTag),
+                .testTag(node?.tag ?: testTag),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
@@ -260,19 +280,19 @@ fun LockedLicenseRow(name: String, testTag: String) {
                 text = "License",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).dataNode(node?.div("label")),
             )
             Text(
                 text = name,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag("${testTag}_value"),
+                modifier = Modifier.testTag(node?.div("value")?.tag ?: "${testTag}_value"),
             )
             Icon(
                 imageVector = Icons.Filled.Lock,
                 contentDescription = stringResource(R.string.content_license_locked),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(16.dp).dataNode(node?.div("lock")),
             )
         }
         Hairline()

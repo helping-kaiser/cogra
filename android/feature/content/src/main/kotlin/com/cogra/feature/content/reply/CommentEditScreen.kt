@@ -28,6 +28,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
@@ -353,7 +356,8 @@ internal fun CommentEditScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .testTag("comment_edit"),
+            .testTag("comment_edit")
+            .dataNodeSurface(),
     ) {
         WizardHeader(
             title = "Edit comment",
@@ -367,12 +371,13 @@ internal fun CommentEditScreen(
             helpContentDescription = HelpTopic.Editing.title,
             titleFocus = heading,
             testTag = "comment_edit_header",
+            node = COMMENT_EDIT / "header",
         )
 
         WizardBody(gap = FIELD_GAP, top = Space.x3, bottom = Space.x2, scrollable = true) {
             QuietNote(
                 text = "Your comment on \"${state.parentTitle}\".",
-                modifier = Modifier.testTag("comment_edit_caption"),
+                modifier = Modifier.dataNode(COMMENT_EDIT / "target"),
             )
 
             CograTextField(
@@ -390,6 +395,7 @@ internal fun CommentEditScreen(
                     null
                 },
                 testTag = "comment_edit_body",
+                node = COMMENT_EDIT / "words",
             )
 
             Media(state, actions)
@@ -432,6 +438,7 @@ private fun ClipMedia(clip: EditPicture.Kept, state: CommentEditState, actions: 
         onDescribe = actions.onDescribePictures,
         testTagPrefix = "comment_edit",
         squareTile = COMMENT_TILE,
+        node = COMMENT_EDIT / "video",
     )
     CoverField(
         gallery = state.gallery,
@@ -441,13 +448,15 @@ private fun ClipMedia(clip: EditPicture.Kept, state: CommentEditState, actions: 
         testTagPrefix = "comment_edit",
         doorNote = false,
         squareTile = COMMENT_TILE,
+        node = COMMENT_EDIT / "cover",
     )
 }
 
 /** `CommentEdit`'s pictures: each the 56 square with its own ×, the add control beside them. */
 @Composable
 private fun PictureMedia(state: CommentEditState, actions: CommentEditActions) {
-    EditFieldGroup(label = "Pictures") {
+    val pictures = COMMENT_EDIT / "pictures"
+    EditFieldGroup(label = "Pictures", node = pictures) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
@@ -462,8 +471,8 @@ private fun PictureMedia(state: CommentEditState, actions: CommentEditActions) {
                     uploading = picture.uploading,
                     progress = picture.progress,
                     onRemove = { actions.onRemovePickAt(index) },
-                    removeTestTag = "comment_edit_tray_${index}_remove",
-                    testTag = "comment_edit_tray_$index",
+                    removeTestTag = (pictures / "thumb" / "remove").tag,
+                    testTag = (pictures / "thumb").keyed("${index + 1}").tag,
                 )
             }
             InlineAction(
@@ -473,6 +482,7 @@ private fun PictureMedia(state: CommentEditState, actions: CommentEditActions) {
                 onClick = actions.onOpenPicker,
                 size = InlineSize.Small,
                 testTag = "comment_edit_add",
+                node = pictures / "add",
             )
         }
         EditUploadErrorLine(
@@ -488,6 +498,7 @@ private fun PictureMedia(state: CommentEditState, actions: CommentEditActions) {
                 total = state.gallery.size,
                 onDescribe = actions.onDescribePictures,
                 testTag = "comment_edit_describe_counter",
+                node = pictures / "describeRow",
             )
         }
     }
@@ -495,10 +506,22 @@ private fun PictureMedia(state: CommentEditState, actions: CommentEditActions) {
 
 @Composable
 private fun Sections(state: CommentEditState, actions: CommentEditActions) {
-    EditFieldGroup(label = "Tags") {
+    Tags(state, actions)
+    References(state, actions)
+}
+
+/** The comment's tags, and a line under them for each one withdrawn. */
+@Composable
+private fun Tags(state: CommentEditState, actions: CommentEditActions) {
+    val tags = COMMENT_EDIT / "tags"
+    EditFieldGroup(label = "Tags", node = tags) {
         TopicEntry(
             section = state.tagSection,
             testTagPrefix = "comment_edit",
+            node = tags,
+            wearsRoot = false,
+            // The edit's tags are the composer's staged pills (`TopicRemovable`, EditCompose).
+            staged = true,
             onTagInputChange = actions.onTagInputChange,
             onAddTag = actions.onAddTag,
             onRemoveTag = actions.onRemoveTag,
@@ -514,14 +537,24 @@ private fun Sections(state: CommentEditState, actions: CommentEditActions) {
                 name = "#$name",
                 onUndo = { actions.onUndoTagWithdrawal(name) },
                 testTag = "comment_edit_withdrawn_tag_$name",
+                node = tags / "withdrawn",
             )
         }
     }
+}
 
-    EditFieldGroup(label = "References") {
+/** The comment's citations, the unlanded one's line, and a line for each one withdrawn. */
+@Composable
+private fun References(state: CommentEditState, actions: CommentEditActions) {
+    val references = COMMENT_EDIT / "references"
+    EditFieldGroup(label = "References", node = references) {
         ReferenceEntry(
             section = state.referenceSection,
             testTagPrefix = "comment_edit",
+            node = references,
+            wearsRoot = false,
+            // A standing citation is the composer's staged row (`StagedReference`, EditCompose).
+            staged = true,
             onOpenFinder = actions.onOpenFinder,
             onCloseFinder = actions.onCloseFinder,
             onFinderQueryChange = actions.onFinderQueryChange,
@@ -552,6 +585,7 @@ private fun Sections(state: CommentEditState, actions: CommentEditActions) {
                 name = row.label(),
                 onUndo = { actions.onUndoReferenceWithdrawal(row.targetId) },
                 testTag = "comment_edit_withdrawn_reference_${row.targetId}",
+                node = references / "withdrawn",
             )
         }
     }
@@ -559,22 +593,14 @@ private fun Sections(state: CommentEditState, actions: CommentEditActions) {
 
 @Composable
 private fun Terms(state: CommentEditState, actions: CommentEditActions) {
-    LockedLicenseRow(
-        name = licenseName(state.license.attribution, state.license.provenance),
-        testTag = "comment_edit_license",
-    )
-    // The license keeps its lock; this row does not. The license is fixed
-    // by contract the moment it is signed, while the mark is the author's
-    // ongoing judgment about their own words (design/backlog.md item 25
-    // part 2).
-    SettingRow(
-        label = "Sensitive",
-        value = if (state.sensitive) "Marked" else "Not marked",
-        actionText = if (state.sensitive) "Change" else "Mark",
-        onAction = actions.onOpenSensitive,
-        testTag = "comment_edit_sensitive",
-    )
-    Hairline()
+    val facts = COMMENT_EDIT / "facts"
+    // The two rows are one block on the board (`facts`), in the edit's field rhythm.
+    Column(
+        modifier = Modifier.fillMaxWidth().dataNode(facts),
+        verticalArrangement = Arrangement.spacedBy(FIELD_GAP),
+    ) {
+        FactRows(state, actions, facts)
+    }
 
     state.problem()?.let { message ->
         Text(
@@ -589,17 +615,48 @@ private fun Terms(state: CommentEditState, actions: CommentEditActions) {
     }
 }
 
+@Composable
+private fun FactRows(state: CommentEditState, actions: CommentEditActions, facts: DataNode) {
+    LockedLicenseRow(
+        name = licenseName(state.license.attribution, state.license.provenance),
+        testTag = "comment_edit_license",
+        node = facts / "license",
+    )
+    // The license keeps its lock; this row does not. The license is fixed
+    // by contract the moment it is signed, while the mark is the author's
+    // ongoing judgment about their own words (design/backlog.md item 25
+    // part 2).
+    SettingRow(
+        label = "Sensitive",
+        value = if (state.sensitive) "Marked" else "Not marked",
+        actionText = if (state.sensitive) "Change" else "Mark",
+        onAction = actions.onOpenSensitive,
+        testTag = "comment_edit_sensitive",
+        node = facts / "sensitive",
+    )
+    Hairline()
+}
+
 /**
  * The foot: the gate over the count over the commit — or, in the commit's
  * place, the write rule's notice or the bug notice (CommentEdit.md).
  */
 @Composable
 private fun Foot(state: CommentEditState, actions: CommentEditActions, slowAnswer: Boolean) {
-    EditUploadGate(state.gallery, onRetry = actions.onRetryUploads, testTag = "comment_edit_gate")
+    EditUploadGate(
+        gallery = state.gallery,
+        onRetry = actions.onRetryUploads,
+        testTag = "comment_edit_gate",
+        node = COMMENT_EDIT / "gate",
+    )
     ActsFooter(
         count = state.signedActionCount,
         onOpen = actions.onOpenActs,
         testTag = "comment_edit_acts_footer",
+        // CommentEditVideo draws the foot once per `upload` value while the clip's cover goes up.
+        node = (COMMENT_EDIT / "acts").keyed(
+            if (state.gallery.clip != null && state.gallery.uploadsPending > 0) "uploading" else "none",
+        ),
         subline = when {
             state.slow -> EDIT_SLOW_LINE
             state.countChanged -> EDIT_COUNT_CHANGED_LINE
@@ -622,7 +679,7 @@ private fun Foot(state: CommentEditState, actions: CommentEditActions, slowAnswe
             onClick = { if (!state.pressed) actions.onSign() },
             enabled = state.canSign || state.pressed,
             modifier = Modifier.fillMaxWidth(),
-            testTag = "comment_edit_sign",
+            testTag = (COMMENT_EDIT / "sign").tag,
         )
     }
 }
@@ -710,6 +767,9 @@ private fun CommentEditSheets(state: CommentEditState, actions: CommentEditActio
         }
     }
 }
+
+/** `CommentEdit`'s registered prefix: both comment edit boards (seam 248). */
+internal val COMMENT_EDIT = DataNode("commentEdit")
 
 /** The one line the edit shows when a submit did not go through. */
 internal fun CommentEditState.problem(): String? = when {

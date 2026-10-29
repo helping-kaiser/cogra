@@ -125,7 +125,7 @@ private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
             // composer (ComposeDetailsReused.md); back returns to the details
             // stage with the draft as it was.
             onOpenPost = { postId -> navController.navigate(PostDetail(postId)) },
-            keyBanner = keyBanner,
+            keyBanner = keyBanner(node = null),
             deletionBand = deletionBand(node = null),
         )
         return
@@ -140,7 +140,7 @@ private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
             navController.popBackStack()
         },
         onBack = { navController.navigateUp() },
-        keyCard = keyBanner,
+        keyCard = keyBanner(node = null),
         deletionBand = deletionBand(node = null),
     )
 }
@@ -178,7 +178,7 @@ private fun ShellScope.ReplyDestination(entry: NavBackStackEntry) {
         // (jakob 2026-09-01).
         onLeave = { navController.navigateUp() },
         onRestoreKey = { navController.navigate(Restore) },
-        keyBanner = keyBanner,
+        keyBanner = keyBanner(node = null),
     )
 }
 

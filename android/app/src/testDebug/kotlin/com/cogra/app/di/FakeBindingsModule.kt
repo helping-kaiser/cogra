@@ -34,11 +34,14 @@ import com.cogra.domain.UserProfile
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.SealedDraftStore
 import com.cogra.domain.deletion.AccountDeletionRepository
+import com.cogra.domain.feed.CommittedFilterStore
+import com.cogra.domain.feed.FeedCard
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
 import com.cogra.domain.feed.FeedRepository
 import com.cogra.domain.feed.RankedEntry
+import com.cogra.domain.feed.ReaderDefaultStore
 import com.cogra.domain.feed.SettlingRow
 import com.cogra.domain.hidden.HiddenRepository
 import com.cogra.domain.history.HistoryRepository
@@ -97,7 +100,9 @@ import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.InMemoryAnnouncedReleaseStore
+import com.cogra.domain.testing.InMemoryCommittedFilterStore
 import com.cogra.domain.testing.InMemoryComposeDraftStore
+import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.InMemorySealedDraftStore
 import com.cogra.domain.testing.RecordingHiddenRepository
 import com.cogra.domain.testing.RecordingNotificationsRepository
@@ -513,6 +518,9 @@ class ListingFeedRepository(private val content: ScriptedContentRepository) : Fe
         val byId = content.listing.associateBy { it.id }
         return Outcome.Success(ids.mapNotNull { byId[it] })
     }
+
+    // The scripted listing carries posts only.
+    override suspend fun cards(ids: List<String>): Outcome<List<FeedCard>> = Outcome.Success(emptyList())
 }
 
 /** The wizard's local draft, in memory (the shared fixture, under the name the app tests use). */
@@ -795,6 +803,20 @@ object FakeBindingsModule {
 
     @Provides
     fun feedRepository(fake: ListingFeedRepository): FeedRepository = fake
+
+    @Provides
+    @Singleton
+    fun inMemoryReaderDefaultStore(): InMemoryReaderDefaultStore = InMemoryReaderDefaultStore()
+
+    @Provides
+    fun readerDefaultStore(fake: InMemoryReaderDefaultStore): ReaderDefaultStore = fake
+
+    @Provides
+    @Singleton
+    fun inMemoryCommittedFilterStore(): InMemoryCommittedFilterStore = InMemoryCommittedFilterStore()
+
+    @Provides
+    fun committedFilterStore(fake: InMemoryCommittedFilterStore): CommittedFilterStore = fake
 
     // A member with nothing standing, by default: no band, and the row opens
     // the request screen. Tests script the grace or the applicant's path.
