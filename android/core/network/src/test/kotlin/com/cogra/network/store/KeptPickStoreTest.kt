@@ -25,7 +25,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 /** Invertible and visibly not a no-op. */
-private class FlipCipher : StoreCipher {
+private class KeptPickCipher : StoreCipher {
     override fun seal(plaintext: ByteArray): ByteArray = byteArrayOf(0x5A) + plaintext.map { (it + 3).toByte() }
 
     override fun open(sealed: ByteArray): ByteArray {
@@ -44,7 +44,7 @@ class KeptPickStoreTest {
     private val file by lazy { File(tmp.newFolder(), "test.preferences_pb") }
 
     private val store: EncryptedStore by lazy {
-        EncryptedStore(PreferenceDataStoreFactory.create(scope = scope) { file }, FlipCipher())
+        EncryptedStore(PreferenceDataStoreFactory.create(scope = scope) { file }, KeptPickCipher())
     }
 
     private val tokens by lazy { TokenStoreImpl(store) }
@@ -79,7 +79,7 @@ class KeptPickStoreTest {
         assertThat(picks.map { it.target }).containsExactly(topic, post).inOrder()
         assertThat(picks.last().pick).isEqualTo(StancePair(0.55, 0.2))
         // Kept in the same millisecond, still strictly after.
-        assertThat(picks.map { it.keptAt }).isStrictlyOrdered()
+        assertThat(picks.map { it.keptAt }).isInStrictOrder()
     }
 
     @Test

@@ -18,6 +18,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.cogra.domain.stance.KeptFamily
 import com.cogra.domain.stance.KeptPick
 import com.cogra.domain.stance.KeptPreview
@@ -191,7 +192,7 @@ class KeptPicksScreenTest {
         render(seal.copy(fault = KeptSealFault.WRITE_RULE), KeptPicksActions(onBackToReview = { back += 1 }))
         compose.onNodeWithText(KEPT_WRITE_RULE_FACT).assertExists()
         compose.onNodeWithTag("keptPicksSeal.foot.sign").assertDoesNotExist()
-        compose.onNodeWithText(KEPT_NOT_NOW).performClick()
+        compose.onNodeWithTag("kept_picks_seal_not_now").performScrollTo().performClick()
         assertThat(back).isEqualTo(1)
     }
 
