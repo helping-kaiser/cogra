@@ -2,6 +2,7 @@ package com.cogra.domain.testing
 
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
+import com.cogra.domain.feed.CommittedFilterStore
 import com.cogra.domain.feed.FeedCard
 import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedKind
@@ -113,5 +114,20 @@ class ScriptedFeedTopics : FeedTopicsRepository {
     override suspend fun heldFor(): Outcome<List<FeedTopic>> {
         reads += 1
         return answer
+    }
+}
+
+/** The committed feed filters on this device, in memory: one per account, the guest's under null. */
+class InMemoryCommittedFilterStore : CommittedFilterStore {
+    val stored = mutableMapOf<String?, FeedFilter>()
+
+    override suspend fun committed(account: String?): FeedFilter? = stored[account]
+
+    override suspend fun commit(account: String?, filter: FeedFilter) {
+        stored[account] = filter
+    }
+
+    override suspend fun forget(account: String?) {
+        stored.remove(account)
     }
 }

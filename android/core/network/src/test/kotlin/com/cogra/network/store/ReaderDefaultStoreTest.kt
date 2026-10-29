@@ -115,6 +115,25 @@ class ReaderDefaultStoreTest {
         assertThat(defaults.now()).isEqualTo(FeedFilter.DEFAULT)
     }
 
+    // FeedSheet.md, round 25: a Done's filter lasts on this device, topic and all,
+    // per account and the guest's apart, and never as the saved default.
+    @Test
+    fun aCommittedFilterRoundTripsWithItsTopicPerAccountAndApartFromTheDefault() = runTest {
+        val committed = CommittedFilterStoreImpl(store)
+        signIn("u1")
+        committed.commit("u1", far)
+        committed.commit(null, FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST))
+        assertThat(committed.committed("u1")).isEqualTo(far)
+        assertThat(committed.committed(null)).isEqualTo(FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST))
+        assertThat(committed.committed("u2")).isNull()
+        assertThat(defaults.now()).isEqualTo(FeedFilter.DEFAULT)
+        assertThat(store.names("feed_filter:")).containsExactly("feed_filter:u1", "feed_filter:guest")
+        committed.forget("u1")
+        assertThat(committed.committed("u1")).isNull()
+        DeviceDataImpl(store).eraseEverything()
+        assertThat(store.names("feed_filter:")).isEmpty()
+    }
+
     @Test
     fun eraseEverythingTakesTheDefault() = runTest {
         signIn("u1")

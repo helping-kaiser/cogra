@@ -34,6 +34,7 @@ import com.cogra.domain.UserProfile
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.SealedDraftStore
 import com.cogra.domain.deletion.AccountDeletionRepository
+import com.cogra.domain.feed.CommittedFilterStore
 import com.cogra.domain.feed.FeedCard
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedRankArgs
@@ -96,6 +97,7 @@ import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.InMemoryAnnouncedReleaseStore
+import com.cogra.domain.testing.InMemoryCommittedFilterStore
 import com.cogra.domain.testing.InMemoryComposeDraftStore
 import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.InMemorySealedDraftStore
@@ -768,6 +770,13 @@ object FakeBindingsModule {
 
     @Provides
     fun readerDefaultStore(fake: InMemoryReaderDefaultStore): ReaderDefaultStore = fake
+
+    @Provides
+    @Singleton
+    fun inMemoryCommittedFilterStore(): InMemoryCommittedFilterStore = InMemoryCommittedFilterStore()
+
+    @Provides
+    fun committedFilterStore(fake: InMemoryCommittedFilterStore): CommittedFilterStore = fake
 
     @Provides
     @Singleton

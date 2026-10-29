@@ -20,6 +20,7 @@ import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.feed.FeedCard
+import com.cogra.domain.feed.CommittedFeedFilter
 import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedForm
 import com.cogra.domain.feed.FeedKind
@@ -36,6 +37,7 @@ import com.cogra.domain.history.TagCardTopic
 import com.cogra.domain.removal.RemovedMarks
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.InMemoryCommittedFilterStore
 import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.RecordingHiddenRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
@@ -82,6 +84,7 @@ class FeedFilterViewModelTest {
     private val defaults = InMemoryReaderDefaultStore()
     private val heldTopics = ScriptedFeedTopics()
     private val removedMarks = RemovedMarks()
+    private val committedFilters = InMemoryCommittedFilterStore()
     private val seenRecord by lazy { SeenRecord(records, server, session, appScope) }
     private val seenTracker by lazy { SeenTracker(history, session, appScope, seenRecord) }
     private val hidden by lazy { HiddenSet(RecordingHiddenRepository(), session, appScope) }
@@ -99,6 +102,7 @@ class FeedFilterViewModelTest {
         ReaderDefaults(defaults, session),
         heldTopics,
         removedMarks,
+        CommittedFeedFilter(committedFilters, session),
     )
 
     private fun FeedViewModel.ids() = state.value.cards.map { it.id }
@@ -173,6 +177,48 @@ class FeedFilterViewModelTest {
         assertThat(vm.state.value.readerDefault).isEqualTo(newer)
         assertThat(vm.state.value.filter).isEqualTo(FeedFilter.DEFAULT)
         assertThat(feed.rankings).hasSize(1)
+    }
+
+    // ── THE COMMITTED FILTER LASTS ON THIS DEVICE (FeedSheet.md, round 25) ──
+
+    @Test
+    fun aCommittedFilterLastsThroughAColdLaunchAndTheFeedOpensWithIt() = runTest(dispatcher) {
+        feed.answer = Outcome.Success(rankingOf("p1", "p2"))
+        val first = viewModel()
+        settle()
+        val done = FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST, topic = FeedTopic("t1", "saltmaps"))
+        first.applyFilter(done)
+        settle()
+        assertThat(committedFilters.stored).containsExactly("u1", done)
+
+        // A fresh process: a new ViewModel over the same device.
+        val relaunched = viewModel()
+        settle()
+        assertThat(relaunched.state.value.filter).isEqualTo(done)
+        assertThat(feed.rankings.last().second).isEqualTo(FeedRankArgs(setOf(FeedKind.POST), "t1"))
+    }
+
+    @Test
+    fun aCommittedFilterNeverChangesTheSavedDefault() = runTest(dispatcher) {
+        feed.answer = Outcome.Success(rankingOf("p1"))
+        val vm = viewModel()
+        settle()
+        vm.applyFilter(FeedFilter.DEFAULT.copy(showSeen = true))
+        settle()
+        assertThat(defaults.saved.value).isEmpty()
+        assertThat(vm.state.value.readerDefault).isEqualTo(FeedFilter.DEFAULT)
+    }
+
+    @Test
+    fun showPostsAgainLeavesNoCommittedFilterStanding() = runTest(dispatcher) {
+        feed.answer = Outcome.Success(rankingOf("p1"))
+        val vm = viewModel()
+        settle()
+        vm.applyFilter(FeedFilter.DEFAULT.copy(kinds = emptySet()))
+        settle()
+        vm.showPostsAgain()
+        settle()
+        assertThat(committedFilters.stored).isEmpty()
     }
 
     // ── FEEDNOTHING (FeedNothing.md) ─────────────────────────────────────

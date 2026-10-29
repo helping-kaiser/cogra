@@ -10,6 +10,7 @@ import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.di.WebOrigin
+import com.cogra.domain.feed.CommittedFeedFilter
 import com.cogra.domain.feed.FeedCard
 import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedKind
@@ -138,6 +139,7 @@ class FeedViewModel @Inject constructor(
     private val readerDefaults: ReaderDefaults,
     private val topics: FeedTopicsRepository,
     private val removedMarks: RemovedMarks,
+    private val committed: CommittedFeedFilter,
 ) : ViewModel() {
 
     /** Whether the reader's hidden set takes [card] out of the feed (hidden-actors §4.3). */
@@ -200,11 +202,13 @@ class FeedViewModel @Inject constructor(
     fun onReveal(nodeId: String, mark: SensitiveMark) = reveals.reveal(nodeId, mark)
 
     init {
-        // EVERY FEED OPENS WITH THE READER'S SAVED DEFAULT (SettingsReading.md),
-        // then the cold-start law (PR-55 (i)): a fresh process ranks afresh.
+        // A FEED OPENS WITH THE FILTER ITS LAST DONE COMMITTED ON THIS DEVICE,
+        // else with the reader's saved default (FeedSheet.md, SettingsReading.md;
+        // round 25) — then the cold-start law (PR-55 (i)): a fresh process ranks afresh.
         viewModelScope.launch {
             val default = readerDefaults.now()
-            _state.update { it.copy(filter = default, readerDefault = default) }
+            val opening = committed.now() ?: default
+            _state.update { it.copy(filter = opening, readerDefault = default) }
             opened.complete(Unit)
         }
         refresh()
@@ -278,6 +282,9 @@ class FeedViewModel @Inject constructor(
         val change = _state.value.filter.changeTo(staged)
         if (change == FilterChange.NONE) return
         _state.update { it.copy(filter = staged) }
+        // IT LASTS ON THIS DEVICE (round 25): through a reload, a restart and a
+        // cold launch, and never as the reader's saved default.
+        viewModelScope.launch { committed.commit(staged) }
         when (change) {
             FilterChange.FETCH -> refresh()
             FilterChange.DERIVE -> rederive()
@@ -289,7 +296,12 @@ class FeedViewModel @Inject constructor(
      * FEEDNOTHING'S WAY BACK (FeedNothing.md:7): the filter returns to its
      * default — the reader's — and the feed shows its default view.
      */
-    fun showPostsAgain() = applyFilter(_state.value.readerDefault)
+    fun showPostsAgain() {
+        applyFilter(_state.value.readerDefault)
+        // Back on the default, nothing committed stands: the feed follows the
+        // saved default again as Settings changes it.
+        viewModelScope.launch { committed.forget() }
+    }
 
     /**
      * THE SHEET OPENED: the topics held for are read at each opening, so one

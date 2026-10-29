@@ -19,6 +19,7 @@ import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.feed.CommittedFeedFilter
 import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedOrder
@@ -38,6 +39,7 @@ import com.cogra.domain.history.StoredSeenRecord
 import com.cogra.domain.removal.RemovedMarks
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.InMemoryCommittedFilterStore
 import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.RecordingHiddenRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
@@ -89,6 +91,7 @@ class FeedViewModelTest {
     private val defaults = InMemoryReaderDefaultStore()
     private val heldTopics = ScriptedFeedTopics()
     private val removedMarks = RemovedMarks()
+    private val committedFilters = InMemoryCommittedFilterStore()
 
     /** The process's record and tracker — built lazily, so a test can script the store first. */
     private val seenRecord by lazy { SeenRecord(records, server, session, appScope) }
@@ -111,6 +114,7 @@ class FeedViewModelTest {
         ReaderDefaults(defaults, session),
         heldTopics,
         removedMarks,
+        CommittedFeedFilter(committedFilters, session),
     )
 
     private fun FeedViewModel.ids() = state.value.posts.map { it.id }
@@ -672,6 +676,7 @@ class FeedViewModelTest {
             ReaderDefaults(defaults, session),
             heldTopics,
             removedMarks,
+            CommittedFeedFilter(committedFilters, session),
         )
         settle()
 
