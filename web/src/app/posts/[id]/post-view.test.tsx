@@ -1474,10 +1474,10 @@ describe("PostView", () => {
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("acct-1"), writeSigner: signer });
     await openComments();
     fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-    const input = screen.getByTestId("comment-edit-input");
+    const input = screen.getByTestId("commentEdit.words.input");
     expect(input).toHaveValue("old words");
     fireEvent.change(input, { target: { value: "better words" } });
-    fireEvent.click(screen.getByTestId("comment-edit-save"));
+    fireEvent.click(screen.getByTestId("commentEdit.sign"));
     await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
     expect(variables).toEqual({
       // The mark is re-stated on the edit: a complete-state write that omitted
@@ -1493,7 +1493,7 @@ describe("PostView", () => {
       },
     });
     // The editor closes and the in-flight notice shows.
-    expect(screen.queryByTestId("comment-edit-input")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("commentEdit.words.input")).not.toBeInTheDocument();
     expect(screen.getByTestId("comment-signed")).toBeInTheDocument();
   });
 
@@ -1529,21 +1529,21 @@ describe("PostView", () => {
 
     it("an_unchanged_edit_leaves_at_once_by_the_x_and_the_back_arrow", async () => {
       await openEdit();
-      fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("commentEdit.header.leave"));
       expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
       expect(screen.queryByTestId("comment-edit-discard-confirm")).not.toBeInTheDocument();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-      fireEvent.click(screen.getByTestId("header-back"));
+      fireEvent.click(screen.getByTestId("commentEdit.header.back"));
       expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
       expect(screen.queryByTestId("comment-edit-discard-confirm")).not.toBeInTheDocument();
     });
 
     it("a_changed_edit_asks_discard_the_changes_before_the_x_leaves", async () => {
       await openEdit();
-      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+      fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "better words" },
       });
-      fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("commentEdit.header.leave"));
       expect(screen.getByTestId("comment-edit")).toBeInTheDocument();
       expect(ask()).toHaveAttribute("open");
       expect(ask()).toHaveTextContent("Discard the changes?");
@@ -1552,19 +1552,19 @@ describe("PostView", () => {
 
     it("a_changed_edit_asks_the_same_before_the_back_arrow_leaves", async () => {
       await openEdit();
-      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+      fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "better words" },
       });
-      fireEvent.click(screen.getByTestId("header-back"));
+      fireEvent.click(screen.getByTestId("commentEdit.header.back"));
       expect(screen.getByTestId("comment-edit")).toBeInTheDocument();
       expect(ask()).toHaveAttribute("open");
     });
 
     it("keep_writing_closes_the_ask_onto_the_edit_as_it_was", async () => {
       await openEdit();
-      const input = screen.getByTestId("comment-edit-input");
+      const input = screen.getByTestId("commentEdit.words.input");
       fireEvent.change(input, { target: { value: "better words" } });
-      fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("commentEdit.header.leave"));
       fireEvent.click(screen.getByTestId("comment-edit-discard-confirm-keep"));
       expect(ask()).not.toHaveAttribute("open");
       expect(screen.getByTestId("comment-edit")).toBeInTheDocument();
@@ -1573,10 +1573,10 @@ describe("PostView", () => {
 
     it("discard_returns_to_the_thread_and_keeps_and_signs_nothing", async () => {
       const { signer, wasPrepared } = await openEdit();
-      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+      fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "better words" },
       });
-      fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("commentEdit.header.leave"));
       fireEvent.click(screen.getByTestId("comment-edit-discard-confirm-discard"));
       expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
       expect(await screen.findByTestId("comment-edit-c1")).toBeInTheDocument();
@@ -1586,7 +1586,7 @@ describe("PostView", () => {
       expect(signer.signStaged).not.toHaveBeenCalled();
       // Reopening starts from the comment, not from the discarded words.
       fireEvent.click(screen.getByTestId("comment-edit-c1"));
-      expect(screen.getByTestId("comment-edit-input")).toHaveValue("old words");
+      expect(screen.getByTestId("commentEdit.words.input")).toHaveValue("old words");
     });
   });
 
@@ -2184,10 +2184,10 @@ describe("PostView", () => {
       // sheet's return (see the reply test above, which waits the same way).
       await waitFor(() => expect(sheet).not.toBeVisible());
       body.scrollTop = 0;
-      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+      fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "better words" },
       });
-      fireEvent.click(screen.getByTestId("comment-edit-save"));
+      fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       // The refetch re-collapsed every branch; this one comes back open,
       // because that is where the words the author just wrote are.
@@ -2349,7 +2349,7 @@ describe("PostView", () => {
       });
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-      expect(screen.getByTestId("comment-edit-tag-0")).toHaveTextContent("#rust");
+      expect(screen.getByTestId("commentEdit.tags.tag")).toHaveTextContent("#rust");
       // The chip opens its pair in a sheet over the edit (CommentEdit.md), on
       // the values the claim actually carries — real ones, never the entry
       // defaults.
@@ -2392,10 +2392,10 @@ describe("PostView", () => {
       await openComments();
 
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+      fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "new words" },
       });
-      fireEvent.click(screen.getByTestId("comment-edit-save"));
+      fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       await waitFor(() => expect(sent).not.toBeNull());
       expect(sent!.sensitive).toBe(false);
@@ -2421,17 +2421,17 @@ describe("PostView", () => {
 
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       // Nothing typed: the row is the only change.
-      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
+      expect(screen.getByTestId("commentEdit.sign")).toBeDisabled();
 
       // `Mark` opens the sheet already marked (ComposeSensitive.jsx).
-      fireEvent.click(screen.getByTestId("comment-edit-open-sensitive"));
+      fireEvent.click(screen.getByTestId("commentEdit.facts.sensitive.action"));
       fireEvent.change(screen.getByTestId("comment-edit-sensitive-reason"), {
         target: { value: "A dead seabird." },
       });
       fireEvent.click(screen.getByTestId("comment-edit-sensitive-done"));
 
-      expect(screen.getByTestId("comment-edit-sensitive-value")).toHaveTextContent("Marked");
-      fireEvent.click(screen.getByTestId("comment-edit-save"));
+      expect(screen.getByTestId("commentEdit.facts.sensitive.value")).toHaveTextContent("Marked");
+      fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       await waitFor(() => expect(sent).not.toBeNull());
       expect(sent!.sensitive).toBe(true);
@@ -2469,12 +2469,12 @@ describe("PostView", () => {
 
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       await waitFor(() =>
-        expect(screen.getByTestId("comment-edit-sensitive-value")).toHaveTextContent("Marked"),
+        expect(screen.getByTestId("commentEdit.facts.sensitive.value")).toHaveTextContent("Marked"),
       );
-      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+      fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "new words" },
       });
-      fireEvent.click(screen.getByTestId("comment-edit-save"));
+      fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       await waitFor(() => expect(sent).not.toBeNull());
       expect(sent!.sensitiveReason).toBe("One rubbing includes a dead seabird.");
@@ -2491,11 +2491,11 @@ describe("PostView", () => {
       await openComments();
 
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+      fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "x".repeat(COMMENT_BODY_MAX_CHARS + 1) },
       });
 
-      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
+      expect(screen.getByTestId("commentEdit.sign")).toBeDisabled();
     });
 
     // The reason is entered on the editor's own sheet, so this is the one
@@ -2512,7 +2512,7 @@ describe("PostView", () => {
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       // The sheet opens marked; over the cap its Done is visible and inert, so
       // an over-long reason never reaches the edit.
-      fireEvent.click(screen.getByTestId("comment-edit-open-sensitive"));
+      fireEvent.click(screen.getByTestId("commentEdit.facts.sensitive.action"));
       fireEvent.change(screen.getByTestId("comment-edit-sensitive-reason"), {
         target: { value: "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1) },
       });
@@ -2523,11 +2523,11 @@ describe("PostView", () => {
       // is not vacuously true against an empty batch.
       fireEvent.click(screen.getByTestId("comment-edit-sensitive-switch"));
       fireEvent.click(screen.getByTestId("comment-edit-sensitive-done"));
-      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+      fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "new words" },
       });
 
-      expect(screen.getByTestId("comment-edit-save")).not.toBeDisabled();
+      expect(screen.getByTestId("commentEdit.sign")).not.toBeDisabled();
     });
 
     it("stages the edit record and one Tag act per change, in one signing pass", async () => {
@@ -2551,14 +2551,14 @@ describe("PostView", () => {
       });
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+      fireEvent.change(screen.getByTestId("commentEdit.words.input"), {
         target: { value: "better words" },
       });
       fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("comment-edit-tag-add"));
+      fireEvent.click(screen.getByTestId("commentEdit.tags.add"));
       // Drop the tag the comment came with.
-      fireEvent.click(screen.getByTestId("comment-edit-tag-0-remove"));
-      fireEvent.click(screen.getByTestId("comment-edit-save"));
+      fireEvent.click(screen.getByTestId("commentEdit.tags.tag.remove"));
+      fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(3));
       expect(editCalled).toBe(true);
@@ -2589,8 +2589,8 @@ describe("PostView", () => {
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("comment-edit-tag-add"));
-      fireEvent.click(screen.getByTestId("comment-edit-save"));
+      fireEvent.click(screen.getByTestId("commentEdit.tags.add"));
+      fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
       expect(editCalled).toBe(false);
@@ -2618,7 +2618,7 @@ describe("PostView", () => {
         target: { value: "0.75" },
       });
       fireEvent.click(screen.getByTestId("comment-edit-tag-pair-done"));
-      fireEvent.click(screen.getByTestId("comment-edit-save"));
+      fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       await waitFor(() =>
         expect(tagInputs).toEqual([
@@ -2659,17 +2659,17 @@ describe("PostView", () => {
       });
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-      fireEvent.change(screen.getByTestId("comment-edit-input"), { target: { value: "moved" } });
+      fireEvent.change(screen.getByTestId("commentEdit.words.input"), { target: { value: "moved" } });
       fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "a-b" } });
-      fireEvent.click(screen.getByTestId("comment-edit-tag-add"));
-      fireEvent.click(screen.getByTestId("comment-edit-save"));
+      fireEvent.click(screen.getByTestId("commentEdit.tags.add"));
+      fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       expect(await screen.findByTestId("comment-edit-tag-error-0")).toHaveTextContent(
         "Something in this wasn't accepted",
       );
       expect(signer.signStaged).not.toHaveBeenCalled();
       // The editor stays open on the work that was refused.
-      expect(screen.getByTestId("comment-edit-input")).toBeInTheDocument();
+      expect(screen.getByTestId("commentEdit.words.input")).toBeInTheDocument();
     });
 
     it("counts the batch: the record once the words were typed, and each tag act", async () => {
@@ -2683,25 +2683,25 @@ describe("PostView", () => {
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       // Untouched: nothing to sign, and the press is inert.
-      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+      expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
         "Nothing to sign yet",
       );
-      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
+      expect(screen.getByTestId("commentEdit.sign")).toBeDisabled();
 
-      fireEvent.click(screen.getByTestId("comment-edit-tag-0-remove"));
-      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+      fireEvent.click(screen.getByTestId("commentEdit.tags.tag.remove"));
+      expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
         "You're signing 1 thing",
       );
-      const input = screen.getByTestId("comment-edit-input");
+      const input = screen.getByTestId("commentEdit.words.input");
       const words = (input as HTMLTextAreaElement).value;
       fireEvent.change(input, { target: { value: "moved" } });
-      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+      expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
         "You're signing 2 things",
       );
       // THE GUARD IS THE ACTS BATCH, NOT A BYTE COMPARISON
       // (EditComposeUnchanged.md:3): typed back, the record stays staged.
       fireEvent.change(input, { target: { value: words } });
-      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+      expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
         "You're signing 2 things",
       );
     });
@@ -2720,13 +2720,13 @@ describe("PostView", () => {
       });
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-      fireEvent.change(screen.getByTestId("comment-edit-input"), { target: { value: "moved" } });
+      fireEvent.change(screen.getByTestId("commentEdit.words.input"), { target: { value: "moved" } });
       fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
-      fireEvent.click(screen.getByTestId("comment-edit-tag-add"));
-      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+      fireEvent.click(screen.getByTestId("commentEdit.tags.add"));
+      expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
         "You're signing 2 things",
       );
-      fireEvent.click(screen.getByTestId("comment-edit-save"));
+      fireEvent.click(screen.getByTestId("commentEdit.sign"));
 
       // Sign is the confirmation: the count was said on the foot.
       expect(screen.queryByTestId("comment-edit-multi-action-count")).not.toBeInTheDocument();
@@ -2953,17 +2953,17 @@ describe("PostView — references", () => {
     await openComments();
 
     fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-    fireEvent.click(screen.getByTestId("comment-edit-reference-0-remove"));
+    fireEvent.click(screen.getByTestId("commentEdit.references.stagedReference.remove"));
     // The foot counts the withdrawal's counter-records, served by the claim,
     // and nothing is staged while the reader reads it.
-    expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+    expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
       "You're signing 2 things",
     );
     expect(screen.getByText(/Withdrawn:/)).toBeInTheDocument();
     expect(withdrawalInput).toBeUndefined();
     expect(signer.signStaged).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByTestId("comment-edit-save"));
+    fireEvent.click(screen.getByTestId("commentEdit.sign"));
     await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
     // The withdrawal names the L2 id, never the claim's L1 identifier.
     expect((withdrawalInput as { input: { target: string } }).input.target).toBe("u-ada");
@@ -2983,10 +2983,10 @@ describe("PostView — references", () => {
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
     await openComments();
     fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-    expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+    expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
       "Nothing to sign yet",
     );
-    expect(screen.getByTestId("comment-edit-reference-0")).toHaveTextContent("@ada");
+    expect(screen.getByTestId("commentEdit.references.stagedReference")).toHaveTextContent("@ada");
   });
 
   // The gallery on the read side: what a media post looks like when the body

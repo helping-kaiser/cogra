@@ -6,6 +6,7 @@ import type { ReferenceDraft } from "@/lib/references/draft";
 import type { EditActRow } from "@/lib/compose/edit-batch";
 import { newTagDraft } from "@/lib/topics/draft";
 import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
+import { byNode } from "@/test/data-node";
 import { CommentEditView } from "./comment-edit-view";
 
 const EDIT: EditActRow = { kind: "edit", label: "Edit", value: "The glovebox", count: 1, noun: "edit" };
@@ -113,26 +114,26 @@ describe("CommentEdit", () => {
 
   it("opens on the words the comment carries", () => {
     draw();
-    expect(screen.getByTestId("comment-edit-input")).toHaveValue(
+    expect(screen.getByTestId("commentEdit.words.input")).toHaveValue(
       "The glovebox camera earns its keep.",
     );
   });
 
   it("reads the mark back and offers to set one", () => {
     draw();
-    expect(screen.getByTestId("comment-edit-sensitive-value")).toHaveTextContent("Not marked");
-    expect(screen.getByTestId("comment-edit-open-sensitive")).toHaveTextContent("Mark");
+    expect(screen.getByTestId("commentEdit.facts.sensitive.value")).toHaveTextContent("Not marked");
+    expect(screen.getByTestId("commentEdit.facts.sensitive.action")).toHaveTextContent("Mark");
   });
 
   it("a marked comment says so, and the row offers the change", () => {
     draw({ sensitive: true });
-    expect(screen.getByTestId("comment-edit-sensitive-value")).toHaveTextContent("Marked");
-    expect(screen.getByTestId("comment-edit-open-sensitive")).toHaveTextContent("Change");
+    expect(screen.getByTestId("commentEdit.facts.sensitive.value")).toHaveTextContent("Marked");
+    expect(screen.getByTestId("commentEdit.facts.sensitive.action")).toHaveTextContent("Change");
   });
 
   it("the row opens the mark sheet", () => {
     const props = draw();
-    fireEvent.click(screen.getByTestId("comment-edit-open-sensitive"));
+    fireEvent.click(screen.getByTestId("commentEdit.facts.sensitive.action"));
     expect(props.onSensitiveOpen).toHaveBeenCalledWith(true);
   });
 
@@ -167,7 +168,7 @@ describe("CommentEdit", () => {
   it("states the license and locks it — an edit has nothing to change it to", () => {
     draw();
     expect(screen.getByTestId("comment-edit")).toHaveTextContent("Public domain");
-    expect(screen.getByTestId("comment-edit-license-locked")).toHaveAttribute(
+    expect(screen.getByTestId("commentEdit.facts.license.lock")).toHaveAttribute(
       "aria-label",
       "The license never changes",
     );
@@ -178,7 +179,7 @@ describe("CommentEdit", () => {
     // grammar carries the cap at both scales).
     it("counts what the comment carries against the cap of four", () => {
       draw({ gallery: ONE_PICTURE });
-      expect(screen.getByTestId("comment-edit-add-media")).toHaveTextContent("+ Add pictures · 1 of 4");
+      expect(screen.getByTestId("commentEdit.pictures.add")).toHaveTextContent("+ Add pictures · 1 of 4");
     });
 
     it("adds through the browser's own dialog — an editor has no pick stage", () => {
@@ -195,20 +196,20 @@ describe("CommentEdit", () => {
         gallery: ONE_PICTURE,
         previews: { m1: "https://media.test/1.webp" },
       });
-      fireEvent.click(screen.getByTestId("comment-edit-media-m1-remove"));
+      fireEvent.click(screen.getByTestId(byNode("commentEdit.pictures.thumb.remove", "1")));
       expect(props.onRemovePicture).toHaveBeenCalledWith("m1");
     });
 
     it("offers the describe counter only when there is something to describe", () => {
       draw();
-      expect(screen.queryByTestId("comment-edit-describe-counter")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("commentEdit.pictures.describeRow.describe")).not.toBeInTheDocument();
       draw({ gallery: ONE_PICTURE });
-      expect(screen.getByTestId("comment-edit-describe-counter")).toBeInTheDocument();
+      expect(screen.getByTestId("commentEdit.pictures.describeRow.describe")).toBeInTheDocument();
     });
 
     it("describes one picture at a time, named by its id", () => {
       const props = draw({ gallery: ONE_PICTURE });
-      fireEvent.click(screen.getByTestId("comment-edit-describe-counter"));
+      fireEvent.click(screen.getByTestId("commentEdit.pictures.describeRow.describe"));
       expect(props.onDescribe).toHaveBeenCalledWith("m1");
     });
   });
@@ -216,7 +217,7 @@ describe("CommentEdit", () => {
   describe("the acts footer", () => {
     it("reads the live count of the batch, You're signing N things", () => {
       draw({ acts: [EDIT, WITHDRAWN] });
-      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+      expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent(
         "You're signing 3 things",
       );
     });
@@ -224,16 +225,16 @@ describe("CommentEdit", () => {
     // EditComposeUnchanged.md — the family's guard, CommentEdit included.
     it("an_empty_batch_leaves_sign_inert_and_the_footer_not_a_control", () => {
       draw({ acts: [] });
-      const foot = screen.getByTestId("comment-edit-signed-actions");
+      const foot = screen.getByTestId("commentEdit.acts.line");
       expect(foot).toHaveTextContent("Nothing to sign yet");
       expect(foot.tagName).not.toBe("BUTTON");
-      expect(screen.getByTestId("comment-edit-save")).toBeVisible();
-      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
+      expect(screen.getByTestId("commentEdit.sign")).toBeVisible();
+      expect(screen.getByTestId("commentEdit.sign")).toBeDisabled();
     });
 
     it("opens the acts sheet — the footer is an affordance, not a label", () => {
       const props = draw({ acts: [EDIT, WITHDRAWN] });
-      fireEvent.click(screen.getByTestId("comment-edit-signed-actions"));
+      fireEvent.click(screen.getByTestId("commentEdit.acts.line"));
       expect(props.onActs).toHaveBeenCalledWith(true);
     });
 
@@ -250,10 +251,10 @@ describe("CommentEdit", () => {
     it("reads a withdrawn tag back under its block, with Undo", () => {
       const coastroad = newTagDraft("coastroad");
       const props = draw({ loadedTags: [coastroad], tags: [] });
-      expect(screen.getByTestId("comment-edit-withdrawn-tag-coastroad")).toHaveTextContent(
+      expect(screen.getByTestId("commentEdit.tags.withdrawn")).toHaveTextContent(
         "Withdrawn: #coastroad",
       );
-      fireEvent.click(screen.getByTestId("comment-edit-withdrawn-tag-coastroad-undo"));
+      fireEvent.click(screen.getByTestId("commentEdit.tags.withdrawn.undo"));
       expect(props.onUndoTag).toHaveBeenCalledWith("coastroad");
     });
   });
@@ -261,7 +262,7 @@ describe("CommentEdit", () => {
   describe("signing", () => {
     it("refuses to sign an edit that would stage nothing", () => {
       draw({ acts: [] });
-      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
+      expect(screen.getByTestId("commentEdit.sign")).toBeDisabled();
     });
 
     // CommentEdit.md: "the line Uploading N of M — signing waits for the
@@ -269,8 +270,8 @@ describe("CommentEdit", () => {
     // uploading and M is 1" … "Sign the edit is enabled GIVEN an upload is running".
     it("keeps Sign enabled while a picture is on its way, the gate standing over the foot", () => {
       draw({ gallery: addTo(ONE_PICTURE, [{ id: "new-0", file: new Blob(["x"]) }]) });
-      expect(screen.getByTestId("comment-edit-save")).not.toBeDisabled();
-      expect(screen.getByTestId("comment-edit-gate")).toHaveTextContent(
+      expect(screen.getByTestId("commentEdit.sign")).not.toBeDisabled();
+      expect(screen.getByTestId("commentEdit.gate")).toHaveTextContent(
         "Uploading 0 of 1 — signing waits for the picture.",
       );
     });
@@ -286,8 +287,8 @@ describe("CommentEdit", () => {
           retryable: true,
         }),
       });
-      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
-      expect(screen.getByTestId("comment-edit-gate")).toHaveTextContent(
+      expect(screen.getByTestId("commentEdit.sign")).toBeDisabled();
+      expect(screen.getByTestId("commentEdit.gate")).toHaveTextContent(
         "One picture didn't upload. Signing waits for it.",
       );
       expect(screen.getByTestId("comment-edit-upload-error")).toHaveTextContent("One picture didn't upload.");
@@ -301,9 +302,9 @@ describe("CommentEdit", () => {
     // ways out refuse; a held press refuses a second one.
     it("refuses a second press while held, and never dims", () => {
       const props = draw({ held: true });
-      fireEvent.click(screen.getByTestId("comment-edit-save"));
+      fireEvent.click(screen.getByTestId("commentEdit.sign"));
       expect(props.onSign).not.toHaveBeenCalled();
-      expect(screen.getByTestId("comment-edit-save")).not.toBeDisabled();
+      expect(screen.getByTestId("commentEdit.sign")).not.toBeDisabled();
     });
 
     it("stands the slow line and the count line under the acts footer", () => {
@@ -327,7 +328,7 @@ describe("CommentEdit", () => {
       const notice = screen.getByTestId("comment-edit-write-rule");
       expect(notice).toHaveTextContent(/Nothing was signed or spent — your edit is still here.$/);
       expect(notice).not.toHaveTextContent(/draft/);
-      expect(screen.queryByTestId("comment-edit-save")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("commentEdit.sign")).not.toBeInTheDocument();
       expect(screen.queryByText(/Retry/)).not.toBeInTheDocument();
       fireEvent.click(screen.getByTestId("comment-edit-not-now"));
       expect(props.onNotNow).toHaveBeenCalled();
@@ -360,7 +361,7 @@ describe("CommentEdit", () => {
 
     it("signs when there is something to sign", () => {
       const props = draw({ acts: [EDIT] });
-      fireEvent.click(screen.getByTestId("comment-edit-save"));
+      fireEvent.click(screen.getByTestId("commentEdit.sign"));
       expect(props.onSign).toHaveBeenCalled();
     });
 
@@ -375,7 +376,7 @@ describe("CommentEdit", () => {
   describe("leaving", () => {
     it("says the edit is discarded rather than kept — a comment keeps no draft", () => {
       draw();
-      expect(screen.getByTestId("header-leave")).toHaveAttribute(
+      expect(screen.getByTestId("commentEdit.header.leave")).toHaveAttribute(
         "aria-label",
         "Leave — the edit is discarded",
       );
@@ -383,14 +384,14 @@ describe("CommentEdit", () => {
 
     it("takes both ways out back to the thread", () => {
       const props = draw();
-      fireEvent.click(screen.getByTestId("header-back"));
-      fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("commentEdit.header.back"));
+      fireEvent.click(screen.getByTestId("commentEdit.header.leave"));
       expect(props.onLeave).toHaveBeenCalledTimes(2);
     });
 
     it("opens the Editing help from its own dot", () => {
       const props = draw();
-      fireEvent.click(screen.getByTestId("header-help"));
+      fireEvent.click(screen.getByTestId("commentEdit.header.help"));
       expect(props.onHelp).toHaveBeenCalled();
     });
   });
@@ -411,10 +412,10 @@ describe("CommentEdit as a covering layer", () => {
 describe("CommentEditVideo", () => {
   it("draws the clip in the Video field with its one description, no add control", () => {
     draw({ gallery: clip() });
-    expect(screen.getByTestId("comment-edit-clip")).toBeInTheDocument();
+    expect(screen.getByTestId("commentEdit.video.thumb")).toBeInTheDocument();
     expect(screen.getByLabelText("Remove this video")).toBeInTheDocument();
-    expect(screen.getByTestId("comment-edit-describe-counter")).toHaveTextContent("Describe the video");
-    expect(screen.queryByTestId("comment-edit-add-media")).not.toBeInTheDocument();
+    expect(screen.getByTestId("commentEdit.video.describeRow.describe")).toHaveTextContent("Describe the video");
+    expect(screen.queryByTestId("commentEdit.pictures.add")).not.toBeInTheDocument();
   });
 
   // "tap the clip's remove control -> the clip leaves whole, taking the
@@ -429,12 +430,12 @@ describe("CommentEditVideo", () => {
   // clip has a cover" / "shows Add a cover and no picture GIVEN … no cover".
   it("shows the face and Change the cover where one was chosen, the door where none was", () => {
     draw({ gallery: clip(false) });
-    expect(screen.getByTestId("comment-edit-cover")).toBeInTheDocument();
-    expect(screen.getByTestId("comment-edit-change-cover")).toHaveTextContent("Change the cover");
+    expect(screen.getByTestId("commentEdit.cover.thumb")).toBeInTheDocument();
+    expect(screen.getByTestId("commentEdit.cover.change")).toHaveTextContent("Change the cover");
     cleanup();
     draw({ gallery: clip(true) });
     expect(screen.getByTestId("comment-edit-add-cover")).toHaveTextContent("Add a cover");
-    expect(screen.queryByTestId("comment-edit-cover")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("commentEdit.cover.thumb")).not.toBeInTheDocument();
   });
 
   // "tap Change the cover -> the platform's own picker opens AND NEVER the
@@ -443,7 +444,7 @@ describe("CommentEditVideo", () => {
     const props = draw({ gallery: clip() });
     const input = screen.getByTestId("comment-edit-cover-input") as HTMLInputElement;
     const opened = vi.spyOn(input, "click");
-    fireEvent.click(screen.getByTestId("comment-edit-change-cover"));
+    fireEvent.click(screen.getByTestId("commentEdit.cover.change"));
     expect(opened).toHaveBeenCalledTimes(1);
     expect(input.accept).toBe("image/*");
     const files = [new File([new Uint8Array([1]) as BlobPart], "face.jpg", { type: "image/jpeg" })];
@@ -469,7 +470,7 @@ describe("CommentEditVideo", () => {
     fireEvent.click(screen.getByLabelText("Back to the edit"));
     expect(onBack).toHaveBeenCalled();
     // The X is the edit's own X.
-    fireEvent.click(screen.getByTestId("header-leave"));
+    fireEvent.click(screen.getByTestId("coverCrop.header.leave"));
     expect(props.onLeave).toHaveBeenCalled();
   });
 
@@ -477,10 +478,10 @@ describe("CommentEditVideo", () => {
   // acts footer GIVEN the cover the edit set is uploading".
   it("gates on the face the edit set, in the cover's noun", () => {
     draw({ gallery: withNewCover(clip(), "v1", face) });
-    expect(screen.getByTestId("comment-edit-gate")).toHaveTextContent(
+    expect(screen.getByTestId("commentEdit.gate")).toHaveTextContent(
       "Uploading 0 of 1 — signing waits for the cover.",
     );
-    expect(screen.getByTestId("comment-edit-save")).not.toBeDisabled();
+    expect(screen.getByTestId("commentEdit.sign")).not.toBeDisabled();
   });
 
   // "the cover the edit set fails to upload -> the cover's thumbnail is marked
@@ -494,10 +495,10 @@ describe("CommentEditVideo", () => {
       }),
     });
     expect(screen.getByTestId("comment-edit-cover-error")).toHaveTextContent("One picture didn't upload.");
-    expect(screen.getByTestId("comment-edit-gate")).toHaveTextContent(
+    expect(screen.getByTestId("commentEdit.gate")).toHaveTextContent(
       "One picture didn't upload. Signing waits for it.",
     );
-    expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
+    expect(screen.getByTestId("commentEdit.sign")).toBeDisabled();
     fireEvent.click(screen.getByTestId("comment-edit-cover-error-remove"));
     expect(props.onRemoveCover).toHaveBeenCalled();
   });
