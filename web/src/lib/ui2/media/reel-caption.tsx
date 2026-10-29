@@ -104,7 +104,9 @@ export function ReelCaption({
               type="button"
               onClick={onReveal}
               {...testAttributes(part(node, "show"), `${testId}-show`)}
-              className="cg-state cg-focus cg-hit flex-none cursor-pointer border-0 bg-transparent p-0 font-sans text-label-small text-on-surface-variant underline"
+              // The text veil's `Show` (`SensitiveVeil kind="text"`): label-small's size
+              // alone, in the button's own weight and line, underlined.
+              className="cg-state cg-focus cg-hit flex-none cursor-pointer border-0 bg-transparent p-0 font-sans text-[length:var(--text-label-small)] [font-weight:400] [line-height:normal] text-on-surface-variant underline"
             >
               {SHOW}
             </button>
