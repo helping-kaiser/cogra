@@ -43,6 +43,9 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.v2.atom.ButtonKind
+import com.cogra.core.designsystem.v2.atom.ButtonSize
+import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.LoadingState
@@ -724,8 +727,9 @@ private fun CommentCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+                // `Card.jsx`: `--card-padding` 16 and `--card-gap` 12, as the feed's cards.
+                .padding(Space.x4),
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
             // The picture the boards draw on a comment card (Q49),
             // and the age beside it. Null is the monogram — the
@@ -876,24 +880,27 @@ private fun CommentAffordances(
         CommentStanceTarget { stanceControl(comment.id, "comment_${comment.id}", node / "stance") }
         if (signedIn == true) {
             // `ReplyEntry` 5 — the composer, pre-targeted.
-            TextButton(
+            // `Button variant="text" size="sm"` (`CommentCard.jsx`).
+            CograButton(
+                text = stringResource(R.string.content_comment_reply),
                 onClick = { onReplyTo(comment) },
+                kind = ButtonKind.Text,
+                size = ButtonSize.Compact,
                 modifier = Modifier.dataNode(node / "reply"),
-            ) {
-                Text(stringResource(R.string.content_comment_reply))
-            }
+            )
         }
         // `ReplyMedia` 6 — an own comment wears Edit, and it
         // opens `CommentEdit`. A REMOVED ONE LOSES IT WITH ITS PAYLOAD
         // (CommentRemoved.md:9; `_shared.jsx` `onEdit={removed ? undefined …}`):
         // there is nothing left on it to edit. Reply and the face stay.
         if (isOwn(comment, viewerId) && !comment.removed) {
-            TextButton(
+            CograButton(
+                text = stringResource(R.string.content_edit),
                 onClick = { onEditComment(comment) },
+                kind = ButtonKind.Text,
+                size = ButtonSize.Compact,
                 modifier = Modifier.dataNode(node / "edit"),
-            ) {
-                Text(stringResource(R.string.content_edit))
-            }
+            )
         }
     }
 }
