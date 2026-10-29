@@ -123,6 +123,12 @@ class KeptPicksViewModel @Inject constructor(
     /** The targets whose preview has been asked for, so a store change re-reads only new rows. */
     private val read = mutableSetOf<StanceTarget>()
 
+    /**
+     * The review has left, once and for good: a store change that lands after
+     * the exit was taken (the signed batch's drop) must not route a second time.
+     */
+    private var exited = false
+
     init {
         viewModelScope.launch {
             // THE REVIEW NEEDS THE KEY HERE (KeptPicksReview.md:39): with it gone
@@ -148,7 +154,7 @@ class KeptPicksViewModel @Inject constructor(
             )
         }
         // Nothing kept to review: back where it was opened from.
-        if (opinions.isEmpty() && _state.value.exit == null) leave()
+        if (opinions.isEmpty()) leave()
         opinions.filter { read.add(it.target) }.forEach(::readRow)
     }
 
@@ -179,7 +185,7 @@ class KeptPicksViewModel @Inject constructor(
         val row = rows.getOrNull(index) ?: return
         val left = rows.size - 1
         if (left == 0) {
-            _state.update { it.copy(exit = KeptExit.Left(KeptSnack.NothingLeft)) }
+            exit(KeptSnack.NothingLeft)
         } else {
             _state.update { it.copy(removedLeft = left, focusIndex = index.coerceAtMost(left - 1)) }
         }
@@ -210,7 +216,13 @@ class KeptPicksViewModel @Inject constructor(
     /** The review's header back: it closes to where it was opened from (KeptPicksReview.md:33). */
     fun onHeaderBack() = leave()
 
-    private fun leave() = _state.update { it.copy(exit = it.exit ?: KeptExit.Left()) }
+    private fun leave() = exit(null)
+
+    private fun exit(snack: KeptSnack?) {
+        if (exited) return
+        exited = true
+        _state.update { it.copy(exit = KeptExit.Left(snack)) }
+    }
 
     fun onExited() = _state.update { it.copy(exit = null) }
 
@@ -237,7 +249,7 @@ class KeptPicksViewModel @Inject constructor(
         val targets = batch.map { it.target }
         signals.markSettling(targets)
         signals.announceSigned()
-        _state.update { it.copy(exit = KeptExit.Left(KeptSnack.Signed(batch.size))) }
+        exit(KeptSnack.Signed(batch.size))
         kept.drop(targets, KeptFamily.OPINION)
     }
 
