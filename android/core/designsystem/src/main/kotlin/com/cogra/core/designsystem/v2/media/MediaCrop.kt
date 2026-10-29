@@ -98,7 +98,7 @@ fun MediaCrop(
         CropZoom(state = state, testTag = testTag?.let { "${it}_zoom" }, node = node?.div("zoom"))
 
         // `QuietNote` (ComposeCrop.jsx:63): what the crop decides and how it moves.
-        QuietNote(text = caption, modifier = Modifier.dataNode(node?.div("howTo")))
+        QuietNote(text = caption, modifier = Modifier.fillMaxWidth().dataNode(node?.div("howTo")))
     }
 }
 
@@ -141,7 +141,10 @@ fun LockedCrop(
         CropZoom(state = state, testTag = testTag?.let { "${it}_zoom" }, node = node?.div("zoom"))
 
         notes.forEachIndexed { index, note ->
-            QuietNote(text = note, modifier = Modifier.dataNode(noteParts.getOrNull(index)?.let { node?.div(it) }))
+            QuietNote(
+                text = note,
+                modifier = Modifier.fillMaxWidth().dataNode(noteParts.getOrNull(index)?.let { node?.div(it) }),
+            )
         }
     }
 }
@@ -395,7 +398,8 @@ fun CropShapeChips(
     node: DataNode? = null,
 ) {
     Row(
-        modifier = modifier.dataNode(node),
+        // The chips' row is the column's full width, the chips at its start (ComposeCrop.jsx).
+        modifier = modifier.fillMaxWidth().dataNode(node),
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
         MediaShape.entries.forEach { shape ->

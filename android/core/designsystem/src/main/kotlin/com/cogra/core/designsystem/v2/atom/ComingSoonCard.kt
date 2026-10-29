@@ -53,13 +53,13 @@ fun ComingSoonCard(headline: String, line: String, modifier: Modifier = Modifier
             text = headline,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.semantics { heading() }.dataNode(node?.div("title")),
+            modifier = Modifier.fillMaxWidth().semantics { heading() }.dataNode(node?.div("title")),
         )
         Text(
             text = line,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.dataNode(node?.div("line")),
+            modifier = Modifier.fillMaxWidth().dataNode(node?.div("line")),
         )
     }
 }

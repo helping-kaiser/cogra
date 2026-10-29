@@ -51,10 +51,11 @@ fun WalletComingSoonScreen(
     val band = WALLET / "band"
     Column(modifier.fillMaxSize().dataNodeSurface()) {
         Row(
+            // The band's node is the full-width bar, its 16 inside it (`CograBand.jsx`).
             modifier = Modifier
+                .dataNode(band)
                 .defaultMinSize(minHeight = Layout.TopBarHeight)
-                .padding(horizontal = Space.x4)
-                .dataNode(band),
+                .padding(horizontal = Space.x4),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
