@@ -58,6 +58,12 @@ const node = (tail: string) => part(NODE, tail);
 /** copy-voice *Faults by code*: the token confirms' visible budget line, and the server's answered no. */
 const RATE_LIMITED_LINE = "Too many tries. Wait a little, then try again.";
 const NOT_THROUGH = "That didn't go through. Try again.";
+/**
+ * No answer reached the device: the house fault's noun form for a confirm
+ * (DeleteAccountConfirmed.md:11; copy-voice *Faults by code*, round 25) — the
+ * long line never stands beside a control that tries again.
+ */
+const UNREACHABLE_LINE = "Can't reach the server — the deletion can't be confirmed right now.";
 
 type Landing =
   | { kind: "confirming" }
@@ -223,7 +229,7 @@ export function DeleteAccountConfirmedView() {
 
       {landing.kind === "unreachable" && (
         <Retry onRetry={() => setAttempt((n) => n + 1)}>
-          <TransportError testId="delete-account-unreachable" />
+          <TransportError testId="delete-account-unreachable" message={UNREACHABLE_LINE} />
         </Retry>
       )}
 

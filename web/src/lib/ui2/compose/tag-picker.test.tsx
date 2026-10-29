@@ -291,3 +291,121 @@ describe("TagPicker — a refused name", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 });
+
+describe("TagPicker — the state chip's cap and fault (rounds 24-25)", () => {
+  const ten = Array.from({ length: 10 }, (_, i) => draft(`held${i}`));
+  const failingIndex = (onCall: () => void = () => {}) =>
+    gqlLink.query("TagNames", () => {
+      onCall();
+      return HttpResponse.error();
+    });
+
+  // :27 tagPicker.cap reads Up to 10 tags per post. above the list GIVEN the
+  // composer holds ten tags and was opened from a post's composer.
+  it(":27 the cap's line stands above the list, per post", async () => {
+    indexServes("saltmaps");
+    renderWithProviders(<Host initial={ten} />);
+    type("salt");
+    await settle();
+    const cap = screen.getByTestId(byNode("tagPicker.cap"));
+    expect(cap).toHaveTextContent("Up to 10 tags per post.");
+    // Above the list: the line precedes the typed name's row.
+    const firstRow = screen.getAllByTestId(byNode("tagPicker.tag"))[0]!;
+    expect(cap.compareDocumentPosition(firstRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // :29 … per comment. GIVEN … opened from a reply's composer or a comment's edit.
+  it(":29 the cap's line says per comment from a reply", () => {
+    renderWithProviders(<Host initial={ten} origin="comment" />);
+    expect(screen.getByTestId(byNode("tagPicker.cap"))).toHaveTextContent("Up to 10 tags per comment.");
+  });
+
+  // :31 ALWAYS every row in the list, the typed name's included, is dimmed and
+  // takes no tap GIVEN the composer holds ten tags.
+  it(":31 at the cap every row, the typed name's included, is dimmed and takes no tap", async () => {
+    indexServes("saltmaps");
+    const spy = vi.fn();
+    renderWithProviders(<Host initial={ten} spy={spy} />);
+    type("salt");
+    await settle();
+    const rows = screen.getAllByTestId(byNode("tagPicker.tag"));
+    expect(rows.map((row) => row.getAttribute("data-testid-key"))).toEqual(["salt", "saltmaps"]);
+    for (const row of rows) {
+      expect(row).toBeDisabled();
+      expect(row.parentElement).toHaveClass("opacity-[var(--state-disabled)]");
+      fireEvent.click(row);
+    }
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  // :33 WHEN press the keyboard's action key GIVEN the composer holds ten tags -> NEVER a tag is staged.
+  it(":33 the action key stages nothing at the cap", () => {
+    const spy = vi.fn();
+    renderWithProviders(<Host initial={ten} spy={spy} />);
+    type("salt");
+    fireEvent.keyDown(field(), { key: "Enter" });
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  // :35 WHEN tap the remove control of a staged row GIVEN ten -> unstaged AND
+  // the cap leaves AND the list takes taps again.
+  it(":35 a staged × at the cap un-stages, the cap leaves, and the list takes taps again", async () => {
+    renderWithProviders(<Host initial={ten} />);
+    type("salt");
+    await settle();
+    fireEvent.click(within(screen.getAllByTestId(byNode("tagPicker.staged.tag"))[0]!).getByRole("button"));
+    expect(stagedNames()).toHaveLength(9);
+    expect(screen.queryByTestId(byNode("tagPicker.cap"))).not.toBeInTheDocument();
+    const first = screen.getAllByTestId(byNode("tagPicker.tag"))[0]!;
+    expect(first).not.toBeDisabled();
+    expect(first.parentElement).not.toHaveClass("opacity-[var(--state-disabled)]");
+    fireEvent.click(first);
+    expect(stagedNames()).toContain("salt");
+  });
+
+  // :37 WHEN the candidates' read gets no answer -> the typed name's row still
+  // stands first AND tagPicker.fault reads Can't reach the server — tags can't
+  // load right now. over tagPicker.fault.retry, outlined, where the candidates
+  // were AND NEVER the line says try again.
+  it(":37 a read with no answer keeps the typed row and says the noun line over an outlined Retry", async () => {
+    server.use(failingIndex());
+    renderWithProviders(<Host />);
+    type("salt");
+    await settle();
+    expect(rowNames()).toEqual(["salt"]);
+    const fault = screen.getByTestId(byNode("tagPicker.fault"));
+    expect(fault).toHaveTextContent("Can't reach the server — tags can't load right now.");
+    expect(fault.textContent).not.toMatch(/try again/i);
+    const retry = within(fault).getByTestId(byNode("tagPicker.fault.retry"));
+    expect(retry).toHaveTextContent("Retry");
+    expect(retry).toHaveClass("border-outline");
+  });
+
+  // :39 WHEN tap tagPicker.fault.retry -> the candidates are read again for the
+  // typed name AND the typed name's row stays first.
+  it(":39 Retry reads the candidates again for the typed name, the typed row first", async () => {
+    let calls = 0;
+    server.use(failingIndex(() => (calls += 1)));
+    renderWithProviders(<Host />);
+    type("salt");
+    await settle();
+    expect(calls).toBe(1);
+    indexServes("saltmaps");
+    fireEvent.click(screen.getByTestId(byNode("tagPicker.fault.retry")));
+    await settle();
+    expect(rowNames()).toEqual(["salt", "saltmaps"]);
+    expect(screen.queryByTestId(byNode("tagPicker.fault"))).not.toBeInTheDocument();
+  });
+
+  // :41 ALWAYS no line stands where the candidates are GIVEN the read is in flight or found nothing.
+  it(":41 an empty answer and a read in flight say nothing", async () => {
+    indexServes();
+    renderWithProviders(<Host />);
+    type("salt");
+    expect(screen.queryByTestId(byNode("tagPicker.fault"))).not.toBeInTheDocument();
+    await settle();
+    expect(rowNames()).toEqual(["salt"]);
+    expect(screen.queryByTestId(byNode("tagPicker.fault"))).not.toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("tagPicker.cap"))).not.toBeInTheDocument();
+  });
+});

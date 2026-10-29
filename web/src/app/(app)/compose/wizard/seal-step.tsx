@@ -35,7 +35,7 @@
 
 import { useState } from "react";
 
-import { BottomSheet } from "@/lib/ui2/bottom-sheet";
+import { BottomSheet, SHEET_RAISED } from "@/lib/ui2/bottom-sheet";
 import { DialogSurface } from "@/lib/ui2/dialog-surface";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { FactRow } from "@/lib/ui2/fact-row";
@@ -595,8 +595,9 @@ function LicenseSheet({
       onClose={onClose}
       title="License"
       titleTrailing={<HelpDot ariaLabel="License" onOpen={onHelp} testId="wizard-license-help" />}
-      flush
       testId="wizard-license-sheet"
+      // ComposeLicense: the raised 88% class.
+      maxHeight={SHEET_RAISED}
     >
       <div className="flex flex-col gap-2">
         <QuietNote>Terms for anyone who reuses this.</QuietNote>

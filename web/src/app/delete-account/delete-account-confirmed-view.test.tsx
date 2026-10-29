@@ -251,7 +251,12 @@ describe("DeleteAccountConfirmed", () => {
       }),
     );
     renderLanding();
-    fireEvent.click(await screen.findByTestId("delete-account-retry"));
+    // DeleteAccountConfirmed.md:11 — the house fault's noun form over Try again.
+    expect(await screen.findByTestId("delete-account-unreachable")).toHaveTextContent(
+      "Can't reach the server — the deletion can't be confirmed right now.",
+    );
+    expect(screen.getByTestId("delete-account-retry")).toHaveTextContent("Try again");
+    fireEvent.click(screen.getByTestId("delete-account-retry"));
     expect(await screen.findByTestId("deleteAccount.title")).toHaveTextContent("Your account is deleted in 7 days");
   });
 });

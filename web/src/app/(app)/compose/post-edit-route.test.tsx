@@ -1270,6 +1270,23 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     expect(screen.getByTestId("postEdit.cover.change")).toBeInTheDocument();
   });
 
+  // EditComposeVideo.md:33 WHEN a new cover lands on the edit GIVEN the edit's
+  // own record is already staged -> NEVER the footer's count moves AND NEVER a
+  // record of the cover's own is staged (round 24: a new face rides the Edit
+  // record — `Cover changed` is no row).
+  it("adds nothing to the count when the edit's record is already staged", async () => {
+    serve(editablePost({ attachments: [clipAttachment({ coverTaken: true })] }));
+    uploads();
+    draw();
+    fireEvent.change(await screen.findByTestId("postEdit.title.input"), { target: { value: "A new title" } });
+    expect(footer()).toHaveTextContent("You're signing 1 thing");
+    await pickInto("post-edit-cover-input", [picture("face.jpg")]);
+    fireEvent.click(await screen.findByTestId("coverCrop.next"));
+    await screen.findByTestId("postEdit.cover.change");
+    expect(footer()).toHaveTextContent("You're signing 1 thing");
+    expect(screen.queryByText("Cover changed")).not.toBeInTheDocument();
+  });
+
   // EditComposeVideo.md: "press Sign the edit GIVEN the signing is taken -> the
   // post opens with the edit settling AND the clip points at the cover the
   // edit set".

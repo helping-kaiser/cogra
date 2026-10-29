@@ -269,3 +269,121 @@ describe("ReferencePicker — the filter", () => {
     expect(kindsReading(["posts", "comments", "profiles"])).toBe("All kinds");
   });
 });
+
+describe("ReferencePicker — the state chip's cap and fault (rounds 24-25)", () => {
+  const ten = Array.from({ length: 10 }, (_, i) =>
+    newReferenceDraft(`u-held${i}`, { kind: "User", label: `@held${i}`, href: `/u/held${i}`, handle: `held${i}` }),
+  );
+  const failing = (onCall: () => void = () => {}) =>
+    gqlLink.query("ReferenceCandidates", () => {
+      onCall();
+      return HttpResponse.error();
+    });
+
+  // :35 referencePicker.cap reads Up to 10 citations per post. above the results.
+  it(":35 the cap's line stands above the results, per post", async () => {
+    server.use(candidates(SAL));
+    renderWithProviders(<Host initial={ten} />);
+    type("salt");
+    await settle();
+    const cap = screen.getByTestId(byNode("referencePicker.cap"));
+    expect(cap).toHaveTextContent("Up to 10 citations per post.");
+    expect(cap.compareDocumentPosition(result("u-sal")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // :37 … per comment from a reply's composer or a comment's edit.
+  it(":37 the cap's line says per comment from a reply", () => {
+    renderWithProviders(<Host initial={ten} origin="comment" />);
+    expect(screen.getByTestId(byNode("referencePicker.cap"))).toHaveTextContent("Up to 10 citations per comment.");
+  });
+
+  // :39 ALWAYS every referencePicker.result is dimmed and takes no tap GIVEN ten.
+  it(":39 at the cap every result is dimmed and takes no tap", async () => {
+    server.use(candidates(SAL, SALT_MAPS));
+    const spy = vi.fn();
+    renderWithProviders(<Host initial={ten} spy={spy} />);
+    type("salt");
+    await settle();
+    expect(results()).toEqual(["u-sal", "p-salt"]);
+    for (const row of resultRows()) {
+      expect(row).toBeDisabled();
+      expect(row.parentElement).toHaveClass("opacity-[var(--state-disabled)]");
+      fireEvent.click(row);
+    }
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  // :41 WHEN tap the remove control of a staged row GIVEN ten -> unstaged AND
+  // referencePicker.cap leaves AND the results take taps again.
+  it(":41 a staged × at the cap un-stages, the cap leaves, and the results take taps again", async () => {
+    server.use(candidates(SAL));
+    renderWithProviders(<Host initial={ten} />);
+    type("salt");
+    await settle();
+    fireEvent.click(screen.getByRole("button", { name: "Remove @held0" }));
+    expect(staged()).toHaveLength(9);
+    expect(screen.queryByTestId(byNode("referencePicker.cap"))).not.toBeInTheDocument();
+    expect(result("u-sal")).not.toBeDisabled();
+    expect(result("u-sal").parentElement).not.toHaveClass("opacity-[var(--state-disabled)]");
+    fireEvent.click(result("u-sal"));
+    expect(staged()).toHaveLength(10);
+  });
+
+  // :43 WHEN the results' read gets no answer GIVEN no result has loaded ->
+  // referencePicker.fault reads … over referencePicker.fault.retry, outlined,
+  // where the results were AND the field keeps the query AND NEVER the line says try again.
+  it(":43 a read with no answer says the noun line over an outlined Retry, the query kept", async () => {
+    server.use(failing());
+    renderWithProviders(<Host />);
+    type("salt");
+    await settle();
+    expect(resultRows()).toHaveLength(0);
+    const fault = screen.getByTestId(byNode("referencePicker.fault"));
+    expect(fault).toHaveTextContent("Can't reach the server — results can't load right now.");
+    expect(fault.textContent).not.toMatch(/try again/i);
+    expect(screen.getByTestId(byNode("referencePicker.fault.retry"))).toHaveTextContent("Retry");
+    expect(screen.getByTestId(byNode("referencePicker.fault.retry"))).toHaveClass("border-outline");
+    expect(field()).toHaveValue("salt");
+  });
+
+  // :45 WHEN tap referencePicker.fault.retry -> the results are read again for the query.
+  it(":45 Retry reads the results again for the query in the field", async () => {
+    let calls = 0;
+    server.use(failing(() => (calls += 1)));
+    renderWithProviders(<Host />);
+    type("salt");
+    await settle();
+    expect(calls).toBe(1);
+    server.use(candidates(SAL));
+    fireEvent.click(screen.getByTestId(byNode("referencePicker.fault.retry")));
+    await settle();
+    expect(results()).toEqual(["u-sal"]);
+    expect(screen.queryByTestId(byNode("referencePicker.fault"))).not.toBeInTheDocument();
+  });
+
+  // :47 WHEN the query changes GIVEN referencePicker.fault stands -> the results read again.
+  it(":47 a changed query reads again while the fault stands", async () => {
+    let calls = 0;
+    server.use(failing(() => (calls += 1)));
+    renderWithProviders(<Host />);
+    type("salt");
+    await settle();
+    expect(screen.getByTestId(byNode("referencePicker.fault"))).toBeInTheDocument();
+    server.use(candidates(SAL));
+    type("salto");
+    await settle();
+    expect(calls).toBe(1);
+    expect(results()).toEqual(["u-sal"]);
+    expect(screen.queryByTestId(byNode("referencePicker.fault"))).not.toBeInTheDocument();
+  });
+
+  // :49 ALWAYS no line stands where the results are GIVEN in flight or found nothing.
+  it(":49 an empty answer and a read in flight say nothing", async () => {
+    renderWithProviders(<Host />);
+    type("salt");
+    expect(screen.queryByTestId(byNode("referencePicker.fault"))).not.toBeInTheDocument();
+    await settle();
+    expect(resultRows()).toHaveLength(0);
+    expect(screen.queryByTestId(byNode("referencePicker.fault"))).not.toBeInTheDocument();
+  });
+});

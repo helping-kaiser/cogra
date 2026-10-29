@@ -37,6 +37,12 @@ import { admitsItem } from "@/lib/feed/feed-predicates";
 import { onFeedReselect } from "@/lib/feed/feed-reselect";
 import { RankedFeed, type FeedIo, type FeedWindow } from "@/lib/feed/ranked-feed";
 import { readReaderDefault, useReaderDefault } from "@/lib/feed/reader-default";
+import {
+  forgetCommittedFeedFilter,
+  readCommittedFeedFilter,
+  useCommittedFeedFilter,
+  writeCommittedFeedFilter,
+} from "@/lib/feed/committed-filter";
 import { fetchHeldTopicsFor } from "@/lib/api/held-topics-api";
 import { seenRecord } from "@/lib/history/seen-record";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
@@ -386,17 +392,23 @@ export function FeedView({
   // below from it is what makes the pages come back on the FIRST render,
   // before any paint.
   const [remembered] = useState(() => recallFeed(reader));
-  // THE READER'S DEFAULT (SettingsReading.md: "every feed opens with the
-  // reader's saved default"): what a new feed is ranked under, what the
-  // trigger speaks deviations from, and what the sheet's Reset stages.
+  // THE READER'S DEFAULT (SettingsReading.md:33: "a feed opens with the
+  // reader's saved default GIVEN no filter committed inside that feed stands
+  // on this device"): what the trigger speaks deviations from, and what the
+  // sheet's Reset stages.
   const readerDefault = useReaderDefault(reader);
+  // THE FILTER COMMITTED HERE LASTS ON THIS DEVICE (FeedSheet.md:65-67): a
+  // Done's filter stands through a reload and a cold launch, and the feed
+  // opens with it; it never changes the saved default.
+  const committed = useCommittedFeedFilter(reader);
   // The held ranking. It outlives this mount through the memory, and a
   // different reader gets a feed of their own (`feed-memory.ts`), opened
-  // under their own default as it stands at that moment.
+  // under the filter they committed here, else their own default, as it
+  // stands at that moment.
   const feedRef = useRef<RankedFeed | null>(remembered?.feed ?? null);
   const feedFor = useCallback((who: string | null): RankedFeed => {
     if (feedRef.current === null || feedRef.current.reader !== who) {
-      feedRef.current = new RankedFeed(who, readReaderDefault(who));
+      feedRef.current = new RankedFeed(who, readCommittedFeedFilter(who) ?? readReaderDefault(who));
     }
     return feedRef.current;
   }, []);
@@ -404,7 +416,7 @@ export function FeedView({
   // A remembered feed comes back with the filter its pages were made under,
   // never the default, so the pill and the list never disagree.
   const [applied, setApplied] = useState<FeedFilterValue | null>(() => remembered?.feed.filter ?? null);
-  const filter = applied ?? readerDefault;
+  const filter = applied ?? committed ?? readerDefault;
   // Whose view the feed borrows, for the sheet's and the trigger's words.
   const [borrowedHandle, setBorrowedHandle] = useState<string | null>(null);
   // THE SHEET (FeedSheet.md): open, and what it has staged since it opened.
@@ -707,17 +719,22 @@ export function FeedView({
     if (!sameFilter(staged, filter)) {
       setSaid(triggerName(feedFilterSummary(staged, readerDefault, borrowedHandle), WHAT_YOUR_FEED_SHOWS));
       setApplied(staged);
+      // Kept on this device until the reader changes it (FeedSheet.md:65),
+      // never as the saved default (:67).
+      writeCommittedFeedFilter(reader, staged);
       announceFeedDone(staged);
     }
     triggerRef.current?.querySelector("button")?.focus();
-  }, [borrowedHandle, filter, readerDefault, staged]);
+  }, [borrowedHandle, filter, reader, readerDefault, staged]);
 
   // FEEDNOTHING'S WAY BACK (FeedNothing.md:7): the filter returns to its
-  // default — the reader's — and the feed shows its default view.
+  // default — the reader's — and the feed shows its default view. The
+  // committed filter is let go, so the feed follows the saved default again.
   const showPostsAgain = useCallback(() => {
+    forgetCommittedFeedFilter(reader);
     setApplied(readerDefault);
     announceFeedDone(readerDefault);
-  }, [readerDefault]);
+  }, [reader, readerDefault]);
 
   // The pages, kept for the next mount. Written from an effect rather than
   // from each fetch so no path can set state and forget to record it.

@@ -42,7 +42,7 @@ import { Icon } from "@/lib/ui/icons";
 import { formatReferenceParamWords } from "@/lib/ui/reference-format";
 import { formatStancePair } from "@/lib/ui/stance-format";
 import { formatTagPair, formatTagParamWords } from "@/lib/ui/tag-format";
-import { BottomSheet } from "./bottom-sheet";
+import { BottomSheet, SHEET_RAISED } from "./bottom-sheet";
 import { ListRow } from "./list-row";
 import { MonogramAvatar } from "./monogram-avatar";
 import { PairReadout } from "./pair-readout";
@@ -157,7 +157,7 @@ export function RefsSheet({
   // but a second Back. Dropping it as the row is followed is what makes Back
   // land where the reader opened it from.
   return (
-    <BottomSheet open={open} onClose={onClose} title={TITLE} testId={testId}>
+    <BottomSheet open={open} onClose={onClose} title={TITLE} testId={testId} maxHeight={SHEET_RAISED}>
       {topics.length > 0 && <SectionLabel>{TAGS_LABEL}</SectionLabel>}
       {topics.map((claim) => {
         const name = claim.hashtag.name.value ?? "";

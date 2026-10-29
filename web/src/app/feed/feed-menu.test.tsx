@@ -451,4 +451,37 @@ describe("the feed's post menu", () => {
     // A removed post has no menu left.
     expect(screen.queryByTestId(byNode("feed.card.menu", "p1"))).not.toBeInTheDocument();
   });
+
+  // FeedRemoveConfirm.md:13 — WHEN the removal does not go through ->
+  // feed.dialog stays up with its pair AND the line That didn't send. Try
+  // again. stands above it AND feed.dialog.remove reads Retry AND the post is
+  // not removed. Offline is the same state: no answer reached the device.
+  it("a_removal_with_no_answer_keeps_the_feed_dialog_with_the_line_and_retry", async () => {
+    let calls = 0;
+    server.use(
+      ...rankedFeed([post("p1", "acct-1"), post("p2")]),
+      gqlLink.mutation("RemoveContent", () => {
+        calls += 1;
+        return HttpResponse.error();
+      }),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    await openMenu();
+    fireEvent.click(screen.getByTestId("feed.menuSheet.remove"));
+    const dialog = (await screen.findByTestId("feed.dialog")) as HTMLDialogElement;
+    fireEvent.click(screen.getByTestId("feed.dialog.remove"));
+    const line = await screen.findByTestId("feed.dialog.line");
+    expect(line).toHaveTextContent("That didn't send. Try again.");
+    expect(
+      line.compareDocumentPosition(screen.getByTestId("feed.dialog.remove")) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByTestId("feed.dialog.remove")).toHaveTextContent("Retry");
+    expect(screen.getByTestId("feed.dialog.keep")).toHaveTextContent("Keep it");
+    expect(dialog.open).toBe(true);
+    expect(screen.queryByTestId(byNode("feed.card.removalMark", "p1"))).not.toBeInTheDocument();
+    expect(screen.getByTestId(byNode("feed.card", "p1"))).toHaveTextContent("body of p1");
+    // Retry asks the same removal again.
+    fireEvent.click(screen.getByTestId("feed.dialog.remove"));
+    await waitFor(() => expect(calls).toBe(2));
+  });
 });

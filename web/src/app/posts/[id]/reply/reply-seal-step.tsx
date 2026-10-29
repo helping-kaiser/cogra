@@ -375,6 +375,7 @@ export function ReplySealStep({
             onChange={onReferences}
             fieldErrors={referenceErrors}
             cap={REFERENCE_BATCH_CAP}
+            scale="comment"
             testIdPrefix="reply"
           />
           <div className="flex justify-end">

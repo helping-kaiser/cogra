@@ -225,6 +225,27 @@ describe("Explore at rest", () => {
     expect(screen.getByTestId(byNode("explore.skyCard"))).toBeInTheDocument();
   });
 
+  // ExploreSearch.md:13 ALWAYS explore.searchField.clear stands at the field's
+  // end, spoken Clear search, GIVEN a query stands; :15 WHEN tap it -> the
+  // query empties AND explore.searchField keeps the focus AND Explore at rest
+  // stands again with its recent searches.
+  it("explore_search_md_13_15_the_clear_x_is_the_fields_end_and_keeps_its_focus", async () => {
+    rememberSearch("me", "tide pools");
+    serveSearch(() => answer([]));
+    renderExplore();
+    type("salt");
+    const clear = screen.getByTestId("explore.searchField.clear");
+    expect(clear).toHaveAccessibleName(CLEAR_SEARCH);
+    expect(clear).toHaveClass("size-8");
+    expect(screen.getByTestId("explore.searchField").lastElementChild).toBe(clear);
+    clear.focus();
+    fireEvent.click(clear);
+    expect(field()).toHaveValue("");
+    expect(field()).toHaveFocus();
+    expect(screen.getByTestId(byNode("explore.skyCard"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("explore.recent", "tide-pools"))).toBeInTheDocument();
+  });
+
   it("explore_md_15_back_mid_query_clears_to_rest_and_never_leaves_explore", async () => {
     serveSearch(() => answer([]));
     renderExplore();
@@ -338,6 +359,22 @@ describe("Explore at rest", () => {
     expect(within(door).getByRole("link")).toHaveAttribute("href", "/explore/topics");
   });
 
+  // Explore.md:39 Your topics alone, with no second line, GIVEN the held count
+  // has not arrived; :41 … and 0 held GIVEN the reader holds no topic.
+  it("explore_md_39_41_no_second_line_before_the_count_and_0_held_for_none", async () => {
+    server.use(
+      gqlLink.query("HeldTopicsCount", () =>
+        HttpResponse.json({
+          data: { me: { __typename: "User", id: "me", heldTopics: { __typename: "HeldTopicConnection", totalCount: 0 } } },
+        }),
+      ),
+    );
+    renderExplore();
+    const door = screen.getByTestId(byNode("explore.topics"));
+    expect(within(door).queryByTestId(byNode("explore.topics.second"))).toBeNull();
+    expect(await within(door).findByTestId(byNode("explore.topics.second"))).toHaveTextContent("0 held");
+  });
+
   it("explore_md_41_the_door_prints_no_count_it_could_not_read", async () => {
     server.use(gqlLink.query("HeldTopicsCount", () => HttpResponse.error()));
     renderExplore();
@@ -389,6 +426,48 @@ describe("Explore searching", () => {
     expect(seam).toHaveTextContent("Beyond your reach — newest first");
     const third = screen.getByTestId(byNode("explore.result", "3"));
     expect(seam.compareDocumentPosition(third) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // ExploreSearch.md:9 the results stand people, then topics, then content;
+  // :11 each section stands its own ranked head then its own rest, and
+  // explore.seam closes the head of each section that has a rest, one per
+  // section, keyed people, topics or content. ExplorePerson.md:15 the people's
+  // seam before explore.profilesDoor; :17 a person past it carries nothing on
+  // its right edge.
+  it("explore_search_md_9_11_each_section_closes_its_head_with_its_own_seam", async () => {
+    serveSearch(() =>
+      answer(
+        [
+          { node: person("u1", "Sal Torres", "saltorres"), score: 4.2 },
+          { node: person("u2", "Ines Salas", "inesalas"), score: null },
+          { node: tag("saltmaps"), score: 3.3 },
+          { node: tag("saltcrust"), score: null },
+          { node: post("p1", "Salt maps", { cover: false }), score: 9.1 },
+          { node: post("p2", "Salt rubbing"), score: null },
+        ],
+        { hasMorePeople: true },
+      ),
+    );
+    renderExplore();
+    type("sal");
+    await waitFor(() => expect(rowNames()).toHaveLength(6));
+    const seams = screen.getAllByTestId(byNode("explore.seam"));
+    expect(seams.map((seam) => seam.getAttribute("data-testid-key"))).toEqual(["people", "topics", "content"]);
+    const resultAt = (key: string) => screen.getByTestId(byNode("explore.result", key));
+    const before = (a: Element, b: Element) =>
+      expect(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // Each seam sits between its section's head and its rest.
+    before(resultAt("1"), seams[0]!);
+    before(seams[0]!, resultAt("2"));
+    before(resultAt("3"), seams[1]!);
+    before(seams[1]!, resultAt("4"));
+    before(resultAt("5"), seams[2]!);
+    before(seams[2]!, resultAt("6"));
+    // The people's seam stands before the door.
+    before(seams[0]!, screen.getByTestId(byNode("explore.profilesDoor")));
+    // A person past the seam carries nothing on its right edge.
+    expect(screen.queryByTestId(byNode("explore.result.rank", "2"))).toBeNull();
+    expect(screen.queryByTestId(byNode("explore.result.value", "2"))).toBeNull();
   });
 
   it("explore_search_md_11_a_tag_or_person_past_the_seam_carries_nothing_on_its_edge", async () => {
@@ -470,14 +549,22 @@ describe("Explore searching", () => {
     expect(asks.map((ask) => ask.query)).toEqual(["salt", "salt flats", "salt flats"]);
   });
 
-  it("explore_search_md_61_a_failed_read_with_nothing_loaded_says_the_house_line_with_retry", async () => {
+  // ExploreSearch.md:69 WHEN a read fails GIVEN nothing is loaded -> Can't
+  // reach the server — results can't load right now. over an outlined Retry
+  // stands in the results' place AND NEVER the line says try again.
+  it("explore_search_md_69_a_failed_read_with_nothing_loaded_says_the_noun_line_over_retry", async () => {
     serveSearch(() => null);
     renderExplore();
     type("salt");
-    expect(await screen.findByTestId("explore-transport-error")).toHaveTextContent(
-      "Can't reach the server. Check your connection and try again.",
-    );
-    expect(screen.getByTestId("explore-retry")).toHaveTextContent("Retry");
+    const line = await screen.findByTestId("explore-transport-error");
+    expect(line).toHaveTextContent("Can't reach the server — results can't load right now.");
+    expect(line.textContent).not.toMatch(/try again/i);
+    const retry = screen.getByTestId("explore-retry");
+    expect(retry).toHaveTextContent("Retry");
+    expect(retry.className).toContain("border-outline");
+    // Over: the line, then the Retry under it, in one column.
+    expect(line.parentElement).toHaveClass("flex-col");
+    expect(line.compareDocumentPosition(retry) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("explore_search_md_65_a_guests_results_stand_newest_with_ages_no_rank_no_seam", async () => {
@@ -615,11 +702,20 @@ describe("the search filter sheet", () => {
     expect(screen.getByTestId(byNode("explore.filterTrigger"))).toHaveTextContent("Everything");
   });
 
-  it("explore_filter_md_41_a_guests_filter_carries_no_seen_toggle", async () => {
+  // ExploreFilter.md:41 ALWAYS the search filter carries no
+  // explore.filterSheet.order, so no Ranked, no Newest and no Show what you've
+  // already seen, and holds explore.filterSheet.kinds and
+  // explore.filterSheet.foot alone GIVEN the reader is a guest.
+  it("explore_filter_md_41_a_guests_filter_holds_the_kinds_and_the_foot_alone", async () => {
     serveSearch(() => answer([]));
     renderExplore({ guest: true });
     const sheet = await openSheet();
     expect(within(sheet).queryByRole("checkbox", { name: "Show what you've already seen" })).toBeNull();
+    expect(within(sheet).queryByTestId("explore.filterSheet.order")).toBeNull();
+    expect(within(sheet).queryByText("Ranked")).toBeNull();
+    expect(within(sheet).queryByText("Newest")).toBeNull();
+    expect(within(sheet).getByTestId("explore.filterSheet.kinds")).toBeInTheDocument();
+    expect(within(sheet).getByTestId("explore.filterSheet.foot")).toBeInTheDocument();
   });
 });
 
@@ -665,7 +761,26 @@ describe("nothing found, and comments without a scope", () => {
     expect(row.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("explore_unscoped_md_11_a_scoped_query_replaces_the_line_with_the_comments", async () => {
+  // ExploreUnscoped.md:11 ALWAYS explore.empty alone reads Found through people
+  // and tags — start with @handle or #tag. where results would stand, and no
+  // other line stands beside it GIVEN Comments is on beside another kind, the
+  // query names no @handle or #tag, and the other kinds found nothing.
+  it("explore_unscoped_md_11_beside_another_kind_with_nothing_found_the_scope_line_stands_alone", async () => {
+    const asks = serveSearch(() => answer([]));
+    commentsOnly(["posts", "comments"]);
+    renderExplore();
+    type("salt flats");
+    await waitFor(() => expect(asks).toHaveLength(1));
+    const empties = await screen.findAllByTestId(byNode("explore.empty"));
+    expect(empties).toHaveLength(1);
+    expect(within(empties[0]!).getByTestId(byNode("explore.empty.title"))).toHaveTextContent(
+      "Found through people and tags — start with @handle or #tag.",
+    );
+    expect(screen.queryByText(/Nothing carries that name/)).toBeNull();
+    expect(rowNames()).toEqual([]);
+  });
+
+  it("explore_unscoped_md_13_a_scoped_query_replaces_the_line_with_the_comments", async () => {
     serveSearch(() => answer([{ node: comment("c1", "Wax sticks", "Salt flats"), score: 1 }]));
     commentsOnly(["comments"]);
     renderExplore();
