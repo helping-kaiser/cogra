@@ -3,7 +3,8 @@
 // THE OPINIONS PAGE (design/designs/canonical/screens/ProfileStances.jsx;
 // behavior/ProfileStances.md; graph.json `ProfileStances`). Opened from any
 // profile's figures row: titled with the person's handle and `Opinions`, the
-// two directions on two tabs named in words — `On them` · `By them` — and
+// two directions on two tabs named in words — `On them` · `By them`, `On you` ·
+// `By you` on the reader's own — and
 // never one merged list. Each row is a person with the public opinion the row
 // is about (`StanceRow`), read-only, strongest first; tapping one opens their
 // profile, whose arrow reads `Back to the opinions`. A read drill-in: the back
@@ -61,27 +62,39 @@ export function rowKey(opinion: HeldOpinionView): string {
   return opinion.holder.handle ?? opinion.holderId;
 }
 
-/** The tab row (ProfileStances.jsx): the choice is named `Which direction`. */
-export const DIRECTION_TABS: readonly Tab<OpinionDirection>[] = [
+/**
+ * The tab row (ProfileStances.jsx): the choice is named `Which direction`.
+ * Another's page and a deleted account's read `On them` · `By them`; the
+ * reader's own speaks in the own figures' second person, `On you` · `By
+ * you` (ProfileStances.md:7-9; copy-voice, *The opinions page*).
+ */
+export function directionTabs(own: boolean): readonly Tab<OpinionDirection>[] {
+  return own ? OWN_TABS : THEIR_TABS;
+}
+const THEIR_TABS: readonly Tab<OpinionDirection>[] = [
   { id: "on", label: "On them" },
   { id: "by", label: "By them" },
+];
+const OWN_TABS: readonly Tab<OpinionDirection>[] = [
+  { id: "on", label: "On you" },
+  { id: "by", label: "By you" },
 ];
 export const DIRECTION_TABS_LABEL = "Which direction";
 
 /**
- * The empty list's line, per tab and whose page it is. Calm, naming what
- * would fill it, never the error colour (copy-voice, *The empty sheet*).
- * Another's `On them` reads the opinions sheet's blessed line — the reader's
- * own opinion would be the first; the rest are this page's own, unblessed
- * (reported to design).
+ * The empty list's line, per tab and whose page it is: the figure's own noun
+ * at zero, in the empty sheet's calm register, never the error colour
+ * (ProfileStances.md:31-41; copy-voice, *The opinions page*). Another's
+ * `On them` keeps the opinions sheet's `No opinions yet — yours would be the
+ * first.`; a deleted account, which will give none again, says so in the past.
  */
 export function emptyLine(direction: OpinionDirection, whose: "own" | "other" | "deleted", handle: string): string {
   if (direction === "on") {
     if (whose === "other") return NO_OPINIONS;
-    return whose === "own" ? "No opinions on you yet." : "No opinions on this account.";
+    return whose === "own" ? "No opinions on you yet." : "No opinions on this account yet.";
   }
-  if (whose === "own") return "You haven't given an opinion on anyone yet.";
-  return whose === "other" ? `@${handle} hasn't given an opinion on anyone yet.` : "This account gave no opinions.";
+  if (whose === "own") return "No opinions by you yet.";
+  return whose === "other" ? `No opinions by @${handle} yet.` : "This account gave no opinions.";
 }
 
 type Rows = { readonly direction: OpinionDirection; readonly rows: readonly HeldOpinionView[] };
@@ -222,7 +235,7 @@ export function OpinionsScreen({
             backTestId="opinions-back"
           />
           <TabBar
-            tabs={DIRECTION_TABS}
+            tabs={directionTabs(own)}
             value={direction}
             ariaLabel={DIRECTION_TABS_LABEL}
             onSelect={onDirection}

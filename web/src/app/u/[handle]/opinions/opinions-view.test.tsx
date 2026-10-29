@@ -310,7 +310,7 @@ describe("OpinionsScreen", () => {
     fireEvent.click(screen.getByTestId(byNode("profileStances.tabRow.byTab")));
     await waitFor(() =>
       expect(screen.getByTestId(byNode("profileStances.empty.title"))).toHaveTextContent(
-        "@ada hasn't given an opinion on anyone yet.",
+        "No opinions by @ada yet.",
       ),
     );
     expect(screen.getByTestId(byNode("profileStances.empty.title")).className).not.toContain("error");
@@ -323,8 +323,37 @@ describe("OpinionsScreen", () => {
     fireEvent.click(screen.getByTestId(byNode("profileStances.tabRow.byTab")));
     await waitFor(() =>
       expect(screen.getByTestId(byNode("profileStances.empty.title"))).toHaveTextContent(
-        "You haven't given an opinion on anyone yet.",
+        "No opinions by you yet.",
       ),
+    );
+  });
+
+  it("names the reader's own tabs On you and By you (ProfileStances.md:9)", async () => {
+    server.use(me("u-me", "me"), myProfile(), userOpinions("on", [[]]));
+    renderWithProviders(<OpinionsScreen handle={null} />, { store: signedInStore() });
+    await screen.findByTestId(byNode("profileStances.empty.title"));
+    const cells = within(screen.getByRole("group", { name: "Which direction" })).getAllByRole("button");
+    expect(cells.map((cell) => cell.textContent)).toEqual(["On you", "By you"]);
+  });
+
+  it("names the tabs On you and By you on the reader's own drill-in too", async () => {
+    server.use(me("u-me", "me"), theirProfile("u-me", "me"), userOpinions("on", [[]]));
+    renderWithProviders(<OpinionsScreen handle="me" />, { store: signedInStore() });
+    await waitFor(() => expect(screen.getByTestId(byNode("profileStances.tabRow.onTab"))).toHaveTextContent("On you"));
+    expect(screen.getByTestId(byNode("profileStances.tabRow.byTab"))).toHaveTextContent("By you");
+  });
+
+  it("keeps On them and By them on a deleted account's page, and says its empty lists (:7, :37, :39)", async () => {
+    server.use(theirProfile("u-gone", "gone", true), userOpinions("on", [[]]), userOpinions("by", [[]]));
+    renderWithProviders(<OpinionsScreen handle="gone" />);
+    expect(await screen.findByTestId(byNode("profileStances.empty.title"))).toHaveTextContent(
+      "No opinions on this account yet.",
+    );
+    const cells = within(screen.getByRole("group", { name: "Which direction" })).getAllByRole("button");
+    expect(cells.map((cell) => cell.textContent)).toEqual(["On them", "By them"]);
+    fireEvent.click(screen.getByTestId(byNode("profileStances.tabRow.byTab")));
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("profileStances.empty.title"))).toHaveTextContent("This account gave no opinions."),
     );
   });
 
