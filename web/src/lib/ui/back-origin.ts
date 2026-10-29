@@ -4,6 +4,7 @@
 // notification — and the feed otherwise. One table, so the post and the
 // profile cannot name the same origin two ways.
 
+import { streamClipOf, streamHref } from "@/lib/reel/stream-origin";
 import { opinionsHref, parseOpinionsOrigin } from "@/lib/profile/opinions-route";
 import { FROM_YOUR_TOPICS, YOUR_TOPICS_HREF } from "@/lib/topics/your-topics";
 
@@ -59,5 +60,9 @@ export function backFor(from: string | null | undefined): BackTarget {
       label: "Back to the profile",
     };
   }
+  // The stream reads `Back to the stream` and returns into it at the clip the
+  // reader left (copy-voice.md:721-722; PostDetailVideo.md:33).
+  const clip = streamClipOf(from);
+  if (clip !== null) return { href: streamHref(clip), label: "Back to the stream" };
   return ORIGINS[from] ?? FEED;
 }
