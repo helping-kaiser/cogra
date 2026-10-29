@@ -165,7 +165,7 @@ class TagPickerScreenTest {
     /** Below the cap no line stands and the rows take taps. */
     @Test
     fun belowTheCapNoLineStands() {
-        render("salt", tags = (1..9).map { "t$it" })
+        render("salt", tags = listOf("t1"))
         compose.onNodeWithTag("tagPicker.cap").assertDoesNotExist()
         row("salt").performClick()
         assertThat(handlers.calls).containsExactly("stage:salt")

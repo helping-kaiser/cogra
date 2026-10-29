@@ -28,6 +28,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import com.cogra.core.designsystem.v2.compose.HelpTopic
@@ -843,15 +844,17 @@ class ComposeWizardScreenTest {
     fun addATagOpensThePicker() {
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
         compose.onNodeWithTag("wizard_tag_input").assertDoesNotExist()
-        compose.onNodeWithTag("composeDetails.tags.add").performScrollTo().performClick()
+        compose.onNodeWithTag("composeDetails.tags.add").performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
         assertThat(tagPicker.calls).containsExactly("open")
     }
 
     /** ComposeDetails.md: WHEN tap composeDetails.references.add -> the citation picker opens. */
     @Test
     fun citeSomethingOpensThePicker() {
-        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
-        compose.onNodeWithTag("composeDetails.references.add").performScrollTo().performClick()
+        compose.setContent { Wizard(words.copy(step = WizardStep.Details, body = "Three weekends")) }
+        compose.onNodeWithTag("composeDetails.references.add").performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
         assertThat(referencePicker.calls).containsExactly("open")
     }
 

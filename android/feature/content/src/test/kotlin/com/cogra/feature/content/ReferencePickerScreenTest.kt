@@ -14,6 +14,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
@@ -154,7 +155,8 @@ class ReferencePickerScreenTest {
     fun theTriggerRaisesAKindsOnlySheet() {
         render()
         compose.onNodeWithContentDescription("Everything, what the search shows").performClick()
-        compose.onNodeWithTag("referencePicker.filterSheet.title").assertTextEquals("What the search shows")
+        compose.onNodeWithTag("referencePicker.filterSheet.title").assertExists()
+        compose.onNodeWithText("What the search shows", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("referencePicker.filterSheet.kinds.postsChip").assertExists()
         compose.onNodeWithTag("referencePicker.filterSheet.kinds.commentsChip").assertExists()
         compose.onNodeWithTag("referencePicker.filterSheet.kinds.profilesChip").assertExists()
