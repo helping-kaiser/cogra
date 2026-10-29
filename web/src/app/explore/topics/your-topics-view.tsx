@@ -36,6 +36,7 @@ import { appendDeduped } from "@/lib/api/pagination";
 import { topicHref, yourTopicsBack } from "@/lib/topics/your-topics";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { Button } from "@/lib/ui/button";
+import { EmptyState } from "@/lib/ui/empty-state";
 import type { DataNode } from "@/lib/ui/data-node";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { PageHeader } from "@/lib/ui/page-header";
@@ -157,9 +158,9 @@ export function YourTopicsView({ from = null }: { from?: string | null }) {
       )}
       {empty && (
         // Words only — calm, and naming where the gesture lives (copy-voice).
-        <p data-testid="yourTopics.empty" className="m-0 px-6 py-2 text-body-medium text-on-surface-variant">
-          {NO_TOPICS_YET}
-        </p>
+        <div className="px-6">
+          <EmptyState title={NO_TOPICS_YET} testId="your-topics-empty" node={{ path: "yourTopics.empty" }} />
+        </div>
       )}
       {rows.length > 0 && (
         // The list starts 4px under the header (YourTopics.jsx).
@@ -173,7 +174,13 @@ export function YourTopicsView({ from = null }: { from?: string | null }) {
                 pairFamily="stance"
                 pending={row.pending}
                 href={row.name === null ? null : topicHref(row.name)}
-                node={{ path: `${NODE.path}.heldTopic`, key: row.name ?? row.id }}
+                // A name moderation took away is `redactedTopic`, keyed by the
+                // held topic's id (YourTopics, round 24).
+                node={
+                  row.name === null
+                    ? { path: `${NODE.path}.redactedTopic`, key: row.id }
+                    : { path: `${NODE.path}.heldTopic`, key: row.name }
+                }
                 testId={`your-topics-row-${row.name ?? row.id}`}
               />
             </div>

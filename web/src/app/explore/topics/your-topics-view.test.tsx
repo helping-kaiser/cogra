@@ -161,12 +161,13 @@ describe("Your topics", () => {
       }),
     );
     render();
-    const row = await screen.findByTestId(byNode("yourTopics.heldTopic", "t-gone"));
-    expect(rowNames()).toEqual(["saltmaps", "t-gone"]);
-    expect(within(row).getByTestId(byNode("yourTopics.heldTopic.name", "t-gone")).textContent).toBe("#");
+    // The removed name is its own registered row, keyed by the held topic's id.
+    const row = await screen.findByTestId(byNode("yourTopics.redactedTopic", "t-gone"));
+    expect(rowNames()).toEqual(["saltmaps"]);
+    expect(within(row).getByTestId(byNode("yourTopics.redactedTopic.name", "t-gone")).textContent).toBe("#");
     expect(row.tagName).not.toBe("A");
     expect(within(row).queryByRole("link")).toBeNull();
-    expect(within(row).getByTestId(byNode("yourTopics.heldTopic.value", "t-gone"))).toHaveTextContent("+0.20 / +0.40");
+    expect(within(row).getByTestId(byNode("yourTopics.redactedTopic.value", "t-gone"))).toHaveTextContent("+0.20 / +0.40");
   });
 
   it("your_topics_md_13_rows_stand_strongest_first_as_served", async () => {
@@ -198,6 +199,7 @@ describe("Your topics", () => {
     serve([]);
     const { container } = render();
     expect(await screen.findByTestId("yourTopics.empty")).toHaveTextContent(NO_TOPICS_YET);
+    expect(screen.getByTestId("yourTopics.empty.title")).toHaveTextContent(NO_TOPICS_YET);
     expect(container.textContent).not.toMatch(/follow/i);
   });
 
