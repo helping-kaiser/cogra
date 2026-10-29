@@ -230,6 +230,7 @@ class ReplyWizardViewModelTest {
         processor,
         video,
         WriteSigner(sealer, identity),
+        com.cogra.domain.testing.ScriptedSearchRepository(),
     ).apply { start(target) }
 
     private val target = ReplyTarget(
@@ -911,8 +912,7 @@ class ReplyWizardViewModelTest {
     fun aRefusalOnAChipLandsOnThatChipRatherThanTheWholeReply() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onBodyChange("Words")
-        vm.onTagInputChange("rust")
-        vm.onAddTag()
+        vm.tagPicker.onStageTag("rust")
         vm.onNext()
         content.outcome = Outcome.Refused(
             listOf(UserError(ErrorCode.BAD_INPUT, "no such topic", field = listOf("tags", "0"))),

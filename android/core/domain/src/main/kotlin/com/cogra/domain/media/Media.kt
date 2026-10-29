@@ -8,6 +8,7 @@ import com.cogra.domain.MediaAssetState
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import kotlinx.coroutines.delay
+import java.time.Instant
 
 /**
  * One picture, processed on the device and ready to send.
@@ -351,7 +352,20 @@ interface MediaRepository {
      * server documents.
      */
     suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?>
+
+    /**
+     * The viewer's earliest published post whose gallery carries any of
+     * [mediaIds] — the composer's already-published marker
+     * (ComposeDetailsReused.md; api-spec.md `Query.ownPublishedPlacement`).
+     * The server resolves each id the way an attachment does, matching by
+     * asset id or rendition digest, and only the viewer's own posts answer.
+     * Null when nothing matches. More ids than a gallery holds is refused.
+     */
+    suspend fun ownPublishedPlacement(mediaIds: List<String>): Outcome<PublishedPlacement?>
 }
+
+/** The post the already-published marker names, and when it was published. */
+data class PublishedPlacement(val postId: String, val createdAt: Instant)
 
 /**
  * Where one uploaded asset stands, as `mediaAttachment` answers it — just

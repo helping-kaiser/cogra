@@ -10,6 +10,8 @@
 
 package com.cogra.domain.references
 
+import com.cogra.domain.feed.FeedKind
+
 /**
  * How load-bearing the cited thing is to the citing artifact. The
  * census calls this **effort `f`** and it rides the `pDirected` slot —
@@ -27,6 +29,13 @@ const val REFERENCE_DEFAULT_SUPPORT = 0.1
 
 /** Mirrors the API's per-kind batch cap (D7) so a surface refuses locally. */
 const val MAX_REFERENCES = 10
+
+/**
+ * The kinds a citation can point at, in the picker filter's order —
+ * Posts, Comments, Profiles (ReferencePicker.md: "the kinds a citation can
+ * point at"; the V1.0 scope cut): the search filter's list without Tags.
+ */
+val CITABLE_KINDS: List<FeedKind> = listOf(FeedKind.POST, FeedKind.COMMENT, FeedKind.PROFILE)
 
 /**
  * One citation an author is declaring: the cited node's L2 id and the

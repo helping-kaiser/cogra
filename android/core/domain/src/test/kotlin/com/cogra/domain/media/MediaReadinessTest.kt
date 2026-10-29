@@ -35,6 +35,9 @@ private class ScriptedMediaRepository : MediaRepository {
         calls += 1
         return answers.removeFirstOrNull() ?: error("mediaAttachment asked for more than scripted")
     }
+
+    override suspend fun ownPublishedPlacement(mediaIds: List<String>): Outcome<PublishedPlacement?> =
+        throw UnsupportedOperationException()
 }
 
 private fun asset(state: MediaAssetState, failureReason: String? = null) = MediaAssetView(

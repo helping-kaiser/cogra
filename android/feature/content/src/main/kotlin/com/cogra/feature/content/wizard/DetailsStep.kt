@@ -1,5 +1,6 @@
 package com.cogra.feature.content.wizard
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -12,10 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.CograTextField
+import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.compose.DescribeCounter
 import com.cogra.core.designsystem.v2.compose.DescribeSubject
 import com.cogra.core.designsystem.v2.compose.PickedRow
@@ -29,7 +34,9 @@ import com.cogra.core.designsystem.v2.media.ThumbBadge
 import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
+import com.cogra.domain.datelineWords
 import com.cogra.feature.content.R
+import java.time.Instant
 
 /**
  * `ComposeDetails` / `ComposeUploading` — the optional title and
@@ -52,6 +59,8 @@ internal fun ColumnScope.DetailsStepBody(
     onManagePictures: () -> Unit,
     onDescribePictures: () -> Unit,
     onCover: () -> Unit,
+    /** The already-published marker's door: opens the post it names (ComposeDetailsReused.md). */
+    onOpenPublished: (String) -> Unit,
     topics: @Composable () -> Unit,
     references: @Composable () -> Unit,
 ) {
@@ -66,6 +75,7 @@ internal fun ColumnScope.DetailsStepBody(
         val clip = state.video
         if (state.mode == BodyMode.Media && clip != null) {
             ClipBlock(state, clip, onRetryUpload, onRemovePick, onDescribePictures)
+            PublishedLine(state.publishedMarker, onOpenPublished)
         } else if (state.mode == BodyMode.Media) {
             // A gallery: the row opens the Show all sheet (a clip has its own
             // block above — one clip is not a set).
@@ -76,6 +86,7 @@ internal fun ColumnScope.DetailsStepBody(
                 testTag = "wizard_picked_row",
                 node = COMPOSE_DETAILS / "mediaRow",
             )
+            PublishedLine(state.publishedMarker, onOpenPublished)
             UploadFailures(state, onRetryUpload, onRemovePick)
             DescribeCounter(
                 described = state.describedCount,
@@ -106,7 +117,14 @@ internal fun ColumnScope.DetailsStepBody(
         // how words stand beside pictures, and the server refuses one
         // beside words.
         if (state.mode == BodyMode.Media) {
-            DescriptionField(state.description, state.descriptionTooLong, onDescriptionChange)
+            // ComposeDetailsVideo draws the clip's description two rows deep, the
+            // gallery's three (ComposeDetailsBody).
+            DescriptionField(
+                value = state.description,
+                tooLong = state.descriptionTooLong,
+                onValueChange = onDescriptionChange,
+                rows = if (clip != null) CLIP_DESCRIPTION_ROWS else GALLERY_DESCRIPTION_ROWS,
+            )
         }
 
         topics()
@@ -129,7 +147,12 @@ private fun ClipBlock(
     onRemove: (Int) -> Unit,
     onDescribe: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+    // The clip's block IS the media row on this path (web's twin registers it
+    // `composeDetails.mediaRow`), its one tile the row's first thumb.
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.fillMaxWidth().dataNode(COMPOSE_DETAILS / "mediaRow"),
+    ) {
         Text(
             text = "Video",
             style = MaterialTheme.typography.labelLarge,
@@ -150,7 +173,7 @@ private fun ClipBlock(
             removeLabel = REMOVE_VIDEO,
             removeTestTag = "wizard_video_remove",
             contentDescription = stringResource(R.string.content_tray_video),
-            testTag = "wizard_video_tile",
+            testTag = CLIP_TILE_NODE.tag,
         )
         UploadFailures(state, onRetry, onRemove)
         DescribeCounter(
@@ -183,6 +206,13 @@ internal fun UploadAside() {
             .testTag("wizard_upload_footnote"),
     )
 }
+
+/** The clip's tile, the media row's first thumb (`composeDetails.mediaRow.thumb`, keyed by place). */
+internal val CLIP_TILE_NODE: DataNode get() = (COMPOSE_DETAILS / "mediaRow" / "thumb").keyed("1")
+
+/** `ComposeDetailsVideo` draws the clip's description 2 rows deep; the gallery's `ComposeDetailsBody` 3. */
+private const val CLIP_DESCRIPTION_ROWS = 2
+private const val GALLERY_DESCRIPTION_ROWS = 3
 
 /** `ComposeDetailsVideo.jsx`: the clip tile, `width={54} height={96}`. */
 private val CLIP_TILE_WIDTH = 54.dp
@@ -218,14 +248,14 @@ private fun TitleField(value: String, tooLong: Boolean, onValueChange: (String) 
  * error state and counter the title wears.
  */
 @Composable
-private fun DescriptionField(value: String, tooLong: Boolean, onValueChange: (String) -> Unit) {
+private fun DescriptionField(value: String, tooLong: Boolean, onValueChange: (String) -> Unit, rows: Int) {
     CograTextField(
         value = value,
         onValueChange = onValueChange,
         label = "Description",
         optional = true,
         singleLine = false,
-        minLines = 3,
+        minLines = rows,
         cap = MAX_DESCRIPTION_CHARS,
         error = if (tooLong) {
             stringResource(R.string.content_error_description_too_long)
@@ -303,3 +333,33 @@ private fun UploadFailures(
         )
     }
 }
+
+/** The marker's words, which are also the door's accessible name (copy-voice *The already-published marker*). */
+internal fun publishedMarkerText(date: String): String = "Already in your post from $date."
+
+/**
+ * THE ALREADY-PUBLISHED MARKER (ComposeDetailsReused.md): one soft line under
+ * the media row in the honesty-marker ink, in the tappable form `Edited`
+ * wears — `label-small`, quiet, underlined, answering at 48 — named by its own
+ * words, its date the matched post's dateline (`12 September`, the year only
+ * when it is not this one). It opens the post it names; nothing asks, nothing
+ * gates, and Next stays as live as at rest.
+ */
+@Composable
+private fun PublishedLine(marker: PublishedMarker?, onOpen: (String) -> Unit, now: Instant = Instant.now()) {
+    marker ?: return
+    Text(
+        text = publishedMarkerText(datelineWords(marker.publishedAt, now)),
+        style = MaterialTheme.typography.labelSmall.copy(textDecoration = TextDecoration.Underline),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .dataNode(COMPOSE_DETAILS / "published")
+            .hitTarget(
+                interactive = Modifier.clickable(role = Role.Button) { onOpen(marker.postId) },
+                drawnHeight = MARKER_LINE,
+            ),
+    )
+}
+
+/** `label-small`'s line, the marker's drawn height. */
+private val MARKER_LINE = 16.dp

@@ -13,6 +13,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -22,8 +23,13 @@ import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.VideoFrame
+import com.cogra.feature.content.RecordingReferencePicker
+import com.cogra.feature.content.RecordingTagPicker
 import com.cogra.feature.content.ReferenceRow
 import com.cogra.feature.content.ReferenceSectionState
+import com.cogra.feature.content.TagPickerState
+import com.cogra.feature.content.TagRow
+import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.PickedAsset
@@ -82,6 +88,8 @@ class ReplyWizardScreenTest {
     private val helps = mutableListOf<HelpTopic>()
     private val stances = mutableListOf<Pair<Double, Double>>()
     private val marks = mutableListOf<Boolean>()
+    private val tagPicker = RecordingTagPicker()
+    private val referencePicker = RecordingReferencePicker()
 
     @Composable
     private fun Wizard(state: ReplyWizardState) {
@@ -113,22 +121,18 @@ class ReplyWizardScreenTest {
             onCloseHelp = {},
             onSign = { signs += 1 },
             onRestoreKey = { restores += 1 },
-            onTagInputChange = {},
-            onAddTag = {},
             onRemoveTag = {},
             onTuneTag = {},
             onDoneTuningTag = {},
             onTagRelevanceChange = { _, _ -> },
             onTagConfidenceChange = { _, _ -> },
-            onOpenFinder = {},
-            onCloseFinder = {},
-            onFinderQueryChange = {},
-            onPickReference = {},
             onRemoveReference = { referenceRemovals += it },
             onTuneReference = { referenceTunings += it },
             onDoneTuningReference = {},
             onReferenceRelevanceChange = { _, _ -> },
             onReferenceSupportChange = { _, _ -> },
+            tagPicker = tagPicker,
+            referencePicker = referencePicker,
         )
     }
 
@@ -398,17 +402,60 @@ class ReplyWizardScreenTest {
         assertThat(sheets).containsExactly(ReplySealSheet.License)
     }
 
-    /** `ReplySeal` 4 and 5 — the two declaring offers. */
+    /**
+     * ReplySeal.md: ALWAYS the seal carries + Add a tag and + Cite something as rows of its
+     * acts card — and round 27: each opens its picker, never an inline field or finder.
+     */
     @Test
-    fun theSealOffersTopicsAndCitationsWhileNoneAreDeclared() {
+    fun theSealsTwoAddsOpenThePickers() {
         compose.setContent { Wizard(sealWithWords()) }
 
-        compose.onNodeWithTag("reply_seal_add_topic").performClick()
+        compose.onNodeWithText("+ Add a tag").assertExists()
+        compose.onNodeWithTag("reply_seal_add_tag").performClick()
         compose.onNodeWithTag("reply_seal_cite").performClick()
 
-        assertThat(sheets)
-            .containsExactly(ReplySealSheet.Topics, ReplySealSheet.References)
-            .inOrder()
+        assertThat(tagPicker.calls).containsExactly("open")
+        assertThat(referencePicker.calls).containsExactly("open")
+        assertThat(sheets).isEmpty()
+    }
+
+    /** An open picker stands in the reply's place, its arrow naming the comment. */
+    @Test
+    fun anOpenPickerStandsInTheRepliesPlace() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(tagSection = TagSectionState(picker = TagPickerState())))
+        }
+        compose.onNodeWithTag("tagPicker").assertExists()
+        compose.onNodeWithContentDescription("Back to the comment").assertExists()
+        compose.onNodeWithTag("reply_seal_acts").assertDoesNotExist()
+    }
+
+    /** A staged tag reads back on the Tags row, the door to its manager; + Add a tag stays. */
+    @Test
+    fun stagedTagsReadBackAndTheAddStays() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(tagSection = TagSectionState(tags = listOf(TagRow("glovebox")))))
+        }
+        compose.onNodeWithText("#glovebox").assertExists()
+        compose.onNodeWithTag("reply_seal_add_tag").assertExists()
+        compose.onNodeWithTag("reply_seal_tags").performClick()
+        assertThat(sheets).containsExactly(ReplySealSheet.Tags)
+    }
+
+    /** ReplyCited.md: WHEN tap a staged citation's name -> the citation's pair sheet opens. */
+    @Test
+    fun theOneCitationsNameOpensItsPair() {
+        compose.setContent { Wizard(sealWithCitations(1)) }
+        compose.onNodeWithTag("reply_seal_cited_repair").performClick()
+        assertThat(referenceTunings).containsExactly("p-0")
+    }
+
+    /** ReplyCitedMany.md: ALWAYS + Add a tag and + Cite something stay GIVEN two or more citations. */
+    @Test
+    fun bothAddsStayWithManyCitations() {
+        compose.setContent { Wizard(sealWithCitations(2)) }
+        compose.onNodeWithTag("reply_seal_add_tag").assertExists()
+        compose.onNodeWithTag("reply_seal_cite").assertExists()
     }
 
     // The N-cited round (jakob's rulings 2026-09-14, design backlog item 70).

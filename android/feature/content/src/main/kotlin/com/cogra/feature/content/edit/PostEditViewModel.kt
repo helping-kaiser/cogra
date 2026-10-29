@@ -24,6 +24,7 @@ import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
+import com.cogra.domain.search.SearchRepository
 import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
@@ -38,8 +39,12 @@ import com.cogra.domain.signing.wireReason
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.topics.TagClaim
 import com.cogra.feature.content.ReferenceCandidateRow
+import com.cogra.feature.content.ReferencePickerEditor
+import com.cogra.feature.content.ReferencePickerHandlers
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
+import com.cogra.feature.content.TagPickerEditor
+import com.cogra.feature.content.TagPickerHandlers
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.editableRow
@@ -251,6 +256,8 @@ class PostEditViewModel @Inject constructor(
     private val media: MediaRepository,
     processor: MediaProcessor,
     video: VideoProcessor,
+    /** The one search read the tag picker's index rides (`#prefix` over topics). */
+    search: SearchRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PostEditUiState())
@@ -264,6 +271,24 @@ class PostEditViewModel @Inject constructor(
         state = _state,
         tagsOf = { it.tagSection },
         withTags = { state, tags -> state.copy(tagSection = tags) },
+        referencesOf = { it.referenceSection },
+        withReferences = { state, refs -> state.copy(referenceSection = refs) },
+    )
+
+    /** `+ Add a tag`: the tag picker in the edit's place (TagPicker), its picks staged straight into the edit. */
+    val tagPicker: TagPickerHandlers = TagPickerEditor(
+        scope = viewModelScope,
+        search = search,
+        state = _state,
+        tagsOf = { it.tagSection },
+        withTags = { state, tags -> state.copy(tagSection = tags) },
+    )
+
+    /** `+ Cite something`: the citation picker in the edit's place (ReferencePicker). */
+    val referencePicker: ReferencePickerHandlers = ReferencePickerEditor(
+        scope = viewModelScope,
+        references = references,
+        state = _state,
         referencesOf = { it.referenceSection },
         withReferences = { state, refs -> state.copy(referenceSection = refs) },
     )
