@@ -33,6 +33,7 @@ import com.cogra.domain.release.ReleaseRegistry
 import com.cogra.domain.removal.RemovalRepository
 import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.hidden.HiddenRepository
+import com.cogra.domain.invites.InvitesRepository
 import com.cogra.domain.notifications.NotificationsRepository
 import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.search.ExploreDeviceStore
@@ -64,6 +65,7 @@ import com.cogra.network.repo.ReleaseRegistryImpl
 import com.cogra.network.repo.RemovalRepositoryImpl
 import com.cogra.network.repo.ReportRepositoryImpl
 import com.cogra.network.repo.HiddenRepositoryImpl
+import com.cogra.network.repo.InvitesRepositoryImpl
 import com.cogra.network.repo.NotificationsRepositoryImpl
 import com.cogra.network.repo.HeldTopicsRepositoryImpl
 import com.cogra.network.repo.SavedRepositoryImpl
@@ -236,6 +238,9 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun savedRepository(impl: SavedRepositoryImpl): SavedRepository
+
+    @Binds
+    abstract fun invitesRepository(impl: InvitesRepositoryImpl): InvitesRepository
 
     @Binds
     abstract fun notificationsRepository(impl: NotificationsRepositoryImpl): NotificationsRepository

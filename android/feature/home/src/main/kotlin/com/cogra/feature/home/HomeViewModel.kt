@@ -7,6 +7,9 @@ import com.cogra.domain.ActorRef
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserProfile
+import com.cogra.domain.di.WebOrigin
+import com.cogra.domain.invites.InvitesRepository
+import com.cogra.domain.invites.MyApplication
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.signing.RegistrationFlow
@@ -51,8 +54,16 @@ data class HomeUiState(
     val applicant: Boolean = false,
     /** The applicant flow's last report; null before the first pass. */
     val progress: RegistrationProgress? = null,
-    /** In-memory only: the hint returns on the next app open. */
-    val waitingHintDismissed: Boolean = false,
+    /**
+     * The application the account reads by precedence, with its ask link —
+     * what the applicant's own card says (ApplicantWaiting, ApplicantRejected).
+     * Null for a member, or before the read answers.
+     */
+    val application: MyApplication? = null,
+    /** The waiting card was put away on this device (ApplicantWaiting.md:15). */
+    val cardPutAway: Boolean = false,
+    /** One-shot: the ask link landed on the clipboard; cleared once shown. */
+    val askLinkCopied: Boolean = false,
     val verificationToken: String = "",
     val resendEmail: String = "",
     val verifying: Boolean = false,
@@ -115,6 +126,8 @@ class HomeViewModel @Inject constructor(
     private val identity: IdentityStore,
     private val onboarding: OnboardingRepository,
     private val registration: RegistrationFlow,
+    private val invites: InvitesRepository,
+    @WebOrigin private val webOrigin: String,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeUiState())
@@ -175,7 +188,10 @@ class HomeViewModel @Inject constructor(
                     val applicant = profile?.accountState == AccountState.APPLICANT
                     // The poll/sign loop is onboarding-only: started (or
                     // poked) for an applicant, never for a member.
-                    if (applicant) registration.ensureAdvancing()
+                    if (applicant) {
+                        registration.ensureAdvancing()
+                        readApplication()
+                    }
                     val member = profile?.accountState == AccountState.MEMBER
                     // The pair's state is the graph's (hasReciprocated),
                     // the dismissal the account's (vouchBackDismissed);
@@ -269,8 +285,35 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /** In-memory: the hint is a reminder, so the next app open revives it. */
-    fun onDismissWaitingHint() = _state.update { it.copy(waitingHintDismissed = true) }
+    /** The ask link whole (auth.md "Link URLs": `/vouch/<link-id>`). */
+    fun askUrl(askLink: String): String = "$webOrigin/vouch/$askLink"
+
+    /**
+     * The applicant's own card: the application by precedence, whom it names,
+     * and the ask link it holds; and whether its waiting form was put away here.
+     * A read that fails keeps what the card last said.
+     */
+    private fun readApplication() {
+        viewModelScope.launch {
+            val putAway = identity.applicationCardPutAway()
+            val mine = (invites.myApplication() as? Outcome.Success)?.value
+            _state.update { it.copy(application = mine ?: it.application, cardPutAway = putAway) }
+        }
+    }
+
+    /**
+     * `Got it` on the waiting card: it steps aside and stays away on this
+     * device (ApplicantWaiting.md:15). The closed and landing cards stand
+     * whatever it says (:17, :19).
+     */
+    fun onPutCardAway() {
+        _state.update { it.copy(cardPutAway = true) }
+        viewModelScope.launch { identity.putApplicationCardAway() }
+    }
+
+    fun onAskLinkCopied() = _state.update { it.copy(askLinkCopied = true) }
+
+    fun onAskLinkCopiedShown() = _state.update { it.copy(askLinkCopied = false) }
 
     fun onApprovedShown() = _state.update { it.copy(approved = false) }
 

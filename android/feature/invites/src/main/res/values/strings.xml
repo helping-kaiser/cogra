@@ -1,31 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Invites, the approval pad, the two closing dialogs and the ask link's
+     landing (behavior/Invites.md and its siblings; copy-voice *The invites
+     round*, *The reject extension's lines*). Every %1$s handle arrives with
+     its @. -->
 <resources>
+    <!-- Invites (Invites.md, InvitesEmpty.md). -->
     <string name="invites_title">Invites</string>
-    <string name="back">Back</string>
-    <string name="invites_create_title">Invite someone you know</string>
-    <string name="invites_create_body">The link carries no stance — you choose it when you approve, and approving is your priced vouch.</string>
-    <string name="invites_single_use">Single-use</string>
-    <string name="invites_multi_use">Multi-use</string>
-    <string name="invites_create">Create link</string>
-    <string name="invites_share">Share</string>
+    <string name="invites_back_profile">Back to your profile</string>
+    <string name="invites_back_notifications">Back to Notifications</string>
+    <string name="invites_back_kept_picks">Back to Kept picks</string>
+    <string name="invites_new">New invite</string>
+    <string name="invites_create">Create invite</string>
+    <string name="invites_creating">Creating invite…</string>
+    <string name="invites_applications">Applications</string>
+    <string name="invites_live_links">Live links</string>
+    <string name="invites_ready">Ready for your approval</string>
+    <string name="invites_not_registered">Not fully registered yet</string>
+    <string name="invites_close_all">Close all</string>
+    <string name="invites_close_all_label">Close all %1$d applications from this link</string>
+    <string name="invites_group_single">Single use · %1$d waiting</string>
+    <string name="invites_group_many">Many uses · %1$d waiting</string>
+    <string name="invites_close_application">Close %1$s\'s application</string>
+    <string name="invites_copy_link">Copy the link</string>
     <string name="invites_revoke">Revoke</string>
-    <string name="invites_revoked">Revoked</string>
-    <string name="invites_vouch_signed">Approved — your vouch is signed and on its way.</string>
-    <string name="invites_signing_failed">Approved, but your vouch didn\'t finish signing — anything still pending can be finished from Home.</string>
-    <string name="invites_husk_hint">Your actor key isn\'t on this device, so approving is off until you restore it — the restore option is on the Home screen.</string>
-    <string name="applicant_ready">@%1$s applied and proved their email and key — ready for your approval.</string>
-    <string name="applicant_unverified">@%1$s applied; waiting on their email verification.</string>
-    <string name="applicant_no_key">@%1$s applied; waiting on their device key.</string>
-    <string name="applicant_incomplete">@%1$s applied; waiting on their email verification and device key.</string>
-    <string name="applicant_approved">@%1$s approved — waiting for their signature and landing.</string>
-    <string name="applicant_landed">@%1$s is a member.</string>
-    <string name="applicant_approve">Approve and vouch</string>
-    <string name="stance_p_directed">Directed weight</string>
-    <string name="stance_p_interest">Interest weight</string>
-    <string name="invites_cant_fund">Your account can\'t fund this approval right now.</string>
-    <string name="invites_bad_input">That didn\'t go through — the application or link may have expired or already been handled.</string>
-    <string name="invites_link_gone">That link is already gone.</string>
-    <string name="error_rate_limited">Too many attempts — wait a moment and try again.</string>
-    <string name="error_generic">Something went wrong. Try again.</string>
-    <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
+    <string name="invites_revoking">Revoking…</string>
+    <string name="invites_link_copied">Link copied</string>
+    <string name="invites_revoked">Invite revoked</string>
+    <string name="invites_link_single">Single use · not used yet</string>
+    <string name="invites_link_many">Many uses</string>
+    <string name="invites_link_expires">Expires in %1$s · %2$s</string>
+    <string name="invites_empty">No invites out yet. A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in.</string>
+    <string name="invites_finish_registering">%1$s has to finish registering before you can approve</string>
+    <string name="invites_already_waiting">%1$s is already waiting in your invites.</string>
+    <string name="invites_transport">Can\'t reach the server. Check your connection and try again.</string>
+    <string name="invites_loading">Loading…</string>
+
+    <!-- The create sheet, the fresh link, the expiry chooser (InviteNew.md,
+         InviteCreated.md, InviteExpiry.md). -->
+    <string name="invites_only_one">Only one person can use it</string>
+    <string name="invites_expires_after">Expires after</string>
+    <string name="invites_footnote">With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time.</string>
+    <string name="invites_your_link">Your invite link</string>
+    <string name="invites_share_link">Share link</string>
+    <string name="invites_expiry_24_hours">24 hours</string>
+    <string name="invites_expiry_7_days">7 days</string>
+    <string name="invites_expiry_30_days">30 days</string>
+
+    <!-- The approval pad (ApprovePad.md, VouchAskPad.md). -->
+    <string name="approve_note_act">Vouching is the act. Set signs your opinion on %1$s and brings them in.</string>
+    <string name="approve_note_answer">It is one signed, priced act — and it is theirs to answer: their opinion back completes the pair.</string>
+    <string name="approve_help_title">How vouching works</string>
+    <string name="approve_help_link">A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in.</string>
+    <string name="approve_help_set">Nothing is signed until Set.</string>
+
+    <!-- The two closing dialogs (RejectConfirm.md, RejectAllConfirm.md). -->
+    <string name="reject_title">Close %1$s\'s application?</string>
+    <string name="reject_body_told">It leaves your list and %1$s is told. Their account stays exactly as it is — signed in, and free to keep reading.</string>
+    <string name="reject_body_call">This is your call and nobody else\'s. Any member can still vouch them in, and %1$s gets a link to ask with.</string>
+    <string name="reject_close_it">Close it</string>
+    <string name="reject_closing_it">Closing it…</string>
+    <string name="reject_keep_it">Keep it</string>
+    <string name="reject_all_title">Close all %1$d applications from this link?</string>
+    <string name="reject_all_body_told">All %1$s leave your list and all %1$s people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.</string>
+    <string name="reject_all_body_call">This is your call and nobody else\'s. Any member can still vouch any of them in, and each gets a link to ask with.</string>
+    <string name="reject_close_them">Close them</string>
+    <string name="reject_closing_them">Closing them…</string>
+    <string name="reject_keep_them">Keep them</string>
+    <string name="reject_didnt_send">That didn\'t send. Try again.</string>
+    <string name="reject_retry">Retry</string>
+    <!-- A count in the batch dialog's prose: spelled out to twelve, digits past it. -->
+    <string-array name="reject_count_words">
+        <item>zero</item>
+        <item>one</item>
+        <item>two</item>
+        <item>three</item>
+        <item>four</item>
+        <item>five</item>
+        <item>six</item>
+        <item>seven</item>
+        <item>eight</item>
+        <item>nine</item>
+        <item>ten</item>
+        <item>eleven</item>
+        <item>twelve</item>
+    </string-array>
+
+    <!-- The ask link's landing (VouchAsk.md, VouchAskInvalid.md, VouchAskUnusable.md). -->
+    <string name="vouch_ask_title">A vouch, asked for</string>
+    <string name="vouch_ask_back">Back</string>
+    <string name="vouch_ask_asking">%1$s is asking to be vouched in</string>
+    <string name="vouch_ask_body">They have an account and can read; what they do not have yet is anyone standing for them. Your opinion is what brings them in.</string>
+    <string name="vouch_ask_not_now">Not now</string>
+    <string name="vouch_ask_once_in">You can vouch once you\'re in.</string>
+    <string name="vouch_ask_own">That\'s your own ask link — send it to someone who\'s already in.</string>
+    <string name="vouch_ask_invalid_title">This ask link doesn\'t work</string>
+    <string name="vouch_ask_invalid_body">Check that the whole link came through, or ask the person who sent it for it again.</string>
+    <string name="vouch_ask_landed_title">%1$s is already in</string>
+    <string name="vouch_ask_landed_body">Someone has vouched them in already, so this ask has nothing left to do.</string>
+    <string name="vouch_ask_profile_door">See %1$s\'s profile</string>
 </resources>

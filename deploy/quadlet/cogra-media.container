@@ -1,0 +1,38 @@
+# The live media store (deployment.md "Topology"): the world-readable live
+# bucket and the carried bucket, behind the API's S3 BlobStore. Internal
+# only — readers reach live objects through the proxy's GET-only /media
+# route. The image is dev's pin (docker/docker-compose.yml); its upstream
+# is archived (deployment.md "The media store", D-4).
+[Unit]
+Description=CoGra media store (live)
+OnFailure=cogra-alert@%n.service
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+ContainerName=cogra-media
+Image=docker.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+Pull=never
+Exec=server /data
+EnvironmentFile=/etc/cogra/media.env
+Secret=cogra-media-root-user,type=env,target=MINIO_ROOT_USER
+Secret=cogra-media-root-password,type=env,target=MINIO_ROOT_PASSWORD
+Volume=cogra-media.volume:/data
+Network=cogra-internal.network
+HealthCmd=mc ready local
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=5
+HealthStartPeriod=30s
+NoNewPrivileges=true
+PidsLimit=4096
+PodmanArgs=--memory=2g --stop-timeout=30
+
+[Service]
+Restart=always
+RestartSec=5
+TimeoutStartSec=300
+ExecStartPost=/usr/bin/podman wait --condition=healthy cogra-media
+
+[Install]
+WantedBy=multi-user.target

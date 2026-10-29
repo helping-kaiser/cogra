@@ -226,6 +226,13 @@ class IdentityStoreImpl @Inject constructor(
         key(STANCE_PAD_TAUGHT)?.let { store.put(it, byteArrayOf(1)) }
     }
 
+    override suspend fun applicationCardPutAway(): Boolean =
+        key(APPLICATION_CARD_PUT_AWAY)?.let { store.get(it) } != null
+
+    override suspend fun putApplicationCardAway() {
+        key(APPLICATION_CARD_PUT_AWAY)?.let { store.put(it, byteArrayOf(1)) }
+    }
+
     // Follows the active account: a Settings change has to reach controls
     // already composed on another destination, and a sign-in has to bring
     // that account's own choice with it. An unreadable or unknown value
@@ -300,6 +307,7 @@ class IdentityStoreImpl @Inject constructor(
         const val SEED = "actor_seed"
         const val PENDING_BLOB = "pending_backup_blob"
         const val STANCE_PAD_TAUGHT = "stance_pad_taught"
+        const val APPLICATION_CARD_PUT_AWAY = "application_card_put_away"
         const val STANCE_INPUT_MODE = "stance_input_mode"
         const val CONFIRM_MULTI_ACTION = "confirm_multi_action_submits"
         const val FORGET = "forget_on_sign_out"

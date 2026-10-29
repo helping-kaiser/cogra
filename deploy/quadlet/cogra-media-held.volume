@@ -1,0 +1,3 @@
+# The held media store's objects: deleted assets' bytes, operator-only.
+[Volume]
+VolumeName=cogra-media-held

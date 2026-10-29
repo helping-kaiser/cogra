@@ -29,6 +29,7 @@ import com.cogra.feature.content.HistoryDoors
 import com.cogra.feature.content.HistoryRoute
 import com.cogra.feature.content.PostDetailRoute
 import com.cogra.feature.content.SavedRoute
+import com.cogra.feature.home.ApplicationSurface
 import com.cogra.feature.home.NewerVersionAnnouncement
 import com.cogra.feature.home.VouchedInScreen
 import com.cogra.feature.notifications.NotificationsRoute
@@ -166,7 +167,7 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
         keyBanner = keyBanner,
         borrowedViewBand = borrowedViewBand,
         deletionBand = deletionBand(DataNode("feed") / "deletionBand"),
-        banners = { statusBanners(actorRestored, consumeRestored) },
+        banners = { statusBanners(actorRestored, consumeRestored, ApplicationSurface.FEED) },
         vouchCard = vouchCard,
         onPulled = {
             onFeedPulled()
@@ -289,7 +290,7 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
         onProfileSavedResultConsumed = consumeProfileSaved,
         onEdit = { navController.navigate(ProfileEdit) },
         onOpenSettings = { navController.navigate(Settings) },
-        onOpenInvites = { navController.navigate(Invites) },
+        onOpenInvites = { navController.navigate(Invites()) },
         onOpenPost = { id -> navController.navigate(PostDetail(id)) },
         // The own-profile tab has no back arrow; another
         // actor's profile is a drill-in.
@@ -299,7 +300,7 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
         keyBanner = { if (route.handle == null) keyBanner() },
         deletionBand = deletionBand(node = null),
         banners = {
-            if (route.handle == null) statusBanners(actorRestored, consumeRestored)
+            if (route.handle == null) statusBanners(actorRestored, consumeRestored, ApplicationSurface.PROFILE)
         },
         // A signing on the member who vouched the reader in opens
         // the ceremony, by Set or by the hold (ProfileOther.md:37).
@@ -348,7 +349,7 @@ private fun ShellScope.NotificationsDestination(entry: NavBackStackEntry) {
                 is NotificationTarget.Person -> navController.navigate(
                     Profile(target.handle, from = NOTIFICATIONS_ORIGIN),
                 )
-                NotificationTarget.Invites -> navController.navigate(Invites)
+                NotificationTarget.Invites -> navController.navigate(Invites(from = NOTIFICATIONS_ORIGIN))
                 NotificationTarget.OwnFeed -> navController.landOnFeedRoot(keepLeaving = true)
             }
         },

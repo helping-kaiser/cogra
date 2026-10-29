@@ -1,0 +1,8 @@
+# New ERROR lines from the app units (deploy/scripts/log-alert.sh).
+[Unit]
+Description=CoGra error-log alert
+OnFailure=cogra-alert@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/cogra/log-alert.sh
