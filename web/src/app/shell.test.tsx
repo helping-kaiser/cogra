@@ -61,6 +61,8 @@ describe("AppShell", () => {
     // The opinions page under either root (nodes.json `profileStances`, round 26).
     ["/profile/opinions", "profileStances.bottomBar"],
     ["/u/ada/opinions", "profileStances.bottomBar"],
+    // WalletComingSoon registers its bar (round 23).
+    ["/wallet", "wallet.bottomBar"],
   ])("names the bar on the registered screen %s after it", async (path, bar) => {
     pathname = path;
     renderWithProviders(
@@ -216,7 +218,7 @@ describe("AppShell", () => {
 
   // EXPLORE AND THE WALLET'S DOOR ARE TAB ROOTS, read by every viewer
   // (Explore.md:35-39; WalletComingSoon.md:3, :5, :9): the bar stands with
-  // their own slot lit, the registered Explore bar wearing its node.
+  // their own slot lit, each registered bar wearing its screen's node.
   it.each([
     ["/explore", "searchSlot", true],
     ["/explore", "searchSlot", false],
@@ -230,10 +232,8 @@ describe("AppShell", () => {
       </AppShell>,
       signedIn ? { store: signedInStore() } : {},
     );
-    const lit =
-      path === "/explore"
-        ? await screen.findByTestId(byNode(`explore.bottomBar.${slot}`))
-        : await screen.findByTestId(`nav-wallet`);
+    const prefix = path === "/explore" ? "explore" : "wallet";
+    const lit = await screen.findByTestId(byNode(`${prefix}.bottomBar.${slot}`));
     expect(lit).toHaveAttribute("aria-current", "page");
   });
 

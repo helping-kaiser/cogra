@@ -120,7 +120,7 @@ export function HeaderBar({
           {stageLabel ? (
             <span className="flex items-center gap-2">
               <span
-                data-testid="header-stage"
+                {...testAttributes(part(node, "stage"), "header-stage")}
                 className="whitespace-nowrap text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] text-on-surface-variant"
               >
                 {stageLabel}

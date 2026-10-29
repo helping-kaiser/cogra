@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { applicationNode, application, daysAgo, daysAhead, MANY, NOW, SINGLE, inviteLink } from "@/test/invites";
+import { applicationNode, application, daysAgo, daysAhead, MANY, NOW, USED, inviteLink } from "@/test/invites";
 import type { ApplicationView, InviteLinkView } from "@/lib/api/invites-api";
 import {
   DEFAULT_EXPIRY,
@@ -25,7 +25,7 @@ const view = (overrides: Parameters<typeof application>[0]) =>
 
 describe("the order law (Invites.md:9-13)", () => {
   const queue = [
-    view({ handle: "rafa", createdAt: daysAgo(3), link: SINGLE }),
+    view({ handle: "rafa", createdAt: daysAgo(3), link: USED }),
     view({ handle: "vora81", createdAt: daysAgo(1), link: MANY }),
     view({ handle: "imke", createdAt: daysAgo(9), link: MANY, keyAttached: false }),
     view({ handle: "noor", createdAt: daysAgo(2), link: null }),
@@ -34,7 +34,7 @@ describe("the order law (Invites.md:9-13)", () => {
   it("groups by link, groups by their oldest row, rows by age — never by readiness", () => {
     const { head, groups } = layoutQueue(queue);
     expect(head.map((a) => a.handle)).toEqual(["noor"]);
-    expect(groups.map((g) => g.linkId)).toEqual([MANY.id, SINGLE.id]);
+    expect(groups.map((g) => g.linkId)).toEqual([MANY.id, USED.id]);
     // @imke is not ready and still stands first: age alone orders (:13).
     expect(groups[0].rows.map((a) => a.handle)).toEqual(["imke", "vora81"]);
   });

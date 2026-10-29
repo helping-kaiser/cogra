@@ -42,6 +42,7 @@ export function WalletView() {
   return (
     <main className="flex w-full flex-1 flex-col">
       <CograBand
+        node={{ path: "wallet.band" }}
         onChats={
           phase === "signedOut"
             ? () => setJoinPrompt(true)
@@ -56,7 +57,7 @@ export function WalletView() {
         }
       />
       <div className="flex flex-1 flex-col pt-2">
-        <ComingSoonCard thing="Wallet" line={WALLET_LINE} testId="wallet-coming-soon" />
+        <ComingSoonCard thing="Wallet" line={WALLET_LINE} node={{ path: "wallet.comingSoonCard" }} />
       </div>
       <JoinPrompt open={joinPrompt} onClose={() => setJoinPrompt(false)} />
     </main>

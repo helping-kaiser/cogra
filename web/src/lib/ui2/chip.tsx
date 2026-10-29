@@ -36,7 +36,9 @@ export function Chip({
   onClick?: () => void;
 }) {
   const tone = selected
-    ? "bg-secondary-container text-on-secondary-container"
+    ? // Selected keeps its 1px edge, transparent (Chip.jsx), so a chip is the same
+      // width in both states and the row never shifts as one is switched.
+      "border border-transparent bg-secondary-container text-on-secondary-container"
     : "border border-outline text-on-surface";
 
   return (

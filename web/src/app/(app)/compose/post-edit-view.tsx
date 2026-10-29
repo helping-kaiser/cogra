@@ -31,11 +31,12 @@
 // leaves at once — so the X says what leaving does, `Leave — the edit is
 // discarded` (EditCompose.md, EditWords.md, DiscardConfirm.md).
 //
-// UNREGISTERED (feed-card-rework §16): no Edit* board is in nodes.json yet, so
-// this surface carries test ids, not node paths — the structural diff waits on
-// registration; the behavior tests pin the sidecars.
+// REGISTERED (nodes.json EditCompose, EditComposeVideo, EditWords, EditPicked;
+// round 23): every part wears its `postEdit.*` path. The board draws its
+// chip-keyed states (`postEdit.sign` under `none`/`slow`/`failed`) once per
+// value; the web shows one at a time, so those nodes carry no key.
 
-import { useRef, type ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
@@ -46,7 +47,7 @@ import { FactRow } from "@/lib/ui2/fact-row";
 import { InlineAction } from "@/lib/ui2/inline-action";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { QuietNote } from "@/lib/ui2/quiet-note";
-import { TextField } from "@/lib/ui2/text-field";
+import { countReading, FieldCount, TextField } from "@/lib/ui2/text-field";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { DescribeCounter, PickedRow, type PickedThumb } from "@/lib/ui2/compose/picked-row";
 import { RefusedFileRow } from "@/lib/ui2/compose/refused-file";
@@ -84,10 +85,22 @@ import { attachmentLanding } from "@/lib/stance/backing";
 import { AttachmentReadout, BACKING_UNREAD } from "@/lib/ui/attachment-readout";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { thumbState } from "./wizard/details-step";
 
-function FieldLabel({ children }: { children: string }) {
-  return <span className="text-label-large">{children}</span>;
+/** The registered edit screen (`postEdit`), and the parts its blocks hang off. */
+const NODE: DataNode = { path: "postEdit" };
+const BODY = part(NODE, "body");
+const FACTS = part(NODE, "facts");
+const VIDEO = part(NODE, "video");
+const COVER = part(NODE, "cover");
+
+function FieldLabel({ children, node }: { children: string; node?: DataNode }) {
+  return (
+    <span className="text-label-large" {...testAttributes(node)}>
+      {children}
+    </span>
+  );
 }
 
 /** The header X's accessible name: the edit keeps no draft (EditCompose, EditWords boards). */
@@ -124,6 +137,8 @@ export function PostEditView({
   onWords,
   onTags,
   onReferences,
+  onOpenTagPicker,
+  onOpenReferencePicker,
   onUndoTag,
   onUndoReference,
   onManagePictures,
@@ -180,6 +195,10 @@ export function PostEditView({
   onWords: (words: string) => void;
   onTags: (tags: readonly TagDraft[]) => void;
   onReferences: (references: readonly ReferenceDraft[]) => void;
+  /** `+ Add a tag`: the tag picker in the edit's place (EditCompose's `tags.add`). */
+  onOpenTagPicker: () => void;
+  /** `+ Cite something`: the citation picker in the edit's place (EditCompose's `references.add`). */
+  onOpenReferencePicker: () => void;
   onUndoTag: (name: string) => void;
   onUndoReference: (targetId: string) => void;
   onManagePictures: () => void;
@@ -258,8 +277,9 @@ export function PostEditView({
         onBack={leave}
         onLeave={leave}
         leaveLabel={EDIT_LEAVE_LABEL}
-        help={<HelpDot ariaLabel="Editing" onOpen={onHelp} testId="header-help" />}
+        help={<HelpDot ariaLabel="Editing" onOpen={onHelp} node={part(NODE, "header.help")} />}
         testId="post-edit-header"
+        node={part(NODE, "header")}
         focusTitle
       />
 
@@ -276,7 +296,7 @@ export function PostEditView({
             onRemoveCover={onRemoveCover}
           />
         ) : media ? (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5" {...testAttributes(BODY)}>
             <PickedRow
               items={thumbs}
               caption={
@@ -285,6 +305,7 @@ export function PostEditView({
               onManage={onManagePictures}
               manageLabel={`Manage the ${thumbs.length === 1 ? "picture" : `${thumbs.length} pictures`}`}
               testId="post-edit-picked"
+              node={part(BODY, "mediaRow")}
             />
             {/* The edit's row is the compose row, and it fails the compose
                 way: the tile marked, one line under the row with its two ways
@@ -296,6 +317,7 @@ export function PostEditView({
                 onRemove={onRemoveFailed}
                 count={faulted}
                 testId="post-edit-upload-error"
+                node={part(BODY, "uploadError")}
               />
             )}
             <Refusals refusals={refusals} onDismiss={onDismissRefusal} />
@@ -304,29 +326,29 @@ export function PostEditView({
               accept={ACCEPT_PICTURES}
               onFiles={onAddMedia}
               testId="post-edit-add-pictures"
+              node={part(BODY, "add")}
             />
-            <QuietNote testId="post-edit-body-rule">{BODY_RULE}</QuietNote>
+            <QuietNote testId="post-edit-body-rule" node={part(BODY, "rule")}>
+              {BODY_RULE}
+            </QuietNote>
           </div>
         ) : (
-          <div className="flex flex-col gap-1.5">
-            <TextField
-              label="What do you want to publish?"
-              value={state.words}
-              onChange={onWords}
-              multiline
-              rows={6}
-              cap={BODY_MAX_CHARS}
-              error={wordsProblem(state.words) ?? undefined}
-              testId="post-edit-words"
-            />
+          // THE WORDS ARE THE BODY, AND THE BODY TAKES THE ROOM (EditWords:
+          // `WordsBody` at flex 1, as the composer's words stage draws it) — the
+          // post, not a field on a form.
+          <div className="flex min-h-0 flex-1 flex-col gap-1.5" {...testAttributes(BODY)}>
+            <WordsField words={state.words} onWords={onWords} />
             <Refusals refusals={refusals} onDismiss={onDismissRefusal} />
             <AddControl
               label="+ Add pictures or a video"
               accept={ACCEPT_MEDIA}
               onFiles={onAddMedia}
               testId="post-edit-add-media"
+              node={part(BODY, "add")}
             />
-            <QuietNote testId="post-edit-body-rule">{BODY_RULE}</QuietNote>
+            <QuietNote testId="post-edit-body-rule" node={part(BODY, "rule")}>
+              {BODY_RULE}
+            </QuietNote>
           </div>
         )}
 
@@ -338,6 +360,7 @@ export function PostEditView({
           cap={TITLE_MAX_CHARS}
           error={titleProblem(state.title) ?? undefined}
           testId="post-edit-title"
+          node={part(NODE, "title")}
         />
 
         {/* THE WORDS EDIT CARRIES NO DESCRIPTION (EditWords.md:7; K8.1/D4): a
@@ -353,60 +376,64 @@ export function PostEditView({
             cap={DESCRIPTION_MAX_CHARS}
             error={descriptionProblem(state.description) ?? undefined}
             testId="post-edit-description"
+            node={part(NODE, "description")}
           />
         )}
 
         {/* The fields carry their own `Tags` and `References` labels. A staged
             chip or row opens its pair in a sheet over the edit (EditCompose.md). */}
-        <div className="flex flex-col gap-1.5">
-          <TagEntryField
-            tags={state.tags}
-            onChange={onTags}
-            fieldErrors={tagErrors}
-            cap={null}
-            testIdPrefix="post-edit"
-            pairs="sheet"
-          />
-          {withdrawnTagList.map((tag) => (
+        <TagEntryField
+          tags={state.tags}
+          onChange={onTags}
+          fieldErrors={tagErrors}
+          cap={null}
+          testIdPrefix="post-edit"
+          pairs="sheet"
+          onOpenPicker={onOpenTagPicker}
+          node={part(NODE, "tags")}
+          after={withdrawnTagList.map((tag) => (
             <WithdrawnLine
               key={tag.name}
               name={`#${tag.name}`}
               onUndo={() => onUndoTag(tag.name)}
               testId={`post-edit-withdrawn-tag-${tag.name}`}
+              node={part(NODE, "tags.withdrawn")}
             />
           ))}
-        </div>
+        />
 
-        <div className="flex flex-col gap-1.5">
-          <ReferenceEntryField
-            references={state.references}
-            onChange={onReferences}
-            fieldErrors={referenceErrors}
-            cap={null}
-            testIdPrefix="post-edit"
-            pairs="sheet"
-          />
-          {withdrawnRefList.map((reference) => (
+        <ReferenceEntryField
+          references={state.references}
+          onChange={onReferences}
+          fieldErrors={referenceErrors}
+          cap={null}
+          testIdPrefix="post-edit"
+          pairs="sheet"
+          onOpenPicker={onOpenReferencePicker}
+          node={part(NODE, "references")}
+          after={withdrawnRefList.map((reference) => (
             <WithdrawnLine
               key={reference.targetId}
               name={reference.target.label}
               onUndo={() => onUndoReference(reference.targetId)}
               testId={`post-edit-withdrawn-reference-${reference.targetId}`}
+              node={part(NODE, "references.withdrawn")}
             />
           ))}
-        </div>
+        />
 
         {/* FactRow's seal emphasis, the seal's order (`_shared.jsx`): the
             License row locked, Your backing under it, then Sensitive. */}
-        <div className="flex flex-col">
+        <div className="flex flex-col" {...testAttributes(FACTS)}>
           <FactRow
             label="License"
-            value={<LicenseValue>{licenseName(state.license)}</LicenseValue>}
+            value={<LicenseValue node={part(FACTS, "license.value")}>{licenseName(state.license)}</LicenseValue>}
+            node={part(FACTS, "license")}
             action={
               <span
                 className="inline-flex text-on-surface-variant"
                 aria-label="The license never changes"
-                data-testid="post-edit-license-locked"
+                {...testAttributes(part(FACTS, "license.lock"))}
               >
                 <LockGlyph />
               </span>
@@ -427,28 +454,36 @@ export function PostEditView({
                 <AttachmentReadout
                   pDirected={attachmentLanding(backingRawSum, state.pick).landing}
                   testId="post-edit-backing-value"
+                  node={part(FACTS, "backing.value")}
                 />
               )
             }
             action="Adjust"
             onAction={onOpenBacking}
             testId="post-edit-open-backing"
+            node={part(FACTS, "backing")}
           />
           <FactRow
             label="Sensitive"
             value={
-              <span className="text-body-medium text-on-surface-variant" data-testid="post-edit-sensitive-value">
+              <span
+                className="text-body-medium text-on-surface-variant"
+                {...testAttributes(part(FACTS, "sensitive.value"))}
+              >
                 {state.sensitive ? "Marked" : "Not marked"}
               </span>
             }
             action={state.sensitive ? "Change" : "Mark"}
             onAction={onOpenSensitive}
             testId="post-edit-open-sensitive"
+            node={part(FACTS, "sensitive")}
             last
           />
         </div>
 
-        <div className="flex-1" />
+        {/* A media body stands at its own height and the foot keeps the
+            screen's bottom; a words body takes the slack itself. */}
+        {media && <div className="flex-1" />}
 
         {refusal && (
           <p role="alert" data-testid="post-edit-refused" className="m-0 text-body-medium text-error">
@@ -470,6 +505,7 @@ export function PostEditView({
             message={failedUploadLine(faulted)}
             onRetry={onRetryUploads}
             testId="post-edit-gate"
+            node={part(NODE, "gate")}
           />
         ) : (
           pending > 0 && (
@@ -478,11 +514,19 @@ export function PostEditView({
               total={took}
               media={clip !== undefined ? "cover" : "pictures"}
               testId="post-edit-gate"
+              node={part(NODE, "gate")}
             />
           )
         )}
 
-        <ActsFooter count={count} onOpen={onOpenActs} subline={subline} testId="post-edit-acts-footer" />
+        <ActsFooter
+          count={count}
+          onOpen={onOpenActs}
+          subline={subline}
+          sublineIsSlow={slow}
+          testId="post-edit-acts-footer"
+          node={part(NODE, "acts")}
+        />
         {keyAbsent ? (
           keyCard
         ) : writeRuleRefused ? (
@@ -493,6 +537,7 @@ export function PostEditView({
         ) : (
           <PillButton
             testId="post-edit-sign"
+            node={part(NODE, "sign")}
             full
             disabled={inert}
             onClick={() => {
@@ -509,10 +554,51 @@ export function PostEditView({
   );
 }
 
-/** A license name in the row's quiet voice, named for the tests. */
-function LicenseValue({ children }: { children: string }) {
+/**
+ * The words body (`WordsBody`, EditWords' `body.words`): the label, then the
+ * one box filling the room, 12px inside its edge, and the supporting row —
+ * the late counter and the cap's refusal — under it.
+ */
+function WordsField({ words, onWords }: { words: string; onWords: (words: string) => void }) {
+  const id = useId();
+  const problem = wordsProblem(words);
+  const errorId = `${id}-error`;
   return (
-    <span className="text-body-medium text-on-surface-variant" data-testid="post-edit-license">
+    <>
+      <label htmlFor={id} className="text-label-large" {...testAttributes(part(BODY, "label"))}>
+        What do you want to publish?
+      </label>
+      <div className="flex min-h-40 flex-1 flex-col gap-1" {...testAttributes(part(BODY, "words"))}>
+        <textarea
+          id={id}
+          value={words}
+          onChange={(event) => onWords(event.target.value)}
+          aria-invalid={problem ? true : undefined}
+          aria-describedby={problem ? errorId : undefined}
+          {...testAttributes(part(BODY, "words.input"))}
+          className={`min-h-0 flex-1 resize-none rounded-extra-small border bg-transparent p-3 text-body-large text-on-surface ${
+            problem ? "border-error" : "border-outline"
+          }`}
+        />
+        {(problem !== null || countReading(words, BODY_MAX_CHARS)) && (
+          <div className="flex items-baseline gap-2">
+            {problem !== null && (
+              <p id={errorId} role="alert" className="m-0 text-body-small text-error">
+                {problem}
+              </p>
+            )}
+            <FieldCount value={words} cap={BODY_MAX_CHARS} />
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+/** A license name in the row's quiet voice, named for the tests. */
+function LicenseValue({ children, node }: { children: string; node?: DataNode }) {
+  return (
+    <span className="text-body-medium text-on-surface-variant" {...testAttributes(node, "post-edit-license")}>
       {children}
     </span>
   );
@@ -529,16 +615,18 @@ function AddControl({
   accept,
   onFiles,
   testId,
+  node,
 }: {
   label: string;
   accept: string;
   onFiles: (files: readonly File[]) => void;
   testId: string;
+  node?: DataNode;
 }) {
   const input = useRef<HTMLInputElement | null>(null);
   return (
     <>
-      <InlineAction size="sm" testId={testId} onClick={() => input.current?.click()}>
+      <InlineAction size="sm" testId={testId} node={node} onClick={() => input.current?.click()}>
         {label}
       </InlineAction>
       <input
@@ -615,8 +703,8 @@ function ClipFields({
   const openPicker = () => input.current?.click();
   return (
     <>
-      <div className="flex flex-col gap-1.5">
-        <FieldLabel>Video</FieldLabel>
+      <div className="flex flex-col gap-1.5" {...testAttributes(VIDEO)}>
+        <FieldLabel node={part(VIDEO, "label")}>Video</FieldLabel>
         <div className="flex items-center gap-2">
           <MediaThumb
             src={clip.coverUrl}
@@ -628,6 +716,8 @@ function ClipFields({
             onRemove={onRemoveClip}
             removeLabel="Remove this video"
             testId="post-edit-clip"
+            node={part(VIDEO, "thumb")}
+            removeNode={part(VIDEO, "thumb.remove")}
           />
         </div>
         {/* One description for the clip, none for its cover (EditComposeVideo.md). */}
@@ -637,14 +727,17 @@ function ClipFields({
           total={1}
           onDescribe={onDescribeClip}
           testId="post-edit-describe-clip"
+          node={part(VIDEO, "describeRow")}
         />
         {/* Where the picture edit's add control stands, the quiet line
             (copy-voice, *Staging a video*: the edit's trim). */}
-        <QuietNote testId="post-edit-clip-note">A video is the whole post.</QuietNote>
+        <QuietNote testId="post-edit-clip-note" node={part(VIDEO, "rule")}>
+          A video is the whole post.
+        </QuietNote>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <FieldLabel>Cover</FieldLabel>
+      <div className="flex flex-col gap-1.5" {...testAttributes(COVER)}>
+        <FieldLabel node={part(COVER, "label")}>Cover</FieldLabel>
         {coverChosen(clip) ? (
           <div className="flex items-center gap-2">
             <MediaThumb
@@ -655,17 +748,24 @@ function ClipFields({
               crop={face?.crop ?? null}
               {...(face !== null ? thumbState(face) : {})}
               testId="post-edit-cover"
+              node={part(COVER, "thumb")}
             />
-            <PillButton variant="text" size="sm" testId="post-edit-change-cover" onClick={openPicker}>
+            <PillButton
+              variant="text"
+              size="sm"
+              testId="post-edit-change-cover"
+              node={part(COVER, "change")}
+              onClick={openPicker}
+            >
               Change the cover
             </PillButton>
           </div>
         ) : (
           <>
-            <InlineAction size="sm" testId="post-edit-add-cover" onClick={openPicker}>
+            <InlineAction size="sm" testId="post-edit-add-cover" node={part(COVER, "add")} onClick={openPicker}>
               Add a cover
             </InlineAction>
-            <QuietNote testId="post-edit-cover-note">
+            <QuietNote testId="post-edit-cover-note" node={part(COVER, "note")}>
               It plays the moment it is on screen, so it starts on its own first frame.
             </QuietNote>
           </>

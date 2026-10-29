@@ -313,6 +313,9 @@ describe("the feed filter", () => {
       server.use(...rankedFeed([post("p1")], reads()));
       renderFeed();
       await openSheet();
+      // FeedSheet.md:3 and BottomSheet.jsx (round 25): 88% of the screen, whole.
+      expect(sheet().style.height.startsWith("min(88dvh,")).toBe(true);
+      expect(sheet().style.height).not.toContain("32px");
       expect(trigger()).toHaveAttribute("aria-expanded", "true");
       const kinds = ["postsChip", "commentsChip", "profilesChip", "topicsChip"].map((id) => chip(`kinds.${id}`));
       expect(kinds.map((kind) => kind.textContent)).toEqual(["Posts", "Comments", "Profiles", "Tags"]);
@@ -385,9 +388,9 @@ describe("the feed filter", () => {
       server.use(...rankedFeed([post("p1")], reads()), heldTopics(), meHandler());
       renderFeed();
       await openSheet();
-      const salt = await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps"));
-      const tide = within(sheet()).getByTestId(byNode("feed.filterSheet.topic.chip", "tidepools"));
-      expect(within(sheet()).queryByTestId(byNode("feed.filterSheet.topic.chip", "harbour"))).toBeNull();
+      const salt = await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.tag", "saltmaps"));
+      const tide = within(sheet()).getByTestId(byNode("feed.filterSheet.topic.tag", "tidepools"));
+      expect(within(sheet()).queryByTestId(byNode("feed.filterSheet.topic.tag", "harbour"))).toBeNull();
       expect(salt).toHaveTextContent("#saltmaps");
       fireEvent.click(salt);
       fireEvent.click(tide);
@@ -555,7 +558,7 @@ describe("the feed filter", () => {
       fireEvent.click(chip("also.removedChip"));
       done();
       await waitFor(() => expect(cardIds()).toEqual(["p1", "p2"]));
-      expect(screen.getByTestId(byNode("feed.card.removed", "p2"))).toHaveTextContent("Removed by its author");
+      expect(screen.getByTestId(byNode("feed.card.removalMark", "p2"))).toHaveTextContent("Removed by its author");
       expect(r.ranks).toHaveLength(1);
       expect(trigger()).toHaveTextContent(/^Posts · \+ removed$/);
     });
@@ -578,6 +581,8 @@ describe("the feed filter", () => {
       done();
       const empty = await screen.findByTestId(byNode("feed.nothing"));
       expect(empty).toHaveTextContent(SHOWING_NOTHING);
+      // In the list's own column, 8px under the band (FeedNothing.jsx `8px 24px`).
+      expect(empty.parentElement?.className).toBe("px-6 pb-2");
       expect(trigger()).toHaveTextContent(/^Nothing$/);
       expect(screen.queryByTestId(byNode("feed.seenSeparator"))).toBeNull();
       expect(screen.queryByTestId(byNode("feed.card"))).toBeNull();
@@ -596,7 +601,7 @@ describe("the feed filter", () => {
       renderFeed();
       await screen.findByTestId(byNode("feed.card", "p1"));
       await openSheet();
-      fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps")));
+      fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.tag", "saltmaps")));
       done();
       await waitFor(() => expect(r.ranks).toHaveLength(2));
       expect(r.ranks[1]!.topic).toBe("t-salt");
@@ -658,14 +663,14 @@ describe("the feed filter", () => {
       await openSheet();
       // Staged, never applied: Newest, and the topic on.
       fireEvent.click(within(sheet()).getByRole("button", { name: "Newest" }));
-      fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps")));
+      fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.tag", "saltmaps")));
       fireEvent.click(within(sheet()).getByTestId(byNode("feed.filterSheet.topic.allTopics")));
       first.unmount();
       renderFeed();
       await waitFor(() => expect(sheet().open).toBe(true));
       expect(within(sheet()).getByRole("button", { name: "Newest" })).toHaveAttribute("aria-pressed", "true");
       expect(
-        await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps")),
+        await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.tag", "saltmaps")),
       ).toHaveAttribute("aria-checked", "true");
       // The feed behind it is what it was: the staged filter never applied.
       expect(trigger()).toHaveTextContent(/^Posts$/);

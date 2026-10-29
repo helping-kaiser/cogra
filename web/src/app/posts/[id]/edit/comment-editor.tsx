@@ -82,6 +82,8 @@ import { CENTERED } from "@/lib/ui2/media/crop";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
+import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
+import { TagPicker } from "@/lib/ui2/compose/tag-picker";
 import { CommentEditView } from "./comment-edit-view";
 
 /** The comment pager's square — the window a comment clip's face is cut to (CoverCrop.md). */
@@ -200,6 +202,9 @@ export function CommentEditor({
   // A picture back from the picker for the clip's face, standing in the
   // cover's crop until Next sets it or the back arrow lets it go.
   const [cropping, setCropping] = useState<PickedAsset | null>(null);
+  // THE EDIT ADDS THROUGH THE PICKERS (CommentEdit draws `+ Add a tag` and
+  // `+ Cite something`): every pick lands in the batch as it is made.
+  const [picking, setPicking] = useState<"tags" | "references" | null>(null);
   const started = useRef(new Set<string>());
 
   useEffect(() => {
@@ -642,6 +647,27 @@ export function CommentEditor({
         }}
         onTags={(tags) => update(() => ({ tags }))}
         onReferences={(references) => update(() => ({ references }))}
+        onOpenTagPicker={() => setPicking("tags")}
+        onOpenReferencePicker={() => setPicking("references")}
+        picker={
+          picking === "tags" ? (
+            <TagPicker
+              tags={editing.tags}
+              onTags={(tags) => update(() => ({ tags }))}
+              onDone={() => setPicking(null)}
+              origin="comment"
+              cap={null}
+            />
+          ) : picking === "references" ? (
+            <ReferencePicker
+              references={editing.references}
+              onReferences={(references) => update(() => ({ references }))}
+              onDone={() => setPicking(null)}
+              origin="comment"
+              cap={null}
+            />
+          ) : null
+        }
         onUndoTag={(name) => update((current) => ({ tags: undoTagWithdrawal(current.loadedTags, current.tags, name) }))}
         onUndoReference={(targetId) =>
           update((current) => ({

@@ -230,7 +230,7 @@ function openMenu(trigger: HTMLElement, sheetTestId: string) {
 }
 
 const postMenu = () => openMenu(screen.getByTestId(byNode("saved.card.menu", "p1")), "saved-menu-sheet");
-const commentMenu = () => openMenu(screen.getByTestId("saved-comment-c1-menu"), "saved-comment-c1-menu-sheet");
+const commentMenu = () => openMenu(screen.getByTestId(byNode("saved.commentCard.menu", "c1")), "saved-comment-c1-menu-sheet");
 const personMenu = () =>
   openMenu(screen.getByTestId(byNode("saved.profileCard.menu", "u3")), "saved-person-u3-menu-sheet");
 
@@ -285,11 +285,13 @@ describe("SavedScreen — a feed of kept things", () => {
     expect(screen.getByTestId("saved-comment-c1-head")).toHaveAttribute("href", "/posts/p1?from=saved");
     expect(screen.getByTestId("saved-comment-c1-link")).toHaveAttribute("href", "/posts/p1?comment=c1&from=saved");
     // Its comment glyph: the same landing with the reply composer aimed at it.
-    const reply = screen.getByTestId("saved-comment-c1-reply");
+    const reply = screen.getByTestId(byNode("saved.commentCard.actionRow.reply", "c1"));
     expect(reply).toHaveAttribute("href", "/posts/p1?comment=c1&from=saved&reply=1");
     expect(reply).toHaveAccessibleName("Reply to @tobias");
     // Its row spreads across the card, as the post card's does (CommentCard.jsx).
-    expect(screen.getByTestId("saved-comment-c1-affordances").className).toContain("justify-between");
+    expect(screen.getByTestId(byNode("saved.commentCard.actionRow", "c1")).className).toContain("justify-between");
+    // So does the person card's (FeedKinds: the opinion leads, the score mid-row, share at the end).
+    expect(screen.getByTestId(byNode("saved.profileCard.actionRow", "u3")).className).toContain("justify-between");
     expect(screen.getByTestId("saved-person-u3-link")).toHaveAttribute("href", "/u/mira?from=saved");
   });
 

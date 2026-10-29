@@ -460,6 +460,7 @@ export function PostView({
         refreshToken={threadToken}
         landOn={landOn}
         aimReply={aimReply}
+        node={{ path: "postDetail.threadSheet" }}
       />
       {/* THE POST'S MENU AND WHAT ITS ROWS RAISE, over this page
           (ReaderPostMenu, ReportConfirm). A removed post has no menu left, so
@@ -473,9 +474,7 @@ export function PostView({
           row: (row) => ({ path: `postDetail.menuSheet.${row}` }),
           licenseSheet: { path: "postDetail.licenseSheet" },
           reportSheet: { path: "postDetail.reportSheet" },
-          // UNREGISTERED: the RemoveConfirm board names no node yet, so the
-          // dialog wears the path the packet proposes for it under the detail
-          // (`postDetail.dialog` and its parts), reported to design.
+          // The RemoveConfirm board's dialog (nodes.json, round 23).
           removeDialog: { path: "postDetail.dialog" },
         }}
         testId="post-menu"
@@ -491,10 +490,8 @@ export function PostView({
       />
       {/* The post's own count lines' sheets, reading the lists the lines
           count. A comment's ⋮ raises the thread's own copies, stacked over the
-          sheet, which are the sheet's to mount. UNREGISTERED: the
-          PostOpinions and CitedBy boards name no node, so each sheet wears
-          the path it evidently takes under the detail (`opinionsSheet`,
-          `citedBySheet`, rows by position), reported to design. */}
+          sheet, which are the sheet's to mount. Each wears its
+          board's node (nodes.json PostOpinions, CitedBy). */}
       <OpinionsSheet
         open={opinionsOpen}
         onClose={() => setOpinionsOpen(false)}

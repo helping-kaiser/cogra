@@ -21,6 +21,8 @@
 
 import type { ReactNode } from "react";
 
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 import { UploadErrorLine } from "./upload-notice";
 
 /** label-small's size, leading and tracking at the ground's weight — the master sets no weight. */
@@ -47,9 +49,9 @@ const HAIRLINE = "border-0 border-b border-solid border-outline-variant";
 const LABEL = "w-19 flex-none text-label-small text-on-surface-variant";
 const VALUE = "min-w-0 flex-1 truncate text-body-medium";
 
-function Count({ count, noun }: { count: number; noun: string }) {
+function Count({ count, noun, node }: { count: number; noun: string; node?: DataNode }) {
   return (
-    <span className={`flex-none ${SMALL_GROUND} text-on-surface-variant`}>
+    <span className={`flex-none ${SMALL_GROUND} text-on-surface-variant`} {...testAttributes(node)}>
       <span aria-hidden="true">{count}</span>
       <span className="sr-only">
         {count} {count === 1 ? noun : `${noun}s`}
@@ -58,21 +60,35 @@ function Count({ count, noun }: { count: number; noun: string }) {
   );
 }
 
-function Row({ row }: { row: ActsRow }) {
+/**
+ * A row's test attributes where it shows them: its registered `actRow`
+ * instance on a registered screen (which names it instead of `testId`), else
+ * its own legacy id.
+ */
+function rowAttributes(row: ActsRow, node: DataNode | undefined, show: boolean) {
+  if (!show) return {};
+  return node === undefined ? { "data-testid": row.testId } : testAttributes(node);
+}
+
+function Row({ row, node }: { row: ActsRow; node?: DataNode }) {
   // The fault's line stands INSIDE the row's hairline, so a row carrying one
   // gives its hairline to the wrapper and keeps none of its own.
   const ruled = row.fault === undefined ? HAIRLINE : "";
   const slots = (
     <>
-      <span className={LABEL}>{row.label}</span>
-      <span className={VALUE}>{row.value}</span>
-      <Count count={row.count} noun={row.countNoun} />
+      <span className={LABEL} {...testAttributes(part(node, "label"))}>
+        {row.label}
+      </span>
+      <span className={VALUE} {...testAttributes(part(node, "value"))}>
+        {row.value}
+      </span>
+      <Count count={row.count} noun={row.countNoun} node={part(node, "count")} />
     </>
   );
   const line = row.open ? (
     <button
       type="button"
-      data-testid={row.testId}
+      {...rowAttributes(row, node, true)}
       onClick={row.open.onOpen}
       aria-label={row.open.label}
       className={`cg-state cg-focus ${ROW} ${ruled} w-full cursor-pointer border-0 bg-transparent p-0 text-left font-sans text-on-surface`}
@@ -80,13 +96,13 @@ function Row({ row }: { row: ActsRow }) {
       {slots}
     </button>
   ) : (
-    <div data-testid={row.fault === undefined ? row.testId : undefined} className={`${ROW} ${ruled}`}>
+    <div {...rowAttributes(row, node, row.fault === undefined)} className={`${ROW} ${ruled}`}>
       {slots}
     </div>
   );
   if (row.fault === undefined) return line;
   return (
-    <div data-testid={row.open ? undefined : row.testId} className={`${HAIRLINE} pb-2`}>
+    <div {...rowAttributes(row, node, !row.open)} className={`${HAIRLINE} pb-2`}>
       {line}
       {/* Aligned with the value: the label's 76px and the row's 8px gap. */}
       <div className="pl-[calc(4.75rem+0.5rem)]">
@@ -107,6 +123,7 @@ export function ActsCard({
   note,
   noteTone = "quiet",
   testId,
+  node,
 }: {
   rows: readonly ActsRow[];
   total: string;
@@ -115,17 +132,27 @@ export function ActsCard({
   /** `slow`: the olive tertiary ink, announced once as a status. */
   noteTone?: "quiet" | "slow";
   testId?: string;
+  /**
+   * The registered card on a registered screen (`keptPicksSeal.acts`): each
+   * row an `actRow` keyed by its place from 1 (its `label`, `value` and
+   * `count`), then the card's `total` and `note`. It names them instead of
+   * `testId`.
+   */
+  node?: DataNode;
 }) {
   return (
-    <div data-testid={testId} className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1">
-      {rows.map((row) => (
-        <Row key={row.key ?? row.label} row={row} />
+    <div
+      {...testAttributes(node, testId)}
+      className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1"
+    >
+      {rows.map((row, index) => (
+        <Row key={row.key ?? row.label} row={row} node={instance(node, "actRow", String(index + 1))} />
       ))}
       {/* 48px of CONTENT plus 6px above and below, as the master's inline style
           measures it (content-box: 60px in all). */}
       <div className="box-content flex min-h-12 flex-col justify-center gap-0.5 py-1.5">
         <span
-          data-testid={testId === undefined ? undefined : `${testId}-total`}
+          {...testAttributes(part(node, "total"), testId === undefined ? undefined : `${testId}-total`)}
           className="text-body-medium [font-weight:var(--text-label-large--font-weight)]"
         >
           {total}
@@ -133,7 +160,7 @@ export function ActsCard({
         {note && (
           <span
             role={noteTone === "slow" ? "status" : undefined}
-            data-testid={testId === undefined ? undefined : `${testId}-note`}
+            {...testAttributes(part(node, "note"), testId === undefined ? undefined : `${testId}-note`)}
             className={`${SMALL_GROUND} ${noteTone === "slow" ? "text-tertiary" : "text-on-surface-variant"}`}
           >
             {note}

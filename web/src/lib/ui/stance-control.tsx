@@ -1472,6 +1472,7 @@ export function StanceControl({
       {anchored && keptShown && (
         <PendingMarker
           testId={`${testIdPrefix}-kept`}
+          node={part(node, "pending")}
           label={waitingForReview ? "Waiting for your review" : "Waiting for your key"}
         />
       )}

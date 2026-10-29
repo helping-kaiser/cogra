@@ -194,8 +194,8 @@ async function pickInto(testId: string, files: File[]) {
   await act(async () => {});
 }
 
-const save = () => screen.getByTestId("comment-edit-save");
-const gate = () => screen.queryByTestId("comment-edit-gate");
+const save = () => screen.getByTestId("commentEdit.sign");
+const gate = () => screen.queryByTestId("commentEdit.gate");
 
 beforeEach(() => installEncoder());
 
@@ -211,7 +211,7 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     const bytes = uploads();
     const { signer, onSigned } = draw(comment([media("m1")]));
     await pickInto("comment-edit-media-input", [picture("a.jpg")]);
-    expect(await screen.findByTestId("comment-edit-gate")).toHaveTextContent(
+    expect(await screen.findByTestId("commentEdit.gate")).toHaveTextContent(
       "Uploading 0 of 1 — signing waits for the picture.",
     );
     expect(save()).not.toBeDisabled();
@@ -243,7 +243,7 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     expect(save()).toBeDisabled();
     expect(save()).toHaveTextContent("Sign the edit");
     expect(signer.signStaged).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByTestId("header-leave"));
+    fireEvent.click(screen.getByTestId("commentEdit.header.leave"));
     // A batch holding an act asks first.
     await waitFor(() => expect(screen.getByTestId("comment-edit-discard-confirm")).toHaveAttribute("open"));
     expect(onLeave).not.toHaveBeenCalled();
@@ -258,7 +258,7 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     await pickInto("comment-edit-media-input", [picture("a.jpg")]);
     fireEvent.click(save());
     await bytes.answer("fail");
-    fireEvent.click(await screen.findByTestId("comment-edit-gate-retry"));
+    fireEvent.click(await screen.findByTestId("commentEdit.gate.retry"));
     await bytes.answer("land");
     await waitFor(() => expect(gate()).not.toBeInTheDocument());
     expect(signer.signStaged).not.toHaveBeenCalled();
@@ -277,7 +277,7 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     await bytes.answer("fail");
     fireEvent.click(await screen.findByTestId("comment-edit-upload-error-remove"));
     await waitFor(() => expect(gate()).not.toBeInTheDocument());
-    expect(screen.getByTestId("comment-edit-add-media")).toHaveTextContent("+ Add pictures · 1 of 4");
+    expect(screen.getByTestId("commentEdit.pictures.add")).toHaveTextContent("+ Add pictures · 1 of 4");
     expect(save()).not.toBeDisabled();
   });
 
@@ -290,7 +290,7 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     expect(await screen.findByTestId("comment-edit-refusals")).toHaveTextContent(
       "That's more than a comment carries — up to four pictures.",
     );
-    expect(screen.getByTestId("comment-edit-add-media")).toHaveTextContent("+ Add pictures · 4 of 4");
+    expect(screen.getByTestId("commentEdit.pictures.add")).toHaveTextContent("+ Add pictures · 4 of 4");
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 
@@ -318,7 +318,7 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
       ),
     );
     const { signer } = draw(comment());
-    fireEvent.change(await screen.findByTestId("comment-edit-input"), { target: { value: "New words." } });
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
     fireEvent.click(save());
     expect(await screen.findByTestId("comment-edit-signed-actions-subline")).toHaveTextContent(
       "The count changed while you were editing — check it, then sign again.",
@@ -346,7 +346,7 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
       ),
     );
     const { signer } = draw(comment());
-    fireEvent.change(await screen.findByTestId("comment-edit-input"), { target: { value: "New words." } });
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
     fireEvent.click(save());
     expect(await screen.findByTestId("comment-edit-write-rule")).toHaveTextContent(
       "Nothing was signed or spent — your edit is still here.",
@@ -354,7 +354,7 @@ describe("CommentEditor — + Add pictures and the gate (CommentEdit)", () => {
     expect(signer.signStaged).not.toHaveBeenCalled();
     fireEvent.click(screen.getByTestId("comment-edit-not-now"));
     expect(screen.queryByTestId("comment-edit-write-rule")).not.toBeInTheDocument();
-    expect(screen.getByTestId("comment-edit-input")).toHaveValue("New words.");
+    expect(screen.getByTestId("commentEdit.words.input")).toHaveValue("New words.");
   });
 });
 
@@ -368,16 +368,16 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     prepared((input) => (sent = input as never));
     const bytes = uploads();
     const { onSigned } = draw(comment([CLIP]));
-    fireEvent.click(await screen.findByTestId("comment-edit-change-cover"));
+    fireEvent.click(await screen.findByTestId("commentEdit.cover.change"));
     await pickInto("comment-edit-cover-input", [picture("face.jpg")]);
     expect(await screen.findByTestId("comment-edit-cover-crop")).toHaveTextContent(
       "The cover takes the video's shape.",
     );
-    fireEvent.click(screen.getByTestId("comment-edit-cover-crop-next"));
-    expect(await screen.findByTestId("comment-edit-gate")).toHaveTextContent(
+    fireEvent.click(screen.getByTestId("coverCrop.next"));
+    expect(await screen.findByTestId("commentEdit.gate")).toHaveTextContent(
       "Uploading 0 of 1 — signing waits for the cover.",
     );
-    expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent("You're signing 1 thing");
+    expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent("You're signing 1 thing");
     fireEvent.click(save());
     await bytes.answer("land");
     await waitFor(() => expect(onSigned).toHaveBeenCalled());
@@ -391,8 +391,8 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     await pickInto("comment-edit-cover-input", [picture("face.jpg")]);
     await screen.findByTestId("comment-edit-cover-crop");
     fireEvent.click(screen.getByLabelText("Back to the edit"));
-    expect(await screen.findByTestId("comment-edit-change-cover")).toBeInTheDocument();
-    expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent("Nothing to sign yet");
+    expect(await screen.findByTestId("commentEdit.cover.change")).toBeInTheDocument();
+    expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent("Nothing to sign yet");
   });
 
   // CommentEditVideo.md: "press Remove it under the cover row -> the new cover
@@ -401,11 +401,11 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     const bytes = uploads();
     draw(comment([CLIP]));
     await pickInto("comment-edit-cover-input", [picture("face.jpg")]);
-    fireEvent.click(await screen.findByTestId("comment-edit-cover-crop-next"));
+    fireEvent.click(await screen.findByTestId("coverCrop.next"));
     await bytes.answer("fail");
     fireEvent.click(await screen.findByTestId("comment-edit-cover-error-remove"));
     await waitFor(() => expect(gate()).not.toBeInTheDocument());
-    expect(screen.getByTestId("comment-edit-cover")).toBeInTheDocument();
+    expect(screen.getByTestId("commentEdit.cover.thumb")).toBeInTheDocument();
     expect(save()).not.toBeDisabled();
   });
 
@@ -416,8 +416,8 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     prepared((input) => (sent = input as never));
     const { onSigned } = draw(comment([CLIP]));
     fireEvent.click(await screen.findByLabelText("Remove this video"));
-    expect(screen.queryByTestId("comment-edit-clip")).not.toBeInTheDocument();
-    expect(screen.getByTestId("comment-edit-add-media")).toHaveTextContent("+ Add pictures · 0 of 4");
+    expect(screen.queryByTestId("commentEdit.video.thumb")).not.toBeInTheDocument();
+    expect(screen.getByTestId("commentEdit.pictures.add")).toHaveTextContent("+ Add pictures · 0 of 4");
     fireEvent.click(save());
     await waitFor(() => expect(onSigned).toHaveBeenCalled());
     // An omitted gallery is a comment without one (api-spec.md, edit as complete state).
