@@ -219,22 +219,49 @@ The route map (Android parity per surface):
 | `/join` | public | InviteEntry — paste an invite to start an application |
 | `/join/<link-id>` | public, SSR for unfurl | InviteEntry + Apply (the same form signed in, auth.md §Application) |
 | `/verify?token=` | public, sessionless | email-verification result |
+| `/vouch/<link-id>` | public | VouchAsk — the ask link's landing; the id is the capability, so nothing renders about the asker until the client's own check reads it |
 | `/feed` | public | Feed — the chronological listing; the shell's root tab |
+| `/explore` (+`?q=` restores the typed query) | public | Explore — search and the at-rest door; the shell's search tab |
+| `/explore/topics` (+`?from=`) | gated | YourTopics — the viewer's held topics, a subpage of Explore |
+| `/wallet` | public | Wallet — the coming-soon door; the shell's wallet tab |
 | `/posts/<id>` | public | PostDetail |
+| `/topics/<name>` | public, SSR for unfurl | Topic |
+| `/trace/<id>` (+`?kind=`, `?from=`, `?settling=`) | public | the feed score's trace — four levels on one route (not built on Android) |
+| `/reel/<id>` | public | Reel — the portrait-clip stream, drawing its own bar (not built on Android) |
 | `/u/<handle>` | public, SSR for unfurl | Profile(handle) |
-| `/profile` | gated | Profile (the viewer's own — the shell's profile tab) |
 | `/u/<handle>/opinions` (+`?tab=by`) | public | ProfileStances — the opinions page someone's figures row opens (not built on Android) |
+| `/profile` | gated | Profile (the viewer's own — the shell's profile tab) |
 | `/profile/opinions` (+`?tab=by`) | gated | ProfileStances (the viewer's own) |
 | `/profile/edit` | gated | ProfileEdit |
+| `/saved` | gated | Saved |
+| `/history` | gated | History |
+| `/notifications` (+`?from=` names the root the bell was tapped on) | gated | Notifications |
+| `/chats` (+`?from=`) | public | ChatsComingSoon |
+| `/about` (+`?from=`) | public | About |
 | `/compose` (+`?post=<id>` opens edit mode) | gated | ComposePost |
+| `/kept-picks` (+`?from=`) | gated | the kept picks' review and seal (not built on Android) |
 | `/key` | gated; key attached → redirect `/` | KeyCeremony |
+| `/vouched-in` | gated | VouchedIn — the vouch-back's ceremony |
 | `/invites` | gated | Invites |
 | `/settings` | gated | Settings |
 | `/settings/key` | gated | KeyExport |
+| `/settings/backup` | gated | SettingsBackup — the recovery code |
+| `/settings/whats-new` | gated | WhatsNew |
+| `/settings/password` | gated | ChangePassword |
+| `/settings/handle` | gated | ChangeHandle |
+| `/settings/email` | gated | ChangeEmail |
+| `/settings/email/applicant` | gated | ChangeEmail (an applicant's unverified address — one fresh link, no code) |
+| `/settings/email/confirm` | gated | ChangeEmailConfirm — the code at the old address and the link at the new one |
+| `/email-change?token=` | public, sessionless | ChangeEmailLinked — the new address's link; with no session it applies nothing and asks for a sign-in first |
+| `/settings/delete` | gated | DeleteAccount |
+| `/settings/delete/mail` | gated | DeleteAccountMail |
+| `/settings/delete/pending` | gated | DeleteAccountPending — the grace period |
+| `/delete-account?token=` | public, sessionless | DeleteAccountConfirmed — the deletion mail's link |
 | `/restore` | gated | Restore |
 
-Everything else 404. `/join`, `/verify`, and `/reset` are the
-doc-fixed link URLs ([auth.md "Link URLs"](auth.md#link-urls)).
+Everything else 404. `/join`, `/vouch`, `/verify`, `/reset`,
+`/email-change`, and `/delete-account` are the doc-fixed link URLs
+([auth.md "Link URLs"](auth.md#link-urls)).
 
 Content reads are public — the per-surface decision "Links
 unfurl" above defers: the graph is continuously readable by
@@ -249,10 +276,12 @@ an anonymous visitor finds the public read without an account.
 The shell is the bottom bar
 ([design/readme.md §7](../../design/readme.md#7-components)), rendered from the root
 layout so it frames the read surfaces across the public tier and
-the `(app)` group alike — `/feed`, `/posts/<id>`, `/u/<handle>`,
-and `/profile`. The task flows (`/compose`, `/profile/edit`,
-`/settings`, `/settings/key`, `/invites`, `/key`, `/restore`) and
-the auth surfaces (login, join, reset, verify) stand without it.
+the `(app)` group alike — `/feed`, `/explore`, `/wallet`, `/posts/<id>`,
+`/u/<handle>`, `/trace/<id>`, and the signed-in `/profile`, `/saved`,
+`/history`, and `/notifications`. `/reel/<id>` draws its own bar on the
+stream's ground. The task flows (`/compose`, `/profile/edit`,
+`/settings` and its subpages, `/invites`, `/key`, `/restore`) and the
+auth surfaces (login, join, vouch, reset, verify) stand without it.
 One frame for every viewer: an anonymous visitor gets the same
 bar on the public read surfaces, its account-needing slots
 (compose, profile) opening the join prompt in place — sign in or
@@ -267,7 +296,9 @@ Gating is client-side — tokens are client-held, so the server
 never knows the auth state. The `(app)` route group's layout
 guards the gated routes and replaces a signed-out visit to
 `/login`; a route's membership in the group is the gate, so the
-public read surfaces live outside it. `/` redirects on the
+public read surfaces live outside it. The gated read surfaces outside the group (`/profile`, `/saved`,
+`/history`, `/notifications`, `/explore/topics`) replace a
+signed-out visit themselves. `/` redirects on the
 phase, rendering nothing. Phase flips replace the location,
 never push — the
 Android navigation parity. Web deltas from Android: `/invites`
