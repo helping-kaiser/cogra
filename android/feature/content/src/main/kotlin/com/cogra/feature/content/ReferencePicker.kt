@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -281,6 +282,7 @@ private fun StagedCitations(references: List<ReferenceRow>, now: Instant, onUnst
  * commits, and the results re-query once; the scrim, a swipe down and Back
  * drop what is staged.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun KindsSheet(
     open: Boolean,
