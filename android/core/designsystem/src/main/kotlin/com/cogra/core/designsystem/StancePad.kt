@@ -645,7 +645,9 @@ fun StanceControl(
         }
     }
 
-    Column(modifier.dataNode(node)) {
+    // The control's column spends `--space-1` between the anchor and the lines
+    // under it (StanceControl.jsx: `gap: var(--space-1)`).
+    Column(modifier.dataNode(node), verticalArrangement = Arrangement.spacedBy(Space.x1)) {
         if (padOnly) {
             Box { considered() }
         } else {

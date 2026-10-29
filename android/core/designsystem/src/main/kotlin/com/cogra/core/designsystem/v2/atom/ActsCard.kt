@@ -123,7 +123,7 @@ private fun ActsFooter(acts: Int, slow: Boolean, node: DataNode?) {
                 fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
             ),
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.dataNode(node?.div("total")),
+            modifier = Modifier.fillMaxWidth().dataNode(node?.div("total")),
         )
         val note = when {
             slow -> ACTS_SLOW_LINE
@@ -136,6 +136,7 @@ private fun ActsFooter(acts: Int, slow: Boolean, node: DataNode?) {
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
                 color = if (slow) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
+                    .fillMaxWidth()
                     .dataNode(node?.div("note"))
                     .then(if (slow) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier),
             )

@@ -312,7 +312,7 @@ private fun KeptPickRow(row: KeptRow, onRemove: () -> Unit, node: DataNode, remo
                 },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.dataNode(node / "name"),
+                modifier = Modifier.fillMaxWidth().dataNode(node / "name"),
             )
             KindLine(kind, node / "kind")
             if (row.severs) KindLine(stringResource(zero.reached), node / "consequence")
@@ -355,7 +355,7 @@ private fun KindLine(text: String, node: DataNode) {
         text = text,
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.dataNode(node),
+        modifier = Modifier.fillMaxWidth().dataNode(node),
     )
 }
 
