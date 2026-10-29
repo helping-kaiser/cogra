@@ -676,12 +676,67 @@ describe("the reply wizard", () => {
       expect(screen.queryByTestId("reply-seal-tags")).toBeNull();
     });
 
-    it("surfaces a submit that never reached the server", async () => {
+    // ReplySeal.md:19 — the fault line and Retry IN THE FOOT, in Sign
+    // comment's place; Retry is the same signing, asked again.
+    it("surfaces a submit that never reached the server in the foot, and Retry asks again", async () => {
+      server.use(gqlLink.mutation("PrepareComment", () => HttpResponse.error()));
+      const { onSigned } = draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const line = await screen.findByTestId("reply-transport-error");
+      expect(line).toHaveTextContent("That didn't send. Try again.");
+      expect(within(screen.getByTestId("reply-seal")).getByTestId("reply-transport-error")).toBe(line);
+      expect(screen.queryByTestId("reply-sign")).toBeNull();
+      server.use(prepareOk("comment-9"));
+      fireEvent.click(screen.getByTestId("reply-retry"));
+      await waitFor(() => expect(onSigned).toHaveBeenCalledWith("comment-9"));
+    });
+
+    it("SealSigning.md: going a stage back and returning shows the plain commit again", async () => {
       server.use(gqlLink.mutation("PrepareComment", () => HttpResponse.error()));
       draw();
       await toSeal();
       fireEvent.click(screen.getByTestId("reply-sign"));
-      expect(await screen.findByTestId("reply-transport-error")).toBeInTheDocument();
+      await screen.findByTestId("reply-transport-error");
+      fireEvent.click(screen.getByTestId("reply-back"));
+      fireEvent.click(await screen.findByTestId("reply-next"));
+      await screen.findByTestId("reply-seal");
+      expect(screen.queryByTestId("reply-transport-error")).toBeNull();
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
+    });
+
+    it("ReplySeal.md:21 the write rule's notice says the reply is still here, its ? the reply's clause, Not now gives the seal back", async () => {
+      server.use(
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: {
+              prepareComment: {
+                __typename: "PrepareContentPayload",
+                node: null,
+                writes: null,
+                userErrors: [{ __typename: "UserError", message: "no", code: "WRITE_RULE_FAILED", field: null }],
+              },
+            },
+          }),
+        ),
+      );
+      const { onSigned } = draw();
+      await toSeal("Still here.");
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const notice = await screen.findByTestId("reply-write-rule");
+      expect(notice).toHaveTextContent("Nothing was signed or spent — your reply is still here.");
+      expect(screen.queryByTestId("reply-retry")).toBeNull();
+      fireEvent.click(screen.getByTestId("reply-write-rule-help"));
+      expect(await screen.findByTestId("reply-help-dialog")).toHaveTextContent(
+        "Nothing was signed or spent, and your reply is still here. Try again in a little while.",
+      );
+      fireEvent.click(screen.getByTestId("reply-not-now"));
+      expect(screen.queryByTestId("reply-write-rule")).toBeNull();
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
+      expect(onSigned).not.toHaveBeenCalled();
+      // WriteRuleFailed.md:29 — the words still in its composer.
+      fireEvent.click(screen.getByTestId("reply-back"));
+      expect(await screen.findByTestId("reply-words")).toHaveValue("Still here.");
     });
 
     it("tells a keyless browser to restore rather than offering a dead button", async () => {

@@ -29,6 +29,12 @@
 // the network is slow. A press made while the reply's bytes still move is
 // HELD — the commit stays enabled through the gate, and only a failed upload
 // closes it, the gate line's fault reading saying why.
+//
+// WHAT BECAME OF THE PRESS IS THE FOOT'S, at comment scale (ReplySeal.md:19-21,
+// the post seal's failure pack): no answer at all puts the fault line, an
+// outlined Retry and Back in the commit's place; the write rule puts its notice
+// there, its fact ending on what is true of a reply — `your reply is still
+// here.` — and `Not now` under it. Everything above the foot stays as it was.
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton } from "@/lib/ui2/pill-button";
@@ -52,6 +58,8 @@ import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { StancePad } from "@/lib/ui2/compose/stance-pad";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
 import { LicenseRows } from "@/lib/ui/license-rows";
+import { TransportError } from "@/lib/ui/transport-error";
+import type { SealFault } from "@/lib/compose/seal-fault";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
@@ -77,6 +85,18 @@ export const REPLYING_SIGNS_AN_OPINION = "Replying also signs an opinion on what
 /** The reply-scale key notice's line (ReplySealKeyAbsent.md:3). */
 export const REPLY_KEY_ABSENT_LINE = "A reply can't wait as pending — restore the key to sign this one.";
 
+/** No answer reached the seal (copy-voice, *No answer at all*: "Seal, pad or dialog"). */
+export const REPLY_OFFLINE_LINE = "That didn't send. Try again.";
+
+/**
+ * `WRITE_RULE_FAILED` on a reply's seal (copy-voice, *Faults by code*;
+ * WriteRuleFailed.md:25): a reply keeps no draft, so the fact's last clause is
+ * what is true here.
+ */
+export const REPLY_WRITE_RULE_TITLE = "You can't sign right now";
+export const REPLY_WRITE_RULE_FACT =
+  "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent — your reply is still here.";
+
 const CLOSE_GLYPH =
   "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
 
@@ -90,6 +110,7 @@ export function ReplySealStep({
   swapped,
   slow,
   keyOnDevice,
+  fault,
   refusal,
   tagErrors,
   referenceErrors,
@@ -106,7 +127,10 @@ export function ReplySealStep({
   onSensitiveHelp,
   onKeyHelp,
   onSign,
+  onRetry,
   onRetryUploads,
+  onWriteRuleHelp,
+  onNotNow,
   onBack,
   onDiscard,
   onRestoreKey,
@@ -126,6 +150,8 @@ export function ReplySealStep({
   /** Past 5s since the press: the acts card's subline says so. */
   slow: boolean;
   keyOnDevice: boolean | null;
+  /** What became of the last press, when it did not leave the seal. */
+  fault: SealFault | null;
   refusal: string | null;
   /** A refused tag's words, by its place in the staged set. */
   tagErrors?: Readonly<Record<number, string>>;
@@ -147,8 +173,14 @@ export function ReplySealStep({
   /** The key notice's own "?" (ReplySealKeyAbsent.md:5). */
   onKeyHelp: () => void;
   onSign: () => void;
+  /** The offline fault's Retry: the same signing, asked again. */
+  onRetry: () => void;
   /** The failed upload's Retry: the gate runs again, and nothing signs until the next press. */
   onRetryUploads: () => void;
+  /** The write rule notice's own "?" — `Why signing waits`, the reply's clause. */
+  onWriteRuleHelp: () => void;
+  /** `Not now` under the write rule's notice: the notice goes and the seal stands again. */
+  onNotNow: () => void;
   onBack: () => void;
   /** `Discard the reply` under the key notice — the wizard's own leave, asking first. */
   onDiscard: () => void;
@@ -353,6 +385,36 @@ export function ReplySealStep({
           </NoticePanel>
           <PillButton testId="reply-discard" variant="text" full onClick={onDiscard}>
             Discard the reply
+          </PillButton>
+        </>
+      ) : fault?.kind === "offline" ? (
+        // NO ANSWER REACHED THE SEAL (ReplySeal.md:19; `NetworkError`'s foot):
+        // the fault line and an outlined Retry take the commit's place, over
+        // the same way back. The rows above say what they said.
+        <div className="flex flex-col gap-2">
+          <TransportError testId="reply-transport-error" message={REPLY_OFFLINE_LINE} />
+          <PillButton testId="reply-retry" variant="outlined" full onClick={onRetry}>
+            Retry
+          </PillButton>
+          <PillButton testId="reply-back" variant="text" full onClick={onBack}>
+            Back
+          </PillButton>
+        </div>
+      ) : fault?.kind === "writeRule" ? (
+        // THE WRITE RULE IS NOT A FAULT (ReplySeal.md:21, WriteRuleFailed.md:25):
+        // nothing was staged or spent, so the tertiary notice stands in the
+        // commit's place with its own "?", and no Retry; `Not now` gives the
+        // seal back with the reply as it was.
+        <>
+          <NoticePanel
+            title={REPLY_WRITE_RULE_TITLE}
+            help={{ label: "Why signing waits", onOpen: onWriteRuleHelp, testId: "reply-write-rule-help" }}
+            testId="reply-write-rule"
+          >
+            <NoticeLine>{REPLY_WRITE_RULE_FACT}</NoticeLine>
+          </NoticePanel>
+          <PillButton testId="reply-not-now" variant="text" full onClick={onNotNow}>
+            Not now
           </PillButton>
         </>
       ) : (

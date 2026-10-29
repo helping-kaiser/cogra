@@ -71,7 +71,8 @@ import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
 import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
 import { TagPicker } from "@/lib/ui2/compose/tag-picker";
 import { COVER_FROM_PICTURE, effectiveCover } from "@/lib/compose/wizard";
-import { TransportError } from "@/lib/ui/transport-error";
+import type { SealFault } from "@/lib/compose/seal-fault";
+import type { UserError } from "@/lib/api/outcome";
 import { SLOW_NETWORK_MS, useSlowAnswer, useWaitedPast } from "@/lib/ui2/waiting-commit";
 import { ReplyComposeStep } from "./reply-compose-step";
 import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
@@ -82,6 +83,11 @@ import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
  * the author and that fact when they have written something.
  */
 export const LEAVE_LABEL = "Leave — the reply is discarded";
+
+/** Whether the write rule is among a refusal's codes (copy-voice, *Faults by code*). */
+function writeRuleIn(errors: readonly UserError[]): boolean {
+  return errors.some((error) => error.code === "WRITE_RULE_FAILED");
+}
 
 const NO_FRAMES: readonly Blob[] = [];
 const NO_URLS: readonly string[] = [];
@@ -144,7 +150,8 @@ export function ReplyWizard({
   const swapped = useSlowAnswer(signing);
   const slow = useWaitedPast(signing, SLOW_NETWORK_MS);
   const [refusal, setRefusal] = useState<string | null>(null);
-  const [transportFailed, setTransportFailed] = useState(false);
+  // What became of the last press, when it did not leave the seal (`SealFault`).
+  const [fault, setFault] = useState<SealFault | null>(null);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
 
@@ -370,7 +377,21 @@ export function ReplyWizard({
    * The arrow: ONE STAGE BACK, and from the first stage that is the thread —
    * which discards the comment just as the X does.
    */
-  const stepBack = () => (state.step === "compose" ? leave() : dispatch({ type: "back" }));
+  const stepBack = () => (state.step === "compose" ? leave() : back());
+
+  /**
+   * A refusal reading is the seal's answer to ONE press (SealSigning.md): going
+   * a stage back, or changing a fact, shows the plain commit again until the
+   * next press.
+   */
+  const retire = () => {
+    setFault(null);
+    setRefusal(null);
+  };
+  const back = () => {
+    retire();
+    dispatch({ type: "back" });
+  };
 
   // The browser's Back is the same arrow (design/readme.md: "the platform
   // back gesture does the same"). This surface is not a route, so being OPEN
@@ -430,7 +451,7 @@ export function ReplyWizard({
     setRefusal(null);
     setTagErrors({});
     setReferenceErrors({});
-    setTransportFailed(false);
+    setFault(null);
 
     // The L1 ids of the node answered and of every cited node, read before
     // anything is staged: the batch is checked against them before its
@@ -443,7 +464,7 @@ export function ReplyWizard({
     );
     if (graphIds.kind !== "success") {
       setBusy(false);
-      setTransportFailed(true);
+      setFault({ kind: "offline" });
       return;
     }
     // One request, read twice: once by the API layer and once by the payload
@@ -463,11 +484,17 @@ export function ReplyWizard({
 
     if (prepared.kind === "failed") {
       setBusy(false);
-      setTransportFailed(true);
+      setFault({ kind: "offline" });
       return;
     }
     if (prepared.kind === "refused") {
       setBusy(false);
+      // The write rule is no fault: its notice stands in the commit's place,
+      // nothing staged or spent (ReplySeal.md:21).
+      if (writeRuleIn(prepared.errors)) {
+        setFault({ kind: "writeRule" });
+        return;
+      }
       const partition = partitionFieldErrors(prepared.errors, (error) =>
         writeRefusalMessage(error.code),
       );
@@ -517,11 +544,16 @@ export function ReplyWizard({
     // so the reader stays on the seal with what they wrote still in front of
     // them, which is the only place the words survive.
     const refused = results.find((result) => result.kind === "refused");
-    setRefusal(
-      refused && refused.kind === "refused"
-        ? firstRefusalMessage(refused.errors, "The comment wasn't signed.")
-        : "The comment wasn't signed.",
-    );
+    if (refused === undefined || refused.kind !== "refused") {
+      // No answer reached the seal: the fault line and Retry, in the foot.
+      setFault({ kind: "offline" });
+      return;
+    }
+    if (writeRuleIn(refused.errors)) {
+      setFault({ kind: "writeRule" });
+      return;
+    }
+    setRefusal(firstRefusalMessage(refused.errors, "The comment wasn't signed."));
   };
 
   // ---- the gate ------------------------------------------------------------
@@ -595,6 +627,7 @@ export function ReplyWizard({
             <TagPicker
               tags={state.tags}
               onTags={(tags) => {
+                retire();
                 setTagErrors({});
                 dispatch({ type: "tags", tags });
               }}
@@ -605,6 +638,7 @@ export function ReplyWizard({
             <ReferencePicker
               references={state.references}
               onReferences={(references) => {
+                retire();
                 setReferenceErrors({});
                 dispatch({ type: "references", references });
               }}
@@ -646,12 +680,6 @@ export function ReplyWizard({
             }
           />
 
-          {transportFailed && (
-            <div className="px-6">
-              <TransportError testId="reply-transport-error" />
-            </div>
-          )}
-
           {state.step === "compose" ? (
             <ReplyComposeStep
               state={state}
@@ -689,6 +717,7 @@ export function ReplyWizard({
               swapped={swapped}
               slow={slow}
               keyOnDevice={keyOnDevice}
+              fault={fault}
               refusal={refusal}
               tagErrors={tagErrors}
               referenceErrors={referenceErrors}
@@ -698,31 +727,48 @@ export function ReplyWizard({
                 if (next === "stance") setStagedStance(state.stance);
                 setSheet(next);
               }}
-              onLicense={(license) => dispatch({ type: "license", license })}
+              onLicense={(license) => {
+                retire();
+                dispatch({ type: "license", license });
+              }}
               onStagedStance={setStagedStance}
               onSetStance={() => {
+                retire();
                 dispatch({ type: "stance", stance: stagedStance });
                 setSheet("none");
               }}
               // A change to the staged set retires the refusal said against it:
               // its words named an item by its place, which has moved.
               onTags={(tags) => {
+                retire();
                 setTagErrors({});
                 dispatch({ type: "tags", tags });
               }}
               onReferences={(references) => {
+                retire();
                 setReferenceErrors({});
                 dispatch({ type: "references", references });
               }}
               onOpenTagPicker={() => setPicking("tags")}
               onOpenReferencePicker={() => setPicking("references")}
-              onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
+              onSensitive={(sensitive) => {
+                retire();
+                dispatch({ type: "sensitive", sensitive });
+              }}
               onSensitiveReason={(reason) => dispatch({ type: "sensitiveReason", reason })}
               onSensitiveHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
               onKeyHelp={() => setHelp(HELP_TOPICS.yourKey)}
               onSign={sign}
+              onRetry={() => {
+                // The same signing, asked again: Retry is the only re-send, and
+                // past 200ms its slot reads the commit's own in-flight label.
+                setFault(null);
+                void submit();
+              }}
               onRetryUploads={retryUploads}
-              onBack={() => dispatch({ type: "back" })}
+              onWriteRuleHelp={() => setHelp(HELP_TOPICS.whySigningWaitsAtReply)}
+              onNotNow={() => setFault(null)}
+              onBack={back}
               onDiscard={leave}
               onRestoreKey={() => router.push("/restore")}
             />

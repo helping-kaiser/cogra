@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { emptyReply, type ReplyState, type ReplyTarget, type SealUploads } from "@/lib/compose/reply-wizard";
 import { newReferenceDraft } from "@/lib/references/draft";
+import type { SealFault } from "@/lib/compose/seal-fault";
 import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
 
 const TARGET: ReplyTarget = {
@@ -35,6 +36,7 @@ function renderSeal(
     slow?: boolean;
     blocked?: string | null;
     uploads?: SealUploads;
+    fault?: SealFault | null;
     tagErrors?: Record<number, string>;
   } = {},
 ) {
@@ -48,6 +50,7 @@ function renderSeal(
     swapped: extra.swapped ?? false,
     slow: extra.slow ?? false,
     keyOnDevice: extra.keyOnDevice ?? true,
+    fault: extra.fault ?? null,
     tagErrors: extra.tagErrors,
     refusal: null,
     onSheet: vi.fn(),
@@ -63,7 +66,10 @@ function renderSeal(
     onSensitiveHelp: vi.fn(),
     onKeyHelp: vi.fn(),
     onSign: vi.fn(),
+    onRetry: vi.fn(),
     onRetryUploads: vi.fn(),
+    onWriteRuleHelp: vi.fn(),
+    onNotNow: vi.fn(),
     onBack: vi.fn(),
     onDiscard: vi.fn(),
     onRestoreKey: vi.fn(),
@@ -386,5 +392,60 @@ describe("ReplySealStep — the gate on the reply's media", () => {
     });
     fireEvent.click(screen.getByTestId("reply-sign"));
     expect(onSign).not.toHaveBeenCalled();
+  });
+});
+
+// WHAT BECAME OF THE PRESS, IN THE FOOT (ReplySeal.md:19-21,
+// WriteRuleFailed.md:25-29; the post seal's failure pack at comment scale).
+describe("ReplySealStep — the fault foot", () => {
+  it("ReplySeal.md:19 no answer: the fault line and Retry take Sign comment's place, everything above stays", () => {
+    const { onRetry, onBack } = renderSeal({ references: [citation("p-2", "Tide tables")] }, "none", {
+      fault: { kind: "offline" },
+    });
+    expect(screen.queryByTestId("reply-sign")).toBeNull();
+    const line = screen.getByTestId("reply-transport-error");
+    expect(line).toHaveTextContent("That didn't send. Try again.");
+    expect(line).toHaveAttribute("role", "alert");
+    // In the foot: under the note that closes the read-back, over Retry and Back.
+    const note = screen.getByTestId("reply-seal-note");
+    expect(note.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(line.compareDocumentPosition(screen.getByTestId("reply-retry")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // Everything above the foot as it was.
+    expect(screen.getByTestId("reply-cited-repair")).toHaveTextContent("Tide tables");
+    expect(screen.getByTestId("reply-open-tags")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("reply-retry"));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId("reply-back"));
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("ReplySeal.md:21 the write rule: the notice says the reply is still here, Not now under it, and never Retry", () => {
+    const { onNotNow, onWriteRuleHelp } = renderSeal({}, "none", { fault: { kind: "writeRule" } });
+    const notice = screen.getByTestId("reply-write-rule");
+    expect(notice).toHaveTextContent("You can't sign right now");
+    expect(notice).toHaveTextContent(
+      "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent — your reply is still here.",
+    );
+    // WriteRuleFailed.md:25 — never a kept draft, never Retry, no commit.
+    expect(screen.getByTestId("reply-seal")).not.toHaveTextContent(/draft/i);
+    expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+    expect(screen.queryByTestId("reply-sign")).toBeNull();
+    fireEvent.click(screen.getByTestId("reply-write-rule-help"));
+    expect(onWriteRuleHelp).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("reply-not-now")).toHaveTextContent("Not now");
+    fireEvent.click(screen.getByTestId("reply-not-now"));
+    expect(onNotNow).toHaveBeenCalledTimes(1);
+  });
+
+  it("WriteRuleFailed.md:3 every act is still read back while the notice stands", () => {
+    renderSeal({ references: [citation("p-2", "Tide tables")] }, "none", { fault: { kind: "writeRule" } });
+    expect(screen.getByTestId("reply-seal-acts-total")).toHaveTextContent("2 things, signed together");
+    expect(screen.getByTestId("reply-open-stance")).toBeInTheDocument();
+  });
+
+  it("the key notice still outranks a fault: no commit is possible without the key", () => {
+    renderSeal({}, "none", { fault: { kind: "offline" }, keyOnDevice: false });
+    expect(screen.getByTestId("reply-key-absent")).toBeInTheDocument();
+    expect(screen.queryByTestId("reply-retry")).toBeNull();
   });
 });
