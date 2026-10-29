@@ -169,7 +169,7 @@ class FeedFilterScreenTest {
     fun theFeedsSheetCarriesTheHeldForTopicsLast() {
         render(FeedUiState(loading = false, heldTopics = listOf(FeedTopic("t1", "saltmaps"))))
         trigger.performClick()
-        node("feed.filterSheet.topic.chip:saltmaps").assertIsDisplayed()
+        node("feed.filterSheet.topic.tag:saltmaps").assertIsDisplayed()
     }
 
     // ── FEEDNOTHING (FeedNothing.md) ─────────────────────────────────────

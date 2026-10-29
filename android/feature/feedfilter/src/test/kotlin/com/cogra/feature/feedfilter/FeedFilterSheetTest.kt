@@ -188,11 +188,11 @@ class FeedFilterSheetTest {
     @Test
     fun aTopicChipTurnsOnAloneAndItsTapClearsIt() {
         show(topics = listOf(maps, rust))
-        tag("feed.filterSheet.topic.chip:saltmaps").performScrollTo().performClick()
+        tag("feed.filterSheet.topic.tag:saltmaps").performScrollTo().performClick()
         assertThat(staged.topic).isEqualTo(maps)
-        tag("feed.filterSheet.topic.chip:rust").performClick()
+        tag("feed.filterSheet.topic.tag:rust").performClick()
         assertThat(staged.topic).isEqualTo(rust)
-        tag("feed.filterSheet.topic.chip:rust").performClick()
+        tag("feed.filterSheet.topic.tag:rust").performClick()
         assertThat(staged.topic).isNull()
         tag("feed.filterSheet.topic.allTopics").assertIsDisplayed()
     }

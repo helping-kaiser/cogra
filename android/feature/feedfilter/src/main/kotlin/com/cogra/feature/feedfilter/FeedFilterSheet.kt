@@ -236,16 +236,15 @@ fun FeedFilterSheet(
 }
 
 /**
- * 88% OF THE SCREEN, AS THE BUILT BOARD MEASURES IT (FeedSheet.md:3): the
- * master's surface takes `height: 88%` and lays its 8 top and 24 bottom
- * padding OUTSIDE it, so the drawn sheet stands 32 taller than 88%; this
- * surface's padding sits inside its height, so it is added back — and the
- * sheet ceiling still caps it (readme §13).
+ * TRUE 88% OF THE SCREEN (FeedSheet.md:3; design round 25: a sheet's height
+ * class is its whole height — `BottomSheet` is border-box, its padding inside
+ * the 88%). This surface's padding sits inside its height too, so the share is
+ * the whole sheet; the sheet ceiling still caps it (readme §13).
  */
 @Composable
 private fun sheetHeight(): Dp {
     val window = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
-    return (window * SHEET_SHARE + Space.x2 + Space.x6).coerceAtMost(sheetCeilingHeight())
+    return (window * SHEET_SHARE).coerceAtMost(sheetCeilingHeight())
 }
 
 /** The settings host's lead: the title with its "?" on its row, then the note, focus on the title. */
@@ -570,7 +569,7 @@ private fun TopicSection(
                 label = "#${topic.name}",
                 selected = on,
                 onClick = { onStage(staged.copy(topic = if (on) null else topic)) },
-                testTag = (node / "chip").keyed(topic.name).tag,
+                testTag = (node / "tag").keyed(topic.name).tag,
             )
         }
         Box(Modifier.fillMaxWidth()) {
