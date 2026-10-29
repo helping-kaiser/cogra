@@ -3,7 +3,7 @@
 // promises: two stages, a pinned target, a seal that names every act with its
 // price, a pad that stages nothing until Set, and a leave that discards.
 
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -12,6 +12,7 @@ import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { byNode } from "@/test/data-node";
 import { echoedMedia } from "@/test/media-echo";
 import type { ReplyTarget } from "@/lib/compose/reply-wizard";
 import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
@@ -148,6 +149,32 @@ async function pick(names: string[]) {
   );
   Object.defineProperty(input, "files", { value: files, configurable: true });
   fireEvent.change(input);
+}
+
+
+/** The tag index, answering the names in use (`TagNames`); none by default. */
+function tagNames(...names: readonly string[]) {
+  return gqlLink.query("TagNames", () =>
+    HttpResponse.json({
+      data: {
+        search: {
+          __typename: "SearchConnection",
+          edges: names.map((name, i) => ({
+            __typename: "SearchEdge",
+            node: { __typename: "Hashtag", id: `h${i}`, name: { __typename: "ModeratedText", value: name } },
+          })),
+        },
+      },
+    }),
+  );
+}
+
+/** From the seal: `+ Add a tag`, the typed name staged by its first row, Done. */
+function stageTag(name: string) {
+  fireEvent.click(screen.getByTestId("reply-open-tags"));
+  fireEvent.change(screen.getByRole("searchbox", { name: "Name a tag" }), { target: { value: name } });
+  fireEvent.click(screen.getByTestId(byNode("tagPicker.tag", name)));
+  fireEvent.click(screen.getByTestId(byNode("tagPicker.done")));
 }
 
 /** Words in, Next pressed — the seal, which is where most of this lives. */
@@ -295,7 +322,7 @@ describe("the reply wizard", () => {
       expect(screen.getByTestId("reply-act-comment")).toHaveTextContent(
         "Reply to @ada's post",
       );
-      expect(screen.getByTestId("reply-signed-actions")).toHaveTextContent("1 signed action");
+      expect(screen.getByTestId("reply-seal-acts-total")).toHaveTextContent("1 thing, signed");
     });
 
     it("names the comment it answers when the reply was pre-targeted", async () => {
@@ -368,10 +395,10 @@ describe("the reply wizard", () => {
       expect(screen.getByTestId("reply-open-sensitive")).toHaveTextContent("Change");
     });
 
-    it("offers the topic and citation rows the board draws, with their price", async () => {
+    it("offers the tag and citation rows the board draws, with their price (ReplySeal.md:5)", async () => {
       draw();
       await toSeal();
-      expect(screen.getByTestId("reply-open-topics")).toHaveTextContent("+ Add a topic");
+      expect(screen.getByTestId("reply-open-tags")).toHaveTextContent("+ Add a tag");
       expect(screen.getByTestId("reply-open-references")).toHaveTextContent("+ Cite something");
       // The offer's price is the board's bare "1 more", not a sentence.
       expect(screen.getByTestId("reply-seal")).toHaveTextContent("1 more");
@@ -383,6 +410,66 @@ describe("the reply wizard", () => {
       await toSeal("Still here.");
       fireEvent.click(screen.getByTestId("reply-back"));
       expect(await screen.findByTestId("reply-words")).toHaveValue("Still here.");
+    });
+  });
+
+  // THE REPLY COMPOSER OPENS THE PICKERS (round 27, seam 253; TagPicker.md,
+  // ReferencePicker.md): in the composer's place, inside the reply's dialog.
+  describe("the pickers", () => {
+    it("+ Add a tag opens the tag picker in place, its arrow Back to the comment", async () => {
+      server.use(tagNames());
+      draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-open-tags"));
+      const picker = screen.getByTestId("reply-picker");
+      expect(within(picker).getByRole("searchbox", { name: "Name a tag" })).toBeInTheDocument();
+      expect(within(picker).getByRole("button", { name: "Back to the comment" })).toBeInTheDocument();
+      // No inline finder, and the seal is not standing under it.
+      expect(screen.queryByTestId("reply-seal")).toBeNull();
+      expect(screen.queryByTestId("reply-tag-input")).toBeNull();
+    });
+
+    it("a pick lands in the reply at once, and Done gives the seal back with it staged", async () => {
+      server.use(tagNames());
+      draw();
+      await toSeal();
+      stageTag("saltmaps");
+      expect(await screen.findByTestId("reply-seal")).toBeInTheDocument();
+      expect(screen.getByTestId("reply-seal-tags")).toHaveTextContent("#saltmaps");
+      expect(screen.getByTestId("reply-seal-acts-total")).toHaveTextContent("2 things, signed together");
+      // + Add a tag stays under what has been added.
+      expect(screen.getByTestId("reply-open-tags")).toBeInTheDocument();
+    });
+
+    it("the picker's arrow is Done's leave: the seal comes back with every pick kept", async () => {
+      server.use(tagNames());
+      draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-open-tags"));
+      fireEvent.change(screen.getByRole("searchbox", { name: "Name a tag" }), { target: { value: "tidepools" } });
+      fireEvent.click(screen.getByTestId(byNode("tagPicker.tag", "tidepools")));
+      fireEvent.click(screen.getByRole("button", { name: "Back to the comment" }));
+      expect(await screen.findByTestId("reply-seal")).toBeInTheDocument();
+      expect(screen.getByTestId("reply-seal-tags")).toHaveTextContent("#tidepools");
+    });
+
+    it("TagPicker.md:29 the cap reads Up to 10 tags per comment. from the reply's composer", async () => {
+      server.use(tagNames());
+      draw();
+      await toSeal();
+      for (let i = 0; i < 10; i += 1) stageTag(`tag${i}`);
+      fireEvent.click(screen.getByTestId("reply-open-tags"));
+      expect(screen.getByTestId(byNode("tagPicker.cap"))).toHaveTextContent("Up to 10 tags per comment.");
+    });
+
+    it("+ Cite something opens the citation picker in place, its arrow Back to the comment", async () => {
+      draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-open-references"));
+      const picker = screen.getByTestId("reply-picker");
+      expect(within(picker).getByTestId(byNode("referencePicker.searchField"))).toBeInTheDocument();
+      expect(within(picker).getByRole("button", { name: "Back to the comment" })).toBeInTheDocument();
+      expect(screen.queryByTestId("reply-reference-input")).toBeNull();
     });
   });
 
@@ -546,8 +633,9 @@ describe("the reply wizard", () => {
       expect(screen.getByTestId("reply-seal-blocked")).toBeInTheDocument();
     });
 
-    it("routes a refused topic onto its own chip and reopens the sheet", async () => {
+    it("says a refused tag on its own row of the acts card, with Remove it", async () => {
       server.use(
+        tagNames(),
         gqlLink.mutation("PrepareComment", () =>
           HttpResponse.json({
             data: {
@@ -570,11 +658,16 @@ describe("the reply wizard", () => {
       );
       const { onSigned } = draw();
       await toSeal();
+      stageTag("reserved");
       fireEvent.click(screen.getByTestId("reply-sign"));
-      await waitFor(() =>
-        expect(screen.getByTestId("reply-topics-sheet")).toBeInTheDocument(),
-      );
+      const fault = await screen.findByTestId("reply-seal-tags-fault");
+      expect(within(fault).getByRole("button", { name: "Remove #reserved" })).toBeInTheDocument();
+      expect(screen.getByTestId("reply-refused")).toBeInTheDocument();
       expect(onSigned).not.toHaveBeenCalled();
+      // Removing it retires the refusal said against it.
+      fireEvent.click(within(fault).getByRole("button", { name: "Remove #reserved" }));
+      expect(screen.queryByTestId("reply-seal-tags-fault")).toBeNull();
+      expect(screen.queryByTestId("reply-seal-tags")).toBeNull();
     });
 
     it("surfaces a submit that never reached the server", async () => {

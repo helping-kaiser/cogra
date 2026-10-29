@@ -82,7 +82,6 @@ export function SensitiveSheet({
           </button>
         </>
       }
-      flush
       testId={`${testIdPrefix}-sensitive-sheet`}
     >
       {/* `min-h-0` is what lets the reason yield: the sheet stops at its

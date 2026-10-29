@@ -139,7 +139,6 @@ export function InviteSheet({
         node={created === null ? CREATE_SHEET : LINK_SHEET}
         // The content stands right under the title (InviteNew, InviteCreated:
         // the options open 0px under the heading row).
-        flush
       >
         {created === null ? (
           <div className="flex flex-col gap-4">

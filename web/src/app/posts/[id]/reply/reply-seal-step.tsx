@@ -1,41 +1,47 @@
 "use client";
 
-// ReplySeal / ReplyPad / ComposeKeyAbsent — the reply's last screen, where
-// every act is named with its price before anything is signed.
+// ReplySeal / ReplyCited / ReplyCitedMany / ReplySealKeyAbsent — the reply's
+// last screen, where every act is named with its price before anything is
+// signed (`_shared.jsx` `ReplySealBody`).
 //
-// THE SENSITIVE ROW IS THE BOARD'S THIRD TERM ROW — "Sensitive · Not marked ·
-// Mark" (`_shared.jsx:780-788`), opening the same `ComposeSensitive` sheet the
-// post seal and the comment editor open. It was held back while a
-// sensitive-marked COMMENT had no veiled read state, so that the switch could
-// not promise a veil the reader never got; design backlog item 25.4 built that
-// veil on 2026-09-02 and says in as many words that "the reply-wizard lanes
-// can implement ReplySeal 1:1". The row closes the group now, and the License
-// row gives back the closing hairline it was holding.
+// ONE SURFACE, THE SYSTEM'S OWN MASTERS. The quiet line that says what is
+// answered, the acts card (`ActsCard`: the comment, the staged tags and
+// citations, then the two action rows, the total and its all-or-nothing
+// subline), the three fact rows (`FactRow`), the note that replying signs an
+// opinion, and the foot. A comment's seal is also its details stage, so the
+// action rows ride along in every state — what could still be added, lined up
+// with what has been (ReplyCitedMany.md:7).
 //
-// THE TOPIC AND CITATION ROWS ARE THE BOARD'S, THE CONTROLS ARE THE PRODUCT'S.
-// ReplySeal draws "+ Add a topic" and "+ Cite something" inside the acts card,
-// each with the act it would add. Both boarded destinations are gaps — the
-// topic picker is not boarded at all, and ReferencePicker has no web
-// implementation — so pressing a row opens the entry field this product
-// already ships, in the sheet idiom the seal already uses for the licence and
-// the sensitive mark. Nothing here invents the picker.
+// THE ACTION ROWS OPEN THE PICKERS (round 27, seam 253: "the reply composer
+// opens the pickers"): `+ Add a tag` raises `TagPicker` and `+ Cite something`
+// raises `ReferencePicker`, each standing in the composer's place as the
+// edits' do — the seal hands the opening up to the wizard, which owns the
+// dialog the picker stands in.
+//
+// THE SENSITIVE ROW IS THE BOARD'S THIRD FACT ROW — "Sensitive · Not marked ·
+// Mark" (`_shared.jsx`), opening the same `ComposeSensitive` sheet the post
+// seal and the comment editor open (design backlog item 25.4).
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
-import { PillButton, TextAction } from "@/lib/ui2/pill-button";
+import { PillButton } from "@/lib/ui2/pill-button";
+import { FactRow } from "@/lib/ui2/fact-row";
+import { NoticeLine, NoticePanel } from "@/lib/ui2/notice-panel";
+import { QuietNote } from "@/lib/ui2/quiet-note";
+import { ReadoutChip } from "@/lib/ui2/chip";
+import { ActsCard, actsTotal, ALL_OR_NOTHING, type ActsAction, type ActsRow } from "@/lib/ui2/compose/acts-card";
 import { CitedSheet } from "@/lib/ui2/compose/cited-sheet";
+import { CITATION_FAMILY, PairSheet } from "@/lib/ui2/compose/pair-sheet";
+import { TagsSheet } from "@/lib/ui2/compose/tags-sheet";
 import { ParkedPad } from "@/lib/ui2/compose/parked-pad";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { StancePad } from "@/lib/ui2/compose/stance-pad";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
+import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 import { LicenseRows } from "@/lib/ui/license-rows";
-import { TagEntryField } from "@/lib/ui/tag-entry-field";
-import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
 import { licenseReading, type License } from "@/lib/license";
-import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
-import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import {
@@ -46,14 +52,19 @@ import {
 } from "@/lib/compose/reply-wizard";
 import { uploadsPending } from "@/lib/compose/comment-media";
 
-export type ReplySheet =
-  | "none"
-  | "license"
-  | "stance"
-  | "topics"
-  | "references"
-  | "cited"
-  | "sensitive";
+export type ReplySheet = "none" | "license" | "stance" | "tags" | "cited" | "pair" | "sensitive";
+
+/** How many chips the Tags row holds before it counts — the post seal's rule (`TAGS_ROW_HOLDS`). */
+const TAGS_ROW_HOLDS = 2;
+
+/** The note under the fact rows (ReplySeal.md:7; `_shared.jsx` `ReplySealBody`). */
+export const REPLYING_SIGNS_AN_OPINION = "Replying also signs an opinion on what it answers.";
+
+/** The reply-scale key notice's line (ReplySealKeyAbsent.md:3). */
+export const REPLY_KEY_ABSENT_LINE = "A reply can't wait as pending — restore the key to sign this one.";
+
+const CLOSE_GLYPH =
+  "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
 
 export function ReplySealStep({
   state,
@@ -71,11 +82,15 @@ export function ReplySealStep({
   onSetStance,
   onTags,
   onReferences,
+  onOpenTagPicker,
+  onOpenReferencePicker,
   onSensitive,
   onSensitiveReason,
   onSensitiveHelp,
+  onKeyHelp,
   onSign,
   onBack,
+  onDiscard,
   onRestoreKey,
 }: {
   state: ReplyState;
@@ -87,7 +102,9 @@ export function ReplySealStep({
   busy: boolean;
   keyOnDevice: boolean | null;
   refusal: string | null;
+  /** A refused tag's words, by its place in the staged set. */
   tagErrors?: Readonly<Record<number, string>>;
+  /** A refused citation's words, by its place in the staged set. */
   referenceErrors?: Readonly<Record<number, string>>;
   onSheet: (next: ReplySheet) => void;
   onLicense: (next: License) => void;
@@ -95,119 +112,176 @@ export function ReplySealStep({
   onSetStance: () => void;
   onTags: (next: readonly TagDraft[]) => void;
   onReferences: (next: readonly ReferenceDraft[]) => void;
+  /** `+ Add a tag`: the tag picker, in the composer's place. */
+  onOpenTagPicker: () => void;
+  /** `+ Cite something`: the citation picker, in the composer's place. */
+  onOpenReferencePicker: () => void;
   onSensitive: (next: boolean) => void;
   onSensitiveReason: (next: string) => void;
   onSensitiveHelp: () => void;
+  /** The key notice's own "?" (ReplySealKeyAbsent.md:5). */
+  onKeyHelp: () => void;
   onSign: () => void;
   onBack: () => void;
+  /** `Discard the reply` under the key notice — the wizard's own leave, asking first. */
+  onDiscard: () => void;
   onRestoreKey: () => void;
 }) {
   const acts = signedActions(state);
   const uploading = uploadsPending(state.media);
+  // SealFooter: the commit refuses a second press from the press on, and says
+  // its participle only past 200ms (ReplySeal.md:9-13) — never dimmed.
+  const slow = useSlowAnswer(busy);
+
+  const removeReference = (targetId: string) =>
+    onReferences(state.references.filter((reference) => reference.targetId !== targetId));
+  const removeTag = (name: string) => onTags(state.tags.filter((tag) => tag.name !== name));
+
+  const rows: (ActsRow | ActsAction)[] = [
+    {
+      label: "Comment",
+      value: <span data-testid="reply-act-comment">{replyActLabel(state.target)}</span>,
+      count: 1,
+      countNoun: "comment",
+      testId: "reply-seal-comment",
+    },
+  ];
+  // THE STAGED TAGS READ BACK AS THE POST SEAL'S DO (`ComposeSealTagged`): the
+  // chips while the row holds them, past that their count, the row the door
+  // to the sheet that lists them. A refused tag is said on its row.
+  const refusedTag = firstRefused(state.tags, tagErrors);
+  const tagFault =
+    refusedTag === null
+      ? undefined
+      : {
+          message: refusedTag.message,
+          onRemove: () => removeTag(refusedTag.item.name),
+          removeLabel: `Remove #${refusedTag.item.name}`,
+        };
+  if (state.tags.length > TAGS_ROW_HOLDS) {
+    rows.push({
+      label: "Tags",
+      value: `${state.tags.length} tags`,
+      count: state.tags.length,
+      countNoun: "tag",
+      open: { label: `Manage the ${state.tags.length} tags`, onOpen: () => onSheet("tags") },
+      fault: tagFault,
+      testId: "reply-open-tags-sheet",
+    });
+  } else if (state.tags.length > 0) {
+    rows.push({
+      label: "Tags",
+      value: (
+        <span className="flex items-center gap-1.5 overflow-hidden">
+          {state.tags.map((tag) => (
+            <ReadoutChip key={tag.name}>#{tag.name}</ReadoutChip>
+          ))}
+        </span>
+      ),
+      count: state.tags.length,
+      countNoun: "tag",
+      fault: tagFault,
+      testId: "reply-seal-tags",
+    });
+  }
+  // THE CITATIONS' THREE READINGS (jakob's rulings 2026-09-14, design backlog
+  // item 70): nothing staged draws no row; ONE reads back as itself — its
+  // name, which opens its pair (ReplyCited.md:9), and the × that drops it;
+  // TWO OR MORE read back as their count, the row the door to `CitedSheet`.
+  const refusedReference = firstRefused(state.references, referenceErrors);
+  const only = state.references.length === 1 ? state.references[0] : undefined;
+  if (only !== undefined) {
+    rows.push({
+      label: "Reference",
+      value: (
+        <span className="flex min-w-0 items-center gap-1">
+          <button
+            type="button"
+            aria-label={`${only.target.label} — set how it relates`}
+            data-testid="reply-cited-repair"
+            onClick={() => onSheet("pair")}
+            className="cg-state cg-focus min-w-0 cursor-pointer truncate rounded-small border-0 bg-transparent p-0 text-left font-sans text-body-medium text-on-surface"
+          >
+            {only.target.label}
+          </button>
+          <button
+            type="button"
+            aria-label={`Remove ${only.target.label}`}
+            data-testid="reply-cited-remove"
+            onClick={() => removeReference(only.targetId)}
+            className="cg-state cg-focus flex h-8 w-8 flex-none cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-on-surface-variant"
+          >
+            <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden="true">
+              <path d={CLOSE_GLYPH} />
+            </svg>
+          </button>
+        </span>
+      ),
+      count: 1,
+      countNoun: "citation",
+      fault:
+        refusedReference === null
+          ? undefined
+          : { message: refusedReference.message, onRemove: () => removeReference(only.targetId) },
+      testId: "reply-seal-reference",
+    });
+  } else if (state.references.length > 1) {
+    const count = state.references.length;
+    rows.push({
+      label: "References",
+      value: `${count} cited`,
+      count,
+      countNoun: "citation",
+      open: { label: `Manage the ${count} citations`, onOpen: () => onSheet("cited") },
+      // Under a count the refused citation is named by Remove it's name.
+      fault:
+        refusedReference === null
+          ? undefined
+          : {
+              message: refusedReference.message,
+              onRemove: () => removeReference(refusedReference.item.targetId),
+              removeLabel: `Remove ${refusedReference.item.target.label}`,
+            },
+      testId: "reply-open-cited",
+    });
+  }
+  // THE ACTION ROWS, in every state (`_shared.jsx` `ADD_ROWS`): the word and
+  // what it would cost, `1 more`.
+  rows.push(
+    { action: "+ Add a tag", count: "1 more", onAct: onOpenTagPicker, testId: "reply-open-tags" },
+    { action: "+ Cite something", count: "1 more", onAct: onOpenReferencePicker, testId: "reply-open-references" },
+  );
 
   return (
     <div data-testid="reply-seal" className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 pb-6 pt-2">
-      <p className="m-0 text-body-small text-on-surface-variant">{replySummary(state)}</p>
+      <QuietNote testId="reply-seal-summary">{replySummary(state)}</QuietNote>
 
-      <div
-        data-testid="reply-seal-acts"
-        className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1"
-      >
-        <div className="flex min-h-11 items-center gap-2 border-b border-outline-variant">
-          <span className="w-19 flex-none text-label-medium text-on-surface-variant">Comment</span>
-          <span className="min-w-0 flex-1 truncate text-body-medium" data-testid="reply-act-comment">
-            {replyActLabel(state.target)}
-          </span>
-          <ActsCount count={1} noun="comment" />
-        </div>
-
-        <AddRow
-          label="+ Add a topic"
-          filled={state.tags.map((tag) => `#${tag.name}`).join("  ")}
-          count={state.tags.length}
-          countNoun="tag"
-          testId="reply-open-topics"
-          onOpen={() => onSheet("topics")}
-        />
-        {/* THE SAME THREE READINGS THE POST'S SEAL TAKES (jakob's ruling
-            2026-09-14, design backlog item 70): the rule is about citations,
-            not about which composer staged them. One reads back as itself,
-            two or more read back as their count behind a door — and the
-            add-row stays in every state, because a comment's seal IS its
-            details stage and counting the citations takes away no way to add
-            another (`ReplyCitedMany.jsx:12-16`). */}
-        {state.references.length === 1 && (
-          <ReplyCitedRow
-            // Singular: the label names the EDGE staged rather than the block
-            // it sits in, and one edge is a reference (`_shared.jsx:1046-1052`).
-            label="Reference"
-            name={state.references[0].target.label}
-            onRepair={() => onSheet("references")}
-            onRemove={() =>
-              onReferences(
-                state.references.filter(
-                  (reference) => reference.targetId !== state.references[0].targetId,
-                ),
-              )
-            }
-          />
-        )}
-        {state.references.length > 1 && (
-          <CitedRow
-            count={state.references.length}
-            testId="reply-open-cited"
-            onOpen={() => onSheet("cited")}
-          />
-        )}
-        {/* "+ Cite something", the short form: the hand board spelled the
-            kinds out while the staged twin said the short form, so one
-            surface said two things depending on whether a reference had
-            landed. The picker's own screen is where the kinds are enumerated
-            (`ReplySeal.jsx:14-17`). */}
-        <OfferRow
-          label="+ Cite something"
-          testId="reply-open-references"
-          onOpen={() => onSheet("references")}
-        />
-
-        <div className="flex min-h-[46px] items-center gap-2">
-          <span className="flex-1 text-label-large" data-testid="reply-signed-actions">
-            {acts === 1 ? "1 signed action" : `${acts} signed actions`}
-          </span>
-          {acts > 1 && (
-            <span className="text-body-small text-on-surface-variant">
-              they land together, or none does
-            </span>
-          )}
-        </div>
-      </div>
+      <ActsCard
+        rows={rows}
+        total={actsTotal(acts)}
+        note={acts > 1 ? ALL_OR_NOTHING : null}
+        testId="reply-seal-acts"
+      />
 
       <div className="flex flex-col">
-        <TermRow
+        <FactRow
           label="Toward what you answer"
           value={<StanceValue pair={state.stance} testId="reply-stance-value" />}
           action="Adjust"
           testId="reply-open-stance"
           onAction={() => onSheet("stance")}
         />
-        <TermRow
+        <FactRow
           label="License"
-          value={
-            <span className="text-body-medium text-on-surface-variant">
-              {licenseReading(state.license)}
-            </span>
-          }
+          value={licenseReading(state.license)}
           action="Change"
           testId="reply-open-license"
           onAction={() => onSheet("license")}
         />
-        <TermRow
+        <FactRow
           label="Sensitive"
           value={
-            <span
-              className="text-body-medium text-on-surface-variant"
-              data-testid="reply-sensitive-value"
-            >
+            <span className="text-body-medium text-on-surface-variant" data-testid="reply-sensitive-value">
               {state.sensitive ? "Marked" : "Not marked"}
             </span>
           }
@@ -218,6 +292,10 @@ export function ReplySealStep({
         />
       </div>
 
+      {/* The opinion the reply carries is a fact about replying, not about
+          the row — so it stands under the ruled block (`ReplySealBody`). */}
+      <QuietNote testId="reply-seal-note">{REPLYING_SIGNS_AN_OPINION}</QuietNote>
+
       <div className="flex-1" />
 
       {refusal && (
@@ -226,31 +304,31 @@ export function ReplySealStep({
         </p>
       )}
 
-      {/* The key card takes the place of the sign button rather than sitting
-          beside it: signing is not something this browser can do, and a
-          disabled button with a banner above it invites the press anyway.
-          There is no "keep the draft" way out here — a comment keeps none. */}
+      {/* THE KEY NOTICE TAKES THE FOOT'S PLACE (ReplySealKeyAbsent.md): every
+          row stays, the reply-scale line, the restore, and `Discard the reply`
+          under it — never a way to keep a draft, since a comment keeps none. */}
       {keyOnDevice === false ? (
-        <div
-          data-testid="reply-key-absent"
-          className="flex flex-col gap-3 rounded-medium bg-tertiary-container p-4 text-on-tertiary-container"
-        >
-          <h2 className="m-0 text-title-small">Your key isn&apos;t on this browser</h2>
-          <p className="m-0 text-body-medium">Nothing is spent until you sign.</p>
-          <PillButton testId="reply-restore-key" full onClick={onRestoreKey}>
-            Restore the key
+        <>
+          <NoticePanel
+            title="Your key isn't on this browser"
+            help={{ label: "Your key", onOpen: onKeyHelp, testId: "reply-key-help" }}
+            testId="reply-key-absent"
+          >
+            <NoticeLine>{REPLY_KEY_ABSENT_LINE}</NoticeLine>
+            <PillButton testId="reply-restore-key" variant="inverse" full onClick={onRestoreKey}>
+              Restore the key
+            </PillButton>
+          </NoticePanel>
+          <PillButton testId="reply-discard" variant="text" full onClick={onDiscard}>
+            Discard the reply
           </PillButton>
-          <PillButton testId="reply-back" variant="text" full onClick={onBack}>
-            Back
-          </PillButton>
-        </div>
+        </>
       ) : (
         <div className="flex flex-col gap-2">
           {/* THE GATE, as ComposeSealUploading draws it: while bytes are still
-              moving the seal says so with the count and holds the button,
-              because nothing signs until the content it signs exists. A
-              failure is words rather than a count — there is nothing left to
-              wait for. */}
+              moving the seal says so with the count, because nothing signs
+              until the content it signs exists. A failure is words rather
+              than a count — there is nothing left to wait for. */}
           {blocked && uploading > 0 ? (
             <UploadStatusLine
               done={state.media.length - uploading}
@@ -266,8 +344,15 @@ export function ReplySealStep({
               {blocked}
             </p>
           ) : null}
-          <PillButton testId="reply-sign" full disabled={busy || blocked !== null} onClick={onSign}>
-            {busy ? "Signing…" : "Sign comment"}
+          <PillButton
+            testId="reply-sign"
+            full
+            disabled={blocked !== null}
+            onClick={() => {
+              if (!busy) onSign();
+            }}
+          >
+            {slow ? "Signing comment…" : "Sign comment"}
           </PillButton>
           <PillButton testId="reply-back" variant="text" full onClick={onBack}>
             Back
@@ -285,11 +370,9 @@ export function ReplySealStep({
           Terms for anyone who reuses this.
         </p>
         {/* The board's own row anatomy — a dot, the reading, its hint —
-            rather than `LicenseChooser`'s settings-page fieldset, which
-            drew a second "License" legend and a second note inside a
-            sheet already titled and noted (`ComposeLicense.jsx:5-11`).
-            The post seal's license sheet was corrected first; this is
-            the same component, not a second copy of it. */}
+            rather than `LicenseChooser`'s settings-page fieldset
+            (`ComposeLicense.jsx:5-11`): the post seal's license sheet's
+            component, not a second copy of it. */}
         <LicenseRows value={state.license} onChange={onLicense} testIdPrefix="reply" />
         <div className="flex items-center gap-2 border-t border-outline-variant pt-2.5">
           <span className="flex-1 text-label-small text-on-surface-variant">
@@ -303,12 +386,9 @@ export function ReplySealStep({
 
       {/* ReplyPad. It PARKS over the page rather than riding a drawer
           (`ReplyPadBody`, design/readme.md §"Fixed elements"): the same
-          place every time, because muscle memory is part of the control —
-          which is also what android's reply pad already does.
-
+          place every time, because muscle memory is part of the control.
           Cancel and the wash stage nothing; only Set moves the stance the
-          seal reads, which is why the pad works on its own staged pair
-          rather than writing through on every drag. */}
+          seal reads, which is why the pad works on its own staged pair. */}
       <ParkedPad
         open={sheet === "stance"}
         onClose={() => onSheet("none")}
@@ -341,60 +421,21 @@ export function ReplySealStep({
         </div>
       </ParkedPad>
 
-      <BottomSheet
-        open={sheet === "topics"}
+      {/* The post seal's own sheets, opened from this seal's doors: one
+          surface, drawn once, wherever a staged collection is managed. They
+          add nothing — the action rows are where another is staged. */}
+      <TagsSheet
+        open={sheet === "tags"}
         onClose={() => onSheet("none")}
-        title="Topics"
-        testId="reply-topics-sheet"
-      >
-        <div className="flex flex-col gap-3">
-          <TagEntryField
-            tags={state.tags}
-            onChange={onTags}
-            fieldErrors={tagErrors}
-            cap={TAG_BATCH_CAP}
-            testIdPrefix="reply"
-          />
-          <div className="flex justify-end">
-            <PillButton testId="reply-topics-done" onClick={() => onSheet("none")}>
-              Done
-            </PillButton>
-          </div>
-        </div>
-      </BottomSheet>
-
-      <BottomSheet
-        open={sheet === "references"}
-        onClose={() => onSheet("none")}
-        title="Cite something"
-        testId="reply-references-sheet"
-      >
-        <div className="flex flex-col gap-3">
-          <ReferenceEntryField
-            references={state.references}
-            onChange={onReferences}
-            fieldErrors={referenceErrors}
-            cap={REFERENCE_BATCH_CAP}
-            testIdPrefix="reply"
-          />
-          <div className="flex justify-end">
-            <PillButton testId="reply-references-done" onClick={() => onSheet("none")}>
-              Done
-            </PillButton>
-          </div>
-        </div>
-      </BottomSheet>
-
-      {/* The post seal's own sheet, opened from this seal's door: one surface,
-          drawn once, wherever a staged collection is managed. It adds nothing —
-          the add-row above it is where another citation is staged. */}
+        items={state.tags}
+        onChange={onTags}
+        testId="reply-tags-sheet"
+      />
       <CitedSheet
         open={sheet === "cited"}
         onClose={() => onSheet("none")}
         items={state.references}
-        onRemove={(targetId) =>
-          onReferences(state.references.filter((reference) => reference.targetId !== targetId))
-        }
+        onRemove={removeReference}
         onRepair={(targetId, next) =>
           onReferences(
             state.references.map((reference) =>
@@ -404,6 +445,22 @@ export function ReplySealStep({
         }
         testId="reply-cited-sheet"
       />
+      {/* THE ONE CITATION'S PAIR (ReplyCited.md:9): its name opens the pair
+          sheet the citations sheet opens per row. */}
+      {only !== undefined && (
+        <PairSheet
+          open={sheet === "pair"}
+          title={only.target.label}
+          value={{ pDirected: only.relevance, pInterest: only.support }}
+          family={CITATION_FAMILY}
+          onDone={(pair) => {
+            onReferences([{ ...only, relevance: pair.pDirected, support: pair.pInterest }]);
+            onSheet("none");
+          }}
+          onDiscard={() => onSheet("none")}
+          testId="reply-cited-pair"
+        />
+      )}
 
       {/* The same sheet the post seal and the comment editor open — one mark,
           explained one way (design/backlog.md item 42). */}
@@ -423,200 +480,17 @@ export function ReplySealStep({
   );
 }
 
-/**
- * An acts-card row that is an affordance while it is empty and a summary once
- * it is filled — the board draws the empty state, and the act it would add.
- *
- * THE COUNT IS A BARE NUMBER, as `ActsCard` draws it: `1 more` on an empty
- * row, the count itself on a filled one. The word form spent the row's width
- * on a noun the column already says, and what it spent came out of the value
- * slot — the drawn example name ellipsised on a real device.
- */
-function AddRow({
-  label,
-  filled,
-  count,
-  countNoun,
-  testId,
-  onOpen,
-}: {
-  label: string;
-  filled: string;
-  count: number;
-  countNoun: string;
-  testId: string;
-  onOpen: () => void;
-}) {
-  if (count === 0) return <OfferRow label={label} testId={testId} onOpen={onOpen} />;
-  return (
-    <div className="flex min-h-[38px] items-center gap-2 border-b border-outline-variant">
-      <button
-        type="button"
-        data-testid={testId}
-        onClick={onOpen}
-        className="cg-state cg-focus min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-body-medium"
-      >
-        {filled}
-      </button>
-      <ActsCount count={count} noun={countNoun} />
-    </div>
-  );
-}
-
-/**
- * THE COUNT IS SEEN BARE AND HEARD WHOLE (jakob's ruling 2026-09-14, design
- * backlog item 73; `ActsCard.jsx:27-39`). The digit is what the board draws;
- * an ear given the number alone gets nothing, so the digit leaves the
- * accessibility tree and a paired reading says "2 citations". The noun is the
- * row's own — the References row counts CITATIONS — never its label's.
- *
- * A count already made of words ("1 more", on a row that still offers an act)
- * keeps them and says itself.
- */
-function ActsCount({ count, noun }: { count: number; noun: string }) {
-  return (
-    <span className="flex-none text-body-small text-on-surface-variant">
-      <span aria-hidden="true">{count}</span>
-      <span className="sr-only">
-        {count} {count === 1 ? noun : `${noun}s`}
-      </span>
-    </span>
-  );
-}
-
-/**
- * A row that is still an offer: the gesture, and what it would cost.
- *
- * The citations' offer stays an offer in every state — the board's add-rows
- * ride along whether or not something is staged (`_shared.jsx:1076-1099`),
- * because the reply's seal is also the stage where its citations are named.
- */
-function OfferRow({
-  label,
-  testId,
-  onOpen,
-}: {
-  label: string;
-  testId: string;
-  onOpen: () => void;
-}) {
-  return (
-    <div className="flex min-h-[38px] items-center gap-2 border-b border-outline-variant">
-      <button
-        type="button"
-        data-testid={testId}
-        onClick={onOpen}
-        className="cg-state cg-focus min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-label-medium text-primary"
-      >
-        {label}
-      </button>
-      <span className="flex-none text-body-small text-on-surface-variant">1 more</span>
-    </div>
-  );
-}
-
-/**
- * The reply's ONE staged citation, read back as itself: the name that opens
- * the citation's pair, and the × that drops it, each naming the citation it
- * acts on (`StagedReference`'s rule, jakob 2026-09-10).
- */
-function ReplyCitedRow({
-  label,
-  name,
-  onRepair,
-  onRemove,
-}: {
-  label: string;
-  name: string;
-  onRepair: () => void;
-  onRemove: () => void;
-}) {
-  return (
-    <div className="flex min-h-[38px] items-center gap-2 border-b border-outline-variant">
-      <span className="w-19 flex-none text-label-medium text-on-surface-variant">{label}</span>
-      <button
-        type="button"
-        aria-label={`${name} — set how it relates`}
-        data-testid="reply-cited-repair"
-        onClick={onRepair}
-        className="cg-state cg-focus min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-body-medium"
-      >
-        {name}
-      </button>
-      <button
-        type="button"
-        aria-label={`Remove ${name}`}
-        data-testid="reply-cited-remove"
-        onClick={onRemove}
-        className="cg-state cg-focus flex h-8 w-8 flex-none cursor-pointer items-center justify-center rounded-full text-on-surface-variant"
-      >
-        <span aria-hidden="true">×</span>
-      </button>
-      <ActsCount count={1} noun="citation" />
-    </div>
-  );
-}
-
-/**
- * The References row once it counts: "N cited", the bare count, and the whole
- * row as the control — the post seal's own door, said on this seal, opening
- * the one sheet both seals open (`ReplyCitedMany.jsx:17-20`). No chevron and
- * no trailing word, so the accessible name is what tells a listener the line
- * is a door, count folded in ("Manage the N citations", and at one "Manage
- * the 1 citation" — copy-voice.md:409-419).
- */
-function CitedRow({
-  count,
-  testId,
-  onOpen,
-}: {
-  count: number;
-  testId: string;
-  onOpen: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      data-testid={testId}
-      onClick={onOpen}
-      aria-label={`Manage the ${count} ${count === 1 ? "citation" : "citations"}`}
-      className="cg-state cg-focus flex min-h-[38px] w-full cursor-pointer items-center gap-2 border-0 border-b border-solid border-outline-variant bg-transparent p-0 text-left text-on-surface"
-    >
-      <span className="w-19 flex-none text-label-medium text-on-surface-variant">References</span>
-      <span className="min-w-0 flex-1 truncate text-body-medium">{count} cited</span>
-      <ActsCount count={count} noun="citation" />
-    </button>
-  );
-}
-
-function TermRow({
-  label,
-  value,
-  action,
-  testId,
-  onAction,
-  last = false,
-}: {
-  label: string;
-  value: React.ReactNode;
-  action: string;
-  testId: string;
-  onAction: () => void;
-  last?: boolean;
-}) {
-  return (
-    <div
-      className={`flex min-h-10 items-center gap-2 border-t border-outline-variant ${
-        last ? "border-b" : ""
-      }`}
-    >
-      <span className="flex-1 text-body-medium">{label}</span>
-      {value}
-      <TextAction testId={testId} onClick={onAction}>
-        {action}
-      </TextAction>
-    </div>
-  );
+/** The first staged item the server refused, with its words — said on its own row. */
+function firstRefused<T>(
+  items: readonly T[],
+  errors: Readonly<Record<number, string>> | undefined,
+): { item: T; message: string } | null {
+  if (errors === undefined) return null;
+  for (const [index, message] of Object.entries(errors)) {
+    const item = items[Number(index)];
+    if (item !== undefined) return { item, message };
+  }
+  return null;
 }
 
 /** The face carries the feel and the pair carries the fact (design.md §8.3). */

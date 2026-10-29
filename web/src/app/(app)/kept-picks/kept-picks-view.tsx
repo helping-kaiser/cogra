@@ -11,7 +11,7 @@
 //   preview, its kind, the pair spoken as the readout speaks it. A target
 //   removed while its pick waited wears the removed-mark face and still signs.
 //   A pick that would net its bundle to nothing says so on its row; `Sign the
-//   opinions` is its confirmation, and no severance dialog follows.
+//   picks` is its confirmation, and no severance dialog follows.
 // - PLAIN OPINIONS ONLY. A kept vouch-back or approval never joins the batch;
 //   a kept approval is named under the intro, with the door to Invites.
 // - THE × DROPS AT ONCE, no confirm and no undo, spoken `Removed — N picks
@@ -21,7 +21,7 @@
 //   (`kept-picks-route.tsx`). The seal's arrow and its Back step back to the
 //   review; its X leaves the flow.
 // - THE SEAL WAITS LIKE EVERY SEAL: inert from the press, `Signing the
-//   opinions…` past 200ms with the ways out refusing a press (never dimmed),
+//   picks…` past 200ms with the ways out refusing a press (never dimmed),
 //   the slow line past 5s, never a spinner. No answer: the fault line and
 //   Retry. The write rule: the notice, `Not now` back to the review. Any other
 //   refusal: the bug notice, `Not now` back to the review. Nothing drops a pick
@@ -101,6 +101,11 @@ export function signedBatchLine(count: number): string {
 }
 
 const keyOf = (target: StanceTarget) => `${target.kind}:${target.id}`;
+
+/** The seal's row label and count noun, by the family the pick signs (`_shared.jsx` `keptPickFamily`). */
+function keptPickFamily(target: StanceTarget): { label: string; countNoun: string } {
+  return target.kind === "topic" ? { label: "Feeling", countNoun: "feeling" } : { label: "Opinion", countNoun: "opinion" };
+}
 
 /** A topic's pick is an Affinity, and speaks in its family's words. */
 function axesOf(target: StanceTarget): StanceAxes {
@@ -322,8 +327,10 @@ export function KeptPicksView() {
     const preview = previewOf(kept);
     const face = bundleReadout(kept.pick, EMPTY_PICK_LABEL);
     return {
-      label: "Opinion",
-      countNoun: "opinion",
+      // KeptPicksSeal.md:7 — the row names what is SIGNED, the record's
+      // family: a pick on a post or a person is an Opinion, a pick on a topic
+      // a Feeling (copy-voice, seam 248: `Topic` on the review, `Feeling` here).
+      ...keptPickFamily(kept.target),
       count: 1,
       key: keyOf(kept.target),
       value: (
@@ -437,7 +444,7 @@ export function KeptPicksView() {
               full
               onClick={() => void onSign()}
             >
-              {swapped ? "Signing the opinions…" : fault === "offline" ? "Retry" : "Sign the opinions"}
+              {swapped ? "Signing the picks…" : fault === "offline" ? "Retry" : "Sign the picks"}
             </PillButton>
             <PillButton
               testId="keptPicksSeal.back"

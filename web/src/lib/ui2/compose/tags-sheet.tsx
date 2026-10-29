@@ -13,7 +13,7 @@
 import { useState } from "react";
 
 import type { TagDraft } from "@/lib/topics/draft";
-import { BottomSheet } from "../bottom-sheet";
+import { BottomSheet, SHEET_RAISED } from "../bottom-sheet";
 import { PillButton } from "../pill-button";
 import { PairSheet, TAG_FAMILY } from "./pair-sheet";
 import { TopicRemovable } from "./topic-removable";
@@ -41,8 +41,11 @@ export function TagsSheet({
         onClose={onClose}
         title={`Tags · ${items.length}`}
         testId={testId}
+        // TagsSheet.jsx: the raised 88% class.
+        maxHeight={SHEET_RAISED}
       >
-        <div className="flex flex-wrap gap-2">
+        {/* The chips carry their own 8px under the title (TagsSheet.jsx `8px 24px 0`). */}
+        <div className="flex flex-wrap gap-2 pt-2">
           {items.map((tag, index) => (
             <TopicRemovable
               key={tag.name}

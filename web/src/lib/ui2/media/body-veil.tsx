@@ -44,15 +44,33 @@ export const VeilContext = createContext(false);
  * as the same veil, so every face says which one a reader met — unconditionally,
  * because an unnamed source would read as the other one.
  */
-export type VeilSource = "author" | "platform";
+export type VeilSource = "author" | "platform" | "both";
 
-export const VEIL_SOURCES: Readonly<Record<VeilSource, string>> = {
+export const VEIL_SOURCES: Readonly<Record<Exclude<VeilSource, "both">, string>> = {
   author: "The author's warning",
   platform: "The platform's verdict",
 };
 
+/**
+ * BOTH MARKS NAME BOTH (round 27, seam 253; `SensitiveVeil.jsx`
+ * `sensitiveSourceLine`): the two states are independent and the veil is
+ * their OR, so where both stand the line reads the author's warning first,
+ * with its reason, then the verdict in the edit's blessed words, its own
+ * reason after an em dash — `The author's warning — A dead seabird in the
+ * second frame. Also veiled by the platform's verdict`. The wire does not
+ * name the case yet (the `sensitiveSource` + `verdictReason` ask, contract
+ * bite B-C1), so `veilSource` never answers `both` today: a client reads the
+ * author's line alone until it does.
+ */
+export const ALSO_VEILED_BY_THE_VERDICT = "Also veiled by the platform's verdict";
+
 /** The face's second line: the source, and the reason after it where there is one. */
-export function veilSourceLine(source: VeilSource, reason?: string | null): string {
+export function veilSourceLine(source: VeilSource, reason?: string | null, verdictReason?: string | null): string {
+  if (source === "both") {
+    const own = reason ? `${VEIL_SOURCES.author} — ${reason}` : VEIL_SOURCES.author;
+    const stop = /[.!?]$/.test(own) ? "" : ".";
+    return `${own}${stop} ${ALSO_VEILED_BY_THE_VERDICT}${verdictReason ? ` — ${verdictReason}` : ""}`;
+  }
   return reason ? `${VEIL_SOURCES[source]} — ${reason}` : VEIL_SOURCES[source];
 }
 

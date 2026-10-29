@@ -15,7 +15,7 @@
 
 import { useState } from "react";
 
-import { BottomSheet } from "../bottom-sheet";
+import { BottomSheet, SHEET_RAISED } from "../bottom-sheet";
 import { HelpDialog, HELP_TOPICS } from "../help-dialog";
 import { HelpDot } from "../help-dot";
 import { PillButton } from "../pill-button";
@@ -89,6 +89,8 @@ export function DescribeSheet({
       title={video ? "Describe the video" : "Describe this picture"}
       titleHidden
       testId={testId}
+      // DescribeSheet.jsx: the raised 88% class.
+      maxHeight={SHEET_RAISED}
     >
       {/* `min-h-0` is what lets the field yield: the sheet stops at its
           ceiling, and the growing box is the one child in this column that

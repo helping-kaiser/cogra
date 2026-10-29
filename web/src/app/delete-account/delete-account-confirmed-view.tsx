@@ -44,8 +44,8 @@ import {
 import { useAccountDeletion } from "@/lib/deletion/deletion-status";
 import { useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
-import { buttonClassName } from "@/lib/ui/button";
-import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { Button, buttonClassName } from "@/lib/ui/button";
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError } from "@/lib/ui/transport-error";
 import { Checkbox } from "@/lib/ui2/checkbox";
@@ -58,6 +58,12 @@ const node = (tail: string) => part(NODE, tail);
 /** copy-voice *Faults by code*: the token confirms' visible budget line, and the server's answered no. */
 const RATE_LIMITED_LINE = "Too many tries. Wait a little, then try again.";
 const NOT_THROUGH = "That didn't go through. Try again.";
+/**
+ * No answer reached the device: the house fault's noun form for a confirm
+ * (DeleteAccountConfirmed.md:11; copy-voice *Faults by code*, round 25) — the
+ * long line never stands beside a control that tries again.
+ */
+const UNREACHABLE_LINE = "Can't reach the server — the deletion can't be confirmed right now.";
 
 type Landing =
   | { kind: "confirming" }
@@ -214,17 +220,15 @@ export function DeleteAccountConfirmedView() {
       )}
 
       {landing.kind === "rateLimited" && (
-        <Retry onRetry={() => setAttempt((n) => n + 1)}>
-          <p role="alert" className="m-0 text-body-medium text-error" data-testid="delete-account-rate-limited">
-            {RATE_LIMITED_LINE}
-          </p>
-        </Retry>
+        <Fault answer="limited" onRetry={() => setAttempt((n) => n + 1)}>
+          <TransportError testId="delete-account-rate-limited" message={RATE_LIMITED_LINE} />
+        </Fault>
       )}
 
       {landing.kind === "unreachable" && (
-        <Retry onRetry={() => setAttempt((n) => n + 1)}>
-          <TransportError testId="delete-account-unreachable" />
-        </Retry>
+        <Fault answer="fault" onRetry={() => setAttempt((n) => n + 1)}>
+          <TransportError testId="delete-account-unreachable" message={UNREACHABLE_LINE} />
+        </Fault>
       )}
 
       <Snackbar testId="delete-account-snackbar" message={snackbar} onDismiss={dismiss} />
@@ -232,19 +236,30 @@ export function DeleteAccountConfirmedView() {
   );
 }
 
-/** A confirm that got no usable answer: the line, and the same link tried again. */
-function Retry({ children, onRetry }: { children: React.ReactNode; onRetry: () => void }) {
+/**
+ * A confirm that got no usable answer — the fault family's one shape
+ * (DeleteAccountConfirmed.jsx `FAULT`; round 27): the line over an OUTLINED
+ * `Try again`, sized to its word and leading the column, 12px under the line.
+ * `fault` (no answer) and `limited` (the confirm's budget) are the answer
+ * chip's two faces, each its own `deleteAccount.fault` copy keyed by the
+ * chip's value (nodes.json DeleteAccountConfirmed).
+ */
+function Fault({
+  answer,
+  children,
+  onRetry,
+}: {
+  answer: "fault" | "limited";
+  children: React.ReactNode;
+  onRetry: () => void;
+}) {
+  const fault = instance(NODE, "fault", answer);
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col items-start gap-3" {...testAttributes(fault)}>
       {children}
-      <button
-        type="button"
-        onClick={onRetry}
-        className={`${buttonClassName({ variant: "text" })} self-start`}
-        data-testid="delete-account-retry"
-      >
+      <Button testId="delete-account-retry" variant="outline" size="sm" selfStart onClick={onRetry} node={part(fault, "retry")}>
         Try again
-      </button>
+      </Button>
     </div>
   );
 }

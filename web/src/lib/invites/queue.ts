@@ -14,6 +14,9 @@ export const CREATE_INVITE = "Create invite";
 export const CREATING_INVITE = "Creating invite…";
 export const APPLICATIONS_LABEL = "Applications";
 export const LIVE_LINKS_LABEL = "Live links";
+/** Invites' empty halves (copy-voice; Invites.md:11, :13): a half with nothing in it still stands. */
+export const NO_APPLICATIONS_WAITING = "No applications waiting.";
+export const NO_LIVE_LINKS = "No live links.";
 export const READY = "Ready for your approval";
 export const NOT_REGISTERED = "Not fully registered yet";
 export const WAITING_FOR_KEY = "Waiting for your key";
@@ -94,26 +97,35 @@ export function rejectAllTitle(count: number): string {
   return `${closeAllLabel(count)}?`;
 }
 
-const COUNT_WORDS = [
-  "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
-  "eleven", "twelve",
-] as const;
+const COUNT_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"] as const;
 
-/** A count in the batch dialog's prose: spelled out to twelve, digits past it. */
+/**
+ * A count in the batch dialog's prose: spelled through nine, digits from 10
+ * (RejectAllConfirm.md:9, the common style rule — `All four`, `All 12`).
+ */
 export function countWord(count: number): string {
   return COUNT_WORDS[count] ?? String(count);
 }
 
+const ACCOUNTS_STAY = "Their accounts stay exactly as they are — signed in, and free to keep reading.";
+
 /**
- * The row's two sentences in the plural (copy-voice, *carried over — blessed
- * by use (jakob 2026-10-06)*: `All four leave your list and all four people
- * are told.`). The drawn line names the count in words; past twelve it reads
- * digits, which no board draws.
+ * The row's two sentences, in the count's English (RejectAllConfirm.md:7-9,
+ * copy-voice seam 248). A group never holds `Close all` below two, so two is
+ * the smallest the dialog meets, and two is a pair: `Both leave…` and
+ * `either of them`. From three, `All four leave your list and all four
+ * people are told.`
  */
 export function rejectAllBody(count: number): readonly [string, string] {
+  if (count <= 2) {
+    return [
+      `Both leave your list and both people are told. ${ACCOUNTS_STAY}`,
+      "This is your call and nobody else's. Any member can still vouch either of them in, and each gets a link to ask with.",
+    ];
+  }
   const n = countWord(count);
   return [
-    `All ${n} leave your list and all ${n} people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.`,
+    `All ${n} leave your list and all ${n} people are told. ${ACCOUNTS_STAY}`,
     "This is your call and nobody else's. Any member can still vouch any of them in, and each gets a link to ask with.",
   ];
 }

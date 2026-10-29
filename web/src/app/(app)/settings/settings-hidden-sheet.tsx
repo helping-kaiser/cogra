@@ -27,7 +27,7 @@ import type { Notify } from "@/lib/saved/save-row";
 import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { DIDNT_GO_THROUGH_ROW } from "@/lib/ui/row-line";
 import { ladderAge } from "@/lib/ui/timestamp";
-import { BottomSheet } from "@/lib/ui2/bottom-sheet";
+import { BottomSheet, SHEET_RAISED } from "@/lib/ui2/bottom-sheet";
 import { ContentRow, type ContentRowDisc } from "@/lib/ui2/content-row";
 import { InlineAction } from "@/lib/ui2/inline-action";
 
@@ -99,7 +99,7 @@ export function SettingsHiddenSheet({
   }, [empty, onClose]);
 
   return (
-    <BottomSheet open={open && rows.length > 0} onClose={onClose} title="Hidden accounts" node={SHEET} focusTitle>
+    <BottomSheet open={open && rows.length > 0} onClose={onClose} title="Hidden accounts" node={SHEET} focusTitle rows maxHeight={SHEET_RAISED}>
       <div className="flex flex-col gap-2 px-6" {...testAttributes(LIST)}>
         {rows.map((entry, index) => {
           const node = rowNode(entry);

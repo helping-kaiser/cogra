@@ -386,6 +386,22 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     ]);
   });
 
+  // CommentEditVideo (round 24): A NEW FACE RIDES THE EDIT RECORD — staging it
+  // when nothing has yet, adding nothing when it is already staged; `Cover
+  // changed` is no row.
+  it("adds nothing to the count when the edit's record is already staged", async () => {
+    uploads();
+    draw(comment([CLIP]));
+    fireEvent.change(await screen.findByTestId("commentEdit.words.input"), { target: { value: "New words." } });
+    expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent("You're signing 1 thing");
+    fireEvent.click(screen.getByTestId("commentEdit.cover.change"));
+    await pickInto("comment-edit-cover-input", [picture("face.jpg")]);
+    fireEvent.click(await screen.findByTestId("coverCrop.next"));
+    await screen.findByTestId("commentEdit.gate");
+    expect(screen.getByTestId("commentEdit.acts.line")).toHaveTextContent("You're signing 1 thing");
+    expect(screen.queryByText("Cover changed")).not.toBeInTheDocument();
+  });
+
   it("the cover crop's back arrow gives the cover row back, the picture unused", async () => {
     draw(comment([CLIP]));
     await pickInto("comment-edit-cover-input", [picture("face.jpg")]);
@@ -422,5 +438,41 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     await waitFor(() => expect(onSigned).toHaveBeenCalled());
     // An omitted gallery is a comment without one (api-spec.md, edit as complete state).
     expect(sent!.attachments ?? []).toEqual([]);
+  });
+});
+
+// TagPicker.md:29 / ReferencePicker.md:37: the cap reads per comment "from a
+// reply's composer or a comment's edit" (W-EDIT-PICKER-CAP).
+describe("CommentEditor — the pickers' cap", () => {
+  const topic = (name: string) => ({
+    __typename: "TopicClaim",
+    hashtag: { __typename: "Hashtag", id: `ht-${name}`, name: { __typename: "ModeratedText", value: name, status: "NORMAL" } },
+    relevance: 0.1,
+    confidence: 1,
+    pending: false,
+  });
+  const reference = (id: string) => ({
+    __typename: "ReferenceClaim",
+    targetId: `l1-${id}`,
+    relevance: 0.1,
+    support: 0.1,
+    withdrawalCost: 1,
+    pending: false,
+    target: { __typename: "User", id, handle: id, displayName: { __typename: "ModeratedText", value: id } },
+  });
+  const holding = (over: Record<string, unknown>) => ({ ...comment(), ...over }) as unknown as CommentView;
+
+  it("TagPicker.md:29 holds at ten: Up to 10 tags per comment.", async () => {
+    draw(holding({ topics: Array.from({ length: 10 }, (_, i) => topic(`tag${i}`)) }));
+    fireEvent.click(await screen.findByTestId("commentEdit.tags.add"));
+    await screen.findByRole("searchbox", { name: "Name a tag" });
+    expect(screen.getByTestId("tagPicker.cap")).toHaveTextContent("Up to 10 tags per comment.");
+  });
+
+  it("ReferencePicker.md:37 holds at ten: Up to 10 citations per comment.", async () => {
+    draw(holding({ references: Array.from({ length: 10 }, (_, i) => reference(`u-${i}`)) }));
+    fireEvent.click(await screen.findByTestId("commentEdit.references.add"));
+    await screen.findByRole("searchbox", { name: "Cite something" });
+    expect(screen.getByTestId("referencePicker.cap")).toHaveTextContent("Up to 10 citations per comment.");
   });
 });

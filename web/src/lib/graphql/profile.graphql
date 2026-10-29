@@ -61,8 +61,11 @@ query MyProfile {
   }
 }
 
-# The chronicle rendered as labelled rows: family + genesis mark, a
-# snippet of the touched content, and the post to open. A record is a
+# THE EVERYTHING TAB: the chronicle rendered as labelled rows, every
+# family the person signed — the Posts and Comments tabs are card views
+# on reads of their own (ProfilePosts, ProfileComments). Family +
+# genesis mark, a snippet of the touched content, and the post to
+# open. A record is a
 # genesis when its target/terminal is the mint of its own act id. The
 # row's age is its landing, an opinion row wears its own face (the pair,
 # and `severed` to tell a walk-back), and an opinion on a person names
@@ -71,8 +74,8 @@ query MyProfile {
 # published, a comment made, the account's joining), WALK_BACK (every
 # record a walk-back signed), VOUCH (the vouch that landed someone),
 # ORDINARY — the chronicle verbs' data.
-query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after: String) {
-  records(author: $author, family: $family, first: $first, after: $after) {
+query AuthorRecords($author: UUID!, $first: Int!, $after: String) {
+  records(author: $author, first: $first, after: $after) {
     edges {
       node {
         id
@@ -186,6 +189,97 @@ query ProfilePosts($id: UUID!, $after: String, $includePending: Boolean! = true)
             __typename
             ... on Post {
               ...FeedPost
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# THE COMMENTS VIEW (ProfileComments.md:3: "the comments view lists the
+# person's comments as comment cards, each in reach of its thread"): the
+# records that made the person's comments — each comment's own Review,
+# never an edit (`genesis: true`), whether it answers a post or a comment
+# (no `toKind`: a Review's actor leg enters on the PARENT, so `toKind:
+# COMMENT` would keep the replies alone) — in the mirror's own order,
+# newest first by landing. The Review's terminal is the comment, carrying
+# what its card draws: the thread's own fields, what it answers (the
+# pointer it leads with, `CommentCard`'s line shape), the thread's post
+# (where its doors land) and its replies' count (the "View n replies"
+# line, priced at `first: 0` as the thread prices it). A page of TEN, the
+# posts view's size and for its reason: every edge carries a whole card.
+# The page size is a literal so the client-operation guard prices the call
+# the device makes.
+query ProfileComments($id: UUID!, $after: String, $includePending: Boolean! = true) {
+  user(id: $id) {
+    id
+    comments: outgoingRecords(family: REVIEW, genesis: true, first: 10, after: $after) {
+      edges {
+        node {
+          id
+          terminal {
+            __typename
+            ... on Comment {
+              ...CommentFields
+              target {
+                __typename
+                ... on Post {
+                  id
+                  title {
+                    value
+                    status
+                  }
+                  content {
+                    value
+                    status
+                  }
+                  attachments {
+                    url
+                    status
+                    mimeType
+                    coverMedia {
+                      url
+                      status
+                    }
+                  }
+                  author {
+                    id
+                    handle
+                  }
+                  moderationStatus
+                  removal {
+                    at
+                    by
+                  }
+                }
+                ... on Comment {
+                  id
+                  content {
+                    value
+                    status
+                  }
+                  author {
+                    id
+                    handle
+                  }
+                  moderationStatus
+                  removal {
+                    at
+                    by
+                  }
+                }
+              }
+              post {
+                id
+              }
+              replies(first: 0, includePending: $includePending) {
+                totalCount
+              }
             }
           }
         }

@@ -10,13 +10,14 @@ import {
   AuthorRecordsDocument,
   MyProfileDocument,
   PrepareProfileUpdateDocument,
+  ProfileCommentsDocument,
   ProfileFiguresDocument,
   ProfilePostsDocument,
   UserProfileDocument,
   type AuthorRecordsQuery,
-  type RecordFamily,
   type UserProfileQuery,
 } from "@/__generated__/graphql";
+import type { CommentFeedView } from "@/lib/ui/comment-feed-card";
 import { fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 import type { Page, PostView } from "./content-api";
@@ -24,21 +25,13 @@ import type { Page, PostView } from "./content-api";
 export type ProfileView = NonNullable<UserProfileQuery["user"]>;
 
 /**
- * The chronicle's tabs (`CHRONICLE_TABS`). Every profile board draws the
- * reader landing on Everything.
+ * The profile's tabs (`CHRONICLE_TABS`). Every profile board draws the
+ * reader landing on Everything, the one tab the chronicle stands on: Posts
+ * lists the person's posts as post cards (ProfilePosts.md:3,
+ * `fetchProfilePosts`), Comments their comments as comment cards
+ * (ProfileComments.md:3, `fetchProfileComments`).
  */
 export type ChronicleFilter = "posts" | "comments" | "everything";
-
-/**
- * The tabs the chronicle stands on. The Posts tab is no chronicle: it lists
- * the person's posts as post cards (ProfilePosts.md:3, `fetchProfilePosts`).
- */
-export type ChronicleTab = Exclude<ChronicleFilter, "posts">;
-
-const FILTER_FAMILY: Record<ChronicleTab, RecordFamily | null> = {
-  comments: "REVIEW",
-  everything: null,
-};
 
 /** What a chronicle act is, which picks its disc (`_shared.jsx` `ProfileOwnBody`). */
 export type ActKind =
@@ -172,6 +165,47 @@ export async function fetchProfilePosts(
     }),
     endCursor: posts.pageInfo.endCursor ?? null,
     hasNextPage: posts.pageInfo.hasNextPage,
+  });
+}
+
+/**
+ * A comment as the comments view's card draws it: the feed card's own view
+ * of it (`CommentFeedView` — the thread's fields, what it answers, the
+ * thread's post) and the count its "View n replies" line promises.
+ */
+export type ProfileCommentView = CommentFeedView & { readonly replyCount: number };
+
+/**
+ * THE COMMENTS VIEW'S PAGE (ProfileComments.md:3): the person's comments as
+ * their cards draw them, newest first by landing — each comment's own Review
+ * record, never an edit, whatever it answers. Ten a page, the document's own
+ * literal (`profile.graphql`); a record whose comment CoGra does not carry is
+ * skipped, never drawn as a blank card.
+ */
+export async function fetchProfileComments(
+  client: ApolloClient,
+  id: string,
+  after: string | null = null,
+): Promise<Outcome<Page<ProfileCommentView>>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: ProfileCommentsDocument,
+      variables: { id, after },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  const comments = fetched.value.user?.comments;
+  if (comments === undefined) return success({ items: [], endCursor: null, hasNextPage: false });
+  return success({
+    items: comments.edges.flatMap((edge) => {
+      const comment = edge.node.terminal;
+      return comment?.__typename === "Comment"
+        ? [{ ...comment, replyCount: comment.replies.totalCount }]
+        : [];
+    }),
+    endCursor: comments.pageInfo.endCursor ?? null,
+    hasNextPage: comments.pageInfo.hasNextPage,
   });
 }
 
@@ -319,10 +353,14 @@ function toRow(node: RecordNode, own: boolean): RecordRow {
   };
 }
 
+/**
+ * THE EVERYTHING TAB'S PAGE: the chronicle, every family the person signed,
+ * one act to a row. The Posts and Comments tabs are card views on reads of
+ * their own.
+ */
 export async function fetchAuthorRecords(
   client: ApolloClient,
   authorId: string,
-  filter: ChronicleTab,
   after: string | null = null,
   /** The reader's own chronicle, whose profile updates say `your`. */
   own = false,
@@ -332,7 +370,6 @@ export async function fetchAuthorRecords(
       query: AuthorRecordsDocument,
       variables: {
         author: authorId,
-        family: FILTER_FAMILY[filter],
         first: PROFILE_PAGE_SIZE,
         after,
       },

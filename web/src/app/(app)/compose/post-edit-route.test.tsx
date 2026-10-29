@@ -604,6 +604,26 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     expect(footer()).toHaveTextContent("You're signing 1 thing");
   });
 
+  // TagPicker.md:27 / ReferencePicker.md:35: the cap reads per post "from a
+  // post's composer or its edit" (W-EDIT-PICKER-CAP).
+  it("TagPicker.md:27 the edit's tag picker holds at ten, Up to 10 tags per post.", async () => {
+    serve(editablePost({ topics: Array.from({ length: 10 }, (_, i) => topicClaim(`tag${i}`)) }));
+    draw();
+    fireEvent.click(await screen.findByTestId("postEdit.tags.add"));
+    await screen.findByRole("searchbox", { name: "Name a tag" });
+    expect(screen.getByTestId("tagPicker.cap")).toHaveTextContent("Up to 10 tags per post.");
+  });
+
+  it("ReferencePicker.md:35 the edit's citation picker holds at ten, Up to 10 citations per post.", async () => {
+    serve(
+      editablePost({ references: Array.from({ length: 10 }, (_, i) => referenceClaim(`u-${i}`, `person${i}`)) }),
+    );
+    draw();
+    fireEvent.click(await screen.findByTestId("postEdit.references.add"));
+    await screen.findByRole("searchbox", { name: "Cite something" });
+    expect(screen.getByTestId("referencePicker.cap")).toHaveTextContent("Up to 10 citations per post.");
+  });
+
   it("cites through the citation picker, in the edit's place", async () => {
     serve(editablePost());
     draw();
@@ -1268,6 +1288,23 @@ describe("PostEditRoute — a clip's cover (EditComposeVideo)", () => {
     expect(footer()).toHaveTextContent("You're signing 1 thing");
     // The field now holds the face and its other half, Change the cover.
     expect(screen.getByTestId("postEdit.cover.change")).toBeInTheDocument();
+  });
+
+  // EditComposeVideo.md:33 WHEN a new cover lands on the edit GIVEN the edit's
+  // own record is already staged -> NEVER the footer's count moves AND NEVER a
+  // record of the cover's own is staged (round 24: a new face rides the Edit
+  // record — `Cover changed` is no row).
+  it("adds nothing to the count when the edit's record is already staged", async () => {
+    serve(editablePost({ attachments: [clipAttachment({ coverTaken: true })] }));
+    uploads();
+    draw();
+    fireEvent.change(await screen.findByTestId("postEdit.title.input"), { target: { value: "A new title" } });
+    expect(footer()).toHaveTextContent("You're signing 1 thing");
+    await pickInto("post-edit-cover-input", [picture("face.jpg")]);
+    fireEvent.click(await screen.findByTestId("coverCrop.next"));
+    await screen.findByTestId("postEdit.cover.change");
+    expect(footer()).toHaveTextContent("You're signing 1 thing");
+    expect(screen.queryByText("Cover changed")).not.toBeInTheDocument();
   });
 
   // EditComposeVideo.md: "press Sign the edit GIVEN the signing is taken -> the

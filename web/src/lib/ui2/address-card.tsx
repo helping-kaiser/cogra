@@ -12,6 +12,11 @@
 // something that already frames it (the applicant's ask link inside its task
 // card) — the fill and the inset go; the label, the copy control, the mono
 // block and the caption are unchanged.
+//
+// `children` STANDS UNDER THE CAPTION, the card's last line (PayoutAddress.jsx):
+// the copy that did not go through says so there (Invites.md, `copyFault`).
+
+import type { ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
@@ -27,7 +32,10 @@ export function AddressCard({
   bare = false,
   node,
   testId,
+  children,
 }: {
+  /** The card's last line, under the caption. */
+  children?: ReactNode;
   address: string;
   label: string;
   onCopy?: () => void;
@@ -101,6 +109,7 @@ export function AddressCard({
           {caption}
         </span>
       )}
+      {children}
     </div>
   );
 }
