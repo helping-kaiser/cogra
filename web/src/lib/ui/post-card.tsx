@@ -162,6 +162,9 @@ function CommentCount({
   );
 }
 
+/** A portrait clip's door on a card, the one media door that leads elsewhere (copy-voice). */
+export const OPEN_THE_STREAM = "Open the stream";
+
 export function PostCard({
   post: given,
   variant = "summary",
@@ -565,6 +568,10 @@ export function PostCard({
                 <Link
                   href={stream.href}
                   onClick={stream.onOpen}
+                  // NAMED FOR ITS ACT, never by the clip's alt text, which
+                  // says what the clip shows and not what the tap does
+                  // (FeedShapes.md; copy-voice, *The stream and the viewer*).
+                  aria-label={OPEN_THE_STREAM}
                   data-testid={`${testId}-stream-link`}
                   className="cg-focus cg-door block"
                 >

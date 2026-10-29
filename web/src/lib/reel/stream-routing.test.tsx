@@ -6,7 +6,7 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { PostCard } from "@/lib/ui/post-card";
+import { OPEN_THE_STREAM, PostCard } from "@/lib/ui/post-card";
 import { renderWithProviders } from "@/test/providers";
 import { reelPost } from "@/test/reel";
 
@@ -47,6 +47,25 @@ describe("a media tap's route", () => {
     expect(screen.getByTestId("card-link")).toHaveAttribute("href", "/posts/p1");
     fireEvent.click(door);
     expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it("the_stream_door_is_named_open_the_stream, never by the clip's alt text (FeedShapes.md; round 26)", () => {
+    renderWithProviders(
+      <PostCard
+        post={reelPost("p1", "9:16", {
+          attachments: [{ ...reelPost("p1").attachments[0], altText: "A man at the edge of a lake" }],
+        })}
+        href="/posts/p1"
+        stream={{ href: "/reel/p1", onOpen: () => {} }}
+        testId="card"
+        authorTestId="card-author"
+        stanceTestId="card-stance"
+        comments={0}
+        onLinkCopied={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("card-stream-link")).toHaveAccessibleName(OPEN_THE_STREAM);
+    expect(screen.getByRole("link", { name: OPEN_THE_STREAM })).toHaveAttribute("href", "/reel/p1");
   });
 
   it.each([
