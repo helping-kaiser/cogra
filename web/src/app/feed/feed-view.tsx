@@ -101,9 +101,8 @@ import { FROM_FEED, YOUR_TOPICS_HREF } from "@/lib/topics/your-topics";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 /**
- * The rows FeedPostMenu registers (`feed.menuSheet.*`) — the reader menu's.
- * The author's own rows on the feed have no drawn board, so they keep their
- * own ids rather than wear a path the registry does not hold.
+ * The rows the feed's menus register (`feed.menuSheet.*`): the reader's
+ * (FeedPostMenu) and the author's own (FeedPostMenuOwn, round 24).
  */
 const FEED_MENU_ROWS: ReadonlySet<PostMenuRow> = new Set([
   "save",
@@ -111,6 +110,9 @@ const FEED_MENU_ROWS: ReadonlySet<PostMenuRow> = new Set([
   "hide",
   "license",
   "report",
+  "edit",
+  "markSensitive",
+  "remove",
 ]);
 
 function feedMenuRow(row: PostMenuRow): DataNode | undefined {
@@ -1170,6 +1172,8 @@ export function FeedView({
           row: feedMenuRow,
           licenseSheet: { path: "feed.licenseSheet" },
           reportSheet: { path: "feed.reportSheet" },
+          // FeedRemoveConfirm's dialog (round 24).
+          removeDialog: { path: "feed.dialog" },
         }}
         testId="feed-menu"
         notify={notify}
