@@ -301,7 +301,11 @@ departs, in lowercase after a `·`:
   so it has no word for its absence.
 - **People**: `your people` (jakob 2026-10-09, ruling 77 — the label
   `Your people` blessed; the trigger's lowercase state word follows the
-  axis rule). `Everyone` is the default and has no word. Under `Your
+  axis rule). `Everyone` is the app's default and has no word there; a
+  reader whose saved default is `Your people` reads the move back as
+  `everyone` — the row's label in lowercase, the axis rule's own state
+  word (seam 248; *new 2026-10-29, merged under the autonomy order,
+  review pending*). Under `Your
   people`, a sign off its `Either` default joins the same extra:
   `your people, for`, `your people, against` (*drafted 2026-10-12 —
   jakob's at review*; the `against` reading outgrows the 154px budget
@@ -1258,6 +1262,15 @@ fact: the signature's total is the card's footer and says in words what
 it counts ("6 things, signed together"). An act count dressed as
 "3 actions" in a row whose label already said what it counts is the same
 number said twice.
+
+**A sentence counts citations; a label names references** (seam 248,
+recorded for both clients' conform). The act is *to cite*, so every
+sentence that counts or speaks of the act says **citation** — `Up to 10
+citations per post.`, `Your citation didn't land`, `3 cited`, `+ Cite
+something`. **References** stays a label only: the block that holds them
+and the seal's row (`Reference`, `References`, `Tags & references`).
+Never `Up to 10 references per post.` (*new 2026-10-29, merged under the
+autonomy order, review pending*.)
 
 **`Cited · 3`** — the staged-citations sheet's title, `Picked · 3`'s
 shape for the same job: a staged collection named by what it is and how

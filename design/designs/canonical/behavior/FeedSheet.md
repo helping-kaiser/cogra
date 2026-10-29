@@ -70,6 +70,8 @@ ALWAYS the trigger speaks each departing axis's state, never the direction it de
 
 ALWAYS feed.band.filterTrigger reads feed.filterSheet.people.yourPeople.label's words in lowercase among its deviations, then a comma and the chosen sign's word in lowercase, GIVEN feed.filterSheet.people.yourPeople is on and feed.filterSheet.people.sign.for or feed.filterSheet.people.sign.against is chosen
 
+ALWAYS feed.band.filterTrigger reads everyone among its deviations GIVEN the reader's saved default narrows the feed to their own people and feed.filterSheet.people.everyone is on
+
 ALWAYS the filter's "?" says Reset brings back your defaults, to change them go to settings.
 
 ALWAYS the feed filter's "?" says What you've already seen waits below the Already seen line unless you ask for it back. and the search sheet's keeps its stays-out sentence
