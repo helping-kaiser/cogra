@@ -27,6 +27,19 @@ export type OpinionHolder = {
   readonly avatarUrl: string | null;
   /** A deleted account: the reserved disc and `Deleted account`. */
   readonly redacted: boolean;
+  /**
+   * The account's id, the lowercase UUID the wire carries (`User.id`); null
+   * for an address no account fronts. A deleted account's row is keyed by it
+   * (nodes.json `profileStances.list.redactedRow`), having no handle to name.
+   */
+  readonly actorId: string | null;
+  /**
+   * The handle the row's door opens, which is not always one the row may
+   * print: a deleted account's route still names its account (ProfileDeleted.md,
+   * "reached by structure that still points at the account") while its handle
+   * line is gone (`StanceRow.jsx`, the `redacted` row). Null opens nothing.
+   */
+  readonly door: string | null;
 };
 
 /** One row: a person and the standing opinion the row is about. */
@@ -46,10 +59,20 @@ export type HeldOpinionView = {
  */
 function holderOf(person: OpinionPersonFieldsFragment | null | undefined, address: string): OpinionHolder {
   if (person === null || person === undefined) {
-    return { name: address, handle: null, avatarUrl: null, redacted: false };
+    return { name: address, handle: null, avatarUrl: null, redacted: false, actorId: null, door: null };
   }
   if (person.displayName.status === "REDACTED") {
-    return { name: REDACTED_ACTOR_NAME, handle: null, avatarUrl: null, redacted: true };
+    // THE ROW IS STILL A DOOR (`StanceRow.jsx`, round 27): the husk is reached
+    // the way every card reaches it, by the route its account still answers
+    // to (`ProfileFeedCard`'s `/u/<handle>`), and that route is never printed.
+    return {
+      name: REDACTED_ACTOR_NAME,
+      handle: null,
+      avatarUrl: null,
+      redacted: true,
+      actorId: person.id,
+      door: person.handle,
+    };
   }
   const avatar = person.avatar;
   return {
@@ -57,6 +80,8 @@ function holderOf(person: OpinionPersonFieldsFragment | null | undefined, addres
     handle: person.handle,
     avatarUrl: avatar === null || avatar === undefined || avatar.status === "REDACTED" ? null : avatar.url,
     redacted: false,
+    actorId: person.id,
+    door: person.handle,
   };
 }
 

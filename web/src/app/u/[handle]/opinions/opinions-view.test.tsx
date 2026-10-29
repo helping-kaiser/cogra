@@ -9,6 +9,7 @@ import { byNode } from "@/test/data-node";
 import { opinionGiven, opinionRecord, userOpinions } from "@/test/inbound";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { opinionsOrigin } from "@/lib/profile/opinions-route";
 import { OpinionsScreen } from "./opinions-view";
 
 // THE OPINIONS PAGE (behavior/ProfileStances.md, every line; ProfileStances.jsx).
@@ -302,12 +303,93 @@ describe("OpinionsScreen", () => {
     expect(names.sort()).toEqual(["Says nothing, +0.00 / +0.00", "Walked back, +0.00 / +0.00"]);
   });
 
-  it("names a deleted account's rows by the reserved name, opening nothing", async () => {
-    server.use(theirProfile(), userOpinions("on", [[opinionRecord("gone", 0.3, 0.3, { redacted: true })]]));
+  // A DELETED HOLDER'S ROW (round 27; ProfileStances.md:23-27): its own node,
+  // keyed by the account's id, since it has no handle to key by. The wire
+  // still serves the account's route (the erasure sentinel), which the row's
+  // door follows and never prints.
+  const DELETED_ID = "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98";
+  const DELETED_ROUTE = `redacted-user-${DELETED_ID}`;
+  function deletedHolder(pDirected: number, pInterest: number) {
+    const record = opinionRecord(DELETED_ROUTE, pDirected, pInterest, { redacted: true });
+    return { ...record, author: { ...record.author, id: DELETED_ID } };
+  }
+
+  it(":23 a deleted account's row is redactedRow, keyed by its id, where its value puts it, Deleted account with the reserved disc and no handle line", async () => {
+    server.use(
+      theirProfile(),
+      userOpinions("on", [
+        [
+          opinionRecord("tobias", 0.7, 0.4, { displayName: "Tobias Lindqvist" }),
+          opinionRecord("juno", -0.2, 0.1, { displayName: "Juno Baptiste" }),
+          deletedHolder(0.2, 0.2),
+        ],
+      ]),
+    );
     renderWithProviders(<OpinionsScreen handle="ada" />);
-    const row = await screen.findByTestId(byNode("profileStances.list.row", "addr-gone"));
+    const row = await screen.findByTestId(byNode("profileStances.list.redactedRow", DELETED_ID));
+    expect(screen.getByTestId(byNode("profileStances.list"))).toContainElement(row);
+    // Strongest first: between the +0.7 and the -0.2 (:17).
+    const order = [...screen.getByTestId(byNode("profileStances.list")).children].map((el) =>
+      el.getAttribute("data-testid-key"),
+    );
+    expect(order).toEqual(["tobias", DELETED_ID, "juno"]);
+    expect(within(row).getByTestId(byNode("profileStances.list.redactedRow.name", DELETED_ID))).toHaveTextContent(
+      "Deleted account",
+    );
+    expect(
+      within(row).getByTestId(byNode("profileStances.list.redactedRow.name", DELETED_ID)).className,
+    ).toContain("text-on-surface-variant");
+    // The reserved disc: no picture, no letter.
+    const disc = within(row).getByTestId(byNode("profileStances.list.redactedRow.avatar", DELETED_ID));
+    expect(disc).toBeEmptyDOMElement();
+    expect(within(row).queryByTestId(byNode("profileStances.list.redactedRow.handle"))).toBeNull();
+    expect(row).not.toHaveTextContent("@");
+    expect(row).not.toHaveTextContent("redacted-user");
+    // Never a `row` too: one node per person.
+    expect(screen.queryByTestId(byNode("profileStances.list.row", DELETED_ID))).toBeNull();
+  });
+
+  it(":25 a deleted account's row keeps its opinion, read as any row's", async () => {
+    server.use(theirProfile(), userOpinions("on", [[deletedHolder(0.2, 0.2)]]));
+    renderWithProviders(<OpinionsScreen handle="ada" />);
+    const value = await screen.findByTestId(byNode("profileStances.list.redactedRow.value", DELETED_ID));
+    expect(value).toHaveAttribute("aria-label", expect.stringContaining("+0.20 / +0.20"));
+    expect(within(value).getByTestId(byNode("profileStances.list.redactedRow.value.face", DELETED_ID))).toBeInTheDocument();
+    expect(within(value).getByTestId(byNode("profileStances.list.redactedRow.value.exact", DELETED_ID))).toHaveTextContent(
+      "+0.20 / +0.20",
+    );
+  });
+
+  it(":27 tapping a deleted account's row opens the deleted account's page", async () => {
+    server.use(theirProfile(), userOpinions("on", [[deletedHolder(0.2, 0.2)]]));
+    renderWithProviders(<OpinionsScreen handle="ada" />);
+    const row = await screen.findByTestId(byNode("profileStances.list.redactedRow", DELETED_ID));
+    expect(row.tagName).toBe("A");
+    // The route its account still answers to, carrying the list's origin as
+    // any row's does — never printed on the row.
+    expect(row.getAttribute("href")).toBe(
+      `/u/${DELETED_ROUTE}?from=${encodeURIComponent(opinionsOrigin("ada", "on", null))}`,
+    );
+  });
+
+  it(":27 a deleted account's row on By them opens its page too", async () => {
+    const given = opinionGiven(DELETED_ROUTE, 0.3, 0.3, { redacted: true });
+    server.use(
+      theirProfile(),
+      userOpinions("on", [[]]),
+      userOpinions("by", [[{ ...given, target: { ...given.target, id: DELETED_ID } }]]),
+    );
+    renderWithProviders(<OpinionsScreen handle="ada" tab="by" />);
+    const row = await screen.findByTestId(byNode("profileStances.list.redactedRow", DELETED_ID));
+    expect(row).toHaveTextContent("Deleted account");
+    expect(row.getAttribute("href")).toContain(`/u/${DELETED_ROUTE}?from=`);
+  });
+
+  it("an address no account fronts keeps a row that opens nothing", async () => {
+    server.use(theirProfile(), userOpinions("on", [[opinionRecord(null, 0.3, 0.3)]]));
+    renderWithProviders(<OpinionsScreen handle="ada" />);
+    const row = await screen.findByTestId(byNode("profileStances.list.row", "addr-system"));
     expect(row.tagName).not.toBe("A");
-    expect(row).not.toHaveTextContent("@gone");
   });
 
   it("says why each list is empty, in calm words and never the error colour", async () => {

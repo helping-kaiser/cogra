@@ -23,7 +23,9 @@
 //
 // REGISTERED AS `profileStances` (nodes.json, round 26): the rows stand in
 // `list`, each `list.row` keyed by the handle of the person it names — the
-// opinion's holder on On, the one it is held on on By — never by position.
+// opinion's holder on On, the one it is held on on By — never by position. A
+// deleted account's row is `list.redactedRow`, keyed by its id (round 27), and
+// opens the deleted account's page like any row (ProfileStances.md:23-27).
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
@@ -54,12 +56,19 @@ const PAGE: DataNode = { path: "profileStances" };
 const LIST = part(PAGE, "list");
 
 /**
- * A row's key (nodes.json `profileStances.list.row`): the handle of the
- * person the row names, without @. A deleted account's row has no handle left
- * to name it, so its holder's address stands in — opaque, one per person.
+ * A row's node. A person is `profileStances.list.row`, keyed by the handle the
+ * row names, without @. A DELETED ACCOUNT is its own node,
+ * `profileStances.list.redactedRow`, keyed by the account's id — the
+ * lowercase UUID the wire carries — since it has no handle left to key by
+ * and `row`'s rule names the handle (nodes.json, round 27; `redactedAccount`'s
+ * precedent). An address no account fronts keeps a `row`, keyed by that
+ * address — opaque, one per person.
  */
-export function rowKey(opinion: HeldOpinionView): string {
-  return opinion.holder.handle ?? opinion.holderId;
+export function rowNode(opinion: HeldOpinionView): DataNode {
+  if (opinion.holder.redacted && opinion.holder.actorId !== null) {
+    return instance(LIST, "redactedRow", opinion.holder.actorId);
+  }
+  return instance(LIST, "row", opinion.holder.handle ?? opinion.holderId);
 }
 
 /**
@@ -288,12 +297,15 @@ export function OpinionsScreen({
               key={opinion.holderId}
               name={opinion.holder.name}
               handle={opinion.holder.handle}
+              // THE DELETED ACCOUNT'S ROW OPENS ITS PAGE (ProfileStances.md:27)
+              // by the route its account still answers to, never printed.
+              opens={opinion.holder.door}
               src={opinion.holder.avatarUrl}
               redacted={opinion.holder.redacted}
               pair={opinion.pair}
               severed={opinion.severed}
               from={rowOrigin}
-              node={instance(LIST, "row", rowKey(opinion))}
+              node={rowNode(opinion)}
               testId={`opinions-row-${index + 1}`}
             />
           ))}

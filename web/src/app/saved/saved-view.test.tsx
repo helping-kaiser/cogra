@@ -19,6 +19,8 @@ import { hiddenPage } from "@/test/hidden";
 import { intersect } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { fakeWriteSigner } from "@/test/registration";
+import { keepPick } from "@/lib/stance/kept-picks";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { stanceHandlers } from "@/test/stance";
 import {
@@ -241,6 +243,21 @@ function search(query: string) {
 }
 
 describe("SavedScreen — a feed of kept things", () => {
+  // ROUND 27 REGISTERS `stance.pending` on saved's cards: a pick kept
+  // pending wears its waiting line under the face, by the shared control.
+  it("wears saved.card and saved.commentCard's actionRow.stance.pending under a kept pick", async () => {
+    await keepPick("me", { kind: "post", id: "p1" }, { pDirected: 0.4, pInterest: 0.2 });
+    await keepPick("me", { kind: "comment", id: "c1" }, { pDirected: 0.3, pInterest: 0.1 });
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn(), writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId(byNode("saved.card.actionRow.stance.pending", "p1"))).toHaveTextContent(
+      /^Waiting for your (review|key)$/,
+    );
+    expect(await screen.findByTestId(byNode("saved.commentCard.actionRow.stance.pending", "c1"))).toHaveTextContent(
+      /^Waiting for your (review|key)$/,
+    );
+  });
+
   it("saved_stands_each_kind_as_its_own_feed_card_newest_by_save_time", async () => {
     serve(THREE);
     renderWithProviders(<SavedScreen />, { store: signedIn() });

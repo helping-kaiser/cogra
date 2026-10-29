@@ -582,9 +582,9 @@ export function CommentEditView({
 
             {/* The fields carry their own `Tags` and `References` labels. A
                 staged chip or row opens its pair in a sheet over the edit
-                (CommentEdit.md). The edit stages a separate act per change,
-                so there is no batch cap here — that is the creation
-                gesture's rule. */}
+                (CommentEdit.md). The fields add nothing themselves, so they
+                hold no cap; the pickers they open hold the comment's ten
+                (TagPicker.md:29, ReferencePicker.md:37). */}
             <TagEntryField
               tags={tags}
               onChange={onTags}

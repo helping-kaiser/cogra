@@ -608,7 +608,6 @@ export function PostEditRoute({
             onTags={(tags) => dispatch({ type: "tags", tags })}
             onDone={() => setPicking(null)}
             origin="post"
-            cap={null}
           />
         ) : (
           <ReferencePicker
@@ -616,7 +615,6 @@ export function PostEditRoute({
             onReferences={(references) => dispatch({ type: "references", references })}
             onDone={() => setPicking(null)}
             origin="post"
-            cap={null}
           />
         )}
       </main>

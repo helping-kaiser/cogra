@@ -322,6 +322,14 @@ describe("the feed filter", () => {
       expect(kinds.map((kind) => kind.getAttribute("aria-checked"))).toEqual(["true", "false", "false", "false"]);
     });
 
+    it("carries no visible title and no title node; its aria-label is its name (round 27: feed.filterSheet.title dropped)", async () => {
+      server.use(...rankedFeed([post("p1")], reads()));
+      renderFeed();
+      await openSheet();
+      expect(within(sheet()).queryByTestId(byNode("feed.filterSheet.title"))).toBeNull();
+      expect(sheet()).toHaveAccessibleName("What your feed shows");
+    });
+
     it("stands at its default: Ranked, Everyone, seen off, Still settling on, Sensitive and Removed off", async () => {
       server.use(...rankedFeed([post("p1")], reads()));
       renderFeed();

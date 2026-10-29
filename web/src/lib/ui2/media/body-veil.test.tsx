@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { BodyVeil } from "./body-veil";
+import { BodyVeil, veilSourceLine } from "./body-veil";
 
 describe("BodyVeil", () => {
   it("keeps the body mounted under the veil, so revealing moves nothing", () => {
@@ -128,5 +128,28 @@ describe("BodyVeil", () => {
     );
     const veil = screen.getByTestId("body-veil");
     expect(veil.innerHTML).not.toContain("error");
+  });
+});
+
+// WHOSE MARK THE LINE NAMES (SensitiveVeil.jsx `sensitiveSourceLine`; round 27,
+// seam 253; copy-voice, *Both marks at once*).
+describe("veilSourceLine", () => {
+  it("names the author's warning with its reason, or the platform's verdict", () => {
+    expect(veilSourceLine("author", "Grief")).toBe("The author's warning — Grief");
+    expect(veilSourceLine("author")).toBe("The author's warning");
+    expect(veilSourceLine("platform")).toBe("The platform's verdict");
+  });
+
+  it("names both marks, the author's first, then the verdict in the edit's blessed words", () => {
+    expect(veilSourceLine("both", "One rubbing includes a dead seabird.")).toBe(
+      "The author's warning — One rubbing includes a dead seabird. Also veiled by the platform's verdict",
+    );
+    expect(veilSourceLine("both", "A dead seabird in the second frame")).toBe(
+      "The author's warning — A dead seabird in the second frame. Also veiled by the platform's verdict",
+    );
+    expect(veilSourceLine("both")).toBe("The author's warning. Also veiled by the platform's verdict");
+    expect(veilSourceLine("both", null, "Graphic injury")).toBe(
+      "The author's warning. Also veiled by the platform's verdict — Graphic injury",
+    );
   });
 });

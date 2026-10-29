@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
 import { createTokenStore } from "@/lib/session/token-store";
 import { dateline } from "@/lib/ui/timestamp";
+import { byNode } from "@/test/data-node";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 
@@ -251,12 +252,41 @@ describe("DeleteAccountConfirmed", () => {
       }),
     );
     renderLanding();
-    // DeleteAccountConfirmed.md:11 — the house fault's noun form over Try again.
-    expect(await screen.findByTestId("delete-account-unreachable")).toHaveTextContent(
+    // DeleteAccountConfirmed.md:11 — the house fault's noun form over Try again,
+    // the answer chip's `fault` face.
+    const fault = await screen.findByTestId(byNode("deleteAccount.fault", "fault"));
+    expect(within(fault).getByTestId("delete-account-unreachable")).toHaveTextContent(
       "Can't reach the server — the deletion can't be confirmed right now.",
     );
-    expect(screen.getByTestId("delete-account-retry")).toHaveTextContent("Try again");
-    fireEvent.click(screen.getByTestId("delete-account-retry"));
+    const retry = within(fault).getByTestId(byNode("deleteAccount.fault.retry", "fault"));
+    expect(retry).toHaveTextContent(/^Try again$/);
+    // OUTLINED, sized to its word and leading the column (round 27).
+    expect(retry.className).toContain("border-outline");
+    expect(retry.className).toContain("self-start");
+    expect(fault.className).toContain("gap-3");
+    fireEvent.click(retry);
     expect(await screen.findByTestId("deleteAccount.title")).toHaveTextContent("Your account is deleted in 7 days");
+  });
+
+  it(":13 a confirm refused by its budget says so over the same outlined Try again", async () => {
+    let calls = 0;
+    server.use(
+      gqlLink.mutation("ConfirmAccountDeletion", () => {
+        calls += 1;
+        return calls === 1
+          ? HttpResponse.json({ data: null, errors: [{ message: "x", extensions: { code: "RATE_LIMITED" } }] })
+          : HttpResponse.json(confirmed(false));
+      }),
+    );
+    renderLanding();
+    const fault = await screen.findByTestId(byNode("deleteAccount.fault", "limited"));
+    expect(fault).toHaveTextContent("Too many tries. Wait a little, then try again.");
+    const retry = within(fault).getByTestId(byNode("deleteAccount.fault.retry", "limited"));
+    expect(retry).toHaveTextContent(/^Try again$/);
+    expect(retry.className).toContain("border-outline");
+    // :15 — the same link checked again; the landing answers as the check does.
+    fireEvent.click(retry);
+    expect(await screen.findByTestId("deleteAccount.title")).toHaveTextContent("Your account is deleted in 7 days");
+    expect(calls).toBe(2);
   });
 });
