@@ -1,0 +1,8 @@
+# The OnFailure= hook of every CoGra unit: one ntfy alert naming the unit
+# that failed (deploy/scripts/alert.sh; deployment.md "Monitoring").
+[Unit]
+Description=CoGra alert for %i
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/cogra/alert.sh "CoGra unit failed: %i" "%i failed on %H. Check: systemctl status %i; journalctl -u %i"

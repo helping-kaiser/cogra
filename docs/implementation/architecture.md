@@ -455,6 +455,15 @@ environment); CI pins the same engine version, so dev and CI test
 against the same store. The L1 substrate sits behind the §5
 boundary in every environment.
 
+Production is one host running each service as its own container
+under systemd (Quadlet units), with Caddy as the sole ingress: it
+terminates TLS, routes `/graphql` and uploads to the API, serves
+`/media` from the live bucket for reads only, and hands everything
+else to the web server. Postgres and the media stores sit on an
+internal network with no route off the host, and the held bucket
+runs as a store instance of its own
+([deployment.md](deployment.md)).
+
 The **media service** runs beside it as its own container — MinIO
 in development, any S3-compatible store in production — with its
 own volume and its own lifecycle. The API reaches it through a

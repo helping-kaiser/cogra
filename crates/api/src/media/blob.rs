@@ -155,13 +155,27 @@ pub trait BlobStore: Send + Sync {
 }
 
 /// How to reach the media service.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct S3Config {
     pub endpoint: String,
     pub bucket: String,
     pub access_key_id: String,
     pub secret_access_key: String,
     pub region: String,
+}
+
+/// Written by hand so the secret key never reaches a log line: the config
+/// rides inside `MediaConfig`, whose `Debug` a `tracing` field can print.
+impl std::fmt::Debug for S3Config {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("S3Config")
+            .field("endpoint", &self.endpoint)
+            .field("bucket", &self.bucket)
+            .field("access_key_id", &self.access_key_id)
+            .field("secret_access_key", &"<redacted>")
+            .field("region", &self.region)
+            .finish()
+    }
 }
 
 /// The one implementation, over any object store.

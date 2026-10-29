@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly CoGra backup pair
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+RandomizedDelaySec=15m
+# A night the box was down is caught up at the next boot.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

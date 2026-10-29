@@ -938,7 +938,7 @@ fn the_scanned_region_section_round_trips() {
         vec![Box::from(".kt"), Box::from(".kts")],
         "both file shapes are Kotlin, and one grammar root reads them"
     );
-    assert_eq!(scanned.none.len(), 3);
+    assert_eq!(scanned.none.len(), 4);
     assert_eq!(scanned.none[0].languages.len(), 8);
     assert!(
         scanned.none[0].names.is_empty(),
@@ -991,6 +991,17 @@ fn every_tracked_type_is_scanned_or_declared() {
         "web/.nvmrc",
         "LICENSE-CODE",
         "LICENSE-DOCS",
+        "deploy/quadlet/cogra-api.container",
+        "deploy/quadlet/cogra-internal.network",
+        "deploy/quadlet/cogra-postgres.volume",
+        "deploy/systemd/cogra-backup.service",
+        "deploy/systemd/cogra-backup.timer",
+        "deploy/env/api.env.example",
+        "deploy/host/journald-cogra.conf",
+        "deploy/web.containerignore",
+        "deploy/proxy/Caddyfile",
+        "deploy/Containerfile.api",
+        "deploy/Containerfile.web",
     ] {
         assert_eq!(scanned.language_of(Path::new(path)), None, "{path}");
         assert!(scanned.declares_unscanned(Path::new(path)), "{path}");

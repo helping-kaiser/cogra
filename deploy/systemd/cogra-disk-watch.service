@@ -1,0 +1,8 @@
+# The disk alarm (deploy/scripts/disk-watch.sh; deployment.md "Monitoring").
+[Unit]
+Description=CoGra disk watch
+OnFailure=cogra-alert@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/cogra/disk-watch.sh
