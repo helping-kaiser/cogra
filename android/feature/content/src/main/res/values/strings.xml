@@ -97,6 +97,8 @@
          beside it tells a listener the verb but not the object
          (guidelines/copy-voice.md). -->
     <string name="content_share_post">Share this post</string>
+    <!-- The Feed score's spoken name: one figure, one name on every kind of card (ExplainableNumber.prompt.md). -->
+    <string name="content_feed_score">Feed score</string>
     <!-- The caption's in-place opener. A text control, not a link: it
          opens the words where they stand and never navigates. -->
     <string name="content_more">More</string>
@@ -378,4 +380,34 @@
     <string name="content_history_see_all_profiles">See all profiles</string>
     <string name="content_history_see_all_tags">See all tags</string>
     <string name="content_back_history">Back to History</string>
+
+    <!-- THE FEED SCORE'S TRACE (FeedEntry, FeedEntryMoved, RankPath, RankHop, RankRecords; copy-voice, The score drill-down). -->
+    <string name="content_trace_title_entry">Why this reached you</string>
+    <string name="content_trace_title_path">One path</string>
+    <string name="content_trace_title_step">One step</string>
+    <string name="content_trace_title_records">What landed</string>
+    <!-- The first back arrow names where the score was tapped (graph.json's origin table). -->
+    <string name="content_trace_back_feed">Back to feed</string>
+    <string name="content_trace_back_post">Back to the post</string>
+    <string name="content_trace_back_tag">Back to #%1$s</string>
+    <string name="content_trace_back_own_profile">Back to your profile</string>
+    <string name="content_trace_back_profile">Back to the profile</string>
+    <string name="content_trace_back_paths">Back to the paths</string>
+    <string name="content_trace_back_path">Back to the path</string>
+    <string name="content_trace_back_step">Back to the step</string>
+    <string name="content_trace_moved">The paths that carried it here have moved on.</string>
+    <string name="content_trace_settling">Still settling — its paths count once it lands.</string>
+    <string name="content_trace_offline">Can\'t reach the server. Check your connection and try again.</string>
+    <string name="content_trace_fault">That didn\'t go through. Try again.</string>
+    <string name="content_trace_retry">Retry</string>
+    <string name="content_trace_loading">Loading…</string>
+    <string name="content_trace_strongest">Strongest first</string>
+    <string name="content_trace_steps">The steps</string>
+    <string name="content_trace_show_more">Show %1$s</string>
+    <string name="content_trace_adds">What it adds</string>
+    <string name="content_trace_newest_on_it">Newest opinion on it</string>
+    <string name="content_trace_carries">What carries it</string>
+    <string name="content_trace_behind">Behind it</string>
+    <string name="content_trace_show_them">Show them</string>
+    <string name="content_trace_newest_of_them">Newest of them</string>
 </resources>
