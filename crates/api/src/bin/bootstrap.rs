@@ -42,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
         handle: env_or("GENESIS_HANDLE", "genesis"),
         display_name: env_or("GENESIS_DISPLAY_NAME", "Genesis Moderator"),
         guidelines_version: "1".to_string(),
-        guidelines_hash: guidelines_hash()?,
+        guidelines_hash: guidelines_hash(),
         burn_per_account_micro: 100_000_000,
     };
     let handle = input.handle.clone();
