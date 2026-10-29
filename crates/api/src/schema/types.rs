@@ -4354,8 +4354,9 @@ pub(super) async fn resolve_reference_target(
 }
 
 /// Every graph-backed thing with an identity and a lifecycle
-/// (api-spec.md "Identity and actor interfaces"). Coverage grows with
-/// the slices; slice 2 carries the content nodes.
+/// (api-spec.md "Identity and actor interfaces"). Posts, comments and
+/// users implement it today; further node types join as their slices
+/// land.
 ///
 /// The `duplicated_attributes` allow answers a named clippy false
 /// positive (rust-clippy #12537): the lint misfires on derive-helper
