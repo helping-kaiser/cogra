@@ -3785,6 +3785,17 @@ Their accounts stay exactly as they are — signed in, and free to keep
 reading.` and `This is your call and nobody else's. Any member can still
 vouch any of them in, and each gets a link to ask with.`
 
+The count is the sentence's, so it takes the count's English (seam 248;
+*new 2026-10-29, merged under the autonomy order, review pending*). A
+group never holds `Close all` below two, so two is the smallest the
+dialog meets, and two is a pair: `Both leave your list and both people
+are told.` and `…Any member can still vouch either of them in, and each
+gets a link to ask with.` From three, `All {N} leave your list and all
+{N} people are told.`, the number spelled through nine (`All four`) and
+in digits from 10 (`All 12`), the common style rule; the title keeps its
+digits throughout (`Close all 2 applications from this link?`), as every
+count on a control does.
+
 **A live link's label is what it is, and its caption is when it dies.**
 `Single use · not used yet` and `Many uses`; the slot state rides the
 single-use label only, because a multi-use link has no slot to be in a
