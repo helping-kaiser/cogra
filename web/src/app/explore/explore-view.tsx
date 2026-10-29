@@ -115,6 +115,9 @@ export const KINDS_HINT = "Combine as many as you like. All, until you narrow it
 /** The load-more fault (copy-voice; design digest item 27). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
 
+/** A read with nothing loaded: the house line's noun form (ExploreSearch.md:69; copy-voice, round 25). */
+export const RESULTS_FAULT = "Can't reach the server — results can't load right now.";
+
 /** The door's second line (Explore.jsx `5 held`; copy-voice, *The list is `Your topics`*). */
 export function heldLine(count: number): string {
   return `${count} held`;
@@ -588,8 +591,11 @@ export function ExploreView({
               </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-3 px-6 pt-2">
-              <TransportError testId="explore-transport-error" />
+            // ExploreSearch.md:69 — nothing loaded: the house line's noun form
+            // over an outlined Retry in the results' place, the fault family's
+            // one shape (copy-voice *Faults by code*, round 25).
+            <div className="flex flex-col items-start gap-3 px-6 py-2">
+              <TransportError testId="explore-transport-error" message={RESULTS_FAULT} />
               <Button testId="explore-retry" variant="outline" size="sm" onClick={() => read(asked, filter)}>
                 Retry
               </Button>
