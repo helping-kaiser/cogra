@@ -2934,6 +2934,12 @@ Object.assign(FLOW_MARKERS, {
     // The kept approval's row (the `kept` chip), head of Applications.
     { n: 9, find: ">@noor<", tag: "button" },
     { n: 5, find: 'aria-label="Close @noor&#x27;s application"', tag: "button" },
+    // Seam 248's chips: the deleted asker's row (the `asker` chip) answers as
+    // any row still waiting on its applicant and closes as any row does; the
+    // failed copy's Retry (the `copy` chip) takes the next free number.
+    { n: 3, find: ">Deleted account<", tag: "button" },
+    { n: 5, find: 'aria-label="Close a deleted account&#x27;s application"', tag: "button" },
+    { n: 10, find: ">Retry</button>", tag: "button" },
   ],
   RejectAllConfirm: [
     { n: 1, find: ">Close them</button>", tag: "button" },

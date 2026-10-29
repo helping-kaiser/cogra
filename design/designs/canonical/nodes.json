@@ -6906,8 +6906,12 @@
       "prefix": "invites",
       "keys": {
         "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
+        "invites.applicationsEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
-        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)",
+        "invites.link.copyFault": "the copy chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "invites.linksEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "invites.redactedApplication": "the deleted asker's actor id, the lowercase UUID the wire carries (Invites' applications, where an asker who deleted their account has no handle left to key by)"
       },
       "nodes": {
         "invites.application": [
@@ -6958,6 +6962,9 @@
           "vora83",
           "rafa"
         ],
+        "invites.applicationsEmpty": [
+          "no-applications"
+        ],
         "invites.applicationsLabel": [],
         "invites.create": [],
         "invites.group": [
@@ -6994,11 +7001,35 @@
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
         ],
+        "invites.link.copyFault": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15/failed"
+        ],
         "invites.link.label": [
           "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
           "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
         ],
-        "invites.linksLabel": []
+        "invites.linksEmpty": [
+          "no-links"
+        ],
+        "invites.linksLabel": [],
+        "invites.redactedApplication": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ],
+        "invites.redactedApplication.close": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ],
+        "invites.redactedApplication.disc": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ],
+        "invites.redactedApplication.second": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ],
+        "invites.redactedApplication.title": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ],
+        "invites.redactedApplication.trailing": [
+          "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ]
       }
     },
     "InvitesEmpty": {

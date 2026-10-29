@@ -28,6 +28,8 @@ export interface PayoutAddressProps {
   node?: string;
   /** The card's content key when it is a repeated instance (an invite link's id). */
   nodeKey?: string;
+  /** The card's last line, under the caption — a copy that did not go through says so here. */
+  children?: React.ReactNode;
 }
 
 export declare function PayoutAddress(props: PayoutAddressProps): JSX.Element;
