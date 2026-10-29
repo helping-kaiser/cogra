@@ -329,6 +329,7 @@ export function CommentFeedCard({
             displayName={comment.author.displayName.value}
             avatarUrl={comment.author.avatar?.url}
             testId={`${testId}-author`}
+            node={part(node, "authorChip")}
           />
         )}
         <div className="flex flex-none items-center gap-3">
@@ -346,6 +347,7 @@ export function CommentFeedCard({
             ariaLabel="More on this comment"
             sheetLabel="Comment actions"
             testId={`${testId}-menu`}
+            node={part(node, "menu")}
             trailing={
               <>
                 {licenseShown !== null && (

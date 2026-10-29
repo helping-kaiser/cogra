@@ -226,7 +226,7 @@ function openMenu(trigger: HTMLElement, sheetTestId: string) {
 }
 
 const postMenu = () => openMenu(screen.getByTestId(byNode("saved.card.menu", "p1")), "saved-menu-sheet");
-const commentMenu = () => openMenu(screen.getByTestId("saved-comment-c1-menu"), "saved-comment-c1-menu-sheet");
+const commentMenu = () => openMenu(screen.getByTestId(byNode("saved.commentCard.menu", "c1")), "saved-comment-c1-menu-sheet");
 const personMenu = () =>
   openMenu(screen.getByTestId(byNode("saved.profileCard.menu", "u3")), "saved-person-u3-menu-sheet");
 
