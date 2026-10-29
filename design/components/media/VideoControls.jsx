@@ -117,10 +117,11 @@ function TransportButton({ label, glyph, size = 22, box = 32, onClick, style }) 
    slots own everything below it, so its 48px target RISES from the track's
    foot instead, and the caption stands clear above that target rather than
    the target shrinking under it. The 3px ink never moves. */
-export function Timeline({ progress = 0, elapsed, duration, thin = false, tone = "media", hitBelow = false, hitAbove = false }) {
+export function Timeline({ progress = 0, elapsed, duration, thin = false, tone = "media", hitBelow = false, hitAbove = false, node }) {
   const at = Math.max(0, Math.min(1, progress));
   return (
     <div
+      data-node={node}
       role="slider"
       tabIndex={0}
       aria-label="Seek"
@@ -289,6 +290,6 @@ export function VideoTransport({
    edge, where Android's gesture zone would swallow it. Its target is 48px,
    risen from the track (`hitAbove`), and the surface keeps the caption clear
    of it — no target on the stream falls below 48dp. */
-export function SeekLine({ progress = 0, elapsed, duration }) {
-  return <Timeline progress={progress} elapsed={elapsed} duration={duration} thin hitAbove />;
+export function SeekLine({ progress = 0, elapsed, duration, node }) {
+  return <Timeline progress={progress} elapsed={elapsed} duration={duration} thin hitAbove node={node} />;
 }

@@ -110,6 +110,7 @@ export const KEY_RULES = {
   redactedTopic: "the held topic's id, as the wire carries it (Your topics, where a name moderation took away leaves no name to key by)",
   redactedApplication: "the deleted asker's actor id, the lowercase UUID the wire carries (Invites' applications, where an asker who deleted their account has no handle left to key by)",
   release: "the release's version, lowercased, each run of other characters one - (What's new's release cards)",
+  row: "the handle of the person the row names, without @ — the opinion's holder on the On tab, the one it is held on on the By tab (the opinions page)",
   result: "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
   tag: "the tag's name, without # (TopicsLine, TopicRemovable)",
   tagCard: "the tag's name, without # (the tag feed card)",

@@ -23,7 +23,9 @@ export interface ExplainableNumberProps {
   onOpenDetail?: () => void;
   /** Restyled to sit on photography — white with a drop shadow, same register. */
   overMedia?: boolean;
-  /** The data-node name its placer gives this number (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `value`. */
+  /** A pending mark's words — the stream's `Still settling` — stacked under the bare glyph inside the door, the whole face being the door. */
+  pending?: string;
+  /** The data-node name its placer gives this number (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `value`, and `settling` for the pending mark. */
   node?: string;
 }
 

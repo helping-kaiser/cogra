@@ -2,7 +2,7 @@
 
 ALWAYS a sensitive post's media, body and description veil as one, and its title and tags stay readable
 
-ALWAYS the veil names its source, The author's warning or The platform's verdict, with the reason after it where there is one
+ALWAYS the veil names its source, The author's warning or The platform's verdict, with the reason after it where there is one, on every veil that stands — a card's media face, a comment's compact block, a words-only post's plate, the detail's and the stream's — once per post, a caption veiled under a media face leaving the line to that face
 
 ALWAYS the veil wears no error colour and no warning glyph
 

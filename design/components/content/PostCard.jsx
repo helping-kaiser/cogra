@@ -308,7 +308,10 @@ export function PostCard({
      the K13 round). The words and the media open the post, so they carry
      `cg-door`, and the card that holds them takes the pressed layer across
      its whole surface — the product's most common tap shows where it went.
-     The stance face, the ⋮, the counts and the share keep their own layers. */
+     The stance face, the ⋮, the counts and the share keep their own layers.
+     A clip taller than wide is the one media door that leads elsewhere — to
+     the stream — and it is named for that act, `Open the stream`, never by
+     the clip's alt text (copy-voice, *The stream and the viewer*). */
   const door = !detail && Boolean(onOpen);
   const linkedText =
     detail || !onOpen ? (

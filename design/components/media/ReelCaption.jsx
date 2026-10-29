@@ -30,12 +30,18 @@ import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
    2026-10-12, the slice-3 round): the last clip's line and the load that did
    not come stand on a `ReelPlate` above the handle, so the caption keeps its
    place and the line reads first. */
-export function ReelCaption({ handle, title, description, bottom = 86, onMore, sensitive = false, notice }) {
+/* NAMED ONLY WHEN PLACED NAMED (the data-node join): the caption names its
+   `handle`, `title`, `description`, the veil's `show` and `More`'s `more`; the
+   line at its head is the placer's (`notice`, on its plate). The veil names
+   only its control, a leaf beside the words it blurs, so the description's
+   path holds in both states. */
+export function ReelCaption({ handle, title, description, bottom = 86, onMore, sensitive = false, notice, node }) {
   // The veil wraps the clamped line, never the text inside it — the clamp clips
   // first, so the blur's halo stays soft on every side (PostCard's reason).
-  const veiled = (node) => (sensitive ? <SensitiveVeil kind="text">{node}</SensitiveVeil> : node);
+  const veiled = (words) => (sensitive ? <SensitiveVeil kind="text" node={node && "show"}>{words}</SensitiveVeil> : words);
   return (
     <div
+      data-node={node}
       style={{
         position: "absolute",
         left: 16,
@@ -51,10 +57,11 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore, s
     >
       {notice}
       {handle && (
-        <span style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}>@{handle}</span>
+        <span style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }} data-node={node && "handle"}>@{handle}</span>
       )}
       {title && (
         <span
+          data-node={node && "title"}
           style={{
             fontSize: "var(--text-title-small)",
             lineHeight: "var(--text-title-small--line-height)",
@@ -66,6 +73,7 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore, s
       )}
       {description && veiled(
         <span
+          data-node={node && "description"}
           style={{
             fontSize: "var(--text-body-small)",
             display: "-webkit-box",
@@ -81,6 +89,7 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore, s
         <button
           type="button"
           onClick={onMore ?? (() => {})}
+          data-node={node && "more"}
           className="cg-state cg-focus cg-hit"
           style={{
             alignSelf: "flex-start",
