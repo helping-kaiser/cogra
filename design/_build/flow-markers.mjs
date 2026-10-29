@@ -230,6 +230,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "Salt maps of the coast road", tag: "button", all: true },
     { n: 4, find: "First try at a rubbing", tag: "button", all: true },
     { n: 5, find: "The wax-stick ones read like weather charts", tag: "button", all: true },
+    // The field's clear × (seam 248), the next free number.
+    { n: 12, find: 'aria-label="Clear search"', tag: "button" },
   ],
   /* The Profiles row (ruling 23): `ExploreSearch`'s numbering, the person's
      row taking the comment row's 5 — the one row each board has that the
@@ -244,6 +246,11 @@ Object.assign(FLOW_MARKERS, {
     /* The people section's door (round 14, sectioned search (a)) takes the
        board's next free number — the numbering is append-only. */
     { n: 12, find: ">See all profiles</button>", tag: "button" },
+    // Seam 248: the topics' and the content's rests, numbered as their kinds
+    // are, and the field's clear ×, the next free number.
+    { n: 11, find: ">saltcrust<", tag: "button" },
+    { n: 4, find: "First try at a rubbing", tag: "button" },
+    { n: 13, find: 'aria-label="Clear search"', tag: "button" },
   ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
@@ -254,8 +261,16 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Done</button>", tag: "button" },
     { n: 7, find: ">Reset</button>", tag: "button" },
   ],
-  ExploreNone: [...searchShell("brackish cartography", 4)],
-  ExploreUnscoped: [...searchShell("salt flats", 4)],
+  ExploreNone: [...searchShell("brackish cartography", 4), { n: 9, find: 'aria-label="Clear search"', tag: "button" }],
+  // The `kinds` chip draws the trigger row twice (seam 248), so the trigger
+  // and the "?" are stamped in both copies.
+  ExploreUnscoped: [
+    { n: 1, find: "salt flats", tag: "div" },
+    { n: 2, find: 'what the search shows"', tag: "button", all: true },
+    { n: 3, find: 'aria-label="How searching works"', tag: "button", all: true },
+    ...nav(4),
+    { n: 9, find: 'aria-label="Clear search"', tag: "button" },
+  ],
   Feed: [
     { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),

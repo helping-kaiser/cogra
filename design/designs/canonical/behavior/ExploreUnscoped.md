@@ -8,4 +8,6 @@ ALWAYS the other kinds' results stand, and explore.empty reads Found through peo
 
 ALWAYS explore.filterTrigger reads Comments GIVEN Comments alone is the search filter's kind
 
+ALWAYS explore.empty alone reads Found through people and tags — start with @handle or #tag. where results would stand, and no other line stands beside it GIVEN Comments is on beside another kind, the query names no @handle or #tag, and the other kinds found nothing
+
 WHEN the reader types a query scoped by @handle or #tag -> the comments it reaches replace the line

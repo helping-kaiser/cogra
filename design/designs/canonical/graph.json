@@ -575,6 +575,7 @@
     { "from": "ExploreSearch", "via": 9, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "ExploreSearch", "via": 10, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "ExploreSearch", "via": 11, "kind": "advance", "label": "tag result", "to": [{ "board": "TagPage" }] },
+    { "from": "ExploreSearch", "via": 12, "kind": "back", "label": "clear × (search field)", "to": [{ "board": "Explore", "case": "the query empties, the field keeps its focus — Explore at rest, with its recent searches (seam 248)" }] },
 
     { "from": "ExplorePerson", "via": 1, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing refines" }, { "board": "ExploreSearch", "case": "a query scoped by @handle or #tag with text after it — the matched people's own work, and no profile row" }, { "board": "ExploreNone", "case": "nothing carries that name" }] },
     { "from": "ExplorePerson", "via": 2, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "ExploreFilter" }] },
@@ -588,6 +589,7 @@
     { "from": "ExplorePerson", "via": 10, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "ExplorePerson", "via": 11, "kind": "advance", "label": "tag result", "to": [{ "board": "TagPage" }] },
     { "from": "ExplorePerson", "via": 12, "kind": "advance", "label": "See all profiles", "to": [{ "terminal": "self", "case": "the people-only narrowing — the search filter at Profiles alone, every person the query matches, the trigger reading Profiles" }] },
+    { "from": "ExplorePerson", "via": 13, "kind": "back", "label": "clear × (search field)", "to": [{ "board": "Explore", "case": "the query empties, the field keeps its focus — Explore at rest, with its recent searches (seam 248)" }] },
 
     { "from": "ExploreFilter", "via": 1, "kind": "detour", "label": "? — How the filter works", "to": [{ "board": "HelpDialog", "case": "the filter text" }] },
     { "from": "ExploreFilter", "via": 2, "kind": "advance", "label": "kind chips", "to": [{ "terminal": "self", "case": "stages what the search shows — the results behind the sheet do not move until Done" }] },
@@ -605,6 +607,7 @@
     { "from": "ExploreNone", "via": 6, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "ExploreNone", "via": 7, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "ExploreNone", "via": 8, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "ExploreNone", "via": 9, "kind": "back", "label": "clear × (search field)", "to": [{ "board": "Explore", "case": "the query empties, the field keeps its focus — Explore at rest, with its recent searches (seam 248)" }] },
     { "from": "ExploreUnscoped", "via": 1, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing" }, { "board": "ExploreSearch", "case": "a query scoped by @handle or #tag — the comments it reaches" }] },
     { "from": "ExploreUnscoped", "via": 2, "kind": "advance", "label": "Comments (filter trigger)", "to": [{ "board": "ExploreFilter" }] },
     { "from": "ExploreUnscoped", "via": 3, "kind": "detour", "label": "? — How searching works", "to": [{ "board": "HelpDialog", "case": "the Searching text" }] },
@@ -613,6 +616,7 @@
     { "from": "ExploreUnscoped", "via": 6, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "ExploreUnscoped", "via": 7, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "ExploreUnscoped", "via": 8, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "ExploreUnscoped", "via": 9, "kind": "back", "label": "clear × (search field)", "to": [{ "board": "Explore", "case": "the query empties, the field keeps its focus — Explore at rest, with its recent searches (seam 248)" }] },
 
     { "from": "Feed", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "Feed", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },

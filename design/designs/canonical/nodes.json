@@ -3152,6 +3152,7 @@
     "ExploreFilter": {
       "prefix": "explore",
       "keys": {
+        "explore.filterSheet.order": "the reader chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
       },
       "nodes": {
@@ -3174,15 +3175,33 @@
         "explore.filterSheet.kinds.postsChip": [],
         "explore.filterSheet.kinds.profilesChip": [],
         "explore.filterSheet.kinds.topicsChip": [],
-        "explore.filterSheet.order": [],
-        "explore.filterSheet.order.hint": [],
-        "explore.filterSheet.order.label": [],
-        "explore.filterSheet.order.picker": [],
-        "explore.filterSheet.order.picker.newestOption": [],
-        "explore.filterSheet.order.picker.rankedOption": [],
-        "explore.filterSheet.order.seen": [],
-        "explore.filterSheet.order.seen.box": [],
-        "explore.filterSheet.order.seen.label": [],
+        "explore.filterSheet.order": [
+          "member"
+        ],
+        "explore.filterSheet.order.hint": [
+          "member"
+        ],
+        "explore.filterSheet.order.label": [
+          "member"
+        ],
+        "explore.filterSheet.order.picker": [
+          "member"
+        ],
+        "explore.filterSheet.order.picker.newestOption": [
+          "member"
+        ],
+        "explore.filterSheet.order.picker.rankedOption": [
+          "member"
+        ],
+        "explore.filterSheet.order.seen": [
+          "member"
+        ],
+        "explore.filterSheet.order.seen.box": [
+          "member"
+        ],
+        "explore.filterSheet.order.seen.label": [
+          "member"
+        ],
         "explore.filterSheet.title": [],
         "explore.filterTrigger": [],
         "explore.help": [],
@@ -3203,9 +3222,13 @@
           "2"
         ],
         "explore.result.sub": [
+          "1"
+        ],
+        "explore.result.value": [
           "2"
         ],
         "explore.searchField": [],
+        "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
         "explore.searchField.input": []
       }
@@ -3225,6 +3248,7 @@
         "explore.filterTrigger": [],
         "explore.help": [],
         "explore.searchField": [],
+        "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
         "explore.searchField.input": []
       }
@@ -3232,7 +3256,8 @@
     "ExplorePerson": {
       "prefix": "explore",
       "keys": {
-        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
+        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
+        "explore.seam": "the section the seam splits — people, topics or content — each section standing its own ranked head, then its own rest (Explore's search)"
       },
       "nodes": {
         "explore.bottomBar": [],
@@ -3250,35 +3275,54 @@
           "2",
           "3",
           "4",
-          "5"
+          "5",
+          "6",
+          "7"
         ],
         "explore.result.mark": [
           "1",
           "2",
           "3",
           "4",
-          "5"
+          "5",
+          "6",
+          "7"
         ],
         "explore.result.name": [
           "1",
           "2",
           "3",
           "4",
-          "5"
+          "5",
+          "6",
+          "7"
         ],
         "explore.result.rank": [
           "1",
           "2",
-          "3",
           "4",
-          "5"
+          "6"
         ],
         "explore.result.sub": [
           "1",
           "2",
           "3"
         ],
+        "explore.result.value": [
+          "7"
+        ],
+        "explore.seam": [
+          "people",
+          "topics",
+          "content"
+        ],
+        "explore.seam.label": [
+          "people",
+          "topics",
+          "content"
+        ],
         "explore.searchField": [],
+        "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
         "explore.searchField.input": []
       }
@@ -3286,7 +3330,8 @@
     "ExploreSearch": {
       "prefix": "explore",
       "keys": {
-        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
+        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
+        "explore.seam": "the section the seam splits — people, topics or content — each section standing its own ranked head, then its own rest (Explore's search)"
       },
       "nodes": {
         "explore.bottomBar": [],
@@ -3321,25 +3366,33 @@
           "3"
         ],
         "explore.result.sub": [
-          "2",
+          "1",
           "3",
-          "1"
+          "2"
         ],
         "explore.result.value": [
           "4",
-          "1",
-          "2"
+          "2",
+          "3"
         ],
-        "explore.seam": [],
-        "explore.seam.label": [],
+        "explore.seam": [
+          "content"
+        ],
+        "explore.seam.label": [
+          "content"
+        ],
         "explore.searchField": [],
+        "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
         "explore.searchField.input": []
       }
     },
     "ExploreUnscoped": {
       "prefix": "explore",
-      "keys": {},
+      "keys": {
+        "explore.filterTrigger": "the kinds chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "explore.help": "the kinds chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
       "nodes": {
         "explore.bottomBar": [],
         "explore.bottomBar.composeSlot": [],
@@ -3349,9 +3402,16 @@
         "explore.bottomBar.walletSlot": [],
         "explore.empty": [],
         "explore.empty.title": [],
-        "explore.filterTrigger": [],
-        "explore.help": [],
+        "explore.filterTrigger": [
+          "comments",
+          "mixed"
+        ],
+        "explore.help": [
+          "comments",
+          "mixed"
+        ],
         "explore.searchField": [],
+        "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
         "explore.searchField.input": []
       }

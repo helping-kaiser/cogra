@@ -115,6 +115,7 @@ export const KEY_RULES = {
   topic: "the topic's title, lowercased, each run of other characters one -, none leading or trailing (About's topics)",
   thumb: "the picture's position in the draft's media, counted from 1 (PickedRow)",
   tier: "the reading's position on its license axis, the least asked first, counted from 1 (LicenseAxis)",
+  seam: "the section the seam splits — people, topics or content — each section standing its own ranked head, then its own rest (Explore's search)",
   session: "the session's position in the list, this device first, counted from 1 (Settings' sessions)",
   stagedReference: "the reference's position in the staged set, counted from 1 (the screen that stages it)",
   step: "the step's position along its path, from the path's start, counted from 1 (the score's trace)",

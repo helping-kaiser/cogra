@@ -888,10 +888,16 @@ function SkyField({ height = 180 }) {
    hairline with its centred quiet label is the one list-splitting line the
    system draws, so the feed's `Already seen` separator is this drawing with
    its own words, never a second construction. `children` carries the words;
-   Explore's stay the default. */
-function Seam({ node, children = "Beyond your reach — newest first" }) {
+   Explore's stay the default.
+
+   ONE SEAM PER SECTION (seam 248). A search answer is sectioned — people,
+   then topics, then content — and each section stands its own ranked head
+   and then its own rest (api-spec, *Search*, Order), so under Ranked each
+   section that has an unscored rest closes its head with its own seam, keyed
+   by the section it splits: `people`, `topics`, `content`. */
+function Seam({ node, nodeKey, children = "Beyond your reach — newest first" }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }} data-node={node}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }} data-node={node} data-node-key={nodeKey}>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
       <span
         style={{

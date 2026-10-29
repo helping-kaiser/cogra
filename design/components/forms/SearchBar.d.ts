@@ -10,6 +10,10 @@ export interface SearchBarProps {
   ariaLabel?: string;
   /** Bind a live input; without it the bar renders statically with a caret. */
   onChange?: (query: string) => void;
+  /** Gives the pill its trailing clear ×, drawn while a query stands: it empties the query and keeps focus. Its part is named `clear`. */
+  onClear?: () => void;
+  /** The ×'s spoken name — `Clear search` (the default, Explore's). */
+  clearLabel?: string;
   /** The field-error state: an inset `--error` ring. The refusal's words belong
    *  to the surface under the bar — the tag picker's naming line. */
   error?: boolean;
