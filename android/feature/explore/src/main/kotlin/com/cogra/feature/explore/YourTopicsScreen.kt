@@ -7,8 +7,9 @@
 // on the topic's own page, where the act is explained); the word "follow"
 // nowhere.
 //
-// UNREGISTERED: nodes.json carries no `YourTopics`; the screen wears its
-// evident prefix, `yourTopics`, until design registers it.
+// REGISTERED as `YourTopics` (prefix `yourTopics`, design round 23); a row
+// is `heldTopic`, keyed by the topic's name without #. The empty and error
+// states are not drawn, so their tags stay unregistered.
 
 package com.cogra.feature.explore
 
@@ -38,7 +39,7 @@ import com.cogra.core.designsystem.v2.atom.ReferenceRow
 import com.cogra.core.designsystem.v2.atom.RowEdge
 import com.cogra.core.designsystem.v2.token.Space
 
-/** The screen's evident prefix (unregistered). */
+/** The screen's registered prefix (nodes.json `YourTopics`). */
 internal val YOUR_TOPICS = DataNode("yourTopics")
 
 @Composable
@@ -106,7 +107,7 @@ fun YourTopicsScreen(
                         edge = RowEdge.Stance(StancePoint(topic.pDirected, topic.pInterest)),
                         pending = topic.pending,
                         onOpen = { onOpenTopic(topic.name) },
-                        node = (YOUR_TOPICS / "row").keyed(topic.name),
+                        node = (YOUR_TOPICS / "heldTopic").keyed(topic.name),
                     )
                 }
                 if (state.moreFailed) {
