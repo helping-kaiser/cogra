@@ -273,6 +273,20 @@ private fun AlternatesActions(
                 .testTag("${testTagPrefix}_stance_failed"),
         )
     }
+    AlternatesCommitRow(state, failed, onCommit, onCancel, onOpenSeverance, zeroWords, testTagPrefix)
+}
+
+/** The one row: `Walk it back` on the left, `Cancel` and `Sign it` (or its wait, or Retry) on the right. */
+@Composable
+private fun AlternatesCommitRow(
+    state: StanceControlState,
+    failed: Boolean,
+    onCommit: () -> Unit,
+    onCancel: () -> Unit,
+    onOpenSeverance: (() -> Unit)?,
+    zeroWords: StanceZeroWords,
+    testTagPrefix: String,
+) {
     val slow = rememberSlowSignature(state.busy)
     Row(
         verticalAlignment = Alignment.CenterVertically,

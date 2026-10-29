@@ -976,40 +976,7 @@ private fun AuthorRecordsQuery.Node.toRow(): RecordRow {
     // A citation is about its terminal leg — the cited thing — while every
     // other family is about its target (a Review's terminal being the
     // comment it minted, whose words are the row's).
-    val cites = kind == Family.REFERENCE
-    val terminalComment = terminal?.onComment
-    val terminalPost = terminal?.onPost
-    val targetPost = target?.onPost
-    val targetComment = target?.onComment
-    val snippet = if (cites) {
-        terminalPost?.title?.value ?: terminalPost?.content?.value ?: terminalComment?.content?.value
-    } else {
-        terminalComment?.content?.value
-            ?: targetPost?.title?.value
-            ?: targetPost?.content?.value
-            ?: targetComment?.content?.value
-    }
-    val link = when {
-        cites && terminalPost != null -> RecordLink.ToPost(terminalPost.id)
-        // A Review's thread opens at its parent post, when the parent
-        // is a post CoGra carries; nested reply chains stay unlinked
-        // until a comment permalink exists.
-        terminalComment != null -> terminalComment.target?.onPost?.id?.let { RecordLink.ToPost(it) }
-        cites -> null
-        targetPost != null -> RecordLink.ToPost(targetPost.id)
-        targetComment != null -> targetComment.target?.onPost?.id?.let { RecordLink.ToPost(it) }
-        else -> null
-    }
-    val about = when {
-        cites && terminal?.onUser != null -> RecordAbout.PERSON
-        cites && terminalPost != null -> RecordAbout.POST
-        cites && terminalComment != null -> RecordAbout.COMMENT
-        cites -> null
-        target?.onUser != null -> RecordAbout.PERSON
-        targetPost != null -> RecordAbout.POST
-        targetComment != null -> RecordAbout.COMMENT
-        else -> null
-    }
+    val reading = if (kind == Family.REFERENCE) citedReading() else touchedReading()
     // The server's reading of what the record did (`Record.act`); a value
     // this client does not know reads ordinary.
     val did = runCatching { RecordAct.valueOf(act.rawValue) }.getOrDefault(RecordAct.ORDINARY)
@@ -1017,15 +984,72 @@ private fun AuthorRecordsQuery.Node.toRow(): RecordRow {
         id = id,
         family = kind,
         genesis = did == RecordAct.GENESIS || targetId == mint || terminalId == mint,
-        snippet = snippet,
-        link = link,
+        snippet = reading.snippet,
+        link = reading.link,
         landedAt = landedAt,
         // Both stance families wear their own face (the chronicle's opinion card).
         opinion = RecordOpinion(pDirected, pInterest, severed == true)
             .takeIf { kind == Family.OPINION || kind == Family.AFFINITY },
-        targetHandle = (if (cites) terminal?.onUser?.handle else target?.onUser?.handle),
+        targetHandle = reading.handle,
         act = did,
-        about = about,
+        about = reading.about,
         untag = kind == Family.TAG && pDirected == 0.0 && pInterest == 0.0,
+    )
+}
+
+/** What a chronicle row reads of the node its act is about. */
+private class RowReading(
+    val snippet: String?,
+    val link: RecordLink?,
+    val about: RecordAbout?,
+    val handle: String?,
+)
+
+/** A citation's row reads its terminal leg, the cited thing: a post, a comment, or a person mentioned. */
+private fun AuthorRecordsQuery.Node.citedReading(): RowReading {
+    val post = terminal?.onPost
+    val comment = terminal?.onComment
+    val person = terminal?.onUser
+    return RowReading(
+        snippet = post?.title?.value ?: post?.content?.value ?: comment?.content?.value,
+        link = post?.let { RecordLink.ToPost(it.id) }
+            ?: comment?.target?.onPost?.id?.let { RecordLink.ToPost(it) },
+        about = when {
+            person != null -> RecordAbout.PERSON
+            post != null -> RecordAbout.POST
+            comment != null -> RecordAbout.COMMENT
+            else -> null
+        },
+        handle = person?.handle,
+    )
+}
+
+/**
+ * Every other row reads what its act touched: a Review's minted comment
+ * (its terminal), else the target post or comment, or the person an
+ * opinion was given on.
+ */
+private fun AuthorRecordsQuery.Node.touchedReading(): RowReading {
+    val minted = terminal?.onComment
+    val post = target?.onPost
+    val comment = target?.onComment
+    val person = target?.onUser
+    return RowReading(
+        snippet = minted?.content?.value ?: post?.title?.value ?: post?.content?.value ?: comment?.content?.value,
+        // A Review's thread opens at its parent post, when the parent is a
+        // post CoGra carries; nested reply chains stay unlinked until a
+        // comment permalink exists.
+        link = when {
+            minted != null -> minted.target?.onPost?.id?.let { RecordLink.ToPost(it) }
+            post != null -> RecordLink.ToPost(post.id)
+            else -> comment?.target?.onPost?.id?.let { RecordLink.ToPost(it) }
+        },
+        about = when {
+            person != null -> RecordAbout.PERSON
+            post != null -> RecordAbout.POST
+            comment != null -> RecordAbout.COMMENT
+            else -> null
+        },
+        handle = person?.handle,
     )
 }

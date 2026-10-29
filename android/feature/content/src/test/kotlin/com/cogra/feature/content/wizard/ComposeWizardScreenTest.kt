@@ -1319,7 +1319,8 @@ class ComposeWizardScreenTest {
         val law = java.io.File("../../../design/designs/canonical/behavior/ComposePick.md").readText()
         val strings = java.io.File("src/main/res/values/strings.xml").readText()
         assertThat(law).contains("each other video is refused with A post carries one video.")
-        assertThat(strings).contains("<string name=\"content_upload_post_one_video\">A post carries one video.</string>")
+        assertThat(strings)
+            .contains("<string name=\"content_upload_post_one_video\">A post carries one video.</string>")
     }
 
     // CW-27: the license sheet's "?" opens the same house explanation the

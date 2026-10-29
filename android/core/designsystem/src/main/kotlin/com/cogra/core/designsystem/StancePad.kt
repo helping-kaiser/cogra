@@ -530,9 +530,9 @@ fun StanceControl(
     /**
      * The row's Retry after a signing that did not go through: it asks the act
      * that was SENT — the hold's default, or a cancelled Set's pick (round 21,
-     * PadFailed.md). Null reads as the hold, for a host with no other route.
+     * PadFailed.md). Defaults to the hold, for a host with no other route.
      */
-    onRetrySigning: (() -> Unit)? = null,
+    onRetrySigning: () -> Unit = onHoldDefault,
 ) {
     val target = targetWords(targetLabel)
     val chooseLabel = stringResource(R.string.stance_target_choose, target)
@@ -664,7 +664,7 @@ fun StanceControl(
         // whose pad was cancelled while it signed passes its wait here too —
         // Cancel closes the pad, never the act (round 21, ask 16).
         if (state.pad == StancePadMode.CLOSED && !padOnly) {
-            HoldRowLine(state, onRetry = onRetrySigning ?: onHoldDefault, testTagPrefix = testTagPrefix)
+            HoldRowLine(state, onRetry = onRetrySigning, testTagPrefix = testTagPrefix)
         }
 
         state.severance?.let { prompt ->

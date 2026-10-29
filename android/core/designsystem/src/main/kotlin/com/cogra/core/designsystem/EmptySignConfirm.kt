@@ -64,36 +64,7 @@ fun EmptySignConfirm(
                 modifier = Modifier.testTag("${testTagPrefix}_empty_sign_title"),
             )
         },
-        text = {
-            // DialogSurface's body: paragraphs `--space-4` apart.
-            Column(verticalArrangement = Arrangement.spacedBy(Space.x4)) {
-                Text(
-                    text = if (vouchIn) {
-                        stringResource(R.string.stance_empty_sign_vouch_in, target)
-                    } else {
-                        stringResource(R.string.stance_empty_sign_effect, target)
-                    },
-                    modifier = Modifier.testTag("${testTagPrefix}_empty_sign_body"),
-                )
-                Text(
-                    text = stringResource(R.string.stance_empty_sign_cost),
-                    modifier = Modifier.testTag("${testTagPrefix}_empty_sign_cost"),
-                )
-                // A signing that did not go through keeps the dialog up: the
-                // fault line, and `Retry` in the act's slot.
-                if (prompt.failed) {
-                    Text(
-                        text = stringResource(R.string.stance_pad_failed),
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .semantics { liveRegion = LiveRegionMode.Assertive }
-                            .testTag("${testTagPrefix}_empty_sign_failed"),
-                    )
-                }
-                // The write rule's no is `SeveranceConfirm`'s (round 21, ask 15).
-                if (prompt.writeRule) WriteRuleDialogLine("${testTagPrefix}_empty_sign_write_rule")
-            }
-        },
+        text = { EmptySignBody(prompt, target, vouchIn, testTagPrefix) },
         // Material's `confirmButton` slot draws last — the right-hand one —
         // so the safe answer sits there.
         confirmButton = {
@@ -121,4 +92,37 @@ fun EmptySignConfirm(
             )
         },
     )
+}
+
+/** The ask's body: what the record does, its cost, and the fault or the write rule's no when one stands. */
+@Composable
+private fun EmptySignBody(prompt: EmptySignPrompt, target: String, vouchIn: Boolean, testTagPrefix: String) {
+    // DialogSurface's body: paragraphs `--space-4` apart.
+    Column(verticalArrangement = Arrangement.spacedBy(Space.x4)) {
+        Text(
+            text = if (vouchIn) {
+                stringResource(R.string.stance_empty_sign_vouch_in, target)
+            } else {
+                stringResource(R.string.stance_empty_sign_effect, target)
+            },
+            modifier = Modifier.testTag("${testTagPrefix}_empty_sign_body"),
+        )
+        Text(
+            text = stringResource(R.string.stance_empty_sign_cost),
+            modifier = Modifier.testTag("${testTagPrefix}_empty_sign_cost"),
+        )
+        // A signing that did not go through keeps the dialog up: the fault
+        // line, and `Retry` in the act's slot.
+        if (prompt.failed) {
+            Text(
+                text = stringResource(R.string.stance_pad_failed),
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .semantics { liveRegion = LiveRegionMode.Assertive }
+                    .testTag("${testTagPrefix}_empty_sign_failed"),
+            )
+        }
+        // The write rule's no is `SeveranceConfirm`'s (round 21, ask 15).
+        if (prompt.writeRule) WriteRuleDialogLine("${testTagPrefix}_empty_sign_write_rule")
+    }
 }

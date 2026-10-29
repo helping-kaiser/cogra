@@ -473,52 +473,63 @@ class StanceViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            // The walk-back is checked against the quote the reader
-            // confirmed: toward the node the read named, netting exactly
-            // the raw sums shown, in exactly the records its cost stated.
-            val graphId = when (val read = stances.targetGraphId(target)) {
-                is Outcome.Success -> read.value
-                else -> return@launch failSeverance(target)
-            }
             val quote = open.quote
-            val expected = Expectation(
-                writes = emptyList(),
-                netting = listOf(severance(graphId, quote.raw.pDirected, quote.raw.pInterest, quote.records)),
+            when (signWalkBack(target, quote)) {
+                Signed.WriteRule -> severanceWriteRule(target)
+                is Signed.Failed -> failSeverance(target)
+                Signed.Done -> walkedBackAll(target, quote.records)
+            }
+        }
+    }
+
+    /** The explicit walk-back taken: the pad closes, and the snackbar counts what it signed. */
+    private suspend fun walkedBackAll(target: StanceTarget, records: Int) {
+        signals.announceSigned()
+        update(target) {
+            it.copy(
+                severance = null,
+                pad = PadMode.CLOSED,
+                pick = StancePair.Origin,
+                landing = null,
+                // `Signed 3 things, still settling. You've walked …
+                // back to nothing.` (SeveranceConfirm.md).
+                walkedBack = records,
             )
-            val prepared = when (val outcome = stances.prepareSeverance(target)) {
-                is Outcome.Success -> outcome.value
-                // The write rule refuses at staging as well as at the signer.
-                is Outcome.Refused ->
-                    return@launch if (outcome.errors.any { it.code in WRITE_RULE_CODES }) {
-                        severanceWriteRule(target)
-                    } else {
-                        failSeverance(target)
-                    }
-                else -> return@launch failSeverance(target)
-            }
-            val results = try {
-                signer.sign(prepared, expected)
-            } catch (_: NoActorKeyException) {
-                return@launch failSeverance(target)
-            }
-            if (results.any { it.rateLimited() }) return@launch severanceWriteRule(target)
-            if (results.all { it is WriteResult.Done }) {
-                signals.announceSigned()
-                update(target) {
-                    it.copy(
-                        severance = null,
-                        pad = PadMode.CLOSED,
-                        pick = StancePair.Origin,
-                        landing = null,
-                        // `Signed 3 things, still settling. You've walked …
-                        // back to nothing.` (SeveranceConfirm.md).
-                        walkedBack = quote.records,
-                    )
-                }
-                readStanding(target)
+        }
+        readStanding(target)
+    }
+
+    /**
+     * Signs the explicit walk-back's batch, checked against the quote the
+     * reader confirmed: toward the node the read named, netting exactly the
+     * raw sums shown, in exactly the records its cost stated. The write rule
+     * refuses at staging as well as at the signer — a notice, not a fault.
+     */
+    private suspend fun signWalkBack(target: StanceTarget, quote: SeveranceQuote): Signed {
+        val graphId = (stances.targetGraphId(target) as? Outcome.Success)?.value
+            ?: return Signed.Failed(needsKey = false)
+        val expected = Expectation(
+            writes = emptyList(),
+            netting = listOf(severance(graphId, quote.raw.pDirected, quote.raw.pInterest, quote.records)),
+        )
+        val prepared = when (val outcome = stances.prepareSeverance(target)) {
+            is Outcome.Success -> outcome.value
+            is Outcome.Refused -> return if (outcome.errors.any { it.code in WRITE_RULE_CODES }) {
+                Signed.WriteRule
             } else {
-                failSeverance(target)
+                Signed.Failed(needsKey = false)
             }
+            else -> return Signed.Failed(needsKey = false)
+        }
+        val results = try {
+            signer.sign(prepared, expected)
+        } catch (_: NoActorKeyException) {
+            return Signed.Failed(needsKey = false)
+        }
+        return when {
+            results.any { it.rateLimited() } -> Signed.WriteRule
+            results.all { it is WriteResult.Done } -> Signed.Done
+            else -> Signed.Failed(needsKey = false)
         }
     }
 

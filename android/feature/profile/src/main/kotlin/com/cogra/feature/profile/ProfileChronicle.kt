@@ -86,32 +86,40 @@ internal fun ChronicleAct(
 internal fun verbOf(row: RecordRow, own: Boolean): Int = when (row.family) {
     Family.PUBLISH -> if (row.genesis) R.string.chronicle_published else R.string.chronicle_edited_post
     Family.REVIEW -> if (row.genesis) R.string.chronicle_commented else R.string.chronicle_edited_comment
-    // The account's own anchoring registration is `Joined`; every later one
-    // updates the profile.
-    Family.REGISTRATION -> when {
-        row.act == RecordAct.GENESIS -> R.string.chronicle_joined
-        own -> R.string.chronicle_profile_yours
-        else -> R.string.chronicle_profile_theirs
-    }
-    Family.OPINION, Family.AFFINITY -> when (row.act) {
-        RecordAct.WALK_BACK -> R.string.chronicle_walked_back
-        RecordAct.VOUCH -> R.string.chronicle_vouched
-        else -> R.string.chronicle_opinion
-    }
-    Family.TAG -> when {
-        row.about == RecordAbout.POST ->
-            if (row.untag) R.string.chronicle_untagged_post else R.string.chronicle_tagged_post
-        row.about == RecordAbout.COMMENT ->
-            if (row.untag) R.string.chronicle_untagged_comment else R.string.chronicle_tagged_comment
-        else -> R.string.chronicle_acted
-    }
-    Family.REFERENCE -> when (row.about) {
-        RecordAbout.PERSON -> R.string.chronicle_mentioned
-        RecordAbout.POST -> R.string.chronicle_cited_post
-        RecordAbout.COMMENT -> R.string.chronicle_cited_comment
-        null -> R.string.chronicle_acted
-    }
+    Family.REGISTRATION -> registrationVerb(row, own)
+    Family.OPINION, Family.AFFINITY -> opinionVerb(row)
+    Family.TAG -> tagVerb(row)
+    Family.REFERENCE -> citationVerb(row)
     else -> R.string.chronicle_acted
+}
+
+/** The account's own anchoring registration is `Joined`; every later one updates the profile. */
+private fun registrationVerb(row: RecordRow, own: Boolean): Int = when {
+    row.act == RecordAct.GENESIS -> R.string.chronicle_joined
+    own -> R.string.chronicle_profile_yours
+    else -> R.string.chronicle_profile_theirs
+}
+
+/** An opinion given, the one that vouched someone in, or a record a walk-back signed. */
+private fun opinionVerb(row: RecordRow): Int = when (row.act) {
+    RecordAct.WALK_BACK -> R.string.chronicle_walked_back
+    RecordAct.VOUCH -> R.string.chronicle_vouched
+    else -> R.string.chronicle_opinion
+}
+
+/** A tag declared or taken off (a tag at `(0, 0)`), by what it was put on. */
+private fun tagVerb(row: RecordRow): Int = when (row.about) {
+    RecordAbout.POST -> if (row.untag) R.string.chronicle_untagged_post else R.string.chronicle_tagged_post
+    RecordAbout.COMMENT -> if (row.untag) R.string.chronicle_untagged_comment else R.string.chronicle_tagged_comment
+    else -> R.string.chronicle_acted
+}
+
+/** A citation, by what it cites: a person is mentioned. */
+private fun citationVerb(row: RecordRow): Int = when (row.about) {
+    RecordAbout.PERSON -> R.string.chronicle_mentioned
+    RecordAbout.POST -> R.string.chronicle_cited_post
+    RecordAbout.COMMENT -> R.string.chronicle_cited_comment
+    null -> R.string.chronicle_acted
 }
 
 /**

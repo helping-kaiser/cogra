@@ -90,7 +90,11 @@ class ProfileRepositoryTest {
 
         val page = (repo().authorRecords("u1", null, 20, null) as Outcome.Success).value.items
 
-        val (published, walkedBack, mention, untag, joined) = page
+        val published = page[0]
+        val walkedBack = page[1]
+        val mention = page[2]
+        val untag = page[3]
+        val joined = page[4]
         assertThat(published.act).isEqualTo(RecordAct.GENESIS)
         assertThat(published.genesis).isTrue()
         assertThat(published.about).isEqualTo(RecordAbout.POST)
