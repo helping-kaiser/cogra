@@ -62,11 +62,7 @@ fun RemovedPlaceholder(
      */
     node: DataNode? = null,
 ) {
-    val headline = when (reason) {
-        RemovalReason.Author -> "Removed by its author"
-        RemovalReason.Platform -> "Removed under the platform's rules"
-        RemovalReason.Account -> "Deleted by the person whose account it was"
-    }
+    val headline = reason.headline()
     // Each reason's own second line (`REASONS`, SensitiveVeil.jsx): the
     // author's says what went and what stays, the verdict's that it was
     // decided in public, the deleted account's what still credits them.
@@ -125,4 +121,15 @@ private fun RemovedPlaceholderReasons() {
             RemovedPlaceholder(RemovalReason.Account)
         }
     }
+}
+
+/**
+ * The mark's own words for [this] reason — the placeholder's headline, and
+ * what a quoted removed thing reads in its body's place (the score's trace
+ * cover): the removed words never reach a quote.
+ */
+fun RemovalReason.headline(): String = when (this) {
+    RemovalReason.Author -> "Removed by its author"
+    RemovalReason.Platform -> "Removed under the platform's rules"
+    RemovalReason.Account -> "Deleted by the person whose account it was"
 }
