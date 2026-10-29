@@ -10,7 +10,10 @@ package com.cogra.feature.explore
 import androidx.lifecycle.SavedStateHandle
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
+import com.cogra.domain.feed.FeedFilter
 import com.cogra.domain.feed.FeedKind
+import com.cogra.domain.feed.FeedOrder
+import com.cogra.domain.feed.ReaderDefaults
 import com.cogra.domain.search.SearchFilter
 import com.cogra.domain.search.SearchHit
 import com.cogra.domain.search.SearchNode
@@ -18,6 +21,7 @@ import com.cogra.domain.search.SearchOrder
 import com.cogra.domain.search.SearchPage
 import com.cogra.domain.testing.FakeExploreDeviceStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.InMemoryReaderDefaultStore
 import com.cogra.domain.testing.ScriptedHeldTopicsRepository
 import com.cogra.domain.testing.ScriptedSearchRepository
 import com.cogra.domain.topics.HeldTopic
@@ -47,6 +51,9 @@ class ExploreViewModelTest {
     private val device = FakeExploreDeviceStore()
     private val tokens = FakeTokenStore()
 
+    /** The reader's feed default on this device; CoGra's unless a test saves one. */
+    private val readerDefaults = InMemoryReaderDefaultStore()
+
     @Before
     fun setUp() = Dispatchers.setMain(dispatcher)
 
@@ -65,7 +72,7 @@ class ExploreViewModelTest {
     }
 
     private fun model(saved: SavedStateHandle = SavedStateHandle()) =
-        ExploreViewModel(search, held, device, tokens, saved)
+        ExploreViewModel(search, held, device, tokens, saved, ReaderDefaults(readerDefaults, tokens))
 
     @Test
     fun `the results refine once typing settles, one ask for a run of keystrokes`() = runTest(dispatcher) {
@@ -285,7 +292,7 @@ class ExploreViewModelTest {
 
     @Test
     fun `the door counts the topics a member holds, and a guest reads no count`() = runTest(dispatcher) {
-        held.topics = List(5) { HeldTopic("t$it", 0.1, 0.1, pending = false) }
+        held.topics = List(5) { HeldTopic("t$it", 0.1, 0.1, pending = false, id = "h-t$it") }
         val guest = model()
         advanceUntilIdle()
         assertThat(guest.state.value.heldCount).isNull()
@@ -333,4 +340,29 @@ class ExploreViewModelTest {
             advanceUntilIdle()
             assertThat(vm.state.value.results?.hits?.map { it.node.id }).containsExactly("a", "b", "c").inOrder()
         }
+
+    // SettingsReading.md: "ALWAYS search's order and its already-seen toggle follow
+    // the reader's saved default, and search's kinds stay search's own".
+    @Test
+    fun `search's order and seen follow the reader's saved default, its kinds its own`() = runTest(dispatcher) {
+        member()
+        readerDefaults.save(
+            "me",
+            FeedFilter.DEFAULT.copy(kinds = setOf(FeedKind.TAG), order = FeedOrder.NEWEST, showSeen = true),
+        )
+        val vm = model()
+        advanceUntilIdle()
+        assertThat(vm.state.value.filter).isEqualTo(SearchFilter(order = SearchOrder.NEWEST, seen = true))
+        assertThat(vm.state.value.defaultFilter).isEqualTo(SearchFilter(order = SearchOrder.NEWEST, seen = true))
+    }
+
+    @Test
+    fun `a default saved in Settings reaches search's Reset`() = runTest(dispatcher) {
+        member()
+        val vm = model()
+        advanceUntilIdle()
+        readerDefaults.save("me", FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST))
+        advanceUntilIdle()
+        assertThat(vm.state.value.defaultFilter.order).isEqualTo(SearchOrder.NEWEST)
+    }
 }

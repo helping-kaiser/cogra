@@ -5,9 +5,10 @@
 // reached, with the read that surface already uses: the feed hydrates the next
 // window of the derived list it holds (`RankedFeed.window`, ≤ 20 ids a window,
 // inside `feed`'s cap of 100, CD-2), History reads its next page with the
-// narrowing its first page answered, and a profile's posts view reads its next
-// page of the same posts read. The stream never ranks: the feed's
-// windows hydrate a list whose order was fixed when it was derived, and
+// narrowing its first page answered, Saved reads its next page under the
+// query its list answered, and a profile's posts view reads its next page of
+// the same posts read. The stream never ranks: the feed's windows hydrate a
+// list whose order was fixed when it was derived, and
 // `feedRanking` is never asked (BD-4: "No relay call is its own").
 //
 // THE CLOSURES OUTLIVE THEIR SURFACE. The surface that tapped is unmounted the
@@ -19,6 +20,7 @@ import type { ApolloClient } from "@apollo/client";
 
 import { fetchHistoryPage, type HistoryEntry } from "@/lib/api/history-api";
 import { fetchProfilePosts } from "@/lib/api/profile-api";
+import { fetchSavedPage } from "@/lib/api/saved-api";
 import type { PostView } from "@/lib/api/content-api";
 import type { FeedItemView } from "@/lib/api/feed-api";
 import { success } from "@/lib/api/outcome";
@@ -85,6 +87,36 @@ export function historyOrigin({
     cursor = page.value.endCursor;
     const rows = page.value.items
       .filter(admits)
+      .map((entry) => entry.node)
+      .filter((node): node is PostView & typeof node => node.__typename === "Post");
+    return success({ rows, hasMore: page.value.hasNextPage && cursor !== null });
+  };
+}
+
+/**
+ * Saved's cards: its next pages, under the query the list on screen answers,
+ * in the order the server keeps them (Saved.md: "Saved's cards narrowed to
+ * their portrait clips in Saved's order"). No hidden set cuts here — Saved
+ * keeps a hidden account's things (ruling 49d).
+ */
+export function savedOrigin({
+  client,
+  guard,
+  after,
+  query,
+}: {
+  client: ApolloClient;
+  /** The session's guard, as Saved's own reads run under it. */
+  guard: AuthGuard;
+  after: string | null;
+  query: string;
+}): LoadOrigin {
+  let cursor = after;
+  return async () => {
+    const page = await guard.run(() => fetchSavedPage(client, cursor, query));
+    if (page.kind !== "success") return page;
+    cursor = page.value.endCursor;
+    const rows = page.value.items
       .map((entry) => entry.node)
       .filter((node): node is PostView & typeof node => node.__typename === "Post");
     return success({ rows, hasMore: page.value.hasNextPage && cursor !== null });

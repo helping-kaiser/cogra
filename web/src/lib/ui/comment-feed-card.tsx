@@ -403,6 +403,8 @@ export function CommentFeedCard({
         // THE COMPACT VEIL TAKES THE WORDS; the head row stays readable.
         <BodyRegion
           veiled={bodyIsSensitive(comment)}
+          marks={comment}
+          face="compact"
           testId={testId}
           nodeId={comment.id}
           signature={sensitiveSignature(comment)}

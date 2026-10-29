@@ -33,6 +33,10 @@ export const PLATE_STYLE: CSSProperties = {
   color: "#fff",
   whiteSpace: "nowrap",
   textShadow: "none",
+  // A LINE AS WIDE AS ITS WORDS: the board's plate is an inline box in a
+  // block, so it hugs its words at the head of the caption; a flex column
+  // would otherwise stretch it to the caption's width.
+  alignSelf: "flex-start",
 };
 
 /** The plate's type: label-medium (ReelRail.jsx:71-73). */

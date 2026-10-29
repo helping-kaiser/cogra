@@ -27,24 +27,50 @@ enum class PeopleSign {
     EITHER,
 }
 
+/** The sheet's Kinds of post (`FEED_FORMS`): words alone, pictures, a clip. */
+enum class FeedForm {
+    TEXT,
+    PHOTOS,
+    VIDEO,
+}
+
+/**
+ * The one topic the feed is narrowed to (FeedTopic.md): the Hashtag's id the
+ * ranker is asked with, and the tag's own name, without `#`, the trigger speaks.
+ */
+data class FeedTopic(val id: String, val name: String)
+
 /**
  * The feed filter's axes this client applies (FeedSheet.md:5-51; defaults
  * `FEED_FILTER_DEFAULT`, FeedFilter.jsx:96). [kinds] and [topic] are the
  * ranker's arguments; every other axis is a device cut over the held answer.
+ * The default constructor IS CoGra's own default.
  */
 data class FeedFilter(
     val kinds: Set<FeedKind> = setOf(FeedKind.POST),
-    val topic: String? = null,
+    /** At most one topic. A reader's default never holds one. */
+    val topic: FeedTopic? = null,
+    /** Kinds of post: a post or comment of a form switched off is cut (CD-4). */
+    val forms: Set<FeedForm> = FeedForm.entries.toSet(),
     val order: FeedOrder = FeedOrder.RANKED,
     val people: PeopleScope = PeopleScope.EVERYONE,
     /** Kept while Everyone is on, for Your people's return (FeedSheet.md:27) — client state, never sent. */
     val peopleSign: PeopleSign = PeopleSign.EITHER,
     /** Show what you've already seen: off stands the device's seen record under `feed.seenSeparator`. */
     val showSeen: Boolean = false,
+    /** Also show: Sensitive — off, the feed admits no veiled body (FeedSheet.md:43). */
+    val showSensitive: Boolean = false,
+    /** Also show: Removed — off, the feed admits no body whose payload went (FeedSheet.md:43). */
+    val showRemoved: Boolean = false,
     /** Also show: Still settling — on by default, final (PR-35). */
     val stillSettling: Boolean = true,
 ) {
-    val rankArgs: FeedRankArgs get() = FeedRankArgs(kinds, topic)
+    val rankArgs: FeedRankArgs get() = FeedRankArgs(kinds, topic?.id)
+
+    companion object {
+        /** CoGra's own default (`FEED_FILTER_DEFAULT`; FeedSheet.md:43). */
+        val DEFAULT = FeedFilter()
+    }
 }
 
 /** What a Done does with the staged filter (CD-1). */

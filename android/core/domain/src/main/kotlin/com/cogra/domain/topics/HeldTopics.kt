@@ -29,4 +29,6 @@ data class HeldTopic(
     val pInterest: Double,
     /** An act toward it still settling (`PendingMarker`). */
     val pending: Boolean,
+    /** The Hashtag's id — what a feed narrowed to it asks the ranker with (FeedTopic.md). */
+    val id: String,
 )

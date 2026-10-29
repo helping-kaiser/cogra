@@ -12,7 +12,9 @@ import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.SealedDraftStore
 import com.cogra.domain.deletion.AccountDeletionRepository
+import com.cogra.domain.feed.CommittedFilterStore
 import com.cogra.domain.feed.FeedRepository
+import com.cogra.domain.feed.ReaderDefaultStore
 import com.cogra.domain.history.SeenHistorySource
 import com.cogra.domain.history.SeenRecordStore
 import com.cogra.domain.history.HistoryRepository
@@ -74,6 +76,8 @@ import com.cogra.network.repo.TopicRepositoryImpl
 import com.cogra.network.repo.HistoryRepositoryImpl
 import com.cogra.network.repo.ViewHistoryRepositoryImpl
 import com.cogra.network.repo.FeedRepositoryImpl
+import com.cogra.network.store.CommittedFilterStoreImpl
+import com.cogra.network.store.ReaderDefaultStoreImpl
 import com.cogra.network.store.ExploreDeviceStoreImpl
 import com.cogra.network.store.SeenRecordStoreImpl
 import com.cogra.network.repo.WriteRepositoryImpl
@@ -253,6 +257,12 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun feedRepository(impl: FeedRepositoryImpl): FeedRepository
+
+    @Binds
+    abstract fun readerDefaultStore(impl: ReaderDefaultStoreImpl): ReaderDefaultStore
+
+    @Binds
+    abstract fun committedFilterStore(impl: CommittedFilterStoreImpl): CommittedFilterStore
 
     @Binds
     abstract fun accountDeletionRepository(impl: AccountDeletionRepositoryImpl): AccountDeletionRepository
