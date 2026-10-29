@@ -173,10 +173,10 @@ private fun RemovalKind.bodyRes() = when (this) {
  *   hold, locked and never dimmed (the walk-back's rule, one family of confirm).
  * @param failed the last removal did not go through: the line stands above the
  *   pair and Remove reads Retry.
- * @param node the dialog's node where its board is registered — RemoveConfirm
- *   and CommentRemoveConfirm are drawn and unregistered, so the detail and the
- *   thread name it by the board's evident path (`postDetail.dialog`); parts
- *   `title`, `body`, `remove`, `keep`, `line`.
+ * @param node the dialog's node: RemoveConfirm registers `postDetail.dialog`
+ *   and its `title`, `body`, `keep` and `remove`; the thread's confirm
+ *   (CommentRemoveConfirm, unregistered) wears the same path, and the failed
+ *   state's `line` is undrawn, so it stays an evident part.
  */
 @Composable
 internal fun RemoveDialog(
