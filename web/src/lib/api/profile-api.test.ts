@@ -176,7 +176,7 @@ describe("fetchProfilePosts", () => {
       }),
     );
     const outcome = await fetchProfilePosts(client(), "u-1", "c-0");
-    expect(asked).toEqual({ id: "u-1", after: "c-0" });
+    expect(asked).toEqual({ id: "u-1", after: "c-0", includePending: true });
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
     expect(outcome.value.items.map((post) => post.id)).toEqual(["p-2", "p-1"]);
@@ -367,9 +367,10 @@ describe("fetchAuthorRecords", () => {
     });
   });
 
-  // The chips are a family filter, and "everything" is the absence of one —
-  // not a third family the server would have to know about.
-  it("maps each chip to its family, and everything to none", async () => {
+  // The chronicle's tabs are a family filter, and "everything" is the absence
+  // of one — not a family the server would have to know about. The Posts tab
+  // is no chronicle (`fetchProfilePosts`).
+  it("maps each chronicle tab to its family, and everything to none", async () => {
     const seen: string[] = [];
     server.use(
       gqlLink.query("AuthorRecords", ({ variables }) => {
@@ -378,10 +379,9 @@ describe("fetchAuthorRecords", () => {
       }),
     );
     const c = client();
-    await fetchAuthorRecords(c, "u-1", "posts");
     await fetchAuthorRecords(c, "u-1", "comments");
     await fetchAuthorRecords(c, "u-1", "everything");
-    expect(seen).toEqual(["PUBLISH", "REVIEW", "null"]);
+    expect(seen).toEqual(["REVIEW", "null"]);
   });
 
   it("asks for the page size the chronicle pages by", async () => {
@@ -392,7 +392,7 @@ describe("fetchAuthorRecords", () => {
         return HttpResponse.json({ data: { records: records([]) } });
       }),
     );
-    await fetchAuthorRecords(client(), "u-1", "posts");
+    await fetchAuthorRecords(client(), "u-1", "everything");
     expect(first).toBe(PROFILE_PAGE_SIZE);
   });
 });

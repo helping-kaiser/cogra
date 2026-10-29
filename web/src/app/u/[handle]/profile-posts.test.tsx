@@ -278,6 +278,7 @@ describe("ProfilePosts — the posts view (ProfilePosts.md)", () => {
       },
       "u1",
     );
+    server.use(meAs("u1", "pixel"));
     serveAda();
     serveChronicle();
     servePosts({ "": { posts: [adas("p2"), adas("p1")], next: null } });
