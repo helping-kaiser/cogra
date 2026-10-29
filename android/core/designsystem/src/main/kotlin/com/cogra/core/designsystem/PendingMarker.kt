@@ -20,8 +20,22 @@ fun PendingMarker(
     testTag: String,
     modifier: Modifier = Modifier,
 ) {
+    PendingMarker(text = stringResource(R.string.pending_settling), testTag = testTag, modifier = modifier)
+}
+
+/**
+ * The same quiet line saying what something else waits on — the master's
+ * `label` (`PendingMarker.jsx`): a kept pick's `Waiting for your key`, or
+ * `Waiting for your review` (PadPending.md:5, PadPendingReview.md:5).
+ */
+@Composable
+fun PendingMarker(
+    text: String,
+    testTag: String,
+    modifier: Modifier = Modifier,
+) {
     Text(
-        text = stringResource(R.string.pending_settling),
+        text = text,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier.testTag(testTag),

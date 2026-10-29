@@ -18,6 +18,8 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.EmptySignPrompt
+import com.cogra.core.designsystem.KeptFace
+import com.cogra.core.designsystem.LocalOnOpenKeptPicks
 import com.cogra.core.designsystem.SeverancePrompt
 import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceControl
@@ -28,10 +30,13 @@ import com.cogra.core.designsystem.StancePadMode
 import com.cogra.core.designsystem.StancePadVariant
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.StanceZeroWords
+import com.cogra.domain.stance.KeptFamily
+import com.cogra.domain.stance.KeptPick
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.isEmptySign
+import com.cogra.domain.stance.keptFor
 
 /**
  * The stance control for one [target]. The view model is scoped to the
@@ -88,6 +93,19 @@ fun StanceControlRoute(
     viewModel: StanceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // WHAT A PICK KEPT HERE SIGNS AS (KeptPicksReview.md:9): the vouch-back's
+    // pad keeps a vouch-back, every other control a plain pick.
+    val family = if (variant != null) KeptFamily.VOUCH_BACK else KeptFamily.OPINION
+    LaunchedEffect(target, family) { viewModel.setFamily(target, family) }
+    // A restore taken on its own screen reaches the anchors here on the way back.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onResume() }
+    val openKeptPicks = LocalOnOpenKeptPicks.current
+    LaunchedEffect(state.reviewFrom) {
+        if (state.reviewFrom == target) {
+            viewModel.onReviewOpened()
+            openKeptPicks?.invoke()
+        }
+    }
     // A guest has no bundle to read, and asking for one costs a refused
     // round trip plus the guard's wasted token refresh on every control
     // the page holds.
@@ -124,6 +142,8 @@ fun StanceControlRoute(
         inputMode = state.inputMode,
         borrowed = state.borrowed,
         keyAbsent = state.keyAbsent,
+        kept = state.kept.keptFor(target, entry.family),
+        settling = target in state.settling,
     )
     StanceControl(
         state = if (onTaken != null) controlState.copy(confirmation = null) else controlState,
@@ -158,6 +178,7 @@ fun StanceControlRoute(
         onDismissEmptySign = { viewModel.onDismissEmptySign(target) },
         vouchesIn = vouchesIn,
         onRetrySigning = { viewModel.onRetrySigning(target) },
+        onKeepPending = { viewModel.onKeepPending(target) },
     )
 }
 
@@ -182,6 +203,8 @@ internal fun TargetStance.toControlState(
     inputMode: StanceInputMode,
     borrowed: Boolean = false,
     keyAbsent: Boolean = false,
+    kept: KeptPick? = null,
+    settling: Boolean = false,
 ) = StanceControlState(
     pick = pick.toPoint(),
     pad = when (pad) {
@@ -234,6 +257,13 @@ internal fun TargetStance.toControlState(
     borrowed = borrowed,
     writeRule = writeRule,
     keyAbsent = keyAbsent,
+    // A kept vouch-back or approval with the key back signs through its own
+    // pad, holding the pick, and wears no waiting line (VouchBackPad.md:49);
+    // a kept plain pick waits on the review once the key is here (PadPendingReview.md).
+    kept = kept?.takeIf { keyAbsent || it.family == KeptFamily.OPINION }?.let {
+        KeptFace(pick = it.pick.toPoint(), review = !keyAbsent)
+    },
+    settling = settling && kept == null,
 )
 
 internal fun StancePair.toPoint() = StancePoint(pDirected, pInterest)

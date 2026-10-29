@@ -123,6 +123,17 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
      * same dialog, its draft clause true of a surface that keeps no draft:
      * `…and your edit is still here.` (copy-voice; blessed, jakob 2026-10-05).
      */
+    /** The write rule's notice on the kept picks' seal (WriteRuleFailed.md:37). */
+    WhySigningWaitsKept(
+        title = "Why signing waits",
+        paragraphs = listOf(
+            "There's a limit to how many signed actions can go through in a short " +
+                "time — it keeps the network safe from flooding. You've hit it for now.",
+            // WriteRuleFailed.md:37: the kept picks' seal's own clause.
+            "Nothing was signed or spent, and your picks are still kept. Try again in a little while.",
+        ),
+    ),
+
     WhySigningWaitsAtEdit(
         title = "Why signing waits",
         paragraphs = listOf(

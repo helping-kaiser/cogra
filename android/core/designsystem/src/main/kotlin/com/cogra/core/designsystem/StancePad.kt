@@ -289,6 +289,33 @@ data class StanceControlState(
      * landing line and the actions would — no Set, no Cancel, no Walk it back.
      */
     val keyAbsent: Boolean = false,
+    /**
+     * A PICK KEPT PENDING (PadPending, PadPendingReview; the master's
+     * `pendingPick` / `pendingReview`): the anchor wears the kept pick's face,
+     * never the bundle's, with what it waits on under it. Null where nothing
+     * is kept toward this target.
+     */
+    val kept: KeptFace? = null,
+    /**
+     * THE ACCOUNT HAS NO BACKUP (KeyElsewhereNoBackup.md:13): the key notice
+     * carries the no-backup sentence in place of its restore line and draws no
+     * `Restore the key`; `Keep it pending, restore later` stays (:15).
+     */
+    val noBackup: Boolean = false,
+    /**
+     * The kept pick toward this target was just signed from the review's seal:
+     * the anchor wears `Still settling` until its record is ordered
+     * (PadPendingReview.md:21) — never under a pick still kept.
+     */
+    val settling: Boolean = false,
+)
+
+/** What a kept pick's anchor shows: the pick, and whether it waits on the reader's review or the key. */
+@Immutable
+data class KeptFace(
+    val pick: StancePoint,
+    /** The key is here and the review was left unsigned (PadPendingReview.md:3). */
+    val review: Boolean,
 )
 
 /**
@@ -298,6 +325,13 @@ data class StanceControlState(
  * no shell provides one (a preview, a test).
  */
 val LocalOnRestoreKey = compositionLocalOf<(() -> Unit)?> { null }
+
+/**
+ * Where a kept pick's face goes with the key here — the kept picks' review
+ * (PadPendingReview.md:11) — provided by the shell beside [LocalOnRestoreKey]
+ * for the same reason: the face is a leaf, the route is the graph's.
+ */
+val LocalOnOpenKeptPicks = compositionLocalOf<(() -> Unit)?> { null }
 
 /**
  * A PAD OPENED AS SOMETHING IN PARTICULAR — the vouch-back
@@ -429,8 +463,18 @@ private fun targetDescription(
     severed: Boolean,
     zeroWords: StanceZeroWords,
     target: String,
+    kept: KeptFace? = null,
 ): String =
-    if (standing == null) {
+    if (kept != null) {
+        // A kept pick says what it waits on, with its own word and pair — no
+        // hold invitation: a hold signs nothing while it waits (PadPending.md:11).
+        stringResource(
+            if (kept.review) R.string.stance_target_kept_review else R.string.stance_target_kept_key,
+            target,
+            stringResource(bundleReadout(kept.pick, EMPTY_PICK_LABEL).label),
+            kept.pick.pair(),
+        )
+    } else if (standing == null) {
         stringResource(R.string.stance_target_give, target)
     } else {
         stringResource(
@@ -533,10 +577,19 @@ fun StanceControl(
      * PadFailed.md). Defaults to the hold, for a host with no other route.
      */
     onRetrySigning: () -> Unit = onHoldDefault,
+    /**
+     * `Keep it pending, restore later` (PadKeyAbsent.md:27, :21): the pick
+     * waits on this device and the pad or the alternates close. The one way a
+     * pick is kept — leaving any other way drops it (:31).
+     */
+    onKeepPending: () -> Unit = {},
 ) {
     val target = targetWords(targetLabel)
     val chooseLabel = stringResource(R.string.stance_target_choose, target)
-    val description = targetDescription(state.standing, state.severed, zeroWords, target)
+    val description = targetDescription(state.standing, state.severed, zeroWords, target, state.kept)
+    // THE ANCHOR WEARS THE KEPT PICK'S FACE, never the bundle's, while one
+    // waits (PadPending.md:3); the bundle behind it is unchanged (:9).
+    val restingPoint = state.kept?.pick ?: state.standing
     // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (PadStanding.md:23-25): a
     // pad over nothing signed carries three controls, over a standing four.
     // A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11).
@@ -576,6 +629,7 @@ fun StanceControl(
             targetLabel = targetLabel,
             severable = severable,
             variant = variant,
+            onKeepPending = onKeepPending,
         )
         if (state.pad == StancePadMode.ALTERNATES) {
             StanceAlternates(
@@ -589,6 +643,7 @@ fun StanceControl(
                 zeroWords = zeroWords,
                 targetLabel = targetLabel,
                 helpLabel = variant?.title ?: stringResource(R.string.stance_explain),
+                onKeepPending = onKeepPending,
             )
         }
     }
@@ -646,8 +701,10 @@ fun StanceControl(
                     .testTag(anchor?.tag ?: "${testTagPrefix}_stance"),
             ) {
                 StanceRestingFace(
-                    standing = state.standing,
-                    face = state.standing?.let { restingReadout(it, state.severed, zeroWords) },
+                    standing = restingPoint,
+                    // A kept pick at (0, 0) says nothing: it is not a walk-back.
+                    face = state.kept?.let { bundleReadout(it.pick, EMPTY_PICK_LABEL) }
+                        ?: state.standing?.let { restingReadout(it, state.severed, zeroWords) },
                     testTagPrefix = testTagPrefix,
                     anchor = anchor,
                     emptyFace = emptyFaceFor(lineFaceInk),
@@ -663,6 +720,7 @@ fun StanceControl(
         // again. With the pad open, the pad's own commit row carries both. A Set
         // whose pad was cancelled while it signed passes its wait here too —
         // Cancel closes the pad, never the act (round 21, ask 16).
+        if (!padOnly) KeptLine(state, node, testTagPrefix)
         if (state.pad == StancePadMode.CLOSED && !padOnly) {
             HoldRowLine(state, onRetry = onRetrySigning, testTagPrefix = testTagPrefix)
         }
@@ -713,6 +771,28 @@ private fun HoldRowLine(state: StanceControlState, onRetry: () -> Unit, testTagP
         // The key notice is the restore flow's (PadKeyAbsent), not this lane's.
         state.failed && state.needsKey -> StanceFailure(testTagPrefix)
         state.failed -> RowLine(RowLineState.DidntSign(onRetry), "${testTagPrefix}_stance_row")
+    }
+}
+
+/**
+ * WHAT A KEPT PICK WAITS ON, under its face (PadPending.md:5, PadPendingReview.md:5;
+ * the master's `PendingMarker` named `pending` under the control): `Waiting for
+ * your key`, or with the key back `Waiting for your review` — never `Still
+ * settling` (PadPending.md:7). The kept picks just signed settle under the
+ * face until their records are ordered (PadPendingReview.md:21).
+ */
+@Composable
+private fun KeptLine(state: StanceControlState, node: DataNode?, testTagPrefix: String) {
+    val kept = state.kept
+    val tag = node?.div("pending")?.tag ?: "${testTagPrefix}_stance_pending"
+    when {
+        kept != null -> PendingMarker(
+            text = stringResource(
+                if (kept.review) R.string.stance_kept_waiting_review else R.string.stance_kept_waiting_key,
+            ),
+            testTag = tag,
+        )
+        state.settling -> PendingMarker(testTag = tag)
     }
 }
 
@@ -834,6 +914,7 @@ private fun StancePadWindow(
     targetLabel: String?,
     severable: Boolean,
     variant: StancePadVariant?,
+    onKeepPending: () -> Unit,
 ) {
     val open = state.pad == StancePadMode.STICKY
     val visible = remember { MutableTransitionState(false) }
@@ -892,6 +973,7 @@ private fun StancePadWindow(
                     targetLabel = targetLabel,
                     severable = severable,
                     variant = variant,
+                    onKeepPending = onKeepPending,
                 )
             }
         }
@@ -915,6 +997,7 @@ private fun StancePadCard(
     targetLabel: String?,
     severable: Boolean,
     variant: StancePadVariant?,
+    onKeepPending: () -> Unit,
 ) {
     val padNode = variant?.padNode
     val helpLabel = variant?.title ?: stringResource(R.string.stance_explain)
@@ -965,6 +1048,7 @@ private fun StancePadCard(
                     testTagPrefix = testTagPrefix,
                     zeroWords = zeroWords,
                     padNode = padNode,
+                    onKeepPending = onKeepPending,
                 )
             }
             PadHelpButton(
@@ -1070,9 +1154,10 @@ private fun PadFoot(
     testTagPrefix: String,
     zeroWords: StanceZeroWords,
     padNode: DataNode?,
+    onKeepPending: () -> Unit,
 ) {
     when {
-        state.keyAbsent -> KeyAbsentNotice(testTagPrefix)
+        state.keyAbsent -> KeyAbsentNotice(testTagPrefix, state.noBackup, onKeepPending)
         state.writeRule -> WriteRuleNotice(onCancel, testTagPrefix, padNode)
         else -> {
             if (state.failed) PadFault(state.needsKey, testTagPrefix)
@@ -1279,10 +1364,15 @@ internal fun WriteRuleNotice(onNotNow: () -> Unit, testTagPrefix: String, padNod
  * THE KEY ISN'T IN THIS APP (PadKeyAbsent.md; `ComposeKeyAbsent`'s panel):
  * the notice where the landing line and the actions would stand, its "?"
  * opening the key's own text, and `Restore the key` in the panel's inverse
- * fill — navigation to the app's restore route ([LocalOnRestoreKey]).
+ * fill — navigation to the app's restore route ([LocalOnRestoreKey]) — then
+ * `Keep it pending, restore later` under it, the one way a pick is kept
+ * (PadKeyAbsent.md:27). With NO BACKUP the restore line reads the no-backup
+ * sentence and no `Restore the key` stands; the keep stays
+ * (KeyElsewhereNoBackup.md:13, :15). One drawing for the pad and the
+ * alternates, which carry the pad's notice as drawn (PadKeyAbsent.md:17).
  */
 @Composable
-private fun KeyAbsentNotice(testTagPrefix: String) {
+internal fun KeyAbsentNotice(testTagPrefix: String, noBackup: Boolean, onKeepPending: () -> Unit) {
     var explaining by remember { mutableStateOf(false) }
     val restore = LocalOnRestoreKey.current
     NoticePanel(
@@ -1293,15 +1383,26 @@ private fun KeyAbsentNotice(testTagPrefix: String) {
         testTag = "${testTagPrefix}_stance_key_absent",
     ) {
         NoticeLine(stringResource(R.string.stance_key_absent_waits))
-        NoticeLine(stringResource(R.string.stance_key_absent_restore_line))
-        CograButton(
-            text = stringResource(R.string.stance_key_absent_restore),
-            onClick = { restore?.invoke() },
-            kind = ButtonKind.Inverse,
-            modifier = Modifier.fillMaxWidth(),
-            testTag = "${testTagPrefix}_stance_restore_key",
-        )
+        if (noBackup) {
+            NoticeLine(stringResource(R.string.stance_key_absent_no_backup))
+        } else {
+            NoticeLine(stringResource(R.string.stance_key_absent_restore_line))
+            CograButton(
+                text = stringResource(R.string.stance_key_absent_restore),
+                onClick = { restore?.invoke() },
+                kind = ButtonKind.Inverse,
+                modifier = Modifier.fillMaxWidth(),
+                testTag = "${testTagPrefix}_stance_restore_key",
+            )
+        }
     }
+    CograButton(
+        text = stringResource(R.string.stance_keep_pending),
+        onClick = onKeepPending,
+        kind = ButtonKind.Text,
+        modifier = Modifier.fillMaxWidth(),
+        testTag = "${testTagPrefix}_stance_keep_pending",
+    )
     if (explaining) {
         HelpDialog(
             title = stringResource(R.string.stance_key_absent_help),

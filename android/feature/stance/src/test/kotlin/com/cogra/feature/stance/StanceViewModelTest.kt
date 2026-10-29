@@ -18,6 +18,7 @@ import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingStanceRepository
@@ -155,7 +156,9 @@ class StanceViewModelTest {
         override suspend fun borrowedView(): Outcome<ActorRef?> = Outcome.Success(lender)
     }
 
-    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals, account)
+    private val kept = InMemoryKeptPickStore()
+
+    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals, account, kept)
 
     private fun entry(vm: StanceViewModel) = vm.state.value.targets.getValue(TARGET)
 

@@ -98,6 +98,7 @@ internal fun StanceAlternates(
     zeroWords: StanceZeroWords,
     targetLabel: String?,
     helpLabel: String,
+    onKeepPending: () -> Unit = {},
 ) {
     val title = stringResource(R.string.stance_alternates_title)
     var typed by rememberSaveable { mutableStateOf(state.inputMode == StanceInputSurface.ENTRY) }
@@ -137,7 +138,7 @@ internal fun StanceAlternates(
                     targetLabel = targetLabel,
                     testTagPrefix = testTagPrefix,
                 )
-                AlternatesActions(state, onCommit, onCancel, onOpenSeverance, zeroWords, testTagPrefix)
+                AlternatesActions(state, onCommit, onCancel, onOpenSeverance, zeroWords, testTagPrefix, onKeepPending)
             }
         }
     }
@@ -197,8 +198,9 @@ private fun AlternatesBody(
                 targetLabel = targetLabel,
             )
             AlternateInputs(typed, onSwap, state.pick, onPick, axes, testTagPrefix)
-            // The write rule's notice stands where the landing line was (PadWriteRule.md).
-            if (!state.writeRule) {
+            // The write rule's notice stands where the landing line was (PadWriteRule.md),
+            // and so does the key's (PadKeyAbsent.md:17).
+            if (!state.writeRule && !state.keyAbsent) {
                 StanceLandingLine(
                     landing = state.landing,
                     testTagPrefix = testTagPrefix,
@@ -251,7 +253,20 @@ private fun AlternatesActions(
     onOpenSeverance: (() -> Unit)?,
     zeroWords: StanceZeroWords,
     testTagPrefix: String,
+    onKeepPending: () -> Unit,
 ) {
+    // THE KEY ELSEWHERE (PadKeyAbsent.md:17): the pad's notice where the landing
+    // line and the action row were, and `Keep it pending, restore later` under
+    // it — no Sign it, no Cancel, no Walk it back.
+    if (state.keyAbsent) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
+            modifier = Modifier.padding(top = Space.x4),
+        ) {
+            KeyAbsentNotice(testTagPrefix, state.noBackup, onKeepPending)
+        }
+        return
+    }
     if (state.writeRule) {
         Column(
             verticalArrangement = Arrangement.spacedBy(Space.x3),
