@@ -150,8 +150,21 @@ data object ProfileEdit
 @Serializable
 data class AvatarFlow(val uri: String, val fromEdit: Boolean)
 
+/**
+ * Invites (Invites.md). [from] names the door it was opened from, which the
+ * back arrow reads (`notifications`, `kept-picks`; the reader's own profile
+ * otherwise — Invites.md:97).
+ */
 @Serializable
-data object Invites
+data class Invites(val from: String? = null)
+
+/**
+ * The ask link's landing (`VouchAsk`; auth.md "Link URLs": `/vouch/<link-id>`).
+ * A root-level destination, like the mailed links' landings: it is reached
+ * from outside, with nothing of its own beneath it.
+ */
+@Serializable
+data class VouchAsk(val askLinkId: String)
 
 @Serializable
 data object Settings
@@ -230,6 +243,9 @@ internal const val EMAIL_CHANGE_PATH = "/email-change"
 
 /** The account deletion's link path (auth.md "Link URLs"), claimed beside `/join`. */
 internal const val DELETE_ACCOUNT_PATH = "/delete-account"
+
+/** The ask link's path (auth.md "Link URLs"), claimed beside `/join`. */
+internal const val VOUCH_PATH = "/vouch"
 
 /** What `ManageSpaceActivity` relays the system storage screen's "Manage space" as. */
 const val ACTION_MANAGE_SPACE = "com.cogra.app.action.MANAGE_SPACE"
