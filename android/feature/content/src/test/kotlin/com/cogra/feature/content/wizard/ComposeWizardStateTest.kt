@@ -577,18 +577,14 @@ class ComposeWizardStateTest {
     }
 
     @Test
-    fun asecondClipReplacesTheFirstRatherThanJoiningIt() {
-        val second = video.togglePick("other", durationMs = 9_000)
-        assertThat(second.picked.map { it.uri }).containsExactly("other")
-    }
-
-    @Test
     fun changingTheBodyForgetsThePreviousClipsFace() {
         val faced = video.copy(
             coverChoice = CoverChoice.Frame(2),
             coverMediaId = "cover-1",
         )
-        val swapped = faced.togglePick("other", durationMs = 1_000)
+        // A second clip is refused now (round 22), so the body changes by the
+        // clip's own × and a new pick.
+        val swapped = faced.togglePick(faced.picked.first().uri).togglePick("other", durationMs = 1_000)
         assertThat(swapped.coverMediaId).isNull()
         assertThat(swapped.coverChoice).isEqualTo(CoverChoice.None)
     }
@@ -760,7 +756,7 @@ class ComposeWizardStateTest {
     @Test
     fun aNewClipForgetsTheFirstFrameItsPredecessorCarried() {
         val skipped = checkNotNull(clipOfRatio(9f / 16f).advanced())
-        val swapped = skipped.togglePick("other", 16f / 9f, durationMs = 1_000)
+        val swapped = skipped.togglePick(skipped.picked.first().uri).togglePick("other", 16f / 9f, durationMs = 1_000)
         assertThat(swapped.coverChoice).isEqualTo(CoverChoice.None)
     }
 }

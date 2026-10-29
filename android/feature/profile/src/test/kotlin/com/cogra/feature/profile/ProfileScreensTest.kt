@@ -318,7 +318,7 @@ class ProfileScreensTest {
     fun aMembersEmptyChronicleReadsNothingHereYetAlone() {
         render(loaded())
         compose.onNodeWithTag("profile.chronicle.empty").assert(hasText("Nothing here yet."))
-        compose.onNodeWithTag("profile.chronicle.empty.title").assertExists()
+        compose.onNodeWithTag("profile.chronicle.empty.title", useUnmergedTree = true).assertExists()
     }
 
     // ProfileDeleted.md: the reserved disc, `Deleted account`, no handle

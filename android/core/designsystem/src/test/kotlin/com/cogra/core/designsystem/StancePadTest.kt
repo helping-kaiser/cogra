@@ -27,6 +27,9 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
@@ -681,7 +684,9 @@ class StancePadTest {
         compose.onNodeWithTag("${TAG}_stance_landing")
             .assertContentDescriptionEquals("Resulting opinion: Says nothing.")
         compose.onNodeWithText("Says nothing.", useUnmergedTree = true).assertExists()
-        compose.onNodeWithText("🤷", useUnmergedTree = true).assertExists()
+        // The landing's own shrug (the standing above wears one too).
+        compose.onNode(hasText("🤷") and hasAnyAncestor(hasTestTag("${TAG}_stance_landing")), useUnmergedTree = true)
+            .assertExists()
         compose.onNodeWithText("This takes you back to zero.").assertDoesNotExist()
         // The 🤷 opens nothing: the unreachable state's door is not the empty sign's.
         compose.onNodeWithTag("${TAG}_stance_landing_zero", useUnmergedTree = true).assertDoesNotExist()

@@ -147,14 +147,18 @@ class AttachmentPadTest {
             moveBy(Offset(10f, 0f))
         }
         // Measure the strip's own extent from what ten pixels picked, then
-        // carry the pick to +0.002 — a float that prints +0.00.
+        // carry the pick to +0.437 — off the grid while the finger is down.
         val measured = 10.0 / (picked.last() - 0.1)
-        val toNearZero = ((0.002 - picked.last()) * measured).toFloat()
         strip.performTouchInput {
-            moveBy(Offset(toNearZero, 0f))
+            moveBy(Offset(((0.4371 - picked.last()) * measured).toFloat(), 0f))
         }
-        assertThat(picked.last()).isWithin(1e-4).of(0.002)
-        assertThat(picked.last()).isNotEqualTo(0.0)
+        assertThat(picked.last()).isWithin(1e-3).of(0.4371)
+        // Then to +0.002: inside the zero hairline's detent (round 20,
+        // ComposePad.md) the knob holds on it and the live pick is exactly 0.
+        strip.performTouchInput {
+            moveBy(Offset(((0.002 - picked.last()) * measured).toFloat(), 0f))
+        }
+        assertThat(picked.last()).isEqualTo(0.0)
         strip.performTouchInput { up() }
         assertThat(picked.last()).isEqualTo(0.0)
         assertThat(1.0 / picked.last()).isPositiveInfinity()
