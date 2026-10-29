@@ -38,9 +38,10 @@ HealthRetries=3
 # Generous: a deploy that carries migrations applies them before listening.
 HealthStartPeriod=300s
 HealthOnFailure=kill
-# The binary installs no SIGTERM handler, and PID 1 ignores a signal it
-# has no handler for: without an init the stop waits out the timeout and
-# ends in SIGKILL. catatonit forwards the signal to a process that obeys it.
+# The binary drains on SIGTERM within 20 of the 30 stop-timeout seconds
+# (crates/api/src/shutdown.rs), but installs its handlers only after
+# migrations, and PID 1 ignores a signal it has no handler for: catatonit
+# forwards the signal, so a stop during startup still ends the process.
 RunInit=true
 NoNewPrivileges=true
 DropCapability=ALL

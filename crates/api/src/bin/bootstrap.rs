@@ -23,10 +23,11 @@ use l1_standin::{StandIn, StandInConfig};
 /// account roughly 1893 acts at the reference θ.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv().ok();
+    let dotenv = api::dotenv::read();
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
+    dotenv.report();
 
     let database_url =
         std::env::var("DATABASE_URL").context("DATABASE_URL must be set (see .env.example)")?;
@@ -42,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
         handle: env_or("GENESIS_HANDLE", "genesis"),
         display_name: env_or("GENESIS_DISPLAY_NAME", "Genesis Moderator"),
         guidelines_version: "1".to_string(),
-        guidelines_hash: guidelines_hash()?,
+        guidelines_hash: guidelines_hash(),
         burn_per_account_micro: 100_000_000,
     };
     let handle = input.handle.clone();
