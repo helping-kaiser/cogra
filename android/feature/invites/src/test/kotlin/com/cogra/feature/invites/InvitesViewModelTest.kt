@@ -1,5 +1,6 @@
 package com.cogra.feature.invites
 
+import com.cogra.core.designsystem.StancePadMode
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.AccountState
 import com.cogra.domain.ErrorCode
@@ -11,9 +12,13 @@ import com.cogra.domain.invites.ApplicationInfo
 import com.cogra.domain.invites.InviteLinkInfo
 import com.cogra.domain.invites.QueueLink
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.stance.KeptFamily
+import com.cogra.domain.stance.StanceKind
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceSignals
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.InMemoryKeptPickStore
 import com.cogra.domain.testing.ScriptedInvitesRepository
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
@@ -61,6 +66,8 @@ class InvitesViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
+    private val kept = InMemoryKeptPickStore()
+
     private fun viewModel() = InvitesViewModel(
         invites,
         account,
@@ -68,6 +75,7 @@ class InvitesViewModelTest {
         identity,
         StanceSignals(),
         "https://cogra.example",
+        kept,
     ).also { it.now = { NOW } }
 
     private fun row(id: String, age: Long, link: QueueLink? = MANY, ready: Boolean = true) = ApplicationInfo(
@@ -439,5 +447,81 @@ class InvitesViewModelTest {
         val NOW: Instant = Instant.parse("2026-09-15T10:00:00Z")
         val MANY = QueueLink("c47b19e0", singleUse = false)
         val SINGLE = QueueLink("8f3c1d2a", singleUse = true)
+    }
+
+    // ── Kept approvals (Invites.md:85-:103; ApprovePad.md:41; RejectConfirm.md:7) ──
+
+    @Test
+    fun keepItPendingTowardAnApplicationKeepsTheVouchAsAnApprovalAndSignsNothing() = runTest(dispatcher) {
+        // PadKeyAbsent.md:27 on the approval pad: kept as itself, never as a plain pick.
+        identity.seed = null
+        invites.queue += row("rafa", 1)
+        val vm = viewModel()
+        advanceUntilIdle()
+        vm.onOpenRow(vm.state.value.layout.rows.single())
+        advanceUntilIdle()
+        val pad = checkNotNull(vm.approvalPad())
+        pad.pick(StancePair(0.3, 0.2))
+
+        pad.keep()
+        advanceUntilIdle()
+
+        val keptVouch = kept.picks.value.single()
+        assertThat(keptVouch.family).isEqualTo(KeptFamily.APPROVAL)
+        assertThat(keptVouch.target).isEqualTo(StanceTarget.Node("rafa"))
+        assertThat(keptVouch.pick).isEqualTo(StancePair(0.3, 0.2))
+        assertThat(invites.approved).isEmpty()
+        assertThat(vm.padState.value?.pad).isEqualTo(StancePadMode.CLOSED)
+    }
+
+    @Test
+    fun aKeptApprovalWithTheKeyElsewhereWaitsForTheKeyAndItsTapOpensTheKeyNotice() = runTest(dispatcher) {
+        // Invites.md:87, :93 — even for an asker not fully registered yet.
+        identity.seed = null
+        kept.keep(StanceTarget.Node("imke"), StancePair(0.4, 0.1), KeptFamily.APPROVAL, StanceKind.PERSON)
+        invites.queue += row("imke", 1, ready = false)
+        val vm = viewModel()
+        advanceUntilIdle()
+        assertThat(vm.state.value.keyAbsent).isTrue()
+        assertThat(vm.state.value.keptApprovals).containsKey("imke")
+
+        vm.onOpenRow(vm.state.value.layout.rows.single())
+        advanceUntilIdle()
+
+        assertThat(vm.state.value.snack).isNull()
+        assertThat(vm.padState.value?.keyAbsent).isTrue()
+        assertThat(vm.padState.value?.pick).isEqualTo(StancePair(0.4, 0.1))
+    }
+
+    @Test
+    fun withTheKeyBackAKeptApprovalSignsThroughThePadAndIsKeptNoLonger() = runTest(dispatcher) {
+        // Invites.md:95, :99; ApprovePad.md:41 — never in the kept picks' batch.
+        kept.keep(StanceTarget.Node("rafa"), StancePair(0.4, 0.1), KeptFamily.APPROVAL, StanceKind.PERSON)
+        invites.queue += row("rafa", 1)
+        val vm = viewModel()
+        advanceUntilIdle()
+        vm.onOpenRow(vm.state.value.layout.rows.single())
+        advanceUntilIdle()
+        assertThat(vm.padState.value?.pick).isEqualTo(StancePair(0.4, 0.1))
+
+        checkNotNull(vm.approvalPad()).commit()
+        advanceUntilIdle()
+
+        assertThat(invites.approved.single()).isEqualTo(Triple("rafa", 0.4, 0.1))
+        assertThat(kept.picks.value).isEmpty()
+    }
+
+    @Test
+    fun theCloseOfAKeptApprovalDropsTheKeptVouchAndSignsNothing() = runTest(dispatcher) {
+        // Invites.md:103, RejectConfirm.md:7.
+        kept.keep(StanceTarget.Node("imke"), StancePair(0.4, 0.1), KeptFamily.APPROVAL, StanceKind.PERSON)
+        invites.queue += row("imke", 1)
+        val vm = viewModel()
+        advanceUntilIdle()
+        vm.onCloseRow(vm.state.value.layout.rows.single())
+        vm.onConfirmClose()
+        advanceUntilIdle()
+        assertThat(kept.picks.value).isEmpty()
+        assertThat(invites.approved).isEmpty()
     }
 }

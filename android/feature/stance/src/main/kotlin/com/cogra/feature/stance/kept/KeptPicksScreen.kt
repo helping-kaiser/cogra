@@ -318,28 +318,34 @@ private fun KeptPickRow(row: KeptRow, onRemove: () -> Unit, node: DataNode, remo
             if (row.severs) KindLine(stringResource(zero.reached), node / "consequence")
         }
         KeptPair(point, axes, node / "pair")
-        Box(
-            modifier = Modifier
-                .dataNode(node / "remove")
-                .focusRequester(removeFocus)
-                .hitTarget(
-                    interactive = Modifier
-                        .clip(CircleShape)
-                        .clickable(role = Role.Button, onClick = onRemove)
-                        .semantics { contentDescription = removeName },
-                    drawnWidth = REMOVE_BOX,
-                    drawnHeight = REMOVE_BOX,
-                )
-                .size(REMOVE_BOX),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Close,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(18.dp),
+        RemoveCross(removeName, onRemove, removeFocus, node / "remove")
+    }
+}
+
+/** The × that drops a kept pick, named for what it drops; 32 drawn, answering at 48. */
+@Composable
+private fun RemoveCross(name: String, onRemove: () -> Unit, focus: FocusRequester, node: DataNode) {
+    Box(
+        modifier = Modifier
+            .dataNode(node)
+            .focusRequester(focus)
+            .hitTarget(
+                interactive = Modifier
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onRemove)
+                    .semantics { contentDescription = name },
+                drawnWidth = REMOVE_BOX,
+                drawnHeight = REMOVE_BOX,
             )
-        }
+            .size(REMOVE_BOX),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Close,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(REMOVE_GLYPH),
+        )
     }
 }
 
@@ -532,35 +538,8 @@ private fun SealFoot(
     onHelp: (HelpTopic) -> Unit,
 ) {
     when (state.fault) {
-        KeptSealFault.WRITE_RULE -> {
-            NoticePanel(
-                title = KEPT_WRITE_RULE_TITLE,
-                helpLabel = KEPT_WRITE_RULE_HELP,
-                onHelp = { onHelp(HelpTopic.WhySigningWaitsKept) },
-                helpTestTag = "kept_picks_seal_write_rule_help",
-                testTag = "kept_picks_seal_write_rule",
-            ) {
-                NoticeLine(KEPT_WRITE_RULE_FACT)
-            }
-            FootText(KEPT_NOT_NOW, actions.onBackToReview, "kept_picks_seal_not_now")
-        }
-        KeptSealFault.BUG -> {
-            NoticePanel(title = KEPT_BUG_TITLE, testTag = "kept_picks_seal_bug") {
-                NoticeLine(KEPT_BUG_FACT)
-                CograButton(
-                    text = KEPT_TRY_AGAIN,
-                    onClick = actions.onSign,
-                    kind = ButtonKind.Inverse,
-                    modifier = Modifier.fillMaxWidth(),
-                    testTag = "kept_picks_seal_try_again",
-                )
-            }
-            Column(Modifier.fillMaxWidth()) {
-                // No report surface exists on the app yet; the word stands as drawn.
-                FootText(KEPT_REPORT, {}, "kept_picks_seal_report")
-                FootText(KEPT_NOT_NOW, actions.onBackToReview, "kept_picks_seal_not_now")
-            }
-        }
+        KeptSealFault.WRITE_RULE -> WriteRuleFoot(actions, onHelp)
+        KeptSealFault.BUG -> BugFoot(actions)
         else -> Column(
             verticalArrangement = Arrangement.spacedBy(Space.x2),
             modifier = Modifier.fillMaxWidth().dataNode(SEAL / "foot"),
@@ -584,6 +563,41 @@ private fun SealFoot(
     }
 }
 
+/** The write rule's notice on the kept picks' seal (WriteRuleFailed.md:39), `Not now` back to the review. */
+@Composable
+private fun WriteRuleFoot(actions: KeptPicksActions, onHelp: (HelpTopic) -> Unit) {
+    NoticePanel(
+        title = KEPT_WRITE_RULE_TITLE,
+        helpLabel = KEPT_WRITE_RULE_HELP,
+        onHelp = { onHelp(HelpTopic.WhySigningWaitsKept) },
+        helpTestTag = "kept_picks_seal_write_rule_help",
+        testTag = "kept_picks_seal_write_rule",
+    ) {
+        NoticeLine(KEPT_WRITE_RULE_FACT)
+    }
+    FootText(KEPT_NOT_NOW, actions.onBackToReview, "kept_picks_seal_not_now")
+}
+
+/** `This shouldn't have happened` (SealFaultBug.md:43-:45): `Try again`, then `Report a problem` and `Not now`. */
+@Composable
+private fun BugFoot(actions: KeptPicksActions) {
+    NoticePanel(title = KEPT_BUG_TITLE, testTag = "kept_picks_seal_bug") {
+        NoticeLine(KEPT_BUG_FACT)
+        CograButton(
+            text = KEPT_TRY_AGAIN,
+            onClick = actions.onSign,
+            kind = ButtonKind.Inverse,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "kept_picks_seal_try_again",
+        )
+    }
+    Column(Modifier.fillMaxWidth()) {
+        // No report surface exists on the app yet; the word stands as drawn.
+        FootText(KEPT_REPORT, {}, "kept_picks_seal_report")
+        FootText(KEPT_NOT_NOW, actions.onBackToReview, "kept_picks_seal_not_now")
+    }
+}
+
 @Composable
 private fun FootText(text: String, onClick: () -> Unit, testTag: String) {
     CograButton(
@@ -597,6 +611,7 @@ private fun FootText(text: String, onClick: () -> Unit, testTag: String) {
 
 /** `StagedReference`'s × box: 32 drawn, 18 glyph. */
 private val REMOVE_BOX = 32.dp
+private val REMOVE_GLYPH = 18.dp
 
 /** `NodeMark` at the staged row's size. */
 private val MARK = 32.dp

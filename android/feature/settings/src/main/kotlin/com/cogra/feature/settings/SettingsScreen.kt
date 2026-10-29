@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -82,6 +83,8 @@ data class SettingsDoors(
     val onContact: () -> Unit = {},
     /** The Delete account row's two doors: the request screen, or the grace page. */
     val onOpenDeletion: (DeletionDoor) -> Unit = {},
+    /** The kept picks' review, reopened from the Key backup group (Settings.md:83). */
+    val onOpenKeptPicks: () -> Unit = {},
 )
 
 @Composable
@@ -600,7 +603,7 @@ private fun BackupGroup(state: SettingsUiState, doors: SettingsDoors) {
             if (made != null) R.string.settings_backup_footnote_made else R.string.settings_backup_footnote_none,
         ),
         node = group,
-        rows = listOf(
+        rows = listOf<@Composable () -> Unit>(
             {
                 SettingsRow(
                     label = stringResource(R.string.settings_backup_recovery),
@@ -622,9 +625,26 @@ private fun BackupGroup(state: SettingsUiState, doors: SettingsDoors) {
                     node = group / "key",
                 )
             },
-            // No kept-picks row: kept picks are not built (Restore-and-kept-picks packet).
-        ),
+        ) + keptRow(state, doors, group),
     )
+}
+
+/**
+ * THE KEPT PICKS' ROW, last in the Key backup group (Settings.md:75-:83): `4
+ * kept picks waiting` — `1 kept pick waiting` in the singular — reopening the
+ * review. It stands only while the key is here and unsigned picks wait; with
+ * the key gone again it goes (KeptPicksReview.md:39).
+ */
+private fun keptRow(state: SettingsUiState, doors: SettingsDoors, group: DataNode): List<@Composable () -> Unit> {
+    if (!state.actorKeyHere || state.keptPicks == 0) return emptyList()
+    return listOf<@Composable () -> Unit> {
+        SettingsRow(
+            label = pluralStringResource(R.plurals.settings_backup_kept, state.keptPicks, state.keptPicks),
+            kind = SettingsRowKind.Opens,
+            onClick = doors.onOpenKeptPicks,
+            node = group / "kept",
+        )
+    }
 }
 
 /** The "Manage space" ask: whether the group is to be brought into view, and the page's scroll to do it with. */

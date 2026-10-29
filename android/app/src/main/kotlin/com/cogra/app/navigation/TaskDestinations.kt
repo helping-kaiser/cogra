@@ -21,6 +21,7 @@ import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.profile.FramedPicture
 import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.avatar.AvatarFlowRoute
+import com.cogra.feature.stance.kept.KeptPicksRoute
 
 /** The task flows: what a tab's stack holds that owns the whole screen. */
 internal fun NavGraphBuilder.taskFlows(shell: ShellScope) {
@@ -43,6 +44,19 @@ internal fun NavGraphBuilder.taskFlows(shell: ShellScope) {
     composable<ProfileEdit> { entry -> shell.ProfileEditDestination(entry) }
     composable<AvatarFlow> { entry -> shell.AvatarFlowDestination(entry) }
     composable<Invites> { entry -> shell.InvitesDestination(entry) }
+    with(shell) {
+        // Every way out returns where the review was opened from, saying its
+        // line there once (KeptPicksReview.md:23, KeptPicksSeal.md:27).
+        composable<KeptPicks> {
+            KeptPicksRoute(
+                onExit = { line ->
+                    navController.popBackStack()
+                    line?.let(::announce)
+                },
+                onOpenInvites = { navController.navigate(Invites(from = INVITES_FROM_KEPT_PICKS)) },
+            )
+        }
+    }
 }
 
 /**

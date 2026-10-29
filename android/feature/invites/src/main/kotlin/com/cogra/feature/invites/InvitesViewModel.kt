@@ -22,8 +22,11 @@ import com.cogra.domain.invites.layoutQueue
 import com.cogra.domain.invites.liveLinks
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.stance.KeptFamily
+import com.cogra.domain.stance.KeptPickStore
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceSignals
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -120,6 +123,10 @@ data class InvitesUiState(
     val focusAfter: FocusAfter? = null,
     /** The handle (without @) an ask link's arrival stands at, once. */
     val standAt: String? = null,
+    /** The vouches kept on this device, by application id (Invites.md:85). */
+    val keptApprovals: Map<String, StancePair> = emptyMap(),
+    /** The signing key is not on this device: a kept approval reads `Waiting for your key` (:87). */
+    val keyAbsent: Boolean = false,
 ) {
     val layout: QueueLayout get() = layoutQueue(read?.queue.orEmpty())
     val links: List<InviteLinkInfo> get() = liveLinks(read?.links.orEmpty())
@@ -138,6 +145,8 @@ class InvitesViewModel @Inject constructor(
     private val identity: IdentityStore,
     private val signals: StanceSignals,
     @WebOrigin private val webOrigin: String,
+    /** The vouches kept for the key, each waiting on its application's row (Invites.md:85-:103). */
+    private val kept: KeptPickStore,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(InvitesUiState())
@@ -160,6 +169,14 @@ class InvitesViewModel @Inject constructor(
                 _state.update { it.copy(notMember = true) }
             }
         }
+        viewModelScope.launch {
+            kept.watch().collect { picks ->
+                val approvals = picks.filter { it.family == KeptFamily.APPROVAL }
+                    .associate { (it.target as StanceTarget.Node).id to it.pick }
+                _state.update { it.copy(keptApprovals = approvals) }
+            }
+        }
+        onResume()
         refresh()
     }
 
@@ -207,7 +224,12 @@ class InvitesViewModel @Inject constructor(
      * opens the pad (Invites.md:39-41, ApprovePad.md:3).
      */
     fun onOpenRow(application: ApplicationInfo) {
-        if (!application.approvable) {
+        val held = _state.value.keptApprovals[application.id]
+        // A KEPT APPROVAL WITH THE KEY ELSEWHERE meets the key notice, as a kept
+        // pick's face does, whatever its asker's registration (Invites.md:93):
+        // the pad opens holding the kept vouch, its notice in place of Set.
+        val keyNotice = held != null && _state.value.keyAbsent
+        if (!application.approvable && !keyNotice) {
             _state.update { it.copy(snack = InvitesSnack.FinishRegistering("@${application.handle}")) }
             return
         }
@@ -220,10 +242,26 @@ class InvitesViewModel @Inject constructor(
             signals = signals,
             source = ApprovalSource.Queued(application),
             onOutcome = ::onApprovalOutcome,
+            kept = kept,
+            // Back, the kept approval signs only through this pad, holding the
+            // vouch that waited (:95, :99; ApprovePad.md:41).
+            held = held,
         )
         pad.value = opened
         _state.update { it.copy(approvingId = application.id) }
         opened.open()
+    }
+
+    /**
+     * The page came back (ON_RESUME): whether the key is here is read again,
+     * so a restore taken on its own screen turns a kept approval's line from
+     * `Waiting for your key` to `Ready for your approval` (Invites.md:87-:89).
+     */
+    fun onResume() {
+        viewModelScope.launch {
+            val keyHere = identity.actorSeed() != null
+            _state.update { it.copy(keyAbsent = !keyHere) }
+        }
     }
 
     /** The approval pad itself, for the control's callbacks; null while none is up. */
@@ -284,6 +322,13 @@ class InvitesViewModel @Inject constructor(
             }
             if (outcome is Outcome.Success) {
                 val index = indexOf(first.id)
+                // A kept approval's closing drops its kept vouch, nothing signed
+                // (Invites.md:103, RejectConfirm.md:7).
+                val closed = when (val target = closing.target) {
+                    is CloseTarget.One -> listOf(target.application)
+                    is CloseTarget.All -> target.group.rows
+                }
+                kept.drop(closed.map { approvalTarget(it.id) }, KeptFamily.APPROVAL)
                 read()
                 _state.update {
                     it.copy(closing = null, focusAfter = FocusAfter(FocusAfter.Section.APPLICATION, index))

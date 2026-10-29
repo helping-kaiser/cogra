@@ -4,6 +4,8 @@
 package com.cogra.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraphBuilder
@@ -20,6 +22,7 @@ import com.cogra.feature.onboarding.InviteEntryRoute
 import com.cogra.feature.onboarding.KeyCeremonyRoute
 import com.cogra.feature.settings.ChangeEmailLinkedRoute
 import com.cogra.feature.settings.DeleteAccountConfirmedRoute
+import kotlinx.coroutines.launch
 
 /** The entry funnel: the invite entry, the application, sign-in and its reset, the key's two ceremonies. */
 internal fun NavGraphBuilder.funnel(shell: ShellScope) = with(shell) {
@@ -78,10 +81,19 @@ internal fun NavGraphBuilder.funnel(shell: ShellScope) = with(shell) {
         )
     }
     composable<Restore> {
+        val keptPicks: KeptPicksDoorViewModel = hiltViewModel()
+        val scope = rememberCoroutineScope()
         RestoreRoute(
             onRestored = {
                 navController.report(actorRestoredKey, true)
-                navController.popBackStack()
+                // PICKS KEPT PENDING WAIT: their review opens over the surface the
+                // restore returns to, under the same snackbar, and nothing signs
+                // on its own (Restore.md:39).
+                scope.launch {
+                    val waiting = keptPicks.picksWaiting()
+                    navController.popBackStack()
+                    if (waiting) navController.navigate(KeptPicks)
+                }
             },
             onBack = { navController.popBackStack() },
         )

@@ -58,5 +58,7 @@ internal fun ApprovalControl(
         onConfirmEmptySign = pad::confirmEmptySign,
         onDismissEmptySign = pad::dismissEmptySign,
         vouchesIn = true,
+        // A vouch kept for the key waits on Invites as its own row (VouchAskPad.md:29).
+        onKeepPending = onRequireAccount ?: pad::keep,
     )
 }
