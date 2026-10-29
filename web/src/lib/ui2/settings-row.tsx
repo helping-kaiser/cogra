@@ -136,7 +136,7 @@ export function SettingsRow({
       {status !== undefined && (
         <span
           role={statusTone === "error" ? "alert" : undefined}
-          className={`truncate text-body-small ${
+          className={`overflow-hidden text-ellipsis text-body-small ${
             statusTone === "error" ? "text-error" : "text-on-surface-variant"
           }`}
           {...testAttributes(part(node, "status"))}
