@@ -19,10 +19,30 @@
 // controls, each named by its own registered part — the wide opinion, Message
 // and the ⋮ on someone else's; Edit profile, Invites and the ⋮ on your own.
 //
-// NOT DRAWN YET (handed to Fable, the profile conformance lane): the figures
-// (Q35 is still open and the read carries no count) and the avatar's change
-// badge (the crop and seal live only inside the edit screen).
+// THE FIGURES, EACH LABELLED, NEVER MERGED (ProfileHeader.jsx; readme §7):
+// `Posts`, then `Opinions on them` and `Opinions by them` (`… you` on one's
+// own). They count RECORDS, never a fold — open-questions.md Q35, closed
+// toward the drawn figures on 2026-10-28 under the autonomy order, jakob's
+// confirmation pending: the posts published (genesis Publish records, never
+// an edit), the Opinion records toward the person, and the Opinion records
+// they gave toward people (`ProfileFigures`). While they fit the column
+// beside the avatar they stand under the name; where they do not, they move
+// under the avatar-and-name block — a container query on the header's own
+// width, 96px of avatar and gap plus the labels' width in rem.
+//
+// THE FIGURES ARE ONE DOOR (ProfileHeader.jsx `onCounts`; graph.json `the
+// figures row` → `ProfileStances`): one tap target, both directions, onto
+// the opinions page — never three doors. Its name says the visible words and
+// numbers, then its purpose (copy-voice, *The profile's figures, spoken*):
+// `… , opinions on and by @ada`, `… , your opinions, both directions` on
+// one's own, `… , opinions on and by this account` on a deleted one. It is a
+// link here, the web's element for a door that navigates; the master draws a
+// button for the canvas's own click.
+//
+// NOT DRAWN YET: the avatar's change badge (the crop and seal live only
+// inside the edit screen).
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
@@ -33,6 +53,109 @@ import { REDACTED_ACTOR_NAME } from "@/lib/ui2/content-row";
 export const ACCOUNT_REMOVAL_LINE = "Deleted by the person whose account it was";
 export const ACCOUNT_REMOVAL_DETAIL =
   "Their name and profile are gone. What they signed stays on the graph and still credits them.";
+
+/*
+ * THE FIGURES MOVE UNDER WHEN THEY DO NOT FIT (ProfileHeader.jsx
+ * `PROFILE_TOP_CSS`): below 96px of avatar and gap plus 15.5rem of another's
+ * labels (14.5rem of one's own), the figures take the second row's full
+ * width, the name centres on the avatar and the figures keep the header's
+ * own 12px gap. Spelled whole for each case so the class scanner sees them.
+ */
+const UNDER_OTHER = "@max-[calc(96px+15.5rem)]:[grid-template-areas:'avatar_name''figures_figures']";
+const UNDER_OWN = "@max-[calc(96px+14.5rem)]:[grid-template-areas:'avatar_name''figures_figures']";
+const UNDER_OTHER_NAME = "@max-[calc(96px+15.5rem)]:self-center";
+const UNDER_OWN_NAME = "@max-[calc(96px+14.5rem)]:self-center";
+const UNDER_OTHER_FIGURES = "@max-[calc(96px+15.5rem)]:mt-3";
+const UNDER_OWN_FIGURES = "@max-[calc(96px+14.5rem)]:mt-3";
+
+/** Figures are grouped the way every figure in the product groups them (copy-voice: `5,000`). */
+const FIGURE_FORMAT = new Intl.NumberFormat("en-US");
+
+/**
+ * One figure: its number in title-medium, its label quiet beneath it, never
+ * wrapping. The master sets each role's size, leading and weight and no
+ * tracking, so the roles' letter-spacing is cleared: it would widen the three
+ * labels by 8px apiece and move the row past the column it is measured for.
+ */
+function Figure({ value, label, node }: { value: number; label: string; node?: DataNode }) {
+  return (
+    <div {...testAttributes(node)} className="flex min-w-0 flex-col">
+      <span {...testAttributes(part(node, "value"))} className="text-title-medium [letter-spacing:normal]">
+        {FIGURE_FORMAT.format(value)}
+      </span>
+      <span
+        {...testAttributes(part(node, "label"))}
+        className="whitespace-nowrap text-label-small [letter-spacing:normal] text-on-surface-variant"
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+type Figures = {
+  readonly posts: number | null;
+  readonly opinionsOn: number | null;
+  readonly opinionsBy: number | null;
+};
+
+/**
+ * The door's name (ProfileHeader.jsx `figuresReading`, `figuresPurpose`):
+ * each drawn figure's number and label, then where the door goes.
+ */
+export function figuresName(figures: Figures | null | undefined, own: boolean, redacted: boolean, handle: string): string {
+  const said = (value: number | null | undefined, label: string) =>
+    value === null || value === undefined ? null : `${FIGURE_FORMAT.format(value)} ${label}`;
+  const reading = [
+    said(figures?.posts, "Posts"),
+    said(figures?.opinionsOn, own ? "Opinions on you" : "Opinions on them"),
+    said(figures?.opinionsBy, own ? "Opinions by you" : "Opinions by them"),
+  ].filter((words) => words !== null);
+  const purpose = own
+    ? "your opinions, both directions"
+    : redacted
+      ? "opinions on and by this account"
+      : `opinions on and by @${handle}`;
+  return `${reading.join(", ")}, ${purpose}`;
+}
+
+/**
+ * The figures' one cell: a door onto the opinions page where there is one to
+ * open, its 48px target grown by `cg-hit` without moving a pixel of the
+ * drawing (ProfileHeader.jsx, *Both doors answer to 48px*), else the plain
+ * row the master draws without `onCounts`.
+ */
+function FiguresCell({
+  href,
+  name,
+  node,
+  className,
+  children,
+}: {
+  href: string | undefined;
+  name: string;
+  node: DataNode | undefined;
+  className: string;
+  children: ReactNode;
+}) {
+  if (href === undefined) {
+    return (
+      <div {...testAttributes(node, "profile-figures")} className={className}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <Link
+      href={href}
+      aria-label={name}
+      {...testAttributes(node, "profile-figures")}
+      className={`cg-state cg-focus cg-hit w-fit max-w-full rounded-small text-left font-sans text-on-surface no-underline ${className}`}
+    >
+      {children}
+    </Link>
+  );
+}
 
 /**
  * Where the website link goes. The stored value is what its owner typed —
@@ -54,9 +177,18 @@ export function ProfileHeader({
   website,
   redacted = false,
   showHandle = true,
+  figures,
+  figuresHref,
+  own = false,
   node,
   children,
 }: {
+  /** The three record counts; a null count is not drawn, and none at all draws no cell. */
+  figures?: Figures | null;
+  /** Where the figures row opens the opinions page; absent, the figures are a plain cell. */
+  figuresHref?: string;
+  /** One's own profile, whose figures say `you`. */
+  own?: boolean;
   handle: string;
   displayName?: string | null;
   avatarSrc?: string | null;
@@ -72,6 +204,10 @@ export function ProfileHeader({
   /** The actions row's controls, in the page's order. */
   children: ReactNode;
 }) {
+  const figuresShown =
+    figures !== null &&
+    figures !== undefined &&
+    (figures.posts !== null || figures.opinionsOn !== null || figures.opinionsBy !== null);
   const name = redacted
     ? REDACTED_ACTOR_NAME
     : displayName?.trim()
@@ -82,7 +218,8 @@ export function ProfileHeader({
       {...testAttributes(node, "profile-identity")}
       className="flex flex-col gap-3 pb-1 pt-3"
     >
-      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 [grid-template-areas:'avatar_name''avatar_figures']">
+      <div className="@container">
+      <div className={`grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 [grid-template-areas:'avatar_name''avatar_figures'] ${own ? UNDER_OWN : UNDER_OTHER}`}>
         <div className="relative flex-none [grid-area:avatar]">
           <MonogramAvatar
             name={name}
@@ -93,7 +230,7 @@ export function ProfileHeader({
             testId="profile-avatar"
           />
         </div>
-        <div className="flex min-w-0 flex-col gap-0.5 self-end [grid-area:name]">
+        <div className={`flex min-w-0 flex-col gap-0.5 self-end [grid-area:name] ${own ? UNDER_OWN_NAME : UNDER_OTHER_NAME}`}>
           <h1
             {...testAttributes(part(node, "name"), "profile-display-name")}
             className={`m-0 text-title-large [overflow-wrap:anywhere] ${redacted ? "text-on-surface-variant" : ""}`}
@@ -109,6 +246,33 @@ export function ProfileHeader({
             </span>
           )}
         </div>
+        {figuresShown && (
+          <FiguresCell
+            href={figuresHref}
+            name={figuresName(figures, own, redacted, handle)}
+            node={part(node, "figures")}
+            className={`mt-1.5 flex gap-5 self-start [grid-area:figures] ${own ? UNDER_OWN_FIGURES : UNDER_OTHER_FIGURES}`}
+          >
+            {figures && figures.posts !== null && (
+              <Figure value={figures.posts} label="Posts" node={part(node, "figures.posts")} />
+            )}
+            {figures && figures.opinionsOn !== null && (
+              <Figure
+                value={figures.opinionsOn}
+                label={own ? "Opinions on you" : "Opinions on them"}
+                node={part(node, "figures.stancesOn")}
+              />
+            )}
+            {figures && figures.opinionsBy !== null && (
+              <Figure
+                value={figures.opinionsBy}
+                label={own ? "Opinions by you" : "Opinions by them"}
+                node={part(node, "figures.stancesTaken")}
+              />
+            )}
+          </FiguresCell>
+        )}
+      </div>
       </div>
       {redacted ? (
         // The mark lives where the payload was (ProfileDeleted.md:13), worded

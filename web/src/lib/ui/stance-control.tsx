@@ -69,7 +69,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
-import { hasCode } from "@/lib/api/outcome";
+import { hasCode, type Outcome } from "@/lib/api/outcome";
 import { useStanceInputMode } from "@/lib/stance/input-mode";
 import { bundleReadout, EMPTY_PICK_LABEL, RESTING_FACE_EMOJI } from "@/lib/stance/anchors";
 import { keepPick, sameTarget, useKeptPicks, type KeptFamily } from "@/lib/stance/kept-picks";
@@ -81,7 +81,12 @@ import { useStanceData } from "@/lib/stance/provider";
 import { announceStanceSigned } from "@/lib/stance/signed-events";
 import { clearSettling, useSettling } from "@/lib/stance/settling";
 import { useStanceTaught } from "@/lib/stance/stance-coach";
-import type { StanceBundle, StanceLanding, StanceTargetRef } from "@/lib/stance/stance-data";
+import type {
+  StanceBundle,
+  StanceCommit,
+  StanceLanding,
+  StanceTargetRef,
+} from "@/lib/stance/stance-data";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { BUTTON_CLASS, buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
@@ -115,10 +120,10 @@ import {
   type BundleState,
 } from "@/lib/ui/stance-readout";
 import { TransportError } from "@/lib/ui/transport-error";
+import { WriteRuleNotice } from "@/lib/ui/write-rule-notice";
 import { PairField } from "@/lib/ui2/compose/pair-field";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
 import { HELP_TOPICS, HelpDialog, type HelpTopic } from "@/lib/ui2/help-dialog";
-import { HelpDot } from "@/lib/ui2/help-dot";
 
 /**
  * How long a press has to be held before it signs the default — the
@@ -136,12 +141,6 @@ export const SETTING_AFTER_MS = 200;
 
 /** The ordinary pad's `?` name (the master's `helpLabel` default, ruling A7). */
 export const PAD_HELP_LABEL = "How opinions work";
-
-/** The write rule's words at the pad's scale (copy-voice, *Faults by code*). */
-const WRITE_RULE_TITLE = "You can't sign right now";
-const WRITE_RULE_PAD_FACT =
-  "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.";
-const WRITE_RULE_HELP = "Why signing waits";
 
 /** An open severance confirmation. A null pick is the explicit gesture. */
 type Confirming = {
@@ -427,9 +426,11 @@ export function StanceControl({
    */
   const [pending, setPending] = useState<Pending | null>(null);
   const [confirming, setConfirming] = useState<Confirming | null>(null);
-  const [confirmFailed, setConfirmFailed] = useState(false);
+  /** What did not go through from the walk-back's dialog, if anything. */
+  const [confirmFault, setConfirmFault] = useState<Fault | null>(null);
   const [emptyAsk, setEmptyAsk] = useState<EmptyAsk | null>(null);
-  const [emptyFailed, setEmptyFailed] = useState(false);
+  /** What did not go through from the empty sign's ask, if anything. */
+  const [emptyFault, setEmptyFault] = useState<Fault | null>(null);
   const [signed, setSigned] = useState<ReactNode | null>(null);
   const [joinPrompt, setJoinPrompt] = useState(false);
   /** The dialog a notice's own "?" opens over the pad, if any. */
@@ -608,7 +609,9 @@ export function StanceControl({
   const landing: StanceLanding | null =
     !considered || bundle === undefined || bundle === null
       ? null
-      : localLanding(bundle.rawSum, pick);
+      : // Nothing stands when no record ever has, or the bundle is walked
+        // back: a (0, 0) landing there is the empty sign's, read as one.
+        localLanding(bundle.rawSum, pick, bundle.records === 0 || bundle.severed);
 
   const clearHold = () => {
     if (holdTimer.current !== null) {
@@ -744,22 +747,32 @@ export function StanceControl({
     setSigned(signedLine(landed.landing, records, landed.severed, target.label, axes));
   };
 
-  /** A signing did not go through: its own surface re-raises it. */
-  const notTaken = (origin: Origin, fault: Fault) => {
-    if (origin === "confirm") {
-      setConfirmFailed(true);
-      return;
-    }
+  /**
+   * A signing did not go through: its own surface re-raises it. `sent` is the
+   * pick that was sent, so a row's Retry asks THAT act again — the hold's
+   * default after a hold, the pick after a Set whose pad was cancelled while
+   * it signed (PadFailed.md: "NEVER the hold's +0.10 / +0.10 is signed in its
+   * place").
+   */
+  const notTaken = (origin: "pad" | "row", fault: Fault, sent: StancePair) => {
     // A pad closed while its act was in flight has no surface left to
     // re-raise: the target's row carries it, as a hold's would.
     if (origin === "pad" && openRef.current) setPadFault(fault);
     else
       setRowLine(
         fault === "failed"
-          ? { kind: "didntSign", onRetry: () => void signPick(TAP_DEFAULT, "row") }
+          ? { kind: "didntSign", onRetry: () => void signPick(sent, "row") }
           : { kind: "writeRule" },
       );
   };
+
+  /** What a dialog's own signing answered: taken, a fault, or the write rule's no. */
+  const answerOf = (
+    outcome: Outcome<StanceCommit>,
+  ): { kind: "taken"; records: number } | { kind: Fault } =>
+    outcome.kind === "success"
+      ? { kind: "taken", records: outcome.value.records }
+      : { kind: hasCode(outcome, "WRITE_RULE_FAILED") ? "writeRule" : "failed" };
 
   /**
    * Every commit route lands here: read where the pick puts the bundle,
@@ -773,12 +786,15 @@ export function StanceControl({
     setSigned(null);
     setPadFault(null);
     setRowLine(null);
-    setConfirmFailed(false);
-    setEmptyFailed(false);
+    setConfirmFault(null);
+    setEmptyFault(null);
     const answer = await runInFlight(origin, async () => {
       const landed = await data.project(seamTarget, chosen);
       if (landed.kind !== "success") return { kind: "failed" as const };
       const { standing, ...landing } = landed.value;
+      // CANCEL DURING THE READ STAGED NOTHING: the pad that asked is gone,
+      // and no dialog may rise over a pad that is no longer there.
+      if (origin === "pad" && !openRef.current) return { kind: "dropped" as const };
       if (landing.severed) {
         // THE LANDING'S `severed` IS THE PAIR ALONE (StanceProjection.severed):
         // whether it walks something back is the standing's to say, read on
@@ -794,6 +810,8 @@ export function StanceControl({
       return { kind: hasCode(committed, "WRITE_RULE_FAILED") ? ("writeRule" as const) : ("failed" as const) };
     });
     switch (answer.kind) {
+      case "dropped":
+        return;
       case "taken":
         taken(answer.landing, answer.records);
         return;
@@ -807,7 +825,7 @@ export function StanceControl({
         setEmptyAsk({ pick: chosen, landing: { ...answer.landing, severed: false } });
         return;
       default:
-        notTaken(origin, answer.kind);
+        notTaken(origin, answer.kind, chosen);
     }
   };
 
@@ -815,20 +833,19 @@ export function StanceControl({
    * `Set it anyway`: the one empty record, signed like any Set. Taken, it is
    * the ordinary path — the surfaces close, the face moves to 🤷 saying
    * nothing, and the ordinary snackbar answers (EmptySignConfirm.md:27).
-   * Not taken, the ask stays up with the fault line and Retry (:33).
+   * Not taken, the ask stays up with the fault line and Retry (:33) — or,
+   * where the write rule refused it, its quiet line with the act dimmed and
+   * no Retry (round 21).
    */
   const onConfirmEmpty = async () => {
     const asked = emptyAsk;
     if (asked === null || busy) return;
-    setEmptyFailed(false);
-    const answer = await runInFlight("empty", async () => {
-      const outcome = await data.commit(seamTarget, asked.pick);
-      return outcome.kind === "success"
-        ? { kind: "taken" as const, records: outcome.value.records }
-        : { kind: "failed" as const };
-    });
+    setEmptyFault(null);
+    const answer = await runInFlight("empty", async () =>
+      answerOf(await data.commit(seamTarget, asked.pick)),
+    );
     if (answer.kind !== "taken") {
-      setEmptyFailed(true);
+      setEmptyFault(answer.kind);
       return;
     }
     setEmptyAsk(null);
@@ -839,7 +856,7 @@ export function StanceControl({
   const openSeverance = () => {
     setSigned(null);
     setPadFault(null);
-    setConfirmFailed(false);
+    setConfirmFault(null);
     const records = bundle === null || bundle === undefined ? 0 : bundle.severance.records;
     setConfirming({ pick: null, records, alreadySevered: records === 0, landing: SEVERED });
   };
@@ -847,25 +864,21 @@ export function StanceControl({
   const onConfirmSeverance = async () => {
     const asked = confirming;
     if (asked === null || busy) return;
-    setConfirmFailed(false);
+    setConfirmFault(null);
     const answer = await runInFlight("confirm", async () => {
       if (asked.pick === null) {
         // The walk-back is checked against the standing the reader
         // confirmed; with none known there is nothing to check against.
         if (bundle === null || bundle === undefined) return { kind: "failed" as const };
-        const outcome = await data.sever(seamTarget, bundle);
-        return outcome.kind === "success"
-          ? { kind: "taken" as const, records: outcome.value.records }
-          : { kind: "failed" as const };
+        return answerOf(await data.sever(seamTarget, bundle));
       }
-      const outcome = await data.commit(seamTarget, asked.pick);
-      return outcome.kind === "success"
-        ? { kind: "taken" as const, records: outcome.value.records }
-        : { kind: "failed" as const };
+      return answerOf(await data.commit(seamTarget, asked.pick));
     });
     if (answer.kind !== "taken") {
-      // The dialog stays up and says so, its confirm reading Retry.
-      notTaken("confirm", "failed");
+      // The dialog stays up and says so: a fault with Retry in the confirm's
+      // slot, or the write rule's quiet line with the act dimmed and no
+      // Retry (SeveranceConfirm.md, round 21).
+      setConfirmFault(answer.kind);
       return;
     }
     setConfirming(null);
@@ -1059,8 +1072,13 @@ export function StanceControl({
 
   /** Whose in-flight state shows where: the pad's, the row's, the dialog's. */
   const padSetting = inFlight === "pad" && slow;
+  // CANCEL MID-SIGNING CLOSES THE SURFACE, NEVER THE SIGNING (PadFailed.md,
+  // round 21): the act was sent and cannot be called back, so its wait passes
+  // to the target's row — `Signing…` under the face, the anchor refusing a
+  // second hold — and it ends there as a hold's would.
+  const rowSigning = inFlight === "row" || (inFlight === "pad" && !considered);
   const rowState: RowLineState | null =
-    inFlight === "row" && slow && confirming === null ? { kind: "signing" } : rowLine;
+    rowSigning && slow && confirming === null ? { kind: "signing" } : rowLine;
 
   const inset = variant?.padInset ?? (barBeneath ? PAD_ABOVE_BAR_INSET_PX : PAD_PARK_INSET_PX);
   const aboveBar = variant?.padInset !== undefined || barBeneath;
@@ -1192,22 +1210,10 @@ export function StanceControl({
             same answer — and no pick is kept. */}
         {padFault === "writeRule" && (
           <>
-            <div
-              data-testid={`${testIdPrefix}-write-rule`}
-              role="status"
-              className="flex flex-col gap-3 rounded-medium bg-tertiary-container p-4 text-on-tertiary-container"
-            >
-              <div className="flex items-center gap-2">
-                <h3 className="m-0 flex-1 text-title-medium">{WRITE_RULE_TITLE}</h3>
-                <HelpDot
-                  ariaLabel={WRITE_RULE_HELP}
-                  onOpen={() => setNoticeHelp(HELP_TOPICS.whySigningWaitsOnPad)}
-                  testId={`${testIdPrefix}-write-rule-help`}
-                  variant="inverse"
-                />
-              </div>
-              <p className="m-0 text-body-medium">{WRITE_RULE_PAD_FACT}</p>
-            </div>
+            <WriteRuleNotice
+              testId={`${testIdPrefix}-write-rule`}
+              onHelp={() => setNoticeHelp(HELP_TOPICS.whySigningWaitsOnPad)}
+            />
             <button
               type="button"
               data-testid={`${testIdPrefix}-not-now`}
@@ -1228,7 +1234,7 @@ export function StanceControl({
           <KeyAbsentNotice
             testIdPrefix={testIdPrefix}
             backedUp={backedUp}
-            onHelp={() => setNoticeHelp(HELP_TOPICS.yourKey)}
+            onHelp={() => setNoticeHelp(HELP_TOPICS.yourKeyOnPad)}
             onKeep={keepAndClose}
           />
         )}
@@ -1313,7 +1319,7 @@ export function StanceControl({
                   ? `Your opinion on ${target.label}, waiting for your ${waitingForReview ? "review" : "key"}: ${restingFace.label}, ${formatStancePair(restingPair)}.`
                   : `Your opinion on ${target.label}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
             }
-            aria-busy={inFlight === "row" || undefined}
+            aria-busy={rowSigning || undefined}
             onClick={onTap}
             onPointerDown={onPointerDown}
             onPointerMove={onTargetPointerMove}
@@ -1435,7 +1441,9 @@ export function StanceControl({
           pick={pick}
           onPick={setPick}
           busy={busy}
+          slow={padSetting}
           fault={padFault}
+          onWriteRuleHelp={() => setNoticeHelp(HELP_TOPICS.whySigningWaitsOnPad)}
           onCommit={() => void signPick(pick, "pad")}
           onCancel={closeAll}
           onSever={severable ? openSeverance : undefined}
@@ -1448,7 +1456,7 @@ export function StanceControl({
               <KeyAbsentNotice
                 testIdPrefix={testIdPrefix}
                 backedUp={backedUp}
-                onHelp={() => setNoticeHelp(HELP_TOPICS.yourKey)}
+                onHelp={() => setNoticeHelp(HELP_TOPICS.yourKeyOnPad)}
                 onKeep={keepAndClose}
               />
             ) : null
@@ -1483,11 +1491,12 @@ export function StanceControl({
           alreadySevered={confirming.alreadySevered}
           busy={inFlight === "confirm"}
           slow={inFlight === "confirm" && slow}
-          failed={confirmFailed}
+          failed={confirmFault === "failed"}
+          writeRule={confirmFault === "writeRule"}
           axes={axes}
           onCancel={() => {
             setConfirming(null);
-            setConfirmFailed(false);
+            setConfirmFault(null);
           }}
           onConfirm={() => void onConfirmSeverance()}
         />
@@ -1501,10 +1510,11 @@ export function StanceControl({
           vouchIn={vouchesIn}
           busy={inFlight === "empty"}
           slow={inFlight === "empty" && slow}
-          failed={emptyFailed}
+          failed={emptyFault === "failed"}
+          writeRule={emptyFault === "writeRule"}
           onCancel={() => {
             setEmptyAsk(null);
-            setEmptyFailed(false);
+            setEmptyFault(null);
           }}
           onConfirm={() => void onConfirmEmpty()}
         />

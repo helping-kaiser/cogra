@@ -41,88 +41,86 @@
    press, and the slow line counts from the press. The `upload` chip draws it:
    the cover row then holds the chosen face and `Change the cover`, the field's
    other half (`CommentEditVideo`), and the foot counts the new face's one
-   record (`Cover changed`, `EditActs`). */
+   record (`Cover changed`, `EditActs`).
+
+   REGISTERED under the `postEdit` prefix (seam 248), `EditComposeBody`'s
+   names; the clip's block is `video`, the cover's `cover` (its door `add` and
+   `note` at rest, the chosen face `thumb` and `change` once one is chosen),
+   and the count's two readings are the `upload` chip's copies of `acts`. */
+export const NODE = "postEdit";
 export const PROPS = { upload: { editor: "enum", options: ["none", "uploading"], default: "none" } };
 export const VALS = `doorShown: this.props.upload === "uploading" ? "none" : "flex", coverShown: this.props.upload === "uploading" ? "flex" : "none", gateShown: this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex"`;
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" />
+      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         {/* The fields scroll under the pinned foot, the post edit's reading:
             with a chosen cover and the gate drawn, the form runs taller than
             the phone, and the foot stays whole. */}
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>Video</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="video">
+            <FieldLabel node="label">Video</FieldLabel>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} fit="cover" video onRemove={() => {}} removeLabel="Remove this video" />
+              <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} fit="cover" video onRemove={() => {}} removeLabel="Remove this video" node="thumb" />
             </div>
-            <DescribeCounter subject="video" described={1} total={1} onDescribe={() => {}} />
+            <DescribeCounter subject="video" described={1} total={1} onDescribe={() => {}} node="describeRow" />
             {/* Where the picture edit's "+ Add" stands, a clip gets the quiet
                 line instead (copy-voice, *Staging a video*): there is nothing
                 to add to a body one clip already fills. The staging line's
                 second half — "Its cover comes next" — is the wizard's, and is
                 dropped here because the cover is on this screen, above. */}
-            <QuietNote>A video is the whole post.</QuietNote>
+            <QuietNote node="rule">A video is the whole post.</QuietNote>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>Cover</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="cover">
+            <FieldLabel node="label">Cover</FieldLabel>
             <div style={{ display: "{{doorShown}}", flexDirection: "column", gap: 6 }}>
-              <InlineAction size="sm" selfStart>
+              <InlineAction size="sm" selfStart node="add">
                 Add a cover
               </InlineAction>
-              <QuietNote>It plays the moment it is on screen, so it starts on its own first frame.</QuietNote>
+              <QuietNote node="note">It plays the moment it is on screen, so it starts on its own first frame.</QuietNote>
             </div>
             <div style={{ display: "{{coverShown}}", alignItems: "center", gap: 8 }}>
-              <MediaThumb src="post-photo.jpg" alt="" width={54} height={96} fit="cover" />
-              <Button variant="text" size="sm">Change the cover</Button>
+              <MediaThumb src="post-photo.jpg" alt="" width={54} height={96} fit="cover" node="thumb" />
+              <Button variant="text" size="sm" node="change">Change the cover</Button>
             </div>
           </div>
 
-          <TextField label="Title" corner="Optional" cap={100} value="The long way home" />
-          <TextField label="Description" corner="Optional" rows={2} cap={500} value="Took the coast road instead of the tunnel. Four hours longer, worth every minute." />
+          <TextField label="Title" corner="Optional" cap={100} value="The long way home" node="title" />
+          <TextField label="Description" corner="Optional" rows={2} cap={500} value="Took the coast road instead of the tunnel. Four hours longer, worth every minute." node="description" />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <FieldLabel>Tags</FieldLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
+            <FieldLabel node="label">Tags</FieldLabel>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <TopicRemovable topic="coastroad" onEdit={() => {}} />
+              <TopicRemovable topic="coastroad" onEdit={() => {}} node="tag" />
             </div>
-            <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
+            <InlineAction size="sm" selfStart node="add">+ Add a tag</InlineAction>
             {/* The post's other tag, withdrawn in this edit — read back with its
                 Undo, as the picture edit reads its own (`WithdrawnLine`). */}
-            <WithdrawnLine name="#photography" />
+            <WithdrawnLine name="#photography" node="withdrawn" />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <FactRow
-              label="License"
-              value="Public domain"
-              action={
-                <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-                  <Icon name="lock" size={16} />
-                </span>
-              }
-            />
+          <div style={{ display: "flex", flexDirection: "column" }} data-node="facts">
+            <LockedLicenseRow />
             <EditBackingRow />
-            <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+            <FactRow label="Sensitive" value="Not marked" action="Mark" last node="sensitive" />
           </div>
 
           <div style={{ flex: 1 }} />
         </div>
 
         <div style={{ display: "{{gateShown}}", flexDirection: "column" }}>
-          <UploadStatusLine done={0} total={1} media="cover" />
+          <UploadStatusLine done={0} total={1} media="cover" node="gate" />
         </div>
-        <div style={{ display: "{{restShown}}", flexDirection: "column" }}>
-          <ActsFooter count={4} />
+        <div style={{ display: "{{restShown}}", flexDirection: "column" }} {...chipCopy("upload", "none")}>
+          <ActsFooter count={4} node="acts" />
         </div>
-        <div style={{ display: "{{gateShown}}", flexDirection: "column" }}>
-          <ActsFooter count={5} />
+        <div style={{ display: "{{gateShown}}", flexDirection: "column" }} {...chipCopy("upload", "uploading")}>
+          <ActsFooter count={5} node="acts" />
         </div>
-        <Button style={{ width: "100%" }}>Sign the edit</Button>
+        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
       </div>
     </>
   );

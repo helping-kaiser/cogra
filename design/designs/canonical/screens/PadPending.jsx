@@ -21,24 +21,29 @@
    THE LIFECYCLE OF A KEPT PICK (`PadKeyAbsent` carries it in full): it lives
    on this device only, survives a restart, and waits beside any other kept
    picks until the key is restored — then they sign together, in one batch
-   the reader reviews first (`KeptPicksReview`, then `KeptPicksSeal`). */
+   the reader reviews first (`KeptPicksReview`, then `KeptPicksSeal`).
+
+   REGISTERED under the `feed` prefix (seam 248), named as `KeyElsewhere`;
+   the anchor's line is `card.actionRow.stance.pending`. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
         <TaskCard
           tone="notice"
           title="Your key isn't on this browser"
           body="Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending."
+          node="keyCard"
         >
           <div style={{ display: "flex" }}>
-            <Button variant="inverse" size="sm">Restore the key</Button>
+            <Button variant="inverse" size="sm" node="restore">Restore the key</Button>
           </div>
         </TaskCard>
-        <PostCard {...ADA_POST} stancePendingPick={{ pDirected: 0.1, pInterest: 0.1 }} />
+        <PostCard {...ADA_POST} stancePendingPick={{ pDirected: 0.1, pInterest: 0.1 }} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

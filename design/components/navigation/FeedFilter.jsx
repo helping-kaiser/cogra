@@ -439,8 +439,10 @@ export function FeedPeopleRows({ people = "everyone", sign = "either", onPeople,
    (design ⇄ impl seam 002): the sections as the search and history sheets
    name theirs — `kinds`, `forms`, `order`, `also` — each chip `<value>Chip`,
    the corner "?" `help`, and `people` with its rows (`everyone`,
-   `yourPeople`) and its sign row (`sign`: `for`, `against`, `either`). The feed's own `FeedFilter` passes none, so its
-   sheet stays unnamed until a drawn feed-hosted state registers it. */
+   `yourPeople`) and its sign row (`sign`: `for`, `against`, `either`), and
+   `topic` with a `tag` chip per topic, keyed by its name, and `allTopics`.
+   The feed's own `FeedFilter` passes none: `FeedSheet` draws this sheet
+   beside the band, as `HistoryFilter` draws its own, and names it there. */
 export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot, topics = [], onOpenTopics, peopleRows, node }) {
   const set = (patch) => onChange && onChange({ ...value, ...patch });
   const toggle = (key, entry) => {
@@ -506,17 +508,19 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
 
           LAST IN THE BODY, because it is the section that grows. */}
       {topics.length > 0 && (
-        <FilterSection label="One topic" hint="Topics you hold and are for. A topic you hold against stays a record — it just never narrows a feed.">
+        <FilterSection label="One topic" hint="Topics you hold and are for. A topic you hold against stays a record — it just never narrows a feed." node={node && "topic"}>
           {topics.map((topic) => (
             <Chip
               key={topic}
               label={topic}
               selected={value.topic === topic}
               onToggle={() => set({ topic: value.topic === topic ? null : topic })}
+              node={node && "tag"}
+              nodeKey={node && topic.replace(/^#/, "")}
             />
           ))}
           <div style={{ flexBasis: "100%" }}>
-            <Button variant="text" size="sm" selfStart onClick={onOpenTopics}>All your topics</Button>
+            <Button variant="text" size="sm" selfStart onClick={onOpenTopics} node={node && "allTopics"}>All your topics</Button>
           </div>
         </FilterSection>
       )}

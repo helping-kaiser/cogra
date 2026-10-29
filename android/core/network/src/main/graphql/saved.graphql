@@ -34,49 +34,9 @@ query SavedPage($query: String, $after: String) {
           }
           ... on Comment {
             ...CommentFields
-            # The comment card's head row: what the comment answers — a
-            # post by its title (or first words) over its author, or a
-            # comment by its author over its first words.
+            # The comment card's head row: what the comment answers.
             target {
-              __typename
-              ... on Post {
-                id
-                title {
-                  value
-                  status
-                }
-                content {
-                  value
-                  status
-                }
-                # The head row's mark: the cover, or a clip's still.
-                attachments {
-                  url
-                  status
-                  mimeType
-                  coverMedia {
-                    url
-                    status
-                  }
-                }
-                author {
-                  id
-                  handle
-                }
-                moderationStatus
-              }
-              ... on Comment {
-                id
-                content {
-                  value
-                  status
-                }
-                author {
-                  id
-                  handle
-                }
-                moderationStatus
-              }
+              ...CommentHeadFields
             }
             # The thread's root post: where the card's doors land, and the
             # title a search reads a comment through.
@@ -120,6 +80,63 @@ mutation RemoveBookmark($node: UUID!) {
     ok
     userErrors {
       ...UserErrorFields
+    }
+  }
+}
+
+# THE COMMENT CARD'S HEAD ROW (FeedCommentShapes.md): what a comment answers
+# — a post by its title (or first words) over its author, or a comment by its
+# author over its first words. Shared by every list that draws the comment
+# feed card (Saved, History), so the head row is read one way.
+fragment CommentHeadFields on CommentTarget {
+  __typename
+  ... on Post {
+    id
+    title {
+      value
+      status
+    }
+    content {
+      value
+      status
+    }
+    # The head row's mark: the cover, or a clip's still.
+    attachments {
+      url
+      status
+      mimeType
+      coverMedia {
+        url
+        status
+      }
+    }
+    author {
+      id
+      handle
+    }
+    moderationStatus
+    # The target's own mark: the head row reads `Removed by its author` off
+    # it (FeedCommentShapes.md:21-23).
+    removal {
+      at
+      by
+    }
+  }
+  ... on Comment {
+    id
+    content {
+      value
+      status
+    }
+    author {
+      id
+      handle
+    }
+    moderationStatus
+    # The target's own mark, as the post's above.
+    removal {
+      at
+      by
     }
   }
 }

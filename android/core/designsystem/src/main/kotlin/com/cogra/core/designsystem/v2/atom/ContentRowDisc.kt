@@ -41,6 +41,13 @@ sealed interface ContentRowDisc {
     /** 🤷 where a picture would go, for a stance walked back (the withdrawal notification). */
     data object WalkedBack : ContentRowDisc
 
+    /**
+     * A kind with no icon wears its letter (`ContentRow.jsx` `letter`): the `#`
+     * every topic wears. [loud] is the door's filled disc, `primary` on
+     * `onPrimary` — the one row that is an entrance rather than an entry.
+     */
+    data class Letter(val letter: String, val loud: Boolean = false) : ContentRowDisc
+
     /** A deleted account: the disc keeps its space and fills with nothing. */
     data object Redacted : ContentRowDisc
 }

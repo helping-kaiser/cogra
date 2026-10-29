@@ -26,7 +26,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { bundleReadout, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
+import { bundleReadout, EMPTY_PICK_LABEL, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon, type GlyphName } from "@/lib/ui/icons";
 import { formatStancePair, STANCE_SEVERANCE_WORDS } from "@/lib/ui/stance-format";
@@ -46,14 +46,16 @@ export type ContentRowDisc =
   | { readonly kind: "monogram"; readonly name: string }
   /**
    * A stance's face where a picture would go, no digits (the chronicle's
-   * opinion row). `zeroLabel` is which (0, 0) it draws, from the record's own
-   * `severed` — the pair alone cannot say (`StanceValue.zeroLabel`).
+   * opinion row). A pair at exactly (0, 0) cannot say by its numbers whether
+   * it was walked back or empty-signed, so the data says (ContentRow.jsx
+   * `face.severed`, seam 245 ask 19): `severed` speaks `Walked back`; absent
+   * or false, the (0, 0) says nothing — `Says nothing`.
    */
   | {
       readonly kind: "face";
       readonly pDirected: number;
       readonly pInterest: number;
-      readonly zeroLabel?: string;
+      readonly severed?: boolean;
     }
   /** 🤷 where a picture would go, for a stance walked back (the withdrawal notification). */
   | { readonly kind: "walkedBack" }
@@ -65,7 +67,7 @@ export type ContentRowDisc =
   | { readonly kind: "letter"; readonly letter: string }
   | { readonly kind: "redacted" };
 
-/** `StanceValue`'s default zero word, the walk-back's (`SEVERED_LABEL`). */
+/** The walk-back's zero word (`SEVERED_LABEL`), spoken only for a `severed` face. */
 const SEVERED_LABEL = STANCE_SEVERANCE_WORDS.zero;
 
 const ELLIPSIS ="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap";
@@ -82,8 +84,9 @@ function Disc({ disc }: { disc: ContentRowDisc }) {
       // `StanceValue` with `showPair={false}` (StanceReadout.jsx): the face on
       // screen, the label and the exact pair spoken.
       const pair = { pDirected: disc.pDirected, pInterest: disc.pInterest };
-      // The master's default word is the walk-back's (`StanceValue`).
-      const readout = bundleReadout(pair, disc.zeroLabel ?? SEVERED_LABEL);
+      // WHICH (0, 0) THE ROW DRAWS, FROM THE ROW'S OWN DATA: only a standing
+      // walked back speaks `Walked back` (ContentRow.jsx `zeroLabel`).
+      const readout = bundleReadout(pair, disc.severed === true ? SEVERED_LABEL : EMPTY_PICK_LABEL);
       return (
         <span
           role="img"
@@ -140,7 +143,14 @@ export function ContentRow({
   unread = false,
   sentence = false,
   titleId,
+  chevron = variant === "door",
 }: {
+  /**
+   * The chevron that says the row opens another surface (ContentRow.jsx
+   * `chevron`, default on). A door draws it; a chronicle row that opens a
+   * level of its own asks for it — the score trace's steps (RankPath.jsx).
+   */
+  chevron?: boolean;
   /** The title's element id, for a control that is described by it. */
   titleId?: string;
   variant?: ContentRowVariant;
@@ -210,7 +220,18 @@ export function ContentRow({
         )}
         {second !== undefined && second !== null && second !== "" && (
           <span
-            className={`${ELLIPSIS} ${variant === "door" ? "text-label-small" : "text-body-medium"} text-on-surface-variant`}
+            // A door's second line takes label-small's size, leading and
+            // tracking, the weight the ground's (ContentRow.jsx `TYPE`), as the
+            // trailing word below does; the chronicle's is body-medium whole.
+            className={`${ELLIPSIS} ${variant === "door" ? "text-[length:var(--text-label-small)]" : "text-body-medium"} text-on-surface-variant`}
+            style={
+              variant === "door"
+                ? {
+                    lineHeight: "var(--text-label-small--line-height)",
+                    letterSpacing: "var(--text-label-small--letter-spacing)",
+                  }
+                : undefined
+            }
             {...testAttributes(part(node, "second"), `${testId}-second`)}
           >
             {second}
@@ -249,7 +270,7 @@ export function ContentRow({
       )}
       {/* A DOOR LEADS SOMEWHERE, and says so with the chevron (ContentRow.jsx
           `chevron`), unless the row carries a control of its own. */}
-      {variant === "door" && action === undefined && (
+      {chevron && action === undefined && (
         <span
           aria-hidden="true"
           className="inline-flex flex-none text-on-surface-variant"

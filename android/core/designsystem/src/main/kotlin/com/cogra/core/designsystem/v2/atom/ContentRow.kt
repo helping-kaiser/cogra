@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -70,6 +72,7 @@ private fun Disc(disc: ContentRowDisc) {
         is ContentRowDisc.Monogram -> CograAvatar(name = disc.name, size = DISC)
         is ContentRowDisc.Face -> FaceDisc(disc)
         ContentRowDisc.WalkedBack -> WalkedBackDisc()
+        is ContentRowDisc.Letter -> LetterDisc(disc)
         is ContentRowDisc.Glyph -> Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -99,6 +102,26 @@ private fun Disc(disc: ContentRowDisc) {
                 modifier = Modifier.clearAndSetSemantics {},
             )
         }
+    }
+}
+
+/** `ContentRow.jsx` `letter`: the kind's letter in the disc, at its tone — the door's `primary`. */
+@Composable
+private fun LetterDisc(disc: ContentRowDisc.Letter) {
+    val colors = MaterialTheme.colorScheme
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(DISC)
+            .clip(CircleShape)
+            .background(if (disc.loud) colors.primary else colors.surfaceContainerHigh),
+    ) {
+        Text(
+            text = disc.letter,
+            style = MaterialTheme.typography.titleMedium,
+            color = if (disc.loud) colors.onPrimary else colors.onSurfaceVariant,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
     }
 }
 
@@ -177,6 +200,8 @@ fun ContentRow(
     node: DataNode? = null,
     unread: Boolean = false,
     sentence: Boolean = false,
+    /** The door's chevron (`ContentRow.jsx` `chevron`): this opens another surface. Never beside an [action]. */
+    chevron: Boolean = false,
 ) {
     // A DELETED ACCOUNT'S ROW (HA-3, design digest item 56): the reserved disc
     // and `Deleted account` in the system's voice, the aside dropped — unless
@@ -210,10 +235,19 @@ fun ContentRow(
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 TitleLine(shownTitle, quiet, aside, part)
                 second?.let { line ->
-                    Box(Modifier.dataNode(part("second"))) { line() }
+                    // A block in the column, as the master's second line is.
+                    Box(Modifier.fillMaxWidth().dataNode(part("second"))) { line() }
                 }
             }
             TrailingEdge(trailing, unread, part, testTag)
+            if (chevron && action == null) {
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp).dataNode(part("chevron")),
+                )
+            }
         }
         action?.invoke()
     }
@@ -281,6 +315,18 @@ private fun TitleLine(title: String, quiet: Boolean, aside: String?, part: (Stri
             )
         }
     }
+}
+
+/** A door's second line (`door` variant): label-small, quiet, one line. */
+@Composable
+fun ContentRowDoorSecond(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 /** A second line of words, in the chronicle's body type, one line ellipsized. */

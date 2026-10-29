@@ -294,6 +294,7 @@ export function PostEditView({
                 message={failedUploadLine(faulted)}
                 onRetry={onRetryUploads}
                 onRemove={onRemoveFailed}
+                count={faulted}
                 testId="post-edit-upload-error"
               />
             )}
@@ -465,6 +466,7 @@ export function PostEditView({
             done={0}
             total={0}
             failed
+            failedCount={faulted}
             message={failedUploadLine(faulted)}
             onRetry={onRetryUploads}
             testId="post-edit-gate"

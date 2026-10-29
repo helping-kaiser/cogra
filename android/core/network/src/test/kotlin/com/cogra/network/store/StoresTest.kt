@@ -18,8 +18,11 @@ import com.cogra.domain.compose.SealedDraft
 import com.cogra.domain.compose.StagedFate
 import com.cogra.domain.history.SeenWatermark
 import com.cogra.domain.history.StoredSeenRecord
+import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.identity.DeviceLock
 import com.cogra.domain.identity.SignOut
+import com.cogra.domain.search.SearchFilter
+import com.cogra.domain.search.SearchOrder
 import com.cogra.domain.store.SessionRead
 import com.cogra.domain.store.ThemeChoice
 import com.cogra.domain.testing.FakeDeviceData
@@ -245,7 +248,42 @@ class StoresTest {
         tokens,
         FakeDeviceData(),
         DeviceLock(LockCustodyStoreImpl(encrypted), tokens, FakeDeviceLockRepository()),
+        ExploreDeviceStoreImpl(encrypted),
     )
+
+    /**
+     * Explore.md:21-31: the recent searches are kept on the device, per
+     * account — a guest's under its own key — ten, newest first, deduped
+     * case aside; the sign-out takes the leaving account's and no one else's;
+     * the committed filter is kept beside them.
+     */
+    @Test
+    fun `explores_recents_are_per_account_and_the_sign_out_takes_only_the_leavers`() = runTest {
+        val encrypted = store()
+        val stores = seedCustody(encrypted, "account-a")
+        val explore = ExploreDeviceStoreImpl(encrypted)
+        explore.rememberSearch("account-a", "salt")
+        explore.rememberSearch("account-a", "Coast")
+        explore.rememberSearch("account-a", "SALT")
+        explore.rememberSearch("account-b", "tide")
+        explore.rememberSearch(null, "guest query")
+        assertThat(explore.recents("account-a").first()).containsExactly("SALT", "Coast").inOrder()
+
+        stores.signOut(encrypted).signOut()
+
+        assertThat(explore.recents("account-a").first()).isEmpty()
+        assertThat(explore.recents("account-b").first()).containsExactly("tide")
+        assertThat(explore.recents(null).first()).containsExactly("guest query")
+    }
+
+    @Test
+    fun `explores_committed_filter_round_trips_per_account`() = runTest {
+        val explore = ExploreDeviceStoreImpl(store())
+        val filter = SearchFilter(kinds = setOf(FeedKind.POST, FeedKind.TAG), order = SearchOrder.NEWEST, seen = true)
+        explore.commitFilter("account-a", filter)
+        assertThat(explore.committedFilter("account-a")).isEqualTo(filter)
+        assertThat(explore.committedFilter(null)).isNull()
+    }
 
     /**
      * jakob's ruling 2026-10-13: a don't-remember sign-out clears THAT

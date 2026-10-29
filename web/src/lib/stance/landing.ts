@@ -30,11 +30,21 @@ import type { StanceLanding } from "./stance-data";
  * graph routes on: a raw sum of (+5, +5) with a (−5, −5) pick is inert
  * because the fold is zero, and a raw sum of (+5, +5) with a (−1, −1)
  * pick is not, because the fold is not.
+ *
+ * `nothingStands` is the bundle's own word — no record ever, or already
+ * walked back to nothing — and a (0, 0) landing over it is the EMPTY SIGN's
+ * (`empty`), never a walk-back: there is nothing to go back from
+ * (`StanceReadout.jsx` `localLanding`, seam 245 ask 20).
  */
-export function localLanding(rawSum: StancePair, pick: StancePair): StanceLanding {
+export function localLanding(
+  rawSum: StancePair,
+  pick: StancePair,
+  nothingStands = false,
+): StanceLanding {
   const landing = clampPair({
     pDirected: rawSum.pDirected + pick.pDirected,
     pInterest: rawSum.pInterest + pick.pInterest,
   });
-  return { landing, inert: isInert(landing), severed: isSevered(landing) };
+  const severed = isSevered(landing);
+  return { landing, inert: isInert(landing), severed, empty: severed && nothingStands };
 }

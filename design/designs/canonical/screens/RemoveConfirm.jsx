@@ -10,15 +10,19 @@
 
    THE DIALOG IS `_shared.jsx`'s `RemoveDialog`, the post's kind of it: the
    comment's confirm (`CommentRemoveConfirm`) draws the same anatomy with its
-   own nouns. */
+   own nouns.
+
+   REGISTERED under the `postDetail` prefix (seam 248), named as `RemoveMenu`
+   is beneath, the dialog `dialog` as every confirm names it. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
-      <DetailHeader items={OWN_POST_MENU} />
+      <DetailHeader items={OWN_POST_MENU} node="header" />
       <DetailColumn>
-        <PostCard {...SOL_POST} variant="detail" bundle={mkBundle(0.1, 1)} />
+        <PostCard {...SOL_POST} variant="detail" bundle={mkBundle(0.1, 1)} node="card" />
       </DetailColumn>
-      <RemoveDialog kind="post" />
+      <RemoveDialog kind="post" node="dialog" />
     </>
   );
 }

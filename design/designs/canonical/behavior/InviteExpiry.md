@@ -1,15 +1,15 @@
 # InviteExpiry · `spec:design:behavior-invite-expiry`
 
-ALWAYS the chooser stands stacked over the create sheet, which dims beneath it and keeps its top edge, its handle and its title visible
+ALWAYS invites.expirySheet stands stacked over invites.createSheet, which dims beneath it and keeps its top edge, its handle and its title visible
 
-ALWAYS the chooser offers 24 hours, 7 days and 30 days, and no custom date
+ALWAYS invites.expirySheet offers invites.expirySheet.expiryOption 24 hours, 7 days and 30 days, and no custom date
 
-ALWAYS exactly one length is selected, the one the create sheet's Expires after row reads
+ALWAYS exactly one length is selected, the one invites.createSheet.options.expiry reads
 
-WHEN tap a length -> the chooser closes onto the create sheet AND the Expires after row reads the length picked AND NEVER a Done is asked
+WHEN tap a length -> invites.expirySheet closes onto invites.createSheet AND invites.createSheet.options.expiry reads the length picked AND NEVER a Done is asked
 
-WHEN tap the scrim -> the chooser closes onto the create sheet AND the Expires after row reads the length it read before
+WHEN tap the scrim -> invites.expirySheet closes onto invites.createSheet AND invites.createSheet.options.expiry reads the length it read before
 
-WHEN swipe the chooser down or press system Back or Escape -> the chooser closes onto the create sheet AND the Expires after row reads the length it read before
+WHEN swipe invites.expirySheet down or press system Back or Escape -> invites.expirySheet closes onto invites.createSheet AND invites.createSheet.options.expiry reads the length it read before
 
-ALWAYS nothing beneath the chooser takes a press while it is up
+ALWAYS nothing beneath invites.expirySheet takes a press while it is up

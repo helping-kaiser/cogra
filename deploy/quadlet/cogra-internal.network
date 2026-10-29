@@ -1,0 +1,6 @@
+# The internal network (deployment.md "Topology"): Postgres, both media
+# stores, the ranker, and the API and the proxy that reach them. Internal:
+# no route off the host, so the data services cannot dial out at all.
+[Network]
+NetworkName=cogra-internal
+Internal=true

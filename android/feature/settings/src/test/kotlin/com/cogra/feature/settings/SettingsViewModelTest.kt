@@ -21,6 +21,7 @@ import com.cogra.domain.store.ThemeChoice
 import com.cogra.domain.testing.FakeDeviceData
 import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.cogra.domain.testing.FakeDevicePreferences
+import com.cogra.domain.testing.FakeExploreDeviceStore
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
@@ -72,7 +73,7 @@ class SettingsViewModelTest {
     private fun viewModel() = SettingsViewModel(
         settings,
         sessions,
-        SignOut(sessions, identity, tokens, deviceData, deviceLock),
+        SignOut(sessions, identity, tokens, deviceData, deviceLock, FakeExploreDeviceStore()),
         identity,
         device,
         sensitive,

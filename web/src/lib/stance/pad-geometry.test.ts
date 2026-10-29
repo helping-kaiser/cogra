@@ -21,6 +21,7 @@ import {
   padPercentOf,
   padTravelHalfExtent,
   valenceFrom,
+  ATTACHMENT_DETENT_PX,
   valenceTravelHalfExtent,
   type PadRect,
 } from "./pad-geometry";
@@ -299,6 +300,16 @@ describe("the one-axis field's travel", () => {
   it("clamps on the sum, so a base off centre still reaches the end", () => {
     expect(valenceFrom(0.9, LINE, LINE_HALF * 10, LINE_INSET)).toBe(1);
     expect(valenceFrom(-0.9, LINE, -LINE_HALF * 10, LINE_INSET)).toBe(-1);
+  });
+
+  // The master's `attachmentFrom` (round 20, backlog 144): within the knob's
+  // own 10px radius of the hairline the knob holds on it and reads 0.00.
+  it("holds the knob on the zero hairline within its own radius", () => {
+    expect(ATTACHMENT_DETENT_PX).toBe(10);
+    expect(valenceFrom(0, LINE, 9, LINE_INSET)).toBe(0);
+    expect(valenceFrom(0, LINE, -10, LINE_INSET)).toBe(0);
+    expect(valenceFrom(0.3, LINE, -0.3 * LINE_HALF + 5, LINE_INSET)).toBe(0);
+    close(valenceFrom(0, LINE, 11, LINE_INSET), 11 / LINE_HALF);
   });
 
   it("keeps the base when the field has no travel in it", () => {

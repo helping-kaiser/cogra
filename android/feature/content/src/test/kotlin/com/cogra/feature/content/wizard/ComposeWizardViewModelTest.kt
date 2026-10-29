@@ -1122,6 +1122,34 @@ class ComposeWizardViewModelTest {
         assertThat(vm.state.value.referenceSection.references.single().targetId).isEqualTo("p9")
     }
 
+    // TAG A NEW POST WITH IT (History.md:63): the composer opens at its first
+    // stage with the tag card's tag riding staged among the new post's tags,
+    // and taking up a held draft keeps it, for the cite's reason.
+    @Test
+    fun aTagCardsActOpensTheComposerWithItsTagStaged() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start(stagedTag = "saltmaps")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Body)
+        assertThat(vm.state.value.tagSection.tags.map { it.name }).containsExactly("saltmaps")
+        assertThat(vm.state.value.tagSection.input).isEmpty()
+    }
+
+    @Test
+    fun continuingADraftKeepsTheTagCardsTagStaged() = runTest(dispatcher) {
+        drafts.held = ComposeDraft(DraftBodyKind.Words, body = "an older draft")
+        val vm = viewModel()
+        vm.start(stagedTag = "saltmaps")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onContinueDraft()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.body).isEqualTo("an older draft")
+        assertThat(vm.state.value.tagSection.tags.map { it.name }).containsExactly("saltmaps")
+    }
+
     // A prefill the lookup cannot type is still staged: the citation names
     // its target by id, and the chip says so rather than silently dropping
     // the author's gesture (the post composer's own rule).

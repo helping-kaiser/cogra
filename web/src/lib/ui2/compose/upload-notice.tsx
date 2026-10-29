@@ -41,6 +41,7 @@ export function UploadStatusLine({
   media = "pictures",
   failed = false,
   message = "One picture didn't upload.",
+  failedCount = 1,
   onRetry,
   testId = "upload-status",
 }: {
@@ -55,6 +56,8 @@ export function UploadStatusLine({
    */
   failed?: boolean;
   message?: string;
+  /** How many failed: past one the gate says signing waits for THEM (round 22). */
+  failedCount?: number;
   onRetry?: () => void;
   testId?: string;
 }) {
@@ -62,7 +65,7 @@ export function UploadStatusLine({
     return (
       <p data-testid={testId} role="status" className="m-0 text-center text-body-medium">
         <span className="text-error">{message}</span>{" "}
-        <span className="text-on-surface-variant">Signing waits for it.</span>{" "}
+        <span className="text-on-surface-variant">{failedCount > 1 ? "Signing waits for them." : "Signing waits for it."}</span>{" "}
         {onRetry && (
           <InlineAction testId={`${testId}-retry`} onClick={onRetry}>
             Retry
@@ -109,11 +112,17 @@ export function UploadErrorLine({
   onRetry,
   onRemove,
   removeLabel,
+  count = 1,
   testId = "upload-error",
 }: {
   message?: string;
   onRetry?: () => void;
   onRemove: () => void;
+  /**
+   * How many the line stands for: past one its way out is `Remove them`, each
+   * failed one leaving (ComposeUploading.md, round 22).
+   */
+  count?: number;
   /** The spoken name of Remove it, where the line stands under a count rather than the thing it names. */
   removeLabel?: string;
   testId?: string;
@@ -142,7 +151,7 @@ export function UploadErrorLine({
         onClick={onRemove}
         className={link}
       >
-        Remove it
+        {count > 1 ? "Remove them" : "Remove it"}
       </button>
     </p>
   );

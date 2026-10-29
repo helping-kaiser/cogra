@@ -91,37 +91,44 @@
    (readme §4, *Navigation*; the K13 round): `Back to the post` from a post's
    composer or its edit — the state drawn here — and `Back to the comment` from
    a reply's composer or a comment's edit. The "?" is named by the dialog it
-   opens, `Tagging`. Both rules hold on every state of both pickers. */
+   opens, `Tagging`. Both rules hold on every state of both pickers.
+
+   REGISTERED under its own `tagPicker` prefix (seam 248), with
+   `TagPickerTyping` and `TagPickerRefused`: `header` (its "?" `help`), the
+   field `nameField`, the naming `rule`, the `staged` section with one `tag`
+   per staged name, a result row `tag` keyed by its name, the `footnote`, the
+   `announcement` and `done`. */
+export const NODE = "tagPicker";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" />} />
+      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" node="help" />} node="header" />
       <div style={{ flex: "none" }}>
-        <SearchBar query="salt" placeholder="Name a tag" ariaLabel="Name a tag" />
+        <SearchBar query="salt" placeholder="Name a tag" ariaLabel="Name a tag" node="nameField" />
         {/* The naming rule stands under the field at rest too (copy-voice; the
             gate is stated, not discovered — `TagPickerTyping`). */}
         <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
-          <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+          <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="rule">
             Letters, digits, dot, dash and underscore. Capitals become lowercase.
           </p>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }}>
-          <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} />
-          <StagedReference kind="topic" name="saltflats" onRemove={() => {}} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }} data-node="staged">
+          <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} node="tag" nodeKey="saltmarsh" />
+          <StagedReference kind="topic" name="saltflats" onRemove={() => {}} node="tag" nodeKey="saltflats" />
         </div>
-        <PickAnnouncement said="Added — in the staged list." />
+        <PickAnnouncement said="Added — in the staged list." node="announcement" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="salt" />
+        <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltmaps" />
+        <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltcrust" />
         <div style={{ flex: 1 }} />
-        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="footnote">
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
         </p>
       </div>
       <div style={{ flex: "none", padding: "0 24px 24px" }}>
-        <Button style={{ width: "100%" }}>Done</Button>
+        <Button style={{ width: "100%" }} node="done">Done</Button>
       </div>
     </>
   );

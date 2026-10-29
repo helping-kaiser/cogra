@@ -1578,7 +1578,7 @@ class ContentScreensTest {
     // RULED (jakob 2026-09-12): hiding names an actor, reached from the
     // commenter's own profile.
     @Test
-    fun aCommentCarriesSaveCiteOpinionsAndLicenseButNoHide() {
+    fun aCommentCarriesSaveCiteCitedByOpinionsAndLicenseButNoHide() {
         renderDetail(
             detailFixture(
                 loading = false,
@@ -1588,11 +1588,12 @@ class ContentScreensTest {
         )
         openComments()
         compose.onNodeWithTag("comment_c1_menu").performClick()
-        compose.onNodeWithTag("comment_menu_save_c1").assertExists()
-        compose.onNodeWithTag("comment_menu_cite_c1").assertExists()
-        compose.onNodeWithTag("comment_menu_opinions_c1").assertExists()
-        compose.onNodeWithTag("comment_menu_license_c1").assertExists()
-        compose.onNodeWithTag("comment_menu_hide_c1").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.menuSheet.save").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.cite").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.citedBy").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.opinions").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.license").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.hide").assertDoesNotExist()
     }
 
     // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the thread
@@ -1611,7 +1612,7 @@ class ContentScreensTest {
         openComments()
         compose.onNodeWithTag("comment_c1_menu").performClick()
         compose.onNodeWithTag("comments_sheet").assertExists()
-        compose.onNodeWithTag("comment_c1_menu_sheet").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet").assertExists()
     }
 
     // The post's own menu opens over the plain page — no sheet stands
@@ -1638,7 +1639,7 @@ class ContentScreensTest {
         )
         openComments()
         compose.onNodeWithTag("comment_c1_menu").performClick()
-        compose.onNodeWithTag("comment_menu_license_c1").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
         compose.onNodeWithTag("comments_sheet").assertExists()
         compose.onNodeWithTag("postDetail.licenseSheet").assertExists()
         compose.onNodeWithTag("postDetail.licenseSheet.dragHandle", useUnmergedTree = true).assertExists()
@@ -1663,7 +1664,7 @@ class ContentScreensTest {
         )
         openComments()
         compose.onNodeWithTag("comment_c1_menu").performClick()
-        compose.onNodeWithTag("comment_menu_license_c1").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
         assertAxisRows("postDetail", "Not required", "Not logged")
     }
 
@@ -1749,23 +1750,6 @@ class ContentScreensTest {
         mimeType = "video/mp4",
         durationMs = 41_000,
     )
-
-    /** The dialog ships; the removal is slice 8's, whole (jakob 2026-09-14). */
-    @Test
-    fun removeOpensTheThinkTwiceDialogAndRemovesNothing() {
-        renderDetail(
-            detailFixture(loading = false, post = testPost("p1")),
-            viewerId = "author-1",
-        )
-        compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("postDetail.menuSheet.remove").performClick()
-        compose.onNodeWithTag("post_remove_confirm").assertExists()
-
-        compose.onNodeWithTag("post_remove_confirm_remove").performClick()
-        compose.onNodeWithTag("post_remove_confirm").assertDoesNotExist()
-        // The post is still on the screen: nothing was removed.
-        compose.onNode(isDetailCard()).assertExists()
-    }
 
     /**
      * `ReplyEntry` 7: the thread's foot opens the composer rather than
@@ -3099,7 +3083,7 @@ class ContentScreensTest {
         )
         openComments()
         compose.onNodeWithTag("comment_c1_menu").performClick()
-        compose.onNodeWithTag("comment_menu_cite_c1").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.cite").performClick()
         assertThat(referenced).containsExactly("c1")
     }
 

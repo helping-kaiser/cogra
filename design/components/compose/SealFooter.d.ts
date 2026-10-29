@@ -18,6 +18,8 @@ export interface SealFooterProps {
   busyLabel?: string;
   onSign?: () => void;
   onBack?: () => void;
+  /** The data-node name its placer gives the foot (design ⇄ impl seam 002; renders as attributes only). Given one, it also names the pair `sign` and `back`. */
+  node?: string;
 }
 
 export declare function SealFooter(props: SealFooterProps): JSX.Element;

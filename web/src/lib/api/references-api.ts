@@ -9,19 +9,23 @@
 import type { ApolloClient } from "@apollo/client";
 
 import {
-  CitedByCountDocument,
-  CitedByDocument,
+  CitingRecordsDocument,
   PrepareReferenceDocument,
   PrepareReferenceWithdrawalDocument,
   ReferenceCandidatesDocument,
-  type CitedByQuery,
+  type CitingRecordsQuery,
+  type NodeKind,
 } from "@/__generated__/graphql";
 import {
   newReferenceDraft,
   type ReferenceDraft,
 } from "@/lib/references/draft";
+import {
+  foldCitingArtifacts,
+  type CitingArtifact,
+  type ReferenceRecord,
+} from "@/lib/references/citing-fold";
 import { isQueryable, targetView } from "@/lib/references/normalize";
-import { CONTENT_PAGE_SIZE, type Page } from "./content-api";
 import { fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 
@@ -36,17 +40,22 @@ export const CANDIDATE_LIMIT = 10;
  * A query that resolves nothing never leaves the browser — the server
  * would answer with an empty list anyway, and a finder runs on every
  * keystroke.
+ *
+ * `kinds` is the picker filter's narrowing, applied by the server (kinds
+ * subtract; null narrows nothing), so a narrowed answer is a full answer of
+ * its kinds rather than a 10-row answer trimmed on the device.
  */
 export async function fetchReferenceCandidates(
   client: ApolloClient,
   query: string,
   limit: number = CANDIDATE_LIMIT,
+  kinds: readonly NodeKind[] | null = null,
 ): Promise<Outcome<readonly ReferenceDraft[]>> {
   if (!isQueryable(query)) return success([]);
   const fetched = await fetchOutcome(() =>
     client.query({
       query: ReferenceCandidatesDocument,
-      variables: { query: query.trim(), limit },
+      variables: { query: query.trim(), limit, ...(kinds === null ? {} : { kinds: [...kinds] }) },
       fetchPolicy: "network-only",
     }),
   );
@@ -122,61 +131,51 @@ export async function prepareReferenceWithdrawal(
   );
 }
 
-/**
- * One citing artifact, as the cited-by sheet draws it: the record's own
- * signed pair, plus the artifact the citation was built into.
- */
-export type CitingRecordView = CitedByQuery["records"]["edges"][number]["node"];
+/** The artifact a citation was built into, as the cited-by row names it. */
+export type CitingTarget = NonNullable<
+  CitingRecordsQuery["records"]["edges"][number]["node"]["target"]
+>;
+
+/** One standing citation of this node: a cited-by row. */
+export type CitingArtifactView = CitingArtifact<CitingTarget | null>;
+
+/** How many pages the whole set may take before the read gives up (100 apiece). */
+const MAX_PAGES = 50;
 
 /**
- * A page of what cites a node, newest-first, with the count of the whole
- * match beside it.
+ * Everything that cites a node, newest first — one row per standing
+ * citation, however many records it took, and none for a withdrawn one
+ * (`citing-fold.ts`). The whole set is read because a bundle's net needs
+ * every record in it; the detail's `Cited by N` and the sheet's rows are this
+ * one answer, so the count is checkable against the list.
  *
- * The read is terminal-anchored rather than node-anchored: a Reference
- * is a hyper act, so a node sits on the target end of two different legs
- * — the T leg of the citations aimed at it, and the A leg of the ones it
- * made itself. Only the terminal leg answers "what cites this".
+ * The read is terminal-anchored rather than node-anchored: a Reference is a
+ * hyper act, so a node sits on the target end of two different legs — the T
+ * leg of the citations aimed at it, and the A leg of the ones it made itself.
+ * Only the terminal leg answers "what cites this".
  */
-export async function fetchCitedBy(
+export async function fetchCitingArtifacts(
   client: ApolloClient,
   nodeId: string,
-  after: string | null = null,
-): Promise<Outcome<Page<CitingRecordView> & { total: number }>> {
-  const fetched = await fetchOutcome(() =>
-    client.query({
-      query: CitedByDocument,
-      variables: { id: nodeId, first: CONTENT_PAGE_SIZE, after },
-      fetchPolicy: "network-only",
-    }),
-  );
-  if (fetched.kind !== "success") return fetched;
-  const records = fetched.value.records;
-  return success({
-    items: records.edges.map((edge) => edge.node),
-    endCursor: records.pageInfo.endCursor ?? null,
-    hasNextPage: records.pageInfo.hasNextPage,
-    total: records.totalCount ?? 0,
-  });
-}
-
-/**
- * How many artifacts cite this one — the number the detail card's line
- * reads to know whether to draw itself at all.
- *
- * Null counts as zero: the contract leaves the count nullable, and a
- * count the server cannot state is not a count a line can print.
- */
-export async function fetchCitedByCount(
-  client: ApolloClient,
-  nodeId: string,
-): Promise<Outcome<number>> {
-  const fetched = await fetchOutcome(() =>
-    client.query({
-      query: CitedByCountDocument,
-      variables: { id: nodeId },
-      fetchPolicy: "network-only",
-    }),
-  );
-  if (fetched.kind !== "success") return fetched;
-  return success(fetched.value.records.totalCount ?? 0);
+): Promise<Outcome<readonly CitingArtifactView[]>> {
+  const records: ReferenceRecord<CitingTarget | null>[] = [];
+  let after: string | null = null;
+  for (let page = 0; page < MAX_PAGES; page += 1) {
+    const fetched = await fetchOutcome(() =>
+      client.query({
+        query: CitingRecordsDocument,
+        variables: { id: nodeId, after },
+        fetchPolicy: "network-only",
+      }),
+    );
+    if (fetched.kind !== "success") return fetched;
+    const connection = fetched.value.records;
+    for (const { node } of connection.edges) {
+      records.push({ ...node, targetId: node.targetId ?? node.id, target: node.target ?? null });
+    }
+    if (!connection.pageInfo.hasNextPage) break;
+    after = connection.pageInfo.endCursor ?? null;
+    if (after === null) break;
+  }
+  return success(foldCitingArtifacts(records));
 }

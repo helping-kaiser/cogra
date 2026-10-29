@@ -30,6 +30,9 @@ vi.mock("next/navigation", () => ({
 let marked: string[][] = [];
 const server = startMswServer(
   ...stanceHandlers(),
+  // The header's figures are read beside every profile; a test that does not
+  // ask about them gets an answer rather than an unhandled request.
+  gqlLink.query("ProfileFigures", () => HttpResponse.json({ data: { user: null } })),
   gqlLink.mutation("MarkSeen", ({ variables }) => {
     marked.push(variables.nodes as string[]);
     return HttpResponse.json({
@@ -87,6 +90,7 @@ function recordsHandler(
     postId?: string;
     on?: string;
     pair?: [number, number];
+    act?: string;
   }[],
 ) {
   return gqlLink.query("AuthorRecords", () =>
@@ -100,7 +104,7 @@ function recordsHandler(
               __typename: "Record",
               id: row.id,
               family: row.family,
-              act: row.targetId === undefined ? "GENESIS" : "ORDINARY",
+              act: row.act ?? (row.targetId === undefined ? "GENESIS" : "ORDINARY"),
               targetId: row.targetId ?? `mint:${row.id}`,
               terminalId: null,
               landedAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
@@ -183,6 +187,145 @@ describe("ProfileScreen", () => {
     expect(screen.getByTestId(byNode("profile.chronicle.act", "2"))).toHaveTextContent(
       "Updated their profile",
     );
+  });
+
+  // THE CHRONICLE'S VERBS (copy-voice, round 22; seam 247 rider 2): the
+  // server's `act` picks the verb — a walk-back wears 🤷 and reads `Walked
+  // back an opinion`, the vouch that landed someone reads `Vouched for`, and
+  // the account's first registration reads `Joined`.
+  it("reads a walk-back, a vouch and the joining from the record's act", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([
+        { id: "act:a:3:opinion", family: "OPINION", targetId: "prof:mira", on: "mira", pair: [-0.4, -0.5], act: "WALK_BACK" },
+        { id: "act:a:2:opinion", family: "OPINION", targetId: "prof:rafa", on: "rafa", pair: [0.1, 0.1], act: "VOUCH" },
+        { id: "act:a:1:registration", family: "REGISTRATION", act: "GENESIS" },
+      ]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const walkBack = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
+    expect(walkBack).toHaveTextContent("Walked back an opinion");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "1"))).toHaveTextContent("on @mira");
+    // 🤷, never the counter-record's own face.
+    expect(screen.getByTestId(byNode("profile.chronicle.act.disc", "1"))).toHaveTextContent("🤷");
+    expect(screen.getByTestId(byNode("profile.chronicle.act", "2"))).toHaveTextContent("Vouched for");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "2"))).toHaveTextContent("@rafa");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "2"))).not.toHaveTextContent("on @rafa");
+    expect(screen.getByTestId(byNode("profile.chronicle.act", "3"))).toHaveTextContent("Joined");
+  });
+
+  // THE HEADER'S FIGURES (ProfileOther.md:7; Q35 closed toward the drawn
+  // figures, jakob's confirmation pending): three labelled record counts,
+  // never merged, grouped as every figure is.
+  it("draws the three figures, each labelled, from ProfileFigures", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+      gqlLink.query("ProfileFigures", () =>
+        HttpResponse.json({
+          data: {
+            user: {
+              __typename: "User",
+              id: "u2",
+              posts: { __typename: "RecordConnection", totalCount: 12 },
+              opinionsOn: { __typename: "RecordConnection", totalCount: 1204 },
+              opinionsBy: { __typename: "RecordConnection", totalCount: 7 },
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const posts = await screen.findByTestId(byNode("profile.identity.figures.posts"));
+    expect(posts).toHaveTextContent("12Posts");
+    expect(screen.getByTestId(byNode("profile.identity.figures.stancesOn.value"))).toHaveTextContent("1,204");
+    expect(screen.getByTestId(byNode("profile.identity.figures.stancesOn.label"))).toHaveTextContent(
+      "Opinions on them",
+    );
+    expect(screen.getByTestId(byNode("profile.identity.figures.stancesTaken.label"))).toHaveTextContent(
+      "Opinions by them",
+    );
+    expect(screen.getByTestId(byNode("profile.identity.figures.stancesTaken.value"))).toHaveTextContent("7");
+  });
+
+  // THE FIGURES ARE ONE DOOR ONTO THE OPINIONS PAGE (ProfileHeader.jsx
+  // `onCounts`; graph.json `the figures row` → ProfileStances; copy-voice,
+  // *The profile's figures, spoken*): never three, never inert.
+  describe("the figures row", () => {
+    function figures(id: string) {
+      return gqlLink.query("ProfileFigures", () =>
+        HttpResponse.json({
+          data: {
+            user: {
+              __typename: "User",
+              id,
+              posts: { __typename: "RecordConnection", totalCount: 12 },
+              opinionsOn: { __typename: "RecordConnection", totalCount: 1204 },
+              opinionsBy: { __typename: "RecordConnection", totalCount: 7 },
+            },
+          },
+        }),
+      );
+    }
+
+    it("opens someone's opinions page, named by its numbers and its purpose", async () => {
+      server.use(
+        gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })),
+        recordsHandler([]),
+        figures("u2"),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" />);
+      const door = await screen.findByRole("link", {
+        name: "12 Posts, 1,204 Opinions on them, 7 Opinions by them, opinions on and by @ada",
+      });
+      expect(door).toHaveAttribute("data-testid", "profile.identity.figures");
+      expect(door).toHaveAttribute("href", "/u/ada/opinions");
+      expect(door.className).toContain("cg-hit");
+    });
+
+    it("carries the profile's own origin onto the page, so its way back holds", async () => {
+      server.use(
+        gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u2", "ada") } })),
+        recordsHandler([]),
+        figures("u2"),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" from="saved" />);
+      expect(await screen.findByTestId(byNode("profile.identity.figures"))).toHaveAttribute(
+        "href",
+        "/u/ada/opinions?from=saved",
+      );
+    });
+
+    it("opens your own opinions page from your own root, both directions", async () => {
+      server.use(
+        meHandler(),
+        gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+        recordsHandler([]),
+        figures("u1"),
+      );
+      renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+      const door = await screen.findByRole("link", {
+        name: "12 Posts, 1,204 Opinions on you, 7 Opinions by you, your opinions, both directions",
+      });
+      expect(door).toHaveAttribute("href", "/profile/opinions");
+    });
+  });
+
+  // A PERSON OPENED FROM AN OPINIONS PAGE (ProfileStances.md:21): their arrow
+  // reads `Back to the opinions` and returns to the page on its tab.
+  it("reads Back to the opinions when an opinions row opened it", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: profile("u3", "tobias") } })),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="tobias" from="opinions.by:ada" />);
+    const back = await screen.findByTestId(byNode("profile.header.back"));
+    expect(back).toHaveAccessibleName("Back to the opinions");
+    expect(back).toHaveAttribute("href", "/u/ada/opinions?tab=by");
   });
 
   // THE CHRONICLE'S TAB ROW (TabBar.jsx; Profile.md:21): three glyph toggles
@@ -663,7 +806,7 @@ describe("ProfileScreen", () => {
     expect(await screen.findByTestId(byNode("profile.identity.actionRow.edit"))).toHaveAttribute("href", "/profile/edit");
     expect(screen.getByTestId(byNode("profile.band.gear"))).toHaveAttribute("href", "/settings");
     expect(screen.getByTestId(byNode("profile.identity.actionRow.invites"))).toHaveAttribute("href", "/invites");
-    expect(screen.getByTestId("profile-chronicle-empty")).toBeInTheDocument();
+    expect(await screen.findByTestId("profile-chronicle-empty")).toBeInTheDocument();
     // The root wears the band (`ProfileBand`): gear, then chats, then the bell.
     expect(screen.getByTestId(byNode("profile.band.gear"))).toHaveAccessibleName("Settings");
     expect(screen.getByTestId(byNode("profile.band.wordmark"))).toHaveTextContent("cogra");

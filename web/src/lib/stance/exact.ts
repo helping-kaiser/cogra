@@ -34,3 +34,18 @@ export function netsToZero(values: readonly number[]): boolean {
   const sum = terms.reduce((acc, t) => acc + t.units * 10n ** BigInt(scale - t.scale), 0n);
   return sum === 0n;
 }
+
+/**
+ * The exact sum of the decimals these doubles denote, rounded ONCE to the
+ * nearest double — the reference's `BundleSum::of_records` (exact.rs
+ * `exact_sum`), so a bundle folded here is the bundle the backend folds,
+ * whatever order its records arrive in. Zero exactly when the exact sum is,
+ * and then positive zero: ECMAScript's string-to-number conversion is
+ * correctly rounded, which is the one rounding the reference takes too.
+ */
+export function exactSum(values: readonly number[]): number {
+  const terms = values.map(decimalOf);
+  const scale = Math.max(0, ...terms.map((t) => t.scale));
+  const sum = terms.reduce((acc, t) => acc + t.units * 10n ** BigInt(scale - t.scale), 0n);
+  return sum === 0n ? 0 : Number(`${sum}e-${scale}`);
+}

@@ -11,6 +11,11 @@
     <string name="content_chats_back_feed">Back to feed</string>
     <string name="content_chats_back_own_profile">Back to your profile</string>
     <string name="content_chats_back_profile">Back to the profile</string>
+    <string name="content_chats_back_explore">Back to Explore</string>
+    <string name="content_chats_back_wallet">Back to Wallet</string>
+    <!-- The wallet slot's door (WalletComingSoon.jsx; copy-voice, the coming-soon surfaces, blessed 2026-09-25). -->
+    <string name="content_wallet_coming_soon">Wallet — coming soon</string>
+    <string name="content_wallet_line">Your earnings will be here.</string>
     <string name="content_feed_compose">Write a post</string>
     <string name="content_feed_load_more">Load more</string>
     <string name="content_compose_title">New post</string>
@@ -194,6 +199,7 @@
     <string name="content_menu_hide_account">Hide this account</string>
     <string name="content_menu_sensitive">Mark as sensitive</string>
     <string name="content_menu_remove">Remove</string>
+    <string name="content_menu_cited_by">Cited by</string>
     <string name="content_menu_opinions">Opinions on this</string>
     <string name="content_menu_license">License terms</string>
     <string name="content_menu_report">Report</string>
@@ -230,6 +236,15 @@
     <string name="content_remove_permanent">This is immediate and permanent.</string>
     <string name="content_remove_confirm">Remove</string>
     <string name="content_remove_keep">Keep it</string>
+    <!-- The comment's confirm: the nouns swap and nothing else moves (REMOVE_CONFIRM_COPY.comment). -->
+    <string name="content_remove_comment_title">Remove this comment?</string>
+    <string name="content_remove_comment_body">The words and pictures leave every reader\'s view, along with every earlier version\'s. A visible mark stays in their place — \"Removed by its author\" — and the comment\'s spot in its thread stays with it.</string>
+    <!-- In flight past 200ms (K4.2: the label swap, never a spinner). -->
+    <string name="content_remove_removing">Removing…</string>
+    <!-- Not through (RemoveConfirm.md:13): above the pair; Remove reads Retry. -->
+    <string name="content_remove_not_sent">That didn\'t send. Try again.</string>
+    <!-- A removed comment's second line (CommentRemoved.md:5; REMOVED_COMMENT_NOTE). -->
+    <string name="content_removed_comment_note">The comment\'s place in the thread, and every response, remain.</string>
     <string name="content_error_empty_body">The post needs a body.</string>
     <string name="content_error_title_too_long">A title is at most 100 characters.</string>
     <string name="content_error_description_too_long">A description is at most 500 characters.</string>
@@ -254,6 +269,7 @@
     <!-- A Saved row's post reads its origin (the origin-naming table). -->
     <string name="content_back_saved">Back to Saved</string>
     <string name="content_back_notifications">Back to Notifications</string>
+    <string name="content_back_search">Back to the search</string>
     <string name="content_comment_edited">Edited</string>
     <string name="content_comment_reply">Reply</string>
     <string name="content_comment_edit_save">Save</string>
@@ -324,4 +340,39 @@
     <string name="content_draft_first_picture">The draft\'s first picture</string>
     <string name="content_clip_length">Length %1$s</string>
     <string name="content_stance_on_post">Where you stand on this post</string>
+
+    <!-- The tag feed card (`_shared.jsx` TagFeedCard; FeedTagShapes.md). -->
+    <string name="content_tag_act">Tag a new post with it</string>
+    <string name="content_tag_nothing">Nothing carries this tag right now.</string>
+    <plurals name="content_tag_glimpse_more">
+        <item quantity="one">%1$s · and %2$d more</item>
+        <item quantity="other">%1$s · and %2$d more</item>
+    </plurals>
+
+    <!-- History (History.md, HistoryEmpty.md, HistoryFilter.md, HistoryNone.md,
+         HistorySearch.md; copy-voice "Saved, History and hiding"). -->
+    <string name="content_history_title">History</string>
+    <string name="content_history_back">Back to your profile</string>
+    <string name="content_history_search">Search your history</string>
+    <string name="content_history_filter_purpose">What your history shows</string>
+    <string name="content_history_filter_kinds">Kinds</string>
+    <string name="content_history_filter_hint">Combine as many as you like. All, until you narrow it.</string>
+    <string name="content_history_kind_posts">Posts</string>
+    <string name="content_history_kind_comments">Comments</string>
+    <string name="content_history_kind_profiles">Profiles</string>
+    <string name="content_history_kind_tags">Tags</string>
+    <string name="content_history_everything">Everything</string>
+    <string name="content_history_all_kinds">All kinds</string>
+    <plurals name="content_history_some_kinds">
+        <item quantity="one">%1$d kind</item>
+        <item quantity="other">%1$d kinds</item>
+    </plurals>
+    <string name="content_history_reset">Reset</string>
+    <string name="content_history_done">Done</string>
+    <string name="content_history_empty">Nothing here yet. Everything you see shows up here on its own, newest first.</string>
+    <string name="content_history_none_search">Nothing you\'ve seen carries that name. Search reads names and titles, never bodies — fewer words reach further.</string>
+    <string name="content_history_none_kinds">Nothing you\'ve seen is of that kind.</string>
+    <string name="content_history_see_all_profiles">See all profiles</string>
+    <string name="content_history_see_all_tags">See all tags</string>
+    <string name="content_back_history">Back to History</string>
 </resources>

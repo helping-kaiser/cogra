@@ -636,6 +636,55 @@ describe("the feed filter", () => {
     });
   });
 
+  // flows.json FeedSheet → YourTopics: "All your topics" opens everything
+  // held; back returns the feed with this sheet up, as it was left (design
+  // readme, *A sheet that launched a forward navigation comes back*).
+  describe("All your topics", () => {
+    it("opens Your topics, naming the feed as where the reader came from", async () => {
+      server.use(...rankedFeed([post("p1")], reads()), heldTopics(), meHandler());
+      renderFeed();
+      await openSheet();
+      fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.allTopics")));
+      expect(push).toHaveBeenCalledWith("/explore/topics?from=feed");
+    });
+
+    it("brings the sheet back up on return, with what it had staged", async () => {
+      server.use(...rankedFeed([post("p1")], reads()), heldTopics(), meHandler());
+      const first = renderFeed();
+      await openSheet();
+      // Staged, never applied: Newest, and the topic on.
+      fireEvent.click(within(sheet()).getByRole("button", { name: "Newest" }));
+      fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps")));
+      fireEvent.click(within(sheet()).getByTestId(byNode("feed.filterSheet.topic.allTopics")));
+      first.unmount();
+      renderFeed();
+      await waitFor(() => expect(sheet().open).toBe(true));
+      expect(within(sheet()).getByRole("button", { name: "Newest" })).toHaveAttribute("aria-pressed", "true");
+      expect(
+        await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.chip", "saltmaps")),
+      ).toHaveAttribute("aria-checked", "true");
+      // The feed behind it is what it was: the staged filter never applied.
+      expect(trigger()).toHaveTextContent(/^Posts$/);
+    });
+
+    it("comes back once: the next arrival is the feed at rest", async () => {
+      server.use(...rankedFeed([post("p1")], reads()), heldTopics(), meHandler());
+      const first = renderFeed();
+      await openSheet();
+      fireEvent.click(await within(sheet()).findByTestId(byNode("feed.filterSheet.topic.allTopics")));
+      first.unmount();
+      const second = renderFeed();
+      await waitFor(() => expect(sheet().open).toBe(true));
+      second.unmount();
+      renderFeed();
+      await screen.findByTestId(byNode("feed.band.filterTrigger"));
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+      expect(sheet().open).toBe(false);
+    });
+  });
+
   describe("a borrowed view (FeedSheet.md, GIVEN the feed borrows a view)", () => {
     it("speaks the borrowed account's people and order, the reader's own words elsewhere", async () => {
       server.use(...rankedFeed([post("p1")], reads()), borrowedView("mira"));

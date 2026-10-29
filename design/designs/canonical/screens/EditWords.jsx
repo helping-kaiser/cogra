@@ -30,53 +30,51 @@
    THE ADD CONTROL IS THE WAY BACK to a media body, and the line under it is
    the same blessed sentence the picture edit carries — read from this side it
    says what taking pictures would cost: the words are the body until media
-   replaces them. */
+   replaces them.
+
+   REGISTERED under the `postEdit` prefix (seam 248), `EditComposeBody`'s
+   names; the body block holds `label` and the field `words` where the
+   picture edit's holds `mediaRow`. */
+export const NODE = "postEdit";
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" />
+      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minHeight: 0 }}>
-          <FieldLabel>What do you want to publish?</FieldLabel>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minHeight: 0 }} data-node="body">
+          <FieldLabel node="label">What do you want to publish?</FieldLabel>
           <WordsBody
             cap={5000}
             paragraphs={[
               "Three weekends of walking the same stretch at low tide, tracing where the salt crust draws its lines.",
               "If you ever drive it, stop at the third headland and look down for once.",
             ]}
+            node="words"
           />
-          <InlineAction size="sm" selfStart>+ Add pictures or a video</InlineAction>
-          <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
+          <InlineAction size="sm" selfStart node="add">+ Add pictures or a video</InlineAction>
+          <QuietNote node="rule">A post&apos;s body is words or media, never both.</QuietNote>
         </div>
 
-        <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" />
+        <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" node="title" />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Tags</FieldLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
+          <FieldLabel node="label">Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <TopicRemovable topic="fieldnotes" onEdit={() => {}} />
-            <TopicRemovable topic="saltmaps" onEdit={() => {}} />
+            <TopicRemovable topic="fieldnotes" onEdit={() => {}} node="tag" />
+            <TopicRemovable topic="saltmaps" onEdit={() => {}} node="tag" />
           </div>
-          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-          <WithdrawnLine name="#coastroad" />
+          <InlineAction size="sm" selfStart node="add">+ Add a tag</InlineAction>
+          <WithdrawnLine name="#coastroad" node="withdrawn" />
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow
-            label="License"
-            value="Public domain"
-            action={
-              <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-                <Icon name="lock" size={16} />
-              </span>
-            }
-          />
+        <div style={{ display: "flex", flexDirection: "column" }} data-node="facts">
+          <LockedLicenseRow />
           <EditBackingRow />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last node="sensitive" />
         </div>
 
-        <ActsFooter count={3} />
-        <Button style={{ width: "100%" }}>Sign the edit</Button>
+        <ActsFooter count={3} node="acts" />
+        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
       </div>
     </>
   );
