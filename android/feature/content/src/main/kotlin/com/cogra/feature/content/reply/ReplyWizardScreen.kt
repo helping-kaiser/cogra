@@ -31,11 +31,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
-import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.DiscardConfirm
 import com.cogra.core.designsystem.v2.atom.DiscardSubject
 import com.cogra.core.designsystem.v2.atom.HelpDialog
-import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.atom.WizardHeader
 import com.cogra.core.designsystem.v2.compose.DescribeSheet
 import com.cogra.core.designsystem.v2.compose.HelpTopic
@@ -44,9 +42,14 @@ import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.feature.content.CitedSheet
+import com.cogra.feature.content.PickerInPlace
+import com.cogra.feature.content.PickerOrigin
 import com.cogra.feature.content.R
-import com.cogra.feature.content.ReferenceEntry
-import com.cogra.feature.content.TopicEntry
+import com.cogra.feature.content.ReferencePairSheet
+import com.cogra.feature.content.ReferencePickerHandlers
+import com.cogra.feature.content.ReferenceSectionState
+import com.cogra.feature.content.TagPickerHandlers
+import com.cogra.feature.content.TagsSheet
 import com.cogra.feature.content.wizard.LicenseSheet
 import com.cogra.feature.content.wizard.SensitiveSheet
 import com.cogra.feature.content.wizard.WizardBody
@@ -145,22 +148,18 @@ fun ReplyWizardRoute(
         onCloseHelp = viewModel::onCloseHelp,
         onSign = viewModel::onSign,
         onRestoreKey = onRestoreKey,
-        onTagInputChange = viewModel::onTagInputChange,
-        onAddTag = viewModel::onAddTag,
         onRemoveTag = viewModel::onRemoveTag,
         onTuneTag = viewModel::onTuneTag,
         onDoneTuningTag = viewModel::onDoneTuningTag,
         onTagRelevanceChange = viewModel::onTagRelevanceChange,
         onTagConfidenceChange = viewModel::onTagConfidenceChange,
-        onOpenFinder = viewModel::onOpenFinder,
-        onCloseFinder = viewModel::onCloseFinder,
-        onFinderQueryChange = viewModel::onFinderQueryChange,
-        onPickReference = viewModel::onPickReference,
         onRemoveReference = viewModel::onRemoveReference,
         onTuneReference = viewModel::onTuneReference,
         onDoneTuningReference = viewModel::onDoneTuningReference,
         onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
         onReferenceSupportChange = viewModel::onReferenceSupportChange,
+        tagPicker = viewModel.tagPicker,
+        referencePicker = viewModel.referencePicker,
         keyBanner = keyBanner,
         modifier = modifier,
     )
@@ -203,22 +202,18 @@ internal fun ReplyWizardScreen(
     onCloseHelp: () -> Unit,
     onSign: () -> Unit,
     onRestoreKey: () -> Unit,
-    onTagInputChange: (String) -> Unit,
-    onAddTag: () -> Unit,
     onRemoveTag: (String) -> Unit,
     onTuneTag: (String) -> Unit,
     onDoneTuningTag: () -> Unit,
     onTagRelevanceChange: (String, Double) -> Unit,
     onTagConfidenceChange: (String, Double) -> Unit,
-    onOpenFinder: () -> Unit,
-    onCloseFinder: () -> Unit,
-    onFinderQueryChange: (String) -> Unit,
-    onPickReference: (com.cogra.feature.content.ReferenceCandidateRow) -> Unit,
     onRemoveReference: (String) -> Unit,
     onTuneReference: (String) -> Unit,
     onDoneTuningReference: () -> Unit,
     onReferenceRelevanceChange: (String, Double) -> Unit,
     onReferenceSupportChange: (String, Double) -> Unit,
+    tagPicker: TagPickerHandlers,
+    referencePicker: ReferencePickerHandlers,
     keyBanner: @Composable () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -228,6 +223,18 @@ internal fun ReplyWizardScreen(
     // drafts (jakob 2026-09-01), which is why a non-empty composer is
     // asked before it goes.
     BackHandler(onBack = onBack)
+
+    // The seal's `+ Add a tag` and `+ Cite something` open their pickers in the
+    // reply's place (round 27), each pick staged into the reply at once; the
+    // arrow names the comment.
+    val picking = PickerInPlace(
+        tags = state.tagSection,
+        references = state.referenceSection,
+        origin = PickerOrigin.Comment,
+        tagPicker = tagPicker,
+        referencePicker = referencePicker,
+    )
+    if (picking) return
 
     if (state.confirmingDiscard) {
         DiscardConfirm(
@@ -297,8 +304,9 @@ internal fun ReplyWizardScreen(
                             ReplySealStepBody(
                                 state = state,
                                 onOpenSheet = onOpenSheet,
-                                onAddTopic = { onOpenSheet(ReplySealSheet.Topics) },
-                                onCite = { onOpenSheet(ReplySealSheet.References) },
+                                onAddTag = tagPicker::onOpenTagPicker,
+                                onCite = referencePicker::onOpenReferencePicker,
+                                onTuneReference = onTuneReference,
                                 onRemoveReference = onRemoveReference,
                             )
                         }
@@ -413,42 +421,18 @@ internal fun ReplyWizardScreen(
                     testTagPrefix = "reply",
                 )
 
-                state.sheet == ReplySealSheet.Topics -> CograSheetSurface(testTag = "reply_topics_sheet") {
-                    SheetTitle("Topics")
-                    TopicEntry(
-                        section = state.tagSection,
-                        testTagPrefix = "reply",
-                        onTagInputChange = onTagInputChange,
-                        onAddTag = onAddTag,
-                        onRemoveTag = onRemoveTag,
-                        onTuneTag = onTuneTag,
-                        onDoneTuningTag = onDoneTuningTag,
-                        onTagRelevanceChange = onTagRelevanceChange,
-                        onTagConfidenceChange = onTagConfidenceChange,
-                        showHeading = false,
-                    )
-                    CograButton("Done", onCloseSheet, testTag = "reply_topics_done")
-                }
-
-                state.sheet == ReplySealSheet.References ->
-                    CograSheetSurface(testTag = "reply_references_sheet") {
-                        SheetTitle("References")
-                        ReferenceEntry(
-                            section = state.referenceSection,
-                            testTagPrefix = "reply",
-                            onOpenFinder = onOpenFinder,
-                            onCloseFinder = onCloseFinder,
-                            onFinderQueryChange = onFinderQueryChange,
-                            onPickReference = onPickReference,
-                            onRemoveReference = onRemoveReference,
-                            onTuneReference = onTuneReference,
-                            onDoneTuningReference = onDoneTuningReference,
-                            onReferenceRelevanceChange = onReferenceRelevanceChange,
-                            onReferenceSupportChange = onReferenceSupportChange,
-                            showHeading = false,
-                        )
-                        CograButton("Done", onCloseSheet, testTag = "reply_references_done")
-                    }
+                // `ComposeTags` — the post seal's own manager, behind the seal's Tags row:
+                // one surface wherever staged tags are managed.
+                state.sheet == ReplySealSheet.Tags -> TagsSheet(
+                    section = state.tagSection,
+                    onRemoveTag = onRemoveTag,
+                    onTuneTag = onTuneTag,
+                    onDoneTuningTag = onDoneTuningTag,
+                    onTagRelevanceChange = onTagRelevanceChange,
+                    onTagConfidenceChange = onTagConfidenceChange,
+                    onDone = onCloseSheet,
+                    testTag = "reply_tags_sheet",
+                )
 
                 // `ComposeCitations` — the post seal's own sheet, opened from
                 // this seal's "N cited" door. One surface, drawn once,
@@ -467,6 +451,17 @@ internal fun ReplyWizardScreen(
                 else -> Unit
             }
         }
+    }
+
+    // ReplyCited.md: the one staged citation's name opens its pair sheet, over the
+    // seal (the Cited sheet draws its own for two or more).
+    if (state.sheet != ReplySealSheet.Cited) {
+        SingleCitationPair(
+            section = state.referenceSection,
+            onRelevanceChange = onReferenceRelevanceChange,
+            onSupportChange = onReferenceSupportChange,
+            onDone = onDoneTuningReference,
+        )
     }
 
     state.help?.let { topic ->
@@ -510,4 +505,25 @@ internal fun ReplyWizardState.problem(): String? = when {
     signingFailed -> "That could not be signed. Try again."
     uploadsFailed -> "A picture did not upload. Remove it, or try again."
     else -> null
+}
+
+/** The staged citation being tuned, if any, in its pair sheet (`RefPair`). */
+@Composable
+private fun SingleCitationPair(
+    section: ReferenceSectionState,
+    onRelevanceChange: (String, Double) -> Unit,
+    onSupportChange: (String, Double) -> Unit,
+    onDone: () -> Unit,
+) {
+    val row = section.references.firstOrNull { it.targetId == section.tuning } ?: return
+    ReferencePairSheet(
+        row = row,
+        testTagPrefix = "reply_seal",
+        onDone = { relevance, support ->
+            onRelevanceChange(row.targetId, relevance)
+            onSupportChange(row.targetId, support)
+            onDone()
+        },
+        onDismiss = onDone,
+    )
 }

@@ -31,6 +31,7 @@ import com.cogra.domain.SelfMarkView
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
+import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceKind
@@ -570,8 +571,17 @@ interface ReferenceRepository {
      * An empty or unresolvable query yields an empty list rather than an error,
      * because a finder runs on every keystroke and most of what it is
      * asked is a prefix of something still being typed.
+     *
+     * [kinds] is the citation picker's filter (api-spec.md
+     * `referenceCandidates(kinds:)`): kinds subtract, and none narrows
+     * nothing — so a narrowed answer is a whole answer of its kinds, never
+     * a ten-row answer trimmed here.
      */
-    suspend fun referenceCandidates(query: String, limit: Int? = null): Outcome<List<ReferenceCandidateView>>
+    suspend fun referenceCandidates(
+        query: String,
+        limit: Int? = null,
+        kinds: Set<FeedKind> = emptySet(),
+    ): Outcome<List<ReferenceCandidateView>>
 
     /**
      * Stages one standalone citation on existing content — the edit

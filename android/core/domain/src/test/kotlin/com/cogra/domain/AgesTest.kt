@@ -26,6 +26,14 @@ class AgesTest {
         assertThat(dateLine(Instant.parse("2026-08-12T09:00:00Z"), ZoneOffset.UTC)).isEqualTo("12.08.2026")
     }
 
+    /** copy-voice *Ages*: "`12 September`, the year added only when it is not the current one". */
+    @Test
+    fun theDatelineNamesDayAndMonthAndTheYearOnlyWhenItDiffers() {
+        assertThat(datelineWords(Instant.parse("2026-09-12T08:00:00Z"), now, ZoneOffset.UTC)).isEqualTo("12 September")
+        assertThat(datelineWords(Instant.parse("2025-09-12T08:00:00Z"), now, ZoneOffset.UTC))
+            .isEqualTo("12 September 2025")
+    }
+
     @Test
     fun aFutureMomentReadsNow() {
         assertThat(ageLadder(now.plusSeconds(600), now, ZoneOffset.UTC)).isEqualTo("now")

@@ -452,6 +452,7 @@ class ScriptedReferenceRepository(private val writes: WriteRepository) : Throwin
     override suspend fun referenceCandidates(
         query: String,
         limit: Int?,
+        kinds: Set<FeedKind>,
     ): Outcome<List<ReferenceCandidateView>> = Outcome.Success(candidates[query].orEmpty())
 
     override suspend fun prepareReference(

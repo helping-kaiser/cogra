@@ -680,6 +680,18 @@ sealed interface ReferenceTargetView {
          * then renders without a destination.
          */
         val containingPostId: String? = null,
+        /**
+         * When the post or comment was made — read only where the citation
+         * picker's lookup selects it (`ReferenceCandidates`), for the row's
+         * `@handle · 3d` line; null everywhere else.
+         */
+        val createdAt: Instant? = null,
+        /**
+         * A post's cover, the picker row's mark — a picture itself, a clip's
+         * still, null for a text post or a veiled gallery. Read only by the
+         * picker's lookup.
+         */
+        val coverUrl: String? = null,
     ) : ReferenceTargetView
 }
 

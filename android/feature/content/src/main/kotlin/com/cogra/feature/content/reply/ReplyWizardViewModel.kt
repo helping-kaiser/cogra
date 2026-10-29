@@ -20,6 +20,7 @@ import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
+import com.cogra.domain.search.SearchRepository
 import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
@@ -31,9 +32,12 @@ import com.cogra.domain.signing.contentExpectation
 import com.cogra.domain.signing.ledgerFor
 import com.cogra.domain.signing.wireReason
 import com.cogra.domain.topics.TagClaim
-import com.cogra.feature.content.ReferenceCandidateRow
+import com.cogra.feature.content.ReferencePickerEditor
+import com.cogra.feature.content.ReferencePickerHandlers
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
+import com.cogra.feature.content.TagPickerEditor
+import com.cogra.feature.content.TagPickerHandlers
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
@@ -80,6 +84,8 @@ class ReplyWizardViewModel @Inject constructor(
     private val processor: MediaProcessor,
     private val video: VideoProcessor,
     private val signer: WriteSigner,
+    /** The one search read the tag picker's index rides (`#prefix` over topics). */
+    search: SearchRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReplyWizardState())
@@ -116,6 +122,24 @@ class ReplyWizardViewModel @Inject constructor(
         state = _state,
         tagsOf = { it.tagSection },
         withTags = { state, tags -> state.copy(tagSection = tags) },
+        referencesOf = { it.referenceSection },
+        withReferences = { state, refs -> state.copy(referenceSection = refs) },
+    )
+
+    /** The seal's `+ Add a tag`: the tag picker in the reply's place (TagPicker; round 27). */
+    val tagPicker: TagPickerHandlers = TagPickerEditor(
+        scope = viewModelScope,
+        search = search,
+        state = _state,
+        tagsOf = { it.tagSection },
+        withTags = { state, tags -> state.copy(tagSection = tags) },
+    )
+
+    /** The seal's `+ Cite something`: the citation picker in the reply's place (ReplyCited.md). */
+    val referencePicker: ReferencePickerHandlers = ReferencePickerEditor(
+        scope = viewModelScope,
+        references = references,
+        state = _state,
         referencesOf = { it.referenceSection },
         withReferences = { state, refs -> state.copy(referenceSection = refs) },
     )
@@ -521,11 +545,14 @@ class ReplyWizardViewModel @Inject constructor(
 
     // -- Topics and citations --
 
-    fun onTagInputChange(value: String) = sections.onTagInputChange(value)
-
-    fun onAddTag() = sections.onAddTag()
-
-    fun onRemoveTag(name: String) = sections.onRemoveTag(name)
+    /** A staged tag leaves on the spot; from the Tags sheet the last removal closes it to the seal (ComposeTags.md). */
+    fun onRemoveTag(name: String) {
+        sections.onRemoveTag(name)
+        _state.update { state ->
+            val emptied = state.sheet == ReplySealSheet.Tags && state.tagSection.tags.isEmpty()
+            if (emptied) state.copy(sheet = ReplySealSheet.None) else state
+        }
+    }
 
     fun onTuneTag(name: String) = sections.onTuneTag(name)
 
@@ -536,14 +563,6 @@ class ReplyWizardViewModel @Inject constructor(
     fun onTagConfidenceChange(name: String, value: Double) = sections.onTagConfidenceChange(name, value)
 
     private fun updateTags(block: (TagSectionState) -> TagSectionState) = sections.updateTags(block)
-
-    fun onOpenFinder() = sections.onOpenFinder()
-
-    fun onCloseFinder() = sections.onCloseFinder()
-
-    fun onFinderQueryChange(query: String) = sections.onFinderQueryChange(query)
-
-    fun onPickReference(row: ReferenceCandidateRow) = sections.onPickReference(row)
 
     fun onRemoveReference(targetId: String) = sections.onRemoveReference(targetId)
 

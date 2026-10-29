@@ -68,3 +68,47 @@ data class TagClaim(
     val relevance: Double = TAG_DEFAULT_RELEVANCE,
     val confidence: Double = TAG_DEFAULT_CONFIDENCE,
 )
+
+/**
+ * What the tag picker reads a typed name as (TagPicker, TagPickerTyping,
+ * TagPickerRefused; copy-voice *Tagging*): nothing yet, a legal name — the
+ * list's first row, canonicalized — or a refusal standing in the rule line's
+ * place. web's twin is `web/src/lib/topics/picker.ts` `readTagName`.
+ */
+sealed interface TagNameReading {
+    /** An empty field (or a bare `#`): the rule line stands, nothing is offered yet. */
+    data object Empty : TagNameReading
+
+    /** A legal atom: [canonical] is the first row's name. */
+    data class Legal(val canonical: String) : TagNameReading
+
+    /** Outside the atom: the refusal's [reason], and no first row. */
+    data class Refused(val reason: TagNameRefusal) : TagNameReading
+}
+
+/** The two refusals the picker's field says (TagPickerRefused.md). */
+enum class TagNameRefusal {
+    /** A character no name may carry, whitespace included — it leads, whatever the length. */
+    CHARSET,
+
+    /** Past the atom's [MAX_TAG_NAME_BYTES]. */
+    LENGTH,
+}
+
+/** The typed name, as the picker draws it. */
+fun readTagName(raw: String): TagNameReading {
+    if (canonicalTagName(raw).isEmpty()) return TagNameReading.Empty
+    return when (tagNameProblem(raw)) {
+        null -> TagNameReading.Legal(canonicalTagName(raw))
+        TagNameProblem.TOO_LONG ->
+            // The charset refusal leads (TagPickerRefused.jsx: a space is the
+            // refusal a reader reaches by habit), so a long name that also
+            // carries an illegal character reads the charset one.
+            if (canonicalTagName(raw).all { it in ATOM_CHARS }) {
+                TagNameReading.Refused(TagNameRefusal.LENGTH)
+            } else {
+                TagNameReading.Refused(TagNameRefusal.CHARSET)
+            }
+        TagNameProblem.WHITESPACE, TagNameProblem.ILLEGAL_CHARSET -> TagNameReading.Refused(TagNameRefusal.CHARSET)
+    }
+}

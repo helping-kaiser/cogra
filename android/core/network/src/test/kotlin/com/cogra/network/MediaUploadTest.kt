@@ -12,6 +12,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.PublishedPlacement
 import com.cogra.domain.media.UploadEchoMismatchException
 import com.cogra.domain.media.UploadProgress
 import com.cogra.network.auth.AuthGuard
@@ -175,6 +176,9 @@ class MediaUploadTest {
                 """{"data":{"uploadMedia":{"__typename":"UploadMediaPayload",
                    "media":${mediaJson(state = if (processingUpload) "PROCESSING" else "READY")},
                    "userErrors":[]}}}"""
+            body.contains("ownPublishedPlacement") ->
+                """{"data":{"ownPublishedPlacement":{"__typename":"Post","id":"p-old",
+                   "createdAt":"2026-09-12T08:00:00Z"}}}"""
             body.contains("mediaAttachment") -> {
                 mediaAttachmentCalls += 1
                 mediaAttachmentResponse
@@ -526,6 +530,27 @@ class MediaUploadTest {
 
         assertThat((outcome as Outcome.Failed).cause).isInstanceOf(UploadEchoMismatchException::class.java)
         assertThat(multipartSends).isEqualTo(1)
+    }
+
+    /**
+     * ComposeDetailsReused.md: the marker names the earliest of the author's
+     * published posts carrying the stage's media — asked with the landed ids,
+     * and not asked at all with none.
+     */
+    @Test
+    fun theMarkersReadAsksWithTheLandedIdsAndNamesThePost() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, _) = pictureRepository()
+
+        assertThat(repo.ownPublishedPlacement(emptyList())).isEqualTo(Outcome.Success(null))
+        assertThat(graphqlBodies).isEmpty()
+
+        val outcome = repo.ownPublishedPlacement(listOf("m1", "m2"))
+
+        assertThat(outcome).isEqualTo(
+            Outcome.Success(PublishedPlacement("p-old", java.time.Instant.parse("2026-09-12T08:00:00Z"))),
+        )
+        assertThat(graphqlBodies.single()).contains("\"mediaIds\":[\"m1\",\"m2\"]")
     }
 
     private fun sha256Hex(bytes: ByteArray): String =

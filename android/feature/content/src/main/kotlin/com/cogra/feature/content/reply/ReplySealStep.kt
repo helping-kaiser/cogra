@@ -71,8 +71,11 @@ import com.cogra.feature.content.wizard.sealLabel
 internal fun ColumnScope.ReplySealStepBody(
     state: ReplyWizardState,
     onOpenSheet: (ReplySealSheet) -> Unit,
-    onAddTopic: () -> Unit,
+    /** `+ Add a tag`: the tag picker in the reply's place. */
+    onAddTag: () -> Unit,
+    /** `+ Cite something`: the citation picker in the reply's place. */
     onCite: () -> Unit,
+    onTuneReference: (String) -> Unit,
     onRemoveReference: (String) -> Unit,
 ) {
     Text(
@@ -84,10 +87,14 @@ internal fun ColumnScope.ReplySealStepBody(
 
     ReplyActBlock(
         state = state,
-        onAddTopic = onAddTopic,
-        onCite = onCite,
-        onOpenCited = { onOpenSheet(ReplySealSheet.Cited) },
-        onRemoveReference = onRemoveReference,
+        doors = ReplyActDoors(
+            onAddTag = onAddTag,
+            onOpenTags = { onOpenSheet(ReplySealSheet.Tags) },
+            onCite = onCite,
+            onTuneReference = onTuneReference,
+            onOpenCited = { onOpenSheet(ReplySealSheet.Cited) },
+            onRemoveReference = onRemoveReference,
+        ),
     )
 
     Column(Modifier.fillMaxWidth()) {
@@ -167,12 +174,13 @@ internal fun ColumnScope.ReplySealActions(
 }
 
 /**
- * The act block: the comment, its topics, its citations, and the total.
+ * The act block: the comment, its tags, its citations, and the total.
  *
- * The board draws the two declaring rows as **offers** while nothing is
- * declared — "+ Add a topic … 1 more" — so the price of the gesture is
- * known before it is made, and as plain rows once something is. A
- * gallery adds no row either way: attaching media mints nothing, which
+ * The board draws the two declaring rows as **offers** — "+ Add a tag …
+ * 1 more", "+ Cite something" — on every state of the seal (ReplySeal.md,
+ * ReplyCitedMany.md), each opening its picker in the reply's place, and what
+ * is already declared reads back above them. A gallery adds no row either
+ * way: attaching media mints nothing, which
  * is why the board reads "1 signed action" beside two pictures.
  *
  * EVERY TRAILING COUNT IS A BARE NUMBER, as `ActsCard` draws it. The
@@ -181,13 +189,7 @@ internal fun ColumnScope.ReplySealActions(
  * example name ellipsised on a device.
  */
 @Composable
-private fun ReplyActBlock(
-    state: ReplyWizardState,
-    onAddTopic: () -> Unit,
-    onCite: () -> Unit,
-    onOpenCited: () -> Unit,
-    onRemoveReference: (String) -> Unit,
-) {
+private fun ReplyActBlock(state: ReplyWizardState, doors: ReplyActDoors) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -204,27 +206,23 @@ private fun ReplyActBlock(
         )
         Hairline()
         val tags = state.tagSection.tags
-        if (tags.isEmpty()) {
-            OfferRow(
-                text = "+ Add a topic",
-                onClick = onAddTopic,
-                testTag = "reply_seal_add_topic",
-            )
-        } else {
+        if (tags.isNotEmpty()) {
+            // The staged tags read back by name; the row is the door to their
+            // manager, the post seal's `TagsSheet`, where each tag's pair is set.
             ActRow(
-                kind = "Topics",
+                kind = "Tags",
                 detail = tags.joinToString(" ") { "#${it.name}" },
                 count = tags.size,
                 countNoun = "tag",
+                onOpen = doors.onOpenTags,
+                testTag = "reply_seal_tags",
             )
+            Hairline()
         }
+        // ReplySeal.md: ALWAYS the seal carries `+ Add a tag` (`ADD_ROWS`).
+        OfferRow(text = "+ Add a tag", onClick = doors.onAddTag, testTag = "reply_seal_add_tag")
         Hairline()
-        CitationRows(
-            references = state.referenceSection.references,
-            onCite = onCite,
-            onOpenCited = onOpenCited,
-            onRemoveReference = onRemoveReference,
-        )
+        CitationRows(state.referenceSection.references, doors)
         val acts = state.signedActionCount
         SummaryRow(
             headline = if (acts == 1) "1 signed action" else "$acts signed actions",
@@ -238,10 +236,19 @@ private fun ReplyActBlock(
 }
 
 @Composable
-private fun ActRow(kind: String, detail: String, count: Int, countNoun: String) {
+private fun ActRow(
+    kind: String,
+    detail: String,
+    count: Int,
+    countNoun: String,
+    onOpen: (() -> Unit)? = null,
+    testTag: String? = null,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .then(if (onOpen != null) Modifier.clickable(role = Role.Button, onClick = onOpen) else Modifier)
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             .padding(vertical = Space.x2),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
@@ -292,30 +299,26 @@ private fun ActsCount(count: Int, noun: String) {
  * `_shared.jsx:1076-1099`).
  */
 @Composable
-private fun CitationRows(
-    references: List<ReferenceRow>,
-    onCite: () -> Unit,
-    onOpenCited: () -> Unit,
-    onRemoveReference: (String) -> Unit,
-) {
+private fun CitationRows(references: List<ReferenceRow>, doors: ReplyActDoors) {
     if (references.size == 1) {
         ReplyCitedRow(
             // Singular: the label names the EDGE staged rather than the block
             // it sits in, and one edge is a reference (`_shared.jsx:1046-1052`).
             name = referenceLabel(references.first().target),
-            onRepair = onCite,
-            onRemove = { onRemoveReference(references.first().targetId) },
+            // ReplyCited.md: the name opens the citation's pair sheet.
+            onRepair = { doors.onTuneReference(references.first().targetId) },
+            onRemove = { doors.onRemoveReference(references.first().targetId) },
         )
         Hairline()
     } else if (references.size > 1) {
-        CitedDoorRow(count = references.size, onOpen = onOpenCited, testTag = "reply_seal_cited")
+        CitedDoorRow(count = references.size, onOpen = doors.onOpenCited, testTag = "reply_seal_cited")
         Hairline()
     }
     // "+ Cite something", the short form: the hand board spelled the kinds out
     // while the staged twin said the short form, so one surface said two things
     // depending on whether a reference had landed. The picker's own screen is
     // where the kinds are enumerated (`ReplySeal.jsx:14-17`).
-    OfferRow(text = "+ Cite something", onClick = onCite, testTag = "reply_seal_cite")
+    OfferRow(text = "+ Cite something", onClick = doors.onCite, testTag = "reply_seal_cite")
     Hairline()
 }
 
@@ -610,3 +613,13 @@ private val PAD_HELP_GUTTER = 40.dp
 
 /** The act block's label column, read off `ReplySeal`. */
 private val ACT_LABEL_WIDTH = 76.dp
+
+/** The act block's doors: the two adds, the managers behind the counted rows, and a citation's own row. */
+private data class ReplyActDoors(
+    val onAddTag: () -> Unit,
+    val onOpenTags: () -> Unit,
+    val onCite: () -> Unit,
+    val onTuneReference: (String) -> Unit,
+    val onOpenCited: () -> Unit,
+    val onRemoveReference: (String) -> Unit,
+)

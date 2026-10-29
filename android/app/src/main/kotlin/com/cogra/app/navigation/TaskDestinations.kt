@@ -135,6 +135,10 @@ private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
             },
             onLeave = { navController.navigateUp() },
             onRestoreKey = { navController.navigate(Restore) },
+            // The already-published marker opens the post it names over the
+            // composer (ComposeDetailsReused.md); back returns to the details
+            // stage with the draft as it was.
+            onOpenPost = { postId -> navController.navigate(PostDetail(postId)) },
             keyBanner = keyBanner(node = null),
             deletionBand = deletionBand(node = null),
         )

@@ -68,6 +68,7 @@ class PostEditLeaveTest {
         FaithfulMediaRepository(),
         ScriptedPictures(),
         ScriptedClips(),
+        com.cogra.domain.testing.ScriptedSearchRepository(),
     )
 
     private var leaves = 0

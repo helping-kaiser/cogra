@@ -18,6 +18,7 @@
 package com.cogra.core.designsystem.v2.atom
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,11 +42,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -79,6 +83,15 @@ fun SearchBar(
     onClear: (() -> Unit)? = null,
     /** The keyboard's action key; null leaves the platform's default. */
     onAction: (() -> Unit)? = null,
+    /**
+     * The field-error state in the pill's idiom (`SearchBar.jsx` `error`): a
+     * 1dp `error` ring inside the pill's own box, so nothing moves; the words
+     * are the surface's, and [errorText] is them as the field's error semantics
+     * (the bound input's `aria-invalid` + `aria-describedby`). Null is at rest.
+     */
+    errorText: String? = null,
+    /** Focus the surface moves into the field (a picker's "takes focus AND the keyboard rises"). */
+    focusRequester: FocusRequester? = null,
 ) {
     Box(modifier.fillMaxWidth().padding(start = Space.x4, end = Space.x4, top = Space.x1, bottom = Space.x3)) {
         Row(
@@ -87,6 +100,7 @@ fun SearchBar(
                 .height(SEARCH_BAR_HEIGHT)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .errorRing(errorText != null)
                 // The registered field is the drawn pill (`SearchBar.jsx` `data-node`
                 // on the pill), so its tag rides outside the pill's own inset.
                 .dataNode(node)
@@ -125,7 +139,11 @@ fun SearchBar(
                         ?: KeyboardActions.Default,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .semantics { contentDescription = label }
+                        .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                        .semantics {
+                            contentDescription = label
+                            if (errorText != null) error(errorText)
+                        }
                         .dataNode(node?.div("input")),
                 )
             }
@@ -159,3 +177,8 @@ private fun ClearControl(onClear: () -> Unit, node: DataNode?) {
         )
     }
 }
+
+/** The error state's 1dp ring, inside the pill's own box so nothing moves (`SearchBar.jsx` `error`). */
+@Composable
+private fun Modifier.errorRing(on: Boolean): Modifier =
+    if (on) border(1.dp, MaterialTheme.colorScheme.error, CircleShape) else this
