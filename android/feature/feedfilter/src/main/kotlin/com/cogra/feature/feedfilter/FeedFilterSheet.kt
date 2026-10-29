@@ -41,6 +41,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -169,6 +170,7 @@ private fun viewWords(borrowedHandle: String?): ViewWords = if (borrowedHandle =
  * [onOpenTopics] is `All your topics`, the door to everything held; null
  * stands it inert.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedFilterSheet(
     staged: FeedFilter,
