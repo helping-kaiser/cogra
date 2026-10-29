@@ -31,7 +31,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import { prepareComment } from "@/lib/api/content-api";
 import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
-import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
+import { writeRefusalMessage } from "@/lib/ui/error-messages";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
 import { commentExpectation } from "@/lib/compose/intent";
@@ -71,8 +71,7 @@ import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
 import { ReferencePicker } from "@/lib/ui2/compose/reference-picker";
 import { TagPicker } from "@/lib/ui2/compose/tag-picker";
 import { COVER_FROM_PICTURE, effectiveCover } from "@/lib/compose/wizard";
-import type { SealFault } from "@/lib/compose/seal-fault";
-import type { UserError } from "@/lib/api/outcome";
+import { sealFaultOf, type SealFault } from "@/lib/compose/seal-fault";
 import { SLOW_NETWORK_MS, useSlowAnswer, useWaitedPast } from "@/lib/ui2/waiting-commit";
 import { ReplyComposeStep } from "./reply-compose-step";
 import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
@@ -83,11 +82,6 @@ import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
  * the author and that fact when they have written something.
  */
 export const LEAVE_LABEL = "Leave — the reply is discarded";
-
-/** Whether the write rule is among a refusal's codes (copy-voice, *Faults by code*). */
-function writeRuleIn(errors: readonly UserError[]): boolean {
-  return errors.some((error) => error.code === "WRITE_RULE_FAILED");
-}
 
 const NO_FRAMES: readonly Blob[] = [];
 const NO_URLS: readonly string[] = [];
@@ -149,7 +143,6 @@ export function ReplyWizard({
   const signing = busy || held;
   const swapped = useSlowAnswer(signing);
   const slow = useWaitedPast(signing, SLOW_NETWORK_MS);
-  const [refusal, setRefusal] = useState<string | null>(null);
   // What became of the last press, when it did not leave the seal (`SealFault`).
   const [fault, setFault] = useState<SealFault | null>(null);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
@@ -386,7 +379,8 @@ export function ReplyWizard({
    */
   const retire = () => {
     setFault(null);
-    setRefusal(null);
+    setTagErrors({});
+    setReferenceErrors({});
   };
   const back = () => {
     retire();
@@ -448,7 +442,6 @@ export function ReplyWizard({
   const submit = async () => {
     setBusy(true);
     setHeld(false);
-    setRefusal(null);
     setTagErrors({});
     setReferenceErrors({});
     setFault(null);
@@ -489,25 +482,27 @@ export function ReplyWizard({
     }
     if (prepared.kind === "refused") {
       setBusy(false);
-      // The write rule is no fault: its notice stands in the commit's place,
-      // nothing staged or spent (ReplySeal.md:21).
-      if (writeRuleIn(prepared.errors)) {
-        setFault({ kind: "writeRule" });
+      // A refusal at prepare stages nothing, and the seal says it where it
+      // stands (the post seal's failure pack, at comment scale): the write
+      // rule's notice, or a cited post that never landed on its own row
+      // (ReplySeal.md:21, ReplySealComment.md:9).
+      const read = sealFaultOf(prepared.errors, state.references);
+      if (read.kind !== "bug") {
+        setFault(read);
         return;
       }
+      // A tag or citation the server named by its place is said on its own
+      // acts-card row with `Remove it` (`ActsCard`'s fault row) — no line at
+      // the foot, the commit staying. Anything else is the bug notice.
       const partition = partitionFieldErrors(prepared.errors, (error) =>
         writeRefusalMessage(error.code),
       );
-      setTagErrors(partition.perTag);
-      setReferenceErrors(partition.perReference);
-      setRefusal(
-        partition.general ??
-          (hasFieldErrors(partition)
-            ? "Something in the details was refused."
-            : "The server refused this write."),
-      );
-      // A refused tag or citation is said on its own acts-card row, with
-      // `Remove it` (`ActsCard`'s fault row), where the seal reads it back.
+      if (hasFieldErrors(partition)) {
+        setTagErrors(partition.perTag);
+        setReferenceErrors(partition.perReference);
+        return;
+      }
+      setFault(read);
       return;
     }
 
@@ -549,11 +544,10 @@ export function ReplyWizard({
       setFault({ kind: "offline" });
       return;
     }
-    if (writeRuleIn(refused.errors)) {
-      setFault({ kind: "writeRule" });
-      return;
-    }
-    setRefusal(firstRefusalMessage(refused.errors, "The comment wasn't signed."));
+    // The write rule's notice; a cited post that never landed, on its row; any
+    // other refused act, whose target landed, the bug notice
+    // (ReplySealComment.md:9-11).
+    setFault(sealFaultOf(refused.errors, state.references));
   };
 
   // ---- the gate ------------------------------------------------------------
@@ -628,7 +622,6 @@ export function ReplyWizard({
               tags={state.tags}
               onTags={(tags) => {
                 retire();
-                setTagErrors({});
                 dispatch({ type: "tags", tags });
               }}
               onDone={() => setPicking(null)}
@@ -639,7 +632,6 @@ export function ReplyWizard({
               references={state.references}
               onReferences={(references) => {
                 retire();
-                setReferenceErrors({});
                 dispatch({ type: "references", references });
               }}
               onDone={() => setPicking(null)}
@@ -718,7 +710,6 @@ export function ReplyWizard({
               slow={slow}
               keyOnDevice={keyOnDevice}
               fault={fault}
-              refusal={refusal}
               tagErrors={tagErrors}
               referenceErrors={referenceErrors}
               onSheet={(next) => {
@@ -741,12 +732,10 @@ export function ReplyWizard({
               // its words named an item by its place, which has moved.
               onTags={(tags) => {
                 retire();
-                setTagErrors({});
                 dispatch({ type: "tags", tags });
               }}
               onReferences={(references) => {
                 retire();
-                setReferenceErrors({});
                 dispatch({ type: "references", references });
               }}
               onOpenTagPicker={() => setPicking("tags")}
@@ -768,6 +757,9 @@ export function ReplyWizard({
               onRetryUploads={retryUploads}
               onWriteRuleHelp={() => setHelp(HELP_TOPICS.whySigningWaitsAtReply)}
               onNotNow={() => setFault(null)}
+              // The report page Settings opens is not built on the web yet: the
+              // word stands where the board draws it, as on the post seal.
+              onReport={() => {}}
               onBack={back}
               onDiscard={leave}
               onRestoreKey={() => router.push("/restore")}

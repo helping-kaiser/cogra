@@ -52,7 +52,6 @@ function renderSeal(
     keyOnDevice: extra.keyOnDevice ?? true,
     fault: extra.fault ?? null,
     tagErrors: extra.tagErrors,
-    refusal: null,
     onSheet: vi.fn(),
     onLicense: vi.fn(),
     onStagedStance: vi.fn(),
@@ -70,6 +69,7 @@ function renderSeal(
     onRetryUploads: vi.fn(),
     onWriteRuleHelp: vi.fn(),
     onNotNow: vi.fn(),
+    onReport: vi.fn(),
     onBack: vi.fn(),
     onDiscard: vi.fn(),
     onRestoreKey: vi.fn(),
@@ -447,5 +447,73 @@ describe("ReplySealStep — the fault foot", () => {
     renderSeal({}, "none", { fault: { kind: "offline" }, keyOnDevice: false });
     expect(screen.getByTestId("reply-key-absent")).toBeInTheDocument();
     expect(screen.queryByTestId("reply-retry")).toBeNull();
+  });
+});
+
+// THE REFUSED ACT (ReplySealComment.md:9-13; SealFaultRow.md, SealFaultBug.md
+// at comment scale).
+describe("ReplySealStep — a refused act", () => {
+  const unlanded = citation("p-2", "Tide tables and the third headland");
+
+  it("ReplySealComment.md:9 the cited post that never landed: its row reads the line, then Remove it; Sign comment stays; no Retry", () => {
+    const { onReferences } = renderSeal({ references: [unlanded] }, "none", {
+      fault: { kind: "row", targetId: "p-2" },
+    });
+    const line = screen.getByTestId("reply-seal-reference-fault");
+    expect(line).toHaveTextContent("This post didn't land, so it can't be cited.");
+    expect(screen.getByTestId("reply-cited-repair")).toHaveTextContent("Tide tables and the third headland");
+    expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
+    expect(screen.getByTestId("reply-sign")).not.toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+    expect(screen.queryByTestId("reply-transport-error")).toBeNull();
+    fireEvent.click(within(line).getByRole("button", { name: /Remove/ }));
+    expect(onReferences).toHaveBeenCalledWith([]);
+  });
+
+  it("SealFaultRow.md:5 under a count the line stands under the References row, the citation named by Remove it's name", () => {
+    const { onReferences } = renderSeal({ references: [unlanded, citation("u-1", "Mira Voss")] }, "none", {
+      fault: { kind: "row", targetId: "p-2" },
+    });
+    expect(screen.getByTestId("reply-open-cited-fault")).toHaveTextContent(
+      "This post didn't land, so it can't be cited.",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Remove Tide tables and the third headland" }));
+    expect(onReferences).toHaveBeenCalledWith([expect.objectContaining({ targetId: "u-1" })]);
+  });
+
+  it("SealFaultRow.md:3 a cited comment that never landed says so in its own noun", () => {
+    const comment = { ...newReferenceDraft("c-9", { kind: "Comment" as const, label: "@mira's comment", href: "/c/c-9" }) };
+    renderSeal({ references: [comment] }, "none", { fault: { kind: "row", targetId: "c-9" } });
+    expect(screen.getByTestId("reply-seal-reference-fault")).toHaveTextContent(
+      "This comment didn't land, so it can't be cited.",
+    );
+  });
+
+  it("ReplySealComment.md:11 any other refused act: the notice This shouldn't have happened takes Sign comment's place with Try again, Report a problem and Discard the reply", () => {
+    const { onRetry, onReport, onDiscard } = renderSeal({ references: [unlanded] }, "none", {
+      fault: { kind: "bug" },
+    });
+    const notice = screen.getByTestId("reply-seal-bug");
+    expect(notice).toHaveTextContent("This shouldn't have happened");
+    expect(notice).toHaveTextContent(
+      "That's a fault on our side, not yours. Nothing was signed or spent, and telling us helps us fix it.",
+    );
+    expect(screen.queryByTestId("reply-sign")).toBeNull();
+    // SealFaultBug.md:5 — Try again is the notice's filled button; the other two text buttons under it.
+    expect(within(notice).getByTestId("reply-try-again")).toHaveTextContent("Try again");
+    expect(within(notice).queryByTestId("reply-report")).toBeNull();
+    expect(screen.getByTestId("reply-report")).toHaveTextContent("Report a problem");
+    expect(screen.getByTestId("reply-discard")).toHaveTextContent("Discard the reply");
+    // Everything above the foot stays as it was, and no row is marked.
+    expect(screen.getByTestId("reply-cited-repair")).toHaveTextContent("Tide tables and the third headland");
+    expect(screen.queryByTestId("reply-seal-reference-fault")).toBeNull();
+    // SealFaultBug.md:15 — the header's ? is the only ? on the seal.
+    expect(within(notice).queryByRole("button", { name: /\?|Why|Your key/ })).toBeNull();
+    fireEvent.click(screen.getByTestId("reply-try-again"));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId("reply-report"));
+    expect(onReport).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId("reply-discard"));
+    expect(onDiscard).toHaveBeenCalledTimes(1);
   });
 });

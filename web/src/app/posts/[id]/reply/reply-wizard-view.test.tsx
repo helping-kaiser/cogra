@@ -668,7 +668,10 @@ describe("the reply wizard", () => {
       fireEvent.click(screen.getByTestId("reply-sign"));
       const fault = await screen.findByTestId("reply-seal-tags-fault");
       expect(within(fault).getByRole("button", { name: "Remove #reserved" })).toBeInTheDocument();
-      expect(screen.getByTestId("reply-refused")).toBeInTheDocument();
+      // Said on its row alone: no fault at the foot, and the commit stays
+      // (SealFaultRow.md, the row's rule read for a tag).
+      expect(screen.queryByTestId("reply-refused")).toBeNull();
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
       expect(onSigned).not.toHaveBeenCalled();
       // Removing it retires the refusal said against it.
       fireEvent.click(within(fault).getByRole("button", { name: "Remove #reserved" }));
@@ -737,6 +740,105 @@ describe("the reply wizard", () => {
       // WriteRuleFailed.md:29 — the words still in its composer.
       fireEvent.click(screen.getByTestId("reply-back"));
       expect(await screen.findByTestId("reply-words")).toHaveValue("Still here.");
+    });
+
+    // ReplySealComment.md:9 — a citation of a post that never landed: its row
+    // says so with Remove it, Sign comment stays, no Retry anywhere.
+    it("says a cited post that never landed on its row, and Remove it readies the seal again", async () => {
+      server.use(
+        gqlLink.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: {
+              prepareComment: {
+                __typename: "PrepareContentPayload",
+                node: null,
+                writes: null,
+                userErrors: [
+                  { __typename: "UserError", message: "gone", code: "NOT_FOUND", field: ["references", "0", "target"] },
+                ],
+              },
+            },
+          }),
+        ),
+      );
+      server.use(
+        gqlLink.query("ReferenceCandidates", () =>
+          HttpResponse.json({
+            data: {
+              referenceCandidates: [
+                {
+                  __typename: "ReferenceCandidate",
+                  targetId: "u-sal",
+                  target: {
+                    __typename: "User",
+                    id: "u-sal",
+                    handle: "saltorres",
+                    displayName: { __typename: "ModeratedText", value: "Sal Torres" },
+                  },
+                },
+              ],
+            },
+          }),
+        ),
+      );
+      draw();
+      await toSeal();
+      // `+ Cite something`: the one candidate staged, Done gives the seal back.
+      fireEvent.click(screen.getByTestId("reply-open-references"));
+      fireEvent.change(await screen.findByRole("searchbox", { name: "Cite something" }), {
+        target: { value: "sal" },
+      });
+      fireEvent.click(await screen.findByTestId(byNode("referencePicker.result", "1")));
+      fireEvent.click(screen.getByTestId(byNode("referencePicker.done")));
+      await screen.findByTestId("reply-cited-repair");
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const line = await screen.findByTestId("reply-seal-reference-fault");
+      expect(line).toHaveTextContent("This post didn't land, so it can't be cited.");
+      expect(screen.getByTestId("reply-sign")).toHaveTextContent("Sign comment");
+      expect(screen.queryByTestId("reply-retry")).toBeNull();
+      expect(screen.queryByTestId("reply-seal-bug")).toBeNull();
+      fireEvent.click(within(line).getByRole("button", { name: /Remove/ }));
+      expect(screen.queryByTestId("reply-seal-reference")).toBeNull();
+      expect(screen.getByTestId("reply-seal-acts-total")).toHaveTextContent("1 thing, signed");
+    });
+
+    // ReplySealComment.md:11,13 — a refused act whose target landed: the bug
+    // notice in Sign comment's place, and its discard asks first.
+    it("puts the bug notice in the foot for any other refused act, its Discard the reply asking first", async () => {
+      server.use(prepareOk("comment-9"));
+      const signer = fakeWriteSigner({
+        signStaged: vi.fn(async () => ({
+          kind: "refused" as const,
+          id: "w1",
+          errors: [{ message: "no", code: "BAD_INPUT" as const, field: null }],
+        })),
+      });
+      const onLeave = vi.fn();
+      renderWithProviders(
+        <ReplyWizard
+          target={POST_TARGET}
+          store={fakeIdentityStore({ keyOnDevice: true })}
+          onLeave={onLeave}
+          onSigned={vi.fn()}
+        />,
+        { store: signedInStore(), writeSigner: signer },
+      );
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-sign"));
+      const notice = await screen.findByTestId("reply-seal-bug");
+      expect(notice).toHaveTextContent("This shouldn't have happened");
+      expect(screen.queryByTestId("reply-sign")).toBeNull();
+      fireEvent.click(screen.getByTestId("reply-discard"));
+      const dialog = screen.getByTestId("reply-discard-confirm");
+      await waitFor(() => expect(dialog).toHaveAttribute("open"));
+      expect(dialog).toHaveTextContent("Discard this reply?");
+      expect(dialog).toHaveTextContent("Nothing is kept.");
+      expect(onLeave).not.toHaveBeenCalled();
+      // SealFaultBug.md: Try again asks the same signing again.
+      fireEvent.click(screen.getByTestId("reply-discard-confirm-keep"));
+      fireEvent.click(screen.getByTestId("reply-try-again"));
+      await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
+      expect(await screen.findByTestId("reply-seal-bug")).toBeInTheDocument();
     });
 
     it("tells a keyless browser to restore rather than offering a dead button", async () => {

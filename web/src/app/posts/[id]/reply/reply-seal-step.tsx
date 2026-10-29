@@ -34,7 +34,10 @@
 // the post seal's failure pack): no answer at all puts the fault line, an
 // outlined Retry and Back in the commit's place; the write rule puts its notice
 // there, its fact ending on what is true of a reply — `your reply is still
-// here.` — and `Not now` under it. Everything above the foot stays as it was.
+// here.` — and `Not now` under it; a staged act refused whose target landed
+// puts the bug notice there, with Try again, Report a problem and Discard the
+// reply. A cited post that never landed is said on its own row instead, and
+// the commit stays. Everything above the foot stays as it was.
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton } from "@/lib/ui2/pill-button";
@@ -60,6 +63,9 @@ import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
 import { LicenseRows } from "@/lib/ui/license-rows";
 import { TransportError } from "@/lib/ui/transport-error";
 import type { SealFault } from "@/lib/compose/seal-fault";
+// The one sentence per noun a refused citation reads, shared with the post
+// seal and the comment edit rather than spelled a third time.
+import { unlandedCitationLine } from "@/app/(app)/compose/wizard/seal-step";
 import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
@@ -97,6 +103,11 @@ export const REPLY_WRITE_RULE_TITLE = "You can't sign right now";
 export const REPLY_WRITE_RULE_FACT =
   "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent — your reply is still here.";
 
+/** The bug notice, in the failure pack's blessed words (SealFaultBug.md:3). */
+export const REPLY_BUG_TITLE = "This shouldn't have happened";
+export const REPLY_BUG_FACT =
+  "That's a fault on our side, not yours. Nothing was signed or spent, and telling us helps us fix it.";
+
 const CLOSE_GLYPH =
   "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
 
@@ -111,7 +122,6 @@ export function ReplySealStep({
   slow,
   keyOnDevice,
   fault,
-  refusal,
   tagErrors,
   referenceErrors,
   onSheet,
@@ -131,6 +141,7 @@ export function ReplySealStep({
   onRetryUploads,
   onWriteRuleHelp,
   onNotNow,
+  onReport,
   onBack,
   onDiscard,
   onRestoreKey,
@@ -152,7 +163,6 @@ export function ReplySealStep({
   keyOnDevice: boolean | null;
   /** What became of the last press, when it did not leave the seal. */
   fault: SealFault | null;
-  refusal: string | null;
   /** A refused tag's words, by its place in the staged set. */
   tagErrors?: Readonly<Record<number, string>>;
   /** A refused citation's words, by its place in the staged set. */
@@ -173,7 +183,7 @@ export function ReplySealStep({
   /** The key notice's own "?" (ReplySealKeyAbsent.md:5). */
   onKeyHelp: () => void;
   onSign: () => void;
-  /** The offline fault's Retry: the same signing, asked again. */
+  /** The offline fault's Retry and the bug notice's Try again: the same signing, asked again. */
   onRetry: () => void;
   /** The failed upload's Retry: the gate runs again, and nothing signs until the next press. */
   onRetryUploads: () => void;
@@ -181,8 +191,10 @@ export function ReplySealStep({
   onWriteRuleHelp: () => void;
   /** `Not now` under the write rule's notice: the notice goes and the seal stands again. */
   onNotNow: () => void;
+  /** `Report a problem` under the bug notice. */
+  onReport: () => void;
   onBack: () => void;
-  /** `Discard the reply` under the key notice — the wizard's own leave, asking first. */
+  /** `Discard the reply` under the key notice and the bug notice — the wizard's own leave, asking first. */
   onDiscard: () => void;
   onRestoreKey: () => void;
 }) {
@@ -248,8 +260,19 @@ export function ReplySealStep({
   // item 70): nothing staged draws no row; ONE reads back as itself — its
   // name, which opens its pair (ReplyCited.md:9), and the × that drops it;
   // TWO OR MORE read back as their count, the row the door to `CitedSheet`.
-  const refusedReference = firstRefused(state.references, referenceErrors);
-  const only = state.references.length === 1 ? state.references[0] : undefined;
+  //
+  // A CITED POST THAT NEVER LANDED is said on its row in its own words, with
+  // `Remove it` and no Retry, and Sign comment stays (ReplySealComment.md:9,
+  // SealFaultRow.md); any other refusal of a citation, in the server's.
+  const unlanded =
+    fault?.kind === "row"
+      ? state.references.find((reference) => reference.targetId === fault.targetId)
+      : undefined;
+  const refusedReference =
+    unlanded !== undefined
+      ? { item: unlanded, message: unlandedCitationLine(unlanded) }
+      : firstRefused(state.references, referenceErrors);
+  const only =state.references.length === 1 ? state.references[0] : undefined;
   if (only !== undefined) {
     rows.push({
       label: "Reference",
@@ -362,12 +385,6 @@ export function ReplySealStep({
 
       <div className="flex-1" />
 
-      {refusal && (
-        <p role="alert" data-testid="reply-refused" className="m-0 text-body-medium text-error">
-          {refusal}
-        </p>
-      )}
-
       {/* THE KEY NOTICE TAKES THE FOOT'S PLACE (ReplySealKeyAbsent.md): every
           row stays, the reply-scale line, the restore, and `Discard the reply`
           under it — never a way to keep a draft, since a comment keeps none. */}
@@ -416,6 +433,28 @@ export function ReplySealStep({
           <PillButton testId="reply-not-now" variant="text" full onClick={onNotNow}>
             Not now
           </PillButton>
+        </>
+      ) : fault?.kind === "bug" ? (
+        // A STAGED ACT REFUSED WHOSE TARGET LANDED is a bug the picking stage
+        // should have blocked (ReplySealComment.md:11, SealFaultBug.md): the
+        // tertiary notice in the bug's own words takes the commit's place, no
+        // row marked, with Try again in it, and Report a problem and the
+        // reply's own discard under it — which asks first (:13).
+        <>
+          <NoticePanel title={REPLY_BUG_TITLE} testId="reply-seal-bug">
+            <NoticeLine>{REPLY_BUG_FACT}</NoticeLine>
+            <PillButton testId="reply-try-again" variant="inverse" full onClick={onRetry}>
+              Try again
+            </PillButton>
+          </NoticePanel>
+          <div className="flex flex-col">
+            <PillButton testId="reply-report" variant="text" full onClick={onReport}>
+              Report a problem
+            </PillButton>
+            <PillButton testId="reply-discard" variant="text" full onClick={onDiscard}>
+              Discard the reply
+            </PillButton>
+          </div>
         </>
       ) : (
         <div className="flex flex-col gap-2">
