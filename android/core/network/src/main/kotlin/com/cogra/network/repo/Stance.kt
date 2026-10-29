@@ -221,10 +221,18 @@ class StanceRepositoryImpl @Inject constructor(
         name: String,
         pick: Optional<StancePickInput?>,
         includePending: Boolean,
-    ): Outcome<StanceBundleFields> = when (val read = askTopic(name, pick, includePending)) {
-        is Outcome.Failed -> Outcome.Failed(read.cause)
-        is Outcome.Refused -> Outcome.Refused(read.errors)
-        is Outcome.Success -> read.value?.let { it.bundle.orRefusal() } ?: notFound()
+    ): Outcome<StanceBundleFields> {
+        // The topic's own root. `hashtag(name:)` resolves any well-formed
+        // name — a Type is anchored vacuously, so a topic nobody has tagged
+        // yet still answers — and a null here means the name is one the
+        // substrate cannot carry, not an empty bundle.
+        val read = client.query(HashtagStanceQuery(name, pick, includePending)).fetch()
+            .map { data -> data.hashtag?.let { RootAnswer(it.viewerStance?.stanceBundleFields) } }
+        return when (read) {
+            is Outcome.Failed -> Outcome.Failed(read.cause)
+            is Outcome.Refused -> Outcome.Refused(read.errors)
+            is Outcome.Success -> read.value?.let { it.bundle.orRefusal() } ?: notFound()
+        }
     }
 
     /**
@@ -258,19 +266,6 @@ class StanceRepositoryImpl @Inject constructor(
         kinds.remove(id)
         return notFound()
     }
-
-    /**
-     * The topic's own root. `hashtag(name:)` resolves any well-formed
-     * name — a Type is anchored vacuously, so a topic nobody has tagged
-     * yet still answers — and a null here means the name is one the
-     * substrate cannot carry, not an empty bundle.
-     */
-    private suspend fun askTopic(
-        name: String,
-        pick: Optional<StancePickInput?>,
-        includePending: Boolean,
-    ): Outcome<RootAnswer?> = client.query(HashtagStanceQuery(name, pick, includePending)).fetch()
-        .map { data -> data.hashtag?.let { RootAnswer(it.viewerStance?.stanceBundleFields) } }
 
     /** One root's answer, or null where that root does not hold the id. */
     private suspend fun ask(

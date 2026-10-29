@@ -36,15 +36,6 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.TypeTokens
 
-/** One act on the card: its quiet kind, what it names, and its count heard whole. */
-class ActsCardRow(
-    val label: String,
-    val count: Int,
-    /** The count's noun, singular — `opinion` reads `1 opinion` to an ear (ActsCard.jsx COUNT). */
-    val noun: String,
-    val value: @Composable () -> Unit,
-)
-
 /** `ActsCard.jsx` ROW's 44px floor. */
 private val ACT_ROW_MIN = 44.dp
 

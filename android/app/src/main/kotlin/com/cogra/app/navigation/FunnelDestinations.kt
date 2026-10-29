@@ -80,24 +80,29 @@ internal fun NavGraphBuilder.funnel(shell: ShellScope) = with(shell) {
             onBack = { navController.popBackStack() },
         )
     }
-    composable<Restore> {
-        val keptPicks: KeptPicksDoorViewModel = hiltViewModel()
-        val scope = rememberCoroutineScope()
-        RestoreRoute(
-            onRestored = {
-                navController.report(actorRestoredKey, true)
-                // PICKS KEPT PENDING WAIT: their review opens over the surface the
-                // restore returns to, under the same snackbar, and nothing signs
-                // on its own (Restore.md:39).
-                scope.launch {
-                    val waiting = keptPicks.picksWaiting()
-                    navController.popBackStack()
-                    if (waiting) navController.navigate(KeptPicks)
-                }
-            },
-            onBack = { navController.popBackStack() },
-        )
-    }
+    composable<Restore> { RestoreDestination() }
+}
+
+/**
+ * The key's restore. PICKS KEPT PENDING WAIT: their review opens over the
+ * surface the restore returns to, under the same snackbar, and nothing signs
+ * on its own (Restore.md:39).
+ */
+@Composable
+private fun ShellScope.RestoreDestination() {
+    val keptPicks: KeptPicksDoorViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
+    RestoreRoute(
+        onRestored = {
+            navController.report(actorRestoredKey, true)
+            scope.launch {
+                val waiting = keptPicks.picksWaiting()
+                navController.popBackStack()
+                if (waiting) navController.navigate(KeptPicks)
+            }
+        },
+        onBack = { navController.popBackStack() },
+    )
 }
 
 /** The mailed links' landings, each an App Link on the web origin. */

@@ -587,9 +587,6 @@ fun StanceControl(
     val target = targetWords(targetLabel)
     val chooseLabel = stringResource(R.string.stance_target_choose, target)
     val description = targetDescription(state.standing, state.severed, zeroWords, target, state.kept)
-    // THE ANCHOR WEARS THE KEPT PICK'S FACE, never the bundle's, while one
-    // waits (PadPending.md:3); the bundle behind it is unchanged (:9).
-    val restingPoint = state.kept?.pick ?: state.standing
     // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (PadStanding.md:23-25): a
     // pad over nothing signed carries three controls, over a standing four.
     // A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11).
@@ -701,10 +698,8 @@ fun StanceControl(
                     .testTag(anchor?.tag ?: "${testTagPrefix}_stance"),
             ) {
                 StanceRestingFace(
-                    standing = restingPoint,
-                    // A kept pick at (0, 0) says nothing: it is not a walk-back.
-                    face = state.kept?.let { bundleReadout(it.pick, EMPTY_PICK_LABEL) }
-                        ?: state.standing?.let { restingReadout(it, state.severed, zeroWords) },
+                    standing = state.restingPoint,
+                    face = state.restingAnchor(zeroWords),
                     testTagPrefix = testTagPrefix,
                     anchor = anchor,
                     emptyFace = emptyFaceFor(lineFaceInk),
@@ -720,10 +715,7 @@ fun StanceControl(
         // again. With the pad open, the pad's own commit row carries both. A Set
         // whose pad was cancelled while it signed passes its wait here too —
         // Cancel closes the pad, never the act (round 21, ask 16).
-        if (!padOnly) KeptLine(state, node, testTagPrefix)
-        if (state.pad == StancePadMode.CLOSED && !padOnly) {
-            HoldRowLine(state, onRetry = onRetrySigning, testTagPrefix = testTagPrefix)
-        }
+        if (!padOnly) RowLines(state, node, onRetrySigning, testTagPrefix)
 
         state.severance?.let { prompt ->
             SeveranceConfirm(
@@ -750,6 +742,26 @@ fun StanceControl(
         }
     }
 }
+
+/**
+ * Under the face: what a kept pick waits on, then — the pad closed — the
+ * hold's row line.
+ */
+@Composable
+private fun RowLines(state: StanceControlState, node: DataNode?, onRetry: () -> Unit, testTagPrefix: String) {
+    KeptLine(state, node, testTagPrefix)
+    if (state.pad == StancePadMode.CLOSED) HoldRowLine(state, onRetry = onRetry, testTagPrefix = testTagPrefix)
+}
+
+/**
+ * THE ANCHOR WEARS THE KEPT PICK'S FACE, never the bundle's, while one waits
+ * (PadPending.md:3); the bundle behind it is unchanged (:9).
+ */
+private val StanceControlState.restingPoint: StancePoint? get() = kept?.pick ?: standing
+
+/** The resting face: a kept pick at (0, 0) says nothing — it is not a walk-back. */
+private fun StanceControlState.restingAnchor(zeroWords: StanceZeroWords): StanceAnchor? =
+    kept?.let { bundleReadout(it.pick, EMPTY_PICK_LABEL) } ?: standing?.let { restingReadout(it, severed, zeroWords) }
 
 /** The hold's row line: `Signing…` past 200ms, `That didn't sign.` with Retry once it fails. */
 @Composable

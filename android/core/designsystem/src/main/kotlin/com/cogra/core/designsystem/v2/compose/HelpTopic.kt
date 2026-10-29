@@ -118,11 +118,6 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
         ),
     ),
 
-    /**
-     * The write rule's notice on an edit, the post's or a comment's — the
-     * same dialog, its draft clause true of a surface that keeps no draft:
-     * `…and your edit is still here.` (copy-voice; blessed, jakob 2026-10-05).
-     */
     /** The write rule's notice on the kept picks' seal (WriteRuleFailed.md:37). */
     WhySigningWaitsKept(
         title = "Why signing waits",
@@ -134,6 +129,11 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
         ),
     ),
 
+    /**
+     * The write rule's notice on an edit, the post's or a comment's — the
+     * same dialog, its draft clause true of a surface that keeps no draft:
+     * `…and your edit is still here.` (copy-voice; blessed, jakob 2026-10-05).
+     */
     WhySigningWaitsAtEdit(
         title = "Why signing waits",
         paragraphs = listOf(

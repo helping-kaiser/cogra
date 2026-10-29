@@ -93,19 +93,7 @@ fun StanceControlRoute(
     viewModel: StanceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    // WHAT A PICK KEPT HERE SIGNS AS (KeptPicksReview.md:9): the vouch-back's
-    // pad keeps a vouch-back, every other control a plain pick.
-    val family = if (variant != null) KeptFamily.VOUCH_BACK else KeptFamily.OPINION
-    LaunchedEffect(target, family) { viewModel.setFamily(target, family) }
-    // A restore taken on its own screen reaches the anchors here on the way back.
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onResume() }
-    val openKeptPicks = LocalOnOpenKeptPicks.current
-    LaunchedEffect(state.reviewFrom) {
-        if (state.reviewFrom == target) {
-            viewModel.onReviewOpened()
-            openKeptPicks?.invoke()
-        }
-    }
+    KeptEffects(target, variant, state.reviewFrom, viewModel)
     // A guest has no bundle to read, and asking for one costs a refused
     // round trip plus the guard's wasted token refresh on every control
     // the page holds.
@@ -180,6 +168,31 @@ fun StanceControlRoute(
         onRetrySigning = { viewModel.onRetrySigning(target) },
         onKeepPending = { viewModel.onKeepPending(target) },
     )
+}
+
+/**
+ * THE KEPT PICK'S WIRING for one control: what a pick kept here signs as —
+ * the vouch-back's pad keeps a vouch-back, every other control a plain pick
+ * (KeptPicksReview.md:9) — the key re-read on the way back from a restore
+ * (PadPending.md:15), and the review a kept face opens (PadPendingReview.md:11).
+ */
+@Composable
+private fun KeptEffects(
+    target: StanceTarget,
+    variant: StancePadVariant?,
+    reviewFrom: StanceTarget?,
+    viewModel: StanceViewModel,
+) {
+    val family = if (variant != null) KeptFamily.VOUCH_BACK else KeptFamily.OPINION
+    LaunchedEffect(target, family) { viewModel.setFamily(target, family) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onResume() }
+    val openKeptPicks = LocalOnOpenKeptPicks.current
+    LaunchedEffect(reviewFrom) {
+        if (reviewFrom == target) {
+            viewModel.onReviewOpened()
+            openKeptPicks?.invoke()
+        }
+    }
 }
 
 /**
