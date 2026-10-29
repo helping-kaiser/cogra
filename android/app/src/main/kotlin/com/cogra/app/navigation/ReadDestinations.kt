@@ -50,7 +50,8 @@ import com.cogra.feature.topics.TopicRoute
 
 /** The Feed tab's root. */
 internal fun NavGraphBuilder.feedRoot(shell: ShellScope) {
-    composable<Feed> { entry -> shell.FeedDestination(entry) }
+    // EVERY RANKED CARD'S SCORE IS A DOOR TO ITS TRACE over the root it stands on.
+    composable<Feed> { entry -> shell.ScoresOpenOver(TraceOrigin.Feed) { shell.FeedDestination(entry) } }
 }
 
 /** The vouch-back's ceremony (`VouchedIn`), which opens over the feed root alone. */
@@ -74,7 +75,10 @@ internal fun NavGraphBuilder.vouchedIn(shell: ShellScope) = with(shell) {
 
 /** The read drill-ins: what a tab's stack holds above its root. */
 internal fun NavGraphBuilder.readDrillIns(shell: ShellScope) {
-    composable<PostDetail> { entry -> shell.PostDetailDestination(entry) }
+    composable<PostDetail> { entry ->
+        val origin = TraceOrigin.Post(entry.toRoute<PostDetail>().postId)
+        shell.ScoresOpenOver(origin) { shell.PostDetailDestination(entry) }
+    }
     composable<Topic> { entry -> shell.TopicDestination(entry) }
     composable<Profile> { entry -> shell.ProfileDestination(entry) }
     // NOTIFICATIONS (Notifications.md): reached from the bell on a root
@@ -86,11 +90,11 @@ internal fun NavGraphBuilder.readDrillIns(shell: ShellScope) {
     // thing with a back arrow reading `Back to Saved`. A post card's
     // comment count raises the thread over Saved, as over the feed, so
     // the thread's return is read here the same way.
-    composable<Saved> { entry -> shell.SavedDestination(entry) }
+    composable<Saved> { entry -> shell.ScoresOpenOver(TraceOrigin.Saved) { shell.SavedDestination(entry) } }
     // HISTORY (History.md): reached from the own profile's ⋮, Saved's sibling,
     // a feed of every seen thing as its kind's own card; every door opens
     // its thing with a back arrow reading `Back to History`.
-    composable<History> { entry -> shell.HistoryDestination(entry) }
+    composable<History> { entry -> shell.ScoresOpenOver(TraceOrigin.History) { shell.HistoryDestination(entry) } }
     // THE SCORE'S TRACE (FeedEntry and below): opened from any card's score,
     // over the root that card stands on.
     scoreTrace(shell)
@@ -115,73 +119,71 @@ private fun ShellScope.FeedDestination(entry: NavBackStackEntry) {
     // THE BELL LIGHTS ON THIS ROOT'S FRESH LOAD (FeedUnread.md:5):
     // once per entry, and again on the reader's pull.
     val rootBell: RootBellViewModel? = if (signedIn == true) hiltViewModel(entry) else null
-    ScoresOpenOver(TraceOrigin.Feed, accountId) {
-        FeedRoute(
-            signedIn = signedIn,
-            reselectSignal = reselects(TopLevelTab.FEED),
-            // A guest's Report asks them to join instead of raising
-            // the confirm (ReportConfirm.md:21).
-            onRequireAccount = { requireJoin() }.takeIf { signedIn == false },
-            onReply = { target -> navController.openReplyWizard(target) },
-            onEditComment = { commentId, parentTitle ->
-                navController.navigate(EditComment(commentId, parentTitle))
-            },
-            onSignInOrJoin = { navController.navigate(Login) },
-            commentsReturn = thread.value,
-            onCommentsReturnConsumed = thread.onConsumed,
-            onCommentsDepart = thread.onDepart,
-            expiredLabel = expiredLabel,
-            onExpiredDismissed = consumeExpired,
-            onOpenDraft = {
-                consumeExpired()
-                navController.navigate(ComposePost())
-            },
-            onOpenPost = { id -> navController.navigate(PostDetail(id)) },
-            // The profile names its way back by the door it came through.
-            onOpenActor = { handle -> navController.navigate(Profile(handle, from = FEED_ORIGIN)) },
-            onOpenCommentActor = { handle -> navController.navigate(Profile(handle, from = COMMENTS_ORIGIN)) },
-            kindDoors = feedKindDoors(),
-            onOpenTopic = { name -> navController.navigate(Topic(name)) },
-            // The card's ⋮ reaches the same two destinations the
-            // detail's menu does: a feed card's rows are the post's
-            // rows, so they cannot lead somewhere else.
-            viewerId = accountId,
-            onEditPost = { id -> navController.navigate(ComposePost(id)) },
-            onCitePost = { id ->
-                navController.navigate(ComposePost(referenceTargetId = id))
-            },
-            // The chats affordance the band carries (jakob
-            // 2026-09-01). A signed-out tap opens the guest gate,
-            // which is the edge the canvas draws (`graph.json`
-            // "FeedBare" → `GuestGate`); a signed-in tap reaches
-            // the coming-soon destination (`graph.json` "Feed" →
-            // `ChatsComingSoon`, backlog item 68). Nothing is
-            // drawn while the auth state is still unknown — the
-            // two readings differ, and guessing puts the wrong
-            // action on the tap for a frame.
-            onChats = when (signedIn) {
-                false -> {
-                    { requireJoin() }
-                }
-                true -> {
-                    { navController.navigate(ChatsComingSoon(CHATS_FROM_FEED)) }
-                }
-                null -> null
-            },
-            bell = bellFor("feed"),
-            refreshSignal = signedResult,
-            onRefreshSignalConsumed = consumeSigned,
-            keyBanner = keyBanner(DataNode("feed") / "keyCard"),
-            borrowedViewBand = borrowedViewBand,
-            deletionBand = deletionBand(DataNode("feed") / "deletionBand"),
-            banners = { statusBanners(actorRestored, consumeRestored, ApplicationSurface.FEED) },
-            vouchCard = vouchCard,
-            onPulled = {
-                onFeedPulled()
-                rootBell?.pulled()
-            },
-        )
-    }
+    FeedRoute(
+        signedIn = signedIn,
+        reselectSignal = reselects(TopLevelTab.FEED),
+        // A guest's Report asks them to join instead of raising
+        // the confirm (ReportConfirm.md:21).
+        onRequireAccount = { requireJoin() }.takeIf { signedIn == false },
+        onReply = { target -> navController.openReplyWizard(target) },
+        onEditComment = { commentId, parentTitle ->
+            navController.navigate(EditComment(commentId, parentTitle))
+        },
+        onSignInOrJoin = { navController.navigate(Login) },
+        commentsReturn = thread.value,
+        onCommentsReturnConsumed = thread.onConsumed,
+        onCommentsDepart = thread.onDepart,
+        expiredLabel = expiredLabel,
+        onExpiredDismissed = consumeExpired,
+        onOpenDraft = {
+            consumeExpired()
+            navController.navigate(ComposePost())
+        },
+        onOpenPost = { id -> navController.navigate(PostDetail(id)) },
+        // The profile names its way back by the door it came through.
+        onOpenActor = { handle -> navController.navigate(Profile(handle, from = FEED_ORIGIN)) },
+        onOpenCommentActor = { handle -> navController.navigate(Profile(handle, from = COMMENTS_ORIGIN)) },
+        kindDoors = feedKindDoors(),
+        onOpenTopic = { name -> navController.navigate(Topic(name)) },
+        // The card's ⋮ reaches the same two destinations the
+        // detail's menu does: a feed card's rows are the post's
+        // rows, so they cannot lead somewhere else.
+        viewerId = accountId,
+        onEditPost = { id -> navController.navigate(ComposePost(id)) },
+        onCitePost = { id ->
+            navController.navigate(ComposePost(referenceTargetId = id))
+        },
+        // The chats affordance the band carries (jakob
+        // 2026-09-01). A signed-out tap opens the guest gate,
+        // which is the edge the canvas draws (`graph.json`
+        // "FeedBare" → `GuestGate`); a signed-in tap reaches
+        // the coming-soon destination (`graph.json` "Feed" →
+        // `ChatsComingSoon`, backlog item 68). Nothing is
+        // drawn while the auth state is still unknown — the
+        // two readings differ, and guessing puts the wrong
+        // action on the tap for a frame.
+        onChats = when (signedIn) {
+            false -> {
+                { requireJoin() }
+            }
+            true -> {
+                { navController.navigate(ChatsComingSoon(CHATS_FROM_FEED)) }
+            }
+            null -> null
+        },
+        bell = bellFor("feed"),
+        refreshSignal = signedResult,
+        onRefreshSignalConsumed = consumeSigned,
+        keyBanner = keyBanner(DataNode("feed") / "keyCard"),
+        borrowedViewBand = borrowedViewBand,
+        deletionBand = deletionBand(DataNode("feed") / "deletionBand"),
+        banners = { statusBanners(actorRestored, consumeRestored, ApplicationSurface.FEED) },
+        vouchCard = vouchCard,
+        onPulled = {
+            onFeedPulled()
+            rootBell?.pulled()
+        },
+    )
     // A newer version, said once per release on a cold open's
     // feed — to members, applicants and guests alike
     // (FeedNewerVersion.md).
@@ -210,44 +212,42 @@ private fun ShellScope.PostDetailDestination(entry: NavBackStackEntry) {
     val thread = entry.threadReturn(navController)
     val accountId by authState.accountId.collectAsStateWithLifecycle()
     val detailRoute = entry.toRoute<PostDetail>()
-    ScoresOpenOver(TraceOrigin.Post(detailRoute.postId), accountId) {
-        PostDetailRoute(
-            postId = detailRoute.postId,
-            from = detailRoute.from,
-            landOn = detailRoute.commentId,
-            aimReply = detailRoute.aimReply,
-            published = detailRoute.published,
-            viewerId = accountId,
-            signedIn = signedIn,
-            onRequireAccount = { requireJoin() }.takeIf { signedIn == false },
-            onEdit = { id -> navController.navigate(ComposePost(id)) },
-            // `ReplyEntry` 5 and 7 — the composer, pinned to
-            // whatever the thread said it answers.
-            onReply = { target -> navController.openReplyWizard(target) },
-            // `ReplyMedia` 6 — `CommentEdit`, on an own comment.
-            onEditComment = { commentId, parentTitle ->
-                navController.navigate(EditComment(commentId, parentTitle))
-            },
-            onOpenActor = { handle -> navController.navigate(Profile(handle, from = POST_ORIGIN)) },
-            onOpenCommentActor = { handle -> navController.navigate(Profile(handle, from = COMMENTS_ORIGIN)) },
-            // A post cited from the tags-and-references sheet; a cited
-            // comment lands on the post carrying it, which has no
-            // permalink of its own.
-            onOpenPost = { id -> navController.navigate(PostDetail(id)) },
-            onOpenTopic = { name -> navController.navigate(Topic(name)) },
-            onReference = { id ->
-                navController.navigate(ComposePost(referenceTargetId = id))
-            },
-            onSignInOrJoin = { navController.navigate(Login) },
-            onBack = { navController.navigateUp() },
-            refreshSignal = signedResult,
-            onRefreshSignalConsumed = consumeSigned,
-            commentsReturn = thread.value,
-            onCommentsReturnConsumed = thread.onConsumed,
-            onCommentsDepart = thread.onDepart,
-            deletionBand = deletionBand(node = null),
-        )
-    }
+    PostDetailRoute(
+        postId = detailRoute.postId,
+        from = detailRoute.from,
+        landOn = detailRoute.commentId,
+        aimReply = detailRoute.aimReply,
+        published = detailRoute.published,
+        viewerId = accountId,
+        signedIn = signedIn,
+        onRequireAccount = { requireJoin() }.takeIf { signedIn == false },
+        onEdit = { id -> navController.navigate(ComposePost(id)) },
+        // `ReplyEntry` 5 and 7 — the composer, pinned to
+        // whatever the thread said it answers.
+        onReply = { target -> navController.openReplyWizard(target) },
+        // `ReplyMedia` 6 — `CommentEdit`, on an own comment.
+        onEditComment = { commentId, parentTitle ->
+            navController.navigate(EditComment(commentId, parentTitle))
+        },
+        onOpenActor = { handle -> navController.navigate(Profile(handle, from = POST_ORIGIN)) },
+        onOpenCommentActor = { handle -> navController.navigate(Profile(handle, from = COMMENTS_ORIGIN)) },
+        // A post cited from the tags-and-references sheet; a cited
+        // comment lands on the post carrying it, which has no
+        // permalink of its own.
+        onOpenPost = { id -> navController.navigate(PostDetail(id)) },
+        onOpenTopic = { name -> navController.navigate(Topic(name)) },
+        onReference = { id ->
+            navController.navigate(ComposePost(referenceTargetId = id))
+        },
+        onSignInOrJoin = { navController.navigate(Login) },
+        onBack = { navController.navigateUp() },
+        refreshSignal = signedResult,
+        onRefreshSignalConsumed = consumeSigned,
+        commentsReturn = thread.value,
+        onCommentsReturnConsumed = thread.onConsumed,
+        onCommentsDepart = thread.onDepart,
+        deletionBand = deletionBand(node = null),
+    )
 }
 
 @Composable
@@ -385,69 +385,65 @@ private fun ShellScope.NotificationsDestination(entry: NavBackStackEntry) {
 private fun ShellScope.SavedDestination(entry: NavBackStackEntry) {
     val thread = entry.threadReturn(navController)
     val accountId by authState.accountId.collectAsStateWithLifecycle()
-    ScoresOpenOver(TraceOrigin.Saved, accountId) {
-        SavedRoute(
-            onBack = { navController.navigateUp() },
-            doors = CardDoors(
-                onOpenPost = { id -> navController.navigate(PostDetail(id, from = SAVED_ORIGIN)) },
-                onOpenComment = { postId, commentId, aimReply ->
-                    navController.navigate(
-                        PostDetail(postId, from = SAVED_ORIGIN, commentId = commentId, aimReply = aimReply),
-                    )
-                },
-                onOpenActor = { handle -> navController.navigate(Profile(handle, from = SAVED_ORIGIN)) },
-                onOpenTopic = { name -> navController.navigate(Topic(name)) },
-            ),
-            viewerId = accountId,
-            signedIn = signedIn,
-            onEditPost = { id -> navController.navigate(ComposePost(id)) },
-            onCitePost = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
-            onReply = { target -> navController.openReplyWizard(target) },
-            onEditComment = { commentId, parentTitle ->
-                navController.navigate(EditComment(commentId, parentTitle))
+    SavedRoute(
+        onBack = { navController.navigateUp() },
+        doors = CardDoors(
+            onOpenPost = { id -> navController.navigate(PostDetail(id, from = SAVED_ORIGIN)) },
+            onOpenComment = { postId, commentId, aimReply ->
+                navController.navigate(
+                    PostDetail(postId, from = SAVED_ORIGIN, commentId = commentId, aimReply = aimReply),
+                )
             },
-            onSignInOrJoin = { navController.navigate(Login) },
-            commentsReturn = thread.value,
-            onCommentsReturnConsumed = thread.onConsumed,
-            onCommentsDepart = thread.onDepart,
-        )
-    }
+            onOpenActor = { handle -> navController.navigate(Profile(handle, from = SAVED_ORIGIN)) },
+            onOpenTopic = { name -> navController.navigate(Topic(name)) },
+        ),
+        viewerId = accountId,
+        signedIn = signedIn,
+        onEditPost = { id -> navController.navigate(ComposePost(id)) },
+        onCitePost = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
+        onReply = { target -> navController.openReplyWizard(target) },
+        onEditComment = { commentId, parentTitle ->
+            navController.navigate(EditComment(commentId, parentTitle))
+        },
+        onSignInOrJoin = { navController.navigate(Login) },
+        commentsReturn = thread.value,
+        onCommentsReturnConsumed = thread.onConsumed,
+        onCommentsDepart = thread.onDepart,
+    )
 }
 
 @Composable
 private fun ShellScope.HistoryDestination(entry: NavBackStackEntry) {
     val thread = entry.threadReturn(navController)
     val accountId by authState.accountId.collectAsStateWithLifecycle()
-    ScoresOpenOver(TraceOrigin.History, accountId) {
-        HistoryRoute(
-            onBack = { navController.navigateUp() },
-            doors = HistoryDoors(
-                cards = CardDoors(
-                    onOpenPost = { id -> navController.navigate(PostDetail(id, from = HISTORY_ORIGIN)) },
-                    onOpenComment = { postId, commentId, aimReply ->
-                        navController.navigate(
-                            PostDetail(postId, from = HISTORY_ORIGIN, commentId = commentId, aimReply = aimReply),
-                        )
-                    },
-                    onOpenActor = { handle -> navController.navigate(Profile(handle, from = HISTORY_ORIGIN)) },
-                    onOpenTopic = { name -> navController.navigate(Topic(name, from = TOPIC_FROM_HISTORY)) },
-                ),
-                // `Tag a new post with it` (History.md:63): the composer at its
-                // first stage, the tag riding staged.
-                onComposeWithTag = { name -> navController.navigate(ComposePost(tag = name)) },
+    HistoryRoute(
+        onBack = { navController.navigateUp() },
+        doors = HistoryDoors(
+            cards = CardDoors(
+                onOpenPost = { id -> navController.navigate(PostDetail(id, from = HISTORY_ORIGIN)) },
+                onOpenComment = { postId, commentId, aimReply ->
+                    navController.navigate(
+                        PostDetail(postId, from = HISTORY_ORIGIN, commentId = commentId, aimReply = aimReply),
+                    )
+                },
+                onOpenActor = { handle -> navController.navigate(Profile(handle, from = HISTORY_ORIGIN)) },
+                onOpenTopic = { name -> navController.navigate(Topic(name, from = TOPIC_FROM_HISTORY)) },
             ),
-            viewerId = accountId,
-            signedIn = signedIn,
-            onEditPost = { id -> navController.navigate(ComposePost(id)) },
-            onCitePost = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
-            onReply = { target -> navController.openReplyWizard(target) },
-            onEditComment = { commentId, parentTitle ->
-                navController.navigate(EditComment(commentId, parentTitle))
-            },
-            onSignInOrJoin = { navController.navigate(Login) },
-            commentsReturn = thread.value,
-            onCommentsReturnConsumed = thread.onConsumed,
-            onCommentsDepart = thread.onDepart,
-        )
-    }
+            // `Tag a new post with it` (History.md:63): the composer at its
+            // first stage, the tag riding staged.
+            onComposeWithTag = { name -> navController.navigate(ComposePost(tag = name)) },
+        ),
+        viewerId = accountId,
+        signedIn = signedIn,
+        onEditPost = { id -> navController.navigate(ComposePost(id)) },
+        onCitePost = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
+        onReply = { target -> navController.openReplyWizard(target) },
+        onEditComment = { commentId, parentTitle ->
+            navController.navigate(EditComment(commentId, parentTitle))
+        },
+        onSignInOrJoin = { navController.navigate(Login) },
+        commentsReturn = thread.value,
+        onCommentsReturnConsumed = thread.onConsumed,
+        onCommentsDepart = thread.onDepart,
+    )
 }

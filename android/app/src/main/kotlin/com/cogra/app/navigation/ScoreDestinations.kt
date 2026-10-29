@@ -8,6 +8,8 @@
 package com.cogra.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
@@ -86,10 +88,12 @@ internal fun NavGraphBuilder.scoreTrace(shell: ShellScope) {
 
 /**
  * Gives [content]'s score slots their door (FeedKinds.md:3; History.md:63;
- * Saved.md:39; PostDetail.md:19): [reader]'s figures, each tap opening the
- * trace over [origin], whose back arrow names it.
+ * Saved.md:39; PostDetail.md:19): the signed-in reader's figures (a guest's are
+ * the held vantage's), each tap opening the trace over [origin], whose back
+ * arrow names it.
  */
 @Composable
-internal fun ShellScope.ScoresOpenOver(origin: TraceOrigin, reader: String?, content: @Composable () -> Unit) {
+internal fun ShellScope.ScoresOpenOver(origin: TraceOrigin, content: @Composable () -> Unit) {
+    val reader by authState.accountId.collectAsStateWithLifecycle()
     ProvideScoreDoor(reader = reader, onOpen = { tap -> navController.navigate(tap.route(origin)) }, content = content)
 }
