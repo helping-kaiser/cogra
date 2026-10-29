@@ -38,6 +38,13 @@ export const FIELD_KINDS = {
     autoCorrect: "off",
     autoComplete: "nickname",
   },
+  url: {
+    type: "text",
+    inputMode: "url",
+    autoCapitalize: "none",
+    autoCorrect: "off",
+    autoComplete: "off",
+  },
   digits: {
     type: "text",
     inputMode: "numeric",
@@ -86,8 +93,10 @@ export function FormTextField({
   error = null,
   mono = false,
   enterKeyHint = "next",
+  autoComplete,
   node,
   inputRef,
+  testId,
 }: {
   label: string;
   value: string;
@@ -97,8 +106,12 @@ export function FormTextField({
   error?: string | null;
   mono?: boolean;
   enterKeyHint?: "next" | "go";
+  /** Overrides the kind's autofill where a form names its account (`username`). */
+  autoComplete?: string;
   node?: DataNode;
   inputRef?: Ref<HTMLInputElement>;
+  /** The input's own test id, on a screen that registers no node. */
+  testId?: string;
 }) {
   const id = useId();
   const supportId = `${id}-support`;
@@ -120,7 +133,7 @@ export function FormTextField({
         inputMode={semantics.inputMode}
         autoCapitalize={semantics.autoCapitalize}
         autoCorrect={semantics.autoCorrect}
-        autoComplete={semantics.autoComplete}
+        autoComplete={autoComplete ?? semantics.autoComplete}
         spellCheck={false}
         enterKeyHint={enterKeyHint}
         value={value}
@@ -128,7 +141,7 @@ export function FormTextField({
         aria-describedby={described}
         onChange={(event) => onChange(event.target.value)}
         className={`${FIELD} ${error ? "border-error" : "border-outline"} ${mono ? "font-mono" : ""}`}
-        {...testAttributes(part(node, "input"))}
+        {...testAttributes(part(node, "input"), testId)}
       />
       <Support id={supportId} hint={hint} error={error} node={part(node, "support")} />
     </div>
@@ -145,6 +158,7 @@ export function FormPasswordField({
   error = null,
   enterKeyHint = "go",
   node,
+  testId,
 }: {
   label: string;
   value: string;
@@ -156,6 +170,8 @@ export function FormPasswordField({
   error?: string | null;
   enterKeyHint?: "next" | "go";
   node?: DataNode;
+  /** The input's own test id, on a screen that registers no node. */
+  testId?: string;
 }) {
   const id = useId();
   const supportId = `${id}-support`;
@@ -193,7 +209,7 @@ export function FormPasswordField({
           aria-describedby={error || hint ? supportId : undefined}
           onChange={(event) => onChange(event.target.value)}
           className={`${FIELD} flex-1 ${error ? "border-error" : "border-outline"}`}
-          {...testAttributes(part(node, "input"))}
+          {...testAttributes(part(node, "input"), testId)}
         />
         <button
           type="button"
