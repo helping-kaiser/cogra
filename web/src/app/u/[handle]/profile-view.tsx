@@ -403,14 +403,15 @@ export function ProfileScreen({
   // A PORTRAIT CLIP'S TAP OPENS THE STREAM OVER THE POSTS VIEW (Reel.md:3,
   // ProfilePosts.md:43-45), in its order, and past the page on screen through
   // the view's own next pages — never a ranking. Its back disc names this
-  // profile by the stream's noun table (Reel.md:85) and returns to its route.
+  // profile by the stream's noun table (Reel.md:85) and returns to its route,
+  // handing the profile the origin it was opened with.
   const openPostsStream = (startId: string) => {
     if (profile === null) return;
     openStream({
       origin:
         origin === "profile"
           ? { kind: "profile", handle: profile.handle, own: true }
-          : { kind: "profile", handle: handle ?? profile.handle, own: false },
+          : { kind: "profile", handle: handle ?? profile.handle, own: false, from: openedFrom },
       rows: posts,
       startId,
       more:

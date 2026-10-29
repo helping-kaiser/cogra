@@ -383,13 +383,22 @@ describe("ProfilePosts — the posts view (ProfilePosts.md)", () => {
     left.unmount();
     expect(reads).toHaveLength(1);
 
-    // The stream's way back is the profile's route, with no `from` of its own.
-    renderWithProviders(<ProfileScreen handle="ada" />);
+    // The stream's back disc hands the profile the origin it was opened with,
+    // so its own arrow and the lit root hold (:59).
+    expect(streamBack(heldStream()!.snapshot.origin).href).toBe("/u/ada?from=saved");
+    const back = renderWithProviders(<ProfileScreen handle="ada" from="saved" />);
     expect(screen.getByTestId("profile-posts")).toBeInTheDocument();
     expect(cardIds()).toEqual(["v1", "p1"]);
     expect(screen.getByTestId(byNode("profile.header.back"))).toHaveAttribute("aria-label", "Back to Saved");
     await screen.findByTestId(byNode("profile.identity.name"));
     expect(reads).toHaveLength(1);
+    back.unmount();
+
+    // The post's and the trace's back arrows name the profile by its route
+    // alone (`backFor("u:ada")`); that return lands on the same view.
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    expect(cardIds()).toEqual(["v1", "p1"]);
+    expect(screen.getByTestId(byNode("profile.header.back"))).toHaveAttribute("aria-label", "Back to Saved");
   });
 
   it("a_profile_opened_afresh_or_left_off_the_posts_view_lands_on_everything", async () => {
