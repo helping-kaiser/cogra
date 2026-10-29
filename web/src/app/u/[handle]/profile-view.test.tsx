@@ -4,7 +4,7 @@ import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
-import { forgetAllProfilePosts } from "@/lib/profile/profile-memory";
+import { forgetAllProfileViews } from "@/lib/profile/profile-memory";
 import { createTokenStore } from "@/lib/session/token-store";
 import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
@@ -135,7 +135,7 @@ function recordsHandler(
 beforeEach(() => {
   window.localStorage.clear();
   resetSeenQueueForTests();
-  forgetAllProfilePosts();
+  forgetAllProfileViews();
   marked = [];
 });
 
@@ -869,14 +869,20 @@ describe("ProfileScreen", () => {
     );
   });
 
-  it("switches the chronicle filter and refetches", async () => {
-    const families: (string | null)[] = [];
+  it("switches the tab and reads the one it lands on", async () => {
+    const reads: string[] = [];
     server.use(
       gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
+      gqlLink.query("ProfileComments", () => {
+        reads.push("comments");
+        return HttpResponse.json({ data: { user: null } });
+      }),
       gqlLink.query("AuthorRecords", ({ variables }) => {
-        families.push((variables as { family: string | null }).family);
+        // The chronicle reads every family: no tab narrows it.
+        expect(variables).not.toHaveProperty("family");
+        reads.push("everything");
         return HttpResponse.json({
           data: {
             records: {
@@ -891,9 +897,11 @@ describe("ProfileScreen", () => {
     renderWithProviders(<ProfileScreen handle="ada" />);
     await screen.findByTestId(byNode("profile.identity.name"));
     // Every visitor lands on Everything, as every profile board draws it.
-    await waitFor(() => expect(families).toEqual([null]));
+    await waitFor(() => expect(reads).toEqual(["everything"]));
     fireEvent.click(screen.getByTestId(byNode("profile.tabRow.commentsTab")));
-    await waitFor(() => expect(families).toEqual([null, "REVIEW"]));
+    await waitFor(() => expect(reads).toEqual(["everything", "comments"]));
+    fireEvent.click(screen.getByTestId(byNode("profile.tabRow.everythingTab")));
+    await waitFor(() => expect(reads).toEqual(["everything", "comments", "everything"]));
   });
 
   // THE PAGE THAT DID NOT ARRIVE (Profile.md:35): the quiet line and Retry

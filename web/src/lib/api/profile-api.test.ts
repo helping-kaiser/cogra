@@ -12,6 +12,7 @@ import {
   fetchAuthorRecords,
   fetchMyProfile,
   fetchProfileByHandle,
+  fetchProfileComments,
   fetchProfileFigures,
   fetchProfilePosts,
   mediaField,
@@ -21,6 +22,7 @@ import {
   type RecordNode,
 } from "./profile-api";
 import { gqlLink, startMswServer } from "@/test/msw";
+import { answersComment, commentsPage, profileComment } from "@/test/profile-comment";
 import { reelPost } from "@/test/reel";
 
 const server = startMswServer();
@@ -198,11 +200,66 @@ describe("fetchProfilePosts", () => {
   // sends: the Posts count can never disagree with the cards it counts.
   it("asks for exactly the records the Posts figure counts, ten to a page, each a whole card", () => {
     const document = readFileSync(join(process.cwd(), "src", "lib", "graphql", "profile.graphql"), "utf-8");
-    const posts = document.slice(document.indexOf("query ProfilePosts"), document.indexOf("query ProfileFigures"));
+    const posts = document.slice(document.indexOf("query ProfilePosts"), document.indexOf("query ProfileComments"));
     expect(posts).toContain(
       "posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 10, after: $after)",
     );
     expect(posts).toContain("...FeedPost");
+  });
+});
+
+describe("fetchProfileComments", () => {
+  it("reads the person's comments off their genesis Review records, in the served order", async () => {
+    let asked: unknown;
+    server.use(
+      gqlLink.query("ProfileComments", ({ variables }) => {
+        asked = variables;
+        const page = commentsPage(
+          "u-1",
+          [
+            profileComment("c-2", { replies: { __typename: "CommentConnection", totalCount: 2 } }),
+            // A record whose comment CoGra does not carry draws no blank card.
+            null,
+            profileComment("c-1", { target: answersComment("c-0", "sol") }),
+          ],
+          "k-1",
+        );
+        return HttpResponse.json({ data: page });
+      }),
+    );
+    const outcome = await fetchProfileComments(client(), "u-1", "k-0");
+    expect(asked).toEqual({ id: "u-1", after: "k-0", includePending: true });
+    expect(outcome.kind).toBe("success");
+    if (outcome.kind !== "success") return;
+    expect(outcome.value.items.map((comment) => [comment.id, comment.replyCount])).toEqual([
+      ["c-2", 2],
+      ["c-1", 0],
+    ]);
+    expect(outcome.value.items[1]?.target?.__typename).toBe("Comment");
+    expect(outcome.value.items[0]?.post?.id).toBe("p1");
+    expect(outcome.value.endCursor).toBe("k-1");
+    expect(outcome.value.hasNextPage).toBe(true);
+  });
+
+  it("reads an unknown person as an empty view, and a fault as failed", async () => {
+    server.use(gqlLink.query("ProfileComments", () => HttpResponse.json({ data: { user: null } })));
+    expect(await fetchProfileComments(client(), "u-9")).toEqual({
+      kind: "success",
+      value: { items: [], endCursor: null, hasNextPage: false },
+    });
+    server.use(gqlLink.query("ProfileComments", () => HttpResponse.error()));
+    expect((await fetchProfileComments(client(), "u-9")).kind).toBe("failed");
+  });
+
+  // Every comment the person made, once, whatever it answers: the genesis
+  // Review (never an edit), with no `toKind` — a Review's actor leg enters on
+  // the parent, so `toKind: COMMENT` would keep the replies alone.
+  it("asks for each comment's own Review record, any parent, ten to a page, each a whole card", () => {
+    const document = readFileSync(join(process.cwd(), "src", "lib", "graphql", "profile.graphql"), "utf-8");
+    const comments = document.slice(document.indexOf("query ProfileComments"), document.indexOf("query ProfileFigures"));
+    expect(comments).toContain("comments: outgoingRecords(family: REVIEW, genesis: true, first: 10, after: $after)");
+    expect(comments).toContain("...CommentFields");
+    expect(comments).toContain("replies(first: 0, includePending: $includePending)");
   });
 });
 
@@ -304,7 +361,7 @@ describe("fetchAuthorRecords", () => {
         }),
       ),
     );
-    const outcome = await fetchAuthorRecords(client(), "u-1", "everything");
+    const outcome = await fetchAuthorRecords(client(), "u-1");
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
     expect(outcome.value.items).toEqual([
@@ -355,7 +412,7 @@ describe("fetchAuthorRecords", () => {
         }),
       ),
     );
-    const outcome = await fetchAuthorRecords(client(), "u-1", "everything", null, true);
+    const outcome = await fetchAuthorRecords(client(), "u-1", null, true);
     if (outcome.kind !== "success") throw new Error(outcome.kind);
     expect(outcome.value.items[0]).toMatchObject({
       kind: "opinion",
@@ -367,21 +424,19 @@ describe("fetchAuthorRecords", () => {
     });
   });
 
-  // The chronicle's tabs are a family filter, and "everything" is the absence
-  // of one — not a family the server would have to know about. The Posts tab
-  // is no chronicle (`fetchProfilePosts`).
-  it("maps each chronicle tab to its family, and everything to none", async () => {
-    const seen: string[] = [];
+  // The chronicle stands on Everything alone, every family the person signed:
+  // the Posts and Comments tabs are card views on reads of their own
+  // (`fetchProfilePosts`, `fetchProfileComments`).
+  it("reads every family, never one tab's", async () => {
+    const seen: unknown[] = [];
     server.use(
       gqlLink.query("AuthorRecords", ({ variables }) => {
-        seen.push(String((variables as { family: string | null }).family));
+        seen.push(variables);
         return HttpResponse.json({ data: { records: records([]) } });
       }),
     );
-    const c = client();
-    await fetchAuthorRecords(c, "u-1", "comments");
-    await fetchAuthorRecords(c, "u-1", "everything");
-    expect(seen).toEqual(["REVIEW", "null"]);
+    await fetchAuthorRecords(client(), "u-1", "c-0");
+    expect(seen).toEqual([{ author: "u-1", first: PROFILE_PAGE_SIZE, after: "c-0" }]);
   });
 
   it("asks for the page size the chronicle pages by", async () => {
@@ -392,7 +447,7 @@ describe("fetchAuthorRecords", () => {
         return HttpResponse.json({ data: { records: records([]) } });
       }),
     );
-    await fetchAuthorRecords(client(), "u-1", "everything");
+    await fetchAuthorRecords(client(), "u-1");
     expect(first).toBe(PROFILE_PAGE_SIZE);
   });
 });
