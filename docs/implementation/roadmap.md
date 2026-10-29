@@ -92,11 +92,8 @@ with the raw-edge semantic, the read-side bundle fold serving both
 the clipped pair and the raw sums, batch severance, and the pad on
 both clients per [design/readme.md §8](../../design/readme.md#8-the-stance-control) — explicit-Set commits,
 fixed lower-centre placement, re-draggable field, local realtime
-landing, first-tap coach, and the 🤷 zero-bundle readout. The
-current visual treatment is accepted as interim: the feed, detail,
-and creation surfaces get their full redesign when media lands
-(2.5) and the ranked-feed rework (slice 3). The rest of the
-content era is sliced below (2.3–2.7).
+landing, first-tap coach, and the 🤷 zero-bundle readout. The rest
+of the content era is sliced below (2.3–2.7).
 
 **Slice 2.3 is closed** (hand-tested 2026-08-27, two rounds): Tag
 hyper-edges on posts and comments — at creation and from the edit
@@ -105,27 +102,91 @@ sliders — the hashtag registry and `hashtag(name)`, topic chips
 with on-demand value reveal on detail views, the current-topics
 fold (newest-wins, relevance-0 un-tag), and the topic page. Every
 submit shows how many signed actions it stages, with a
-multi-action confirm. Topic follow is backend-accepted but
-client-hidden until the topic feed lands (slice 3, where the
-"topics you follow" list and third-party tag claims also arrive).
-Web/Android visual divergence is accepted as interim per the same
-redesign note as 2.2.
+multi-action confirm. The topic page carries the Affinity gesture
+on both clients; third-party tag claims arrive with slice 3.
 
 **Slice 2.4 is closed** (hand-tested 2026-08-28, one fix round):
 Reference hyper-edges on posts and comments — citations and
 mentions authored at creation, from the edit surfaces, and via a
 Reference affordance on every content detail, each its own priced
 act with relevance/support sliders and a whole-batch solvency
-pre-check. The exact-match reference finder ships as structure
-(real search replaces its lookup in 2.7, behind the same field);
-topics are not reference targets — tagging is the topic gesture.
+pre-check. The reference finder reads the search matcher behind
+`referenceCandidates`; topics are not reference targets — tagging
+is the topic gesture.
 Reads serve the carrier author's netted current references with
 batched target resolution; withdrawal nets the bundle, its act
 count quoted before anything signs. Live sets are capped at fifty
 references and fifty topics per artifact, and the query budgets
 are derived from measured client operations under a standing
-guard. Inbound "cited by" and third-party reference claims wait
-for slice 3 with their tag siblings.
+guard. Third-party reference claims wait for slice 3 with their
+tag siblings.
+
+**Slice 2.5 is built on both clients.** The media service, pictures
+and galleries, video (posters, the play disc, sound-only cards), the
+compose wizard, and the whole of 2.5.3: the fullscreen viewers, edit
+as one batch for posts and comments (add pictures, the locked crop,
+the held-press upload gate, a clip's cover change, the comment-video
+edit surface), the default-license setting, and share.
+
+**Slice 2.6 is built on both clients.** Saved, hidden actors,
+`markSeen` with the seen tail, the History screens (reached from the
+own profile's menu), and the server-stored preferences.
+`hasSeenOnboarding` is stored and no client reads it: the intro is
+not built.
+
+**Slice 2.7 is built on both clients.** One server matcher answers
+`search` and `referenceCandidates`. Explore — at rest and searching,
+with its filter sheet and the Sky card as an announcement — and
+Your topics (`User.heldTopics`) behind Explore's door are built, and
+the five-slot bar ships whole, its Wallet slot opening the
+coming-soon door.
+
+**Slice 3 is built on both clients except the readout and its
+siblings.** The `ranker` crate and the `ranker-server` container;
+`feedSlice`, `feedRanking`, and `feed`; borrowed-view ranking; the
+people cut on the device; the feed filter sheet (kinds, forms of
+post, the one order with the seen toggle, what else is admitted,
+whose people, one topic), which also sets the reader's default from
+Settings; and the comment, profile, and tag cards in the feed.
+Web alone has the score readout (`/trace/<id>` over `feedTrace`),
+the Reel stream, the detail's opinions and cited-by rows, the
+opinions pages (ProfileStances), the profile's Posts and Comments
+tabs as card lists, the tag and reference pickers, and the kept
+picks with their review and seal.
+
+**Slice 3.1 is built on both clients:** the bell and the
+notifications list, with no push channel.
+
+**Slice 8's erasure half is built on both clients.** Account
+deletion with its grace period, and `removeContent` for a post and
+a comment, with the removal marks and tombstones on every surface
+that draws them.
+
+**The application registry and the invite lifecycle are built on
+both clients.** The registry: What's new, Update now, and the
+newer-version announcement. The lifecycle: the approval queue with
+its approval pad, reject and reject all, the ask-link share and the
+VouchAsk landing, and the applicant cards.
+
+**The shell's navigation contract is built on both clients.**
+Android's tabs are nested graphs under one `NavHost`, with the
+re-tap ladders and platform back as ruled.
+
+**Conformance** has landed on web through design round 27 and on
+Android through round 24.
+
+**Slice 9's engineering half is on main:** the SMTP mailer and the
+`deploy/` tree — images, Quadlet units, Caddy, backup, restore and
+deploy scripts, and `deployment.md`. The server, the domain, and the
+mail vendor are not stood up. **Slice 10** has no code yet: the
+release build is unsigned and unshrunk.
+
+**Queued.** Android: the score readout, the Reel, the detail's
+opinions and cited-by rows, ProfileStances, the tag and reference
+pickers, the kept picks, and the profile's card lists. Both clients:
+the intro, the Report a problem page, the invite-link vantage, the
+settings, entry, applicant, About, and What's new conformance
+re-audits, and the W8 copy sweep, last.
 
 ## The stand-in and the swap
 
@@ -160,13 +221,11 @@ event-driven and is not an MVP dependency.
 
 **In the MVP:**
 
-- **Slice 2.5.3's remainder** — the fullscreen viewers, edit as one
-  batch, the default-license setting, and the comment-video edit
-  surface (share already shipped).
-- **Slice 2.6 — private viewer state.** Boards drawn for bookmarks,
-  hidden actors, and view history; implementation outstanding.
-- **Slice 2.7 — search**, with the Explore surface that waits on it
-  (the Explore boards are drawn).
+- **Slice 2.5.3** — the fullscreen viewers, edit as one batch, the
+  default-license setting, the comment-video edit surface, and share.
+- **Slice 2.6 — private viewer state**: bookmarks, hidden actors, and
+  view history.
+- **Slice 2.7 — search**, with the Explore surface.
 - **Slice 3 — the ranked feed**, the Reel stream included. The
   ranker is standalone and never runs inside the backend process: it
   runs on the viewer's device or in its own container on the server,
@@ -554,6 +613,10 @@ from the media path and carrying their own doc write-back:
   *behind* `referenceCandidates`, the field the clients already
   bind to — prefix matching and ranking arrive without a client
   change.
+- **Explore** — the search surface, with **Your topics** behind its
+  door: the page reads `User.heldTopics` (the viewer's own Affinity
+  bundles across every Type), and the topic page carries the
+  Affinity gesture.
 - **Hand test:** find a post by a title word; find a person by
   handle.
 - **Surfaces:** backend, API, Android, web.
@@ -607,12 +670,6 @@ from the media path and carrying their own doc write-back:
   rail is author · stance · comments · share · score; the stream
   carries sound and a drag-to-seek line, never the full transport;
   guest and key-absent gate exactly as the feed does.
-- **Unhide topic follow** — the follow/unfollow control, backend-
-  accepted since 2.3 (`prepareStance` toward the Hashtag) but
-  hidden from the client until the topic feed exists to receive it.
-- **The held-topics list** — Your topics, read from `User.heldTopics`
-  (the viewer's own Affinity bundles across every Type), surfaced
-  alongside the unhidden follow control.
 - The score readout — [copy-voice.md](../../design/guidelines/copy-voice.md#the-two-hard-rules-about-numbers) "numbers are in
   scope": a post can show what it scored and why it sits where
   it does, opening into the actual paths behind it.
