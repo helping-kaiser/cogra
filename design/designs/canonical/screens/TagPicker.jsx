@@ -97,8 +97,21 @@
    `TagPickerTyping` and `TagPickerRefused`: `header` (its "?" `help`), the
    field `nameField`, the naming `rule`, the `staged` section with one `tag`
    per staged name, a result row `tag` keyed by its name, the `footnote`, the
-   `announcement` and `done`. */
+   `announcement` and `done`.
+
+   THE `state` CHIP DRAWS THE BATCH AT ITS CAP AND THE READ THAT FAILED (seam
+   248, GAPS B–C; `ReferencePicker`'s chip, the shared anatomy). `cap` is the
+   composer holding its ten tags: `Up to 10 tags per post.` stands above the
+   list — `per comment` from a reply's composer — and every row under it,
+   the typed name's included, is dimmed and takes no tap, the keyboard's
+   action key staging nothing; the staged rows' × still un-stage. `fault` is
+   the candidates' read that got no answer: the typed name's row still
+   stands, because it is the field's own words and needs no read, and the
+   house line takes the candidates' place. An empty list and the read in
+   flight stay silent — the typed name's row is already the answer. */
 export const NODE = "tagPicker";
+export const PROPS = { state: { editor: "enum", options: ["picking", "cap", "fault"], default: "picking" } };
+export const VALS = `capShown: this.props.state === "cap" ? "block" : "none", faultShown: this.props.state === "fault" ? "block" : "none", candidatesShown: this.props.state === "fault" ? "none" : "flex", rowsOpacity: this.props.state === "cap" ? "var(--state-disabled)" : "1"`;
 export function Screen() {
   return (
     <>
@@ -119,9 +132,23 @@ export function Screen() {
         <PickAnnouncement said="Added — in the staged list." node="announcement" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="salt" />
-        <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltmaps" />
-        <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltcrust" />
+        <div style={{ display: "{{capShown}}" }} data-node-chip="state" data-node-key="cap">
+          <p style={PICKER_NOTE} data-node="cap">
+            Up to 10 tags per post.
+          </p>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", opacity: "{{rowsOpacity}}" }}>
+          <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="salt" />
+          <div style={{ display: "{{candidatesShown}}", flexDirection: "column" }}>
+            <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltmaps" />
+            <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltcrust" />
+          </div>
+        </div>
+        <div style={{ display: "{{faultShown}}", padding: "8px 24px" }} data-node-chip="state" data-node-key="fault">
+          <div data-node="fault">
+            <TransportError />
+          </div>
+        </div>
         <div style={{ flex: 1 }} />
         <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="footnote">
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.

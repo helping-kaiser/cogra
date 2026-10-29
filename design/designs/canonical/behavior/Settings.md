@@ -70,7 +70,7 @@ WHEN tap Your key in a browser GIVEN the seed is sealed behind the backup -> the
 
 WHEN tap Your key GIVEN the key is elsewhere -> the key-absent screen opens AND NEVER an unlock is asked for
 
-ALWAYS the row 3 kept picks waiting stands last in the Key backup group, reading 1 kept pick waiting in the singular, GIVEN picks kept with the key elsewhere wait unsigned, the key is here, and their review was left unsigned
+ALWAYS the row 4 kept picks waiting stands last in the Key backup group, reading 1 kept pick waiting in the singular, GIVEN picks kept with the key elsewhere wait unsigned, the key is here, and their review was left unsigned
 
 ALWAYS no kept-picks row stands in the Key backup group GIVEN no kept pick waits for its review
 

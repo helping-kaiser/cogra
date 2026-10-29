@@ -86,6 +86,7 @@ const {
   TAG_RANGES,
   TaggedRow,
   TransportError,
+  SigningPending,
   NoticePanel,
   NoticeLine,
   SensitiveVeil,
@@ -183,6 +184,18 @@ function PickAnnouncement({ said = "", node }) {
     </div>
   );
 }
+
+/* THE PICKERS' CAP LINE (seam 248, GAP B): the batch's ten reached, said once
+   above the rows it stills — the naming rule's register under the field, a
+   fact and not a fault, so never `--error`. */
+const PICKER_NOTE = {
+  margin: 0,
+  padding: "8px 24px",
+  fontSize: "var(--text-body-small)",
+  lineHeight: "var(--text-body-small--line-height)",
+  letterSpacing: "var(--text-body-small--letter-spacing)",
+  color: "var(--text-secondary)",
+};
 
 /* An opinion of one gentle record — the vouch-back default made a bundle. */
 function mkBundle(pDirected, pInterest) {
@@ -673,17 +686,26 @@ const REMOVE_CONFIRM_COPY = {
 /* `overSheet` lifts the dialog above a sheet it is raised over — the comments
    thread — by `ReplyKeyAbsent`'s one layer of board glue: `DialogSurface` sits
    on the base wash layer and the sheet one above it, so the dialog is the
-   thing raised last. Over the post detail there is no sheet to clear. */
-function RemoveDialog({ kind, overSheet = false, node }) {
+   thing raised last. Over the post detail there is no sheet to clear.
+
+   `failed` IS THE REMOVAL THAT DID NOT GO THROUGH (seam 248, RM-G7; the
+   failure pack's grammar at dialog scale, `SeveranceConfirm`'s): the dialog
+   never closed — the act waits for its answer — so it stays up with its
+   pair, `That didn't send. Try again.` stands above it in the dialog's
+   `line` slot, and `Remove`'s own slot reads `Retry`, still a text button in
+   no colour. `Keep it` keeps its place: the way out is the way out it was.
+   One anatomy for both kinds, so the post and the comment fail alike. */
+function RemoveDialog({ kind, overSheet = false, failed = false, node }) {
   const { title, body } = REMOVE_CONFIRM_COPY[kind];
   const dialog = (
     <DialogSurface
       onScrimPress={() => {}}
       title={title}
       body={[body, "This is immediate and permanent."]}
+      line={failed ? "That didn't send. Try again." : undefined}
       actions={
         <>
-          <Button variant="text" node={node && "remove"}>Remove</Button>
+          <Button variant="text" node={node && "remove"}>{failed ? "Retry" : "Remove"}</Button>
           <Button node={node && "keep"}>Keep it</Button>
         </>
       }
@@ -866,10 +888,16 @@ function SkyField({ height = 180 }) {
    hairline with its centred quiet label is the one list-splitting line the
    system draws, so the feed's `Already seen` separator is this drawing with
    its own words, never a second construction. `children` carries the words;
-   Explore's stay the default. */
-function Seam({ node, children = "Beyond your reach — newest first" }) {
+   Explore's stay the default.
+
+   ONE SEAM PER SECTION (seam 248). A search answer is sectioned — people,
+   then topics, then content — and each section stands its own ranked head
+   and then its own rest (api-spec, *Search*, Order), so under Ranked each
+   section that has an unscored rest closes its head with its own seam, keyed
+   by the section it splits: `people`, `topics`, `content`. */
+function Seam({ node, nodeKey, children = "Beyond your reach — newest first" }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }} data-node={node}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }} data-node={node} data-node-key={nodeKey}>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
       <span
         style={{
@@ -1508,8 +1536,8 @@ const SEAL_CITATIONS = [
 /* THE KEPT PICKS, written once (backlog item 113, the kept picks' review):
    the review that lists them and the seal that signs them are two boards of
    one batch, and a seal reading back a set the review disagreed with would
-   be the drift this constant exists to stop. Three, because the settings row
-   that reopens the review counts three. The first is `PadPending`'s own pick
+   be the drift this constant exists to stop — and the settings row that
+   reopens the review counts this list, so it cannot drift either. The first is `PadPending`'s own pick
    on @ada's post; a person among them on purpose, since every pad that meets
    the key's absence can keep its pick (`PadKeyAbsent` is the master for all
    of them). Each pair is read the readout's way on both boards — the face,
@@ -1523,12 +1551,24 @@ const SEAL_CITATIONS = [
    of what they had said — so its row carries `consequence`, the person's
    landing words. @juno's post was removed by its author while its pick
    waited, so its row carries `removed`, the target's removal mark, and both
-   boards draw the mark where the name stood. */
+   boards draw the mark where the name stood.
+
+   THE FOURTH IS A TOPIC (seam 248): a feeling about #saltmaps, kept from the
+   tag page's pad while the key was away — the Affinity family, which the
+   batch signs beside the opinions. Its pair is read in the Affinity pad's
+   own axis words, never an opinion's (`AFFINITY_AXES`, handed at render),
+   and the seal's acts row names its family as a feeling — the register the
+   trace's `How you feel about #saltmaps` speaks, never the word Affinity
+   (copy-voice). */
 const KEPT_PICKS = [
   { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 } },
   { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 }, consequence: "This takes you back to zero." },
   { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 }, removed: "Removed by its author" },
+  { kind: "topic", name: "saltmaps", sub: "Topic", pair: { pDirected: 0.6, pInterest: 0.35 } },
 ];
+/* The family word a kept pick's seal row names it by: an opinion on a post
+   or a person, a feeling about a topic. */
+const keptPickFamily = (pick) => (pick.kind === "topic" ? { label: "Feeling", countNoun: "feeling" } : { label: "Opinion", countNoun: "opinion" });
 
 /* A KEPT APPROVAL, NAMED BESIDE THE KEPT PICKS (jakob 2026-10-05, the B
    round's 7, amended: "maybe we should add a link/indicator from the held
@@ -2540,10 +2580,10 @@ function CommentComposerFoot({ fieldOpacity, shown }) {
    margin. */
 const COMMENTS_GAP = 12;
 
-function CommentsSheet({ children, scrolledBy = 0, footOpacity, shown }) {
+function CommentsSheet({ children, scrolledBy = 0, footOpacity, shown, node }) {
   return (
-    <BottomSheet open tallest ariaLabel="Comments">
-      <SheetTitle>Comments</SheetTitle>
+    <BottomSheet open tallest ariaLabel="Comments" node={node}>
+      <SheetTitle node={node && "title"}>Comments</SheetTitle>
       <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: COMMENTS_GAP, margin: 0, padding: "0 16px", listStyle: "none" }}>
         {scrolledBy > 0 && <li aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -(scrolledBy + COMMENTS_GAP) }} />}
         {children}
@@ -2666,8 +2706,22 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    own (jakob 2026-10-02), so in the applicant's reading the foot's face is
    @juno's and @sol's comment is someone else's: no `Edit`, the reader's ⋮.
    Each reading's copy of that comment stands in its own list item, the other
-   one hidden. */
-function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown }) {
+   one hidden.
+
+   `node` NAMES THE THREAD (seam 248, the debt seam 094 left: the sheet stood
+   unnamed until a board needed what is inside it). The sheet is the post
+   detail's thread, so a registered board places it as `threadSheet` under
+   `postDetail` — the surface that hosts every comment menu, confirm and mark
+   the thread raises. Its title is `title`, and each top-level comment
+   `commentCard`, keyed by its author's handle as every comment card is; a
+   branch's replies stay unnamed until a board needs them, named then as pure
+   addition. The comment menus and the removal confirm are raised OVER the
+   sheet, never inside it, so they keep their own names beside it
+   (`postDetail.menuSheet` — jakob's item 64: one path for every menu on the
+   detail, told apart by board — and `postDetail.dialog`). A board that names
+   the sheet draws one reader, so the `shown` pair stays unnamed. */
+function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, node }) {
+  const card = node && "commentCard";
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
       <CommentCard
@@ -2693,11 +2747,13 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
       onEdit={removed ? undefined : () => {}}
       menuItems={removed ? [] : OWN_THREAD_MENU}
       redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
+      node={shown ? undefined : card}
     />
   );
   return (
-    <CommentsSheet scrolledBy={scrolledBy} footOpacity={footOpacity} shown={shown}>
+    <CommentsSheet scrolledBy={scrolledBy} footOpacity={footOpacity} shown={shown} node={node}>
       <CommentCard
+        node={card}
         author={TOBIAS}
         content={TOBIAS_COMMENT}
         timestamp="1h"
@@ -2721,6 +2777,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
           comment-scale block, while the author, the timestamp and the
           opinion stay readable. */}
       <CommentCard
+        node={card}
         author={MIRA}
         content="The gulls had been at it before the tide came back. Two frames, both grim."
         timestamp="2h"
@@ -4744,6 +4801,19 @@ const CITING_ARTIFACTS = [
    door's tolerance for a bare one stays at the door, where a reader never has
    to think about it. */
 const SOL_INVITE_ID = "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15";
+/* The actor id of the asker who deleted their account (`Invites`' `asker`
+   chip): the lowercase UUID the wire carries, the row's only key left. */
+const DELETED_ASKER_ID = "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608";
+/* A section of Invites with nothing in it (`Invites`' `sections` chip): the
+   empty list's quiet register, at the rows' inset. */
+const INVITES_EMPTY_LINE = {
+  margin: 0,
+  padding: "0 24px 8px",
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  color: "var(--text-secondary)",
+};
 const SOL_INVITE_LINK = `https://cogra.social/join/${SOL_INVITE_ID}`;
 const SOL_INVITE_LINK_OPEN = "https://cogra.social/join/c47b19e0-3a52-4f68-b1d9-6e0a85f37c24";
 /* @rafa came through a single-use link sol issued before the fresh one. Using
@@ -5054,8 +5124,30 @@ function KeptApprovalRow({ shown }) {
    head — and a group by the id of the link its applications came through. A
    live link's card is `link`, keyed by the same id; the `revoke` chip draws
    the first one twice, and each copy keeps the link's own key (jakob
-   2026-10-07, ruling 39: a chip copy of a keyed instance). */
-function InvitesBody({ approving = false, kept = "none", revoke }) {
+   2026-10-07, ruling 39: a chip copy of a keyed instance).
+
+   THREE MORE STATES, ONE CHIP EACH (seam 248), all `Invites`' own:
+   - `sections` — EITHER HALF CAN BE EMPTY, AND IT STILL STANDS. The page
+     reads Applications, then Live links, always (the sidecar's law): a half
+     with nothing in it keeps its label and says so in one quiet line,
+     `No applications waiting.` or `No live links.`, the empty list's calm
+     register at the list's own rung. Only both halves empty is
+     `InvitesEmpty`, the teaching state. `shown` holds the display holes.
+   - `asker` — THE ASKER WHO DELETED THEIR ACCOUNT. Their application keeps
+     its place and its age; the row reads by the removal mark's grammar —
+     the disc keeps its space and fills with nothing, `Deleted account` in
+     the system's voice where the handle stood (`ContentRow`'s `redacted`),
+     and its close is spoken `Close a deleted account's application`. The row
+     has no handle left to key by, so it is `redactedApplication`, keyed by
+     the asker's actor id, the hidden-accounts sheet's rule. The data does
+     not serve this yet: the application carries no redaction signal today
+     (seam 248, an API field owed by the implementation side).
+   - `copy` — A COPY THAT FAILED. Copying is a comfort, not a signature, so it
+     answers in the comfort's register on the link's own card: `That didn't
+     go through.` with `Retry`, the row line's vehicle (`RowSigning`'s),
+     where `Link copied` would have answered. The link stays whole on the
+     card, readable by hand. */
+function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
   return (
     <>
       <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -5078,8 +5170,15 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
         </div>
 
         <SectionLabel node="applicationsLabel">Applications</SectionLabel>
+        {shown && (
+          <div style={{ display: shown.applicationsEmpty }} data-node-chip="sections" data-node-key="no-applications">
+            <p style={INVITES_EMPTY_LINE} data-node="applicationsEmpty">
+              No applications waiting.
+            </p>
+          </div>
+        )}
         {kept !== "none" && <KeptApprovalRow shown={kept} />}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+        <div style={{ display: shown ? shown.applications : "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
           <ApplicationGroup label="Many uses" count={4} node="group" nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)} />
           <ContentRow
             variant="chronicle"
@@ -5117,18 +5216,35 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             node="application"
             nodeKey="vora82"
           />
-          <ContentRow
-            variant="chronicle"
-            chevron={false}
-            name="vora83"
-            title="@vora83"
-            second="Not fully registered yet"
-            trailing="1d"
-            action={<CloseApplication handle="@vora83" node="close" />}
-            onOpen={() => {}}
-            node="application"
-            nodeKey="vora83"
-          />
+          <div style={{ display: shown ? shown.askerNamed : "flex", flexDirection: "column" }}>
+            <ContentRow
+              variant="chronicle"
+              chevron={false}
+              name="vora83"
+              title="@vora83"
+              second="Not fully registered yet"
+              trailing="1d"
+              action={<CloseApplication handle="@vora83" node="close" />}
+              onOpen={() => {}}
+              node="application"
+              nodeKey="vora83"
+            />
+          </div>
+          {shown && (
+            <div style={{ display: shown.askerDeleted, flexDirection: "column" }} data-node-chip="asker" data-node-key="deleted">
+              <ContentRow
+                variant="chronicle"
+                chevron={false}
+                redacted
+                second="Not fully registered yet"
+                trailing="1d"
+                action={<CloseApplication handle="a deleted account" node="close" />}
+                onOpen={() => {}}
+                node="redactedApplication"
+                nodeKey={DELETED_ASKER_ID}
+              />
+            </div>
+          )}
           <ApplicationGroup label="Single use" count={1} node="group" nodeKey={SOL_INVITE_USED_ID} />
           <ContentRow
             variant="chronicle"
@@ -5160,7 +5276,14 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
         </div>
 
         <SectionLabel node="linksLabel">Live links</SectionLabel>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+        {shown && (
+          <div style={{ display: shown.linksEmpty }} data-node-chip="sections" data-node-key="no-links">
+            <p style={INVITES_EMPTY_LINE} data-node="linksEmpty">
+              No live links.
+            </p>
+          </div>
+        )}
+        <div style={{ display: shown ? shown.links : "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
           {/* REVOKE WAITS (the check round's Q10, jakob 2026-10-06): a revoke is
               a consequential write, so the card holds while it is in flight and,
               past 200ms, its word reads `Revoking…`, inert and never dimmed. The
@@ -5178,7 +5301,15 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
               caption="Expires in 7 days · 22.09.2026"
               node="link"
               nodeKey={SOL_INVITE_ID}
-            />
+            >
+              {shown && (
+                <div style={{ display: shown.copyFailed }} data-node-chip="copy" data-node-key="failed">
+                  <div data-node="copyFault">
+                    <SigningPending row message="That didn't go through." onRetry={() => {}} />
+                  </div>
+                </div>
+              )}
+            </PayoutAddress>
           </div>
           {revoke && (
             <div style={{ display: revoke.busy }} data-node-chip="revoke" data-node-key="waiting">

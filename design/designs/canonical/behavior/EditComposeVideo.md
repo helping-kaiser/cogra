@@ -26,7 +26,15 @@ ALWAYS the pick rides the edit's own record and adds nothing to the footer's cou
 
 WHEN tap Add a cover -> the device's own picker opens AND NEVER the clip's frames are offered
 
-WHEN a picture is picked for the cover -> it passes the crop locked to the clip's shape AND the new cover joins the edit's batch
+WHEN a picture is picked for the cover -> it passes the crop locked to the clip's shape AND the new cover rides the edit's own record
+
+WHEN a new cover lands on the edit GIVEN the edit's own record is not yet staged -> the edit's own record is staged AND the footer counts it once
+
+WHEN a new cover lands on the edit GIVEN the edit's own record is already staged -> NEVER the footer's count moves AND NEVER a record of the cover's own is staged
+
+ALWAYS the References block stands after the tags, with + Cite something, as on every edit
+
+WHEN tap + Cite something -> the citation picker opens AND its arrow reads Back to the post
 
 WHEN tap the clip's remove control -> the clip leaves whole AND the words edit stands with its field empty
 

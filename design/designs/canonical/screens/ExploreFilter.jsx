@@ -35,18 +35,33 @@
    REGISTERED under the `explore` prefix (design ⇄ impl seam 062/063): the
    results named as `ExploreSearch` names them, and the sheet named as
    `HistoryFilter` names its own — `filterSheet`, its `help`, `title`, the
-   `kinds` with each chip as `<value>Chip`, then the `order` and the `foot`. */
+   `kinds` with each chip as `<value>Chip`, then the `order` and the `foot`.
+
+   THE `reader` CHIP DRAWS A GUEST'S SHEET (seam 248). A guest's search has
+   one order — newest, no viewer to rank for — and nothing seen to show, so
+   the order section, its seen toggle with it, is left out whole: the sheet
+   holds the kinds and the foot. Beneath the wash a guest's results stand
+   newest first, the topics section first, a tag bare-edged and a post with
+   its age (`ExploreSearch`'s guest law). */
 export const NODE = "explore";
+export const PROPS = { reader: { editor: "enum", options: ["member", "guest"], default: "member" } };
+export const VALS = `memberShown: this.props.reader === "guest" ? "none" : "flex", guestShown: this.props.reader === "guest" ? "flex" : "none", orderShown: this.props.reader === "guest" ? "none" : "block"`;
 export function Screen() {
   return (
     <>
       <div style={{ flex: "none", paddingTop: 12 }}>
-        <SearchBar query="@sol salt" node="searchField" />
+        <SearchBar query="@sol salt" onClear={() => {}} node="searchField" />
         <SearchTriggerRow reading="Everything" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="1" />
-        <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} node="result" nodeKey="2" />
+        <div style={{ display: "{{memberShown}}", flexDirection: "column" }} data-node-chip="reader" data-node-key="member">
+          <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} node="result" nodeKey="1" />
+          <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="2" />
+        </div>
+        <div style={{ display: "{{guestShown}}", flexDirection: "column" }} data-node-chip="reader" data-node-key="guest">
+          <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" onOpen={() => {}} node="result" nodeKey="1" />
+          <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" value="3d" onOpen={() => {}} node="result" nodeKey="2" />
+        </div>
       </div>
       <BottomNav active="search" slots={ALL_SLOTS} inline node="bottomBar" />
 
@@ -60,7 +75,9 @@ export function Screen() {
             <Chip key={kind.value} label={kind.label} selected={false} node={`${kind.value}Chip`} />
           ))}
         </FilterSection>
-        <OrderSection order="ranked" node="order" />
+        <div style={{ display: "{{orderShown}}" }} data-node-chip="reader" data-node-key="member">
+          <OrderSection order="ranked" node="order" />
+        </div>
         <FilterFoot node="foot" />
       </BottomSheet>
     </>

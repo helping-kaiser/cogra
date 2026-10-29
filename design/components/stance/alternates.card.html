@@ -82,6 +82,14 @@ function Demo(){
       </StanceAlternates>
     </div>
   </div>
+  <div className="row">
+    <div className="col">
+      <span className="lbl">The key away — the pad's notice where the landing and the actions were; the pick is kept only by its own words</span>
+      <StanceAlternates inline onSever={()=>{}} signing="keyAbsent" pick={a} onPick={setA} landing={<StanceLandingLine landing={landingOf(standing.rawSum,a)}/>}>
+        <StanceStanding pick={a} bundle={standing} targetLabel="this post"/>
+      </StanceAlternates>
+    </div>
+  </div>
   </div>)}
 ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
 </script></body></html>

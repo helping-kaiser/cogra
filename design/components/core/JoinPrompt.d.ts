@@ -26,6 +26,10 @@ export interface DialogSurfaceProps {
   /** `body-medium` on `onSurfaceVariant`, 16px under the title: a string, a
    *  list of paragraphs, or nodes for a body that needs more than words. */
   body?: React.ReactNode | readonly React.ReactNode[];
+  /** The fault that keeps the dialog up — `That didn't send. Try again.` —
+   *  `body-medium` in `--text-failure`, 16px under the body, announced as an
+   *  alert; the commitment's own slot reads `Retry` beside it. */
+  line?: React.ReactNode;
   /** The buttons, at the default size, end-aligned, 24px under the body. */
   actions?: React.ReactNode;
   ariaLabel?: string;
@@ -36,7 +40,7 @@ export interface DialogSurfaceProps {
   /** Overrides the max only — the inset still holds, so no dialog reaches the
    *  edge. Every product dialog uses the default. */
   width?: string;
-  /** The data-node name its placer gives the dialog's surface (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its `title` and `body` slots; the buttons in `actions` are named by whoever placed them, and the scrim around the surface stays unnamed. */
+  /** The data-node name its placer gives the dialog's surface (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its `title`, `body` and `line` slots; the buttons in `actions` are named by whoever placed them, and the scrim around the surface stays unnamed. */
   node?: string;
 }
 
