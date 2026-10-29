@@ -30,7 +30,7 @@ import { FormTextField } from "@/lib/ui2/form-fields";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { useSlowAnswer, WaitingCommit } from "@/lib/ui2/waiting-commit";
 
-import { NO_ANSWER, NOT_THROUGH, TaskPage } from "../task-page";
+import { NO_ANSWER, NOT_THROUGH, TaskPage } from "@/lib/ui2/task-page";
 
 const NODE: DataNode = { path: "changeHandle" };
 const FORMAT_LINE = "A handle is 3–30 characters: a–z, 0–9, _.";

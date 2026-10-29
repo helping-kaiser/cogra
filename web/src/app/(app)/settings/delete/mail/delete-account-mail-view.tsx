@@ -30,7 +30,7 @@ import { TransportError } from "@/lib/ui/transport-error";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 
-import { NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "../../task-page";
+import { NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "@/lib/ui2/task-page";
 
 const NODE: DataNode = { path: "deleteAccount" };
 const node = (tail: string) => part(NODE, tail);

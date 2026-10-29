@@ -20,7 +20,7 @@ import { useAccountDeletion } from "@/lib/deletion/deletion-status";
 import { part, type DataNode } from "@/lib/ui/data-node";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 
-import { NOT_THROUGH, TaskPage } from "../../task-page";
+import { NOT_THROUGH, TaskPage } from "@/lib/ui2/task-page";
 
 const NODE: DataNode = { path: "deleteAccount" };
 
