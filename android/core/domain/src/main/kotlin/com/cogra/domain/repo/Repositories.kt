@@ -33,6 +33,7 @@ import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StanceKind
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
@@ -446,6 +447,14 @@ interface StanceRepository {
      * last bundle read for [target] served, or read now.
      */
     suspend fun targetGraphId(target: StanceTarget): Outcome<String>
+
+    /**
+     * What [target] is, as far as this process has learned it without a
+     * read of its own: a topic is always one, a node is whatever root its
+     * standing read answered from, or null before any read did. A kept pick
+     * names its kind by this (KeptPicksReview.md:13).
+     */
+    suspend fun kindOf(target: StanceTarget): StanceKind? = (target as? StanceTarget.Topic)?.let { StanceKind.TOPIC }
 }
 
 /**

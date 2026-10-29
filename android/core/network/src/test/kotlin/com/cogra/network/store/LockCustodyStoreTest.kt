@@ -27,6 +27,10 @@ import com.cogra.domain.identity.DeviceLock
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.identity.LocalSessionEnd
 import com.cogra.domain.identity.SignInLeg
+import com.cogra.domain.stance.KeptFamily
+import com.cogra.domain.stance.StanceKind
+import com.cogra.domain.stance.StancePair
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CoroutineScope
@@ -572,6 +576,22 @@ class LockCustodyStoreTest {
         assertThat(w.server.rows).containsKey(id)
         assertThat(w.custody.lockId(A)).isEqualTo(id)
         assertThat(w.engine.ensureHeld(A)).isFalse()
+    }
+
+    // ------------------------------------------- the kept picks (PadKeyAbsent.md:41)
+
+    @Test
+    fun `the_kept_picks_are_locked_with_the_draft_and_put_back_by_the_unlock`() = runTest {
+        val w = World()
+        w.forgetAccount(A, backed = true)
+        val kept = KeptPickStoreImpl(w.encrypted, w.tokens)
+        kept.keep(StanceTarget.Node("post-1"), StancePair(0.3, 0.2), KeptFamily.OPINION, StanceKind.POST)
+        assertThat(w.endLocal.end()).isEqualTo(LocalSessionEnd.LOCKED)
+        // Sealed and unusable until the account signs in again, never destroyed.
+        assertThat(w.encrypted.names("kept_picks:$A")).isEmpty()
+        assertThat(w.encrypted.names("locked:$A:")).contains("locked:$A:kept_picks:$A")
+        assertThat(w.signInAgain(A, forget = true).ready).isTrue()
+        assertThat(kept.list().single().pick).isEqualTo(StancePair(0.3, 0.2))
     }
 
     // ------------------------------------- the carried expectation (PR-88)

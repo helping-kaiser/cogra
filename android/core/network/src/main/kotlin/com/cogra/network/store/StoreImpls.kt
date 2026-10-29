@@ -299,7 +299,9 @@ class IdentityStoreImpl @Inject constructor(
         val draft = composeDraftKey(account)
         val sealed = composeSealedPrefix(account)
         val seen = seenRecordKey(account)
-        store.removeAll { it.startsWith(slot) || it == draft || it.startsWith(sealed) || it == seen }
+        // The kept picks are cleared with the draft (PadKeyAbsent.md:39).
+        val kept = keptPicksKey(account)
+        store.removeAll { it.startsWith(slot) || it == draft || it.startsWith(sealed) || it == seen || it == kept }
     }
 
     private companion object {

@@ -19,6 +19,7 @@ import com.cogra.domain.map
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StanceKind
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
@@ -90,6 +91,17 @@ class StanceRepositoryImpl @Inject constructor(
     // The node each target's last bundle read named — what a stance or
     // severance signed from that read must point at (Intent.kt).
     private val graphIds = ConcurrentHashMap<StanceTarget, String>()
+
+    // What the probe learned, as a kept pick names it — no read of its own.
+    override suspend fun kindOf(target: StanceTarget): StanceKind? = when (target) {
+        is StanceTarget.Topic -> StanceKind.TOPIC
+        is StanceTarget.Node -> when (kinds[target.id]) {
+            TargetKind.POST -> StanceKind.POST
+            TargetKind.COMMENT -> StanceKind.COMMENT
+            TargetKind.USER -> StanceKind.PERSON
+            null -> null
+        }
+    }
 
     override suspend fun targetGraphId(target: StanceTarget): Outcome<String> =
         graphIds[target]?.let { Outcome.Success(it) }
