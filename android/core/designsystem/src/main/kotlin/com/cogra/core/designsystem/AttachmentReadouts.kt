@@ -74,7 +74,13 @@ fun walkBackPick(rawSum: Double): Double = hundredth(-rawSum)
  * number on a line, the spoken twin naming the one axis there is.
  */
 @Composable
-fun AttachmentReadout(pDirected: Double, modifier: Modifier = Modifier, testTag: String? = null) {
+fun AttachmentReadout(
+    pDirected: Double,
+    modifier: Modifier = Modifier,
+    testTag: String? = null,
+    /** The readout's data-node on a registered screen: its `face` and `exact` wear its parts. */
+    node: DataNode? = null,
+) {
     val band = nearestValenceAnchor(pDirected)
     val spoken = valenceReading(pDirected)
     Row(
@@ -82,12 +88,13 @@ fun AttachmentReadout(pDirected: Double, modifier: Modifier = Modifier, testTag:
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
         modifier = modifier
             .semantics(mergeDescendants = true) { contentDescription = spoken }
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+            .then(if (node == null && testTag != null) Modifier.testTag(testTag) else Modifier)
+            .dataNode(node),
     ) {
         Text(
             text = band.emoji,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.clearAndSetSemantics { },
+            modifier = Modifier.dataNode(node?.div("face")).clearAndSetSemantics { },
         )
         // NEVER WRAPS: a number broken across two lines reads as two.
         Text(
@@ -97,7 +104,7 @@ fun AttachmentReadout(pDirected: Double, modifier: Modifier = Modifier, testTag:
             maxLines = 1,
             softWrap = false,
             overflow = TextOverflow.Visible,
-            modifier = Modifier.clearAndSetSemantics { },
+            modifier = Modifier.dataNode(node?.div("exact")).clearAndSetSemantics { },
         )
     }
 }

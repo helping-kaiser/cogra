@@ -24,6 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
@@ -54,6 +56,8 @@ fun UploadStatusLine(
     modifier: Modifier = Modifier,
     media: UploadMedia = UploadMedia.Pictures,
     testTag: String? = null,
+    /** The gate's data-node on a registered screen: the line's words wear its `line`. */
+    node: DataNode? = null,
 ) {
     // Strictly the in-flight gate (component prompt lines 1, 11): nothing
     // is uploading when there is nothing to upload, so the line never
@@ -62,7 +66,8 @@ fun UploadStatusLine(
     if (total <= 0) return
     Row(
         modifier = modifier
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+            .then(if (node == null && testTag != null) Modifier.testTag(testTag) else Modifier)
+            .dataNode(node)
             // The count changes while the author reads the seal; a polite
             // region announces it without interrupting them.
             .semantics { liveRegion = LiveRegionMode.Polite },
@@ -84,6 +89,7 @@ fun UploadStatusLine(
             text = "Uploading $done of $total — signing waits for the ${gateNoun(media, total)}.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.dataNode(node?.div("line")),
         )
     }
 }
@@ -128,6 +134,11 @@ fun UploadGateFailedLine(
     media: UploadMedia = UploadMedia.Pictures,
     failed: Int = 1,
     testTag: String? = null,
+    /**
+     * The gate's data-node on a registered screen. Its fact, its consequence and
+     * its Retry are spans of one line, so only the line wears it.
+     */
+    node: DataNode? = null,
 ) {
     val retry = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary))
     val (message, consequence) = gateFaultLines(media, failed)
@@ -145,7 +156,8 @@ fun UploadGateFailedLine(
         style = MaterialTheme.typography.bodyMedium,
         textAlign = TextAlign.Center,
         modifier = modifier
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+            .then(if (node == null && testTag != null) Modifier.testTag(testTag) else Modifier)
+            .dataNode(node)
             .semantics { liveRegion = LiveRegionMode.Polite },
     )
 }
@@ -172,6 +184,11 @@ fun UploadErrorLine(
     message: String = "One picture didn't upload.",
     removeLabel: String = "Remove it",
     testTag: String? = null,
+    /**
+     * The line's data-node on a registered screen. Its message and its ways out
+     * are spans of one line, so only the line wears it.
+     */
+    node: DataNode? = null,
 ) {
     val linkStyles = TextLinkStyles(
         style = SpanStyle(color = MaterialTheme.colorScheme.primary),
@@ -189,7 +206,8 @@ fun UploadErrorLine(
         text = text,
         style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
         modifier = modifier
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+            .then(if (node == null && testTag != null) Modifier.testTag(testTag) else Modifier)
+            .dataNode(node)
             // A refusal has to reach a reader who is not looking at it.
             .semantics { liveRegion = LiveRegionMode.Assertive },
     )
