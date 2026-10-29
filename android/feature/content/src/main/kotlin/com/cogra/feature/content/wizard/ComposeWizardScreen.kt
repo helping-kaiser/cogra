@@ -327,9 +327,13 @@ internal fun ComposeWizardScreen(
                 },
                 helpContentDescription = HelpTopic.HowSigningWorks.title,
                 testTag = "wizard_header",
-                // Only the details stage is a registered board; the other
+                // The details and crop stages are registered boards; the other
                 // stages' header keeps its wizard tags.
-                node = (COMPOSE_DETAILS / "header").takeIf { state.step == WizardStep.Details },
+                node = when (state.step) {
+                    WizardStep.Details -> COMPOSE_DETAILS / "header"
+                    WizardStep.Crop -> COMPOSE_CROP / "header"
+                    else -> null
+                },
             )
 
             // Directly under the header (FeedDeleting.md:5).
@@ -380,7 +384,7 @@ internal fun ComposeWizardScreen(
                                 text = "Next",
                                 onClick = onNext,
                                 modifier = Modifier.fillMaxWidth(),
-                                testTag = "wizard_crop_next",
+                                testTag = (COMPOSE_CROP / "next").tag,
                             )
                         }
                     }
