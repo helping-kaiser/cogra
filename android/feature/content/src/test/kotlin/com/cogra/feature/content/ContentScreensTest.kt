@@ -960,7 +960,7 @@ class ContentScreensTest {
                         onLicense = { licenseShown = it },
                         onSignInOrJoin = onSignInOrJoin,
                         onDepart = onCommentsDepart,
-                        stanceControl = { target, tag -> onStance(target, tag) },
+                        stanceControl = { target, tag, _ -> onStance(target, tag) },
                     )
                 },
             )
@@ -1078,7 +1078,7 @@ class ContentScreensTest {
         )
         openComments()
         compose.onNodeWithTag("detail_body").assertExists()
-        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        compose.onNodeWithTag(threadCard("c1")).assertExists()
         compose.onNodeWithTag("detail_no_comments").assertDoesNotExist()
     }
 
@@ -1096,12 +1096,12 @@ class ContentScreensTest {
                 comments = listOf(testComment("c1")),
             ),
         )
-        compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
-        compose.onNodeWithTag("detail_comment_c1").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.threadSheet").assertDoesNotExist()
+        compose.onNodeWithTag(threadCard("c1")).assertDoesNotExist()
         compose.onNodeWithTag("detail_add_comment").assertDoesNotExist()
         openComments()
-        compose.onNodeWithTag("comments_sheet").assertExists()
-        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        compose.onNodeWithTag("postDetail.threadSheet").assertExists()
+        compose.onNodeWithTag(threadCard("c1")).assertExists()
         compose.onNodeWithTag("detail_add_comment").assertExists()
     }
 
@@ -1126,7 +1126,7 @@ class ContentScreensTest {
         // is measured inside that root, against the tallest of the
         // composition's roots (the full window in the sandbox).
         val screen = compose.onAllNodes(isRoot()).fetchSemanticsNodes().maxOf { it.size.height }
-        val sheet = compose.onNodeWithTag("comments_sheet").fetchSemanticsNode()
+        val sheet = compose.onNodeWithTag("postDetail.threadSheet").fetchSemanticsNode()
         val sliver = with(compose.density) { SheetCeilingSliver.roundToPx() }
 
         // Pinned AT the ceiling, not merely held under it: the thread is the
@@ -1159,7 +1159,7 @@ class ContentScreensTest {
         )
         openComments()
 
-        val sheet = compose.onNodeWithTag("comments_sheet").getUnclippedBoundsInRoot()
+        val sheet = compose.onNodeWithTag("postDetail.threadSheet").getUnclippedBoundsInRoot()
         val list = compose.onNodeWithTag("comments_list").getUnclippedBoundsInRoot()
         val foot = compose.onNodeWithTag("detail_add_comment").getUnclippedBoundsInRoot()
 
@@ -1188,7 +1188,7 @@ class ContentScreensTest {
             onThreadRaised = { raised += it },
             viewerId = "viewer",
         )
-        compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.threadSheet").assertDoesNotExist()
 
         compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.comments").performClick()
         compose.waitForIdle()
@@ -1196,12 +1196,12 @@ class ContentScreensTest {
         assertThat(raised).containsExactly("p1")
         // The count raised the thread rather than navigating away.
         assertThat(opened).isEmpty()
-        compose.onNodeWithTag("comments_sheet").assertExists()
-        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        compose.onNodeWithTag("postDetail.threadSheet").assertExists()
+        compose.onNodeWithTag(threadCard("c1")).assertExists()
         // Full-function: the composer's door and the comment's own ⋮.
         compose.onNodeWithTag("detail_add_comment").assertExists()
-        compose.onNodeWithTag("comment_c1_menu").assertExists()
-        compose.onNodeWithTag("comment_reply_c1").assertExists()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).assertExists()
+        compose.onNodeIn(threadCard("c1"), threadPart("actionRow.reply")).assertExists()
     }
 
     /**
@@ -1224,8 +1224,8 @@ class ContentScreensTest {
 
         // The thread stands at the comment the reader was looking at, not
         // at the top it would otherwise be drawn from.
-        compose.onNodeWithTag("detail_comment_c10").assertIsDisplayed()
-        compose.onNodeWithTag("detail_comment_c1").assertIsNotDisplayed()
+        compose.onNodeWithTag(threadCard("c10")).assertIsDisplayed()
+        compose.onNodeWithTag(threadCard("c1")).assertIsNotDisplayed()
         // And the place is consumed, so it cannot jump a second time.
         assertThat(restored).isEqualTo(1)
     }
@@ -1259,7 +1259,7 @@ class ContentScreensTest {
             onDepart = { departures += it },
             onReplyTo = { replied += 1 },
         )
-        compose.onNodeWithTag("comment_reply_c1").performClick()
+        compose.onNodeIn(threadCard("c1"), threadPart("actionRow.reply")).performClick()
         compose.waitForIdle()
         assertThat(departures).hasSize(1)
         assertThat(replied).isEqualTo(1)
@@ -1388,7 +1388,7 @@ class ContentScreensTest {
         openComments()
         compose.onNodeWithTag("detail_pending").assertDoesNotExist()
         compose.onNodeWithTag("comment_pending_c1").assertExists()
-        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        compose.onNodeWithTag(threadCard("c1")).assertExists()
         compose.onNodeWithTag("comment_pending_c2").assertDoesNotExist()
     }
 
@@ -1587,7 +1587,7 @@ class ContentScreensTest {
             ),
         )
         openComments()
-        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
         compose.onNodeWithTag("postDetail.menuSheet.save").assertExists()
         compose.onNodeWithTag("postDetail.menuSheet.cite").assertExists()
         compose.onNodeWithTag("postDetail.menuSheet.citedBy").assertExists()
@@ -1610,8 +1610,8 @@ class ContentScreensTest {
             ),
         )
         openComments()
-        compose.onNodeWithTag("comment_c1_menu").performClick()
-        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
+        compose.onNodeWithTag("postDetail.threadSheet").assertExists()
         compose.onNodeWithTag("postDetail.menuSheet").assertExists()
     }
 
@@ -1621,7 +1621,7 @@ class ContentScreensTest {
     fun thePostsOwnMenuOpensOverThePageAlone() {
         renderDetail(detailFixture(loading = false, post = testPost("p1")))
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.threadSheet").assertDoesNotExist()
         // The registered sheet (ReaderPostMenu), never stacked.
         compose.onNodeWithTag("postDetail.menuSheet").assertExists()
     }
@@ -1638,9 +1638,9 @@ class ContentScreensTest {
             ),
         )
         openComments()
-        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
         compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
-        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("postDetail.threadSheet").assertExists()
         compose.onNodeWithTag("postDetail.licenseSheet").assertExists()
         compose.onNodeWithTag("postDetail.licenseSheet.dragHandle", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("postDetail.licenseSheet.terms").assertExists()
@@ -1663,7 +1663,7 @@ class ContentScreensTest {
             ),
         )
         openComments()
-        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
         compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
         assertAxisRows("postDetail", "Not required", "Not logged")
     }
@@ -1814,7 +1814,7 @@ class ContentScreensTest {
         )
         openComments()
         compose.onNodeWithTag("detail_body").assertExists()
-        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        compose.onNodeWithTag(threadCard("c1")).assertExists()
         compose.onNodeWithTag("detail_transport_error").assertDoesNotExist()
         compose.onNodeWithTag("detail_transport_banner").assertExists()
         compose.onNodeWithTag("detail_retry").performClick()
@@ -1836,7 +1836,7 @@ class ContentScreensTest {
             onLoadMoreComments = { more = true },
         )
         openComments()
-        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        compose.onNodeWithTag(threadCard("c1")).assertExists()
         compose.onNodeWithTag("detail_transport_banner").assertDoesNotExist()
         compose.onNodeWithTag("detail_more_comments").assertDoesNotExist()
         compose.onNodeWithTag("detail_more_comments_error").performScrollTo().assertExists()
@@ -1939,7 +1939,7 @@ class ContentScreensTest {
             ),
         )
         openComments()
-        compose.onNodeWithTag("detail_comment_r1").assertDoesNotExist()
+        compose.onNodeWithTag(threadCard("r1")).assertDoesNotExist()
         compose.onNodeWithTag("replies_more_c1").assertExists()
     }
 
@@ -1971,7 +1971,7 @@ class ContentScreensTest {
             ),
         )
         openComments()
-        compose.onNodeWithTag("detail_comment_r1").assertExists()
+        compose.onNodeWithTag(threadCard("r1")).assertExists()
     }
 
     @Test
@@ -1983,7 +1983,7 @@ class ContentScreensTest {
         )
         renderDetail(state, signedIn = false)
         openComments()
-        compose.onNodeWithTag("comment_reply_c1").assertDoesNotExist()
+        compose.onNodeIn(threadCard("c1"), threadPart("actionRow.reply")).assertDoesNotExist()
     }
 
     /**
@@ -2005,7 +2005,7 @@ class ContentScreensTest {
             onReplyTo = { replied = it },
         )
         openComments()
-        compose.onNodeWithTag("comment_reply_c2").performScrollTo().performClick()
+        compose.onNodeIn(threadCard("c2"), threadPart("actionRow.reply")).performScrollTo().performClick()
         assertThat(replied?.id).isEqualTo("c2")
     }
 
@@ -2034,7 +2034,7 @@ class ContentScreensTest {
         )
         openComments()
         compose.onNodeWithTag("postDetail.card.authorChip").assertExists()
-        compose.onNodeWithTag("comment_c1_author").assertExists()
+        compose.onNodeIn(threadCard("c1"), threadPart("authorChip")).assertExists()
     }
 
     // -- Topics --
@@ -2218,7 +2218,7 @@ class ContentScreensTest {
             ),
         )
         openComments()
-        compose.onNodeWithTag("comment_c1_age", useUnmergedTree = true).assertExists()
+        compose.onNodeIn(threadCard("c1"), threadPart("timestamp"), useUnmergedTree = true).assertExists()
     }
 
     // -- The affordance row (PostCard.jsx 300-358) --
@@ -2297,7 +2297,7 @@ class ContentScreensTest {
         compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.comments", useUnmergedTree = true).performClick()
         compose.waitForIdle()
         assertThat(opened).isNull()
-        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("postDetail.threadSheet").assertExists()
     }
 
     /** On the detail the count raises the thread's own sheet (`ReplyEntry`). */
@@ -2312,7 +2312,7 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("postDetail.card.actionRow.comments").assert(hasClickAction())
         openComments()
-        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        compose.onNodeWithTag(threadCard("c1")).assertExists()
     }
 
     // Above the narrow-share breakpoint — the row still carries Share there.
@@ -3082,7 +3082,7 @@ class ContentScreensTest {
             onReference = { referenced += it },
         )
         openComments()
-        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
         compose.onNodeWithTag("postDetail.menuSheet.cite").performClick()
         assertThat(referenced).containsExactly("c1")
     }

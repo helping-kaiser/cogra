@@ -122,7 +122,7 @@ class RemovalScreensTest {
                             onReference = {},
                             onLicense = {},
                             onSignInOrJoin = {},
-                            stanceControl = { target, _ -> Box(Modifier.testTag("stance_$target")) },
+                            stanceControl = { target, _, _ -> Box(Modifier.testTag("stance_$target")) },
                         )
                     },
                 )
@@ -259,7 +259,7 @@ class RemovalScreensTest {
         compose.onNodeWithTag("stance_p1").assertExists()
         compose.onNodeWithTag("postDetail.card.actionRow.comments").assertExists().performClick()
         compose.waitForIdle()
-        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("postDetail.threadSheet").assertExists()
     }
 
     /** ALWAYS the mark reads Removed by its author GIVEN its author's account sweep took the post (Removed.md:5). */
@@ -361,7 +361,7 @@ class RemovalScreensTest {
     @Test
     fun theOwnCommentsMenuReadsItsRowsInTheirOrder() {
         openThread()
-        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
 
         val rows = listOf("save", "cite", "remove", "citedBy", "opinions", "license").map { row ->
             compose.onNodeWithTag("postDetail.menuSheet.$row").getUnclippedBoundsInRoot().top
@@ -374,7 +374,7 @@ class RemovalScreensTest {
     @Test
     fun someoneElsesCommentCarriesNoRemoveRow() {
         openThread(listOf(testComment("c1")))
-        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
         compose.onNodeWithTag("postDetail.menuSheet.citedBy").assertExists()
         compose.onNodeWithTag("postDetail.menuSheet.remove").assertDoesNotExist()
     }
@@ -383,12 +383,12 @@ class RemovalScreensTest {
     @Test
     fun theOwnCommentsRemoveRaisesTheCommentsConfirmOverTheThread() {
         openThread()
-        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
         compose.onNodeWithTag("postDetail.menuSheet.remove").performClick()
         compose.waitForIdle()
 
         compose.onNodeWithTag("postDetail.menuSheet").assertDoesNotExist()
-        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("postDetail.threadSheet").assertExists()
         compose.onNodeWithText("Remove this comment?").assertExists()
         compose.onNodeWithText(
             "The words and pictures leave every reader's view, along with every earlier version's. " +
@@ -400,7 +400,7 @@ class RemovalScreensTest {
     // ---- CommentRemoveConfirm.md + CommentRemoved.md ------------------
 
     private fun removeOwnComment() {
-        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
         compose.onNodeWithTag("postDetail.menuSheet.remove").performClick()
         compose.waitForIdle()
         press("remove")
@@ -416,22 +416,22 @@ class RemovalScreensTest {
     @Test
     fun aTakenCommentRemovalSwapsTheOneNodeForItsMark() {
         openThread()
-        val before = compose.onNodeWithTag("detail_comment_c1").getUnclippedBoundsInRoot().top
+        val before = compose.onNodeWithTag(threadCard("c1")).getUnclippedBoundsInRoot().top
         removeOwnComment()
 
         compose.onNodeWithTag("postDetail.dialog").assertDoesNotExist()
         compose.onNodeWithText(AUTHOR_MARK).assertExists()
         compose.onNodeWithText(COMMENT_LINE).assertExists()
         compose.onNodeWithText("Comment c1").assertDoesNotExist()
-        compose.onNodeWithTag("comment_c1_author").assertExists()
-        compose.onNodeWithTag("comment_c1_menu").assertDoesNotExist()
-        compose.onNodeWithTag("comment_edit_c1").assertDoesNotExist()
-        compose.onNodeWithTag("comment_reply_c1").assertExists()
+        compose.onNodeIn(threadCard("c1"), threadPart("authorChip")).assertExists()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).assertDoesNotExist()
+        compose.onNodeIn(threadCard("c1"), threadPart("actionRow.edit")).assertDoesNotExist()
+        compose.onNodeIn(threadCard("c1"), threadPart("actionRow.reply")).assertExists()
         compose.onNodeWithTag("stance_c1").assertExists()
         // The branch is untouched: its reply still reads, in its place.
         compose.onNodeWithText("A reply that stays").assertExists()
         // ALWAYS the thread holds the reader's offset: the comment did not move.
-        assertThat(compose.onNodeWithTag("detail_comment_c1").getUnclippedBoundsInRoot().top).isEqualTo(before)
+        assertThat(compose.onNodeWithTag(threadCard("c1")).getUnclippedBoundsInRoot().top).isEqualTo(before)
         assertThat(repo.records).containsExactly("rec:c1")
         assertThat(repo.reads.single().second).isEqualTo("c1")
     }
@@ -458,7 +458,7 @@ class RemovalScreensTest {
     @Test
     fun keepingTheCommentLeavesTheThreadAsItWas() {
         openThread()
-        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).performClick()
         compose.onNodeWithTag("postDetail.menuSheet.remove").performClick()
         compose.waitForIdle()
         press("keep")
@@ -466,7 +466,7 @@ class RemovalScreensTest {
 
         compose.onNodeWithTag("postDetail.dialog").assertDoesNotExist()
         compose.onNodeWithText("Comment c1").assertExists()
-        compose.onNodeWithTag("comment_c1_menu").assertExists()
+        compose.onNodeIn(threadCard("c1"), threadPart("menu")).assertExists()
         assertThat(repo.records).isEmpty()
     }
 

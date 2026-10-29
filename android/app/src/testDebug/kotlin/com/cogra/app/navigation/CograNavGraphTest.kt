@@ -242,7 +242,7 @@ class CograNavGraphTest {
         // count raises (`ReplyEntry`).
         waitForTag("postDetail.card.actionRow.comments")
         compose.onNodeWithTag("postDetail.card.actionRow.comments").performClick()
-        waitForTag("detail_comment_c1")
+        waitForTag("postDetail.threadSheet.commentCard:c1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
 
         // A read drill-in keeps the frame and carries its own back arrow

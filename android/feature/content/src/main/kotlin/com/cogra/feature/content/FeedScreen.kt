@@ -226,8 +226,8 @@ fun FeedRoute(
                     onDepart = onCommentsDepart,
                     commentsReturn = commentsReturn,
                     onReturnConsumed = onCommentsReturnConsumed,
-                    stanceControl = { target, tag ->
-                        StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
+                    stanceControl = { target, tag, node ->
+                        StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
                     },
                 )
             },

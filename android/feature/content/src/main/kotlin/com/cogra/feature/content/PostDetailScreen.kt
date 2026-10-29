@@ -276,8 +276,8 @@ private fun DetailThread(
         commentsReturn = commentsReturn,
         onReturnConsumed = onReturnConsumed,
         refreshToken = refreshToken,
-        stanceControl = { target, tag ->
-            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
+        stanceControl = { target, tag, node ->
+            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
         },
         landOn = landOn,
         aimReply = aimReply,
