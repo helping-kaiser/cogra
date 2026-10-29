@@ -3978,7 +3978,9 @@ four-rung ladder.
   reset on every visit there would be no state to re-enter.
 - **The tab you are on pops to its own root** from anywhere deep in it,
   and the root's scroll is wherever it was left — a pop is not a
-  reload.
+  reload. The list stays as it was left; a profile's header alone reads
+  its facts again beneath it, so a signed edit or a changed handle shows
+  on arrival without moving anything the reader kept (round 27).
 - **At the root, scrolled, the tap goes to the top**, animated, so the
   jump reads as travel over a list the reader still owns. **The feed
   says this rung out loud** (jakob 2026-09-14): deep in the list, a
