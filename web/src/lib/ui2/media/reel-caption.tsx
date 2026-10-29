@@ -57,7 +57,9 @@ export function ReelCaption({
   const clamp = (
     <span
       {...testAttributes(part(node, "description"), `${testId}-description`)}
-      className="text-body-small"
+      // Size only, as drawn (ReelCaption.jsx:62-74): the clamp's two lines
+      // stand in the caption's inherited line box.
+      className="text-[length:var(--text-body-small)]"
       style={
         open
           ? undefined
@@ -75,7 +77,12 @@ export function ReelCaption({
     >
       {notice}
       {handle !== null && (
-        <span {...testAttributes(part(node, "handle"), `${testId}-handle`)} className="text-label-large">
+        // The board sets the role's SIZE and WEIGHT only (ReelCaption.jsx:48-50);
+        // the line box is the caption's own, inherited.
+        <span
+          {...testAttributes(part(node, "handle"), `${testId}-handle`)}
+          className="text-[length:var(--text-label-large)] [font-weight:var(--text-label-large--font-weight)]"
+        >
           @{handle}
         </span>
       )}
@@ -111,7 +118,7 @@ export function ReelCaption({
           aria-expanded={open}
           onClick={() => setOpen((shown) => !shown)}
           {...testAttributes(part(node, "more"), `${testId}-more`)}
-          className="cg-state cg-focus cg-hit cursor-pointer self-start border-0 bg-transparent font-sans text-label-medium"
+          className="cg-state cg-focus cg-hit cursor-pointer self-start border-0 bg-transparent font-sans text-[length:var(--text-label-medium)] [font-weight:var(--text-label-medium--font-weight)] [line-height:normal]"
           style={{ padding: "2px 0", color: "#fff" }}
         >
           {open ? "Less" : "More"}

@@ -152,7 +152,7 @@ export function ReelRail({
           href={author.href}
           aria-label={author.displayName}
           {...testAttributes(part(node, "author"), `${testId}-author`)}
-          className="cg-focus block rounded-full no-underline"
+          className="cg-focus block no-underline"
         >
           <MonogramAvatar name={author.displayName} src={author.src} size={44} />
         </Link>
