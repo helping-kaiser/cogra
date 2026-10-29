@@ -10671,6 +10671,48 @@ review pending*.
   **137 screens**, **5515 → 5517** board paths, **1629 → 1631** distinct
   (`tagPicker.fault.retry`, `referencePicker.fault.retry`).
 
+### Round 26, the stream and the opinions page — 2026-10-29
+
+Seam 250's two surfaces the web built before any round registered them,
+and the gaps their lanes found, under the same autonomy order. Every new
+string is in copy-voice, *merged under the autonomy order, review
+pending*.
+
+- **The ids the web minted are the registry's**, with three departures,
+  each the join law's: the face's row line and its Retry are named
+  (`reel.rail.stanceLine`, `.retry` — a line a test must reach), the
+  settling line stands inside the score's door (`reel.rail.score.settling`
+  — the whole face is the door), and the opinions page's rows sit in its
+  list (`profileStances.list.row`, as `notifications.list.notification`
+  does), keyed by the handle of the person the row names. `ReelSensitive`
+  joins `reel`, one surface in two states; the score's faces, the plate
+  lines and the caption's head key by the `state` value that draws them.
+  The share's fallback is drawn once, on the existing board: `copied`,
+  the house snackbar's `Link copied`.
+- **Saved opens the stream.** Its portrait clip's edge was drawn when
+  Saved became History's sibling (jakob 2026-10-14), after the stream's
+  origin list was written (jakob 2026-10-12); the list was the one that
+  lagged. `Back to Saved` joins the stream's nouns.
+- **A clip detail opens no stream.** The detail's clip tap returns into a
+  stream the reader came from, or opens the viewer; no edge opened one from
+  a post, so `Back to the post` leaves the stream's table, and a return
+  from the detail keeps the noun of the list the stream was opened from.
+- **The stream's door is named for its act**: `Open the stream`, never
+  the clip's alt text.
+- **The veil names its source on every veil** (Q47's "always"): the media
+  face, a comment's compact block, a words-only post's plate, the
+  detail's and the stream's, once per post.
+- **The opinions page.** One's own reads `On you` · `By you`, a deleted
+  account's is titled `Opinions`, and each empty tab says the figure's
+  noun at zero (copy-voice, *The profile save*'s carried-over words). The
+  page browses, so it joins the Collapses column (§4). A person opened
+  from its rows keeps the root the page's stack began in — a stack is
+  where a screen was opened from (`BottomNav`), never Feed by default.
+- **The gate**: edges hold at **2157** (the share's fallback is an outcome
+  of the edges that stood); flows hold at **227**, none re-blessed. The
+  registry grows **137 → 140 screens**, **5517 → 5599** board paths,
+  **1631 → 1689** distinct.
+
 ---
 
 ## 14. The canvases
