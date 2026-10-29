@@ -406,6 +406,12 @@ describe("the seal's words", () => {
     );
   });
 
+  it("ReplySealComment.md:3 reads back Reply to @tobias when the reply answers a comment", () => {
+    expect(replySummary({ ...emptyReply(COMMENT_TARGET), words: "Four" })).toBe(
+      "Reply to @tobias — 4 characters.",
+    );
+  });
+
   it("names the post it answers on the acts row", () => {
     expect(replyActLabel(POST_TARGET)).toBe("Reply to @ada's post");
   });

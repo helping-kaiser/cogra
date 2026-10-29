@@ -327,7 +327,9 @@ describe("the reply wizard", () => {
 
     it("names the comment it answers when the reply was pre-targeted", async () => {
       draw({ target: COMMENT_TARGET });
-      await toSeal();
+      await toSeal("Four");
+      // ReplySealComment.md:3 — the read-back names the comment by its author's handle.
+      expect(screen.getByTestId("reply-seal-summary")).toHaveTextContent("Reply to @tobias — 4 characters.");
       expect(screen.getByTestId("reply-act-comment")).toHaveTextContent(
         "Reply to @tobias's comment",
       );
@@ -691,12 +693,20 @@ describe("the reply wizard", () => {
   describe("leaving", () => {
     // NO COMMENT DRAFTS (jakob 2026-09-01): the X discards, so the label must
     // not promise the post wizard's kept draft.
-    it("says the comment is discarded rather than kept", () => {
+    it("says the reply is discarded rather than kept, as every reply board's header does", () => {
       draw();
       expect(screen.getByTestId("header-leave")).toHaveAttribute(
         "aria-label",
-        "Leave — this comment is discarded",
+        "Leave — the reply is discarded",
       );
+    });
+
+    it("ReplySeal: the seal's header carries Last step and the one ? as WizardHeader's pair", async () => {
+      draw();
+      await toSeal();
+      expect(screen.getByTestId("header-stage")).toHaveTextContent("Last step");
+      fireEvent.click(screen.getByRole("button", { name: "How signing works" }));
+      expect(await screen.findByTestId("reply-help-dialog")).toBeInTheDocument();
     });
 
     it("asks before discarding from the seal, where words certainly exist", async () => {

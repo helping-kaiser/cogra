@@ -246,7 +246,11 @@ export function signedActions(state: ReplyState): number {
 export function replySummary(state: ReplyState): string {
   const count = [...state.words.trim()].length;
   const characters = count === 1 ? "1 character" : `${count} characters`;
-  return `Reply to "${state.target.label}" — ${characters}.`;
+  // A post is named by its title, a comment by its author's handle — the one
+  // line besides the act row that names the target (ReplySealComment.md:3-5).
+  const answered =
+    state.target.kind === "post" ? `"${state.target.label}"` : `@${state.target.authorHandle}`;
+  return `Reply to ${answered} — ${characters}.`;
 }
 
 /** The acts card's first row — what the one signed act actually is. */

@@ -62,7 +62,8 @@ import {
 } from "@/lib/compose/reply-wizard";
 import type { StancePair } from "@/lib/stance/model";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
-import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
+import { HeaderBar } from "@/lib/ui2/header-bar";
+import { HelpDot } from "@/lib/ui2/help-dot";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
@@ -74,11 +75,11 @@ import { ReplyComposeStep } from "./reply-compose-step";
 import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
 
 /**
- * The leave label. Nothing is kept — there are no comment drafts — and the
- * confirm is what stands between the author and that fact when they have
- * written something.
+ * The leave label, as every reply board's `WizardHeader` spells it. Nothing is
+ * kept — there are no comment drafts — and the confirm is what stands between
+ * the author and that fact when they have written something.
  */
-export const LEAVE_LABEL = "Leave — this comment is discarded";
+export const LEAVE_LABEL = "Leave — the reply is discarded";
 
 const NO_FRAMES: readonly Blob[] = [];
 const NO_URLS: readonly string[] = [];
@@ -572,17 +573,16 @@ export function ReplyWizard({
             onBack={stepBack}
             onLeave={leave}
             leaveLabel={LEAVE_LABEL}
-            action={
+            // `WizardHeader`'s own pair on the seal (`ReplySealBody`): the
+            // stage's name, then the screen's one "?" as `HelpDot`.
+            stageLabel={state.step === "seal" ? "Last step" : undefined}
+            help={
               state.step === "seal" ? (
-                <span className="flex items-center gap-2">
-                  <span className="whitespace-nowrap text-label-small text-on-surface-variant">
-                    Last step
-                  </span>
-                  <HelpButton
-                    label="How signing works"
-                    onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)}
-                  />
-                </span>
+                <HelpDot
+                  ariaLabel="How signing works"
+                  onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)}
+                  testId="header-help"
+                />
               ) : undefined
             }
           />
