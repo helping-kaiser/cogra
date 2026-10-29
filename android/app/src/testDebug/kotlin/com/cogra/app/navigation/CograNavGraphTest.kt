@@ -101,6 +101,8 @@ class CograNavGraphTest {
 
     @Inject lateinit var reveals: com.cogra.domain.content.SensitiveReveals
 
+    @Inject lateinit var readerDefaults: com.cogra.domain.testing.InMemoryReaderDefaultStore
+
     private lateinit var navController: TestNavHostController
 
     @Before
@@ -458,6 +460,11 @@ class CograNavGraphTest {
             post = post,
             comments = com.cogra.domain.Page(emptyList(), null, hasNextPage = false),
         )
+        // A sensitive body reaches the feed only with Also show's Sensitive on
+        // (FeedSheet.md:43: off by default) — so this reader set it in Settings.
+        runBlocking {
+            readerDefaults.save("u1", com.cogra.domain.feed.FeedFilter.DEFAULT.copy(showSensitive = true))
+        }
         reveals.reveal(
             "p1",
             com.cogra.domain.content.SensitiveMark(
