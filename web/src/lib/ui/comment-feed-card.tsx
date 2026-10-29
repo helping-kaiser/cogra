@@ -21,6 +21,14 @@
 //
 // ITS ⋮ IS THE COMMENT'S MENU (`comment-menu.ts`), the sheet every comment's ⋮
 // opens, never the post card's.
+//
+// THE LINE SHAPE (`CommentCard`'s `targetShape="line"`, ProfileComments): where
+// a comment is listed away from its thread and nothing ranks it — a profile's
+// comments — the card leads with the one-line `On …` pointer instead of the
+// head row, its words stand whole and are no door, and its row is the
+// thread's own: the opinion, then the text `Reply`, with the collapsed
+// "View n replies" line under the card. Every door — the pointer, Reply and
+// the replies line — opens the thread the comment lives in.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -50,6 +58,7 @@ import {
 import { OverflowMenu } from "@/lib/ui2/overflow-menu";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
+import { buttonClassName } from "./button";
 import { Card } from "./card";
 import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
@@ -81,6 +90,21 @@ import { TopicsLine } from "./topics-line";
    shape's line, which hangs 44px in. */
 const CLAMP_LINES = 2;
 const CHARS_PER_LINE = 45;
+
+/**
+ * An applicant's Reply answers in place (ProfileComments.md:29; the comment
+ * foot's twin, staged-surfaces.md): locked, never gone, never the composer.
+ */
+export const COMMENT_LOCKED = "You can comment once you're in.";
+
+/** What the line shape's text Reply does for this reader. */
+export type LineReply =
+  /** A member: the thread opens, its composer aimed at the comment. */
+  | "open"
+  /** An applicant: the locked look, the tap answered in the snackbar. */
+  | "locked"
+  /** A guest: no Reply, as the thread draws none for one. */
+  | "none";
 
 const REMOVED_LINE: Record<RemovalReason, string> = {
   author: REMOVED_BY_AUTHOR,
@@ -197,8 +221,33 @@ export function CommentFeedCard({
   onNotify,
   onLinkCopied,
   scoreOrigin,
+  shape = "thread",
+  authorHere = false,
+  reply = "open",
+  replyCount = 0,
+  onRemoved,
 }: {
   comment: CommentFeedView;
+  /**
+   * How the card names what it answers (`CommentCard`'s `targetShape`): the
+   * feed's `thread` head row, or the `line` pointer of a comment listed away
+   * from its thread (ProfileComments.md:5).
+   */
+  shape?: "thread" | "line";
+  /**
+   * The card stands on its author's own profile, where the chip's door would
+   * open the page it is on: the chip is inert (ProfileComments.md:21).
+   */
+  authorHere?: boolean;
+  /** The line shape's text Reply, for this reader. */
+  reply?: LineReply;
+  /** The line shape's collapsed branch: the "View n replies" line under the card. */
+  replyCount?: number;
+  /**
+   * The author's own Remove, taken from the card's ⋮: the host keeps the mark
+   * too, so a view held for a return comes back wearing it.
+   */
+  onRemoved?: (removal: Removal) => void;
   /** Where the card stands, for its score slot's trace; absent, no score is drawn. */
   scoreOrigin?: TraceOrigin;
   /** The surface the doors' destinations name on their back arrows (`saved`). */
@@ -234,23 +283,36 @@ export function CommentFeedCard({
     readonly opinions: readonly HeldOpinionView[] | null;
   } | null>(null);
 
+  const line = shape === "line";
   const threadPost = comment.post?.id ?? null;
+  // The origin rides every door's query, encoded: a profile's is `u:<handle>`.
+  const origin = encodeURIComponent(from);
   // THE COMMENT'S OWN PLACE: its thread, landed on it.
   const place =
-    threadPost === null ? null : `/posts/${threadPost}?comment=${comment.id}&from=${from}`;
+    threadPost === null ? null : `/posts/${threadPost}?comment=${comment.id}&from=${origin}`;
   const head = comment.target ? headRowOf(comment.target) : null;
   const headHref =
     comment.target === null || comment.target === undefined
       ? null
-      : comment.target.__typename === "Post"
-        ? `/posts/${comment.target.id}?from=${from}`
-        : threadPost === null
+      : comment.target.__typename === "Comment"
+        ? threadPost === null
           ? null
-          : `/posts/${threadPost}?comment=${comment.target.id}&from=${from}`;
+          : `/posts/${threadPost}?comment=${comment.target.id}&from=${origin}`
+        : line
+          // THE POINTER OPENS THE THREAD THE COMMENT LIVES IN
+          // (ProfileComments.md:23; graph.json: "the post, its thread open"),
+          // landed on the comment that answers it.
+          ? place
+          : `/posts/${comment.target.id}?from=${origin}`;
 
   const redacted = payloadIsRedacted(comment);
   const words = redacted ? "" : (comment.content.value ?? "");
-  const folds = words.length > CLAMP_LINES * CHARS_PER_LINE;
+  // A profile's list draws the words whole (`CommentCard`'s `clampLines`,
+  // off outside the feed).
+  const folds = !line && words.length > CLAMP_LINES * CHARS_PER_LINE;
+  // In the line shape the words are no door: the card is reached through
+  // its pointer, its Reply and its replies line (ProfileComments.md:23-27).
+  const wordsDoor = line ? null : place;
   const stamp = shortTimestamp(comment.createdAt);
   const handle = comment.author?.handle ?? null;
 
@@ -290,10 +352,10 @@ export function CommentFeedCard({
   const body = (
     <>
       {words !== "" &&
-        (place === null ? (
+        (wordsDoor === null ? (
           <p className={`text-body-medium ${folds && !unfolded ? "line-clamp-2" : ""}`}>{words}</p>
         ) : (
-          <Link href={place} data-testid={`${testId}-link`} className="block">
+          <Link href={wordsDoor} data-testid={`${testId}-link`} className="block">
             <p className={`text-body-medium ${folds && !unfolded ? "line-clamp-2" : ""}`}>{words}</p>
           </Link>
         ))}
@@ -302,8 +364,8 @@ export function CommentFeedCard({
           (FeedCommentShapes.md). The pictures take the words' door. */}
       {hasMedia(comment) && (
         <div
-          onClick={place === null ? undefined : () => router.push(place)}
-          className={place === null ? undefined : "cursor-pointer"}
+          onClick={wordsDoor === null ? undefined : () => router.push(wordsDoor)}
+          className={wordsDoor === null ? undefined : "cursor-pointer"}
         >
           <PostMedia
             node={comment}
@@ -330,6 +392,7 @@ export function CommentFeedCard({
             avatarUrl={comment.author.avatar?.url}
             testId={`${testId}-author`}
             node={part(node, "authorChip")}
+            here={authorHere}
           />
         )}
         <div className="flex flex-none items-center gap-3">
@@ -381,7 +444,10 @@ export function CommentFeedCard({
                     nodeId={comment.id}
                     record={comment.genesisRecordId}
                     onClose={() => setRemoving(false)}
-                    onRemoved={setTaken}
+                    onRemoved={(removal) => {
+                      setTaken(removal);
+                      onRemoved?.(removal);
+                    }}
                     testId={`${testId}-remove-confirm`}
                   />
                 )}
@@ -398,6 +464,9 @@ export function CommentFeedCard({
           when={removalWhen(comment)}
           note={removalReason(comment) === "author" ? REMOVED_COMMENT_NOTE : undefined}
           testId={`${testId}-removed`}
+          // The mark's registered name where its placer gives one
+          // (`CommentCard`'s `removalMark`, the thread sheet's).
+          node={line ? part(node, "removalMark") : undefined}
         />
       ) : (
         // THE COMPACT VEIL TAKES THE WORDS; the head row stays readable.
@@ -436,9 +505,22 @@ export function CommentFeedCard({
     </>
   );
 
-  return (
+  const card = (
     <Card testId={testId} node={node}>
-      {head !== null && headHref !== null ? (
+      {/* THE TARGET POINTER (`CommentCard`'s line shape; ProfileComments.md:5):
+          one line, one tap to the thread — the target kind's glyph, then
+          `On …` in the quiet ink, ellipsized. */}
+      {line && head !== null && headHref !== null && (
+        <Link
+          href={headHref}
+          {...testAttributes(part(node, "target"), `${testId}-target`)}
+          className="cg-state cg-focus cg-hit flex max-w-full items-center gap-2 rounded-small text-left text-on-surface-variant"
+        >
+          <Icon name={head.kind === "comment" ? "chat_bubble" : "dynamic_feed"} size={14} />
+          <span className="truncate text-label-small">On {head.label}</span>
+        </Link>
+      )}
+      {!line && head !== null && headHref !== null ? (
         <div className="flex flex-col">
           {/* THE HEAD ROW — its own door, to what it names. A removed target
               keeps its row: its mark keeps its space empty and the title's
@@ -504,7 +586,31 @@ export function CommentFeedCard({
             testId={`${testId}-score`}
           />
         )}
-        {place !== null && !redacted && (
+        {/* THE LINE SHAPE'S REPLY IS THE THREAD'S TEXT BUTTON (`CommentCard`
+            without `replyGlyph`): the thread opens, its composer aimed at
+            this comment (ProfileComments.md:25) — and a removed comment keeps
+            it, as in its thread (CommentRemoved.md). An applicant's stands
+            locked and answers in the snackbar, never the composer (:29). */}
+        {line && place !== null && reply === "open" && (
+          <Link
+            href={`${place}&reply=1`}
+            {...testAttributes(part(node, "actionRow.reply"), `${testId}-reply`)}
+            className={buttonClassName({ variant: "text", size: "sm" })}
+          >
+            Reply
+          </Link>
+        )}
+        {line && place !== null && reply === "locked" && (
+          <button
+            type="button"
+            {...testAttributes(part(node, "actionRow.reply"), `${testId}-reply`)}
+            onClick={() => onNotify(COMMENT_LOCKED)}
+            className={`${buttonClassName({ variant: "text", size: "sm" })} opacity-[var(--state-disabled)]`}
+          >
+            Reply
+          </button>
+        )}
+        {!line && place !== null && !redacted && (
           <Link
             href={`${place}&reply=1`}
             aria-label={handle === null ? "Reply" : `Reply to @${handle}`}
@@ -514,7 +620,7 @@ export function CommentFeedCard({
             <Icon name="chat_bubble" size={18} />
           </Link>
         )}
-        {threadPost !== null && (
+        {!line && threadPost !== null && (
           <ShareButton
             href={`/posts/${threadPost}?comment=${comment.id}`}
             targetLabel="this comment"
@@ -528,5 +634,24 @@ export function CommentFeedCard({
           comment that did not go through. */}
       {comfort !== null && <RowLine state={comfort} testId={`${testId}-row-line`} />}
     </Card>
+  );
+  if (!line) return card;
+  return (
+    <>
+      {card}
+      {/* THE COLLAPSED BRANCH, as the thread draws it: a short rule and the
+          count, indented under the card — its door the thread
+          (ProfileComments.md:27). */}
+      {replyCount > 0 && place !== null && (
+        <Link
+          href={place}
+          {...testAttributes(part(node, "viewReplies"), `${testId}-replies`)}
+          className="cg-state cg-focus cg-hit ml-7 flex items-center gap-3 self-start py-1 pl-0 pr-2 text-label-medium text-on-surface-variant"
+        >
+          <span aria-hidden="true" className="h-px w-6 bg-outline-variant" />
+          View {replyCount === 1 ? "1 reply" : `${replyCount} replies`}
+        </Link>
+      )}
+    </>
   );
 }
