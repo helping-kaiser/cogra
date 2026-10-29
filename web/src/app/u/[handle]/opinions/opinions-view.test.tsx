@@ -337,6 +337,25 @@ describe("OpinionsScreen", () => {
     );
   });
 
+  it("never stands the reader as a row on their own page (:21)", async () => {
+    server.use(
+      me("u-me", "me"),
+      myProfile(),
+      userOpinions("on", [[opinionRecord("me", 0.5, 0.5, { displayName: "Me" }), opinionRecord("sol", 0.6, 0.3, { displayName: "Sol Ferreira" })]]),
+    );
+    renderWithProviders(<OpinionsScreen handle={null} />, { store: signedInStore() });
+    await screen.findByTestId(byNode("profileStances.list.row", "sol"));
+    expect(screen.queryByTestId(byNode("profileStances.list.row", "me"))).toBeNull();
+    expect(screen.getAllByTestId(byNode("profileStances.list.row"))).toHaveLength(1);
+  });
+
+  it("keeps an opinion the person holds on themselves on another's page", async () => {
+    server.use(theirProfile(), userOpinions("on", [[opinionRecord("ada", 0.5, 0.5), opinionRecord("sol", 0.6, 0.3)]]));
+    renderWithProviders(<OpinionsScreen handle="ada" />);
+    await screen.findByTestId(byNode("profileStances.list.row", "sol"));
+    expect(screen.getByTestId(byNode("profileStances.list.row", "ada"))).toBeInTheDocument();
+  });
+
   it("names the reader's own tabs On you and By you (ProfileStances.md:11)", async () => {
     server.use(me("u-me", "me"), myProfile(), userOpinions("on", [[]]));
     renderWithProviders(<OpinionsScreen handle={null} />, { store: signedInStore() });

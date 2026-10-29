@@ -213,7 +213,15 @@ export function OpinionsScreen({
           href: from === null ? `/u/${encodeURIComponent(handle)}` : `/u/${encodeURIComponent(handle)}?from=${encodeURIComponent(from)}`,
           label: own ? "Back to your profile" : "Back to the profile",
         };
-  const rows = listed !== null && listed.direction === direction ? listed.rows : null;
+  // THE READER IS NEVER A ROW ON THEIR OWN PAGE (ProfileStances.md:21; the
+  // board's own page drops @sol's row): an opinion the reader holds on
+  // themselves, on either tab, names the reader, who is the page.
+  const rows =
+    listed !== null && listed.direction === direction
+      ? own && profile !== null
+        ? listed.rows.filter((opinion) => opinion.holder.handle !== profile.handle)
+        : listed.rows
+      : null;
   // A deleted account's handle went with the rest (ProfileDeleted.md:11), so
   // its page is titled with what it holds alone.
   const title =
