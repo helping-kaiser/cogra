@@ -20,7 +20,7 @@ import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PostView } from "@/lib/api/content-api";
-import { forgetAllProfilePosts } from "@/lib/profile/profile-memory";
+import { forgetAllProfileViews } from "@/lib/profile/profile-memory";
 import { forgetStream, heldStream, streamBack } from "@/lib/reel/stream-session";
 import { forgetStandings, holdRanking } from "@/lib/score/standing";
 import { originOf, traceBack } from "@/lib/score/trace-session";
@@ -28,6 +28,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
 import { gqlLink, startMswServer } from "@/test/msw";
+import { commentsPage, profileComment } from "@/test/profile-comment";
 import { renderWithProviders } from "@/test/providers";
 import { reelPost } from "@/test/reel";
 import { stanceHandlers } from "@/test/stance";
@@ -130,7 +131,7 @@ function serveChronicle(): (string | null)[] {
   const families: (string | null)[] = [];
   server.use(
     gqlLink.query("AuthorRecords", ({ variables }) => {
-      families.push((variables as { family: string | null }).family);
+      families.push((variables as { family?: string | null }).family ?? null);
       return HttpResponse.json({
         data: {
           records: {
@@ -191,7 +192,7 @@ const cardIds = () =>
 beforeEach(() => {
   window.localStorage.clear();
   push.mockReset();
-  forgetAllProfilePosts();
+  forgetAllProfileViews();
   forgetStream();
 });
 
@@ -242,13 +243,18 @@ describe("ProfilePosts — the posts view (ProfilePosts.md)", () => {
     fireEvent.click(screen.getByTestId(byNode("profile.tabRow.postsTab")));
     expect(reads).toHaveLength(1);
     // :19 — Comments: the person's comments, below the same header.
+    server.use(
+      gqlLink.query("ProfileComments", () =>
+        HttpResponse.json({ data: commentsPage("u-ada", [profileComment("c1")]) }),
+      ),
+    );
     fireEvent.click(screen.getByTestId(byNode("profile.tabRow.commentsTab")));
-    await waitFor(() => expect(families).toEqual([null, "REVIEW"]));
+    expect(await screen.findByTestId(byNode("profile.comments.card", "c1"))).toBeInTheDocument();
     expect(screen.queryByTestId("profile-posts")).toBeNull();
     expect(screen.getByTestId(byNode("profile.identity.name"))).toBe(name);
     // :21 — Everything: the chronicle.
     fireEvent.click(screen.getByTestId(byNode("profile.tabRow.everythingTab")));
-    await waitFor(() => expect(families).toEqual([null, "REVIEW", null]));
+    await waitFor(() => expect(families).toEqual([null, null]));
     expect(await screen.findByTestId(byNode("profile.chronicle.act", "1"))).toBeInTheDocument();
   });
 
