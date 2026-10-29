@@ -122,7 +122,7 @@ internal fun ScoreOrigin(cover: TraceCover?, kind: TraceThingKind, figure: Strin
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.clearAndSetSemantics { testTag = (node / "flag" / "value").tag },
+                    modifier = Modifier.dataNode(node / "flag" / "value"),
                 )
             }
         }
@@ -278,14 +278,14 @@ internal fun MorePathsRow(label: String, value: String, name: String, onUnfold: 
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Normal,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f).clearAndSetSemantics { testTag = (row / "label").tag },
+            modifier = Modifier.weight(1f).dataNode(row / "label"),
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.clearAndSetSemantics { testTag = (row / "value").tag },
+            modifier = Modifier.dataNode(row / "value"),
         )
     }
 }

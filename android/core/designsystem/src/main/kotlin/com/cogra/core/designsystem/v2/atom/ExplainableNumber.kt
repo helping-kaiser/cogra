@@ -36,10 +36,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -121,7 +119,7 @@ fun ExplainableNumber(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .widthIn(max = PENDING_WIDTH)
-                    .clearAndSetSemantics { node?.let { testTag = (it / "settling").tag } },
+                    .dataNode(node?.div("settling")),
             )
         }
         return
@@ -139,8 +137,8 @@ fun ExplainableNumber(
                 fontWeight = FontWeight.Medium,
                 color = if (overMedia) Color.White else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
-                // The door speaks the figure with its name; the digits add nothing heard twice.
-                modifier = Modifier.clearAndSetSemantics { node?.let { testTag = (it / "value").tag } },
+                // The door's own name speaks the figure with its label (`Feed score 15.20`).
+                modifier = Modifier.dataNode(node?.div("value")),
             )
         }
     }

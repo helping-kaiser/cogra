@@ -15,10 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.LocalShowExactValues
@@ -50,11 +48,11 @@ fun StanceValue(
             .dataNode(node)
             .semantics(mergeDescendants = true) { contentDescription = spoken },
     ) {
-        // Each part says nothing of its own: the pair is heard once, whole.
+        // The row's own name speaks the whole fact: the word and the pair.
         Text(
             text = readout.emoji,
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.clearAndSetSemantics { node?.let { testTag = (it / "face").tag } },
+            modifier = Modifier.dataNode(node?.div("face")),
         )
         if (LocalShowExactValues.current) {
             Text(
@@ -63,7 +61,7 @@ fun StanceValue(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 softWrap = false,
-                modifier = Modifier.clearAndSetSemantics { node?.let { testTag = (it / "exact").tag } },
+                modifier = Modifier.dataNode(node?.div("exact")),
             )
         }
     }
