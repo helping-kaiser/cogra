@@ -57,12 +57,17 @@ const TOP: ScrollPlace = { offset: 0, anchorId: null, anchorTop: 0 };
 
 let memory: ProfilePostsMemory | null = null;
 
+/** A handle names one profile whatever its case; the own root is its own route. */
+function routeKey(route: string | null): string | null {
+  return route === null ? null : route.toLowerCase();
+}
+
 function sameProfile(
   held: ProfilePostsMemory,
   reader: string | null,
   route: string | null,
 ): boolean {
-  return held.reader === reader && held.route === route;
+  return held.reader === reader && routeKey(held.route) === routeKey(route);
 }
 
 /**
@@ -75,9 +80,17 @@ export function rememberProfilePosts(left: Omit<ProfilePostsMemory, "place">): v
   memory = { ...left, place };
 }
 
-/** Keep the place. Called as the reader scrolls, so it costs no render. */
-export function rememberProfilePlace(place: ScrollPlace): void {
-  if (memory !== null) memory = { ...memory, place };
+/**
+ * Keep the place on this profile's held view. Called as the reader scrolls,
+ * so it costs no render; a scroll on any other profile, or on a chronicle tab,
+ * leaves the held place alone.
+ */
+export function rememberProfilePlace(
+  reader: string | null,
+  route: string | null,
+  place: ScrollPlace,
+): void {
+  if (memory !== null && sameProfile(memory, reader, route)) memory = { ...memory, place };
 }
 
 /**
@@ -94,7 +107,16 @@ export function recallProfilePosts(
   return from === null || from === memory.from ? memory : null;
 }
 
-/** The reader moved off the posts view: its landing is the tab's again. */
-export function forgetProfilePosts(): void {
+/**
+ * The reader moved off this profile's posts view, or opened it afresh: its
+ * landing is the tab's again. Another profile's held view stays — the stream
+ * opened from it may still be on its way back there.
+ */
+export function forgetProfilePosts(reader: string | null, route: string | null): void {
+  if (memory !== null && sameProfile(memory, reader, route)) memory = null;
+}
+
+/** Drop it — a cold start, for a test. */
+export function forgetAllProfilePosts(): void {
   memory = null;
 }
