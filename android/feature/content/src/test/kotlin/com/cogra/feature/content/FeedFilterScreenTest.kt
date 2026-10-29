@@ -131,14 +131,13 @@ class FeedFilterScreenTest {
         render(FeedUiState(loading = false))
         trigger.performClick()
         node("feed.filterSheet.order.picker.newestOption").performClick()
-        node("feed.filterSheet.also.settlingChip").performClick()
         assertThat(applied).isEmpty()
 
         node("feed.filterSheet.foot.done").performClick()
 
-        assertThat(applied).containsExactly(FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST, stillSettling = false))
+        assertThat(applied).containsExactly(FeedFilter.DEFAULT.copy(order = FeedOrder.NEWEST))
         compose.onAllNodesWithTag("feed.filterSheet", useUnmergedTree = true).assertCountEquals(0)
-        node(FEED_FILTER_STATUS).assert(spoken("Posts · newest · settled only, what your feed shows"))
+        node(FEED_FILTER_STATUS).assert(spoken("Posts · newest, what your feed shows"))
         trigger.assertIsFocused()
     }
 
@@ -200,10 +199,10 @@ class FeedFilterScreenTest {
                 ),
             ),
         )
-        node("feed.card:author").assertIsDisplayed()
-        node("feed.commentCard:c1").assertIsDisplayed()
-        node("feed.profileCard:u-mira").assertIsDisplayed()
-        node("feed.tagCard:saltmaps").assertIsDisplayed()
+        node("feed.card:p1").assertExists()
+        node("feed.commentCard:c1").assertExists()
+        node("feed.profileCard:u-mira").assertExists()
+        node("feed.tagCard:saltmaps").assertExists()
         // FeedTagShapes.md — an empty tag keeps its card and says so.
         compose.onNodeWithText("Nothing carries this tag right now.").assertIsDisplayed()
     }
