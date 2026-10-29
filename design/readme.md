@@ -407,6 +407,12 @@ rendering is acceptable as a platform habit. Where a platform genuinely
 cannot — a capability the other has and this one does not — the
 difference is *presented*, deliberately and per case, the way `Back is
 the platform's` already is. The test is capability, never convention.
+**A house control is the design on both platforms, never the kit's
+stock one** (seam 248): where the master departs from M3 on purpose,
+Android draws the master, because drawing it is a capability Compose has.
+The `Checkbox` is the worked case — the master's 18px box with the one
+1px hairline is the Android box too, never M3's 20dp control with its
+2dp stroke, which §4's one-weight rule refuses.
 
 ### Corner radii and cards
 
