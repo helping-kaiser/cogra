@@ -13,6 +13,7 @@ import {
   fetchMyProfile,
   fetchProfileByHandle,
   fetchProfileFigures,
+  fetchProfilePosts,
   mediaField,
   prepareProfileUpdate,
   PROFILE_PAGE_SIZE,
@@ -20,6 +21,7 @@ import {
   type RecordNode,
 } from "./profile-api";
 import { gqlLink, startMswServer } from "@/test/msw";
+import { reelPost } from "@/test/reel";
 
 const server = startMswServer();
 
@@ -147,6 +149,63 @@ describe("fetchProfileFigures", () => {
   });
 });
 
+describe("fetchProfilePosts", () => {
+  it("reads the person's posts off their genesis Publish records, in the served order", async () => {
+    let asked: unknown;
+    server.use(
+      gqlLink.query("ProfilePosts", ({ variables }) => {
+        asked = variables;
+        return HttpResponse.json({
+          data: {
+            user: {
+              __typename: "User",
+              id: "u-1",
+              posts: {
+                __typename: "RecordConnection",
+                edges: [
+                  { __typename: "RecordEdge", node: { __typename: "Record", id: "r-2", target: reelPost("p-2") } },
+                  // A record whose post CoGra does not carry draws no blank card.
+                  { __typename: "RecordEdge", node: { __typename: "Record", id: "r-x", target: null } },
+                  { __typename: "RecordEdge", node: { __typename: "Record", id: "r-1", target: reelPost("p-1", "photo") } },
+                ],
+                pageInfo: { __typename: "PageInfo", hasNextPage: true, endCursor: "c-1" },
+              },
+            },
+          },
+        });
+      }),
+    );
+    const outcome = await fetchProfilePosts(client(), "u-1", "c-0");
+    expect(asked).toEqual({ id: "u-1", after: "c-0" });
+    expect(outcome.kind).toBe("success");
+    if (outcome.kind !== "success") return;
+    expect(outcome.value.items.map((post) => post.id)).toEqual(["p-2", "p-1"]);
+    expect(outcome.value.endCursor).toBe("c-1");
+    expect(outcome.value.hasNextPage).toBe(true);
+  });
+
+  it("reads an unknown person as an empty view, and a fault as failed", async () => {
+    server.use(gqlLink.query("ProfilePosts", () => HttpResponse.json({ data: { user: null } })));
+    expect(await fetchProfilePosts(client(), "u-9")).toEqual({
+      kind: "success",
+      value: { items: [], endCursor: null, hasNextPage: false },
+    });
+    server.use(gqlLink.query("ProfilePosts", () => HttpResponse.error()));
+    expect((await fetchProfilePosts(client(), "u-9")).kind).toBe("failed");
+  });
+
+  // The figure and the list are one filter, read from the document the client
+  // sends: the Posts count can never disagree with the cards it counts.
+  it("asks for exactly the records the Posts figure counts, ten to a page, each a whole card", () => {
+    const document = readFileSync(join(process.cwd(), "src", "lib", "graphql", "profile.graphql"), "utf-8");
+    const posts = document.slice(document.indexOf("query ProfilePosts"), document.indexOf("query ProfileFigures"));
+    expect(posts).toContain(
+      "posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 10, after: $after)",
+    );
+    expect(posts).toContain("...FeedPost");
+  });
+});
+
 describe("mediaField", () => {
   // Omitted, cleared and replaced are three different instructions, and
   // `undefined` is the one that serialises to an absent field.
@@ -245,7 +304,7 @@ describe("fetchAuthorRecords", () => {
         }),
       ),
     );
-    const outcome = await fetchAuthorRecords(client(), "u-1", "posts");
+    const outcome = await fetchAuthorRecords(client(), "u-1", "everything");
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
     expect(outcome.value.items).toEqual([

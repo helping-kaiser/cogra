@@ -29,8 +29,13 @@ export type ProfileView = NonNullable<UserProfileQuery["user"]>;
  */
 export type ChronicleFilter = "posts" | "comments" | "everything";
 
-const FILTER_FAMILY: Record<ChronicleFilter, RecordFamily | null> = {
-  posts: "PUBLISH",
+/**
+ * The tabs the chronicle stands on. The Posts tab is no chronicle: it lists
+ * the person's posts as post cards (ProfilePosts.md:3, `fetchProfilePosts`).
+ */
+export type ChronicleTab = Exclude<ChronicleFilter, "posts">;
+
+const FILTER_FAMILY: Record<ChronicleTab, RecordFamily | null> = {
   comments: "REVIEW",
   everything: null,
 };
@@ -317,7 +322,7 @@ function toRow(node: RecordNode, own: boolean): RecordRow {
 export async function fetchAuthorRecords(
   client: ApolloClient,
   authorId: string,
-  filter: ChronicleFilter,
+  filter: ChronicleTab,
   after: string | null = null,
   /** The reader's own chronicle, whose profile updates say `your`. */
   own = false,
