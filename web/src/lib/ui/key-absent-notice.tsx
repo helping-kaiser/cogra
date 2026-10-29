@@ -13,8 +13,10 @@
 //
 // ONE DRAWING FOR BOTH OF THE CONTROL'S CONSIDERED SURFACES: the pad, and the
 // alternates that replace it everywhere for a reader whose input is sliders or
-// typed values (§8.6) — the alternates have no board of their own for this
-// state, so they carry the pad's notice as drawn.
+// typed values (§8.6) — `StanceAlternates`' `keyAbsent` state (round 24)
+// carries the pad's notice exactly as `PadKeyAbsent` draws it, where the
+// landing line and the action row were, and `Keep it pending, restore later`
+// under it (PadKeyAbsent.md:23).
 
 import Link from "next/link";
 

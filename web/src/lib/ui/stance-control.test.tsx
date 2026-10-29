@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -1564,6 +1564,50 @@ describe("the pad with the signing key elsewhere", () => {
     await settle();
     expect(screen.queryByTestId("stance-alternates")).toBeNull();
     expect(screen.getByTestId(`${PREFIX}-kept`)).toHaveTextContent("Waiting for your key");
+    expect(data.sent).toEqual([]);
+  });
+
+  // PadKeyAbsent.md:23 WHEN the alternates open GIVEN the signing key is not
+  // on this device -> the pad's key notice where the landing line and the
+  // action row were, Your key isn't on this browser over its two lines and
+  // Restore the key, with Keep it pending, restore later under it AND NEVER
+  // Sign it, Cancel or Walk it back stands.
+  it("draws the alternates' keyAbsent face: the notice over Restore, Keep it pending under it, no commit row", async () => {
+    mount({ keyAbsent: true, seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } }, { mode: "sliders" });
+    await settle();
+    await openPad();
+    await settle();
+    const dialog = screen.getByTestId("stance-alternates");
+    const notice = within(dialog).getByTestId(`${PREFIX}-key-absent`);
+    expect(notice).toHaveTextContent("Your key isn't on this browser");
+    expect(notice).toHaveTextContent(
+      "Signing needs your key, which isn't in this browser — the write waits as pending.",
+    );
+    expect(notice).toHaveTextContent("Restore the key with your recovery code to finish.");
+    expect(within(notice).getByTestId(`${PREFIX}-restore`)).toHaveTextContent("Restore the key");
+    const keep = within(dialog).getByTestId(`${PREFIX}-keep-pending`);
+    expect(keep).toHaveTextContent("Keep it pending, restore later");
+    expect(notice.compareDocumentPosition(keep) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    for (const gone of ["stance-alt-commit", "stance-alt-cancel", "stance-alt-sever", `${PREFIX}-landing`]) {
+      expect(screen.queryByTestId(gone)).toBeNull();
+    }
+  });
+
+  // PadKeyAbsent.md:27 WHEN press outside the alternates or press the system's
+  // Back GIVEN the signing key is not on this device -> the alternates close
+  // AND the pick is dropped AND NEVER the pick is kept.
+  it("drops the pick when the alternates are left by the scrim, keeping nothing", async () => {
+    const data = mount({ keyAbsent: true }, { mode: "sliders" });
+    await settle();
+    await openPad();
+    await settle();
+    const dialog = screen.getByTestId("stance-alternates");
+    await act(async () => {
+      fireEvent.click(dialog);
+    });
+    await settle();
+    expect(screen.queryByTestId("stance-alternates")).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-kept`)).toBeNull();
     expect(data.sent).toEqual([]);
   });
 });
