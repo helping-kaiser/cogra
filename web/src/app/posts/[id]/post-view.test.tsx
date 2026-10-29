@@ -152,6 +152,8 @@ function commentNode(comment: FixtureComment): Record<string, unknown> {
     content: moderated(comment.body),
     attachments: comment.attachments ?? [],
     attachmentsStatus: comment.attachmentsStatus ?? "NORMAL",
+    sensitiveSelfMark: false,
+    sensitiveReason: null,
     author: {
       __typename: "User",
       id: comment.authorId ?? "u2",
@@ -3783,6 +3785,8 @@ describe("PostView — opened from the feed", () => {
         description: gone,
         content: gone,
         attachmentsStatus: "REDACTED",
+        sensitiveSelfMark: false,
+        sensitiveReason: null,
         updatedAt: "2026-08-12T12:00:00Z",
       },
     };

@@ -145,6 +145,8 @@ const POST_COVER: TraceCover = postCover({
   author: { handle: "ada", displayName: { value: "Ada Lindqvist" }, avatar: null },
   attachments: [],
   attachmentsStatus: "NORMAL",
+  sensitiveSelfMark: false,
+  sensitiveReason: null,
   moderationStatus: "NORMAL",
   removal: null,
   createdAt: POST_CREATED,

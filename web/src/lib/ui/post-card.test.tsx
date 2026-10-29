@@ -39,6 +39,8 @@ function post(over: Record<string, unknown> = {}): PostView {
     content: { __typename: "ModeratedText", value: "The body", status: "NORMAL" },
     attachments: [],
     attachmentsStatus: "NORMAL",
+    sensitiveSelfMark: false,
+    sensitiveReason: null,
     author: {
       __typename: "User",
       id: "u1",

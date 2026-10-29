@@ -158,6 +158,8 @@ function comment(attachments: Record<string, unknown>[] = []): CommentView {
     content: { __typename: "ModeratedText", value: "Eighteen seconds of the same headland.", status: "NORMAL" },
     attachments,
     attachmentsStatus: "NORMAL",
+    sensitiveSelfMark: false,
+    sensitiveReason: null,
     topics: [],
     references: [],
     license: { __typename: "License", attribution: 0, provenance: 0 },

@@ -29,6 +29,8 @@ function post(over: Partial<Fixture> = {}): Fixture {
       { id: "m2", status: "NORMAL", coverMedia: { id: "c2", status: "NORMAL" } },
     ],
     attachmentsStatus: "NORMAL",
+    sensitiveSelfMark: false,
+    sensitiveReason: null,
     topics: [tag("cats")],
     references: [{ targetId: "l1-a", relevance: 0.1 }],
     comments: { totalCount: 1, edges: [{ node: { id: "c1", content: { status: "NORMAL" } } }] },

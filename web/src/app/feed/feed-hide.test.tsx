@@ -36,6 +36,8 @@ function post(id: string, authorId: string, handle: string) {
     content: moderated(`body of ${id}`),
     attachments: [] as unknown[],
     attachmentsStatus: "NORMAL",
+    sensitiveSelfMark: false,
+    sensitiveReason: null,
     author: {
       __typename: "User",
       id: authorId,
