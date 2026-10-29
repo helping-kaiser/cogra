@@ -47,7 +47,7 @@ import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
-import { instance, part, type DataNode } from "@/lib/ui/data-node";
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import type { License } from "@/lib/license";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { useMeasureEffect } from "@/lib/ui/measure-effect";
@@ -894,12 +894,51 @@ export function CommentsSheet({
               testIdPrefix={`comment-${comment.id}`}
             />
           )}
-          {/* The comment carries its own stance control (design.md §6). */}
-          <StanceControl
-            target={{ id: comment.id, kind: "comment", label: "this comment" }}
-            testIdPrefix={`comment-stance-${comment.id}`}
-            node={part(card, "actionRow.stance")}
-          />
+          {/* ONE ACTION ROW (the thread's CommentCard, CommentRemoved): the
+              comment's own stance control (design.md §6) leads and Reply and
+              Edit stand at the row's far end — one spread row, as the feed's
+              comment card draws it. */}
+          <div
+            className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1"
+            {...testAttributes(part(card, "actionRow"))}
+          >
+            <StanceControl
+              target={{ id: comment.id, kind: "comment", label: "this comment" }}
+              testIdPrefix={`comment-stance-${comment.id}`}
+              node={part(card, "actionRow.stance")}
+            />
+            <div className="flex gap-2">
+              {phase === "signedIn" && (
+                <Button
+                  testId={`comment-reply-${comment.id}`}
+                  node={part(card, "actionRow.reply")}
+                  variant="text"
+                  size="sm"
+                  onClick={() => {
+                    // ReplyEntry via=5: the composer, PRE-TARGETED at this
+                    // comment. The other door — "Add a comment" at the foot of
+                    // the thread — pins the post instead.
+                    openComposer(commentTarget(comment));
+                  }}
+                >
+                  Reply
+                </Button>
+              )}
+              {/* The removed comment keeps `own` but loses Edit with its payload
+                  (`_shared.jsx`: `onEdit={removed ? undefined : …}`). */}
+              {isOwn && !removed && (
+                <Button
+                  testId={`comment-edit-${comment.id}`}
+                  node={part(card, "actionRow.edit")}
+                  variant="text"
+                  size="sm"
+                  onClick={() => openEditor(comment, parentId)}
+                >
+                  Edit
+                </Button>
+              )}
+            </div>
+          </div>
           {/* THE ROW LINE under the face (RowSigning.md): a save or unsave of
               this comment that did not go through. */}
           {writes.failure(comment.id) !== null && (
@@ -911,37 +950,6 @@ export function CommentsSheet({
               testId={`comment-${comment.id}-row-line`}
             />
           )}
-          <div className="flex gap-2">
-            {phase === "signedIn" && (
-              <Button
-                testId={`comment-reply-${comment.id}`}
-                node={part(card, "actionRow.reply")}
-                variant="text"
-                size="sm"
-                onClick={() => {
-                  // ReplyEntry via=5: the composer, PRE-TARGETED at this
-                  // comment. The other door — "Add a comment" at the foot of
-                  // the thread — pins the post instead.
-                  openComposer(commentTarget(comment));
-                }}
-              >
-                Reply
-              </Button>
-            )}
-            {/* The removed comment keeps `own` but loses Edit with its payload
-                (`_shared.jsx`: `onEdit={removed ? undefined : …}`). */}
-            {isOwn && !removed && (
-              <Button
-                testId={`comment-edit-${comment.id}`}
-                node={part(card, "actionRow.edit")}
-                variant="text"
-                size="sm"
-                onClick={() => openEditor(comment, parentId)}
-              >
-                Edit
-              </Button>
-            )}
-          </div>
         </Card>
         {replies.length > 0 && (
           <ul className="flex flex-col gap-3">

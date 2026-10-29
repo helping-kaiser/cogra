@@ -1323,6 +1323,13 @@ describe("PostView", () => {
       // :11 its opinion and its Reply.
       expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.stance.anchor", "c1"))).toBeInTheDocument();
       expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1"))).toBeInTheDocument();
+      // One action row (CommentRemoved): the face leads, Reply at the row's end.
+      const row = screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow", "c1"));
+      expect(row).toContainElement(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.reply", "c1")));
+      expect(row).toContainElement(
+        screen.getByTestId(byNode("postDetail.threadSheet.commentCard.actionRow.stance.anchor", "c1")),
+      );
+      expect(row.className).toContain("justify-between");
       // :15 its replies stay under it, readable; its neighbours untouched.
       expect(screen.getByTestId("post-comment-c1a")).toHaveTextContent("An answer");
       expect(screen.getByTestId("post-comment-c0")).toHaveTextContent("Above");
