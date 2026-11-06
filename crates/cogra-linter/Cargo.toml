@@ -33,16 +33,16 @@ proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 # DEFAULT features, which is why no feature list appears here; tsx and dts
 # are per-file syntax settings rather than build-time ones. Verified
 # against docs.rs/swc_ecma_parser 45.0.0 on 2026-08-26.
-swc_ecma_parser = "46.1.1"
+swc_ecma_parser = "47.0.0"
 # The comments store the parser fills, the source map owning the file's
 # byte positions, and the span type those are keyed by. Verified against
 # docs.rs/swc_common 26.0.0 on 2026-08-26.
-swc_common = "26.0.0"
+swc_common = "27.0.0"
 # `EsVersion`, the parse target `parse_file_as_program` takes. The syntax
 # tree itself goes unread: the web package carries no census in version 1,
 # so the AST's only duty is to have been built. Verified against
 # docs.rs/swc_ecma_ast 29.0.0 on 2026-08-26.
-swc_ecma_ast = "29.0.0"
+swc_ecma_ast = "30.0.0"
 # The Kotlin frontend runtime (architecture, kotlin-tree-sitter decision):
 # Parser, Tree and Node over the vendored first-party grammar. The version
 # is the one whose CLI generated the committed parser.c, which the grammar's
