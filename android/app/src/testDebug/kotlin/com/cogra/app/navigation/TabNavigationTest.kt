@@ -590,7 +590,7 @@ class TabNavigationTest {
         assertThat(navController.currentBackStackEntry?.toRoute<ProfileStances>()?.handle).isNull()
         waitForTag("profileStances.empty.title")
         compose.onNodeWithTag("profileStances.header.back").assertContentDescriptionEquals("Back to your profile")
-        compose.onNodeWithTag("profileStances.tabRow.onTab", useUnmergedTree = true).assertTextEquals("On you")
+        compose.onNodeWithTag("profileStances.tabRow.onTab").assertTextEquals("On you")
 
         compose.onNodeWithTag("profileStances.header.back").performClick()
         waitUntilOn(::onOwnProfileRoot)

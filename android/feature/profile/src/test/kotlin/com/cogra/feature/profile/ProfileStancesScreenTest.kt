@@ -126,8 +126,8 @@ class ProfileStancesScreenTest {
     @Test
     fun anothersTabsReadOnThemAndByThemTheStandingOneSelected() {
         render(state())
-        node("profileStances.tabRow.onTab").assertTextEquals("On them").assertIsSelected()
-        node("profileStances.tabRow.byTab").assertTextEquals("By them").assertIsNotSelected()
+        compose.onNodeWithTag("profileStances.tabRow.onTab").assertTextEquals("On them").assertIsSelected()
+        compose.onNodeWithTag("profileStances.tabRow.byTab").assertTextEquals("By them").assertIsNotSelected()
         // The board draws the row once per tab, keyed by it (nodes.json).
         node("profileStances.tabRow:on").assertExists()
     }
@@ -142,15 +142,15 @@ class ProfileStancesScreenTest {
     @Test
     fun aDeletedAccountsTabsReadOnThemAndByThem() {
         render(state(profile = husk))
-        node("profileStances.tabRow.onTab").assertTextEquals("On them")
-        node("profileStances.tabRow.byTab").assertTextEquals("By them")
+        compose.onNodeWithTag("profileStances.tabRow.onTab").assertTextEquals("On them")
+        compose.onNodeWithTag("profileStances.tabRow.byTab").assertTextEquals("By them")
     }
 
     @Test
     fun theReadersOwnTabsReadOnYouAndByYou() {
         render(state(profile = me, own = true))
-        node("profileStances.tabRow.onTab").assertTextEquals("On you")
-        node("profileStances.tabRow.byTab").assertTextEquals("By you")
+        compose.onNodeWithTag("profileStances.tabRow.onTab").assertTextEquals("On you")
+        compose.onNodeWithTag("profileStances.tabRow.byTab").assertTextEquals("By you")
     }
 
     // -- :29, :31 a tab tap names its direction --

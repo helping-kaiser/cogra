@@ -216,8 +216,9 @@ private fun Rows(rows: List<HeldOpinion>, onOpenPerson: (String) -> Unit) {
  */
 internal fun rowNode(opinion: HeldOpinion): DataNode {
     val holder = opinion.holder
-    return if (holder.redacted && holder.actorId != null) {
-        (LIST / "redactedRow").keyed(holder.actorId)
+    val deletedId = holder.actorId?.takeIf { holder.redacted }
+    return if (deletedId != null) {
+        (LIST / "redactedRow").keyed(deletedId)
     } else {
         (LIST / "row").keyed(holder.handle ?: opinion.holderId)
     }
