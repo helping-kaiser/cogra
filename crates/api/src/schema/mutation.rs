@@ -2208,8 +2208,7 @@ impl Mutation {
             credentials.actor_id,
             device_label.as_deref(),
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        .await?;
         Ok(LogInPayload {
             auth: Some(AuthSession::from_issued(issued)),
             reuse_detected_at,
@@ -2365,8 +2364,7 @@ impl Mutation {
                 )],
             });
         };
-        let hash = auth::hash_password(&input.new_password)
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let hash = auth::hash_password(&input.new_password)?;
         store::update_password_hash(pool, user_id, &hash).await?;
         store::revoke_sessions(pool, user_id, None, RevokedReason::Security).await?;
         Ok(ConfirmPasswordResetPayload {
@@ -2420,8 +2418,7 @@ impl Mutation {
                 )],
             });
         }
-        let hash = auth::hash_password(&input.new_password)
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let hash = auth::hash_password(&input.new_password)?;
         store::update_password_hash(pool, v.user_id, &hash).await?;
         store::revoke_sessions(pool, v.user_id, Some(v.session_id), RevokedReason::Security)
             .await?;
@@ -3791,7 +3788,7 @@ impl Mutation {
                     )));
                 }
                 Err(media::GalleryPlanError::Internal(e)) => {
-                    return Err(async_graphql::Error::new(e));
+                    return Err(super::faults::Fault::new(e).into());
                 }
             };
         Ok(UploadMediaPayload {
