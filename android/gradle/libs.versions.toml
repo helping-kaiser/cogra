@@ -8,7 +8,15 @@
 # ships with Kotlin 2.x via the `kotlin.plugin.compose` plugin.
 agp = "8.13.2"
 kotlin = "2.3.21"
-ksp = "2.3.13"
+# KSP stays on 2.3.12: 2.3.13 is a known-defective release. Its notes
+# mark it so, citing google/ksp#3286. KSP executions running at the same
+# time in one daemon clear a shared jar cache under each other, so
+# library annotations stop resolving and a module's Hilt output comes out
+# empty while the task still reports success. Measured here: core:network
+# had no output in 3 of 3 parallel builds on 2.3.13. Dependabot skips that
+# one version, so the release that carries the fix (#3290) comes through
+# as an ordinary bump.
+ksp = "2.3.12"
 
 # Static analysis. ktlint is the formatter (the analogue of `cargo fmt`)
 # and detekt the rule engine (the analogue of clippy); ktlint's own docs

@@ -1,0 +1,91 @@
+# THE OPINIONS PAGE (ProfileStances): the Opinion records aimed at a person
+# and the ones a person gave toward people — ungated, everyone can check
+# every profile. The web's twin documents are `web/src/lib/graphql/
+# opinions.graphql`; these carry the same selections, so they price the same.
+#
+# THE RECORDS, NOT THE PEOPLE. A revised opinion is a parallel record in its
+# author's bundle, so the page's rows — one per person, their standing
+# opinion — are the client's fold over the whole set (`HeldOpinions.kt`),
+# read 100 at a time. `totalCount` would count records, which is why it is
+# not read here: the profile's figures read it on purpose (`ProfileFigures`).
+#
+# INBOUND RECORDS ARE DISPLAY ONLY. Nothing read here reaches a feed — per
+# the ranking model only viewer-rooted forward paths do.
+
+# The person a row is about.
+fragment OpinionPersonFields on User {
+  id
+  handle
+  displayName {
+    value
+    status
+  }
+  avatar {
+    url
+    status
+  }
+}
+
+# One opinion record as the fold reads it: the pair, which (0, 0) it speaks,
+# whether it is payload-marked, and its causal key — which record in a
+# bundle is newest.
+fragment OpinionRecordFields on Record {
+  id
+  authorId
+  targetId
+  pDirected
+  pInterest
+  severed
+  payloadMarked
+  landingEpoch
+  actTime
+  position
+}
+
+# `On them`: the Opinion records aimed at a person's profile — the set the
+# `Opinions on them` figure counts — one row per author.
+query UserOpinionsOn($id: UUID!, $after: String) {
+  user(id: $id) {
+    id
+    incomingRecords(family: OPINION, first: 100, after: $after) {
+      edges {
+        node {
+          ...OpinionRecordFields
+          # Null where no account fronts the address.
+          author {
+            ...OpinionPersonFields
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# `By them`: the Opinion records a person gave toward people — the set the
+# `Opinions by them` figure counts — one row per person they are about.
+query UserOpinionsBy($id: UUID!, $after: String) {
+  user(id: $id) {
+    id
+    outgoingRecords(family: OPINION, toKind: USER, first: 100, after: $after) {
+      edges {
+        node {
+          ...OpinionRecordFields
+          target {
+            __typename
+            ... on User {
+              ...OpinionPersonFields
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

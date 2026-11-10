@@ -25,6 +25,7 @@ import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.ReferenceCandidateView
@@ -66,8 +67,10 @@ import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.removal.RemovalRepository
+import com.cogra.domain.stance.HeldOpinion
 import com.cogra.domain.stance.KeptPickStore
 import com.cogra.domain.stance.KeptPreviewRepository
+import com.cogra.domain.stance.OpinionDirection
 import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.score.TraceRepository
@@ -243,6 +246,18 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
     var others: MutableMap<String, ProfileView> = mutableMapOf()
     var records: List<RecordRow> = emptyList()
     val updates = mutableListOf<Triple<String, String?, String?>>()
+
+    /** The header's figures, by actor id; an unscripted one draws no figures (and so no door). */
+    var figures: MutableMap<String, ProfileFigures> = mutableMapOf()
+
+    /** The opinions page's sets, by actor id and direction; unscripted reads empty. */
+    var opinions: MutableMap<Pair<String, OpinionDirection>, List<HeldOpinion>> = mutableMapOf()
+
+    override suspend fun figures(actorId: String): Outcome<ProfileFigures> =
+        figures[actorId]?.let { Outcome.Success(it) } ?: super.figures(actorId)
+
+    override suspend fun opinions(actorId: String, direction: OpinionDirection): Outcome<List<HeldOpinion>> =
+        Outcome.Success(opinions[actorId to direction].orEmpty())
 
     override suspend fun myProfile(): Outcome<ProfileView?> = Outcome.Success(profile)
 

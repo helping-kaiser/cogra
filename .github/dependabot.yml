@@ -91,8 +91,13 @@ updates:
         versions: ["[2.4,)"]
       - dependency-name: "org.jetbrains.kotlin.*"
         versions: ["[2.4,)"]
+      # KSP 2.3.13 is also skipped: its own release notes mark it
+      # defective (google/ksp#3286), because KSP executions running at
+      # the same time in one daemon can produce empty Hilt output. Only
+      # that version is skipped, so the fix release comes through as
+      # usual (rationale: android/gradle/libs.versions.toml).
       - dependency-name: "com.google.devtools.ksp*"
-        versions: ["[2.4,)"]
+        versions: ["[2.4,)", "2.3.13"]
       # kotlinx-serialization 1.12 is compiled with Kotlin 2.4 metadata,
       # which Hilt 2.58's processor refuses ("maximum supported version
       # is 2.3.0") — it rides the same Kotlin/KSP/Hilt move.
