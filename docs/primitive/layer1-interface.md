@@ -1429,7 +1429,8 @@ lower time (`rem:graph:act-time-is-summary`).
 **Authoritative act order (`def:graph:authoritative-act-order`).** For
 epoch $k$ the host chooses a finite total order $\mathcal{Q}_k$ of the
 accepted acts and publishes each act's position
-$\mathrm{pos}_k(q_{k,j}) = j$. The **key of record** is the pair
+$\mathrm{pos}_k(q_{k,j}) = j$, numbering the acts of the epoch from 1 to
+$|\mathcal{Q}_k|$. The **key of record** is the pair
 $(k, \mathrm{pos}_k(q))$, ordered lexicographically across epochs as well
 as within one epoch (`rem:graph:order-of-record-is-position`). Logical
 time is derived from this order, never the reverse; a time comparison never
