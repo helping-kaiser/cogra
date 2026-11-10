@@ -84,11 +84,10 @@ internal fun isNarrowShareWidth(): Boolean =
  *
  * **Two of the master's five carry a condition.**
  *
- * - **The score slot** waits on the score readout, not on a design: its
- *   vocabulary is ruled — a figure is what a feed fetch computed, the
- *   bare slot is a thing still settling's (ruling 90), the dash is no
- *   computed figure (design/readme.md §13) — but no figure rides the
- *   wire yet, so the slot arrives with the readout's fetch.
+ * - **The score slot** stands where the surface provides a score door
+ *   (`LocalScoreDoor`): a figure is what the latest fetch of the post
+ *   found, the bare slot is a thing still settling's (ruling 90), the dash
+ *   is no computed figure (design/readme.md §13) — `ScoreSlot`.
  * - **The overflow ⋮** opens `ReaderPostMenu`, whose rows (License
  *   terms, Cite in a new post) are W3's sheets. Its other possible
  *   content is a folded affordance — and strictly below 360dp of window
@@ -119,6 +118,11 @@ internal fun PostAffordanceRow(
      * caller's slot, so the caller hands it the row's `stance` part.
      */
     node: DataNode? = null,
+    /**
+     * The Feed score (`ScoreSlot`), second in the row after the opinion
+     * (FeedKinds.md:3); empty where the surface wears no score.
+     */
+    score: @Composable () -> Unit = {},
     stanceControl: @Composable () -> Unit,
 ) {
     val narrow = isNarrowShareWidth()
@@ -132,6 +136,7 @@ internal fun PostAffordanceRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         stanceControl()
+        score()
         CommentAffordance(commentCount, onOpenComments, testTagPrefix, node?.div("comments"))
         // THE ROW GIVES WAY FROM ITS END strictly below the narrow-share
         // breakpoint: share is the first to move into the ⋮.

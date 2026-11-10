@@ -70,6 +70,7 @@ import com.cogra.domain.stance.KeptPickStore
 import com.cogra.domain.stance.KeptPreviewRepository
 import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.saved.SavedRepository
+import com.cogra.domain.score.TraceRepository
 import com.cogra.domain.search.ExploreDeviceStore
 import com.cogra.domain.search.SearchRepository
 import com.cogra.domain.settings.AccountEmail
@@ -101,6 +102,7 @@ import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.FakeTraceRepository
 import com.cogra.domain.testing.InMemoryAnnouncedReleaseStore
 import com.cogra.domain.testing.InMemoryCommittedFilterStore
 import com.cogra.domain.testing.InMemoryKeptPickStore
@@ -807,6 +809,13 @@ object FakeBindingsModule {
 
     @Provides
     fun feedRepository(fake: ListingFeedRepository): FeedRepository = fake
+
+    @Provides
+    @Singleton
+    fun fakeTraceRepository(): FakeTraceRepository = FakeTraceRepository()
+
+    @Provides
+    fun traceRepository(fake: FakeTraceRepository): TraceRepository = fake
 
     @Provides
     @Singleton

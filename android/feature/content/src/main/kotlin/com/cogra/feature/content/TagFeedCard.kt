@@ -8,9 +8,8 @@
 // header. The card opens the tag's page.
 //
 // THE ROW READS OPINION · SCORE · THE KIND'S OWN ACT · SHARE (FeedKinds.md):
-// the topic's Affinity on the tag page's own words, the score slot waiting
-// with every card's (no field carries a card's score until the ranker's
-// figure reaches the contract), `Tag a new post with it` — the composer
+// the topic's Affinity on the tag page's own words, the topic's own standing
+// (`ScoreSlot`), `Tag a new post with it` — the composer
 // opened with the tag already staged — and the share the tag page's row ends
 // with. A Type has no license, is never cited and is never saved, so the card
 // carries no ⋮.
@@ -57,6 +56,7 @@ import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.history.TagCardTopic
+import com.cogra.domain.score.TraceThingKind
 import java.time.Instant
 
 /** The lead's `#` tile and the glimpse's marks: 32dp, the card's darker tile tone (`NodeMark`'s `onCard`). */
@@ -115,7 +115,7 @@ internal fun TagFeedCard(
         ) {
             TagLead(name, through, topic, card, now)
             Glimpse(topic, card)
-            TagRow(name, card, actions)
+            TagRow(topic.id, name, card, actions)
         }
     }
 }
@@ -237,9 +237,9 @@ private fun Glimpse(topic: TagCardTopic, card: DataNode) {
     }
 }
 
-/** Affinity · (score, waiting) · `Tag a new post with it` · share. */
+/** Affinity · score · `Tag a new post with it` · share. */
 @Composable
-private fun TagRow(name: String, card: DataNode, actions: TagCardActions) {
+private fun TagRow(topicId: String, name: String, card: DataNode, actions: TagCardActions) {
     val row = card / "actionRow"
     Row(
         modifier = Modifier.fillMaxWidth().dataNode(row),
@@ -249,6 +249,14 @@ private fun TagRow(name: String, card: DataNode, actions: TagCardActions) {
         // A name moderation took away is a topic with nothing to stance
         // toward: the canonical name IS the target's identity (TagPage's rule).
         if (name.isNotEmpty()) actions.stance(name, row / "stance") else Box(Modifier)
+        ScoreSlot(
+            targetId = topicId,
+            kind = TraceThingKind.TOPIC,
+            pending = false,
+            cover = topicCover(name),
+            node = row / "score",
+            testTag = "${card.tag}_score",
+        )
         GlyphAffordance(
             icon = Icons.Filled.Add,
             description = stringResource(R.string.content_tag_act),

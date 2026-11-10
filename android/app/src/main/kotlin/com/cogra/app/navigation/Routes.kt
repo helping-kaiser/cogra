@@ -119,6 +119,34 @@ data class Topic(val name: String, val from: String? = null)
 @Serializable
 data class Profile(val handle: String? = null, val from: String? = null)
 
+/**
+ * The Feed score's trace (FeedEntry and below): the thing the score was
+ * tapped on, where ([from], `TraceOrigin.param`), whether it still settles,
+ * the view its figure was computed in, the card's cover of it — the words
+ * ride the route as the reply wizard's do, so no level reads its own thing —
+ * and how deep: [path] and [step] count from 1, 0 being none; [records] is
+ * the floor under that step.
+ */
+@Serializable
+data class ScoreTrace(
+    val targetId: String,
+    /** A `TraceThingKind` name. */
+    val kind: String,
+    val from: String,
+    val settling: Boolean = false,
+    val viewer: String? = null,
+    val coverTitle: String? = null,
+    val coverSnippet: String? = null,
+    val discName: String? = null,
+    val discSrc: String? = null,
+    val markSrc: String? = null,
+    /** ISO-8601; the thing's own age, where its publish is a step. */
+    val createdAt: String? = null,
+    val path: Int = 0,
+    val step: Int = 0,
+    val records: Boolean = false,
+)
+
 /** The reader's Saved list, reached from their own profile's ⋮ (Saved.md). */
 @Serializable
 data object Saved

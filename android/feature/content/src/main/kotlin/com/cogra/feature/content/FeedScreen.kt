@@ -109,6 +109,7 @@ import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.removal.RemovalKind
 import com.cogra.domain.removal.marked
 import com.cogra.domain.saved.SavedWrites
+import com.cogra.domain.score.TraceThingKind
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
@@ -1415,11 +1416,11 @@ internal fun PostCard(
 }
 
 /**
- * Stance, comment, share — the master's row, minus the two it gates (see
- * `PostAffordanceRow`) — and the row line under the face. THE COUNT RAISES
- * THE THREAD (graph.json: every `comment count` edge advances to
- * `ReplyEntry`), which is the master's own destination — the card's tap, its
- * fallback, opens the post instead.
+ * Stance, score, comment, share — the master's row (see `PostAffordanceRow`)
+ * — and the row line under the face. THE COUNT RAISES THE THREAD
+ * (graph.json: every `comment count` edge advances to `ReplyEntry`), which
+ * is the master's own destination — the card's tap, its fallback, opens the
+ * post instead.
  */
 @Composable
 private fun CardRow(
@@ -1436,6 +1437,16 @@ private fun CardRow(
         onShare = { onShare(post.id) },
         testTagPrefix = tag,
         node = card / "actionRow",
+        score = {
+            ScoreSlot(
+                targetId = post.id,
+                kind = TraceThingKind.POST,
+                pending = post.landing.isPending,
+                cover = postCover(post),
+                node = card / "actionRow" / "score",
+                testTag = "${tag}_score",
+            )
+        },
     ) {
         stanceControl(post.id, tag, card / "actionRow" / "stance")
     }

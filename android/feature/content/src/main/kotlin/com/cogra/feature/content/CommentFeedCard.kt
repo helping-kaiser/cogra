@@ -14,8 +14,7 @@
 //
 // THE ROW READS OPINION · SCORE · THE COMMENT GLYPH · SHARE (FeedKinds.md). The
 // glyph is the reply: the same comment section at this comment, the composer
-// already aimed at it. The score slot waits with the post card's: no field
-// carries a card's score until the ranker's figure reaches the contract.
+// already aimed at it. The score is the comment's own standing (`ScoreSlot`).
 // REPLIES NEVER APPEAR IN A FEED: the card carries no view-replies line.
 //
 // ITS ⋮ IS THE COMMENT'S MENU (`commentMenuRows`), the sheet every comment's ⋮
@@ -68,6 +67,7 @@ import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.CommentView
 import com.cogra.domain.saved.CommentTarget
 import com.cogra.domain.saved.headRowOf
+import com.cogra.domain.score.TraceThingKind
 import com.cogra.feature.saved.LocalSavedHost
 
 /** A long comment folds at two lines under `More` (FeedCommentShapes.md). */
@@ -165,7 +165,7 @@ internal fun CommentFeedCard(
     }
 }
 
-/** OPINION · THE COMMENT GLYPH · SHARE — the card's one row (FeedKinds.md). */
+/** OPINION · SCORE · THE COMMENT GLYPH · SHARE — the card's one row (FeedKinds.md:3). */
 @Composable
 private fun FeedCommentRow(
     comment: CommentView,
@@ -182,6 +182,14 @@ private fun FeedCommentRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CommentStanceTarget { stanceControl(comment.id, testTagPrefix, node / "stance") }
+        ScoreSlot(
+            targetId = comment.id,
+            kind = TraceThingKind.COMMENT,
+            pending = comment.landing.isPending,
+            cover = commentCover(comment),
+            node = node / "score",
+            testTag = "${testTagPrefix}_score",
+        )
         val handle = comment.author?.handle
         GlyphAffordance(
             icon = Icons.Filled.ChatBubble,

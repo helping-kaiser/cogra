@@ -403,6 +403,7 @@ private val READ_SURFACES = listOf(
     Saved::class,
     History::class,
     Notifications::class,
+    ScoreTrace::class,
 )
 
 /**
@@ -453,4 +454,6 @@ private val BAR_NODES = listOf(
     Profile::class to DataNode("profile") / "bottomBar",
     Saved::class to DataNode("saved") / "bottomBar",
     History::class to DataNode("history") / "bottomBar",
+    // The trace's four levels share the `feedEntry` prefix (round 7).
+    ScoreTrace::class to DataNode("feedEntry") / "bottomBar",
 )
