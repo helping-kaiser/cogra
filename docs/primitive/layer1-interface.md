@@ -1090,8 +1090,8 @@ all six clauses hold:
 - **(iii) Authorization and parties.** The Accept is authored by the seller
   and targets the buyer; the Ratify is authored by the buyer and targets
   the seller (the Accept's author). Clause (iii) reads the prior title
-  certificate and the Bid's authorship back into admission — the
-  straddler. A Ratify authored by anyone but the buyer, an Accept whose
+  certificate and the Bid's authorship; the title certificate it reads back
+  into admission is the straddler. A Ratify authored by anyone but the buyer, an Accept whose
   target is not the buyer, or a Ratify whose target is not the Accept's
   author fails (iii): the acts are written and never bind, their standing
   resolves to the author's self-retention channel, and no host
