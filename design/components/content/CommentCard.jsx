@@ -168,8 +168,12 @@ export function CommentCard({
      its author's `authorChip` and its ⋮ `menu` (as `PostCard` names them),
      the mark a removed comment wears `removalMark` (as
      `PostCard` names it), and the thread's text buttons `reply` and `edit`
-     (seam 248, the thread sheet named). Given none, the card renders exactly
-     as before. */
+     (seam 248, the thread sheet named); the line pointer to what it answers
+     `target` (as `commentEdit` names its own) and the collapsed replies'
+     line `viewReplies` (round 28, seam 254 A3). That line hangs under the
+     card, outside its surface, so its path is the card's sibling and it
+     carries the card's own key. Given none, the card renders exactly as
+     before. */
   node,
   /* THE CARD'S KEY WHERE ITS AUTHOR CANNOT TELL IT APART (round 27) — a
      profile's comments view lists one author's comments, so its placer keys
@@ -318,6 +322,7 @@ export function CommentCard({
           <button
             type="button"
             onClick={onOpenTarget}
+            data-node={node && "target"}
             className="cg-state cg-focus cg-hit"
             style={{
               display: "flex",
@@ -429,6 +434,8 @@ export function CommentCard({
         <button
           type="button"
           onClick={onOpenReplies}
+          data-node={node && "viewReplies"}
+          data-node-key={node && (nodeKey ?? author?.handle)}
           className="cg-state cg-focus cg-hit"
           style={{
             alignSelf: "flex-start",
