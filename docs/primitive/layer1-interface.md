@@ -2626,7 +2626,9 @@ price (`thm:epoch:emission-export-bound`).
 **Tilt backoff (`def:epoch:tilt-backoff-grid`, `alg:epoch:tilt-backoff`).**
 The accepted strength $t_k$ is the greatest element of the published finite
 grid $\mathcal{G}_t$ (chartered depth $J_{\text{tilt}}$, terminating at zero)
-whose certificate passes. Backoff preserves the shape exactly — a lower rung
+whose certificate the deployment's declared certification procedure proves
+passing. A lower accepted rung is a performance outcome with a passing
+certificate, not an unsafe epoch. Backoff preserves the shape exactly — a lower rung
 is **the same signal at lower volume**, never a signal substitution — and
 each rung is independently certified rather than inferred from a higher one.
 The anchor $t_k = 0$ is the exact no-tilt allocation rule and always
@@ -2637,8 +2639,11 @@ different axis (`rem:epoch:tilt-backoff-is-not-export-backoff`). A rung can
 fail two ways and the certificate must say which
 (`rem:epoch:certificate-failure-versus-indecisive-enclosure`): a
 *certificate failure* proves the fence does not hold and the graph moved; an
-*indecisive enclosure* proves nothing and calls for tighter interval
-arithmetic, not a lower rung.
+*indecisive enclosure* proves nothing and is published as INDECISIVE, never
+as FAIL. A rung the declared procedure leaves indecisive is passed over; the
+procedure's precision and refinement policy is the deployment's published,
+versioned choice, and a more refined published procedure may accept a higher
+rung. Every accepted rung still carries a proved pass.
 
 **Raw signed double-cover service (`subsec:epoch:raw-signed-service`).** The
 double-cover traversal survives as a public raw-graph service for consumers
@@ -2886,7 +2891,8 @@ memory, no below-wall branch**. It has no effect on standing.
  6: Read emission fractions 𝔢_u and contributing widths from 𝖠 + the ledger
                                                   (def:epoch:source-emission)
  7: For each rung t of 𝒢_t, greatest first: evaluate 𝒦_k over ℬ_k;
-    break when m_θ·𝒦_k ≤ 1                       (alg:epoch:tilt-backoff)
+    break when the declared procedure proves m_θ·𝒦_k ≤ 1;
+    record each rung above as FAILED or INDECISIVE  (alg:epoch:tilt-backoff)
  8: Solve the unique equilibrium x* at the accepted rung t_k
                                     (thm:dynamics:certified-conserved-standing-uniqueness)
  9: Compute transport entries Π_ui and final standing α^(k)
