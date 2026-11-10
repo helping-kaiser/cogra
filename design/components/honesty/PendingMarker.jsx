@@ -4,7 +4,9 @@ import React from "react";
    these use `error` colouring — they are statements of fact, not warnings.
 
    Both are `label-small` on `onSurfaceVariant`, deliberately the quietest type in
-   the system: soft, friendly, not forensic. */
+   the system: soft, friendly, not forensic — the whole role, size, leading,
+   tracking and weight, so a line measures the role's 16px wherever it stands
+   and never its container's (round 28, seam 254 item 8). */
 
 /** Content authored and signed but not yet ordered on L1. Shows in FULL to every
     reader — not just its author — under a quiet line saying it is still settling.
@@ -15,7 +17,13 @@ import React from "react";
     itself a button: a `<button>` takes phrasing content, so a `<p>` inside one is
     illegal markup. Same two tokens, same words — only the box changes. */
 export function PendingMarker({ label = "Still settling", inline = false, node }) {
-  const ink = { fontSize: "var(--text-label-small)", color: "var(--text-secondary)" };
+  const ink = {
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
+    fontWeight: "var(--text-label-small--font-weight)",
+    color: "var(--text-secondary)",
+  };
   if (inline) return <span style={ink} data-node={node}>{label}</span>;
   return <p style={{ margin: 0, ...ink }} data-node={node}>{label}</p>;
 }

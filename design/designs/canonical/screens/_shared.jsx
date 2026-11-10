@@ -3263,6 +3263,7 @@ function WaitingCommit({ id, label, reason, waiting = true, node }) {
             fontSize: "var(--text-label-small)",
             lineHeight: "var(--text-label-small--line-height)",
             letterSpacing: "var(--text-label-small--letter-spacing)",
+            fontWeight: "var(--text-label-small--font-weight)",
             color: "var(--text-secondary)",
           }}
         >

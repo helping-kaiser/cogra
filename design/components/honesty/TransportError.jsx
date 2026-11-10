@@ -10,9 +10,22 @@ import { InlineAction } from "../core/Button.jsx";
    already on screen the fault means "stale", not "gone", so the wording changes and
    the loaded content stays readable underneath. */
 
+/* Both fault lines set `body-medium` whole — size, leading, tracking, weight —
+   so a client conforming to the master draws the role's 20px line, never the
+   page's inherited 24 (round 28, seam 254 item 5). */
 export function TransportError({ message }) {
   return (
-    <p role="alert" style={{ margin: 0, fontSize: "var(--text-body-medium)", color: "var(--text-failure)" }}>
+    <p
+      role="alert"
+      style={{
+        margin: 0,
+        fontSize: "var(--text-body-medium)",
+        lineHeight: "var(--text-body-medium--line-height)",
+        letterSpacing: "var(--text-body-medium--letter-spacing)",
+        fontWeight: "var(--text-body-medium--font-weight)",
+        color: "var(--text-failure)",
+      }}
+    >
       {message ?? "Can't reach the server. Check your connection and try again."}
     </p>
   );
@@ -65,7 +78,17 @@ export function SigningPending({ needsKey = false, restoreHref = "/restore", row
     );
   }
   return (
-    <p role="alert" style={{ margin: 0, fontSize: "var(--text-body-medium)", color: "var(--text-failure)" }}>
+    <p
+      role="alert"
+      style={{
+        margin: 0,
+        fontSize: "var(--text-body-medium)",
+        lineHeight: "var(--text-body-medium--line-height)",
+        letterSpacing: "var(--text-body-medium--letter-spacing)",
+        fontWeight: "var(--text-body-medium--font-weight)",
+        color: "var(--text-failure)",
+      }}
+    >
       {needsKey ? (
         <>
           Signing needs your key, which isn&apos;t in this browser — the write waits as pending.{" "}
