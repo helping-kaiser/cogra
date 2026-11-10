@@ -2683,7 +2683,10 @@ never merges, hides, or removes payload projections
 Aggregation properties (`prop:epoch:net-stance-properties`): order-stable (a
 function of the accepted epoch set, invariant under every
 dependency-compliant permutation of $\mathcal{Q}_k$); range-safe (the clip
-returns parameters to the master formula's domain); **priced** (every
+returns parameters to the master formula's domain); person-vouch gate (a
+net-hostile mixed-sign stance and a coherent-hostile $(-,-)$ stance alike fail
+the strictly-positive coordinate clause and compile no person-vouch, whatever
+their raw parity); **priced** (every
 revision is an accepted act — one $\theta$-debit and one count increment,
 irrevocably diluting $r_j$); append-only.
 Sum-then-clip is deliberate: walking back accumulated conviction costs
