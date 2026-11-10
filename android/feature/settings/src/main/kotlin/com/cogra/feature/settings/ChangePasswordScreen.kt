@@ -22,8 +22,10 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.CograPasswordField
 import com.cogra.core.designsystem.v2.atom.QuietNote
+import com.cogra.core.designsystem.v2.atom.TaskPage
 import com.cogra.core.designsystem.v2.atom.WaitingCommit
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.MAX_PASSWORD_LENGTH
 import com.cogra.domain.MIN_PASSWORD_LENGTH
 import com.cogra.domain.Outcome
 import com.cogra.domain.repo.AccountRepository
@@ -60,7 +62,7 @@ internal fun passwordLengthLine(password: String): Int? {
     val length = password.scalarLength()
     return when {
         length < MIN_PASSWORD_LENGTH -> R.string.password_too_short
-        length > PASSWORD_MAX -> R.string.password_too_long
+        length > MAX_PASSWORD_LENGTH -> R.string.password_too_long
         else -> null
     }
 }

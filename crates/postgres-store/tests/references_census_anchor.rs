@@ -50,7 +50,7 @@ async fn land_reference(
         "INSERT INTO mirror_records
              (record_id, family, author, epoch, act_time, position,
               payload_marked, payload_witness)
-         VALUES ($1, 'reference', $2, $3, $4, 0, $5, '\\x00'::bytea)",
+         VALUES ($1, 'reference', $2, $3, $4, 1, $5, '\\x00'::bytea)",
     )
     .bind(record_id)
     .bind(author)
@@ -68,7 +68,7 @@ async fn land_reference(
               family, epoch, act_time, position)
          VALUES ($1, 't', $2, $3, $4, $5, 'tribal',
                  TRUE, TRUE, TRUE, TRUE, 'full', 0.0,
-                 'reference', $6, $7, 0)",
+                 'reference', $6, $7, 1)",
     )
     .bind(record_id)
     .bind(ARTIFACT)

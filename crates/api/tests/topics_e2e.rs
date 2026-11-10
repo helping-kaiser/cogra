@@ -1558,7 +1558,9 @@ async fn seed_tag(
         "INSERT INTO mirror_records
              (record_id, family, author, epoch, act_time, position,
               payload_marked, payload_witness)
-         VALUES ($1, 'tag', $2, 0, 0, 0, FALSE, '\\x00')",
+         VALUES ($1, 'tag', $2, 1, 0,
+                 (SELECT COALESCE(MAX(position), 0) + 1 FROM mirror_records WHERE epoch = 1),
+                 FALSE, '\\x00')",
     )
     .bind(record)
     .bind(author)
@@ -1574,7 +1576,7 @@ async fn seed_tag(
               family, epoch, act_time, position)
          VALUES ($1, 't', $2, $3, $4, $5, 'tribal',
                  TRUE, TRUE, TRUE, TRUE, 'full', 1.0,
-                 'tag', 0, 0, 0)",
+                 'tag', 1, 0, (SELECT position FROM mirror_records WHERE record_id = $1))",
     )
     .bind(record)
     .bind(node)

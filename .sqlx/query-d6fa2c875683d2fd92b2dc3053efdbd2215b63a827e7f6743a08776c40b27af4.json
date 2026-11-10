@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT user_id FROM auth_account_deletions\n         WHERE confirmed_at IS NOT NULL AND cancelled_at IS NULL\n           AND superseded_at IS NULL AND executed_at IS NULL\n           AND scheduled_for <= NOW()\n         ORDER BY scheduled_for\n         LIMIT $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d6fa2c875683d2fd92b2dc3053efdbd2215b63a827e7f6743a08776c40b27af4"
+}

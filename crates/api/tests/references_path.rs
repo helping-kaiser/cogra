@@ -478,7 +478,9 @@ async fn seed_reference(
         "INSERT INTO mirror_records
              (record_id, family, author, epoch, act_time, position,
               payload_marked, payload_witness)
-         VALUES ($1, 'reference', $2, 0, 0, 0, $3, '\\x00')",
+         VALUES ($1, 'reference', $2, 1, 0,
+                 (SELECT COALESCE(MAX(position), 0) + 1 FROM mirror_records WHERE epoch = 1),
+                 $3, '\\x00')",
     )
     .bind(record)
     .bind(author)
@@ -495,7 +497,7 @@ async fn seed_reference(
               family, epoch, act_time, position)
          VALUES ($1, 't', $2, $3, $4, $5, 'tribal',
                  TRUE, TRUE, TRUE, TRUE, 'full', 1.0,
-                 'reference', 0, 0, 0)",
+                 'reference', 1, 0, (SELECT position FROM mirror_records WHERE record_id = $1))",
     )
     .bind(record)
     .bind(artifact)

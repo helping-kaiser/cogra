@@ -699,9 +699,10 @@ contribution:
   verbs re-derive under the account lock; a funded address is a
   funding row in any state, and a lapsed vouch never reopens the
   immediate verb.
-- When deletion completes, all of the account's refresh tokens
-  are revoked. Any outstanding access tokens age out within their
-  normal TTL.
+- When the deadline executes the deletion, the credentials are
+  redacted and all of the account's refresh tokens revoked in the
+  same transaction. An outstanding access token resolves to no
+  viewer from then on: a request carrying it is unauthenticated.
 
 ---
 
@@ -997,13 +998,13 @@ Server-initiated revocations:
 - Password change → revoke all others (the changing session
   survives; see "Password change").
 - Password reset → revoke all.
-- Account-deletion completion → revoke all.
+- Account-deletion execution → revoke all.
 - Refresh-token reuse detected → revoke all.
 
 Every revocation records its reason: `owner` for the user's own
-acts (sign-out, the session list, "revoke all others",
-deletion), `security` for the server-initiated set above,
-`rotated` for rotation. The reason decides how a later replay of
+acts (sign-out, the session list, "revoke all others", and the
+deletion they requested, revoked when it executes), `security` for
+the rest of the server-initiated set above, `rotated` for rotation. The reason decides how a later replay of
 the dead token is read ("Reuse detection").
 
 A revoked session says nothing about the actor: the signing key

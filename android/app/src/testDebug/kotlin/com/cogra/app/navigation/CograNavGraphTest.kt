@@ -44,6 +44,8 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.ApplicationView
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.InviteCheck
+import com.cogra.domain.Outcome
 import com.cogra.domain.UserProfile
 import com.cogra.domain.identity.SecurityNotices
 import com.cogra.domain.stance.StancePair
@@ -1111,17 +1113,42 @@ class CograNavGraphTest {
     // The true launch-intent plumbing is covered by the on-device link
     // check (hand-test notes).
 
+    /** The invite check's answer for a live link: usable, from @mira. */
+    private fun liveInvite() {
+        onboarding.inviteCheck = Outcome.Success(InviteCheck(true, "mira", Instant.MAX))
+    }
+
+    private fun currentJoin(): Join? =
+        navController.currentBackStackEntry
+            ?.takeIf { it.destination.hasRoute<Join>() }
+            ?.toRoute<Join>()
+
     @Test
-    fun aJoinDeepLinkCarriesTheIdIntoTheEntry() {
+    fun aLiveJoinDeepLinkOpensTheFormHoldingTheLinkAndItsInviter() {
+        // Join.md:3 — a live link checks out at the door and Join opens holding it.
+        liveInvite()
         render()
         val handled = navController.handleDeepLink(joinIntent("/join/$inviteId"))
-        compose.waitUntil(timeoutMillis = 30_000) {
-            onboarding.checkedInviteIds.isNotEmpty()
-        }
+        compose.waitUntil(timeoutMillis = 30_000) { currentJoin() != null }
         assertThat(handled).isTrue()
-        assertThat(currentInviteEntry()?.inviteId).isEqualTo(inviteId)
-        // The entry auto-checked exactly the linked id.
+        assertThat(currentJoin()).isEqualTo(Join(inviteId, "mira"))
+        // The door checked exactly the linked id, and left the stack for the form.
         assertThat(onboarding.checkedInviteIds).containsExactly(inviteId)
+        assertThat(navController.currentBackStack.value.any { it.destination.hasRoute<InviteEntry>() }).isFalse()
+    }
+
+    @Test
+    fun aDeadJoinDeepLinkLeavesTheLandingUnderOneSnackbarAndNeverTheInvalidDoor() {
+        // JoinInvalid.md:9 — the landing stands unchanged AND the snackbar
+        // reads This invite link has expired. once AND NEVER JoinInvalid opens.
+        render()
+        navController.handleDeepLink(joinIntent("/join/$inviteId"))
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodes(hasText("This invite link has expired.")).fetchSemanticsNodes().isNotEmpty()
+        }
+        assertThat(currentInviteEntry()).isNull()
+        assertThat(compose.onAllNodesWithTag("joinInvalid.header").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodes(hasText("This invite link has expired.")).fetchSemanticsNodes()).hasSize(1)
     }
 
     @Test
@@ -1137,19 +1164,73 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun aWarmStartJoinLinkReachesTheEntry() {
+    fun aWarmStartJoinLinkReachesTheForm() {
         // singleTask delivers a link tap on a running app via
         // onNewIntent; the graph's listener forwards it.
+        liveInvite()
         render()
         compose.activity.dispatchNewIntent(joinIntent("/join/$inviteId"))
-        compose.waitUntil(timeoutMillis = 30_000) {
-            onboarding.checkedInviteIds.isNotEmpty()
-        }
-        assertThat(currentInviteEntry()?.inviteId).isEqualTo(inviteId)
+        compose.waitUntil(timeoutMillis = 30_000) { currentJoin() != null }
+        assertThat(currentJoin()?.inviteId).isEqualTo(inviteId)
     }
 
     @Test
-    fun aSignedInSessionIgnoresAWarmJoinLink() {
+    fun aSignedInSessionOpensALiveJoinLinkAsALayerAndBackClosesItUntouched() {
+        // Join.md:7 — a live invite link opened signed in opens Join holding the
+        // link as a layer over the signed-in state; Join.md:17 — the back arrow
+        // closes the layer onto the signed-in state, untouched.
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        liveInvite()
+        render()
+        waitFor(isBottomBar())
+
+        compose.activity.dispatchNewIntent(joinIntent("/join/$inviteId"))
+        compose.waitUntil(timeoutMillis = 30_000) { currentJoin() != null }
+        waitForTag("join.header.back")
+        compose.onNodeWithTag("join.header.back").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Feed>() == true
+        }
+        waitFor(isBottomBar())
+    }
+
+    @Test
+    fun aPastedLinkOpensTheFormWhoseQuestionMarkAndArrowWalkBackToTheDoor() {
+        // InviteEntry.md: the link checks out -> Join opens holding it;
+        // Join.md:21 — the "?" opens About with a plain Back; Join.md:23 —
+        // About's back brings the form back with every field as it was left;
+        // Join.md:13 — the arrow, the link pasted at the door, opens InviteEntry.
+        liveInvite()
+        render()
+        compose.runOnUiThread { navController.navigate(InviteEntry()) }
+        waitForTag("inviteEntry.link.input")
+        compose.onNodeWithTag("inviteEntry.link.input").performTextInput(inviteId)
+        compose.onNodeWithTag("inviteEntry.commit.action").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) { currentJoin() != null }
+        waitForTag("join.handle.input")
+        compose.onNodeWithTag("join.handle.input").performTextInput("noor")
+
+        compose.onNodeWithTag("join.header.help").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<About>() == true
+        }
+        assertThat(navController.currentBackStackEntry?.toRoute<About>()?.plainBack).isTrue()
+        waitForTag("about.header.back")
+        compose.onNodeWithTag("about.header.back").assertContentDescriptionEquals("Back").performClick()
+
+        compose.waitUntil(timeoutMillis = 30_000) { currentJoin() != null }
+        waitForTag("join.handle.input")
+        compose.onNodeWithTag("join.handle.input").assertTextEquals("noor")
+        compose.onNodeWithTag("join.header.back").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) { currentInviteEntry() != null }
+    }
+
+    @Test
+    fun aSignedInSessionHearsADeadJoinLinkAndStaysWhereItWas() {
+        // JoinInvalid.md:11 — the reader stays where they were AND the snackbar
+        // reads This invite link has expired. AND NEVER anything else moves.
         signIn()
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
@@ -1157,9 +1238,10 @@ class CograNavGraphTest {
         waitFor(isBottomBar())
 
         compose.activity.dispatchNewIntent(joinIntent("/join/$inviteId"))
-        compose.waitForIdle()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodes(hasText("This invite link has expired.")).fetchSemanticsNodes().isNotEmpty()
+        }
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
-        assertThat(onboarding.checkedInviteIds).isEmpty()
     }
 
     @Test

@@ -227,7 +227,7 @@ class DeletionNavGraphTest {
         waitForRoute<Feed>()
         waitForTag("feed.deletionBand.line")
         // Two inner surfaces whose reads the fakes answer; the rest are covered by their screens' slots.
-        for (route in listOf(ChangePassword, About)) {
+        for (route in listOf(ChangePassword, About())) {
             open(route)
             waitForTag("home_deletion_band")
             compose.runOnUiThread { navController.popBackStack() }

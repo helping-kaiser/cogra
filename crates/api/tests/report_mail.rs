@@ -21,9 +21,9 @@ const SEND_REPORT: &str = r#"mutation($target: UUID!) {
 
 fn landed(secs: i64) -> LandingOrder {
     LandingOrder {
-        landed_epoch: secs,
+        landed_epoch: secs + 1,
         act_time: secs,
-        position: 0,
+        position: 1,
     }
 }
 

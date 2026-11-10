@@ -62,7 +62,8 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
     assert_eq!(outcome.epochs, 0);
     assert_eq!(
         mirror::last_ingested_epoch(&pool).await.expect("cursor"),
-        -1
+        0,
+        "the empty boundary"
     );
 
     standin.close_epoch().await.expect("closes").expect("acts");
@@ -70,9 +71,13 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
         .await
         .expect("pass");
     assert_eq!(outcome.epochs, 1);
-    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 0);
     assert_eq!(
-        mirror::record_ids_in_epoch(&pool, 0).await.expect("ids"),
+        mirror::last_ingested_epoch(&pool).await.expect("cursor"),
+        1,
+        "the first epoch is epoch 1"
+    );
+    assert_eq!(
+        mirror::record_ids_in_epoch(&pool, 1).await.expect("ids"),
         vec![act_id.to_string()]
     );
 
@@ -114,14 +119,18 @@ async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool)
         .await
         .expect("pass");
     let attested: Vec<(i64, chrono::DateTime<chrono::Utc>)> = boundary
-        .epochs_since(-1)
+        .epochs_since(0)
         .await
         .expect("published")
         .into_iter()
         .map(|p| (p.epoch, p.attested_at))
         .collect();
     assert_eq!(attested.len(), 2);
-    let mirrored = mirror::epoch_instants(&pool, &[0, 1])
+    assert_eq!(
+        attested.iter().map(|(epoch, _)| *epoch).collect::<Vec<_>>(),
+        vec![1, 2]
+    );
+    let mirrored = mirror::epoch_instants(&pool, &[1, 2])
         .await
         .expect("instants");
     for (epoch, at) in &attested {
@@ -136,7 +145,7 @@ async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool)
         mirror::first_epoch_without_instant(&pool)
             .await
             .expect("gap"),
-        Some(0)
+        Some(1)
     );
     let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
         .await
@@ -148,7 +157,7 @@ async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool)
             .expect("gap"),
         None
     );
-    let refilled = mirror::epoch_instants(&pool, &[0, 1])
+    let refilled = mirror::epoch_instants(&pool, &[1, 2])
         .await
         .expect("instants");
     for (epoch, at) in &attested {

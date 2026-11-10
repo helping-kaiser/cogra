@@ -172,7 +172,7 @@ impl L1Boundary for StandInBoundary {
     }
 
     async fn current_theta(&self) -> Result<f64, BoundaryError> {
-        Ok(self.0.config().theta_micro as f64 / 1e6)
+        Ok(self.0.current_theta().await? as f64 / 1e6)
     }
 
     async fn max_payload_bytes(&self) -> Result<usize, BoundaryError> {
