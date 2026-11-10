@@ -40,6 +40,7 @@ use async_graphql::{Context, Enum, ErrorExtensions};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use common::hashtag_uuid;
+use common::l1::handshake::{EMPTY_BOUNDARY, FIRST_EPOCH};
 use postgres_store::search::{
     SECTIONS, SearchCursor, SearchHit, SearchRequest, Window, section_of,
 };
@@ -102,13 +103,14 @@ impl RankedCursor {
     }
 
     /// A wire cursor back to its position; None for anything a ranked
-    /// search did not issue.
+    /// search did not issue. A pin is an epoch (from 1) or the empty
+    /// boundary 0, which a search pins before the mirror holds any epoch.
     pub fn decode(raw: &str) -> Option<Self> {
         let text = String::from_utf8(B64.decode(raw).ok()?).ok()?;
         let parts: Vec<&str> = text.split(':').collect();
         match parts.as_slice() {
             ["ranked", epoch, "h", slot] => Some(Self::Head {
-                epoch: epoch.parse().ok().filter(|e: &i64| *e >= 0)?,
+                epoch: epoch.parse().ok().filter(|e: &i64| *e >= EMPTY_BOUNDARY)?,
                 slot: slot.parse().ok()?,
             }),
             ["ranked", epoch, "t", tier, micros, id] => {
@@ -117,7 +119,7 @@ impl RankedCursor {
                     return None;
                 }
                 Some(Self::Tail {
-                    epoch: epoch.parse().ok().filter(|e: &i64| *e >= 0)?,
+                    epoch: epoch.parse().ok().filter(|e: &i64| *e >= EMPTY_BOUNDARY)?,
                     at: SearchCursor {
                         tier,
                         created_at: chrono::DateTime::from_timestamp_micros(micros.parse().ok()?)?,
@@ -417,7 +419,7 @@ async fn ranked_head(
     viewer: Uuid,
     pin: i64,
 ) -> async_graphql::Result<Vec<(SearchHit, f64)>> {
-    if pin < 0 {
+    if pin < FIRST_EPOCH {
         return Ok(Vec::new());
     }
     let Some(address) = store::actor_identity(pool, viewer)
@@ -544,16 +546,17 @@ mod tests {
     fn a_ranked_cursor_round_trips_with_its_pin() {
         let head = RankedCursor::Head { epoch: 7, slot: 12 };
         assert_eq!(RankedCursor::decode(&head.encode()), Some(head));
-        let tail = RankedCursor::Tail {
-            epoch: 3,
-            at: SearchCursor {
-                tier: 1,
-                created_at: chrono::DateTime::from_timestamp_micros(1_791_354_394_123_456)
-                    .expect("instant"),
-                node_id: Uuid::new_v4(),
-            },
+        let at = SearchCursor {
+            tier: 1,
+            created_at: chrono::DateTime::from_timestamp_micros(1_791_354_394_123_456)
+                .expect("instant"),
+            node_id: Uuid::new_v4(),
         };
+        let tail = RankedCursor::Tail { epoch: 3, at };
         assert_eq!(RankedCursor::decode(&tail.encode()), Some(tail));
+        // Pinned at the empty boundary, before the mirror holds an epoch.
+        let boundary = RankedCursor::Tail { epoch: 0, at };
+        assert_eq!(RankedCursor::decode(&boundary.encode()), Some(boundary));
         for foreign in [
             "not base64!",
             &B64.encode("ranked:-1:h:0"),

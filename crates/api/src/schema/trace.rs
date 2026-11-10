@@ -22,6 +22,7 @@
 use std::collections::{HashMap, HashSet};
 
 use async_graphql::{Context, ErrorExtensions, SimpleObject};
+use common::l1::handshake::FIRST_EPOCH;
 use postgres_store::{PgPool, mirror};
 use uuid::Uuid;
 
@@ -100,7 +101,7 @@ pub async fn feed_trace(
     let pool = ctx.data::<PgPool>()?;
     let ranker = ctx.data::<RankerClient>()?;
     let epoch = mirror::last_ingested_epoch(pool).await.map_err(storage)?;
-    if epoch < 0 {
+    if epoch < FIRST_EPOCH {
         return Ok(None);
     }
     let answer = match ranker

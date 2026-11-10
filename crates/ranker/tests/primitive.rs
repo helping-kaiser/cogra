@@ -431,9 +431,9 @@ fn t_fold_a_netted_bundle_is_inert() {
 #[test]
 fn a_malformed_bundle_refuses() {
     let key = CausalKey {
-        landing_epoch: 0,
-        act_time: 0,
-        position: 0,
+        landing_epoch: 1,
+        act_time: 1,
+        position: 1,
     };
     let member = Member {
         key,

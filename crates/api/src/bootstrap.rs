@@ -8,7 +8,9 @@
 
 use common::l1::Family;
 use common::l1::client::ActorKey;
-use common::l1::handshake::{Proposal, StructuralBody, VerifiedAct, content_commitment};
+use common::l1::handshake::{
+    FIRST_EPOCH, Proposal, StructuralBody, VerifiedAct, content_commitment,
+};
 use common::l1::identifier::{ActId, NodeId};
 use l1_standin::StandIn;
 use postgres_store::PgPool;
@@ -248,7 +250,7 @@ pub async fn run(
         .and_then(|publisher| publisher.realization_address);
     let l1_half = match publisher_address {
         Some(address) => mirror::has_record_by(pool, &address, Family::Publish).await?,
-        None => mirror::last_ingested_epoch(pool).await? >= 0,
+        None => mirror::last_ingested_epoch(pool).await? >= FIRST_EPOCH,
     };
 
     match (l2_half, l1_half) {
