@@ -765,7 +765,7 @@ one $\theta$-debit, competes under W1/W2a/W2b, consumes epoch write
 capacity, and receives the same final stamp as every other same-author act
 — **no special Registration branch and no live-value newcomer formula**. A
 candidate actor has prior count zero; with no relational flow its stamp is
-its own source rate (`prop:epoch:final-standing-embedding`), and a current
+its own source rate (`prop:epoch:final-standing-hull`), and a current
 high-rate external vouch may lift it under the ordinary hull. **Same-epoch
 topology creates no source** (`cor:epoch:same-epoch-source-hull`): a
 same-epoch cohort whose source rates all lie below $\rho_\theta$ cannot
