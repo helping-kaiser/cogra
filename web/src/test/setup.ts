@@ -15,7 +15,7 @@ import { resetAnnouncerForTests } from "@/lib/release/newer-version-announcer";
 import { resetClipMemoryForTests } from "@/lib/ui2/media/clip-memory";
 import { resetElementPoolForTests } from "@/lib/ui2/media/video-stage";
 
-import { installTestFetch } from "./fetch";
+import { installTestFetch, resetRequestCountForTests, takeRunaway } from "./fetch";
 import { installMediaEnvironment, resetMediaEnvironmentForTests } from "./media-env";
 
 afterEach(cleanup);
@@ -124,5 +124,12 @@ if (typeof HTMLDialogElement !== "undefined" && !HTMLDialogElement.prototype.sho
   };
 }
 
-// Multipart under jsdom, and requests a test leaves in flight (fetch.ts).
+// Multipart under jsdom, requests a test leaves in flight, and a test that
+// sends in a loop (fetch.ts): each test counts its own requests, and one that
+// ran past the limit fails by name.
 installTestFetch();
+beforeEach(() => resetRequestCountForTests());
+afterEach(() => {
+  const runaway = takeRunaway();
+  if (runaway !== null) throw new Error(runaway);
+});
