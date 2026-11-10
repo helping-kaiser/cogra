@@ -1,8 +1,10 @@
 package com.cogra.domain.history
 
+import com.cogra.domain.CograLog
 import com.cogra.domain.Outcome
 import com.cogra.domain.di.ApplicationScope
 import com.cogra.domain.store.TokenStore
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
@@ -13,6 +15,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.IOException
+import java.security.GeneralSecurityException
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -109,7 +113,7 @@ class SeenRecord @Inject constructor(
                 .distinctUntilChanged()
                 .collect { account -> switchTo(account) }
         }
-        scope.launch { dirty.consumeEach { persist() } }
+        scope.launch { dirty.consumeEach { persistLoggingFault() } }
     }
 
     /**
@@ -228,6 +232,29 @@ class SeenRecord @Inject constructor(
     private suspend fun purgedWhileHeld(held: Slot.Held): Boolean =
         synchronized(lock) { held.onDisk } && store.load(held.account) == null
 
+    /**
+     * One write, whose failure ends that write and nothing else: an uncaught
+     * fault here would end the `consumeEach` loop and with it every later
+     * write-through, silently, for the rest of the process. The record stays
+     * whole in memory and the next change writes the latest set again.
+     */
+    private suspend fun persistLoggingFault() {
+        try {
+            persist()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            logWriteFault(e)
+        } catch (e: GeneralSecurityException) {
+            // The store seals what it writes; a key that will not seal is a failed write too.
+            logWriteFault(e)
+        }
+    }
+
+    private fun logWriteFault(cause: Exception) {
+        CograLog.w(TAG, cause) { "the seen record could not be written; it stays in memory" }
+    }
+
     private suspend fun persist() = writes.withLock {
         val held = synchronized(lock) { slot.value as? Slot.Held } ?: return@withLock
         val (who, record) = synchronized(lock) { held.snapshot() }
@@ -254,3 +281,5 @@ private fun MutableSet<String>.addAllExcept(ids: Collection<String>, own: String
 
 /** A seen-list page per sync call: the page budget. */
 internal const val SYNC_PAGE_SIZE = MAX_SEEN_BATCH
+
+private const val TAG = "SeenRecord"

@@ -8,6 +8,7 @@ import com.cogra.app.BuildConfig
 import com.cogra.core.media.AndroidMediaProcessor
 import com.cogra.core.media.AndroidVideoProcessor
 import com.cogra.core.media.MediaStoreMediaSource
+import com.cogra.domain.CograLog
 import com.cogra.domain.di.ApplicationScope
 import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.media.DeviceMediaSource
@@ -21,9 +22,12 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+
+private const val APPLICATION_SCOPE_TAG = "ApplicationScope"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -48,11 +52,21 @@ object AppModule {
     /**
      * The app-lifetime scope (the documented external-scope pattern:
      * a SupervisorJob so one failed child never kills the rest).
+     *
+     * The handler is what keeps a failed child from taking the process
+     * down: a `launch` on a scope with none hands its exception to the
+     * thread's uncaught handler, which on Android is a crash. The fault is
+     * written down instead, and the siblings carry on.
      */
     @Provides
     @Singleton
     @ApplicationScope
-    fun applicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    fun applicationScope(): CoroutineScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Default +
+            CoroutineExceptionHandler { _, failure ->
+                CograLog.w(APPLICATION_SCOPE_TAG, failure) { "a job on the application scope failed" }
+            },
+    )
 
     /**
      * The on-device image pipeline (D11, D17).

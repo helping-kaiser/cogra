@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -32,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -42,6 +44,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -67,7 +70,9 @@ fun RecoveryCodeConfirm(
 ) {
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
-    var typedBack by rememberSaveable { mutableStateOf("") }
+    // Plain `remember`: a saveable copy would write the typed secret into
+    // the saved-state bundle, which the system can persist across process death.
+    var typedBack by remember { mutableStateOf("") }
     var copied by rememberSaveable { mutableStateOf(false) }
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -127,6 +132,17 @@ fun RecoveryCodeConfirm(
 }
 
 /**
+ * The keyboard a recovery code is typed on: the password variation keeps
+ * the IME from learning the secret into its dictionary or suggesting over
+ * it, and autocorrect is off for the same reason. The text itself stays
+ * visible — the reader is checking it against what they wrote down.
+ */
+val RecoveryCodeKeyboardOptions = KeyboardOptions(
+    keyboardType = KeyboardType.Password,
+    autoCorrectEnabled = false,
+)
+
+/**
  * The field the code is typed back into, wearing the divergence as its
  * own supporting line — Material's arrangement, which also puts the
  * message inside the field's accessible name rather than beside it.
@@ -143,6 +159,7 @@ private fun ConfirmField(
         label = { Text(stringResource(R.string.recovery_code_type_back)) },
         singleLine = true,
         isError = diverged,
+        keyboardOptions = RecoveryCodeKeyboardOptions,
         supportingText = if (diverged) {
             {
                 Text(

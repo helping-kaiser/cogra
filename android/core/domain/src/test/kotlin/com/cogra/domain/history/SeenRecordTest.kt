@@ -250,6 +250,31 @@ class SeenRecordTest {
         assertThat(store.records.getValue("u1").ids).containsExactly("p1", "p2", "tall")
     }
 
+    /** The first write fails the way a full disk does; every later one lands. */
+    private class OneFailedWrite(private val inner: SeenRecordStore) : SeenRecordStore by inner {
+        var failed = 0
+
+        override suspend fun save(account: String, record: StoredSeenRecord) {
+            if (failed++ == 0) throw IOException("disk full")
+            inner.save(account, record)
+        }
+    }
+
+    @Test
+    fun `one failed write does not end the write loop`() = runTest {
+        signIn("u1")
+        val flaky = OneFailedWrite(store)
+        // Opening queues the record's first write, which is the one that fails.
+        val record = SeenRecord(flaky, server, session, backgroundScope).also { runCurrent() }
+        assertThat(flaky.failed).isEqualTo(1)
+
+        record.add("u1", listOf("p1"))
+        runCurrent()
+
+        // The loop outlived the fault: the next report still reaches the store.
+        assertThat(store.records.getValue("u1").ids).containsExactly("p1")
+    }
+
     private class FaultOnSecondPage(private val inner: SeenHistorySource) : SeenHistorySource {
         private var served = 0
 
