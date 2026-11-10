@@ -959,9 +959,12 @@ This is forced by the Quadrant Law: a coerced and unfair Accept with both
 parameters negative has $\epsilon = +1$ — correct for routing coherence,
 wrong as a verdict. Routing reads coherence; stance consumers read stance.
 The closure-side gate is recipient resolution on Accept/Ratify: the act
-reaches the counterparty only when it is title-transferring under the epoch
-title fold and all its mandatory coordinates are strictly positive; otherwise
-it resolves to its author (§11.3).
+reaches the counterparty only when its candidate is recognized,
+unchallenged, and title-transferring under the epoch title fold and all its
+mandatory folded coordinates are strictly positive; otherwise it resolves
+to its author while remaining weighed, priced, and counted (§11.3). A
+successful transfer is event-persistent: a later resale does not revoke it
+(`post:epoch:settlement-standing-title-coupling`).
 
 The full paper's **terminal default** for the read-site
 (`rem:graph:settlement-reputation`): three authored edges carry three signed
