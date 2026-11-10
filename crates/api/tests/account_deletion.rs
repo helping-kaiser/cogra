@@ -1301,10 +1301,9 @@ async fn an_applicant_deletion_takes_its_device_locks(pool: PgPool) {
 }
 
 /// The deleted applicant's email and handle are free again: the same
-/// person can register anew. Deliberately silent on the single-use invite
-/// slot — consumed for good at account creation (round-3 ruling), which
-/// the link's used-at stamp will enforce for this path and the reaper's
-/// alike.
+/// person can register anew, here through a multi-use link: a single-use
+/// slot is consumed for good at account creation (round-3 ruling), as
+/// `a_single_use_link_stays_used_after_its_account_goes` pins.
 ///
 /// An applicant's deletion frees its email and handle for a fresh registration.
 /// ´claim:deletion:an-applicant-deletion-frees-its-email-and-handle´
@@ -1323,6 +1322,49 @@ async fn an_applicant_deletion_frees_its_email_and_handle(pool: PgPool) {
     let again = applicant_through(&rig, noa.link, "noa").await;
     assert_ne!(again.id, noa.id, "a new account, not the old one");
     assert_eq!(again.email, noa.email);
+}
+
+/// A single-use link is used up by the account registered through it,
+/// for good: neither the applicant's own deletion nor the reaper's sweep
+/// of a never-verified account gives the slot back, so the link reads
+/// unusable and refuses a fresh registration.
+///
+/// A single-use invite link stays used after the account it created is deleted or reaped.
+/// ´claim:deletion:a-single-use-link-stays-used´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_single_use_link_stays_used_after_its_account_goes(pool: PgPool) {
+    let rig = rig(pool);
+    let mira = member(&rig, "mira").await;
+    let usable = |link: Uuid| {
+        let rig = &rig;
+        async move {
+            rig.gql(
+                None,
+                &format!("{{ inviteLinkCheck(id: \"{link}\") {{ usable }} }}"),
+                json!({}),
+            )
+            .await["inviteLinkCheck"]["usable"]
+                .clone()
+        }
+    };
+
+    let deleted = invite_link(&rig, &mira, true).await;
+    let noa = applicant_through(&rig, deleted, "noa").await;
+    rig.gql(Some(&noa.token), DELETE_APPLICANT, json!({})).await;
+    assert_eq!(usable(deleted).await, json!(false));
+    let again = register(&rig, deleted, "noa").await;
+    assert_eq!(
+        again["data"]["register"]["userErrors"][0]["code"], "INVITE_UNUSABLE",
+        "{again}"
+    );
+
+    let reaped = invite_link(&rig, &mira, true).await;
+    let registered = register(&rig, reaped, "ilo").await;
+    assert!(registered["errors"].is_null(), "{registered}");
+    store::reap_unverified_accounts(&rig.pool, Utc::now() + Duration::days(30))
+        .await
+        .expect("reaps");
+    assert_eq!(usable(reaped).await, json!(false));
 }
 
 /// Once the account lands it is a member: the immediate path is refused,

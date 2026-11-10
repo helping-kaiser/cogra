@@ -534,3 +534,43 @@ async fn invite_link_check_reads_expiry_as_unusable(pool: PgPool) {
     .await;
     assert_eq!(data["inviteLinkCheck"]["usable"], false);
 }
+
+/// An authentication scheme's name is case-insensitive (RFC 9110 §11.1,
+/// which RFC 6750's `Bearer` scheme inherits), so every casing of
+/// `Bearer` carries the session — on the GraphQL route and on the upload
+/// part route, which read the header through the same function.
+///
+/// The bearer scheme name is matched case-insensitively on every authenticated route.
+/// ´claim:server:the-bearer-scheme-is-case-insensitive´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_bearer_scheme_is_case_insensitive(pool: PgPool) {
+    let rig = rig::WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
+    let (alice, _) = rig.seed_member("alice", "alice@example.com").await;
+    let token = rig.log_in("alice@example.com").await;
+    for scheme in ["Bearer", "bearer", "BEARER"] {
+        let me = rig
+            .send(
+                Request::builder()
+                    .method("POST")
+                    .uri("/graphql")
+                    .header("content-type", "application/json")
+                    .header("authorization", format!("{scheme} {token}"))
+                    .body(Body::from(r#"{"query":"{ me { id } }"}"#))
+                    .expect("request"),
+            )
+            .await;
+        assert_eq!(me["data"]["me"]["id"], alice.to_string(), "{scheme}: {me}");
+
+        let part = rig
+            .send(
+                Request::builder()
+                    .method("PUT")
+                    .uri(format!("/media/uploads/{}/parts/1", uuid::Uuid::new_v4()))
+                    .header("authorization", format!("{scheme} {token}"))
+                    .body(Body::from(vec![0u8; 16]))
+                    .expect("request"),
+            )
+            .await;
+        assert_eq!(part["code"], "NOT_FOUND", "{scheme}: {part}");
+    }
+}

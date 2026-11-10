@@ -2336,6 +2336,7 @@ impl Mutation {
         if let Ok(email) = auth::normalize_email(&input.email)
             && ratelimit::within(pool, scope::RESET_EMAIL, &email, limits.reset_email).await?
             && let Some(credentials) = store::credentials_by_email(pool, &email).await?
+            && credentials.email_verified_at.is_some()
         {
             let secret = auth::new_secret();
             store::create_password_reset(
@@ -2583,7 +2584,7 @@ impl Mutation {
         };
         let hash = auth::hash_of(&input.code);
         let change_id = match store::email_change_by_token(pool, &hash).await? {
-            Some(change) if change.requires_code => {
+            Some(change) => {
                 if change.user_id != v.user_id {
                     return Ok(refuse(UserError::new(
                         ErrorCode::EmailChangeOtherAccount,
@@ -2596,7 +2597,7 @@ impl Mutation {
                 store::confirm_email_change_link(pool, change.id).await?;
                 change.id
             }
-            _ => match store::submit_email_change_code(
+            None => match store::submit_email_change_code(
                 pool,
                 v.user_id,
                 &hash,
@@ -3259,20 +3260,15 @@ impl Mutation {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
-        if !ratelimit::spend_device_lock_issue(pool, limits, v.user_id).await? {
+        let cap = i64::from(limits.device_lock_live_cap);
+        if store::device_locks_held(pool, v.user_id).await? >= cap
+            || !ratelimit::spend_device_lock_issue(pool, limits, v.user_id).await?
+        {
             return Err(rate_limited());
         }
         let id = Uuid::new_v4();
         let secret = device_lock::generate_secret();
-        match store::issue_device_lock(
-            pool,
-            v.user_id,
-            id,
-            &secret,
-            i64::from(limits.device_lock_live_cap),
-        )
-        .await?
-        {
+        match store::issue_device_lock(pool, v.user_id, id, &secret, cap).await? {
             store::IssueLockOutcome::Issued => Ok(IssueDeviceLockPayload {
                 lock: Some(DeviceLock {
                     id,
