@@ -9,12 +9,15 @@ import com.cogra.domain.media.PartFailure
 import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.UploadRetry
 import com.cogra.domain.store.TokenStore
+import com.cogra.network.auth.SessionRefresher
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
 import java.net.HttpURLConnection
 import java.net.URI
+import javax.inject.Provider
 import kotlin.random.Random
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -43,6 +46,9 @@ import kotlinx.coroutines.withContext
  */
 class PartUploader(
     private val tokens: TokenStore,
+    // Provider, as the gate holds it: the refresher calls the client, so
+    // reaching for it only when a part is refused keeps construction acyclic.
+    private val refresher: Provider<SessionRefresher>,
     private val endpoint: String,
     private val random: Random = Random.Default,
     // Injected so the suites drive the backoff on a virtual clock
@@ -102,11 +108,12 @@ class PartUploader(
      */
     private suspend fun sendOne(uploadId: String, partNumber: Int, bytes: ByteArray): PartFailure? {
         var attempt = 1
+        var refreshed = false
         while (true) {
             val wait = UploadRetry.delayMs(attempt, random.nextDouble())
             if (wait > 0) delay(wait)
 
-            when (attemptPart(uploadId, partNumber, bytes)) {
+            when (val result = attemptPart(uploadId, partNumber, bytes)) {
                 PartResult.Sent -> return null
                 PartResult.Refused -> return PartFailure.REFUSED
                 // The token could not be read, so every further attempt
@@ -114,6 +121,19 @@ class PartUploader(
                 // connection. Spending the budget on it only delays a
                 // message that was already going to be wrong.
                 PartResult.NoToken -> return PartFailure.TRANSPORT
+                // The part route sits outside the GraphQL client, so
+                // nothing else rotates an access token that expired
+                // mid-upload (they live fifteen minutes; a long clip does
+                // not). Rotate once and replay the same attempt; a 401
+                // that outlives a rotation is the session's answer, not
+                // the network's, and repeating it cannot change it.
+                is PartResult.Unauthorized -> {
+                    if (refreshed || !refresher.get().refresh(result.access)) {
+                        return PartFailure.UNAUTHENTICATED
+                    }
+                    refreshed = true
+                    continue
+                }
                 PartResult.Transient ->
                     if (!UploadRetry.retryable(attempt)) return PartFailure.TRANSPORT
             }
@@ -121,7 +141,18 @@ class PartUploader(
         }
     }
 
-    private enum class PartResult { Sent, Refused, Transient, NoToken }
+    private sealed interface PartResult {
+        data object Sent : PartResult
+
+        data object Refused : PartResult
+
+        data object Transient : PartResult
+
+        data object NoToken : PartResult
+
+        /** The store would not accept [access], the bearer this attempt carried. */
+        data class Unauthorized(val access: String) : PartResult
+    }
 
     /**
      * One attempt, suspending rather than blocking.
@@ -137,6 +168,9 @@ class PartUploader(
         // author is told the network is at fault when the fault was
         // reading our own token store.
         val access = runCatching { tokens.current()?.accessToken }
+            // The read suspends, so the caller leaving cancels it: that is
+            // the upload stopping, not a store that cannot be read.
+            .onFailure { if (it is CancellationException) throw it }
             .getOrElse { failure ->
                 CograLog.w(TAG, failure) { "could not read the access token for part $partNumber" }
                 return PartResult.NoToken
@@ -161,11 +195,7 @@ class PartUploader(
 
             when (val code = connection.responseCode) {
                 in 200..299 -> PartResult.Sent
-                // A stale access token is worth one more try: the
-                // Apollo side refreshes it around the calls that
-                // bracket this one, so the next attempt carries a
-                // fresh header without this loop knowing how.
-                UNAUTHORIZED -> PartResult.Transient
+                UNAUTHORIZED -> PartResult.Unauthorized(access)
                 // Anything else below 500 is an answer about the
                 // request, and repeating it changes nothing.
                 in 400..499 -> PartResult.Refused

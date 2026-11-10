@@ -2,18 +2,24 @@ package com.cogra.core.designsystem
 
 import android.content.ClipDescription
 import android.content.ClipboardManager
+import android.text.InputType
+import android.view.inputmethod.EditorInfo
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.platform.InterceptPlatformTextInput
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.awaitCancellation
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -197,5 +203,59 @@ class RecoveryCodeConfirmTest {
         compose.waitForIdle()
 
         compose.onNodeWithTag("recovery_code_copied").assertExists()
+    }
+
+    // What the IME is told when the field takes focus: the editor info is the
+    // only place the keyboard type and autocorrect choice are observable.
+    @OptIn(ExperimentalComposeUiApi::class)
+    @Test
+    fun theTypedBackFieldAsksTheKeyboardForPasswordInputWithoutAutocorrect() {
+        var editor: EditorInfo? = null
+        compose.setContent {
+            InterceptPlatformTextInput(
+                interceptor = { request, _ ->
+                    editor = EditorInfo().also { request.createInputConnection(it) }
+                    awaitCancellation()
+                },
+            ) {
+                RecoveryCodeConfirm(
+                    code = CODE,
+                    explainer = "keep it",
+                    matches = { it == CODE },
+                    diverged = { false },
+                    onConfirmed = {},
+                )
+            }
+        }
+
+        compose.onNodeWithTag("recovery_code_typed_back").performClick()
+        compose.waitForIdle()
+
+        val info = requireNotNull(editor)
+        assertThat(info.inputType and InputType.TYPE_MASK_VARIATION)
+            .isEqualTo(InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        assertThat(info.inputType and InputType.TYPE_TEXT_FLAG_AUTO_CORRECT).isEqualTo(0)
+    }
+
+    // The saved-state bundle can outlive the process: a typed-back secret has
+    // no business in it.
+    @Test
+    fun theTypedBackCodeIsNotKeptInSavedState() {
+        val restoration = StateRestorationTester(compose)
+        restoration.setContent {
+            RecoveryCodeConfirm(
+                code = CODE,
+                explainer = "keep it",
+                matches = { it == CODE },
+                diverged = { false },
+                onConfirmed = {},
+            )
+        }
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput(CODE)
+        compose.onNodeWithTag("recovery_code_saved").assertIsEnabled()
+
+        restoration.emulateSavedInstanceStateRestore()
+
+        compose.onNodeWithTag("recovery_code_saved").assertIsNotEnabled()
     }
 }

@@ -54,6 +54,7 @@ import com.cogra.domain.store.TokenStore
 import com.cogra.domain.topics.HeldTopicsRepository
 import com.cogra.network.auth.BearerInterceptor
 import com.cogra.network.auth.SessionGate
+import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.AccountDeletionRepositoryImpl
 import com.cogra.network.repo.AccountRepositoryImpl
 import com.cogra.network.repo.ContentRepositoryImpl
@@ -106,6 +107,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Provider
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -137,8 +139,9 @@ internal object NetworkProvidesModule {
     @Singleton
     fun partUploader(
         tokens: TokenStore,
+        refresher: Provider<SessionRefresher>,
         @GraphqlEndpoint endpoint: String,
-    ): PartUploader = PartUploader(tokens, endpoint)
+    ): PartUploader = PartUploader(tokens, refresher, endpoint)
 
     @Provides
     @Singleton
