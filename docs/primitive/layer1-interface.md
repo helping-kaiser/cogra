@@ -2726,8 +2726,8 @@ mass, not density or address count alone, and a funded partition can change
 individual coordinates or the maximum (`rem:epoch:dense-cluster-fairness`);
 with zero relational flow, $\alpha_i = r_i$ exactly; (4) equal-rate
 invariance (`prop:epoch:equal-rate-standing-invariance`) — if every
-contributing source carries the same reduced rate, $\alpha_i$ is exactly that
-rate at every state, every rung, every profile and depth mass. A community of
+contributing source carries the same reduced rate $c$, $\alpha_i = \nu c$
+exactly, at every state, every rung, every profile and depth mass. A community of
 equal rate cannot lift itself, and no arrangement of regard inside it changes
 any member's standing.
 
