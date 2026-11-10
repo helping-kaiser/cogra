@@ -2591,12 +2591,15 @@ independently of the fixed point that has not yet been computed.
 index is $m^*$. History travels on the back of balance: the **emission
 fraction** of source $u$ is
 
-$$\mathfrak{e}_u = \min\!\left(1,\ \frac{b_u^{(k)}}{\theta\, N_u^{(k)}}\right) = \min\!\left(1,\ \frac{\hat{r}_u}{\rho_\theta}\right) \in [0, 1],$$
+$$\mathfrak{e}_u = \min\!\left(1,\ \frac{b_u^{(k)}}{\theta^{(k)}\, N_u^{(k)}}\right) = \min\!\left(1,\ \frac{\hat{r}_u}{\rho_\theta}\right) \in [0, 1],$$
 
 the source's own reduced rate measured against the safety wall and capped at
 one; the exported capacity $b_u/\theta$ *is* the ledger's remaining-action
 capacity up to integrality, which is why no new constant was minted to state
-it. Emission is a property of the source's **pair**, never of one of its
+it. The source pair is the completed epoch-$k$ pair of the marker-defined
+state, and the threshold $\theta^{(k)}$ is the writing-epoch price used for
+the debit, never the next epoch's controller output; emission and
+contributing width read this same ledger. Emission is a property of the source's **pair**, never of one of its
 relations — a per-recipient fraction is prohibited, because the tilt is the
 sole chartered modulator of a source's relative odds.
 
@@ -2917,9 +2920,11 @@ increments its count:
 
 $$b_i \mathrel{-}= \theta^{(k)}, \qquad N_i \mathrel{+}= 1.$$
 
-A hyper-edge is one act: one $\theta$, one stamp. The debit is consummated
-at the writing epoch's price and **never re-calculated** (the sole vintage
-object). $\theta$ is the **only** debited object — no gate, door, stamp, or
+A hyper-edge is one act: one $\theta$, one stamp. The debited amount is the
+epoch's published charged value (`def:epoch:safety-threshold`) — the same
+value read by W1, the safety wall, emission, and capacity. The debit is
+consummated at the writing epoch's price and **never re-calculated** (the sole
+vintage object). $\theta$ is the **only** debited object — no gate, door, stamp, or
 average moves a balance. **Capacity *is* the balance:** remaining actions
 $= \lfloor b_i/\theta \rfloor$, restored immediately by burning. Standing
 prices nothing and no per-epoch capacity object is derived. Two samplings
