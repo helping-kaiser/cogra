@@ -2438,9 +2438,13 @@ Actor *spends* on, in the same unit their own activity consumes.
 
 **Artifacts allocate nothing (`prop:epoch:artifact-non-allocation`).**
 Changing raw incidence on a passive node — a Chat, Content item, Item, Type,
-Comment, Message, Offer, or Profile — leaves every entry of $\mathsf{A}$
-unchanged, and therefore leaves every transported share and every standing
-value unchanged. This is structural, not a guard: only accepted
+Comment, Message, Offer, or Profile — while preserving the compiled cells,
+their coefficients, recipients and domain profiles, the final ledger, and the
+effective constants, leaves every entry of $\mathsf{A}$ unchanged, and
+therefore leaves the transport, the standing map, and its certified
+equilibrium unchanged. The premise excludes adding or removing Actor-authored
+artifact acts: those enter the fold and the ledger and can crowd out outward
+allocation. This is structural, not a guard: only accepted
 Actor-authored acts fold into cells, and an artifact has no row to allocate
 from and no authorship to inherit. Popularity is visible to feed and bridge,
 and invisible here.
@@ -2709,8 +2713,9 @@ set is fixed by the base scores and the ledger alone, so the hull is known
 before the solve begins; (3) strong-embedding limit
 (`prop:epoch:final-standing-embedding`) — as incoming transported action mass
 dominates the own pair, $\alpha_i$ approaches the transported-mass-weighted
-source average (dense-cluster fairness: the pooled leave-one-out
-burn-per-action of the support base, `rem:epoch:dense-cluster-fairness`);
+source average — the relevant limit is that dominance over the own retained
+mass, not density or address count alone, and a funded partition can change
+individual coordinates or the maximum (`rem:epoch:dense-cluster-fairness`);
 with zero relational flow, $\alpha_i = r_i$ exactly; (4) equal-rate
 invariance (`prop:epoch:equal-rate-standing-invariance`) — if every
 contributing source carries the same reduced rate, $\alpha_i$ is exactly that
@@ -2746,32 +2751,35 @@ detaches a cluster's mean from its ledger and is inadmissible; one that
 verbatim, which is exactly what source emission does
 (`cor:epoch:conserving-source-root-criterion`).
 
-**Full-pair source transport is a current nonclaim
-(`rem:epoch:full-pair-source-transport`).** The mediant transports the
-*full*, unscaled current source pair $(b_u^{(k)}, N_u^{(k)})$ with no
-source-root attenuation: emission never scales the pair itself, only the
-transport entries that route it, so what a sub-wall source withholds from
-its recipients it retains at its own self column rather than losing. A
-fully depleted source ($b_u = 0$) gives $\mathfrak{e}_u = 0$ exactly, so
-its transport row collapses to the identity and the source reaches no
-target at all. What survives depletion is graduated: a partially-depleted
-source ($0 < \hat{r}_u < \rho_\theta$) still exports the fraction
-$\hat{r}_u/\rho_\theta$, carrying low-rate mass onward, so
-rate-proportional dilution persists, priced and bounded by the hull. The
-specification makes **no** claim that every unit of relational standing
-pressure is continuously backed by positive current residual balance;
-replacing graduated export with a hard source-root eligibility cutoff is an
-open question (`frontier:source-root-eligibility`).
+**Full pairs and bounded export
+(`rem:epoch:full-pair-source-transport`).** The mediant reads each
+contributing source's *full* current pair $(b_u^{(k)}, N_u^{(k)})$: emission
+apportions the source's row between export and self-retention before that
+pair is transported and never scales the pair itself, so what a sub-wall
+source withholds from its recipients it retains at its own self column. A
+fully depleted source ($b_u = 0$) has $\mathfrak{e}_u = 0$, retains an
+identity row, and sends no count mass to another Actor. A partially depleted
+source ($0 < \hat{r}_u < \rho_\theta$) exports at most the fraction
+$\hat{r}_u/\rho_\theta$ of its row, so its total exported count mass is at
+most $b_u/\theta$ (`thm:epoch:emission-export-bound`); low-rate incoming
+allocation can dilute a target within the contributing source-rate hull —
+priced and bounded, not forbidden. The graduated rule is the chartered one
+(`rem:epoch:source-emission-rationale`): a hard source-rate cutoff would
+change that rule, not complete an unresolved part of it.
 
 **Dilution cost (`prop:epoch:dilution-cost`):** coordinated low-rate
 endorsement is $\theta$-priced exactly — each ballast action debits
 $\theta$, sustained dilution pressure of $n$ endorsers costs $n\theta$ per
 epoch-action, and total grip is bounded by spent balance$/\theta$
 (capacity per burn unit $= 1/\theta \approx 18.94$ at the chartered
-value): grip is rented, not owned. Amplification by multiplicity is closed by
-conservation rather than by any per-path rule — a source apportions one unit
-however many acts it authors, so additional acts redistribute that unit
-instead of adding to it. Griefing is bounded by four independent constraints
+value): grip is rented, not owned. Cross-target copying of pair mass is
+excluded by row conservation rather than by any per-path rule — a source
+apportions one unit however many acts it authors, so additional acts
+redistribute that unit instead of adding to it. This is not immunity to
+funded address partition: actual export and dilution can change within the
+fibre-capacity and source-mixture bounds (`prop:epoch:split-fibre-capacity`,
+`prop:epoch:split-pair-displacement`). Pricing and source conservation impose
+no individual response sign. Griefing is bounded by four independent constraints
 (`rem:epoch:griefing-resistance`): only acts their author authored enter that
 author's row; every act is priced and count-dilutive; outward allocation is
 one conserved unit; and what a depleted history can export is bounded by what
