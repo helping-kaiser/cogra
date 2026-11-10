@@ -9,25 +9,29 @@
 package com.cogra.feature.onboarding
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -37,6 +41,8 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.TaskPage
 import com.cogra.core.designsystem.v2.atom.WaitingCommit
+import com.cogra.core.designsystem.v2.atom.hitTarget
+import com.cogra.core.designsystem.v2.token.Layout
 
 /**
  * The door's two readings, each under its board's name. Neither board is
@@ -142,22 +148,30 @@ fun InviteEntryScreen(
 /**
  * A way out of the door: the board's text button laid full width with its
  * words at the start and no padding (`JoinInvalid.jsx`: `justifyContent:
- * flex-start, padding: 0`), the ink and the 40dp height the text button's own.
+ * flex-start, padding: 0`), in the text button's ink. Its drawn 40dp stays
+ * in the layout and it answers at 48 (`cg-hit`, [hitTarget]), so the two
+ * stand flush as the board stacks them instead of each growing to its
+ * touch target.
  */
 @Composable
 private fun DoorWayOut(text: String, onClick: () -> Unit, node: DataNode) {
-    TextButton(
-        onClick = onClick,
-        contentPadding = PaddingValues(0.dp),
+    Box(
+        contentAlignment = Alignment.CenterStart,
         modifier = Modifier
             .fillMaxWidth()
-            .dataNode(node),
+            .dataNode(node)
+            .hitTarget(
+                interactive = Modifier
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onClick),
+                drawnHeight = Layout.ButtonHeight,
+            )
+            .defaultMinSize(minHeight = Layout.ButtonHeight),
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.primary,
         )
     }
 }

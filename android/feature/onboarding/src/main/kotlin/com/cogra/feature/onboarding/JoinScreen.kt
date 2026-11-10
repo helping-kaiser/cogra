@@ -47,8 +47,8 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.v2.atom.ButtonKind
-import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograPasswordField
+import com.cogra.core.designsystem.v2.atom.CograRowButton
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.HelpDot
 import com.cogra.core.designsystem.v2.atom.PageHeader
@@ -166,7 +166,10 @@ fun JoinScreen(
                     inFlightLabel = stringResource(R.string.join_creating),
                     node = JOIN / "commit",
                 )
-                CograButton(
+                // The board's text button keeps its drawn 40dp in the layout and
+                // answers at 48 (`cg-hit`), which the row button does; Material's
+                // own button would grow the stack by its touch target instead.
+                CograRowButton(
                     text = stringResource(R.string.entry_sign_in),
                     onClick = onSignIn,
                     kind = ButtonKind.Text,
