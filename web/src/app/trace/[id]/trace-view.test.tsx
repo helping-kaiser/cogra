@@ -185,6 +185,9 @@ beforeEach(() => {
   push.mockClear();
   forgetTrace();
   forgetStandings();
+  // The token store persists in localStorage: a reader one test signed in
+  // would otherwise still be signed in for the next.
+  window.localStorage.clear();
 });
 
 afterEach(() => {

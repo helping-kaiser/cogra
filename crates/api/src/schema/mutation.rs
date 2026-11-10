@@ -3761,6 +3761,7 @@ impl Mutation {
         let destination = media::GalleryKind::from(input.scale);
         let caps = config.caps_for(destination);
 
+        let _permit = config.process_permits.acquire().await?;
         let processed = tokio::task::spawn_blocking(move || {
             use std::io::Read;
             let mut bytes = Vec::new();

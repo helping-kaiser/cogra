@@ -30,6 +30,7 @@ import com.cogra.domain.media.richerThan
 import com.cogra.domain.media.rotatedDimensions
 import java.io.File
 import kotlin.coroutines.resume
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -82,6 +83,15 @@ class AndroidVideoProcessor(
         val output = File(context.cacheDir, "upload-${System.nanoTime()}.mp4")
 
         val exported = runCatching { export(uri, probe, output, capBytes, onProgress) }
+            .onFailure { failure ->
+                // A cancelled transcode is the caller leaving, not a fault:
+                // swallowing it here would log it as one and hand back a
+                // value to a scope that has already been told to stop.
+                if (failure is CancellationException) {
+                    output.delete()
+                    throw failure
+                }
+            }
             .getOrElse { failure ->
                 CograLog.w(TAG, failure) { "transcode threw before it could export" }
                 output.delete()
