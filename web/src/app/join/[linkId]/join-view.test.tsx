@@ -295,6 +295,26 @@ describe("JoinView", () => {
       expect(push).toHaveBeenCalledWith(`/about?from=join&invite=${ID}`);
     });
 
+    // Join.md:13 — pasted at the invite door, Back returns to it.
+    it("press_the_back_arrow_given_the_link_was_pasted_at_the_invite_door_opens_invite_entry", async () => {
+      server.use(usableCheck);
+      renderWithProviders(<JoinView linkId={ID} origin="door" />);
+      await screen.findByTestId("invite_inviter");
+      expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/join");
+      // The "?" carries the door along, so About's Back finds this same form.
+      fireEvent.click(screen.getByRole("button", { name: "About CoGra" }));
+      expect(push).toHaveBeenCalledWith(`/about?from=join&invite=${ID}&door=1`);
+    });
+
+    // Join.md:15 — the link held from the arrival: Back returns to the
+    // borrowed view, never to a door the reader never used.
+    it("press_the_back_arrow_given_the_link_was_held_from_the_arrival_brings_the_borrowed_view_back", async () => {
+      server.use(usableCheck);
+      renderWithProviders(<JoinView linkId={ID} />);
+      await screen.findByTestId("invite_inviter");
+      expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/feed");
+    });
+
     it("the hints read until a line takes their place", async () => {
       server.use(usableCheck);
       renderWithProviders(<JoinView linkId={ID} />);

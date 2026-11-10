@@ -8,7 +8,7 @@
 # ships with Kotlin 2.x via the `kotlin.plugin.compose` plugin.
 agp = "8.13.2"
 kotlin = "2.3.21"
-ksp = "2.3.12"
+ksp = "2.3.13"
 
 # Static analysis. ktlint is the formatter (the analogue of `cargo fmt`)
 # and detekt the rule engine (the analogue of clippy); ktlint's own docs
@@ -59,7 +59,7 @@ hilt = "2.58"
 hiltNavigationCompose = "1.3.0"
 
 # GraphQL
-apollo = "4.4.3"
+apollo = "4.4.4"
 
 # Images. Coil 3 is the Compose-native loader Android's own Compose docs
 # point at, and the one the media slice's D20 ruling names. Coil 3 ships no
