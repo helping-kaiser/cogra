@@ -19,7 +19,8 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 /**
  * The configuration every android-variant module shares: SDK levels
  * from the catalog, Java 17 for compilation, a Java 21 launcher for
- * tests, the release-variant unit-test skip, and parallel test forks.
+ * tests, the release-variant unit-test skip, parallel test forks, and
+ * the Hilt KSP output guard.
  * Applied after the module's own
  * android.application/android.library plugin.
  */
@@ -77,6 +78,8 @@ class AndroidModuleConventionPlugin : Plugin<Project> {
         extensions.configure<KotlinAndroidProjectExtension> {
             jvmToolchain(17)
         }
+
+        pluginManager.withPlugin("com.google.dagger.hilt.android") { guardHiltKspOutput() }
     }
 }
 
