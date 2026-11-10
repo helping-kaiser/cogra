@@ -2415,7 +2415,9 @@ words, recorded so the registry is whole:
 
 - **The page** — the figures `Posts` · `Opinions on you` · `Opinions by
   you` on one's own, `Opinions on them` · `Opinions by them` on
-  another's; the own page's `Edit profile`. The chronicle's tabs `Posts` ·
+  another's, each opinion figure counting people, never records — one
+  person's bundle is one, however often revised (jakob 2026-11-10); the
+  own page's `Edit profile`. The chronicle's tabs `Posts` ·
   `Comments` · `Everything`, named `What the chronicle shows`; its rows
   `Published a post` (the post's title under it), `Commented` (the
   comment's words), `Gave an opinion` (`on @mira`), and `Updated your
