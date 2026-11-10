@@ -15,6 +15,8 @@
 // Nothing here talks to the server, and nothing here knows a session; the
 // caller revokes first and ends the session after.
 
+import { safeStorage, type SafeStorage } from "@/lib/safe-storage";
+
 /** CoGra's databases in this browser, named where each store opens them. */
 export const COGRA_DATABASES = ["cogra.identity", "cogra.compose", "cogra.seen"] as const;
 
@@ -44,7 +46,7 @@ async function databaseNames(idb: IDBFactory): Promise<string[]> {
   return [...names];
 }
 
-function clearPrefixed(storage: Storage | undefined): void {
+function clearPrefixed(storage: SafeStorage | undefined): void {
   if (storage === undefined) return;
   const doomed: string[] = [];
   for (let i = 0; i < storage.length; i += 1) {
@@ -56,12 +58,12 @@ function clearPrefixed(storage: Storage | undefined): void {
 
 export async function eraseEverything({
   idb = typeof indexedDB === "undefined" ? undefined : indexedDB,
-  local = typeof window === "undefined" ? undefined : window.localStorage,
-  session = typeof window === "undefined" ? undefined : window.sessionStorage,
+  local = typeof window === "undefined" ? undefined : safeStorage("local"),
+  session = typeof window === "undefined" ? undefined : safeStorage("session"),
 }: {
   idb?: IDBFactory;
-  local?: Storage;
-  session?: Storage;
+  local?: SafeStorage;
+  session?: SafeStorage;
 } = {}): Promise<void> {
   if (idb !== undefined) {
     const names = await databaseNames(idb);

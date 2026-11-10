@@ -19,6 +19,8 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
+import { safeStorage } from "@/lib/safe-storage";
+
 export type StanceInputMode = "pad" | "sliders" | "entry";
 
 export const STANCE_INPUT_MODES: readonly StanceInputMode[] = ["pad", "sliders", "entry"];
@@ -33,7 +35,7 @@ function isMode(value: string | null): value is StanceInputMode {
 
 export function readStanceInputMode(): StanceInputMode {
   if (typeof window === "undefined") return DEFAULT_STANCE_INPUT_MODE;
-  const stored = window.localStorage.getItem(STORAGE_KEY);
+  const stored = safeStorage().getItem(STORAGE_KEY);
   return isMode(stored) ? stored : DEFAULT_STANCE_INPUT_MODE;
 }
 
@@ -45,7 +47,7 @@ function announce() {
 
 export function writeStanceInputMode(mode: StanceInputMode): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, mode);
+  safeStorage().setItem(STORAGE_KEY, mode);
   // `storage` fires in OTHER tabs only, so this tab is told directly.
   announce();
 }
