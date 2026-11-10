@@ -2723,11 +2723,18 @@ any member's standing.
 `thm:epoch:closed-cluster-rate-identity`).** Call a set $S$ of Actors
 *closed* when $\mathsf{A}_{uj} = 0$ whenever exactly one of $u, j$ lies in
 $S$ — a property of the base matrix alone, checkable before the solve. Then
-the **transported-mass-weighted** mean standing of $S$ equals $\nu$ times its
-aggregate residual balance over its aggregate action mass, at every state of
-the solve. The weighting is mandatory: the identity holds for the
-$\tilde{N}_i$-weighted mean only, and any restatement that drops the weight
-is false. Standing transport within a closed community is purely
+the **transported-mass-weighted** mean standing of $S$ equals its ledger
+ratio, at every state of the solve:
+
+$$\frac{\sum_{i \in S} \tilde{N}_i\,\alpha_i^{(k)}}{\sum_{i \in S} \tilde{N}_i} = \frac{\sum_{u \in S} b_u^{(k)}}{\sum_{u \in S} N_u^{(k)}}$$
+
+(`eq:epoch:closed-cluster-mean`). The weighting is mandatory: the identity
+holds for the $\tilde{N}_i$-weighted mean only, and any restatement that drops
+the weight is false. For a cluster closed in both compared states, with $N$
+its aggregate action count and $R$ its reduced weighted mean, an accepted internal burn increment $\Delta B$ at
+fixed counts raises $R$ by exactly $\Delta B/(\nu N)$, and one additional
+internal accepted act without additional burn changes it by
+$-(R + \theta/\nu)/(N+1)$; neither identity fixes an individual coordinate. Standing transport within a closed community is purely
 distributive — no internal arrangement of regard, tilt, or transport may
 raise or lower what the community's ledger can back. Exact closure is a
 limit, not a field condition: a boundary carrying base-allocation weight at
