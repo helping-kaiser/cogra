@@ -43,13 +43,19 @@ struct Rig {
 
 impl Rig {
     fn new(pool: PgPool) -> Self {
+        Self::with_media(
+            pool,
+            api::media::MediaConfig {
+                base_url: "https://media.example/bucket".into(),
+                ..Default::default()
+            },
+        )
+    }
+
+    fn with_media(pool: PgPool, media: api::media::MediaConfig) -> Self {
         let standin = l1_standin::StandIn::new(pool.clone(), Default::default());
         let auth = api::auth::AuthConfig::ephemeral().expect("auth config");
         let blobs: Arc<dyn BlobStore> = Arc::new(api::media::blob::in_memory());
-        let media = api::media::MediaConfig {
-            base_url: "https://media.example/bucket".into(),
-            ..Default::default()
-        };
         let ctx = api::schema::ApiContext {
             pool: pool.clone(),
             boundary: api::l1::StandInBoundary(standin.clone()),
@@ -379,6 +385,50 @@ async fn a_video_nested_past_any_movie_is_refused_by_field(pool: PgPool) {
         .await
         .expect("count");
     assert_eq!(rows, 0, "a refused upload writes no row");
+}
+
+/// With every processing permit held, an upload that has fully arrived
+/// waits for one instead of reading its bytes into memory, and finishes
+/// once a permit is free.
+///
+/// An upload waits for a free processing permit before its bytes are read into memory.
+/// ´claim:media:an-upload-waits-for-a-processing-permit´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_upload_waits_while_every_processing_permit_is_held(pool: PgPool) {
+    let permits = api::media::ProcessPermits::new(1);
+    let rig = Rig::with_media(
+        pool,
+        api::media::MediaConfig {
+            base_url: "https://media.example/bucket".into(),
+            process_permits: permits.clone(),
+            ..Default::default()
+        },
+    );
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let held = permits.acquire().await.expect("the one permit");
+    let photo = photo_with_location();
+    let upload = rig.upload(&token, &photo);
+    tokio::pin!(upload);
+    assert!(
+        tokio::time::timeout(std::time::Duration::from_millis(500), &mut upload)
+            .await
+            .is_err(),
+        "the upload is processed while every permit is held"
+    );
+    let rows: i64 = sqlx::query_scalar("SELECT count(*) FROM media_attachments")
+        .fetch_one(&rig.pool)
+        .await
+        .expect("count");
+    assert_eq!(rows, 0, "nothing stored while it waits");
+
+    drop(held);
+    let uploaded = upload.await;
+    assert_eq!(
+        uploaded["media"]["state"], "READY",
+        "stored once the permit is free: {uploaded}"
+    );
 }
 
 /// An asset nobody attached is collected, row and object together.
