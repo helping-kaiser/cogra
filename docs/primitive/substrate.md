@@ -312,7 +312,9 @@ CoGra is the carriage service for its users' content. The model is
   store, verifiable against the committed digests. The witness
   covers the envelope bytes; external resources are witnessed
   transitively through their digests — substitution or rot is
-  publicly detectable evidence, not prevented delivery. The
+  publicly detectable evidence, not prevented delivery. The witness
+  compels neither availability nor honest rendering: an L2 may
+  withhold, substitute at render, or decline to verify. The
   transitive witness is **CoGra's guarantee, not the container's**:
   the envelope format registers no digest affordance and treats a
   referent as opaque, so the digests ride CoGra's own guild
@@ -320,7 +322,10 @@ CoGra is the carriage service for its users' content. The model is
   cannot interpret.
 - **Node type is never in the payload.** Type is fixed by the
   authoring L1 edge (declarative identity); envelope conformance is
-  a binary L2 admission check, never a ranking or reward signal.
+  a binary L2 admission check, never a ranking or reward signal. A
+  non-conforming payload still holds a valid, irrevocable, scored L1
+  act (``prop:graph:removable-projection-invariance``); it is only
+  invisible where conformance is enforced.
 - **Removal is the deletion story.** Payload state moves one way,
   full → reduced: removing payload and salt erases content — never
   rewrites it — while the structural record stays. The visible mark
