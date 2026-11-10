@@ -14,13 +14,13 @@ use common::l1::identifier::{ActId, NodeId};
 use l1_standin::{StandIn, StandInConfig};
 use sqlx::PgPool;
 
-const THETA: i64 = 1_000_000;
+/// The price every close charges (tests/host.rs explains why no other).
+const THETA: i64 = l1_standin::REFERENCE_THETA_MICRO;
 
 fn standin(pool: PgPool) -> StandIn {
     StandIn::new(
         pool,
         StandInConfig {
-            theta_micro: THETA,
             epoch_target_acts: 10_000,
             max_payload_bytes: 1024,
             ..StandInConfig::default()

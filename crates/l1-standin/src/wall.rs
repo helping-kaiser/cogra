@@ -245,7 +245,9 @@ pub struct Step {
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum WallError {
-    #[error("width {0} is not one the stand-in can propose for: q(W) is implemented at W = 0 and W = 1")]
+    #[error(
+        "width {0} is not one the stand-in can propose for: q(W) is implemented at W = 0 and W = 1"
+    )]
     UnsupportedWidth(Ratio),
     #[error("wall {0} is below the declared floor")]
     BelowFloor(Ratio),
@@ -311,7 +313,10 @@ mod tests {
             .checked_mul(D.controller.margin)
             .and_then(|m| m.checked_mul(D.controller.cumulative_tilt))
             .expect("exact");
-        assert_eq!(ratio_of(fence.denominator(), fence.numerator()), ratio_of(16, 75));
+        assert_eq!(
+            ratio_of(fence.denominator(), fence.numerator()),
+            ratio_of(16, 75)
+        );
         assert_eq!(D.burn_image(REFERENCE_WALL), Ok(REFERENCE_THETA_MICRO));
         assert_eq!(D.initialization, REFERENCE_WALL);
         assert_eq!((D.width, D.accepted_rung), (Ratio::ONE, Ratio::ZERO));

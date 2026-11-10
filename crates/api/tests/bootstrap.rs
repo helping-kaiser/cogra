@@ -139,6 +139,7 @@ async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
         "mirror_epochs",
         "l1_act_legs",
         "l1_acts",
+        "l1_epoch_ledger",
         "l1_epochs",
         "l1_node_state",
         "l1_accounts",
@@ -189,6 +190,7 @@ async fn a_repair_run_with_changed_input_is_refused(pool: PgPool) {
         "mirror_epochs",
         "l1_act_legs",
         "l1_acts",
+        "l1_epoch_ledger",
         "l1_epochs",
         "l1_node_state",
         "l1_accounts",
@@ -279,6 +281,7 @@ async fn rewind_to_partial_genesis(pool: &PgPool, keep: &[String]) {
     .await
     .expect("unorder");
     for table in [
+        "l1_epoch_ledger",
         "l1_epochs",
         "l1_node_state",
         "mirror_record_legs",

@@ -173,9 +173,11 @@ async fn main() -> anyhow::Result<()> {
             let (_, standin) = connect().await?;
             match standin.close_epoch().await? {
                 Some(package) => println!(
-                    "epoch {} closed with {} record(s)",
+                    "epoch {} closed with {} record(s), charged θ {} µ; next θ {} µ",
                     package.epoch,
-                    package.records.len()
+                    package.records.len(),
+                    package.closure.theta_charged_micro,
+                    standin.current_theta().await?
                 ),
                 None => println!("nothing orderable — no epoch closed"),
             }

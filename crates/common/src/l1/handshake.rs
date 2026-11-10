@@ -348,6 +348,7 @@ pub struct EpochPackage {
     pub attested_at: chrono::DateTime<chrono::Utc>,
     /// 𝒬_k in its published order; its length is the realized size.
     pub records: Vec<PublishedRecord>,
+    pub closure: EpochClosure,
 }
 
 /// An exact rational, in lowest terms with a positive denominator — how a
@@ -428,7 +429,10 @@ impl Ratio {
     }
 
     pub fn checked_sub(self, other: Ratio) -> Option<Ratio> {
-        self.checked_add(Ratio::from_wide(-(other.numerator as i128), other.denominator as i128)?)
+        self.checked_add(Ratio::from_wide(
+            -(other.numerator as i128),
+            other.denominator as i128,
+        )?)
     }
 
     pub fn checked_mul(self, other: Ratio) -> Option<Ratio> {
@@ -742,6 +746,7 @@ mod tests {
                     legs: vec![],
                 })
                 .collect(),
+            closure: EpochClosure::default(),
         }
     }
 

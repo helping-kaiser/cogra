@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT act_id, author, family, act_time AS \"act_time!\",\n                  position AS \"position!\", payload_len, content_commitment\n           FROM l1_acts WHERE epoch = $1 AND status = 'accepted'\n           ORDER BY position",
+  "query": "SELECT act_id, author, family, act_time AS \"act_time!\",\n                  position AS \"position!\", payload_len, content_commitment,\n                  asserted_parents, settlement_ref\n           FROM l1_acts WHERE epoch = $1 AND status = 'accepted'\n           ORDER BY position",
   "describe": {
     "columns": [
       {
@@ -37,6 +37,16 @@
         "ordinal": 6,
         "name": "content_commitment",
         "type_info": "Bytea"
+      },
+      {
+        "ordinal": 7,
+        "name": "asserted_parents",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 8,
+        "name": "settlement_ref",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -51,8 +61,10 @@
       true,
       true,
       false,
-      false
+      false,
+      false,
+      true
     ]
   },
-  "hash": "78a4fa317a184a53307b7cfa72a52c3524f180feab13b86be7bef7a19d0c10c5"
+  "hash": "c84d2444ac9e4c8786445d8ecad6c24d03567e9007b0e4900167aacb10fd9ff3"
 }

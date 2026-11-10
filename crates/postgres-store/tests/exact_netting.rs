@@ -46,6 +46,7 @@ async fn land(pool: &PgPool, epoch: i64, seq: u64, person: &str, (p_d, p_i): (f6
             epoch,
             attested_at: chrono::Utc::now(),
             records: vec![record],
+            closure: Default::default(),
         },
     )
     .await

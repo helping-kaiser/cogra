@@ -128,6 +128,7 @@ async fn seq_allocation_is_monotone_and_catches_up_with_the_mirror(pool: PgPool)
             epoch: 1,
             attested_at: chrono::Utc::now(),
             records: vec![published("alice", 7, Family::Registration, 1, 1)],
+            closure: Default::default(),
         },
     )
     .await
@@ -174,6 +175,7 @@ async fn seq_catch_up_agrees_with_the_rust_parser_and_survives_a_stray_row(pool:
             epoch: 1,
             attested_at: chrono::Utc::now(),
             records: vec![published("alice", 4, Family::Registration, 1, 1)],
+            closure: Default::default(),
         },
     )
     .await
@@ -346,6 +348,7 @@ async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: Pg
             epoch: 1,
             attested_at: chrono::Utc::now(),
             records: vec![published("alice", 0, Family::Opinion, 1, 1)],
+            closure: Default::default(),
         },
     )
     .await
@@ -469,6 +472,7 @@ async fn a_record_landing_after_expiry_still_promotes(pool: PgPool) {
             epoch: 1,
             attested_at: chrono::Utc::now(),
             records: vec![published("alice", 0, Family::Opinion, 1, 1)],
+            closure: Default::default(),
         },
     )
     .await

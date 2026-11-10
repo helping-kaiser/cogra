@@ -21,6 +21,7 @@ use std::path::{Path, PathBuf};
 const OWNERS: &[&str] = &[
     "20260724000003_l1_standin.sql",
     "20261007200000_l1_standin_admission_burns.sql",
+    "20261110210000_l1_standin_wall_controller.sql",
 ];
 
 /// The stand-in's own migrations that alter its tables without creating

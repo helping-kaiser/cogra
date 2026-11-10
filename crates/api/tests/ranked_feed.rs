@@ -155,6 +155,7 @@ async fn land(pool: &PgPool, records: Vec<PublishedRecord>) -> i64 {
             epoch,
             attested_at: landing_instant(epoch),
             records,
+            closure: Default::default(),
         },
     )
     .await

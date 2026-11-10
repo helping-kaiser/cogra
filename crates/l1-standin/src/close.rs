@@ -10,6 +10,17 @@
 //! W2a/W2b evaluation points are here so the real substrate's verdicts
 //! slot in at the swap (stamps ≡ 1 — see the crate root).
 //!
+//! # The price an epoch charges
+//!
+//! Close k charges θ^(k), the burn image of the wall in force: the wall
+//! close k − 1 delivered, or — when the last closed epoch ran no
+//! controller, or there is none — the declared initialization
+//! ([`crate::wall`]). The W1 solvency gate and every debit of the epoch read
+//! that one value, recorded as the epoch's debit vintage. The close then
+//! runs one controller step and publishes its delivered wall, whose burn
+//! image θ^(k+1) close k + 1 charges and [`crate::StandIn::current_theta`]
+//! reads in between (one-boundary lead, §11.8 X5).
+//!
 //! # The selection is pure; only the ends touch the database
 //!
 //! [`select_and_order`] takes the loaded rows and the ledger state and
@@ -62,11 +73,15 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use common::l1::census::LegRole;
-use common::l1::handshake::{EpochPackage, FIRST_POSITION, PublishedLeg, PublishedRecord};
+use common::l1::handshake::{
+    ClosureCause, EpochClosure, EpochPackage, FIRST_POSITION, LedgerLine, MarkerPolicy,
+    PublishedLeg, PublishedRecord, Ratio, WallStep,
+};
 use common::l1::identifier::NodeId;
 use sqlx::PgConnection;
 
 use crate::seal::{projection_legs, stored_body};
+use crate::wall::DECLARATION;
 use crate::{StandIn, StandInError};
 
 /// One approved act as the selection sees it: the parsed body plus the
@@ -79,9 +94,71 @@ pub(crate) struct Candidate {
     pub body: common::l1::StructuralBody,
     pub payload_len: usize,
     pub payload_witness: Vec<u8>,
-    /// Declared dependencies and asserted parents together — every act
-    /// this one must follow.
+    /// Declared dependencies and causal parents together — every act this
+    /// one must follow.
     pub prerequisites: Vec<String>,
+    /// The causal parents alone, which form the dependent-set partition.
+    pub parents: Vec<String>,
+}
+
+/// An act's causal parents (`def:graph:act-causal-parents`): its asserted
+/// parents and, for the settlement family, the act it settles — the
+/// settles-pointer is that family's instance of the field. Declared
+/// dependencies constrain placement but are not parents.
+pub(crate) fn causal_parents(
+    asserted_parents: &[String],
+    settlement_ref: Option<&String>,
+) -> Vec<String> {
+    let mut parents = asserted_parents.to_vec();
+    parents.extend(settlement_ref.cloned());
+    parents
+}
+
+/// The dependent-set partition of one epoch (`def:graph:dependent-act-set`):
+/// each act's principal closure is the act with its causal ancestors outside
+/// the history finalized before the epoch, and closures that intersect join
+/// one block. Two closures intersect exactly when the acts are linked
+/// through parents inside the epoch, so the blocks are the connected
+/// components of that relation — whatever order the acts are given in.
+///
+/// Takes each act's position, identifier and causal parents; returns the
+/// blocks as ascending positions, ordered by their first position.
+pub(crate) fn dependent_sets(acts: &[(i64, String, Vec<String>)]) -> Vec<Vec<i64>> {
+    let index: HashMap<&str, usize> = acts
+        .iter()
+        .enumerate()
+        .map(|(i, (_, id, _))| (id.as_str(), i))
+        .collect();
+    let mut root: Vec<usize> = (0..acts.len()).collect();
+    fn find(root: &mut [usize], mut i: usize) -> usize {
+        while root[i] != i {
+            root[i] = root[root[i]];
+            i = root[i];
+        }
+        i
+    }
+    for (i, (_, _, parents)) in acts.iter().enumerate() {
+        for parent in parents {
+            if let Some(&j) = index.get(parent.as_str()) {
+                let (a, b) = (find(&mut root, i), find(&mut root, j));
+                root[a.max(b)] = a.min(b);
+            }
+        }
+    }
+    let mut blocks: BTreeMap<usize, Vec<i64>> = BTreeMap::new();
+    for (i, (position, _, _)) in acts.iter().enumerate() {
+        let r = find(&mut root, i);
+        blocks.entry(r).or_default().push(*position);
+    }
+    let mut blocks: Vec<Vec<i64>> = blocks
+        .into_values()
+        .map(|mut block| {
+            block.sort_unstable();
+            block
+        })
+        .collect();
+    blocks.sort_unstable_by_key(|block| block.first().copied());
+    blocks
 }
 
 /// The ledger state a close reads and moves: act times already in history,
@@ -103,6 +180,7 @@ pub(crate) struct Selection {
     pub acts_per_author: BTreeMap<String, i64>,
     /// Only the nodes this epoch moved, as (frontier, degree).
     pub touched_nodes: BTreeMap<String, (i64, i64)>,
+    pub dependent_sets: Vec<Vec<i64>>,
 }
 
 /// The selection, ordering and maturity replay, over loaded state alone.
@@ -254,8 +332,20 @@ pub(crate) fn select_and_order(
         .map(|(_, candidate)| candidate.prerequisites.as_slice())
         .collect();
     linearizes(&records, &prerequisites, &state.accepted_times)?;
+    let parents: Vec<(i64, String, Vec<String>)> = records
+        .iter()
+        .zip(&ordered)
+        .map(|(record, (_, candidate))| {
+            (
+                record.position,
+                candidate.act_id.clone(),
+                candidate.parents.clone(),
+            )
+        })
+        .collect();
 
     Ok(Selection {
+        dependent_sets: dependent_sets(&parents),
         records,
         acts_per_author,
         touched_nodes: touched,
@@ -302,9 +392,10 @@ fn linearizes(
 /// Persisted with the accepted acts' causal keys and legs: the θ-debit and
 /// count increment, consummated at the writing epoch's price and never
 /// re-calculated (§11.7); the node state the epoch moved; and the epoch
-/// row. The admission burns due by this epoch settle in the same
-/// transaction, after the selection: a burn pinned by epoch k funds acts
-/// from epoch k + 1 on, never the epoch it was pinned in.
+/// row with its closure outputs and final ledger. The admission burns due
+/// by this epoch settle in the same transaction, after the selection: a
+/// burn pinned by epoch k funds acts from epoch k + 1 on, never the epoch
+/// it was pinned in.
 pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage>, StandInError> {
     standin.config().check()?;
     let mut tx = standin.pool().begin().await?;
@@ -313,6 +404,8 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
         .execute(&mut *tx)
         .await?;
     let epoch = crate::last_closed_epoch(&mut tx).await? + 1;
+    let wall_in_force = load_wall_in_force(&mut tx).await?;
+    let theta = DECLARATION.burn_image(wall_in_force).map_err(wall_fault)?;
 
     let rows = sqlx::query!(
         "SELECT act_id, author, seq, family, middle, target, p_d, p_i,
@@ -330,8 +423,9 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
 
     let mut candidates = Vec::with_capacity(rows.len());
     for row in &rows {
+        let parents = causal_parents(&row.asserted_parents, row.settlement_ref.as_ref());
         let mut prerequisites = row.deps.clone();
-        prerequisites.extend(row.asserted_parents.iter().cloned());
+        prerequisites.extend(parents.iter().cloned());
         candidates.push(Candidate {
             act_id: row.act_id.clone(),
             author: row.author.clone(),
@@ -341,6 +435,7 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
             })?,
             payload_witness: row.content_commitment.clone(),
             prerequisites,
+            parents,
         });
     }
 
@@ -355,16 +450,21 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
 
     let authors: HashSet<&str> = candidates.iter().map(|c| c.author.as_str()).collect();
     let author_list: Vec<String> = authors.into_iter().map(str::to_string).collect();
-    let balances: HashMap<String, i64> = sqlx::query!(
-        "SELECT address, balance_micro FROM l1_accounts
+    let accounts = sqlx::query!(
+        "SELECT address, balance_micro, action_count FROM l1_accounts
          WHERE address = ANY($1) FOR UPDATE",
         &author_list,
     )
     .fetch_all(&mut *tx)
-    .await?
-    .into_iter()
-    .map(|r| (r.address, r.balance_micro))
-    .collect();
+    .await?;
+    let counts: HashMap<String, i64> = accounts
+        .iter()
+        .map(|r| (r.address.clone(), r.action_count))
+        .collect();
+    let balances: HashMap<String, i64> = accounts
+        .into_iter()
+        .map(|r| (r.address, r.balance_micro))
+        .collect();
 
     let mut frontiers: HashMap<String, i64> = HashMap::new();
     let mut degrees: HashMap<String, i64> = HashMap::new();
@@ -382,29 +482,110 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
         degrees,
     };
 
-    let selection = select_and_order(
-        candidates,
-        &mut state,
-        epoch,
-        standin.config().theta_micro,
-        standin.config().epoch_target_acts,
-    )?;
+    let budget = standin.config().epoch_target_acts;
+    let selection = select_and_order(candidates, &mut state, epoch, theta, budget)?;
     if selection.records.is_empty() {
         tx.rollback().await?;
         return Ok(None);
     }
 
-    let attested_at = persist(&mut tx, epoch, &selection, standin.config().theta_micro).await?;
+    let closure = closure_outputs(&selection, &state, &counts, wall_in_force, theta, budget)?;
+    let attested_at = persist(&mut tx, epoch, &selection, &closure).await?;
     crate::settle_due(&mut tx, epoch).await?;
     let package = EpochPackage {
         epoch,
         attested_at,
         records: selection.records,
+        closure,
     };
     publishable(&package)?;
     tx.commit().await?;
 
     Ok(Some(package))
+}
+
+/// The wall in force at the next close: what the last closed epoch's
+/// controller step delivered, or the declared initialization when there is
+/// no closed epoch or the last one ran no controller.
+async fn load_wall_in_force(conn: &mut PgConnection) -> Result<Ratio, StandInError> {
+    let last = sqlx::query!(
+        "SELECT delivered_num, delivered_den FROM l1_epochs ORDER BY epoch DESC LIMIT 1"
+    )
+    .fetch_optional(conn)
+    .await?;
+    match last.and_then(|row| row.delivered_num.zip(row.delivered_den)) {
+        Some((n, d)) => stored_ratio(n, d),
+        None => Ok(DECLARATION.initialization),
+    }
+}
+
+/// θ^(k+1) as the last close published it — the price the next close
+/// charges — or the initialization's burn image before any controller step.
+pub(crate) async fn current_theta(standin: &StandIn) -> Result<i64, StandInError> {
+    let mut conn = standin.pool().acquire().await?;
+    let wall = load_wall_in_force(&mut conn).await?;
+    DECLARATION.burn_image(wall).map_err(wall_fault)
+}
+
+fn wall_fault(e: crate::wall::WallError) -> StandInError {
+    StandInError::Host(format!("wall controller: {e}"))
+}
+
+fn stored_ratio(numerator: i64, denominator: i64) -> Result<Ratio, StandInError> {
+    Ratio::new(numerator, denominator).ok_or_else(|| {
+        StandInError::Host(format!(
+            "stored ratio {numerator}/{denominator} has no value"
+        ))
+    })
+}
+
+/// The closure outputs of a selected epoch: why it closed, its partition,
+/// its final ledger at the debit vintage it was charged, and one controller
+/// step from the wall in force under the deployment's declared inputs.
+fn closure_outputs(
+    selection: &Selection,
+    state: &LedgerState,
+    counts_before: &HashMap<String, i64>,
+    wall_in_force: Ratio,
+    theta: i64,
+    budget: i64,
+) -> Result<EpochClosure, StandInError> {
+    let size = i64::try_from(selection.records.len()).unwrap_or(i64::MAX);
+    let cause = if size >= budget {
+        ClosureCause::TargetFilled
+    } else {
+        ClosureCause::DurationElapsed
+    };
+    let mut ledger = Vec::with_capacity(selection.acts_per_author.len());
+    for (address, acts) in &selection.acts_per_author {
+        let residual = state.balances.get(address).copied().ok_or_else(|| {
+            StandInError::Host(format!("author {address} landed acts with no account"))
+        })?;
+        ledger.push(LedgerLine {
+            address: address.clone(),
+            accepted_acts: *acts,
+            action_count: counts_before.get(address).copied().unwrap_or(0) + acts,
+            residual_balance_micro: Some(residual),
+        });
+    }
+    let step = DECLARATION
+        .step(wall_in_force, DECLARATION.width, DECLARATION.accepted_rung)
+        .map_err(wall_fault)?;
+    Ok(EpochClosure {
+        cause,
+        dependent_sets: selection.dependent_sets.clone(),
+        ledger,
+        theta_charged_micro: theta,
+        wall: Some(WallStep {
+            wall_in_force,
+            width: DECLARATION.width,
+            accepted_rung: DECLARATION.accepted_rung,
+            proposal: step.proposal,
+            delivered: step.delivered,
+            theta_next_micro: DECLARATION.burn_image(step.delivered).map_err(wall_fault)?,
+        }),
+        marker: DECLARATION.marker(),
+    })
 }
 
 /// The package has an order of record — epoch and positions numbered from
@@ -434,8 +615,9 @@ async fn persist(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     epoch: i64,
     selection: &Selection,
-    theta: i64,
+    closure: &EpochClosure,
 ) -> Result<chrono::DateTime<chrono::Utc>, StandInError> {
+    let theta = closure.theta_charged_micro;
     let mut act_ids: Vec<String> = Vec::with_capacity(selection.records.len());
     let mut act_times: Vec<i64> = Vec::with_capacity(selection.records.len());
     let mut positions: Vec<i64> = Vec::with_capacity(selection.records.len());
@@ -531,13 +713,63 @@ async fn persist(
     .execute(&mut **tx)
     .await?;
 
-    Ok(sqlx::query_scalar!(
-        "INSERT INTO l1_epochs (epoch, act_count) VALUES ($1, $2) RETURNING closed_at",
+    let step = closure
+        .wall
+        .as_ref()
+        .ok_or_else(|| StandInError::Host("a close publishes its controller step".into()))?;
+    let attested_at = sqlx::query_scalar!(
+        "INSERT INTO l1_epochs
+             (epoch, act_count, theta_charged_micro, closure_cause,
+              marker_policy, marker_edition,
+              wall_num, wall_den, width_num, width_den, rung_num, rung_den,
+              proposal_num, proposal_den, delivered_num, delivered_den,
+              theta_next_micro)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+         RETURNING closed_at",
         epoch,
         selection.records.len() as i64,
+        theta,
+        closure.cause.as_str(),
+        closure.marker.identity,
+        closure.marker.edition,
+        step.wall_in_force.numerator(),
+        step.wall_in_force.denominator(),
+        step.width.numerator(),
+        step.width.denominator(),
+        step.accepted_rung.numerator(),
+        step.accepted_rung.denominator(),
+        step.proposal.numerator(),
+        step.proposal.denominator(),
+        step.delivered.numerator(),
+        step.delivered.denominator(),
+        step.theta_next_micro,
     )
     .fetch_one(&mut **tx)
-    .await?)
+    .await?;
+
+    let mut addresses: Vec<String> = Vec::with_capacity(closure.ledger.len());
+    let mut accepted: Vec<i64> = Vec::with_capacity(closure.ledger.len());
+    let mut action_counts: Vec<i64> = Vec::with_capacity(closure.ledger.len());
+    let mut residuals: Vec<Option<i64>> = Vec::with_capacity(closure.ledger.len());
+    for line in &closure.ledger {
+        addresses.push(line.address.clone());
+        accepted.push(line.accepted_acts);
+        action_counts.push(line.action_count);
+        residuals.push(line.residual_balance_micro);
+    }
+    sqlx::query!(
+        "INSERT INTO l1_epoch_ledger (epoch, address, accepted_acts, action_count, balance_micro)
+         SELECT $1, * FROM UNNEST($2::TEXT[], $3::BIGINT[], $4::BIGINT[], $5::BIGINT[])",
+        epoch,
+        &addresses,
+        &accepted,
+        &action_counts,
+        &residuals as &[Option<i64>],
+    )
+    .execute(&mut **tx)
+    .await?;
+
+    Ok(attested_at)
 }
 
 pub(crate) async fn epochs_since(
@@ -546,21 +778,76 @@ pub(crate) async fn epochs_since(
 ) -> Result<Vec<EpochPackage>, StandInError> {
     let mut conn = standin.pool().acquire().await?;
     let epochs = sqlx::query!(
-        "SELECT epoch, closed_at FROM l1_epochs WHERE epoch > $1 ORDER BY epoch",
+        "SELECT epoch, closed_at, theta_charged_micro, closure_cause,
+                marker_policy, marker_edition,
+                wall_num, wall_den, width_num, width_den, rung_num, rung_den,
+                proposal_num, proposal_den, delivered_num, delivered_den,
+                theta_next_micro
+         FROM l1_epochs WHERE epoch > $1 ORDER BY epoch",
         after,
     )
     .fetch_all(&mut *conn)
     .await?;
     let mut packages = Vec::with_capacity(epochs.len());
     for e in epochs {
-        packages.push(load_epoch(&mut conn, e.epoch, e.closed_at).await?);
+        let wall = match (
+            e.wall_num,
+            e.wall_den,
+            e.width_num,
+            e.width_den,
+            e.rung_num,
+            e.rung_den,
+            e.proposal_num,
+            e.proposal_den,
+            e.delivered_num,
+            e.delivered_den,
+            e.theta_next_micro,
+        ) {
+            (
+                Some(wall_n),
+                Some(wall_d),
+                Some(width_n),
+                Some(width_d),
+                Some(rung_n),
+                Some(rung_d),
+                Some(proposal_n),
+                Some(proposal_d),
+                Some(delivered_n),
+                Some(delivered_d),
+                Some(theta_next_micro),
+            ) => Some(WallStep {
+                wall_in_force: stored_ratio(wall_n, wall_d)?,
+                width: stored_ratio(width_n, width_d)?,
+                accepted_rung: stored_ratio(rung_n, rung_d)?,
+                proposal: stored_ratio(proposal_n, proposal_d)?,
+                delivered: stored_ratio(delivered_n, delivered_d)?,
+                theta_next_micro,
+            }),
+            _ => None,
+        };
+        let cause = ClosureCause::parse(&e.closure_cause).ok_or_else(|| {
+            StandInError::Host(format!("stored closure cause {} unknown", e.closure_cause))
+        })?;
+        let mut package = load_epoch(&mut conn, e.epoch, e.closed_at).await?;
+        package.closure.cause = cause;
+        package.closure.theta_charged_micro = e.theta_charged_micro;
+        package.closure.wall = wall;
+        package.closure.marker = MarkerPolicy {
+            identity: e.marker_policy,
+            edition: e.marker_edition,
+        };
+        packages.push(package);
     }
     Ok(packages)
 }
 
-/// Rebuilds one published epoch's records from storage, in position
-/// order. Each record's legs are read back ordered by role ('a' before
-/// 't' lexically), matching `projection_legs`'s own ordering.
+/// Rebuilds one published epoch's records and final ledger from storage,
+/// in position order, with its dependent-set partition recomputed from
+/// the records' stored causal parents — immutable structural fields, so
+/// the partition reads back as the close published it. Each record's legs
+/// are read back ordered by role ('a' before 't' lexically), matching
+/// `projection_legs`'s own ordering. The epoch row's own closure columns
+/// are the caller's.
 ///
 /// The legs come back in one query and are grouped in memory: a query per
 /// record is the same N+1 the write side avoids.
@@ -571,13 +858,40 @@ async fn load_epoch(
 ) -> Result<EpochPackage, StandInError> {
     let rows = sqlx::query!(
         r#"SELECT act_id, author, family, act_time AS "act_time!",
-                  position AS "position!", payload_len, content_commitment
+                  position AS "position!", payload_len, content_commitment,
+                  asserted_parents, settlement_ref
            FROM l1_acts WHERE epoch = $1 AND status = 'accepted'
            ORDER BY position"#,
         epoch,
     )
     .fetch_all(&mut *conn)
     .await?;
+    let parents: Vec<(i64, String, Vec<String>)> = rows
+        .iter()
+        .map(|r| {
+            (
+                r.position,
+                r.act_id.clone(),
+                causal_parents(&r.asserted_parents, r.settlement_ref.as_ref()),
+            )
+        })
+        .collect();
+
+    let ledger = sqlx::query!(
+        r#"SELECT address, accepted_acts, action_count, balance_micro
+           FROM l1_epoch_ledger WHERE epoch = $1 ORDER BY address COLLATE "C""#,
+        epoch,
+    )
+    .fetch_all(&mut *conn)
+    .await?
+    .into_iter()
+    .map(|l| LedgerLine {
+        address: l.address,
+        accepted_acts: l.accepted_acts,
+        action_count: l.action_count,
+        residual_balance_micro: l.balance_micro,
+    })
+    .collect();
 
     let act_ids: Vec<String> = rows.iter().map(|r| r.act_id.clone()).collect();
     let mut legs_by_act: HashMap<String, Vec<PublishedLeg>> = HashMap::new();
@@ -622,6 +936,11 @@ async fn load_epoch(
         epoch,
         attested_at,
         records,
+        closure: EpochClosure {
+            dependent_sets: dependent_sets(&parents),
+            ledger,
+            ..EpochClosure::default()
+        },
     })
 }
 
@@ -631,7 +950,7 @@ mod tests {
     use common::l1::Family;
     use common::l1::identifier::ActId;
 
-    const THETA: i64 = 1_000_000;
+    const THETA: i64 = crate::REFERENCE_THETA_MICRO;
 
     fn candidate(author: &str, seq: u64, target: &str, prerequisites: &[&str]) -> Candidate {
         let body = common::l1::StructuralBody {
@@ -653,6 +972,7 @@ mod tests {
             payload_len: 0,
             payload_witness: vec![],
             prerequisites: prerequisites.iter().map(|p| p.to_string()).collect(),
+            parents: vec![],
         }
     }
 
@@ -842,6 +1162,7 @@ mod tests {
             epoch: 4,
             attested_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
             records: selection.records,
+            closure: EpochClosure::default(),
         };
         let positions: Vec<i64> = package.records.iter().map(|r| r.position).collect();
         assert_eq!(positions, vec![1, 2, 3]);
@@ -872,6 +1193,7 @@ mod tests {
             epoch: 0,
             attested_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
             records: selection.records,
+            closure: EpochClosure::default(),
         };
         assert!(matches!(publishable(&package), Err(StandInError::Host(_))));
         package.epoch = 1;
@@ -911,6 +1233,7 @@ mod tests {
             payload_len: 0,
             payload_witness: vec![],
             prerequisites: vec![],
+            parents: vec![],
         };
 
         let mut state = funded(&["alice"], 4);
@@ -935,6 +1258,58 @@ mod tests {
         assert!(
             second.records[0].legs.iter().all(|leg| leg.tau > 0.0),
             "the endpoints have matured"
+        );
+    }
+
+    /// The partition joins acts linked through causal parents inside the
+    /// epoch and nothing else: a parent already in history joins nobody,
+    /// even when two acts share it, and a declared dependency is not a
+    /// parent. The blocks are the same however the acts are listed.
+    ///
+    /// The dependent-set partition joins acts linked through in-epoch causal parents, and only those.
+    /// ´claim:close:the-partition-joins-in-epoch-causal-parents-only´
+    #[test]
+    fn the_partition_joins_in_epoch_causal_parents_only() {
+        let acts: Vec<(i64, String, Vec<String>)> = vec![
+            (1, "a".into(), vec![]),
+            (2, "b".into(), vec!["a".into()]),
+            (3, "c".into(), vec!["historical".into()]),
+            (4, "d".into(), vec!["c".into()]),
+            (5, "e".into(), vec!["historical".into()]),
+            (6, "f".into(), vec!["d".into(), "b".into()]),
+            (7, "g".into(), vec![]),
+        ];
+        assert_eq!(
+            dependent_sets(&acts),
+            vec![vec![1, 2, 3, 4, 6], vec![5], vec![7]]
+        );
+        let mut reversed = acts.clone();
+        reversed.reverse();
+        assert_eq!(dependent_sets(&reversed), dependent_sets(&acts));
+        assert_eq!(dependent_sets(&acts[..2]), vec![vec![1, 2]]);
+        assert!(dependent_sets(&[]).is_empty());
+
+        assert_eq!(
+            causal_parents(&["p".to_string()], Some(&"settled".to_string())),
+            vec!["p".to_string(), "settled".to_string()],
+            "the settles-pointer is a causal parent"
+        );
+
+        let mut state = funded(&["alice"], 3);
+        let mut dependent = candidate("alice", 1, "bob", &[&id("alice", 0)]);
+        dependent.parents = vec![];
+        let selection = select_and_order(
+            vec![candidate("alice", 0, "bob", &[]), dependent],
+            &mut state,
+            1,
+            THETA,
+            10,
+        )
+        .expect("selects");
+        assert_eq!(
+            selection.dependent_sets,
+            vec![vec![1], vec![2]],
+            "a declared dependency orders the pair but does not join their blocks"
         );
     }
 

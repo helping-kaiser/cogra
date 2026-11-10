@@ -13,7 +13,9 @@
 //!   the conserved standing solve of §11.3–11.5 is not — every act's
 //!   stamp is taken as 1, so the W2a wall and W2b door pass trivially.
 //!   The gates' call-sites are real; the real substrate supplies the
-//!   real stamps.
+//!   real stamps. With no solve there is no measured width either: the
+//!   wall controller runs at every close with its width input held at 1,
+//!   so θ sits at the reference (wall.rs).
 //!
 //! This crate owns the l1_* tables directly — the named exception to "SQL
 //! only in postgres-store" (CLAUDE.md) — and is the only code that
@@ -41,14 +43,13 @@ use sqlx::{PgConnection, PgPool};
 use tokio::sync::OnceCell;
 
 /// Operating values for the constants layer1-interface.md §6 marks
-/// "illustrative, not locked": the per-act price θ (micro-units), the
-/// epoch act budget N_epoch, and the payload carriage bound M_payload —
-/// plus the one stand-in knob that is not a protocol constant, the
-/// settlement delay of an admission burn.
+/// "illustrative, not locked": the epoch act budget N_epoch and the
+/// payload carriage bound M_payload — plus the one stand-in knob that is
+/// not a protocol constant, the settlement delay of an admission burn.
+/// The per-act price θ is not among them: it is the wall controller's
+/// output, never a host input ([`wall`]).
 #[derive(Debug, Clone)]
 pub struct StandInConfig {
-    /// θ in integer micro-units (1e-6).
-    pub theta_micro: i64,
     /// N_epoch — the epoch target act budget (layer1-interface.md §11.6).
     pub epoch_target_acts: i64,
     /// M_payload — per-act payload bound, aggregate over a hyper-edge's
@@ -64,23 +65,11 @@ pub struct StandInConfig {
 }
 
 impl StandInConfig {
-    /// The default act price in micro-units. Named so a caller pricing a
-    /// batch against it — a test funding an author for exactly N acts —
-    /// states the multiple rather than a bare number.
-    pub const DEFAULT_THETA_MICRO: i64 = 52_810;
-
-    /// A checked config. The three values are operating constants, not free
-    /// parameters: a non-positive θ lets an author with no account at all
-    /// pass the solvency gate, a non-positive act budget defers every
-    /// candidate, and a zero payload bound admits no act that carries
-    /// anything.
-    pub fn new(
-        theta_micro: i64,
-        epoch_target_acts: i64,
-        max_payload_bytes: usize,
-    ) -> Result<Self, StandInError> {
+    /// A checked config. The two values are operating constants, not free
+    /// parameters: a non-positive act budget defers every candidate, and a
+    /// zero payload bound admits no act that carries anything.
+    pub fn new(epoch_target_acts: i64, max_payload_bytes: usize) -> Result<Self, StandInError> {
         let config = Self {
-            theta_micro,
             epoch_target_acts,
             max_payload_bytes,
             settlement_delay_epochs: 0,
@@ -102,12 +91,6 @@ impl StandInConfig {
     /// runs it before every close, so a degenerate value is refused rather
     /// than quietly degrading the epoch it governs.
     pub fn check(&self) -> Result<(), StandInError> {
-        if self.theta_micro <= 0 {
-            return Err(StandInError::Host(format!(
-                "θ must be positive, got {}",
-                self.theta_micro
-            )));
-        }
         if self.epoch_target_acts <= 0 {
             return Err(StandInError::Host(format!(
                 "the epoch act budget must be positive, got {}",
@@ -132,7 +115,6 @@ impl StandInConfig {
 impl Default for StandInConfig {
     fn default() -> Self {
         Self {
-            theta_micro: Self::DEFAULT_THETA_MICRO,
             epoch_target_acts: 10_000,
             max_payload_bytes: 64 * 1024,
             settlement_delay_epochs: 0,
@@ -389,6 +371,14 @@ impl StandIn {
             balance: balance as f64 / 1e6,
             action_count: count,
         })
+    }
+
+    /// The published θ in micro-units: θ^(k+1), the burn image of the wall
+    /// the last close delivered, which the next close charges — or, before
+    /// any controller step, the declared initialization's
+    /// (layer1-interface.md §11.8, one-boundary lead).
+    pub async fn current_theta(&self) -> Result<i64, StandInError> {
+        close::current_theta(self).await
     }
 
     /// Relay leg 1 — seal: verify the pre-signed proposal, add salts and

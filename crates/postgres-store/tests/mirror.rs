@@ -40,6 +40,7 @@ fn package(epoch: i64, records: Vec<PublishedRecord>) -> EpochPackage {
         epoch,
         attested_at: closed_at(epoch),
         records,
+        closure: Default::default(),
     }
 }
 
