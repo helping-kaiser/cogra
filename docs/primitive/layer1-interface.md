@@ -2114,7 +2114,7 @@ hygiene. Under this default, De-invite
 records are **advisory**: they enter only through a published chat/guild
 policy $\mathcal{P}$ naming an authority set (published per
 `subsec:deployment:completeness`). Where $\mathcal{P}$ recognizes one, the
-conservative rule governs — a recognized De-invite defeats membership only if
+conservative rule governs — a recognized De-invite defeats membership iff
 it strictly $\prec$-follows the $\prec$-maximal element of $M(a,C)$ (a
 concurrent or earlier one is inert, mirroring the epoch title fold), and a
 Participant strictly $\prec$-following the De-invite re-establishes membership
