@@ -200,11 +200,18 @@ pub(crate) struct Selection {
 /// selected act's Lamport time is one more than the maximum over its
 /// incident endpoints' frontiers and its prerequisites' times.
 ///
-/// The authoritative order is the stable sort by Lamport time — position
-/// totalizes equal frontiers, per layer1-interface.md §8.3's
-/// authoritative-order rule, numbering the epoch's acts from 1 to
-/// |𝒬_k|. Replay in that published order derives
-/// maturities from the pre-act projected degrees; both legs of a
+/// The published order is the host's choice (layer1-interface.md §8.3,
+/// `rem:graph:host-ordering-discretion`): this host takes the stable sort
+/// of the selection by those Lamport times, and positions number it from 1
+/// to |𝒬_k|. That sequence is the order of record; the act time each record
+/// carries is the §8.3 recurrence recomputed along it, which the selection's
+/// times already are: everything that raised an act's inputs during the
+/// selection — a prerequisite, or an earlier pick sharing an endpoint — has
+/// a strictly lower time and so sorts before it, and nothing sorting before
+/// it without such a link touches its inputs.
+/// `the_published_act_times_are_the_recurrence_along_the_positions` checks
+/// that over arbitrary candidate sets. Replay in the published order
+/// derives maturities from the pre-act projected degrees; both legs of a
 /// hyper-edge see the same pre-act state and do not mature one another.
 pub(crate) fn select_and_order(
     candidates: Vec<Candidate>,
@@ -352,8 +359,11 @@ pub(crate) fn select_and_order(
     })
 }
 
-/// Every record's prerequisites are either earlier in this epoch or already
-/// in history at a strictly smaller time.
+/// Every record's prerequisites lie at a strictly lower key of record:
+/// earlier in this epoch, or anywhere in accepted history, every act of
+/// which sits in an earlier epoch. Precedence is read off membership and
+/// position, never off a time comparison (layer1-interface.md §8.3,
+/// `cond:graph:authoritative-order-dependency-placement`).
 ///
 /// The selection loop guarantees it; this is the check that keeps a
 /// violation from becoming durable, so it runs before the transaction
@@ -363,15 +373,12 @@ pub(crate) fn select_and_order(
 fn linearizes(
     records: &[PublishedRecord],
     prerequisites: &[&[String]],
-    accepted_times: &HashMap<String, i64>,
+    accepted: &HashMap<String, i64>,
 ) -> Result<(), StandInError> {
     let mut earlier: HashSet<String> = HashSet::new();
     for (record, needed) in records.iter().zip(prerequisites) {
         for dependency in *needed {
-            let honored = earlier.contains(dependency)
-                || accepted_times
-                    .get(dependency)
-                    .is_some_and(|t| *t < record.act_time);
+            let honored = earlier.contains(dependency) || accepted.contains_key(dependency);
             if !honored {
                 return Err(StandInError::Host(format!(
                     "published order fails to linearize {} before {}",
@@ -1311,6 +1318,200 @@ mod tests {
             vec![vec![1], vec![2]],
             "a declared dependency orders the pair but does not join their blocks"
         );
+    }
+
+    /// A dependency in accepted history is honored by membership: it sits
+    /// in an earlier epoch, so at a lower key of record, even where its act
+    /// time is higher than the dependent's — times on disjoint endpoints
+    /// order nothing. A dependency in neither history nor the earlier part
+    /// of the epoch is refused.
+    ///
+    /// A history dependency is honored by membership, never by comparing act times.
+    /// ´claim:close:a-history-dependency-is-honored-by-membership´
+    #[test]
+    fn a_history_dependency_is_honored_by_membership() {
+        let mut state = funded(&["alice"], 1);
+        let selection = select_and_order(
+            vec![candidate("alice", 0, "bob", &[])],
+            &mut state,
+            2,
+            THETA,
+            10,
+        )
+        .expect("selects");
+        let low_time = &selection.records;
+        assert_eq!(low_time[0].act_time, 1);
+        let history: HashMap<String, i64> = [("act:carol:0:opinion".to_string(), 9)].into();
+        let needs = ["act:carol:0:opinion".to_string()];
+        linearizes(low_time, &[&needs[..]], &history)
+            .expect("an accepted act precedes every act of a later epoch");
+        let unknown = ["act:nobody:0:opinion".to_string()];
+        assert!(matches!(
+            linearizes(low_time, &[&unknown[..]], &history),
+            Err(StandInError::Host(_))
+        ));
+    }
+
+    /// One generated candidate: author, target node, whether it is a hyper
+    /// act through a middle node, and which earlier candidates or history
+    /// acts it must follow.
+    #[derive(Debug, Clone)]
+    struct Shape {
+        author: usize,
+        target: usize,
+        hyper: Option<usize>,
+        prerequisites: Vec<usize>,
+        history: Vec<usize>,
+    }
+
+    const AUTHORS: [&str; 3] = ["alice", "bob", "carol"];
+    const NODES: usize = 5;
+    const HISTORY: [(&str, i64); 3] = [
+        ("act:hist:0:opinion", 3),
+        ("act:hist:1:opinion", 7),
+        ("act:hist:2:opinion", 1),
+    ];
+
+    fn shapes() -> impl proptest::strategy::Strategy<Value = Vec<Shape>> {
+        use proptest::prelude::*;
+        let shape = (
+            0..AUTHORS.len(),
+            0..NODES,
+            proptest::option::of(0..NODES),
+            proptest::collection::vec(0usize..12, 0..3),
+            proptest::collection::vec(0..HISTORY.len(), 0..2),
+        )
+            .prop_map(|(author, target, hyper, prerequisites, history)| Shape {
+                author,
+                target,
+                hyper,
+                prerequisites,
+                history,
+            });
+        proptest::collection::vec(shape, 1..12)
+    }
+
+    fn generated(shapes: &[Shape]) -> Vec<Candidate> {
+        let ids: Vec<String> = shapes
+            .iter()
+            .enumerate()
+            .map(|(seq, s)| {
+                let family = if s.hyper.is_some() {
+                    Family::Tag
+                } else {
+                    Family::Opinion
+                };
+                ActId::new(AUTHORS[s.author], seq as u64, family)
+                    .expect("valid")
+                    .to_string()
+            })
+            .collect();
+        shapes
+            .iter()
+            .enumerate()
+            .map(|(seq, s)| {
+                let body = common::l1::StructuralBody {
+                    author: AUTHORS[s.author].to_string(),
+                    seq: seq as u64,
+                    family: if s.hyper.is_some() {
+                        Family::Tag
+                    } else {
+                        Family::Opinion
+                    },
+                    middle: s.hyper.map(|m| NodeId::Prof(format!("n{m}"))),
+                    target: match s.hyper {
+                        Some(_) => NodeId::name(&format!("role{}", s.target)).expect("name"),
+                        None => NodeId::Prof(format!("n{}", s.target)),
+                    },
+                    p_d: 0.0,
+                    p_i: 0.0,
+                    settlement_ref: None,
+                    license: None,
+                    asserted_parents: vec![],
+                };
+                let mut prerequisites: Vec<String> = s
+                    .prerequisites
+                    .iter()
+                    .filter(|&&p| p != seq && p < shapes.len())
+                    .map(|&p| ids[p].clone())
+                    .collect();
+                prerequisites.extend(s.history.iter().map(|&h| HISTORY[h].0.to_string()));
+                Candidate {
+                    act_id: ids[seq].clone(),
+                    author: AUTHORS[s.author].to_string(),
+                    body,
+                    payload_len: 0,
+                    payload_witness: vec![],
+                    prerequisites,
+                    parents: vec![],
+                }
+            })
+            .collect()
+    }
+
+    use proptest::{prop_assert, prop_assert_eq};
+
+    proptest::proptest! {
+        /// Over arbitrary candidate sets — shared and disjoint endpoints,
+        /// binary and hyper acts, in-epoch and history prerequisites,
+        /// dependency cycles that can never land, and a budget that may
+        /// cut the epoch short — the §8.3 recurrence recomputed along the
+        /// published positions, from the frontiers the epoch started with,
+        /// reproduces every published act time: one more than the maximum
+        /// over the act's incident endpoints' frontiers and its finalized
+        /// predecessors' times. Every prerequisite sits at a lower key.
+        ///
+        /// The published act times are the §8.3 recurrence recomputed along the published positions.
+        /// ´claim:close:act-times-are-the-recurrence-along-the-positions´
+        #[test]
+        fn the_published_act_times_are_the_recurrence_along_the_positions(
+            shapes in shapes(),
+            frontiers in proptest::collection::vec(0i64..10, NODES),
+            budget in 1i64..14,
+        ) {
+            let candidates = generated(&shapes);
+            let prerequisites: HashMap<String, Vec<String>> = candidates
+                .iter()
+                .map(|c| (c.act_id.clone(), c.prerequisites.clone()))
+                .collect();
+            let mut state = funded(&AUTHORS, 20);
+            state.accepted_times = HISTORY.iter().map(|(id, t)| (id.to_string(), *t)).collect();
+            state.frontiers = (0..NODES)
+                .map(|n| (NodeId::Prof(format!("n{n}")).to_string(), frontiers[n]))
+                .collect();
+            let start = state.clone();
+
+            let selection = select_and_order(candidates, &mut state, 3, THETA, budget)
+                .expect("selects");
+            prop_assert!(selection.records.len() as i64 <= budget);
+
+            let mut frontier = start.frontiers.clone();
+            let mut finalized = start.accepted_times.clone();
+            for (expected_position, record) in (FIRST_POSITION..).zip(&selection.records) {
+                prop_assert_eq!(record.position, expected_position);
+                let id = record.act_id.to_string();
+                let mut endpoints: Vec<String> = Vec::new();
+                for leg in &record.legs {
+                    endpoints.push(leg.source.to_string());
+                    endpoints.push(leg.target.to_string());
+                }
+                let mut base = 0;
+                for endpoint in &endpoints {
+                    base = base.max(frontier.get(endpoint).copied().unwrap_or(0));
+                }
+                for predecessor in &prerequisites[&id] {
+                    let at = finalized.get(predecessor).copied();
+                    prop_assert!(at.is_some(), "{} precedes {}", predecessor, id);
+                    base = base.max(at.unwrap_or(0));
+                }
+                prop_assert_eq!(record.act_time, base + 1, "act time of {}", id);
+                for endpoint in endpoints {
+                    let f = frontier.entry(endpoint).or_insert(0);
+                    *f = (*f).max(record.act_time);
+                }
+                finalized.insert(id, record.act_time);
+            }
+        }
     }
 
     fn permutations(items: Vec<Candidate>) -> Vec<Vec<Candidate>> {
