@@ -1152,7 +1152,7 @@ independently folded projections, substitute an unrelated incoming edge for
 an A-projection, or select a T-projection whose parent act it cannot
 resolve. Layer 1 reads bundles in **exactly two** places
 (`rem:graph:authored-act-bundle-consumers`): the **standing** projection
-(net stance + recipient resolution + inviter revocation, §11.3) and
+(net stance + recipient resolution, §11.3) and
 **title** (the epoch-quantized settlement fold, §7.2). Every other reading
 — current profile (latest), membership, decay, amended-vs-accumulated
 display — is Layer-2-free. A parallel *genesis* is rejected by record
