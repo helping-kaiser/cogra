@@ -29,6 +29,7 @@ import { fetchFeedTrace, fetchTraceNodes } from "@/lib/api/trace-api";
 import { DASH, flagFigure } from "@/lib/score/figure";
 import { adoptTrace, heldViewer } from "@/lib/score/standing";
 import { useScoreReader } from "@/lib/score/use-standing";
+import { useAuthPhase } from "@/lib/session/provider";
 import type { TraceCover } from "@/lib/score/cover";
 import {
   CLIPPED_RECORDS,
@@ -160,6 +161,7 @@ export function TraceView({ address, level }: { address: TraceAddress; level: Tr
   const client = useApolloClient();
   const router = useRouter();
   const reader = useScoreReader();
+  const phase = useAuthPhase();
   // The open the tap began, or a fresh one for a cold arrival — read once:
   // the levels are one mount, and the held answer outlives it (`trace-session.ts`).
   const [open] = useState(() => {
@@ -195,10 +197,13 @@ export function TraceView({ address, level }: { address: TraceAddress; level: Tr
 
   useEffect(() => {
     // NO FETCH FOR A THING STILL SETTLING (FeedEntryMoved.md:9), and none for
-    // a level the held answer already serves (CD-SR2).
-    if (address.settling || openTrace(open.targetId).read.kind !== "idle") return;
+    // a level the held answer already serves (CD-SR2). NOR BEFORE THE READER
+    // IS KNOWN: a reload or a shared link hydrates with the session still
+    // resolving, and a read run then would fall back to no viewer and hold
+    // that as its one answer. Resolving ends at hydration, signed in or out.
+    if (address.settling || phase === "resolving" || openTrace(open.targetId).read.kind !== "idle") return;
     run();
-  }, [address.settling, open, run]);
+  }, [address.settling, phase, open, run]);
 
   const answered = read.kind === "answered" ? read : null;
   const cover = open.cover ?? answered?.nodes.covers.get(address.targetId) ?? null;

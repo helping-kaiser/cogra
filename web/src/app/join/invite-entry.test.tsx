@@ -24,14 +24,14 @@ describe("InviteEntry", () => {
       target: { value: `https://cogra.example/join/${ID}` },
     });
     fireEvent.click(screen.getByTestId("invite_continue"));
-    expect(push).toHaveBeenCalledWith(`/join/${ID}`);
+    expect(push).toHaveBeenCalledWith(`/join/${ID}?from=door`);
   });
 
   it("reads a bare invite id pasted in the link's place as the same link", () => {
     renderWithProviders(<InviteEntry />);
     fireEvent.change(screen.getByTestId("invite_input"), { target: { value: ID } });
     fireEvent.click(screen.getByTestId("invite_continue"));
-    expect(push).toHaveBeenCalledWith(`/join/${ID}`);
+    expect(push).toHaveBeenCalledWith(`/join/${ID}?from=door`);
   });
 
   // InviteEntryError.md
@@ -96,7 +96,7 @@ describe("InviteEntry", () => {
     ).toBeInTheDocument();
     fireEvent.change(screen.getByTestId("invite_input"), { target: { value: ID } });
     fireEvent.click(screen.getByTestId("invite_continue"));
-    expect(push).toHaveBeenCalledWith(`/join/${ID}`);
+    expect(push).toHaveBeenCalledWith(`/join/${ID}?from=door`);
     expect(screen.getByTestId("invite_login")).toBeInTheDocument();
     expect(screen.getByTestId("invite_browse")).toBeInTheDocument();
   });

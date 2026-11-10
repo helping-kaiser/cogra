@@ -30,6 +30,7 @@ import type { AccountState, ErrorCode } from "@/__generated__/graphql";
 import { fetchMe } from "@/lib/api/auth-api";
 import { checkInviteLink, register, type InviteCheck } from "@/lib/api/onboarding-api";
 import { extractInviteId } from "@/lib/onboarding/invite-input";
+import { joinBackHref, type JoinOrigin } from "@/lib/onboarding/join-origin";
 import { emailValid, handleValid, passwordLength } from "@/lib/onboarding/registration-rules";
 import { deviceLabel } from "@/lib/session/device-label";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
@@ -70,7 +71,7 @@ type CheckState =
   | { status: "notFound" }
   | { status: "transportFailed" };
 
-export function JoinView({ linkId }: { linkId: string }) {
+export function JoinView({ linkId, origin = "arrival" }: { linkId: string; origin?: JoinOrigin }) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const phase = useAuthPhase();
@@ -136,7 +137,7 @@ export function JoinView({ linkId }: { linkId: string }) {
     // The check in flight, or unanswered — neither is drawn; the page stands
     // bare under its header with the shared lines.
     return (
-      <TaskPage backHref="/join" backLabel="Back">
+      <TaskPage backHref={joinBackHref(origin)} backLabel="Back">
         {checkState.status === "transportFailed" ? (
           <TransportError testId="invite_transport_error" />
         ) : (
@@ -149,7 +150,7 @@ export function JoinView({ linkId }: { linkId: string }) {
   }
 
   return (
-    <JoinPage inviteId={inviteId} inviter={check.inviterHandle}>
+    <JoinPage inviteId={inviteId} inviter={check.inviterHandle} origin={origin}>
       {phase === "signedOut" && <ApplyForm inviteId={inviteId} onSpent={() => setSpent(true)} />}
       {phase === "signedIn" && accountState === "MEMBER" && (
         <div className="mt-8 flex flex-col gap-2">
@@ -166,16 +167,26 @@ export function JoinView({ linkId }: { linkId: string }) {
 }
 
 /** The header with its "?", and the inviter's face and name over the form. */
-function JoinPage({ inviteId, inviter, children }: { inviteId: string; inviter: string; children: React.ReactNode }) {
+function JoinPage({
+  inviteId,
+  inviter,
+  origin,
+  children,
+}: {
+  inviteId: string;
+  inviter: string;
+  origin: JoinOrigin;
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   return (
     <TaskPage
-      backHref="/join"
+      backHref={joinBackHref(origin)}
       backLabel="Back"
       headerAction={
         <HelpDot
           ariaLabel="About CoGra"
-          onOpen={() => router.push(`/about?from=join&invite=${inviteId}`)}
+          onOpen={() => router.push(`/about?from=join&invite=${inviteId}${origin === "door" ? "&door=1" : ""}`)}
           testId="join_help"
         />
       }

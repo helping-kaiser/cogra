@@ -248,10 +248,31 @@ pub struct Ffmpeg {
     tone_map: bool,
 }
 
+/// An ffmpeg invocation with an environment of `PATH` alone.
+///
+/// A child inherits its parent's whole environment by default, and the
+/// API's carries its secrets — the database password, the session
+/// signing seed, the mail and store credentials — which ffmpeg has no use
+/// for and which a demuxer bug on an author's bytes must not be able to
+/// read. `PATH` is kept because `MEDIA_FFMPEG` may be a bare name, which
+/// is looked up on it. Nothing else is: the filters this module drives
+/// (`scale`, `zscale`, `format`, `tonemap`) render no text, so fontconfig
+/// and the `HOME` it reads are never consulted; no preset file is named,
+/// so `HOME`'s `.ffmpeg` is not either; and nothing writes a temporary
+/// file — `+faststart` rewrites the output in place.
+fn command(program: &Path) -> tokio::process::Command {
+    let mut command = tokio::process::Command::new(program);
+    command.env_clear();
+    if let Some(path) = std::env::var_os("PATH") {
+        command.env("PATH", path);
+    }
+    command
+}
+
 /// One ffmpeg capability listing (`-encoders`, `-filters`, `-bsfs`), as
 /// text.
 async fn listing(program: &Path, flag: &str) -> Result<String, FfmpegUnavailable> {
-    let output = tokio::process::Command::new(program)
+    let output = command(program)
         .args(["-hide_banner", flag])
         .stdin(Stdio::null())
         .stderr(Stdio::null())
@@ -352,12 +373,39 @@ impl Ffmpeg {
     ///   Only [`VideoPlan::Encode`] carries a transfer at all: a copied
     ///   video is, by construction, already the SDR signal readers are
     ///   served ([`VideoPlan`]).
-    pub fn args(&self, input: &Path, output: &Path, video: VideoPlan) -> Vec<OsString> {
-        let mut args: Vec<OsString> =
-            ["-nostdin", "-hide_banner", "-loglevel", "error", "-y", "-i"]
-                .into_iter()
-                .map(OsString::from)
-                .collect();
+    /// - **The input is read as a local file and nothing else.**
+    ///   `-protocol_whitelist file` is an input option (ffmpeg-protocols
+    ///   §2), so it precedes `-i`: whatever references an author's
+    ///   container carries, ffmpeg opens no network or pipe protocol for
+    ///   it.
+    /// - **The output stops one byte past `max_bytes`.** `-fs` is an output
+    ///   option (ffmpeg's "Main options"), so it precedes the output path.
+    ///   ffmpeg stops writing once the limit is exceeded, finishing a file
+    ///   "slightly more than the requested file size". A limit of the cap
+    ///   itself could leave a cut-short rendition at or under the cap,
+    ///   which would then be stored as the whole clip; one byte more means
+    ///   a rendition that hit the limit is always over the cap, and is
+    ///   refused as too long rather than served truncated.
+    pub fn args(
+        &self,
+        input: &Path,
+        output: &Path,
+        video: VideoPlan,
+        max_bytes: u64,
+    ) -> Vec<OsString> {
+        let mut args: Vec<OsString> = [
+            "-nostdin",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-y",
+            "-protocol_whitelist",
+            "file",
+            "-i",
+        ]
+        .into_iter()
+        .map(OsString::from)
+        .collect();
         args.push(input.as_os_str().to_owned());
         let audio_bps = AUDIO_BPS.to_string();
         args.extend(
@@ -429,10 +477,12 @@ impl Ffmpeg {
                 "+faststart",
                 "-f",
                 "mp4",
+                "-fs",
             ]
             .into_iter()
             .map(OsString::from),
         );
+        args.push(max_bytes.saturating_add(1).to_string().into());
         args.push(output.as_os_str().to_owned());
         args
     }
@@ -445,16 +495,18 @@ impl Ffmpeg {
     /// killed rather than left running on a job nobody will collect
     /// (tokio's `Command::kill_on_drop`). Stdout is discarded and stderr
     /// kept, bounded by `-loglevel error`, for the log line a failure
-    /// earns.
+    /// earns. The rendition is held to `max_bytes` ([`Ffmpeg::args`]), and
+    /// ffmpeg sees no environment beyond `PATH` ([`command`]).
     pub async fn transcode(
         &self,
         input: &Path,
         output: &Path,
         video: VideoPlan,
+        max_bytes: u64,
         deadline: Duration,
     ) -> Result<(), TranscodeError> {
-        let run = tokio::process::Command::new(&self.program)
-            .args(self.args(input, output, video))
+        let run = command(&self.program)
+            .args(self.args(input, output, video, max_bytes))
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::piped())
@@ -488,8 +540,13 @@ impl Ffmpeg {
     /// An ffmpeg as [`Ffmpeg::detect`] describes one built without zimg:
     /// it encodes, and it cannot tone-map.
     pub(crate) fn without_tone_map() -> Self {
+        Self::at("ffmpeg")
+    }
+
+    /// The same, run from `program` — a stand-in a test controls.
+    pub(crate) fn at(program: impl Into<PathBuf>) -> Self {
         Self {
-            program: "ffmpeg".into(),
+            program: program.into(),
             h264: "libx264",
             tone_map: false,
         }
@@ -614,6 +671,7 @@ mod tests {
                     bps: 1_791_781,
                     transfer: Transfer::Sdr,
                 },
+                CAP,
             )
             .into_iter()
             .map(|a| a.to_string_lossy().into_owned())
@@ -651,7 +709,12 @@ mod tests {
             tone_map: true,
         };
         let args: Vec<String> = ffmpeg
-            .args(Path::new("in.mp4"), Path::new("out.mp4"), VideoPlan::Copy)
+            .args(
+                Path::new("in.mp4"),
+                Path::new("out.mp4"),
+                VideoPlan::Copy,
+                CAP,
+            )
             .into_iter()
             .map(|a| a.to_string_lossy().into_owned())
             .collect();
@@ -679,6 +742,45 @@ mod tests {
         );
     }
 
+    /// Whatever the plan, the input is opened through the file protocol
+    /// alone — an input option, so ahead of `-i` — and the output is
+    /// limited to one byte past the cap — an output option, so ahead of
+    /// the output path.
+    ///
+    /// The ffmpeg invocation reads only local files and stops writing one byte past the destination's cap.
+    /// ´claim:media:the-transcode-is-bounded-and-local´
+    #[test]
+    fn the_invocation_bounds_its_output_and_reads_only_files() {
+        let ffmpeg = Ffmpeg::at("ffmpeg");
+        for plan in [
+            VideoPlan::Copy,
+            VideoPlan::Encode {
+                bps: 4_000_000,
+                transfer: Transfer::Sdr,
+            },
+        ] {
+            let args: Vec<String> = ffmpeg
+                .args(Path::new("in.mp4"), Path::new("out.mp4"), plan, CAP)
+                .into_iter()
+                .map(|a| a.to_string_lossy().into_owned())
+                .collect();
+            let at = |flag: &str| args.iter().position(|a| a == flag).expect(flag);
+            let input = at("-i");
+            let whitelist = at("-protocol_whitelist");
+            assert!(whitelist < input, "an input option: {args:?}");
+            assert_eq!(args[whitelist + 1], "file");
+
+            let limit = at("-fs");
+            assert!(limit > input, "an output option: {args:?}");
+            assert_eq!(args[limit + 1], (CAP + 1).to_string());
+            assert_eq!(
+                &args[limit + 2..],
+                ["out.mp4"],
+                "the limit binds the output it precedes"
+            );
+        }
+    }
+
     /// An HDR source's invocation scales, then tone-maps from the transfer
     /// the probe found — linear light, float, BT.709 gamut, the curve, back
     /// to BT.709 8-bit 4:2:0 — and states BT.709 in the container and the
@@ -702,6 +804,7 @@ mod tests {
                         bps: 4_000_000,
                         transfer,
                     },
+                    CAP,
                 )
                 .into_iter()
                 .map(|a| a.to_string_lossy().into_owned())
