@@ -3632,7 +3632,7 @@ structural declaration). The fence clearance belongs to the accepted rung at
 the published wall (X2) and X3 bounds controller motion; the wall cannot
 cross its structural floor, and ridge clearance follows from either floor
 declaration and X8, not from X2. The safeguard is visibility plus the clamp,
-not trust. The dials lock only after empirical calibration.
+not trust.
 
 **Recoinage (`prop:epoch:compensation`, `rem:epoch:capacity-crush`).** Under
 $(\nu, \rho_{\text{pol}}) \to (c\nu, \rho_{\text{pol}}/c)$ the door product
