@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.RecoveryCodeKeyboardOptions
 import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.identity.RestoreResult
 
@@ -77,6 +78,7 @@ fun RestoreScreen(
                 onValueChange = onCodeChange,
                 label = { Text(stringResource(R.string.restore_code)) },
                 singleLine = true,
+                keyboardOptions = RecoveryCodeKeyboardOptions,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("restore_code"),
