@@ -37,8 +37,12 @@ internal fun NavGraphBuilder.settingsFlows(shell: ShellScope) {
 
 /** The pages that only read or reveal: About, What's new, the key, the backup. */
 private fun NavGraphBuilder.settingsPages(shell: ShellScope) = with(shell) {
-    composable<About> {
-        AboutScreen(onBack = { navController.navigateUp() }, deletionBand = deletionBand(node = null))
+    composable<About> { entry ->
+        AboutScreen(
+            onBack = { navController.navigateUp() },
+            plainBack = entry.toRoute<About>().plainBack,
+            deletionBand = deletionBand(node = null),
+        )
     }
     composable<KeyExport> {
         // Arriving reveals nothing; the screen's own gate does.
@@ -169,7 +173,7 @@ private fun ShellScope.SettingsDestination(entry: NavBackStackEntry) {
                     },
                 )
             },
-            onOpenAbout = { navController.navigate(About) },
+            onOpenAbout = { navController.navigate(About()) },
             onOpenWhatsNew = { navController.navigate(WhatsNew) },
             onOpenKeptPicks = { navController.navigate(KeptPicks) },
             onOpenDeletion = { door ->

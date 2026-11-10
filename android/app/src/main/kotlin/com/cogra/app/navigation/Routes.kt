@@ -27,11 +27,18 @@ data object ExploreTab
 data object WalletTab
 
 // The destinations (type-safe routes, Navigation 2.8+).
-@Serializable
-data class InviteEntry(val inviteId: String? = null)
 
+/**
+ * The invite door. [inviteId] is a link opened from outside the app;
+ * [invalid] opens the door in its unusable reading (`JoinInvalid`), where
+ * the form sends a link the registration found spent.
+ */
 @Serializable
-data class Apply(val inviteId: String)
+data class InviteEntry(val inviteId: String? = null, val invalid: Boolean = false)
+
+/** The application form, holding a checked link and its inviter (`Join`). */
+@Serializable
+data class Join(val inviteId: String, val inviterHandle: String)
 
 @Serializable
 data object Login
@@ -247,8 +254,9 @@ data object ChangeEmailConfirm
 @Serializable
 data class ChangeEmailLinked(val token: String)
 
+/** About CoGra; [plainBack] when the join form's "?" opened it (About.md:21). */
 @Serializable
-data object About
+data class About(val plainBack: Boolean = false)
 
 /** The deletion's request screen (`DeleteAccount`), opened from the Settings row. */
 @Serializable
@@ -284,6 +292,9 @@ data class ChatsComingSoon(val from: String = CHATS_FROM_FEED)
  */
 @Serializable
 data class VouchedIn(val handle: String, val name: String, val avatarUrl: String? = null)
+
+/** The invite link's path (auth.md "Link URLs"): `/join/<link-id>`, and the bare `/join`. */
+internal const val JOIN_PATH = "/join"
 
 /** The new address's link path (auth.md "Link URLs"), claimed beside `/join`. */
 internal const val EMAIL_CHANGE_PATH = "/email-change"

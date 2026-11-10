@@ -80,6 +80,7 @@ class ClientConstantsTest {
         assertThat(MIN_HANDLE_LENGTH).isEqualTo(registration.int("handleMinChars"))
         assertThat(MAX_HANDLE_LENGTH).isEqualTo(registration.int("handleMaxChars"))
         assertThat(MIN_PASSWORD_LENGTH).isEqualTo(registration.int("passwordMinChars"))
+        assertThat(MAX_PASSWORD_LENGTH).isEqualTo(registration.int("passwordMaxChars"))
         assertThat(HANDLE_CHARSET.pattern).isEqualTo(registration.text("handleCharsetPattern"))
     }
 

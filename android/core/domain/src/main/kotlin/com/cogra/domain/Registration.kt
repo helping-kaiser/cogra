@@ -27,6 +27,9 @@ val HANDLE_CHARSET = Regex("^[a-z0-9_]+$")
 /** Client mirror of the server's password length floor. */
 const val MIN_PASSWORD_LENGTH = 12
 
+/** Client mirror of the server's password length ceiling (auth.md "Credentials"). */
+const val MAX_PASSWORD_LENGTH = 128
+
 /** Whether the registration form may be submitted. */
 fun registrationFormValid(handle: String, email: String, password: String): Boolean =
     handleValid(handle) && emailValid(email) && password.length >= MIN_PASSWORD_LENGTH
