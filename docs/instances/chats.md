@@ -49,7 +49,7 @@ Chat and Message nodes they anchor
 | **Leave** | Actor → Chat | The exit record — unilateral, unconditional, a control record. Departure *without* destination: there is no "nowhere" node and a self-referential T-leg is a join, so Leave is not subsumed by the move form. |
 | **Join Request** | Actor → Chat | Asking to join — a proposal, never participation. |
 | **Invitation** | Actor → Chat → Profile | Inviting — a public, priced vouch that the invitee fits; a proposal, never participation. |
-| **De-invite** | Actor → Chat → Profile | The expulsion mark; a control record with no standing effect. |
+| **De-invite** | Actor → Chat → Profile | The expulsion mark; a control record that never vouches and withdraws nothing. |
 | **Send** | Actor → Chat → Message | Posting a message — the terminal leg mints the Message. |
 
 Two L1 facts frame the whole doc:
