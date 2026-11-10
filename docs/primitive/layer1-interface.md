@@ -548,7 +548,12 @@ auditability. Only the structural record is L1·closure.
 > raw damped-edge weighting, raw positive-subgraph composition, and raw
 > bridge-consent policy, provided it publishes the replacement completely.
 > The host's cached raw $\tilde{w}(e)$, $\epsilon(e)$, and derived raw
-> constants are non-authoritative by-products.
+> constants are non-authoritative by-products. A guild may transport richer
+> raw sign information than determinant parity, but rotation information is
+> order-sensitive and does not inherit determinant-based path factorization,
+> so the guild must publish its transported object, composition rule and
+> deterministic replay procedure (`subsec:deployment:completeness`), without
+> changing the conserved standing package or admission rules.
 >
 > The grant does not include any component of the conserved standing package
 > (`def:network:conserved-standing-package`): the fold compiler and its
@@ -570,15 +575,24 @@ auditability. Only the structural record is L1·closure.
 > inputs (accepted edge set, binding constants, burn snapshot), the
 > admission rules, and the derived straddlers — the conserved standing
 > package with its relative-standing field $\alpha_i$ *as gate input* and
-> the title certificate $T^{(k)}$ — which it must consume as published. A
-> guild MAY still *recompute* any such value to audit it; recomputation is
-> an audit right, never an override right.
+> the title certificate $T^{(k)}$ — which it must consume as published
+> (`rem:graph:title-certificate-is-summary`,
+> `cond:graph:boundary-accountability-title-certificate`). A guild MAY
+> still *recompute* any such value to audit it; recomputation is an audit
+> right, never an override right.
 >
 > Deviating from a terminal default forks only the deviating guild (loss
 > of composability); attempting to deviate from a binding value forks the
 > shared graph and is rejected. The binding surface is the accepted-state
 > kernel, admission rules, conserved standing package, standing as gate
 > input, and title — and no larger.
+>
+> For a funded-partition comparison, a standing bound becomes a feed or
+> normalized-share bound only with the stated terminal context fixed
+> (`prop:transport:split-terminal-readout-bounds`). The calculation does not
+> hold creator sets, paths, attribution or guild factors fixed by itself,
+> and it does not establish ranking stability or an end-to-end reward
+> guarantee.
 
 On the admission rules: the write rule ($W1/W2a/W2b$), formation, and
 recognition are value-facing predicates a guild might try to recompute — the
@@ -653,9 +667,12 @@ Layer 1 / operator provides: the public append-only graph
 the commitment ledger and standing-compilation infrastructure, and the
 epoch machinery (PN full §6, `subsec:epoch:epoch-boundary`). Publishes the
 binding constants and the host-cached raw defaults (§6 below). From its
-foundation the network reads only the interface constants a realization
-publishes — $B_{\max}$ (R9), $c_{\mathrm{u}}$ (R10), and the R11 operator
-bound; nothing else a realization publishes enters a network formula. The
+foundation the network reads only the two published interface constants
+$B_{\max}$ (R9) and $c_{\mathrm{u}}$ (R10). The applicable operator bound
+and proof or statement of absence (R11) and the separately published
+recording-event costs (R10) are required public audit evidence, not
+additional computational inputs; nothing else a realization publishes
+enters a network formula. The
 network levies no protocol-level fee of its own; no protocol-level fee is
 extracted from content transactions, advertising spend, or guild reward
 pools.
@@ -671,15 +688,17 @@ parameters, reward distribution schedule, and bridge composition rule;
 scores, and standing values are public.
 
 Burn consumption (`def:transport:commitment-via-burn`, PN full §8): $B_i \in \mathbb{R}_{\ge 0}$ is
-the cumulative burn-denominated value committed by actor $i$, read from
+the cumulative burn-denominated amount committed by actor $i$, read from
 the burn primitive; costliness and irrevocability are inherited at the
-network's sampling depth (R8). During bootstrapping, aggregate $B_i$ is
-capacity-bounded by $B_{\max}$. All formulas consume $B_i$ as a
-non-negative, non-decreasing, publicly auditable scalar; no surface
-quantity appears. Burn
-granularity (`rem:transport:burn-granularity`): compliant implementations must support precision
-such that the reduced rate $\hat{r}_i = r_i/\nu$ is representable
-to at least 8 significant figures.
+network's sampling depth (R8). During a nonempty pre-opening interval,
+aggregate $B_i$ is capacity-bounded by $B_{\max}$. All formulas consume
+$B_i$ as a non-negative, non-decreasing, publicly auditable scalar; no
+surface quantity appears. Burn granularity
+(`rem:transport:burn-granularity`): compliant implementations must support
+precision sufficient for fair pricing and the deployment's certification;
+a stated numerical precision, such as the reduced rate
+$\hat{r}_i = r_i/\nu$ to 8 significant figures, is an example of such a
+level, not a protocol constant.
 
 Notes on the full paper's terminal defaults: $(1+\alpha_C)$
 remains the sole Layer 1 factor in the guild reward formula Eq. (8.2)
@@ -691,8 +710,10 @@ only to the standing projection; raw sorting reads raw records
 unchanged. $q = \tfrac12$ is the canonical default for the raw services; a
 guild may expose $q \ne \tfrac12$ for its own sorting only
 (`rem:sorting:matrix-bfs`). Every relevance calculation consumes only the
-**final** reduced standing of the creator; stage internals have no feed
-read-site (`rem:sorting:final-standing-input`). The bridge transport:
+**final** reduced standing of the creator; the base allocation matrix, hop
+matrices, emission fractions, accepted rung, certificates, fixed-point
+enclosures, and solver iterates have no feed read-site
+(`rem:sorting:final-standing-input`). The bridge transport:
 Channel 2 is stance-signed ($\mathrm{sgn}(p_d(e_{\text{Op}}))$, not
 $\epsilon$), and Channel 3 consent carries an **absolute direct-stance
 veto** (a negative net direct stance
