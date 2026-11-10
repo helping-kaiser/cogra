@@ -2779,8 +2779,8 @@ change that rule, not complete an unresolved part of it.
 endorsement is $\theta$-priced exactly — each ballast action debits
 $\theta$, sustained dilution pressure of $n$ endorsers costs $n\theta$ per
 epoch-action, and total grip is bounded by spent balance$/\theta$
-(capacity per burn unit $= 1/\theta \approx 18.94$ at the chartered
-value): grip is rented, not owned. Cross-target copying of pair mass is
+(capacity per burn unit $= 1/\theta \approx 19.93$ at the delivered
+reference price): grip is rented, not owned. Cross-target copying of pair mass is
 excluded by row conservation rather than by any per-path rule — a source
 apportions one unit however many acts it authors, so additional acts
 redistribute that unit instead of adding to it. This is not immunity to
@@ -3020,7 +3020,10 @@ actuator.
 
 One price runs the whole height, and a family of derived floors divides the
 roles a single threshold would otherwise conflate
-(`subsec:epoch:floor-governance`). The mantra: **ν joins, θ debits, ρ_pol
+(`subsec:epoch:floor-governance`). The network publishes a reduced **safety
+wall** $\rho_\theta$ with one-boundary lead and a chartered positive floor;
+the safety threshold $\theta = \nu\,\rho_\theta$ is its burn image. The
+mantra: **ν joins, θ debits, ρ_pol
 admits, m_θ margins; ρ_θ walls, ρ_eff doors, and the stamps measure.** Two
 axes, never conflated — the **price axis** ($\nu$, $\theta$) and the
 **gate/position axis** ($\rho_{\text{pol}}, \rho_\theta, \rho_{\text{eff}}$).
@@ -3035,31 +3038,130 @@ Price axis:
   operating point — structural; moving it is a *migration event*, not a dial
   turn.
 - **Safety price $\theta$ (`def:epoch:safety-threshold`).** The per-act
-  **debited** price and the minimum burn value behind a write the
-  coupled dynamics certifiably tolerate (burn units per action). The **only** debited
-  object (W1). **An algorithmic output of the epoch computation, never a host
-  input** — certificate $k$ carries $\theta^{(k+1)}$ (one-boundary lead),
-  governed by premises X1–X7 (derivability, sufficiency with X2b width
-  dominance, step-boundedness, hysteresis, lead, publication, declared
-  covariance); the algorithm is a calibration deliverable. Chartered interim rule
-  $\theta^{(k+1)} = \nu\,\lambda_Q^{-1}\!\big(1/(m_\theta\, W_{\text{loc}}^{(k)})\big)$
-  with **margin factor $m_\theta = 5/4$** (fence slack
-  $\mu = 1 - 1/m_\theta = 0.20$; X3 per-boundary step bound; X4 Schmitt
-  hysteresis; escalation to $m_\theta = 1.5$ if p95 one-boundary
-  $W_{\text{loc}}$ growth exceeds $\sqrt{m_\theta} = 1.118$).
+  **debited** price (burn units per action): the burn image
+  $\theta = \nu\,\rho_\theta$ of the published safety wall. The **only**
+  debited object (W1). **An algorithmic output of the epoch computation, never
+  a host input** — certificate $k$ carries $\theta^{(k+1)}$, the value in
+  force at boundary $k+1$ (one-boundary lead). The published $\theta^{(k+1)}$
+  is the value charged; its representation (exact, or on a grid the
+  deployment declares) and the arithmetic producing it are the deployment's,
+  which certifies premises X1–X9 for that charged value:
+  - (X1) *derivability* — $\rho_\theta^{(k+1)}$ is a function of the epoch-$k$
+    certificate and the published constants alone, replayable by any
+    participant;
+  - (X2) *in-epoch certification* — the accepted rung is the greatest element
+    of $\mathcal{G}_t$ whose certificate the declared procedure proves passing
+    at the wall in force and on the epoch's own contributing width,
+    $m_\theta\,\mathcal{K}_k \le 1$; the anchor always certifies, and
+    higher-rung failures and indecisive enclosures stay distinct and
+    published;
+  - (X3) *step bound* — $|\rho_\theta^{(k+1)} - \rho_\theta^{(k)}| \le
+    \min(a,\ r\,\rho_\theta^{(k)})$ for published $a > 0$, $0 < r < 1$;
+  - (X4) *hysteresis* — the published relative deadband applies to the
+    floored proposal before X3, with no unpublished latch;
+  - (X5) *lead* — one-boundary lead; a width excursion reprices neither the
+    epoch nor any consummated debit vintage;
+  - (X6) *publication* — beside $\mathcal{K}_k$, the accepted rung $t_k$, and
+    $W_{\text{loc}}^{(k)}$: the wall in force, the controller edition and
+    constants, its proposal, the next wall, and its burn image
+    (`post:network:host-contract`);
+  - (X7) *covariance* — the controller is numéraire-blind; reduced inputs and
+    constants are invariant under a change of burn unit, and $\theta$ scales
+    exactly with $\nu$;
+  - (X8) *floor* — every published wall satisfies
+    $\rho_\theta \ge \rho_{\theta,\min} > 0$, at zero width and on an empty
+    live domain too, compared against the declared floor's exact defining
+    object;
+  - (X9) *input quarantine* — only the previous wall, the completed-epoch
+    width, and the accepted rung, with published constants, enter the
+    controller; boundary-demand and admission statistics are excluded
+    (`rem:epoch:admission-statistics-quarantine`).
 
-Gate axis (the five-ρ family — three floors plus two stamps):
+  **Margin factor $m_\theta = 5/4$** (fence slack
+  $\mu = 1 - 1/m_\theta = 0.20$) is a published constant. No requirement
+  bounds or predicts the following epoch's width, and neither a width-growth
+  escalation nor a calibration window enters the controller.
+
+**Wall controller (`def:epoch:wall-controller`).** For a published constant
+and formula edition $\Gamma$, the next wall is
+
+$$\rho_\theta^{(k+1)} = C_\Gamma\big(\rho_\theta^{(k)},\ W_{\text{loc}}^{(k)},\ t_k\big), \qquad C_\Gamma : [\rho_{\theta,\min}, \infty) \times [0, \infty) \times \mathcal{G}_t \to [\rho_{\theta,\min}, \infty),$$
+
+a deterministic map whose inputs are the wall in force and the completed
+epoch's contributing width and accepted rung — closure-side data published
+with the certificate. No prior standing vector is an input; the map and every
+constant it reads live on the reduced axis and never read $\nu$. The
+controller is memory-one: no growth window, private latch, or unpublished
+history. Its edition, constants, inputs, proposal, and delivered wall are
+replayable (`post:network:host-contract`).
+
+**Canonical interim wall controller
+(`def:epoch:canonical-interim-wall-controller`).** Fix the chartered rung
+$t_{\text{char}} = \max \mathcal{G}_t$ and its cumulative tilt
+$S_{\text{char}} > 0$ at the deepest supported depth $m^*$ ($15/8$ for the
+chartered profile); profile and depth are constants of the controller, not
+measured inputs. With $G = \lambda_{\text{vch}}$ the deployed per-hop
+reduced-standing log-gain, the target proposal for completed-epoch width $W$
+is
+
+$$q(W) = \begin{cases} \rho_{\theta,\min}, & W = 0, \\ \max\big\{\rho_{\theta,\min},\ G^{-1}\big(1/(2\,m_\theta\,S_{\text{char}}\,W)\big)\big\}, & W > 0, \end{cases}$$
+
+the least wall at or above the floor at which the chartered rung's evaluated
+certificate passes on that width. For previous wall $\rho$, put
+$e = q(W) - \rho$; the deadband sets $e_d = 0$ when $|e| \le d\,\rho$ and
+$e_d = e$ otherwise, and
+
+$$C_\Gamma(\rho, W, t) = \rho + \mathrm{sgn}(e_d)\,\min\big(|e_d|,\ a,\ r\rho\big), \qquad \mathrm{sgn}(0) = 0.$$
+
+The order is proposal, floor, deadband, then step cap; release outside the
+deadband is symmetric, and the rung argument $t$ is published but unused by
+this interim map. The interim settings are $a = 0.10$ (absolute reduced
+increment), $r = 1/4$ (relative step), and $d = 1/20$ (relative deadband) —
+performance calibration constants, not safety premises; $m_\theta$ stays
+fixed. Zero width, including an empty live domain, returns the floor without
+evaluating an inverse. The proposal and the delivered wall are both
+published, followed by the burn image
+$\theta^{(k+1)} = \nu\,C_\Gamma(\rho, W, t)$, with one-boundary lead; no
+consummated debit is recalculated. The clean-gain inversion
+$\lambda_Q^{-1}(1/(m_\theta W))$ is a screening diagnostic
+(`cor:dynamics:minimal-safe-rung`), not in general the least wall for the
+deployed certificate. The controller is total, its proposal and delivered
+wall never fall below $\rho_{\theta,\min}$, and the delivered wall satisfies
+X3 (`prop:epoch:wall-controller-total`). Safety does not depend on it: under
+the hypotheses of `thm:dynamics:certified-conserved-standing-uniqueness`,
+every finite wall at or above $\rho_{\theta,\min}$ admits a greatest rung proved
+passing on the completed epoch's own width, at which the fixed point is
+unique (`prop:epoch:safety-independent-of-controller`).
+
+**Reference values.** The reference fixture runs the canonical controller at
+$W_{\text{loc}} = 1$, $S_{\text{char}} = 15/8$, $m_\theta = 5/4$, with the
+previous wall initialized to the target, which the deadband holds
+(`ver:floor:fixture-regime`). Target, previous, and delivered wall are then
+$\rho_\theta \approx 0.501855$, where
+$G(\rho_\theta) = 1/(2 \cdot \tfrac54 \cdot \tfrac{15}{8}) \approx 0.2133$;
+the price is $\theta = \nu\,\rho_\theta \approx 0.0501855$ and the real
+capacity per burn unit $1/\theta \approx 19.93$. The fixture selects neither
+floor declaration and delivers the same wall under both
+(`ver:floor:fixture-declaration-invariant`). This initialization specifies a
+reference evaluation, not an attracting fixed point of the coupled epoch
+dynamics.
+
+Gate axis (the five-ρ family — policy floor, safety wall, effective floor,
+and two stamps):
 
 - **Policy floor $\rho_{\text{pol}}$ (`def:epoch:policy-floor`).** The host's
   dimensionless standing dial against spam/Sybil pressure. Announced at
   boundary $k$, effective at $k+1$, persisting until re-announced. Purely
   extensive: it excludes, but cannot reprice a survivor's actions. Canonical
   default $1$.
-- **Safety floor $\rho_\theta = \theta/\nu$ (`def:epoch:safety-floor`) — the
-  wall.** The gate-axis image of the per-act price. Binding read-sites:
-  the **W2a** comparator, the **below-wall activation clamp key**
-  (`def:epoch:safety-wall-clamped-activation`), and the width fence pin
-  $\lambda(\rho_\theta)\,W_{\text{loc}}\,m_\theta = 1$.
+- **Safety wall $\rho_\theta$ (`def:epoch:safety-wall`) — the wall.** The
+  published reduced position at which the standing activation is clamped,
+  $\rho_\theta \ge \rho_{\theta,\min} > 0$, published with one-boundary lead;
+  $\rho_\theta = \theta/\nu$ is the gate-axis image of the per-act price, the
+  wall and the price being one coordinate pair, not independently adjustable
+  quantities. Binding read-sites: the **W2a** comparator, the **below-wall
+  activation clamp key** (`def:epoch:safety-wall-clamped-activation`), and
+  the epoch's certificate, which it parameterizes (X2).
 - **Effective floor $\rho_{\text{eff}} = \max(\rho_{\text{pol}}, \rho_\theta)$
   (`def:epoch:participation-floor`) — the door.** Derived, not dialed; $=
   \rho_{\text{pol}}$ on every valid certificate (the $\max$ is fault
@@ -3071,6 +3173,53 @@ Gate axis (the five-ρ family — three floors plus two stamps):
   (`def:epoch:final-act-stamps`).** The standing-derived **measurements** the
   write rule gates: the act-owned reduced final standing at W2a, and its
   act-weighted mean at W2b. Measurements, never floors; never debited.
+
+**Structural wall floor (`def:epoch:safety-wall-floor`).** The chartered
+floor set is exactly $\{\rho^*, 3/37\}$. $\rho^* = p^*/(1-p^*)$ is the exact
+ridge image, $p^*$ being the unique maximizer on $(0,1)$ of the clean
+full-depth elasticity (`rem:dynamics:elasticity-profile`): an exact real
+defined by the activation, not a grid endpoint or rounded root, certified in
+$[0.072857886,\ 0.072858002]$ ($\rho^* \approx 0.072858$) and strictly below
+$3/37 \approx 0.081081$, so either declaration gives
+$\rho_{\theta,\min} \ge \rho^* > 0$. Before its first epoch the deployment
+publicly declares $\rho_{\theta,\min} \in \{\rho^*, 3/37\}$ beside $\nu$ in
+its structural tier. The declaration is fixed for the deployment: changing
+it is a public structural change with regenerated evidence, never an epoch
+dial or host-policy choice, and any third value requires its own derivation.
+The floor is distinct from the wall in force, the policy floor, the effective
+floor, and the width-dependent clean-screen diagnostic; it guarantees a
+positive debit and defined capacity and emission denominators even at zero
+contributing width, and does not assert that the chartered rung passes at
+every width. Both declared floors lie strictly below the default policy door
+$1$ (`ver:floor:below-door`), which bounds the floor, not every wall.
+
+**The selection criterion (`rem:epoch:floor-is-a-landmark`).** Neither
+declaration is a default; the selection criterion is what the deployment
+certifies. The exact ridge $\rho^*$ suits a published comparison procedure
+that certifies X8 against a certified enclosure of an exact real, with
+refine-or-reject; the rational $3/37$ suits a representation proving the
+floor side of X8 by exact rational comparison. X8 compares against the
+declared floor's exact defining object — $\rho^*$, never an enclosure
+midpoint, or $3/37$. A difference enclosure straddling zero is indecisive:
+refine the wall and ridge enclosures or reject the proposed wall and any
+package requiring it. The ridge is the chartered reason for both floors —
+beyond it clean elasticity decreases — and economic positivity and this
+leverage landmark are structural choices, not consequences of X2.
+
+**Floor economics (`cor:epoch:floor-economics`).** At every published wall,
+$\theta = \nu\rho_\theta \ge \nu\rho_{\theta,\min} > 0$ (minimum price per act)
+and $1/\theta \le 1/(\nu\rho_{\theta,\min})$ (maximum real remaining-action
+capacity per burn unit); integer remaining acts obey
+$\lfloor b/\theta \rfloor \le \lfloor b/(\nu\rho_{\theta,\min}) \rfloor$. At
+$\nu = 0.10$:
+
+| Declaration | $\rho_{\theta,\min}$ | Minimum price $\nu\rho_{\theta,\min}$ | Maximum capacity $1/(\nu\rho_{\theta,\min})$ |
+|---|---|---|---|
+| ridge $\rho^*$ | $\approx 0.072858$ | $\approx 0.0072858$ | $\approx 137.25$ |
+| rational $3/37$ | $\approx 0.081081$ | $\approx 0.0081081$ | $\approx 123.33$ |
+
+Emission saturates exactly when $\hat{r}_u \ge \rho_\theta$; at a wall above
+the floor, being above $\rho_{\theta,\min}$ alone is insufficient.
 
 **Certificate validity (`eq:epoch:floor-validity`).** A certificate is valid
 only if $\rho_{\text{pol}} \ge \rho_\theta$ (equivalently
@@ -3089,10 +3238,13 @@ the stamps, gated against these floors.
 **Host authority (`rem:epoch:operator-authority-floor`).** The host's entire
 floor authority is the $\rho_{\text{pol}}$ schedule — announced with
 one-boundary lead, valid only above the led safety threshold, auditable ex
-ante. $\theta$ and $\nu$ are not host dials ($\theta$ is algorithmic, $\nu$ a
-migration constant). The safeguard remains visibility: the full formula is
-public, so any participant can compute the economic consequence of any
-value. The dials lock only after empirical calibration.
+ante. $\theta$, $\nu$, and $\rho_{\theta,\min}$ are not host dials ($\theta$
+is algorithmic, $\nu$ a migration constant, $\rho_{\theta,\min}$ a fixed
+structural declaration). The fence clearance belongs to the accepted rung at
+the published wall (X2) and X3 bounds controller motion; the wall cannot
+cross its structural floor, and ridge clearance follows from either floor
+declaration and X8, not from X2. The safeguard is visibility plus the clamp,
+not trust. The dials lock only after empirical calibration.
 
 **Recoinage (`prop:epoch:compensation`, `rem:epoch:capacity-crush`).** Under
 $(\nu, \rho_{\text{pol}}) \to (c\nu, \rho_{\text{pol}}/c)$ the door product
@@ -3100,10 +3252,18 @@ $\rho_{\text{pol}}\nu$ (admission set, per-act door benchmark) is invariant,
 the gate axis $\{\rho_{\text{pol}}, \rho_{\text{act}}, \rho_{\text{ep}}\}$
 is exactly invariant (stamps and floors co-scale), and reduced quantities
 scale by $1/c$; W1/W2a are $\theta$-mediated per the X7 declaration. The
-historical capacity-crush is dissolved: the retroactive repricing branch
+controller's covariance (`prop:epoch:wall-controller-covariance`): under
+recoinage proper — every burn-denominated value and $\nu$ scaled by $c$ —
+its reduced inputs, constants, and next wall are unchanged and its burn image
+scales to $c\,\theta^{(k+1)}$; a structural migration $\nu \to c\nu$ at a
+fixed burn ledger, compensated ($\rho_{\text{pol}} \to \rho_{\text{pol}}/c$)
+or not, publishes its transformed reduced inputs and the resulting wall and
+threshold, with no homogeneity of $C_\Gamma$ and no invariance of W1 or W2a
+claimed.
+The historical capacity-crush is dissolved: the retroactive repricing branch
 was deleted by the $\theta$-debit ledger — a consummated debit is never
 re-calculated, so there is **no frozen stock to crush**. The door product
-is no longer an independent charter surface; the host publishes
+is not an independent charter surface; the host publishes
 $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 (`rem:epoch:dial-scope`).
 
