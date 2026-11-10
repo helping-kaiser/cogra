@@ -1785,10 +1785,10 @@ every edge (binary or hyper-edge leg): (1) role assignment — domain
 parameters assigned to directional ($p_d$) and intensity ($p_i$) roles;
 single-parameter edges set the missing role to 1; (2) extended slice via the
 master formula with the domain's bilinear mask; (3) path-view extraction
-with $\eta$-softening; (4) temporal attributes — the inherited act time,
-$\tau_e$, $H_\tau(e)$ computed under the authoritative order; (5) closure
-extraction — per-edge $|\det \boldsymbol{\Psi}_e^{[P]}|^{1/2}$,
-$\epsilon(e)$, $\tilde{w}(e)$. Single-parameter row collapse (Owner,
+with $\eta$-softening; (4) temporal augmentation of $\boldsymbol{\Psi}_e$ by
+the maturity scalar $\tau_e$ (the augmented tensor is terminal, §8.9);
+(5) interface extraction — the path view $\boldsymbol{\Psi}_e^{[P]}$, beside
+the terminal Scalar and Attribution Views (§8.6). Single-parameter row collapse (Owner,
 Publish, Send/A) is a census property, not an incentive surface
 (`rem:nodes:row-collapse`).
 
