@@ -133,12 +133,7 @@ async fn graphql_handler(
         Err(rejection) => return client_ip_refusal(rejection),
     };
     let (parts, body) = req.into_parts();
-    let viewer: Option<Viewer> = parts
-        .headers
-        .get(axum::http::header::AUTHORIZATION)
-        .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.strip_prefix("Bearer "))
-        .and_then(|token| auth::verify_access_token(&state.auth, token));
+    let viewer = bearer_viewer(&state.auth, &parts.headers);
     let content_type = parts
         .headers
         .get(axum::http::header::CONTENT_TYPE)
@@ -296,13 +291,22 @@ fn over_the_body_limit(err: &(dyn std::error::Error + 'static)) -> bool {
     false
 }
 
-/// The viewer a request carries, or the status that refuses it.
+/// The viewer a request's `Authorization: Bearer <token>` header carries
+/// (auth.md "Access token"), for every route that reads one.
+///
+/// The scheme name is matched case-insensitively — RFC 9110 §11.1 makes
+/// every authentication scheme name case-insensitive, and RFC 6750 §2.1's
+/// `Bearer` is one — and is separated from the token by spaces.
 fn bearer_viewer(auth: &AuthConfig, headers: &HeaderMap) -> Option<Viewer> {
-    headers
-        .get(axum::http::header::AUTHORIZATION)
-        .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.strip_prefix("Bearer "))
-        .and_then(|token| auth::verify_access_token(auth, token))
+    let value = headers
+        .get(axum::http::header::AUTHORIZATION)?
+        .to_str()
+        .ok()?;
+    let (scheme, token) = value.split_once(' ')?;
+    if !scheme.eq_ignore_ascii_case("Bearer") {
+        return None;
+    }
+    auth::verify_access_token(auth, token.trim_start_matches(' '))
 }
 
 /// A refusal in the same vocabulary a GraphQL `UserError` uses, so a
