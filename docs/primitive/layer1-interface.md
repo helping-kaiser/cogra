@@ -513,16 +513,14 @@ adds binding intermediate values because W2 consumes their result and their
 validity selects which relational schedule may take effect — but they are
 not straddlers. (`subsec:symbols:boundary`)
 
-Two reclassifications against the pre-Edition-4 ledger, both explicit in the
-source: the **raw damped-weight and parity formulas are terminal defaults**
-— $q$, raw depth $L$, $\tilde{w}(e)$, $\epsilon(e)$, and the derived raw
-constants ($\tilde{w}_{\text{spam}}, \tilde{w}_{\max},
-\tilde{w}_{\max}^{\text{Op}}$) are (L2) as formulas, (L1·by-product) as
-host-cached values, because standing no longer consumes them
-(`rem:epoch:shared-raw-edge-primitive`, `def:epoch:damped-edge-weight`);
-and the raw-traversal **precision clip is deleted** — Layer 1 publishes no
-raw pruning tolerance ($\epsilon_{\text{clip}}$ has no successor;
-`rem:sorting:raw-pruning-is-implementation`).
+The **raw damped-weight and parity formulas are terminal defaults**: $q$,
+raw depth $L$, $\tilde{w}(e)$, $\epsilon(e)$, and the derived raw constants
+($\tilde{w}_{\text{spam}}, \tilde{w}_{\max}, \tilde{w}_{\max}^{\text{Op}}$)
+are (L2) as formulas and (L1·by-product) as host-cached values, because
+standing is not a raw graph consumer (`rem:epoch:shared-raw-edge-primitive`,
+`def:epoch:damped-edge-weight`). Layer 1 publishes no raw pruning
+tolerance, precision clip, semantic weak-path cutoff, or permanent
+pruned-node state (`rem:sorting:raw-pruning-is-implementation`).
 
 Note: the payload **projection / bytes** are terminal by postulate — no
 closure quantity reads them (removable-projection invariance), so they are
