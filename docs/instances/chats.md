@@ -183,10 +183,16 @@ authority policy `𝒫`:
   keyed to its **T-leg**, the chat being entered — only when
   backed by an approved Join Request or an Invitation; the
   founding act is exempt, since it mints the chat it enters. An
-  Invitation backs the Participant only if its author's
-  Invitations toward `(C, prof(a))` that `≺`-precede the
-  Participant do not net to `(0,0)`; a withdrawal `≺`-following
-  the Participant does not undo the membership it backed. In
+  Invitation backs the Participant only while it is a live vouch:
+  its author's Invitation bundle toward `(C, prof(a))`, over the
+  records that `≺`-precede the Participant, has both folded
+  coordinates strictly positive (L1's positivity gate,
+  ``def:epoch:effective-act-contribution``). The withdrawal
+  gesture is the cancelling Invitation that nets the bundle to
+  `(0,0)`; a bundle carried past zero is withdrawn all the same,
+  and an Invitation that is not strictly positive on both
+  coordinates backs nothing. A withdrawal `≺`-following the
+  Participant does not undo the membership it backed. In
   open chats, any Participant is recognized as-is.
 
 **Three act shapes, keyed on leg role.** Participant is a
