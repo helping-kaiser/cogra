@@ -2991,10 +2991,10 @@ $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 
 | Quantity | Closure consumer | Notes |
 |---|---|---|
-| $\epsilon(e)$, $\epsilon(p)$ | raw signed double-cover service (`alg:epoch:double-cover-bfs`), feed ranking | parity routing; coherence bit, never a favor bit; **terminal formula** — no standing read-site |
+| $\epsilon(e)$, $\epsilon(p)$ | raw signed double-cover service (`alg:epoch:exact-signed-raw-traversal`), feed ranking | parity routing; coherence bit, never a favor bit; **terminal formula** — no standing read-site |
 | $\lvert\det \boldsymbol{\Psi}_e^{[P]}\rvert^{1/2}$ | $\tilde{w}(e)$ | coherence factor |
-| $\mathbb{T}^{\text{act}}_q$, $\tau_e$, $H_\tau(e)$ | act time: authoritative order + formation + boundary replay; $\tau_e, H_\tau$: $\tilde{w}(e)$ | act time is closure; raw maturity and entropy are terminal (feed/bridge only) |
-| causal parents, declared dependencies | formation rule; authoritative-order compliance ($\mathrm{DepOK}$); causal closure of $E_k$ | backward-only metadata; never a scoring input (the $\tau$-farming lint) |
+| key of record $(k, \mathrm{pos}_k(q))$; $\mathbb{T}^{\text{act}}_q$, $\tau_e$, $H_\tau(e)$ | key of record: authoritative order + formation + boundary replay; $\tau_e, H_\tau$: $\tilde{w}(e)$ | the act time is a recomputable Lamport summary of the order of record **(L1·verify)**, never an input to precedence; raw maturity and entropy are terminal (feed/bridge only) |
+| causal parents, declared dependencies | formation rule; authoritative-order compliance ($\mathrm{DepOK}$ and parent placement); causal closure of $E_k$ | backward-only metadata; never a scoring input (the $\tau$-farming lint) |
 | handshake objects ($C^{\text{pre}}_q$, verified act, approval witness) | formation — only approved verified acts are orderable | fraud proofs are verification evidence |
 | $\tilde{w}(e)$ | raw-graph traversals: feed ranking, the raw signed double-cover service, bridge Channel 1 | **one raw formula for all raw-graph consumers**; the formula itself is a terminal default (§3); standing is not a raw consumer |
 | stance marginals $p_d, p_i$ | recipient resolution (folded coordinates); settlement-adjacent stance reads | stance decides the destination; terminal stance consumers named in the ledger |
@@ -3003,8 +3003,8 @@ $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 | base matrix $\mathsf{A}$, emission $\mathfrak{e}_u$, accepted rung $t_k$, certificate $\mathcal{K}_k$ | assemble the transport → standing → W2 | binding intermediate values, not straddlers |
 | transport entries $\Pi_{ui}$ | the standing mediant | sole relational input to standing |
 | settlement references | recognition clauses (i)–(ii); forced handshake chain | act-identity resolution |
-| ownership thread | title certificate; recognition clause (iii) | title as straddler |
-| $\mathrm{owner}^{(k)}$ | recognition clause (iii) | terminal routing/display read it downstream |
+| ownership thread | title certificate; recognition clause (iii), authorization and parties | title as straddler |
+| $\mathrm{owner}^{(k)}$ | recognition clause (iii), authorization and parties; standing recipient resolution reads the epoch title fold (`post:epoch:settlement-standing-title-coupling`) | terminal routing/display read it downstream |
 | payload structural witness | act integrity; removable-projection invariance | (L1·verify) — retained by Layer 1 across phases; bytes never read by Layer 1 |
 | terminal complement | — | feed, reward, attribution, bridge transport, identity association, payload rendering, licensing, membership policy, raw scoring formulas: named only in `tbl:symbols:boundary` |
 
