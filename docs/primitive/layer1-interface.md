@@ -188,7 +188,9 @@ realization's history that carries or accumulates burn and extends the
 settlement lineage, depending on and extending the record before it.
 Appending one is open to any party; no party holds a privilege over the
 lineage. The lineage $L(m)$ of a record $m$ is the set of burn records it
-depends on.
+depends on. This realization-side object satisfies the append-only,
+non-negative, settlement-pinned and provenance-auditable requirements of
+`post:comparator:burn-primitive`.
 
 **Epoch Marker (`def:comparator:epoch-marker`).** A burn accumulator that
 the deployment's published marker policy recognizes by its form, one per
@@ -219,14 +221,17 @@ recognized markers satisfy all five conditions:
   lineage and its interpretation data.
 - **M2 network acceptance** — the policy determines a finite accepted set
   $A(k)$ per recognized marker, with $A(0) = \varnothing$ and
-  $A(k-1) \subseteq A(k) \subseteq L(m_k)$; $C(k) = A(k) \setminus A(k-1)$.
-  Every reader recovers the same complete $A(k)$ from the marker's fixed
+  $A(k-1) \subseteq A(k) \subseteq L(m_k)$ for $k \ge 1$;
+  $C(k) = A(k) \setminus A(k-1)$. Lineage, accepted sets and both
+  containments are read within one history. Every reader recovers the same complete $A(k)$ from the marker's fixed
   interpretation data and its predecessor's accepted set, without a private
   choice or a later observation; a commitment requires a uniquely verifiable
   public opening of the complete set. For every accepted record $r$, every
   reader can verify its lineage membership, its genuine underlying
   destruction $d(r)$, the non-negative amount $\mu(d(r))$, and the
-  attributed address $a(d(r)) \in \mathbb{A}$. A record failing verification
+  attributed address $a(d(r)) \in \mathbb{A}$; the identity, amount and
+  attribution belong to the destruction and agree across its valid
+  referring records. A record failing verification
   contributes nothing, and a candidate accepting it is not recognized;
   missing contents or evidence prevent recognition and never license
   omitting a member of $A(k)$. A candidate naming a burn outside its lineage,
@@ -252,8 +257,11 @@ recognized markers satisfy all five conditions:
 
 The deployment publishes its marker policy before genesis, fixed for that
 marker sequence, together with its identity and edition, the epoch-marker
-placement rule, and the cadence. No marker is obliged to accept a lineage
-burn; neither acceptance time nor eventual acceptance is specified.
+placement rule, and the cadence. The policy has authority over acceptance
+within the two bounds; settlement supplies the lineage bound. A burn in a
+marker's lineage remains eligible under these bounds at every successor,
+whether or not it is accepted. No marker is obliged to accept it; neither
+acceptance time nor eventual acceptance is specified.
 
 **Marker Burn Snapshot (`def:comparator:marker-burn-snapshot`).** Fix an
 admissible history, the published marker policy, and $m_k$ final at the
