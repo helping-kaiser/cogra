@@ -307,17 +307,21 @@ fn over_the_body_limit(err: &(dyn std::error::Error + 'static)) -> bool {
 ///
 /// Measured, not chosen, the way the depth and complexity ceilings are.
 /// The longest operation either client sends is the web history page at
-/// 6 116 bytes with its fragments, comments included. The widest variables
-/// any gesture carries are a media post's at every text cap — title 100,
-/// description 500, sensitive reason 140, ten descriptions of 1 000 — so
-/// 10 740 scalar values, each at most six bytes once JSON-encoded (a
-/// `\u00XX` escape), which is 64 440 bytes; its ten topic names and ten
-/// citations add under four kilobytes. Seventy-five kilobytes is the
-/// widest legitimate request, and 128 KiB leaves 1.7× headroom over it
-/// while bounding what an anonymous caller makes the server hold before
-/// the parse to that. `the_widest_legitimate_request_fits_under_the_json_ceiling`
-/// re-measures the widest gesture against it.
-pub const GRAPHQL_JSON_BODY_LIMIT_BYTES: usize = 128 * 1024;
+/// 6 116 bytes with its fragments, comments included. The widest content
+/// gesture is a media post at every text cap — title 100, description
+/// 500, sensitive reason 140, ten descriptions of 1 000 — so 10 740
+/// scalar values, each at most six bytes once JSON-encoded (a `\u00XX`
+/// escape): about 75 KB with its document, topics and citations. The
+/// widest request of all is a relay carrying the longest batch one
+/// prepare can stage under the shipped signing budget
+/// ([`ratelimit::SigningBudget::longest_batch`], 1 000): about 210 bytes
+/// an entry — a staged-write id and a base64 pre-commitment of a 32-byte
+/// nonce and a 64-byte signature — so about 210 KB. 320 KiB is the
+/// smallest multiple of 64 KiB above the 1.5× floor over it, and it
+/// bounds what an anonymous caller makes the server hold before the parse.
+/// `the_widest_legitimate_request_fits_under_the_json_ceiling` re-measures
+/// both against it.
+pub const GRAPHQL_JSON_BODY_LIMIT_BYTES: usize = 320 * 1024;
 
 /// Whether async-graphql will read the body as a multipart upload. The
 /// same parse and the same test the library's `receive_batch_body`

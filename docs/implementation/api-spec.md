@@ -300,14 +300,16 @@ budget stops being a preview of release, and a document refused
 only in production is the failure this rule exists to prevent.
 
 **The request body is bounded before the parse.** A `/graphql`
-body that is not a multipart upload is at most **128 KiB**,
-measured the same way: the longest operation either client sends
-is about 6 KB with its fragments, and the widest variables are a
+body that is not a multipart upload is at most **320 KiB**,
+measured the same way. The longest operation either client sends
+is about 6 KB with its fragments; the widest content gesture is a
 media post at every text cap — 10 740 characters, at most six
-bytes each once JSON-encoded — so the widest legitimate request is
-about 75 KB, and the ceiling leaves 1.7× over it. A standing test
-re-measures that request against the ceiling with at least 1.5×
-room. A multipart upload answers to the media transport's own
+bytes each once JSON-encoded — at about 75 KB; and the widest
+request of all is a relay carrying the longest batch one prepare
+can stage under the shipped signing budget ("A list is bounded by
+the longest batch"), a thousand entries at about 210 bytes each.
+320 KiB is the smallest multiple of 64 KiB above 1.5× that relay,
+and a standing test re-measures both requests against it. A multipart upload answers to the media transport's own
 ceiling instead (twice the larger upload cap, under "Content
 authoring"). A body past its ceiling is refused at
 the HTTP layer with **413** and never reaches the GraphQL parse:

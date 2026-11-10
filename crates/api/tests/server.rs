@@ -225,8 +225,10 @@ async fn a_json_body_past_its_ceiling_is_refused_before_the_parse(pool: PgPool) 
 /// The JSON ceiling is measured from the clients, so the widest request a
 /// client can legitimately send must pass it with headroom: the post
 /// composer's whole document file beside a media post at every text cap,
-/// each character the six-byte JSON escape. A cap or a document growing
-/// into the headroom fails here before it grows past the ceiling.
+/// each character the six-byte JSON escape, and a relay carrying the
+/// longest batch the shipped signing budget lets one prepare stage. A
+/// cap, a budget or a document growing into the headroom fails here
+/// before it grows past the ceiling.
 ///
 /// The widest legitimate request passes the JSON body ceiling with at least half again as much room.
 /// ´claim:server:the-widest-legitimate-request-fits´
@@ -278,25 +280,44 @@ async fn the_widest_legitimate_request_fits_under_the_json_ceiling(pool: PgPool)
         }},
     })
     .to_string();
-    assert!(
-        body.len() * 3 / 2 <= JSON_CEILING,
-        "the widest request is {} bytes, too close to the {JSON_CEILING}-byte ceiling",
-        body.len()
-    );
 
-    let response = test_app(pool)
-        .oneshot(
-            Request::builder()
-                .method("POST")
-                .uri("/graphql")
-                .header("content-type", "application/json")
-                .header("content-length", body.len())
-                .body(Body::from(body))
-                .expect("request"),
-        )
-        .await
-        .expect("response");
-    assert_eq!(response.status(), StatusCode::OK);
+    use base64::Engine;
+    let signature = base64::engine::general_purpose::STANDARD.encode(
+        common::l1::wire::encode_pre_commitment(&[0xff; common::l1::crypto::SALT_LEN], &[0xff; 64]),
+    );
+    let longest = api::ratelimit::SigningBudget::default().longest_batch();
+    let proposals: Vec<serde_json::Value> = (0..longest)
+        .map(|_| serde_json::json!({ "stagedWriteId": uuid::Uuid::new_v4(), "signature": signature }))
+        .collect();
+    let relay = serde_json::json!({
+        "query": include_str!("../../../web/src/lib/graphql/writes.graphql"),
+        "operationName": "SubmitProposals",
+        "variables": { "input": { "proposals": proposals }},
+    })
+    .to_string();
+
+    let app = test_app(pool);
+    for body in [body, relay] {
+        assert!(
+            body.len() * 3 / 2 <= JSON_CEILING,
+            "a legitimate request is {} bytes, too close to the {JSON_CEILING}-byte ceiling",
+            body.len()
+        );
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/graphql")
+                    .header("content-type", "application/json")
+                    .header("content-length", body.len())
+                    .body(Body::from(body))
+                    .expect("request"),
+            )
+            .await
+            .expect("response");
+        assert_eq!(response.status(), StatusCode::OK);
+    }
 }
 
 /// The JSON ceiling is not the upload's: a multipart picture at exactly
