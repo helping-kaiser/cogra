@@ -740,10 +740,14 @@ A record by actor $i$ is writable in epoch $k$ iff all three sub-gates hold
    when the door has headroom (the membrane, not a wall).
 
 An insolvent actor (W1) restores capacity immediately by committing burns.
-Re-crossing the wall (W2a) requires some combination of new burns raising
-$r_i$ directly and new incoming allocation from actors whose rates exceed
-the current standing, lifting the mediant within the transported-rate hull
-(`prop:epoch:final-standing-hull`).
+Re-crossing the wall (W2a) requires the recomputed final standing to pass
+it: an accepted burn raises the actor's own source rate and a complete
+eligible person-directed act may add higher-rate support, but neither
+intervention alone guarantees that result — passing certificates do not
+imply monotonic standing under an accepted burn or act
+(`thm:epoch:burn-response`;
+monotone regimes `cor:epoch:burn-monotone-regimes`; bounds
+`prop:epoch:finite-standing-response`).
 
 Actor states (`tbl:epoch:actor-states`), by (W2a $\rho_{\text{act}} \ge
 \rho_\theta$, W1 $b \ge \theta$): **Active** (✓/✓, may act); **Band** (✓/✓,
@@ -766,7 +770,8 @@ high-rate external vouch may lift it under the ordinary hull. **Same-epoch
 topology creates no source** (`cor:epoch:same-epoch-source-hull`): a
 same-epoch cohort whose source rates all lie below $\rho_\theta$ cannot
 mutually vouch itself above the wall; only a current external positive-rate
-source lifts a newly registered actor.
+source lifts a newly registered actor. This is the equal-contributing-rate
+regime, not a theorem for heterogeneous funded partitions.
 
 **Universal per-act burn benchmarks
 (`cor:epoch:universal-burn-benchmarks`).** For an unsupported actor
