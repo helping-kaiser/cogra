@@ -1195,8 +1195,9 @@ source Tag and Review terminal legs; Offer sources Review legs but no Tag;
 Item additionally sources a Bid leg; Chat additionally sources Send,
 Invitation, and De-invite legs; Profile additionally sources the derived
 Reputation component; and every passive type sources Reference terminal
-legs — Reference's A-leg may source from any passive node (the universal
-citing artifact). Edges between actors may be asymmetric; each edge
+legs — Reference's A-leg may land on any passive node (the universal
+citing artifact), which then sources one author-fixed Reference/T terminal
+leg. Edges between actors may be asymmetric; each edge
 carries independent sentiment parameters set unilaterally by its
 originating actor (`rem:graph:asymmetry`).
 
