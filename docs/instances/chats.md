@@ -49,7 +49,7 @@ Chat and Message nodes they anchor
 | **Leave** | Actor → Chat | The exit record — unilateral, unconditional, a control record. Departure *without* destination: there is no "nowhere" node and a self-referential T-leg is a join, so Leave is not subsumed by the move form. |
 | **Join Request** | Actor → Chat | Asking to join — a proposal, never participation. |
 | **Invitation** | Actor → Chat → Profile | Inviting — a public, priced vouch that the invitee fits; a proposal, never participation. |
-| **De-invite** | Actor → Chat → Profile | The expulsion mark, and withdrawal of one's own Invitation; a control record. |
+| **De-invite** | Actor → Chat → Profile | The expulsion mark; a control record with no standing effect. |
 | **Send** | Actor → Chat → Message | Posting a message — the terminal leg mints the Message. |
 
 Two L1 facts frame the whole doc:
@@ -175,14 +175,9 @@ authority policy `𝒫`:
   proposal's anchor cited in the payload (§6): De-invites
   (`decision:disavow_member`) and un-ban Invitations
   (`decision:lift_ban`, §5). A freelance De-invite is
-  membership-inert; its only effect is suppressing the author's
-  *own* Invitation vouch toward that (Chat, Profile) — evidence,
-  not force, and per-author by L1's own rule. An ordinary member's
+  membership-inert — evidence, not force. An ordinary member's
   Invitation is a vouch and admission backing, never part of the
-  ban predicate — otherwise any member could un-ban anyone. L1's
-  Inviter Revocation stays per-author because it governs vouch
-  compilation; this predicate governs membership — two folds over
-  the same records, asking different questions.
+  ban predicate — otherwise any member could un-ban anyone.
 - **Backing (gated chats):** where the chat's governance map
   requires admission approval, the fold recognizes a Participant —
   keyed to its **T-leg**, the chat being entered — only when
@@ -226,9 +221,10 @@ the joiner's own Participant record**:
 - **Invite flow:** an existing member authors an **Invitation**
   (Actor → Chat → Profile) — a priced public vouch, with the
   invite message as payload; the invitee, if they want in,
-  authors their own Participant. An Invitation is revocable per
-  author by a later De-invite; a later Invitation re-establishes
-  it.
+  authors their own Participant. Its author withdraws it by a
+  cancelling Invitation that nets their bundle toward that
+  (Chat, Profile) to `(0,0)`; a later positive Invitation
+  re-establishes it (``lem:epoch:authored-vouch-withdrawable``).
 
 The Participant's parameters (interactivity, responsibility) are
 a real stance toward the chat, defaulted low like every normal

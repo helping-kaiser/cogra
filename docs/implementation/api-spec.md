@@ -4753,8 +4753,7 @@ input PrepareChatLeaveInput {
  the payload. Prepared only for the chat authority the per-chat
  contract designates, and only against a passed
  decision:disavow_member proposal; the membership fold ignores
- anything else (a freelance De-invite merely revokes the author's
- own prior Invitation vouch)."
+ anything else."
 input PrepareDeInviteInput {
   chat: UUID!
   member: UUID!
