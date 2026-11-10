@@ -775,15 +775,11 @@ Stated independently of any mechanism that achieves them.
   compliant. Downstream computation consumes that complete package
   (`lem:graph:ordered-replay-determinism`,
   `prop:epoch:epoch-replay-determinism`).
-- **Epoch history (`rem:epoch:epoch-history-is-the-marker-sequence`).** The
-  epoch history is the recognized epoch-marker sequence of the admissible
-  history, read past the settlement depth, with the empty initial boundary
-  and pending markers distinguished by M5 (§1.2). Epochs number
-  certificates from 1, and positions number acts within one certificate
-  from 1; neither reads the realization's own order, and the unsettled part
-  of its history is never read. A replacement beyond the published
-  settlement depth halts Layer 1 at the last closed epoch
-  (`rem:comparator:finality-breach-halts`, §1.2).
+- **Epoch history.** The epoch history is the recognized epoch-marker
+  sequence read past the settlement depth
+  (`rem:epoch:epoch-history-is-the-marker-sequence`, §11.6). A replacement
+  beyond the published settlement depth halts Layer 1 at the last closed
+  epoch (`rem:comparator:finality-breach-halts`, §1.2).
 - **Host Contract (`post:network:host-contract`).** The host operates the
   boundary and publishes the results; its entire authority is what it
   publishes each boundary. One self-contained final-state package: **(i)
@@ -3287,9 +3283,11 @@ one settled read and the writing epoch's debit vintage; the next controller
 price cannot replace that vintage. Any participant accepting the complete
 package, with the same published constants, compiler edition, and
 certificate procedure, reproduces every epoch-$k$ quantity. The epoch history
-is the recognized marker sequence read past the settlement depth, with an
-empty initial boundary; epochs number certificates from 1, and positions
-number acts within one certificate from 1
+is the recognized epoch-marker sequence of the admissible history, read past
+the settlement depth, with the empty initial boundary and pending markers
+distinguished by M5 (§1.2). Epochs number certificates from 1, and positions
+number acts within one certificate from 1; neither reads the realization's
+own order, and the unsettled part of its history is never read
 (`rem:epoch:epoch-history-is-the-marker-sequence`).
 
 **Log position (`def:epoch:log-position`).** $\mathrm{pos}(e)$, the
