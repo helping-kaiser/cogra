@@ -3068,18 +3068,28 @@ operator duties (both at the end of this section).
 - **Transparency of Protocol Constants and Formulas
   (`subsec:deployment:transparency-of-protocol-formulas`).** The network
   protocol constants ($\beta, \eta, q, \nu, \rho_{\text{pol}}, \theta,
-  m_\theta, N_{\text{epoch}}, \delta_{\text{pos}}, L, L_{\text{vch}},
+  m_\theta, N_{\text{epoch}}, \delta_{\text{pos}}, L, L_{\text{hop}},
   M_{\text{payload}}$), the derived effective floor $\rho_{\text{eff}}$,
   the published boundary triple (target size, min/max durations), the
   derived raw constants ($\tilde{w}_{\text{spam}}, \tilde{w}_{\max},
-  \tilde{w}_{\max}^{\text{Op}}$), **and the standing-census, complete-act
+  \tilde{w}_{\max}^{\text{Op}}$), **the standing-census, complete-act
   compiler, coefficient, projected-activation, path-selection, allocator,
-  mediant, scalar-encoding, and certificate formula editions**, together
-  with the interface constants the network reads from its realization and
-  surfaces unmodified (`subsec:deployment:realization-obligations`), are
-  known to all clients and do not change without clients being able to
-  detect the change and invalidate affected cached computations before it
-  applies.
+  mediant, scalar-encoding, certificate, and wall-controller formula
+  editions**, the marker policy with its identity and edition, the
+  deployment's structural floor declaration
+  $\rho_{\theta,\min} \in \{\rho^*, 3/37\}$ with its exact defining object
+  and X8 comparison procedure, and the controller's reduced constants
+  $a, r, d$, together with the interface constants the network reads from
+  its realization and surfaces unmodified
+  (`subsec:deployment:realization-obligations`), are known to all clients
+  and do not change without clients being able to detect the change and
+  invalidate affected cached computations before it applies. The marker
+  policy is published before genesis and stays fixed for the interpretation
+  of that marker sequence; a different policy cannot reinterpret a
+  recognized marker or erase predecessor acceptance. The floor declaration
+  is published once, beside $\nu$, before the first epoch; changing it is a
+  publicly identified structural change with regenerated evidence, never a
+  host-policy or epoch dial.
 - **Self-Sufficient Edge Record (`subsec:deployment:sufficiency`).** The
   published record for each edge contains exactly the fields required to
   recompute $\tilde{w}(e)$, $\epsilon(e)$, the CAN base value, and the
