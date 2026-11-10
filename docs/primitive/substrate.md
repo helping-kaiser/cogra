@@ -285,8 +285,7 @@ closure — and drives the restoration flows when a check fails: an
 insolvent actor (W1) restores capacity immediately by committing
 burns; re-crossing the wall (W2a) takes some combination of new
 burns and admissible vouch-positive connections from actors with
-source rates above the current standing — burns alone can
-suffice. Who funds these debits — the community's admission
+source rates above the current standing. Who funds these debits — the community's admission
 fund, from genesis on — is economics:
 [economics.md](economics.md).
 
