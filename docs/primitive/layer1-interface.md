@@ -1941,8 +1941,8 @@ feed/bridge/CAN properties only, not the standing activation: zero at zero;
 strictly monotone increasing in $\alpha_j$; $\tilde{w}(e_{\text{Rep}}) < 1$
 always; concave; positive parity; both components synchronized at every
 epoch boundary; feed-through hierarchy (profile-bridged ceiling
-$(\tilde{w}_{\max}^{\text{Op}})^2 \cdot \tilde{w}_{\max} \approx 0.249$ vs
-direct-Opinion ceiling $\approx 0.502$ — the bridge is always at least
+$(\tilde{w}_{\max}^{\text{Op}})^2 \cdot \tilde{w}_{\max} \approx 0.250$ vs
+direct-Opinion ceiling $\approx 0.503$ — the bridge is always at least
 2× weaker); raw $\tau$-channel ceiling at frozen $p$:
 $\sup_\tau \tilde{w}(e_{\text{Rep}})(p_0;\tau) = |\det \boldsymbol{\Psi}^{[P]}(p_0)|^{1/2}\sqrt{2} < 1$.
 Self-loop paths Actor→Profile→Actor produce no register update in raw
