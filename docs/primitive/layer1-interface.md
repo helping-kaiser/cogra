@@ -3589,7 +3589,10 @@ midpoint, or $3/37$. A difference enclosure straddling zero is indecisive:
 refine the wall and ridge enclosures or reject the proposed wall and any
 package requiring it. The ridge is the chartered reason for both floors —
 beyond it clean elasticity decreases — and economic positivity and this
-leverage landmark are structural choices, not consequences of X2.
+leverage landmark are structural choices, not consequences of X2. The
+deployment assesses economic suitability under
+`cond:deployment:wall-calibration` and `cond:deployment:parameter-comparisons`
+(§13.1).
 
 **Floor economics (`cor:epoch:floor-economics`).** At every published wall,
 $\theta = \nu\rho_\theta \ge \nu\rho_{\theta,\min} > 0$ (minimum price per act)
@@ -3885,7 +3888,7 @@ and retains the material needed to replay that edition.
 | Condition | Duty |
 |---|---|
 | `cond:deployment:standing-parameters` | Publish the tilt profile and backoff grid, the depth mass and its deepest supported depth, the self-retention base, the domain weights, and each act family's normalized domain profile, with their defining formulas and admissibility evidence. |
-| `cond:deployment:wall-calibration` | Publish the numéraire, policy-floor schedule, structural floor declaration and its exact defining object, margin, controller edition, initialization, reduced constants, and arithmetic and comparison procedure; publish proposal and delivered wall separately and certify the charged value. |
+| `cond:deployment:wall-calibration` | Publish the numéraire, policy-floor schedule, structural floor declaration and its exact defining object, margin, controller edition, initialization, reduced constants, and arithmetic and comparison procedure. Evaluate both chartered floors against the declared economic and work criteria; neither is a default. Publish proposal and delivered wall separately, including the floor, deadband and step-cap order, preserve the debit vintage in force, and certify the charged value. A floor switch is a public structural change with regenerated evidence; a third floor needs its own derivation. |
 | `cond:deployment:boundary-policy` | Publish the epoch target size, minimum and maximum durations, policy-floor schedule, threshold announcement lead, candidate-set search policy and trial budget, validation timeout, solver availability target, and fallback, with a constant-change adaptation window during which cadence retargeting is frozen. |
 | `cond:deployment:canonical-encoding` | Publish and version one canonical encoding of the standing package, with round-trip evidence. |
 | `cond:deployment:canonical-replay` | Publish the deterministic certification procedure with its precision, refinement, equality handling, and stopping limits, and every attempted rung with its PASS, FAIL, or INDECISIVE verdict. |
