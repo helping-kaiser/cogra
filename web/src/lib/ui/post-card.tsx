@@ -185,6 +185,7 @@ export function PostCard({
   onOpenMedia,
   stream,
   authorHere = false,
+  authorFrom = null,
   onOpenMenu,
   menuOpen = false,
   node,
@@ -296,6 +297,8 @@ export function PostCard({
    * (ProfilePosts.md:25, `ActorChip`'s `here`).
    */
   authorHere?: boolean;
+  /** The `from` the author chip's profile is opened with (`ActorChip`'s `from`). */
+  authorFrom?: string | null;
 }) {
   const detail = variant === "detail";
   const router = useRouter();
@@ -487,6 +490,7 @@ export function PostCard({
             testId={authorTestId}
             node={part(node, "authorChip")}
             here={authorHere}
+            from={authorFrom}
           />
         )}
         <div className="flex flex-none items-center gap-3">
