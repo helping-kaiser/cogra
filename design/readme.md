@@ -4020,8 +4020,10 @@ four-rung ladder.
   from the feed are Feed's stack, and one screen may sit in two tabs at
   two positions at once. The Profile TAB is your own profile; your own
   profile reached from a chip in the feed is still Feed's. The reel
-  stream is Feed's too, which is what its edge has said since the reel
-  round.
+  stream lights its origin's root, the stack of the list it was opened
+  from; an arrival with no origin, a shared link, lights Feed. A tag
+  page stays lit on the root it was opened from, and a stream opened
+  from a tag page lights that same root (jakob 2026-11-10).
 - **The compose slot has no ladder** — it is an action, not a
   destination, the deviation the master already declares, and the
   kept-draft rules govern what a second tap meets.
