@@ -1209,9 +1209,8 @@ $\mathrm{sgn}(c_{\text{Acc}})$, and buyer confirmation
 $\mathrm{sgn}(c_{\text{Rat}})$ — and **positive commercial reputation holds
 iff all three stance marginals are positive** (the *conjunction*, reading the
 $p_d$ marginal row; not the parity product $\prod\epsilon(e)$, which would
-reward predatory-meets-coerced). This is a terminal L2 read-site: CoGra is
-free to adopt or replace it — the interface records the reference default, it
-does not bind it. (`subsec:necessity:stance-marginal-reputation`)
+reward predatory-meets-coerced). This is a terminal Layer-2 read-site
+(`subsec:necessity:stance-marginal-reputation`).
 
 **Cross-layer (`rem:graph:settlement-cross-layer`):** Layer 1 holds no value,
 locks nothing, adjudicates nothing; it records Offers and ownership changes. A
@@ -1813,10 +1812,7 @@ content commitment (*witness*) is invariant across phases; only carriage
 migrates. Centralized: Layer 1 tracks payload and salt, removable on
 request. Decentralized: Layer 1 tracks only the witness; payload and salt
 are a terminal carriage obligation. The structural record is identical in
-both. The L1 author has confirmed that Layer-1 carriage of payload and salt
-is optional from the start, so a centralized deployment may already run
-witness-only. CoGra does
-([data-model.md](../implementation/data-model.md#act-payload-carriage)).
+both.
 
 **Payload envelope convention (L2).** The opaque payload MAY carry a structured
 Layer-2 **content-envelope** — a deterministic-CBOR convention; the Peer Content
@@ -2502,9 +2498,8 @@ it strictly $\prec$-follows the $\prec$-maximal element of $M(a,C)$ (a
 concurrent or earlier one is inert, mirroring the epoch title fold), and a
 Participant strictly $\prec$-following the De-invite re-establishes membership
 unless $\mathcal{P}$ specifies ban semantics. **This fold is not part of the
-L1 interface**: membership is a Layer-2 read-site, so it is CoGra's to define,
-adopt, or replace — the interface fixes only the boundary (next paragraph),
-never the mechanism.
+L1 interface**: membership is a Layer-2 read-site — the interface fixes only
+the boundary (next paragraph), never the mechanism.
 
 **Membership is terminal (`rem:nodes:membership-is-terminal`).** No
 admission rule reads $\mathrm{member}^{(k)}$ — it feeds neither the gate,
@@ -2581,10 +2576,9 @@ at minting, immutable, surviving payload removal, published with the
 self-sufficient edge record. No read-site of $(a, o)$ or of $l$ is ever read
 back into the decision of what may append to $G$, so the whole license field
 belongs to the terminal complement. **Judging a degree on either axis,
-checking compliance, and enforcing terms are Layer 2 acts** — CoGra's, and
-published per the formula-completeness invariant
-(App. I, `subsec:deployment:completeness`); see
-[platform-guidelines.md §5](../instances/platform-guidelines.md#5-license-and-provenance-obligations).
+checking compliance, and enforcing terms are Layer 2 acts**, published per
+the formula-completeness invariant
+(App. I, `subsec:deployment:completeness`).
 A more demanding pair still acts indirectly: it lowers adoption, hence
 betweenness centrality $S_C$, hence a creator's guild reward $R_C$, while
 $r_C$ and $\alpha_C$ partially offset it via the standing amplifier
