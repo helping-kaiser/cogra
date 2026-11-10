@@ -2802,9 +2802,12 @@ $\mathcal{K}_k$ makes the fixed point unique on it and every orbit converge
 geometrically (`thm:dynamics:certified-conserved-standing-uniqueness`,
 `thm:dynamics:within-epoch-fixed-point-convergence`); and the solution does
 not depend on where the solver started
-(`cor:dynamics:standing-initialization-independence`). The orbit and
-bifurcation apparatus of the earlier scalar regime is quarantined as
-non-normative (`subsec:dynamics:quarantined-residuals`).
+(`cor:dynamics:standing-initialization-independence`). At every accepted
+rung, single-step non-normal amplification is excluded in the infinity norm.
+The oscillator, onset, and drift apparatus is quarantined from the normative
+dynamics of the conserved map: its onset classifications are not results
+about that map (`subsec:dynamics:quarantined-apparatus-scope`), and the
+contraction certificate depends on none of it.
 
 **Burn and act response (`prop:epoch:no-tilt-commitment-monotonicity`,
 `thm:epoch:burn-response`).** At the anchor $t_k = 0$, with counts, base
