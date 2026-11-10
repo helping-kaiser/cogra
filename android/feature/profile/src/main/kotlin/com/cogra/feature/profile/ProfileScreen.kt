@@ -128,6 +128,8 @@ fun ProfileRoute(
     onChats: (() -> Unit)? = null,
     /** `Message` on another's profile: the chats coming-soon (ProfileOther.md:51). */
     onMessage: () -> Unit = {},
+    /** The figures' one door: the opinions page on this profile (Profile.md:49). */
+    onOpenOpinions: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
     shareModel: ProfileShareViewModel = hiltViewModel(),
 ) {
@@ -182,6 +184,7 @@ fun ProfileRoute(
         bell = bell,
         onChats = onChats,
         onMessage = onMessage,
+        onOpenOpinions = onOpenOpinions,
     )
 }
 
@@ -271,6 +274,8 @@ fun ProfileScreen(
     onChats: (() -> Unit)? = null,
     /** `Message` on another's profile. */
     onMessage: () -> Unit = {},
+    /** The figures' one door: the opinions page on this profile (Profile.md:49, ProfileOther.md:57). */
+    onOpenOpinions: () -> Unit = {},
     now: Instant = Instant.now(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -328,6 +333,7 @@ fun ProfileScreen(
                         onShareProfile = onShareProfile,
                         onRequireAccount = onRequireAccount,
                         onMessage = onMessage,
+                        onOpenOpinions = onOpenOpinions,
                     ),
                     banners = banners,
                     drillIn = onBack != null,
@@ -352,6 +358,7 @@ internal class ProfileActions(
     val onShareProfile: (String) -> Unit,
     val onRequireAccount: (() -> Unit)?,
     val onMessage: () -> Unit,
+    val onOpenOpinions: () -> Unit,
 )
 
 /**
@@ -486,6 +493,7 @@ private fun ProfileList(
                 under = { savedHost?.comfortLine(profile.id)?.let { RowLine(it, "profile_row_line") } },
                 figures = state.figures,
                 own = state.own,
+                onFigures = actions.onOpenOpinions,
             )
         }
         item(key = "tabs") { ChronicleTabRow(state.filter, actions.onFilterChange) }
