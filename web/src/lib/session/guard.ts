@@ -29,6 +29,13 @@ export type AuthGuard = {
    * is still the replay's job.
    */
   prime(): Promise<void>;
+  /**
+   * Rotate the pair once, for a caller that sends without an `Outcome` for
+   * `run` to read — the part route answers a bare HTTP 401. True when the
+   * caller should send again; `staleAccess` is the token that was refused.
+   * The same refresher `run` uses, so the two share one single-flight domain.
+   */
+  refresh(staleAccess: string | null): Promise<boolean>;
 };
 
 export function createGuard(store: TokenStore, refresher: Refresher): AuthGuard {
@@ -56,5 +63,7 @@ export function createGuard(store: TokenStore, refresher: Refresher): AuthGuard 
       });
       await priming;
     },
+
+    refresh: (staleAccess) => refresher.refresh(staleAccess),
   };
 }

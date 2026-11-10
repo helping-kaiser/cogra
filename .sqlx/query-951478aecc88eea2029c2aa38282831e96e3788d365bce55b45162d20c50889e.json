@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT d.id AS deletion_id, d.user_id, a.realization_address AS address,\n                  d.include_content, d.executed_at AS \"executed_at!\"\n           FROM auth_account_deletions d\n           JOIN actors a ON a.id = d.user_id\n           WHERE d.executed_at IS NOT NULL\n             AND a.handle <> 'redacted-user-' || a.id::text\n           ORDER BY d.executed_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "deletion_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "include_content",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "executed_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "951478aecc88eea2029c2aa38282831e96e3788d365bce55b45162d20c50889e"
+}

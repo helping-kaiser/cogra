@@ -188,4 +188,15 @@ describe("priming a token before a body goes up", () => {
     // and send anonymous for the rest of its life.
     expect(refresh).toHaveBeenCalledTimes(2);
   });
+
+  // The part route answers a bare 401, with no `Outcome` for `run` to read, so
+  // the uploader asks for the rotation by name — through the same refresher.
+  it("hands a caller's refresh to the refresher, with the refused token", async () => {
+    const store = createTokenStore();
+    const { refresher, refresh } = refresherReturning(true);
+    const guard = createGuard(store, refresher);
+
+    await expect(guard.refresh("stale")).resolves.toBe(true);
+    expect(refresh).toHaveBeenCalledExactlyOnceWith("stale");
+  });
 });

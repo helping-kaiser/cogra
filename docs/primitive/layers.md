@@ -150,6 +150,9 @@ and only for operational state, not history:
 - `user_preferences` — per-user settings row, overwritten in
   place; a setting's current value is operational state, not
   history.
+- `user_view_log` — per-viewer seen-list; never compacted while the
+  account stands, deleted outright when its owner deletes the
+  account.
 
 Every entry is operational state private to the viewer.
 Additions to this list require a named exception added here.

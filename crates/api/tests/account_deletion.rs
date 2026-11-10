@@ -3,14 +3,14 @@
 //! the session-free confirm and its 7-day grace, supersede, cancel, the
 //! dead links' one code, the deletion mail budget, the viewer-only read,
 //! and the applicant's immediate whole-account delete with its
-//! funded-window refusal (design item 69). Execution — the husk — is the
-//! erasure engine's and not here. Requires a live Postgres (`make up`).
+//! funded-window refusal (design item 69). Execution — the husk — is
+//! `account_execution.rs`. Requires a live Postgres (`make up`).
 //!
 //! The deletion verbs' error codes (charter API rule 3), each provoked
 //! here: UNAUTHENTICATED on the three session verbs, FORBIDDEN on both
 //! paths, RATE_LIMITED on the request, and DELETION_TOKEN_INVALID for
 //! the unknown, superseded, cancelled and expired link (the executed one
-//! arrives with the engine); the confirm's RATE_LIMITED is
+//! is `account_execution.rs`'s); the confirm's RATE_LIMITED is
 //! `rate_limits.rs`'s shared per-IP budget. EMAIL_NOT_VERIFIED is not
 //! provocable on these verbs: the mailed path's accounts are verified by
 //! construction, and the applicant verb does not gate on the proof (seam

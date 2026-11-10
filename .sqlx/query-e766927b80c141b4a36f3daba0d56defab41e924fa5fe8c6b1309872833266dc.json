@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT family AS \"family!\", node AS \"node!\" FROM (\n               SELECT r.family, l.target AS node\n               FROM mirror_records r\n               JOIN mirror_record_legs l ON l.record_id = r.record_id\n               WHERE r.author = $1 AND r.family = ANY($3) AND l.leg IN ('binary', 't')\n               UNION\n               SELECT family, target AS node FROM staged_writes\n               WHERE actor_id = $2 AND family = ANY($3) AND state <> 'carried'\n           ) authored\n           ORDER BY family, node",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "family!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "node!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "e766927b80c141b4a36f3daba0d56defab41e924fa5fe8c6b1309872833266dc"
+}

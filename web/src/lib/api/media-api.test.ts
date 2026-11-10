@@ -5,7 +5,7 @@
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { HttpResponse } from "msw/http";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   fetchMediaAttachmentStatus,
@@ -103,7 +103,7 @@ describe("uploadMedia", () => {
 });
 
 describe("uploadVideo", () => {
-  const passthrough: AuthGuard = { run: (block) => block(), prime: async () => {} };
+  const passthrough: AuthGuard = { run: (block) => block(), prime: async () => {}, refresh: async () => false };
 
   /** A parts run with no network: what it was asked for, and what it answers. */
   function uploader(failure: string | null = null) {
@@ -315,6 +315,7 @@ describe("uploadVideo", () => {
         return block();
       },
       prime: async () => {},
+      refresh: async () => false,
     };
     server.use(beginHandler(session()), completeHandler(payload(media("m"))));
     await uploadVideo(
@@ -324,6 +325,65 @@ describe("uploadVideo", () => {
       { uploader: uploader().stub, thresholdBytes: 64 },
     );
     expect(wrapped).toEqual(["call-0", "call-1"]);
+  });
+});
+
+describe("uploadVideo, default part uploader", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  // The uploader built when none is injected rides the guard's refresh: a
+  // part refused for an expired token is sent again after the session rotates,
+  // instead of the whole upload failing on a long clip.
+  it("refreshes through the guard when a part is refused with a 401", async () => {
+    server.use(
+      gqlLink.mutation("BeginMediaUpload", () =>
+        HttpResponse.json({
+          data: {
+            beginMediaUpload: {
+              __typename: "BeginMediaUploadPayload",
+              upload: {
+                __typename: "MediaUploadSession",
+                id: "sess-1",
+                partSizeBytes: 64,
+                partCount: 1,
+              },
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+      gqlLink.mutation("CompleteMediaUpload", () =>
+        HttpResponse.json({
+          data: { completeMediaUpload: payload(media("m-long")) },
+        }),
+      ),
+    );
+    const realFetch = globalThis.fetch;
+    const parts: number[] = [];
+    vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) => {
+      if (!String(input).includes("/media/uploads/")) return realFetch(input, init);
+      parts.push(parts.length === 0 ? 401 : 200);
+      return Promise.resolve(new Response(null, { status: parts[parts.length - 1] }));
+    });
+    const refresh = vi.fn(async () => true);
+    const guard: AuthGuard = {
+      run: (block) => block(),
+      prime: async () => {},
+      refresh,
+    };
+
+    const outcome = await uploadVideo(
+      client(),
+      guard,
+      { blob: new Blob([new Uint8Array(64) as BlobPart], { type: "video/mp4" }), scale: "POST" },
+      { thresholdBytes: 64 },
+    );
+
+    expect(outcome.kind).toBe("success");
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(parts).toEqual([401, 200]);
   });
 });
 

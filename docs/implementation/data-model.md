@@ -932,18 +932,24 @@ CREATE UNIQUE INDEX actors_realization_address_key ON actors (realization_addres
 -- detection"). password_changed_at is when the password was last
 -- set — registration, a reset or a change — stamped in the
 -- statement that rotates the hash; Settings reads it as the
--- password's age. Nothing references this row; it is a pure bolt-on
--- keyed by the actor.
+-- password's age. An executed account deletion redacts the row in
+-- place (erasure.md §2): email, password_hash, the verification
+-- token hash and reuse_detected_at go to NULL together, and a row
+-- with no password_hash is no login — every credentials read skips
+-- it. Nothing references this row; it is a pure bolt-on keyed by
+-- the actor.
 CREATE TABLE user_credentials (
     actor_id                      UUID        PRIMARY KEY REFERENCES actors(id),
-    email                         TEXT        NOT NULL UNIQUE,
-    password_hash                 TEXT        NOT NULL,
+    email                         TEXT        UNIQUE,
+    password_hash                 TEXT,
     password_changed_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     account_state                 TEXT        NOT NULL CHECK (account_state IN ('guest', 'applicant', 'member')),
     email_verified_at             TIMESTAMPTZ,
     email_verification_token_hash BYTEA       UNIQUE,
     reuse_detected_at             TIMESTAMPTZ,
-    created_at                    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at                    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT user_credentials_redacted_together
+        CHECK ((email IS NULL) = (password_hash IS NULL))
 );
 
 -- Actor profiles: append-only versions of the profile display
@@ -1954,7 +1960,13 @@ CREATE UNIQUE INDEX auth_email_changes_one_live_idx
 -- Account deletions: the grace-period state per
 -- erasure.md §5 — requested, then confirmed by opening the mailed
 -- link, cancellable from any logged-in session until the deadline,
--- executed by the worker after it. A requested row has no deadline:
+-- executed by the worker after it. executed_at is the execution's
+-- claim: one transaction, under the account lock and this row's,
+-- that stamps it and redacts the credentials, so a cancel either
+-- commits first or finds the row executed. The execution is done
+-- when the actor's handle reads redacted-user-{uuid}, which its last
+-- transaction writes; an executed row whose actor still carries its
+-- own handle is resumed. A requested row has no deadline:
 -- confirmed_at and scheduled_for are set together, at the first
 -- confirmation. A second request supersedes an unconfirmed one
 -- (superseded_at); a confirmed one is never superseded, so at most

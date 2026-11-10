@@ -18,7 +18,7 @@ import type { WriteResult, WriteSigner } from "./write-signer";
 
 const server = startMswServer();
 
-const passthroughGuard: AuthGuard = { run: (block) => block(), prime: async () => {} };
+const passthroughGuard: AuthGuard = { run: (block) => block(), prime: async () => {}, refresh: async () => false };
 
 const PAST = "2026-08-06T12:00:00Z";
 

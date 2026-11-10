@@ -3,6 +3,8 @@
 // localStorage is the persistent half because its `storage` event
 // propagates sign-out and rotation to other tabs for free.
 
+import { safeStorage } from "@/lib/safe-storage";
+
 export type SessionAuth = {
   readonly accessToken: string;
   readonly refreshToken: string;
@@ -29,16 +31,17 @@ export type TokenStore = {
 const REFRESH_KEY = "cogra.refreshToken";
 const ACCOUNT_KEY = "cogra.activeAccount";
 
+// A browser that refuses storage still gets a working tab: the pair then
+// lives in memory (`safe-storage.ts`) and a reload signs out.
+const storage = safeStorage();
+
 export function createTokenStore(): TokenStore {
   let accessToken: string | null = null;
   const listeners = new Set<() => void>();
 
   const notify = () => listeners.forEach((listener) => listener());
 
-  const stored = (key: string) => {
-    if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(key);
-  };
+  const stored = (key: string) => storage.getItem(key);
 
   if (typeof window !== "undefined") {
     // A refresh token stored before custody was account-keyed carries no
@@ -46,10 +49,10 @@ export function createTokenStore(): TokenStore {
     // migration cost. IndexedDB records are untouched here; the identity
     // store adopts them once an account signs in.
     if (stored(REFRESH_KEY) !== null && stored(ACCOUNT_KEY) === null) {
-      window.localStorage.removeItem(REFRESH_KEY);
+      storage.removeItem(REFRESH_KEY);
     }
     if (stored(REFRESH_KEY) === null && stored(ACCOUNT_KEY) !== null) {
-      window.localStorage.removeItem(ACCOUNT_KEY);
+      storage.removeItem(ACCOUNT_KEY);
     }
     // Fires only in *other* tabs; key === null means a wholesale clear.
     window.addEventListener("storage", (event) => {
@@ -72,14 +75,14 @@ export function createTokenStore(): TokenStore {
       accessToken = auth.accessToken;
       // Account first: no observer window ever sees a refresh token
       // without the account it belongs to.
-      window.localStorage.setItem(ACCOUNT_KEY, auth.accountId);
-      window.localStorage.setItem(REFRESH_KEY, auth.refreshToken);
+      storage.setItem(ACCOUNT_KEY, auth.accountId);
+      storage.setItem(REFRESH_KEY, auth.refreshToken);
       notify();
     },
     clear() {
       accessToken = null;
-      window.localStorage.removeItem(REFRESH_KEY);
-      window.localStorage.removeItem(ACCOUNT_KEY);
+      storage.removeItem(REFRESH_KEY);
+      storage.removeItem(ACCOUNT_KEY);
       notify();
     },
     subscribe(listener) {
