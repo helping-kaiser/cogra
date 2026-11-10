@@ -1,16 +1,17 @@
 // @vitest-environment node
+//
+// `AbortSignal.timeout` runs on the platform's own timer, which vitest's fake
+// clock does not drive — so these use real, tiny budgets.
 
-import { ApolloLink, execute, gql } from "@apollo/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SSR_READ_TIMEOUT_MS, ssrFetch, ssrLink } from "./ssr-link";
 
-beforeEach(() => {
-  vi.useFakeTimers();
-});
+const BUDGET_MS = 25;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 afterEach(() => {
-  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -36,20 +37,17 @@ describe("the server-side read budget", () => {
 describe("ssrFetch", () => {
   it("aborts a request that outlasts the budget", async () => {
     const seen: AbortSignal[] = [];
-    const call = ssrFetch(hanging(seen))("http://api/graphql");
-    const settled = expect(call).rejects.toBeDefined();
-    await vi.advanceTimersByTimeAsync(SSR_READ_TIMEOUT_MS - 1);
+    const call = ssrFetch(hanging(seen), BUDGET_MS)("http://api/graphql");
     expect(seen[0]!.aborted).toBe(false);
-    await vi.advanceTimersByTimeAsync(1);
-    await settled;
+    await expect(call).rejects.toBeDefined();
     expect(seen[0]!.aborted).toBe(true);
   });
 
   it("starts a fresh budget for every request, never one shared clock", async () => {
     const seen: AbortSignal[] = [];
-    const fetcher = ssrFetch(hanging(seen));
+    const fetcher = ssrFetch(hanging(seen), BUDGET_MS);
     void fetcher("http://api/graphql").catch(() => {});
-    await vi.advanceTimersByTimeAsync(SSR_READ_TIMEOUT_MS + 5_000);
+    await sleep(BUDGET_MS * 3);
     void fetcher("http://api/graphql").catch(() => {});
     expect(seen[0]!.aborted).toBe(true);
     expect(seen[1]!.aborted).toBe(false);
@@ -58,7 +56,7 @@ describe("ssrFetch", () => {
   it("still honours a signal the caller passes", async () => {
     const seen: AbortSignal[] = [];
     const own = new AbortController();
-    const call = ssrFetch(hanging(seen))("http://api/graphql", { signal: own.signal });
+    const call = ssrFetch(hanging(seen), 60_000)("http://api/graphql", { signal: own.signal });
     const settled = expect(call).rejects.toBeDefined();
     own.abort(new Error("gone"));
     await settled;
@@ -81,18 +79,12 @@ describe("ssrFetch", () => {
 describe("ssrLink", () => {
   it("gives up on a hung API instead of holding the render open", async () => {
     vi.stubGlobal("fetch", hanging());
-    const link: ApolloLink = ssrLink();
-    const errors: unknown[] = [];
-    const done = new Promise<void>((resolve) => {
-      execute(link, { query: gql`query Q { __typename }` }).subscribe({
-        error: (error) => {
-          errors.push(error);
-          resolve();
-        },
-      });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ssrLink(BUDGET_MS),
     });
-    await vi.advanceTimersByTimeAsync(SSR_READ_TIMEOUT_MS);
-    await done;
-    expect(errors).toHaveLength(1);
+    await expect(
+      client.query({ query: gql`query Q { __typename }`, fetchPolicy: "network-only" }),
+    ).rejects.toBeDefined();
   });
 });
