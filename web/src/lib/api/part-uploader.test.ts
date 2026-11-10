@@ -22,7 +22,7 @@ function harness(
   const requests: { url: string; init: RequestInit }[] = [];
   let call = 0;
   let token = "tok";
-  const refresh = vi.fn(async (_stale: string | null) => {
+  const refresh = vi.fn<(stale: string | null) => Promise<boolean>>(async () => {
     if (options.refreshes === false) return false;
     token = "rotated";
     return true;
