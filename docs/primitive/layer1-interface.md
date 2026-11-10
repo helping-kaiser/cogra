@@ -868,9 +868,11 @@ buyer); Accepted→Committed (Ratify, buyer); Accepted→Dead (Withdraw, buyer);
 Accepted→Dead (Rescind, seller). Dead and Committed are absorbing. No death
 by inaction: no count, window, or throughput measure enters the lifecycle
 map. Cleanup is an authored choice, never a silent timeout. Cancellation is
-best-effort at the boundary: ties favor the cancel, so any cancel submitted
-in an epoch strictly before the commit's finalization epoch is safe
-regardless of latency (`rem:graph:cancellation-best-effort`).
+best-effort at the boundary: a cancel defeats a candidate only when written
+at or before the commit's finalization boundary, and no record class has a
+write right. Submission alone carries no delivery guarantee, so a withheld
+cancel can be defeated however early it was submitted; the tie rule favors
+a written cancel (`rem:graph:cancellation-best-effort`).
 
 **Ownership Thread (`def:graph:ownership-thread`).** The **boundary-indexed**
 chain rooted at the genesis Owner record, extended at each epoch boundary by
@@ -944,8 +946,9 @@ mechanism is terminal. Layer 1 supplies the deterministic commit anchor: the
 **epoch certificate** in which the settlement is recognized, unchallenged, and
 title-transferring — not the Ratify, which is no longer the point of no return
 (`rem:graph:regret-window`). The residual exposure is boundary censorship — a
-host suppressing a co-epochal cancel while writing the commit
-(`frontier:boundary-censorship`, `rem:epoch:consent-exposure`).
+host suppressing a cancel while writing the commit, which leaves no Layer-1
+trace (`rem:epoch:consent-exposure`); its written-side accountability is
+`post:graph:boundary-accountability`.
 
 ---
 
