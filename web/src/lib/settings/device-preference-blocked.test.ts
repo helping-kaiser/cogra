@@ -32,3 +32,12 @@ describe("the stance input mode with blocked storage", () => {
     expect(readStanceInputMode()).toBe("entry");
   });
 });
+
+describe("the stance coach flag with blocked storage", () => {
+  it("reads untaught, and remembers the lesson for the life of the page", async () => {
+    const { readStanceTaught, writeStanceTaught } = await import("../stance/stance-coach");
+    expect(readStanceTaught()).toBe(false);
+    expect(() => writeStanceTaught()).not.toThrow();
+    expect(readStanceTaught()).toBe(true);
+  });
+});
