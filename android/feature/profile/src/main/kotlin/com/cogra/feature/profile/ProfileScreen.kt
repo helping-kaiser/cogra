@@ -222,6 +222,7 @@ internal fun backLabel(from: String?): String = when {
     from == POST_ORIGIN -> stringResource(R.string.profile_back_post)
     from == COMMENTS_ORIGIN -> stringResource(R.string.profile_back_comments)
     from == SEARCH_ORIGIN -> stringResource(R.string.profile_back_search)
+    from == OPINIONS_ORIGIN -> stringResource(R.string.profile_back_opinions)
     from != null && from.startsWith("#") -> stringResource(R.string.profile_back_topic, from.removePrefix("#"))
     else -> stringResource(R.string.profile_back_feed)
 }
