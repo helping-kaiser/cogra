@@ -345,6 +345,42 @@ async fn a_file_that_is_not_a_webp_image_is_refused_by_field(pool: PgPool) {
     assert_eq!(rows, 0, "a refused upload writes no row");
 }
 
+/// An MP4 whose movie box nests a hundred thousand containers deep — a
+/// file of under a megabyte — is refused naming `file`, and the server
+/// answers it: the metadata strip that walks the boxes stops at the
+/// deepest a movie nests rather than recursing until the process aborts.
+///
+/// A deeply nested MP4 upload is refused naming its field, and the server keeps answering.
+/// ´claim:media:a-nested-video-upload-is-refused-not-fatal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_video_nested_past_any_movie_is_refused_by_field(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    const DEPTH: usize = 100_000;
+    let mut file = Vec::new();
+    file.extend_from_slice(&16u32.to_be_bytes());
+    file.extend_from_slice(b"ftypisom\0\0\x02\0");
+    for level in 0..DEPTH {
+        let size = u32::try_from((DEPTH - level) * 8).expect("a box size");
+        file.extend_from_slice(&size.to_be_bytes());
+        file.extend_from_slice(b"moov");
+    }
+
+    let refused = rig.upload(&token, &file).await;
+    assert!(refused["media"].is_null(), "stored: {refused}");
+    let error = &refused["userErrors"][0];
+    assert_eq!(error["code"], "BAD_INPUT");
+    assert_eq!(error["field"], json!(["file"]));
+
+    let rows: i64 = sqlx::query_scalar("SELECT count(*) FROM media_attachments")
+        .fetch_one(&rig.pool)
+        .await
+        .expect("count");
+    assert_eq!(rows, 0, "a refused upload writes no row");
+}
+
 /// An asset nobody attached is collected, row and object together.
 ///
 /// An asset nobody attached is collected, row and stored object together.

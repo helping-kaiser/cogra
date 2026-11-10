@@ -290,6 +290,10 @@ struct Written {
 }
 
 /// Re-encodes one upload and writes the result, touching no row.
+///
+/// The source's probe runs on the blocking pool: it walks the header
+/// boxes of bytes an author supplied, CPU work like every other pass over
+/// upload bytes, and a runtime thread is not the place for it.
 async fn run_job(
     blobs: &dyn BlobStore,
     config: &MediaConfig,
@@ -312,7 +316,12 @@ async fn run_job(
     let output = scratch.path().join("rendition.mp4");
 
     let (caps, video_bps) = plan(config, job.scale, &job.options);
-    let source_probe = video::probe(&source).ok();
+    let (source, source_probe) = tokio::task::spawn_blocking(move || {
+        let probe = video::probe(&source).ok();
+        (source, probe)
+    })
+    .await
+    .map_err(|e| JobError::Transient(e.to_string()))?;
     let transfer = transfer_of(source_probe);
     if transfer.is_hdr() && !ffmpeg.tone_maps() {
         return Err(JobError::Refused(REASON_NO_TONE_MAP));
