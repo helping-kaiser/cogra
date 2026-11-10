@@ -503,4 +503,16 @@ describe("the profile's doors carry the origin it was opened with", () => {
     await openPostsTab();
     expect(screen.getByTestId("profile-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=u%3Aada");
   });
+
+  // W-REEL-OWN-BACK-NOUN (Reel.md:85; ProfilePosts.md:45).
+  it("your_own_profile_reached_by_handle_opens_a_stream_back_to_your_profile_in_its_stack", async () => {
+    server.use(meAs("u-ada", "ada"));
+    serveAda();
+    serveChronicle();
+    servePosts({ "": { posts: [adas("v1", "9:16")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" from="search" />, { store: signedIn("u-ada") });
+    await openPostsTab();
+    fireEvent.click(screen.getByTestId("profile-post-v1-stream-link"));
+    expect(streamBack(heldStream()!.snapshot.origin)).toEqual({ href: "/u/ada?from=search", label: "Back to your profile" });
+  });
 });

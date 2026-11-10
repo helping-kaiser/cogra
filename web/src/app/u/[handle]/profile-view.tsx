@@ -454,7 +454,9 @@ export function ProfileScreen({
       origin:
         origin === "profile"
           ? { kind: "profile", handle: profile.handle, own: true }
-          : { kind: "profile", handle: handle ?? profile.handle, own: false, from: openedFrom },
+          : // Your own reached by its handle is still yours (Reel.md:85), in
+            // the stack it was opened in.
+            { kind: "profile", handle: handle ?? profile.handle, own, byHandle: own, from: openedFrom },
       rows: posts,
       startId,
       more:
