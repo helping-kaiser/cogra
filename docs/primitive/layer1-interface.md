@@ -2297,7 +2297,7 @@ $b_j$): severance is burn-priced
 
 **Standing fold cells (`def:epoch:standing-fold-cell`,
 `rem:epoch:compiled-acts-fold-into-cells`).** After the per-author net-stance
-fold and inviter revocation, the compiler groups the accepted acts of one
+fold, the compiler groups the accepted acts of one
 **full incidence** (author, family, source, semantic target, and — for
 hyper-edges — middle) into **fold cells** $\xi$, the order-free unit of
 standing input. A cell's identity is the deterministic full-incidence bundle
@@ -2341,7 +2341,7 @@ Actor or the permanently bound Profile of an Actor:
 | Act class | Recipient |
 |---|---|
 | Positive Opinion on Profile$_j$ | Actor $j$ |
-| Complete positive Invitation (unsuppressed) | the invitee |
+| Complete positive Invitation | the invitee |
 | Complete positive Reference to Profile$_j$ | Actor $j$ |
 | Accept / Ratify, title-transferring under the epoch title fold | the counterparty |
 | Accept / Ratify otherwise | self |
@@ -2353,8 +2353,7 @@ Actor or the permanently bound Profile of an Actor:
 Self is a destination, not a defect: a self-resolved cell lands on the
 diagonal of the base matrix, priced and counted like any other. The
 settlement rows read the epoch title fold and nothing else
-(`post:epoch:settlement-standing-title-coupling`); the revocation rows read
-epoch indices with ties favouring the revocation. Syntax alone never selects
+(`post:epoch:settlement-standing-title-coupling`). Syntax alone never selects
 a non-self recipient — a cell whose target identifier is not anchored in the
 completed set resolves home by the same rule
 (`rem:epoch:allocation-index-set`), which keeps resolution and allocation
@@ -2366,17 +2365,28 @@ Withdraw, Rescind, Leave, and De-invite/A·T are accepted acts, so they are
 weighed and consume their author's allocation — they simply never direct any
 of it outward. De-invite is the case that makes this load-bearing: its fixed
 raw parameters are positive, and treating raw positivity as regard would turn
-expulsion into standing support. The family's only compilation-visible effect
-on another act is **inviter revocation**
-(`def:epoch:inviter-revocation`): actor $a$'s Invitation toward $(C, P)$ is
-absent iff the latest epoch index in $a$'s Invitation/De-invite records for
-that pair contains a De-invite, ties within an epoch favouring the
-revocation, and a later Invitation re-establishing the act. The rule is
-epoch-quantized rather than order-read — no standing quantity may read
-host-assigned order (`post:epoch:standing-epoch-set-determinism`) — and
-strictly per author. **Conviction sums; consent toggles**: stance bundles
-aggregate with inertia, but a vouch-of-fitness is live consent, and live
-consent is latest-record-wins.
+expulsion into standing support. The control family never enters the
+person-vouch projection: a De-invite directs nothing outward and leaves its
+author's Invitation bundle untouched — it is still a priced act, one
+$\theta$-debit and one count increment, weighed at self at coefficient $1$ —
+and its reading is the Layer-2 membership fold alone
+(`def:nodes:canonical-membership-fold`).
+
+**Authored vouches are withdrawable
+(`lem:epoch:authored-vouch-withdrawable`).** Every family that stance
+aggregation folds — Opinion, Reference, Invitation — is withdrawable by its
+author through netting within the accepted epoch set. Standing consumes no
+family-specific withdrawal rule and no tie rule; the fold is invariant under
+every dependency-compliant permutation
+(`post:epoch:standing-epoch-set-determinism`). For an Invitation with
+mandatory A-leg pair $(u, f)$, a cancelling Invitation with $(-u, -f)$ nets
+the bundle to $(0, 0)$, fails the strictly-positive gate, and is weighed home
+at coefficient zero; a later positive Invitation re-establishes the vouch.
+Each withdrawal and re-establishment is a priced act. Settlement acts (Accept,
+Ratify) are singleton cells withdrawn through the epoch-quantized settlement
+consent of `def:graph:settlement-recognition`, not through netting; the two
+routes together cover every outward-capable family. The only lever a host
+retains over a standing fold is an act's epoch of inclusion.
 
 **Base allocation matrix (`def:epoch:domain-weighted-base-allocation`,
 `eq:epoch:domain-weighted-base-allocation`).** Each cell carries a published
@@ -2417,11 +2427,11 @@ Compilation properties (`prop:epoch:act-folding-properties`):
 **author-owned** (every cell is sourced by the author of the complete act
 that creates it); **passive-independent** (passive context identifies the act
 and its semantic target but contributes no upstream standing weight);
-**standing-atomic**; **record-preserving** (incomplete, hostile, suppressed,
-and self-resolving records stay public and readable by every non-standing
+**standing-atomic**; **record-preserving** (incomplete, hostile, and
+self-resolving records stay public and readable by every non-standing
 consumer); **range-safe**; **self-inclusive**; **deterministic**. **Folding
 precedes allocation** (`rem:epoch:folding-precedes-allocation`): the compiler
-reconstructs complete acts, applies folds and revocations, resolves each cell,
+reconstructs complete acts, applies bundle folds, resolves each cell,
 and emits $\mathsf{A}$ — only then does anything allocate. The exclusion of
 passive nodes therefore happens once, in the compiler, rather than being
 re-checked at every hop.
