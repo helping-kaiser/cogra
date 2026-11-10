@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM user_hidden_actors WHERE viewer_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "61822398c4fe2ef00d4b5b635c2ccdd36af01c4347ec38ed8b3985a5044a05ac"
+}
