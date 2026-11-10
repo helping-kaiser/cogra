@@ -316,6 +316,7 @@ label.
 | `test:integration:a-silent-server-times-out`                                                                   | a_silent_server_times_out                                                                   |
 | `test:integration:a-single-target-trace-reads-at-the-newest-epoch-with-no-pin`                                 | a_single_target_trace_reads_at_the_newest_epoch_with_no_pin                                 |
 | `test:integration:a-single-use-link-holds-exactly-one-slot`                                                    | a_single_use_link_holds_exactly_one_slot                                                    |
+| `test:integration:a-single-use-link-stays-used-after-its-account-goes`                                         | a_single_use_link_stays_used_after_its_account_goes                                         |
 | `test:integration:a-slice-reread-at-its-epoch-is-identical`                                                    | a_slice_reread_at_its_epoch_is_identical                                                    |
 | `test:integration:a-staged-write-past-gc-is-staged-write-expired`                                              | a_staged_write_past_gc_is_staged_write_expired                                              |
 | `test:integration:a-staging-failure-hands-the-write-back-instead-of-wedging-it`                                | a_staging_failure_hands_the_write_back_instead_of_wedging_it                                |
