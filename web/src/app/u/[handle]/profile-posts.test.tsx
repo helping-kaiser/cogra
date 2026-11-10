@@ -503,5 +503,4 @@ describe("the profile's doors carry the origin it was opened with", () => {
     await openPostsTab();
     expect(screen.getByTestId("profile-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=u%3Aada");
   });
-  });
 });
