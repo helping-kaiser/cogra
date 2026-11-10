@@ -17,7 +17,8 @@
 // 3. A test whose code sends in a loop — a paging walk over a fixture that
 //    never ends — spins until the worker's heap is gone, and where its chain
 //    never yields a macrotask it starves every timer that could stop it, the
-//    settle wait's among them (saved-view's stream test aborted CI this way).
+//    settle wait's among them (CI's worker aborted out of heap in
+//    saved-view's stream test, which walked an endless fixture).
 //    So past `RUNAWAY_LIMIT` requests in one test the next one fails as a
 //    network failure does — which ends any loop that stops on one — and the
 //    test fails by name (`takeRunaway`, checked after each test).
