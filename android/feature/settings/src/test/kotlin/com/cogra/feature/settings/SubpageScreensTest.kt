@@ -339,4 +339,13 @@ class SubpageScreensTest {
         node("about.header.back").performClick()
         assertThat(back).isEqualTo(1)
     }
+
+    // About.md:21: ALWAYS the back arrow reads a plain Back GIVEN About CoGra
+    // was opened from the join form's "?".
+    @Test
+    fun `back_reads_a_plain_back_from_the_join_form`() {
+        compose.setContent { AboutScreen(onBack = {}, plainBack = true) }
+        compose.onNode(hasContentDescription("Back", substring = false), useUnmergedTree = true).assertExists()
+        compose.onNode(hasContentDescription("Back to settings"), useUnmergedTree = true).assertDoesNotExist()
+    }
 }

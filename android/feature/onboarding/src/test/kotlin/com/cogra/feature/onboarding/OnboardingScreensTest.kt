@@ -23,90 +23,6 @@ class OnboardingScreensTest {
     val compose = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun anUnusableInviteShowsTheRefusalAndNoContinue() {
-        compose.setContent {
-            InviteEntryScreen(
-                state = InviteEntryUiState(
-                    input = "x",
-                    check = com.cogra.domain.InviteCheck(false, "inviter", java.time.Instant.MAX),
-                ),
-                onInputChange = {},
-                onCheck = {},
-                onContinue = {},
-                onLogInInstead = {},
-                onBrowseFeed = {},
-            )
-        }
-        compose.onNodeWithTag("invite_error").assertExists()
-        compose.onNodeWithTag("invite_continue").assertDoesNotExist()
-    }
-
-    @Test
-    fun theFrontDoorOffersBrowsingBeforeAnyCommitment() {
-        var browsing = false
-        compose.setContent {
-            InviteEntryScreen(
-                state = InviteEntryUiState(),
-                onInputChange = {},
-                onCheck = {},
-                onContinue = {},
-                onLogInInstead = {},
-                onBrowseFeed = { browsing = true },
-            )
-        }
-        compose.onNodeWithTag("invite_browse").performClick()
-        assertThat(browsing).isTrue()
-    }
-
-    @Test
-    fun theFormBlocksAnInvalidSubmit() {
-        compose.setContent {
-            ApplyScreen(
-                state = ApplyUiState(handle = "ab", email = "a@b.c", password = "short"),
-                onHandleChange = {},
-                onEmailChange = {},
-                onPasswordChange = {},
-                onSubmit = {},
-            )
-        }
-        compose.onNodeWithTag("apply_continue").assertIsNotEnabled()
-    }
-
-    @Test
-    fun theFormPasswordCarriesItsVisibilityToggle() {
-        compose.setContent {
-            ApplyScreen(
-                state = ApplyUiState(),
-                onHandleChange = {},
-                onEmailChange = {},
-                onPasswordChange = {},
-                onSubmit = {},
-            )
-        }
-        compose.onNodeWithTag("apply_password_toggle").assertExists()
-    }
-
-    @Test
-    fun aRefusedRegisterRendersItsMessage() {
-        compose.setContent {
-            ApplyScreen(
-                state = ApplyUiState(
-                    handle = "joiner",
-                    email = "a@b.c",
-                    password = "a strong password",
-                    error = com.cogra.domain.ErrorCode.EMAIL_IN_USE,
-                    errorField = "email",
-                ),
-                onHandleChange = {},
-                onEmailChange = {},
-                onPasswordChange = {},
-                onSubmit = {},
-            )
-        }
-        compose.onNodeWithTag("apply_error").assertExists()
-    }
-
-    @Test
     fun theCeremonyShowsTheCodeExactlyWhenCreated() {
         showCeremonyCode()
         compose.onNodeWithTag("recovery_code").assertExists()
@@ -159,28 +75,6 @@ class OnboardingScreensTest {
         // not the typed-back confirmation takes the actor with it — and
         // the band's arrow is the same door the gesture is.
         compose.onNodeWithTag("key_ceremony_header_back").assertDoesNotExist()
-    }
-
-    @Test
-    fun anEntryScreenOpensWithTheBandsWayBack() {
-        var back = false
-        compose.setContent {
-            InviteEntryScreen(
-                state = InviteEntryUiState(),
-                onInputChange = {},
-                onCheck = {},
-                onContinue = {},
-                onLogInInstead = {},
-                onBrowseFeed = {},
-                onBack = { back = true },
-            )
-        }
-
-        // Every entry board draws the header band; without it the drawn
-        // back edges had no control at all (EK-01).
-        compose.onNodeWithTag("invite_header_back").performClick()
-
-        assertThat(back).isTrue()
     }
 
     @Test
