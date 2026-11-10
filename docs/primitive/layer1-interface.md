@@ -1814,39 +1814,6 @@ request. Decentralized: Layer 1 tracks only the witness; payload and salt
 are a terminal carriage obligation. The structural record is identical in
 both.
 
-**Payload envelope convention (L2).** The opaque payload MAY carry a structured
-Layer-2 **content-envelope** — a deterministic-CBOR convention; the Peer Content
-Envelope is the reference format. L1 never inspects it: the envelope's
-serialized-length bound `max_payload_bytes` **is** $M_{\text{payload}}$
-(`def:graph:act-payload-projection`), and no envelope field enters any closure
-formula. Two seam facts hold regardless of the envelope's internal format:
-
-- **Type is not in the payload.** Node type is fixed by the authoring L1 act,
-  never an envelope field (declarative identity, §7.2 / §8.1); every envelope
-  has the same shape across types.
-- **Conformance is an L2 admission gate, never an L1 signal.** Envelope
-  well-formedness is a binary guild-admission test; it MUST NOT become a reward
-  weight or scoring input. A non-conforming payload still holds a valid,
-  irrevocable, scored L1 act
-  (`prop:graph:removable-projection-invariance`,
-  `rem:graph:payload-size-not-act-cost`) — it is simply invisible in
-  enforcing guilds.
-
-A revision is new bytes / a new act, never in-place mutation. The envelope's
-content-format specifics (body length, field set, media, encryption) are L2 and
-out of scope for this interface.
-
-**Witness reach (evidence, not prevention).** The L1 content commitment covers
-the payload — the envelope bytes — and no further. External resources a manifest
-references are witnessed only **transitively**: an envelope carrying a resource's
-content digest binds *that the author committed to those exact bytes*, so any
-participant who fetches and hashes can detect substitution or rot. This is
-tamper-*evidence*, consistent with the boundary posture (§5, "misbehavior is
-evidence, not prevention", `post:graph:boundary-accountability`); it compels
-neither availability nor honest rendering — both terminal (L2). An L2 may
-withhold, substitute at render, or decline to verify; the digest yields a
-publicly falsifiable record, not enforced delivery.
-
 ### 8.5 The stored sentiment slice
 
 Clamping functions: $\sigma_{\text{sig}}(x) = 1/(1 + e^{-x})$;

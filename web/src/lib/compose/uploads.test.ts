@@ -92,7 +92,7 @@ function clientEchoing(id: string): ApolloClient {
  * A guard that only passes the block through. The refresh-and-replay it adds
  * is `guard.test.ts`'s subject; here it would only hide which call was made.
  */
-const guard: AuthGuard = { run: (block) => block(), prime: async () => {} };
+const guard: AuthGuard = { run: (block) => block(), prime: async () => {}, refresh: async () => false };
 
 /**
  * The server's answer to a request that carried no access token, exactly as
@@ -648,6 +648,7 @@ describe("runVideoUpload", () => {
       prime: async () => {
         order.push("prime");
       },
+      refresh: async () => false,
     };
 
     await runVideoUpload(client, priming, clip, null, steps().step, steps().step, SCALE);

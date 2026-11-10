@@ -23,18 +23,20 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
+import { safeStorage } from "@/lib/safe-storage";
+
 const STORAGE_KEY = "cogra.stanceGestureTaught";
 
 export function readStanceTaught(): boolean {
   if (typeof window === "undefined") return false;
-  return window.localStorage.getItem(STORAGE_KEY) === "true";
+  return safeStorage().getItem(STORAGE_KEY) === "true";
 }
 
 const listeners = new Set<() => void>();
 
 export function writeStanceTaught(): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, "true");
+  safeStorage().setItem(STORAGE_KEY, "true");
   // `storage` fires in OTHER tabs only, so this tab is told directly.
   for (const listener of listeners) listener();
 }

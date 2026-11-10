@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH open_rows AS (\n               SELECT version_id, avatar_id FROM actor_profile_versions\n               WHERE actor_id = $1 AND redaction_reason IS NULL\n               FOR UPDATE\n           )\n           UPDATE actor_profile_versions v\n           SET display_name = '', bio = NULL, avatar_id = NULL, website_url = NULL,\n               redaction_reason = $2\n           FROM open_rows o\n           WHERE v.version_id = o.version_id\n           RETURNING o.avatar_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "avatar_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "c8ac1f37c174ec2858f01c216698bb352e2efb8b2f95c5cbc435b68e718c106c"
+}

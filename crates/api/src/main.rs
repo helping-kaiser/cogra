@@ -52,7 +52,8 @@ fn auth_config() -> anyhow::Result<AuthConfig> {
 /// surface, the L1 stand-in behind the seam, and the background loops —
 /// mirror ingestion, the dev epoch clock, the account reaper (auth.md
 /// "Reaper"), the auth-throttle GC sweep (auth.md "Rate limiting"), the
-/// media orphan sweep, and the media ingest workers.
+/// media orphan sweep, the account-deletion executor (erasure.md §5), and
+/// the media ingest workers.
 ///
 /// The server serves without ffmpeg too: every upload already within the
 /// video target is unaffected, and one that needs re-encoding fails with
@@ -182,6 +183,17 @@ async fn main() -> anyhow::Result<()> {
             areas.clone(),
             media.orphan_reaper_interval_secs,
             media.orphan_max_age_secs,
+        ),
+    );
+
+    let deletion_interval = api::boot::env_positive_secs("ACCOUNT_DELETION_INTERVAL_SECS", 60)?;
+    api::boot::spawn_supervised(
+        "account-deletion executor",
+        api::deletion::executor_loop(
+            boundary.clone(),
+            pool.clone(),
+            areas.clone(),
+            deletion_interval,
         ),
     );
 
