@@ -1193,7 +1193,7 @@ and thereafter immutable. Passive out-degree
 (`lem:graph:passive-out-degree`): Content, Type, Comment, and Message
 source Tag and Review terminal legs; Offer sources Review legs but no Tag;
 Item additionally sources a Bid leg; Chat additionally sources Send,
-Invitation, and De-invite legs; Profile additionally sources the derived
+Invitation, De-invite, and Participant legs; Profile additionally sources the derived
 Reputation component; and every passive type sources Reference terminal
 legs — Reference's A-leg may land on any passive node (the universal
 citing artifact), which then sources one author-fixed Reference/T terminal
