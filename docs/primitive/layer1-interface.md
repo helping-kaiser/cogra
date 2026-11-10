@@ -79,7 +79,7 @@ anything not in the feedback closure below is a Layer 2's to reimplement
 
 The map from an actor to the *person* behind it is never represented at
 Layer 1: it has no feedback read-site, hence terminal. Severing it changes
-no $\alpha_i$, no $W_{\text{end}}^{(k)}(u \to i)$, no title, and no gate.
+no $\alpha_i$, no $\Pi_{ui}$, no title, and no reward.
 (`rem:comparator:identity-is-layer-2`)
 
 ### 1.1 The burn interface and requirements R1–R11
