@@ -49,7 +49,7 @@ Chat and Message nodes they anchor
 | **Leave** | Actor → Chat | The exit record — unilateral, unconditional, a control record. Departure *without* destination: there is no "nowhere" node and a self-referential T-leg is a join, so Leave is not subsumed by the move form. |
 | **Join Request** | Actor → Chat | Asking to join — a proposal, never participation. |
 | **Invitation** | Actor → Chat → Profile | Inviting — a public, priced vouch that the invitee fits; a proposal, never participation. |
-| **De-invite** | Actor → Chat → Profile | The expulsion mark, and withdrawal of one's own Invitation; a control record. |
+| **De-invite** | Actor → Chat → Profile | The expulsion mark; a control record that never vouches and withdraws nothing. |
 | **Send** | Actor → Chat → Message | Posting a message — the terminal leg mints the Message. |
 
 Two L1 facts frame the whole doc:
@@ -108,7 +108,11 @@ toward lineage chat `C_k` is in the bundle iff it landed in an L1
 epoch ≤ the epoch where `C_k`'s successor landed. Later records
 toward a superseded node are deliberate and fall out; CoGra's own
 prepare step always targets the lineage head, so the cutoff only
-affects records prepared outside CoGra. Membership, messages,
+affects records prepared outside CoGra. The one exception is a
+cancelling Invitation: L1 nets per (Chat node, Profile)
+incidence, so it targets the node the Invitation it cancels
+targeted, and the fold reads it there even when that node is
+superseded. Membership, messages,
 backing, bans, stances, and the key-epoch count all read the
 bundle (§4, §7), and the feed ranks the lineage as one candidate
 ([feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set)).
@@ -161,11 +165,13 @@ record at one point in the order. Two clauses:
 >
 > **Member.** `a` is a member of `C` iff `a` is not banned, and
 > `a`'s own `≺`-latest {Participant, Leave} element toward `C` is
-> a Participant that strictly `≺`-follows the latest recognized
-> De-invite toward `(C, prof(a))`, where one exists.
+> a recognized Participant (Backing, below) that strictly
+> `≺`-follows the latest recognized De-invite toward
+> `(C, prof(a))`, where one exists.
 
 Where no De-invite exists, the member clause reduces to the
-canonical fold — the ordinary join/leave path is unchanged.
+canonical fold over recognized Participants — the ordinary
+join/leave path is unchanged.
 
 On top of the fold sit CoGra's two published policy clauses, the
 authority policy `𝒫`:
@@ -175,20 +181,31 @@ authority policy `𝒫`:
   proposal's anchor cited in the payload (§6): De-invites
   (`decision:disavow_member`) and un-ban Invitations
   (`decision:lift_ban`, §5). A freelance De-invite is
-  membership-inert; its only effect is suppressing the author's
-  *own* Invitation vouch toward that (Chat, Profile) — evidence,
-  not force, and per-author by L1's own rule. An ordinary member's
+  membership-inert — evidence, not force. An ordinary member's
   Invitation is a vouch and admission backing, never part of the
-  ban predicate — otherwise any member could un-ban anyone. L1's
-  Inviter Revocation stays per-author because it governs vouch
-  compilation; this predicate governs membership — two folds over
-  the same records, asking different questions.
+  ban predicate — otherwise any member could un-ban anyone.
 - **Backing (gated chats):** where the chat's governance map
   requires admission approval, the fold recognizes a Participant —
   keyed to its **T-leg**, the chat being entered — only when
   backed by an approved Join Request or an Invitation; the
-  founding act is exempt, since it mints the chat it enters. In
-  open chats, any Participant is recognized as-is.
+  founding act is exempt, since it mints the chat it enters. An
+  Invitation backs the Participant only while it is a live vouch:
+  its author's Invitation bundle toward one lineage node and
+  `prof(a)`, over the records that `≺`-precede the Participant,
+  has both folded coordinates strictly positive (L1's positivity
+  gate, ``def:epoch:effective-act-contribution``). The lineage
+  decides which records are in scope, but each node's bundle nets
+  on its own, as L1 nets it, and a Participant is backed when any
+  lineage node carries a live Invitation vouch by some author
+  toward `prof(a)`. The withdrawal
+  gesture is the cancelling Invitation that nets the bundle to
+  `(0,0)`; a bundle carried past zero is withdrawn all the same,
+  and an Invitation that is not strictly positive on both
+  coordinates backs nothing. Backing is required to become a
+  member, not to remain one: a withdrawal `≺`-following the
+  Participant does not undo the membership it backed, and a
+  Participant by an actor who is already a member — by this fold,
+  at the Participant's own place in `≺` — needs no backing. In open chats, any Participant is recognized as-is.
 
 **Three act shapes, keyed on leg role.** Participant is a
 movement record — *from A to T* (§2) — so departure is
@@ -226,9 +243,11 @@ the joiner's own Participant record**:
 - **Invite flow:** an existing member authors an **Invitation**
   (Actor → Chat → Profile) — a priced public vouch, with the
   invite message as payload; the invitee, if they want in,
-  authors their own Participant. An Invitation is revocable per
-  author by a later De-invite; a later Invitation re-establishes
-  it.
+  authors their own Participant. Its author withdraws it by a
+  cancelling Invitation that nets their bundle toward that
+  (Chat, Profile) to `(0,0)`, targeting the Chat node the
+  Invitation targeted (§3); a later positive Invitation
+  re-establishes it (``lem:epoch:authored-vouch-withdrawable``).
 
 The Participant's parameters (interactivity, responsibility) are
 a real stance toward the chat, defaulted low like every normal

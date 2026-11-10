@@ -33,7 +33,7 @@ within a phase, order is flexible.
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 | 5. When a community wants its own pot | 1 | **Q55** | Community pool splitting — how a community leaves the global admission fund, where the `admission_fund` carve routes once pools multiply, and who governs each pool. One network splitting, not federation (Q15). |
 | 6. If Layer 1 cannot land a batch whole | 1 | **Q57** | Batch atomicity — how the seals' land-together guarantee holds if Layer 1 never backs it, without breaking the mirror. Deferred: the product builds to the guarantee. |
-| 7. At the L1 swap | 1 | **Q58** | The write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist. On the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words. Deferred to the swap. |
+| 7. At the L1 swap | 3 | **Q56, Q58, Q61** | What the seam exposes of the burn realization (its computational inputs and audit evidence); the write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist (on the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words); and who in CoGra is the deployment that publishes the marker policy, with which finality-breach response. Deferred to the swap. |
 | 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
 
 As questions resolve, their blocks disappear from below and their
@@ -86,7 +86,7 @@ questions are closed.
 - Q43 — resolved in the compose design session (2026-08-27): **a creation batch is all-or-nothing.** The prepare quotes the whole batch and refuses it whole when the balance cannot carry it — an author never keeps a half-staged batch. On screen the count of signed actions is the only cost unit ("This creates 4 signed actions"), stated before signing with "they land together, or none does"; θ is never rendered, and the community pool that covers members' signings is named at the seal ([design/readme.md §13](../design/readme.md#13-decided-in-design-sessions)). The server-side cumulative pre-check is in implementation as of this ruling. Carrier to update: [api-spec.md](implementation/api-spec.md) (the write flow's batch semantics).
 - Q45 — raised and resolved in the compose design session (2026-08-27); rulings recorded in [design/readme.md §13](../design/readme.md#13-decided-in-design-sessions) until they move into the product docs. **The compose flow's product rulings:** (1) a post's body is words OR media — one picture, a set, or one video with a cover — never both; words beside media go in the description; title and description stay optional. The current API (`content` required, `attachments` beside it) needs the XOR. (2) Media carries one crop per post: Tall 4:5, Square 1:1, or Wide 1.91:1, section chosen per picture. (3) A comment stays text plus optional media. (4) Authors can self-mark content sensitive with an optional public reason; the mark veils body and description per the per-field model while the title stays readable — a new field on the creation inputs and a policy for [moderation.md](instances/moderation.md)'s read-side flags. (5) Accounts carry a default-license setting (Public domain until changed) that the composer reads. (6) An edit is one batch: the content edit plus topic/citation adds and withdrawals sign together under the all-or-nothing rule. (7) Drafts are local-only, one per target, kept automatically on leaving. (8) The did-not-land notice (Q38) is a calm card in the shell naming the post, that nothing was spent, and that the draft is saved. **Ported:** (1) the body XOR to [api-spec.md](implementation/api-spec.md) and [post.md §1](instances/post.md), (2) the per-post crop to [design/readme.md §7](../design/readme.md#7-components), (3) the comment's text-plus-media asymmetry to [comment.md §1](instances/comment.md), (6)–(8) as built. (4) the sensitive self-mark shipped with the media slice ([moderation.md](instances/moderation.md), [api-spec.md](implementation/api-spec.md)). **Still unported:** (5) the default-license account setting, carried by the settings surface (design backlog item 20).
 - Q46 — raised and resolved in the search design session (2026-08-28); rulings recorded in [design/readme.md §13](../design/readme.md#13-decided-in-design-sessions) until they move into the product docs. **The search rulings:** (1) The default result order is full-match tier then partial-match tier, each ordered by the viewer's ranker; the backend stays viewer-blind exactly as [feed-ranking.md §11](primitive/feed-ranking.md#11-where-ranking-runs) demands — the ranked default runs client-side or through the miner's `rankSearch` — and results the ranker cannot score (every path below dust) fall to newest-first behind a visible seam. The reader can swap the order to newest and toggle "show already seen" (default off since the feed-filter session, 2026-08-28 — what you've seen stays out until you ask for it back). (2) A **seen-list** exists: a card whose impression entered the viewer's viewport counts as seen. It is device-local session state, never a graph record ([graph-model.md](primitive/graph-model.md)'s rule stands); it is shared *transiently* with the viewer's chosen ranker — sent with requests, or held by a delegated miner, which sharpens Q25's "miner-held seen-list" from convenience to necessity: without it, a stable graph metric re-serves the same top results forever. graph-model.md's "the frontend keeps session data local" needs the refinement *local, shared transiently with the viewer's chosen ranker, never a record*. The feed shares this whole ordering section (order swap + seen toggle) — and, ruled in the feed-filter session (2026-08-28, backlog item 19), the full kind list too: messages, campaigns, and offers become feed-admittable kinds, one shared list on both surfaces, with "Profiles" as the on-screen word for the person kind everywhere. (3) The global index **grows**: proposals and campaigns become indexed, searchable kinds (their name-class field from the terms payload / display content). (4) **Scoped-search operators**: a query may open with `@handle` (author scope) or `#topic` (topic scope), and the remainder matches both the scoped author's own indexed content *and the indexed name of the target of their acts* — a comment found through its post's title, an offer through its item's name, a chat message through its chat's name — all as a relational join, with bodies staying unindexed. This returns comments, chat messages, and offers to scope for search *and* the reference explorer; the "casual conversation doesn't surface to strangers by keyword" rationale in [api-spec.md](implementation/api-spec.md)'s Search section survives narrowed (bodies still never match globally) and needs rewording. `search()` grows scope arguments; clients parse the operators. (5) Every result kind carries its viewer-relative rank on the row (quiet numbers; drill-down arrives with the Post Score screens); the unranked tail shows age instead — relative to one year, an absolute date past it. Carriers at implementation time: [api-spec.md](implementation/api-spec.md) (index, kinds, scope arguments, ordering prose), [miner-api.md](implementation/miner-api.md) (`rankSearch` + the transient seen-list), [graph-model.md](primitive/graph-model.md) (the session-data sentence), [hashtag.md](instances/hashtag.md) (topic-scoped search).
-- Q28 — closed on both sides with the L1 author. **Standing:** v0.23's initiator-owned rebase compiles a Reference into standing only as a complete act through the source's view of its *author*, and self-reference is compiler-excluded. **Feed:** [feed-ranking.md §4](primitive/feed-ranking.md#4-the-path-set)'s two-channel rule — for a jailed reference author, the content-intrinsic channel never opens (author ≠ carrier author) and the initiator-owned channel crosses at the viewer's forward weight to the jailed author, which is dead. **Self-invitation is an accepted residual:** a confederate account reproduces the geometry legally, so no self-guard closes it; CoGra declines to render such interactions as read-side policy, and the earnings side is closed by economics.md's exclusion rules ([economics.md §8.2](primitive/economics.md#82-players-exclusions-sign)). Accepted leftover geometry, on record: the Invitation T-leg twin persists in the feed (hyper-edge legs traverse ordinarily; Marginal tier; severance cannot net the inviter's own leg) — covered by the same read-side policy, with extending the two-channel rule to Invitation T-legs available if it ever matters — and a jailed author's minted Comments stay reachable via Review T-legs (commentary visibility, moderation's domain).
+- Q28 — closed on both sides with the L1 author. **Standing:** v0.23's initiator-owned rebase compiles a Reference into standing only as a complete act through the source's view of its *author*, and self-reference is compiler-excluded. **Feed:** [feed-ranking.md §4](primitive/feed-ranking.md#4-the-path-set)'s two-channel rule — for a jailed reference author, the content-intrinsic channel never opens (author ≠ carrier author) and the initiator-owned channel crosses at the viewer's forward weight to the jailed author, which is dead. **Self-invitation is an accepted residual:** a confederate account reproduces the geometry legally, so no self-guard closes it; CoGra declines to render such interactions as read-side policy, and the earnings side is closed by economics.md's exclusion rules ([economics.md §8.2](primitive/economics.md#82-players-exclusions-sign)). Accepted leftover geometry, on record: the Invitation T-leg twin persists in the feed (hyper-edge legs traverse ordinarily; Marginal tier; severance cannot net the inviter's own leg, which falls inert only with its author's A-leg — [feed-ranking.md §3.2](primitive/feed-ranking.md#32-the-fold--per-author-net-stance)) — covered by the same read-side policy, with extending the two-channel rule to Invitation T-legs available if it ever matters — and a jailed author's minted Comments stay reachable via Review T-legs (commentary visibility, moderation's domain).
 
 ---
 
@@ -480,19 +480,37 @@ together; a separate concept from one network's pools splitting).
 
 ### Context
 
-The v0.25.0 interface has the realization publish three quantities
-beyond the burn values and addresses CoGra already reads through the
-seam: the capacity bound $B_{\max}$ (R9), the unit-cost projection
-$c_{\mathrm{u}}$ (R10), and the settlement depth (R4(e)) — see
-[layer1-interface.md §"The interface"](primitive/layer1-interface.md).
-The `L1Boundary` trait does not surface them; the stand-in holds its
-equivalents internally, and the seam's shape was deliberately left
-unchanged by the v0.25.0 update.
+What the real Layer 1 reads of a burn realization falls into three
+classes (``def:comparator:burn-interface``,
+``post:comparator:burn-primitive``,
+``post:comparator:marker-bound-settlement``; see
+[layer1-interface.md §1.1](primitive/layer1-interface.md#11-the-burn-interface-and-requirements-r1r11)):
+
+- **Computational inputs.** The burn map — at epoch $k$ the marker
+  burn snapshot $B^{(k)}$ (``def:comparator:marker-burn-snapshot``)
+  — and two published constants: the capacity bound $B_{\max}$
+  (R9; zero, with its reason, when external acquisition is open
+  from the start) and the unit-cost projection $c_{\mathrm{u}}$
+  (R10; positive, with its external denomination and terms).
+- **Public audit evidence**, never a computational input: the
+  settlement depth with the finality assumptions under which it
+  holds (R4(e)), the R7 provenance quantities, recording-event
+  costs published separately from $c_{\mathrm{u}}$ (R10), and the
+  R11 operator bound with its proof — or a statement that no role
+  accrues burn amount from operating the realization.
+- **Deployment-published:** the marker policy, with its identity
+  and edition, the epoch-marker placement rule and cadence —
+  published before genesis and fixed for its marker sequence (Q61).
+
+The `L1Boundary` trait surfaces none of these beyond the burn
+amounts and addresses CoGra already reads; the stand-in has no
+burn realization behind it
+([roadmap.md "The stand-in and the swap"](implementation/roadmap.md#the-stand-in-and-the-swap)).
 
 ### The question
 
-At swap time, does `L1Boundary` expose the published quantities, and
-in what form?
+At swap time, does `L1Boundary` expose the computational inputs and
+the audit evidence, and in what form?
 
 - **Consumers.** The burn-snapshot buffer $\delta_{\text{pos}}$ must
   exceed the published settlement depth; bootstrap UX and economics
@@ -507,7 +525,7 @@ in what form?
 ### Related
 
 Q55 (community pools consume admission economics that
-$c_{\mathrm{u}}$ prices).
+$c_{\mathrm{u}}$ prices); Q61 (who publishes the marker policy).
 
 ## Q57 — Batch atomicity if Layer 1 cannot back it
 
@@ -698,3 +716,57 @@ Does the walk-back of an empty sign read as severed?
 Q11 (severance, resolved — the `(0, 0)` edge and zero-jail; the
 routing math is the same for every `(0, 0)` bundle, whichever way it
 reads).
+
+## Q61 — The deployment's marker policy and finality-breach response
+
+**Status:** open (deferred — to the preparation of the real Layer 1
+swap; jakob, 2026-11-10)
+
+### Context
+
+The real Layer 1 closes every epoch against an epoch marker that a
+**marker policy** recognizes among the burn accumulators, one per
+epoch index; the policy also decides which burn records each marker
+accepts, and no epoch closes without its recognized marker (M5). The
+deployment publishes the policy before genesis — its identity and
+edition, the epoch-marker placement rule and cadence — fixed for its
+marker sequence (``post:comparator:marker-bound-settlement``). A
+marker's form may be producible by the host alone.
+
+A history replacement beyond the realization's published settlement
+depth is a finality breach: Layer 1 halts at the last closed epoch,
+rewrites nothing, and closes no further epoch under that marker
+policy. Where the marker form is host-only, the host's continued
+marker production is a liveness dependency of the epoch sequence
+(``rem:comparator:finality-breach-halts``). Which response a
+deployment takes is its published policy, not a Layer 1 rule. The
+stand-in has no burn realization behind it
+([roadmap.md "The stand-in and the swap"](implementation/roadmap.md#the-stand-in-and-the-swap)).
+
+### The question
+
+- **Who is the deployment.** Which party in CoGra's setup publishes
+  the marker policy and the breach response, and where.
+- **Which breach response CoGra publishes.** The two the spec
+  states:
+  - **Re-anchor**
+    (``case:deployment:realization-obligations-finality-breach-reanchor``).
+    Every closed epoch stays as published; the deployment resumes by a
+    published marker-policy edition change naming a fresh initial
+    epoch marker in the surviving history, with a published
+    ledger-continuity decision stating which settled amounts carry
+    over. Closed epochs are not reissued. It is also the spec's
+    remedy when a host stops producing host-only markers.
+  - **Follow**
+    (``case:deployment:realization-obligations-finality-breach-follow``).
+    The host follows the replaced history, re-deriving the epochs
+    whose markers were lost from the new lineage under a published
+    marker-policy edition change; the deployment names the
+    superseded certificates, publishes the point of divergence and
+    its ledger-continuity decision. This lies outside Layer 1's
+    irreversibility guarantee and is stated as such.
+
+### Related
+
+Q56 (what the seam exposes of the realization); Q58 (the other
+deferred swap question).
