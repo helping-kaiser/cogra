@@ -780,10 +780,11 @@ proposing $m \ge 1$ epoch acts:
 $$B_{\mathrm{W1}}(m) = m\theta, \qquad B_{\mathrm{safety}}(m) = 2m\theta,
 \qquad B_{\mathrm{door}}(m) = m(\theta + \nu\rho_{\text{eff}}),$$
 
-projected through the published unit cost as outlays in the realization's
-external denomination $\delta(m) = B(m)\,c_{\mathrm{u}}$ (R10;
-`eq:comparator:admission-benchmark-deposits`,
-`subsec:comparator:capacity-and-admission-benchmarks`). These are
+projected through the published unit cost as amount-proportional outlays in
+the realization's external denomination $\delta(m) = B(m)\,c_{\mathrm{u}}$
+(R10; `eq:comparator:admission-benchmark-deposits`,
+`subsec:comparator:capacity-and-admission-benchmarks`); total outlay also
+includes any separately published costs of the recording events used. These are
 final-state gate benchmarks, not prices that guarantee selection into the
 finite write set; there is no universal admission price. Band dwell is
 linear and exact (`rem:epoch:band-dwell`); re-entry from below either
