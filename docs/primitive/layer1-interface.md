@@ -657,7 +657,7 @@ formation, package validity, or the epoch target;
 | $\rho_{\text{eff}}$ | $\max(\rho_{\text{pol}}, \rho_\theta)$; $= \rho_{\text{pol}} = 1$ on any valid certificate (derived) | `def:epoch:participation-floor` |
 | $m_\theta$ | $5/4$ (chartered margin factor: the certificate margin $m_\theta\,\mathcal{K}_k \le 1$, the fence slack $1 - 1/m_\theta = 0.20$, and the controller target $q(W)$) | `def:epoch:safety-threshold` |
 | $N_{\text{epoch}}$ | 10000 (illustrative **target** act budget, denominated in accepted authored acts; not yet locked) | `def:epoch:epoch-act-budget` |
-| $\delta_{\text{pos}}$ | 500 (illustrative burn-snapshot buffer, chosen to exceed the settlement depth the realization publishes, R4(e); not yet locked) | `post:epoch:final-edge-set` |
+| $\delta_{\text{pos}}$ | 500 (illustrative settlement-stability depth at which the network reads the recognized final epoch marker $m_k$, chosen to exceed the settlement depth the realization publishes with its finality assumptions, R4(e); protects the marker, its lineage and its fixed interpretation — edge membership stays the closure rule's; not yet locked) | `post:epoch:final-edge-set` |
 | $L_{\text{hop}}$ | 4 (chartered transport depth, in hops of the conserved transport) | `def:epoch:standing-depth-mass` |
 | $\gamma$ | $1/4$ (chartered activation exponent; **not** the reciprocal of $L_{\text{hop}}$) | `def:epoch:responsive-vouch-activation` |
 | $Q(1)$ | $\approx 0.6975$ (activation normalization of the deployed core) | `def:epoch:responsive-vouch-activation` |
