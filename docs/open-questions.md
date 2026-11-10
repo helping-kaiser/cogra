@@ -33,7 +33,7 @@ within a phase, order is flexible.
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 | 5. When a community wants its own pot | 1 | **Q55** | Community pool splitting — how a community leaves the global admission fund, where the `admission_fund` carve routes once pools multiply, and who governs each pool. One network splitting, not federation (Q15). |
 | 6. If Layer 1 cannot land a batch whole | 1 | **Q57** | Batch atomicity — how the seals' land-together guarantee holds if Layer 1 never backs it, without breaking the mirror. Deferred: the product builds to the guarantee. |
-| 7. At the L1 swap | 1 | **Q58** | The write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist. On the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words. Deferred to the swap. |
+| 7. At the L1 swap | 3 | **Q56, Q58, Q61** | What the seam exposes of the burn realization (its computational inputs and audit evidence); the write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist (on the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words); and who in CoGra is the deployment that publishes the marker policy, with which finality-breach response. Deferred to the swap. |
 | 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
 
 As questions resolve, their blocks disappear from below and their
@@ -480,19 +480,37 @@ together; a separate concept from one network's pools splitting).
 
 ### Context
 
-The v0.25.0 interface has the realization publish three quantities
-beyond the burn values and addresses CoGra already reads through the
-seam: the capacity bound $B_{\max}$ (R9), the unit-cost projection
-$c_{\mathrm{u}}$ (R10), and the settlement depth (R4(e)) — see
-[layer1-interface.md §"The interface"](primitive/layer1-interface.md).
-The `L1Boundary` trait does not surface them; the stand-in holds its
-equivalents internally, and the seam's shape was deliberately left
-unchanged by the v0.25.0 update.
+What the real Layer 1 reads of a burn realization falls into three
+classes (``def:comparator:burn-interface``,
+``post:comparator:burn-primitive``,
+``post:comparator:marker-bound-settlement``; see
+[layer1-interface.md §1.1](primitive/layer1-interface.md#11-the-burn-interface-and-requirements-r1r11)):
+
+- **Computational inputs.** The burn map — at epoch $k$ the marker
+  burn snapshot $B^{(k)}$ (``def:comparator:marker-burn-snapshot``)
+  — and two published constants: the capacity bound $B_{\max}$
+  (R9; zero, with its reason, when external acquisition is open
+  from the start) and the unit-cost projection $c_{\mathrm{u}}$
+  (R10; positive, with its external denomination and terms).
+- **Public audit evidence**, never a computational input: the
+  settlement depth with the finality assumptions under which it
+  holds (R4(e)), the R7 provenance quantities, recording-event
+  costs published separately from $c_{\mathrm{u}}$ (R10), and the
+  R11 operator bound with its proof — or a statement that no role
+  accrues burn amount from operating the realization.
+- **Deployment-published:** the marker policy, with its identity
+  and edition, the epoch-marker placement rule and cadence —
+  published before genesis and fixed for its marker sequence (Q61).
+
+The `L1Boundary` trait surfaces none of these beyond the burn
+amounts and addresses CoGra already reads; the stand-in has no
+burn realization behind it
+([roadmap.md "The stand-in and the swap"](implementation/roadmap.md#the-stand-in-and-the-swap)).
 
 ### The question
 
-At swap time, does `L1Boundary` expose the published quantities, and
-in what form?
+At swap time, does `L1Boundary` expose the computational inputs and
+the audit evidence, and in what form?
 
 - **Consumers.** The burn-snapshot buffer $\delta_{\text{pos}}$ must
   exceed the published settlement depth; bootstrap UX and economics
@@ -507,7 +525,7 @@ in what form?
 ### Related
 
 Q55 (community pools consume admission economics that
-$c_{\mathrm{u}}$ prices).
+$c_{\mathrm{u}}$ prices); Q61 (who publishes the marker policy).
 
 ## Q57 — Batch atomicity if Layer 1 cannot back it
 
@@ -698,3 +716,57 @@ Does the walk-back of an empty sign read as severed?
 Q11 (severance, resolved — the `(0, 0)` edge and zero-jail; the
 routing math is the same for every `(0, 0)` bundle, whichever way it
 reads).
+
+## Q61 — The deployment's marker policy and finality-breach response
+
+**Status:** open (deferred — to the preparation of the real Layer 1
+swap; jakob, 2026-11-10)
+
+### Context
+
+The real Layer 1 closes every epoch against an epoch marker that a
+**marker policy** recognizes among the burn accumulators, one per
+epoch index; the policy also decides which burn records each marker
+accepts, and no epoch closes without its recognized marker (M5). The
+deployment publishes the policy before genesis — its identity and
+edition, the epoch-marker placement rule and cadence — fixed for its
+marker sequence (``post:comparator:marker-bound-settlement``). A
+marker's form may be producible by the host alone.
+
+A history replacement beyond the realization's published settlement
+depth is a finality breach: Layer 1 halts at the last closed epoch,
+rewrites nothing, and closes no further epoch under that marker
+policy. Where the marker form is host-only, the host's continued
+marker production is a liveness dependency of the epoch sequence
+(``rem:comparator:finality-breach-halts``). Which response a
+deployment takes is its published policy, not a Layer 1 rule. The
+stand-in has no burn realization behind it
+([roadmap.md "The stand-in and the swap"](implementation/roadmap.md#the-stand-in-and-the-swap)).
+
+### The question
+
+- **Who is the deployment.** Which party in CoGra's setup publishes
+  the marker policy and the breach response, and where.
+- **Which breach response CoGra publishes.** The two the spec
+  states:
+  - **Re-anchor**
+    (``case:deployment:realization-obligations-finality-breach-reanchor``).
+    Every closed epoch stays as published; the deployment resumes by a
+    published marker-policy edition change naming a fresh initial
+    epoch marker in the surviving history, with a published
+    ledger-continuity decision stating which settled amounts carry
+    over. Closed epochs are not reissued. It is also the spec's
+    remedy when a host stops producing host-only markers.
+  - **Follow**
+    (``case:deployment:realization-obligations-finality-breach-follow``).
+    The host follows the replaced history, re-deriving the epochs
+    whose markers were lost from the new lineage under a published
+    marker-policy edition change; the deployment names the
+    superseded certificates, publishes the point of divergence and
+    its ledger-continuity decision. This lies outside Layer 1's
+    irreversibility guarantee and is stated as such.
+
+### Related
+
+Q56 (what the seam exposes of the realization); Q58 (the other
+deferred swap question).
