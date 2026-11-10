@@ -1985,9 +1985,9 @@ fixtures of the original's verification section:
 | Marginal | Leave, De-invite legs (fixed parameters) | $(1.00, 1.00)$ | $0.153$ |
 
 The tier assignment of the remaining edge types follows the census,
-without a worked fixture in the original: Full — Reference/T, Publish,
-Participant/A, Send/A; Half — Invitation/A; Marginal — Reference/A,
-Send/T, Participant/T. The original presents $0.27$–$0.36$ as the
+without a worked fixture in the original: Full — Registration, Reference/T,
+Publish, Participant/A, Send/A; Half — Invitation/A; Marginal — Reference/A,
+Send/T, Participant/T, Withdraw, Rescind. The original presents $0.27$–$0.36$ as the
 reference band for non-Self full-mask edges, Self above it
 (`prop:graph:path-view-determinant-bound`).
 
