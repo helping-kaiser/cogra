@@ -9,11 +9,13 @@ import com.cogra.domain.media.PartFailure
 import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.UploadRetry
 import com.cogra.domain.store.TokenStore
+import com.cogra.network.auth.SessionRefresher
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
 import java.net.HttpURLConnection
 import java.net.URI
+import javax.inject.Provider
 import kotlin.random.Random
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +45,9 @@ import kotlinx.coroutines.withContext
  */
 class PartUploader(
     private val tokens: TokenStore,
+    // Provider, as the gate holds it: the refresher calls the client, so
+    // reaching for it only when a part is refused keeps construction acyclic.
+    private val refresher: Provider<SessionRefresher>,
     private val endpoint: String,
     private val random: Random = Random.Default,
     // Injected so the suites drive the backoff on a virtual clock

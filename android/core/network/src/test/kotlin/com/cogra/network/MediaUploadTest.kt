@@ -28,6 +28,7 @@ import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.io.IOException
 import java.security.MessageDigest
+import javax.inject.Provider
 import kotlin.random.Random
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -65,6 +66,13 @@ class MediaUploadTest {
     /** Part numbers to fail, and how many times before letting through. */
     private var failuresFor = mutableMapOf<Int, Int>()
     private var refusalsFor = mutableMapOf<Int, Int>()
+
+    /** When set, the part route answers 401 to every bearer but this one. */
+    private var acceptedBearer: String? = null
+
+    /** The pair the refresh mutation hands out, and how often it was asked. */
+    private var rotatedAccess = "rotated-access"
+    private var refreshCalls = 0
 
     private var completeCalls = 0
     private var beginCalls = 0
@@ -146,6 +154,12 @@ class MediaUploadTest {
         // mock server can produce deterministically — the socket-policy
         // shim in mockwebserver 5's legacy package does not.
         if (seen <= owed) return MockResponse().setResponseCode(503)
+        // The store resolves the bearer itself: any other token is a 401.
+        acceptedBearer?.let { accepted ->
+            if (request.getHeader("Authorization") != "Bearer $accepted") {
+                return MockResponse().setResponseCode(401)
+            }
+        }
         // A refusal: an answer about the request, not a blip.
         refusalsFor[number]?.let { return MockResponse().setResponseCode(it) }
         return MockResponse()
@@ -170,6 +184,13 @@ class MediaUploadTest {
                 completeCalls += 1
                 """{"data":{"completeMediaUpload":{"__typename":"UploadMediaPayload",
                    "media":${mediaJson(state = if (processingUpload) "PROCESSING" else "READY")},
+                   "userErrors":[]}}}"""
+            }
+            body.contains("refreshSession") -> {
+                refreshCalls += 1
+                """{"data":{"refreshSession":{"__typename":"RefreshPayload",
+                   "auth":{"__typename":"AuthSession","accessToken":"$rotatedAccess",
+                   "refreshToken":"rotated-refresh","user":{"__typename":"User","id":"acct"}},
                    "userErrors":[]}}}"""
             }
             body.contains("uploadMedia") ->
@@ -203,6 +224,9 @@ class MediaUploadTest {
         echoedDigest = sha256Hex(file.readBytes())
         val uploader = PartUploader(
             tokens = tokens,
+            refresher = Provider {
+                SessionRefresher(tokens, EndLocalSession(FakeLockCustodyStore(), tokens)) { client }
+            },
             endpoint = server.url("/graphql").toString(),
             // Pinned so the schedule is the policy's, not chance's.
             random = Random(1),
@@ -303,6 +327,44 @@ class MediaUploadTest {
 
         assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
         assertThat(partAttempts).isEmpty()
+        assertThat(completeCalls).isEqualTo(0)
+    }
+
+    /**
+     * An upload outlives the 15-minute access token. The part route is not
+     * behind the gate, so a 401 there has to be answered by rotating the
+     * session, not by repeating the same dead header until the budget is gone.
+     */
+    @Test
+    fun aPartTurnedAwayAsUnauthenticatedRefreshesTheSessionAndLands() = runTest {
+        tokens.save(AuthTokens("stale-access", "refresh", "acct"))
+        acceptedBearer = rotatedAccess
+        val (repo, clip) = repositoryFor(PART_SIZE + 10)
+
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
+
+        assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
+        assertThat(refreshCalls).isEqualTo(1)
+        // One refused try, then the part and its successor carry the new token.
+        assertThat(partAttempts[1]).isEqualTo(2)
+        assertThat(partAttempts[2]).isEqualTo(1)
+        assertThat(tokens.current()?.accessToken).isEqualTo(rotatedAccess)
+    }
+
+    @Test
+    fun aUnauthenticatedAnswerThatSurvivesTheRefreshIsItsOwnFailure() = runTest {
+        tokens.save(AuthTokens("stale-access", "refresh", "acct"))
+        // Nothing the client can hold is good enough for this store.
+        acceptedBearer = "a-token-nobody-has"
+        val (repo, clip) = repositoryFor(PART_SIZE + 10)
+
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
+
+        assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
+        assertThat((outcome as Outcome.Failed).cause.message).contains("UNAUTHENTICATED")
+        // One refresh and one replay — not a budget of six dead headers.
+        assertThat(refreshCalls).isEqualTo(1)
+        assertThat(partAttempts[1]).isEqualTo(2)
         assertThat(completeCalls).isEqualTo(0)
     }
 
