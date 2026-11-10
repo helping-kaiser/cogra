@@ -2053,8 +2053,8 @@ view and preserves determinant sign exactly.
 
 ### 8.9 Derived path quantities consumed by raw traversal
 
-- **Path matrix (`def:graph:path-matrix`):** for a directed path
-  $p = (e_1, \dots, e_d)$ viable under the authoritative order:
+- **Path matrix (`def:graph:path-matrix`):** for a directed raw snapshot
+  path $p = (e_1, \dots, e_d)$ (`def:graph:raw-snapshot-path`):
   $P(p) = \boldsymbol{\Psi}_{e_1}^{[P]} \cdots \boldsymbol{\Psi}_{e_d}^{[P]}$.
 - **Determinant product (`thm:graph:determinant-product`):**
   $\det(P(p)) = \prod_{e\in p} \det(\boldsymbol{\Psi}_e^{[P]})$.
