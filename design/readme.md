@@ -10787,6 +10787,73 @@ the autonomy order, review pending*.
   registry grows **140 → 143 screens**, **5599 → 5775** board paths,
   **1689 → 1750** distinct.
 
+### Round 28, the closing registrations and the whole roles — 2026-11-10
+
+Seam 254's registrations (A1–A3), android's five registry questions (item
+13) and the four masters' type roles (items 5–8), ruled by jakob 2026-11-10;
+backlog 147 finished in the same pass. Nothing is drawn differently except
+the type.
+
+- **The entry and settings boards register**, one prefix per surface:
+  `signIn` (with its error, signed-out and backoff states), `join`,
+  `inviteEntry` (`JoinInvalid` among them — it is the entry step answering a
+  link), `reset` (the request, the new password, the dead link), `verify`
+  (`Verified` and `VerifiedApp` join `VerifyExpired`), `settingsBackup`,
+  `yourKey` and `recoveryCode`. Names follow the credential family: fields
+  for what they hold, the proof `current`, the commit with its reason
+  `commit`, the quiet note `note`; the remember box is `forget`, as Settings
+  names the same words; the plain way on is `onward`. `NoticePanel`,
+  `NoticeLine` and `RecoveryCode` take `node`; the code master draws no box,
+  so the board names the card (`recoveryCode.code`) and the parts join under
+  it.
+- **A live commit is the waiting commit with nothing to wait for.** The error
+  states drew a bare button where their twins draw `WaitingCommit`; they now
+  draw the master with `waiting` off, so `.commit.action` is one path in both
+  states. The wrapper adds no geometry (measured, 0 boxes moved on the four
+  boards).
+- **A name never forbids its own words**, again: the account switch is
+  `signInDoor` and the key export's card `exportCard`, so the sidecars keep
+  `Sign in` and `actor key`.
+- **The wizard's picked sheet** is `composeDetails.pickedSheet` on
+  `ComposePicked`, `postEdit.pickedSheet`'s grammar: drawn once over the pick
+  step and raised from both stages, it keeps one path wherever it is raised.
+- **The profile comment card's parts.** `target` is the card's pointer, the
+  comment edit's own name; `removalMark` is the master's name already and
+  registers once the comments view draws a removed comment. The replies line
+  hangs under the card, outside its surface, so it is `viewReplies` beside
+  the card — `profile.comments.viewReplies`, keyed by the comment's id — and
+  the thread's is `postDetail.threadSheet.viewReplies`. The card's own ⋮
+  waits with the other host menus (backlog 149, each named).
+- **Android's questions, from precedent.** A group's heading is the group's
+  `label` (`postEdit.body.label` beside `.words`, as `postEdit.tags.label`),
+  never the field's own. A chip key is the board's state address, read from
+  that board's registry entry; one element keyed by different chips on two
+  boards is the law, not a drift. Parts drawn inside one line keep their
+  paths, and a node's two attributes are its whole identity — never its
+  nesting in a client's tree — so a × standing beside a merged picture node
+  still carries `…thumb.remove`. A card keyed by its author's handle collides
+  wherever one person stands twice, and both clients key every list card by
+  its wire id: the re-key is jakob's (seam 254 item 13, G4).
+- **The masters take their whole roles** (round 20's law): the fault line
+  draws body-medium's 20px leading and 0.25px tracking (−4px a line); the
+  waiting reason label-small's weight 500; the password input body-large's
+  24px leading and 0.5px tracking (+5px, the text field's height); the pending
+  line label-small's 16px (−8px a line). Measured headless, Figtree loaded.
+- **Backlog 147 closed.** 348 sites set size, leading, tracking and weight
+  from one role; 20 that set one part on purpose keep it. The collective
+  shifts, measured: body-medium lines take 0.25px tracking where they
+  inherited 0.5px (173 boards; widths, and 23 lines rewrap one shorter); the
+  header and band titles in title-large and headline-small lose the inherited
+  0.5px (151 and 52 boards, widths only); label-large controls that drew the
+  browser's leading measure 20px and 0.1px (166 boards, +2–3px); body-small
+  and label-medium lines that inherited 24px measure 16px (133 and 90 boards,
+  −8px a line); label-small lines take the role's weight 500 (119 boards,
+  widths only); inputs take body-large's 0.5px tracking (50 boards, widths
+  only).
+- **The gate**: edges hold at **2159**, flows at **227**, none re-blessed. The
+  registry grows **143 → 167 screens**, **5775 → 6096** board paths, **1750
+  → 1904** distinct.
+
 ---
 
 ## 14. The canvases
