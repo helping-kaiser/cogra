@@ -1993,10 +1993,10 @@ names them /A and /T.)
 | Review | Actor → Passive → Comment | Tribal $(1,1,1,1)$ F / Epistemic $(0,1,0,1)$ M | enthusiasm $e$, effort $f$; A: $p_d = e, p_i = f$; T: $p_d = f, p_i = e$. Commentary, never state; standing-inert as a family |
 | Bid | Actor → Item → Offer | Economic ↑promoted, both legs **Half** | signed generosity $g \in [-1,1]$, urgency $u \in [0,1]$; A: $p_d = g, p_i = u$; T: $p_d = u, p_i = g$. Both legs carry $\epsilon = \mathrm{sgn}(g)$, so composed parity is $+1$: a predatory Bid is parity-visible per leg, parity-neutral as a composition; the buyer's stance is read by stance consumers (`cor:nodes:bid-leg-parity`) |
 | **Participant** | Actor → Chat → Chat | Relational $(1,1,1,1)$ ↑ F / Epistemic $(0,1,0,1)$ M | interactivity $i \in [-1,1]$, responsibility $r \in [-1,1]$, continuity $c \in [0,1]$; A: $p_d = i, p_i = r$; T: $p_d = c, p_i = 1$ type-fixed (forced $\epsilon = +1$, `lem:nodes:self-loop-neutral`). **A-leg whence, T-leg whither** — one meaning, *I move from A to T*, in four instantiations: **found** (both legs on $\mathsf{mint}(\mathrm{actid})$), **join** (both on $C_1$), **found successor** (A on $C_0$, T on the mint), **move** (A on $C_0$, T on $C_1$). There is no shape branch to test and no field a reader must consult; the terminal target alone decides whether the act mints, so found and found successor mint and join and move do not (§8.1). Origin is unchecked at formation — a move from a chat the author was never in is a decorated join. The A-leg's $(i, r)$ are the act's mandatory coordinates; the T-leg's $c$ is authored, semantically vacuous in the join and found cases, and **not** mandatory, so a choice on a meaningless field never moves its author's coefficient. The T-leg's damped weight is bounded by the Marginal family supremum, a function of $c$ alone (`thm:graph:raw-weight-ceiling`). The membership fold reads leg roles, never family incidence (§9.8) (`edge:nodes:participant`) |
-| **Invitation** | Actor → Chat → Profile(invitee) | Relational $(1,1,1,1)$ ↑ **Half** / Epistemic $(0,1,0,1)$ M | urgency $u \in [-1,1]$, formality $f \in [-1,1]$, relevance $r \in [0,1]$; A: $p_d = u, p_i = f$; T: $p_d = r, p_i = 1$ (forced $+1$ for $r > 0$). A public, priced, authored vouch that the invitee fits the community; a proposal, not participation. The A-leg's $(u, f)$ are the act's mandatory coordinates: when the folded $u, f$ are strictly positive after netting, the inviter may compile one complete hyper-vouch toward the invitee's bound Actor, at the coefficient $\sqrt{|u\,f|}$, the geometric mean of their magnitudes; the T-leg's $r$ is raw context and enters neither that coefficient nor its positivity gate. The terminal leg targets the invitee's **Profile**, never the Actor — influence reaches the invitee only through their standing-dependent activation (wall-clamped, §11.4). Revocable per author (§9.8) (`edge:nodes:hyper-invitation`, `subsec:necessity:invitation-profile-terminus`) |
-| **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs excluded from the standing projection — a De-invite never vouches for its target. Sole closure-visible effect: per-author suppression of the author's own Invitation bundle toward the same (Chat, Profile) incidence (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
+| **Invitation** | Actor → Chat → Profile(invitee) | Relational $(1,1,1,1)$ ↑ **Half** / Epistemic $(0,1,0,1)$ M | urgency $u \in [-1,1]$, formality $f \in [-1,1]$, relevance $r \in [0,1]$; A: $p_d = u, p_i = f$; T: $p_d = r, p_i = 1$ (forced $+1$ for $r > 0$). A public, priced, authored vouch that the invitee fits the community; a proposal, not participation. The A-leg's $(u, f)$ are the act's mandatory coordinates: when the folded $u, f$ are strictly positive after netting, the inviter may compile one complete hyper-vouch toward the invitee's bound Actor, at the coefficient $\sqrt{|u\,f|}$, the geometric mean of their magnitudes; the T-leg's $r$ is raw context and enters neither that coefficient nor its positivity gate. The terminal leg targets the invitee's **Profile**, never the Actor — influence reaches the invitee only through their standing-dependent activation (wall-clamped, §11.4). Withdrawn by its author through a cancelling Invitation that nets the bundle to $(0, 0)$ (§9.8) (`edge:nodes:hyper-invitation`, `subsec:necessity:invitation-profile-terminus`) |
+| **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs are control records resolving to their author, absent from person-vouch compilation — a De-invite never vouches for its target (`rem:epoch:control-acts-resolve-to-self`). It withdraws nothing: it allocates nothing outward and has no effect on its author's Invitation bundle, which a cancelling Invitation withdraws (§9.8). It is still a priced act — debited, counted, and weighed at self at coefficient 1. Its reading is the Layer-2 membership fold (`def:nodes:canonical-membership-fold`) (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
 | Send | Actor → Chat → Message | Relational $(1,1,1,1)$ ↑ F / Minimal $(0,0,0,1)$ M | importance $i \in [-1,1]$; A: $p_d = i, p_i = 1$; T: $p_d = 1, p_i = i$. **Renamed from "Write"** (`edge:nodes:hyper-send`): *write* is the protocol act (§8.2); a Send is carried into the graph by a write, it is not one. **Not membership-gated**: a Layer-1 membership precondition would drag membership into the admission closure (`rem:nodes:membership-is-terminal`). Standing role none: sending into a Chat endorses no one |
-| Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; A: $p_d = f, p_i = e$; T: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches the allocation destination: a **complete** Reference whose T-leg targets Profile$_i$ with strictly-positive folded $(e, f)$ resolves its fold cell to Actor $i$; every other Reference resolves to its author's self-retention channel — weighed and priced either way, but reaching no one else (still read by feed, raw signed traversal, CAN, provenance, terminal policy). The artifact supplies context, never transferable standing: incoming weight on the citing artifact enters no cell (§11.3, `def:epoch:standing-recipient-resolution`). Self-reference resolves home; withdrawal is per-leg net stance (`edge:nodes:hyper-reference`, `rem:nodes:reference-author-allocation`) |
+| Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; A: $p_d = f, p_i = e$; T: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches the allocation destination: a **complete** Reference whose T-leg targets Profile$_i$ with strictly-positive folded $(e, f)$ resolves its fold cell to Actor $i$; every other Reference resolves to its author's self-retention channel — weighed and priced either way, but reaching no one else (still read by feed, raw signed traversal, CAN, provenance, terminal policy). The artifact supplies context, never transferable standing: incoming weight on the citing artifact enters no cell (§11.3, `def:epoch:standing-recipient-resolution`). Self-reference resolves home; withdrawal is per-leg net stance (`lem:epoch:authored-vouch-withdrawable`) (`edge:nodes:hyper-reference`, `rem:nodes:reference-author-allocation`) |
 
 There is no combined Actor → Actor → Chat request edge: joining is the binary
 Join Request (Actor → Chat), and inviting is the Invitation hyper-edge (Chat
@@ -2087,7 +2087,7 @@ Invitation are proposals. They establish no membership and do not substitute
 for the Participant edge. A Chat membership signal exists only when the
 joining actor authors a Participant edge. Ignoring a proposal requires no
 graph action. A Join Request allocates to nobody but its author; an
-inviter's own complete, positive, unsuppressed Invitation act may instead
+inviter's own complete, positive Invitation act may instead
 compile into a person-vouch toward the invitee.
 
 **Canonical Membership Fold — the full paper's Layer-2 default
@@ -2134,24 +2134,27 @@ admission closure and enlarge the binding surface
 (`subsec:necessity:unrestricted-departure` — "who may expel" is a terminal
 policy verdict).
 
-**Inviter Revocation (`def:epoch:inviter-revocation`).** Author $j$'s
-Invitation act toward incidence (Chat $C$, Profile $P$) is **absent** from
-fold-cell compilation iff the latest **epoch index** represented in $j$'s own
-{Invitation, De-invite} records with that incidence contains a De-invite —
-ties within an epoch favouring the revocation; a later complete Invitation at
-a subsequent epoch re-establishes the act. The rule is **epoch-quantized,
-not order-read**, and obligatorily so: no standing quantity may read
-host-assigned order or any intra-epoch "latest"
-(`post:epoch:standing-epoch-set-determinism`), and the $\prec$-maximal
-element is free among acts with no declared dependency, so a host could
-otherwise decide suppression by placement. Suppression is
-strictly per-author — it never affects another author's invitation — and is
-a suppression predicate, not a parameter contribution. No control edge
-enters any stance sum. "Conviction sums; consent toggles": stance bundles
-aggregate with inertia, but a vouch-of-fitness is live consent, and live
-consent is latest-record-wins — the same cancel-over-commit shape as
-settlement's epoch-quantized consent rule. Each toggle is a priced act;
-oscillation dilutes $r_j$ irrevocably.
+**Authored vouches are withdrawable
+(`lem:epoch:authored-vouch-withdrawable`).** Every authored vouch that
+stance aggregation folds — Opinion, Reference, and Invitation — is
+withdrawable by its author through netting within the accepted epoch set.
+Standing consumes no family-specific withdrawal rule and no tie rule; the
+fold is invariant under every dependency-compliant permutation
+(`post:epoch:standing-epoch-set-determinism`). For an Invitation with
+mandatory A-leg pair $(u, f)$, a cancelling Invitation with $(-u, -f)$
+toward the same incidence nets the author's bundle to $(0, 0)$, which fails
+the strictly-positive gate (`def:epoch:effective-act-contribution`) and is
+weighed home at coefficient zero; a later positive Invitation re-establishes
+the vouch. Netting is strictly per-author: no act withdraws another author's
+vouch. Each withdrawal and re-establishment is a priced act — it increments
+the author's act count and irrevocably lowers the author's commitment rate. A De-invite withdraws
+nothing: it has no effect on its author's Invitation bundle and allocates
+nothing outward; it is still a priced act — debited, counted, and weighed at
+self at coefficient 1 (`rem:epoch:control-acts-resolve-to-self`) — and its
+reading is the Layer-2 membership fold above. Settlement acts (Accept,
+Ratify) are singleton cells and withdraw through the epoch-quantized
+settlement consent of `def:graph:settlement-recognition`, not through
+netting.
 
 ---
 
