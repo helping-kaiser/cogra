@@ -239,8 +239,9 @@ data object ChangeEmailConfirm
 @Serializable
 data class ChangeEmailLinked(val token: String)
 
+/** About CoGra; [plainBack] when the join form's "?" opened it (About.md:21). */
 @Serializable
-data object About
+data class About(val plainBack: Boolean = false)
 
 /** The deletion's request screen (`DeleteAccount`), opened from the Settings row. */
 @Serializable
