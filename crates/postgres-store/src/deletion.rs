@@ -195,9 +195,12 @@ async fn forget_identity(conn: &mut PgConnection, user_id: Uuid) -> Result<(), s
     sqlx::query!("DELETE FROM auth_email_changes WHERE user_id = $1", user_id)
         .execute(&mut *conn)
         .await?;
-    sqlx::query!("DELETE FROM auth_password_resets WHERE user_id = $1", user_id)
-        .execute(&mut *conn)
-        .await?;
+    sqlx::query!(
+        "DELETE FROM auth_password_resets WHERE user_id = $1",
+        user_id
+    )
+    .execute(&mut *conn)
+    .await?;
     sqlx::query!("DELETE FROM auth_key_backups WHERE user_id = $1", user_id)
         .execute(&mut *conn)
         .await?;
@@ -392,9 +395,12 @@ pub async fn close(pool: &PgPool, execution: &Execution) -> Result<Closed, sqlx:
     let user_id = execution.user_id;
     let mut tx = pool.begin().await?;
     auth::lock_account(&mut tx, user_id).await?;
-    let handle = sqlx::query_scalar!("SELECT handle FROM actors WHERE id = $1 FOR UPDATE", user_id)
-        .fetch_one(&mut *tx)
-        .await?;
+    let handle = sqlx::query_scalar!(
+        "SELECT handle FROM actors WHERE id = $1 FOR UPDATE",
+        user_id
+    )
+    .fetch_one(&mut *tx)
+    .await?;
     if handle == redacted_handle(user_id) {
         return Ok(Closed {
             already: true,
@@ -449,9 +455,12 @@ async fn delete_private_state(conn: &mut PgConnection, user_id: Uuid) -> Result<
     sqlx::query!("DELETE FROM user_bookmarks WHERE user_id = $1", user_id)
         .execute(&mut *conn)
         .await?;
-    sqlx::query!("DELETE FROM user_hidden_actors WHERE viewer_id = $1", user_id)
-        .execute(&mut *conn)
-        .await?;
+    sqlx::query!(
+        "DELETE FROM user_hidden_actors WHERE viewer_id = $1",
+        user_id
+    )
+    .execute(&mut *conn)
+    .await?;
     sqlx::query!("DELETE FROM chat_read_state WHERE user_id = $1", user_id)
         .execute(&mut *conn)
         .await?;

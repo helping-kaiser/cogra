@@ -164,12 +164,8 @@ async fn confirmed(rig: &WireRig, token: &str, email: &str, include_content: boo
 }
 
 async fn confirm(rig: &WireRig, link: &str) -> Value {
-    rig.gql(
-        None,
-        CONFIRM,
-        json!({ "input": { "deletionToken": link } }),
-    )
-    .await
+    rig.gql(None, CONFIRM, json!({ "input": { "deletionToken": link } }))
+        .await
 }
 
 /// Moves the account's confirmed deadline into the past.
@@ -214,8 +210,12 @@ async fn landed_profile_update(rig: &WireRig, m: &Member, input: Value) {
         .gql(Some(&m.token), PREPARE_PROFILE, json!({ "input": input }))
         .await;
     no_errors(&prepared["prepareProfileUpdate"]);
-    rig.sign_prepared(&m.token, &m.key, &prepared["prepareProfileUpdate"]["writes"])
-        .await;
+    rig.sign_prepared(
+        &m.token,
+        &m.key,
+        &prepared["prepareProfileUpdate"]["writes"],
+    )
+    .await;
     rig.close_and_ingest().await;
 }
 
@@ -235,7 +235,8 @@ async fn post(rig: &WireRig, m: &Member, body: &str) -> String {
         .await;
     let payload = &prepared["preparePost"];
     no_errors(payload);
-    rig.sign_prepared(&m.token, &m.key, &payload["writes"]).await;
+    rig.sign_prepared(&m.token, &m.key, &payload["writes"])
+        .await;
     rig.close_and_ingest().await;
     payload["node"].as_str().expect("node").to_string()
 }
@@ -257,7 +258,8 @@ async fn comment(rig: &WireRig, m: &Member, target: &str, body: &str) -> String 
         .await;
     let payload = &prepared["prepareComment"];
     no_errors(payload);
-    rig.sign_prepared(&m.token, &m.key, &payload["writes"]).await;
+    rig.sign_prepared(&m.token, &m.key, &payload["writes"])
+        .await;
     rig.close_and_ingest().await;
     payload["node"].as_str().expect("node").to_string()
 }
@@ -327,7 +329,10 @@ async fn execution_redacts_identity_and_keeps_every_record(pool: PgPool) {
         .await,
         1
     );
-    assert_eq!(handle_of(&rig, sol.id).await, format!("redacted-user-{}", sol.id));
+    assert_eq!(
+        handle_of(&rig, sol.id).await,
+        format!("redacted-user-{}", sol.id)
+    );
     assert_eq!(
         count(
             &rig,
@@ -505,7 +510,11 @@ async fn nothing_executes_before_the_deadline(pool: PgPool) {
     assert_eq!(handle_of(&rig, sol.id).await, "sol");
     assert_eq!(handle_of(&rig, kel.id).await, "kel");
     let me = rig.gql(Some(&sol.token), ME, json!({})).await;
-    assert_eq!(me["me"]["id"], sol.id.to_string(), "the session still works");
+    assert_eq!(
+        me["me"]["id"],
+        sol.id.to_string(),
+        "the session still works"
+    );
 }
 
 /// A cancelled deletion and a superseded request never execute, whatever
@@ -558,7 +567,10 @@ async fn a_cancel_racing_the_executor_is_serialized(pool: PgPool) {
     let pool = rig.pool.clone();
     let claim = tokio::spawn(async move { store::claim(&pool, sol.id).await });
     tokio::time::sleep(std::time::Duration::from_millis(300)).await;
-    assert!(!claim.is_finished(), "the claim waits on the cancel's row lock");
+    assert!(
+        !claim.is_finished(),
+        "the claim waits on the cancel's row lock"
+    );
     cancelling.commit().await.expect("cancel commits");
     assert_eq!(claim.await.expect("joins").expect("claims"), None);
     assert_eq!(handle_of(&rig, sol.id).await, "sol");
@@ -586,7 +598,10 @@ async fn a_cancel_racing_the_executor_is_serialized(pool: PgPool) {
     )
     .await
     .expect("finishes");
-    assert_eq!(handle_of(&rig, kel.id).await, format!("redacted-user-{}", kel.id));
+    assert_eq!(
+        handle_of(&rig, kel.id).await,
+        format!("redacted-user-{}", kel.id)
+    );
 }
 
 /// Running the execution again changes nothing: no second tombstone, no
@@ -602,7 +617,10 @@ async fn re_execution_is_idempotent(pool: PgPool) {
     tick(&rig).await;
     let rows = "SELECT COUNT(*) FROM actor_profile_versions WHERE actor_id = $1";
     let units = "SELECT COUNT(*) FROM retention_archive WHERE redacted_by = $1::text";
-    let (rows_once, units_once) = (count(&rig, rows, sol.id).await, count(&rig, units, sol.id).await);
+    let (rows_once, units_once) = (
+        count(&rig, rows, sol.id).await,
+        count(&rig, units, sol.id).await,
+    );
 
     let execution = sqlx::query_as::<_, (Uuid, bool, chrono::DateTime<chrono::Utc>)>(
         "SELECT id, include_content, executed_at FROM auth_account_deletions
@@ -629,7 +647,10 @@ async fn re_execution_is_idempotent(pool: PgPool) {
     assert!(!again.tombstoned, "no second tombstone");
     assert_eq!(count(&rig, rows, sol.id).await, rows_once);
     assert_eq!(count(&rig, units, sol.id).await, units_once);
-    assert_eq!(handle_of(&rig, sol.id).await, format!("redacted-user-{}", sol.id));
+    assert_eq!(
+        handle_of(&rig, sol.id).await,
+        format!("redacted-user-{}", sol.id)
+    );
     assert_eq!(tick(&rig).await, Tick::default());
 }
 
@@ -663,7 +684,11 @@ async fn an_interrupted_execution_is_resumed(pool: PgPool) {
     )
     .await
     .expect("one act redacted, then the executor stops");
-    assert_eq!(handle_of(&rig, sol.id).await, "sol", "the run stopped before its close");
+    assert_eq!(
+        handle_of(&rig, sol.id).await,
+        "sol",
+        "the run stopped before its close"
+    );
     assert_eq!(
         store::incomplete(&rig.pool).await.expect("reads"),
         vec![claimed.clone()]
@@ -672,7 +697,10 @@ async fn an_interrupted_execution_is_resumed(pool: PgPool) {
     let done = tick(&rig).await;
     assert_eq!(done.resumed, vec![sol.id]);
     assert!(done.executed.is_empty(), "nothing is claimed twice");
-    assert_eq!(handle_of(&rig, sol.id).await, format!("redacted-user-{}", sol.id));
+    assert_eq!(
+        handle_of(&rig, sol.id).await,
+        format!("redacted-user-{}", sol.id)
+    );
     assert_eq!(
         count(
             &rig,
@@ -683,16 +711,20 @@ async fn an_interrupted_execution_is_resumed(pool: PgPool) {
         0
     );
     for act in &acts {
-        let units: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM retention_archive WHERE original_id = $1",
-        )
-        .bind(&act.act_id)
-        .fetch_one(&rig.pool)
-        .await
-        .expect("archive");
+        let units: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM retention_archive WHERE original_id = $1")
+                .bind(&act.act_id)
+                .fetch_one(&rig.pool)
+                .await
+                .expect("archive");
         assert!(units <= 1, "{} archived once", act.act_id);
     }
-    assert!(store::incomplete(&rig.pool).await.expect("reads").is_empty());
+    assert!(
+        store::incomplete(&rig.pool)
+            .await
+            .expect("reads")
+            .is_empty()
+    );
 }
 
 /// From the claim on there is no way back in: the old password signs
@@ -731,13 +763,19 @@ async fn the_executed_account_cannot_sign_in_refresh_or_act(pool: PgPool) {
         )
         .await;
     assert!(again["logIn"]["auth"].is_null(), "{again}");
-    assert_eq!(again["logIn"]["userErrors"][0]["code"], "INVALID_CREDENTIALS", "{again}");
+    assert_eq!(
+        again["logIn"]["userErrors"][0]["code"], "INVALID_CREDENTIALS",
+        "{again}"
+    );
     let refreshed = rig
-        .gql(None, REFRESH, json!({ "input": { "refreshToken": refresh } }))
+        .gql(
+            None,
+            REFRESH,
+            json!({ "input": { "refreshToken": refresh } }),
+        )
         .await;
     assert_eq!(
-        refreshed["refreshSession"]["userErrors"][0]["code"],
-        "REFRESH_TOKEN_INVALID",
+        refreshed["refreshSession"]["userErrors"][0]["code"], "REFRESH_TOKEN_INVALID",
         "{refreshed}"
     );
     assert!(
@@ -762,8 +800,7 @@ async fn the_executed_account_cannot_sign_in_refresh_or_act(pool: PgPool) {
     assert_eq!(transport_code(&seen), Some("UNAUTHENTICATED"), "{seen}");
     let reopened = confirm(&rig, &link).await;
     assert_eq!(
-        reopened["confirmAccountDeletion"]["userErrors"][0]["code"],
-        "DELETION_TOKEN_INVALID",
+        reopened["confirmAccountDeletion"]["userErrors"][0]["code"], "DELETION_TOKEN_INVALID",
         "{reopened}"
     );
 }
@@ -865,8 +902,12 @@ async fn a_profile_revision_landing_after_execution_lands_reduced(pool: PgPool) 
         )
         .await;
     no_errors(&prepared["prepareProfileUpdate"]);
-    rig.sign_prepared(&sol.token, &sol.key, &prepared["prepareProfileUpdate"]["writes"])
-        .await;
+    rig.sign_prepared(
+        &sol.token,
+        &sol.key,
+        &prepared["prepareProfileUpdate"]["writes"],
+    )
+    .await;
     confirmed(&rig, &sol.token, &sol.email, false).await;
     pass_deadline(&rig, sol.id).await;
     let registrations = || async {
@@ -979,7 +1020,10 @@ async fn an_executed_applicant_never_lands(pool: PgPool) {
         )
         .await;
     no_errors(&carried["prepareStance"]);
-    assert_eq!(carried["prepareStance"]["writes"][0]["carried"], true, "{carried}");
+    assert_eq!(
+        carried["prepareStance"]["writes"][0]["carried"], true,
+        "{carried}"
+    );
     confirmed(&rig, &noa.token, &noa.email, false).await;
     pass_deadline(&rig, noa.id).await;
 
@@ -1003,11 +1047,12 @@ async fn an_executed_applicant_never_lands(pool: PgPool) {
         .fetch_one(&rig.pool)
         .await
         .expect("vouch act");
-    let on_graph: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM mirror_records WHERE record_id = $1")
-        .bind(&vouch_act)
-        .fetch_one(&rig.pool)
-        .await
-        .expect("mirror");
+    let on_graph: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM mirror_records WHERE record_id = $1")
+            .bind(&vouch_act)
+            .fetch_one(&rig.pool)
+            .await
+            .expect("mirror");
     assert_eq!(on_graph, 1, "the late vouch's record stands on the graph");
     let state: String =
         sqlx::query_scalar("SELECT account_state FROM user_credentials WHERE actor_id = $1")
