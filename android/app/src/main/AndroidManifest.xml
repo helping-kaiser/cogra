@@ -39,6 +39,7 @@
     <application
         android:name=".CograApp"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:hasFragileUserData="true"
         android:icon="@mipmap/ic_launcher"
         android:label="CoGra"

@@ -349,6 +349,10 @@ pub async fn receive_part(
 /// decided by [`super::process`] from the assembled bytes — the same call
 /// the single-shot upload makes, so the two paths cannot drift into
 /// admitting different things.
+///
+/// Reading the assembled object puts the whole upload in memory, so a
+/// processing permit ([`super::ProcessPermits`]) is taken first and held
+/// until the asset is stored.
 pub async fn complete(
     pool: &PgPool,
     blobs: &dyn BlobStore,
@@ -403,6 +407,11 @@ pub async fn complete(
         );
     }
 
+    let _permit = config
+        .process_permits
+        .acquire()
+        .await
+        .map_err(SessionError::internal)?;
     let bytes = blobs
         .get(&session.storage_key)
         .await

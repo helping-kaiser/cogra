@@ -11,6 +11,7 @@ import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { readRecents, rememberSearch, RECENTS_KEPT, withRecent } from "@/lib/search/recents";
+import { detailRoot } from "@/app/shell";
 import { createTokenStore } from "@/lib/session/token-store";
 import { CLEAR_SEARCH } from "@/lib/ui2/search-bar";
 import { byNode } from "@/test/data-node";
@@ -847,7 +848,23 @@ describe("people in the results", () => {
     type("sal");
     await waitFor(() => expect(rowNames()).toHaveLength(4));
     expect(screen.getByTestId(byNode("explore.result", "1"))).toHaveAttribute("href", "/u/saltorres?from=search");
-    expect(screen.getByTestId(byNode("explore.result", "3"))).toHaveAttribute("href", "/profile");
     expect(screen.getByTestId(byNode("explore.result", "4"))).toHaveAttribute("href", "/posts/p1?from=search");
+  });
+
+  // YOUR OWN PROFILE FROM A SEARCH RESULT STAYS IN EXPLORE'S STACK (readme §13:
+  // "A stack is where a screen was opened FROM … your own profile reached from
+  // a chip in the feed is still Feed's"; ExplorePerson.md:31): it opens as the
+  // feed's own chip opens it, by handle, carrying the search as its origin — so
+  // Explore stays lit and the Profile tab is never switched to.
+  it("explore_person_md_31_your_own_row_opens_your_profile_inside_explores_stack", async () => {
+    serveSearch(() => answer(PEOPLE));
+    renderExplore();
+    type("sal");
+    await waitFor(() => expect(rowNames()).toHaveLength(4));
+    const own = screen.getByTestId(byNode("explore.result", "3"));
+    expect(own).toHaveAttribute("href", "/u/me?from=search");
+    expect(detailRoot(new URL(own.getAttribute("href")!, "http://localhost").searchParams.get("from"))).toBe(
+      "search",
+    );
   });
 });

@@ -12,7 +12,7 @@
 //   suspending, the pad pausing, a hidden page, ruling 96): `stage.ts`'s
 //   suites; here, each is pinned once on the stream itself.
 
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -608,6 +608,58 @@ describe("the share (graph.json Reel via 6)", () => {
   });
 });
 
+/** The bar's lit slots, by name — exactly one on every stream. */
+function litSlots(): string[] {
+  return [...screen.getByTestId(byNode("reel.bottomBar")).querySelectorAll('[aria-current="page"]')].map(
+    (slot) => slot.getAttribute("data-testid")?.replace(/^reel\.bottomBar\.(\w+)Slot$/, "$1") ?? "",
+  );
+}
+
+// THE STREAM LIGHTS ITS ORIGIN'S ROOT (jakob 2026-11-10; BottomNav.prompt.md:
+// "The originating root stays lit on a drill-in"; readme §13: "A stack is where
+// a screen was opened FROM"): the root the list it narrowed belongs to.
+describe("the lit root is the origin's (BottomNav.prompt.md)", () => {
+  it("a_stream_from_the_feed_lights_feed", () => {
+    mountStream({ origin: { kind: "feed" }, signedIn: true });
+    expect(litSlots()).toEqual(["feed"]);
+  });
+
+  it("a_stream_from_saved_lights_profile", () => {
+    mountStream({ origin: { kind: "saved" }, signedIn: true });
+    expect(litSlots()).toEqual(["profile"]);
+  });
+
+  it("a_stream_from_history_lights_profile", () => {
+    mountStream({ origin: { kind: "history" }, signedIn: true });
+    expect(litSlots()).toEqual(["profile"]);
+  });
+
+  it("a_stream_from_your_own_profiles_posts_lights_profile", () => {
+    mountStream({ origin: { kind: "profile", handle: "me", own: true }, signedIn: true });
+    expect(litSlots()).toEqual(["profile"]);
+  });
+
+  it("a_stream_from_someones_profile_lights_the_root_that_profile_was_opened_in", () => {
+    mountStream({ origin: { kind: "profile", handle: "ada", own: false, from: "search" }, signedIn: true });
+    expect(litSlots()).toEqual(["search"]);
+    cleanup();
+    forgetStream();
+    mountStream({ origin: { kind: "profile", handle: "ada", own: false, from: "saved" }, signedIn: true });
+    expect(litSlots()).toEqual(["profile"]);
+    cleanup();
+    forgetStream();
+    // A profile reached from someone's opinions page under Saved keeps the
+    // root that page's stack began in (`opinions-route.ts`, the chain).
+    mountStream({ origin: { kind: "profile", handle: "ada", own: false, from: "opinions:tobias/saved" }, signedIn: true });
+    expect(litSlots()).toEqual(["profile"]);
+    cleanup();
+    forgetStream();
+    // Opened from the feed's chip, or by a link: the feed's.
+    mountStream({ origin: { kind: "profile", handle: "ada", own: false, from: null }, signedIn: true });
+    expect(litSlots()).toEqual(["feed"]);
+  });
+});
+
 describe("the exits (Reel.md:75-79)", () => {
   const backDisc = () => screen.getByTestId(byNode("reel.backDisc"));
 
@@ -645,6 +697,19 @@ describe("the exits (Reel.md:75-79)", () => {
     );
     renderWithProviders(<ReelView postId="p9" />, { stanceData: createStubStanceData() });
     expect(await screen.findByTestId(byNode("reel.backDisc"))).toHaveAttribute("href", "/feed");
+  });
+
+  it("a_cold_reel_link_lights_feed — an arrival with no origin lights the content's home root (BottomNav.prompt.md)", async () => {
+    server.use(
+      gqlLink.query("Feed", () =>
+        HttpResponse.json({
+          data: { feed: { __typename: "FeedConnection", edges: [{ __typename: "FeedEdge", node: reelPost("p9") }] } },
+        }),
+      ),
+    );
+    renderWithProviders(<ReelView postId="p9" />, { stanceData: createStubStanceData() });
+    await screen.findByTestId(byNode("reel.backDisc"));
+    expect(litSlots()).toEqual(["feed"]);
   });
 
   it("a cold link to a post that is no stream clip opens the post", async () => {

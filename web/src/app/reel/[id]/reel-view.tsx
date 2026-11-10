@@ -53,6 +53,7 @@ import {
   onScreen,
   streamBack,
   streamFor,
+  type StreamOrigin,
   type StreamSession,
   type StreamState,
 } from "@/lib/reel/stream-session";
@@ -63,7 +64,7 @@ import { useStanding } from "@/lib/score/use-standing";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { useAlwaysUnveil } from "@/lib/settings/sensitive-content";
 import { useAuthPhase } from "@/lib/session/provider";
-import { BottomNav } from "@/lib/ui/bottom-nav";
+import { BottomNav, type NavSlot } from "@/lib/ui/bottom-nav";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 import { bodyIsSensitive, galleryItems, payloadIsRedacted, veilReason, veilSource } from "@/lib/ui/post-media";
@@ -80,6 +81,7 @@ import { rememberReveal, sensitiveSignature, useRevealed } from "@/lib/ui2/media
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { VideoPlayer } from "@/lib/ui2/media/video-player";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
+import { detailRoot } from "@/app/shell";
 
 /**
  * The stream's nodes, registered as `reel` (nodes.json, round 26 — `Reel` and
@@ -108,6 +110,27 @@ function aboveBar(px: number): string {
 
 /** How far a drag travels before it is a swipe rather than a tap. */
 const SWIPE_PX = 48;
+
+/**
+ * THE ROOT THE STREAM KEEPS LIT IS ITS ORIGIN'S (jakob 2026-11-10;
+ * BottomNav.prompt.md: "The originating root stays lit on a drill-in"; readme
+ * §13: a stack is where a screen was opened FROM). The origin is read as the
+ * `from` a drill-in from that list carries, through the shell's one table:
+ * Saved, History and your own profile light Profile, someone's profile the
+ * root it was itself opened in, and the feed — a cold link's origin too
+ * (`streamFor`) — lights Feed.
+ */
+export function streamRoot(origin: StreamOrigin): NavSlot {
+  switch (origin.kind) {
+    case "feed":
+      return detailRoot(null);
+    case "saved":
+    case "history":
+      return detailRoot(origin.kind);
+    case "profile":
+      return detailRoot(origin.own ? "profile" : (origin.from ?? null));
+  }
+}
 
 export function ReelView({ postId }: { postId: string }) {
   const client = useApolloClient();
@@ -264,11 +287,10 @@ function Stream({ session }: { session: StreamSession }) {
           <Icon name="arrow_back" size={20} />
         </Link>
       </div>
-      {/* THE BOTTOM BAR STAYS (Reel.md:17; Reel.jsx:147-149): the stream is
-          Feed's (readme §13, stack ownership), so the Feed slot is lit and
-          leaves the stream for the feed it narrowed. */}
+      {/* THE BOTTOM BAR STAYS (Reel.md:17; Reel.jsx:147-149), its origin's
+          root lit (`streamRoot`). */}
       <div className="absolute inset-x-0 bottom-0" style={{ zIndex: 4 }}>
-        <BottomNav active="feed" signedIn={phase === "signedIn"} node={part(REEL, "bottomBar")} />
+        <BottomNav active={streamRoot(state.origin)} signedIn={phase === "signedIn"} node={part(REEL, "bottomBar")} />
       </div>
       <Snackbar
         testId="reel-snackbar"
