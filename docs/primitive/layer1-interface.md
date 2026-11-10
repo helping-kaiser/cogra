@@ -456,22 +456,23 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 
 | Object | Feedback read-site | Terminal read-site | Verdict | Permission |
 |---|---|---|---|---|
-| accepted edge set $E_k$ + accepted authoritative act sequence $\mathcal{Q}_k$ (acts, honest $\mathbb{T}^{\text{act}}_q$) | substrate of all of $\mathcal{A}$ | — | L1·closure | consume only; agreement on $\mathcal{Q}_k$, not merely $E_k$ |
-| binding constants + formula pins $\beta,\eta,\nu,\rho_{\text{pol}},\theta,m_\theta,N_{\text{epoch}},\delta_{\text{pos}},L_{\text{vch}},M_{\text{payload}}$; standing-census/compiler/coefficient/activation/allocator/certificate formula editions | standing activation / gate / formation / package validity / epoch target | — | L1·closure | consume only; no silent formula-edition change |
+| accepted edge set $E_k$ + accepted authoritative act sequence $\mathcal{Q}_k$ (acts, key of record $(k, \mathrm{pos}_k(q))$, honest $\mathbb{T}^{\text{act}}_q$) | substrate of all of $\mathcal{A}$ | — | L1·closure | consume only; agreement on $\mathcal{Q}_k$, not merely $E_k$; $\mathbb{T}^{\text{act}}_q$ itself is a recomputable summary of the order of record with no ordering authority (L1·verify) |
+| binding constants + formula pins $\beta,\eta,\nu,\rho_{\text{pol}},\theta,m_\theta,N_{\text{epoch}},\delta_{\text{pos}},L_{\text{hop}},M_{\text{payload}}$; standing-census/compiler/coefficient/activation/allocator/certificate formula editions, structural wall floor and reduced controller constants, and controller formula edition | standing activation / gate / formation / package validity / epoch target | — | L1·closure | consume only; no silent formula-edition change |
 | canonical raw defaults: $q$, raw depth $L$, the canonical raw path-composition rule | — | feed / raw bridge / raw signed services | **L2** | reimplement freely at terminal read-sites |
 | host-cached $\tilde{w}_{\text{spam}}, \tilde{w}_{\max}, \tilde{w}_{\max}^{\text{Op}}, \tilde{w}(e), \epsilon(e)$ | — | client convenience, raw diagnostics | L1·by-product | ignore and recompute freely |
-| burn snapshot $B_i^{(k)}$ | gate via $\alpha$ | — | interface·input | consume only |
+| burn snapshot $B_i^{(k)}$, derived from the complete accepted set recovered and verified through the marker policy's chosen package encoding (§1.2, `post:epoch:final-edge-set`) | gate via $\alpha$ | — | interface·input | consume only |
 | identity order $\prec^*$, $\mathrm{pos}(e)$ | replay tie-break | — | L1·verify | consume only; consistency-audited |
 | write rule $W1{:}\,b_i \ge \theta$, $W2a{:}\,\rho_{\text{act}} \ge \rho_\theta$, $W2b{:}\,\rho_{\text{ep}} \ge \rho_{\text{eff}}$ | is admission | — | L1·closure | consume only |
 | closure rule (write) | is admission | — | L1·closure | consume only |
 | set price | closure rule | — | L1·closure | consume only |
-| $\theta$ / $\rho_\theta$ / $\rho_{\text{pol}}$ / $\rho_{\text{eff}}$ | floor validity / stamps / door | congestion dashboards | L1·closure | consume only; dial constrained by clamp, published |
+| $\theta$ / $\rho_\theta$ / $\rho_{\text{pol}}$ / $\rho_{\text{eff}}$ | floor validity / stamps / door | — | L1·closure | consume only; policy dial constrained by led wall, published |
+| wall controller inputs, proposal and delivered wall | next-wall calculation and burn-image schedule | — | L1·closure | replay published reduced state and formula; no private inputs |
 | door headroom $H_k$ | — | congestion dashboards | L1·verify | consume only; outcome, no actuator |
 | recognition predicate (i)–(vi) | is admission | — | L1·closure | consume only |
 | formation rule (identifier algebra; endpoint typing; handshake) | is admission | — | L1·closure | consume only |
 | dependent-set partition | validity replay | guild dashboards | L1·verify | consume only; recompute to audit |
 | act-folding compiler + base allocation matrix $\mathsf{A}$ | via the transport → standing → W2 | guild audit dashboards | L1·closure | consume only; recompute to audit |
-| per-author folds, inviter revocation, recipient resolution | via the base matrix → standing → W2 | terminal authored-history displays | L1·closure | consume only |
+| per-author folds, complete person-vouch compilation, recipient resolution | via the base matrix → standing → W2 | terminal authored-history displays | L1·closure | consume only |
 | cell coefficients $c(\xi)$, domain weights $\omega_D$, self-retention base $\kappa_{\text{self}}$ | via the base matrix → standing → W2 | guild audit/display | L1·closure | consume only |
 | recipient activations $\bar{g}_{\text{vch}}(x_j)$ | via every tilted allocation score | terminal diagnostics | L1·closure | consume only |
 | hop allocation matrices $\Lambda^{(r)}$, depth mass $\mathfrak{m}_m$ | via the conserved transport | terminal allocation diagnostics | L1·closure | consume only |
@@ -480,11 +481,12 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | residual balances $b_i$, action counts $N_i$ | source pairs of the standing mediant; W1 | ledger dashboards | L1·closure | consume only |
 | source emission $\mathfrak{e}_u$, transport entries $\Pi_{ui}$ | standing mediant → W2 | guild/readout diagnostics | L1·closure | consume only |
 | action + epoch stamps $\rho_{\text{act}}, \rho_{\text{ep}}$ | W2a / W2b | guild dashboards | L1·closure | consume only |
-| standing certificate $\mathcal{K}_k$ + binding verdict | selects the accepted tilt rung | guild dashboards | L1·closure | consume only; recompute to audit |
+| standing certificate $\mathcal{K}_k$ + binding verdict | selects the greatest passing tilt rung (`def:epoch:tilt-backoff-grid`) | guild dashboards | L1·closure | consume only; recompute to audit |
 | local width $W_{\text{loc}}$ | width fence + safety-threshold rule | guild dashboards | L1·closure | consume only; recompute to audit |
-| accepted interval boxes, path-incidence transcript, fixed-point residual reports | — (evidence for the committed package) | any verifier | L1·verify | consume only; replayable evidence |
+| published contributing width, evaluated fence, and verdict | — (evidence for the committed standing package) | any verifier | L1·verify | consume only; replayable evidence |
+| Vcert accepted boxes, path-incidence transcript, and proof-tree root | — (evidence for the retired staged construction only) | verifier of that construction | L1·verify | no conserved-standing rung, stamp, headroom, or bound |
 | attested boundary timestamp, closure cause | boundary-accountability replay | guild dashboards | L1·verify | consume only |
-| title $\mathrm{owner}^{(k)}$ | recognition (iii) | guild routing | L1·closure ⋆ | consume kernel value; read downstream |
+| title $\mathrm{owner}^{(k)}$ | recognition (iii), authorization and parties | guild routing | L1·closure ⋆ | consume kernel value; read downstream; a recomputable summary of the partition (`rem:graph:title-certificate-is-summary`) |
 | standing $\alpha_i$ | gate | reward amplifier $(1+\alpha_C)$ | L1·closure ⋆ | consume kernel value; read downstream |
 | ownership thread, Item genesis | title → recognition (iii) | terminal display | L1·closure | consume only; may recompute |
 | settlement acts Bid / Accept / Ratify / Withdraw / Rescind | recognition predicate | terminal reputation / dispute policy | L1·closure (records/rules) | consume recognition result; terminal policy free |
