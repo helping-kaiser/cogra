@@ -19,4 +19,7 @@ enum class PartFailure {
 
     /** The bytes never landed: the connection, or a spent retry budget. */
     TRANSPORT,
+
+    /** The store still answered 401 after the session was refreshed, or the refresh itself failed. */
+    UNAUTHENTICATED,
 }

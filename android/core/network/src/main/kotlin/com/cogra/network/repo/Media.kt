@@ -199,7 +199,7 @@ class MediaRepositoryImpl @Inject constructor(
         when (failure) {
             null -> Unit
             PartFailure.REFUSED -> return Outcome.Refused(emptyList())
-            PartFailure.UNREADABLE, PartFailure.TRANSPORT ->
+            PartFailure.UNREADABLE, PartFailure.TRANSPORT, PartFailure.UNAUTHENTICATED ->
                 return Outcome.Failed(IllegalStateException("upload stopped: $failure"))
         }
 
