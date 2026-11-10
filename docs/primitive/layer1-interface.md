@@ -3018,8 +3018,8 @@ surface; the full paper's `app:deployment` additionally documents five
 terminal invariants (client-reproducible feed ranking, device-local
 computation scope, concealment-entropy custody, auditable terminal
 centrality, attribution-view insulation of CAN enrichment), reproduced by
-their own owners, and one realization-side invariant (end of this
-section).
+their own owners, one realization-side invariant, and three postulates of
+operator duties (both at the end of this section).
 
 - **Continuous Public Availability of Graph State
   (`subsec:deployment:public-availability`).** Every edge record —
@@ -3038,13 +3038,22 @@ section).
 - **Final Epoch State Agreement
   (`subsec:deployment:final-epoch-state-agreement`).** At each boundary the
   operator publishes the authoritative ordered act sequence $\mathcal{Q}_k$
-  and its record projection, the monotone edge set $E_k$; any participant
-  accepting $\mathcal{Q}_k$ replays identical epoch results. **Agreement on
-  the ordered sequence is required — agreement on the edge set alone is
-  insufficient**, since acts the host may place in either order yield
-  order-dependent results. (Supersedes the pre-Edition-4 epoch-edge-set
-  agreement invariant.) The act identifier exposes equivocation rather than
-  absorbing it: distinct records claiming one act identifier fail formation.
+  and its record projection, the monotone edge set $E_k$. The epoch package
+  also binds the deployment's published marker policy with its identity and
+  fixed edition, the final marker, the settled lineage view, the accepted
+  burn sets and their verification evidence, the burn snapshot and
+  increment, the preceding completed state, and the writing epoch's debit
+  vintage and constants (`post:epoch:final-edge-set`); each closed epoch
+  binds its own recognized marker, one-to-one and in order (M5,
+  `cond:comparator:marker-epoch-registration`). Participants accepting the
+  same complete package replay identical epoch results. **Agreement on the
+  ordered sequence is required — agreement on the edge set alone is
+  insufficient for formation and order-sensitive raw quantities** such as
+  edge-projection maturity. Standing is invariant under dependency-compliant
+  permutations with accepted membership, final ledger, epoch title fold,
+  and constants fixed (`post:epoch:standing-epoch-set-determinism`). The act
+  identifier exposes equivocation rather than absorbing it: distinct records
+  claiming one act identifier fail formation.
 - **Immutability of Published Records (`subsec:deployment:immutability`).**
   Once an edge record or ledger entry is published, its structural fields
   cannot be silently altered. Changes require new acts.
