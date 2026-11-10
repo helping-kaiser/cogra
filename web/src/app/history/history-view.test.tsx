@@ -1042,16 +1042,20 @@ describe("the stream opened from History (RL-3)", () => {
   it("the_stream_from_history_narrows_historys_rows_in_their_order, its way back reading Back to History", async () => {
     const { forgetStream, heldStream, streamBack } = await import("@/lib/reel/stream-session");
     forgetStream();
-    serveHistory(() =>
-      page(
-        [
-          { node: clip("v1", "9:16"), firstSeenAt: seenOn(0, 12) },
-          { node: clip("w1", "16:9"), firstSeenAt: seenOn(0, 11) },
-          POST,
-          { node: clip("v2", "3:4"), firstSeenAt: seenOn(0, 9) },
-        ],
-        { hasNextPage: true, endCursor: "c3" },
-      ),
+    // History holds one page past these rows, and it ends there: a server
+    // never answers the page after `c3` with `c3` again.
+    const reads = serveHistory(({ after }) =>
+      after === null
+        ? page(
+            [
+              { node: clip("v1", "9:16"), firstSeenAt: seenOn(0, 12) },
+              { node: clip("w1", "16:9"), firstSeenAt: seenOn(0, 11) },
+              POST,
+              { node: clip("v2", "3:4"), firstSeenAt: seenOn(0, 9) },
+            ],
+            { hasNextPage: true, endCursor: "c3" },
+          )
+        : page([]),
     );
     render();
     await screen.findByTestId("history-list");
@@ -1065,6 +1069,11 @@ describe("the stream opened from History (RL-3)", () => {
     expect(stream?.snapshot.index).toBe(1);
     expect(stream?.snapshot.hasMore).toBe(true);
     expect(streamBack(stream!.snapshot.origin)).toEqual({ href: "/history", label: "Back to History" });
+    // Standing on the last clip, the stream asks History's next page once,
+    // under the cursor the list reached, and stands at the list's end.
+    await waitFor(() => expect(stream!.snapshot.loading).toBe(false));
+    expect(reads.map((read) => read.after)).toEqual([null, "c3"]);
+    expect(stream!.snapshot.hasMore).toBe(false);
     forgetStream();
   });
 });
