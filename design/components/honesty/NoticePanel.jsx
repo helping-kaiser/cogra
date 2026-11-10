@@ -30,11 +30,17 @@ import { HelpDot } from "../core/HelpDot.jsx";
    (`TaskCard`'s `tone="notice"`). A feed card that only says how things stand
    — waiting, approved and landing, a post that didn't land with its draft
    kept — keeps the feed card's ground, so the olive always means "this is
-   yours to do". It is never a page's wash and never a failure. */
-export function NoticePanel({ title, helpLabel, onHelp, corner = "medium", children }) {
+   yours to do". It is never a page's wash and never a failure.
+
+   `node` names the panel where a registered board places it (design ⇄ impl
+   seam 002; round 28): its title `title` and its "?" `help`, as `TaskCard`
+   names its own; the board names what it places inside (`NoticeLine`'s
+   `body`, the act). */
+export function NoticePanel({ title, helpLabel, onHelp, corner = "medium", children, node }) {
   const body = React.Children.toArray(children);
   return (
     <div
+      data-node={node}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -55,20 +61,23 @@ export function NoticePanel({ title, helpLabel, onHelp, corner = "medium", child
             fontWeight: "var(--text-title-medium--font-weight)",
             letterSpacing: "var(--text-title-medium--letter-spacing)",
           }}
+          data-node={node && "title"}
         >
           {title}
         </h2>
-        {helpLabel && <HelpDot ariaLabel={helpLabel} onOpen={onHelp} variant="inverse" />}
+        {helpLabel && <HelpDot ariaLabel={helpLabel} onOpen={onHelp} variant="inverse" node={node && "help"} />}
       </div>
       {body}
     </div>
   );
 }
 
-/* The panel's sentence — `body-medium` in the panel's own ink. */
-export function NoticeLine({ children }) {
+/* The panel's sentence — `body-medium` in the panel's own ink. `node` names it
+   where a registered board places it. */
+export function NoticeLine({ children, node }) {
   return (
     <p
+      data-node={node}
       style={{
         margin: 0,
         fontSize: "var(--text-body-medium)",

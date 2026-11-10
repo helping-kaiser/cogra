@@ -37,21 +37,32 @@
    THE TWO LEGAL LINES ride the commit stack (jakob 2026-10-09, ruling 76):
    `JoinTermsLine` directly above `Create account`, `Terms` a door and no
    checkbox, and the Privacy Policy as its own linked notice at the foot —
-   never inside the accept sentence. The reasons live on the helpers. */
+   never inside the accept sentence. The reasons live on the helpers.
+
+   REGISTERED under the `join` prefix (round 28, seam 254 A1), with
+   `JoinErrors`: the header's "?" is `help` (`postEdit.header.help`), the
+   inviter's picture `avatar`, then `title`, `body`, the fields `handle`,
+   `email` and `password` (the credential family's names), the legal lines
+   `terms` and `privacy`, the commit with its reason `commit`, and the account
+   switch `signInDoor` — a name that does not bar the sidecar's `Sign in`
+   (round 23: a name never forbids its own words). */
+export const NODE = "join";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" action={<HelpDot ariaLabel="About CoGra" onOpen={() => {}} />} />
+      <PageHeader backHref="#" backLabel="Back" action={<HelpDot ariaLabel="About CoGra" onOpen={() => {}} node="help" />} node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-          <MonogramAvatar name="Mira Voss" size={64} src="inviter.jpg" />
+          <MonogramAvatar name="Mira Voss" size={64} src="inviter.jpg" node="avatar" />
           <h1
             style={{
               margin: "16px 0 0",
               fontSize: "var(--text-headline-small)",
+              letterSpacing: "var(--text-headline-small--letter-spacing)",
               lineHeight: "var(--text-headline-small--line-height)",
               fontWeight: "var(--text-headline-small--font-weight)",
             }}
+            data-node="title"
           >
             Mira invited you
           </h1>
@@ -59,25 +70,27 @@ export function Screen() {
             style={{
               margin: "8px 0 0",
               fontSize: "var(--text-body-medium)",
+              fontWeight: "var(--text-body-medium--font-weight)",
               lineHeight: "var(--text-body-medium--line-height)",
               letterSpacing: "var(--text-body-medium--letter-spacing)",
               color: "var(--text-secondary)",
             }}
+            data-node="body"
           >
             CoGra is invite-only — a member vouches for you, and @mira's approval brings you in.
           </p>
         </div>
 
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-          <TextField id="handle" label="Handle" kind="handle" value="" hint="3–30 characters: a–z, 0–9, _" />
-          <TextField id="email" label="Email" type="email" autoComplete="username" value="" />
-          <PasswordField id="password" label="Password" autoComplete="new-password" value="" hint="At least 12 characters." />
+          <TextField id="handle" label="Handle" kind="handle" value="" hint="3–30 characters: a–z, 0–9, _" node="handle" />
+          <TextField id="email" label="Email" type="email" autoComplete="username" value="" node="email" />
+          <PasswordField id="password" label="Password" autoComplete="new-password" value="" hint="At least 12 characters." node="password" />
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
           <JoinTermsLine />
-          <WaitingCommit id="join" label="Create account" reason="Waiting for a handle, your email and a password" />
-          <Button variant="text" style={{ width: "100%" }}>
+          <WaitingCommit id="join" label="Create account" reason="Waiting for a handle, your email and a password" node="commit" />
+          <Button variant="text" style={{ width: "100%" }} node="signInDoor">
             Already have an account? Sign in
           </Button>
           <JoinPrivacyNotice />

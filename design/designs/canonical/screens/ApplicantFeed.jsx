@@ -55,6 +55,7 @@ export function Screen() {
                 minWidth: 0,
                 overflowWrap: "anywhere",
                 fontSize: "var(--text-body-medium)",
+                fontWeight: "var(--text-body-medium--font-weight)",
                 lineHeight: "var(--text-body-medium--line-height)",
                 letterSpacing: "var(--text-body-medium--letter-spacing)",
               }}
@@ -70,6 +71,7 @@ export function Screen() {
             style={{
               margin: 0,
               fontSize: "var(--text-body-small)",
+              fontWeight: "var(--text-body-small--font-weight)",
               lineHeight: "var(--text-body-small--line-height)",
               letterSpacing: "var(--text-body-small--letter-spacing)",
               color: "var(--text-secondary)",

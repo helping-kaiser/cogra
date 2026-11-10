@@ -87,7 +87,7 @@ export function WizardHeader({
           </button>
           {stageLabel ? (
             <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }} data-node={node && "stage"}>
+              <span style={{ fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }} data-node={node && "stage"}>
                 {stageLabel}
               </span>
               {help && <HelpDot ariaLabel={help} onOpen={onHelp} node={node && "help"} />}

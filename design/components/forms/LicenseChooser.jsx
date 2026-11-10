@@ -84,10 +84,10 @@ export function LicenseSummary({ license = PUBLIC_DOMAIN }) {
 function AxisChoice({ legend, tiers, name, value, onChange }) {
   return (
     <div role="radiogroup" aria-label={legend} style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-      <span style={{ fontSize: "var(--text-body-medium)" }}>{legend}</span>
+      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)" }}>{legend}</span>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "var(--space-3)" }}>
         {tiers.map((tier) => (
-          <label key={tier.value} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "var(--text-body-medium)" }}>
+          <label key={tier.value} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)" }}>
             <input
               type="radio"
               name={name}
@@ -111,12 +111,14 @@ export function LicenseChooser({ value = PUBLIC_DOMAIN, onChange, name = "licens
         style={{
           padding: 0,
           fontSize: "var(--text-label-large)",
+          lineHeight: "var(--text-label-large--line-height)",
+          letterSpacing: "var(--text-label-large--letter-spacing)",
           fontWeight: "var(--text-label-large--font-weight)",
         }}
       >
         License
       </legend>
-      <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
+      <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)" }}>
         Terms for anyone who reuses this — not a statement about how you made it.
       </p>
       <AxisChoice
@@ -197,6 +199,7 @@ export function LicenseTerms({ license = PUBLIC_DOMAIN, node }) {
             data-node={node && "publicDomain"}
             style={{
               fontSize: "var(--text-label-small)",
+              letterSpacing: "var(--text-label-small--letter-spacing)",
               lineHeight: "var(--text-label-small--line-height)",
               fontWeight: "var(--text-label-small--font-weight)",
             }}
@@ -208,10 +211,10 @@ export function LicenseTerms({ license = PUBLIC_DOMAIN, node }) {
       <div style={{ display: "grid", gridTemplateColumns: "116px 1fr", columnGap: "var(--space-2)", rowGap: "var(--space-1)" }}>
         {licenseReadings(license).map((row) => (
           <div key={row.axis} style={{ display: "contents" }} data-node={node && "axis"} data-node-key={node && axisKey(row.axis)}>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "label"}>
+            <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "label"}>
               {row.axis}
             </span>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }} data-node={node && "value"}>
+            <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)" }} data-node={node && "value"}>
               {row.reading}
             </span>
           </div>

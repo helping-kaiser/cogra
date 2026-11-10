@@ -91,6 +91,8 @@ function Body({ kind, name, sub, src, pair, stance, removed, consequence, axisNa
         <span
           style={{
             fontSize: "var(--text-body-medium)",
+            letterSpacing: "var(--text-body-medium--letter-spacing)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             whiteSpace: "nowrap",
             overflow: "hidden",
@@ -102,12 +104,12 @@ function Body({ kind, name, sub, src, pair, stance, removed, consequence, axisNa
           {removed || name}
         </span>
         {sub && (
-          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "kind"}>
+          <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "kind"}>
             {sub}
           </span>
         )}
         {consequence && (
-          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "consequence"}>
+          <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "consequence"}>
             {consequence}
           </span>
         )}
@@ -116,10 +118,10 @@ function Body({ kind, name, sub, src, pair, stance, removed, consequence, axisNa
         <>
           <span
             aria-hidden="true"
-            style={{ flex: "none", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+            style={{ flex: "none", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
             data-node={node && "pair"}
           >
-            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: 1 }} data-node={node && "face"}>
+            <span style={{ fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: 1 }} data-node={node && "face"}>
               {anchor.emoji}
             </span>
             <span className="cg-exact" data-node={node && "exact"}>

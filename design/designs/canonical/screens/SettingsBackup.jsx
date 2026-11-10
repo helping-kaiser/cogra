@@ -37,7 +37,11 @@
    browser's key is sealed behind the backup it would replace, so without the
    current code it cannot re-key (web.md) — and a reader retrying the field
    forever is the dead end the quiet line under it closes. The wrong code is
-   `SettingsBackupError`; offline is `NetworkError`'s. */
+   `SettingsBackupError`; offline is `NetworkError`'s.
+
+   REGISTERED under the `settingsBackup` prefix (round 28, seam 254 A1), with
+   its three siblings: `SettingsBackupBody`'s names. */
+export const NODE = "settingsBackup";
 export function Screen() {
   return <SettingsBackupBody />;
 }

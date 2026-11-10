@@ -132,7 +132,7 @@ export function Screen() {
           <StanceLandingLine landing={{ landing: RESULTING, inert: false, severed: false }} names={CITATION_FAMILY} />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
               {"{{signedWith}}"}{" "}
               <span id="refpair-edit-removal-cost">Removing it signs 1 thing, paid on its own.</span>
             </span>

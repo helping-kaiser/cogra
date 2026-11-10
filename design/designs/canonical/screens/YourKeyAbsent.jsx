@@ -33,24 +33,30 @@
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser", noKey: this.props.wording === "app" ? "There is no key in this app to show." : "There is no key on this browser to show."`;
 
+/* REGISTERED under the `yourKey` prefix (round 28): the panel `notice` —
+   `SettingsBackupKeyAbsent`'s names, the key card's (`feed.keyCard`) — then the
+   key paragraph `body`, `YourKey`'s. */
+export const NODE = "yourKey";
 export function Screen() {
   return (
     <>
-      <PageHeader title="Your key" backHref="/settings" backLabel="Back to settings" />
+      <PageHeader title="Your key" backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 32px", overflow: "hidden" }}>
-        <NoticePanel title="{{keyTitle}}" helpLabel="Your key" corner="large">
-          <NoticeLine>{"{{noKey}}"}</NoticeLine>
-          <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
+        <NoticePanel title="{{keyTitle}}" helpLabel="Your key" corner="large" node="notice">
+          <NoticeLine node="body">{"{{noKey}}"}</NoticeLine>
+          <Button variant="inverse" style={{ width: "100%" }} node="restore">Restore the key</Button>
         </NoticePanel>
 
         <p
           style={{
             margin: 0,
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           This key signs everything you publish, and it lives only on the device it was made on. Store a copy
           somewhere safe and you keep it whatever happens to CoGra. Anyone who has a copy can act

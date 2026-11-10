@@ -70,12 +70,12 @@ export function Screen() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "10px var(--space-3)" }}>
             <MonogramAvatar name="Mira Voss" src="inviter.jpg" />
-            <span style={{ flex: 1, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
+            <span style={{ flex: 1, fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
               @mira
             </span>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>4h</span>
+            <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>4h</span>
           </div>
-          <div style={{ padding: "0 var(--space-3) 10px", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
+          <div style={{ padding: "0 var(--space-3) 10px", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }}>
             Sunday at the tide market
           </div>
           <div style={{ display: "flex", gap: 2 }}>

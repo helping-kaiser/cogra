@@ -157,6 +157,7 @@ export function FieldCount({ value, cap, used, id }) {
         flex: "none",
         whiteSpace: "nowrap",
         fontSize: "var(--text-body-small)",
+        fontWeight: "var(--text-body-small--font-weight)",
         lineHeight: "var(--text-body-small--line-height)",
         letterSpacing: "var(--text-body-small--letter-spacing)",
         color: reading.over ? "var(--error)" : "var(--text-secondary)",
@@ -186,6 +187,7 @@ export function FieldSupport({ id, countId, hint, error, value, cap, used, node 
           data-node={node}
           style={{
             fontSize: "var(--text-body-small)",
+            fontWeight: "var(--text-body-small--font-weight)",
             lineHeight: "var(--text-body-small--line-height)",
             letterSpacing: "var(--text-body-small--letter-spacing)",
             color: error ? "var(--error)" : "var(--text-secondary)",
@@ -236,6 +238,8 @@ export function FieldLabel({ children, htmlFor, corner, error, node }) {
         <span
           style={{
             fontSize: "var(--text-label-small)",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
+            fontWeight: "var(--text-label-small--font-weight)",
             lineHeight: "var(--text-label-small--line-height)",
             color: "var(--text-secondary)",
           }}
@@ -290,6 +294,8 @@ export function TextField({
     padding: rows ? "8px" : "8px 12px",
     fontFamily: mono ? "var(--font-mono)" : "var(--font-sans)",
     fontSize: "var(--text-body-large)",
+    letterSpacing: "var(--text-body-large--letter-spacing)",
+    fontWeight: "var(--text-body-large--font-weight)",
     lineHeight: "var(--text-body-large--line-height)",
     minWidth: 0,
     width: "100%",

@@ -294,6 +294,8 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
         color: "var(--text-body)",
         fontFamily: "var(--font-sans)",
         fontSize: "var(--text-label-large)",
+        lineHeight: "var(--text-label-large--line-height)",
+        letterSpacing: "var(--text-label-large--letter-spacing)",
         fontWeight: "var(--text-label-large--font-weight)",
         cursor: "pointer",
         whiteSpace: "nowrap",
@@ -350,10 +352,10 @@ export function FeedPeopleRows({ people = "everyone", sign = "either", onPeople,
                 data-node={node && "dot"}
               />
               <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }} data-node={node && "label"}>
+                <span style={{ fontSize: "var(--text-body-medium)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }} data-node={node && "label"}>
                   {entry.label}
                 </span>
-                <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
+                <span style={{ fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
                   {entry.value === "everyone" ? "The whole feed, as far as your eyes reach." : "Only the people you hold an opinion of — the same rank, narrowed to them."}
                 </span>
               </span>
@@ -371,6 +373,7 @@ export function FeedPeopleRows({ people = "everyone", sign = "either", onPeople,
             gap: 6,
             paddingLeft: 28,
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             whiteSpace: "nowrap",

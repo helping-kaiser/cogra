@@ -11,19 +11,29 @@
    elsewhere — and signing in is just the app opening for it, so each state
    opens where an app-open in that state does. A pending security notice
    (`LogInPayload.reuseDetectedAt`) rides along to that landing as a card.
-   A tripped login backoff answers here, as `SignInLimited`. */
+   A tripped login backoff answers here, as `SignInLimited`.
+
+   REGISTERED under the `signIn` prefix (round 28, seam 254 A1), with
+   `SignInError`, `SignInExpired` and `SignInLimited`, named as the credential
+   family names its screens (`ChangePassword`): `title`, `body`, the fields
+   `email` and `password`, the commit with its reason `commit`. The remember
+   box is `forget`, as Settings names the same words' row; the four ways round
+   it are `forgot`, `invite`, `browse` and `apk`. */
+export const NODE = "signIn";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Sign in to CoGra
         </h1>
@@ -31,32 +41,34 @@ export function Screen() {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           Welcome back — your feed is where you left it.
         </p>
 
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-          <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="" />
-          <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="" />
-          <Checkbox label="Don't remember this account on this device" />
-          <WaitingCommit id="signin" label="Sign in" reason="Waiting for your email and password" />
+          <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="" node="email" />
+          <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="" node="password" />
+          <Checkbox label="Don't remember this account on this device" node="forget" />
+          <WaitingCommit id="signin" label="Sign in" reason="Waiting for your email and password" node="commit" />
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column" }}>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="forgot">
             Forgot password?
           </Button>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="invite">
             New here? Enter your invite
           </Button>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="browse">
             Just looking? Browse the feed →
           </Button>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="apk">
             On Android? Download the app (APK)
           </Button>
         </div>

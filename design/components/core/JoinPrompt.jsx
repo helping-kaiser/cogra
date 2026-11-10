@@ -65,6 +65,7 @@ const DIALOG_BODY_STYLE = {
   flexDirection: "column",
   gap: "var(--space-4)",
   fontSize: "var(--text-body-medium)",
+  fontWeight: "var(--text-body-medium--font-weight)",
   lineHeight: "var(--text-body-medium--line-height)",
   letterSpacing: "var(--text-body-medium--letter-spacing)",
   color: "var(--text-secondary)",
@@ -72,6 +73,7 @@ const DIALOG_BODY_STYLE = {
 const DIALOG_LINE_STYLE = {
   margin: 0,
   fontSize: "var(--text-body-medium)",
+  fontWeight: "var(--text-body-medium--font-weight)",
   lineHeight: "var(--text-body-medium--line-height)",
   letterSpacing: "var(--text-body-medium--letter-spacing)",
   color: "var(--text-failure)",

@@ -39,6 +39,7 @@ export function Screen() {
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
@@ -50,6 +51,7 @@ export function Screen() {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-large)",
+            fontWeight: "var(--text-body-large--font-weight)",
             lineHeight: "var(--text-body-large--line-height)",
             letterSpacing: "var(--text-body-large--letter-spacing)",
           }}
@@ -61,6 +63,7 @@ export function Screen() {
           style={{
             margin: "16px 0 0",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",

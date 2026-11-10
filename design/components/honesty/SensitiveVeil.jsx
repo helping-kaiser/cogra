@@ -187,9 +187,9 @@ export function SensitiveVeil({
       >
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
           <Icon name="visibility" size={18} />
-          <span style={{ fontSize: "var(--text-label-medium)", fontWeight: "var(--text-label-medium--font-weight)" }}>{label}</span>
+          <span style={{ fontSize: "var(--text-label-medium)", lineHeight: "var(--text-label-medium--line-height)", letterSpacing: "var(--text-label-medium--letter-spacing)", fontWeight: "var(--text-label-medium--font-weight)" }}>{label}</span>
         </span>
-        <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", textWrap: "pretty" }}>{sourceLine}</span>
+        <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", textWrap: "pretty" }}>{sourceLine}</span>
       </button>
     );
   }
@@ -226,6 +226,9 @@ export function SensitiveVeil({
             cursor: "pointer",
             fontFamily: "var(--font-sans)",
             fontSize: "var(--text-label-small)",
+            lineHeight: "var(--text-label-small--line-height)",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
+            fontWeight: "var(--text-label-small--font-weight)",
             color: "var(--text-secondary)",
             textDecoration: "underline",
           }}
@@ -238,7 +241,7 @@ export function SensitiveVeil({
     return (
       <span style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", maxWidth: "100%" }}>
         {veil}
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", textWrap: "pretty" }}>
+        <span style={{ fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", textWrap: "pretty" }}>
           {sourceLine}
         </span>
       </span>
@@ -297,8 +300,8 @@ export function SensitiveVeil({
           }}
         >
           <Icon name="visibility" size={24} />
-          <span style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}>{label}</span>
-          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", opacity: 0.85, textWrap: "pretty" }}>
+          <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", letterSpacing: "var(--text-label-large--letter-spacing)", fontWeight: "var(--text-label-large--font-weight)" }}>{label}</span>
+          <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", opacity: 0.85, textWrap: "pretty" }}>
             {sourceLine}
           </span>
         </span>

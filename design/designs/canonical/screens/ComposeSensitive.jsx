@@ -64,7 +64,7 @@ export function Screen() {
           Mark as sensitive
         </SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px" }}>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
+          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
             Veils the pictures and the words until a reader chooses to look.
           </p>
 

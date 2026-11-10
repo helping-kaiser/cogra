@@ -48,6 +48,7 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
           style={{
             flex: 1,
             fontSize: "var(--text-label-small)",
+            fontWeight: "var(--text-label-small--font-weight)",
             lineHeight: "var(--text-label-small--line-height)",
             letterSpacing: "var(--text-label-small--letter-spacing)",
             color: "var(--text-secondary)",
@@ -85,7 +86,7 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
 export function DescribeCounter({ described, total, onDescribe, subject = "pictures", node }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }} data-node={node}>
-      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }}>
+      <p style={{ margin: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }}>
         <InlineAction size="sm" onClick={onDescribe} style={{ fontSize: "inherit", lineHeight: "inherit" }} node={node && "describe"}>
           Describe the {subject}
         </InlineAction>{" "}
@@ -94,7 +95,7 @@ export function DescribeCounter({ described, total, onDescribe, subject = "pictu
         </span>
       </p>
       <p
-        style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
+        style={{ margin: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
         data-node={node && "reason"}
       >
         Read aloud to people who can&apos;t see it.

@@ -61,11 +61,13 @@ const VARIANTS = {
 const TYPE = {
   "label-small": {
     fontSize: "var(--text-label-small)",
+    fontWeight: "var(--text-label-small--font-weight)",
     lineHeight: "var(--text-label-small--line-height)",
     letterSpacing: "var(--text-label-small--letter-spacing)",
   },
   "body-medium": {
     fontSize: "var(--text-body-medium)",
+    fontWeight: "var(--text-body-medium--font-weight)",
     lineHeight: "var(--text-body-medium--line-height)",
     letterSpacing: "var(--text-body-medium--letter-spacing)",
   },
@@ -122,6 +124,8 @@ function Disc({ redacted, image, imageShape, name, face, letter, glyph, tone }) 
           aria-hidden="true"
           style={{
             fontSize: "var(--text-title-medium)",
+            letterSpacing: "var(--text-title-medium--letter-spacing)",
+            fontWeight: "var(--text-title-medium--font-weight)",
             lineHeight: 1,
           }}
         >
@@ -139,6 +143,7 @@ function Disc({ redacted, image, imageShape, name, face, letter, glyph, tone }) 
           style={{
             fontFamily: "var(--font-sans)",
             fontSize: "var(--text-title-medium)",
+            letterSpacing: "var(--text-title-medium--letter-spacing)",
             lineHeight: 1,
             fontWeight: "var(--text-title-medium--font-weight)",
           }}
