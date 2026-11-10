@@ -182,7 +182,11 @@ authority policy `𝒫`:
   requires admission approval, the fold recognizes a Participant —
   keyed to its **T-leg**, the chat being entered — only when
   backed by an approved Join Request or an Invitation; the
-  founding act is exempt, since it mints the chat it enters. In
+  founding act is exempt, since it mints the chat it enters. An
+  Invitation backs the Participant only if its author's
+  Invitations toward `(C, prof(a))` that `≺`-precede the
+  Participant do not net to `(0,0)`; a withdrawal `≺`-following
+  the Participant does not undo the membership it backed. In
   open chats, any Participant is recognized as-is.
 
 **Three act shapes, keyed on leg role.** Participant is a
