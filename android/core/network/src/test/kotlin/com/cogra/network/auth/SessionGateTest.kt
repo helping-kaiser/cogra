@@ -281,7 +281,9 @@ class SessionGateTest {
         val outcome = sessions.revokeOtherSessions()
 
         assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
-        assertThat((outcome as Outcome.Failed).cause).isInstanceOf(SessionRefreshFailedException::class.java)
+        // Apollo may wrap what an interceptor throws, so the chain is read.
+        val chain = generateSequence<Throwable>((outcome as Outcome.Failed).cause) { it.cause }.toList()
+        assertThat(chain.any { it is SessionRefreshFailedException }).isTrue()
         // Only the rotation left the device; the call it was for never did,
         // and the session is still held for the next try.
         assertThat(server.requestCount).isEqualTo(1)

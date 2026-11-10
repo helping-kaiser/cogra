@@ -111,7 +111,13 @@ class SessionGate @Inject constructor(
         if (!expired(access)) return access
         refresher.get().refresh(access)
         return when (val after = tokens.read()) {
-            is SessionRead.Present -> after.tokens.accessToken
+            is SessionRead.Present -> {
+                // The rotation did not land (transport, a refusal that left
+                // the session standing): what is stored is the very token
+                // that was found dead, and sending it reads as a guest.
+                if (expired(after.tokens.accessToken)) throw SessionRefreshFailedException()
+                after.tokens.accessToken
+            }
             // Reuse detection ended the session: this reader really is
             // signed out now, and anonymous is the truth.
             SessionRead.None -> null
