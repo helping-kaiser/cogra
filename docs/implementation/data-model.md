@@ -291,14 +291,16 @@ The content commitment is invariant across custody phases and only
 carriage migrates
 ([layer1-interface.md](../primitive/layer1-interface.md), "Custody
 across phases"). CoGra runs witness-only at Layer 1 from the start.
-The host holds the payload, its content salt and the proposal
-nonce **transiently**, from seal until acceptance, because it forms
-the commitments over them. At acceptance it nulls all three and
-keeps the payload length and both commitments. The nonce goes with
-them: the public pre-commitment is formed over it and the payload,
-so a kept nonce would confirm a guessed payload. The dependency salt
-stays, because an ordering fraud proof opens it. From acceptance on,
-`act_payloads` is the only carriage.
+The L1 author has confirmed that Layer-1 carriage of payload and salt
+is optional from the start, so a centralized deployment may run
+witness-only. The host holds the payload, its content salt and the
+proposal nonce **transiently**, from seal until acceptance, because
+it forms the commitments over them. At acceptance it nulls all three
+and keeps the payload length and both commitments. The nonce goes
+with them: the public pre-commitment is formed over it and the
+payload, so a kept nonce would confirm a guessed payload. The
+dependency salt stays, because an ordering fraud proof opens it.
+From acceptance on, `act_payloads` is the only carriage.
 
 At confirm, promotion moves the envelope and the seal's private
 value from the staged row into `act_payloads`, keyed by the L1 act
