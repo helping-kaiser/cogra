@@ -4025,8 +4025,13 @@ $H_\tau$ temporal entropy (`def:graph:temporal-entropy`) ·
 $|\det \boldsymbol{\Psi}_e^{[P]}|^{1/2}$ determinant score ·
 $\psi_\pm, \psi_+, \sigma_{\text{sig}}$ clamps (`def:graph:sentiment-slice`) ·
 $\mathrm{clip}_{[-1,1]}$ (net-stance fold) · $\mathrm{sat}(x) = x/(1+x)$
-(the Möbius map shared by bond kernel and CAN saturation) — tag-exempt
-operators. **Not shared mathematics:** the parity bits $\epsilon(e)$ and
+(the Möbius map shared by bond kernel and CAN saturation) ·
+$\lambda_{\text{vch}}(x)$, the exact deployed per-hop reduced-standing
+log-gain of the activation ($G$ of the wall controller, §11.8;
+`def:dynamics:tilt-gain-coordinates`) · $\lambda_Q(x)$, the clean
+full-depth gain envelope that screens every active maximizing path through
+at most $L_{\text{hop}}$ hops and is not the exact per-hop gain
+(`prop:dynamics:clean-gain-domination`) — tag-exempt operators. **Not shared mathematics:** the parity bits $\epsilon(e)$ and
 $\epsilon(p)$ and the raw damped weight $\tilde{w}(e)$ are terminal-default
 raw formulas (§3); the act time $\mathbb{T}^{\text{act}}_q$ is a
 recomputable L1·verify summary; the maturity scalar $\tau_e$ is terminal (raw channel only); the activations
