@@ -1777,8 +1777,12 @@ non-monotone in $\tau$ with minimum near $\tau \approx 0.5$. **Raw
 edge-weight ceiling (`thm:graph:raw-weight-ceiling`):**
 $0 \le \tilde{w}(e) \le \tilde{w}_{\max} < 1$ for every raw edge
 projection and derived reading, every parameter tuple, tier, and maturity
-— so log costs are positive, max-product registers bounded, and every
-optimal bounded raw walk has a simple representative. Maturity crossover:
+— so log costs are positive on routing-live edges and max-product registers
+bounded. When parity is unconstrained and depth has only an upper bound,
+every optimal raw walk has a simple representative with no smaller
+product; this supplies no simple representative of a prescribed parity, so
+signed traversal enforces original-vertex simplicity explicitly
+(`lem:epoch:double-cover-bfs-correctness`). Maturity crossover:
 $g(\tau) = \sqrt{1+\tau^2}\, e^{-\beta H_\tau} > 1$ iff
 $\tau > \tau^* \approx 0.94$ (`def:epoch:maturity-crossover`,
 `prop:epoch:crossover-location`).
