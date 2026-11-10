@@ -48,7 +48,6 @@ class ExploreScreenTest {
         onOpenPost = { opened += "post:$it" },
         onOpenComment = { post, comment -> opened += "comment:$post/$comment" },
         onOpenPerson = { opened += "person:$it" },
-        onOpenOwnProfile = { opened += "own" },
         onOpenTopic = { opened += "topic:$it" },
         onOpenYourTopics = { opened += "yourTopics" },
     )
@@ -313,7 +312,7 @@ class ExploreScreenTest {
     }
 
     @Test
-    fun `the reader's own row opens their own profile, another person's theirs`() {
+    fun `the reader's own row opens their profile by its handle, as another person's opens theirs`() {
         val filter = SearchFilter()
         render(
             member.copy(
@@ -323,7 +322,7 @@ class ExploreScreenTest {
         )
         compose.onNodeWithTag("explore.result:1", useUnmergedTree = true).performClick()
         compose.onNodeWithTag("explore.result:2", useUnmergedTree = true).performClick()
-        assertThat(opened).containsExactly("own", "person:jade").inOrder()
+        assertThat(opened).containsExactly("person:jakob", "person:jade").inOrder()
     }
 
     // -- ExploreFilter.md --
