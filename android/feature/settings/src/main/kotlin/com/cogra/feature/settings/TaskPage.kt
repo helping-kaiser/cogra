@@ -18,9 +18,6 @@ import com.cogra.domain.has
  */
 internal fun looksLikeEmail(value: String): Boolean = emailValid(value)
 
-/** The password ceiling (auth.md "Credentials"); the floor is the domain's [com.cogra.domain.MIN_PASSWORD_LENGTH]. */
-internal const val PASSWORD_MAX = 128
-
 internal fun String.scalarLength(): Int = codePointCount(0, length)
 
 /** Whether this outcome is a refusal carrying [code]. */
