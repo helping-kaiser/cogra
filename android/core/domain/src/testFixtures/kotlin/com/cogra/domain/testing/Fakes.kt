@@ -96,6 +96,8 @@ import com.cogra.domain.signing.ExpectedNetting
 import com.cogra.domain.signing.NodeExpectation
 import com.cogra.domain.signing.Parents
 import com.cogra.domain.signing.stanceRecord
+import com.cogra.domain.stance.HeldOpinion
+import com.cogra.domain.stance.OpinionDirection
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
@@ -917,6 +919,10 @@ open class ThrowingProfileRepository : ProfileRepository {
      */
     override suspend fun figures(actorId: String): Outcome<ProfileFigures> =
         Outcome.Failed(UnsupportedOperationException("figures not scripted"))
+
+    /** The opinions page reads nothing until a test scripts it: its fault stands, never a crash. */
+    override suspend fun opinions(actorId: String, direction: OpinionDirection): Outcome<List<HeldOpinion>> =
+        Outcome.Failed(UnsupportedOperationException("opinions not scripted"))
     override suspend fun prepareProfileUpdate(
         displayName: String,
         bio: String?,

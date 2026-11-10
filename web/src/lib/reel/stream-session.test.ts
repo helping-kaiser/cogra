@@ -20,6 +20,7 @@ import {
   openStream,
   streamBack,
   streamFor,
+  streamOriginToken,
   type LoadOrigin,
   type OriginPage,
 } from "./stream-session";
@@ -271,5 +272,39 @@ describe("the way back's noun (Reel.md:79)", () => {
     expect(streamBack({ kind: "history" })).toEqual({ href: "/history", label: "Back to History" });
     expect(streamBack({ kind: "profile", handle: "ada", own: false })).toEqual({ href: "/u/ada", label: "Back to the profile" });
     expect(streamBack({ kind: "profile", handle: "me", own: true })).toEqual({ href: "/profile", label: "Back to your profile" });
+  });
+
+  // "Back to your profile from the reader's own" (Reel.md:85) — your own
+  // reached by its handle too, a feed chip's or a search result's, whose way
+  // back returns to it in the stack it was opened in.
+  it("back_from_your_own_profile_reached_by_handle_reads_back_to_your_profile", () => {
+    expect(streamBack({ kind: "profile", handle: "me", own: true, byHandle: true, from: "search" })).toEqual({
+      href: "/u/me?from=search",
+      label: "Back to your profile",
+    });
+    expect(streamBack({ kind: "profile", handle: "me", own: true, byHandle: true })).toEqual({
+      href: "/u/me",
+      label: "Back to your profile",
+    });
+    expect(streamBack({ kind: "profile", handle: "ada", own: false, from: "saved" })).toEqual({
+      href: "/u/ada?from=saved",
+      label: "Back to the profile",
+    });
+  });
+});
+
+// The token the stream's doors chain (`streamFrom`), and the shell reads the
+// lit root off: the list the stream narrowed, as its own drill-ins name it.
+describe("the origin the stream's doors carry", () => {
+  it.each([
+    [{ kind: "feed" } as const, null],
+    [{ kind: "saved" } as const, "saved"],
+    [{ kind: "history" } as const, "history"],
+    [{ kind: "profile", handle: "me", own: true } as const, "profile"],
+    [{ kind: "profile", handle: "me", own: true, byHandle: true, from: "search" } as const, "u:me/search"],
+    [{ kind: "profile", handle: "ada", own: false } as const, "u:ada"],
+    [{ kind: "profile", handle: "ada", own: false, from: "opinions:tobias/saved" } as const, "u:ada/opinions:tobias/saved"],
+  ])("%o → %s", (origin, token) => {
+    expect(streamOriginToken(origin)).toBe(token);
   });
 });

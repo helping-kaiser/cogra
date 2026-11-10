@@ -120,6 +120,14 @@ data class Topic(val name: String, val from: String? = null)
 data class Profile(val handle: String? = null, val from: String? = null)
 
 /**
+ * The opinions page (`ProfileStances`), opened from a profile's figures and
+ * standing in that profile's stack: [handle] is the profile's, null on the
+ * reader's own root. Its arrow returns to the profile as it was left.
+ */
+@Serializable
+data class ProfileStances(val handle: String? = null)
+
+/**
  * The Feed score's trace (FeedEntry and below): the thing the score was
  * tapped on, where ([from], `TraceOrigin.param`), whether it still settles,
  * the view its figure was computed in, the card's cover of it — the words

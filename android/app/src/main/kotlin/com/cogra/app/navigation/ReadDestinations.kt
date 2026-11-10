@@ -40,8 +40,10 @@ import com.cogra.feature.profile.COMMENTS_ORIGIN
 import com.cogra.feature.profile.FEED_ORIGIN
 import com.cogra.feature.profile.HISTORY_ORIGIN
 import com.cogra.feature.profile.NOTIFICATIONS_ORIGIN
+import com.cogra.feature.profile.OPINIONS_ORIGIN
 import com.cogra.feature.profile.POST_ORIGIN
 import com.cogra.feature.profile.ProfileRoute
+import com.cogra.feature.profile.ProfileStancesRoute
 import com.cogra.feature.profile.SAVED_ORIGIN
 import com.cogra.feature.profile.topicOrigin
 import com.cogra.feature.stance.StanceControlRoute
@@ -81,6 +83,17 @@ internal fun NavGraphBuilder.readDrillIns(shell: ShellScope) {
     }
     composable<Topic> { entry -> shell.TopicDestination(entry) }
     composable<Profile> { entry -> shell.ProfileDestination(entry) }
+    // THE OPINIONS PAGE (ProfileStances.md): opened from a profile's figures,
+    // in that profile's stack — the bar keeps lit the root the stack began
+    // in, never Feed by default (:55, :57) — and a row's person opens over it
+    // with a back arrow reading `Back to the opinions` (:47).
+    composable<ProfileStances> { entry ->
+        ProfileStancesRoute(
+            handle = entry.toRoute<ProfileStances>().handle,
+            onBack = { shell.navController.navigateUp() },
+            onOpenPerson = { handle -> shell.navController.navigate(Profile(handle, from = OPINIONS_ORIGIN)) },
+        )
+    }
     // NOTIFICATIONS (Notifications.md): reached from the bell on a root
     // band; every row opens its thing with a back arrow reading `Back to
     // Notifications`, and the list's own arrow pops to the bell's root.
@@ -343,6 +356,8 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
         // (ProfileOther.md:51-53).
         onChats = { navController.navigate(ChatsComingSoon(CHATS_FROM_OWN_PROFILE)) }.takeIf { ownRoot },
         onMessage = { navController.navigate(ChatsComingSoon(CHATS_FROM_MESSAGE)) },
+        // The figures' one door: the opinions page, in this profile's stack.
+        onOpenOpinions = { navController.navigate(ProfileStances(route.handle)) },
     )
 }
 

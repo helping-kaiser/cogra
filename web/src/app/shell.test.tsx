@@ -216,6 +216,49 @@ describe("AppShell", () => {
     expect(screen.getByTestId(byNode(`${bar}.${unlit}`))).not.toHaveAttribute("aria-current");
   });
 
+  // THE CHAIN, COMPLETED (jakob 2026-11-10; BottomNav.prompt.md: "A screen
+  // belongs to the stack it was opened from whatever its subject … The
+  // originating root stays lit on a drill-in"): a door out of someone's
+  // profile, a tag's page, the stream or a post's detail by its score keeps lit
+  // the root that page's own stack began in — the origin its token carries —
+  // and a token carrying none is the feed's.
+  it.each([
+    // Someone's profile (W-ORIGIN-CHAIN-U).
+    ["/posts/post-1", "from=u%3Aada", "/feed"],
+    ["/posts/post-1", "from=u%3Aada%2Fsaved", "/profile"],
+    ["/posts/post-1", "from=u%3Aada%2Fsearch", "/explore"],
+    ["/posts/post-1", "from=u%3Aada%2Fopinions%3Atobias%2Fhistory", "/profile"],
+    ["/u/alice", "from=u%3Aada%2Fsearch", "/explore"],
+    ["/trace/post-1", "from=u%3Aada%2Fsaved&kind=POST", "/profile"],
+    // A tag's page, grandfathered: what it opens keeps the page's own root.
+    ["/posts/post-1", "from=tag%3Acoast", "/feed"],
+    ["/posts/post-1", "from=tag%3Acoast%2Ffeed", "/feed"],
+    ["/posts/post-1", "from=tag%3Acoast%2Fsearch", "/explore"],
+    ["/posts/post-1", "from=tag%3Acoast%2Fhistory", "/profile"],
+    ["/u/alice", "from=tag%3Acoast%2Fu%3Aada%2Fsaved", "/profile"],
+    ["/trace/post-1", "from=tag%3Acoast%2Fsearch&kind=POST", "/explore"],
+    // A post's detail as the score's origin: the detail's own.
+    ["/trace/post-1", "from=post%3Apost-1&kind=POST", "/feed"],
+    ["/trace/post-1", "from=post%3Apost-1%3Asaved&kind=POST", "/profile"],
+    ["/trace/post-1", "from=post%3Apost-1%3Atag%3Acoast%2Fsearch&kind=POST", "/explore"],
+    // The stream's doors (W-STREAM-DOOR-ROOT): the list the stream narrowed.
+    ["/posts/post-1", "from=stream%3Av2", "/feed"],
+    ["/posts/post-1", "from=stream%3Av2%2Fsaved", "/profile"],
+    ["/u/alice", "from=stream%3Av2%2Fhistory", "/profile"],
+    ["/u/alice", "from=stream%3Av2%2Fu%3Aada%2Fsearch", "/explore"],
+  ])("keeps the chained origin's root lit on %s?%s, its slot going to %s", async (path, query, root) => {
+    pathname = path;
+    search = query;
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      { store: signedInStore() },
+    );
+    const nav = await screen.findByRole("navigation", { name: "Main" });
+    expect(within(nav).getByRole("link", { current: "page" })).toHaveAttribute("href", root);
+  });
+
   // EXPLORE AND THE WALLET'S DOOR ARE TAB ROOTS, read by every viewer
   // (Explore.md:35-39; WalletComingSoon.md:3, :5, :9): the bar stands with
   // their own slot lit, each registered bar wearing its screen's node.
