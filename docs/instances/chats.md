@@ -204,8 +204,8 @@ authority policy `𝒫`:
   coordinates backs nothing. Backing is required to become a
   member, not to remain one: a withdrawal `≺`-following the
   Participant does not undo the membership it backed, and a
-  Participant by an actor who is already a member needs no
-  backing. In open chats, any Participant is recognized as-is.
+  Participant by an actor who is already a member — by this fold,
+  at the Participant's own place in `≺` — needs no backing. In open chats, any Participant is recognized as-is.
 
 **Three act shapes, keyed on leg role.** Participant is a
 movement record — *from A to T* (§2) — so departure is
