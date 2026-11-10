@@ -72,8 +72,8 @@ anything not in the feedback closure below is a Layer 2's to reimplement
 | Part | Comparator role | Owns / prices |
 |---|---|---|
 | The burn primitive (beneath Layer 1) | frame source — supplies the neutral exogenous scalar | owns nothing of the graph (`rem:comparator:neutrality-from-silence`) |
-| Layer 1 (Network) | the binding — welds the frame onto $G$, publishes the standing field, the ledger, and every closure constant | owns the public infrastructure; prices nothing of its own |
-| Terminal complement | read-sites — downstream services may consume $\alpha_i$, title, and other published values at terminal sites | named only in `tbl:symbols:boundary`; mechanisms not specified in the closure edition |
+| Layer 1 (Network) | the binding — compiles complete actor-authored vouches, derives source-relative safe standing flow, forms the balance/count mediant, and publishes the standing field, hop matrices, emission fractions, and certificates | owns the public infrastructure; prices nothing of its own |
+| Layer 2 (Guilds) | readouts — consume $\alpha_i$ to attribute and reward; identity association and payload carriage are likewise Layer 2 (consumers, of which guilds are the economic kind) | each owns its own pool and recursion; none owns frame or graph |
 
 (`tbl:introduction:layer-roles`)
 
