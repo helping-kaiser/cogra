@@ -419,8 +419,12 @@ W1/W2 validity verdicts. The base allocation matrix, the emission fractions,
 the accepted tilt rung, and the certificate verdict are
 binding because changing any of them may change final standing and
 therefore final-set admission. Everything else the network publishes is
-terminal. Permission is decided per read-site by a single question — *does
-this re-enter $E$?*
+terminal. Commercial assertions read by terminal consumers keep the
+semantic limit of `rem:graph:settlement-reputation`, and their
+interpretation is terminal; standing recipient resolution reads the epoch
+title fold (`post:epoch:settlement-standing-title-coupling`) and is part of
+the binding surface. Permission is decided per read-site by a single
+question — *does this re-enter $E$?*
 (`rem:network:boundary-one-sentence`, `post:transport:guild-grant`)
 
 ---
@@ -587,9 +591,14 @@ and $E_k$.
 Grant soundness preconditions (`rem:transport:guild-grant-preconditions`):
 (1) the binding surface is minimal and fixed; (2) straddlers are consumed at
 their kernel value, audited not authored — a guild's own standing/owner has
-no standing in the shared graph; (3) the feedback-but-terminally-consumed
-cell (`frontier:settlement-tie-fabrication`) is flagged, its remedy handed
-to the terminal complement under the grant.
+no standing in the shared graph; (3) terminal interpretation does not
+rewrite binding meaning: commercial assertions may be read through raw
+routing or a terminal reputation conjunction, subject to the semantic limit
+of `rem:graph:settlement-reputation`, and a guild may discount or
+reinterpret those terminal readings, but it may not replace the title fold
+or the standing recipient rule — unrecognized, challenged or
+non-title-transferring Accept/Ratify acts resolve to self
+(`post:epoch:settlement-standing-title-coupling`).
 
 **Computed share vs. realized reward** (PN full §8,
 `rem:transport:guild-economic-autonomy`): the reward formula
