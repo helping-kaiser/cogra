@@ -102,7 +102,9 @@ downstream can revive a dead hop.
 ### 3.2 The fold — per-author net stance
 
 Before any weight is derived, the ranker folds the raw records.
-Same-author bundles — key **(author, target, edge type)** — net by
+Same-author bundles — key **(author, target, edge type)**, a
+hyper-edge's target being its full incidence (both legs' targets,
+as L1 folds, ``def:epoch:net-stance``) — net by
 sum-then-clip into one effective edge with parameters
 `(p̄_d, p̄_i)`, hyper-edge legs netted per-leg, temporal attributes
 taken from the bundle's `≺`-newest member. Excluded from folding,
