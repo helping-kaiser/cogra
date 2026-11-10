@@ -26,12 +26,12 @@ import com.cogra.domain.identity.Register
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.io.IOException
 
 /** A registration that answers only when the test lets it. */
 private class HeldOnboarding : ThrowingOnboardingRepository() {
@@ -90,8 +90,10 @@ class JoinScreenTest {
 
     private fun top(path: String): Float = tag(path).fetchSemanticsNode().positionInRoot.y
 
-    private fun text(path: String): String =
-        tag(path).fetchSemanticsNode().config.getOrNull(SemanticsProperties.Text)?.joinToString("") { it.text }.orEmpty()
+    private fun text(path: String): String {
+        val runs = tag(path).fetchSemanticsNode().config.getOrNull(SemanticsProperties.Text)
+        return runs?.joinToString("") { it.text }.orEmpty()
+    }
 
     // Join.md:9 — ALWAYS the face and the name over the form are the link's inviter's.
     @Test

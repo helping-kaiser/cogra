@@ -36,13 +36,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.DataNode
-import com.cogra.core.designsystem.R as DesignR
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.TaskPage
 import com.cogra.core.designsystem.v2.atom.WaitingCommit
 import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.token.Layout
+import com.cogra.core.designsystem.R as DesignR
 
 /**
  * The door's two readings, each under its board's name. Neither board is

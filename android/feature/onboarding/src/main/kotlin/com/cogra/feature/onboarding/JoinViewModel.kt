@@ -12,12 +12,12 @@ import com.cogra.domain.handleValid
 import com.cogra.domain.identity.Register
 import com.cogra.domain.sanitizedEmail
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * WHAT WAS TYPED OUTLIVES A WAY OUT (Join.md:25-27): leaving the form by
@@ -107,12 +107,16 @@ class JoinViewModel @Inject constructor(
     fun onHandleChange(value: String) {
         val next = value.lowercase()
         draft.handle = next
-        _state.update { it.copy(handle = next, local = it.local.copy(handle = it.local.handle?.let { handleLine(next) })) }
+        _state.update {
+            it.copy(handle = next, local = it.local.copy(handle = it.local.handle?.let { handleLine(next) }))
+        }
     }
 
     fun onEmailChange(value: String) {
         draft.email = value
-        _state.update { it.copy(email = value, local = it.local.copy(email = it.local.email?.let { emailLine(value) })) }
+        _state.update {
+            it.copy(email = value, local = it.local.copy(email = it.local.email?.let { emailLine(value) }))
+        }
     }
 
     fun onPasswordChange(value: String) {

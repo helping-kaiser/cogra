@@ -22,10 +22,10 @@ import com.cogra.feature.invites.VouchAskRoute
 import com.cogra.feature.onboarding.InviteEntryRoute
 import com.cogra.feature.onboarding.JoinRoute
 import com.cogra.feature.onboarding.KeyCeremonyRoute
-import com.cogra.feature.onboarding.R as OnboardingR
 import com.cogra.feature.settings.ChangeEmailLinkedRoute
 import com.cogra.feature.settings.DeleteAccountConfirmedRoute
 import kotlinx.coroutines.launch
+import com.cogra.feature.onboarding.R as OnboardingR
 
 /** The entry funnel: the invite entry, the application, sign-in and its reset, the key's two ceremonies. */
 internal fun NavGraphBuilder.funnel(shell: ShellScope) = with(shell) {

@@ -27,6 +27,7 @@ data object ExploreTab
 data object WalletTab
 
 // The destinations (type-safe routes, Navigation 2.8+).
+
 /**
  * The invite door. [inviteId] is a link opened from outside the app;
  * [invalid] opens the door in its unusable reading (`JoinInvalid`), where

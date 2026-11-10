@@ -134,57 +134,63 @@ fun JoinScreen(
             Spacer(Modifier.height(32.dp))
             Fields(state, onHandleChange, onEmailChange, onPasswordChange, onSubmit)
             Spacer(Modifier.height(24.dp))
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                state.fault?.let { fault ->
-                    Text(
-                        text = stringResource(fault.text()),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics { liveRegion = LiveRegionMode.Polite }
-                            .dataNode(JOIN / "fault"),
-                    )
-                }
-                // THE TERMS ARE ACCEPTED BY THE PRESS (Join.md:79-81): the line
-                // stands directly above Create account, and no checkbox stands
-                // anywhere on the form.
-                LegalLine(
-                    sentence = stringResource(R.string.join_terms),
-                    door = stringResource(R.string.join_terms_door),
-                    node = JOIN / "terms",
-                )
-                WaitingCommit(
-                    label = stringResource(R.string.join_create),
-                    reason = stringResource(R.string.join_waiting),
-                    waiting = state.waiting,
-                    onCommit = onSubmit,
-                    inFlight = state.inFlight,
-                    inFlightLabel = stringResource(R.string.join_creating),
-                    node = JOIN / "commit",
-                )
-                // The board's text button keeps its drawn 40dp in the layout and
-                // answers at 48 (`cg-hit`), which the row button does; Material's
-                // own button would grow the stack by its touch target instead.
-                CograRowButton(
-                    text = stringResource(R.string.entry_sign_in),
-                    onClick = onSignIn,
-                    kind = ButtonKind.Text,
-                    modifier = Modifier.fillMaxWidth(),
-                    testTag = (JOIN / "signIn").tag,
-                )
-                // The Privacy Policy is a notice, never part of the acceptance
-                // (Join.md:83): its own line at the form's foot.
-                LegalLine(
-                    sentence = stringResource(R.string.join_privacy),
-                    door = stringResource(R.string.join_privacy_door),
-                    node = JOIN / "privacy",
-                )
-            }
+            Actions(state, onSubmit, onSignIn)
         }
+    }
+}
+
+/** The commit stack: the fault, the accept sentence, Create account, Sign in, the notice. */
+@Composable
+private fun Actions(state: JoinUiState, onSubmit: () -> Unit, onSignIn: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        state.fault?.let { fault ->
+            Text(
+                text = stringResource(fault.text()),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { liveRegion = LiveRegionMode.Polite }
+                    .dataNode(JOIN / "fault"),
+            )
+        }
+        // THE TERMS ARE ACCEPTED BY THE PRESS (Join.md:79-81): the line
+        // stands directly above Create account, and no checkbox stands
+        // anywhere on the form.
+        LegalLine(
+            sentence = stringResource(R.string.join_terms),
+            door = stringResource(R.string.join_terms_door),
+            node = JOIN / "terms",
+        )
+        WaitingCommit(
+            label = stringResource(R.string.join_create),
+            reason = stringResource(R.string.join_waiting),
+            waiting = state.waiting,
+            onCommit = onSubmit,
+            inFlight = state.inFlight,
+            inFlightLabel = stringResource(R.string.join_creating),
+            node = JOIN / "commit",
+        )
+        // The board's text button keeps its drawn 40dp in the layout and
+        // answers at 48 (`cg-hit`), which the row button does; Material's
+        // own button would grow the stack by its touch target instead.
+        CograRowButton(
+            text = stringResource(R.string.entry_sign_in),
+            onClick = onSignIn,
+            kind = ButtonKind.Text,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = (JOIN / "signIn").tag,
+        )
+        // The Privacy Policy is a notice, never part of the acceptance
+        // (Join.md:83): its own line at the form's foot.
+        LegalLine(
+            sentence = stringResource(R.string.join_privacy),
+            door = stringResource(R.string.join_privacy_door),
+            node = JOIN / "privacy",
+        )
     }
 }
 
@@ -282,8 +288,8 @@ private fun Fields(
  * THE DOORS OPEN NOTHING YET. The Terms and the Privacy Policy are a launch
  * task — the documents are not written — so the link is drawn and named as
  * the board draws it but answers no tap, as the web's inert doors do.
- * Join.md:85-87's "the form keeps every field as it was left on the way
- * back" holds trivially until there is a page to go to and come back from.
+ * Join.md:85-87 also asks that the form keep every field as it was left on
+ * the way back from those pages, which is untestable until the pages exist.
  */
 @Composable
 private fun LegalLine(sentence: String, door: String, node: DataNode) {

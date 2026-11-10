@@ -38,7 +38,6 @@ import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.identity.recoveryCodePrefixDiverged
 import com.cogra.domain.identity.recoveryCodeTypedBack
 
-
 @Composable
 fun KeyCeremonyRoute(
     onDone: () -> Unit,
