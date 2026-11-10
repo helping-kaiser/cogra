@@ -2660,7 +2660,15 @@ double-cover traversal survives as a public raw-graph service for consumers
 needing signed raw-path evidence (the canonical bridge-consent
 calculation). It reads the sign already computed for raw ranking and **does
 not compute standing** — standing and feed share neither one activation nor
-one traversal (`rem:dynamics:standing-feed-separation`).
+one traversal (`rem:dynamics:standing-feed-separation`). Its exact traversal
+(`alg:epoch:exact-signed-raw-traversal`,
+`lem:epoch:double-cover-bfs-correctness`) enumerates path prefixes simple in
+the original raw snapshot to depth $L$, with no pruning threshold; time and
+memory are $O\big(n + m + (L+1)\sum_{d=0}^{L}\Delta^d\big)$ for $n$ vertices,
+$m$ raw edges, and maximum outgoing raw-edge count $\Delta$ (parallel
+projections included) — polynomial in $\Delta$ with a
+degree that grows with $L$, not a constant-factor enlargement of the feed
+traversal.
 
 ### 11.5 Final standing
 
