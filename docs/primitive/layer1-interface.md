@@ -789,17 +789,20 @@ Stated independently of any mechanism that achieves them.
   closures against the history finalized before the epoch, realized size,
   closure cause, attested boundary timestamp; **(ii) final ledger** —
   settled boundary burn state, final residual balances, final action
-  counts, accepted-act increments, debit vintages; **(iii) act folding** —
-  complete acts, per-author folds, cell coefficients, recipient resolution,
-  the base allocation matrix; **(iv) the transport** — domain weights and
-  profiles, the tilt shape, the depth mass, source emission fractions, and
-  the hop allocation matrices they assemble; **(v) the accepted rung** — the
-  certificate verdict (pass, fail or indecisive) at each attempted rung of
-  the published grid, the accepted $t_k$, the declared hull box, and the
-  fixed-point enclosure; **(vi) final standing and admission** — the
-  equilibrium $\boldsymbol{x}^*$, the transport entries $\Pi_{ui}$, final
-  standing, final action and epoch stamps, door headroom, W1/W2 verdicts;
-  **(vii) shared closure outputs and policy** — the title certificate,
+  counts, accepted-act increments, debit vintages; **(iii) semantic
+  projection** — every accepted Actor-authored (complete) act, per-author
+  folds, each act's fold cell and coefficient, its recipient resolution,
+  and the base allocation matrix the published domain weights and profiles
+  determine from them; **(iv) allocation and transport** — the tilt profile
+  shape, the accepted rung $t_k$ with the certificate verdict (pass, fail or
+  indecisive) of every rung of the published grid attempted above it, the
+  depth mass, the source emission fractions, and the conserved transport
+  with the hop allocation matrices it composes; **(v) final standing and
+  admission** — the declared rate hull box, the standing certificate
+  $\mathcal{K}_k$, the fixed-point enclosure, the equilibrium
+  $\boldsymbol{x}^*$, the transport entries $\Pi_{ui}$, final standing,
+  final action and epoch stamps, door headroom, W1/W2 verdicts; **(vi)
+  shared closure outputs and policy** — the title certificate,
   settlement-recognition result, epoch target size, min/max durations, the
   policy-floor and safety-threshold schedules, the margin factor
   $m_\theta = 5/4$, the wall in force, the deployment's fixed structural
@@ -809,9 +812,10 @@ Stated independently of any mechanism that achieves them.
   controller edition and reduced constants, the completed-epoch
   contributing width and accepted rung, and the proposal and delivered led
   wall whose burn image is the threshold schedule
-  (`def:epoch:wall-controller`), all under no-silent-change; **(viii)
+  (`def:epoch:wall-controller`), all under no-silent-change; **(vii)
   reproducibility evidence** — formula editions, declared constants,
-  interval boxes, residual bounds. Every binding value is reproducible from
+  interval boxes, residual bounds, and reports sufficient for any
+  participant to rerun the calculation. Every binding value is reproducible from
   the accepted records, final ledger, explicit public previous-wall state,
   public formulas, and constants. Previous standing,
   warm starts, and cached solver state are not package inputs. **No hashes,
