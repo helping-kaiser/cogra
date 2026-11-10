@@ -10,6 +10,7 @@ pub mod boot;
 pub mod bootstrap;
 pub mod breach;
 pub mod content;
+pub mod deletion;
 pub mod dotenv;
 pub mod hidden;
 pub mod history;
@@ -108,7 +109,11 @@ struct AppState {
 /// Resolves the request's viewer from `Authorization: Bearer <token>`
 /// before execution (auth.md "Access token") and rides it, with the
 /// derived client IP, into the GraphQL context — resolvers read
-/// `Option<Viewer>` and `RequestIp`.
+/// `Option<Viewer>` and `RequestIp`. A token whose account has no login
+/// any more — its deletion executed — resolves to no viewer: the token
+/// outlives the execution by up to its TTL, and nothing may be signed or
+/// written as the executed account (one primary-key read per signed-in
+/// request).
 ///
 /// The body is parsed here rather than through the library's own
 /// extractor because that extractor hard-codes `MultipartOptions`
@@ -152,7 +157,10 @@ async fn graphql_handler(
             GRAPHQL_JSON_BODY_LIMIT_BYTES,
         ))
     };
-    let viewer = bearer_viewer(&state.auth, &parts.headers);
+    let viewer = match bearer_viewer(&state.auth, &parts.headers) {
+        Some(v) if deletion::viewer_has_login(&state.uploads.pool, v.user_id).await => Some(v),
+        _ => None,
+    };
 
     let reader = StreamReader::new(body.into_data_stream().map_err(std::io::Error::other)).compat();
     let parsed = async_graphql::http::receive_batch_body(content_type, reader, state.multipart)
