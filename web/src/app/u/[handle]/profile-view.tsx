@@ -397,13 +397,19 @@ export function ProfileScreen({
   const deleted = profile?.displayName.status === "REDACTED";
   const comfort = useComfortLine(profile?.id ?? "");
   const back = backFor(openedFrom);
-  // Where a chronicle card's post, and the chats, say they were opened from.
-  const origin = own && handle === null ? "profile" : profile ? personOrigin(profile.handle) : null;
+  // Where a chronicle card's post says it was opened from — this profile, and
+  // the origin the profile itself was opened with (`back-origin.ts`, the
+  // chain), so the post keeps lit the root this profile's stack began in.
+  const origin = own && handle === null ? "profile" : profile ? personOrigin(profile.handle, openedFrom) : null;
   // What a posts-view card's score names on its trace's way back
   // (ProfilePosts.md:39-41): `Back to your profile` from your own root,
   // `Back to the profile` from a profile by its handle.
   const scoreOrigin: TraceOrigin | null =
-    origin === "profile" ? { kind: "profile" } : profile ? { kind: "person", handle: profile.handle } : null;
+    origin === "profile"
+      ? { kind: "profile" }
+      : profile
+        ? { kind: "person", handle: profile.handle, from: openedFrom }
+        : null;
 
   // THE CARDS STAND EDGE TO EDGE, as the feed's do (the ProfilePosts and
   // ProfileComments boards: the list's `padding: 8px 0 0`, Feed's and

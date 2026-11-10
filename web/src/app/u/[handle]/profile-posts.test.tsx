@@ -475,3 +475,33 @@ describe("ProfilePosts — the posts view (ProfilePosts.md)", () => {
     scroller.remove();
   });
 });
+
+// W-ORIGIN-CHAIN-U: someone's profile hands what it opens the origin it was
+// itself opened with (`u:ada/saved`; `back-origin.ts`, the chain), so the
+// post and the trace keep lit the root its stack began in, and their way back
+// returns to the profile as it was opened (BottomNav.prompt.md; readme §13).
+describe("the profile's doors carry the origin it was opened with", () => {
+  const from = (slot: HTMLElement) => new URL(slot.getAttribute("href") ?? "", "http://x").searchParams.get("from");
+
+  it("someones_profile_opened_from_saved_hands_its_posts_and_their_scores_that_origin", async () => {
+    serveAda();
+    serveChronicle();
+    servePosts({ "": { posts: [adas("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" from="saved" />);
+    await openPostsTab();
+    expect(screen.getByTestId("profile-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=u%3Aada%2Fsaved");
+    const score = screen.getByTestId(byNode("profile.posts.card.actionRow.score", "p1"));
+    expect(from(score)).toBe("u:ada/saved");
+    expect(traceBack(originOf(from(score)))).toEqual({ href: "/u/ada?from=saved", label: "Back to the profile" });
+  });
+
+  it("someones_profile_opened_with_no_origin_hands_none", async () => {
+    serveAda();
+    serveChronicle();
+    servePosts({ "": { posts: [adas("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    await openPostsTab();
+    expect(screen.getByTestId("profile-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=u%3Aada");
+  });
+  });
+});
