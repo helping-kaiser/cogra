@@ -2488,7 +2488,7 @@
     { "from": "RankRecords", "via": 5, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "RankRecords", "via": 6, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
-    { "from": "PostOpinions", "via": 1, "kind": "advance", "label": "a holder row", "to": [{ "board": "ProfileOther", "case": "their profile, where acting on an opinion lives — back returns the post with this sheet up, as it was left (readme §4, Navigation)" }] },
+    { "from": "PostOpinions", "via": 1, "kind": "advance", "label": "a holder row", "to": [{ "board": "ProfileOther", "case": "their profile, where acting on an opinion lives — back returns the post with this sheet up, as it was left (readme §4, Navigation)" }, { "board": "ProfileDeleted", "case": "a deleted holder's row — the deleted account's page, reached by structure that still points at it, its back arrow Back to the post (round 29)" }] },
     { "from": "PostOpinions", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the post is still open beneath it" }] },
     { "from": "CommentOpinionsEmpty", "via": 1, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the thread is still open beneath it" }] },
 

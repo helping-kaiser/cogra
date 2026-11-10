@@ -293,7 +293,7 @@ const MIRA_GALLERY_POST = {
   topics: ["tidemarket", "coastroad"],
   score: "6.40",
   comments: 2,
-  opinions: 8,
+  opinions: 9,
   license: { attribution: 0, provenance: 0 },
   menuItems: CARD_MENU,
 };
@@ -4294,13 +4294,20 @@ function ScoreColumn({ children }) {
    for-or-against value. That order is the precedent's, read off the board
    rather than found written down — it is what a reader of the profile page has
    already learned to expect, and a second surface sorting the same rows a
-   different way would teach them it means nothing. */
+   different way would teach them it means nothing.
+
+   ONE HOLDER DELETED THEIR ACCOUNT (round 29, seam 254 item 12): their row
+   stands where its value puts it, `StanceRow`'s `redacted`, keyed by the
+   actor's id — the one `ProfileStances` draws — since a deleted holder has no
+   handle left. It is one of the nine the count names (`MIRA_GALLERY_POST`'s
+   `opinions`). */
 const POST_OPINION_HOLDERS = [
   { name: MIRA.displayName, handle: MIRA.handle, src: "inviter.jpg", pDirected: 0.9, pInterest: 0.25 },
   { name: ADA.displayName, handle: ADA.handle, src: "comment-camera.jpg", pDirected: 0.7, pInterest: 0.4 },
   { name: TOBIAS.displayName, handle: TOBIAS.handle, pDirected: 0.6, pInterest: 0.65 },
   { name: SOL.displayName, handle: SOL.handle, pDirected: 0.55, pInterest: 0.2 },
   { name: KEL.displayName, handle: KEL.handle, pDirected: 0.25, pInterest: 0.95 },
+  { redacted: true, actorId: "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98", pDirected: 0.2, pInterest: 0.2 },
   { name: NADIA.displayName, handle: NADIA.handle, pDirected: 0.15, pInterest: 0.15 },
   { name: WREN.displayName, handle: WREN.handle, pDirected: -0.2, pInterest: 0.1 },
   { name: JUNO.displayName, handle: JUNO.handle, pDirected: -0.55, pInterest: 0.25 },
