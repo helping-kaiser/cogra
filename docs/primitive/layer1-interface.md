@@ -1288,8 +1288,9 @@ opening material beside carriage, a binding-yet-concealing commitment
 residue in the structural record, one-way tombstoning. The dependency
 projection is the actor's finite canonical dependency list
 $\mathrm{deps}(q)$ — each element naming one authored act, never an
-individual leg, declaring that $q$'s authoritative time must exceed each
-member's; the declaration grants no inclusion right. States: full-empty /
+individual leg, declaring that $q$'s key of record must exceed each
+member's (`cond:graph:authoritative-order-dependency-placement`); the
+declaration grants no inclusion right. States: full-empty /
 full / tombstoned (list and opening removed, the binding commitment residue
 remaining — the anchor a later opening reopens). Tombstoning changes no
 identity, order, time, count, debit, standing, feed, CAN, title, or
@@ -1357,55 +1358,82 @@ compliant.
 ### 8.3 Temporal structure
 
 **Authored-act causality (`ax:graph:act-causality`,
-`def:graph:act-incidence-causality`).** Authoritative logical time is
-finalization metadata attached to the accepted act, not an edge-owned
-attribute. Each accepted act is one Lamport event whose causal incidence is
-its complete graph projection: a binary act is a two-way event over its
-source and target; a hyper-edge act a **three-way** event over its
+`def:graph:act-incidence-causality`).** Logical time is finalization
+metadata attached to the accepted act, not an edge-owned attribute; the
+host-published sequence is the order of record, and Lamport time
+summarizes that order. Each accepted act is one Lamport event whose causal
+incidence is its complete graph projection: a binary act is a two-way event
+over its source and target; a hyper-edge act a **three-way** event over its
 initiating Actor, contextual middle node, and semantic target (the middle
 node participates in causal incidence only — no authorship, autonomy, or
 standing authority). Along the host-published sequence, an act's Lamport
 time is one more than the maximum over its incident endpoints' frontiers
-and its predecessors' times (asserted parents ∪ declared dependencies);
-every incident endpoint then advances to the act frontier. The two
-projections of a hyper-edge inherit the one event frontier — never two
-independently timed records.
+and the times of its predecessors (asserted parents ∪ declared
+dependencies); only finalized predecessors at strictly lower keys of record
+contribute, and a missing or non-earlier one contributes nothing
+(`cond:graph:act-incidence-causality-finalized-predecessors`). Every
+incident endpoint then advances to the act frontier. Each endpoint's
+frontier entering epoch $k$ is its frontier at the close of epoch $k-1$,
+carried across an empty epoch; it is zero at genesis and for an endpoint
+with no earlier incidence, and an empty maximum is zero
+(`cond:graph:act-incidence-causality-frontier-carry`). Every time in the
+recurrence is the recursively recomputed value, never an unchecked
+published stamp, so every finalized act has a finite time
+(`prop:graph:act-time-finite`). The two projections of a hyper-edge
+inherit the one event frontier — never two independently timed records.
+$\mathbb{T}^{\text{act}}_q$ is a recomputable summary: anyone with the
+same replay inputs recomputes it, it carries no authority over order or
+finalized consequences, and disjoint incidence can give a later act a
+lower time (`rem:graph:act-time-is-summary`).
 
 **Authoritative act order (`def:graph:authoritative-act-order`).** For
 epoch $k$ the host chooses a finite total order $\mathcal{Q}_k$ of the
-accepted acts and publishes each act's position. The **authoritative causal
-key** is the lexicographic pair
-$(\mathbb{T}^{\text{act}}_q, \mathrm{pos}_k(q))$ — Lamport time, then host
-position totalizing equal frontiers. The order is total and *semantically
-authoritative*: not forced by incidence, but it must linearize every
-asserted parent and declared dependency (each at strictly lower key) while
-placing both edge projections of one hyper-edge at the same key. Where
-this document writes $\prec$ in scoring, maturity, or path viability it
-means authoritative-order precedence, with the internal A→T transition of
-one act permitted at equal key.
+accepted acts and publishes each act's position
+$\mathrm{pos}_k(q_{k,j}) = j$. The **key of record** is the pair
+$(k, \mathrm{pos}_k(q))$, ordered lexicographically across epochs as well
+as within one epoch (`rem:graph:order-of-record-is-position`). Logical
+time is derived from this order, never the reverse; a time comparison never
+decides precedence, even when a later act has a lower time on disjoint
+endpoints (`rem:graph:cross-epoch-precedence`). The order is total and
+*semantically authoritative*; compliance requires every declared
+dependency and every asserted parent of an act to lie in finalized history
+at a strictly lower key
+(`cond:graph:authoritative-order-dependency-placement`,
+`cond:graph:authoritative-order-parent-placement`), and both edge
+projections of one hyper-edge have the same key. A finalized order that
+violates a placement condition remains the order of record; evidence and
+consequences follow ordering accountability (§8.2). Where this document
+writes $\prec$ in scoring, maturity, or path viability it means precedence
+by the key of record, with the internal A→T transition of one act permitted
+at equal key.
 
 **Host ordering discretion (`rem:graph:host-ordering-discretion`).** For
 acts not ordered by a causal parent or declared dependency, Layer 1
 imposes no arrival-order, fairness, neutrality, or canonical-identifier
 preference — the host may select any dependency-compliant order according
 to its own incentives. **Different valid host choices may produce different
-authoritative causal keys, edge-projection maturities, relation frontiers,
-causal standing paths, standing fields, and final-set admission
-outcomes.** This is authorized boundary discretion. The guarantee is
+authoritative causal keys, edge-projection maturities, and raw folded
+relation frontiers.** Formation and dependency validity read order; the
+write gates, standing, and ledger are evaluated once on the completed final
+union. Permuting a fixed accepted set in a dependency-compliant way, with
+final ledger, epoch title fold, and constants fixed, cannot change standing
+(`post:epoch:standing-epoch-set-determinism`); changing accepted membership
+can. This is authorized boundary discretion. The guarantee is
 public visibility and deterministic replay — *order transparency and
 replay determinism, not incentive-neutral ordering*.
 
 **Ordered-replay determinism (`lem:graph:ordered-replay-determinism`).**
-Fixing the finalized $\mathcal{Q}_k$ and the published constants:
-$\mathbb{T}^{\text{act}}$, $\tau_e$, $\tilde{w}(e)$, $\epsilon(e)$, every
-path parity, the half-score, path distance, the relevance score $S(u,c)$,
-and every CAN value are functions of $\mathcal{Q}_k$ and the constants
-alone — every participant holding the same ordered history reproduces them
-identically; none references $\mathrm{pos}(e)$ beyond the order itself.
-**This supersedes the pre-Edition-4 linearization-invariance lemma**: the
-claim is downgraded from order-independence to determinism given the
-published order. A lower Lamport time is necessary but not sufficient for
-causal ancestry (`rem:graph:causal-frontier-not-ancestry`).
+Fixing the finalized ordered history through epoch $k$ — including
+$\mathcal{Q}_k$ and the incidence and authenticated dependency inputs — and
+the published constants: $\mathbb{T}^{\text{act}}$, $\tau_e$,
+$\tilde{w}(e)$, $\epsilon(e)$, every path parity, the half-score, path
+distance, the relevance score $S(u,c)$, and every CAN value are functions of
+that ordered history and the constants alone — every participant holding
+the same ordered history reproduces them identically; none references
+$\mathrm{pos}(e)$, and no quantity reads host discretion beyond the
+published sequences. A lower recomputed Lamport time is necessary but not
+sufficient for causal ancestry
+(`rem:graph:causal-frontier-not-ancestry`).
 
 **Edge-projection maturity (`def:graph:edge-projection-maturity`).** For
 $e \in \mathrm{edges}(q)$:
@@ -1765,10 +1793,12 @@ view and preserves determinant sign exactly.
   projections plus current derived readings traversed, at most $L$. **Raw
   path viability does not require edge times to increase**: raw feed and
   bridge services measure connectivity in the current public snapshot, not
-  a chronological event chain. The host-published act order remains binding
-  for act acceptance, maturity, bundle folds, title, standing, and the
-  derived Self-edge parameters — it is not a path constraint on terminal
-  snapshot traversal. (Supersedes the pre-Edition-4 path-viability axiom.)
+  a chronological event chain. The host-published act order governs
+  dependency formation, authoritative placement, edge-projection maturity,
+  and order-sensitive raw bundle folds; standing, the ledger, and the write
+  gates are evaluated once on the completed final union, and title reads
+  membership and epoch. The act order is not a path constraint on terminal
+  snapshot traversal.
 - **Exactness (`rem:sorting:raw-pruning-is-implementation`):** the
   canonical raw feed, signed, and bridge services are exact bounded-depth
   max-product computations on $G_k^{\text{raw}}$. Layer 1 publishes no raw
@@ -1777,8 +1807,8 @@ view and preserves determinant sign exactly.
   a terminal Layer-2 choice that must publish its own error, cutoff, and
   tie semantics.
 - **Ordered-replay determinism (`lem:graph:ordered-replay-determinism`):**
-  see §8.3 — all of the above are deterministic functions of
-  $(\mathcal{Q}_k, \text{constants})$; different valid host orders may
+  see §8.3 — all of the above are deterministic functions of the finalized
+  ordered history and the constants; different valid host orders may
   differ (`rem:graph:host-ordering-discretion`).
 
 Excised from the closure edition (terminal): the general $W_q$
