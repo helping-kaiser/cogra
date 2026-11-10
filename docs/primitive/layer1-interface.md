@@ -2390,20 +2390,16 @@ and its reading is the Layer-2 membership fold alone
 (`def:nodes:canonical-membership-fold`).
 
 **Authored vouches are withdrawable
-(`lem:epoch:authored-vouch-withdrawable`).** Every family that stance
-aggregation folds — Opinion, Reference, Invitation — is withdrawable by its
-author through netting within the accepted epoch set. Standing consumes no
-family-specific withdrawal rule and no tie rule; the fold is invariant under
-every dependency-compliant permutation
-(`post:epoch:standing-epoch-set-determinism`). For an Invitation with
-mandatory A-leg pair $(u, f)$, a cancelling Invitation with $(-u, -f)$ nets
-the bundle to $(0, 0)$, fails the strictly-positive gate, and is weighed home
-at coefficient zero; a later positive Invitation re-establishes the vouch.
-Each withdrawal and re-establishment is a priced act. Settlement acts (Accept,
-Ratify) are singleton cells withdrawn through the epoch-quantized settlement
-consent of `def:graph:settlement-recognition`, not through netting; the two
-routes together cover every outward-capable family. The only lever a host
-retains over a standing fold is an act's epoch of inclusion.
+(`lem:epoch:authored-vouch-withdrawable`, stated in full in §9.8).** Opinion,
+Reference, and Invitation are withdrawn by their author through netting
+within the accepted epoch set — a cancelling Invitation with $(-u, -f)$ nets
+the bundle to $(0, 0)$ and is weighed home at coefficient zero — with no
+family-specific withdrawal rule and no tie rule
+(`post:epoch:standing-epoch-set-determinism`); each withdrawal and
+re-establishment is a priced act. Accept and Ratify withdraw through the
+epoch-quantized settlement consent of `def:graph:settlement-recognition`
+instead. The only lever a host retains over a standing fold is an act's epoch
+of inclusion.
 
 **Base allocation matrix (`def:epoch:domain-weighted-base-allocation`,
 `eq:epoch:domain-weighted-base-allocation`).** Each cell carries its act
@@ -2882,7 +2878,7 @@ closure, satisfying `post:introduction:epoch-edge-set` with no appeal to
 any global position coordinate. Commitment rates are computed from the
 completed residual balances and action counts. Every component of the
 closure reads the same recognized final marker $m_k$
-(`post:comparator:marker-bound-settlement`), in one settled history under one
+(`post:comparator:marker-bound-settlement`, §1.2), in one settled history under one
 published marker policy (`cond:comparator:marker-epoch-registration`). The
 published **epoch package** binds the marker policy by its identity and fixed
 edition; the marker's settled lineage view, fixed interpretation data,
