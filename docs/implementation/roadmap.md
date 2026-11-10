@@ -205,6 +205,20 @@ trivially and the derived Self-edge reading carries a constant
 coordinate. The gates' call-sites are real; the real substrate brings
 the real stamps at the swap.
 
+Everywhere else the stand-in follows the contract's rule with its
+numbers. Epochs number from 1, and the acts of each epoch from 1. Every
+close charges the wall in force and runs one step of the canonical
+interim wall controller (layer1-interface.md §11.8); with no standing
+solve its width input is the constant 1, so θ sits at the reference,
+50_186 µ — q(1) on the stand-in's micro-unit grid, rounded up. The
+deployment declares the structural floor 3/37, and its marker policy
+is the epoch close itself. Each epoch package carries, beside its
+records, the closure outputs the stand-in computes: the dependent-set
+partition, the closure cause, the final ledger with its debit vintage,
+the controller step and the marker policy. Epochs closed before the
+controller keep the debit they were charged, and the next close
+charges the declared initialization.
+
 Because every slice builds against the contract, the real substrate's
 arrival is a **swap, not a slice**: when L1 is available, the
 stand-in is replaced behind the seam and no slice reopens. The swap
