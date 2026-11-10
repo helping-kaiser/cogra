@@ -3135,12 +3135,12 @@ operator duties (both at the end of this section).
   pipeline; path-view extraction; mask and tier rules; determinant sign and
   damped weight; **net stance, cell coefficients, recipient resolution,
   domain weights, activations, the tilt grid and emission rule, control-act
-  self-resolution and inviter revocation**; the **write rule (W1/W2a/W2b),
-  closure rule, formation rule + handshake, and the θ-debit ledger**;
-  settlement recognition and the **epoch title fold**; the conserved
-  derivation sequence and certificate definitions; the
-  safety-price/five-ρ-floor family — is jointly sufficient to reproduce the
-  server's output from published records alone. Terminal mechanisms are not
+  self-resolution and vouch withdrawal by netting**; the **write rule
+  (W1/W2a/W2b), closure rule, formation rule + handshake, and the θ-debit
+  ledger**; settlement recognition and the **epoch title fold**; the
+  conserved derivation sequence and certificate definitions; the
+  safety-price/five-ρ-floor family and the wall controller — is jointly
+  sufficient to reproduce the server's output from published records alone. Terminal mechanisms are not
   part of this invariant; **if a terminal service publishes a mechanism,
   the grant requires that terminal mechanism's own completeness** — a guild
   that reimplements a terminal default publishes its own complete
