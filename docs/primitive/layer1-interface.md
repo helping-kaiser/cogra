@@ -181,6 +181,125 @@ R1–R11 name the burn-primitive requirements and M1–M5 the marker-bound
 settlement conditions (§1.2). The safety-threshold premises are X1–X9
 (§11.8).
 
+### 1.2 Marker-bound burn settlement
+
+**Burn Accumulator (`def:comparator:burn-accumulator`).** A record of the
+realization's history that carries or accumulates burn and extends the
+settlement lineage, depending on and extending the record before it.
+Appending one is open to any party; no party holds a privilege over the
+lineage. The lineage $L(m)$ of a record $m$ is the set of burn records it
+depends on.
+
+**Epoch Marker (`def:comparator:epoch-marker`).** A burn accumulator that
+the deployment's published marker policy recognizes by its form, one per
+epoch index; Layer 1 reads epoch markers at epoch closure past the
+settlement depth. The form is the deployment's published placement rule and
+may be producible by the host alone. An accumulator without the form may
+lie in a marker's lineage but carries no epoch index and closes nothing.
+$m_k$ is the marker of epoch $k$; $m_0$ is reserved for the empty initial
+boundary.
+
+**Marker-Bound Burn Settlement
+(`post:comparator:marker-bound-settlement`).** A realization used at epoch
+closure supplies settled lineage in addition to meeting R1–R11. The
+deployment publishes a **marker policy**: its recognition and acceptance
+rule selects the epoch markers among the burn accumulators and determines
+which burn records each marker accepts. A history is admissible only if its
+recognized markers satisfy all five conditions:
+
+- **M1 lineage succession** — the policy identifies $m_0$ (index zero, no
+  predecessor, empty accepted set and snapshot) and at most one marker at
+  each later index together with its immediate predecessor $m_{k-1}$; no
+  index is skipped. $m_k$ depends on and extends $m_{k-1}$, and
+  $L(m_{k-1}) \subseteq L(m_k)$. A recognized marker fixes its lineage,
+  predecessor, marker-policy identity and edition, and the immutable public
+  data the policy reads. The realization subjects recognized markers and
+  their lineage to its settlement and publishes the settlement depth (R4(e))
+  with the finality assumptions under which it protects each marker, its
+  lineage and its interpretation data.
+- **M2 network acceptance** — the policy determines a finite accepted set
+  $A(k)$ per recognized marker, with $A(0) = \varnothing$ and
+  $A(k-1) \subseteq A(k) \subseteq L(m_k)$; $C(k) = A(k) \setminus A(k-1)$.
+  Every reader recovers the same complete $A(k)$ from the marker's fixed
+  interpretation data and its predecessor's accepted set, without a private
+  choice or a later observation; a commitment requires a uniquely verifiable
+  public opening of the complete set. For every accepted record $r$, every
+  reader can verify its lineage membership, its genuine underlying
+  destruction $d(r)$, the non-negative amount $\mu(d(r))$, and the
+  attributed address $a(d(r)) \in \mathbb{A}$. A record failing verification
+  contributes nothing, and a candidate accepting it is not recognized;
+  missing contents or evidence prevent recognition and never license
+  omitting a member of $A(k)$. A candidate naming a burn outside its lineage,
+  or omitting a burn its predecessor accepted, is not recognized. Lineage
+  burns need not be accepted; one already in $L(m_{k-1})$ may first be
+  accepted by $m_k$.
+- **M3 causal dependence** — $m_k$ exists only in histories containing its
+  lineage, which for $k \ge 1$ contains $m_{k-1}$. A history that loses a
+  lineage member does not contain the same recognized marker, even if it
+  copies the marker's written contents; losing an accepted burn loses the
+  marker that accepted it and every successor depending on that marker.
+- **M4 single counting** — each destruction represented by an accepted
+  record contributes its amount exactly once, at the first marker accepting
+  a record for it; further referring records, re-read ancestry, or a changed
+  referring record, asserted address or accumulation mechanism add nothing.
+- **M5 epoch registration** — closed epochs and recognized markers
+  correspond one-to-one and in order: epoch $k \ge 1$ closes against $m_k$
+  and binds it. No epoch closes without its recognized marker; no
+  recognized marker index is skipped or closed twice. $m_0$ names the empty
+  boundary, not a closed epoch; a recognized marker whose epoch is not yet
+  closed is pending; an accumulator the policy does not recognize closes no
+  epoch and accepts no burn.
+
+The deployment publishes its marker policy before genesis, fixed for that
+marker sequence, together with its identity and edition, the epoch-marker
+placement rule, and the cadence. No marker is obliged to accept a lineage
+burn; neither acceptance time nor eventual acceptance is specified.
+
+**Marker Burn Snapshot (`def:comparator:marker-burn-snapshot`).** Fix an
+admissible history, the published marker policy, and $m_k$ final at the
+published settlement depth under the stated finality assumptions. With
+$D(j) = \{d(r) : r \in A(j)\} \setminus \{d(r) : r \in A(j-1)\}$, the
+destructions first represented by an accepted record at $m_j$, the settled
+burn amount through $m_k$ is
+
+$$B^{(k)}(a) = \sum_{j=1}^{k} \sum_{d \in D(j),\ a(d) = a} \mu(d), \qquad B^{(0)}(a) = 0$$
+
+(`eq:comparator:marker-burn-snapshot`). The epoch-$k$ instance of the
+burn-interface map $B$ is $B^{(k)}$, and
+$B_i^{(k)} = B^{(k)}(\mathrm{key}(i))$. The increment
+$\Delta B^{(k)}(a) = B^{(k)}(a) - B^{(k-1)}(a)$ sums the destructions first
+accepted at $m_k$, which may have records in an earlier marker's lineage. A
+destruction's contributing epoch is its first acceptance under the marker
+policy, not its first appearance in the history or a reader's observation
+time. The map records gross accepted amounts; the residual balance
+subtracts consummated debits.
+
+**Marker Settlement Consistency
+(`prop:comparator:marker-settlement-consistency`).** Readers accepting the
+same recognized final marker under the same marker policy obtain one settled
+lineage view, accepted burn set, burn snapshot and increment. Each
+address's settled amount is non-decreasing along the recognized marker
+sequence (`lem:comparator:frame-stability`). Revising a boundary snapshot
+requires replacing its recognized marker, which the published finality
+assumptions exclude beyond the settlement depth. No first-following-marker
+guarantee, acceptance time, eventual acceptance, eventual marker production
+or positive standing follows. The epoch package binds every closure
+component to the same recognized final marker and published marker policy
+(`post:epoch:final-edge-set`, §11.6).
+
+**A Finality Breach Halts Layer 1
+(`rem:comparator:finality-breach-halts`).** A replacement beyond the
+published settlement depth is a failure of the realization's R4(e).
+Closed epochs, ledgers, standing and title stand: Layer 1 halts at the last
+closed epoch, rewrites nothing, and can close no further epoch under that
+marker policy (M5). Re-anchoring or following the replaced history is a
+published deployment decision outside Layer 1's guarantee
+(`case:deployment:realization-obligations-finality-breach-reanchor`,
+`case:deployment:realization-obligations-finality-breach-follow`); Layer 1
+specifies no resumption procedure. Where the epoch marker's form is
+host-only, the host's continued production of epoch markers is a liveness
+dependency of the epoch sequence.
+
 ---
 
 ## 2 The boundary predicate (feedback closure)
