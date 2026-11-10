@@ -2314,6 +2314,7 @@ impl Mutation {
         if let Ok(email) = auth::normalize_email(&input.email)
             && ratelimit::within(pool, scope::RESET_EMAIL, &email, limits.reset_email).await?
             && let Some(credentials) = store::credentials_by_email(pool, &email).await?
+            && credentials.email_verified_at.is_some()
         {
             let secret = auth::new_secret();
             store::create_password_reset(
