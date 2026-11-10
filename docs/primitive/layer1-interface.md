@@ -803,8 +803,7 @@ by record integrity, never adjudicated by title logic. No payload datum
 enters the act identifier, so identity, pointer resolution, and title
 survive every payload state. Two actors listing "the same" real-world
 referent create two Items with two ownership threads; out-of-band truth is
-deterred by accountability cost and witnessed by `frontier:item-genesis`.
-Genesis is an ordinary gated append. Title at Layer 1 is title over a
+subject to accountability cost. Genesis is an ordinary gated append. Title at Layer 1 is title over a
 **registered claim**, never custody of a referent
 (`rem:graph:item-identity-limit`).
 
