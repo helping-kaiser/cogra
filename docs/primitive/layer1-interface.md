@@ -2064,8 +2064,10 @@ view and preserves determinant sign exactly.
   `eq:graph:half-score`):** at $q = \tfrac12$ the path score is
   $\prod_{e\in p} \big(|\det \boldsymbol{\Psi}_e^{[P]}|^{1/2}\sqrt{1+\tau_e^2}\, e^{-\beta H_\tau(e)}\big) = \prod_{e\in p}\tilde{w}(e)$
   (Dijkstra-compatible), consumed by the raw-graph traversals (feed ranking,
-  the raw signed double-cover service, bridge Channel 1); standing reads the
-  relation-layer quantities, not $\tilde{w}$ paths (§11.4).
+  the raw signed double-cover service, bridge Channel 1); standing compiles
+  complete acts into cells and reads their coefficients, the wall-clamped
+  activation and the emission fractions, not $\tilde{w}$ paths
+  (§11.3–11.4).
   $q = \tfrac12$ is the canonical default; a guild may expose
   $q \ne \tfrac12$ for its own sorting at matrix-BFS cost
   (`rem:sorting:matrix-bfs`).
