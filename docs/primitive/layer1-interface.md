@@ -1745,23 +1745,40 @@ remain specified in the full paper's terminal sections only.
 
 ### 9.1 Universal principles (`subsec:nodes:universal-principles`)
 
-Six structural invariants for all edges and hyper-edges:
+Eight structural invariants for all edges and hyper-edges:
 
-1. Every edge projection inherits its parent act's logical time
+1. Every record is initiated at its author: the source of a binary edge or
+   A-leg is the act's author, and a T-leg's passive source is the act's
+   middle node, fixed by that same author. Author metadata, the
+   act-identifier author component, the frame-bound key, and the initiating
+   source endpoint are one actor by construction
+   (`prop:graph:author-source-identity`).
+2. Every edge projection inherits its parent act's logical time
    $\mathbb{T}^{\text{act}}_q$ — the Lamport summary of the order of record,
    never an input to precedence (`ax:graph:act-causality`) — and carries its
    own maturity scalar $\tau_e$.
-2. Every edge's stored sentiment is a $3\times3$ extended slice
+3. Every edge's stored sentiment is a $3\times3$ extended slice
    $\boldsymbol{\Psi}_e$ constructed via the canonical pipeline.
-3. Every edge exposes the raw path-view interface
+4. Every edge exposes the raw path-view interface
    $\boldsymbol{\Psi}_e^{[P]}$, its determinant magnitude, and its
-   determinant sign.
-4. Every hyper-edge act projects into two binary legs whose path-view
-   determinants and determinant signs multiply.
-5. Boundary damping $e^{-\beta H_\tau}$ is applied at observation, not to
+   determinant sign (`def:graph:dual-view-architecture`; the Scalar and
+   Attribution Views are terminal reads, §8.6).
+5. Every hyper-edge act decomposes into an A-leg and a T-leg for raw-graph
+   and CAN consumers, whose path-view determinants and determinant signs multiply
+   (`thm:graph:hyper-edge-reduction`); standing consumes the matched pair
+   once as one complete act, never as independently reachable legs
+   (`cor:graph:standing-act-atomicity`).
+6. Boundary damping $e^{-\beta H_\tau}$ is applied at observation, not to
    stored tensors.
-6. Every act carries a separable payload commitment; payload bytes and
-   payload state enter no Layer-1 closure formula.
+7. Every authored act carries a payload commitment; payload bytes and
+   payload state enter the canonical pipeline nowhere
+   (`prop:graph:removable-projection-invariance`). Nodes carry nothing:
+   every node-level quantity is a declared fold over incident records
+   (`ax:graph:authored-act-ontology`, `def:graph:canonical-folds`).
+8. Standing authority is assigned by the closed census of
+   `def:epoch:standing-recipient-resolution`. Positive determinant parity, a
+   grounded target, a strong raw edge weight, or a passive artifact's
+   incoming weight is never sufficient by itself to create a person-vouch.
 
 **Canonical Tensor Pipeline (`post:nodes:canonical-tensor-pipeline`).** For
 every edge (binary or hyper-edge leg): (1) role assignment — domain
