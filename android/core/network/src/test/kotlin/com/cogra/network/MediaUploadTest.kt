@@ -23,6 +23,7 @@ import com.cogra.network.repo.MediaRepositoryImpl
 import com.cogra.network.repo.PartUploader
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.testing.FakeLockCustodyStore
+import com.cogra.domain.store.TokenStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.google.common.truth.Truth.assertThat
 import java.io.File
@@ -30,6 +31,8 @@ import java.io.IOException
 import java.security.MessageDigest
 import javax.inject.Provider
 import kotlin.random.Random
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -42,6 +45,17 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+
+/** A store whose read is cut short by the caller leaving — a cancellation, not a fault. */
+private class LeavingTokenStore : TokenStore {
+    override val tokens = MutableStateFlow<AuthTokens?>(null)
+
+    override suspend fun current(): AuthTokens? = throw CancellationException("the caller left")
+
+    override suspend fun save(tokens: AuthTokens) = Unit
+
+    override suspend fun clear() = Unit
+}
 
 /**
  * The resumable upload, against a server that drops parts.
@@ -366,6 +380,48 @@ class MediaUploadTest {
         assertThat(refreshCalls).isEqualTo(1)
         assertThat(partAttempts[1]).isEqualTo(2)
         assertThat(completeCalls).isEqualTo(0)
+    }
+
+    /**
+     * A caller that leaves mid-upload cancels the token read like any other
+     * suspension. Reported as "no token" it would be told the store was
+     * unreadable — a fault that never happened — instead of simply stopping.
+     */
+    @Test
+    fun aTokenReadCutShortByCancellationStopsTheUploadRatherThanFailingIt() = runTest {
+        val file = temp.newFile("leaving.mp4").apply { writeBytes(ByteArray(10)) }
+        val uploader = PartUploader(
+            tokens = LeavingTokenStore(),
+            refresher = Provider { error("a cancelled read never reaches the refresher") },
+            endpoint = server.url("/graphql").toString(),
+            io = UnconfinedTestDispatcher(testScheduler),
+        )
+
+        val failure = runCatching { uploader.sendAll("upload", file, 10, 1) {} }.exceptionOrNull()
+
+        assertThat(failure).isInstanceOf(CancellationException::class.java)
+        assertThat(partAttempts).isEmpty()
+    }
+
+    @Test
+    fun anAbortCutShortByCancellationIsNotSwallowedAsBestEffort() = runTest {
+        val leaving = LeavingTokenStore()
+        val unused = Provider<SessionRefresher> { error("a cancelled read never reaches the refresher") }
+        val leavingClient = ApolloClient.Builder()
+            .serverUrl(server.url("/graphql").toString())
+            .addHttpInterceptor(BearerInterceptor(SessionGate(leaving, unused)))
+            .build()
+        val refresher = SessionRefresher(leaving, EndLocalSession(FakeLockCustodyStore(), leaving)) { leavingClient }
+        val aborting = MediaRepositoryImpl(
+            leavingClient,
+            AuthGuard(leaving, refresher),
+            PartUploader(leaving, unused, server.url("/graphql").toString()),
+        )
+
+        val failure = runCatching { aborting.abortUpload(SESSION) }.exceptionOrNull()
+
+        leavingClient.close()
+        assertThat(failure).isInstanceOf(CancellationException::class.java)
     }
 
     @Test

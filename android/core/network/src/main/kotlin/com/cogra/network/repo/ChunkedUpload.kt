@@ -17,6 +17,7 @@ import java.net.HttpURLConnection
 import java.net.URI
 import javax.inject.Provider
 import kotlin.random.Random
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -167,6 +168,9 @@ class PartUploader(
         // author is told the network is at fault when the fault was
         // reading our own token store.
         val access = runCatching { tokens.current()?.accessToken }
+            // The read suspends, so the caller leaving cancels it: that is
+            // the upload stopping, not a store that cannot be read.
+            .onFailure { if (it is CancellationException) throw it }
             .getOrElse { failure ->
                 CograLog.w(TAG, failure) { "could not read the access token for part $partNumber" }
                 return PartResult.NoToken

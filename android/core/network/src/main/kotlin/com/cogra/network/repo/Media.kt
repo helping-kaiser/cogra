@@ -34,6 +34,7 @@ import com.cogra.network.graphql.type.MediaUploadKind
 import com.cogra.network.graphql.type.UploadMediaInput
 import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
+import kotlinx.coroutines.CancellationException
 import okio.source
 import java.io.File
 import java.security.MessageDigest
@@ -222,7 +223,7 @@ class MediaRepositoryImpl @Inject constructor(
         // whether the store let go, and the sweep would do it anyway.
         runCatching {
             client.mutation(AbortMediaUploadMutation(uploadId = uploadId)).execute()
-        }
+        }.onFailure { if (it is CancellationException) throw it }
     }
 
     override suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?> = guard.run {
