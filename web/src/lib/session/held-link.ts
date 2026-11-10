@@ -8,6 +8,8 @@
 // throws — a private window, blocked site data — holds nothing, and the
 // reader opens the link again.
 
+import { isUuid } from "@/lib/uuid";
+
 const KEY = "cogra.heldEmailChangeLink";
 
 /** Parks a new-address link's token for the sign-in it is about to wait on. */
@@ -43,8 +45,13 @@ const ASK_KEY = "cogra.heldAskLink";
  * Parks an ask link a guest raised the gate over, so the sign-in brings the
  * ask back (VouchAsk.md:23). The id is the capability, so it stays in this
  * tab and never rides a second URL.
+ *
+ * Only a UUID is held: the id comes from the address bar and `afterSignIn`
+ * builds a route from it, so a crafted segment (`../`, a query) must not
+ * survive to become a redirect target.
  */
 export function holdAskLink(id: string): void {
+  if (!isUuid(id)) return;
   try {
     window.sessionStorage.setItem(ASK_KEY, id);
   } catch {
@@ -52,10 +59,11 @@ export function holdAskLink(id: string): void {
   }
 }
 
-/** The parked ask link, if any. */
+/** The parked ask link, if any — re-checked on the way out, since storage is not ours alone. */
 export function heldAskLink(): string | null {
   try {
-    return window.sessionStorage.getItem(ASK_KEY);
+    const held = window.sessionStorage.getItem(ASK_KEY);
+    return held !== null && isUuid(held) ? held : null;
   } catch {
     return null;
   }

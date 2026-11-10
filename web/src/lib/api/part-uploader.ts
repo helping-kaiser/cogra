@@ -34,7 +34,7 @@ const TRANSPORT = "The upload could not reach the server.";
 const REFUSED = "The server would not take that video.";
 const MALFORMED = "That file could not be read as a video.";
 
-type PartResult = "sent" | "refused" | "transient";
+type PartResult = "sent" | "refused" | "transient" | "unauthorized";
 
 export type PartUploader = {
   /**
@@ -74,6 +74,13 @@ export function createPartUploader(deps: {
   origin: string;
   /** This tab's access token, read per attempt so a refresh mid-upload lands. */
   accessToken: () => string | null;
+  /**
+   * Rotates the session once; true when the caller should send again. This is
+   * the app's own refresh — the guard's, so one single-flight domain rotates
+   * the pair — handed the token that was refused so a rotation another caller
+   * already made is not spent twice (`session/refresher.ts`).
+   */
+  refresh: (staleAccess: string | null) => Promise<boolean>;
   /** Injected so the suites drive the backoff on a virtual clock. */
   sleep?: (ms: number) => Promise<void>;
   /** Injected so a test can pin the schedule. */
@@ -112,8 +119,8 @@ export function createPartUploader(deps: {
     uploadId: string,
     partNumber: number,
     chunk: Blob,
+    token: string | null,
   ): Promise<PartResult> {
-    const token = deps.accessToken();
     let response: Response;
     try {
       response = await doFetch(partUrl(uploadId, partNumber), {
@@ -130,10 +137,7 @@ export function createPartUploader(deps: {
       return "transient";
     }
     if (response.ok) return "sent";
-    // A stale access token is worth one more try: the guard refreshes around
-    // the calls that bracket this one, so the next attempt reads a fresh
-    // header without this loop knowing how.
-    if (response.status === UNAUTHORIZED) return "transient";
+    if (response.status === UNAUTHORIZED) return "unauthorized";
     if (response.status < SERVER_ERROR) return "refused";
     return "transient";
   }
@@ -145,13 +149,29 @@ export function createPartUploader(deps: {
     chunk: Blob,
   ): Promise<PartsFailure | null> {
     let attempt = 1;
+    // One refresh per part. The guard refreshes around begin and complete, but
+    // the parts of a long upload outlive the access token between them, and a
+    // 401 that survives a refresh is the server saying no rather than a stale
+    // header — retrying it would only be slower.
+    let refreshed = false;
+    // The send right after a refresh is the same attempt on a new token, not a
+    // retry against a failing link, so it neither waits nor spends the budget.
+    let afterRefresh = false;
     for (;;) {
-      const wait = delayMs(attempt, random());
+      const wait = afterRefresh ? 0 : delayMs(attempt, random());
+      afterRefresh = false;
       if (wait > 0) await sleep(wait);
 
-      const result = await attemptPart(uploadId, partNumber, chunk);
+      const token = deps.accessToken();
+      const result = await attemptPart(uploadId, partNumber, chunk, token);
       if (result === "sent") return null;
       if (result === "refused") return REFUSED;
+      if (result === "unauthorized") {
+        if (refreshed || !(await deps.refresh(token))) return REFUSED;
+        refreshed = true;
+        afterRefresh = true;
+        continue;
+      }
       if (!retryable(attempt)) return TRANSPORT;
       attempt += 1;
     }
