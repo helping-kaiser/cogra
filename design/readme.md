@@ -10485,8 +10485,10 @@ jakob after his hand test.
   stands, blessed; a `(0, 0)` pick over the standing an empty sign left
   still asks the walk-back — that record stands, and severance is a
   `(0, 0)` landing over anything standing.
-- **Every new string above is merged under the autonomy order, review
-  pending.** Backlog 147 banks the type sites round 20 left.
+- **Every new string above was merged under the autonomy order and is
+  blessed (jakob 2026-11-10)**, but the words of Cancel while Set signs
+  (`Signing…` under the face after a cancel) and their law, whose review
+  stays pending. Backlog 147 banks the type sites round 20 left.
 - **The gate**: edges hold at **2127**, flows at **227**, the registry
   at **100 screens**; no board added — two boards gain a chip.
 
@@ -10494,7 +10496,7 @@ jakob after his hand test.
 
 Seam 245's asks 9–13, under the same autonomy order: built, merged,
 reviewed by jakob after his hand test. Every new string is in copy-voice,
-marked *merged under the autonomy order, review pending*.
+marked *blessed (jakob 2026-11-10)*.
 
 - **The profile figures stand** (Q35 closed in docs/open-questions.md,
   jakob's confirmation pending): the header counts records, never a
@@ -10580,7 +10582,7 @@ from the tree and the bar's Explore slot opens `Explore`.
 
 Seam 248's undrawn states, under the same autonomy order: built, merged,
 reviewed by jakob after his hand test. Every new string is in its board's
-docblock and sidecar, *merged under the autonomy order, review pending*.
+docblock and sidecar, *blessed (jakob 2026-11-10)*.
 
 - **The thread is named.** `CommentsThreadSheet` registers as
   `postDetail.threadSheet` — its `title` and one `commentCard` per top-level
@@ -10636,8 +10638,7 @@ docblock and sidecar, *merged under the autonomy order, review pending*.
 
 Seam 248's wordings, sidecar confirms and contradictions, under the same
 autonomy order: built, merged, reviewed by jakob after his hand test.
-Every new string is in copy-voice, *merged under the autonomy order,
-review pending*.
+Every new string is in copy-voice, *blessed (jakob 2026-11-10)*.
 
 - **The words.** The kept picks' seal commits `Sign the picks` — its
   batch can hold a feeling; `A post` · `A comment` · `A person` name a
@@ -10680,8 +10681,7 @@ review pending*.
 
 Seam 250's two surfaces the web built before any round registered them,
 and the gaps their lanes found, under the same autonomy order. Every new
-string is in copy-voice, *merged under the autonomy order, review
-pending*.
+string is in copy-voice, *blessed (jakob 2026-11-10)*.
 
 - **The ids the web minted are the registry's**, with three departures,
   each the join law's: the face's row line and its Retry are named
@@ -10722,8 +10722,8 @@ pending*.
 
 Seam 252's registrations, rulings, geometry and undrawn states, under the
 same autonomy order: built, merged, reviewed by jakob after his hand test.
-Every new string is in its board's docblock and copy-voice, *merged under
-the autonomy order, review pending*.
+Every new string is in its board's docblock and copy-voice, *blessed
+(jakob 2026-11-10)*.
 
 - **A kept pick stands on every host.** The stance control's `pending` line
   registers wherever the control does: a `pick` chip (`none` · `key` ·
