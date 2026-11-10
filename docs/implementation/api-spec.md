@@ -3351,6 +3351,19 @@ These bind every mutation below.
   budget** — one unit per entry that funds a fresh address, none for
   an applicant already funded — in the same all-or-nothing charge,
   with the same refusal.
+- **A list is bounded by the longest batch.** `submitProposals`,
+  `approveActs` and `approveApplicants` carry at most as many
+  entries as one prepare can stage under the signing budget. A
+  batch is spent whole from its class's window and the daily
+  backstop, so the longest are the netting batches — a severance's
+  counter-records (the stance window), a reference withdrawal's
+  (the claim window) — and an approval batch (the approval
+  window); every other prepare stages at most its minting record
+  with ten tags and ten citations. A longer list is refused whole,
+  `BAD_INPUT` on the list field, before any entry is read. An
+  application named twice in one approval batch is one vouch,
+  charged once; named twice with different stances, the repeat is
+  refused `BAD_INPUT` at its entry.
 - **The viewer is the actor; `actAs` names a Collective acting
   through them.** No mutation takes an author argument — the
   authenticated viewer in the execution context initiates every

@@ -669,3 +669,20 @@ async fn a_repeated_application_is_charged_once(pool: PgPool) {
     let writes = accepted(&data, "approveApplicants");
     assert_eq!(writes.as_array().expect("writes").len(), 1);
 }
+
+/// The longest batch is the widest netting or approval window, never
+/// below a full creation batch and never above the daily backstop.
+///
+/// The longest batch one prepare can stage follows the signing budget's windows.
+/// ´claim:ratelimit:the-longest-batch-follows-the-budget´
+#[test]
+fn the_longest_batch_follows_the_budget() {
+    assert_eq!(SigningBudget::default().longest_batch(), 1000);
+    let mut tight = SigningBudget::UNLIMITED;
+    tight.stance = window(2);
+    tight.claim = window(2);
+    tight.approval = window(2);
+    assert_eq!(tight.longest_batch(), 21);
+    tight.any = window(5);
+    assert_eq!(tight.longest_batch(), 5);
+}

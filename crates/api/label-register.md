@@ -944,6 +944,7 @@ label.
 | `test:integration:the-listing-pages-by-keyset-in-landing-order`                                                | the_listing_pages_by_keyset_in_landing_order                                                |
 | `test:integration:the-live-lock-cap-answers-rate-limited`                                                      | the_live_lock_cap_answers_rate_limited                                                      |
 | `test:integration:the-live-lock-cap-holds-under-concurrent-issues`                                             | the_live_lock_cap_holds_under_concurrent_issues                                             |
+| `test:integration:the-longest-batch-follows-the-budget`                                                        | the_longest_batch_follows_the_budget                                                        |
 | `test:integration:the-marker-names-the-earliest-post-carrying-any-named-media`                                 | the_marker_names_the_earliest_post_carrying_any_named_media                                 |
 | `test:integration:the-marker-never-answers-with-another-authors-placement`                                     | the_marker_never_answers_with_another_authors_placement                                     |
 | `test:integration:the-new-side-token-is-scoped-to-its-account`                                                 | the_new_side_token_is_scoped_to_its_account                                                 |
