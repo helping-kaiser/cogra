@@ -157,10 +157,16 @@ picks with their review and seal.
 **Slice 3.1 is built on both clients:** the bell and the
 notifications list, with no push channel.
 
-**Slice 8's erasure half is built on both clients.** Account
-deletion with its grace period, and `removeContent` for a post and
-a comment, with the removal marks and tombstones on every surface
-that draws them.
+**Slice 8's erasure half is built on both clients**, short of the
+deleted account's own read. Account deletion's request, confirmation,
+7-day grace and cancel, and `removeContent` for a post and a comment,
+with the removal marks and tombstones on every surface that draws
+them. The backend executes a confirmed deletion at its deadline —
+the identity level always, the content sweep when opted into
+([erasure.md §2](../instances/erasure.md#2-account-deletion-two-redaction-levels)).
+The husk's wire shape — `User.removal` and its fields served
+`REDACTED` — is not built: an executed account still serves its
+stored `redacted-user-{uuid}` handle.
 
 **The application registry and the invite lifecycle are built on
 both clients.** The registry: What's new, Update now, and the
