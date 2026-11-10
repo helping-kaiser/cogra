@@ -1317,7 +1317,12 @@ recognition quantity.
    the hash of the canonical structural body plus both pre-digests, and the
    actor signs it. The pre-commitment exists before host salting, binds the
    exact proposal, cannot be transplanted to another act identifier,
-   carries no host order, and grants no inclusion.
+   carries no host order, and grants no inclusion. The nonce's entropy
+   custody is the actor's when it is client-generated; the host receives
+   it at proposal, validates its checkable part at append (format, length,
+   freshness, and non-reuse across the author's acts), and custodies and
+   removes it with the payload (`subsec:deployment:concealment-entropy`,
+   `rem:graph:erasure-floor`).
 2. **Verified act (`def:graph:verified-act`).** The host verifies the actor
    signature, act-identifier uniqueness, canonical formation, hyper-edge
    A/T consistency, public protocol references, carriage and dependency
@@ -1382,7 +1387,12 @@ removable-projection binding; (vii) ordering accountability. **The
 specification prescribes properties, not a cryptographic realization:
 signature schemes, commitment schemes, hash functions, salts, serialization
 formats, key management, proof encodings, and algorithm migration are
-deployment concerns.** Any implementation satisfying the postulate is
+deployment concerns.** The handshake constructions above are one reference
+realization: encode is the deployment's declared canonical serialization
+(one encoding per value, published and versioned), $H$ its declared
+collision-resistant hash, and Sign its declared signature scheme; the
+domain-separation tags, nonce and salt formats, and salt entropy floor are
+the deployment's. Any implementation satisfying the postulate is
 compliant.
 
 ### 8.3 Temporal structure
@@ -1491,18 +1501,30 @@ $H_\tau = 0$ at $\tau_e = 0$; applied once at the thermodynamic boundary.
 
 Fields the structural record carries, per act: author binding; the act
 identifier; family; endpoints/incidence per projection with role; the
-authoritative act time; the authored parameters $p_d, p_i$ and domain label
-$D$ with mask $\mathbf{a}_D$ and routing tier per projection; derived
-parity $\epsilon(e)$ per projection; public protocol references
-(settlement references, license qualifiers); the **payload commitment**
-and the **dependency commitment**; handshake signatures and the approval
-witness. The record is sufficient to recompute the sentiment slice,
-path-view determinant, determinant sign, damped weight, and both
-commitment verifications (`subsec:deployment:sufficiency`).
+finalization epoch and act time $\mathbb{T}^{\text{act}}_q$; the authored
+parameters $p_d, p_i$ and domain label $D$ with mask $\mathbf{a}_D$ and
+routing tier per projection; derived parity $\epsilon(e)$ per projection;
+public protocol references (settlement references, license qualifiers) and
+asserted causal parents; the **payload commitment** and the **dependency
+commitment**; handshake signatures and the approval witness. The record is
+sufficient to recompute the sentiment slice, path-view determinant,
+determinant sign, damped weight, and both commitment verifications
+(`subsec:deployment:sufficiency`).
+
+**Act envelope (`def:graph:act-envelope`).** The abstract published record
+of an accepted act has exactly these fields: act identifier, author, and
+family; structural body; public protocol references and causal parents;
+payload and dependency commitments; admission handshake and approval
+witness; finalization epoch and act time. The payload bytes, salts, and
+dependency opening travel beside the envelope and are not part of it. Its
+serialization, carriage, and transport are deployment concerns.
 
 **Act payload projection (`def:graph:act-payload-projection`).** **Every
 authored act carries a payload projection**: a byte string the network
-never reads, bounded **per act** by $M_{\text{payload}}$. For a hyper-edge
+never reads, bounded **per act** by
+$\mathrm{len}(\mathrm{encode}(Y_q)) \le M_{\text{payload}}$, where encode
+is the deployment's declared payload encoding, so $M_{\text{payload}}$ is
+stated in that encoding's bytes. For a hyper-edge
 act the payload may be a structured, role-addressed object
 $(Y^{\text{act}}, Y^A, Y^T)$ — but this is *one* act payload under one
 commitment and one lifecycle; the role labels are schema fields, never
