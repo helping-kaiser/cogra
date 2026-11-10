@@ -40,3 +40,13 @@ private const val ROUND_TRIP_DIGITS = 17
 /** Whether the decimals these doubles denote sum to exactly zero. */
 fun netsToZero(values: Iterable<Double>): Boolean =
     values.fold(BigDecimal.ZERO) { sum, x -> sum.add(decimalOf(x)) }.signum() == 0
+
+/**
+ * The decimals these doubles denote, summed exactly and rounded once to the
+ * nearest double (the web's `exactSum`). `Double.parseDouble` is specified to
+ * round to nearest, so the one rounding is the reference's own.
+ */
+fun exactSum(values: Iterable<Double>): Double {
+    val sum = values.fold(BigDecimal.ZERO) { acc, x -> acc.add(decimalOf(x)) }
+    return if (sum.signum() == 0) 0.0 else sum.toString().toDouble()
+}

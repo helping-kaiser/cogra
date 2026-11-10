@@ -918,13 +918,15 @@ async fn a_verified_application_stays_approvable_past_the_links_expiry(pool: PgP
 }
 
 /// A waiting application holds its single-use link's slot — applications
-/// carry no timer, so nothing about waiting frees it. The reaper deleting
-/// the never-verified account, application and all, is what does.
+/// carry no timer, so nothing about waiting frees it — and the reaper
+/// deleting the never-verified account, application and all, does not
+/// free it either: the account used the link up for good, and the way
+/// back is a new link (auth.md "The unverified carve-out").
 ///
-/// A single-use slot is held by a waiting application and freed only when the reaper deletes its never-verified account.
-/// ´claim:onboarding:a-waiting-application-holds-its-slot-until-reaped´
+/// A single-use slot is used for good at registration, through waiting and through the reaper's sweep alike.
+/// ´claim:onboarding:a-single-use-slot-outlives-the-reaper´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_waiting_application_holds_a_single_use_slot_until_reaped(pool: PgPool) {
+async fn a_single_use_slot_outlives_the_reaper(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let inviter = rig.inviter("inviter").await;
     let link = rig.link(inviter, true).await;
@@ -948,9 +950,11 @@ async fn a_waiting_application_holds_a_single_use_slot_until_reaped(pool: PgPool
     .await
     .expect("reaps");
     assert_eq!(swept, 1);
-    rig.register(rig.form(link, "second", "second@example.com"))
-        .await
-        .expect("the reaped slot is free again");
+    assert!(matches!(
+        rig.register(rig.form(link, "second", "second@example.com"))
+            .await,
+        Err(OnboardingError::InviteUnusable)
+    ));
 }
 
 /// With two accounts past the bound, only the never-verified one is dead:

@@ -10,14 +10,14 @@
 // Publish records, the Opinion records toward the person, the ones they gave
 // toward people. They stand beside the avatar under the name while they fit
 // its column, and move under the avatar-and-name block where they do not
-// (the master's two arrangements). They are not yet the door to the opinions
-// page the master makes them: that page is not built on android, so they are
-// drawn inert. The own avatar's change badge is not here yet: the
+// (the master's two arrangements), and the whole line is one door to the
+// opinions page (`onCounts`). The own avatar's change badge is not here yet: the
 // crop-and-seal lives inside the edit flow only, handed to the impl loop.
 
 package com.cogra.feature.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -38,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +48,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.core.designsystem.v2.media.RemovalReason
 import com.cogra.core.designsystem.v2.media.RemovedPlaceholder
@@ -75,6 +78,8 @@ internal fun ProfileHeader(
     figures: ProfileFigures? = null,
     /** One's own profile: the figures read `Opinions on you` · `Opinions by you`. */
     own: Boolean = false,
+    /** The figures' one door, the opinions page (`onCounts`); null draws them inert. */
+    onFigures: (() -> Unit)? = null,
 ) {
     Column(
         modifier = Modifier
@@ -85,7 +90,8 @@ internal fun ProfileHeader(
             .padding(top = Space.x3, bottom = Space.x1),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        Identity(profile, showHandle, node, figures?.let { profileFigures(it, own) }.orEmpty())
+        val door = onFigures?.let { FiguresDoor(figuresPurpose(profile, own), it) }
+        Identity(profile, showHandle, node, figures?.let { profileFigures(it, own) }.orEmpty(), door)
         if (profile.deleted) {
             // THE MARK STANDS IN THE BIO'S PLACE — a space kept, not lost
             // (ProfileDeleted.md:11). Its moment is not on the wire yet.
@@ -107,6 +113,21 @@ internal fun ProfileHeader(
 
 /** One figure as the header draws it: the number over its label, and the node they wear. */
 private class Figure(val value: Int, val label: String, val node: String)
+
+/** The figures as one tap target: what it opens, and the purpose its name ends on. */
+private class FiguresDoor(val purpose: String, val onOpen: () -> Unit)
+
+/**
+ * The door's purpose, after the figures' own words (copy-voice.md, *The
+ * profile's figures, spoken*): one's own, a deleted account's, or anyone's by
+ * handle.
+ */
+@Composable
+private fun figuresPurpose(profile: ProfileView, own: Boolean): String = when {
+    own -> stringResource(R.string.profile_figures_door_own)
+    profile.deleted -> stringResource(R.string.profile_figures_door_deleted)
+    else -> stringResource(R.string.profile_figures_door_other, profile.handle)
+}
 
 /** The figures the header was served, in the master's order: Posts, on, by. */
 @Composable
@@ -134,19 +155,25 @@ private fun profileFigures(figures: ProfileFigures, own: Boolean): List<Figure> 
  * labels at their rendered size, so it moves with the reader's text size.
  */
 @Composable
-private fun Identity(profile: ProfileView, showHandle: Boolean, node: DataNode, figures: List<Figure>) {
+private fun Identity(
+    profile: ProfileView,
+    showHandle: Boolean,
+    node: DataNode,
+    figures: List<Figure>,
+    door: FiguresDoor?,
+) {
     if (figures.isEmpty()) {
-        AvatarAndName(profile, showHandle, node, figures = null)
+        AvatarAndName(profile, showHandle, node, figures = null, door = null)
         return
     }
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val fits = figuresWidth(figures) <= maxWidth - AVATAR - Space.x4
         if (fits) {
-            AvatarAndName(profile, showHandle, node, figures)
+            AvatarAndName(profile, showHandle, node, figures, door)
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(Space.x3)) {
-                AvatarAndName(profile, showHandle, node, figures = null, centred = true)
-                FiguresRow(figures, node)
+                AvatarAndName(profile, showHandle, node, figures = null, door = null, centred = true)
+                FiguresRow(figures, node, door)
             }
         }
     }
@@ -171,11 +198,29 @@ private fun figuresWidth(figures: List<Figure>): Dp {
 @Composable
 private fun figureLabelStyle() = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium)
 
-/** The figures' one line: each a number over its label, 20 apart, never wrapping. */
+/**
+ * The figures' one line: each a number over its label, 20 apart, never
+ * wrapping. Given a [door] the whole line is ONE tap target toward the
+ * opinions page (`onCounts`), named by what the eye reads and then its purpose
+ * — `5 Posts, 9 Opinions on you, 4 Opinions by you, your opinions, both
+ * directions` (ProfileHeader.jsx `figuresReading`); its target answers at
+ * 48dp over the line's drawn height (`cg-hit`).
+ */
 @Composable
-private fun FiguresRow(figures: List<Figure>, node: DataNode, modifier: Modifier = Modifier) {
+private fun FiguresRow(figures: List<Figure>, node: DataNode, door: FiguresDoor?, modifier: Modifier = Modifier) {
     val cell = node / "figures"
-    Row(horizontalArrangement = Arrangement.spacedBy(FIGURES_GAP), modifier = modifier.dataNode(cell)) {
+    val opened = door?.let {
+        val reading = figures.joinToString(", ") { figure -> "${figure.value} ${figure.label}" }
+        val name = "$reading, ${it.purpose}"
+        Modifier.hitTarget(
+            interactive = Modifier
+                .clickable(role = Role.Button, onClick = it.onOpen)
+                .semantics { contentDescription = name },
+            drawnHeight = FIGURES_INK,
+        )
+    } ?: Modifier
+    // The node names the drawn line, outside the grown target (AffordanceRow's order).
+    Row(horizontalArrangement = Arrangement.spacedBy(FIGURES_GAP), modifier = modifier.dataNode(cell).then(opened)) {
         figures.forEach { figure ->
             val own = cell / figure.node
             // The number and the label share the figure's width (`display: flex;
@@ -211,6 +256,7 @@ private fun AvatarAndName(
     showHandle: Boolean,
     node: DataNode,
     figures: List<Figure>?,
+    door: FiguresDoor?,
     centred: Boolean = false,
 ) {
     val deleted = profile.deleted
@@ -260,7 +306,7 @@ private fun AvatarAndName(
                 }
             }
             // The figures 6 under the name (`marginTop: 6`).
-            if (figures != null) FiguresRow(figures, node, Modifier.padding(top = FIGURES_TOP))
+            if (figures != null) FiguresRow(figures, node, door, Modifier.padding(top = FIGURES_TOP))
         }
     }
 }
@@ -293,3 +339,6 @@ private val FIGURES_TOP = 6.dp
 
 /** Between two figures: `--space-5`. */
 private val FIGURES_GAP = 20.dp
+
+/** The line's drawn height: a `title-medium` number (24) over a `label-small` label (16). */
+private val FIGURES_INK = 40.dp
