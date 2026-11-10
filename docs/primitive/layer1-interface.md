@@ -2586,9 +2586,9 @@ published per the formula-completeness invariant
 (App. I, `subsec:deployment:completeness`); see
 [platform-guidelines.md §5](../instances/platform-guidelines.md#5-license-and-provenance-obligations).
 A more demanding pair still acts indirectly: it lowers adoption, hence
-betweenness centrality $S_C$, hence a creator's guild reward $R_C$ —
-partially offsetting the standing amplifier
-(`rem:content:license-guild-interaction`, a terminal reward-economics
+betweenness centrality $S_C$, hence a creator's guild reward $R_C$, while
+$r_C$ and $\alpha_C$ partially offset it via the standing amplifier
+$(1+\hat{\alpha}_C)$ (`rem:content:license-guild-interaction`, a terminal reward-economics
 consequence, not a Layer-1 formula).
 
 **Deferred by the spec:** what constitutes a valid public use record at a
