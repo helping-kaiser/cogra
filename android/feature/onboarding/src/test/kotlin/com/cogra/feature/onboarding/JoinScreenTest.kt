@@ -162,6 +162,8 @@ class JoinScreenTest {
         compose.onNode(hasText("Creating account…"), useUnmergedTree = true).assertExists()
         compose.mainClock.advanceTimeBy(5_000)
         compose.onNode(hasText("Creating account…"), useUnmergedTree = true).assertExists()
+        // The press scrolls the commit into view, an animation the paused clock would never finish.
+        compose.mainClock.autoAdvance = true
         compose.onNodeWithTag("join.commit.action").assertIsEnabled().performScrollTo().performClick()
         assertThat(presses).isEqualTo(0)
         compose.onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
