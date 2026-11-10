@@ -474,7 +474,7 @@ impl std::fmt::Display for Ratio {
     }
 }
 
-/// Why the epoch closed (§11.6, `post:epoch:final-act-sequence-closure`):
+/// Why the epoch closed (§11.6, "Final-set closure"):
 /// its write set filled the target act budget, or the epoch's duration ran
 /// out first.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -526,7 +526,7 @@ pub struct LedgerLine {
     pub residual_balance_micro: Option<i64>,
 }
 
-/// One step of the wall controller (§11.8, `def:epoch:wall-controller`):
+/// One step of the wall controller (§11.8, "Wall controller"):
 /// its inputs, its proposal and the led wall it delivers, with that wall's
 /// burn image — the price the next epoch charges.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -557,7 +557,7 @@ pub struct WallStep {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct EpochClosure {
     pub cause: ClosureCause,
-    /// The dependent-set partition of 𝒬_k (`def:graph:dependent-act-set`),
+    /// The dependent-set partition of 𝒬_k (§8.2, "Dependent act set"),
     /// each block as the positions of its acts in ascending order, blocks
     /// ordered by their first position.
     pub dependent_sets: Vec<Vec<i64>>,

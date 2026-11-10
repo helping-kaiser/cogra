@@ -101,7 +101,7 @@ pub(crate) struct Candidate {
     pub parents: Vec<String>,
 }
 
-/// An act's causal parents (`def:graph:act-causal-parents`): its asserted
+/// An act's causal parents (layer1-interface.md §8.2): its asserted
 /// parents and, for the settlement family, the act it settles — the
 /// settles-pointer is that family's instance of the field. Declared
 /// dependencies constrain placement but are not parents.
@@ -114,7 +114,7 @@ pub(crate) fn causal_parents(
     parents
 }
 
-/// The dependent-set partition of one epoch (`def:graph:dependent-act-set`):
+/// The dependent-set partition of one epoch (layer1-interface.md §8.2):
 /// each act's principal closure is the act with its causal ancestors outside
 /// the history finalized before the epoch, and closures that intersect join
 /// one block. Two closures intersect exactly when the acts are linked
@@ -201,7 +201,7 @@ pub(crate) struct Selection {
 /// incident endpoints' frontiers and its prerequisites' times.
 ///
 /// The published order is the host's choice (layer1-interface.md §8.3,
-/// `rem:graph:host-ordering-discretion`): this host takes the stable sort
+/// "Host ordering discretion"): this host takes the stable sort
 /// of the selection by those Lamport times, and positions number it from 1
 /// to |𝒬_k|. That sequence is the order of record; the act time each record
 /// carries is the §8.3 recurrence recomputed along it, which the selection's
@@ -363,7 +363,7 @@ pub(crate) fn select_and_order(
 /// earlier in this epoch, or anywhere in accepted history, every act of
 /// which sits in an earlier epoch. Precedence is read off membership and
 /// position, never off a time comparison (layer1-interface.md §8.3,
-/// `cond:graph:authoritative-order-dependency-placement`).
+/// "Authoritative act order").
 ///
 /// The selection loop guarantees it; this is the check that keeps a
 /// violation from becoming durable, so it runs before the transaction
@@ -1460,9 +1460,6 @@ mod tests {
         /// reproduces every published act time: one more than the maximum
         /// over the act's incident endpoints' frontiers and its finalized
         /// predecessors' times. Every prerequisite sits at a lower key.
-        ///
-        /// The published act times are the §8.3 recurrence recomputed along the published positions.
-        /// ´claim:close:act-times-are-the-recurrence-along-the-positions´
         #[test]
         fn the_published_act_times_are_the_recurrence_along_the_positions(
             shapes in shapes(),

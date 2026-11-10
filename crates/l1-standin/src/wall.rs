@@ -1,9 +1,9 @@
 //! ´mod:module:wall´
 //!
 //! The price: the canonical interim wall controller and the deployment
-//! declaration it runs under (layer1-interface.md §11.8,
-//! `def:epoch:wall-controller`, `def:epoch:canonical-interim-wall-controller`,
-//! `def:epoch:safety-wall-floor`).
+//! declaration it runs under (layer1-interface.md §11.8: "Wall
+//! controller", "Canonical interim wall controller", "Structural wall
+//! floor").
 //!
 //! θ is not configured. Every close charges the wall in force — the wall the
 //! previous close delivered, or the declared initialization before the
@@ -63,9 +63,9 @@ const fn ratio(numerator: i64, denominator: i64) -> Ratio {
 
 /// The reference wall q(1) on the grid: 50_186/100_000.
 ///
-/// Derivation (layer1-interface.md §11.8 and its spec source,
-/// `06_epoch.tex` `def:epoch:canonical-interim-wall-controller`;
-/// `D1_dynamics.tex` `def:dynamics:tilt-gain-coordinates`):
+/// Derivation (layer1-interface.md §11.8, and its spec source: the
+/// Canonical Interim Wall Controller of the epoch chapter, the Tilt Gain
+/// Coordinates of the dynamics appendix):
 /// q(1) = G⁻¹(1/(2·m_θ·S_char·1)) = G⁻¹(16/75), with G = λ_vch the deployed
 /// reduced-standing gain, λ_vch(x) = d/dx log g_vch(x) = (1 − p)²·γ·K(p),
 /// p = x/(1 + x), γ = 1/4, K(p) = d/dp log Q(p),
@@ -102,7 +102,7 @@ pub struct Controller {
 }
 
 /// The deployment's fixed public declaration: what layer1-interface.md
-/// §11.8 and §13.1 (`cond:deployment:wall-calibration`) have the deployment
+/// §11.8 and §13.1 (the wall-calibration condition) have the deployment
 /// publish once, beside ν and before its first epoch, rather than per
 /// package — and the constants the stand-in's two simplifications fix.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -113,7 +113,7 @@ pub struct Declaration {
     /// ρ_θ,min — the structural floor, the rational 3/37
     /// (`const.epoch.wall_floor_rational`): the representation is exact
     /// rational, which is the selection criterion's case for 3/37
-    /// (`rem:epoch:floor-is-a-landmark`).
+    /// (§11.8, "The selection criterion").
     pub floor: Ratio,
     /// The grid walls are published on (1/`wall_grid` of the reduced axis).
     pub wall_grid: i64,
@@ -131,7 +131,7 @@ pub struct Declaration {
     pub marker_identity: &'static str,
     pub marker_edition: i32,
     /// The declared payload encoding M_payload is stated in
-    /// (`def:graph:act-payload-projection`): the identity over the
+    /// (layer1-interface.md §8.4): the identity over the
     /// proposal's payload bytes, which already are the encoded envelope, so
     /// the bound counts those bytes as they arrive.
     pub payload_encoding: &'static str,
@@ -446,9 +446,6 @@ mod tests {
         /// more than min(a, r·ρ) (X3), holds inside the deadband (X4),
         /// moves toward the proposal without passing it outside it, and
         /// holds where the proposal is the wall (sgn(0) = 0).
-        ///
-        /// The step is bounded by min(a, r·ρ), holds in the deadband, never overshoots and never crosses the floor.
-        /// ´claim:wall:the-step-keeps-its-premises´
         #[test]
         fn the_step_keeps_its_premises(wall in grid_wall(), proposal in floored_proposal()) {
             let c = &DECLARATION.controller;
@@ -471,9 +468,6 @@ mod tests {
 
         /// At zero width the proposal is the floor whatever the wall, and
         /// the delivered wall still obeys the step cap and the floor.
-        ///
-        /// Zero width proposes the floor, and the step from any wall stays above it.
-        /// ´claim:wall:zero-width-proposes-the-floor´
         #[test]
         fn zero_width_proposes_the_floor(wall in grid_wall()) {
             let step = DECLARATION.step(wall, Ratio::ZERO, Ratio::ZERO).expect("a step");
