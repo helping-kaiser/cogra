@@ -737,59 +737,83 @@ Stated independently of any mechanism that achieves them.
   non-decrease of the committed quantity $B_i$ is a property of the burn
   primitive the network reads, not a network primitive: what a burn
   destroys is priced at the instant it occurs and its record is never
-  removed (R8), so successive pinned values at an address cannot fall
+  removed (R8), so successive pinned amounts at an address cannot fall
   (R4(b)); the network's frame stability at its own sampling depth follows
   (`lem:comparator:frame-stability`).
 - **Authoritative Ordering (`post:introduction:authoritative-act-order`).**
   The host chooses a total **authoritative order** over the accepted
-  authored acts of each epoch and assigns each act a logical time by its
-  position (`def:graph:authoritative-act-order`). The order is semantically
-  authoritative: it is not forced by incidence, but it must place every
-  declared dependency earlier, and it is published so that any two
-  participants holding the same ordered sequence $\mathcal{Q}_k$ reproduce
-  the same result. *Agreement on $\mathcal{Q}_k$ — not merely on the edge
-  set — is required.* (Supersedes the pre-Edition-4 ordering-consistency
-  postulate: edges no longer own Lamport times, and no order-independence
-  is claimed.)
+  authored acts of each epoch. The order of record is the lexicographic
+  pair of epoch and position; each act's logical time summarizes replay of
+  that order (`def:graph:authoritative-act-order`). The order is
+  semantically authoritative: it is not forced by incidence, but it must
+  place every asserted parent and declared dependency earlier, and it is
+  published so that any two participants holding the same ordered sequence
+  $\mathcal{Q}_k$ and the remaining shared epoch inputs reproduce the same
+  result. *Agreement on $\mathcal{Q}_k$ is required for formation and
+  order-sensitive raw quantities.* The settled burn snapshot is derived from
+  the recognized marker's accepted set under the deployment's published
+  marker policy (§1.2), bound to the same package
+  (`post:epoch:final-edge-set`); act order alone does not determine
+  acceptance or that snapshot.
 - **Epoch Edge-Set Provision (`post:introduction:epoch-edge-set`).** At each
   epoch boundary $k$ the operator provides a finite edge set
   $E_k \subseteq E$ that is causally closed
   ($e' \in E_k \wedge e \prec e' \Rightarrow e \in E_k$) and monotone
   ($E_{k-1} \subseteq E_k$). $E_k$ is the sole topological input to the
   epoch-$k$ computation; the mechanism by which the operator forms it is
-  out of scope. The settled sampling depth that makes frame stability hold
-  is a property of $E_k$, not of any global clock.
+  out of scope. The settlement margin applies to the recognized marker, its
+  lineage and fixed interpretation (`post:epoch:final-edge-set`); it does
+  not choose edge membership or require a global clock.
 - **Mechanism-agnostic (`rem:introduction:mechanism-agnostic`).** Any
   mechanism — a strict append log, an ordered cluster-closure write, a
   frontier-finality gadget — delivering a monotone $E_k$ together with an
-  authoritative order $\mathcal{Q}_k$ on which honest participants agree is
-  compliant. Agreement on the *ordered sequence* $\mathcal{Q}_k$, not
-  merely on the set $E_k$, is what the downstream computation consumes
-  (`lem:graph:ordered-replay-determinism`).
+  authoritative order $\mathcal{Q}_k$ and the shared settled epoch package
+  of `post:epoch:final-edge-set` on which honest participants agree is
+  compliant. Downstream computation consumes that complete package
+  (`lem:graph:ordered-replay-determinism`,
+  `prop:epoch:epoch-replay-determinism`).
+- **Epoch history (`rem:epoch:epoch-history-is-the-marker-sequence`).** The
+  epoch history is the recognized epoch-marker sequence of the admissible
+  history, read past the settlement depth, with the empty initial boundary
+  and pending markers distinguished by M5 (§1.2). Epochs number
+  certificates from 1, and positions number acts within one certificate
+  from 1; neither reads the realization's own order, and the unsettled part
+  of its history is never read. A replacement beyond the published
+  settlement depth halts Layer 1 at the last closed epoch
+  (`rem:comparator:finality-breach-halts`, §1.2).
 - **Host Contract (`post:network:host-contract`).** The host operates the
   boundary and publishes the results; its entire authority is what it
   publishes each boundary. One self-contained final-state package: **(i)
   accepted records** — the final write set $\mathcal{Q}_k$, final edge set
-  $E_k$, dependent-set partition, realized size, closure cause, attested
-  boundary timestamp; **(ii) final ledger** — settled boundary burn state,
-  final residual balances, final action counts, accepted-act increments,
-  debit vintages; **(iii) act folding** — complete acts, per-author folds,
-  inviter revocation, cell coefficients, recipient resolution, the base
-  allocation matrix; **(iv) the transport** — domain weights and profiles,
-  the tilt shape, the depth mass, source emission fractions, and the hop
-  allocation matrices they assemble; **(v) the accepted rung** — the
-  certificate evaluated at each attempted rung of the published grid, its
-  failure mode, the accepted $t_k$, the declared hull box, and the
+  $E_k$, dependent-set partition formed by merging overlapping principal
+  closures against the history finalized before the epoch, realized size,
+  closure cause, attested boundary timestamp; **(ii) final ledger** —
+  settled boundary burn state, final residual balances, final action
+  counts, accepted-act increments, debit vintages; **(iii) act folding** —
+  complete acts, per-author folds, cell coefficients, recipient resolution,
+  the base allocation matrix; **(iv) the transport** — domain weights and
+  profiles, the tilt shape, the depth mass, source emission fractions, and
+  the hop allocation matrices they assemble; **(v) the accepted rung** — the
+  certificate verdict (pass, fail or indecisive) at each attempted rung of
+  the published grid, the accepted $t_k$, the declared hull box, and the
   fixed-point enclosure; **(vi) final standing and admission** — the
   equilibrium $\boldsymbol{x}^*$, the transport entries $\Pi_{ui}$, final
   standing, final action and epoch stamps, door headroom, W1/W2 verdicts;
   **(vii) shared closure outputs and policy** — the title certificate,
   settlement-recognition result, epoch target size, min/max durations, the
-  policy-floor and safety-threshold schedules, and the margin factor
-  $m_\theta = 5/4$, all under no-silent-change; **(viii) reproducibility
-  evidence** — formula editions, declared constants, interval boxes,
-  residual bounds. Every binding value is reproducible from the accepted
-  records, final ledger, public formulas, and constants. Previous standing,
+  policy-floor and safety-threshold schedules, the margin factor
+  $m_\theta = 5/4$, the wall in force, the deployment's fixed structural
+  declaration $\rho_{\theta,\min} \in \{\rho^*, 3/37\}$ (published beside
+  $\nu$ before its first epoch, with its exact defining object and
+  published X8 comparison procedure, `def:epoch:safety-wall-floor`), the
+  controller edition and reduced constants, the completed-epoch
+  contributing width and accepted rung, and the proposal and delivered led
+  wall whose burn image is the threshold schedule
+  (`def:epoch:wall-controller`), all under no-silent-change; **(viii)
+  reproducibility evidence** — formula editions, declared constants,
+  interval boxes, residual bounds. Every binding value is reproducible from
+  the accepted records, final ledger, explicit public previous-wall state,
+  public formulas, and constants. Previous standing,
   warm starts, and cached solver state are not package inputs. **No hashes,
   roots, or source digests are normative.** A finite implementation must
   publish a standing enclosure narrow enough to decide every binding
@@ -801,15 +825,19 @@ Stated independently of any mechanism that achieves them.
 **Verification model** (`subsec:introduction:verification-model`): every
 computation that can feed admission is specified by published formula over
 the public record and independently reproducible from records and constants
-alone. For standing, verification has three explicit layers: the epoch
-certificate commits the folded cells, their recipients, and the base
-allocation matrix; the transport and the exact balance/count mediant are
-replayed from public action masses and residual balances; and the
-graph-dependent certificate $\mathcal{K}_k$ checks the declared hull box
-against the chartered margin. An uncertifiable rung falls back down the
-published grid to the no-tilt anchor, which always certifies; if all
-relational flow into an actor is zero, that actor's standing is exactly
-their own neutral source.
+alone. For standing, verification checks the completed ledger and
+accepted-act census, reproduces fold cells, base allocation and source
+emission, and evaluates the declared certificate at each attempted rung
+(`subsec:deployment:conserved-standing-reproducibility`). The published
+procedure accepts the greatest proved passing rung; independent replay
+checks the conserved equilibrium through a certified residual enclosure
+(`def:epoch:tilt-backoff-grid`,
+`lem:dynamics:fixed-point-residual-enclosure`). The certificate is the
+evaluated width fence, not a selected-path certificate
+(`def:dynamics:conserved-standing-certificate`). Certified convergence
+within an epoch does not bound movement across epochs or establish
+controller tracking; those observations and their declared responses are
+published under `post:deployment:centralized-monitoring`.
 Centralized phase: verification as audit (results apply before
 verification; constants being calibrated, not yet locked). Decentralized
 phase: verification as gate (nothing failing verification takes effect).
