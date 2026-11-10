@@ -500,7 +500,7 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | path-depth flow shares, clipping rates, and one-boundary standing movement | — | monitoring dashboards | L1·verify | diagnostics; may not override the binding certificate |
 | attested boundary timestamp, closure cause | boundary-accountability replay | guild dashboards | L1·verify | consume only |
 | title $\mathrm{owner}^{(k)}$ | recognition (iii), authorization and parties | guild routing | L1·closure ⋆ | consume kernel value; read downstream; a recomputable summary of the partition (`rem:graph:title-certificate-is-summary`) |
-| standing $\alpha_i$ | gate | reward amplifier $(1+\alpha_C)$ | L1·closure ⋆ | consume kernel value; read downstream |
+| standing $\alpha_i$ | gate | reward amplifier $(1+\hat{\alpha}_C)$ | L1·closure ⋆ | consume kernel value; read downstream |
 | ownership thread, Item genesis | title → recognition (iii) | terminal display | L1·closure | consume only; may recompute |
 | settlement acts Bid / Accept / Ratify / Withdraw / Rescind | recognition predicate | terminal reputation / dispute policy | L1·closure (records/rules) | consume recognition result; terminal policy free |
 | parallel bundles, all other folds | — | the guild / user | L2 | **reimplement freely** (`rem:graph:authored-act-bundle-consumers`) |
@@ -712,7 +712,7 @@ a stated numerical precision, such as the reduced rate
 $\hat{r}_i = r_i/\nu$ to 8 significant figures, is an example of such a
 level, not a protocol constant.
 
-Notes on the full paper's terminal defaults: $(1+\alpha_C)$
+Notes on the full paper's terminal defaults: $(1+\hat{\alpha}_C)$
 remains the sole Layer 1 factor in the guild reward formula Eq. (8.2)
 (`eq:transport:reward-formula`); per-creator-epoch entropy is Eq. (8.3)
 (`eq:transport:epoch-entropy`). The default feed S(u,c) (full §7,
@@ -2336,7 +2336,7 @@ traversal (`prop:nodes:self-loop-neutral`).
 $\text{Actor}_i \xrightarrow{\text{Op}} \text{Profile}_j \xrightarrow{\text{Rep}} \text{Actor}_j$.
 **Raw profile-bridge amplification
 (`def:nodes:raw-profile-bridge-amplification`):**
-$A(\hat{\alpha}_j) = \tilde{w}(e_{\text{Rep}})(\alpha_j)\cdot(1 + \alpha_j)$,
+$A(\hat{\alpha}_j) = \tilde{w}(e_{\text{Rep}})(\alpha_j)\cdot(1 + \hat{\alpha}_j)$,
 strictly increasing, $A(0) = 0$ — a terminal reader of the published
 standing, not a second run of the standing machinery.
 
