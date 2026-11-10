@@ -2141,8 +2141,9 @@ adopt, or replace — the interface fixes only the boundary (next paragraph),
 never the mechanism.
 
 **Membership is terminal (`rem:nodes:membership-is-terminal`).** No
-admission rule reads $\mathrm{member}^{(k)}$ — it feeds neither the write
-rule (W1/W2a/W2b), nor formation, nor settlement recognition. Two terminal
+admission rule reads $\mathrm{member}^{(k)}$ — it feeds neither the gate,
+nor capacity, nor settlement recognition (`def:network:admission-closure`).
+Two terminal
 services may derive different membership from the same $E_k$ without
 forking the graph (contrast title, which recognition clause (iii) reads
 back). This is why Leave and De-invite append unconditionally: a
