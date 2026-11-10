@@ -3148,15 +3148,91 @@ operator duties (both at the end of this section).
 
 **Realization Obligations (`subsec:deployment:realization-obligations`).**
 The deployment runs against a realization that publishes, and keeps
-published, the R7 audit quantities, $B_{\max}$ (R9), $c_{\mathrm{u}}$ (R10),
-the settlement depth (R4(e)), and — where the realization has an operator
-accruing burn value — the R11 operator bound. The network carries all of it
-to participants unmodified and without access control; the deployment adds
-no channel by which a published quantity could be silently dropped,
-replaced, or amended in transit. Two duties: *publication* on the
-realization, *non-occlusion* on the deployment. Design space: a pointer to
-the realization's own publication, a mirror in the network's append-log, or
-a periodic published snapshot beside the network's own constants.
+published, the R7 audit quantities; $B_{\max}$ (R9), a published zero with
+its explanation for an empty pre-opening interval; $c_{\mathrm{u}}$ (R10)
+with its denomination and terms, and any separately published
+recording-event costs; the settlement depth (R4(e)) with the finality
+assumptions under which it holds; and — where the realization has an
+operator accruing burn amount — the R11 operator bound and its proof, or
+else a statement of that absence with its explanation. Settlement depth,
+provenance, recording-event costs, and the operator evidence are public
+audit evidence, not computational inputs. The deployment publishes its
+marker policy with its fixed edition, epoch-marker placement rule, and
+cadence (`post:comparator:marker-bound-settlement`); every reader can
+recover the complete accepted sets and their evidence from the policy's
+package encoding. The network carries all of it to participants unmodified
+and without access control; the deployment adds no channel by which a
+published quantity could be silently dropped, replaced, or amended in
+transit. Two duties: *publication* on the realization, *non-occlusion* on
+the deployment. Design space: a pointer to the realization's own
+publication, a mirror in the network's append-log, or a periodic published
+snapshot beside the network's own constants. A breach of the finality
+assumptions halts Layer 1 (§13.1).
+
+### 13.1 Operator duties
+
+Three postulates bind the deployment's operator; each condition below is
+one published duty.
+
+**Calibration declarations (`post:deployment:calibration-declarations`).**
+Before an edition takes effect, the deployment publishes these declarations
+and retains the material needed to replay that edition.
+
+| Condition | Duty |
+|---|---|
+| `cond:deployment:standing-parameters` | Publish the tilt profile and backoff grid, the depth mass and its deepest supported depth, the self-retention base, the domain weights, and each act family's normalized domain profile, with their defining formulas and admissibility evidence. |
+| `cond:deployment:wall-calibration` | Publish the numéraire, policy-floor schedule, structural floor declaration and its exact defining object, margin, controller edition, initialization, reduced constants, and arithmetic and comparison procedure; publish proposal and delivered wall separately and certify the charged value. |
+| `cond:deployment:boundary-policy` | Publish the epoch target size, minimum and maximum durations, policy-floor schedule, threshold announcement lead, candidate-set search policy and trial budget, validation timeout, solver availability target, and fallback, with a constant-change adaptation window during which cadence retargeting is frozen. |
+| `cond:deployment:canonical-encoding` | Publish and version one canonical encoding of the standing package, with round-trip evidence. |
+| `cond:deployment:canonical-replay` | Publish the deterministic certification procedure with its precision, refinement, equality handling, and stopping limits, and every attempted rung with its PASS, FAIL, or INDECISIVE verdict. |
+
+**Centralized-phase monitoring (`post:deployment:centralized-monitoring`).**
+During the centralized phase the operator publishes reproducible
+observations, their procedures, thresholds, persistence windows, and review
+schedule, and records the disposition of each threshold crossing; a missed
+target never waives the floor, a passing certificate, exact standing, or X9.
+
+| Condition | Duty |
+|---|---|
+| `cond:deployment:certificate-monitoring` | Publish per accepted epoch the evaluated certificate, contributing width, accepted rung, enclosure radius, standing movement, transported mass by hop, and below-wall fraction, with fallback and rung frequencies that distinguish FAIL from INDECISIVE. |
+| `cond:deployment:title-certificate-monitoring` | Recompute $\mathrm{owner}^{(k)}$ from the published partition at every boundary, compare it with the published certificate, and publish every disagreement with its evidence; a disagreement triggers the published review, not a rewrite of the certificate. |
+| `cond:deployment:emission-experience` | Publish the wall in force, the emission-fraction distribution, exported mass, and community sag and fading-Actor observations against a declared experience envelope, with the declared response; no response silently changes the source-emission rule. |
+| `cond:deployment:controller-performance` | Publish the controller's response model, hypotheses, tested range, and tracking, steady-error, settling, and chatter observations, and calibrate $a$, $r$, $d$ within the published edition; a failed target prompts review, not margin escalation or a new controller input. |
+| `cond:deployment:standing-work` | Measure and publish, per accepted epoch and per trial set, the standing work against a declared scale and duration budget, including the load at which the duration target is missed. |
+| `cond:deployment:cadence-maturity` | Whenever the boundary triple changes, measure raw maturity drift and the resulting raw feed/bridge observations, and publish the adaptation window with evidence that cadence retargeting stays frozen throughout it. |
+
+**Deployment evidence publication (`post:deployment:calibration-evidence`).**
+Each required calibration publishes its inputs or acquisition procedure,
+formula and implementation editions, workload, comparison method,
+acceptance criteria declared before evaluation, results, and limitations; a
+failed criterion is reported with its disposition.
+
+| Condition | Duty |
+|---|---|
+| `cond:deployment:parameter-comparisons` | For a proposed change to tilt, depth, domain weights, self-retention, bleed, inverse temperature, or the floor/numéraire/controller declaration, publish baseline and candidate inputs, affected derived quantities, and comparison criteria, and regenerate the affected proof and fixture evidence. |
+| `cond:deployment:payload-cache-envelope` | Publish the payload cap, encoding and indexing overhead, device/cache budget, traversal depth, workload, and retention horizon used for capacity sizing, and reject a cap/workload combination that exceeds the declared cache budget. |
+| `cond:deployment:boundary-search-evidence` | Publish boundary-search trial counts and elapsed-time envelopes with their hardware, arithmetic, residual target, and timeout/fallback settings, and show that any adopted exact reuse yields the same certified outputs as complete validation on the declared comparison inputs. |
+| `cond:deployment:terminal-regression` | For a standing-edition change, publish regression inputs and deltas for each terminal consumer that reads standing, with its declared tolerance and response to a failed criterion. |
+| `cond:deployment:complete-act-conformance` | Publish compiler/replay evidence covering parallel acts, complete-act identity, fold cells, recipient resolution, domain profiles, and base allocation, and reproduce the accepted-act census under projection completeness. |
+
+**Finality breach (`rem:comparator:finality-breach-halts`).** A replacement
+beyond the published settlement depth is a failure of the realization's
+finality assumptions: closed epochs, ledgers, standing, and title stand,
+and Layer 1 halts at the last closed epoch and rewrites nothing. Where the
+epoch marker's form is host-only, the host's continued production of
+markers is a liveness dependency of the epoch sequence, with the re-anchor
+response as the deployment remedy. Which response follows a breach is the
+deployment's published policy; neither is a Layer-1 rule:
+
+- **Re-anchor (`case:deployment:realization-obligations-finality-breach-reanchor`).**
+  Keep every closed epoch as published and resume by a published
+  marker-policy edition change naming a fresh initial epoch marker in the
+  surviving history, with a published ledger-continuity decision.
+- **Follow (`case:deployment:realization-obligations-finality-breach-follow`).**
+  Follow the replaced history, re-deriving the epochs whose markers were lost
+  under a published marker-policy edition change; name the superseded
+  certificates and the point of divergence, and publish the
+  ledger-continuity decision.
 
 ---
 
