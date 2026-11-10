@@ -39,8 +39,11 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    THE COUNTS ARE THE HARD PART, and the difficulty is accuracy rather than
    vocabulary. What links two people here carries an opinion and has a direction,
    so a single number would have to pick one of those facts and hide the other.
-   The header counts what a reader can actually place instead: how many people
-   have given an opinion on this person, and how many this person has given. Two
+   The header counts what a reader can actually place instead: the people who
+   hold an opinion on this person, and the people this person holds an opinion
+   on — bundles, never records: one person's opinions toward one target count
+   once however often revised, a revision count belonging only inside that
+   person's bundle view (jakob 2026-11-10). Two
    figures, each labelled, each plain — never one merged "followers" number,
    because there is no following here and borrowing the word would describe a
    different product. A Posts figure leads the row, and the figures are one tap

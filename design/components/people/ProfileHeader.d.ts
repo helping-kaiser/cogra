@@ -4,8 +4,10 @@ import type { StanceBundle, StancePair } from "../stance/StanceReadout";
  * The top of a profile. Not a card — it sits on the page ground, because a card
  * would imply a second card beside it.
  *
- * The two counts say what a reader can place: how many people have given an
- * opinion on this person, and how many they have given. Never one merged "followers"
+ * The two counts say what a reader can place: the people who hold an opinion on
+ * this person, and the people they hold an opinion on — bundles, never records
+ * (one person's opinions toward one target count once however often revised).
+ * Never one merged "followers"
  * figure — a link here has a direction and carries an opinion, so one number would
  * have to hide one of those facts.
  */
