@@ -317,6 +317,74 @@ async fn attaching_a_bound_key_is_actor_key_in_use(pool: PgPool) {
     assert_eq!(error["field"], json!(["actorPubkey"]));
 }
 
+/// A store fault that leaves a resolver as an ordinary error — stringified
+/// at the site or carried by a bare `?` — reaches the wire as the
+/// collapsed `INTERNAL` code and the fixed message, never the driver's
+/// text. The store faults by its pool being closed under the router.
+///
+/// A store fault leaving a resolver reaches the client as INTERNAL with a fixed message, never the driver's text.
+/// ´claim:server:a-store-fault-collapses-to-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_store_fault_reaches_the_wire_as_internal(pool: PgPool) {
+    let rig = rig(pool);
+    rig.pool.close().await;
+    for query in [
+        format!("{{ post(id: \"{}\") {{ id }} }}", Uuid::new_v4()),
+        format!(
+            "{{ inviteLinkCheck(id: \"{}\") {{ usable }} }}",
+            Uuid::new_v4()
+        ),
+    ] {
+        let answer = rig.gql_raw(None, &query, json!({})).await;
+        let error = &answer["errors"][0];
+        assert_eq!(error["extensions"]["code"], "INTERNAL", "{answer}");
+        assert_eq!(error["message"], "internal error", "{answer}");
+        assert!(!answer.to_string().contains("pool"), "{answer}");
+    }
+}
+
+/// The collapse touches only errors that name no code and carry a Rust
+/// error: a refusal that already declares its code keeps code and
+/// message, and an argument the schema cannot parse keeps the library's
+/// own message, the caller's fault rather than the server's.
+///
+/// An error that declares its code, or names a malformed argument, passes the collapse untouched.
+/// ´claim:server:a-declared-code-passes-the-collapse´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_declared_code_passes_the_internal_collapse(pool: PgPool) {
+    let rig = rig(pool);
+    let answer = rig
+        .gql_raw(
+            None,
+            "mutation($input: ApproveActsInput!) { approveActs(input: $input) { userErrors { code } } }",
+            json!({ "input": { "approvals": [] }}),
+        )
+        .await;
+    assert_eq!(
+        answer["errors"][0]["extensions"]["code"], "UNAUTHENTICATED",
+        "{answer}"
+    );
+    assert_eq!(answer["errors"][0]["message"], "authentication required");
+
+    rig.seed_member("caller", "caller@example.com").await;
+    let token = rig.log_in("caller@example.com").await;
+    let answer = rig
+        .gql_raw(
+            Some(&token),
+            "mutation($input: PrepareStanceInput!) { prepareStance(input: $input) { userErrors { code } } }",
+            json!({ "input": { "target": Uuid::new_v4(), "pDirected": 0.005, "pInterest": 0.0 }}),
+        )
+        .await;
+    let error = &answer["errors"][0];
+    assert_ne!(error["extensions"]["code"], "INTERNAL", "{answer}");
+    assert!(
+        error["message"]
+            .as_str()
+            .is_some_and(|m| m.contains("Dimension")),
+        "{answer}"
+    );
+}
+
 /// A member whose profile chain has no head in the mirror is a diverged
 /// mirror — an operational fault, never user input. The refusal is the
 /// collapsed `INTERNAL` code with a generic message; the detail goes to

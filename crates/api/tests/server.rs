@@ -165,6 +165,191 @@ async fn graphql_refuses_a_body_past_the_route_limit(pool: PgPool) {
     assert_eq!(body_json(streamed).await["code"], "PAYLOAD_TOO_LARGE");
 }
 
+/// The ceiling a non-multipart `/graphql` body answers to.
+const JSON_CEILING: usize = api::GRAPHQL_JSON_BODY_LIMIT_BYTES;
+
+/// A plain JSON request answers to a ceiling of its own, far below the
+/// multipart upload transport's, and is refused with 413 before the parse
+/// — under the deployed media caps, not shrunk ones, because the defect
+/// was a JSON body admitted up to the upload ceiling. A declared length
+/// past it is refused unread, an undeclared one is cut at it, and a body
+/// that never ends is answered at all, which only a cut can do.
+///
+/// A non-multipart GraphQL body past its own ceiling is refused with 413 before the parse, however it arrives.
+/// ´claim:server:a-json-body-has-its-own-ceiling´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_json_body_past_its_ceiling_is_refused_before_the_parse(pool: PgPool) {
+    use async_graphql::futures_util::{StreamExt, stream};
+    let app = test_app(pool);
+    let padding = "x".repeat(2 * JSON_CEILING);
+    let body = serde_json::json!({ "query": format!("{{ __typename }}#{padding}") }).to_string();
+    let post = |length: Option<usize>, body: Body| {
+        let mut builder = Request::builder()
+            .method("POST")
+            .uri("/graphql")
+            .header("content-type", "application/json");
+        if let Some(length) = length {
+            builder = builder.header("content-length", length);
+        }
+        builder.body(body).expect("request")
+    };
+
+    let declared = app
+        .clone()
+        .oneshot(post(Some(body.len()), Body::from(body.clone())))
+        .await
+        .expect("response");
+    assert_eq!(declared.status(), StatusCode::PAYLOAD_TOO_LARGE);
+
+    let streamed = app
+        .clone()
+        .oneshot(post(None, Body::from(body)))
+        .await
+        .expect("response");
+    assert_eq!(streamed.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    assert_eq!(body_json(streamed).await["code"], "PAYLOAD_TOO_LARGE");
+
+    let opening = stream::once(async {
+        Ok::<_, std::io::Error>(axum::body::Bytes::from_static(br#"{"query":"#))
+    });
+    let endless = stream::repeat_with(|| {
+        Ok::<_, std::io::Error>(axum::body::Bytes::from_static(&[b' '; 8192]))
+    });
+    let unending = app
+        .oneshot(post(None, Body::from_stream(opening.chain(endless))))
+        .await
+        .expect("response");
+    assert_eq!(unending.status(), StatusCode::PAYLOAD_TOO_LARGE);
+}
+
+/// The JSON ceiling is measured from the clients, so the widest request a
+/// client can legitimately send must pass it with headroom: the post
+/// composer's whole document file beside a media post at every text cap,
+/// each character the six-byte JSON escape, and a relay carrying the
+/// longest batch the shipped signing budget lets one prepare stage. A
+/// cap, a budget or a document growing into the headroom fails here
+/// before it grows past the ceiling.
+///
+/// The widest legitimate request passes the JSON body ceiling with at least half again as much room.
+/// ´claim:server:the-widest-legitimate-request-fits´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_widest_legitimate_request_fits_under_the_json_ceiling(pool: PgPool) {
+    use api::content::{MAX_DESCRIPTION_CHARS, MAX_SENSITIVE_REASON_CHARS, MAX_TITLE_CHARS};
+    use api::media::{MAX_ALT_TEXT_CHARS, MAX_POST_ATTACHMENTS};
+    let widest = |chars: usize| "\u{1}".repeat(chars);
+    let attachments: Vec<serde_json::Value> = (0..MAX_POST_ATTACHMENTS)
+        .map(|i| {
+            serde_json::json!({
+                "mediaId": uuid::Uuid::new_v4(),
+                "displayOrder": i,
+                "altText": widest(MAX_ALT_TEXT_CHARS),
+            })
+        })
+        .collect();
+    let tags: Vec<serde_json::Value> = (0..api::topics::MAX_TAGS_PER_BATCH)
+        .map(|_| {
+            serde_json::json!({
+                "name": "a".repeat(common::l1::identifier::MAX_ATOM_BYTES),
+                "pDirected": 1.0,
+                "pInterest": 1.0,
+            })
+        })
+        .collect();
+    let references: Vec<serde_json::Value> = (0..api::references::MAX_REFERENCES_PER_BATCH)
+        .map(|_| {
+            serde_json::json!({
+                "target": uuid::Uuid::new_v4(),
+                "relevance": 1.0,
+                "support": 1.0,
+            })
+        })
+        .collect();
+    let body = serde_json::json!({
+        "query": include_str!("../../../web/src/lib/graphql/content.graphql"),
+        "operationName": "PreparePost",
+        "variables": { "input": {
+            "title": widest(MAX_TITLE_CHARS),
+            "description": widest(MAX_DESCRIPTION_CHARS),
+            "license": { "attribution": 1.0, "provenance": 1.0 },
+            "pDirected": 1.0,
+            "tags": tags,
+            "references": references,
+            "attachments": attachments,
+            "sensitive": true,
+            "sensitiveReason": widest(MAX_SENSITIVE_REASON_CHARS),
+        }},
+    })
+    .to_string();
+
+    use base64::Engine;
+    let signature = base64::engine::general_purpose::STANDARD.encode(
+        common::l1::wire::encode_pre_commitment(&[0xff; common::l1::crypto::SALT_LEN], &[0xff; 64]),
+    );
+    let longest = api::ratelimit::SigningBudget::default().longest_batch();
+    let proposals: Vec<serde_json::Value> = (0..longest)
+        .map(|_| serde_json::json!({ "stagedWriteId": uuid::Uuid::new_v4(), "signature": signature }))
+        .collect();
+    let relay = serde_json::json!({
+        "query": include_str!("../../../web/src/lib/graphql/writes.graphql"),
+        "operationName": "SubmitProposals",
+        "variables": { "input": { "proposals": proposals }},
+    })
+    .to_string();
+
+    let app = test_app(pool);
+    for body in [body, relay] {
+        assert!(
+            body.len() * 3 / 2 <= JSON_CEILING,
+            "a legitimate request is {} bytes, too close to the {JSON_CEILING}-byte ceiling",
+            body.len()
+        );
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/graphql")
+                    .header("content-type", "application/json")
+                    .header("content-length", body.len())
+                    .body(Body::from(body))
+                    .expect("request"),
+            )
+            .await
+            .expect("response");
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+}
+
+/// The JSON ceiling is not the upload's: a multipart picture at exactly
+/// the deployed picture cap, far past the JSON ceiling, still uploads.
+///
+/// A multipart upload at its own cap passes the transport the JSON ceiling would refuse.
+/// ´claim:server:an-upload-keeps-its-own-ceiling´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_upload_at_its_cap_is_not_held_to_the_json_ceiling(pool: PgPool) {
+    let cap = api::media::MediaConfig::default().max_upload_bytes;
+    assert!(cap > JSON_CEILING);
+    let mut picture = rig::webp_chunk(b"VP8L", &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08]);
+    let framing = 12 + 8 + picture.len();
+    picture.extend_from_slice(&rig::webp_chunk(b"EXIF", &vec![b'x'; cap - framing]));
+    let picture = rig::webp_container(&picture);
+    assert_eq!(picture.len(), cap);
+
+    let rig = rig::WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
+    rig.seed_member("uploader", "uploader@example.com").await;
+    let token = rig.log_in("uploader@example.com").await;
+    let answer = rig.upload_media_raw(&token, &picture).await;
+    assert_eq!(
+        answer["data"]["uploadMedia"]["userErrors"],
+        serde_json::json!([]),
+        "{answer}"
+    );
+    assert!(
+        answer["data"]["uploadMedia"]["media"]["id"].is_string(),
+        "{answer}"
+    );
+}
+
 /// Behind the proxy the API reads the client from the rightmost
 /// `X-Forwarded-For` hop, and a request that reaches it without one —
 /// a server-side render dialling the API directly — is refused as the

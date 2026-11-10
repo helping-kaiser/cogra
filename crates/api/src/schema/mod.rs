@@ -9,6 +9,7 @@
 //! legs (api-spec.md).
 
 pub mod app_versions;
+pub mod faults;
 pub mod feed;
 mod mutation;
 pub mod notifications;
@@ -140,7 +141,8 @@ pub fn build(ctx: ApiContext) -> ApiSchema {
 }
 
 /// Builds the schema under explicit budgets — the seam the budget tests
-/// drive both postures through.
+/// drive both postures through. Every posture collapses server faults to
+/// `INTERNAL` ([`faults`]).
 pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
     let loaders = crate::loaders::NodeLoaders::new(ctx.pool.clone());
     let mut builder = Schema::build(Query, Mutation, EmptySubscription)
@@ -173,7 +175,8 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(ctx.ranker)
         .data(ctx.slice_reads)
         .limit_depth(budgets.depth)
-        .limit_complexity(budgets.complexity);
+        .limit_complexity(budgets.complexity)
+        .extension(faults::InternalFaults);
     if !budgets.introspection_enabled {
         builder = builder.disable_introspection();
     }

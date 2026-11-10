@@ -6,6 +6,7 @@
 
 pub mod auth;
 pub mod bookmarks;
+pub mod boot;
 pub mod bootstrap;
 pub mod breach;
 pub mod content;
@@ -122,7 +123,10 @@ struct AppState {
 /// `RequestBodyLimitLayer` on the route (see [`app`]): consuming the body
 /// stream directly is precisely the case axum documents `DefaultBodyLimit`
 /// as *not* covering, so the limit has to wrap the body rather than ride
-/// an extractor.
+/// an extractor. That ceiling is sized for an upload; every body that is
+/// not one answers to [`GRAPHQL_JSON_BODY_LIMIT_BYTES`] instead, wrapped
+/// here in `http_body_util::Limited` before the library reads a byte,
+/// because the library reads a JSON body whole before it parses it.
 async fn graphql_handler(
     State(state): State<AppState>,
     client_ip: Result<ClientIp, axum_client_ip::Rejection>,
@@ -133,17 +137,27 @@ async fn graphql_handler(
         Err(rejection) => return client_ip_refusal(rejection),
     };
     let (parts, body) = req.into_parts();
+    let content_type = parts
+        .headers
+        .get(axum::http::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_owned);
+    let body = if is_multipart(content_type.as_deref()) {
+        body
+    } else if declared_length(&parts.headers).is_some_and(|n| n > GRAPHQL_JSON_BODY_LIMIT_BYTES) {
+        return body_too_large();
+    } else {
+        axum::body::Body::new(http_body_util::Limited::new(
+            body,
+            GRAPHQL_JSON_BODY_LIMIT_BYTES,
+        ))
+    };
     let viewer: Option<Viewer> = parts
         .headers
         .get(axum::http::header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.strip_prefix("Bearer "))
         .and_then(|token| auth::verify_access_token(&state.auth, token));
-    let content_type = parts
-        .headers
-        .get(axum::http::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
-        .map(str::to_owned);
 
     let reader = StreamReader::new(body.into_data_stream().map_err(std::io::Error::other)).compat();
     let parsed = async_graphql::http::receive_batch_body(content_type, reader, state.multipart)
@@ -151,14 +165,7 @@ async fn graphql_handler(
         .and_then(async_graphql::BatchRequest::into_single);
     let mut request = match parsed {
         Ok(request) => request,
-        Err(e) if over_the_body_limit(&e) => {
-            return upload_error(
-                StatusCode::PAYLOAD_TOO_LARGE,
-                "PAYLOAD_TOO_LARGE",
-                "the request body is larger than this endpoint accepts",
-                &[],
-            );
-        }
+        Err(e) if over_the_body_limit(&e) => return body_too_large(),
         Err(e) => return GraphQLRejection(e).into_response(),
     };
 
@@ -294,6 +301,55 @@ fn over_the_body_limit(err: &(dyn std::error::Error + 'static)) -> bool {
         cause = e.source();
     }
     false
+}
+
+/// The ceiling on a `/graphql` body that is not a multipart upload
+/// (api-spec.md "Query budgets").
+///
+/// Measured, not chosen, the way the depth and complexity ceilings are.
+/// The longest operation either client sends is the web history page at
+/// 6 116 bytes with its fragments, comments included. The widest content
+/// gesture is a media post at every text cap — title 100, description
+/// 500, sensitive reason 140, ten descriptions of 1 000 — so 10 740
+/// scalar values, each at most six bytes once JSON-encoded (a `\u00XX`
+/// escape): about 75 KB with its document, topics and citations. The
+/// widest request of all is a relay carrying the longest batch one
+/// prepare can stage under the shipped signing budget
+/// ([`ratelimit::SigningBudget::longest_batch`], 1 000): about 210 bytes
+/// an entry — a staged-write id and a base64 pre-commitment of a 32-byte
+/// nonce and a 64-byte signature — so about 210 KB. 320 KiB is the
+/// smallest multiple of 64 KiB above the 1.5× floor over it, and it
+/// bounds what an anonymous caller makes the server hold before the parse.
+/// `the_widest_legitimate_request_fits_under_the_json_ceiling` re-measures
+/// both against it.
+pub const GRAPHQL_JSON_BODY_LIMIT_BYTES: usize = 320 * 1024;
+
+/// Whether async-graphql will read the body as a multipart upload. The
+/// same parse and the same test the library's `receive_batch_body`
+/// applies, so the upload ceiling never covers a body the library reads
+/// as JSON: an absent or unparseable content type is JSON there too.
+fn is_multipart(content_type: Option<&str>) -> bool {
+    content_type
+        .and_then(|value| value.parse::<mime::Mime>().ok())
+        .is_some_and(|value| value.type_() == mime::MULTIPART)
+}
+
+/// The body length the request declares, when it declares one.
+fn declared_length(headers: &HeaderMap) -> Option<usize> {
+    headers
+        .get(axum::http::header::CONTENT_LENGTH)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.parse().ok())
+}
+
+/// The refusal of a body past the ceiling its request answers to.
+fn body_too_large() -> axum::response::Response {
+    upload_error(
+        StatusCode::PAYLOAD_TOO_LARGE,
+        "PAYLOAD_TOO_LARGE",
+        "the request body is larger than this endpoint accepts",
+        &[],
+    )
 }
 
 /// The viewer a request carries, or the status that refuses it.
@@ -450,7 +506,9 @@ async fn upload_part(
 /// extractor, which is what axum's own documentation points at for a
 /// handler in this shape. The bound sits one part above the multipart
 /// transport ceiling so that the file part is always refused by the
-/// readable multipart error rather than by the connection being cut.
+/// readable multipart error rather than by the connection being cut. It
+/// is the upload's ceiling only: a body that is not multipart answers to
+/// [`GRAPHQL_JSON_BODY_LIMIT_BYTES`] inside the handler.
 ///
 /// `/graphql` answers compressed itself (ranked-feed-api §4.13): gzip, to
 /// any client that accepts it, so the feed's wire obligation holds in

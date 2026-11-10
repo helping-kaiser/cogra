@@ -548,3 +548,141 @@ async fn approval_budget_trips_as_write_rule_failed(pool: PgPool) {
     let writes = accepted(&data, "approveApplicants");
     assert_eq!(writes.as_array().expect("writes").len(), 1);
 }
+
+/// A relay list that answers to the longest batch: the daily backstop
+/// lowered to three makes three the longest batch any prepare can stage.
+fn backstop_of_three() -> RateLimitConfig {
+    budget(|b| {
+        b.any = Window {
+            limit: 3,
+            window_secs: 86_400.0,
+        }
+    })
+}
+
+/// `count` relay entries naming staged writes that do not exist.
+fn relay_entries(list: &str, count: usize) -> Value {
+    let entries: Vec<Value> = (0..count)
+        .map(|_| json!({ "stagedWriteId": uuid::Uuid::new_v4(), "signature": "AA==" }))
+        .collect();
+    json!({ "input": { list: entries }})
+}
+
+/// No relay list may be longer than the longest batch one prepare can
+/// stage under the signing budget: past it the list is refused whole at
+/// its own field, before a single entry is read; at it, every entry is
+/// read and answered for itself.
+///
+/// A relay or approval list longer than one prepare's longest batch is refused whole as BAD_INPUT on the list field.
+/// ´claim:ratelimit:a-relay-list-is-bounded-by-the-longest-batch´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_list_past_the_longest_batch_is_bad_input_on_the_list(pool: PgPool) {
+    let rig = WireRig::new(pool, backstop_of_three());
+    let caller = member(&rig, "lister").await;
+    let cases = [
+        (
+            "submitProposals",
+            "mutation($input: SubmitProposalsInput!) {
+               submitProposals(input: $input) { userErrors { code field } }
+             }",
+            "proposals",
+        ),
+        (
+            "approveActs",
+            "mutation($input: ApproveActsInput!) {
+               approveActs(input: $input) { userErrors { code field } }
+             }",
+            "approvals",
+        ),
+    ];
+    for (operation, document, list) in cases {
+        let data = rig
+            .gql(Some(&caller.token), document, relay_entries(list, 4))
+            .await;
+        assert_eq!(
+            data[operation]["userErrors"],
+            json!([{ "code": "BAD_INPUT", "field": [list] }]),
+            "{data}"
+        );
+        let data = rig
+            .gql(Some(&caller.token), document, relay_entries(list, 3))
+            .await;
+        assert_eq!(refusals(&data, operation), vec!["NOT_FOUND"; 3], "{data}");
+    }
+
+    let unknown: Vec<String> = (0..4).map(|_| uuid::Uuid::new_v4().to_string()).collect();
+    let unknown: Vec<&str> = unknown.iter().map(String::as_str).collect();
+    let data = rig
+        .gql(Some(&caller.token), APPROVE_APPLICANTS, approvals(&unknown))
+        .await;
+    assert_eq!(
+        data["approveApplicants"]["userErrors"][0]["field"],
+        json!(["approvals"]),
+        "{data}"
+    );
+    assert_eq!(refusals(&data, "approveApplicants"), vec!["BAD_INPUT"]);
+}
+
+/// The same application named twice is one vouch: it is priced, charged
+/// and prepared once, so a budget of one carries it. Named twice with
+/// different stances it is refused at the second naming rather than
+/// either pick being dropped silently.
+///
+/// An application named twice in one approval batch is one vouch, charged once.
+/// ´claim:ratelimit:a-repeated-application-is-charged-once´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_repeated_application_is_charged_once(pool: PgPool) {
+    let rig = WireRig::new(
+        pool,
+        budget(|b| {
+            b.approval = Window {
+                limit: 1,
+                window_secs: 86_400.0,
+            }
+        }),
+    );
+    let inviter = member(&rig, "repeater").await;
+    let joiner = approvable_application(&rig, &inviter, "joiner_twice").await;
+
+    let mut conflicting = approvals(&[&joiner, &joiner]);
+    conflicting["input"]["approvals"][1]["pDirected"] = json!(0.2);
+    let data = rig
+        .gql(Some(&inviter.token), APPROVE_APPLICANTS, conflicting)
+        .await;
+    assert_eq!(
+        data["approveApplicants"]["userErrors"],
+        json!([{
+            "code": "BAD_INPUT",
+            "message": data["approveApplicants"]["userErrors"][0]["message"],
+            "field": ["approvals", "1", "application"],
+        }]),
+        "{data}"
+    );
+
+    let data = rig
+        .gql(
+            Some(&inviter.token),
+            APPROVE_APPLICANTS,
+            approvals(&[&joiner, &joiner]),
+        )
+        .await;
+    let writes = accepted(&data, "approveApplicants");
+    assert_eq!(writes.as_array().expect("writes").len(), 1);
+}
+
+/// The longest batch is the widest netting or approval window, never
+/// below a full creation batch and never above the daily backstop.
+///
+/// The longest batch one prepare can stage follows the signing budget's windows.
+/// ´claim:ratelimit:the-longest-batch-follows-the-budget´
+#[test]
+fn the_longest_batch_follows_the_budget() {
+    assert_eq!(SigningBudget::default().longest_batch(), 1000);
+    let mut tight = SigningBudget::UNLIMITED;
+    tight.stance = window(2);
+    tight.claim = window(2);
+    tight.approval = window(2);
+    assert_eq!(tight.longest_batch(), 21);
+    tight.any = window(5);
+    assert_eq!(tight.longest_batch(), 5);
+}

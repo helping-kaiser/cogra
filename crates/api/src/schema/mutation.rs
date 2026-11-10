@@ -409,6 +409,23 @@ fn internal(e: impl std::fmt::Display) -> UserError {
     UserError::new(ErrorCode::Internal, "internal error")
 }
 
+/// The refusal of a relay or approval list longer than the longest batch
+/// one prepare can stage ([`SigningBudget::longest_batch`]): refused whole
+/// at the list's own field before a single entry is read, because every
+/// entry costs store reads and no prepare could have produced the list.
+///
+/// [`SigningBudget::longest_batch`]: crate::ratelimit::SigningBudget::longest_batch
+fn past_the_longest_batch(len: usize, limits: &RateLimitConfig, field: &str) -> Option<UserError> {
+    let longest = limits.signing.longest_batch();
+    (len > longest).then(|| {
+        UserError::at(
+            ErrorCode::BadInput,
+            format!("at most {longest} entries per call, got {len}"),
+            vec![field.to_string()],
+        )
+    })
+}
+
 fn decode_b64(field: &'static str, value: &str) -> Result<Vec<u8>, UserError> {
     B64.decode(value).map_err(|_| {
         UserError::at(
@@ -2026,6 +2043,12 @@ impl Mutation {
         let boundary = ctx.data::<StandInBoundary>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
+        if let Some(refusal) = past_the_longest_batch(input.approvals.len(), limits, "approvals") {
+            return Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![refusal],
+            });
+        }
         let approvals: Vec<onboarding::Approval> = input
             .approvals
             .iter()
@@ -2208,8 +2231,7 @@ impl Mutation {
             credentials.actor_id,
             device_label.as_deref(),
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        .await?;
         Ok(LogInPayload {
             auth: Some(AuthSession::from_issued(issued)),
             reuse_detected_at,
@@ -2365,8 +2387,7 @@ impl Mutation {
                 )],
             });
         };
-        let hash = auth::hash_password(&input.new_password)
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let hash = auth::hash_password(&input.new_password)?;
         store::update_password_hash(pool, user_id, &hash).await?;
         store::revoke_sessions(pool, user_id, None, RevokedReason::Security).await?;
         Ok(ConfirmPasswordResetPayload {
@@ -2420,8 +2441,7 @@ impl Mutation {
                 )],
             });
         }
-        let hash = auth::hash_password(&input.new_password)
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let hash = auth::hash_password(&input.new_password)?;
         store::update_password_hash(pool, v.user_id, &hash).await?;
         store::revoke_sessions(pool, v.user_id, Some(v.session_id), RevokedReason::Security)
             .await?;
@@ -3792,7 +3812,7 @@ impl Mutation {
                     )));
                 }
                 Err(media::GalleryPlanError::Internal(e)) => {
-                    return Err(async_graphql::Error::new(e));
+                    return Err(super::faults::Fault::new(e).into());
                 }
             };
         Ok(UploadMediaPayload {
@@ -4259,6 +4279,13 @@ impl Mutation {
         input: SubmitProposalsInput,
     ) -> async_graphql::Result<SubmitProposalsPayload> {
         let v = viewer(ctx)?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        if let Some(refusal) = past_the_longest_batch(input.proposals.len(), limits, "proposals") {
+            return Ok(SubmitProposalsPayload {
+                staged_writes: None,
+                user_errors: vec![refusal],
+            });
+        }
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let areas = ctx.data::<MediaAreas>()?;
@@ -4345,6 +4372,13 @@ impl Mutation {
         input: ApproveActsInput,
     ) -> async_graphql::Result<ApproveActsPayload> {
         let v = viewer(ctx)?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        if let Some(refusal) = past_the_longest_batch(input.approvals.len(), limits, "approvals") {
+            return Ok(ApproveActsPayload {
+                staged_writes: None,
+                user_errors: vec![refusal],
+            });
+        }
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let mut writes = Vec::with_capacity(input.approvals.len());
