@@ -1790,9 +1790,10 @@ Affinity → Type; Tag → Taggable; Review → Reviewable; Owner/Bid → Ownabl
 Join Request, Invitation/A, Send/A, Leave, De-invite/A, Participant/A →
 Chat; Participant/T → Chat; Withdraw/Rescind → Offer; Invitation/T → invitee's Profile;
 De-invite/T → de-invitee's Profile. Reference is trait-independent on both
-ends: its A-leg sources from any passive citing artifact, and its T-leg
-targets any existing passive node, including a Profile, never an Actor
-(`rem:nodes:reference-author-allocation`).
+ends: its A-leg lands on any passive node, the citing artifact, which
+sources the author-fixed T-leg toward any existing passive node, including a
+Profile, never an Actor (`lem:graph:passive-out-degree`,
+`rem:nodes:reference-author-allocation`).
 
 **Reviews are commentary, never state (`rem:graph:reviews-commentary`).**
 Every passive node type implements Reviewable: anything that exists in the
