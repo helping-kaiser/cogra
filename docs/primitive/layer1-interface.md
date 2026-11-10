@@ -3370,8 +3370,8 @@ $\mathrm{clip}_{[-1,1]}$ (net-stance fold) · $\mathrm{sat}(x) = x/(1+x)$
 (the Möbius map shared by bond kernel and CAN saturation) — tag-exempt
 operators. **Not shared mathematics:** the parity bits $\epsilon(e)$ and
 $\epsilon(p)$ and the raw damped weight $\tilde{w}(e)$ are terminal-default
-raw formulas (§3); the act time $\mathbb{T}^{\text{act}}_q$ is closure; the
-maturity scalar $\tau_e$ is terminal (raw channel only); the activations
+raw formulas (§3); the act time $\mathbb{T}^{\text{act}}_q$ is a
+recomputable L1·verify summary; the maturity scalar $\tau_e$ is terminal (raw channel only); the activations
 $g_{\text{vch}}, \bar{g}_{\text{vch}}$ are closure.
 
 ### 14.7 Vocabulary disambiguation (from the collision registers)
@@ -3384,10 +3384,13 @@ Word register (closure edition symbol index, *Word Collisions*):
   projections, one payload, one debit, one stamp, one time.
 - **floor** — distinct objects, one word, never an edge-claim: the
   numéraire $\nu$ (Layer 1 burn-unit→action join) | the policy floor
-  $\rho_{\text{pol}}$, the safety floor $\rho_\theta = \theta/\nu$ (the wall),
-  the effective floor $\rho_{\text{eff}} = \max(\rho_{\text{pol}}, \rho_\theta)$
-  (the door) | the safety price $\theta$ | "through the floor" (the binding
-  axiom). Never a redemption floor of a realization's own economy — a
+  $\rho_{\text{pol}}$, the safety wall $\rho_\theta = \theta/\nu$, the
+  effective floor $\rho_{\text{eff}} = \max(\rho_{\text{pol}}, \rho_\theta)$
+  (the door) | the declared structural wall floor
+  $\rho_{\theta,\min} \in \{\rho^*, 3/37\}$, distinct from the wall in force
+  and from the width-dependent clean-screen diagnostic $\rho_{\theta,\min}(W)$
+  (always written with its width) | the safety price $\theta$ | "through the
+  floor" (the binding axiom). Never a redemption floor of a realization's own economy — a
   distinct object the network never reads
   (`rem:comparator:surface-readings`). Never conflate the price axis ($\nu$,
   $\theta$) with the position axis ($\rho_{\text{pol}}, \rho_\theta,
@@ -3436,7 +3439,8 @@ $\mathbb{T}^{\text{act}}_q$ (act time) vs $\mathbb{T}_{\partial k}$
 coordinate) · $x$ is reserved for reduced standing · $g_{\text{vch}}$
 (activation) vs $g$ (Bid generosity) · $\Pi_{ui}$ (transport entry) vs
 $W_{\text{loc}}$ (local width) · $\mathfrak{m}_m$ (depth mass) vs $m_\theta$
-(margin factor) vs $m^*$ (supported depth) ·
+(margin factor) vs $m^*$ (supported depth) vs $m_k$ (epoch marker; an
+epoch's act count is written $|\mathcal{Q}_k|$) ·
 $L_{\text{hop}}$ (transport) vs $L$/$L_{\text{feed}}$ (raw) · index $a$
 (an opaque address in $\mathbb{A}$ vs actor label after frame binding) ·
 $B_{\max}$ vs $B_i$ ("max" subscript). **Full
