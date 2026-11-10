@@ -3032,7 +3032,7 @@ operator duties (both at the end of this section).
   available only while in full projection, and Layer-1 verification never
   requires them. For standing, edge availability alone is insufficient: the
   verifier must also determine that no accepted complete act was omitted —
-  allocation-input completeness
+  projection completeness
   (`prop:deployment:allocation-input-completeness`) and the public declared
   inputs and formula editions supply that binding.
 - **Final Epoch State Agreement
@@ -3106,18 +3106,30 @@ operator duties (both at the end of this section).
   input, intermediate value, validity verdict, and output of the conserved
   standing package (`def:network:conserved-standing-package`) is
   independently derivable from $E_k$, the completed final ledger, and the
-  published constants and formula editions. **No server-maintained
-  allocation counter, hidden recipient assignment, unpublished tilt rung,
-  private model weight, or uncommitted certificate box may enter standing.**
-  The replay sequence: derive final balances and counts → reconstruct
-  complete acts → apply folds and revocations → cell coefficients and
-  recipient resolution → assemble the base allocation matrix → read emission
-  fractions → evaluate the certificate down the tilt grid → solve the
-  equilibrium and the transport → recompute the mediant → derive final
-  standing, stamps, and W2 decisions. Allocation-input completeness and
-  dynamic safety are orthogonal checks
+  published constants and formula editions. The completed ledger is derived
+  from the shared marker's accepted burn sets under the deployment's marker
+  policy, their verified snapshot and increment, the prior completed state,
+  the accepted write set, and the writing epoch's debit vintage
+  (`post:epoch:final-edge-set`). **No server-maintained relation counter,
+  unpublished emission fraction, private model weight, or unpublished
+  certificate verdict may enter standing.** The replay sequence: recover the
+  marker policy and its edition, the final marker's interpretation data, and
+  the complete accepted sets $A(j)$ with their evidence; check genesis,
+  unique succession, lineage dependence, depth and finality assumptions,
+  both acceptance bounds, evidence availability, and destruction identity,
+  amount and address attribution; derive $C(j)$ and $D(j)$ and recompute the
+  snapshot → derive residual balances and counts from that snapshot and
+  increment, the preceding completed state, the accepted acts, and the
+  writing epoch's debit vintage → reconstruct complete acts → apply per-author
+  folds and recipient resolution to every accepted act → cell coefficients
+  and domain profiles → assemble the base allocation matrix → recompute every
+  emission fraction and the contributing width from the same completed
+  ledger and debit vintage → evaluate the certificate at each attempted rung
+  → iterate the conserved map at the accepted rung to the published residual
+  → derive final standing, projected activations, stamps, and W2 decisions.
+  Projection completeness and dynamic safety are orthogonal checks
   (`rem:deployment:completeness-safety-orthogonal`); a valid package
-  requires both.
+  requires both, and controller replay is a separate obligation.
 - **Formula Completeness (`subsec:deployment:completeness`).** The published
   material — protocol constants; edge-type specifications and census; tensor
   pipeline; path-view extraction; mask and tier rules; determinant sign and
