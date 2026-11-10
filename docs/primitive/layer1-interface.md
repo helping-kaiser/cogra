@@ -2460,8 +2460,13 @@ re-checked at every hop.
 **Proposed final epoch state (`def:epoch:proposed-final-act-state`).** Fix
 a proposed write set $\mathcal{Q}_k$. For each actor $i$, the accepted-act
 increment $\Delta N_i^{(k)}$ counts proposed epoch-$k$ **acts** (one binary
-record, one complete hyper-edge, or one Registration each count one). With
-the settled boundary burn increment $\Delta B_i^{(k)}$:
+record, one complete hyper-edge, or one Registration each count one). The
+burn increment $\Delta B_i^{(k)} = B_i^{(k)} - B_i^{(k-1)}$ is
+marker-defined: $B_i^{(k)}$ is the settled amount derived from the accepted
+set $A(k)$ at the recognized final marker $m_k$, and the increment sums $i$'s
+destruction amounts first represented by accepted records at this marker
+(`def:comparator:marker-burn-snapshot`) — positive even when $i$ authors no
+act, zero when the marker accepts no previously uncounted destruction. Then:
 
 $$b_i^{(k)} = b_i^{(k-1)} + \Delta B_i^{(k)} - \Delta N_i^{(k)}\,\theta^{(k)}, \qquad N_i^{(k)} = N_i^{(k-1)} + \Delta N_i^{(k)}$$
 
@@ -2469,7 +2474,12 @@ $$b_i^{(k)} = b_i^{(k-1)} + \Delta B_i^{(k)} - \Delta N_i^{(k)}\,\theta^{(k)}, \
 debit vintages stay consummated. Every standing, path,
 admission-fraction, stamp, and gate quantity associated with
 $\mathcal{Q}_k$ is computed from this **completed tentative state**
-$E_k = E_{k-1} \cup \Delta E_k$.
+$E_k = E_{k-1} \cup \Delta E_k$, using the same recognized final marker,
+published marker policy, settled lineage view, accepted burn sets, accepted
+write set, and writing epoch's debit vintage. The next controller price is
+derived from this epoch's contributing width and takes effect with the
+one-boundary lead; a marker never retroactively chooses the price of a
+consummated act.
 
 **Epoch-quantized standing (`post:epoch:standing-quantization`).** Standing
 is defined only for a completed epoch edge set: one simultaneous standing
@@ -2809,15 +2819,40 @@ consume them (`rem:epoch:admission-statistics-quarantine`).
 **Final epoch edge set (`post:epoch:final-edge-set`).** $E_k = E_{k-1} \cup
 \Delta E_k$ — monotone by construction, causally closed by the dependency
 closure, satisfying `post:introduction:epoch-edge-set` with no appeal to
-any global position coordinate. Commitment rates are computed from $B_i$
-and $N_i$ accumulated within $E_k$; the boundary burn state is provided
-alongside, sampled at the settlement-stability depth $\delta_{\text{pos}}$
-— chosen to exceed the settlement depth the realization publishes (R4(e)),
-so every sampled value is order-free and equal to its last pinned value
-(`lem:comparator:frame-stability`). $\delta_{\text{pos}}$ buffers the *burn
-snapshot*, not edge membership. Any participant
-accepting the same $E_k$ (and $\mathcal{Q}_k$) reproduces every epoch-$k$
-quantity from the published constants alone.
+any global position coordinate. Commitment rates are computed from the
+completed residual balances and action counts. Every component of the
+closure reads the same recognized final marker $m_k$
+(`post:comparator:marker-bound-settlement`), in one settled history under one
+published marker policy (`cond:comparator:marker-epoch-registration`). The
+published **epoch package** binds the marker policy by its identity and fixed
+edition; the marker's settled lineage view, fixed interpretation data,
+accepted sets, and public verification evidence to its burn snapshot and
+increment; the accepted write set with its authoritative sequence
+$\mathcal{Q}_k$ and edge projection $E_k$; the preceding completed state
+(that of $m_{k-1}$); and the writing epoch's debit vintage and constants.
+The boundary burn state $\{B_i^{(k)}\}$ is derived from $A(k)$, counting each
+represented destruction once; its increment counts $D(k)$, the destructions
+first represented by accepted records at $m_k$
+(`def:comparator:marker-burn-snapshot`). A burn outside $A(k)$ contributes
+nothing to the snapshot; no reader may omit a member of the accepted set or
+import a burn through a later observation; an accepted package cannot mix
+marker histories or marker-policy editions, drop predecessor acceptance, or
+substitute an unchecked asserted total for the verified accepted amount.
+
+The network reads $m_k$ at the settlement-stability depth
+$\delta_{\text{pos}}$, chosen to exceed the settlement depth the realization
+publishes (R4(e)), under the finality assumptions of
+`cond:comparator:marker-lineage-succession`. $\delta_{\text{pos}}$ protects
+the marker, its lineage, and its fixed interpretation, not edge membership.
+Residual balances, standing, emission, and contributing width all use this
+one settled read and the writing epoch's debit vintage; the next controller
+price cannot replace that vintage. Any participant accepting the complete
+package, with the same published constants, compiler edition, and
+certificate procedure, reproduces every epoch-$k$ quantity. The epoch history
+is the recognized marker sequence read past the settlement depth, with an
+empty initial boundary; epochs number certificates from 1, and positions
+number acts within one certificate from 1
+(`rem:epoch:epoch-history-is-the-marker-sequence`).
 
 **Log position (`def:epoch:log-position`).** $\mathrm{pos}(e)$, the
 zero-based rank under the identity-key order $\prec^*$ (lexicographic
@@ -2838,7 +2873,7 @@ memory, no below-wall branch**. It has no effect on standing.
 (`alg:epoch:conserved-standing-computation`):**
 
 ```text
- 1: Input: proposed 𝒬_k, settled boundary burn state, E_{k−1}, constants
+ 1: Input: proposed 𝒬_k, shared marker-defined epoch package, E_{k−1}
  2: Validate formation + dependent-set closure
  3: Form tentative E_k = E_{k−1} ∪ ΔE_k          (def:epoch:proposed-final-act-state)
  4: Apply all count increments and θ-debits; reject if any b_i^(k) < 0
@@ -2862,15 +2897,17 @@ memory, no below-wall branch**. It has no effect on standing.
 ```
 
 **Epoch Replay Determinism (`prop:epoch:epoch-replay-determinism`).** Given
-$E_k$, the boundary burn state, the debit schedule, the published
-constants, the projection-compiler version, and the declared certificate
-procedure, the entire epoch-$k$ derivation — rates, fold cells,
-coefficients, the base matrix, emission fractions, the accepted rung, the
-transport, final standing, title, the raw Self-edge reading, activations,
-stamps, headroom, and the certificate — is deterministic: a function of the
-authoritative order
-$\mathcal{Q}_k$ (`lem:graph:ordered-replay-determinism`), invariant under
-every payload state.
+the shared epoch package — its published marker policy with identity and
+fixed edition, the marker's lineage and acceptance evidence, $E_k$, the
+marker-defined burn state and increment, the prior completed state, the
+writing epoch's debit vintage, and the published constants — together with
+the projection-compiler version and the declared certificate procedure, the
+entire epoch-$k$ derivation — rates, fold cells, coefficients, the base
+matrix, emission fractions, the accepted rung, the transport, final standing,
+title, the raw Self-edge reading, activations, stamps, headroom, and the
+certificate — is deterministic: for these fixed inputs a function of the
+authoritative order $\mathcal{Q}_k$ (`lem:graph:ordered-replay-determinism`),
+invariant under every payload state.
 
 ### 11.7 The θ-debit ledger and the two-gate write rule
 
