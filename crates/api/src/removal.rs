@@ -192,6 +192,37 @@ pub async fn remove_content<B: L1Boundary>(
     sweep_chain(boundary, pool, areas, &chain, node, store::AUTHOR_REMOVAL).await
 }
 
+/// Removes the whole chain `author` wrote on one content node, under
+/// `reason` — the account deletion's content sweep (erasure.md §2
+/// "Content-level"), which owes no authorship check: the executor read
+/// the node off the author's own records. Every revision goes, landed and
+/// in flight, exactly as `removeContent` with `includeRevisions` takes it.
+#[allow(clippy::too_many_arguments)]
+pub async fn remove_authored_chain<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    areas: &MediaAreas,
+    author: Uuid,
+    address: &str,
+    family: Family,
+    node: &str,
+    reason: &str,
+) -> Result<Removed, RemovalError> {
+    if !removable(family) {
+        return Err(RemovalError::OutOfScope(family.as_str().to_string()));
+    }
+    let entity = content_node(pool, family, node).await?;
+    let chain = Chain {
+        viewer: author,
+        address,
+        family,
+        node,
+        record: "",
+        include_revisions: true,
+    };
+    sweep_chain(boundary, pool, areas, &chain, entity, reason).await
+}
+
 /// The display row a content node's version rows hang off — None for a
 /// node whose entity row was never written (an act never pre-signed).
 async fn content_node(
