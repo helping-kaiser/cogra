@@ -14,10 +14,38 @@
 //    logs. `settleFetches` lets the per-file server wait for them before it
 //    resets the handlers, so every request is answered by its own test.
 //
+// 3. A test whose code sends in a loop — a paging walk over a fixture that
+//    never ends — spins until the worker's heap is gone, and where its chain
+//    never yields a macrotask it starves every timer that could stop it, the
+//    settle wait's among them (saved-view's stream test aborted CI this way).
+//    So past `RUNAWAY_LIMIT` requests in one test the next one fails as a
+//    network failure does — which ends any loop that stops on one — and the
+//    test fails by name (`takeRunaway`, checked after each test).
+//
 // Installed once from setup.ts, beneath msw's own fetch patch (applied later
 // at `listen()`), so msw still sees every request.
 
 const inFlight = new Set<Promise<unknown>>();
+
+/** Far past what any one test sends; past it, a test is sending in a loop. */
+export const RUNAWAY_LIMIT = 1000;
+let limit = RUNAWAY_LIMIT;
+let sent = 0;
+let runaway: string | null = null;
+
+/** A fresh count for the next test; a test of the guard itself lowers the limit. */
+export function resetRequestCountForTests(nextLimit: number = RUNAWAY_LIMIT): void {
+  limit = nextLimit;
+  sent = 0;
+  runaway = null;
+}
+
+/** The runaway this test ran into, if any — taken, so it is reported once. */
+export function takeRunaway(): string | null {
+  const found = runaway;
+  runaway = null;
+  return found;
+}
 
 // The real clock, captured before any suite fakes timers: the wait below must
 // run out even when a test left fake timers installed.
@@ -50,17 +78,24 @@ export function installTestFetch() {
   }
 
   globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
-    const sent = send(input, init);
+    sent += 1;
+    if (sent > limit) {
+      runaway ??= `a request loop: more than ${limit} requests sent in one test, the one past them to ${
+        input instanceof Request ? input.url : String(input)
+      }`;
+      return Promise.reject(new TypeError("fetch failed", { cause: new Error(runaway) }));
+    }
+    const answer = send(input, init);
     // In flight until the answer's body has fully arrived, not just its
     // headers: the caller acts on the body. The clone is taken before the
     // caller's own continuation runs, since this one is attached first.
-    const delivered: Promise<unknown> = sent.then(
+    const delivered: Promise<unknown> = answer.then(
       (response) => response.clone().arrayBuffer().catch(() => undefined),
       () => undefined,
     );
     inFlight.add(delivered);
     void delivered.then(() => inFlight.delete(delivered));
-    return sent;
+    return answer;
   };
 }
 
