@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { InviteLinkCheckDocument } from "@/__generated__/graphql";
 import { query } from "@/lib/apollo-client";
 import { extractInviteId } from "@/lib/onboarding/invite-input";
+import { joinOriginOf } from "@/lib/onboarding/join-origin";
 import { JoinView } from "./join-view";
 
 type Props = { params: Promise<{ linkId: string }> };
@@ -34,7 +35,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function JoinPage({ params }: Props) {
+export default async function JoinPage({
+  params,
+  searchParams,
+}: Props & { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const { linkId } = await params;
-  return <JoinView linkId={linkId} />;
+  const { from } = await searchParams;
+  return <JoinView linkId={linkId} origin={joinOriginOf(typeof from === "string" ? from : null)} />;
 }
