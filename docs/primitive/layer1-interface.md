@@ -3554,8 +3554,8 @@ floor set is exactly $\{\rho^*, 3/37\}$. $\rho^* = p^*/(1-p^*)$ is the exact
 ridge image, $p^*$ being the unique maximizer on $(0,1)$ of the clean
 full-depth elasticity (`rem:dynamics:elasticity-profile`): an exact real
 defined by the activation, not a grid endpoint or rounded root, certified in
-$[0.072857886,\ 0.072858002]$ ($\rho^* \approx 0.072858$) and strictly below
-$3/37 \approx 0.081081$, so either declaration gives
+$[0.072857886,\ 0.072858002]$ ($\rho^* \approx 0.072857922$) and strictly
+below $3/37 \approx 0.081081081$, so either declaration gives
 $\rho_{\theta,\min} \ge \rho^* > 0$. Before its first epoch the deployment
 publicly declares $\rho_{\theta,\min} \in \{\rho^*, 3/37\}$ beside $\nu$ in
 its structural tier. The declaration is fixed for the deployment: changing
@@ -3590,8 +3590,8 @@ $\nu = 0.10$:
 
 | Declaration | $\rho_{\theta,\min}$ | Minimum price $\nu\rho_{\theta,\min}$ | Maximum capacity $1/(\nu\rho_{\theta,\min})$ |
 |---|---|---|---|
-| ridge $\rho^*$ | $\approx 0.072858$ | $\approx 0.0072858$ | $\approx 137.25$ |
-| rational $3/37$ | $\approx 0.081081$ | $\approx 0.0081081$ | $\approx 123.33$ |
+| ridge $\rho^*$ | $\approx 0.072857922$ | $\approx 0.007285792$ | $\approx 137.253435$ |
+| rational $3/37$ | $\approx 0.081081081$ | $\approx 0.008108108$ | $\approx 123.333333$ |
 
 Emission saturates exactly when $\hat{r}_u \ge \rho_\theta$; at a wall above
 the floor, being above $\rho_{\theta,\min}$ alone is insufficient.
