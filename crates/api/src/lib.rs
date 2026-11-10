@@ -6,6 +6,7 @@
 
 pub mod auth;
 pub mod bookmarks;
+pub mod boot;
 pub mod bootstrap;
 pub mod breach;
 pub mod content;

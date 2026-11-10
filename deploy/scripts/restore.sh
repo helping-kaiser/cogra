@@ -109,7 +109,9 @@ timed "carried bucket restore" mirror_bucket cogra-drill-media cogra-drill "$MED
 timed "held bucket restore" mirror_bucket cogra-drill-media cogra-drill "$MEDIA_HELD_BUCKET" "$restored/held" push cogra-drill
 
 # A scratch API on the restored pair: no route from the proxy, no mail, no
-# epoch clock, no breach lookups — it only has to come up and answer.
+# epoch clock, no breach lookups — it only has to come up and answer. A
+# release image refuses to start without a session key, so it gets a
+# throwaway one no session ever outlives.
 podman run -d --name cogra-drill-api --network cogra-drill --pull=never \
   --env-file "$COGRA_ETC/buckets.env" \
   --secret cogra-drill-pg,type=env,target=PGPASSWORD \
@@ -118,6 +120,7 @@ podman run -d --name cogra-drill-api --network cogra-drill --pull=never \
   -e DATABASE_URL=postgres://cogra@cogra-drill-postgres:5432/cogra \
   -e MEDIA_S3_ENDPOINT=http://cogra-drill-media:9000 \
   -e MAILER=dev -e BREACH_CHECK=off -e CLIENT_IP_SOURCE=ConnectInfo -e RUST_LOG=info \
+  -e SESSION_SIGNING_SEED="$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')" \
   "$api_image" >/dev/null
 wait_for "scratch api" podman exec cogra-drill-api /usr/local/bin/http-health 8080 /health
 
