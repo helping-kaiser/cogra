@@ -667,7 +667,7 @@ $t(n) < 1$ is preserved.
 CAN composition-graph rules (PN full Def B.4): four rules; the
 Layer-1-issued Declaration component enters as a leaf
 keyed on source class; the Rule-2 hyper-edge families are Tag, Review, Send,
-Bid, Invitation, and Reference; the control-edge exclusion covers settlement
+Bid, Invitation, Reference, and Participant; the control-edge exclusion covers settlement
 (Withdraw, Rescind) and conversational (Leave, De-invite A·T) control
 records, with Rule 4 taking precedence over Rule 2 for De-invite legs.
 
