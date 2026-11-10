@@ -884,9 +884,8 @@ host-cached values are by-products — §3): $q = \tfrac12$ (raw diversity
 preference), raw feed depth $L = L_{\text{feed}} = 4$,
 $\tilde{w}_{\text{spam}} \approx 0.011$, $\tilde{w}_{\max} \approx 0.986$
 (the raw edge-weight ceiling, `thm:graph:raw-weight-ceiling`),
-$\tilde{w}_{\max}^{\text{Op}} \approx 0.503$. The pre-Edition-4 raw
-precision clip $\epsilon_{\text{clip}}$ is **deleted with no successor**
-(`rem:sorting:raw-pruning-is-implementation`).
+$\tilde{w}_{\max}^{\text{Op}} \approx 0.503$. Layer 1 publishes no raw
+precision clip (`rem:sorting:raw-pruning-is-implementation`).
 
 The comparator's single burn-unit→action join is the **numéraire** $\nu$; the
 participation floor is a *pair* — the host-dialed $\rho_{\text{pol}}$ and the
@@ -1212,7 +1211,7 @@ locks nothing, adjudicates nothing; it records Offers and ownership changes. A
 terminal escrow or payment system may observe the public log, but that
 mechanism is terminal. Layer 1 supplies the deterministic commit anchor: the
 **epoch certificate** in which the settlement is recognized, unchallenged, and
-title-transferring — not the Ratify, which is no longer the point of no return
+title-transferring. The certificate, not the Ratify, is the point of no return
 (`rem:graph:regret-window`). The residual exposure is boundary censorship — a
 host suppressing a cancel while writing the commit, which leaves no Layer-1
 trace (`rem:epoch:consent-exposure`); its written-side accountability is
@@ -1898,8 +1897,8 @@ The damped weight $\tilde{w}(e)$ is the identical **raw per-edge primitive**
 for every raw-graph consumer — feed ranking, the raw signed double-cover
 service, and Channel 1 of bridge transport — with no per-consumer variant
 (**one raw formula for all raw-graph consumers**,
-`rem:epoch:shared-raw-edge-primitive`). Under Edition 4 the raw formula
-itself is a **terminal default** (a guild may replace it, publishing the
+`rem:epoch:shared-raw-edge-primitive`). The raw formula itself is a
+**terminal default** (a guild may replace it, publishing the
 replacement completely; host-cached values are by-products — §3, §4).
 **Standing is not a raw-graph consumer:** it folds complete acts into cells
 and reads the cell coefficient and the wall-clamped recipient activation
@@ -3033,7 +3032,7 @@ versioned choice, and a more refined published procedure may accept a higher
 rung. Every accepted rung still carries a proved pass.
 
 **Raw signed double-cover service (`subsec:epoch:raw-signed-service`).** The
-double-cover traversal survives as a public raw-graph service for consumers
+double-cover traversal is a public raw-graph service for consumers
 needing signed raw-path evidence (the canonical bridge-consent
 calculation). It reads the sign already computed for raw ranking and **does
 not compute standing** — standing and feed share neither one activation nor
@@ -3296,9 +3295,8 @@ zero-based rank within the written record set under the identity-key order
 $\prec^*$ — which first compares the epoch-position key of record
 (`def:graph:authoritative-act-order`) and, within an equal key, the
 lexicographic tie-break $(\mathbb{T}^{\text{act}}, \mathrm{author},
-\mathrm{src}, \mathrm{tgt})$, so it refines the authoritative order —
-survives only as a deterministic
-**audit coordinate**: epoch membership is the closure rule's, and no
+\mathrm{src}, \mathrm{tgt})$, so it refines the authoritative order — is
+a deterministic **audit coordinate** and nothing more: epoch membership is the closure rule's, and no
 scoring, recognition, or boundary quantity consumes it. $\prec^*$ retains
 exactly one consumer — an optional audit tie-break within the
 authoritative order.
@@ -4092,8 +4090,7 @@ Word register (closure edition symbol index, *Word Collisions*):
   gone; no glyph.
 
 Glyph register highlights:
-$\epsilon \in \{+1,-1\}$ (parity) — the pre-Edition-4 collision partner
-$\epsilon_{\text{clip}}$ is deleted · $N_i$ vs $N_{\text{epoch}}$ ·
+$N_i$ vs $N_{\text{epoch}}$ ·
 $\mathbb{T}^{\text{act}}_q$ (act time) vs $\mathbb{T}_{\partial k}$
 (boundary slot of derived readings) vs $\mathrm{pos}(e)$ (audit
 coordinate) · $x$ is reserved for reduced standing · $g_{\text{vch}}$
