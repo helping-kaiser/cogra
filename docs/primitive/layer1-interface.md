@@ -670,7 +670,7 @@ host-cached values are by-products — §3): $q = \tfrac12$ (raw diversity
 preference), raw feed depth $L = L_{\text{feed}} = 4$,
 $\tilde{w}_{\text{spam}} \approx 0.011$, $\tilde{w}_{\max} \approx 0.986$
 (the raw edge-weight ceiling, `thm:graph:raw-weight-ceiling`),
-$\tilde{w}_{\max}^{\text{Op}} \approx 0.502$. The pre-Edition-4 raw
+$\tilde{w}_{\max}^{\text{Op}} \approx 0.503$. The pre-Edition-4 raw
 precision clip $\epsilon_{\text{clip}}$ is **deleted with no successor**
 (`rem:sorting:raw-pruning-is-implementation`).
 
