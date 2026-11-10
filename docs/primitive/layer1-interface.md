@@ -3819,7 +3819,8 @@ operator duties (both at the end of this section).
   (W1/W2a/W2b), closure rule, formation rule + handshake, and the θ-debit
   ledger**; settlement recognition and the **epoch title fold**; the
   conserved derivation sequence and certificate definitions; the
-  safety-price/five-ρ-floor family and the wall controller — is jointly
+  safety price, the five-ρ family (§11.8), the structural wall floor, and
+  the wall controller — is jointly
   sufficient to reproduce the server's output from published records alone. Terminal mechanisms are not
   part of this invariant; **if a terminal service publishes a mechanism,
   the grant requires that terminal mechanism's own completeness** — a guild
