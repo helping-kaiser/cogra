@@ -126,7 +126,6 @@ export function formatRank(score: number): string {
 
 type RowContext = {
   readonly query: string;
-  readonly reader: string | null;
   readonly order: SearchOrder;
   readonly now: number;
 };
@@ -174,11 +173,11 @@ function rowOf(hit: SearchHit, position: number, context: RowContext): ResultRow
         sub: `@${node.handle}`,
         src: node.avatar?.status === "NORMAL" ? node.avatar.url : null,
         value: null,
-        // The reader's own row opens their own profile (ExplorePerson.md:25).
-        href:
-          context.reader !== null && node.id === context.reader
-            ? "/profile"
-            : withFrom(`/u/${encodeURIComponent(node.handle)}`),
+        // The reader's own row opens their own profile (ExplorePerson.md:31)
+        // inside Explore's stack, as the feed's own chip opens it inside
+        // Feed's — by handle, never the Profile tab (readme §13: "A stack is
+        // where a screen was opened FROM").
+        href: withFrom(`/u/${encodeURIComponent(node.handle)}`),
       };
     case "Hashtag": {
       const cue = cueOf(context.query);
@@ -203,8 +202,6 @@ export type ResultsLayout = {
   readonly kinds: readonly FeedKindValue[];
   readonly order: SearchOrder;
   readonly hasMorePeople: boolean;
-  /** The signed-in reader's id; null for a guest. */
-  readonly reader: string | null;
   readonly now?: number;
 };
 
@@ -215,10 +212,9 @@ export function layoutResults({
   kinds,
   order,
   hasMorePeople,
-  reader,
   now = Date.now(),
 }: ResultsLayout): ResultItem[] {
-  const context: RowContext = { query, reader, order, now };
+  const context: RowContext = { query, order, now };
   const profilesAlone = kinds.length === 1 && kinds[0] === "profiles";
   const items: ResultItem[] = [];
   let position = 0;

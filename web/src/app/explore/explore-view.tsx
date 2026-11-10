@@ -489,10 +489,9 @@ export function ExploreView({
             kinds: results.filter.kinds,
             order: guest ? "newest" : results.filter.order,
             hasMorePeople: results.hasMorePeople,
-            reader,
             now,
           }),
-    [results, guest, reader, now],
+    [results, guest, now],
   );
   const rowCount = items.filter((item) => item.type === "row").length;
   const tailRef = useApproachingTail({
