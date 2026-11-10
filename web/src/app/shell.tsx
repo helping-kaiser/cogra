@@ -63,8 +63,9 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
  * where a screen was opened FROM") — never Feed by default. So does a door out
  * of someone's profile, a tag's page, the stream, or a post's detail by its
  * score: each token carries the origin its page was opened with
- * (`carriedOrigin`; `u:ada/saved`, `tag:coast/search`, `stream:v2/saved`,
- * `post:p1:saved`), and the root is that origin's. A token carrying none was
+ * (`carriedOrigin`; `u:ada/saved`, `tag:coast/search`, `stream:v2/saved`, and
+ * `post:p1` with the detail's own origin after a further colon), and the root
+ * is that origin's. A token carrying none was
  * opened from the feed, a link or a chip, and lights Feed.
  */
 export function detailRoot(from: string | null): NavSlot {
