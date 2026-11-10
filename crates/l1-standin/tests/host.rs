@@ -110,13 +110,14 @@ async fn handshake_lands_a_record(pool: PgPool) {
         .await
         .expect("closes")
         .expect("non-empty");
-    assert_eq!(package.epoch, 0);
+    assert_eq!(package.epoch, 1, "epochs number from 1");
     assert_eq!(package.records.len(), 1);
     let record = &package.records[0];
     assert_eq!(record.act_id, act_id);
     assert_eq!(record.family, Family::Registration);
+    assert_eq!(record.epoch, 1);
     assert_eq!(record.act_time, 1);
-    assert_eq!(record.position, 0);
+    assert_eq!(record.position, 1, "positions number from 1");
     assert!(record.payload_marked);
     assert_eq!(record.legs.len(), 1);
     let leg = &record.legs[0];
@@ -130,10 +131,10 @@ async fn handshake_lands_a_record(pool: PgPool) {
     assert!((balance.balance - 2.0).abs() < 1e-9);
     assert!((balance.burned_total - 3.0).abs() < 1e-9);
 
-    let since = host.epochs_since(-1).await.expect("epochs");
-    assert_eq!(since.len(), 1);
+    let since = host.epochs_since(0).await.expect("epochs");
+    assert_eq!(since.len(), 1, "the empty boundary 0 reads the whole sequence");
     assert_eq!(since[0], package);
-    assert!(host.epochs_since(0).await.expect("epochs").is_empty());
+    assert!(host.epochs_since(1).await.expect("epochs").is_empty());
 }
 
 /// An epoch with nothing approved in it publishes no package at all.
@@ -142,7 +143,7 @@ async fn handshake_lands_a_record(pool: PgPool) {
 async fn empty_close_publishes_nothing(pool: PgPool) {
     let host = standin(pool);
     assert!(host.close_epoch().await.expect("ok").is_none());
-    assert!(host.epochs_since(-1).await.expect("ok").is_empty());
+    assert!(host.epochs_since(0).await.expect("ok").is_empty());
 }
 
 /// The close loop publishes an approved act on its interval, with no close asked for.
@@ -157,7 +158,7 @@ async fn close_loop_publishes_on_the_interval(pool: PgPool) {
 
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
     let package = loop {
-        if let Some(package) = host.epochs_since(-1).await.expect("epochs").pop() {
+        if let Some(package) = host.epochs_since(0).await.expect("epochs").pop() {
             break package;
         }
         assert!(
@@ -432,16 +433,17 @@ async fn a_burn_settles_after_its_delay(pool: PgPool) {
 
     let ticker = funded_actor(&host, 10 * THETA).await;
     submit(&host, &ticker, registration(&ticker)).await;
-    host.close_epoch().await.expect("ok").expect("epoch 0");
+    host.close_epoch().await.expect("ok").expect("epoch 1");
     assert_eq!(
         host.burn_settlement(&ticket).await.expect("reads"),
         BurnSettlement::Pending,
-        "requested before epoch 0 with a delay of 2: due at epoch 1"
+        "requested at the empty boundary 0 with a delay of 2: due at epoch 2"
     );
     submit(&host, &ticker, opinion(&ticker, 1, "bob", vec![])).await;
-    let epoch_1 = host.close_epoch().await.expect("ok").expect("epoch 1");
+    let epoch_2 = host.close_epoch().await.expect("ok").expect("epoch 2");
+    assert_eq!(epoch_2.epoch, 2);
     assert!(
-        epoch_1.records.iter().all(|r| r.author == ticker.address()),
+        epoch_2.records.iter().all(|r| r.author == ticker.address()),
         "the burn settles at this close, after its selection"
     );
     assert_eq!(
@@ -450,7 +452,7 @@ async fn a_burn_settles_after_its_delay(pool: PgPool) {
             pinned_micro: 3 * THETA
         }
     );
-    let package = host.close_epoch().await.expect("ok").expect("epoch 2");
+    let package = host.close_epoch().await.expect("ok").expect("epoch 3");
     assert_eq!(package.records[0].author, applicant.address());
 }
 
@@ -715,7 +717,7 @@ async fn founding_participant_self_loops_at_its_own_mint(pool: PgPool) {
 /// Bob's opinion toward Alice's Profile matures with the prior degree:
 /// Bob's Actor node is fresh (degree 0) but Alice's Profile has degree 1
 /// from the Registration — max(0, 1) = 1 → τ = 1 − 1/(1+1) = 0.5. Later
-/// acts never contribute to an earlier act's maturity: the epoch-0
+/// acts never contribute to an earlier act's maturity: the epoch-1
 /// record still reads τ = 0 through the ingest surface.
 ///
 /// Maturity reads the degree the endpoints carried before the act, and no later act revises it.
@@ -727,14 +729,14 @@ async fn maturity_grows_with_prior_degree(pool: PgPool) {
     let bob = funded_actor(&host, 10 * THETA).await;
 
     submit(&host, &alice, registration(&alice)).await;
-    host.close_epoch().await.expect("ok").expect("epoch 0");
+    host.close_epoch().await.expect("ok").expect("epoch 1");
 
     submit(&host, &bob, opinion(&bob, 0, &alice.address(), vec![])).await;
-    let package = host.close_epoch().await.expect("ok").expect("epoch 1");
-    assert_eq!(package.epoch, 1);
+    let package = host.close_epoch().await.expect("ok").expect("epoch 2");
+    assert_eq!(package.epoch, 2);
     let leg = &package.records[0].legs[0];
     assert!((leg.tau - 0.5).abs() < 1e-12);
-    let all = host.epochs_since(-1).await.expect("ok");
+    let all = host.epochs_since(0).await.expect("ok");
     assert_eq!(all[0].records[0].legs[0].tau, 0.0);
 }
 
@@ -758,12 +760,21 @@ async fn act_budget_caps_the_epoch(pool: PgPool) {
     let alice = funded_actor(&host, 10 * THETA).await;
     submit(&host, &alice, registration(&alice)).await;
     submit(&host, &alice, opinion(&alice, 1, "bob", vec![])).await;
-    host.close_epoch().await.expect("ok").expect("epoch 0");
     host.close_epoch().await.expect("ok").expect("epoch 1");
-    let packages = host.epochs_since(-1).await.expect("ok");
+    host.close_epoch().await.expect("ok").expect("epoch 2");
+    let packages = host.epochs_since(0).await.expect("ok");
     assert_eq!(packages.len(), 2, "one act per epoch under a budget of 1");
     assert_eq!(packages[0].records.len(), 1);
     assert_eq!(packages[1].records.len(), 1);
+    let keys: Vec<(i64, i64)> = packages
+        .iter()
+        .flat_map(|p| p.records.iter().map(|r| (r.epoch, r.position)))
+        .collect();
+    assert_eq!(
+        keys,
+        vec![(1, 1), (2, 1)],
+        "each close numbers its own epoch from 1, its acts from 1"
+    );
 }
 
 /// Approving never closes: closing is the substrate's own clock, so a
@@ -787,13 +798,50 @@ async fn approving_does_not_close_an_epoch(pool: PgPool) {
     submit(&host, &alice, opinion(&alice, 1, "bob", vec![])).await;
 
     assert!(
-        host.epochs_since(-1).await.expect("ok").is_empty(),
+        host.epochs_since(0).await.expect("ok").is_empty(),
         "the act budget is full twice over and nothing has closed"
     );
     host.close_epoch()
         .await
         .expect("ok")
         .expect("the clock closes it");
+}
+
+/// The stand-in's own tables hold the numbering, so even a writer that
+/// goes around the crate cannot store what has no order of record: no
+/// epoch 0 row, no accepted act at position 0, and no accepted (epoch,
+/// position) twice (layer1-interface.md §7.2).
+///
+/// The stand-in's tables refuse an epoch 0, a position 0 and a repeated (epoch, position).
+/// ´claim:standin:the-tables-refuse-a-numbering-without-an-order-of-record´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_tables_refuse_a_numbering_without_an_order_of_record(pool: PgPool) {
+    let zero = sqlx::query("INSERT INTO l1_epochs (epoch, act_count) VALUES (0, 0)")
+        .execute(&pool)
+        .await;
+    assert!(zero.is_err(), "no epoch 0: {zero:?}");
+
+    let host = standin(pool.clone());
+    let alice = funded_actor(&host, 10 * THETA).await;
+    let first = submit(&host, &alice, registration(&alice)).await;
+    let second = submit(&host, &alice, opinion(&alice, 1, "bob", vec![])).await;
+    let package = host.close_epoch().await.expect("ok").expect("lands");
+    assert_eq!(package.records.len(), 2);
+
+    let position_zero = sqlx::query("UPDATE l1_acts SET position = 0 WHERE act_id = $1")
+        .bind(first.to_string())
+        .execute(&pool)
+        .await;
+    assert!(position_zero.is_err(), "no position 0: {position_zero:?}");
+    let repeated = sqlx::query(
+        "UPDATE l1_acts SET position = (SELECT position FROM l1_acts WHERE act_id = $1)
+         WHERE act_id = $2",
+    )
+    .bind(first.to_string())
+    .bind(second.to_string())
+    .execute(&pool)
+    .await;
+    assert!(repeated.is_err(), "no repeated position: {repeated:?}");
 }
 
 /// One stored act that will not parse fails the whole close and stays

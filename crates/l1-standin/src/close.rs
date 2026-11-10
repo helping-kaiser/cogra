@@ -62,7 +62,7 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use common::l1::census::LegRole;
-use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::handshake::{EpochPackage, FIRST_POSITION, PublishedLeg, PublishedRecord};
 use common::l1::identifier::NodeId;
 use sqlx::PgConnection;
 
@@ -124,7 +124,8 @@ pub(crate) struct Selection {
 ///
 /// The authoritative order is the stable sort by Lamport time — position
 /// totalizes equal frontiers, per layer1-interface.md §8.3's
-/// authoritative-order rule. Replay in that published order derives
+/// authoritative-order rule, numbering the epoch's acts from 1 to
+/// |𝒬_k|. Replay in that published order derives
 /// maturities from the pre-act projected degrees; both legs of a
 /// hyper-edge see the same pre-act state and do not mature one another.
 pub(crate) fn select_and_order(
@@ -206,7 +207,7 @@ pub(crate) fn select_and_order(
 
     let mut records: Vec<PublishedRecord> = Vec::with_capacity(ordered.len());
     let mut acts_per_author: BTreeMap<String, i64> = BTreeMap::new();
-    for (position, (act_time, candidate)) in ordered.iter().enumerate() {
+    for (position, (act_time, candidate)) in (FIRST_POSITION..).zip(ordered.iter()) {
         let legs = projection_legs(&candidate.body)?;
         let mut published_legs: Vec<PublishedLeg> = Vec::with_capacity(legs.len());
         for (role, src, tgt, p_d, p_i) in &legs {
@@ -241,7 +242,7 @@ pub(crate) fn select_and_order(
             family: candidate.body.family,
             epoch,
             act_time: *act_time,
-            position: position as i64,
+            position,
             payload_marked: candidate.payload_len > 0,
             payload_witness: candidate.payload_witness.clone(),
             legs: published_legs,
@@ -311,9 +312,7 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
     sqlx::query!("LOCK TABLE l1_epochs IN EXCLUSIVE MODE")
         .execute(&mut *tx)
         .await?;
-    let epoch = sqlx::query_scalar!(r#"SELECT COALESCE(MAX(epoch) + 1, 0) AS "e!" FROM l1_epochs"#)
-        .fetch_one(&mut *tx)
-        .await?;
+    let epoch = crate::last_closed_epoch(&mut tx).await? + 1;
 
     let rows = sqlx::query!(
         "SELECT act_id, author, seq, family, middle, target, p_d, p_i,
@@ -397,13 +396,25 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
 
     let attested_at = persist(&mut tx, epoch, &selection, standin.config().theta_micro).await?;
     crate::settle_due(&mut tx, epoch).await?;
-    tx.commit().await?;
-
-    Ok(Some(EpochPackage {
+    let package = EpochPackage {
         epoch,
         attested_at,
         records: selection.records,
-    }))
+    };
+    publishable(&package)?;
+    tx.commit().await?;
+
+    Ok(Some(package))
+}
+
+/// The package has an order of record — epoch and positions numbered from
+/// 1, no gap, no repeat (layer1-interface.md §7.2) — checked before the
+/// close commits, like [`linearizes`], so a malformed epoch is never
+/// written. Dropping the transaction on the error rolls the close back.
+fn publishable(package: &EpochPackage) -> Result<(), StandInError> {
+    package
+        .check_order_of_record()
+        .map_err(|malformed| StandInError::Host(format!("refusing to publish: {malformed}")))
 }
 
 /// Writes one closed epoch. Every set is written in one statement over
@@ -685,7 +696,7 @@ mod tests {
                 candidate("alice", 0, "bob", &[]),
             ],
             &mut state,
-            0,
+            1,
             THETA,
             10,
         )
@@ -709,7 +720,7 @@ mod tests {
                 candidate("alice", 2, "bob", &[]),
             ],
             &mut state,
-            0,
+            1,
             THETA,
             10,
         )
@@ -737,7 +748,7 @@ mod tests {
                 candidate("mallory", 0, "bob", &[]),
             ],
             &mut state,
-            0,
+            1,
             THETA,
             10,
         )
@@ -760,7 +771,7 @@ mod tests {
                 .map(|seq| candidate("alice", seq, "bob", &[]))
                 .collect(),
             &mut state,
-            0,
+            1,
             THETA,
             2,
         )
@@ -793,16 +804,83 @@ mod tests {
 
         for arrangement in permutations(chain) {
             let mut state = funded(&["alice"], 5);
-            let selection = select_and_order(arrangement, &mut state, 0, THETA, 10)
+            let selection = select_and_order(arrangement, &mut state, 1, THETA, 10)
                 .expect("every arrangement selects");
             assert_eq!(
                 published(&selection),
                 (0..5).map(|seq| id("alice", seq)).collect::<Vec<_>>()
             );
-            for (position, record) in selection.records.iter().enumerate() {
-                assert_eq!(record.position, position as i64);
-            }
+            let positions: Vec<i64> = selection.records.iter().map(|r| r.position).collect();
+            assert_eq!(positions, vec![1, 2, 3, 4, 5]);
         }
+    }
+
+    /// Whatever the selection holds — several authors, a dependency, a
+    /// deferral — positions number its acts 1..=|𝒬_k| in the published
+    /// order, every record names the closing epoch, and the package passes
+    /// the order-of-record check the close runs before committing.
+    ///
+    /// A close numbers its acts from 1 with no gap, in the epoch it closes.
+    /// ´claim:close:positions-number-the-epoch-from-one´
+    #[test]
+    fn positions_number_the_epoch_from_one() {
+        let mut state = funded(&["alice", "bob"], 3);
+        let selection = select_and_order(
+            vec![
+                candidate("bob", 0, "carol", &[&id("alice", 0)]),
+                candidate("alice", 0, "carol", &[]),
+                candidate("alice", 1, "dave", &["act:nobody:0:opinion"]),
+                candidate("bob", 1, "dave", &[]),
+            ],
+            &mut state,
+            4,
+            THETA,
+            10,
+        )
+        .expect("selects");
+        let package = EpochPackage {
+            epoch: 4,
+            attested_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
+            records: selection.records,
+        };
+        let positions: Vec<i64> = package.records.iter().map(|r| r.position).collect();
+        assert_eq!(positions, vec![1, 2, 3]);
+        assert!(package.records.iter().all(|r| r.epoch == 4));
+        publishable(&package).expect("an order of record");
+    }
+
+    /// The pre-commit check refuses what has no order of record: the close
+    /// reports a host fault instead of writing an epoch 0 or a position 0.
+    ///
+    /// The close refuses to publish an epoch 0 or a position outside 1..=n.
+    /// ´claim:close:a-malformed-epoch-is-never-published´
+    #[test]
+    fn a_malformed_package_is_not_publishable() {
+        let mut state = funded(&["alice"], 2);
+        let selection = select_and_order(
+            vec![
+                candidate("alice", 0, "bob", &[]),
+                candidate("alice", 1, "bob", &[]),
+            ],
+            &mut state,
+            0,
+            THETA,
+            10,
+        )
+        .expect("selects");
+        let mut package = EpochPackage {
+            epoch: 0,
+            attested_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
+            records: selection.records,
+        };
+        assert!(matches!(publishable(&package), Err(StandInError::Host(_))));
+        package.epoch = 1;
+        for record in &mut package.records {
+            record.epoch = 1;
+        }
+        publishable(&package).expect("renumbered, it is publishable");
+        package.records[1].position = 0;
+        assert!(matches!(publishable(&package), Err(StandInError::Host(_))));
     }
 
     /// Both legs of a hyper act see the same pre-act degrees, so neither
@@ -837,7 +915,7 @@ mod tests {
 
         let mut state = funded(&["alice"], 4);
         let first =
-            select_and_order(vec![founding.clone()], &mut state, 0, THETA, 10).expect("selects");
+            select_and_order(vec![founding.clone()], &mut state, 1, THETA, 10).expect("selects");
         let legs = &first.records[0].legs;
         assert_eq!(legs.len(), 2);
         assert!(
@@ -853,7 +931,7 @@ mod tests {
             body: second_body,
             ..founding
         };
-        let second = select_and_order(vec![again], &mut state, 1, THETA, 10).expect("selects");
+        let second = select_and_order(vec![again], &mut state, 2, THETA, 10).expect("selects");
         assert!(
             second.records[0].legs.iter().all(|leg| leg.tau > 0.0),
             "the endpoints have matured"
