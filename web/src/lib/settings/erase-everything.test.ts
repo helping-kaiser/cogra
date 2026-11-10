@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { blockStorage } from "@/test/blocked-storage";
 import { COGRA_DATABASES, eraseEverything } from "./erase-everything";
 
 function create(name: string): Promise<void> {
@@ -53,5 +54,31 @@ describe("erase everything from this browser (EraseConfirm.md:21)", () => {
     expect(COGRA_DATABASES).toContain("cogra.seen");
     expect(COGRA_DATABASES).toContain("cogra.identity");
     expect(COGRA_DATABASES).toContain("cogra.compose");
+  });
+});
+
+describe("erase everything where local storage is blocked", () => {
+  it("still clears session storage and the databases", async () => {
+    for (const name of COGRA_DATABASES) await create(name);
+    window.sessionStorage.setItem("cogra.heldEmailChangeLink", "t");
+    const unblock = blockStorage("localStorage");
+    try {
+      await expect(eraseEverything()).resolves.toBeUndefined();
+    } finally {
+      unblock();
+    }
+    expect(window.sessionStorage.length).toBe(0);
+    expect(await names()).toEqual([]);
+  });
+
+  it("still clears local storage where only session storage is blocked", async () => {
+    window.localStorage.setItem("cogra.refreshToken", "r");
+    const unblock = blockStorage("sessionStorage");
+    try {
+      await expect(eraseEverything()).resolves.toBeUndefined();
+    } finally {
+      unblock();
+    }
+    expect(window.localStorage.length).toBe(0);
   });
 });

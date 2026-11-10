@@ -9,11 +9,24 @@ import { MAX_ATTEMPTS, delayMs } from "./upload-retry";
 // the jitter is a fixed roll rather than a source of flake.
 function harness(
   responses: readonly (Response | Error)[],
-  options: { random?: number; blob?: Blob; partSize?: number; partCount?: number } = {},
+  options: {
+    random?: number;
+    blob?: Blob;
+    partSize?: number;
+    partCount?: number;
+    /** What the session refresh answers; it also rotates the token when true. */
+    refreshes?: boolean;
+  } = {},
 ) {
   const waits: number[] = [];
   const requests: { url: string; init: RequestInit }[] = [];
   let call = 0;
+  let token = "tok";
+  const refresh = vi.fn<(stale: string | null) => Promise<boolean>>(async () => {
+    if (options.refreshes === false) return false;
+    token = "rotated";
+    return true;
+  });
   const fetchImpl = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
     requests.push({ url: String(url), init: init ?? {} });
     const next = responses[Math.min(call, responses.length - 1)];
@@ -24,7 +37,8 @@ function harness(
 
   const uploader = createPartUploader({
     origin: "https://api.example",
-    accessToken: () => "tok",
+    accessToken: () => token,
+    refresh,
     sleep: async (ms) => {
       waits.push(ms);
     },
@@ -38,6 +52,7 @@ function harness(
     waits,
     requests,
     fetchImpl,
+    refresh,
     run: () =>
       uploader.sendAll("up-1", blob, options.partSize ?? 4, options.partCount ?? 3),
   };
@@ -98,6 +113,7 @@ describe("sendAll", () => {
     const uploader = createPartUploader({
       origin: "",
       accessToken: () => tokens[Math.min(read++, tokens.length - 1)]!,
+      refresh: async () => true,
       sleep: async () => {},
       random: () => 0,
       fetchImpl: vi.fn(async () => status(200)) as unknown as typeof fetch,
@@ -145,10 +161,48 @@ describe("retry", () => {
     expect(h.requests).toHaveLength(3);
   });
 
-  it("retries a 401 exactly once more, because the guard refreshes around this", async () => {
+  it("refreshes the session on a 401 and lands the part with the rotated token", async () => {
+    // A long upload outlives the access token; nothing around the part loop
+    // refreshes it, so the uploader has to.
     const h = harness([status(401), ok()], { partCount: 1, partSize: 10 });
     expect(await h.run()).toBeNull();
+    expect(h.refresh).toHaveBeenCalledTimes(1);
+    // The refresh is told which token went stale, so a rotation another caller
+    // already made is not spent twice.
+    expect(h.refresh).toHaveBeenCalledWith("tok");
     expect(h.requests).toHaveLength(2);
+    expect((h.requests[0]!.init.headers as Record<string, string>).authorization).toBe(
+      "Bearer tok",
+    );
+    expect((h.requests[1]!.init.headers as Record<string, string>).authorization).toBe(
+      "Bearer rotated",
+    );
+  });
+
+  it("fails distinctly on a 401 that persists after a refresh, without burning the budget", async () => {
+    const h = harness([status(401)], { partCount: 3, partSize: 4 });
+    expect(await h.run()).toBe("The server would not take that video.");
+    expect(h.refresh).toHaveBeenCalledTimes(1);
+    expect(h.requests).toHaveLength(2);
+  });
+
+  it("fails the same way when the refresh itself finds no session", async () => {
+    const h = harness([status(401)], { partCount: 1, partSize: 10, refreshes: false });
+    expect(await h.run()).toBe("The server would not take that video.");
+    expect(h.refresh).toHaveBeenCalledTimes(1);
+    expect(h.requests).toHaveLength(1);
+  });
+
+  it("refreshes per part: a token that expires twice in one upload is rotated twice", async () => {
+    const h = harness([status(401), ok(), status(401), ok()], { partCount: 2, partSize: 5 });
+    expect(await h.run()).toBeNull();
+    expect(h.refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not refresh when nothing was refused", async () => {
+    const h = harness([ok()]);
+    await h.run();
+    expect(h.refresh).not.toHaveBeenCalled();
   });
 
   it("stops at the first part that gives up, rather than burning the budget on the rest", async () => {

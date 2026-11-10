@@ -180,14 +180,7 @@ pub async fn remove_content<B: L1Boundary>(
     if located.carried {
         return Err(RemovalError::Carried(record.to_string()));
     }
-    let node = match located.family {
-        Family::Publish => content_store::post_by_node(pool, &located.node)
-            .await?
-            .map(|p| ContentNode::Post(p.id)),
-        _ => content_store::comment_by_node(pool, &located.node)
-            .await?
-            .map(|c| ContentNode::Comment(c.id)),
-    };
+    let node = content_node(pool, located.family, &located.node).await?;
     let chain = Chain {
         viewer,
         address: &address,
@@ -196,7 +189,72 @@ pub async fn remove_content<B: L1Boundary>(
         record,
         include_revisions,
     };
+    sweep_chain(boundary, pool, areas, &chain, node, store::AUTHOR_REMOVAL).await
+}
 
+/// Removes the whole chain `author` wrote on one content node, under
+/// `reason` — the account deletion's content sweep (erasure.md §2
+/// "Content-level"), which owes no authorship check: the executor read
+/// the node off the author's own records. Every revision goes, landed and
+/// in flight, exactly as `removeContent` with `includeRevisions` takes it.
+#[allow(clippy::too_many_arguments)]
+pub async fn remove_authored_chain<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    areas: &MediaAreas,
+    author: Uuid,
+    address: &str,
+    family: Family,
+    node: &str,
+    reason: &str,
+) -> Result<Removed, RemovalError> {
+    if !removable(family) {
+        return Err(RemovalError::OutOfScope(family.as_str().to_string()));
+    }
+    let entity = content_node(pool, family, node).await?;
+    let chain = Chain {
+        viewer: author,
+        address,
+        family,
+        node,
+        record: "",
+        include_revisions: true,
+    };
+    sweep_chain(boundary, pool, areas, &chain, entity, reason).await
+}
+
+/// The display row a content node's version rows hang off — None for a
+/// node whose entity row was never written (an act never pre-signed).
+async fn content_node(
+    pool: &PgPool,
+    family: Family,
+    node: &str,
+) -> Result<Option<ContentNode>, RemovalError> {
+    Ok(match family {
+        Family::Publish => content_store::post_by_node(pool, node)
+            .await?
+            .map(|p| ContentNode::Post(p.id)),
+        _ => content_store::comment_by_node(pool, node)
+            .await?
+            .map(|c| ContentNode::Comment(c.id)),
+    })
+}
+
+/// Works one chain's scope act by act — each its own transaction of
+/// reduction, display tombstones and media hold, widened for edits staged
+/// under it — then releases the substrate's residue and the held bytes.
+/// `reason` is the archive's and the tombstones' trigger; the chain's
+/// author is the initiator.
+async fn sweep_chain<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    areas: &MediaAreas,
+    chain: &Chain<'_>,
+    node: Option<ContentNode>,
+    reason: &str,
+) -> Result<Removed, RemovalError> {
+    let viewer = chain.viewer;
+    let include_revisions = chain.include_revisions;
     let mut conn = pool.acquire().await?;
     let mut scope = chain.resolve(&mut conn).await?;
     drop(conn);
@@ -221,7 +279,7 @@ pub async fn remove_content<B: L1Boundary>(
         let r = Redaction {
             actor_id: viewer,
             act_id: &act.act_id,
-            reason: store::AUTHOR_REMOVAL,
+            reason,
             redacted_by: &redacted_by,
         };
         let mut tx = pool.begin().await?;
@@ -254,7 +312,7 @@ pub async fn remove_content<B: L1Boundary>(
             }
         }
         if let (Some(node), Some(head)) = (node, &head) {
-            store::tombstone_act(&mut tx, node, head, &act.rows, store::AUTHOR_REMOVAL).await?;
+            store::tombstone_act(&mut tx, node, head, &act.rows, reason).await?;
         }
         let redacted = reduced.hold_in(&mut tx).await?;
         tx.commit().await?;

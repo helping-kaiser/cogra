@@ -17,7 +17,7 @@ function client() {
   return new ApolloClient({ cache: new InMemoryCache(), link: new HttpLink({ uri: "http://localhost/graphql" }) });
 }
 
-const guard: AuthGuard = { run: (block) => block(), prime: async () => {} };
+const guard: AuthGuard = { run: (block) => block(), prime: async () => {}, refresh: async () => false };
 
 /** Saved's server: every page holds nothing and names `endCursor` next. */
 function serve(endCursor: string | null, hasNextPage = true) {

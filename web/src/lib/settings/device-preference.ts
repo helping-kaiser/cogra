@@ -10,6 +10,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
+import { safeStorage } from "@/lib/safe-storage";
 import { EXACT_VALUES_STORAGE_KEY, THEME_STORAGE_KEY } from "./theme-boot";
 
 type Preference<T extends string> = {
@@ -30,13 +31,13 @@ export function devicePreference<T extends string>(
 
   function read(): T {
     if (typeof window === "undefined") return fallback;
-    const stored = window.localStorage.getItem(storageKey);
+    const stored = safeStorage().getItem(storageKey);
     return isValue(stored) ? stored : fallback;
   }
 
   function write(value: T): void {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(storageKey, value);
+    safeStorage().setItem(storageKey, value);
     // `storage` fires in OTHER tabs only, so this tab is told directly.
     for (const listener of listeners) listener();
   }

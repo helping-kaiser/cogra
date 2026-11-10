@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_credentials\n         SET email = NULL, password_hash = NULL,\n             email_verification_token_hash = NULL, reuse_detected_at = NULL\n         WHERE actor_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8556b7ec9d95885a42072b00aaa83376c238ba5485c7ad28ed437fe6b25d6188"
+}

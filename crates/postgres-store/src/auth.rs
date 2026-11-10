@@ -1332,14 +1332,19 @@ pub async fn lapse_vouches(
 /// booked as landed — every account the landing predicate has something
 /// new to decide for. Read from the mirror rather than from this pass's
 /// promotions, so a late landing, a reaped staged write, or a rebuild is
-/// never missed.
+/// never missed. An account whose deletion executed is no candidate: it
+/// never lands (ruling PR-22), so it has nothing to decide.
 pub async fn landing_candidates(pool: &PgPool) -> Result<Vec<Uuid>, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT DISTINCT ap.account_id AS "account_id!"
            FROM auth_application_vouches v
            JOIN auth_applications ap ON ap.id = v.application_id
            JOIN mirror_records m ON m.record_id = v.act_id
-           WHERE v.landed_at IS NULL"#,
+           WHERE v.landed_at IS NULL
+             AND NOT EXISTS (
+                 SELECT 1 FROM auth_account_deletions d
+                 WHERE d.user_id = ap.account_id AND d.executed_at IS NOT NULL
+             )"#,
     )
     .fetch_all(pool)
     .await
@@ -1362,6 +1367,10 @@ pub enum Landing {
     Recorded(u64),
     /// A fact is still missing: the Registration, or a confirmed vouch.
     Waiting,
+    /// The account's deletion executed. Deletion is final: nothing lands,
+    /// is released or is booked for it, and a late vouch's edge only
+    /// stands on the graph (ruling PR-22).
+    Deleted,
 }
 
 /// The landing predicate for one account (EC-R2, EC-R3), decided from
@@ -1391,6 +1400,9 @@ pub enum Landing {
 /// that confirm are booked landed as ordinary Opinions. Idempotent and
 /// safe under concurrent ingestion: the lock serializes evaluations, the
 /// second finds the member, and the one-landed-path index is the backstop.
+/// An account whose deletion executed answers [`Landing::Deleted`] and
+/// nothing is written; the execution's claim takes the same account
+/// lock, so the two serialize.
 pub async fn evaluate_landing(
     pool: &PgPool,
     account_id: Uuid,
@@ -1401,13 +1413,20 @@ pub async fn evaluate_landing(
         return Ok(Landing::Waiting);
     }
     let account = sqlx::query!(
-        "SELECT c.account_state, a.realization_address
-         FROM user_credentials c JOIN actors a ON a.id = c.actor_id
-         WHERE c.actor_id = $1",
+        r#"SELECT c.account_state, a.realization_address,
+                  EXISTS(
+                      SELECT 1 FROM auth_account_deletions d
+                      WHERE d.user_id = c.actor_id AND d.executed_at IS NOT NULL
+                  ) AS "deleted!"
+           FROM user_credentials c JOIN actors a ON a.id = c.actor_id
+           WHERE c.actor_id = $1"#,
         account_id,
     )
     .fetch_one(&mut *tx)
     .await?;
+    if account.deleted {
+        return Ok(Landing::Deleted);
+    }
     let mut outcome = Landing::Waiting;
     if account.account_state == "applicant"
         && let Some(address) = account.realization_address
@@ -1893,13 +1912,31 @@ pub async fn sweep_spent_secrets(
     })
 }
 
+/// Whether the account still has a login — a credentials row not redacted
+/// by an executed deletion. The request's viewer resolution reads it,
+/// because an access token outlives the execution by up to its TTL.
+pub async fn has_login(pool: &PgPool, actor_id: Uuid) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM user_credentials
+               WHERE actor_id = $1 AND password_hash IS NOT NULL
+           ) AS "exists!""#,
+        actor_id,
+    )
+    .fetch_one(pool)
+    .await
+}
+
+/// The login an email names. An executed deletion's credentials row holds
+/// no address, so nothing ever names it.
 pub async fn credentials_by_email(
     pool: &PgPool,
     email: &str,
 ) -> Result<Option<Credentials>, sqlx::Error> {
     sqlx::query!(
-        "SELECT actor_id, email, password_hash, account_state, email_verified_at
-         FROM user_credentials WHERE email = $1",
+        r#"SELECT actor_id, email AS "email!", password_hash AS "password_hash!",
+                  account_state, email_verified_at
+           FROM user_credentials WHERE email = $1 AND password_hash IS NOT NULL"#,
         email,
     )
     .fetch_optional(pool)
@@ -1908,13 +1945,18 @@ pub async fn credentials_by_email(
     .transpose()
 }
 
+/// The account's login — None for an account that has none: gone, or
+/// executed, whose credentials row stays redacted in place (erasure.md
+/// §2). Every gate that reads it therefore treats an executed account as
+/// signed out.
 pub async fn credentials_by_actor(
     pool: &PgPool,
     actor_id: Uuid,
 ) -> Result<Option<Credentials>, sqlx::Error> {
     sqlx::query!(
-        "SELECT actor_id, email, password_hash, account_state, email_verified_at
-         FROM user_credentials WHERE actor_id = $1",
+        r#"SELECT actor_id, email AS "email!", password_hash AS "password_hash!",
+                  account_state, email_verified_at
+           FROM user_credentials WHERE actor_id = $1 AND password_hash IS NOT NULL"#,
         actor_id,
     )
     .fetch_optional(pool)
