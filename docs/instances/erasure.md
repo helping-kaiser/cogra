@@ -117,7 +117,8 @@ mechanism itself is the same one-way transition either way.
   archived; their digests remain committed in the (now removed)
   witnessed payloads.
 - **Private per-user state** (preferences, bookmarks,
-  hidden-actor lists, read state) is **deleted outright** — the
+  hidden-actor lists, the seen-list, chat read state) is
+  **deleted outright** — the
   named operational carve-outs of
   [layers.md §4](../primitive/layers.md#4-layers-on-postgres-side-display-content).
   These hold no preservation value once the user is anonymized
