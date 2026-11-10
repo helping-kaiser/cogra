@@ -166,7 +166,7 @@ async fn graphql_refuses_a_body_past_the_route_limit(pool: PgPool) {
 }
 
 /// The ceiling a non-multipart `/graphql` body answers to.
-const JSON_CEILING: usize = 128 * 1024;
+const JSON_CEILING: usize = api::GRAPHQL_JSON_BODY_LIMIT_BYTES;
 
 /// A plain JSON request answers to a ceiling of its own, far below the
 /// multipart upload transport's, and is refused with 413 before the parse
@@ -220,6 +220,113 @@ async fn a_json_body_past_its_ceiling_is_refused_before_the_parse(pool: PgPool) 
         .await
         .expect("response");
     assert_eq!(unending.status(), StatusCode::PAYLOAD_TOO_LARGE);
+}
+
+/// The JSON ceiling is measured from the clients, so the widest request a
+/// client can legitimately send must pass it with headroom: the post
+/// composer's whole document file beside a media post at every text cap,
+/// each character the six-byte JSON escape. A cap or a document growing
+/// into the headroom fails here before it grows past the ceiling.
+///
+/// The widest legitimate request passes the JSON body ceiling with at least half again as much room.
+/// ´claim:server:the-widest-legitimate-request-fits´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_widest_legitimate_request_fits_under_the_json_ceiling(pool: PgPool) {
+    use api::content::{MAX_DESCRIPTION_CHARS, MAX_SENSITIVE_REASON_CHARS, MAX_TITLE_CHARS};
+    use api::media::{MAX_ALT_TEXT_CHARS, MAX_POST_ATTACHMENTS};
+    let widest = |chars: usize| "\u{1}".repeat(chars);
+    let attachments: Vec<serde_json::Value> = (0..MAX_POST_ATTACHMENTS)
+        .map(|i| {
+            serde_json::json!({
+                "mediaId": uuid::Uuid::new_v4(),
+                "displayOrder": i,
+                "altText": widest(MAX_ALT_TEXT_CHARS),
+            })
+        })
+        .collect();
+    let tags: Vec<serde_json::Value> = (0..api::topics::MAX_TAGS_PER_BATCH)
+        .map(|_| {
+            serde_json::json!({
+                "name": "a".repeat(common::l1::identifier::MAX_ATOM_BYTES),
+                "pDirected": 1.0,
+                "pInterest": 1.0,
+            })
+        })
+        .collect();
+    let references: Vec<serde_json::Value> = (0..api::references::MAX_REFERENCES_PER_BATCH)
+        .map(|_| {
+            serde_json::json!({
+                "target": uuid::Uuid::new_v4(),
+                "relevance": 1.0,
+                "support": 1.0,
+            })
+        })
+        .collect();
+    let body = serde_json::json!({
+        "query": include_str!("../../../web/src/lib/graphql/content.graphql"),
+        "operationName": "PreparePost",
+        "variables": { "input": {
+            "title": widest(MAX_TITLE_CHARS),
+            "description": widest(MAX_DESCRIPTION_CHARS),
+            "license": { "attribution": 1.0, "provenance": 1.0 },
+            "pDirected": 1.0,
+            "tags": tags,
+            "references": references,
+            "attachments": attachments,
+            "sensitive": true,
+            "sensitiveReason": widest(MAX_SENSITIVE_REASON_CHARS),
+        }},
+    })
+    .to_string();
+    assert!(
+        body.len() * 3 / 2 <= JSON_CEILING,
+        "the widest request is {} bytes, too close to the {JSON_CEILING}-byte ceiling",
+        body.len()
+    );
+
+    let response = test_app(pool)
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/graphql")
+                .header("content-type", "application/json")
+                .header("content-length", body.len())
+                .body(Body::from(body))
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+    assert_eq!(response.status(), StatusCode::OK);
+}
+
+/// The JSON ceiling is not the upload's: a multipart picture at exactly
+/// the deployed picture cap, far past the JSON ceiling, still uploads.
+///
+/// A multipart upload at its own cap passes the transport the JSON ceiling would refuse.
+/// ´claim:server:an-upload-keeps-its-own-ceiling´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_upload_at_its_cap_is_not_held_to_the_json_ceiling(pool: PgPool) {
+    let cap = api::media::MediaConfig::default().max_upload_bytes;
+    assert!(cap > JSON_CEILING);
+    let mut picture = rig::webp_chunk(b"VP8L", &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08]);
+    let framing = 12 + 8 + picture.len();
+    picture.extend_from_slice(&rig::webp_chunk(b"EXIF", &vec![b'x'; cap - framing]));
+    let picture = rig::webp_container(&picture);
+    assert_eq!(picture.len(), cap);
+
+    let rig = rig::WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
+    rig.seed_member("uploader", "uploader@example.com").await;
+    let token = rig.log_in("uploader@example.com").await;
+    let answer = rig.upload_media_raw(&token, &picture).await;
+    assert_eq!(
+        answer["data"]["uploadMedia"]["userErrors"],
+        serde_json::json!([]),
+        "{answer}"
+    );
+    assert!(
+        answer["data"]["uploadMedia"]["media"]["id"].is_string(),
+        "{answer}"
+    );
 }
 
 /// Behind the proxy the API reads the client from the rightmost

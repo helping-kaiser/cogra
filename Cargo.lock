@@ -169,6 +169,7 @@ dependencies = [
  "jsonwebtoken",
  "l1-standin",
  "lettre",
+ "mime",
  "mp4",
  "object_store",
  "postgres-store",

@@ -299,6 +299,21 @@ ceiling. Both postures carry the *same* ceilings: a looser dev
 budget stops being a preview of release, and a document refused
 only in production is the failure this rule exists to prevent.
 
+**The request body is bounded before the parse.** A `/graphql`
+body that is not a multipart upload is at most **128 KiB**,
+measured the same way: the longest operation either client sends
+is about 6 KB with its fragments, and the widest variables are a
+media post at every text cap — 10 740 characters, at most six
+bytes each once JSON-encoded — so the widest legitimate request is
+about 75 KB, and the ceiling leaves 1.7× over it. A standing test
+re-measures that request against the ceiling with at least 1.5×
+room. A multipart upload answers to the media transport's own
+ceiling instead (twice the larger upload cap, under "Content
+authoring"). A body past its ceiling is refused at
+the HTTP layer with **413** and never reaches the GraphQL parse:
+a declared length is refused unread, an undeclared one is cut at
+the ceiling.
+
 **Introspection is disabled in release builds** — not secrecy
 (the repo is public; the contract travels as the checked-in
 `schema.graphql`, which both clients generate from) but
@@ -373,6 +388,8 @@ never by convenience:
   array with a stable `extensions.code`. The `message` is a
   developer-facing fallback; internal detail stays in the server log
   and never reaches the client, which sees only the `INTERNAL` code.
+  One refusal comes before GraphQL at all: a body past its ceiling
+  (see "Query budgets") answers HTTP 413, never a GraphQL response.
 - **Expected business failures** — a bad value or a rule rejection the
   end user should see and act on — are *data*, not transport errors:
   every mutation payload carries `userErrors: [UserError!]!`, each entry
