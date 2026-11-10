@@ -954,10 +954,14 @@ A record by actor $i$ is writable in epoch $k$ iff all three sub-gates hold
    when the door has headroom (the membrane, not a wall).
 
 An insolvent actor (W1) restores capacity immediately by committing burns.
-Re-crossing the wall (W2a) requires some combination of new burns raising
-$r_i$ directly and new incoming allocation from actors whose rates exceed
-the current standing, lifting the mediant within the transported-rate hull
-(`prop:epoch:final-standing-hull`).
+Re-crossing the wall (W2a) requires the recomputed final standing to pass
+it: an accepted burn raises the actor's own source rate and a complete
+eligible person-directed act may add higher-rate support, but neither
+intervention alone guarantees that result — passing certificates do not
+imply monotonic standing under an accepted burn or act
+(`thm:epoch:burn-response`;
+monotone regimes `cor:epoch:burn-monotone-regimes`; bounds
+`prop:epoch:finite-standing-response`).
 
 Actor states (`tbl:epoch:actor-states`), by (W2a $\rho_{\text{act}} \ge
 \rho_\theta$, W1 $b \ge \theta$): **Active** (✓/✓, may act); **Band** (✓/✓,
@@ -975,12 +979,13 @@ one $\theta$-debit, competes under W1/W2a/W2b, consumes epoch write
 capacity, and receives the same final stamp as every other same-author act
 — **no special Registration branch and no live-value newcomer formula**. A
 candidate actor has prior count zero; with no relational flow its stamp is
-its own source rate (`prop:epoch:final-standing-embedding`), and a current
+its own source rate (`prop:epoch:final-standing-hull`), and a current
 high-rate external vouch may lift it under the ordinary hull. **Same-epoch
 topology creates no source** (`cor:epoch:same-epoch-source-hull`): a
 same-epoch cohort whose source rates all lie below $\rho_\theta$ cannot
 mutually vouch itself above the wall; only a current external positive-rate
-source lifts a newly registered actor.
+source lifts a newly registered actor. This is the equal-contributing-rate
+regime, not a theorem for heterogeneous funded partitions.
 
 **Universal per-act burn benchmarks
 (`cor:epoch:universal-burn-benchmarks`).** For an unsupported actor
@@ -989,10 +994,11 @@ proposing $m \ge 1$ epoch acts:
 $$B_{\mathrm{W1}}(m) = m\theta, \qquad B_{\mathrm{safety}}(m) = 2m\theta,
 \qquad B_{\mathrm{door}}(m) = m(\theta + \nu\rho_{\text{eff}}),$$
 
-projected through the published unit cost as outlays in the realization's
-external denomination $\delta(m) = B(m)\,c_{\mathrm{u}}$ (R10;
-`eq:comparator:admission-benchmark-deposits`,
-`subsec:comparator:capacity-and-admission-benchmarks`). These are
+projected through the published unit cost as amount-proportional outlays in
+the realization's external denomination $\delta(m) = B(m)\,c_{\mathrm{u}}$
+(R10; `eq:comparator:admission-benchmark-deposits`,
+`subsec:comparator:capacity-and-admission-benchmarks`); total outlay also
+includes any separately published costs of the recording events used. These are
 final-state gate benchmarks, not prices that guarantee selection into the
 finite write set; there is no universal admission price. Band dwell is
 linear and exact (`rem:epoch:band-dwell`); re-entry from below either
@@ -1017,8 +1023,7 @@ by record integrity, never adjudicated by title logic. No payload datum
 enters the act identifier, so identity, pointer resolution, and title
 survive every payload state. Two actors listing "the same" real-world
 referent create two Items with two ownership threads; out-of-band truth is
-deterred by accountability cost and witnessed by `frontier:item-genesis`.
-Genesis is an ordinary gated append. Title at Layer 1 is title over a
+subject to accountability cost. Genesis is an ordinary gated append. Title at Layer 1 is title over a
 **registered claim**, never custody of a referent
 (`rem:graph:item-identity-limit`).
 
@@ -1030,15 +1035,29 @@ act it confirms ($\mathrm{accepts}$). These references are act-owned
 *metadata, not graph incidence*: an Accept or Ratify names its settlement
 partner by act identity, and its edge projection is incident only to its
 two actor endpoints, never to the Offer. Because the references are
-declared causal parents, any authoritative order forces
-$\text{Bid} \prec \text{Accept} \prec \text{Ratify}$
-(`rem:graph:title-order-irrelevance`).
+causal parents, a compliant order places
+$\text{Bid} \prec \text{Accept} \prec \text{Ratify}$ by the key of record;
+a finalized placement or stamp violation is evidence under ordering
+accountability (§8.2, `rem:graph:title-order-irrelevance`).
 
 **Finalization epoch (`def:graph:act-finalization-epoch`).**
 $\mathrm{ep}(q) = \min\{k : q \in \mathcal{Q}_k\}$ — well-defined by
 monotonicity of the accepted act history. Two acts are *co-epochal* iff
 their finalization epochs are equal. Title consumes acts at
 $\mathrm{ep}(\cdot)$ granularity only.
+
+**Settlement parties (`def:graph:settlement-parties`).** For a Bid act
+opening an Offer on Item $n_i$, the *buyer* is the author of the Bid; the
+*Item* is reached from the Bid's T-leg through the Offer; the *seller* is
+the certified owner $\mathrm{owner}^{(k-1)}(n_i)$ at the boundary preceding
+the Ratify's finalization epoch $k = \mathrm{ep}(q_{\text{Ratify}})$, or the
+genesis owner if the thread is fresh and its genesis finalizes in that
+epoch. Parties and Item are functions of the record alone. The Item
+endpoint of a Bid is a minted identifier and may dangle: a Bid on an
+unanchored Item forms and is fold-neutral; once the genesis finalizes, the
+Item enters the fold at that boundary, a candidate whose Ratify finalizes
+in that epoch uses the fresh-thread rule, and a later one reads the
+certified owner.
 
 **Settlement Recognition (`def:graph:settlement-recognition`).** A
 settlement candidate on Item $n_i$ in epoch edge set $E_k$ is a triple of
@@ -1052,28 +1071,33 @@ all six clauses hold:
   in $E_k$.
 - **(ii) Reference binding.** The Accept's and Ratify's settlement
   references both resolve to the Bid act identifier.
-- **(iii) Authorization.** The author of the Accept is the certified owner
-  $\mathrm{owner}^{(k-1)}(n_i)$ at the boundary preceding the Ratify's
-  finalization epoch $k = \mathrm{ep}(q_{\text{Ratify}})$ (the genesis owner
-  if the thread is fresh). Clause (iii) reads the prior title certificate
-  back into admission — the straddler.
+- **(iii) Authorization and parties.** The Accept is authored by the seller
+  and targets the buyer; the Ratify is authored by the buyer and targets
+  the seller (the Accept's author). Clause (iii) reads the prior title
+  certificate and the Bid's authorship back into admission — the
+  straddler. A Ratify authored by anyone but the buyer, an Accept whose
+  target is not the buyer, or a Ratify whose target is not the Accept's
+  author fails (iii): the acts are written and never bind, their standing
+  resolves to the author's self-retention channel, and no host
+  accountability attaches (`rem:graph:settlement-party-mismatch`).
 - **(iv) Buyer consent.** No buyer Withdraw on this Offer satisfies
   $\mathrm{ep}(\text{Withdraw}) \le \mathrm{ep}(\text{Ratify})$.
 - **(v) Seller consent.** No seller Rescind on this Offer satisfies
   $\mathrm{ep}(\text{Rescind}) \le \mathrm{ep}(\text{Ratify})$.
 - **(vi) Well-formedness.** $\text{Bid} \prec \text{Accept} \prec
   \text{Ratify}$ — retained as a well-formedness check on the handshake
-  chain (each party observes the prior record), forced by the settlement
-  references and carrying no tie-breaking force.
+  chain (each party observes the prior record), carrying no tie-breaking
+  force.
 
 Clauses (iv) and (v) are the **epoch-quantized consent rule**: a cancellation
 co-epochal with, or earlier than, the commit defeats it; a cancellation in a
 strictly later epoch is inert — the sale is final *at the certificate*, not
 at the Ratify (`rem:graph:regret-window`). A recognized candidate whose
 Ratify finalizes at boundary $k$ with no defeating cancel is *unchallenged
-at $k$*. The predicate reads set membership, $\mathrm{ep}(\cdot)$ indices,
-and the reference-forced chain — no $\mathrm{pos}(e)$, no residual sub-epoch
-order (`rem:graph:settlement-clause-structure`). Parallel settlement
+at $k$*. The predicate reads set membership, pointer resolution, the prior
+certificate and the Bid's authorship, $\mathrm{ep}(\cdot)$ indices, and the
+handshake chain — no $\mathrm{pos}(e)$, no sub-epoch order, no Lamport
+comparability (`rem:graph:settlement-clause-structure`). Parallel settlement
 records are consumed exclusively through this predicate
 (`rem:graph:authored-act-bundle-consumers`).
 
@@ -1082,9 +1106,11 @@ buyer); Accepted→Committed (Ratify, buyer); Accepted→Dead (Withdraw, buyer);
 Accepted→Dead (Rescind, seller). Dead and Committed are absorbing. No death
 by inaction: no count, window, or throughput measure enters the lifecycle
 map. Cleanup is an authored choice, never a silent timeout. Cancellation is
-best-effort at the boundary: ties favor the cancel, so any cancel submitted
-in an epoch strictly before the commit's finalization epoch is safe
-regardless of latency (`rem:graph:cancellation-best-effort`).
+best-effort at the boundary: a cancel defeats a candidate only when written
+at or before the commit's finalization boundary, and no record class has a
+write right. Submission alone carries no delivery guarantee, so a withheld
+cancel can be defeated however early it was submitted; the tie rule favors
+a written cancel (`rem:graph:cancellation-best-effort`).
 
 **Ownership Thread (`def:graph:ownership-thread`).** The **boundary-indexed**
 chain rooted at the genesis Owner record, extended at each epoch boundary by
@@ -1096,8 +1122,25 @@ title force.
 **Title Certificate (`def:graph:title-certificate`).** The map
 $\mathrm{owner}^{(k)} : \text{Items} \to V_u \cup \{\varnothing\}$ sending
 each Item to the terminal actor of its ownership thread, or $\varnothing$ if
-no genesis Owner edge resolves it. Layer 1 publishes $\mathrm{owner}^{(k)}$
-alongside the epoch certificate.
+no genesis Owner edge has finalized for it: an Item has no certified owner
+before the boundary of its genesis epoch. Finalization epochs are numbered
+from 1; boundary 0 is the empty state before epoch 1, at which every Item
+has value $\varnothing$. An act placed in an epoch 0, a position outside 1
+to $|\mathcal{Q}_k|$, a repeated (epoch, position), or a missing position
+means the epoch has no order of record; such a certificate is malformed and
+refused before any replay. Layer 1 publishes $\mathrm{owner}^{(k)}$
+alongside the epoch certificate as a recomputable summary of the epoch
+partition (`rem:graph:title-certificate-is-summary`): title means the
+recomputed fold, and a published value that differs from it is a
+title-certificate fault (`def:graph:title-certificate-fault`). Boundary
+accountability obliges the certificate to publish $\mathrm{owner}^{(k)}$
+equal to the fold recomputed from the partition it certifies
+(`cond:graph:boundary-accountability-title-certificate`, the fourth
+obligation of `post:graph:boundary-accountability`); a proven fault is
+attributed to the host under the deployment's published review and
+sanctions mechanism, reorders and deletes nothing, recomputes no other
+finalized quantity, and does not authorize verifier refusal of a finalized
+epoch.
 
 **Settlement Consumption (`def:graph:settlement-consumption`).** Let
 $C_k(n_i)$ be the recognized, unchallenged candidates on $n_i$ whose Ratify
@@ -1136,9 +1179,12 @@ This is forced by the Quadrant Law: a coerced and unfair Accept with both
 parameters negative has $\epsilon = +1$ — correct for routing coherence,
 wrong as a verdict. Routing reads coherence; stance consumers read stance.
 The closure-side gate is recipient resolution on Accept/Ratify: the act
-reaches the counterparty only when it is title-transferring under the epoch
-title fold and all its mandatory coordinates are strictly positive; otherwise
-it resolves to its author (§11.3).
+reaches the counterparty only when its candidate is recognized,
+unchallenged, and title-transferring under the epoch title fold and all its
+mandatory folded coordinates are strictly positive; otherwise it resolves
+to its author while remaining weighed, priced, and counted (§11.3). A
+successful transfer is event-persistent: a later resale does not revoke it
+(`post:epoch:settlement-standing-title-coupling`).
 
 The full paper's **terminal default** for the read-site
 (`rem:graph:settlement-reputation`): three authored edges carry three signed
@@ -1158,8 +1204,9 @@ mechanism is terminal. Layer 1 supplies the deterministic commit anchor: the
 **epoch certificate** in which the settlement is recognized, unchallenged, and
 title-transferring — not the Ratify, which is no longer the point of no return
 (`rem:graph:regret-window`). The residual exposure is boundary censorship — a
-host suppressing a co-epochal cancel while writing the commit
-(`frontier:boundary-censorship`, `rem:epoch:consent-exposure`).
+host suppressing a cancel while writing the commit, which leaves no Layer-1
+trace (`rem:epoch:consent-exposure`); its written-side accountability is
+`post:graph:boundary-accountability`.
 
 ---
 
@@ -1221,8 +1268,10 @@ submission; the act identifier is
 $\mathrm{actid}(q) = \mathsf{act}(\mathrm{author}(q), s_q,
 \mathrm{family}(q))$ — no host-assigned time, no minted target, so it
 exists before host salting, verification, ordering, and time assignment.
-Edge-projection identifiers derive from it by role
-($\mathsf{edge}(\mathrm{actid}(q), A/T)$), and a node minted by a genesis
+Record identifiers project it by role with one constructor
+($\mathsf{record}(\mathrm{actid}(q), \mathrm{binary})$,
+$\mathsf{record}(\mathrm{actid}(q), A)$,
+$\mathsf{record}(\mathrm{actid}(q), T)$), and a node minted by a genesis
 act takes identity $\mathsf{mint}(\mathrm{actid}(q))$ — the minted node
 names its genesis *act*, never itself. A monotone author-local sequence
 makes accidental reuse directly detectable; distinct accepted acts never
@@ -1319,7 +1368,7 @@ independently folded projections, substitute an unrelated incoming edge for
 an A-projection, or select a T-projection whose parent act it cannot
 resolve. Layer 1 reads bundles in **exactly two** places
 (`rem:graph:authored-act-bundle-consumers`): the **standing** projection
-(net stance + recipient resolution + inviter revocation, §11.3) and
+(net stance + recipient resolution, §11.3) and
 **title** (the epoch-quantized settlement fold, §7.2). Every other reading
 — current profile (latest), membership, decay, amended-vs-accumulated
 display — is Layer-2-free. A parallel *genesis* is rejected by record
@@ -1358,10 +1407,11 @@ and thereafter immutable. Passive out-degree
 (`lem:graph:passive-out-degree`): Content, Type, Comment, and Message
 source Tag and Review terminal legs; Offer sources Review legs but no Tag;
 Item additionally sources a Bid leg; Chat additionally sources Send,
-Invitation, and De-invite legs; Profile additionally sources the derived
+Invitation, De-invite, and Participant legs; Profile additionally sources the derived
 Reputation component; and every passive type sources Reference terminal
-legs — Reference's A-leg may source from any passive node (the universal
-citing artifact). Edges between actors may be asymmetric; each edge
+legs — Reference's A-leg may land on any passive node (the universal
+citing artifact), which then sources one author-fixed Reference/T terminal
+leg. Edges between actors may be asymmetric; each edge
 carries independent sentiment parameters set unilaterally by its
 originating actor (`rem:graph:asymmetry`).
 
@@ -1414,21 +1464,32 @@ package speak.
 *asserted parents*: prior-act references, structural fields of its body,
 defining the directed acyclic causal-parent relation (backward-only by
 construction, acyclic within a batch by the topological formation check).
-Semantics: the act is admissible only into an epoch whose history contains
-every asserted parent earlier. The settlement reference is the settlement
+Semantics: the act is admissible only into an epoch that contains, or whose
+history contains, every asserted parent earlier
+(`cond:graph:authoritative-order-parent-placement`). The settlement reference is the settlement
 family's instance of this field. An asserted parent is metadata, not graph
 incidence, and adds no endpoint pre-degree — asserted parents and declared
 dependencies in a scoring formula are prohibited (the $\tau$-farming lint,
 `rem:graph:act-ordering-relations`).
 
-**Dependent act set (`def:graph:dependent-act-set`).** A *dependent set* is
-a set of formed acts closed under the causal-parent relation, taken
-together with both edge projections of every hyper-edge act in it. The
-shared-parent grouping of a hyper-edge's projections is not a directed
-parent: it groups without ordering, so admitting both projections together
-creates no causal cycle. Minimal dependent sets are the closures of a
-single act. The dependent set is the sole unit of the write: written whole
-or not at all. Conflict grouping by causality is rejected — cancels and
+**Dependent act set (`def:graph:dependent-act-set`).** Fix the history $H$
+finalized before the epoch's write. A *dependent set* is a set of formed
+acts outside $H$ closed under the causal-parent relation — every causal
+ancestor of every member is in $H$ or in the set — taken together with both
+edge projections of every hyper-edge act in it; earlier pieces of the same
+final union do not enlarge $H$. The shared-parent grouping of a
+hyper-edge's projections is not a directed parent: it groups without
+ordering, so admitting both projections together creates no causal cycle.
+For a closed candidate final union $S$, the *principal closure* of
+$q \in S$ is $q$ with all its causal ancestors outside $H$; joining two
+principal closures whenever they intersect, the union of the closures in
+each connected component is one block of the **dependent-set partition**.
+The blocks cover $S$, are pairwise disjoint, are each closed relative to
+$H$, and do not depend on processing order or on any dependency-compliant
+permutation. Two acts sharing a causal parent outside $H$ therefore belong
+to one block, and that parent is counted and debited once; a shared parent
+already in $H$ does not by itself join their blocks. Each dependent block
+is the unit of the write: written whole or not at all. Conflict grouping by causality is rejected — cancels and
 commits are concurrent by construction, and the regret window depends on
 it; conflict protection is boundary accountability, not write-unit
 grouping (`rem:graph:dependency-closure-excludes-conflicts`).
@@ -1452,8 +1513,9 @@ opening material beside carriage, a binding-yet-concealing commitment
 residue in the structural record, one-way tombstoning. The dependency
 projection is the actor's finite canonical dependency list
 $\mathrm{deps}(q)$ — each element naming one authored act, never an
-individual leg, declaring that $q$'s authoritative time must exceed each
-member's; the declaration grants no inclusion right. States: full-empty /
+individual leg, declaring that $q$'s key of record must exceed each
+member's (`cond:graph:authoritative-order-dependency-placement`); the
+declaration grants no inclusion right. States: full-empty /
 full / tombstoned (list and opening removed, the binding commitment residue
 remaining — the anchor a later opening reopens). Tombstoning changes no
 identity, order, time, count, debit, standing, feed, CAN, title, or
@@ -1469,7 +1531,12 @@ recognition quantity.
    the hash of the canonical structural body plus both pre-digests, and the
    actor signs it. The pre-commitment exists before host salting, binds the
    exact proposal, cannot be transplanted to another act identifier,
-   carries no host order, and grants no inclusion.
+   carries no host order, and grants no inclusion. The nonce's entropy
+   custody is the actor's when it is client-generated; the host receives
+   it at proposal, validates its checkable part at append (format, length,
+   freshness, and non-reuse across the author's acts), and custodies and
+   removes it with the payload (`subsec:deployment:concealment-entropy`,
+   `rem:graph:erasure-floor`).
 2. **Verified act (`def:graph:verified-act`).** The host verifies the actor
    signature, act-identifier uniqueness, canonical formation, hyper-edge
    A/T consistency, public protocol references, carriage and dependency
@@ -1495,13 +1562,32 @@ recognition quantity.
 4. **Ordering fraud proof (`def:graph:ordering-fraud-proof`,
    `post:graph:ordering-accountability`).** For an accepted act, a fraud
    proof is the ordinary full opening of its dependency projection; it
-   succeeds iff the finalized order violates the committed dependency list.
-   A successful proof may trigger fault attribution, operator slashing, or
-   deployment sanctions — but it does **not** reorder the epoch, delete the
-   act, reverse counts or debits, recompute historical standing, or
-   reverse title. The authoritative order stays authoritative even when
-   proven non-compliant; by finalizing an act the host attests it held and
-   validated the full dependency opening.
+   succeeds iff some dependency is absent from finalized history or has a
+   key of record not strictly below the act's. A successful proof may
+   trigger fault attribution, operator slashing, or deployment sanctions —
+   but it does **not** reorder the epoch, delete the act, reverse counts or
+   debits, recompute historical standing, or reverse title. The
+   authoritative order stays authoritative even when proven non-compliant
+   (a *compliant* order satisfies both placement conditions); by finalizing
+   an act the host attests it held and validated the full dependency
+   opening.
+
+**Post-finalization faults (`def:graph:parent-placement-fault`,
+`def:graph:stamp-fault`, `def:graph:title-certificate-fault`).** A
+*parent-placement fault* is an asserted parent of a finalized act that is
+absent from finalized history or sits at a key of record not strictly below
+the act's; the public finalized record proves it, with no
+removable-projection opening. It carries the dependency case's consequences
+— attribution and sanctions, no reordering, deletion, recomputation, or
+reversal (`cond:graph:ordering-accountability-parent-placement`). A *stamp
+fault* is a published logical time that differs from the recomputed
+$\mathbb{T}^{\text{act}}_q$; it is attributed to the host as the sole
+stamper, and the order of record and every derived quantity stand
+(`cond:graph:ordering-accountability-stamp`). A *title-certificate fault*
+is a published $\mathrm{owner}^{(k)}(n_i)$ that differs from the recomputed
+fold (§7.2). None of these proofs authorizes verifier refusal of a
+finalized epoch: finalization is irreversible, and no
+replacement-agreement mechanism is specified.
 
 **Act authentication requirements
 (`post:graph:act-authentication-requirements`,
@@ -1515,61 +1601,94 @@ removable-projection binding; (vii) ordering accountability. **The
 specification prescribes properties, not a cryptographic realization:
 signature schemes, commitment schemes, hash functions, salts, serialization
 formats, key management, proof encodings, and algorithm migration are
-deployment concerns.** Any implementation satisfying the postulate is
+deployment concerns.** The handshake constructions above are one reference
+realization: encode is the deployment's declared canonical serialization
+(one encoding per value, published and versioned), $H$ its declared
+collision-resistant hash, and Sign its declared signature scheme; the
+domain-separation tags, nonce and salt formats, and salt entropy floor are
+the deployment's. Any implementation satisfying the postulate is
 compliant.
 
 ### 8.3 Temporal structure
 
 **Authored-act causality (`ax:graph:act-causality`,
-`def:graph:act-incidence-causality`).** Authoritative logical time is
-finalization metadata attached to the accepted act, not an edge-owned
-attribute. Each accepted act is one Lamport event whose causal incidence is
-its complete graph projection: a binary act is a two-way event over its
-source and target; a hyper-edge act a **three-way** event over its
+`def:graph:act-incidence-causality`).** Logical time is finalization
+metadata attached to the accepted act, not an edge-owned attribute; the
+host-published sequence is the order of record, and Lamport time
+summarizes that order. Each accepted act is one Lamport event whose causal
+incidence is its complete graph projection: a binary act is a two-way event
+over its source and target; a hyper-edge act a **three-way** event over its
 initiating Actor, contextual middle node, and semantic target (the middle
 node participates in causal incidence only — no authorship, autonomy, or
 standing authority). Along the host-published sequence, an act's Lamport
 time is one more than the maximum over its incident endpoints' frontiers
-and its predecessors' times (asserted parents ∪ declared dependencies);
-every incident endpoint then advances to the act frontier. The two
-projections of a hyper-edge inherit the one event frontier — never two
-independently timed records.
+and the times of its predecessors (asserted parents ∪ declared
+dependencies); only finalized predecessors at strictly lower keys of record
+contribute, and a missing or non-earlier one contributes nothing
+(`cond:graph:act-incidence-causality-finalized-predecessors`). Every
+incident endpoint then advances to the act frontier. Each endpoint's
+frontier entering epoch $k$ is its frontier at the close of epoch $k-1$,
+carried across an empty epoch; it is zero at genesis and for an endpoint
+with no earlier incidence, and an empty maximum is zero
+(`cond:graph:act-incidence-causality-frontier-carry`). Every time in the
+recurrence is the recursively recomputed value, never an unchecked
+published stamp, so every finalized act has a finite time
+(`prop:graph:act-time-finite`). The two projections of a hyper-edge
+inherit the one event frontier — never two independently timed records.
+$\mathbb{T}^{\text{act}}_q$ is a recomputable summary: anyone with the
+same replay inputs recomputes it, it carries no authority over order or
+finalized consequences, and disjoint incidence can give a later act a
+lower time (`rem:graph:act-time-is-summary`).
 
 **Authoritative act order (`def:graph:authoritative-act-order`).** For
 epoch $k$ the host chooses a finite total order $\mathcal{Q}_k$ of the
-accepted acts and publishes each act's position. The **authoritative causal
-key** is the lexicographic pair
-$(\mathbb{T}^{\text{act}}_q, \mathrm{pos}_k(q))$ — Lamport time, then host
-position totalizing equal frontiers. The order is total and *semantically
-authoritative*: not forced by incidence, but it must linearize every
-asserted parent and declared dependency (each at strictly lower key) while
-placing both edge projections of one hyper-edge at the same key. Where
-this document writes $\prec$ in scoring, maturity, or path viability it
-means authoritative-order precedence, with the internal A→T transition of
-one act permitted at equal key.
+accepted acts and publishes each act's position
+$\mathrm{pos}_k(q_{k,j}) = j$, numbering the acts of the epoch from 1 to
+$|\mathcal{Q}_k|$. The **key of record** is the pair
+$(k, \mathrm{pos}_k(q))$, ordered lexicographically across epochs as well
+as within one epoch (`rem:graph:order-of-record-is-position`). Logical
+time is derived from this order, never the reverse; a time comparison never
+decides precedence, even when a later act has a lower time on disjoint
+endpoints (`rem:graph:cross-epoch-precedence`). The order is total and
+*semantically authoritative*; compliance requires every declared
+dependency and every asserted parent of an act to lie in finalized history
+at a strictly lower key
+(`cond:graph:authoritative-order-dependency-placement`,
+`cond:graph:authoritative-order-parent-placement`), and both edge
+projections of one hyper-edge have the same key. A finalized order that
+violates a placement condition remains the order of record; evidence and
+consequences follow ordering accountability (§8.2). Where this document
+writes $\prec$ in scoring, maturity, or path viability it means precedence
+by the key of record, with the internal A→T transition of one act permitted
+at equal key.
 
 **Host ordering discretion (`rem:graph:host-ordering-discretion`).** For
 acts not ordered by a causal parent or declared dependency, Layer 1
 imposes no arrival-order, fairness, neutrality, or canonical-identifier
 preference — the host may select any dependency-compliant order according
 to its own incentives. **Different valid host choices may produce different
-authoritative causal keys, edge-projection maturities, relation frontiers,
-causal standing paths, standing fields, and final-set admission
-outcomes.** This is authorized boundary discretion. The guarantee is
+authoritative causal keys, edge-projection maturities, and raw folded
+relation frontiers.** Formation and dependency validity read order; the
+write gates, standing, and ledger are evaluated once on the completed final
+union. Permuting a fixed accepted set in a dependency-compliant way, with
+final ledger, epoch title fold, and constants fixed, cannot change standing
+(`post:epoch:standing-epoch-set-determinism`); changing accepted membership
+can. This is authorized boundary discretion. The guarantee is
 public visibility and deterministic replay — *order transparency and
 replay determinism, not incentive-neutral ordering*.
 
 **Ordered-replay determinism (`lem:graph:ordered-replay-determinism`).**
-Fixing the finalized $\mathcal{Q}_k$ and the published constants:
-$\mathbb{T}^{\text{act}}$, $\tau_e$, $\tilde{w}(e)$, $\epsilon(e)$, every
-path parity, the half-score, path distance, the relevance score $S(u,c)$,
-and every CAN value are functions of $\mathcal{Q}_k$ and the constants
-alone — every participant holding the same ordered history reproduces them
-identically; none references $\mathrm{pos}(e)$ beyond the order itself.
-**This supersedes the pre-Edition-4 linearization-invariance lemma**: the
-claim is downgraded from order-independence to determinism given the
-published order. A lower Lamport time is necessary but not sufficient for
-causal ancestry (`rem:graph:causal-frontier-not-ancestry`).
+Fixing the finalized ordered history through epoch $k$ — including
+$\mathcal{Q}_k$ and the incidence and authenticated dependency inputs — and
+the published constants: $\mathbb{T}^{\text{act}}$, $\tau_e$,
+$\tilde{w}(e)$, $\epsilon(e)$, every path parity, the half-score, path
+distance, the relevance score $S(u,c)$, and every CAN value are functions of
+that ordered history and the constants alone — every participant holding
+the same ordered history reproduces them identically; none references
+$\mathrm{pos}(e)$, and no quantity reads host discretion beyond the
+published sequences. A lower recomputed Lamport time is necessary but not
+sufficient for causal ancestry
+(`rem:graph:causal-frontier-not-ancestry`).
 
 **Edge-projection maturity (`def:graph:edge-projection-maturity`).** For
 $e \in \mathrm{edges}(q)$:
@@ -1597,18 +1716,30 @@ $H_\tau = 0$ at $\tau_e = 0$; applied once at the thermodynamic boundary.
 
 Fields the structural record carries, per act: author binding; the act
 identifier; family; endpoints/incidence per projection with role; the
-authoritative act time; the authored parameters $p_d, p_i$ and domain label
-$D$ with mask $\mathbf{a}_D$ and routing tier per projection; derived
-parity $\epsilon(e)$ per projection; public protocol references
-(settlement references, license qualifiers); the **payload commitment**
-and the **dependency commitment**; handshake signatures and the approval
-witness. The record is sufficient to recompute the sentiment slice,
-path-view determinant, determinant sign, damped weight, and both
-commitment verifications (`subsec:deployment:sufficiency`).
+finalization epoch and act time $\mathbb{T}^{\text{act}}_q$; the authored
+parameters $p_d, p_i$ and domain label $D$ with mask $\mathbf{a}_D$ and
+routing tier per projection; derived parity $\epsilon(e)$ per projection;
+public protocol references (settlement references, license qualifiers) and
+asserted causal parents; the **payload commitment** and the **dependency
+commitment**; handshake signatures and the approval witness. The record is
+sufficient to recompute the sentiment slice, path-view determinant,
+determinant sign, damped weight, and both commitment verifications
+(`subsec:deployment:sufficiency`).
+
+**Act envelope (`def:graph:act-envelope`).** The abstract published record
+of an accepted act has exactly these fields: act identifier, author, and
+family; structural body; public protocol references and causal parents;
+payload and dependency commitments; admission handshake and approval
+witness; finalization epoch and act time. The payload bytes, salts, and
+dependency opening travel beside the envelope and are not part of it. Its
+serialization, carriage, and transport are deployment concerns.
 
 **Act payload projection (`def:graph:act-payload-projection`).** **Every
 authored act carries a payload projection**: a byte string the network
-never reads, bounded **per act** by $M_{\text{payload}}$. For a hyper-edge
+never reads, bounded **per act** by
+$\mathrm{len}(\mathrm{encode}(Y_q)) \le M_{\text{payload}}$, where encode
+is the deployment's declared payload encoding, so $M_{\text{payload}}$ is
+stated in that encoding's bytes. For a hyper-edge
 act the payload may be a structured, role-addressed object
 $(Y^{\text{act}}, Y^A, Y^T)$ — but this is *one* act payload under one
 commitment and one lifecycle; the role labels are schema fields, never
@@ -1861,8 +1992,12 @@ non-monotone in $\tau$ with minimum near $\tau \approx 0.5$. **Raw
 edge-weight ceiling (`thm:graph:raw-weight-ceiling`):**
 $0 \le \tilde{w}(e) \le \tilde{w}_{\max} < 1$ for every raw edge
 projection and derived reading, every parameter tuple, tier, and maturity
-— so log costs are positive, max-product registers bounded, and every
-optimal bounded raw walk has a simple representative. Maturity crossover:
+— so log costs are positive on routing-live edges and max-product registers
+bounded. When parity is unconstrained and depth has only an upper bound,
+every optimal raw walk has a simple representative with no smaller
+product; this supplies no simple representative of a prescribed parity, so
+signed traversal enforces original-vertex simplicity explicitly
+(`lem:epoch:double-cover-bfs-correctness`). Maturity crossover:
 $g(\tau) = \sqrt{1+\tau^2}\, e^{-\beta H_\tau} > 1$ iff
 $\tau > \tau^* \approx 0.94$ (`def:epoch:maturity-crossover`,
 `prop:epoch:crossover-location`).
@@ -1929,10 +2064,12 @@ view and preserves determinant sign exactly.
   projections plus current derived readings traversed, at most $L$. **Raw
   path viability does not require edge times to increase**: raw feed and
   bridge services measure connectivity in the current public snapshot, not
-  a chronological event chain. The host-published act order remains binding
-  for act acceptance, maturity, bundle folds, title, standing, and the
-  derived Self-edge parameters — it is not a path constraint on terminal
-  snapshot traversal. (Supersedes the pre-Edition-4 path-viability axiom.)
+  a chronological event chain. The host-published act order governs
+  dependency formation, authoritative placement, edge-projection maturity,
+  and order-sensitive raw bundle folds; standing, the ledger, and the write
+  gates are evaluated once on the completed final union, and title reads
+  membership and epoch. The act order is not a path constraint on terminal
+  snapshot traversal.
 - **Exactness (`rem:sorting:raw-pruning-is-implementation`):** the
   canonical raw feed, signed, and bridge services are exact bounded-depth
   max-product computations on $G_k^{\text{raw}}$. Layer 1 publishes no raw
@@ -1941,8 +2078,8 @@ view and preserves determinant sign exactly.
   a terminal Layer-2 choice that must publish its own error, cutoff, and
   tie semantics.
 - **Ordered-replay determinism (`lem:graph:ordered-replay-determinism`):**
-  see §8.3 — all of the above are deterministic functions of
-  $(\mathcal{Q}_k, \text{constants})$; different valid host orders may
+  see §8.3 — all of the above are deterministic functions of the finalized
+  ordered history and the constants; different valid host orders may
   differ (`rem:graph:host-ordering-discretion`).
 
 Excised from the closure edition (terminal): the general $W_q$
