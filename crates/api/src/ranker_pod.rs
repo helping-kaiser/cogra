@@ -124,6 +124,10 @@ impl RankerConfig {
         .parse()
         .context("RANKER_MAX_IN_FLIGHT must be a whole number")?;
         anyhow::ensure!(max_in_flight > 0, "RANKER_MAX_IN_FLIGHT must be at least 1");
+        anyhow::ensure!(
+            timeout_ms > 0,
+            "RANKER_TIMEOUT_MS must be at least 1: a zero bound fails every relay"
+        );
         Ok(Self {
             url: crate::env_or("RANKER_URL", Self::DEFAULT_URL),
             timeout: Duration::from_millis(timeout_ms),

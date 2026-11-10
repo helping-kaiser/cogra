@@ -20,9 +20,10 @@ use tokio_util::task::TaskTracker;
 use tracing_subscriber::EnvFilter;
 
 /// The session-signing key (auth.md "Access token"): from
-/// `SESSION_SIGNING_SEED` (32 bytes, hex). Absent in dev, an ephemeral
-/// key is generated — sessions then die with the process, which is loud
-/// enough to notice and harmless locally.
+/// `SESSION_SIGNING_SEED` (32 bytes, hex). A release build refuses to
+/// start without it ([`api::boot::session_seed_required`]). Absent in a
+/// dev build, an ephemeral key is generated — sessions then die with the
+/// process, which is loud enough to notice and harmless locally.
 fn auth_config() -> anyhow::Result<AuthConfig> {
     match std::env::var("SESSION_SIGNING_SEED") {
         Ok(hex_seed) => {
@@ -33,6 +34,10 @@ fn auth_config() -> anyhow::Result<AuthConfig> {
                 .map_err(|_| anyhow::anyhow!("SESSION_SIGNING_SEED must be 32 bytes of hex"))?;
             Ok(AuthConfig::from_seed(seed)?)
         }
+        Err(_) if api::boot::session_seed_required() => anyhow::bail!(
+            "SESSION_SIGNING_SEED must be set in a release build: an ephemeral key would sign \
+             every session out at each restart"
+        ),
         Err(_) => {
             tracing::warn!(
                 "SESSION_SIGNING_SEED not set; using an ephemeral session key — \
@@ -78,6 +83,8 @@ async fn main() -> anyhow::Result<()> {
         .with_env_filter(EnvFilter::from_default_env())
         .init();
     dotenv.report();
+    let auth = auth_config()?;
+    let ip_source = api::boot::client_ip_source(&env_or("CLIENT_IP_SOURCE", "ConnectInfo"))?;
 
     let database_url =
         std::env::var("DATABASE_URL").context("DATABASE_URL must be set (see .env.example)")?;
@@ -99,37 +106,40 @@ async fn main() -> anyhow::Result<()> {
             .context("L1_STANDIN_SETTLEMENT_DELAY_EPOCHS")?,
     );
     let boundary = StandInBoundary(standin.clone());
-    let ingest_interval: u64 = env_or("L1_INGEST_INTERVAL_SECS", "2")
-        .parse()
-        .context("L1_INGEST_INTERVAL_SECS must be a number of seconds")?;
+    let ingest_interval = api::boot::env_positive_secs("L1_INGEST_INTERVAL_SECS", 2)?;
     let gc_after_epochs: i64 = env_or(
         "STAGED_WRITE_GC_EPOCHS",
         &api::ingest::DEFAULT_GC_AFTER_EPOCHS.to_string(),
     )
     .parse()
     .context("STAGED_WRITE_GC_EPOCHS must be a number of epochs")?;
-    tokio::spawn(api::ingest::ingest_loop(
-        boundary.clone(),
-        pool.clone(),
-        ingest_interval,
-        gc_after_epochs,
-    ));
+    api::boot::spawn_supervised(
+        "mirror ingestion",
+        api::ingest::ingest_loop(
+            boundary.clone(),
+            pool.clone(),
+            ingest_interval,
+            gc_after_epochs,
+        ),
+    );
 
-    if let Ok(raw) = std::env::var("L1_EPOCH_CLOSE_INTERVAL_SECS") {
-        let close_interval: u64 = raw
-            .parse()
-            .context("L1_EPOCH_CLOSE_INTERVAL_SECS must be a number of seconds")?;
-        tokio::spawn(l1_standin::close_loop(standin.clone(), close_interval));
+    if std::env::var("L1_EPOCH_CLOSE_INTERVAL_SECS").is_ok() {
+        let close_interval = api::boot::env_positive_secs("L1_EPOCH_CLOSE_INTERVAL_SECS", 0)?;
+        api::boot::spawn_supervised(
+            "epoch clock",
+            l1_standin::close_loop(standin.clone(), close_interval),
+        );
         tracing::info!(
             interval_secs = close_interval,
             "epoch interval close active"
         );
     }
 
-    let reaper_interval: u64 = env_or("ACCOUNT_REAPER_INTERVAL_SECS", "600")
-        .parse()
-        .context("ACCOUNT_REAPER_INTERVAL_SECS must be a number of seconds")?;
-    tokio::spawn(api::onboarding::reaper_loop(pool.clone(), reaper_interval));
+    let reaper_interval = api::boot::env_positive_secs("ACCOUNT_REAPER_INTERVAL_SECS", 600)?;
+    api::boot::spawn_supervised(
+        "account reaper",
+        api::onboarding::reaper_loop(pool.clone(), reaper_interval),
+    );
 
     let admission_burn_micro: i64 = env_or(
         "ADMISSION_BURN_MICRO",
@@ -138,13 +148,11 @@ async fn main() -> anyhow::Result<()> {
     .parse()
     .context("ADMISSION_BURN_MICRO must be an integer of micro-units")?;
 
-    let rate_limit_gc_interval: u64 = env_or("RATE_LIMIT_GC_INTERVAL_SECS", "3600")
-        .parse()
-        .context("RATE_LIMIT_GC_INTERVAL_SECS must be a number of seconds")?;
-    tokio::spawn(api::ratelimit::gc_loop(
-        pool.clone(),
-        rate_limit_gc_interval,
-    ));
+    let rate_limit_gc_interval = api::boot::env_positive_secs("RATE_LIMIT_GC_INTERVAL_SECS", 3600)?;
+    api::boot::spawn_supervised(
+        "throttle-row GC",
+        api::ratelimit::gc_loop(pool.clone(), rate_limit_gc_interval),
+    );
 
     let breach: Arc<dyn BreachCorpus> = match env_or("BREACH_CHECK", "hibp").as_str() {
         "hibp" => Arc::new(HibpCorpus::new().context("building the HIBP client")?),
@@ -154,10 +162,6 @@ async fn main() -> anyhow::Result<()> {
         }
         other => anyhow::bail!("BREACH_CHECK must be 'hibp' or 'off', got '{other}'"),
     };
-
-    let ip_source: axum_client_ip::ClientIpSource = env_or("CLIENT_IP_SOURCE", "ConnectInfo")
-        .parse()
-        .map_err(|e| anyhow::anyhow!("CLIENT_IP_SOURCE unrecognized: {e}"))?;
 
     let media = api::media::MediaConfig::from_env()?;
     let areas = api::media::MediaAreas::s3(&media).context("building the media store clients")?;
@@ -171,12 +175,15 @@ async fn main() -> anyhow::Result<()> {
         base_url = %media.base_url,
         "media service configured"
     );
-    tokio::spawn(api::media::orphan_reaper_loop(
-        pool.clone(),
-        areas.clone(),
-        media.orphan_reaper_interval_secs,
-        media.orphan_max_age_secs,
-    ));
+    api::boot::spawn_supervised(
+        "media orphan reaper",
+        api::media::orphan_reaper_loop(
+            pool.clone(),
+            areas.clone(),
+            media.orphan_reaper_interval_secs,
+            media.orphan_max_age_secs,
+        ),
+    );
 
     let ffmpeg = match api::media::transcode::Ffmpeg::detect(&media.ffmpeg).await {
         Ok(ffmpeg) => {
@@ -209,14 +216,17 @@ async fn main() -> anyhow::Result<()> {
         .cancel_on_signal(stop.clone());
     let draining = TaskTracker::new();
     for _ in 0..media.ingest_workers {
-        draining.spawn(api::media::ingest_queue::ingest_loop(
-            pool.clone(),
-            blobs.clone(),
-            media.clone(),
-            ffmpeg.clone(),
-            stop.clone(),
-            shutdown::GRACE,
-        ));
+        api::boot::watch(
+            "media ingest worker",
+            draining.spawn(api::media::ingest_queue::ingest_loop(
+                pool.clone(),
+                blobs.clone(),
+                media.clone(),
+                ffmpeg.clone(),
+                stop.clone(),
+                shutdown::GRACE,
+            )),
+        );
     }
     draining.close();
 
@@ -232,7 +242,6 @@ async fn main() -> anyhow::Result<()> {
 
     let mailer = api::mailer::build(MailerConfig::from_env()?)
         .context("building the SMTP transport from SMTP_URL")?;
-    let auth = auth_config()?;
     let uploads = api::UploadRouting {
         pool: pool.clone(),
         blobs,

@@ -79,10 +79,7 @@ impl Query {
     /// verified act is checkable on-device.
     async fn host_public_key(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
         let boundary = ctx.data::<StandInBoundary>()?;
-        let key = boundary
-            .host_public_key()
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let key = boundary.host_public_key().await?;
         Ok(B64.encode(key))
     }
 
@@ -100,7 +97,7 @@ impl Query {
         };
         let inviter = store::actor_identity(pool, link.inviter_id)
             .await?
-            .ok_or_else(|| async_graphql::Error::new("invite link without inviter"))?;
+            .ok_or_else(|| super::faults::Fault::new("invite link without inviter"))?;
         Ok(Some(InviteLinkCheck {
             usable: store::invite_link_usable(pool, id).await?,
             inviter_handle: inviter.handle,
@@ -279,7 +276,7 @@ impl Query {
             Ok(_) | Err(staged::StagedError::NotFound(_) | staged::StagedError::Reaped(_)) => {
                 Ok(None)
             }
-            Err(e) => Err(async_graphql::Error::new(e.to_string())),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -302,8 +299,7 @@ impl Query {
         };
         let pool = ctx.data::<PgPool>()?;
         Ok(postgres_store::media::by_id(pool, id)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .await?
             .filter(|asset| asset.author_id == viewer.user_id)
             .map(MediaAttachmentType::asset))
     }
@@ -336,25 +332,17 @@ impl Query {
         }
         let pool = ctx.data::<PgPool>()?;
         let Some(post) =
-            postgres_store::media::first_own_placement(pool, viewer.user_id, &media_ids)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            postgres_store::media::first_own_placement(pool, viewer.user_id, &media_ids).await?
         else {
             return Ok(None);
         };
-        Ok(content_store::post(pool, post)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?
-            .map(PostType))
+        Ok(content_store::post(pool, post).await?.map(PostType))
     }
 
     /// One post by id; null for an unknown id.
     async fn post(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<PostType>> {
         let pool = ctx.data::<PgPool>()?;
-        Ok(content_store::post(pool, id)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?
-            .map(PostType))
+        Ok(content_store::post(pool, id).await?.map(PostType))
     }
 
     /// One comment by id; null for an unknown id.
@@ -364,10 +352,7 @@ impl Query {
         id: Uuid,
     ) -> async_graphql::Result<Option<CommentType>> {
         let pool = ctx.data::<PgPool>()?;
-        Ok(content_store::comment(pool, id)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?
-            .map(CommentType))
+        Ok(content_store::comment(pool, id).await?.map(CommentType))
     }
 
     /// One topic by name — canonicalized here (lowercase, `#` stripped)
@@ -424,10 +409,7 @@ impl Query {
         id: RecordId,
     ) -> async_graphql::Result<Option<Record>> {
         let pool = ctx.data::<PgPool>()?;
-        Ok(mirror::record_full(pool, &id.0)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?
-            .map(Record))
+        Ok(mirror::record_full(pool, &id.0).await?.map(Record))
     }
 
     /// Generic record lookup over the mirror — the public chronicle,
@@ -503,8 +485,7 @@ impl Query {
             page.backward,
             page.limit + 1,
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        .await?;
         Ok(record_connection(rows, &page, Some(filter)))
     }
 
@@ -558,9 +539,7 @@ impl Query {
 
         if let Ok(id) = Uuid::parse_str(query) {
             let mut out = Vec::new();
-            if let Some(node) = crate::nodes::resolve_id(pool, id)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            if let Some(node) = crate::nodes::resolve_id(pool, id).await?
                 && let Some(target) = resolve_reference_target(ctx, &node.to_string()).await?
                 && wanted(target.kind())
             {
@@ -594,9 +573,7 @@ impl Query {
             return Ok(Vec::new());
         };
         let request = search::unscoped(text, &kinds, None, true);
-        let hits = search_store::find(pool, &request, None, false, i64::from(limit))
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let hits = search_store::find(pool, &request, None, false, i64::from(limit)).await?;
         Ok(hydrate(pool, hits)
             .await?
             .into_iter()
@@ -712,9 +689,7 @@ impl Query {
         let cap = if past_people {
             None
         } else {
-            people_cap(pool, &request, None)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            people_cap(pool, &request, None).await?
         };
         let window = search_store::Window {
             people: cap.as_ref().map(|cap| cap.served.as_slice()),
@@ -722,8 +697,7 @@ impl Query {
         };
         let mut hits = request
             .find_in(pool, window, cursor, backward, limit + 1)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            .await?;
         let has_more = hits.len() as i64 > limit;
         if has_more {
             if backward {
@@ -767,8 +741,7 @@ impl Query {
             page.limit + 1,
             include_pending,
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        .await?;
         Ok(keyset_connection(
             rows,
             &page,
@@ -1160,8 +1133,7 @@ pub(super) async fn hydrate(
         pool,
         &ids_of(&[IndexKind::Post.as_store(), ScopedKind::Comment.as_store()]),
     )
-    .await
-    .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    .await?;
     let mut users: HashMap<Uuid, store::ActorIdentity> =
         store::actor_identities_by_ids(pool, &ids_of(&[IndexKind::User.as_store()]))
             .await?
@@ -1249,8 +1221,7 @@ async fn resolve_nodes(
     ids: &[Uuid],
 ) -> async_graphql::Result<HashMap<Uuid, Resolved>> {
     let mut nodes: HashMap<Uuid, Resolved> = crate::nodes::resolve_content_many(pool, ids)
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .await?
         .into_iter()
         .map(|(id, content)| (id, Resolved::Content(content)))
         .collect();
@@ -1301,7 +1272,6 @@ fn typed_node(content: crate::nodes::ContentNode) -> Node {
 /// all resolves to `None`, hence to an empty page.
 async fn uuid_to_node_string(pool: &PgPool, id: Uuid) -> async_graphql::Result<Option<String>> {
     Ok(crate::nodes::resolve_id(pool, id)
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .await?
         .map(|node| node.to_string()))
 }
