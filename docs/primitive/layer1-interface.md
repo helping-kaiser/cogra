@@ -1795,7 +1795,7 @@ either removable projection — payload or dependency opening — changes
 neither the edge projections nor any identifier, incidence, role,
 parameter rendering, act time, standing quantity, title quantity, or raw
 graph quantity: $\boldsymbol{\Psi}_e$, $\boldsymbol{\Psi}_e^{[P]}$,
-$\epsilon(e)$, $\tilde{w}(e)$, $W_{\text{end}}^{(k)}$, $\alpha_i$,
+$\epsilon(e)$, $\tilde{w}(e)$, the CAN base value $v(e)$, $\Pi_{ui}$, $\alpha_i$,
 settlement recognition, $\mathrm{owner}^{(k)}$, and every gate are
 identical across all payload states of every act. Removal is
 scoring-neutral: the reduced projection carries the entire Layer-1 closure
