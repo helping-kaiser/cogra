@@ -302,7 +302,7 @@ async fn a_published_epoch_read_back_after_acceptance_still_marks_its_payload(po
     assert!(marked.contains(&(Family::Registration, true)));
     assert!(marked.contains(&(Family::Opinion, false)));
 
-    let read_back = host.epochs_since(-1).await.expect("epochs");
+    let read_back = host.epochs_since(0).await.expect("epochs");
     assert_eq!(read_back, vec![package]);
 }
 

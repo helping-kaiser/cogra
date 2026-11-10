@@ -227,12 +227,43 @@ async fn a_partial_landing_position_is_rejected(pool: PgPool) {
 
     sqlx::query(
         "INSERT INTO chat_versions (chat_id, name, landed_epoch, act_time, position)
-         VALUES ($1, 'whole', 1, 1, 0)",
+         VALUES ($1, 'whole', 1, 1, 1)",
     )
     .bind(chat)
     .execute(&pool)
     .await
     .expect("a whole position is accepted");
+}
+
+/// A copy of the order key carries the mirror's numbering: an epoch 0 or
+/// a position 0 is no key the graph ever issued (layer1-interface.md
+/// §7.2), so every table holding a copy refuses it.
+///
+/// A copied landing position numbers its epoch and its position from 1.
+/// ´claim:schema:a-copied-landing-position-numbers-from-one´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_copied_landing_position_numbers_from_one(pool: PgPool) {
+    let chat = Uuid::new_v4();
+    sqlx::query("INSERT INTO chats (id) VALUES ($1)")
+        .bind(chat)
+        .execute(&pool)
+        .await
+        .expect("chat");
+    for (epoch, position) in [(0, 1), (1, 0)] {
+        let refused = sqlx::query(
+            "INSERT INTO chat_versions (chat_id, name, landed_epoch, act_time, position)
+             VALUES ($1, 'zero', $2, 1, $3)",
+        )
+        .bind(chat)
+        .bind(epoch)
+        .bind(position)
+        .execute(&pool)
+        .await;
+        assert!(
+            refused.is_err(),
+            "({epoch}, {position}) is no landing position"
+        );
+    }
 }
 
 /// Refusals key on constraint *names*: PostgreSQL reports the constraint

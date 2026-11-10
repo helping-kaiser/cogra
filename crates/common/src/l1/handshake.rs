@@ -309,10 +309,11 @@ pub struct PublishedRecord {
     pub act_id: ActId,
     pub author: String,
     pub family: Family,
-    /// Landing epoch.
+    /// Landing epoch, numbered from [`FIRST_EPOCH`].
     pub epoch: i64,
     /// Authoritative causal key (§8.3).
     pub act_time: i64,
+    /// The act's place in its epoch, numbered from [`FIRST_POSITION`].
     pub position: i64,
     /// Non-empty payload committed under the witness.
     pub payload_marked: bool,
@@ -339,11 +340,84 @@ pub struct PublishedLeg {
 /// final act sequence), with the boundary's attested timestamp.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EpochPackage {
+    /// The epoch, numbered from [`FIRST_EPOCH`].
     pub epoch: i64,
     /// The attested boundary timestamp (the Host Contract's accepted-records
     /// package): when the epoch closed, so when its records landed.
     pub attested_at: chrono::DateTime<chrono::Utc>,
     pub records: Vec<PublishedRecord>,
+}
+
+/// Boundary 0: the empty state before epoch 1 (§7.2, "Title Certificate").
+/// No epoch carries this number; a reader that has seen no epoch stands
+/// here, so it is what "the last epoch" reads before the first close.
+pub const EMPTY_BOUNDARY: i64 = 0;
+
+/// The first epoch: epochs number certificates from 1 (§11.6, the epoch
+/// history).
+pub const FIRST_EPOCH: i64 = 1;
+
+/// The first position: the acts of one epoch are numbered from 1 to
+/// |𝒬_k| (§8.3, "Authoritative act order").
+pub const FIRST_POSITION: i64 = 1;
+
+/// Why an epoch package has no order of record (§7.2, "Title
+/// Certificate"): such a certificate is malformed and refused before any
+/// replay. A missing position needs no variant of its own — n records at
+/// positions inside 1..=n with none repeated cover every position, so a
+/// gap always shows up as a repeat or an out-of-range position.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum MalformedOrder {
+    #[error("epoch {0} is not numbered from {FIRST_EPOCH}")]
+    EpochOutOfRange(i64),
+    #[error("record {act} names epoch {named} inside epoch {epoch}")]
+    MisplacedRecord { act: String, named: i64, epoch: i64 },
+    #[error("record {act} sits at position {position}, outside {FIRST_POSITION}..={len}")]
+    PositionOutOfRange {
+        act: String,
+        position: i64,
+        len: i64,
+    },
+    #[error("position {position} of epoch {epoch} is repeated")]
+    RepeatedPosition { epoch: i64, position: i64 },
+}
+
+impl EpochPackage {
+    /// Whether the package has an order of record (§7.2, §8.3): an epoch
+    /// numbered from 1, every record placed in it, and positions that are
+    /// exactly 1..=|𝒬_k|. The host checks this before it publishes and the
+    /// mirror before it ingests, so neither side can make the other hold
+    /// an epoch 0, a position 0, a gap or a repeat.
+    pub fn check_order_of_record(&self) -> Result<(), MalformedOrder> {
+        if self.epoch < FIRST_EPOCH {
+            return Err(MalformedOrder::EpochOutOfRange(self.epoch));
+        }
+        let len = i64::try_from(self.records.len()).unwrap_or(i64::MAX);
+        let mut seen = std::collections::HashSet::with_capacity(self.records.len());
+        for record in &self.records {
+            if record.epoch != self.epoch {
+                return Err(MalformedOrder::MisplacedRecord {
+                    act: record.act_id.to_string(),
+                    named: record.epoch,
+                    epoch: self.epoch,
+                });
+            }
+            if !(FIRST_POSITION..=len).contains(&record.position) {
+                return Err(MalformedOrder::PositionOutOfRange {
+                    act: record.act_id.to_string(),
+                    position: record.position,
+                    len,
+                });
+            }
+            if !seen.insert(record.position) {
+                return Err(MalformedOrder::RepeatedPosition {
+                    epoch: self.epoch,
+                    position: record.position,
+                });
+            }
+        }
+        Ok(())
+    }
 }
 
 /// The B_i surface as the stand-in honors it: numbers
@@ -428,5 +502,93 @@ mod tests {
             canonical_deps(&[d2, d1])
         );
         assert_eq!(canonical_deps(&[]), vec![0x80]);
+    }
+
+    fn package(epoch: i64, positions: &[i64]) -> EpochPackage {
+        EpochPackage {
+            epoch,
+            attested_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
+            records: positions
+                .iter()
+                .enumerate()
+                .map(|(seq, position)| PublishedRecord {
+                    act_id: ActId::new("alice", seq as u64, Family::Opinion).expect("valid"),
+                    author: "alice".into(),
+                    family: Family::Opinion,
+                    epoch,
+                    act_time: 1,
+                    position: *position,
+                    payload_marked: false,
+                    payload_witness: vec![],
+                    legs: vec![],
+                })
+                .collect(),
+        }
+    }
+
+    /// A package at epoch 1 or later whose positions are 1..=n, in any
+    /// listed order, has an order of record — including the empty epoch.
+    ///
+    /// Epochs and positions numbered from 1 with no gap or repeat form an order of record.
+    /// ´claim:handshake:an-order-of-record-numbers-from-one´
+    #[test]
+    fn epochs_and_positions_from_one_form_an_order_of_record() {
+        assert_eq!(package(1, &[1, 2, 3]).check_order_of_record(), Ok(()));
+        assert_eq!(package(7, &[2, 3, 1]).check_order_of_record(), Ok(()));
+        assert_eq!(package(1, &[]).check_order_of_record(), Ok(()));
+    }
+
+    /// Each fault §7.2 names — an epoch 0, a position outside 1..=|𝒬_k|, a
+    /// repeated or a missing position — leaves the package with no order
+    /// of record, as does a record that names another epoch than its own.
+    ///
+    /// Epoch 0, a position outside 1..=n, a repeat, a gap or a misplaced record has no order of record.
+    /// ´claim:handshake:a-malformed-numbering-has-no-order-of-record´
+    #[test]
+    fn every_numbering_fault_is_refused() {
+        assert_eq!(
+            package(0, &[1]).check_order_of_record(),
+            Err(MalformedOrder::EpochOutOfRange(0))
+        );
+        assert_eq!(
+            package(-1, &[]).check_order_of_record(),
+            Err(MalformedOrder::EpochOutOfRange(-1))
+        );
+        assert!(matches!(
+            package(1, &[0, 1]).check_order_of_record(),
+            Err(MalformedOrder::PositionOutOfRange {
+                position: 0,
+                len: 2,
+                ..
+            })
+        ));
+        assert!(
+            matches!(
+                package(1, &[1, 2, 4]).check_order_of_record(),
+                Err(MalformedOrder::PositionOutOfRange {
+                    position: 4,
+                    len: 3,
+                    ..
+                })
+            ),
+            "a gap: position 3 is missing, so 4 lies outside 1..=3"
+        );
+        assert_eq!(
+            package(2, &[1, 1]).check_order_of_record(),
+            Err(MalformedOrder::RepeatedPosition {
+                epoch: 2,
+                position: 1
+            })
+        );
+        let mut misplaced = package(3, &[1, 2]);
+        misplaced.records[1].epoch = 2;
+        assert!(matches!(
+            misplaced.check_order_of_record(),
+            Err(MalformedOrder::MisplacedRecord {
+                named: 2,
+                epoch: 3,
+                ..
+            })
+        ));
     }
 }

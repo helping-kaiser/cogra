@@ -1177,13 +1177,7 @@ async fn the_burn_funds_the_address_and_publishes_no_record(pool: PgPool) {
         rig.burned_micro(&address).await,
         rig.cfg.admission_burn_micro
     );
-    assert!(
-        rig.standin
-            .epochs_since(-1)
-            .await
-            .expect("reads")
-            .is_empty()
-    );
+    assert!(rig.standin.epochs_since(0).await.expect("reads").is_empty());
     let acts: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM l1_acts WHERE author = $1")
         .bind(&address)
         .fetch_one(&rig.pool)

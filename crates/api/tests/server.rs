@@ -62,7 +62,10 @@ async fn graphql_health_reports_store_and_mirror(pool: PgPool) {
     let json = body_json(response).await;
     let health = &json["data"]["health"];
     assert_eq!(health["postgresConnected"], true);
-    assert_eq!(health["mirrorEpoch"], -1);
+    assert_eq!(
+        health["mirrorEpoch"], 0,
+        "epochs number from 1; 0 is nothing ingested"
+    );
     assert_eq!(health["backendVersion"], env!("CARGO_PKG_VERSION"));
 }
 

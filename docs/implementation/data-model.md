@@ -57,7 +57,10 @@ adds nothing. Conventions:
   edit, and ballot folds — newest-wins reads, resolved within an
   epoch by the causal key), and by **epoch** (ingestion,
   incremental recompute).
-- **An epoch cursor** records the last fully-ingested epoch;
+- **An epoch cursor** records the last fully-ingested epoch —
+  0, the empty boundary, before the first, since epochs and the
+  positions within one are numbered from 1
+  ([layer1-interface.md §8.3](../primitive/layer1-interface.md#83-temporal-structure));
   ingestion appends records and advances it
   ([architecture.md "Record ingestion"](architecture.md#record-ingestion-the-mirror-contract)).
 - **Per epoch, the attested boundary timestamp** the package

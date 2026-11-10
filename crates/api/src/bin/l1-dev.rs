@@ -22,7 +22,7 @@ use anyhow::{Context, bail};
 use api::l1::StandInBoundary;
 use common::l1::Family;
 use common::l1::client::ActorKey;
-use common::l1::handshake::{Proposal, StructuralBody};
+use common::l1::handshake::{FIRST_EPOCH, Proposal, StructuralBody};
 use common::l1::identifier::NodeId;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::mirror;
@@ -215,7 +215,7 @@ async fn main() -> anyhow::Result<()> {
             let (pool, _) = connect().await?;
             let cursor = mirror::last_ingested_epoch(&pool).await?;
             println!("mirror cursor: epoch {cursor}");
-            for epoch in 0..=cursor {
+            for epoch in FIRST_EPOCH..=cursor {
                 let ids = mirror::record_ids_in_epoch(&pool, epoch).await?;
                 println!("  epoch {epoch}: {} record(s)", ids.len());
                 for id in ids {

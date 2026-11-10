@@ -69,9 +69,9 @@ fn at(secs: i64) -> Timestamp {
 
 fn landed(secs: i64) -> LandingOrder {
     LandingOrder {
-        landed_epoch: secs,
+        landed_epoch: secs + 1,
         act_time: secs,
-        position: 0,
+        position: 1,
     }
 }
 
@@ -424,7 +424,7 @@ async fn a_redacted_handle_never_matches_redacted(pool: PgPool) {
     sqlx::query(
         "INSERT INTO actor_profile_versions
              (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'policy', 99, 99, 0)",
+         VALUES ($1, '[redacted]', 'policy', 99, 99, 1)",
     )
     .bind(sol)
     .execute(&rig.pool)
@@ -458,7 +458,7 @@ async fn a_removed_posts_title_never_matches(pool: PgPool) {
         "INSERT INTO post_versions
              (post_id, title, content, redaction_reason, pending, created_at,
               landed_epoch, act_time, position)
-         VALUES ($1, '[removed]', '[removed]', 'policy', FALSE, $2, 9, 9, 0)",
+         VALUES ($1, '[removed]', '[removed]', 'policy', FALSE, $2, 9, 9, 1)",
     )
     .bind(id)
     .bind(at(9))
@@ -1154,7 +1154,7 @@ async fn claim_pair(
         family: Family::Tag,
         epoch,
         act_time: epoch,
-        position: 0,
+        position: 1,
         payload_marked: false,
         payload_witness: vec![0; 32],
         legs: vec![
@@ -1339,9 +1339,9 @@ async fn a_tag_scoped_query_finds_what_carries_the_tag(pool: PgPool) {
     let off_title = minted("kel", 2);
     post_as(&rig.pool, kel, &off_title, 3, Some("Coast road rubbings")).await;
     post_as(&rig.pool, kel, &minted("kel", 3), 4, Some("Salt untagged")).await;
-    claim(&rig.pool, 0, "sol", 10, &carried, "saltmaps", 0.8).await;
-    claim(&rig.pool, 1, "kel", 10, &elsewhere, "tides", 0.8).await;
-    claim(&rig.pool, 2, "kel", 11, &off_title, "saltmaps", 0.8).await;
+    claim(&rig.pool, 1, "sol", 10, &carried, "saltmaps", 0.8).await;
+    claim(&rig.pool, 2, "kel", 10, &elsewhere, "tides", 0.8).await;
+    claim(&rig.pool, 3, "kel", 11, &off_title, "saltmaps", 0.8).await;
 
     let found = scoped(&rig, None, json!({ "query": "#saltmaps salt" })).await;
     assert_eq!(hits(&found), vec!["Post:Salt maps of the coast road"]);
@@ -1389,8 +1389,8 @@ async fn a_tag_scoped_query_matches_a_carried_comments_target_title(pool: PgPool
     let top_id = comment_as(&rig.pool, sol, &top, (flats, "post"), 2).await;
     let reply = minted("kel", 2);
     let reply_id = comment_as(&rig.pool, kel, &reply, (top_id, "comment"), 3).await;
-    claim(&rig.pool, 0, "sol", 10, &top, "saltmaps", 0.5).await;
-    claim(&rig.pool, 1, "kel", 10, &reply, "saltmaps", 0.5).await;
+    claim(&rig.pool, 1, "sol", 10, &top, "saltmaps", 0.5).await;
+    claim(&rig.pool, 2, "kel", 10, &reply, "saltmaps", 0.5).await;
 
     let found = scoped(&rig, None, json!({ "query": "#saltmaps flats" })).await;
     assert_eq!(hits(&found), vec![as_comment(reply_id), as_comment(top_id)]);
@@ -1418,10 +1418,10 @@ async fn a_comment_on_a_tagged_post_that_does_not_carry_the_tag_is_not_reached(p
     post_as(&rig.pool, kel, &strangers, 3, Some("Salt study")).await;
     let withdrawn = minted("kel", 3);
     post_as(&rig.pool, kel, &withdrawn, 4, Some("Salt withdrawn")).await;
-    claim(&rig.pool, 0, "sol", 10, &tagged, "saltmaps", 0.9).await;
-    claim(&rig.pool, 1, "sol", 11, &strangers, "saltmaps", 0.9).await;
-    claim(&rig.pool, 2, "kel", 10, &withdrawn, "saltmaps", 0.9).await;
-    unclaim(&rig.pool, 3, "kel", 11, &withdrawn, "saltmaps").await;
+    claim(&rig.pool, 1, "sol", 10, &tagged, "saltmaps", 0.9).await;
+    claim(&rig.pool, 2, "sol", 11, &strangers, "saltmaps", 0.9).await;
+    claim(&rig.pool, 3, "kel", 10, &withdrawn, "saltmaps", 0.9).await;
+    unclaim(&rig.pool, 4, "kel", 11, &withdrawn, "saltmaps").await;
 
     let found = scoped(&rig, None, json!({ "query": "#saltmaps salt" })).await;
     assert_eq!(hits(&found), vec!["Post:Salt maps"]);
@@ -1444,12 +1444,12 @@ async fn a_handle_scoped_query_returns_the_tags_they_tagged_with(pool: PgPool) {
     post_as(&rig.pool, sol, &own, 1, Some("Rubbings")).await;
     let strangers = minted("kel", 1);
     post_as(&rig.pool, kel, &strangers, 2, Some("Wax charts")).await;
-    claim(&rig.pool, 0, "sol", 10, &own, "saltmaps", 0.7).await;
-    claim(&rig.pool, 1, "sol", 11, &own, "salty", 0.7).await;
-    unclaim(&rig.pool, 2, "sol", 12, &own, "salty").await;
-    claim(&rig.pool, 3, "kel", 10, &own, "saltpans", 0.7).await;
-    claim(&rig.pool, 4, "sol", 13, &own, "tides", 0.7).await;
-    claim(&rig.pool, 5, "sol", 14, &strangers, "saltflats", 0.7).await;
+    claim(&rig.pool, 1, "sol", 10, &own, "saltmaps", 0.7).await;
+    claim(&rig.pool, 2, "sol", 11, &own, "salty", 0.7).await;
+    unclaim(&rig.pool, 3, "sol", 12, &own, "salty").await;
+    claim(&rig.pool, 4, "kel", 10, &own, "saltpans", 0.7).await;
+    claim(&rig.pool, 5, "sol", 13, &own, "tides", 0.7).await;
+    claim(&rig.pool, 6, "sol", 14, &strangers, "saltflats", 0.7).await;
     tag(&rig.pool, "saltmarsh").await;
 
     let found = scoped(&rig, None, json!({ "query": "@sol salt" })).await;
@@ -1562,7 +1562,7 @@ async fn a_bare_person_cue_lists_profiles_then_their_content(pool: PgPool) {
     let comment = comment_as(&rig.pool, sol, &minted("solarium", 2), (titled, "post"), 2).await;
     let untitled = post_as(&rig.pool, sol, &minted("solarium", 3), 3, None).await;
     post_as(&rig.pool, kel, &minted("kel", 1), 4, Some("Solar charts")).await;
-    claim(&rig.pool, 0, "solarium", 10, &carried, "saltmaps", 0.9).await;
+    claim(&rig.pool, 1, "solarium", 10, &carried, "saltmaps", 0.9).await;
 
     let ids = |connection: &Value| -> Vec<String> {
         connection["edges"]
@@ -1620,9 +1620,9 @@ async fn a_bare_topic_cue_lists_topics_then_what_carries_them(pool: PgPool) {
     post_as(&rig.pool, kel, &pans, 2, None).await;
     let tides = minted("kel", 2);
     post_as(&rig.pool, kel, &tides, 3, Some("Salt tides")).await;
-    claim(&rig.pool, 0, "sol", 10, &maps, "saltmaps", 0.9).await;
-    claim(&rig.pool, 1, "kel", 10, &pans, "saltpans", 0.9).await;
-    claim(&rig.pool, 2, "kel", 11, &tides, "tides", 0.9).await;
+    claim(&rig.pool, 1, "sol", 10, &maps, "saltmaps", 0.9).await;
+    claim(&rig.pool, 2, "kel", 10, &pans, "saltpans", 0.9).await;
+    claim(&rig.pool, 3, "kel", 11, &tides, "tides", 0.9).await;
 
     let found = scoped(&rig, None, json!({ "query": "#salt" })).await;
     let mut order = hits(&found);
@@ -1698,7 +1698,7 @@ async fn an_unknown_handle_scope_with_text_reads_empty(pool: PgPool) {
     sqlx::query(
         "INSERT INTO actor_profile_versions
              (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'policy', 99, 99, 0)",
+         VALUES ($1, '[redacted]', 'policy', 99, 99, 1)",
     )
     .bind(sol)
     .execute(&rig.pool)
@@ -1788,7 +1788,7 @@ async fn scoped_pages_are_stable_and_complete(pool: PgPool) {
     }
     let tagged = minted("sol", 99);
     post_as(&rig.pool, sol, &tagged, 50, Some("Rubbings")).await;
-    claim(&rig.pool, 0, "sol", 200, &tagged, "saltmaps", 0.9).await;
+    claim(&rig.pool, 1, "sol", 200, &tagged, "saltmaps", 0.9).await;
 
     let whole = scoped(&rig, None, json!({ "query": "@sol salt", "first": 100 })).await;
     let expected = hits(&whole);
@@ -1862,7 +1862,7 @@ async fn a_removed_comment_is_never_found_under_a_scope(pool: PgPool) {
         "INSERT INTO comment_versions
              (comment_id, content, redaction_reason, pending, created_at,
               landed_epoch, act_time, position)
-         VALUES ($1, '[removed]', 'policy', FALSE, $2, 9, 9, 0)",
+         VALUES ($1, '[removed]', 'policy', FALSE, $2, 9, 9, 1)",
     )
     .bind(removed)
     .bind(at(9))

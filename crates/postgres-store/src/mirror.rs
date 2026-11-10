@@ -9,7 +9,7 @@
 //! no row is ever precious.
 
 use common::l1::census::Family;
-use common::l1::handshake::EpochPackage;
+use common::l1::handshake::{EMPTY_BOUNDARY, EpochPackage, MalformedOrder};
 
 use sqlx::PgPool;
 
@@ -18,11 +18,18 @@ pub enum MirrorError {
     /// Ingestion is strictly sequential: the next epoch is cursor + 1.
     #[error("epoch {got} does not follow the cursor ({cursor})")]
     OutOfOrder { got: i64, cursor: i64 },
+    /// The package has no order of record — an epoch 0, a position outside
+    /// 1..=|𝒬_k|, a repeat or a gap (layer1-interface.md §7.2) — and is
+    /// refused before anything is written. Ingestion stops there, loudly,
+    /// rather than mirror a malformed certificate.
+    #[error("epoch package refused: {0}")]
+    Unordered(#[from] MalformedOrder),
     #[error(transparent)]
     Storage(#[from] sqlx::Error),
 }
 
-/// The last fully-ingested epoch; -1 when nothing has been ingested.
+/// The last fully-ingested epoch; 0, the empty boundary, when nothing has
+/// been ingested — epochs number from 1.
 pub async fn last_ingested_epoch(pool: &PgPool) -> Result<i64, MirrorError> {
     Ok(
         sqlx::query_scalar!("SELECT last_epoch FROM mirror_epoch_cursor WHERE singleton")
@@ -144,6 +151,7 @@ impl PackageRows {
 }
 
 pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), MirrorError> {
+    package.check_order_of_record()?;
     let mut tx = pool.begin().await?;
     let cursor = sqlx::query_scalar!(
         "SELECT last_epoch FROM mirror_epoch_cursor WHERE singleton FOR UPDATE"
@@ -592,16 +600,16 @@ pub async fn epoch_instants(
 }
 
 /// The oldest ingested epoch the mirror holds no attested instant for, if
-/// any. Ingested epochs are contiguous from 0 to the cursor, so a full
+/// any. Ingested epochs are contiguous from 1 to the cursor, so a full
 /// set is a count check; only an incomplete one is searched.
 pub async fn first_epoch_without_instant(pool: &PgPool) -> Result<Option<i64>, MirrorError> {
     Ok(sqlx::query_scalar!(
         r#"WITH c AS (SELECT last_epoch FROM mirror_epoch_cursor WHERE singleton)
            SELECT CASE
                WHEN (SELECT COUNT(*) FROM mirror_epochs, c
-                     WHERE epoch <= c.last_epoch) = (SELECT last_epoch + 1 FROM c)
+                     WHERE epoch <= c.last_epoch) = (SELECT last_epoch FROM c)
                THEN NULL
-               ELSE (SELECT MIN(s) FROM c, generate_series(0, c.last_epoch) s
+               ELSE (SELECT MIN(s) FROM c, generate_series(1, c.last_epoch) s
                      WHERE NOT EXISTS (SELECT 1 FROM mirror_epochs e WHERE e.epoch = s))
            END AS "epoch""#,
     )
@@ -1223,9 +1231,12 @@ pub async fn reset(pool: &PgPool) -> Result<(), MirrorError> {
     sqlx::query!("DELETE FROM mirror_epochs")
         .execute(&mut *tx)
         .await?;
-    sqlx::query!("UPDATE mirror_epoch_cursor SET last_epoch = -1 WHERE singleton")
-        .execute(&mut *tx)
-        .await?;
+    sqlx::query!(
+        "UPDATE mirror_epoch_cursor SET last_epoch = $1 WHERE singleton",
+        EMPTY_BOUNDARY,
+    )
+    .execute(&mut *tx)
+    .await?;
     tx.commit().await?;
     Ok(())
 }

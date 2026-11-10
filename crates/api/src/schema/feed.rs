@@ -21,6 +21,7 @@ use async_graphql::{Context, Enum, ErrorExtensions, InputObject, Object, SimpleO
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD as B64;
 use common::hashtag_uuid;
+use common::l1::handshake::FIRST_EPOCH;
 use common::l1::identifier::NodeId;
 use postgres_store::{PgPool, auth as store, hashtag, mirror, params, settling, slice};
 use uuid::Uuid;
@@ -179,6 +180,26 @@ impl SliceReadLog {
     }
 }
 
+/// The epoch a ranked read is pinned at: the `asOfEpoch` argument, which
+/// must name an ingested epoch (1..=cursor — epochs number from 1), or else
+/// the cursor itself. None while the mirror still stands at the empty
+/// boundary 0, when there is no epoch to read as of.
+fn pin_epoch(cursor: i64, as_of_epoch: Option<i64>) -> async_graphql::Result<Option<i64>> {
+    if let Some(pin) = as_of_epoch
+        && !(FIRST_EPOCH..=cursor).contains(&pin)
+    {
+        return Err(bad_input(if cursor < FIRST_EPOCH {
+            "asOfEpoch must name an ingested epoch, and none is ingested yet".to_string()
+        } else {
+            format!("asOfEpoch must lie in {FIRST_EPOCH}..={cursor}, the ingested epochs")
+        }));
+    }
+    if cursor < FIRST_EPOCH {
+        return Ok(None);
+    }
+    Ok(Some(as_of_epoch.unwrap_or(cursor)))
+}
+
 /// The `feedSlice` read. Argument faults are `BAD_INPUT`; a governed χ
 /// above 0 is `INTERNAL`, because the bound it would need is not built
 /// and serving the plain closure under it would claim a bound it never
@@ -214,16 +235,9 @@ pub async fn feed_slice(
         ));
     }
     let cursor = mirror::last_ingested_epoch(pool).await.map_err(storage)?;
-    if let Some(pin) = as_of_epoch
-        && !(0..=cursor).contains(&pin)
-    {
-        return Err(bad_input(format!(
-            "asOfEpoch must lie in 0..={cursor}, the ingested epochs"
-        )));
-    }
-    if cursor < 0 {
+    let Some(as_of_epoch) = pin_epoch(cursor, as_of_epoch)? else {
         return Ok(None);
-    }
+    };
     let Some(address) = store::actor_identity(pool, viewer)
         .await
         .map_err(storage)?
@@ -231,7 +245,6 @@ pub async fn feed_slice(
     else {
         return Ok(None);
     };
-    let as_of_epoch = as_of_epoch.unwrap_or(cursor);
     let reach = slice::reach(pool, &address, as_of_epoch)
         .await
         .map_err(storage)?;
@@ -593,17 +606,9 @@ pub async fn feed_ranking(
     let filter = filter.unwrap_or_default();
 
     let cursor = mirror::last_ingested_epoch(pool).await.map_err(storage)?;
-    if let Some(pin) = as_of_epoch
-        && !(0..=cursor).contains(&pin)
-    {
-        return Err(bad_input(format!(
-            "asOfEpoch must lie in 0..={cursor}, the ingested epochs"
-        )));
-    }
-    if cursor < 0 {
+    let Some(pinned) = pin_epoch(cursor, as_of_epoch)? else {
         return Ok(None);
-    }
-    let pinned = as_of_epoch.unwrap_or(cursor);
+    };
 
     let kinds = filter.kinds.unwrap_or_else(|| vec![NodeKind::Post]);
     if kinds.is_empty() {
@@ -1007,4 +1012,27 @@ fn decode_slot_cursor(raw: &str) -> Option<usize> {
         .strip_prefix("feed:")?
         .parse()
         .ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Epochs number from 1, so the mirror's empty boundary 0 pins nothing
+    /// and refuses every argument, an ingested mirror pins its cursor by
+    /// default, and an argument must name an epoch in 1..=cursor — the
+    /// boundary 0 is not one.
+    ///
+    /// A ranked read pins an ingested epoch in 1..=cursor, and nothing at the empty boundary.
+    /// ´claim:feed:a-ranked-read-pins-an-epoch-from-one´
+    #[test]
+    fn a_ranked_read_pins_an_ingested_epoch() {
+        assert_eq!(pin_epoch(0, None).expect("no pin"), None);
+        assert!(pin_epoch(0, Some(0)).is_err());
+        assert_eq!(pin_epoch(5, None).expect("cursor"), Some(5));
+        assert_eq!(pin_epoch(5, Some(1)).expect("first epoch"), Some(1));
+        assert_eq!(pin_epoch(5, Some(5)).expect("cursor"), Some(5));
+        assert!(pin_epoch(5, Some(0)).is_err(), "the boundary is no epoch");
+        assert!(pin_epoch(5, Some(6)).is_err(), "not yet ingested");
+    }
 }

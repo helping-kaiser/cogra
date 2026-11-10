@@ -26,7 +26,7 @@ mod seal;
 use std::sync::Arc;
 
 use common::l1::handshake::{
-    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage,
+    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EMPTY_BOUNDARY, EpochPackage,
 };
 use common::l1::identifier::ActId;
 use common::l1::{PreSignedProposal, StructuralBody, VerifiedAct};
@@ -451,7 +451,8 @@ impl StandIn {
     }
 
     /// The ingest read of the seam: every closed epoch after `after`, in
-    /// order, as published packages (§11.6).
+    /// order, as published packages (§11.6). Epochs number from 1, so
+    /// `after` = 0, the empty boundary, reads the whole sequence.
     pub async fn epochs_since(&self, after: i64) -> Result<Vec<EpochPackage>, StandInError> {
         close::epochs_since(self, after).await
     }
@@ -461,13 +462,13 @@ impl StandIn {
     }
 }
 
-/// The last closed epoch, -1 before the first close.
+/// The last closed epoch; the empty boundary 0 before the first close,
+/// since epochs number from 1 (layer1-interface.md §11.6).
 async fn last_closed_epoch(conn: &mut PgConnection) -> Result<i64, StandInError> {
-    Ok(
-        sqlx::query_scalar!(r#"SELECT COALESCE(MAX(epoch), -1) AS "e!" FROM l1_epochs"#)
-            .fetch_one(conn)
-            .await?,
-    )
+    Ok(sqlx::query_scalar!("SELECT MAX(epoch) FROM l1_epochs")
+        .fetch_one(conn)
+        .await?
+        .unwrap_or(EMPTY_BOUNDARY))
 }
 
 /// Settles every admission burn due by `epoch`: marks it settled and

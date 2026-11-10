@@ -40,8 +40,8 @@ async fn the_finalization_that_landed_last_is_in_force(pool: PgPool) {
         .await
         .expect("seed");
 
-    landed(&pool, "quorum", 9, 9, 0).await;
-    landed(&pool, "quorum", 2, 2, 0).await;
+    landed(&pool, "quorum", 9, 9, 1).await;
+    landed(&pool, "quorum", 2, 2, 1).await;
 
     assert_eq!(
         params::current_i64(&pool, "quorum").await.expect("reads"),
@@ -63,7 +63,7 @@ async fn the_genesis_seed_holds_until_a_finalization_lands(pool: PgPool) {
         Some(1)
     );
 
-    landed(&pool, "quorum", 7, 3, 0).await;
+    landed(&pool, "quorum", 7, 3, 1).await;
     assert_eq!(
         params::current_i64(&pool, "quorum").await.expect("reads"),
         Some(7),
