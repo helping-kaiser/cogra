@@ -44,7 +44,8 @@ class ProfileStancesScreenTest {
 
     private val ada = testProfile(id = "u2", handle = "ada")
     private val me = testProfile(id = "u1", handle = "jakob")
-    private val husk = testProfile(id = "u9", handle = "gone").copy(displayName = ModeratedField(null, FieldStatus.REDACTED))
+    private val husk = testProfile(id = "u9", handle = "gone")
+        .copy(displayName = ModeratedField(null, FieldStatus.REDACTED))
 
     private val deletedId = "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98"
     private val deletedRow = HeldOpinion(
@@ -267,7 +268,12 @@ class ProfileStancesScreenTest {
 
     @Test
     fun anAddressNoAccountFrontsKeepsItsRowAndOpensNothing() {
-        val nobody = HeldOpinion("addr-x", OpinionHolder(null, null, null, null, redacted = false), StancePair(0.1, 0.1), false)
+        val nobody = HeldOpinion(
+            holderId = "addr-x",
+            holder = OpinionHolder(null, null, null, null, redacted = false),
+            pair = StancePair(0.1, 0.1),
+            severed = false,
+        )
         render(state(rows = listOf(nobody)))
         node("profileStances.list.row:addr-x").assertExists().performClick()
         assertThat(opened).isEmpty()

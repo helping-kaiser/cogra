@@ -136,6 +136,9 @@ class ProfileRepositoryTest {
 
     // -- The opinions page (ProfileStances): the whole set, folded to people --
 
+    /** A JSON string, or `null`. */
+    private fun quoted(value: String?): String = if (value == null) "null" else "\"$value\""
+
     private fun opinion(
         id: String,
         author: String,
@@ -145,19 +148,19 @@ class ProfileRepositoryTest {
         epoch: Int,
         person: String,
         severed: Boolean = false,
-    ) = """{"node":{"__typename":"Record","id":"$id","authorId":"$author","targetId":${target?.let { "\"$it\"" } ?: "null"},
+    ) = """{"node":{"__typename":"Record","id":"$id","authorId":"$author","targetId":${quoted(target)},
         "pDirected":$d,"pInterest":$i,"severed":$severed,"payloadMarked":false,
         "landingEpoch":$epoch,"actTime":0,"position":0,$person}}"""
 
     private fun user(id: String, handle: String, name: String?, status: String = "NORMAL") =
         """{"__typename":"User","id":"$id","handle":"$handle",
-           "displayName":{"__typename":"ModeratedText","value":${name?.let { "\"$it\"" } ?: "null"},"status":"$status"},
+           "displayName":{"__typename":"ModeratedText","value":${quoted(name)},"status":"$status"},
            "avatar":null}"""
 
     private fun onPage(edges: List<String>, next: String?) =
         """{"data":{"user":{"__typename":"User","id":"u2","incomingRecords":{"__typename":"RecordConnection",
            "edges":[${edges.joinToString(",")}],
-           "pageInfo":{"__typename":"PageInfo","hasNextPage":${next != null},"endCursor":${next?.let { "\"$it\"" } ?: "null"}}}}}}"""
+           "pageInfo":{"__typename":"PageInfo","hasNextPage":${next != null},"endCursor":${quoted(next)}}}}}}"""
 
     @Test
     fun theOnSetIsReadWholeAcrossPagesAndFoldedToOneRowPerAuthor() = runTest {
@@ -215,7 +218,8 @@ class ProfileRepositoryTest {
 
     @Test
     fun aFailedPageFailsTheWholeRead() = runTest {
-        enqueue(onPage(listOf(opinion("r1", "a-ada", "u2", 0.4, 0.2, 1, "\"author\":${user("ada", "ada", null)}")), "c1"))
+        val ada = opinion("r1", "a-ada", "u2", 0.4, 0.2, 1, "\"author\":${user("ada", "ada", null)}")
+        enqueue(onPage(listOf(ada), next = "c1"))
         server.enqueue(MockResponse().setResponseCode(500))
 
         assertThat(repo().opinions("u2", OpinionDirection.ON)).isInstanceOf(Outcome.Failed::class.java)

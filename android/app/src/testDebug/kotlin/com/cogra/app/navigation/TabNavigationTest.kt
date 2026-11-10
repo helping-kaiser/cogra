@@ -535,7 +535,8 @@ class TabNavigationTest {
 
         // :47, :57 — a row's person opens in the same stack, its arrow naming the page.
         openTheRow("mira")
-        assertThat(navController.currentBackStackEntry?.toRoute<Profile>()).isEqualTo(Profile("mira", from = "opinions"))
+        val person = navController.currentBackStackEntry?.toRoute<Profile>()
+        assertThat(person).isEqualTo(Profile("mira", from = "opinions"))
         assertLit("feed")
         compose.onNodeWithTag("profile.header.back").assertContentDescriptionEquals("Back to the opinions")
 

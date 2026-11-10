@@ -160,7 +160,8 @@ class ProfileStancesViewModelTest {
 
     @Test
     fun `a deleted account's page is the deleted reading`() = runTest(dispatcher) {
-        val husk = testProfile(id = "u9", handle = "gone").copy(displayName = ModeratedField(null, FieldStatus.REDACTED))
+        val husk = testProfile(id = "u9", handle = "gone")
+            .copy(displayName = ModeratedField(null, FieldStatus.REDACTED))
         profiles.byHandle["gone"] = Outcome.Success(husk)
         val vm = viewModel()
         vm.start("gone")

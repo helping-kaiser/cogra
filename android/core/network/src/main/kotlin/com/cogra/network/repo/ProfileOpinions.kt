@@ -42,8 +42,9 @@ internal suspend fun readOpinions(
 ): Outcome<List<HeldOpinion>> {
     val records = mutableListOf<OpinionRecord>()
     var after: String? = null
+    var more = true
     var pages = 0
-    while (pages++ < MAX_OPINION_PAGES) {
+    while (more && pages++ < MAX_OPINION_PAGES) {
         val fetched = when (direction) {
             OpinionDirection.ON -> onPage(client, actorId, after)
             OpinionDirection.BY -> byPage(client, actorId, after)
@@ -53,9 +54,9 @@ internal suspend fun readOpinions(
             is Outcome.Refused -> return fetched
             is Outcome.Failed -> return fetched
         }
-        if (read == null) break
-        records += read.records
-        after = read.next ?: break
+        records += read?.records.orEmpty()
+        after = read?.next
+        more = after != null
     }
     return Outcome.Success(foldHeldOpinions(records))
 }

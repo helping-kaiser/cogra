@@ -8,8 +8,13 @@ import org.junit.Test
 
 class HeldOpinionsTest {
 
-    private fun holder(handle: String?, redacted: Boolean = false) =
-        OpinionHolder(actorId = handle?.let { "id-$it" }, handle = handle, displayName = null, avatarUrl = null, redacted = redacted)
+    private fun holder(handle: String?) = OpinionHolder(
+        actorId = handle?.let { "id-$it" },
+        handle = handle,
+        displayName = null,
+        avatarUrl = null,
+        redacted = false,
+    )
 
     private fun record(
         holder: String,
@@ -83,7 +88,10 @@ class HeldOpinionsTest {
     @Test
     fun `which zero a row speaks is the newest record's severed, whatever the arrival order`() {
         val walkedBack = foldHeldOpinions(
-            listOf(record("a", -0.4, -0.2, epoch = 2, severed = true), record("a", 0.4, 0.2, epoch = 1, severed = false)),
+            listOf(
+                record("a", -0.4, -0.2, epoch = 2, severed = true),
+                record("a", 0.4, 0.2, epoch = 1, severed = false),
+            ),
         )
         assertThat(walkedBack.single().severed).isTrue()
         val saysNothing = foldHeldOpinions(listOf(record("b", 0.0, 0.0, severed = null)))

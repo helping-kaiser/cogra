@@ -9,11 +9,11 @@ import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.stance.HeldOpinion
 import com.cogra.domain.stance.OpinionDirection
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /** Whose page this is — the three readings every board chip draws (`whose`). */
 enum class StancesWhose { OWN, OTHER, DELETED }
