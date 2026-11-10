@@ -353,12 +353,12 @@ pub struct EpochPackage {
 /// here, so it is what "the last epoch" reads before the first close.
 pub const EMPTY_BOUNDARY: i64 = 0;
 
-/// The first epoch: epochs number certificates from 1 (§11.6,
-/// `rem:epoch:epoch-history-is-the-marker-sequence`).
+/// The first epoch: epochs number certificates from 1 (§11.6, the epoch
+/// history).
 pub const FIRST_EPOCH: i64 = 1;
 
 /// The first position: the acts of one epoch are numbered from 1 to
-/// |𝒬_k| (§8.3, `def:graph:authoritative-act-order`).
+/// |𝒬_k| (§8.3, "Authoritative act order").
 pub const FIRST_POSITION: i64 = 1;
 
 /// Why an epoch package has no order of record (§7.2, "Title
@@ -562,15 +562,17 @@ mod tests {
                 ..
             })
         ));
-        // A gap: three records, positions 1, 2 and 4 — 3 is missing.
-        assert!(matches!(
-            package(1, &[1, 2, 4]).check_order_of_record(),
-            Err(MalformedOrder::PositionOutOfRange {
-                position: 4,
-                len: 3,
-                ..
-            })
-        ));
+        assert!(
+            matches!(
+                package(1, &[1, 2, 4]).check_order_of_record(),
+                Err(MalformedOrder::PositionOutOfRange {
+                    position: 4,
+                    len: 3,
+                    ..
+                })
+            ),
+            "a gap: position 3 is missing, so 4 lies outside 1..=3"
+        );
         assert_eq!(
             package(2, &[1, 1]).check_order_of_record(),
             Err(MalformedOrder::RepeatedPosition {

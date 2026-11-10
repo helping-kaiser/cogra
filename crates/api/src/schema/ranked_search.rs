@@ -554,9 +554,12 @@ mod tests {
         };
         let tail = RankedCursor::Tail { epoch: 3, at };
         assert_eq!(RankedCursor::decode(&tail.encode()), Some(tail));
-        // Pinned at the empty boundary, before the mirror holds an epoch.
         let boundary = RankedCursor::Tail { epoch: 0, at };
-        assert_eq!(RankedCursor::decode(&boundary.encode()), Some(boundary));
+        assert_eq!(
+            RankedCursor::decode(&boundary.encode()),
+            Some(boundary),
+            "a pin at the empty boundary, before the mirror holds an epoch"
+        );
         for foreign in [
             "not base64!",
             &B64.encode("ranked:-1:h:0"),
