@@ -337,7 +337,8 @@ pub struct PublishedLeg {
 
 /// One closed epoch as published through the seam: the ordered accepted
 /// act sequence 𝒬_k as records (§11.6 — the record projection of the
-/// final act sequence), with the boundary's attested timestamp.
+/// final act sequence), with the boundary's attested timestamp and the
+/// closure outputs the host computed for it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EpochPackage {
     /// The epoch, numbered from [`FIRST_EPOCH`].
@@ -345,7 +346,225 @@ pub struct EpochPackage {
     /// The attested boundary timestamp (the Host Contract's accepted-records
     /// package): when the epoch closed, so when its records landed.
     pub attested_at: chrono::DateTime<chrono::Utc>,
+    /// 𝒬_k in its published order; its length is the realized size.
     pub records: Vec<PublishedRecord>,
+}
+
+/// An exact rational, in lowest terms with a positive denominator — how a
+/// package carries the reduced-axis values of the wall controller (§11.8),
+/// none of which a double holds exactly: the declarable floor 3/37 has no
+/// finite binary expansion, and X8 compares against the declared floor's
+/// exact defining object.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Ratio {
+    numerator: i64,
+    denominator: i64,
+}
+
+impl Ratio {
+    pub const ZERO: Ratio = Ratio::integer(0);
+    pub const ONE: Ratio = Ratio::integer(1);
+
+    /// The ratio `numerator / denominator` in lowest terms; `None` for a
+    /// zero denominator or a value whose lowest terms leave `i64`.
+    pub const fn new(numerator: i64, denominator: i64) -> Option<Ratio> {
+        Ratio::from_wide(numerator as i128, denominator as i128)
+    }
+
+    pub const fn integer(value: i64) -> Ratio {
+        Ratio {
+            numerator: value,
+            denominator: 1,
+        }
+    }
+
+    pub const fn numerator(&self) -> i64 {
+        self.numerator
+    }
+
+    pub const fn denominator(&self) -> i64 {
+        self.denominator
+    }
+
+    /// Reduction from a wide intermediate, so a sum or product is formed
+    /// exactly and only its lowest terms have to fit.
+    pub const fn from_wide(numerator: i128, denominator: i128) -> Option<Ratio> {
+        if denominator == 0 {
+            return None;
+        }
+        let (mut n, mut d) = if denominator < 0 {
+            match (numerator.checked_neg(), denominator.checked_neg()) {
+                (Some(n), Some(d)) => (n, d),
+                _ => return None,
+            }
+        } else {
+            (numerator, denominator)
+        };
+        let (mut a, mut b) = (n.unsigned_abs(), d.unsigned_abs());
+        while b != 0 {
+            let r = a % b;
+            a = b;
+            b = r;
+        }
+        if a > 1 {
+            n /= a as i128;
+            d /= a as i128;
+        }
+        if n > i64::MAX as i128 || n < i64::MIN as i128 || d > i64::MAX as i128 {
+            return None;
+        }
+        Some(Ratio {
+            numerator: n as i64,
+            denominator: d as i64,
+        })
+    }
+
+    /// Exact sum. Every intermediate is a product of two `i64` factors (or
+    /// the sum of two), which `i128` holds; only the reduced result has to
+    /// fit back.
+    pub fn checked_add(self, other: Ratio) -> Option<Ratio> {
+        let (a, b) = (self.wide(), other.wide());
+        Ratio::from_wide(a.0 * b.1 + b.0 * a.1, a.1 * b.1)
+    }
+
+    pub fn checked_sub(self, other: Ratio) -> Option<Ratio> {
+        self.checked_add(Ratio::from_wide(-(other.numerator as i128), other.denominator as i128)?)
+    }
+
+    pub fn checked_mul(self, other: Ratio) -> Option<Ratio> {
+        let (a, b) = (self.wide(), other.wide());
+        Ratio::from_wide(a.0 * b.0, a.1 * b.1)
+    }
+
+    pub fn checked_abs(self) -> Option<Ratio> {
+        Ratio::from_wide((self.numerator as i128).abs(), self.denominator as i128)
+    }
+
+    pub fn signum(self) -> i64 {
+        self.numerator.signum()
+    }
+
+    fn wide(self) -> (i128, i128) {
+        (self.numerator as i128, self.denominator as i128)
+    }
+}
+
+impl Ord for Ratio {
+    /// By value: both denominators are positive, so cross-multiplying in
+    /// `i128` compares exactly and cannot overflow two `i64` factors.
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let (a, b) = (self.wide(), other.wide());
+        (a.0 * b.1).cmp(&(b.0 * a.1))
+    }
+}
+
+impl PartialOrd for Ratio {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl std::fmt::Display for Ratio {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}/{}", self.numerator, self.denominator)
+    }
+}
+
+/// Why the epoch closed (§11.6, `post:epoch:final-act-sequence-closure`):
+/// its write set filled the target act budget, or the epoch's duration ran
+/// out first.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum ClosureCause {
+    /// |𝒬_k| reached N_epoch — the binding regime.
+    TargetFilled,
+    /// The duration elapsed with the write set below the target — the
+    /// slack regime.
+    #[default]
+    DurationElapsed,
+}
+
+impl ClosureCause {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ClosureCause::TargetFilled => "target",
+            ClosureCause::DurationElapsed => "duration",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        match s {
+            "target" => Some(ClosureCause::TargetFilled),
+            "duration" => Some(ClosureCause::DurationElapsed),
+            _ => None,
+        }
+    }
+}
+
+/// The marker policy an epoch package binds, by identity and fixed
+/// edition (§11.6, the published epoch package).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct MarkerPolicy {
+    pub identity: String,
+    pub edition: i32,
+}
+
+/// One author's line of the epoch's final ledger (§5 host contract (ii)):
+/// the accepted-act increment ΔN_i, the action count N_i and the residual
+/// balance b_i after this epoch's debits.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LedgerLine {
+    pub address: String,
+    pub accepted_acts: i64,
+    pub action_count: i64,
+    /// `None` for an epoch closed before the host recorded residual
+    /// balances: the balance at that boundary was never kept, and a later
+    /// reading cannot recover it.
+    pub residual_balance_micro: Option<i64>,
+}
+
+/// One step of the wall controller (§11.8, `def:epoch:wall-controller`):
+/// its inputs, its proposal and the led wall it delivers, with that wall's
+/// burn image — the price the next epoch charges.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WallStep {
+    /// ρ_θ^(k), the wall in force — the reduced image of the charged price.
+    pub wall_in_force: Ratio,
+    /// W_loc^(k), the completed epoch's contributing width.
+    pub width: Ratio,
+    /// t_k, the accepted rung.
+    pub accepted_rung: Ratio,
+    /// q(W), the target proposal, floored.
+    pub proposal: Ratio,
+    /// ρ_θ^(k+1) = C_Γ(ρ_θ^(k), W, t_k), after deadband and step cap.
+    pub delivered: Ratio,
+    /// θ^(k+1) = ν·ρ_θ^(k+1) in micro-units, charged by epoch k + 1.
+    pub theta_next_micro: i64,
+}
+
+/// The closure outputs of one epoch beyond its records (§5 host contract
+/// (i), (ii) and (vi)): the dependent-set partition and closure cause, the
+/// final ledger with the debit vintage, the wall controller's step, and the
+/// marker policy. The deployment's fixed declarations — numéraire, floor,
+/// controller edition and constants — are published once per deployment,
+/// not here.
+///
+/// `Default` is the empty value, for fixtures of consumers that read the
+/// records alone; no host publishes it.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct EpochClosure {
+    pub cause: ClosureCause,
+    /// The dependent-set partition of 𝒬_k (`def:graph:dependent-act-set`),
+    /// each block as the positions of its acts in ascending order, blocks
+    /// ordered by their first position.
+    pub dependent_sets: Vec<Vec<i64>>,
+    /// One line per author with an act in 𝒬_k, ordered by address.
+    pub ledger: Vec<LedgerLine>,
+    /// θ^(k) in micro-units — the debit vintage every act of this epoch
+    /// was charged, never re-calculated (§11.7).
+    pub theta_charged_micro: i64,
+    /// `None` for an epoch closed before the host ran the controller.
+    pub wall: Option<WallStep>,
+    pub marker: MarkerPolicy,
 }
 
 /// Boundary 0: the empty state before epoch 1 (§7.2, "Title Certificate").
@@ -524,6 +743,44 @@ mod tests {
                 })
                 .collect(),
         }
+    }
+
+    /// A ratio is held in lowest terms with a positive denominator, so
+    /// equal values compare equal however they were written, and the order
+    /// is the order of the values — 3/37 sits between the grid walls
+    /// 8_108/100_000 and 8_109/100_000.
+    ///
+    /// A ratio is exact: one value has one representation, and the order is the order of the values.
+    /// ´claim:handshake:a-ratio-is-exact´
+    #[test]
+    fn a_ratio_is_exact() {
+        let floor = Ratio::new(3, 37).expect("ratio");
+        assert_eq!(Ratio::new(6, 74), Some(floor));
+        assert_eq!(Ratio::new(-3, -37), Some(floor));
+        assert_eq!(Ratio::new(3, -37).map(|r| r.denominator()), Some(37));
+        assert_eq!(Ratio::new(1, 0), None);
+        let below = Ratio::new(8_108, 100_000).expect("ratio");
+        let above = Ratio::new(8_109, 100_000).expect("ratio");
+        assert!(below < floor && floor < above);
+        assert_eq!(above.numerator(), 8_109);
+        assert_eq!(
+            Ratio::new(1, 4).and_then(|q| q.checked_add(Ratio::new(1, 20)?)),
+            Ratio::new(3, 10)
+        );
+        assert_eq!(
+            Ratio::new(1, 4).and_then(|q| q.checked_sub(Ratio::ONE)),
+            Ratio::new(-3, 4)
+        );
+        assert_eq!(
+            Ratio::new(-3, 4).and_then(Ratio::checked_abs),
+            Ratio::new(3, 4)
+        );
+        assert_eq!(
+            Ratio::new(5, 4).and_then(|m| m.checked_mul(Ratio::new(15, 8)?)),
+            Ratio::new(75, 32)
+        );
+        assert_eq!(floor.to_string(), "3/37");
+        assert_eq!(Ratio::ZERO.signum(), 0);
     }
 
     /// A package at epoch 1 or later whose positions are 1..=n, in any

@@ -22,6 +22,9 @@
 
 mod close;
 mod seal;
+pub mod wall;
+
+pub use wall::{DECLARATION, Declaration, REFERENCE_THETA_MICRO, REFERENCE_WALL};
 
 use std::sync::Arc;
 
