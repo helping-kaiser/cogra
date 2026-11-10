@@ -2262,13 +2262,13 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
 - Signed: the settled snackbar in its batch form, `Signed 3 things, still
   settling.` — the signed-opinion snackbar's own opening, without a
   `Current opinion`, since a batch holds more than one target.
-- The settings row, last in `Key backup`: `3 kept picks waiting` (`1 kept
+- The settings row, last in `Key backup`: `4 kept picks waiting` (`1 kept
   pick waiting` in the singular). No status line.
 
 The kept-picks rulings (jakob 2026-10-02) add these, each *new
 2026-10-02, blessed (jakob 2026-10-02)*:
 
-- A dropped row is spoken in the pickers' status idiom: `Removed — 2
+- A dropped row is spoken in the pickers' status idiom: `Removed — 3
   picks left.` (`Removed — 1 pick left.` in the singular).
 - A row whose target was removed or redacted wears the target's removal
   mark in the name's place — `Removed by its author`, `Removed under the

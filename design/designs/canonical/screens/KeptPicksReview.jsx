@@ -46,7 +46,7 @@
    nothing is lost that the reader cannot make again — the pick is re-made
    from its pad. The drop is spoken in the pickers' status idiom
    (`PickAnnouncement`), `Removed —
-   2 picks left.`, and focus moves to the next row (jakob 2026-10-02, kept
+   3 picks left.`, and focus moves to the next row (jakob 2026-10-02, kept
    picks 6). Dropping the last row leaves the review, with the snackbar
    `Nothing left to sign.`, where the review was opened from.
 
@@ -111,7 +111,7 @@ export function Screen() {
         </div>
         {/* THE SPOKEN DROP'S REGION (seam 248): the pickers' polite status
             message, mounted whether or not it has anything to say, so the ×'s
-            `Removed — 2 picks left.` reaches an ear (copy-voice, the kept
+            `Removed — 3 picks left.` reaches an ear (copy-voice, the kept
             picks' rulings). At rest it says nothing and draws nothing. */}
         <PickAnnouncement node="announcement" />
         <div style={{ flex: 1 }} />
