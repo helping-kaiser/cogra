@@ -903,8 +903,25 @@ title force.
 **Title Certificate (`def:graph:title-certificate`).** The map
 $\mathrm{owner}^{(k)} : \text{Items} \to V_u \cup \{\varnothing\}$ sending
 each Item to the terminal actor of its ownership thread, or $\varnothing$ if
-no genesis Owner edge resolves it. Layer 1 publishes $\mathrm{owner}^{(k)}$
-alongside the epoch certificate.
+no genesis Owner edge has finalized for it: an Item has no certified owner
+before the boundary of its genesis epoch. Finalization epochs are numbered
+from 1; boundary 0 is the empty state before epoch 1, at which every Item
+has value $\varnothing$. An act placed in an epoch 0, a position outside 1
+to $|\mathcal{Q}_k|$, a repeated (epoch, position), or a missing position
+means the epoch has no order of record; such a certificate is malformed and
+refused before any replay. Layer 1 publishes $\mathrm{owner}^{(k)}$
+alongside the epoch certificate as a recomputable summary of the epoch
+partition (`rem:graph:title-certificate-is-summary`): title means the
+recomputed fold, and a published value that differs from it is a
+title-certificate fault (`def:graph:title-certificate-fault`). Boundary
+accountability obliges the certificate to publish $\mathrm{owner}^{(k)}$
+equal to the fold recomputed from the partition it certifies
+(`cond:graph:boundary-accountability-title-certificate`, the fourth
+obligation of `post:graph:boundary-accountability`); a proven fault is
+attributed to the host under the deployment's published review and
+sanctions mechanism, reorders and deletes nothing, recomputes no other
+finalized quantity, and does not authorize verifier refusal of a finalized
+epoch.
 
 **Settlement Consumption (`def:graph:settlement-consumption`).** Let
 $C_k(n_i)$ be the recognized, unchallenged candidates on $n_i$ whose Ratify
