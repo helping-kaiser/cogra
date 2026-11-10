@@ -685,17 +685,24 @@ reference calibration $(\nu, \rho_{\text{pol}}) = (0.10, 1)$, $\rho_{\text{eff}}
 No netting-clip constant exists: the stance-aggregation clip is the fixed
 $\mathrm{clip}_{[-1,1]}$ in `def:epoch:net-stance`, not a calibrated value.
 
-*Interface constants* — $B_{\max}$ (R9), $c_{\mathrm{u}} \ge 1$ (R10), and
-the settlement depth (R4(e)) — are published by the realization, read as
-constants, and re-derived nowhere. A realization's own fees, splits, phase
+*Interface constants* — $B_{\max}$ (R9; zero, with its explanation, for an
+empty pre-opening interval) and the positive unit-cost projection
+$c_{\mathrm{u}}$ (R10, with its denomination and terms) — are published by
+the realization, read as constants, and re-derived nowhere. The settlement
+depth with its finality assumptions (R4(e)), R7 provenance, separately
+published recording-event costs, and the R11 operator bound and proof or
+statement of absence are public audit evidence, not computational inputs
+(`def:comparator:burn-interface`). A realization's own fees, splits, phase
 leads, and any ceiling derived from them are its design; the network
 neither names nor recomputes them (`rem:comparator:surface-readings`).
-$c_{\mathrm{u}}$ turns a burn-value quantity into an outlay in the
-realization's external denomination by multiplication — the admission
-benchmarks of §7.1 (`eq:comparator:admission-benchmark-deposits`). The
-minimum deposit $\delta_{\min} = \rho_{\text{eff}}\,\nu\,c_{\mathrm{u}}$,
-the door price projected through $c_{\mathrm{u}}$, is the sole user-facing
-quantity carried in that external denomination
+$c_{\mathrm{u}}$ turns a burn-amount quantity into an amount-proportional
+outlay in the realization's published external denomination by
+multiplication — the admission benchmarks of §7.1
+(`eq:comparator:admission-benchmark-deposits`); total outlay also includes
+any separately published recording-event costs. The amount-proportional
+door outlay $\delta_{\min} = \rho_{\text{eff}}\,\nu\,c_{\mathrm{u}}$ is the
+door price projected through $c_{\mathrm{u}}$ at the published terms;
+recording-event costs are reported separately
 (`subsec:necessity:floor-as-numeraire`). Illustrative Layer 1 constants are
 subject to empirical calibration during the centralized deployment phase and
 are not yet locked.
