@@ -5219,7 +5219,18 @@ stopped there. Two families stay unregistered until a board draws them:
   the stream's rail and the tag page pass no pick through yet. The fix is
   `CommentCard`'s: an additive pass-through, then the host's `pick` chip.
 - **A host card's own sheets off the feed**: by the round's law a card's ⋮
-  and the sheets its rows open take their host's prefix — `history.menuSheet`,
-  `saved.menuSheet`, `profile.menuSheet` from the posts view (told apart from
-  the profile's own menu by board, item 64) — and only the feed's are
-  drawn (`FeedPostMenu`, `FeedPostLicense`).
+  and the sheets its rows open are drawn over their host and take its prefix
+  — the menu `<prefix>.menuSheet`, the license `<prefix>.licenseSheet`, the
+  report `<prefix>.reportSheet`, the removal `<prefix>.dialog` — and only the
+  feed's are drawn (`FeedPostMenu`, `FeedPostMenuOwn`, `FeedPostLicense`,
+  `FeedReportConfirm`, `FeedRemoveConfirm`). Undrawn, each its own board when
+  drawn:
+  - **History's card menus** — a post card's and a comment card's ⋮:
+    `history.menuSheet` and the sheets beneath it under `history`.
+  - **Saved's card menus** — a post card's and a comment card's ⋮:
+    `saved.menuSheet` and the sheets beneath it under `saved`.
+  - **The profile's posts view** — a post card's ⋮: `profile.menuSheet`,
+    told apart from the profile's own menu by board (item 64).
+  - **The profile's comments view** — the comment card's own ⋮ (round 28,
+    seam 254 A3, held undrawn by jakob 2026-11-10): `profile.menuSheet` on
+    its own board, as the posts view's.
