@@ -190,10 +190,14 @@ authority policy `𝒫`:
   backed by an approved Join Request or an Invitation; the
   founding act is exempt, since it mints the chat it enters. An
   Invitation backs the Participant only while it is a live vouch:
-  its author's Invitation bundle toward `(C, prof(a))`, over the
-  records that `≺`-precede the Participant, has both folded
-  coordinates strictly positive (L1's positivity gate,
-  ``def:epoch:effective-act-contribution``). The withdrawal
+  its author's Invitation bundle toward one lineage node and
+  `prof(a)`, over the records that `≺`-precede the Participant,
+  has both folded coordinates strictly positive (L1's positivity
+  gate, ``def:epoch:effective-act-contribution``). The lineage
+  decides which records are in scope, but each node's bundle nets
+  on its own, as L1 nets it, and a Participant is backed when any
+  lineage node carries a live Invitation vouch by some author
+  toward `prof(a)`. The withdrawal
   gesture is the cancelling Invitation that nets the bundle to
   `(0,0)`; a bundle carried past zero is withdrawn all the same,
   and an Invitation that is not strictly positive on both
