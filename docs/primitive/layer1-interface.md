@@ -363,8 +363,8 @@ the same committed statement changes no standing. Transcripts are
 verification objects, not closure inputs.
 
 A read-site is *terminal* when its output is consumed only by an agent (a
-user, a terminal service, a guild, an advertiser, or another downstream
-policy) and never re-enters the forward evolution of $E$. An object is then
+user, a guild, an advertiser) and never re-enters the forward evolution of
+$E$. An object is then
 
 - **Layer 1 (binding)** iff it lies in $\overline{\mathcal{A}}$ — it
   influences admission;
