@@ -1269,7 +1269,7 @@ hyper-edge's A- and T-projections are not two records later joined into one
 act: they are two graph projections of one already-formed act, sharing by
 construction one act identifier, author, payload lifecycle, dependency
 projection, causal-parent set, approval witness, debit, count increment,
-stamp, and authoritative time.
+stamp, and authoritative logical time.
 
 **Act identifier and minted-node identity (`def:graph:act-identifier`).**
 The actor chooses a unique author-local sequence value $s_q$ fixed before
