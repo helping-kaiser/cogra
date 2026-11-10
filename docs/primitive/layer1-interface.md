@@ -2,14 +2,14 @@
 
 > **Provenance.** This document is a derived reference extracted from the
 > **PeerNetworks Layer 1** specification by the **Peer Team** (Peer Network,
-> v0.25.0), reproducing its binding surface for the purpose
+> v0.31.1), reproducing its binding surface for the purpose
 > of building CoGra as a Layer 2 on it. It is not the normative source —
 > the PeerNetworks paper is. Licensed under CC-BY-4.0; see
 > [LICENSE-DOCS](../../LICENSE-DOCS).
 
-**Derived file — hard facts only.** v0.25.0 ships as the flat source
-(`PeerNetwork_PeerNetwork_v0.25.0_flat.tex`). It carries the **Edition 4**
-body rewrite (the authored-act ontology, the admission handshake, the
+**Derived file — hard facts only.** v0.31.1 ships as the flat source
+(`PeerNetwork_PeerNetwork_v0.31.1_flat.tex`). It carries the **Edition 4**
+act-ownership refoundation (authored acts, the admission handshake, the
 authoritative act order) and the **Edition 5** refoundation of standing as
 one conserved allocation operator. This reference draws two scopes from it:
 
