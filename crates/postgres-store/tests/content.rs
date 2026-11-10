@@ -187,8 +187,8 @@ async fn same_instant_pending_entries_paginate_without_loss(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
     let author = actor(&pool, "author").await;
-    let old = post(&pool, author, Some(order(1, 0)), at(0), "landed-old").await;
-    let new = post(&pool, author, Some(order(1, 1)), at(10), "landed-new").await;
+    let old = post(&pool, author, Some(order(1, 1)), at(0), "landed-old").await;
+    let new = post(&pool, author, Some(order(1, 2)), at(10), "landed-new").await;
     let pending_first = post(&pool, author, None, at(20), "p1").await;
     let pending_second = post(&pool, author, None, at(30), "p2").await;
 
@@ -200,10 +200,10 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
     let boundary = cursor_of(&page1[1]);
 
     let mut tx = pool.begin().await.expect("tx");
-    content::land_post(&mut tx, pending_first, order(2, 0))
+    content::land_post(&mut tx, pending_first, order(2, 1))
         .await
         .expect("lands");
-    content::land_post(&mut tx, pending_second, order(2, 1))
+    content::land_post(&mut tx, pending_second, order(2, 2))
         .await
         .expect("lands");
     tx.commit().await.expect("commit");
@@ -225,7 +225,7 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     let author = actor(&pool, "author").await;
-    let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
+    let id = post(&pool, author, Some(order(1, 1)), at(0), "genesis").await;
 
     let mut tx = pool.begin().await.expect("tx");
     content::insert_post_version(
@@ -256,7 +256,7 @@ async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
 
     let mut tx = pool.begin().await.expect("tx");
     assert!(
-        content::land_post_version(&mut tx, id, at(10), order(2, 0))
+        content::land_post_version(&mut tx, id, at(10), order(2, 1))
             .await
             .expect("lands")
     );
@@ -275,7 +275,7 @@ async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn discarding_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     let author = actor(&pool, "author").await;
-    let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
+    let id = post(&pool, author, Some(order(1, 1)), at(0), "genesis").await;
     let mut tx = pool.begin().await.expect("tx");
     content::insert_post_version(
         &mut tx,
@@ -345,7 +345,7 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
         &pool,
         commenter,
         host,
-        Some(order(2, 0)),
+        Some(order(2, 1)),
         at(30),
         "already ordered",
     )
@@ -397,7 +397,7 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
     let author = actor(&pool, "author").await;
-    let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
+    let id = post(&pool, author, Some(order(1, 1)), at(0), "genesis").await;
 
     let mut tx = pool.begin().await.expect("tx");
     content::insert_post_version(
@@ -407,7 +407,7 @@ async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
         None,
         "landed later",
         None,
-        Some(order(9, 0)),
+        Some(order(9, 1)),
         at(100),
     )
     .await
@@ -419,7 +419,7 @@ async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
         None,
         "landed earlier",
         None,
-        Some(order(2, 0)),
+        Some(order(2, 1)),
         at(200),
     )
     .await
@@ -452,8 +452,8 @@ async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
 async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgPool) {
     let author = actor(&pool, "author").await;
     let commenter = actor(&pool, "commenter").await;
-    let host = post(&pool, author, Some(order(1, 0)), at(0), "host").await;
-    let id = comment(&pool, commenter, host, Some(order(1, 1)), at(10), "genesis").await;
+    let host = post(&pool, author, Some(order(1, 1)), at(0), "host").await;
+    let id = comment(&pool, commenter, host, Some(order(1, 2)), at(10), "genesis").await;
 
     let mut tx = pool.begin().await.expect("tx");
     content::insert_comment_version(
@@ -461,7 +461,7 @@ async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgP
         id,
         "landed later",
         None,
-        Some(order(9, 0)),
+        Some(order(9, 1)),
         at(100),
     )
     .await
@@ -471,7 +471,7 @@ async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgP
         id,
         "landed earlier",
         None,
-        Some(order(2, 0)),
+        Some(order(2, 1)),
         at(200),
     )
     .await
@@ -513,7 +513,7 @@ async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgP
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool: PgPool) {
     let author = actor(&pool, "author").await;
-    let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
+    let id = post(&pool, author, Some(order(1, 1)), at(0), "genesis").await;
 
     let mut tx = pool.begin().await.expect("tx");
     content::insert_post_version(
@@ -535,7 +535,7 @@ async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool:
         None,
         "landed",
         None,
-        Some(order(9, 0)),
+        Some(order(9, 1)),
         at(20),
     )
     .await
@@ -568,7 +568,7 @@ async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool:
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_landed_version_without_coordinates_falls_below_one_with_them(pool: PgPool) {
     let author = actor(&pool, "author").await;
-    let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
+    let id = post(&pool, author, Some(order(1, 1)), at(0), "genesis").await;
 
     let mut tx = pool.begin().await.expect("tx");
     content::insert_post_version(
@@ -578,7 +578,7 @@ async fn a_landed_version_without_coordinates_falls_below_one_with_them(pool: Pg
         None,
         "ordered by the graph",
         None,
-        Some(order(2, 0)),
+        Some(order(2, 1)),
         at(10),
     )
     .await
@@ -617,13 +617,13 @@ async fn a_landed_version_without_coordinates_falls_below_one_with_them(pool: Pg
 async fn the_thread_count_admits_what_the_thread_read_serves(pool: PgPool) {
     let author = actor(&pool, "author").await;
     let commenter = actor(&pool, "commenter").await;
-    let host = post(&pool, author, Some(order(1, 0)), at(0), "host").await;
-    comment(&pool, commenter, host, Some(order(1, 1)), at(10), "landed").await;
+    let host = post(&pool, author, Some(order(1, 1)), at(0), "host").await;
+    comment(&pool, commenter, host, Some(order(1, 2)), at(10), "landed").await;
     comment(
         &pool,
         commenter,
         host,
-        Some(order(2, 0)),
+        Some(order(2, 1)),
         at(20),
         "landed too",
     )
@@ -675,7 +675,7 @@ async fn the_thread_count_admits_what_the_thread_read_serves(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_unanswered_target_counts_zero(pool: PgPool) {
     let author = actor(&pool, "author").await;
-    let host = post(&pool, author, Some(order(1, 0)), at(0), "nobody replied").await;
+    let host = post(&pool, author, Some(order(1, 1)), at(0), "nobody replied").await;
 
     assert_eq!(
         content::count_comments_for_target(&pool, host, true)
@@ -702,7 +702,7 @@ struct Branch {
 async fn branch(pool: &PgPool) -> Branch {
     let author = actor(pool, "author").await;
     let replier = actor(pool, "replier").await;
-    let host = post(pool, author, Some(order(1, 0)), at(0), "host").await;
+    let host = post(pool, author, Some(order(1, 1)), at(0), "host").await;
     let mut landed = [Uuid::nil(); 3];
     for (i, slot) in landed.iter_mut().enumerate() {
         let i = i as i64;
@@ -710,7 +710,7 @@ async fn branch(pool: &PgPool) -> Branch {
             pool,
             replier,
             host,
-            Some(order(2 + i, 0)),
+            Some(order(2 + i, 1)),
             at(10 + i),
             "landed",
         )

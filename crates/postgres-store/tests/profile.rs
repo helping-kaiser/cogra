@@ -63,7 +63,7 @@ async fn current_profile_serves_the_newest_version(pool: PgPool) {
         Some("Curious."),
         None,
         Some("https://ada.example"),
-        Some(order(1, 0)),
+        Some(order(1, 1)),
         Utc::now(),
     )
     .await
@@ -109,7 +109,7 @@ async fn same_instant_writes_both_land_and_the_later_one_is_current(pool: PgPool
         None,
         None,
         None,
-        Some(order(1, 0)),
+        Some(order(1, 1)),
         at,
     )
     .await
@@ -121,7 +121,7 @@ async fn same_instant_writes_both_land_and_the_later_one_is_current(pool: PgPool
         None,
         None,
         None,
-        Some(order(1, 0)),
+        Some(order(1, 1)),
         at,
     )
     .await
@@ -169,7 +169,7 @@ async fn the_record_that_landed_last_is_current_even_when_written_first(pool: Pg
         None,
         None,
         None,
-        Some(order(9, 0)),
+        Some(order(9, 1)),
         first,
     )
     .await
@@ -184,7 +184,7 @@ async fn the_record_that_landed_last_is_current_even_when_written_first(pool: Pg
         None,
         None,
         None,
-        Some(order(2, 0)),
+        Some(order(2, 1)),
         first + Duration::seconds(1),
     )
     .await
@@ -235,7 +235,7 @@ async fn a_row_without_coordinates_never_outranks_a_landed_one(pool: PgPool) {
         None,
         None,
         None,
-        Some(order(1, 0)),
+        Some(order(1, 1)),
         Utc::now(),
     )
     .await
@@ -283,7 +283,7 @@ async fn a_pending_version_is_current_ahead_of_every_landed_one(pool: PgPool) {
         None,
         None,
         None,
-        Some(order(9, 0)),
+        Some(order(9, 1)),
         signed + Duration::seconds(1),
     )
     .await
@@ -331,13 +331,13 @@ async fn a_pending_version_is_named_by_its_instant(pool: PgPool) {
         "a retry at the same instant writes nothing"
     );
     assert!(
-        !profile::land_profile_version(&mut tx, actor, signed + Duration::seconds(1), order(3, 0))
+        !profile::land_profile_version(&mut tx, actor, signed + Duration::seconds(1), order(3, 1))
             .await
             .expect("lands"),
         "another instant names no row"
     );
     assert!(
-        profile::land_profile_version(&mut tx, actor, signed, order(3, 0))
+        profile::land_profile_version(&mut tx, actor, signed, order(3, 1))
             .await
             .expect("lands")
     );
@@ -377,7 +377,7 @@ async fn expiry_discards_only_the_pending_version(pool: PgPool) {
         None,
         None,
         None,
-        Some(order(1, 0)),
+        Some(order(1, 1)),
         signed,
     )
     .await

@@ -94,14 +94,14 @@ async fn land_tag(
 async fn fixture(pool: &PgPool) {
     let crypto = "cryptography";
     let garden = "gardening";
-    land_tag(pool, "r1", "ada", crypto, (0.40, 0.90), (3, 100, 0), false).await;
-    land_tag(pool, "r2", "ada", crypto, (-0.75, 0.25), (3, 100, 5), false).await;
-    land_tag(pool, "r3", "ada", garden, (0.60, 0.30), (2, 500, 9), false).await;
-    land_tag(pool, "r4", "ada", garden, (0.0, 0.0), (5, 1, 0), false).await;
-    land_tag(pool, "r5", "ada", "chess", (0.15, 1.00), (4, 7, 2), false).await;
-    land_tag(pool, "r6", "bob", "chess", (0.95, 0.50), (6, 9, 1), false).await;
-    land_tag(pool, "r7", "ada", crypto, (0.0, 0.0), (7, 900, 0), true).await;
-    land_tag(pool, "r8", "ada", "baking", (0.0, 0.80), (5, 2, 0), false).await;
+    land_tag(pool, "r1", "ada", crypto, (0.40, 0.90), (3, 100, 1), false).await;
+    land_tag(pool, "r2", "ada", crypto, (-0.75, 0.25), (3, 100, 6), false).await;
+    land_tag(pool, "r3", "ada", garden, (0.60, 0.30), (2, 500, 10), false).await;
+    land_tag(pool, "r4", "ada", garden, (0.0, 0.0), (5, 1, 1), false).await;
+    land_tag(pool, "r5", "ada", "chess", (0.15, 1.00), (4, 7, 3), false).await;
+    land_tag(pool, "r6", "bob", "chess", (0.95, 0.50), (6, 9, 2), false).await;
+    land_tag(pool, "r7", "ada", crypto, (0.0, 0.0), (7, 900, 1), true).await;
+    land_tag(pool, "r8", "ada", "baking", (0.0, 0.80), (5, 2, 2), false).await;
 }
 
 /// The fold, computed by hand from the fixture and asserted against the
