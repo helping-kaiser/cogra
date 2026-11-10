@@ -763,10 +763,10 @@ describe("the stream from Saved", () => {
       THREE[1]!,
       { node: clip("v2", "3:4", SAVED[2]), bookmarkedAt: SAVED[2] },
     ];
-    server.use(
-      gqlLink.query("SavedPage", () =>
-        HttpResponse.json({ data: page(entries, { hasNextPage: true, endCursor: "c3" }) }),
-      ),
+    // Saved holds one page past these cards, and it ends there: a server
+    // never answers the page after `c3` with `c3` again.
+    const reads = serveSaved(({ after }) =>
+      after === null ? page(entries, { hasNextPage: true, endCursor: "c3" }) : page([]),
     );
     renderWithProviders(<SavedScreen />, { store: signedIn() });
     await screen.findByTestId("saved-list");
@@ -781,6 +781,11 @@ describe("the stream from Saved", () => {
     expect(stream?.snapshot.index).toBe(1);
     expect(stream?.snapshot.hasMore).toBe(true);
     expect(streamBack(stream!.snapshot.origin)).toEqual({ href: "/saved", label: "Back to Saved" });
+    // Standing on the last clip, the stream asks Saved's next page once, under
+    // the cursor the list reached, and stands at the list's end.
+    await waitFor(() => expect(stream!.snapshot.loading).toBe(false));
+    expect(reads.map((read) => read.after)).toEqual([null, "c3"]);
+    expect(stream!.snapshot.hasMore).toBe(false);
     forgetStream();
   });
 });
