@@ -2861,9 +2861,15 @@ for dependency formation and authoritative placement; W1/W2a/W2b,
 standing, and the ledger are evaluated once on the completed final union,
 and no prefix of $\mathcal{Q}_k$ carries a normative standing value.
 **Selection among valid ordered sequences is host discretion** (the spec
-fixes the constraints, not the algorithm); the certificate publishes the
-ordered dependent-set partition so validity is replayable, and the chosen
-sequence, once published, is the agreed $\mathcal{Q}_k$. Conflict
+fixes the constraints, not the algorithm). The certificate publishes the
+disjoint dependent-set partition of the membership of $\mathcal{Q}_k$ —
+overlapping principal closures merged relative to the history finalized
+before this epoch (`def:graph:dependent-act-set`) — together with each act's
+authoritative position. The blocks cover the final union, earlier blocks do
+not discharge another block's closure obligations, and blocks may interleave
+in the sequence: positions order acts, not the construction of the
+partition. Validity is thus replayable, and the chosen sequence, once
+published, is the agreed $\mathcal{Q}_k$. Conflict
 recognition reads only membership and epoch, never residual sub-epoch
 order. The epoch's **regime** is certificate-derived: *binding* iff
 $|\mathcal{Q}_k| = N_{\text{epoch}}$, *slack* otherwise. Binding-regime
@@ -2909,9 +2915,12 @@ number acts within one certificate from 1
 (`rem:epoch:epoch-history-is-the-marker-sequence`).
 
 **Log position (`def:epoch:log-position`).** $\mathrm{pos}(e)$, the
-zero-based rank under the identity-key order $\prec^*$ (lexicographic
-$(\mathbb{T}^{\text{act}}, \mathrm{author}, \mathrm{src}, \mathrm{tgt})$,
-refining the authoritative order), survives only as a deterministic
+zero-based rank within the written record set under the identity-key order
+$\prec^*$ — which first compares the epoch-position key of record
+(`def:graph:authoritative-act-order`) and, within an equal key, the
+lexicographic tie-break $(\mathbb{T}^{\text{act}}, \mathrm{author},
+\mathrm{src}, \mathrm{tgt})$, so it refines the authoritative order —
+survives only as a deterministic
 **audit coordinate**: epoch membership is the closure rule's, and no
 scoring, recognition, or boundary quantity consumes it. $\prec^*$ retains
 exactly one consumer — an optional audit tie-break within the
