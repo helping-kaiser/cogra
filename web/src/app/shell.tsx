@@ -32,6 +32,7 @@ import type { BellRoot } from "@/lib/notifications/row-content";
 import { parseOpinionsOrigin } from "@/lib/profile/opinions-route";
 import { useAuthPhase } from "@/lib/session/provider";
 import { KeptPicksNavigation } from "@/lib/stance/kept-picks-route";
+import { carriedOrigin } from "@/lib/ui/back-origin";
 import { BottomNav, type NavSlot } from "@/lib/ui/bottom-nav";
 import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
 import { scrollHostToTopAnimated, scrollOffsetOf } from "@/lib/ui/scroll-host";
@@ -59,12 +60,19 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
  * (`from=opinions`, ProfileStances.md:49, :51). A row on someone else's keeps the
  * root that page's stack began in — the origin its token chains
  * (`from=opinions:ada/saved`; ProfileStances.md:51; readme §4: "a stack is
- * where a screen was opened FROM") — never Feed by default.
+ * where a screen was opened FROM") — never Feed by default. So does a door out
+ * of someone's profile, a tag's page, the stream, or a post's detail by its
+ * score: each token carries the origin its page was opened with
+ * (`carriedOrigin`; `u:ada/saved`, `tag:coast/search`, `stream:v2/saved`,
+ * `post:p1:saved`), and the root is that origin's. A token carrying none was
+ * opened from the feed, a link or a chip, and lights Feed.
  */
 export function detailRoot(from: string | null): NavSlot {
   if (from === "search") return "search";
   const opinions = parseOpinionsOrigin(from);
   if (opinions !== null) return opinions.handle === null ? "profile" : detailRoot(opinions.from);
+  const carried = carriedOrigin(from);
+  if (carried !== undefined) return detailRoot(carried);
   return from === "saved" || from === "history" || from === "profile" ? "profile" : "feed";
 }
 

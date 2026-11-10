@@ -15,6 +15,16 @@ describe("the_trace_back_arrow_names_its_origin", () => {
     [{ kind: "saved" } as const, "/saved", "Back to Saved"],
     [{ kind: "profile" } as const, "/profile", "Back to your profile"],
     [{ kind: "person", handle: "ada" } as const, "/u/ada", "Back to the profile"],
+    // A CHAINED ORIGIN: the page is handed the origin it was opened with
+    // again, so it keeps its own way back and its root (`back-origin.ts`).
+    [{ kind: "person", handle: "ada", from: "saved" } as const, "/u/ada?from=saved", "Back to the profile"],
+    [
+      { kind: "person", handle: "ada", from: "opinions:tobias/search" } as const,
+      "/u/ada?from=opinions%3Atobias%2Fsearch",
+      "Back to the profile",
+    ],
+    [{ kind: "tag", name: "saltmaps", from: "search" } as const, "/topics/saltmaps?from=search", "Back to #saltmaps"],
+    [{ kind: "tag", name: "saltmaps", from: "u:ada/saved" } as const, "/topics/saltmaps?from=u%3Aada%2Fsaved", "Back to #saltmaps"],
   ])("%o", (origin, href, label) => {
     expect(traceBack(origin)).toEqual({ href, label });
     // The origin survives the URL.
