@@ -13,8 +13,8 @@
    this is where a member meets it: `Everything` always holds the member's
    own registration, while `Comments` is empty for anyone who never
    commented — and the figures, which count no comments, stay true over it.
-   Merged under the autonomy order of 2026-10-28; the wording jakob's at
-   review.
+   Merged under the autonomy order of 2026-10-28; blessed (jakob
+   2026-11-10).
 
    REGISTERED under the `profile` prefix (round 27, seam 252), as
    `ProfilePosts` is: a tab of the profile page takes the page's prefix. The
