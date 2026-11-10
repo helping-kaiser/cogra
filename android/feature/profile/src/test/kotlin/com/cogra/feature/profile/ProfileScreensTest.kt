@@ -1,6 +1,7 @@
 package com.cogra.feature.profile
 
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
@@ -56,6 +57,7 @@ class ProfileScreensTest {
         onRequireAccount: (() -> Unit)? = null,
         backDescription: String? = null,
         onOpenHistory: () -> Unit = {},
+        onOpenOpinions: () -> Unit = {},
     ) {
         compose.setContent {
             ProfileScreen(
@@ -76,6 +78,7 @@ class ProfileScreensTest {
                 onRequireAccount = onRequireAccount,
                 backDescription = backDescription,
                 onOpenHistory = onOpenHistory,
+                onOpenOpinions = onOpenOpinions,
                 now = now,
             )
         }
@@ -301,6 +304,59 @@ class ProfileScreensTest {
             .assertTextEquals("Opinions on you")
         compose.onNodeWithTag((figures / "stancesTaken" / "label").tag, useUnmergedTree = true)
             .assertTextEquals("Opinions by you")
+    }
+
+    // ProfileOther.md:9, :57 — the figures are one tap target, spoken as each
+    // figure's number and words, then opinions on and by the person's handle.
+    @Test
+    fun anothersFiguresAreOneDoorToTheOpinionsPage() {
+        var opened = 0
+        render(
+            loaded().copy(figures = ProfileFigures(posts = 12, opinionsOn = 48, opinionsBy = 7)),
+            onOpenOpinions = { opened++ },
+        )
+        compose.onNodeWithTag((id / "figures").tag)
+            .assertContentDescriptionEquals(
+                "12 Posts, 48 Opinions on them, 7 Opinions by them, opinions on and by @ada",
+            )
+            .performScrollTo()
+            .performClick()
+        assertThat(opened).isEqualTo(1)
+    }
+
+    // Profile.md:13, :49 — one's own: your opinions, both directions.
+    @Test
+    fun onesOwnFiguresAreOneDoorSpokenInTheSecondPerson() {
+        var opened = 0
+        render(
+            loaded(own = true).copy(figures = ProfileFigures(posts = 5, opinionsOn = 9, opinionsBy = 4)),
+            onOpenOpinions = { opened++ },
+        )
+        compose.onNodeWithTag((id / "figures").tag)
+            .assertContentDescriptionEquals(
+                "5 Posts, 9 Opinions on you, 4 Opinions by you, your opinions, both directions",
+            )
+            .performScrollTo()
+            .performClick()
+        assertThat(opened).isEqualTo(1)
+    }
+
+    // ProfileDeleted.md:21, :47 — a deleted account's: opinions on and by this account.
+    @Test
+    fun aDeletedAccountsFiguresAreOneDoorOnThisAccount() {
+        var opened = 0
+        render(
+            deleted().copy(figures = ProfileFigures(posts = 2, opinionsOn = 3, opinionsBy = 1)),
+            onBack = {},
+            onOpenOpinions = { opened++ },
+        )
+        compose.onNodeWithTag((id / "figures").tag)
+            .assertContentDescriptionEquals(
+                "2 Posts, 3 Opinions on them, 1 Opinions by them, opinions on and by this account",
+            )
+            .performScrollTo()
+            .performClick()
+        assertThat(opened).isEqualTo(1)
     }
 
     // A count the server did not serve is no figure at all, never a false zero.

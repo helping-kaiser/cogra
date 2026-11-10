@@ -15,6 +15,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -37,12 +38,17 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
+import com.cogra.domain.ProfileFigures
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
 import com.cogra.domain.UserProfile
 import com.cogra.domain.search.SearchHit
 import com.cogra.domain.search.SearchNode
 import com.cogra.domain.search.SearchPage
+import com.cogra.domain.stance.HeldOpinion
+import com.cogra.domain.stance.OpinionDirection
+import com.cogra.domain.stance.OpinionHolder
+import com.cogra.domain.stance.StancePair
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ScriptedSearchRepository
@@ -526,8 +532,110 @@ class TabNavigationTest {
         assertLit("search")
     }
 
+    // -- The opinions page (ProfileStances.md): the figures' door, its stack, its way back --
+
+    private fun held(id: String, handle: String) = HeldOpinion(
+        holderId = "addr-$handle",
+        holder = OpinionHolder(id, handle, null, null, redacted = false),
+        pair = StancePair(0.5, 0.2),
+        severed = false,
+    )
+
+    private fun openTheFigures() {
+        waitForTag(FIGURES)
+        compose.onNodeWithTag(FIGURES).performScrollTo().performClick()
+        waitUntilOn { onTop<ProfileStances>() }
+    }
+
+    private fun openTheRow(handle: String) {
+        waitForTag("profileStances.list.row:$handle")
+        compose.onNodeWithTag("profileStances.list.row:$handle").performClick()
+        waitUntilOn { onTop<Profile>() }
+    }
+
+    @Test
+    fun anothersFiguresOpenTheOpinionsPageInFeedsStackAndEveryWayBackUnwinds() {
+        profiles.figures["author-1"] = ProfileFigures(posts = 1, opinionsOn = 1, opinionsBy = 0)
+        profiles.opinions["author-1" to OpinionDirection.ON] = listOf(held("mira-1", "mira"))
+        profiles.others["mira"] = testProfile(id = "mira-1", handle = "mira")
+        memberOnTheFeed()
+        compose.onNodeWithTag("feed.card.authorChip").performClick()
+        waitUntilOn { onTop<Profile>() }
+        openTheFigures()
+
+        // ProfileStances.md:55 — the slot of the root the profile was opened from.
+        assertLit("feed")
+        waitForTag("profileStances.bottomBar")
+        compose.onNodeWithTag("profileStances.header.back").assertContentDescriptionEquals("Back to the profile")
+
+        // :47, :57 — a row's person opens in the same stack, its arrow naming the page.
+        openTheRow("mira")
+        val person = navController.currentBackStackEntry?.toRoute<Profile>()
+        assertThat(person).isEqualTo(Profile("mira", from = "opinions"))
+        assertLit("feed")
+        compose.onNodeWithTag("profile.header.back").assertContentDescriptionEquals("Back to the opinions")
+
+        // :49 — back returns to the page, then to the profile whose figures were tapped.
+        pressBack()
+        waitUntilOn { onTop<ProfileStances>() }
+        pressBack()
+        waitUntilOn { onTop<Profile>() }
+        assertThat(navController.currentBackStackEntry?.toRoute<Profile>()?.handle).isEqualTo("author")
+    }
+
+    @Test
+    fun aPersonOpenedFromTheOpinionsPageInExploresStackKeepsExploreLitNeverFeed() {
+        search.respond = { _, _ ->
+            Outcome.Success(
+                SearchPage(
+                    hits = listOf(SearchHit(SearchNode.Person("author-1", "author", "Author", null), score = null)),
+                    endCursor = null,
+                    hasNextPage = false,
+                    hasMorePeople = false,
+                ),
+            )
+        }
+        profiles.figures["author-1"] = ProfileFigures(posts = 1, opinionsOn = 0, opinionsBy = 1)
+        profiles.opinions["author-1" to OpinionDirection.BY] = listOf(held("mira-1", "mira"))
+        profiles.others["mira"] = testProfile(id = "mira-1", handle = "mira")
+        memberOnTheFeed()
+        openExploreTab()
+        compose.onNodeWithTag("explore.searchField.input", useUnmergedTree = true).performTextInput("author")
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodesWithTag("explore.result:1", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("explore.result:1", useUnmergedTree = true).performClick()
+        waitUntilOn { onTop<Profile>() }
+        openTheFigures()
+        assertLit("search")
+
+        compose.onNodeWithTag("profileStances.tabRow.byTab").performClick()
+        openTheRow("mira")
+        // ProfileStances.md:57 — the root the page's stack began in, never Feed by default.
+        assertLit("search")
+    }
+
+    @Test
+    fun theOwnRootsFiguresOpenTheOwnPageInTheProfileTab() {
+        profiles.figures["u1"] = ProfileFigures(posts = 1, opinionsOn = 0, opinionsBy = 0)
+        memberOnTheFeed()
+        openProfileTab()
+        openTheFigures()
+
+        assertLit("profile")
+        assertThat(navController.currentBackStackEntry?.toRoute<ProfileStances>()?.handle).isNull()
+        // An own page with no one on it: the empty line in the list's place.
+        waitForTag("profileStances.empty")
+        compose.onNodeWithTag("profileStances.header.back").assertContentDescriptionEquals("Back to your profile")
+        compose.onNodeWithTag("profileStances.tabRow.onTab").assertTextEquals("On you")
+
+        compose.onNodeWithTag("profileStances.header.back").performClick()
+        waitUntilOn(::onOwnProfileRoot)
+    }
+
     private companion object {
         const val CHRONICLE_ROW = "chronicle_row_open"
+        const val FIGURES = "profile.identity.figures"
 
         /** The bar's shell tags where a slot's key and its tag differ (`search` reads `bar_explore`). */
         val FALLBACK_TAGS = mapOf("search" to "explore")
