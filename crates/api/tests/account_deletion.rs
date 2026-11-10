@@ -1301,10 +1301,9 @@ async fn an_applicant_deletion_takes_its_device_locks(pool: PgPool) {
 }
 
 /// The deleted applicant's email and handle are free again: the same
-/// person can register anew. Deliberately silent on the single-use invite
-/// slot — consumed for good at account creation (round-3 ruling), which
-/// the link's used-at stamp will enforce for this path and the reaper's
-/// alike.
+/// person can register anew, here through a multi-use link: a single-use
+/// slot is consumed for good at account creation (round-3 ruling), as
+/// `a_single_use_link_stays_used_after_its_account_goes` pins.
 ///
 /// An applicant's deletion frees its email and handle for a fresh registration.
 /// ´claim:deletion:an-applicant-deletion-frees-its-email-and-handle´
