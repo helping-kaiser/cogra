@@ -2323,6 +2323,63 @@
         "composeDetails.title.label": []
       }
     },
+    "ComposePicked": {
+      "prefix": "composeDetails",
+      "keys": {
+        "composeDetails.pickedSheet.picture": "the picture's position in the post's media, counted from 1 (PickedSheet)"
+      },
+      "nodes": {
+        "composeDetails.pickedSheet": [],
+        "composeDetails.pickedSheet.done": [],
+        "composeDetails.pickedSheet.dragHandle": [],
+        "composeDetails.pickedSheet.note": [],
+        "composeDetails.pickedSheet.picture": [
+          "1",
+          "2",
+          "3"
+        ],
+        "composeDetails.pickedSheet.picture.describe": [
+          "2",
+          "3"
+        ],
+        "composeDetails.pickedSheet.picture.described": [
+          "1"
+        ],
+        "composeDetails.pickedSheet.picture.label": [
+          "1",
+          "2",
+          "3"
+        ],
+        "composeDetails.pickedSheet.picture.makeCover": [
+          "2",
+          "3"
+        ],
+        "composeDetails.pickedSheet.picture.moveDown": [
+          "1",
+          "2"
+        ],
+        "composeDetails.pickedSheet.picture.moveUp": [
+          "2",
+          "3"
+        ],
+        "composeDetails.pickedSheet.picture.remove": [
+          "1",
+          "2",
+          "3"
+        ],
+        "composeDetails.pickedSheet.picture.reorder": [
+          "1",
+          "2",
+          "3"
+        ],
+        "composeDetails.pickedSheet.picture.thumb": [
+          "1",
+          "2",
+          "3"
+        ],
+        "composeDetails.pickedSheet.title": []
+      }
+    },
     "CoverCrop": {
       "prefix": "coverCrop",
       "keys": {},
@@ -6778,6 +6835,42 @@
         "invites.linksLabel": []
       }
     },
+    "InviteEntry": {
+      "prefix": "inviteEntry",
+      "keys": {},
+      "nodes": {
+        "inviteEntry.body": [],
+        "inviteEntry.browse": [],
+        "inviteEntry.commit": [],
+        "inviteEntry.commit.action": [],
+        "inviteEntry.commit.reason": [],
+        "inviteEntry.header": [],
+        "inviteEntry.header.back": [],
+        "inviteEntry.link": [],
+        "inviteEntry.link.input": [],
+        "inviteEntry.link.label": [],
+        "inviteEntry.signInDoor": [],
+        "inviteEntry.title": []
+      }
+    },
+    "InviteEntryError": {
+      "prefix": "inviteEntry",
+      "keys": {},
+      "nodes": {
+        "inviteEntry.body": [],
+        "inviteEntry.browse": [],
+        "inviteEntry.commit": [],
+        "inviteEntry.commit.action": [],
+        "inviteEntry.header": [],
+        "inviteEntry.header.back": [],
+        "inviteEntry.link": [],
+        "inviteEntry.link.input": [],
+        "inviteEntry.link.label": [],
+        "inviteEntry.link.support": [],
+        "inviteEntry.signInDoor": [],
+        "inviteEntry.title": []
+      }
+    },
     "InviteExpiry": {
       "prefix": "invites",
       "keys": {
@@ -7149,6 +7242,86 @@
         "invites.header": [],
         "invites.header.back": [],
         "invites.header.title": []
+      }
+    },
+    "Join": {
+      "prefix": "join",
+      "keys": {},
+      "nodes": {
+        "join.avatar": [],
+        "join.body": [],
+        "join.commit": [],
+        "join.commit.action": [],
+        "join.commit.reason": [],
+        "join.email": [],
+        "join.email.input": [],
+        "join.email.label": [],
+        "join.handle": [],
+        "join.handle.input": [],
+        "join.handle.label": [],
+        "join.handle.support": [],
+        "join.header": [],
+        "join.header.back": [],
+        "join.header.help": [],
+        "join.password": [],
+        "join.password.input": [],
+        "join.password.label": [],
+        "join.password.reveal": [],
+        "join.password.support": [],
+        "join.privacy": [],
+        "join.privacy.open": [],
+        "join.signInDoor": [],
+        "join.terms": [],
+        "join.terms.open": [],
+        "join.title": []
+      }
+    },
+    "JoinErrors": {
+      "prefix": "join",
+      "keys": {},
+      "nodes": {
+        "join.avatar": [],
+        "join.body": [],
+        "join.commit": [],
+        "join.commit.action": [],
+        "join.email": [],
+        "join.email.input": [],
+        "join.email.label": [],
+        "join.handle": [],
+        "join.handle.input": [],
+        "join.handle.label": [],
+        "join.handle.support": [],
+        "join.header": [],
+        "join.header.back": [],
+        "join.password": [],
+        "join.password.input": [],
+        "join.password.label": [],
+        "join.password.reveal": [],
+        "join.password.support": [],
+        "join.privacy": [],
+        "join.privacy.open": [],
+        "join.signInDoor": [],
+        "join.terms": [],
+        "join.terms.open": [],
+        "join.title": []
+      }
+    },
+    "JoinInvalid": {
+      "prefix": "inviteEntry",
+      "keys": {},
+      "nodes": {
+        "inviteEntry.body": [],
+        "inviteEntry.browse": [],
+        "inviteEntry.commit": [],
+        "inviteEntry.commit.action": [],
+        "inviteEntry.commit.reason": [],
+        "inviteEntry.header": [],
+        "inviteEntry.header.back": [],
+        "inviteEntry.link": [],
+        "inviteEntry.link.input": [],
+        "inviteEntry.link.label": [],
+        "inviteEntry.signInDoor": [],
+        "inviteEntry.title": []
       }
     },
     "KeptPicksReview": {
@@ -9515,6 +9688,39 @@
         "postDetail.menuSheet.save": []
       }
     },
+    "RecoveryCode": {
+      "prefix": "recoveryCode",
+      "keys": {},
+      "nodes": {
+        "recoveryCode.code": [],
+        "recoveryCode.code.confirm": [],
+        "recoveryCode.code.confirm.input": [],
+        "recoveryCode.code.confirm.label": [],
+        "recoveryCode.code.copy": [],
+        "recoveryCode.code.done": [],
+        "recoveryCode.code.explainer": [],
+        "recoveryCode.code.value": [],
+        "recoveryCode.header": [],
+        "recoveryCode.title": []
+      }
+    },
+    "RecoveryCodeMismatch": {
+      "prefix": "recoveryCode",
+      "keys": {},
+      "nodes": {
+        "recoveryCode.code": [],
+        "recoveryCode.code.confirm": [],
+        "recoveryCode.code.confirm.input": [],
+        "recoveryCode.code.confirm.label": [],
+        "recoveryCode.code.confirm.support": [],
+        "recoveryCode.code.copy": [],
+        "recoveryCode.code.done": [],
+        "recoveryCode.code.explainer": [],
+        "recoveryCode.code.value": [],
+        "recoveryCode.header": [],
+        "recoveryCode.title": []
+      }
+    },
     "Reel": {
       "prefix": "reel",
       "keys": {
@@ -10435,6 +10641,50 @@
         "postDetail.reportSheet.title": []
       }
     },
+    "Reset": {
+      "prefix": "reset",
+      "keys": {},
+      "nodes": {
+        "reset.body": [],
+        "reset.commit": [],
+        "reset.commit.action": [],
+        "reset.commit.reason": [],
+        "reset.email": [],
+        "reset.email.input": [],
+        "reset.email.label": [],
+        "reset.header": [],
+        "reset.header.back": [],
+        "reset.note": [],
+        "reset.title": []
+      }
+    },
+    "ResetExpired": {
+      "prefix": "reset",
+      "keys": {},
+      "nodes": {
+        "reset.again": [],
+        "reset.body": [],
+        "reset.onward": [],
+        "reset.title": []
+      }
+    },
+    "ResetNew": {
+      "prefix": "reset",
+      "keys": {},
+      "nodes": {
+        "reset.body": [],
+        "reset.commit": [],
+        "reset.commit.action": [],
+        "reset.commit.reason": [],
+        "reset.note": [],
+        "reset.password": [],
+        "reset.password.input": [],
+        "reset.password.label": [],
+        "reset.password.reveal": [],
+        "reset.password.support": [],
+        "reset.title": []
+      }
+    },
     "Saved": {
       "prefix": "saved",
       "keys": {
@@ -11146,6 +11396,69 @@
         "settings.writing.license.chevron": [],
         "settings.writing.license.label": [],
         "settings.writing.license.value": []
+      }
+    },
+    "SettingsBackup": {
+      "prefix": "settingsBackup",
+      "keys": {},
+      "nodes": {
+        "settingsBackup.body": [],
+        "settingsBackup.commit": [],
+        "settingsBackup.commit.action": [],
+        "settingsBackup.commit.reason": [],
+        "settingsBackup.current": [],
+        "settingsBackup.current.input": [],
+        "settingsBackup.current.label": [],
+        "settingsBackup.header": [],
+        "settingsBackup.header.back": [],
+        "settingsBackup.lostNote": [],
+        "settingsBackup.note": [],
+        "settingsBackup.title": []
+      }
+    },
+    "SettingsBackupError": {
+      "prefix": "settingsBackup",
+      "keys": {},
+      "nodes": {
+        "settingsBackup.body": [],
+        "settingsBackup.commit": [],
+        "settingsBackup.commit.action": [],
+        "settingsBackup.current": [],
+        "settingsBackup.current.input": [],
+        "settingsBackup.current.label": [],
+        "settingsBackup.current.support": [],
+        "settingsBackup.header": [],
+        "settingsBackup.header.back": [],
+        "settingsBackup.lostNote": [],
+        "settingsBackup.note": [],
+        "settingsBackup.title": []
+      }
+    },
+    "SettingsBackupKeyAbsent": {
+      "prefix": "settingsBackup",
+      "keys": {},
+      "nodes": {
+        "settingsBackup.body": [],
+        "settingsBackup.header": [],
+        "settingsBackup.header.back": [],
+        "settingsBackup.notice": [],
+        "settingsBackup.notice.body": [],
+        "settingsBackup.notice.help": [],
+        "settingsBackup.notice.restore": [],
+        "settingsBackup.notice.title": [],
+        "settingsBackup.title": []
+      }
+    },
+    "SettingsBackupNone": {
+      "prefix": "settingsBackup",
+      "keys": {},
+      "nodes": {
+        "settingsBackup.body": [],
+        "settingsBackup.create": [],
+        "settingsBackup.header": [],
+        "settingsBackup.header.back": [],
+        "settingsBackup.note": [],
+        "settingsBackup.title": []
       }
     },
     "SettingsDeleting": {
@@ -12347,6 +12660,114 @@
         "settings.writing.license.value": []
       }
     },
+    "SignIn": {
+      "prefix": "signIn",
+      "keys": {},
+      "nodes": {
+        "signIn.apk": [],
+        "signIn.body": [],
+        "signIn.browse": [],
+        "signIn.commit": [],
+        "signIn.commit.action": [],
+        "signIn.commit.reason": [],
+        "signIn.email": [],
+        "signIn.email.input": [],
+        "signIn.email.label": [],
+        "signIn.forget": [],
+        "signIn.forget.box": [],
+        "signIn.forget.label": [],
+        "signIn.forgot": [],
+        "signIn.header": [],
+        "signIn.header.back": [],
+        "signIn.invite": [],
+        "signIn.password": [],
+        "signIn.password.input": [],
+        "signIn.password.label": [],
+        "signIn.password.reveal": [],
+        "signIn.title": []
+      }
+    },
+    "SignInError": {
+      "prefix": "signIn",
+      "keys": {},
+      "nodes": {
+        "signIn.apk": [],
+        "signIn.body": [],
+        "signIn.browse": [],
+        "signIn.commit": [],
+        "signIn.commit.action": [],
+        "signIn.email": [],
+        "signIn.email.input": [],
+        "signIn.email.label": [],
+        "signIn.fault": [],
+        "signIn.forget": [],
+        "signIn.forget.box": [],
+        "signIn.forget.label": [],
+        "signIn.forgot": [],
+        "signIn.header": [],
+        "signIn.header.back": [],
+        "signIn.invite": [],
+        "signIn.password": [],
+        "signIn.password.input": [],
+        "signIn.password.label": [],
+        "signIn.password.reveal": [],
+        "signIn.title": []
+      }
+    },
+    "SignInExpired": {
+      "prefix": "signIn",
+      "keys": {},
+      "nodes": {
+        "signIn.apk": [],
+        "signIn.body": [],
+        "signIn.browse": [],
+        "signIn.commit": [],
+        "signIn.commit.action": [],
+        "signIn.commit.reason": [],
+        "signIn.email": [],
+        "signIn.email.input": [],
+        "signIn.email.label": [],
+        "signIn.forget": [],
+        "signIn.forget.box": [],
+        "signIn.forget.label": [],
+        "signIn.forgot": [],
+        "signIn.header": [],
+        "signIn.header.back": [],
+        "signIn.invite": [],
+        "signIn.password": [],
+        "signIn.password.input": [],
+        "signIn.password.label": [],
+        "signIn.password.reveal": [],
+        "signIn.title": []
+      }
+    },
+    "SignInLimited": {
+      "prefix": "signIn",
+      "keys": {},
+      "nodes": {
+        "signIn.apk": [],
+        "signIn.body": [],
+        "signIn.browse": [],
+        "signIn.commit": [],
+        "signIn.commit.action": [],
+        "signIn.email": [],
+        "signIn.email.input": [],
+        "signIn.email.label": [],
+        "signIn.fault": [],
+        "signIn.forget": [],
+        "signIn.forget.box": [],
+        "signIn.forget.label": [],
+        "signIn.forgot": [],
+        "signIn.header": [],
+        "signIn.header.back": [],
+        "signIn.invite": [],
+        "signIn.password": [],
+        "signIn.password.input": [],
+        "signIn.password.label": [],
+        "signIn.password.reveal": [],
+        "signIn.title": []
+      }
+    },
     "SignOutConfirm": {
       "prefix": "settings",
       "keys": {
@@ -12642,6 +13063,26 @@
         "tagPicker.tag.trailing": [
           "saltmaps"
         ]
+      }
+    },
+    "Verified": {
+      "prefix": "verify",
+      "keys": {},
+      "nodes": {
+        "verify.body": [],
+        "verify.mark": [],
+        "verify.onward": [],
+        "verify.title": []
+      }
+    },
+    "VerifiedApp": {
+      "prefix": "verify",
+      "keys": {},
+      "nodes": {
+        "verify.body": [],
+        "verify.mark": [],
+        "verify.onward": [],
+        "verify.title": []
       }
     },
     "VerifyExpired": {
@@ -12983,6 +13424,58 @@
           "0-1-1",
           "0-1-0"
         ]
+      }
+    },
+    "YourKey": {
+      "prefix": "yourKey",
+      "keys": {},
+      "nodes": {
+        "yourKey.body": [],
+        "yourKey.exportCard": [],
+        "yourKey.exportCard.hex": [],
+        "yourKey.exportCard.hex.copy": [],
+        "yourKey.exportCard.hex.label": [],
+        "yourKey.exportCard.hex.value": [],
+        "yourKey.exportCard.pem": [],
+        "yourKey.exportCard.pem.copy": [],
+        "yourKey.exportCard.pem.label": [],
+        "yourKey.exportCard.pem.value": [],
+        "yourKey.exportCard.title": [],
+        "yourKey.header": [],
+        "yourKey.header.back": [],
+        "yourKey.header.title": [],
+        "yourKey.note": []
+      }
+    },
+    "YourKeyAbsent": {
+      "prefix": "yourKey",
+      "keys": {},
+      "nodes": {
+        "yourKey.body": [],
+        "yourKey.header": [],
+        "yourKey.header.back": [],
+        "yourKey.header.title": [],
+        "yourKey.notice": [],
+        "yourKey.notice.body": [],
+        "yourKey.notice.help": [],
+        "yourKey.notice.restore": [],
+        "yourKey.notice.title": []
+      }
+    },
+    "YourKeyGate": {
+      "prefix": "yourKey",
+      "keys": {},
+      "nodes": {
+        "yourKey.body": [],
+        "yourKey.commit": [],
+        "yourKey.commit.action": [],
+        "yourKey.commit.reason": [],
+        "yourKey.current": [],
+        "yourKey.current.input": [],
+        "yourKey.current.label": [],
+        "yourKey.header": [],
+        "yourKey.header.back": [],
+        "yourKey.header.title": []
       }
     },
     "YourTopics": {
