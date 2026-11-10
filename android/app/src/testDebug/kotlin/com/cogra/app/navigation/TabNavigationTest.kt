@@ -588,7 +588,8 @@ class TabNavigationTest {
 
         assertLit("profile")
         assertThat(navController.currentBackStackEntry?.toRoute<ProfileStances>()?.handle).isNull()
-        waitForTag("profileStances.empty.title")
+        // An own page with no one on it: the empty line in the list's place.
+        waitForTag("profileStances.empty")
         compose.onNodeWithTag("profileStances.header.back").assertContentDescriptionEquals("Back to your profile")
         compose.onNodeWithTag("profileStances.tabRow.onTab").assertTextEquals("On you")
 
