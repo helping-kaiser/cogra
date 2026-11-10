@@ -2096,32 +2096,50 @@ remain specified in the full paper's terminal sections only.
 
 ### 9.1 Universal principles (`subsec:nodes:universal-principles`)
 
-Six structural invariants for all edges and hyper-edges:
+Eight structural invariants for all edges and hyper-edges:
 
-1. Every edge projection inherits its parent act's authoritative logical
-   time $\mathbb{T}^{\text{act}}_q$ and carries its own maturity scalar
-   $\tau_e$.
-2. Every edge's stored sentiment is a $3\times3$ extended slice
+1. Every record is initiated at its author: the source of a binary edge or
+   A-leg is the act's author, and a T-leg's passive source is the act's
+   middle node, fixed by that same author. Author metadata, the
+   act-identifier author component, the frame-bound key, and the initiating
+   source endpoint are one actor by construction
+   (`prop:graph:author-source-identity`).
+2. Every edge projection inherits its parent act's logical time
+   $\mathbb{T}^{\text{act}}_q$ — the Lamport summary of the order of record,
+   never an input to precedence (`ax:graph:act-causality`) — and carries its
+   own maturity scalar $\tau_e$.
+3. Every edge's stored sentiment is a $3\times3$ extended slice
    $\boldsymbol{\Psi}_e$ constructed via the canonical pipeline.
-3. Every edge exposes the raw path-view interface
+4. Every edge exposes the raw path-view interface
    $\boldsymbol{\Psi}_e^{[P]}$, its determinant magnitude, and its
-   determinant sign.
-4. Every hyper-edge act projects into two binary legs whose path-view
-   determinants and determinant signs multiply.
-5. Boundary damping $e^{-\beta H_\tau}$ is applied at observation, not to
+   determinant sign (`def:graph:dual-view-architecture`; the Scalar and
+   Attribution Views are terminal reads, §8.6).
+5. Every hyper-edge act decomposes into an A-leg and a T-leg for raw-graph
+   and CAN consumers, whose path-view determinants and determinant signs multiply
+   (`thm:graph:hyper-edge-reduction`); standing consumes the matched pair
+   once as one complete act, never as independently reachable legs
+   (`cor:graph:standing-act-atomicity`).
+6. Boundary damping $e^{-\beta H_\tau}$ is applied at observation, not to
    stored tensors.
-6. Every act carries a separable payload commitment; payload bytes and
-   payload state enter no Layer-1 closure formula.
+7. Every authored act carries a payload commitment; payload bytes and
+   payload state enter the canonical pipeline nowhere
+   (`prop:graph:removable-projection-invariance`). Nodes carry nothing:
+   every node-level quantity is a declared fold over incident records
+   (`ax:graph:authored-act-ontology`, `def:graph:canonical-folds`).
+8. Standing authority is assigned by the closed census of
+   `def:epoch:standing-recipient-resolution`. Positive determinant parity, a
+   grounded target, a strong raw edge weight, or a passive artifact's
+   incoming weight is never sufficient by itself to create a person-vouch.
 
 **Canonical Tensor Pipeline (`post:nodes:canonical-tensor-pipeline`).** For
 every edge (binary or hyper-edge leg): (1) role assignment — domain
 parameters assigned to directional ($p_d$) and intensity ($p_i$) roles;
 single-parameter edges set the missing role to 1; (2) extended slice via the
 master formula with the domain's bilinear mask; (3) path-view extraction
-with $\eta$-softening; (4) temporal attributes — the inherited act time,
-$\tau_e$, $H_\tau(e)$ computed under the authoritative order; (5) closure
-extraction — per-edge $|\det \boldsymbol{\Psi}_e^{[P]}|^{1/2}$,
-$\epsilon(e)$, $\tilde{w}(e)$. Single-parameter row collapse (Owner,
+with $\eta$-softening; (4) temporal augmentation of $\boldsymbol{\Psi}_e$ by
+the maturity scalar $\tau_e$ (the augmented tensor is terminal, §8.9);
+(5) interface extraction — the path view $\boldsymbol{\Psi}_e^{[P]}$, beside
+the terminal Scalar and Attribution Views (§8.6). Single-parameter row collapse (Owner,
 Publish, Send/A) is a census property, not an incentive surface
 (`rem:nodes:row-collapse`).
 
@@ -2140,9 +2158,10 @@ Affinity → Type; Tag → Taggable; Review → Reviewable; Owner/Bid → Ownabl
 Join Request, Invitation/A, Send/A, Leave, De-invite/A, Participant/A →
 Chat; Participant/T → Chat; Withdraw/Rescind → Offer; Invitation/T → invitee's Profile;
 De-invite/T → de-invitee's Profile. Reference is trait-independent on both
-ends: its A-leg sources from any passive citing artifact, and its T-leg
-targets any existing passive node, including a Profile, never an Actor
-(`rem:nodes:reference-author-allocation`).
+ends: its A-leg lands on any passive node, the citing artifact, which
+sources the author-fixed T-leg toward any existing passive node, including a
+Profile, never an Actor (`lem:graph:passive-out-degree`,
+`rem:nodes:reference-author-allocation`).
 
 **Reviews are commentary, never state (`rem:graph:reviews-commentary`).**
 Every passive node type implements Reviewable: anything that exists in the
@@ -2262,9 +2281,8 @@ Both components are derived certificate recomputations
 (`def:graph:derived-raw-edges`, `def:graph:derived-self-reading`), excluded
 from the record set, bundles, action counts, and the payload schema. **The
 reading is a deterministic function of the current final standing: there is
-no freeze, no previous-standing memory, and no below-wall branch** — the
-pre-Edition-4 last-valid-pair freeze is deleted; below the wall, standing
-uses the wall-clamped *activation* instead (§11.4), which is a property of
+no freeze, no previous-standing memory, and no below-wall branch** — below
+the wall, standing uses the wall-clamped *activation* instead (§11.4), which is a property of
 the standing solve, not of the raw reading.
 
 - **Declaration** (Actor → Profile): derived — recomputed from the epoch
@@ -2290,8 +2308,8 @@ feed/bridge/CAN properties only, not the standing activation: zero at zero;
 strictly monotone increasing in $\alpha_j$; $\tilde{w}(e_{\text{Rep}}) < 1$
 always; concave; positive parity; both components synchronized at every
 epoch boundary; feed-through hierarchy (profile-bridged ceiling
-$(\tilde{w}_{\max}^{\text{Op}})^2 \cdot \tilde{w}_{\max} \approx 0.249$ vs
-direct-Opinion ceiling $\approx 0.502$ — the bridge is always at least
+$(\tilde{w}_{\max}^{\text{Op}})^2 \cdot \tilde{w}_{\max} \approx 0.250$ vs
+direct-Opinion ceiling $\approx 0.503$ — the bridge is always at least
 2× weaker); raw $\tau$-channel ceiling at frozen $p$:
 $\sup_\tau \tilde{w}(e_{\text{Rep}})(p_0;\tau) = |\det \boldsymbol{\Psi}^{[P]}(p_0)|^{1/2}\sqrt{2} < 1$.
 Self-loop paths Actor→Profile→Actor produce no register update in raw
@@ -2316,7 +2334,7 @@ standing, not a second run of the standing machinery.
 | Affinity | Actor → Type | Epistemic | $(0,1,0,1)$ | Marginal | association $a$, attraction $t$ ($p_d = a$, $p_i = t$) | relevance, not verdict; its sign is coherence, not a recipient; the cell resolves home |
 | Owner | Actor → Item | Economic | $(1,1,1,1)$ ↑promoted | Full | attachment $a \in [-1,1]$ ($p_d = a$, $p_i = 1$) | at $a = 0$ anchors the title thread but is routing-inert — title is sentiment-blind; orphaned Owner edges persist without title force |
 | **Join Request** | Actor → Chat | Relational | $(1,1,1,1)$ ↑promoted | **Half** | urgency $u \in [-1,1]$, formality $f \in [-1,1]$ ($p_d = u$, $p_i = f$) | a proposal, not participation: creates no membership, alters no Chat state (`edge:nodes:join-request`) |
-| Accept | Actor(seller) → Actor(buyer) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | comfort $c$, equity $e$ ($p_d = c$, $p_i = e$) | settlement reference → Bid act; not binding — title moves only at Ratify; person-directed: only positive-coordinate Accepts fold into the standing projection |
+| Accept | Actor(seller) → Actor(buyer) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | comfort $c$, equity $e$ ($p_d = c$, $p_i = e$) | settlement reference → Bid act; not binding — title moves only at Ratify; person-directed: resolves outward to the buyer only when its folded $(c, e)$ are both strictly positive and the settlement event is recognized, unchallenged, and title-transferring under the epoch title fold, otherwise to the seller's self-retention channel; the settlement event is event-persistent — a later resale does not revoke the earlier transfer (`post:epoch:settlement-standing-title-coupling`) |
 | Ratify | Actor(buyer) → Actor(seller) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | final comfort $c$, final equity $e$ | settlement reference must match the Accept's, plus the exact Accept reference; the commit record (final at the certificate); same recipient-resolution rule |
 | Withdraw | Actor(buyer) → Offer | Minimal | $(0,0,0,1)$ | Marginal | $p_d = p_i = 1$ fixed; $\epsilon = +1$ forced | control record — weighed and priced, always resolving home |
 | Rescind | Actor(seller) → Offer | Minimal | $(0,0,0,1)$ | Marginal | $p_d = p_i = 1$ fixed; $\epsilon = +1$ forced | seller's sole escape from a non-binding Accept before commit; control record |
@@ -2333,8 +2351,6 @@ assigned domain and mask and may occupy different tiers;
 $\epsilon(\mathcal{H}) = \epsilon(e_A)\cdot\epsilon(e_T)$. The **A-leg**
 is Actor → Passive (the initiating side), the **T-leg** Passive → terminal
 target; both are projections of one act (`def:graph:act-edge-projection`).
-(Pre-Edition-4 census tables named these legs "L1/L2"; the current census
-names them /A and /T.)
 
 | Hyper-edge | Legs | Leg domains (masks, tiers) | Params (roles A / T) |
 |---|---|---|---|
@@ -2342,10 +2358,10 @@ names them /A and /T.)
 | Review | Actor → Passive → Comment | Tribal $(1,1,1,1)$ F / Epistemic $(0,1,0,1)$ M | enthusiasm $e$, effort $f$; A: $p_d = e, p_i = f$; T: $p_d = f, p_i = e$. Commentary, never state; standing-inert as a family |
 | Bid | Actor → Item → Offer | Economic ↑promoted, both legs **Half** | signed generosity $g \in [-1,1]$, urgency $u \in [0,1]$; A: $p_d = g, p_i = u$; T: $p_d = u, p_i = g$. Both legs carry $\epsilon = \mathrm{sgn}(g)$, so composed parity is $+1$: a predatory Bid is parity-visible per leg, parity-neutral as a composition; the buyer's stance is read by stance consumers (`cor:nodes:bid-leg-parity`) |
 | **Participant** | Actor → Chat → Chat | Relational $(1,1,1,1)$ ↑ F / Epistemic $(0,1,0,1)$ M | interactivity $i \in [-1,1]$, responsibility $r \in [-1,1]$, continuity $c \in [0,1]$; A: $p_d = i, p_i = r$; T: $p_d = c, p_i = 1$ type-fixed (forced $\epsilon = +1$, `lem:nodes:self-loop-neutral`). **A-leg whence, T-leg whither** — one meaning, *I move from A to T*, in four instantiations: **found** (both legs on $\mathsf{mint}(\mathrm{actid})$), **join** (both on $C_1$), **found successor** (A on $C_0$, T on the mint), **move** (A on $C_0$, T on $C_1$). There is no shape branch to test and no field a reader must consult; the terminal target alone decides whether the act mints, so found and found successor mint and join and move do not (§8.1). Origin is unchecked at formation — a move from a chat the author was never in is a decorated join. The A-leg's $(i, r)$ are the act's mandatory coordinates; the T-leg's $c$ is authored, semantically vacuous in the join and found cases, and **not** mandatory, so a choice on a meaningless field never moves its author's coefficient. The T-leg's damped weight is bounded by the Marginal family supremum, a function of $c$ alone (`thm:graph:raw-weight-ceiling`). The membership fold reads leg roles, never family incidence (§9.8) (`edge:nodes:participant`) |
-| **Invitation** | Actor → Chat → Profile(invitee) | Relational $(1,1,1,1)$ ↑ **Half** / Epistemic $(0,1,0,1)$ M | urgency $u \in [-1,1]$, formality $f \in [-1,1]$, relevance $r \in [0,1]$; A: $p_d = u, p_i = f$; T: $p_d = r, p_i = 1$ (forced $+1$ for $r > 0$). A public, priced, authored vouch that the invitee fits the community; a proposal, not participation. The terminal leg targets the invitee's **Profile**, never the Actor — influence reaches the invitee only through their standing-dependent activation (wall-clamped, §11.4). Revocable per author (§9.8) (`edge:nodes:hyper-invitation`, `subsec:necessity:invitation-profile-terminus`) |
-| **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs excluded from the standing projection — a De-invite never vouches for its target. Sole closure-visible effect: per-author suppression of the author's own Invitation bundle toward the same (Chat, Profile) incidence (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
-| Send | Actor → Chat → Message | Relational $(1,1,1,1)$ ↑ F / Minimal $(0,0,0,1)$ M | importance $i \in [-1,1]$; A: $p_d = i, p_i = 1$; T: $p_d = 1, p_i = i$. **Renamed from "Write"** (`edge:nodes:hyper-send`): *write* is the protocol act (§8.2); a Send is carried into the graph by a write, it is not one. **Not membership-gated**: a Layer-1 membership precondition would drag membership into the admission closure (`rem:nodes:membership-is-terminal`). Standing role none: sending into a Chat endorses no one |
-| Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; A: $p_d = f, p_i = e$; T: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches the allocation destination: a **complete** Reference whose T-leg targets Profile$_i$ with strictly-positive folded $(e, f)$ resolves its fold cell to Actor $i$; every other Reference resolves to its author's self-retention channel — weighed and priced either way, but reaching no one else (still read by feed, raw signed traversal, CAN, provenance, terminal policy). The artifact supplies context, never transferable standing: incoming weight on the citing artifact enters no cell (§11.3, `def:epoch:standing-recipient-resolution`). Self-reference resolves home; withdrawal is per-leg net stance (`edge:nodes:hyper-reference`, `rem:nodes:reference-author-allocation`) |
+| **Invitation** | Actor → Chat → Profile(invitee) | Relational $(1,1,1,1)$ ↑ **Half** / Epistemic $(0,1,0,1)$ M | urgency $u \in [-1,1]$, formality $f \in [-1,1]$, relevance $r \in [0,1]$; A: $p_d = u, p_i = f$; T: $p_d = r, p_i = 1$ (forced $+1$ for $r > 0$). A public, priced, authored vouch that the invitee fits the community; a proposal, not participation. The A-leg's $(u, f)$ are the act's mandatory coordinates: when the folded $u, f$ are strictly positive after netting, the inviter may compile one complete hyper-vouch toward the invitee's bound Actor, at the coefficient $\sqrt{|u\,f|}$, the geometric mean of their magnitudes; the T-leg's $r$ is raw context and enters neither that coefficient nor its positivity gate. The terminal leg targets the invitee's **Profile**, never the Actor — influence reaches the invitee only through their standing-dependent activation (wall-clamped, §11.4). Withdrawn by its author through a cancelling Invitation that nets the bundle to $(0, 0)$ (§9.8) (`edge:nodes:hyper-invitation`, `subsec:necessity:invitation-profile-terminus`) |
+| **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs are control records resolving to their author, absent from person-vouch compilation — a De-invite never vouches for its target (`rem:epoch:control-acts-resolve-to-self`). It withdraws nothing: it allocates nothing outward and has no effect on its author's Invitation bundle, which a cancelling Invitation withdraws (§9.8). It is still a priced act — debited, counted, and weighed at self at coefficient 1. Its reading is the Layer-2 membership fold (`def:nodes:canonical-membership-fold`) (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
+| Send | Actor → Chat → Message | Relational $(1,1,1,1)$ ↑ F / Minimal $(0,0,0,1)$ M | importance $i \in [-1,1]$; A: $p_d = i, p_i = 1$; T: $p_d = 1, p_i = i$. *Write* is the protocol act (§8.2), and no edge family may shadow it (`edge:nodes:hyper-send`): a Send is carried into the graph by a write, it is not one. **Not membership-gated**: a Layer-1 membership precondition would drag membership into the admission closure (`rem:nodes:membership-is-terminal`). Standing role none: sending into a Chat endorses no one |
+| Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; A: $p_d = f, p_i = e$; T: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches the allocation destination: a **complete** Reference whose T-leg targets Profile$_i$ with strictly-positive folded $(e, f)$ resolves its fold cell to Actor $i$; every other Reference resolves to its author's self-retention channel — weighed and priced either way, but reaching no one else (still read by feed, raw signed traversal, CAN, provenance, terminal policy). The artifact supplies context, never transferable standing: incoming weight on the citing artifact enters no cell (§11.3, `def:epoch:standing-recipient-resolution`). Self-reference resolves home. Withdrawn by its author through netting (`lem:epoch:authored-vouch-withdrawable`) (`edge:nodes:hyper-reference`, `rem:nodes:reference-author-allocation`) |
 
 There is no combined Actor → Actor → Chat request edge: joining is the binary
 Join Request (Actor → Chat), and inviting is the Invitation hyper-edge (Chat
@@ -2436,7 +2452,7 @@ Invitation are proposals. They establish no membership and do not substitute
 for the Participant edge. A Chat membership signal exists only when the
 joining actor authors a Participant edge. Ignoring a proposal requires no
 graph action. A Join Request allocates to nobody but its author; an
-inviter's own complete, positive, unsuppressed Invitation act may instead
+inviter's own complete, positive Invitation act may instead
 compile into a person-vouch toward the invitee.
 
 **Canonical Membership Fold — the full paper's Layer-2 default
@@ -2463,7 +2479,7 @@ hygiene. Under this default, De-invite
 records are **advisory**: they enter only through a published chat/guild
 policy $\mathcal{P}$ naming an authority set (published per
 `subsec:deployment:completeness`). Where $\mathcal{P}$ recognizes one, the
-conservative rule governs — a recognized De-invite defeats membership only if
+conservative rule governs — a recognized De-invite defeats membership iff
 it strictly $\prec$-follows the $\prec$-maximal element of $M(a,C)$ (a
 concurrent or earlier one is inert, mirroring the epoch title fold), and a
 Participant strictly $\prec$-following the De-invite re-establishes membership
@@ -2473,8 +2489,9 @@ adopt, or replace — the interface fixes only the boundary (next paragraph),
 never the mechanism.
 
 **Membership is terminal (`rem:nodes:membership-is-terminal`).** No
-admission rule reads $\mathrm{member}^{(k)}$ — it feeds neither the write
-rule (W1/W2a/W2b), nor formation, nor settlement recognition. Two terminal
+admission rule reads $\mathrm{member}^{(k)}$ — it feeds neither the gate,
+nor capacity, nor settlement recognition (`def:network:admission-closure`).
+Two terminal
 services may derive different membership from the same $E_k$ without
 forking the graph (contrast title, which recognition clause (iii) reads
 back). This is why Leave and De-invite append unconditionally: a
@@ -2483,24 +2500,27 @@ admission closure and enlarge the binding surface
 (`subsec:necessity:unrestricted-departure` — "who may expel" is a terminal
 policy verdict).
 
-**Inviter Revocation (`def:epoch:inviter-revocation`).** Author $j$'s
-Invitation act toward incidence (Chat $C$, Profile $P$) is **absent** from
-fold-cell compilation iff the latest **epoch index** represented in $j$'s own
-{Invitation, De-invite} records with that incidence contains a De-invite —
-ties within an epoch favouring the revocation; a later complete Invitation at
-a subsequent epoch re-establishes the act. The rule is **epoch-quantized,
-not order-read**, and obligatorily so: no standing quantity may read
-host-assigned order or any intra-epoch "latest"
-(`post:epoch:standing-epoch-set-determinism`), and the $\prec$-maximal
-element is free among acts with no declared dependency, so a host could
-otherwise decide suppression by placement. Suppression is
-strictly per-author — it never affects another author's invitation — and is
-a suppression predicate, not a parameter contribution. No control edge
-enters any stance sum. "Conviction sums; consent toggles": stance bundles
-aggregate with inertia, but a vouch-of-fitness is live consent, and live
-consent is latest-record-wins — the same cancel-over-commit shape as
-settlement's epoch-quantized consent rule. Each toggle is a priced act;
-oscillation dilutes $r_j$ irrevocably.
+**Authored vouches are withdrawable
+(`lem:epoch:authored-vouch-withdrawable`).** Every authored vouch that
+stance aggregation folds — Opinion, Reference, and Invitation — is
+withdrawable by its author through netting within the accepted epoch set.
+Standing consumes no family-specific withdrawal rule and no tie rule; the
+fold is invariant under every dependency-compliant permutation
+(`post:epoch:standing-epoch-set-determinism`). For an Invitation with
+mandatory A-leg pair $(u, f)$, a cancelling Invitation with $(-u, -f)$
+toward the same incidence nets the author's bundle to $(0, 0)$, which fails
+the strictly-positive gate (`def:epoch:effective-act-contribution`) and is
+weighed home at coefficient zero; a later positive Invitation re-establishes
+the vouch. Netting is strictly per-author: no act withdraws another author's
+vouch. Each withdrawal and re-establishment is a priced act — it increments
+the author's act count and irrevocably lowers the author's commitment rate. A De-invite withdraws
+nothing: it has no effect on its author's Invitation bundle and allocates
+nothing outward; it is still a priced act — debited, counted, and weighed at
+self at coefficient 1 (`rem:epoch:control-acts-resolve-to-self`) — and its
+reading is the Layer-2 membership fold above. Settlement acts (Accept,
+Ratify) are singleton cells and withdraw through the epoch-quantized
+settlement consent of `def:graph:settlement-recognition`, not through
+netting.
 
 ---
 
