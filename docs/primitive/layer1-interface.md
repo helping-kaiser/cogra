@@ -2267,25 +2267,35 @@ $$\bar{p}_d^{(a \to t)} = \mathrm{clip}_{[-1,1]}\Big(\sum_e p_d(e)\Big), \qquad 
 
 The fold is per author, family, source, target, and full incidence — it
 never nets across authors ("one author's revision could erase another's
-vouch", `subsec:necessity:per-author-netting`). The compiler may fold
+vouch", `subsec:necessity:per-author-netting`). Each eligible equivalence
+class yields one set of folded coordinates and one cell coefficient,
+independently of its member count. The compiler may fold
 revisions of one authored semantic incidence but may not pair independently
 folded A- and T-legs, replace an A-leg with unrelated incoming weight, or
 create a complete act from unmatched records. Excluded from stance
 aggregation: **derived Self-edge components** (not authored records, hence
 no bundle); the settlement records **Accept and Ratify** (recognition and
 standing read individual records); the **control records** Withdraw,
-Rescind, Leave, De-invite/A·T; and every family that resolves to its author
-where the fold would otherwise be used only to create standing. Feed
-ranking, raw signed traversal, CAN, title, payload display, and settlement
+Rescind, Leave, De-invite/A·T; and every family that may never resolve
+outward (Publish, Owner, Affinity, Tag, Review, Send, Bid, Join Request,
+Participant), whose fold could only create its author's own standing. Each
+excluded authored act is a singleton cell whose coordinates are read
+directly. Opinion, Reference, and Invitation fold into cells whatever a
+cell's destination — parallel Opinions by one author on one content target
+or one hostile person target form one cell with one coefficient that resolves
+home: eligibility for stance aggregation is a property of the family, never of
+an act's destination. Feed ranking, raw signed traversal, CAN, title, payload display, and settlement
 recognition continue to read their declared raw records or bundles — **net
 stance is one input to act folding, never a mutation of the record**, and it
 never merges, hides, or removes payload projections
 (`prop:graph:removable-projection-invariance`).
 
-Aggregation properties (`prop:epoch:net-stance-properties`): order-free once
-the epoch record set and bundle folds are fixed; range-safe (the clip
+Aggregation properties (`prop:epoch:net-stance-properties`): order-stable (a
+function of the accepted epoch set, invariant under every
+dependency-compliant permutation of $\mathcal{Q}_k$); range-safe (the clip
 returns parameters to the master formula's domain); **priced** (every
-revision increments $N_j$, irrevocably diluting $r_j$); append-only.
+revision is an accepted act — one $\theta$-debit and one count increment,
+irrevocably diluting $r_j$); append-only.
 Sum-then-clip is deliberate: walking back accumulated conviction costs
 counter-acts in proportion to it — flip-flops are expensive, stance is
 sticky (`rem:epoch:conviction-inertia`). A prior $(0.5, 0.5)$ act is
@@ -2297,10 +2307,12 @@ $b_j$): severance is burn-priced
 
 **Standing fold cells (`def:epoch:standing-fold-cell`,
 `rem:epoch:compiled-acts-fold-into-cells`).** After the per-author net-stance
-fold, the compiler groups the accepted acts of one
+fold, the compiler groups the eligible acts of one
 **full incidence** (author, family, source, semantic target, and — for
-hyper-edges — middle) into **fold cells** $\xi$, the order-free unit of
-standing input. A cell's identity is the deterministic full-incidence bundle
+hyper-edges — middle) into one **fold cell** $\xi$ per equivalence class,
+retaining the member acts as witnesses; each aggregation-excluded act is a
+singleton cell. The cell is the order-free unit of standing input and
+contributes one folded coefficient, never one copy per member. A cell's identity is the deterministic full-incidence bundle
 key, not a new act identifier; a hyper-edge act is one cell, never two
 (`cor:graph:standing-act-atomicity`). A cell is a derived reading: no new
 act, edge projection, payload, debit, count increment, or Lamport event.
@@ -2391,10 +2403,13 @@ routes together cover every outward-capable family. The only lever a host
 retains over a standing fold is an act's epoch of inclusion.
 
 **Base allocation matrix (`def:epoch:domain-weighted-base-allocation`,
-`eq:epoch:domain-weighted-base-allocation`).** Each cell carries a published
-act-level domain profile $\delta_D(\xi) \ge 0$ with $\sum_D \delta_D(\xi) =
-1$, so a hyper-edge act spreads one unit across the domains of its
-projections and is never double-counted (`def:epoch:standing-domain-profile`).
+`eq:epoch:domain-weighted-base-allocation`).** Each cell carries its act
+family's declared public domain profile $\delta_D(\xi) \ge 0$ with
+$\sum_D \delta_D(\xi) = 1$, supported on the domains of that family's act
+projections, so a hyper-edge act spreads one unit across them and is never
+double-counted (`def:epoch:standing-domain-profile`). No equal split is
+assumed; a deployment using unequal domain weights publishes each family's
+profile.
 With published nonnegative domain weights $\omega_D$ and the published
 self-retention base $\kappa_{\text{self}} > 0$
 (`def:epoch:self-retention-base`), the **base allocation score** of the
@@ -2403,7 +2418,9 @@ ordered Actor pair $(u, j)$ is
 $$\mathsf{A}_{uj} = \kappa_{\text{self}}\,\mathbf{1}_{u=j} + \sum_{\xi:\ \mathrm{src}(\xi)=u,\ \mathrm{res}(\xi)=j} c(\xi) \sum_D \omega_D\,\delta_D(\xi) \;\ge\; 0,$$
 
 with $\mathsf{A}_{uu} \ge \kappa_{\text{self}} > 0$, so every anchored Actor
-has a well-defined row even having authored nothing. **$\mathsf{A}$ is the
+has a well-defined row even having authored nothing. The sum reads each
+cell's coefficient once, without a multiplier for its number of member acts;
+ledger action counts and debits still read every accepted act. **$\mathsf{A}$ is the
 sole standing-relevant reading of the epoch's acts: no standing quantity
 reads the Action Graph beyond it.** Reference values for both constants are
 unity, pending the calibration lock.
