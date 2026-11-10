@@ -3001,8 +3001,9 @@ $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 | fold cells $\xi$, coefficients $c(\xi)$ | base allocation matrix → transport → mediant → gate | the act-folding layer (§11.3) |
 | $\bar{g}_{\text{vch}}(x)$ | every tilted allocation score in the standing solve | wall-clamped; below-wall constant |
 | base matrix $\mathsf{A}$, emission $\mathfrak{e}_u$, accepted rung $t_k$, certificate $\mathcal{K}_k$ | assemble the transport → standing → W2 | binding intermediate values, not straddlers |
+| wall-controller inputs ($\rho_\theta^{(k)}$, $W_{\text{loc}}^{(k)}$, $t_k$), proposal, delivered wall | next-wall calculation and the burn-image schedule $\theta^{(k+1)}$ | memory-one; replayed from the published reduced state and formula, no private inputs (`def:epoch:wall-controller`) |
 | transport entries $\Pi_{ui}$ | the standing mediant | sole relational input to standing |
-| settlement references | recognition clauses (i)–(ii); forced handshake chain | act-identity resolution |
+| settlement references | recognition clauses (i)–(ii); handshake chain as causal parents, placed $\mathrm{Bid} \prec \mathrm{Accept} \prec \mathrm{Ratify}$ by a compliant order | act-identity resolution |
 | ownership thread | title certificate; recognition clause (iii), authorization and parties | title as straddler |
 | $\mathrm{owner}^{(k)}$ | recognition clause (iii), authorization and parties; standing recipient resolution reads the epoch title fold (`post:epoch:settlement-standing-title-coupling`) | terminal routing/display read it downstream |
 | payload structural witness | act integrity; removable-projection invariance | (L1·verify) — retained by Layer 1 across phases; bytes never read by Layer 1 |
