@@ -1,6 +1,6 @@
 # CommentEdit · `spec:design:behavior-comment-edit`
 
-ALWAYS the comment edit is one screen and one batch: words, pictures, tags, citations and the license
+ALWAYS the comment edit is one screen and one batch: words, pictures or one video, tags, citations and the license
 
 ALWAYS the comment edit's license row is locked
 
@@ -13,6 +13,12 @@ WHEN tap the acts footer -> the acts sheet opens over the edit
 WHEN tap a picture's remove control -> the picture leaves the batch
 
 WHEN tap + Add pictures -> the platform's own picker opens AND NEVER a pick stage opens
+
+ALWAYS the comment edit's add row reads + Add pictures or a video GIVEN the comment holds words alone, no picture and no clip
+
+WHEN tap + Add pictures or a video -> the platform's own picker opens AND NEVER a pick stage opens
+
+WHEN a video is picked from + Add pictures or a video -> the clip arrives as the comment's video with its cover row, as CommentEditVideo draws it
 
 WHEN a video is picked at the edit GIVEN the comment holds no picture and no clip and the edit's video path is still staged -> the refusal A video can't join an edit yet — post it on its own. stands under commentEdit.pictures with Remove it alone AND NEVER the video is taken AND NEVER a dialog opens
 

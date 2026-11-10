@@ -5193,7 +5193,7 @@ before and after.
   figures — the label set label-small without its tracking, the value
   title-medium without its tracking~~. Both now set the role whole.
 
-### 148 · Does a words comment's edit take a video? · *design* · **filed 2026-10-29**
+### 148 · Does a words comment's edit take a video? · *design* · **filed 2026-10-29** · **closed 2026-11-10**
 
 Round 25 (seam 248, VIDEO_AT_EDIT). A words post's edit takes a clip
 through the cover step (`EditWords.md`), and the interim refusal is
@@ -5207,6 +5207,12 @@ cover row; (b) a comment's edit adds pictures only, its row reading `+ Add
 pictures`, and a clip is refused by a rule of its own. Until ruled, the
 comment edit says the staged line, `A video can't join an edit yet — post
 it on its own.`
+
+- **Ruled (a)** (jakob 2026-11-10: "all comments can hold
+  words/images/one video. there is no specific 'text-comment'"), built in
+  round 29 as law: `CommentEdit.md` and its docblock, the staged-surfaces
+  row. A words comment's edit is not drawn: how its empty media block
+  reads is open (readme §13, round 29).
 
 ### 149 · What round 27's registrations left undrawn · *system* · **filed 2026-10-29**
 
