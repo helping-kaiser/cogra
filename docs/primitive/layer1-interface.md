@@ -325,10 +325,10 @@ epoch write set becomes the next public edge set — six rule groups:
   endpoints (`def:graph:registration`);
 - **(final state)** the proposed completed edge set and final post-debit
   balance/count pairs (`def:epoch:proposed-final-act-state`);
-- **(conserved standing)** the complete conserved standing package — fold
-  cells and their coefficients, the base allocation matrix, wall-clamped
-  activation, the accepted tilt rung, source emission, and the certified
-  equilibrium (`def:network:conserved-standing-package`) — which feeds
+- **(conserved standing)** the complete conserved standing package — the
+  base allocation matrix, wall-clamped activation, the accepted tilt rung,
+  the depth mass, source emission, and the certified equilibrium
+  (`def:network:conserved-standing-package`) — which feeds
   W2a/W2b through the published final standing and stamps;
 - **(final gates)** the write rule: **W1** solvency (debited)
   $b_i \ge \theta^{(k)}$, **W2a** individual final safety
@@ -352,10 +352,10 @@ values read — directly, through other values, **or through a binding
 validity predicate** — into any rule in $\mathcal{A}$. A value belongs to
 the closure not only when it appears arithmetically in W1/W2 or
 recognition, but also when its validity decides which value may appear
-there: the complete-act fold, the base allocation matrix, the emission
-fractions, the accepted tilt rung, the declared hull box, and the
-certificate verdict all lie in $\overline{\mathcal{A}}$ — they determine
-which equilibrium, and therefore which final standing, reaches W2. A
+there: the fold, the base allocation matrix, the emission fractions, the
+hop matrices, the hull box, and the certificate verdict at each rung all
+lie in $\overline{\mathcal{A}}$ — they determine which rung is accepted,
+and therefore which final standing, reaches W2. A
 **proof transcript** is
 different: it is *evidence about* a binding value with no alternative
 arithmetic read-site — replacing a valid transcript with another proof of
@@ -415,9 +415,9 @@ audited but not authored (`rem:transport:guild-grant-preconditions`).
 of final-set admission: the accepted record set, the final post-debit
 ledger, the binding constants, the formation and recognition rules, the
 complete conserved standing package, final standing and stamps, and the
-W1/W2 validity verdicts. The base allocation matrix, the emission fractions,
-the accepted tilt rung, and the certificate verdict are
-binding because changing any of them may change final standing and
+W1/W2 validity verdicts. The base allocation matrix, the accepted tilt
+rung, the depth mass, the emission fractions, and the certificate verdict
+are binding because changing any of them may change final standing and
 therefore final-set admission. Everything else the network publishes is
 terminal. Commercial assertions read by terminal consumers keep the
 semantic limit of `rem:graph:settlement-reputation`, and their
