@@ -1258,14 +1258,24 @@ incidence, and adds no endpoint pre-degree — asserted parents and declared
 dependencies in a scoring formula are prohibited (the $\tau$-farming lint,
 `rem:graph:act-ordering-relations`).
 
-**Dependent act set (`def:graph:dependent-act-set`).** A *dependent set* is
-a set of formed acts closed under the causal-parent relation, taken
-together with both edge projections of every hyper-edge act in it. The
-shared-parent grouping of a hyper-edge's projections is not a directed
-parent: it groups without ordering, so admitting both projections together
-creates no causal cycle. Minimal dependent sets are the closures of a
-single act. The dependent set is the sole unit of the write: written whole
-or not at all. Conflict grouping by causality is rejected — cancels and
+**Dependent act set (`def:graph:dependent-act-set`).** Fix the history $H$
+finalized before the epoch's write. A *dependent set* is a set of formed
+acts outside $H$ closed under the causal-parent relation — every causal
+ancestor of every member is in $H$ or in the set — taken together with both
+edge projections of every hyper-edge act in it; earlier pieces of the same
+final union do not enlarge $H$. The shared-parent grouping of a
+hyper-edge's projections is not a directed parent: it groups without
+ordering, so admitting both projections together creates no causal cycle.
+For a closed candidate final union $S$, the *principal closure* of
+$q \in S$ is $q$ with all its causal ancestors outside $H$; joining two
+principal closures whenever they intersect, the union of the closures in
+each connected component is one block of the **dependent-set partition**.
+The blocks cover $S$, are pairwise disjoint, are each closed relative to
+$H$, and do not depend on processing order or on any dependency-compliant
+permutation. Two acts sharing a causal parent outside $H$ therefore belong
+to one block, and that parent is counted and debited once; a shared parent
+already in $H$ does not by itself join their blocks. Each dependent block
+is the unit of the write: written whole or not at all. Conflict grouping by causality is rejected — cancels and
 commits are concurrent by construction, and the regret window depends on
 it; conflict protection is boundary accountability, not write-unit
 grouping (`rem:graph:dependency-closure-excludes-conflicts`).
