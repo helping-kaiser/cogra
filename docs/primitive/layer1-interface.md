@@ -928,7 +928,7 @@ $\mathcal{A}$ is the six rule groups of `def:network:admission-closure`
 (§2): **formation** (identifier algebra, endpoint typing, asserted parents,
 dependent sets, the approval handshake, the authoritative order — §8.1,
 §8.2, §9); the **final state** (the proposed completed edge set and final
-post-debit pairs — §11.6); **conserved standing** (the package that produces
+post-debit pairs — §11.4); **conserved standing** (the package that produces
 final standing — §11.4); the **final gates** (the write rule W1/W2a/W2b +
 the act budget — §7.1); **recognition** (§7.2); and the **write** (the
 host's admission of the final set — §11.6). The write rule decides *who may
