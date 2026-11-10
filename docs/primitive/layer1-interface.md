@@ -2534,7 +2534,7 @@ depth** — its numerical coincidence with $L_{\text{hop}} = 4$ is a
 coincidence, and routing one through the other is a defect.
 
 **Safety-wall clamp (`def:epoch:safety-wall-clamped-activation`).** Every
-standing evaluation uses the **effective** activation
+hop allocation evaluates the **effective** activation
 
 $$\bar{g}_{\text{vch}}(x) = g_{\text{vch}}(\max(x, \rho_\theta))$$
 
