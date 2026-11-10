@@ -2564,7 +2564,7 @@ impl Mutation {
         };
         let hash = auth::hash_of(&input.code);
         let change_id = match store::email_change_by_token(pool, &hash).await? {
-            Some(change) if change.requires_code => {
+            Some(change) => {
                 if change.user_id != v.user_id {
                     return Ok(refuse(UserError::new(
                         ErrorCode::EmailChangeOtherAccount,
@@ -2577,7 +2577,7 @@ impl Mutation {
                 store::confirm_email_change_link(pool, change.id).await?;
                 change.id
             }
-            _ => match store::submit_email_change_code(
+            None => match store::submit_email_change_code(
                 pool,
                 v.user_id,
                 &hash,
