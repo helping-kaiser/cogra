@@ -53,7 +53,11 @@ pub struct StandInConfig {
     /// N_epoch — the epoch target act budget (layer1-interface.md §11.6).
     pub epoch_target_acts: i64,
     /// M_payload — per-act payload bound, aggregate over a hyper-edge's
-    /// projections (layer1-interface.md §8.4).
+    /// projections (layer1-interface.md §8.4), stated in bytes of the
+    /// deployment's declared payload encoding. That encoding is the
+    /// identity over the proposal's payload bytes, which already are the
+    /// encoded envelope ([`Declaration::payload_encoding`]), so the bound
+    /// is compared against their length as they arrive.
     pub max_payload_bytes: usize,
     /// How many epoch closes an admission burn waits before it settles
     /// (`L1_STANDIN_SETTLEMENT_DELAY_EPOCHS`, development.md). Zero — the
