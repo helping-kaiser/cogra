@@ -165,6 +165,63 @@ async fn graphql_refuses_a_body_past_the_route_limit(pool: PgPool) {
     assert_eq!(body_json(streamed).await["code"], "PAYLOAD_TOO_LARGE");
 }
 
+/// The ceiling a non-multipart `/graphql` body answers to.
+const JSON_CEILING: usize = 128 * 1024;
+
+/// A plain JSON request answers to a ceiling of its own, far below the
+/// multipart upload transport's, and is refused with 413 before the parse
+/// — under the deployed media caps, not shrunk ones, because the defect
+/// was a JSON body admitted up to the upload ceiling. A declared length
+/// past it is refused unread, an undeclared one is cut at it, and a body
+/// that never ends is answered at all, which only a cut can do.
+///
+/// A non-multipart GraphQL body past its own ceiling is refused with 413 before the parse, however it arrives.
+/// ´claim:server:a-json-body-has-its-own-ceiling´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_json_body_past_its_ceiling_is_refused_before_the_parse(pool: PgPool) {
+    use async_graphql::futures_util::{StreamExt, stream};
+    let app = test_app(pool);
+    let padding = "x".repeat(2 * JSON_CEILING);
+    let body = serde_json::json!({ "query": format!("{{ __typename }}#{padding}") }).to_string();
+    let post = |length: Option<usize>, body: Body| {
+        let mut builder = Request::builder()
+            .method("POST")
+            .uri("/graphql")
+            .header("content-type", "application/json");
+        if let Some(length) = length {
+            builder = builder.header("content-length", length);
+        }
+        builder.body(body).expect("request")
+    };
+
+    let declared = app
+        .clone()
+        .oneshot(post(Some(body.len()), Body::from(body.clone())))
+        .await
+        .expect("response");
+    assert_eq!(declared.status(), StatusCode::PAYLOAD_TOO_LARGE);
+
+    let streamed = app
+        .clone()
+        .oneshot(post(None, Body::from(body)))
+        .await
+        .expect("response");
+    assert_eq!(streamed.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    assert_eq!(body_json(streamed).await["code"], "PAYLOAD_TOO_LARGE");
+
+    let opening = stream::once(async {
+        Ok::<_, std::io::Error>(axum::body::Bytes::from_static(br#"{"query":"#))
+    });
+    let endless = stream::repeat_with(|| {
+        Ok::<_, std::io::Error>(axum::body::Bytes::from_static(&[b' '; 8192]))
+    });
+    let unending = app
+        .oneshot(post(None, Body::from_stream(opening.chain(endless))))
+        .await
+        .expect("response");
+    assert_eq!(unending.status(), StatusCode::PAYLOAD_TOO_LARGE);
+}
+
 /// Behind the proxy the API reads the client from the rightmost
 /// `X-Forwarded-For` hop, and a request that reaches it without one —
 /// a server-side render dialling the API directly — is refused as the

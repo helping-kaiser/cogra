@@ -127,6 +127,7 @@ label.
 | `test:integration:a-hidden-actors-things-never-match-in-history`                                               | a_hidden_actors_things_never_match_in_history                                               |
 | `test:integration:a-history-query-finds-a-match-beyond-the-loaded-window`                                      | a_history_query_finds_a_match_beyond_the_loaded_window                                      |
 | `test:integration:a-hyper-edge-record-ships-both-legs-with-their-own-parameters-and-maturity`                  | a_hyper_edge_record_ships_both_legs_with_their_own_parameters_and_maturity                  |
+| `test:integration:a-json-body-past-its-ceiling-is-refused-before-the-parse`                                    | a_json_body_past_its_ceiling_is_refused_before_the_parse                                    |
 | `test:integration:a-kept-deleted-account-stays-as-a-husk`                                                      | a_kept_deleted_account_stays_as_a_husk                                                      |
 | `test:integration:a-kept-sensitive-post-stays-with-its-status`                                                 | a_kept_sensitive_post_stays_with_its_status                                                 |
 | `test:integration:a-kind-filter-subtracts-sections-and-keeps-the-rest`                                         | a_kind_filter_subtracts_sections_and_keeps_the_rest                                         |
