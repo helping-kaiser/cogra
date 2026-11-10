@@ -29,8 +29,8 @@ one conserved allocation operator. This reference draws two scopes from it:
 Proofs and motivation prose are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 374 distinct anchor names,
-`anchor_set_hash = 88c0e4d9e51bfa34091d363236c61db1a3f8838047faad0f883617ade4ca83f4`
+anchor-stability contract: 450 distinct anchor names,
+`anchor_set_hash = 2ad892124e020ab7058fd06746f100a450d9da0ab93e8f5383e3b2cb33f0c100`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
