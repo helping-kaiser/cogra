@@ -3188,6 +3188,18 @@ pub enum IssueLockOutcome {
     NoAccount,
 }
 
+/// How many device locks the account holds — the count the live cap in
+/// [`issue_device_lock`] is held against, read before an issue spends its
+/// budget so a refusal at the cap spends none.
+pub async fn device_locks_held(pool: &PgPool, user_id: Uuid) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "held!" FROM auth_device_locks WHERE user_id = $1"#,
+        user_id,
+    )
+    .fetch_one(pool)
+    .await
+}
+
 /// Stores a fresh device lock (data-model.md `auth_device_locks`) under
 /// the account's live-lock cap. The count and the insert run under the
 /// account's credentials-row lock, so two issues racing at one below the

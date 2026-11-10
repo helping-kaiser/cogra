@@ -3240,20 +3240,15 @@ impl Mutation {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
-        if !ratelimit::spend_device_lock_issue(pool, limits, v.user_id).await? {
+        let cap = i64::from(limits.device_lock_live_cap);
+        if store::device_locks_held(pool, v.user_id).await? >= cap
+            || !ratelimit::spend_device_lock_issue(pool, limits, v.user_id).await?
+        {
             return Err(rate_limited());
         }
         let id = Uuid::new_v4();
         let secret = device_lock::generate_secret();
-        match store::issue_device_lock(
-            pool,
-            v.user_id,
-            id,
-            &secret,
-            i64::from(limits.device_lock_live_cap),
-        )
-        .await?
-        {
+        match store::issue_device_lock(pool, v.user_id, id, &secret, cap).await? {
             store::IssueLockOutcome::Issued => Ok(IssueDeviceLockPayload {
                 lock: Some(DeviceLock {
                     id,
