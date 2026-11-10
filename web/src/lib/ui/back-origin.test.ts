@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { backFor, personOrigin } from "./back-origin";
+import { backFor, carriedOrigin, personOrigin, tagOrigin } from "./back-origin";
 
 // The origin-naming table (design/readme.md "Back labels"; ProfileOther.md:63;
 // Profile.md: a chronicle card's post; ChatsComingSoon.md:15-17).
@@ -13,6 +13,40 @@ describe("backFor", () => {
   it("names your own profile, and someone else's as the profile", () => {
     expect(backFor("profile")).toEqual({ href: "/profile", label: "Back to your profile" });
     expect(backFor(personOrigin("ada"))).toEqual({ href: "/u/ada", label: "Back to the profile" });
+  });
+
+  // A CHAINED ORIGIN hands its page the origin it was opened with on the way
+  // back, and names the page by its noun (readme §13's origin-noun tables;
+  // ProfileOther.md:73: `Back to #<thattag>` from a tag's page).
+  it("returns to someone's profile opened as it was, naming the profile", () => {
+    expect(backFor(personOrigin("ada", "saved"))).toEqual({ href: "/u/ada?from=saved", label: "Back to the profile" });
+    expect(backFor("u:ada/opinions:tobias/history")).toEqual({
+      href: "/u/ada?from=opinions%3Atobias%2Fhistory",
+      label: "Back to the profile",
+    });
+  });
+
+  it("names a tag's page Back to #<thattag>, returning to it opened as it was", () => {
+    expect(backFor(tagOrigin("coast"))).toEqual({ href: "/topics/coast", label: "Back to #coast" });
+    expect(backFor(tagOrigin("coast", "search"))).toEqual({
+      href: "/topics/coast?from=search",
+      label: "Back to #coast",
+    });
+  });
+
+  it("names the stream whatever list it narrowed, returning into it at the clip", () => {
+    expect(backFor("stream:v2")).toEqual({ href: "/reel/v2", label: "Back to the stream" });
+    expect(backFor("stream:v2/u:ada/saved")).toEqual({ href: "/reel/v2", label: "Back to the stream" });
+  });
+
+  it("reads the origin a chained token carries, and nothing from a plain one", () => {
+    expect(carriedOrigin("u:ada")).toBeNull();
+    expect(carriedOrigin("u:ada/opinions:tobias/saved")).toBe("opinions:tobias/saved");
+    expect(carriedOrigin("tag:coast/search")).toBe("search");
+    expect(carriedOrigin("post:p1:u:ada/saved")).toBe("u:ada/saved");
+    expect(carriedOrigin("stream:v2/saved")).toBe("saved");
+    expect(carriedOrigin("saved")).toBeUndefined();
+    expect(carriedOrigin(null)).toBeUndefined();
   });
 
   it("names History, the reader's seen-list (History.md:47-61)", () => {

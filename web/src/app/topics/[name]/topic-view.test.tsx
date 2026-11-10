@@ -144,7 +144,7 @@ describe("TopicView", () => {
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("topic-name")).toHaveTextContent("#rust");
     expect(screen.getByTestId("topic-post-p1")).toHaveTextContent("About Rust");
-    expect(screen.getByTestId("topic-post-p1-link")).toHaveAttribute("href", "/posts/p1");
+    expect(screen.getByTestId("topic-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=tag%3Arust");
     // PostCard's own inventory rides along — the stance control included.
     expect(screen.getByTestId("topic-stance-p1")).toBeInTheDocument();
   });
@@ -344,6 +344,64 @@ describe("TopicView", () => {
     );
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("topic-comment-c1")).toHaveTextContent("nice crate");
-    expect(screen.getByTestId("topic-comment-post-c1")).toHaveAttribute("href", "/posts/p1");
+    expect(screen.getByTestId("topic-comment-post-c1")).toHaveAttribute("href", "/posts/p1?from=tag%3Arust");
+  });
+});
+
+// EVERY DOOR OUT OF THE TAG PAGE CARRIES IT AND THE ORIGIN IT WAS OPENED WITH
+// (jakob 2026-11-10, "grandfathering style"; BottomNav.prompt.md: the
+// originating root stays lit on a drill-in): the post, a comment's post, the
+// author's profile and the score's trace read `Back to #rust` and keep lit the
+// root the page was opened from — Explore's here, the profile's in the chain.
+describe("TopicView — what it opens keeps its origin's root", () => {
+  const comment = {
+    relevance: 0.1,
+    confidence: 1,
+    pending: false,
+    node: {
+      __typename: "Comment",
+      id: "c1",
+      content: moderated("nice crate"),
+      author: {
+        __typename: "User",
+        id: "u2",
+        handle: "bob",
+        displayName: { __typename: "ModeratedText", value: "Bob" },
+        avatar: null,
+      },
+      createdAt: "2026-08-12T10:05:00Z",
+      updatedAt: "2026-08-12T10:05:00Z",
+      landing: { __typename: "Landing", state: "LANDED" },
+      moderationStatus: "NORMAL",
+      removal: null,
+      genesisRecordId: "rec-genesis",
+      target: { __typename: "Post", id: "p1" },
+    },
+  };
+
+  it.each([
+    ["search", "tag%3Arust%2Fsearch"],
+    ["u:ada/saved", "tag%3Arust%2Fu%3Aada%2Fsaved"],
+  ])("the_doors_out_of_a_tag_page_opened_from_%s_carry_it", async (from, token) => {
+    server.use(
+      gqlLink.query("HashtagDetail", () =>
+        HttpResponse.json({
+          data: hashtagDetail("rust", [
+            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
+            comment,
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<TopicView name="rust" from={from} />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("topic-post-p1");
+    expect(screen.getByTestId("topic-post-p1-link")).toHaveAttribute("href", `/posts/p1?from=${token}`);
+    expect(screen.getByTestId("topic-author-p1")).toHaveAttribute("href", `/u/alice?from=${token}`);
+    expect(screen.getByTestId("topic-post-p1-score")).toHaveAttribute(
+      "href",
+      expect.stringContaining(`?from=${token}&`),
+    );
+    expect(screen.getByTestId("topic-comment-author-c1")).toHaveAttribute("href", `/u/bob?from=${token}`);
+    expect(screen.getByTestId("topic-comment-post-c1")).toHaveAttribute("href", `/posts/p1?from=${token}`);
   });
 });

@@ -53,6 +53,7 @@ import {
   onScreen,
   streamBack,
   streamFor,
+  streamOriginToken,
   type StreamOrigin,
   type StreamSession,
   type StreamState,
@@ -115,21 +116,15 @@ const SWIPE_PX = 48;
  * THE ROOT THE STREAM KEEPS LIT IS ITS ORIGIN'S (jakob 2026-11-10;
  * BottomNav.prompt.md: "The originating root stays lit on a drill-in"; readme
  * §13: a stack is where a screen was opened FROM). The origin is read as the
- * `from` a drill-in from that list carries, through the shell's one table:
- * Saved, History and your own profile light Profile, someone's profile the
- * root it was itself opened in, and the feed — a cold link's origin too
- * (`streamFor`) — lights Feed.
+ * `from` a drill-in from that list carries (`streamOriginToken`), through the
+ * shell's one table: Saved, History and your own profile light Profile,
+ * someone's profile — or your own, reached by its handle — the root it was
+ * itself opened in, and the feed — a cold link's origin too (`streamFor`) —
+ * lights Feed. The stream's doors carry the same token, so what they open
+ * keeps the same root lit.
  */
 export function streamRoot(origin: StreamOrigin): NavSlot {
-  switch (origin.kind) {
-    case "feed":
-      return detailRoot(null);
-    case "saved":
-    case "history":
-      return detailRoot(origin.kind);
-    case "profile":
-      return detailRoot(origin.own ? "profile" : (origin.from ?? null));
-  }
+  return detailRoot(streamOriginToken(origin));
 }
 
 export function ReelView({ postId }: { postId: string }) {
@@ -351,7 +346,7 @@ function Clip({
   // packet's RL-G14 reading; History.md:5-7 — the top-layer content, whole).
   useSeenOnOpen(post.id);
 
-  const from = streamFrom(post.id);
+  const from = streamFrom(post.id, streamOriginToken(state.origin));
   const author = post.author;
   const title = post.title.value ?? null;
   const description = post.description.value ?? null;

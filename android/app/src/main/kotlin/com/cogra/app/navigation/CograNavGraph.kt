@@ -404,6 +404,7 @@ private val READ_SURFACES = listOf(
     Explore::class,
     Wallet::class,
     Profile::class,
+    ProfileStances::class,
     PostDetail::class,
     ChatsComingSoon::class,
     Saved::class,
@@ -458,6 +459,7 @@ private val BAR_NODES = listOf(
     PostDetail::class to DataNode("postDetail") / "bottomBar",
     Notifications::class to DataNode("notifications") / "bottomBar",
     Profile::class to DataNode("profile") / "bottomBar",
+    ProfileStances::class to DataNode("profileStances") / "bottomBar",
     Saved::class to DataNode("saved") / "bottomBar",
     History::class to DataNode("history") / "bottomBar",
     // The trace's four levels share the `feedEntry` prefix (round 7).

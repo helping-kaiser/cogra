@@ -658,6 +658,43 @@ describe("the lit root is the origin's (BottomNav.prompt.md)", () => {
     mountStream({ origin: { kind: "profile", handle: "ada", own: false, from: null }, signedIn: true });
     expect(litSlots()).toEqual(["feed"]);
   });
+
+  // W-REEL-OWN-BACK-NOUN: "Back to your profile from the reader's own"
+  // (Reel.md:85), your own reached by its handle too — a feed chip's, a search
+  // result's — returning to it in the stack it was opened in, that root lit.
+  it("a_stream_from_your_own_profile_reached_by_handle_reads_back_to_your_profile", () => {
+    mountStream({
+      origin: { kind: "profile", handle: "me", own: true, byHandle: true, from: "search" },
+      signedIn: true,
+    });
+    const disc = screen.getByTestId(byNode("reel.backDisc"));
+    expect(disc).toHaveAccessibleName("Back to your profile");
+    expect(disc).toHaveAttribute("href", "/u/me?from=search");
+    expect(litSlots()).toEqual(["search"]);
+  });
+});
+
+// W-STREAM-DOOR-ROOT: the stream's own doors — its author's profile and its
+// score's detail — carry the list the stream narrowed after the clip
+// (`streamFrom`), so what they open keeps that list's root lit, never Feed by
+// default, and still reads `Back to the stream` (Reel.md:79; readme §13).
+describe("the doors out of the stream keep its origin's root", () => {
+  const author = () => screen.getByTestId(byNode("reel.rail.author"));
+  const score = () => screen.getByTestId(byNode("reel.rail.score"));
+
+  it.each([
+    [{ kind: "feed" } as StreamOrigin, "stream%3Ap1"],
+    [{ kind: "saved" } as StreamOrigin, "stream%3Ap1%2Fsaved"],
+    [{ kind: "history" } as StreamOrigin, "stream%3Ap1%2Fhistory"],
+    [{ kind: "profile", handle: "me", own: true } as StreamOrigin, "stream%3Ap1%2Fprofile"],
+    [{ kind: "profile", handle: "ada", own: false, from: "search" } as StreamOrigin, "stream%3Ap1%2Fu%3Aada%2Fsearch"],
+  ])("the_doors_from_a_stream_over_%o_carry_its_origin", (origin, token) => {
+    holdRanking(null, answerOf({ p1: 7.4 }), "viewer");
+    mountStream({ origin, signedIn: true });
+    expect(author()).toHaveAttribute("href", `/u/mira?from=${token}`);
+    expect(score()).toHaveAttribute("href", `/posts/p1?from=${token}`);
+    expect(backFor(decodeURIComponent(token))).toEqual({ href: "/reel/p1", label: "Back to the stream" });
+  });
 });
 
 describe("the exits (Reel.md:75-79)", () => {

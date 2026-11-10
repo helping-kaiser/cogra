@@ -45,6 +45,8 @@ import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.signing.wireReason
+import com.cogra.domain.stance.HeldOpinion
+import com.cogra.domain.stance.OpinionDirection
 import com.cogra.domain.topics.TagClaim
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
@@ -931,6 +933,9 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
             )
         }
     }
+
+    override suspend fun opinions(actorId: String, direction: OpinionDirection): Outcome<List<HeldOpinion>> =
+        guard.run { readOpinions(client, actorId, direction) }
 
     override suspend fun prepareProfileUpdate(
         displayName: String,

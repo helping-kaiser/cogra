@@ -30,6 +30,16 @@ import type { AuthGuard } from "@/lib/session/guard";
 
 import type { LoadOrigin } from "./stream-session";
 
+/**
+ * Whether the origin holds a page past this one: the server says so AND its
+ * cursor moved. A cursor answered again would ask the same page forever — the
+ * fill loop (`stream-session.ts`) walks until a clip or the end — so a server
+ * that repeats one ends the list rather than spinning the reader's device.
+ */
+function continues(hasNextPage: boolean, asked: string | null, next: string | null): boolean {
+  return hasNextPage && next !== null && next !== asked;
+}
+
 /** A row the stream may narrow: a post, never another kind. */
 function postsOf(items: readonly FeedItemView[]): PostView[] {
   return items.filter((item): item is PostView & FeedItemView => item.__typename === "Post");
@@ -82,14 +92,15 @@ export function historyOrigin({
 }): LoadOrigin {
   let cursor = after;
   return async () => {
-    const page = await guard.run(() => fetchHistoryPage(client, cursor, query, kinds));
+    const asked = cursor;
+    const page = await guard.run(() => fetchHistoryPage(client, asked, query, kinds));
     if (page.kind !== "success") return page;
     cursor = page.value.endCursor;
     const rows = page.value.items
       .filter(admits)
       .map((entry) => entry.node)
       .filter((node): node is PostView & typeof node => node.__typename === "Post");
-    return success({ rows, hasMore: page.value.hasNextPage && cursor !== null });
+    return success({ rows, hasMore: continues(page.value.hasNextPage, asked, cursor) });
   };
 }
 
@@ -113,13 +124,14 @@ export function savedOrigin({
 }): LoadOrigin {
   let cursor = after;
   return async () => {
-    const page = await guard.run(() => fetchSavedPage(client, cursor, query));
+    const asked = cursor;
+    const page = await guard.run(() => fetchSavedPage(client, asked, query));
     if (page.kind !== "success") return page;
     cursor = page.value.endCursor;
     const rows = page.value.items
       .map((entry) => entry.node)
       .filter((node): node is PostView & typeof node => node.__typename === "Post");
-    return success({ rows, hasMore: page.value.hasNextPage && cursor !== null });
+    return success({ rows, hasMore: continues(page.value.hasNextPage, asked, cursor) });
   };
 }
 
@@ -142,9 +154,10 @@ export function profileOrigin({
 }): LoadOrigin {
   let cursor = after;
   return async () => {
-    const page = await fetchProfilePosts(client, authorId, cursor);
+    const asked = cursor;
+    const page = await fetchProfilePosts(client, authorId, asked);
     if (page.kind !== "success") return page;
     cursor = page.value.endCursor;
-    return success({ rows: page.value.items, hasMore: page.value.hasNextPage && cursor !== null });
+    return success({ rows: page.value.items, hasMore: continues(page.value.hasNextPage, asked, cursor) });
   };
 }
