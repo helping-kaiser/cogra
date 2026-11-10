@@ -1184,7 +1184,7 @@ ordering of unconstrained acts enters nowhere. Handshake well-formedness is
 fixed by the public, non-tombstonable settlement references; conflict
 resolution reads only set membership, $\mathrm{ep}(\cdot)$ indices, and
 that chain — never the tombstonable dependency projection. Closure
-selection is title-invisible: the write rule decides membership only, never
+selection is title-invisible: the closure rule decides membership only, never
 recognition or tie-break (`rem:graph:title-order-irrelevance`).
 
 **Settlement reputation: stance, not parity
