@@ -1054,8 +1054,10 @@ submission; the act identifier is
 $\mathrm{actid}(q) = \mathsf{act}(\mathrm{author}(q), s_q,
 \mathrm{family}(q))$ — no host-assigned time, no minted target, so it
 exists before host salting, verification, ordering, and time assignment.
-Edge-projection identifiers derive from it by role
-($\mathsf{edge}(\mathrm{actid}(q), A/T)$), and a node minted by a genesis
+Record identifiers project it by role with one constructor
+($\mathsf{record}(\mathrm{actid}(q), \mathrm{binary})$,
+$\mathsf{record}(\mathrm{actid}(q), A)$,
+$\mathsf{record}(\mathrm{actid}(q), T)$), and a node minted by a genesis
 act takes identity $\mathsf{mint}(\mathrm{actid}(q))$ — the minted node
 names its genesis *act*, never itself. A monotone author-local sequence
 makes accidental reuse directly detectable; distinct accepted acts never
