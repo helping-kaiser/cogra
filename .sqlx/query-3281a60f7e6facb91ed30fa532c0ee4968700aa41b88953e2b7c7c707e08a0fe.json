@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT delivered_num, delivered_den FROM l1_epochs ORDER BY epoch DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "delivered_num",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "delivered_den",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "3281a60f7e6facb91ed30fa532c0ee4968700aa41b88953e2b7c7c707e08a0fe"
+}

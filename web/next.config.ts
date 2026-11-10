@@ -41,7 +41,62 @@ const apiOrigin = new URL(process.env.GRAPHQL_URL ?? "http://localhost:8080/grap
  */
 export const UPLOAD_PROXY_TIMEOUT_MS = 900_000;
 
+/**
+ * What every response carries, on every route (Next docs, `next.config.js`
+ * `headers`: `/:path*` matches all paths).
+ *
+ * NO `script-src`, `style-src` OR `default-src`. The App Router streams its
+ * payload in inline scripts, so a script policy needs a per-request nonce — a
+ * separate decision that makes every page dynamic. These directives are the
+ * ones that hold without it: nothing may frame the app, embed a plugin, or
+ * re-base its relative urls.
+ *
+ * The `Permissions-Policy` denies only what the app has no code for. What it
+ * does use — `navigator.clipboard.writeText` (recovery code, key export, share
+ * link), `navigator.share`, autoplaying clips — stays at the browser default
+ * of same-origin, so it is not listed. A file picker needs no entry; only the
+ * capture and sensor APIs do.
+ *
+ * HSTS is the proxy's header, not the app's.
+ */
+const SECURITY_HEADERS = [
+  {
+    key: "Content-Security-Policy",
+    value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+  },
+  // `frame-ancestors` is the modern form; this covers a browser that ignores it.
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: [
+      "camera",
+      "microphone",
+      "geolocation",
+      "payment",
+      "usb",
+      "serial",
+      "bluetooth",
+      "hid",
+      "midi",
+      "display-capture",
+      "accelerometer",
+      "gyroscope",
+      "magnetometer",
+    ]
+      .map((feature) => `${feature}=()`)
+      .join(", "),
+  },
+];
+
 const nextConfig: NextConfig = {
+  // The `x-powered-by: Next.js` header tells a scanner what to aim at and
+  // nothing else (Next docs, `poweredByHeader`).
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+  },
   allowedDevOrigins: privateNetworkOrigins,
   // THE VERSION RUNNING HERE — Settings' `What's new` row reads it. npm sets
   // `npm_package_version` from package.json for every script it runs (`dev`,

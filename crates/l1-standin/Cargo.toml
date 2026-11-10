@@ -23,3 +23,5 @@ ed25519-dalek = { workspace = true }
 chrono    = { workspace = true }
 
 [dev-dependencies]
+# The wall controller's and the close's property tests.
+proptest = "1"

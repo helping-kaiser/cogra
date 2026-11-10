@@ -20,7 +20,7 @@ use l1_standin::{StandIn, StandInConfig};
 /// a handle and a display name are not secrets.
 ///
 /// The admission burn is seeded at 100 units, which buys an admitted
-/// account roughly 1893 acts at the reference θ.
+/// account 1992 acts at the reference θ (50_186 µ).
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let dotenv = api::dotenv::read();

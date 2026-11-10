@@ -431,7 +431,7 @@ async fn a_deleted_account_can_be_hidden(pool: PgPool) {
     sqlx::query(
         "INSERT INTO actor_profile_versions
              (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'erasure', 99, 99, 0)",
+         VALUES ($1, '[redacted]', 'erasure', 99, 99, 1)",
     )
     .bind(gone)
     .execute(&rig.pool)

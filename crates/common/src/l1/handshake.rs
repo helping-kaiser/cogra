@@ -309,10 +309,11 @@ pub struct PublishedRecord {
     pub act_id: ActId,
     pub author: String,
     pub family: Family,
-    /// Landing epoch.
+    /// Landing epoch, numbered from [`FIRST_EPOCH`].
     pub epoch: i64,
     /// Authoritative causal key (§8.3).
     pub act_time: i64,
+    /// The act's place in its epoch, numbered from [`FIRST_POSITION`].
     pub position: i64,
     /// Non-empty payload committed under the witness.
     pub payload_marked: bool,
@@ -336,14 +337,310 @@ pub struct PublishedLeg {
 
 /// One closed epoch as published through the seam: the ordered accepted
 /// act sequence 𝒬_k as records (§11.6 — the record projection of the
-/// final act sequence), with the boundary's attested timestamp.
+/// final act sequence), with the boundary's attested timestamp and the
+/// closure outputs the host computed for it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EpochPackage {
+    /// The epoch, numbered from [`FIRST_EPOCH`].
     pub epoch: i64,
     /// The attested boundary timestamp (the Host Contract's accepted-records
     /// package): when the epoch closed, so when its records landed.
     pub attested_at: chrono::DateTime<chrono::Utc>,
+    /// 𝒬_k in its published order; its length is the realized size.
     pub records: Vec<PublishedRecord>,
+    pub closure: EpochClosure,
+}
+
+/// An exact rational, in lowest terms with a positive denominator — how a
+/// package carries the reduced-axis values of the wall controller (§11.8),
+/// none of which a double holds exactly: the declarable floor 3/37 has no
+/// finite binary expansion, and X8 compares against the declared floor's
+/// exact defining object.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Ratio {
+    numerator: i64,
+    denominator: i64,
+}
+
+impl Ratio {
+    pub const ZERO: Ratio = Ratio::integer(0);
+    pub const ONE: Ratio = Ratio::integer(1);
+
+    /// The ratio `numerator / denominator` in lowest terms; `None` for a
+    /// zero denominator or a value whose lowest terms leave `i64`.
+    pub const fn new(numerator: i64, denominator: i64) -> Option<Ratio> {
+        Ratio::from_wide(numerator as i128, denominator as i128)
+    }
+
+    pub const fn integer(value: i64) -> Ratio {
+        Ratio {
+            numerator: value,
+            denominator: 1,
+        }
+    }
+
+    pub const fn numerator(&self) -> i64 {
+        self.numerator
+    }
+
+    pub const fn denominator(&self) -> i64 {
+        self.denominator
+    }
+
+    /// Reduction from a wide intermediate, so a sum or product is formed
+    /// exactly and only its lowest terms have to fit.
+    pub const fn from_wide(numerator: i128, denominator: i128) -> Option<Ratio> {
+        if denominator == 0 {
+            return None;
+        }
+        let (mut n, mut d) = if denominator < 0 {
+            match (numerator.checked_neg(), denominator.checked_neg()) {
+                (Some(n), Some(d)) => (n, d),
+                _ => return None,
+            }
+        } else {
+            (numerator, denominator)
+        };
+        let (mut a, mut b) = (n.unsigned_abs(), d.unsigned_abs());
+        while b != 0 {
+            let r = a % b;
+            a = b;
+            b = r;
+        }
+        if a > 1 {
+            n /= a as i128;
+            d /= a as i128;
+        }
+        if n > i64::MAX as i128 || n < i64::MIN as i128 || d > i64::MAX as i128 {
+            return None;
+        }
+        Some(Ratio {
+            numerator: n as i64,
+            denominator: d as i64,
+        })
+    }
+
+    /// Exact sum. Every intermediate is a product of two `i64` factors (or
+    /// the sum of two), which `i128` holds; only the reduced result has to
+    /// fit back.
+    pub fn checked_add(self, other: Ratio) -> Option<Ratio> {
+        let (a, b) = (self.wide(), other.wide());
+        Ratio::from_wide(a.0 * b.1 + b.0 * a.1, a.1 * b.1)
+    }
+
+    pub fn checked_sub(self, other: Ratio) -> Option<Ratio> {
+        self.checked_add(Ratio::from_wide(
+            -(other.numerator as i128),
+            other.denominator as i128,
+        )?)
+    }
+
+    pub fn checked_mul(self, other: Ratio) -> Option<Ratio> {
+        let (a, b) = (self.wide(), other.wide());
+        Ratio::from_wide(a.0 * b.0, a.1 * b.1)
+    }
+
+    pub fn checked_abs(self) -> Option<Ratio> {
+        Ratio::from_wide((self.numerator as i128).abs(), self.denominator as i128)
+    }
+
+    pub fn signum(self) -> i64 {
+        self.numerator.signum()
+    }
+
+    fn wide(self) -> (i128, i128) {
+        (self.numerator as i128, self.denominator as i128)
+    }
+}
+
+impl Ord for Ratio {
+    /// By value: both denominators are positive, so cross-multiplying in
+    /// `i128` compares exactly and cannot overflow two `i64` factors.
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let (a, b) = (self.wide(), other.wide());
+        (a.0 * b.1).cmp(&(b.0 * a.1))
+    }
+}
+
+impl PartialOrd for Ratio {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl std::fmt::Display for Ratio {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}/{}", self.numerator, self.denominator)
+    }
+}
+
+/// Why the epoch closed (§11.6, "Final-set closure"):
+/// its write set filled the target act budget, or the epoch's duration ran
+/// out first.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum ClosureCause {
+    /// |𝒬_k| reached N_epoch — the binding regime.
+    TargetFilled,
+    /// The duration elapsed with the write set below the target — the
+    /// slack regime.
+    #[default]
+    DurationElapsed,
+}
+
+impl ClosureCause {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ClosureCause::TargetFilled => "target",
+            ClosureCause::DurationElapsed => "duration",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        match s {
+            "target" => Some(ClosureCause::TargetFilled),
+            "duration" => Some(ClosureCause::DurationElapsed),
+            _ => None,
+        }
+    }
+}
+
+/// The marker policy an epoch package binds, by identity and fixed
+/// edition (§11.6, the published epoch package).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct MarkerPolicy {
+    pub identity: String,
+    pub edition: i32,
+}
+
+/// One author's line of the epoch's final ledger (§5 host contract (ii)):
+/// the accepted-act increment ΔN_i, the action count N_i and the residual
+/// balance b_i after this epoch's debits.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LedgerLine {
+    pub address: String,
+    pub accepted_acts: i64,
+    pub action_count: i64,
+    /// `None` for an epoch closed before the host recorded residual
+    /// balances: the balance at that boundary was never kept, and a later
+    /// reading cannot recover it.
+    pub residual_balance_micro: Option<i64>,
+}
+
+/// One step of the wall controller (§11.8, "Wall controller"):
+/// its inputs, its proposal and the led wall it delivers, with that wall's
+/// burn image — the price the next epoch charges.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WallStep {
+    /// ρ_θ^(k), the wall in force — the reduced image of the charged price.
+    pub wall_in_force: Ratio,
+    /// W_loc^(k), the completed epoch's contributing width.
+    pub width: Ratio,
+    /// t_k, the accepted rung.
+    pub accepted_rung: Ratio,
+    /// q(W), the target proposal, floored.
+    pub proposal: Ratio,
+    /// ρ_θ^(k+1) = C_Γ(ρ_θ^(k), W, t_k), after deadband and step cap.
+    pub delivered: Ratio,
+    /// θ^(k+1) = ν·ρ_θ^(k+1) in micro-units, charged by epoch k + 1.
+    pub theta_next_micro: i64,
+}
+
+/// The closure outputs of one epoch beyond its records (§5 host contract
+/// (i), (ii) and (vi)): the dependent-set partition and closure cause, the
+/// final ledger with the debit vintage, the wall controller's step, and the
+/// marker policy. The deployment's fixed declarations — numéraire, floor,
+/// controller edition and constants — are published once per deployment,
+/// not here.
+///
+/// `Default` is the empty value, for fixtures of consumers that read the
+/// records alone; no host publishes it.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct EpochClosure {
+    pub cause: ClosureCause,
+    /// The dependent-set partition of 𝒬_k (§8.2, "Dependent act set"),
+    /// each block as the positions of its acts in ascending order, blocks
+    /// ordered by their first position.
+    pub dependent_sets: Vec<Vec<i64>>,
+    /// One line per author with an act in 𝒬_k, ordered by address.
+    pub ledger: Vec<LedgerLine>,
+    /// θ^(k) in micro-units — the debit vintage every act of this epoch
+    /// was charged, never re-calculated (§11.7).
+    pub theta_charged_micro: i64,
+    /// `None` for an epoch closed before the host ran the controller.
+    pub wall: Option<WallStep>,
+    pub marker: MarkerPolicy,
+}
+
+/// Boundary 0: the empty state before epoch 1 (§7.2, "Title Certificate").
+/// No epoch carries this number; a reader that has seen no epoch stands
+/// here, so it is what "the last epoch" reads before the first close.
+pub const EMPTY_BOUNDARY: i64 = 0;
+
+/// The first epoch: epochs number certificates from 1 (§11.6, the epoch
+/// history).
+pub const FIRST_EPOCH: i64 = 1;
+
+/// The first position: the acts of one epoch are numbered from 1 to
+/// |𝒬_k| (§8.3, "Authoritative act order").
+pub const FIRST_POSITION: i64 = 1;
+
+/// Why an epoch package has no order of record (§7.2, "Title
+/// Certificate"): such a certificate is malformed and refused before any
+/// replay. A missing position needs no variant of its own — n records at
+/// positions inside 1..=n with none repeated cover every position, so a
+/// gap always shows up as a repeat or an out-of-range position.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum MalformedOrder {
+    #[error("epoch {0} is not numbered from {FIRST_EPOCH}")]
+    EpochOutOfRange(i64),
+    #[error("record {act} names epoch {named} inside epoch {epoch}")]
+    MisplacedRecord { act: String, named: i64, epoch: i64 },
+    #[error("record {act} sits at position {position}, outside {FIRST_POSITION}..={len}")]
+    PositionOutOfRange {
+        act: String,
+        position: i64,
+        len: i64,
+    },
+    #[error("position {position} of epoch {epoch} is repeated")]
+    RepeatedPosition { epoch: i64, position: i64 },
+}
+
+impl EpochPackage {
+    /// Whether the package has an order of record (§7.2, §8.3): an epoch
+    /// numbered from 1, every record placed in it, and positions that are
+    /// exactly 1..=|𝒬_k|. The host checks this before it publishes and the
+    /// mirror before it ingests, so neither side can make the other hold
+    /// an epoch 0, a position 0, a gap or a repeat.
+    pub fn check_order_of_record(&self) -> Result<(), MalformedOrder> {
+        if self.epoch < FIRST_EPOCH {
+            return Err(MalformedOrder::EpochOutOfRange(self.epoch));
+        }
+        let len = i64::try_from(self.records.len()).unwrap_or(i64::MAX);
+        let mut seen = std::collections::HashSet::with_capacity(self.records.len());
+        for record in &self.records {
+            if record.epoch != self.epoch {
+                return Err(MalformedOrder::MisplacedRecord {
+                    act: record.act_id.to_string(),
+                    named: record.epoch,
+                    epoch: self.epoch,
+                });
+            }
+            if !(FIRST_POSITION..=len).contains(&record.position) {
+                return Err(MalformedOrder::PositionOutOfRange {
+                    act: record.act_id.to_string(),
+                    position: record.position,
+                    len,
+                });
+            }
+            if !seen.insert(record.position) {
+                return Err(MalformedOrder::RepeatedPosition {
+                    epoch: self.epoch,
+                    position: record.position,
+                });
+            }
+        }
+        Ok(())
+    }
 }
 
 /// The B_i surface as the stand-in honors it: numbers
@@ -428,5 +725,132 @@ mod tests {
             canonical_deps(&[d2, d1])
         );
         assert_eq!(canonical_deps(&[]), vec![0x80]);
+    }
+
+    fn package(epoch: i64, positions: &[i64]) -> EpochPackage {
+        EpochPackage {
+            epoch,
+            attested_at: chrono::DateTime::from_timestamp(1_800_000_000, 0).expect("instant"),
+            records: positions
+                .iter()
+                .enumerate()
+                .map(|(seq, position)| PublishedRecord {
+                    act_id: ActId::new("alice", seq as u64, Family::Opinion).expect("valid"),
+                    author: "alice".into(),
+                    family: Family::Opinion,
+                    epoch,
+                    act_time: 1,
+                    position: *position,
+                    payload_marked: false,
+                    payload_witness: vec![],
+                    legs: vec![],
+                })
+                .collect(),
+            closure: EpochClosure::default(),
+        }
+    }
+
+    /// A ratio is held in lowest terms with a positive denominator, so
+    /// equal values compare equal however they were written, and the order
+    /// is the order of the values — 3/37 sits between the grid walls
+    /// 8_108/100_000 and 8_109/100_000.
+    ///
+    /// A ratio is exact: one value has one representation, and the order is the order of the values.
+    /// ´claim:handshake:a-ratio-is-exact´
+    #[test]
+    fn a_ratio_is_exact() {
+        let floor = Ratio::new(3, 37).expect("ratio");
+        assert_eq!(Ratio::new(6, 74), Some(floor));
+        assert_eq!(Ratio::new(-3, -37), Some(floor));
+        assert_eq!(Ratio::new(3, -37).map(|r| r.denominator()), Some(37));
+        assert_eq!(Ratio::new(1, 0), None);
+        let below = Ratio::new(8_108, 100_000).expect("ratio");
+        let above = Ratio::new(8_109, 100_000).expect("ratio");
+        assert!(below < floor && floor < above);
+        assert_eq!(above.numerator(), 8_109);
+        assert_eq!(
+            Ratio::new(1, 4).and_then(|q| q.checked_add(Ratio::new(1, 20)?)),
+            Ratio::new(3, 10)
+        );
+        assert_eq!(
+            Ratio::new(1, 4).and_then(|q| q.checked_sub(Ratio::ONE)),
+            Ratio::new(-3, 4)
+        );
+        assert_eq!(
+            Ratio::new(-3, 4).and_then(Ratio::checked_abs),
+            Ratio::new(3, 4)
+        );
+        assert_eq!(
+            Ratio::new(5, 4).and_then(|m| m.checked_mul(Ratio::new(15, 8)?)),
+            Ratio::new(75, 32)
+        );
+        assert_eq!(floor.to_string(), "3/37");
+        assert_eq!(Ratio::ZERO.signum(), 0);
+    }
+
+    /// A package at epoch 1 or later whose positions are 1..=n, in any
+    /// listed order, has an order of record — including the empty epoch.
+    ///
+    /// Epochs and positions numbered from 1 with no gap or repeat form an order of record.
+    /// ´claim:handshake:an-order-of-record-numbers-from-one´
+    #[test]
+    fn epochs_and_positions_from_one_form_an_order_of_record() {
+        assert_eq!(package(1, &[1, 2, 3]).check_order_of_record(), Ok(()));
+        assert_eq!(package(7, &[2, 3, 1]).check_order_of_record(), Ok(()));
+        assert_eq!(package(1, &[]).check_order_of_record(), Ok(()));
+    }
+
+    /// Each fault §7.2 names — an epoch 0, a position outside 1..=|𝒬_k|, a
+    /// repeated or a missing position — leaves the package with no order
+    /// of record, as does a record that names another epoch than its own.
+    ///
+    /// Epoch 0, a position outside 1..=n, a repeat, a gap or a misplaced record has no order of record.
+    /// ´claim:handshake:a-malformed-numbering-has-no-order-of-record´
+    #[test]
+    fn every_numbering_fault_is_refused() {
+        assert_eq!(
+            package(0, &[1]).check_order_of_record(),
+            Err(MalformedOrder::EpochOutOfRange(0))
+        );
+        assert_eq!(
+            package(-1, &[]).check_order_of_record(),
+            Err(MalformedOrder::EpochOutOfRange(-1))
+        );
+        assert!(matches!(
+            package(1, &[0, 1]).check_order_of_record(),
+            Err(MalformedOrder::PositionOutOfRange {
+                position: 0,
+                len: 2,
+                ..
+            })
+        ));
+        assert!(
+            matches!(
+                package(1, &[1, 2, 4]).check_order_of_record(),
+                Err(MalformedOrder::PositionOutOfRange {
+                    position: 4,
+                    len: 3,
+                    ..
+                })
+            ),
+            "a gap: position 3 is missing, so 4 lies outside 1..=3"
+        );
+        assert_eq!(
+            package(2, &[1, 1]).check_order_of_record(),
+            Err(MalformedOrder::RepeatedPosition {
+                epoch: 2,
+                position: 1
+            })
+        );
+        let mut misplaced = package(3, &[1, 2]);
+        misplaced.records[1].epoch = 2;
+        assert!(matches!(
+            misplaced.check_order_of_record(),
+            Err(MalformedOrder::MisplacedRecord {
+                named: 2,
+                epoch: 3,
+                ..
+            })
+        ));
     }
 }

@@ -37,8 +37,9 @@ pub struct Health {
     backend_version: String,
     /// True when PostgreSQL answers a round-trip probe.
     postgres_connected: bool,
-    /// The last L1 epoch fully ingested into the record mirror; -1 until
-    /// the first epoch lands, null when the cursor could not be read.
+    /// The last L1 epoch fully ingested into the record mirror. Epochs
+    /// number from 1, so 0 until the first epoch lands; null when the
+    /// cursor could not be read.
     mirror_epoch: Option<i64>,
 }
 
@@ -51,7 +52,7 @@ impl Query {
     /// mirror has ingested. Answers even when the store does not, so a
     /// dumb probe always gets a response: a failed cursor read comes back
     /// as a null `mirrorEpoch` rather than an error, and so stays
-    /// distinguishable from the legitimate "-1, nothing ingested".
+    /// distinguishable from the legitimate "0, nothing ingested".
     async fn health(&self, ctx: &Context<'_>) -> async_graphql::Result<Health> {
         let pool = ctx.data::<PgPool>()?;
         let mirror_epoch = match postgres_store::mirror::last_ingested_epoch(pool).await {

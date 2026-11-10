@@ -142,10 +142,10 @@ async fn land(pool: &PgPool, records: Vec<PublishedRecord>) -> i64 {
     let records = records
         .into_iter()
         .enumerate()
-        .map(|(position, mut r)| {
+        .map(|(index, mut r)| {
             r.epoch = epoch;
-            r.act_time = epoch * 100 + position as i64;
-            r.position = position as i64;
+            r.act_time = epoch * 100 + index as i64;
+            r.position = index as i64 + 1;
             r
         })
         .collect();
@@ -155,6 +155,7 @@ async fn land(pool: &PgPool, records: Vec<PublishedRecord>) -> i64 {
             epoch,
             attested_at: landing_instant(epoch),
             records,
+            closure: Default::default(),
         },
     )
     .await
@@ -195,7 +196,7 @@ async fn post_row(pool: &PgPool, author: Uuid, node: &NodeId, epoch: i64) -> Uui
         Some(LandingOrder {
             landed_epoch: epoch,
             act_time: epoch * 100,
-            position: 0,
+            position: 1,
         }),
         chrono::DateTime::from_timestamp(1_800_000_000 + epoch, 0).expect("instant"),
         Some("a title"),
@@ -211,11 +212,11 @@ async fn post_row(pool: &PgPool, author: Uuid, node: &NodeId, epoch: i64) -> Uui
 
 /// The fixture graph. `v` is the viewer.
 ///
-/// - epoch 0: Registrations of v, a, b, x.
-/// - epoch 1: v holds an opinion of a's Profile; a publishes P; a tags P
+/// - epoch 1: Registrations of v, a, b, x.
+/// - epoch 2: v holds an opinion of a's Profile; a publishes P; a tags P
 ///   with `salt`; x stances v (inbound) and publishes Q; v withdraws
 ///   toward b, who publishes R; c reviews *out of* the Type `salt`.
-/// - epoch 2: a reviews P (a hyper act minting comment K); v stances P
+/// - epoch 3: a reviews P (a hyper act minting comment K); v stances P
 ///   over a leg the census does not describe; a re-publishes P (an
 ///   edit); a mints a node CoGra carries no row for.
 struct Fixture {
@@ -501,7 +502,7 @@ async fn a_never_amended_parameter_reads_the_charters_landing_epoch(pool: PgPool
         .expect("the Charter landed");
     sqlx::query(
         "INSERT INTO network_parameter_versions (parameter, value, landed_epoch, act_time, position)
-         VALUES ('gamma', '0.9', 7, 700, 0)",
+         VALUES ('gamma', '0.9', 7, 700, 1)",
     )
     .execute(&rig.pool)
     .await
@@ -700,17 +701,17 @@ async fn slice_nodes_carry_their_genesis_key_and_a_type_carries_none(pool: PgPoo
     let s = full_slice(&rig, f.viewer).await;
     assert_eq!(
         node(&s, &f.p.to_string())["genesis"],
-        json!({ "landingEpoch": 1, "actTime": 101, "position": 1 })
+        json!({ "landingEpoch": 2, "actTime": 201, "position": 2 })
     );
     assert_eq!(
         node(&s, &prof("a").to_string())["genesis"],
-        json!({ "landingEpoch": 0, "actTime": 1, "position": 1 })
+        json!({ "landingEpoch": 1, "actTime": 101, "position": 2 })
     );
     assert_eq!(node(&s, &topic("salt").to_string())["genesis"], Value::Null);
 }
 
-/// a re-publishes P in epoch 2; P's genesis stays its minting act in
-/// epoch 1.
+/// a re-publishes P in epoch 3; P's genesis stays its minting act in
+/// epoch 2.
 ///
 /// An update record never moves a node's genesis key.
 /// ´claim:slice:an-edit-keeps-the-genesis-key´
@@ -721,8 +722,8 @@ async fn an_edit_never_moves_a_nodes_genesis_key(pool: PgPool) {
     let s = full_slice(&rig, f.viewer).await;
     let edit = shipped(&s, &act("a", 4, Family::Publish).to_string());
     assert_eq!(edit["legs"][0]["targetId"], f.p.to_string());
-    assert_eq!(edit["landingEpoch"], 2);
-    assert_eq!(node(&s, &f.p.to_string())["genesis"]["landingEpoch"], 1);
+    assert_eq!(edit["landingEpoch"], 3);
+    assert_eq!(node(&s, &f.p.to_string())["genesis"]["landingEpoch"], 2);
 }
 
 /// v's Opinion arrived on a leg role its family's census row does not
@@ -2800,7 +2801,7 @@ async fn titled_post(
         Some(LandingOrder {
             landed_epoch: epoch,
             act_time: epoch * 100,
-            position: 0,
+            position: 1,
         }),
         chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("instant"),
         Some(title),
@@ -3457,7 +3458,7 @@ async fn landed_comment(pool: &PgPool, parent: Uuid) -> Uuid {
         Some(LandingOrder {
             landed_epoch: 2,
             act_time: 200,
-            position: 0,
+            position: 1,
         }),
         authored_at(0),
         "a reply",

@@ -77,6 +77,7 @@ async fn land(pool: &PgPool, epoch: i64, records: Vec<PublishedRecord>) {
             epoch,
             attested_at,
             records,
+            closure: Default::default(),
         },
     )
     .await
@@ -146,14 +147,14 @@ async fn newest_wins_within_a_bundle(pool: PgPool) {
     let post = content_of("alice", 0);
     land(
         &pool,
-        0,
-        vec![tag("alice", 0, &post, "rust", 0.2, 0.5, 0, 10, 0)],
+        1,
+        vec![tag("alice", 0, &post, "rust", 0.2, 0.5, 1, 10, 1)],
     )
     .await;
     land(
         &pool,
-        1,
-        vec![tag("alice", 1, &post, "rust", 0.9, 0.8, 1, 20, 0)],
+        2,
+        vec![tag("alice", 1, &post, "rust", 0.9, 0.8, 2, 20, 1)],
     )
     .await;
 
@@ -177,11 +178,11 @@ async fn within_one_epoch_the_causal_key_decides(pool: PgPool) {
     let post = content_of("alice", 0);
     land(
         &pool,
-        0,
+        1,
         vec![
-            tag("alice", 0, &post, "rust", 0.1, 0.1, 0, 5, 0),
-            tag("alice", 1, &post, "rust", 0.7, 0.2, 0, 9, 0),
-            tag("alice", 2, &post, "rust", 0.4, 0.3, 0, 5, 1),
+            tag("alice", 0, &post, "rust", 0.1, 0.1, 1, 5, 1),
+            tag("alice", 1, &post, "rust", 0.7, 0.2, 1, 9, 2),
+            tag("alice", 2, &post, "rust", 0.4, 0.3, 1, 5, 3),
         ],
     )
     .await;
@@ -194,10 +195,10 @@ async fn within_one_epoch_the_causal_key_decides(pool: PgPool) {
 
     land(
         &pool,
-        1,
+        2,
         vec![
-            tag("alice", 3, &post, "ferris", 0.2, 0.4, 1, 7, 0),
-            tag("alice", 4, &post, "ferris", 0.6, 0.4, 1, 7, 3),
+            tag("alice", 3, &post, "ferris", 0.2, 0.4, 2, 7, 1),
+            tag("alice", 4, &post, "ferris", 0.6, 0.4, 2, 7, 2),
         ],
     )
     .await;
@@ -223,8 +224,8 @@ async fn zero_zero_withdraws_the_pair(pool: PgPool) {
     let post = content_of("alice", 0);
     land(
         &pool,
-        0,
-        vec![tag("alice", 0, &post, "rust", 0.8, 1.0, 0, 1, 0)],
+        1,
+        vec![tag("alice", 0, &post, "rust", 0.8, 1.0, 1, 1, 1)],
     )
     .await;
     assert_eq!(
@@ -238,8 +239,8 @@ async fn zero_zero_withdraws_the_pair(pool: PgPool) {
 
     land(
         &pool,
-        1,
-        vec![tag("alice", 1, &post, "rust", 0.0, 1.0, 1, 2, 0)],
+        2,
+        vec![tag("alice", 1, &post, "rust", 0.0, 1.0, 2, 2, 1)],
     )
     .await;
     let survivor = topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
@@ -254,8 +255,8 @@ async fn zero_zero_withdraws_the_pair(pool: PgPool) {
 
     land(
         &pool,
-        2,
-        vec![tag("alice", 2, &post, "rust", 0.0, 0.0, 2, 3, 0)],
+        3,
+        vec![tag("alice", 2, &post, "rust", 0.0, 0.0, 3, 3, 1)],
     )
     .await;
     assert!(
@@ -281,20 +282,20 @@ async fn a_topic_can_be_reclaimed_after_withdrawal(pool: PgPool) {
     let post = content_of("alice", 0);
     land(
         &pool,
-        0,
-        vec![tag("alice", 0, &post, "rust", 0.8, 0.9, 0, 1, 0)],
-    )
-    .await;
-    land(
-        &pool,
         1,
-        vec![tag("alice", 1, &post, "rust", 0.0, 0.0, 1, 2, 0)],
+        vec![tag("alice", 0, &post, "rust", 0.8, 0.9, 1, 1, 1)],
     )
     .await;
     land(
         &pool,
         2,
-        vec![tag("alice", 2, &post, "rust", 0.3, 0.7, 2, 3, 0)],
+        vec![tag("alice", 1, &post, "rust", 0.0, 0.0, 2, 2, 1)],
+    )
+    .await;
+    land(
+        &pool,
+        3,
+        vec![tag("alice", 2, &post, "rust", 0.3, 0.7, 3, 3, 1)],
     )
     .await;
 
@@ -316,17 +317,17 @@ async fn each_type_folds_in_its_own_bundle(pool: PgPool) {
     let post = content_of("alice", 0);
     land(
         &pool,
-        0,
+        1,
         vec![
-            tag("alice", 0, &post, "rust", 0.5, 0.9, 0, 1, 0),
-            tag("alice", 1, &post, "ferris", 0.4, 0.8, 0, 2, 0),
+            tag("alice", 0, &post, "rust", 0.5, 0.9, 1, 1, 1),
+            tag("alice", 1, &post, "ferris", 0.4, 0.8, 1, 2, 2),
         ],
     )
     .await;
     land(
         &pool,
-        1,
-        vec![tag("alice", 2, &post, "rust", 0.0, 0.0, 1, 3, 0)],
+        2,
+        vec![tag("alice", 2, &post, "rust", 0.0, 0.0, 2, 3, 1)],
     )
     .await;
 
@@ -363,8 +364,8 @@ async fn relevance_is_read_from_the_transposed_leg(pool: PgPool) {
 
     land(
         &pool,
-        0,
-        vec![tag("alice", 0, &post, "rust", 0.25, 0.75, 0, 1, 0)],
+        1,
+        vec![tag("alice", 0, &post, "rust", 0.25, 0.75, 1, 1, 1)],
     )
     .await;
     let current = topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
@@ -384,8 +385,8 @@ async fn relevance_is_read_from_the_transposed_leg(pool: PgPool) {
 
     land(
         &pool,
-        1,
-        vec![tag("alice", 1, &post, "rust", 0.0, 1.0, 1, 2, 0)],
+        2,
+        vec![tag("alice", 1, &post, "rust", 0.0, 1.0, 2, 2, 1)],
     )
     .await;
     let current = topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
@@ -398,8 +399,8 @@ async fn relevance_is_read_from_the_transposed_leg(pool: PgPool) {
     let other = content_of("alice", 1);
     land(
         &pool,
-        2,
-        vec![tag("alice", 2, &other, "rust", 1.0, 0.0, 2, 3, 0)],
+        3,
+        vec![tag("alice", 2, &other, "rust", 1.0, 0.0, 3, 3, 1)],
     )
     .await;
     let current = topics::topics_of(&pool, &other.to_string(), "alice", TopicView::Landed)
@@ -462,10 +463,10 @@ async fn a_chip_row_shows_only_the_content_authors_own_tags(pool: PgPool) {
     let post = content_of("alice", 0);
     land(
         &pool,
-        0,
+        1,
         vec![
-            tag("alice", 0, &post, "rust", 0.5, 0.9, 0, 1, 0),
-            tag("mallory", 0, &post, "spam", 0.9, 1.0, 0, 2, 0),
+            tag("alice", 0, &post, "rust", 0.5, 0.9, 1, 1, 1),
+            tag("mallory", 0, &post, "spam", 0.9, 1.0, 1, 2, 2),
         ],
     )
     .await;
@@ -499,17 +500,17 @@ async fn bundles_of_different_authors_do_not_fold_together(pool: PgPool) {
     let post = content_of("alice", 0);
     land(
         &pool,
-        0,
+        1,
         vec![
-            tag("alice", 0, &post, "rust", 0.5, 0.9, 0, 1, 0),
-            tag("bob", 0, &post, "rust", 0.7, 0.9, 0, 2, 0),
+            tag("alice", 0, &post, "rust", 0.5, 0.9, 1, 1, 1),
+            tag("bob", 0, &post, "rust", 0.7, 0.9, 1, 2, 2),
         ],
     )
     .await;
     land(
         &pool,
-        1,
-        vec![tag("bob", 1, &post, "rust", 0.0, 0.0, 1, 3, 0)],
+        2,
+        vec![tag("bob", 1, &post, "rust", 0.0, 0.0, 2, 3, 1)],
     )
     .await;
 
@@ -541,10 +542,10 @@ async fn the_topic_page_gates_third_party_claims(pool: PgPool) {
     let bobs = content_of("bob", 0);
     land(
         &pool,
-        0,
+        1,
         vec![
-            tag("alice", 0, &alices, "rust", 0.5, 0.9, 0, 1, 0),
-            tag("mallory", 0, &bobs, "rust", 0.9, 1.0, 0, 2, 0),
+            tag("alice", 0, &alices, "rust", 0.5, 0.9, 1, 1, 1),
+            tag("mallory", 0, &bobs, "rust", 0.9, 1.0, 1, 2, 2),
         ],
     )
     .await;
@@ -579,19 +580,19 @@ async fn the_topic_page_folds_and_orders_newest_first(pool: PgPool) {
     let withdrawn = content_of("carol", 0);
     land(
         &pool,
-        0,
+        1,
         vec![
-            tag("alice", 0, &first, "rust", 0.5, 0.9, 0, 1, 0),
-            tag("carol", 0, &withdrawn, "rust", 0.6, 0.9, 0, 2, 0),
+            tag("alice", 0, &first, "rust", 0.5, 0.9, 1, 1, 1),
+            tag("carol", 0, &withdrawn, "rust", 0.6, 0.9, 1, 2, 2),
         ],
     )
     .await;
     land(
         &pool,
-        1,
+        2,
         vec![
-            tag("bob", 0, &second, "rust", 0.4, 0.8, 1, 5, 0),
-            tag("carol", 1, &withdrawn, "rust", 0.0, 0.0, 1, 6, 0),
+            tag("bob", 0, &second, "rust", 0.4, 0.8, 2, 5, 1),
+            tag("carol", 1, &withdrawn, "rust", 0.0, 0.0, 2, 6, 2),
         ],
     )
     .await;
@@ -631,16 +632,16 @@ async fn the_topic_page_reads_relevance_from_the_transposed_leg(pool: PgPool) {
     let kept = content_of("bob", 0);
     land(
         &pool,
-        0,
-        vec![tag("alice", 0, &withdrawn, "rust", 0.6, 0.9, 0, 1, 0)],
+        1,
+        vec![tag("alice", 0, &withdrawn, "rust", 0.6, 0.9, 1, 1, 1)],
     )
     .await;
     land(
         &pool,
-        1,
+        2,
         vec![
-            tag("alice", 1, &withdrawn, "rust", 0.0, 0.0, 1, 2, 0),
-            tag("bob", 0, &kept, "rust", 1.0, 0.0, 1, 3, 0),
+            tag("alice", 1, &withdrawn, "rust", 0.0, 0.0, 2, 2, 1),
+            tag("bob", 0, &kept, "rust", 1.0, 0.0, 2, 3, 2),
         ],
     )
     .await;
@@ -714,8 +715,8 @@ async fn a_pending_claim_supersedes_a_landed_one(pool: PgPool) {
     let post = content_of("alice", 0);
     land(
         &pool,
-        0,
-        vec![tag("alice", 0, &post, "rust", 0.8, 0.9, 0, 1, 0)],
+        1,
+        vec![tag("alice", 0, &post, "rust", 0.8, 0.9, 1, 1, 1)],
     )
     .await;
     stage_tag(&pool, "alice", 1, &post, "rust", 0.0, 0.0).await;
@@ -811,9 +812,9 @@ async fn include_pending_needs_a_viewer(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn verdict_marks_are_not_topics(pool: PgPool) {
     let post = content_of("alice", 0);
-    let mut verdict = tag("moderator", 0, &post, "illegal", 0.0, 0.0, 0, 1, 0);
+    let mut verdict = tag("moderator", 0, &post, "illegal", 0.0, 0.0, 1, 1, 1);
     verdict.payload_marked = true;
-    land(&pool, 0, vec![verdict]).await;
+    land(&pool, 1, vec![verdict]).await;
 
     assert!(
         topics::topics_of(&pool, &post.to_string(), "moderator", TopicView::Landed)
@@ -845,13 +846,13 @@ async fn a_verdict_mark_does_not_hide_a_real_claim(pool: PgPool) {
     let post = content_of("moderator", 0);
     land(
         &pool,
-        0,
-        vec![tag("moderator", 0, &post, "rust", 0.5, 0.9, 0, 1, 0)],
+        1,
+        vec![tag("moderator", 0, &post, "rust", 0.5, 0.9, 1, 1, 1)],
     )
     .await;
-    let mut verdict = tag("moderator", 1, &post, "rust", 0.0, 0.0, 1, 2, 0);
+    let mut verdict = tag("moderator", 1, &post, "rust", 0.0, 0.0, 2, 2, 1);
     verdict.payload_marked = true;
-    land(&pool, 1, vec![verdict]).await;
+    land(&pool, 2, vec![verdict]).await;
 
     let current = topics::topics_of(&pool, &post.to_string(), "moderator", TopicView::Landed)
         .await
@@ -868,7 +869,7 @@ async fn seed_bulk_tags(pool: &PgPool) {
              (record_id, family, author, epoch, act_time, position,
               payload_marked, payload_witness)
          SELECT 'act:a' || (i % 400) || ':' || i || ':tag', 'tag',
-                'a' || (i % 400), i / 100, i, i % 100, FALSE, ''::bytea
+                'a' || (i % 400), i / 100 + 1, i, i % 100 + 1, FALSE, ''::bytea
          FROM generate_series(1, 20000) AS i",
     )
     .execute(pool)
@@ -883,7 +884,7 @@ async fn seed_bulk_tags(pool: &PgPool) {
                 'mint:act:a' || (i % 400) || ':' || (i % 500) || ':publish',
                 'name:t' || (i % 50), 0.5, 0.5, 'epistemic',
                 FALSE, TRUE, FALSE, TRUE, 'marginal', 0.0,
-                'tag', i / 100, i, i % 100
+                'tag', i / 100 + 1, i, i % 100 + 1
          FROM generate_series(1, 20000) AS i",
     )
     .execute(pool)

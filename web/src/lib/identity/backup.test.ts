@@ -26,7 +26,7 @@ import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
-const passThroughGuard: AuthGuard = { run: (block) => block(), prime: async () => {} };
+const passThroughGuard: AuthGuard = { run: (block) => block(), prime: async () => {}, refresh: async () => false };
 
 function client() {
   return new ApolloClient({

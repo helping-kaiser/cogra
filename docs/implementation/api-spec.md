@@ -2835,8 +2835,9 @@ type Health {
   backendVersion: String!
   "True when PostgreSQL answers a round-trip probe."
   postgresConnected: Boolean!
-  "The last L1 epoch fully ingested into the record mirror; -1 until
-   the first epoch lands, null when the cursor could not be read."
+  "The last L1 epoch fully ingested into the record mirror. Epochs
+   number from 1, so 0 until the first epoch lands; null when the cursor
+   could not be read."
   mirrorEpoch: Int
 }
 ```

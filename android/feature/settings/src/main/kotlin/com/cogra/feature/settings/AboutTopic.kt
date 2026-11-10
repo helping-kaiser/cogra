@@ -45,6 +45,7 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.PageHeader
+import com.cogra.core.designsystem.R as DesignR
 
 /** One topic: its title and the paragraphs behind it. */
 data class AboutTopic(val title: String, val answer: List<String>) {
@@ -146,13 +147,14 @@ private val OpenTopicsSaver = listSaver<SnapshotStateList<String>, String>(
 )
 
 /**
- * The pinned header reads `Back to settings` from Settings (the only door
- * Android has: the join form's "?" is not built here), and the page
+ * The pinned header reads `Back to settings` from Settings and a plain
+ * `Back` from the join form's "?" (About.md:19-21) — [plainBack]; the page
  * carries no "?" and no bottom bar.
  */
 @Composable
 fun AboutScreen(
     onBack: () -> Unit,
+    plainBack: Boolean = false,
     /** The deletion band under the header, while a confirmed deletion runs its grace. */
     deletionBand: @Composable () -> Unit = {},
 ) {
@@ -164,7 +166,9 @@ fun AboutScreen(
                 PageHeader(
                     title = stringResource(R.string.about_title),
                     onBack = onBack,
-                    backContentDescription = stringResource(R.string.back_to_settings),
+                    backContentDescription = stringResource(
+                        if (plainBack) DesignR.string.page_header_back else R.string.back_to_settings,
+                    ),
                     node = Page / "header",
                 )
                 deletionBand()

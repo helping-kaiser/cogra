@@ -194,10 +194,11 @@ export type ResumableDeps = {
   thresholdBytes?: number;
 };
 
-function defaultUploader(): PartUploader {
+function defaultUploader(guard: AuthGuard): PartUploader {
   return createPartUploader({
     origin: uploadsOrigin(graphqlUri()),
     accessToken: () => tokenStore.accessToken(),
+    refresh: (staleAccess) => guard.refresh(staleAccess),
   });
 }
 
@@ -245,7 +246,7 @@ export async function uploadVideo(
   if (session.kind !== "success") return session;
 
   const opened = session.value;
-  const uploader = deps.uploader ?? defaultUploader();
+  const uploader = deps.uploader ?? defaultUploader(guard);
   const failure = await uploader.sendAll(
     opened.id,
     asset.blob,

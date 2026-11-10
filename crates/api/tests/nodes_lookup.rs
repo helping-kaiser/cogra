@@ -57,7 +57,7 @@ fn landed() -> LandingOrder {
     LandingOrder {
         landed_epoch: 5,
         act_time: 5,
-        position: 0,
+        position: 1,
     }
 }
 
@@ -198,7 +198,7 @@ async fn a_deleted_user_reads_as_its_husk_through_node(pool: PgPool) {
     sqlx::query(
         "INSERT INTO actor_profile_versions
              (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'erasure', 99, 99, 0)",
+         VALUES ($1, '[redacted]', 'erasure', 99, 99, 1)",
     )
     .bind(gone)
     .execute(&rig.pool)

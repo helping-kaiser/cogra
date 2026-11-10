@@ -157,10 +157,16 @@ picks with their review and seal.
 **Slice 3.1 is built on both clients:** the bell and the
 notifications list, with no push channel.
 
-**Slice 8's erasure half is built on both clients.** Account
-deletion with its grace period, and `removeContent` for a post and
-a comment, with the removal marks and tombstones on every surface
-that draws them.
+**Slice 8's erasure half is built on both clients**, short of the
+deleted account's own read. Account deletion's request, confirmation,
+7-day grace and cancel, and `removeContent` for a post and a comment,
+with the removal marks and tombstones on every surface that draws
+them. The backend executes a confirmed deletion at its deadline —
+the identity level always, the content sweep when opted into
+([erasure.md §2](../instances/erasure.md#2-account-deletion-two-redaction-levels)).
+The husk's wire shape — `User.removal` and its fields served
+`REDACTED` — is not built: an executed account still serves its
+stored `redacted-user-{uuid}` handle.
 
 **The application registry and the invite lifecycle are built on
 both clients.** The registry: What's new, Update now, and the
@@ -204,6 +210,20 @@ act's stamp is taken as 1, so the W2a wall and W2b door pass
 trivially and the derived Self-edge reading carries a constant
 coordinate. The gates' call-sites are real; the real substrate brings
 the real stamps at the swap.
+
+Everywhere else the stand-in follows the contract's rule with its
+numbers. Epochs number from 1, and the acts of each epoch from 1. Every
+close charges the wall in force and runs one step of the canonical
+interim wall controller (layer1-interface.md §11.8); with no standing
+solve its width input is the constant 1, so θ sits at the reference,
+50_186 µ — q(1) on the stand-in's micro-unit grid, rounded up. The
+deployment declares the structural floor 3/37, and its marker policy
+is the epoch close itself. Each epoch package carries, beside its
+records, the closure outputs the stand-in computes: the dependent-set
+partition, the closure cause, the final ledger with its debit vintage,
+the controller step and the marker policy. Epochs closed before the
+controller keep the debit they were charged, and the next close
+charges the declared initialization.
 
 Because every slice builds against the contract, the real substrate's
 arrival is a **swap, not a slice**: when L1 is available, the

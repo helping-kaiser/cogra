@@ -80,6 +80,7 @@ breaking the loop or the bound it sets.
 | `WEB_ORIGIN` | `http://localhost:3000` | The per-environment web origin emailed links ride on ([auth.md "Link URLs"](auth.md#link-urls)) |
 | `ADMISSION_BURN_MICRO` | `100000000` | The community-funded admission burn per approved applicant, micro-units — operational until the economics slice wires the subsidy machinery |
 | `ACCOUNT_REAPER_INTERVAL_SECS` | `600` | Sweep interval of the account reaper — never-verified accounts past their 7-day bound are deleted whole ([auth.md](auth.md#account-lifecycle)) |
+| `ACCOUNT_DELETION_INTERVAL_SECS` | `60` | Tick interval of the account-deletion executor — each tick finishes any execution left open, then executes up to 16 confirmed deletions past their 7-day grace ([erasure.md §5](../instances/erasure.md#5-the-self-service-triggers)) |
 | `RATE_LIMIT_LOGIN_PER_IP` | `30` | Login attempts per IP per 15 min ([auth.md "Rate limiting"](auth.md#rate-limiting)) |
 | `RATE_LIMIT_REGISTER_PER_IP` | `5` | Application submits per IP per hour |
 | `RATE_LIMIT_REGISTER_PER_LINK` | `20` | Application submits per invite link per day |

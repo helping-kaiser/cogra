@@ -26,7 +26,7 @@ async fn seed_tag_legs(pool: &PgPool) {
              (record_id, family, author, epoch, act_time, position,
               payload_marked, payload_witness)
          SELECT 'act:a' || (i % 400) || ':' || i || ':tag', 'tag',
-                'a' || (i % 400), i / 100, i, i % 100, FALSE, ''::bytea
+                'a' || (i % 400), i / 100 + 1, i, i % 100 + 1, FALSE, ''::bytea
          FROM generate_series(1, 20000) AS i",
     )
     .execute(pool)
@@ -41,7 +41,7 @@ async fn seed_tag_legs(pool: &PgPool) {
                 'mint:act:a' || (i % 400) || ':' || (i % 500) || ':publish',
                 'name:t' || (i % 2000), 0.5, 0.5, 'epistemic',
                 FALSE, TRUE, FALSE, TRUE, 'marginal', 0.0,
-                'tag', i / 100, i, i % 100
+                'tag', i / 100 + 1, i, i % 100 + 1
          FROM generate_series(1, 20000) AS i",
     )
     .execute(pool)

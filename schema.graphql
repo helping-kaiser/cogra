@@ -1176,8 +1176,9 @@ type Health {
 	"""
 	postgresConnected: Boolean!
 	"""
-	The last L1 epoch fully ingested into the record mirror; -1 until
-	the first epoch lands, null when the cursor could not be read.
+	The last L1 epoch fully ingested into the record mirror. Epochs
+	number from 1, so 0 until the first epoch lands; null when the
+	cursor could not be read.
 	"""
 	mirrorEpoch: Int
 }
@@ -3174,7 +3175,7 @@ type Query {
 	mirror has ingested. Answers even when the store does not, so a
 	dumb probe always gets a response: a failed cursor read comes back
 	as a null `mirrorEpoch` rather than an error, and so stays
-	distinguishable from the legitimate "-1, nothing ingested".
+	distinguishable from the legitimate "0, nothing ingested".
 	"""
 	health: Health!
 	"""

@@ -43,7 +43,7 @@ async fn post(pool: &PgPool, author: Uuid, title: &str) -> Uuid {
         Some(LandingOrder {
             landed_epoch: 1,
             act_time: 1,
-            position: 0,
+            position: 1,
         }),
         at(1),
         Some(title),

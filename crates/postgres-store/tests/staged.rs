@@ -125,9 +125,10 @@ async fn seq_allocation_is_monotone_and_catches_up_with_the_mirror(pool: PgPool)
     mirror::ingest_epoch(
         &pool,
         &EpochPackage {
-            epoch: 0,
+            epoch: 1,
             attested_at: chrono::Utc::now(),
-            records: vec![published("alice", 7, Family::Registration, 0, 0)],
+            records: vec![published("alice", 7, Family::Registration, 1, 1)],
+            closure: Default::default(),
         },
     )
     .await
@@ -171,9 +172,10 @@ async fn seq_catch_up_agrees_with_the_rust_parser_and_survives_a_stray_row(pool:
     mirror::ingest_epoch(
         &pool,
         &EpochPackage {
-            epoch: 0,
+            epoch: 1,
             attested_at: chrono::Utc::now(),
-            records: vec![published("alice", 4, Family::Registration, 0, 0)],
+            records: vec![published("alice", 4, Family::Registration, 1, 1)],
+            closure: Default::default(),
         },
     )
     .await
@@ -182,7 +184,7 @@ async fn seq_catch_up_agrees_with_the_rust_parser_and_survives_a_stray_row(pool:
         "INSERT INTO mirror_records
              (record_id, family, author, epoch, act_time, position,
               payload_marked, payload_witness)
-         VALUES ('addr:alice', 'registration', 'alice', 0, 1, 1, FALSE, '\\x00')",
+         VALUES ('addr:alice', 'registration', 'alice', 1, 1, 2, FALSE, '\\x00')",
     )
     .execute(&pool)
     .await
@@ -343,15 +345,16 @@ async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: Pg
     mirror::ingest_epoch(
         &pool,
         &EpochPackage {
-            epoch: 0,
+            epoch: 1,
             attested_at: chrono::Utc::now(),
-            records: vec![published("alice", 0, Family::Opinion, 0, 0)],
+            records: vec![published("alice", 0, Family::Opinion, 1, 1)],
+            closure: Default::default(),
         },
     )
     .await
     .expect("ingest");
 
-    let promoted = staged::promote_landed(&pool, 0).await.expect("promotes");
+    let promoted = staged::promote_landed(&pool, 1).await.expect("promotes");
     assert_eq!(promoted.len(), 1);
     assert_eq!(promoted[0].id, landed);
     assert_eq!(promoted[0].actor_id, actor_id);
@@ -367,7 +370,7 @@ async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: Pg
     );
 
     assert!(
-        staged::promote_landed(&pool, 0)
+        staged::promote_landed(&pool, 1)
             .await
             .expect("p")
             .is_empty()
@@ -466,14 +469,15 @@ async fn a_record_landing_after_expiry_still_promotes(pool: PgPool) {
     mirror::ingest_epoch(
         &pool,
         &EpochPackage {
-            epoch: 0,
+            epoch: 1,
             attested_at: chrono::Utc::now(),
-            records: vec![published("alice", 0, Family::Opinion, 0, 0)],
+            records: vec![published("alice", 0, Family::Opinion, 1, 1)],
+            closure: Default::default(),
         },
     )
     .await
     .expect("ingest");
-    let promoted = staged::promote_landed(&pool, 0).await.expect("promotes");
+    let promoted = staged::promote_landed(&pool, 1).await.expect("promotes");
     assert_eq!(promoted.len(), 1);
     assert_eq!(
         staged::load(&pool, id).await.expect("loads").state,

@@ -1284,13 +1284,13 @@ impl Rig {
         let records = records
             .into_iter()
             .enumerate()
-            .map(|(position, (seq, family, p_d))| PublishedRecord {
+            .map(|(index, (seq, family, p_d))| PublishedRecord {
                 act_id: ActId::new(author, seq, family).expect("act id"),
                 author: author.to_string(),
                 family,
                 epoch,
-                act_time: epoch * 100 + position as i64,
-                position: position as i64,
+                act_time: epoch * 100 + index as i64,
+                position: index as i64 + 1,
                 payload_marked: family == Family::Publish,
                 payload_witness: vec![0; 32],
                 legs: vec![PublishedLeg {
@@ -1310,6 +1310,7 @@ impl Rig {
                 attested_at: chrono::DateTime::from_timestamp(1_850_000_000 + epoch * 60, 0)
                     .expect("instant"),
                 records,
+                closure: Default::default(),
             },
         )
         .await

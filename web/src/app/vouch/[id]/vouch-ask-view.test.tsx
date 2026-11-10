@@ -36,7 +36,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 const server = startMswServer();
-const ASK = "k1";
+const ASK = "0b2f5c1e-7a43-4c8e-9d0a-5e6f1a2b3c4d";
 
 function signedInStore() {
   const store = createTokenStore();

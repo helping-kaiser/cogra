@@ -73,9 +73,9 @@ fn at(secs: i64) -> Timestamp {
 
 fn landed(secs: i64) -> LandingOrder {
     LandingOrder {
-        landed_epoch: secs,
+        landed_epoch: secs + 1,
         act_time: secs,
-        position: 0,
+        position: 1,
     }
 }
 
@@ -680,7 +680,7 @@ async fn a_removed_kept_post_stays_and_reads_its_removal(pool: PgPool) {
         "INSERT INTO post_versions
              (post_id, title, content, redaction_reason, pending, created_at,
               landed_epoch, act_time, position)
-         VALUES ($1, '[removed]', '[removed]', 'policy', FALSE, $2, 9, 9, 0)",
+         VALUES ($1, '[removed]', '[removed]', 'policy', FALSE, $2, 9, 9, 1)",
     )
     .bind(removed)
     .bind(at(9))
@@ -709,7 +709,7 @@ async fn a_redacted_kept_comment_stays(pool: PgPool) {
         "INSERT INTO comment_versions
              (comment_id, content, redaction_reason, pending, created_at,
               landed_epoch, act_time, position)
-         VALUES ($1, '[removed]', 'policy', FALSE, $2, 9, 9, 0)",
+         VALUES ($1, '[removed]', 'policy', FALSE, $2, 9, 9, 1)",
     )
     .bind(c)
     .bind(at(9))
@@ -736,7 +736,7 @@ async fn a_kept_deleted_account_stays_as_a_husk(pool: PgPool) {
     sqlx::query(
         "INSERT INTO actor_profile_versions
              (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'erasure', 99, 99, 0)",
+         VALUES ($1, '[redacted]', 'erasure', 99, 99, 1)",
     )
     .bind(sol)
     .execute(&rig.pool)

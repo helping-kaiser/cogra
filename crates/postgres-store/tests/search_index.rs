@@ -137,7 +137,7 @@ async fn a_raw_rename_or_retitle_replaces_the_old_value(pool: PgPool) {
     run(
         &pool,
         "INSERT INTO post_versions (post_id, title, content, landed_epoch, act_time, position)
-         VALUES ($1, 'Harbour lights', 'body', 5, 5, 0)",
+         VALUES ($1, 'Harbour lights', 'body', 5, 5, 1)",
         maps,
     )
     .await;
@@ -179,7 +179,7 @@ async fn a_pending_display_name_is_the_indexed_one(pool: PgPool) {
         &pool,
         "INSERT INTO actor_profile_versions
              (actor_id, display_name, landed_epoch, act_time, position)
-         VALUES ($1, 'Sol Landed', 5, 5, 0)",
+         VALUES ($1, 'Sol Landed', 5, 5, 1)",
         sol,
     )
     .await;
@@ -217,7 +217,7 @@ async fn a_redaction_takes_the_rows_away(pool: PgPool) {
         &pool,
         "INSERT INTO post_versions
              (post_id, title, content, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[removed]', '[removed]', 'policy', 9, 9, 0)",
+         VALUES ($1, '[removed]', '[removed]', 'policy', 9, 9, 1)",
         maps,
     )
     .await;
@@ -339,7 +339,7 @@ async fn a_redaction_racing_an_edit_leaves_nothing_findable(pool: PgPool) {
         sqlx::query(
             "INSERT INTO actor_profile_versions
                  (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-             VALUES ($1, '[redacted]', 'policy', 99, 99, 0)",
+             VALUES ($1, '[redacted]', 'policy', 99, 99, 1)",
         )
         .bind(sol)
         .execute(&mut *tx)

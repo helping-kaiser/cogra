@@ -161,7 +161,7 @@ async fn the_five_steps_land_a_record_and_confirm_the_staged_write(pool: PgPool)
         StagedState::Landed
     );
     assert_eq!(
-        mirror::record_ids_in_epoch(&rig.pool, 0)
+        mirror::record_ids_in_epoch(&rig.pool, 1)
             .await
             .expect("ids"),
         vec![prepared.proposal.body.act_id().to_string()]

@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT COALESCE(MAX(epoch), -1) AS \"e!\" FROM l1_epochs",
+  "query": "SELECT MAX(epoch) FROM l1_epochs",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "e!",
+        "name": "max",
         "type_info": "Int8"
       }
     ],
@@ -16,5 +16,5 @@
       null
     ]
   },
-  "hash": "ea0e678212ae05c8071b0c0f658ff8f6b6c28d0dfaa342d6da653660fbf9a181"
+  "hash": "ef1560193f629dddd7521d67daac51583e6b2820fd524fc528b5b507d8fb4727"
 }

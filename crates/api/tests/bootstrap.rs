@@ -73,8 +73,8 @@ async fn fresh_bootstrap_creates_both_halves(pool: PgPool) {
         .expect("operator row");
     assert_eq!(operator.kind, "user");
 
-    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 0);
-    let ids = mirror::record_ids_in_epoch(&pool, 0).await.expect("ids");
+    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 1);
+    let ids = mirror::record_ids_in_epoch(&pool, 1).await.expect("ids");
     assert_eq!(ids.len(), 8);
     let publisher_address = genesis::actor_by_handle(&pool, genesis::PUBLISHER_HANDLE)
         .await
@@ -111,9 +111,9 @@ async fn rerun_is_idempotent(pool: PgPool) {
     run(&host, &pool, input()).await.expect("first run");
     let outcome = run(&host, &pool, input()).await.expect("second run");
     assert_eq!(outcome, BootstrapOutcome::AlreadyComplete);
-    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 0);
+    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 1);
     assert_eq!(
-        mirror::record_ids_in_epoch(&pool, 0)
+        mirror::record_ids_in_epoch(&pool, 1)
             .await
             .expect("ids")
             .len(),
@@ -139,6 +139,7 @@ async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
         "mirror_epochs",
         "l1_act_legs",
         "l1_acts",
+        "l1_epoch_ledger",
         "l1_epochs",
         "l1_node_state",
         "l1_accounts",
@@ -148,7 +149,7 @@ async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
             .await
             .expect("wipe");
     }
-    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = -1")
+    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = 0")
         .execute(&pool)
         .await
         .expect("cursor reset");
@@ -189,6 +190,7 @@ async fn a_repair_run_with_changed_input_is_refused(pool: PgPool) {
         "mirror_epochs",
         "l1_act_legs",
         "l1_acts",
+        "l1_epoch_ledger",
         "l1_epochs",
         "l1_node_state",
         "l1_accounts",
@@ -198,7 +200,7 @@ async fn a_repair_run_with_changed_input_is_refused(pool: PgPool) {
             .await
             .expect("wipe");
     }
-    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = -1")
+    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = 0")
         .execute(&pool)
         .await
         .expect("cursor reset");
@@ -279,6 +281,7 @@ async fn rewind_to_partial_genesis(pool: &PgPool, keep: &[String]) {
     .await
     .expect("unorder");
     for table in [
+        "l1_epoch_ledger",
         "l1_epochs",
         "l1_node_state",
         "mirror_record_legs",
@@ -294,7 +297,7 @@ async fn rewind_to_partial_genesis(pool: &PgPool, keep: &[String]) {
         .execute(pool)
         .await
         .expect("undebit");
-    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = -1")
+    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = 0")
         .execute(pool)
         .await
         .expect("cursor reset");
@@ -331,9 +334,9 @@ async fn crash_inside_the_l1_sequence_is_repaired(pool: PgPool) {
 
     let outcome = run(&host, &pool, input()).await.expect("repairs");
     assert_eq!(outcome, BootstrapOutcome::Repaired);
-    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 0);
+    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 1);
     assert_eq!(
-        mirror::record_ids_in_epoch(&pool, 0)
+        mirror::record_ids_in_epoch(&pool, 1)
             .await
             .expect("ids")
             .len(),
@@ -388,7 +391,7 @@ async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
     let outcome = run(&host, &pool, input()).await.expect("repairs");
     assert_eq!(outcome, BootstrapOutcome::Repaired);
     assert_eq!(
-        mirror::record_ids_in_epoch(&pool, 0)
+        mirror::record_ids_in_epoch(&pool, 1)
             .await
             .expect("ids")
             .len(),
@@ -487,7 +490,7 @@ async fn an_occupied_author_sequence_is_refused(pool: PgPool) {
 async fn every_genesis_act_lands_witness_only_with_its_carriage_beside_it(pool: PgPool) {
     let host = standin(&pool);
     run(&host, &pool, input()).await.expect("bootstraps");
-    let ids = mirror::record_ids_in_epoch(&pool, 0).await.expect("ids");
+    let ids = mirror::record_ids_in_epoch(&pool, 1).await.expect("ids");
     assert_eq!(ids.len(), 8);
     let mut carried = 0;
     for id in ids {
@@ -542,7 +545,7 @@ async fn rewind_keeping_accepted(pool: &PgPool, keep: &[String]) {
             .await
             .expect("wipe");
     }
-    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = -1")
+    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = 0")
         .execute(pool)
         .await
         .expect("cursor reset");
@@ -759,7 +762,7 @@ async fn a_failed_promotion_refuses_the_catch_up_ingestion(pool: PgPool) {
         message.contains(&staged_id.to_string()),
         "the failing staged write must name itself: {message}"
     );
-    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 1);
+    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 2);
 }
 
 /// The bootstrap's second ingestion — the one that lands the genesis

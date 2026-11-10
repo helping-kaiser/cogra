@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_account_deletions SET executed_at = NOW() WHERE id = $1\n         RETURNING executed_at AS \"executed_at!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "executed_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "f8c31e3b424e01405166f0a151ae12f820bc801775b0f5286233a6b1dca65964"
+}

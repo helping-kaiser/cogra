@@ -16,7 +16,7 @@ import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
-const passthroughGuard: AuthGuard = { run: (block) => block(), prime: async () => {} };
+const passthroughGuard: AuthGuard = { run: (block) => block(), prime: async () => {}, refresh: async () => false };
 
 function deps(store: IdentityStore) {
   return {
