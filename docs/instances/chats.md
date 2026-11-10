@@ -108,7 +108,11 @@ toward lineage chat `C_k` is in the bundle iff it landed in an L1
 epoch ≤ the epoch where `C_k`'s successor landed. Later records
 toward a superseded node are deliberate and fall out; CoGra's own
 prepare step always targets the lineage head, so the cutoff only
-affects records prepared outside CoGra. Membership, messages,
+affects records prepared outside CoGra. The one exception is a
+cancelling Invitation: L1 nets per (Chat node, Profile)
+incidence, so it targets the node the Invitation it cancels
+targeted, and the fold reads it there even when that node is
+superseded. Membership, messages,
 backing, bans, stances, and the key-epoch count all read the
 bundle (§4, §7), and the feed ranks the lineage as one candidate
 ([feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set)).
@@ -233,7 +237,8 @@ the joiner's own Participant record**:
   invite message as payload; the invitee, if they want in,
   authors their own Participant. Its author withdraws it by a
   cancelling Invitation that nets their bundle toward that
-  (Chat, Profile) to `(0,0)`; a later positive Invitation
+  (Chat, Profile) to `(0,0)`, targeting the Chat node the
+  Invitation targeted (§3); a later positive Invitation
   re-establishes it (``lem:epoch:authored-vouch-withdrawable``).
 
 The Participant's parameters (interactivity, responsibility) are
