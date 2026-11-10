@@ -3502,8 +3502,9 @@ deadband is symmetric, and the rung argument $t$ is published but unused by
 this interim map. The interim settings are $a = 0.10$ (absolute reduced
 increment), $r = 1/4$ (relative step), and $d = 1/20$ (relative deadband) —
 performance calibration constants, not safety premises; $m_\theta$ stays
-fixed. Zero width, including an empty live domain, returns the floor without
-evaluating an inverse. The proposal and the delivered wall are both
+fixed. For zero width, including an empty live domain, the proposal returns
+the floor without evaluating an inverse; the delivered wall still obeys the
+deadband and step cap. The proposal and the delivered wall are both
 published, followed by the burn image
 $\theta^{(k+1)} = \nu\,C_\Gamma(\rho, W, t)$, with one-boundary lead; no
 consummated debit is recalculated. The clean-gain inversion
