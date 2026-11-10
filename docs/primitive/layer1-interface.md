@@ -1209,7 +1209,7 @@ locks nothing, adjudicates nothing; it records Offers and ownership changes. A
 terminal escrow or payment system may observe the public log, but that
 mechanism is terminal. Layer 1 supplies the deterministic commit anchor: the
 **epoch certificate** in which the settlement is recognized, unchallenged, and
-title-transferring. The certificate, not the Ratify, is the point of no return
+title-transferring — not the Ratify, which is no longer the point of no return
 (`rem:graph:regret-window`). The residual exposure is boundary censorship — a
 host suppressing a cancel while writing the commit, which leaves no Layer-1
 trace (`rem:epoch:consent-exposure`); its written-side accountability is
