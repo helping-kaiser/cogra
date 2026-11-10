@@ -15,6 +15,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -48,6 +49,10 @@ class InviteEntryScreenTest {
 
     private fun tag(path: String) = compose.onNodeWithTag(path, useUnmergedTree = true)
 
+    // The page outgrows Robolectric's default screen: scroll a control into view before
+    // pressing it, or the touch lands outside the window and nothing answers.
+    private fun press(path: String) = compose.onNodeWithTag(path).performScrollTo().performClick()
+
     private fun top(path: String): Float = tag(path).fetchSemanticsNode().positionInRoot.y
 
     // JoinInvalid.md:3, 13 — the heading says the link can't be used; the
@@ -61,8 +66,8 @@ class InviteEntryScreenTest {
             "It may have expired or already been used. Ask the person who invited you for a new link.",
         )
         tag("joinInvalid.link.label").assertTextEquals("Invite link")
-        tag("joinInvalid.signIn").assertTextEquals("Already have an account? Sign in")
-        tag("joinInvalid.browse").assertTextEquals("Just looking? Browse the feed →")
+        compose.onNodeWithTag("joinInvalid.signIn").assertTextEquals("Already have an account? Sign in")
+        compose.onNodeWithTag("joinInvalid.browse").assertTextEquals("Just looking? Browse the feed →")
         assertThat(top("joinInvalid.link")).isLessThan(top("joinInvalid.commit.action"))
         assertThat(top("joinInvalid.commit.action")).isLessThan(top("joinInvalid.signIn"))
         assertThat(top("joinInvalid.signIn")).isLessThan(top("joinInvalid.browse"))
@@ -84,7 +89,7 @@ class InviteEntryScreenTest {
         show(InviteEntryUiState(invalid = true), onBack = { back++ })
         compose.onNode(hasContentDescription("Back") and SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick))
             .assertExists()
-        tag("joinInvalid.header.back").performClick()
+        compose.onNodeWithTag("joinInvalid.header.back").performClick()
         assertThat(back).isEqualTo(1)
     }
 
@@ -101,7 +106,7 @@ class InviteEntryScreenTest {
         compose.onNode(hasText("Continuing…"), useUnmergedTree = true).assertExists()
         compose.mainClock.advanceTimeBy(5_000)
         compose.onNode(hasText("Continuing…"), useUnmergedTree = true).assertExists()
-        tag("joinInvalid.commit.action").assertIsEnabled().performClick()
+        compose.onNodeWithTag("joinInvalid.commit.action").assertIsEnabled().performScrollTo().performClick()
         assertThat(presses).isEqualTo(0)
         compose.onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate)).assertDoesNotExist()
     }
@@ -115,7 +120,7 @@ class InviteEntryScreenTest {
         tag("joinInvalid.fault").assertTextEquals("That didn't send. Try again.")
         tag("joinInvalid.link.input").assertTextEquals(link)
         assertThat(top("joinInvalid.fault")).isLessThan(top("joinInvalid.commit.action"))
-        tag("joinInvalid.commit.action").performClick()
+        press("joinInvalid.commit.action")
         assertThat(presses).isEqualTo(1)
     }
 
@@ -130,8 +135,8 @@ class InviteEntryScreenTest {
             onSignIn = { signIn++ },
             onBrowseFeed = { browse++ },
         )
-        tag("joinInvalid.signIn").performClick()
-        tag("joinInvalid.browse").performClick()
+        press("joinInvalid.signIn")
+        press("joinInvalid.browse")
         assertThat(signIn to browse).isEqualTo(1 to 1)
     }
 

@@ -17,6 +17,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import com.cogra.domain.AuthTokens
@@ -83,6 +84,10 @@ class JoinScreenTest {
 
     private fun tag(path: String) = compose.onNodeWithTag(path, useUnmergedTree = true)
 
+    // The page outgrows Robolectric's default screen: scroll a control into view before
+    // pressing it, or the touch lands outside the window and nothing answers.
+    private fun press(path: String) = compose.onNodeWithTag(path).performScrollTo().performClick()
+
     private fun top(path: String): Float = tag(path).fetchSemanticsNode().positionInRoot.y
 
     private fun text(path: String): String =
@@ -108,7 +113,7 @@ class JoinScreenTest {
         show(onBack = { back++ })
         compose.onNode(hasContentDescription("Back") and SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick))
             .assertExists()
-        tag("join.header.back").performClick()
+        compose.onNodeWithTag("join.header.back").performClick()
         assertThat(back).isEqualTo(1)
     }
 
@@ -119,7 +124,7 @@ class JoinScreenTest {
         var about = 0
         show(onAbout = { about++ })
         compose.onNode(hasContentDescription("About CoGra")).assertExists()
-        tag("join.header.help").performClick()
+        compose.onNodeWithTag("join.header.help").performClick()
         assertThat(about).isEqualTo(1)
     }
 
@@ -137,9 +142,9 @@ class JoinScreenTest {
     fun theRevealControlIsNamedForWhatItDoes() {
         show(filled)
         compose.onNode(hasContentDescription("Show password"), useUnmergedTree = true).assertExists()
-        tag("join.password.reveal").performClick()
+        press("join.password.reveal")
         compose.onNode(hasContentDescription("Hide password"), useUnmergedTree = true).assertExists()
-        tag("join.password.reveal").performClick()
+        press("join.password.reveal")
         compose.onNode(hasContentDescription("Show password"), useUnmergedTree = true).assertExists()
     }
 
@@ -157,7 +162,7 @@ class JoinScreenTest {
         compose.onNode(hasText("Creating account…"), useUnmergedTree = true).assertExists()
         compose.mainClock.advanceTimeBy(5_000)
         compose.onNode(hasText("Creating account…"), useUnmergedTree = true).assertExists()
-        tag("join.commit.action").assertIsEnabled().performClick()
+        compose.onNodeWithTag("join.commit.action").assertIsEnabled().performScrollTo().performClick()
         assertThat(presses).isEqualTo(0)
         compose.onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
             .assertDoesNotExist()
@@ -186,17 +191,18 @@ class JoinScreenTest {
         vm.onHandleChange("noor")
         vm.onEmailChange("noor@fieldmail.org")
         vm.onPasswordChange("fielddayfield")
-        tag("join.commit.action").performClick()
+        press("join.commit.action")
         compose.waitForIdle()
         assertThat(vm.state.value.inFlight).isTrue()
-        for (path in listOf("join.header.back", "join.header.help", "join.signIn")) {
-            tag(path).assertIsEnabled().performClick()
+        for (path in listOf("join.header.back", "join.header.help")) {
+            compose.onNodeWithTag(path).assertIsEnabled().performClick()
         }
+        compose.onNodeWithTag("join.signIn").assertIsEnabled().performScrollTo().performClick()
         assertThat(left).isEqualTo(0)
 
         held.answer.complete(Outcome.Failed(IOException("offline")))
         compose.waitForIdle()
-        tag("join.signIn").performClick()
+        press("join.signIn")
         assertThat(left).isEqualTo(1)
     }
 
@@ -221,7 +227,7 @@ class JoinScreenTest {
         vm.onHandleChange("noor")
         vm.onEmailChange("noor@fieldmail.org")
         vm.onPasswordChange("fielddayfield")
-        tag("join.commit.action").performClick()
+        press("join.commit.action")
         held.answer.complete(Outcome.Success(AuthTokens("a", "r", "u2")))
         compose.waitForIdle()
         assertThat(created).isEqualTo(1)
@@ -277,7 +283,7 @@ class JoinScreenTest {
         show(filled.copy(fault = JoinFault.NO_ANSWER), onSubmit = { presses++ })
         tag("join.fault").assertTextEquals("That didn't send. Try again.")
         assertThat(top("join.fault")).isLessThan(top("join.commit.action"))
-        tag("join.commit.action").assertIsEnabled().performClick()
+        compose.onNodeWithTag("join.commit.action").assertIsEnabled().performScrollTo().performClick()
         assertThat(presses).isEqualTo(1)
     }
 
@@ -286,7 +292,8 @@ class JoinScreenTest {
     fun alreadyHaveAnAccountOpensSignIn() {
         var signIn = 0
         show(onSignIn = { signIn++ })
-        tag("join.signIn").assertTextEquals("Already have an account? Sign in").performClick()
+        compose.onNodeWithTag("join.signIn").assertTextEquals("Already have an account? Sign in")
+        press("join.signIn")
         assertThat(signIn).isEqualTo(1)
     }
 
