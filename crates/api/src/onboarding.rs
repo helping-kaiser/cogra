@@ -423,6 +423,11 @@ pub struct Approval {
 /// discovering it on the third. Failures after that pass are per-entry:
 /// the approvals that already executed stand, and their repair path is
 /// the applicant's own status poll.
+///
+/// An application named twice is one vouch: a repeat with the same
+/// stance is dropped before anything is read or priced, so it is charged
+/// once; a repeat with a different stance is refused at the repeat, since
+/// keeping either pick would silently drop the other.
 pub async fn approve_applicants<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -432,8 +437,31 @@ pub async fn approve_applicants<B: L1Boundary>(
     approvals: &[Approval],
 ) -> Result<Vec<prepare::Prepared>, Vec<ApprovalFault>> {
     let mut errors = Vec::new();
-    let mut applications = Vec::with_capacity(approvals.len());
+    let mut first_naming: std::collections::HashMap<Uuid, &Approval> =
+        std::collections::HashMap::with_capacity(approvals.len());
+    let mut unique: Vec<(usize, &Approval)> = Vec::with_capacity(approvals.len());
     for (i, approval) in approvals.iter().enumerate() {
+        match first_naming.get(&approval.application) {
+            None => {
+                first_naming.insert(approval.application, approval);
+                unique.push((i, approval));
+            }
+            Some(seen) if seen.p_d == approval.p_d && seen.p_i == approval.p_i => {}
+            Some(_) => errors.push((
+                Some(i),
+                OnboardingError::BadInput {
+                    field: "application",
+                    message: "the application is named twice with different stances".into(),
+                },
+            )),
+        }
+    }
+    if !errors.is_empty() {
+        return Err(errors);
+    }
+
+    let mut applications = Vec::with_capacity(unique.len());
+    for &(i, approval) in &unique {
         match validate_approval(pool, inviter, approval).await {
             Ok(application) => applications.push(application),
             Err(e) => errors.push((Some(i), e)),
@@ -447,8 +475,8 @@ pub async fn approve_applicants<B: L1Boundary>(
         return Err(vec![(None, e)]);
     }
 
-    let mut prepared = Vec::with_capacity(approvals.len());
-    for (i, (approval, application)) in approvals.iter().zip(applications).enumerate() {
+    let mut prepared = Vec::with_capacity(unique.len());
+    for (&(i, approval), application) in unique.iter().zip(applications) {
         match approve_one(pool, boundary, cfg, inviter, approval, &application).await {
             Ok(opinion) => prepared.push(opinion),
             Err(e) => {

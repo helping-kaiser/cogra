@@ -46,7 +46,7 @@ pub struct AppVersion {
 impl AppVersion {
     fn from_row(row: Release) -> async_graphql::Result<Self> {
         let component = AppComponent::from_store(&row.component).ok_or_else(|| {
-            async_graphql::Error::new(format!("unknown registry component {}", row.component))
+            super::faults::Fault::new(format!("unknown registry component {}", row.component))
         })?;
         Ok(Self {
             component,
@@ -89,8 +89,7 @@ impl AppVersionConnectionFields {
             pool,
             self.component.map(AppComponent::as_store),
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        .await?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
     }
 }
@@ -120,8 +119,7 @@ pub async fn app_versions(
         backward,
         limit + 1,
     )
-    .await
-    .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    .await?;
     let has_more = rows.len() as i64 > limit;
     if has_more {
         if backward {

@@ -149,6 +149,32 @@ impl SigningBudget {
         admission_funding: Window::GENEROUS,
     };
 
+    /// The longest batch one prepare can stage under this budget, and so
+    /// the longest list a relay or approval call can legitimately carry
+    /// (api-spec.md "Conventions").
+    ///
+    /// Prepare spends a batch whole or refuses it (`spend_signing`), so no
+    /// batch outgrows the window of the class it spends, nor the daily
+    /// backstop. Only the netting gestures stage a batch whose length the
+    /// author's history sets — a severance's counter-records spend
+    /// [`SigningClass::Stance`], a reference withdrawal's
+    /// [`SigningClass::Claim`] — and an approval batch is one vouch per
+    /// entry, spending [`SigningClass::Approval`]. Every other prepare
+    /// stages at most a creation batch: the minting record and its tags
+    /// and citations (`content::batch_acts`), each list capped per batch.
+    pub fn longest_batch(&self) -> usize {
+        let creation =
+            1 + crate::topics::MAX_TAGS_PER_BATCH + crate::references::MAX_REFERENCES_PER_BATCH;
+        let netting = [self.stance, self.claim, self.approval]
+            .iter()
+            .map(|window| usize::try_from(window.limit).unwrap_or(0))
+            .max()
+            .unwrap_or(0);
+        netting
+            .max(creation)
+            .min(usize::try_from(self.any.limit).unwrap_or(0))
+    }
+
     fn window(&self, class: SigningClass) -> Window {
         match class {
             SigningClass::Post => self.post,

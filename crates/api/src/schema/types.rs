@@ -1129,9 +1129,7 @@ impl StagedWriteType {
         }
         let pool = ctx.data::<PgPool>()?;
         let act_id = self.0.proposal.body.act_id().to_string();
-        let row = postgres_store::mirror::record_full(pool, &act_id)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let row = postgres_store::mirror::record_full(pool, &act_id).await?;
         Ok(row.map(Record))
     }
 }
@@ -1636,8 +1634,7 @@ impl User {
             backward,
             limit + 1,
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        .await?;
         let has_more = kept.len() as i64 > limit;
         if has_more {
             if backward {
@@ -1703,8 +1700,7 @@ impl User {
             backward,
             limit + 1,
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        .await?;
         let has_more = hidden.len() as i64 > limit;
         if has_more {
             if backward {
@@ -1773,8 +1769,7 @@ impl User {
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
         let mut held =
             stance_store::held_topics(pool, &author, view, cursor.as_ref(), backward, limit + 1)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+                .await?;
         let has_more = held.len() as i64 > limit;
         if has_more {
             if backward {
@@ -1898,8 +1893,7 @@ impl User {
             backward,
             limit + 1,
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        .await?;
         let has_more = entries.len() as i64 > limit;
         if has_more {
             if backward {
@@ -1989,9 +1983,7 @@ impl User {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        let writes = staged::list_for_actor(pool, self.identity.id)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let writes = staged::list_for_actor(pool, self.identity.id).await?;
         Ok(Some(
             offset_connection(writes, after, before, first, last, StagedWriteType).await?,
         ))
@@ -2962,7 +2954,7 @@ impl License {
     /// stronger pair than the record published.
     fn of(canonical: &str) -> async_graphql::Result<Self> {
         let license = crate::content::License::parse(canonical)
-            .ok_or_else(|| async_graphql::Error::new("license qualifiers are unreadable"))?;
+            .ok_or_else(|| super::faults::Fault::new("license qualifiers are unreadable"))?;
         Ok(Self {
             attribution: license.attribution,
             provenance: license.provenance,
@@ -3636,12 +3628,10 @@ impl CommentType {
         let pool = ctx.data::<PgPool>()?;
         Ok(match self.0.target_type.as_str() {
             "post" => postgres_store::content::post(pool, self.0.target_id)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+                .await?
                 .map(|p| CommentTarget::Post(PostType(p))),
             "comment" => postgres_store::content::comment(pool, self.0.target_id)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+                .await?
                 .map(|c| CommentTarget::Comment(CommentType(c))),
             _ => None,
         })
@@ -3809,8 +3799,7 @@ impl HashtagType {
             TopicView::from_include_pending(include_pending, viewer.as_deref()),
             limit,
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        .await?;
         let mut out = Vec::with_capacity(rows.len());
         for row in rows {
             if let Some(node) = resolve_node_id(ctx, &row.node).await? {
@@ -4241,8 +4230,7 @@ async fn topic_claims(
         &author,
         TopicView::from_include_pending(counts_pending, Some(author.as_str())),
     )
-    .await
-    .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    .await?;
     Ok(rows
         .into_iter()
         .map(|row| TopicClaim {
@@ -4298,8 +4286,7 @@ async fn reference_claims(
         &author,
         ReferenceView::from_include_pending(counts_pending, Some(author.as_str())),
     )
-    .await
-    .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    .await?;
 
     Ok(rows
         .into_iter()
@@ -4493,8 +4480,7 @@ pub(crate) async fn node_records(
         page.backward,
         page.limit + 1,
     )
-    .await
-    .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    .await?;
     Ok(record_connection(rows, &page, Some(filter)))
 }
 
@@ -4621,8 +4607,7 @@ impl ViewHistoryConnectionFields {
                 )
                 .await
             }
-        }
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        }?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
     }
 
@@ -4645,8 +4630,7 @@ impl ViewHistoryConnectionFields {
             request,
             Some(postgres_store::search::ReaderList::History(self.viewer)),
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .await?
         .is_some_and(|cap| cap.more))
     }
 
@@ -4669,8 +4653,7 @@ impl ViewHistoryConnectionFields {
             request,
             Some(postgres_store::search::ReaderList::History(self.viewer)),
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .await?
         .is_some_and(|cap| cap.more))
     }
 }
@@ -4762,17 +4745,13 @@ impl User {
         let past_people =
             !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_PEOPLE);
         let cap = match &request {
-            Some(request) if !past_people => super::query::people_cap(pool, request, list)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            Some(request) if !past_people => super::query::people_cap(pool, request, list).await?,
             _ => None,
         };
         let past_topics =
             !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_TOPICS);
         let topics_cap = match &request {
-            Some(request) if !past_topics => super::query::topics_cap(pool, request, list)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            Some(request) if !past_topics => super::query::topics_cap(pool, request, list).await?,
             _ => None,
         };
         let window = postgres_store::search::Window {
@@ -4782,16 +4761,17 @@ impl User {
             ..postgres_store::search::Window::default()
         };
         let mut hits = match &request {
-            Some(request) => request
-                .find_in(
-                    pool,
-                    window,
-                    cursor.map(postgres_store::history::HistoryMatchCursor::as_search_cursor),
-                    backward,
-                    limit + 1,
-                )
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            Some(request) => {
+                request
+                    .find_in(
+                        pool,
+                        window,
+                        cursor.map(postgres_store::history::HistoryMatchCursor::as_search_cursor),
+                        backward,
+                        limit + 1,
+                    )
+                    .await?
+            }
             None => Vec::new(),
         };
         let has_more = hits.len() as i64 > limit;
@@ -4858,9 +4838,7 @@ async fn hydrate_history(
             .map(|e| e.content_id)
             .collect()
     };
-    let content = crate::nodes::resolve_content_many(pool, &ids_of(&["post", "comment"]))
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    let content = crate::nodes::resolve_content_many(pool, &ids_of(&["post", "comment"])).await?;
     let mut users: std::collections::HashMap<Uuid, store::ActorIdentity> =
         store::actor_identities_by_ids(pool, &ids_of(&["user"]))
             .await?
@@ -4979,8 +4957,7 @@ impl BookmarkConnectionFields {
                 )
                 .await
             }
-        }
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        }?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
     }
 
@@ -5003,8 +4980,7 @@ impl BookmarkConnectionFields {
             request,
             Some(postgres_store::search::ReaderList::Saved(self.viewer)),
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .await?
         .is_some_and(|cap| cap.more))
     }
 }
@@ -5081,9 +5057,7 @@ impl User {
         let past_people =
             !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_PEOPLE);
         let cap = match &request {
-            Some(request) if !past_people => super::query::people_cap(pool, request, list)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            Some(request) if !past_people => super::query::people_cap(pool, request, list).await?,
             _ => None,
         };
         let window = postgres_store::search::Window {
@@ -5092,16 +5066,17 @@ impl User {
             ..postgres_store::search::Window::default()
         };
         let mut hits = match &request {
-            Some(request) => request
-                .find_in(
-                    pool,
-                    window,
-                    cursor.map(postgres_store::bookmarks::SavedMatchCursor::as_search_cursor),
-                    backward,
-                    limit + 1,
-                )
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            Some(request) => {
+                request
+                    .find_in(
+                        pool,
+                        window,
+                        cursor.map(postgres_store::bookmarks::SavedMatchCursor::as_search_cursor),
+                        backward,
+                        limit + 1,
+                    )
+                    .await?
+            }
             None => Vec::new(),
         };
         let has_more = hits.len() as i64 > limit;
@@ -5182,9 +5157,7 @@ async fn hydrate_bookmarks_with(
             .map(|b| b.content_id)
             .collect()
     };
-    let content = crate::nodes::resolve_content_many(pool, &ids_of(&["post", "comment"]))
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    let content = crate::nodes::resolve_content_many(pool, &ids_of(&["post", "comment"])).await?;
     let mut users: std::collections::HashMap<Uuid, store::ActorIdentity> =
         store::actor_identities_by_ids(pool, &ids_of(&["user"]))
             .await?
@@ -5332,9 +5305,7 @@ impl HeldTopicConnectionFields {
             return Ok(Some(0));
         };
         let pool = ctx.data::<PgPool>()?;
-        let total = stance_store::count_held_topics(pool, author, self.view)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let total = stance_store::count_held_topics(pool, author, self.view).await?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
     }
 }
@@ -5353,9 +5324,7 @@ impl HiddenActorConnectionFields {
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
         let pool = ctx.data::<PgPool>()?;
-        let total = postgres_store::hidden::count_hidden(pool, self.viewer)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let total = postgres_store::hidden::count_hidden(pool, self.viewer).await?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
     }
 }
@@ -5456,9 +5425,7 @@ impl SearchConnectionFields {
             return Ok(Some(0));
         };
         let pool = ctx.data::<PgPool>()?;
-        let total = super::query::served_count(pool, request, None)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let total = super::query::served_count(pool, request, None).await?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
     }
 
@@ -5476,8 +5443,7 @@ impl SearchConnectionFields {
         };
         let pool = ctx.data::<PgPool>()?;
         Ok(super::query::people_cap(pool, request, None)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .await?
             .is_some_and(|cap| cap.more))
     }
 }
@@ -5585,17 +5551,13 @@ impl RecordConnectionFields {
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
         let pool = ctx.data::<PgPool>()?;
         if let Some((reach, as_of_epoch)) = &self.slice {
-            let total = postgres_store::slice::count_records(pool, reach, *as_of_epoch)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            let total = postgres_store::slice::count_records(pool, reach, *as_of_epoch).await?;
             return Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)));
         }
         let Some(filter) = &self.filter else {
             return Ok(Some(0));
         };
-        let total = mirror::count_records(pool, filter)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let total = mirror::count_records(pool, filter).await?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
     }
 }
@@ -5673,8 +5635,7 @@ impl CommentConnectionFields {
             self.target,
             self.include_pending,
         )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        .await?;
         Ok(i32::try_from(total).unwrap_or(i32::MAX))
     }
 }
@@ -5942,8 +5903,7 @@ async fn comments_connection(
         thread.include_pending,
         thread.order,
     )
-    .await
-    .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    .await?;
     Ok(keyset_connection_with(
         rows,
         &page,
