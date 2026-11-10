@@ -3671,7 +3671,7 @@ $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 ## 13 Deployment invariants (`app:deployment`)
 
 Apply in both deployment phases; what changes is the consequence of failed
-verification, not the specification. Seven invariants bind the closure
+verification, not the specification. Eight invariants bind the closure
 surface; the full paper's `app:deployment` additionally documents five
 terminal invariants (client-reproducible feed ranking, device-local
 computation scope, concealment-entropy custody, auditable terminal
@@ -3788,6 +3788,28 @@ operator duties (both at the end of this section).
   Projection completeness and dynamic safety are orthogonal checks
   (`rem:deployment:completeness-safety-orthogonal`); a valid package
   requires both, and controller replay is a separate obligation.
+- **Canonical Standing Encoding
+  (`subsec:deployment:canonical-standing-encoding`,
+  `post:deployment:canonical-standing-publication`).** The host publishes
+  the conserved standing package in a canonical encoding — a declared
+  ordering of Actors and of each row's support, a declared representation
+  for every rational quantity, and a declared rounding disclosure for every
+  inexact value — itself published and versioned under no-silent-change.
+  The encoded fields include the floor declaration with its exact defining
+  object and comparison procedure, the controller edition and reduced
+  constants, the wall in force, the completed-epoch width and accepted rung,
+  the proposal, and the delivered next wall with its burn image; the
+  declaration prescribes no exact-real codec. The prior wall is explicit
+  public controller state, not a prior standing-vector input, and the
+  in-force debit vintage stays distinct from the led output. The encoded
+  certificate verdict includes every attempted rung and whether it failed
+  or was indecisive. A recomputation either matches the published bits or
+  finds a discrepancy to attribute. The byte serialization is the
+  deployment's, published and versioned with its deterministic certification
+  and replay procedure (`cond:deployment:canonical-encoding`,
+  `cond:deployment:canonical-replay`, §13.1); the same procedure must
+  reproduce the same verdicts, including INDECISIVE. Publishing an encoding
+  badly is a deployment defect; not declaring one is a protocol defect.
 - **Formula Completeness (`subsec:deployment:completeness`).** The published
   material — protocol constants; edge-type specifications and census; tensor
   pipeline; path-view extraction; mask and tier rules; determinant sign and
