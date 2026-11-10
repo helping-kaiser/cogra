@@ -267,6 +267,28 @@ class SessionGateTest {
     }
 
     @Test
+    fun aRefreshThatFailsLeavesTheDeadTokenUnsentAndTheCallFailed() = runTest {
+        val tokens = FakeTokenStore()
+        val expired = jwt(nowSeconds() - 60)
+        tokens.save(AuthTokens(expired, "r1", "u1"))
+        val sessions = wire(tokens)
+        // The rotation dies in transport; the session itself is intact.
+        server.enqueue(MockResponse().setResponseCode(503))
+        // What a gate that sent the dead token anyway would be answered with:
+        // a working-looking guest read.
+        revoked(0)
+
+        val outcome = sessions.revokeOtherSessions()
+
+        assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
+        assertThat((outcome as Outcome.Failed).cause).isInstanceOf(SessionRefreshFailedException::class.java)
+        // Only the rotation left the device; the call it was for never did,
+        // and the session is still held for the next try.
+        assertThat(server.requestCount).isEqualTo(1)
+        assertThat(tokens.current()?.accessToken).isEqualTo(expired)
+    }
+
+    @Test
     fun aRefreshThatEndsTheSessionLeavesTheRequestAnonymous() = runTest {
         val tokens = FakeTokenStore()
         tokens.save(AuthTokens(jwt(nowSeconds() - 60), "stolen", "u1"))

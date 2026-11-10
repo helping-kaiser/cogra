@@ -42,6 +42,14 @@ import kotlinx.serialization.json.Json
  */
 class SessionUnreadableException : Exception("the session store holds a record it cannot open")
 
+/**
+ * The session's access token had expired and the refresh that should have
+ * replaced it did not land, so the only token on hand is a dead one. The
+ * call fails: the API folds an invalid token into a guest view, so sending
+ * it would show a signed-in reader somebody else's feed instead of an error.
+ */
+class SessionRefreshFailedException : Exception("the expired access token could not be refreshed")
+
 /** The header a call sets to skip the gate — stripped before the wire. */
 internal const val SESSION_BYPASS_HEADER = "X-Cogra-Session-Bypass"
 
