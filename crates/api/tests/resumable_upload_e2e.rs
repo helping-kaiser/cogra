@@ -429,6 +429,47 @@ async fn an_assembled_upload_matches_a_single_shot_upload(pool: PgPool) {
     );
 }
 
+/// Completion reads the assembled object into memory, so it takes a
+/// processing permit first: with every permit held it waits, and it
+/// produces the asset once one is free. The parts themselves never wait —
+/// they are the network read, which a permit must not be held across.
+///
+/// Completing a resumable upload waits for a free processing permit before it reads the assembled bytes.
+/// ´claim:media:a-completion-waits-for-a-processing-permit´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_completion_waits_while_every_processing_permit_is_held(pool: PgPool) {
+    let permits = api::media::ProcessPermits::new(1);
+    let rig = Rig::with_media(
+        pool,
+        api::media::MediaConfig {
+            process_permits: permits.clone(),
+            ..Rig::media(16)
+        },
+    );
+    let author = rig.member("patient").await;
+    let file = photo_with_location();
+
+    let held = permits.acquire().await.expect("the one permit");
+    let begun = rig.begin(&author, file.len(), "STILL").await;
+    no_errors(&begun, "begin refused");
+    let session = begun["upload"]["id"].as_str().expect("session id");
+    rig.put_all_parts(&author, session, 16, &file).await;
+
+    let complete = rig.complete(&author, session);
+    tokio::pin!(complete);
+    assert!(
+        tokio::time::timeout(std::time::Duration::from_millis(500), &mut complete)
+            .await
+            .is_err(),
+        "the completion is processed while every permit is held"
+    );
+
+    drop(held);
+    let completed = complete.await;
+    no_errors(&completed, "completion refused");
+    assert_eq!(completed["media"]["mimeType"], "image/webp");
+}
+
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
