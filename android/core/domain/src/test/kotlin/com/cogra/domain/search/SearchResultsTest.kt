@@ -21,8 +21,8 @@ class SearchResultsTest {
 
     private fun tag(id: String, name: String) = SearchNode.Tag(id, name)
 
-    private fun context(order: SearchOrder = SearchOrder.RANKED, query: String = "sal", reader: String? = "me") =
-        ResultsContext(query = query, reader = reader, order = order, now = now, zone = ZoneOffset.UTC)
+    private fun context(order: SearchOrder = SearchOrder.RANKED, query: String = "sal") =
+        ResultsContext(query = query, order = order, now = now, zone = ZoneOffset.UTC)
 
     private fun rows(items: List<ResultItem>) = items.filterIsInstance<ResultItem.Row>()
 
@@ -121,7 +121,7 @@ class SearchResultsTest {
     }
 
     @Test
-    fun `the reader's own row opens the own profile and another person's opens theirs`() {
+    fun `a person's row opens their profile, the reader's own row included`() {
         val items = layoutResults(
             listOf(SearchHit(person("me", "jakob"), 1.0), SearchHit(person("u2", "sal"), 1.0)),
             emptySet(),
@@ -129,8 +129,8 @@ class SearchResultsTest {
             context(),
         )
         assertThat(rows(items).map { it.door }).containsExactly(
-            ResultDoor.Person("jakob", own = true),
-            ResultDoor.Person("sal", own = false),
+            ResultDoor.Person("jakob"),
+            ResultDoor.Person("sal"),
         ).inOrder()
     }
 
