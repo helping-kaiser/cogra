@@ -56,6 +56,30 @@
     <string name="profile_figure_on_you">Opinions on you</string>
     <string name="profile_figure_by_them">Opinions by them</string>
     <string name="profile_figure_by_you">Opinions by you</string>
+    <!-- The figures' one door, spoken: what the eye reads, then its purpose
+         (copy-voice.md, *The profile's figures, spoken*). -->
+    <string name="profile_figures_door_own">your opinions, both directions</string>
+    <string name="profile_figures_door_other">opinions on and by @%1$s</string>
+    <string name="profile_figures_door_deleted">opinions on and by this account</string>
+
+    <!-- The opinions page (ProfileStances; copy-voice.md, *The opinions page*). -->
+    <string name="stances_title">@%1$s · Opinions</string>
+    <string name="stances_title_deleted">Opinions</string>
+    <string name="stances_back_other">Back to the profile</string>
+    <string name="stances_back_own">Back to your profile</string>
+    <string name="stances_tabs_label">Which direction</string>
+    <string name="stances_tab_on_them">On them</string>
+    <string name="stances_tab_by_them">By them</string>
+    <string name="stances_tab_on_you">On you</string>
+    <string name="stances_tab_by_you">By you</string>
+    <string name="stances_empty_on_them">No opinions yet — yours would be the first.</string>
+    <string name="stances_empty_by_them">No opinions by @%1$s yet.</string>
+    <string name="stances_empty_on_you">No opinions on you yet.</string>
+    <string name="stances_empty_by_you">No opinions by you yet.</string>
+    <string name="stances_empty_on_deleted">No opinions on this account yet.</string>
+    <string name="stances_empty_by_deleted">This account gave no opinions.</string>
+    <!-- A person opened from the opinions page (copy-voice.md origin nouns). -->
+    <string name="profile_back_opinions">Back to the opinions</string>
 
     <!-- The chronicle's verbs, one per family it lists (copy-voice, the
          profile; round 22, seam 245 ask 10 — merged under the autonomy

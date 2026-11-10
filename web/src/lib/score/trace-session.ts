@@ -16,6 +16,15 @@
 // detail), and returns the reader there.
 
 import type { TraceNodes } from "@/lib/api/trace-api";
+import {
+  parsePersonOrigin,
+  parsePostOrigin,
+  parseTagOrigin,
+  personHref,
+  personOrigin,
+  tagOrigin,
+  tagPageHref,
+} from "@/lib/ui/back-origin";
 import type { TraceCover } from "./cover";
 import type { TraceAnswer, TraceThingKind } from "./trace-model";
 
@@ -24,11 +33,13 @@ export type TraceOrigin =
   | { readonly kind: "feed" }
   /** The post's own detail; `via` is the detail's own origin, kept for its back arrow. */
   | { readonly kind: "post"; readonly postId: string; readonly via: string | null }
-  | { readonly kind: "tag"; readonly name: string }
+  /** A tag's page; `from` is the page's own origin, which its way back hands it again. */
+  | { readonly kind: "tag"; readonly name: string; readonly from?: string | null }
   | { readonly kind: "history" }
   | { readonly kind: "saved" }
   | { readonly kind: "profile" }
-  | { readonly kind: "person"; readonly handle: string };
+  /** Someone's profile; `from` is the profile's own origin, which its way back hands it again. */
+  | { readonly kind: "person"; readonly handle: string; readonly from?: string | null };
 
 /** The first back arrow: where it goes and what it reads. */
 export function traceBack(origin: TraceOrigin): { href: string; label: string } {
@@ -40,7 +51,7 @@ export function traceBack(origin: TraceOrigin): { href: string; label: string } 
       return { href: `/posts/${encodeURIComponent(origin.postId)}${via}`, label: "Back to the post" };
     }
     case "tag":
-      return { href: `/topics/${encodeURIComponent(origin.name)}`, label: `Back to #${origin.name}` };
+      return { href: tagPageHref(origin.name, origin.from ?? null), label: `Back to #${origin.name}` };
     case "history":
       return { href: "/history", label: "Back to History" };
     case "saved":
@@ -48,19 +59,22 @@ export function traceBack(origin: TraceOrigin): { href: string; label: string } 
     case "profile":
       return { href: "/profile", label: "Back to your profile" };
     case "person":
-      return { href: `/u/${encodeURIComponent(origin.handle)}`, label: "Back to the profile" };
+      return { href: personHref(origin.handle, origin.from ?? null), label: "Back to the profile" };
   }
 }
 
-/** The `from` a trace URL carries. */
+/**
+ * The `from` a trace URL carries — a chained origin's tail included
+ * (`back-origin.ts`), so the shell lights the root the page's stack began in.
+ */
 export function originParam(origin: TraceOrigin): string {
   switch (origin.kind) {
     case "post":
       return `post:${origin.postId}${origin.via === null ? "" : `:${origin.via}`}`;
     case "tag":
-      return `tag:${origin.name}`;
+      return tagOrigin(origin.name, origin.from ?? null);
     case "person":
-      return `u:${origin.handle}`;
+      return personOrigin(origin.handle, origin.from ?? null);
     default:
       return origin.kind;
   }
@@ -69,12 +83,15 @@ export function originParam(origin: TraceOrigin): string {
 /** A `from` read back; anything unknown is the feed. */
 export function originOf(param: string | null): TraceOrigin {
   if (param === null) return { kind: "feed" };
-  if (param.startsWith("post:")) {
-    const [postId, ...via] = param.slice("post:".length).split(":");
-    return { kind: "post", postId: postId ?? "", via: via.length > 0 ? via.join(":") : null };
+  const post = parsePostOrigin(param);
+  if (post !== null) return { kind: "post", postId: post.postId, via: post.via };
+  const tag = parseTagOrigin(param);
+  // A token carrying no origin reads back as the origin built without one.
+  if (tag !== null) return tag.from === null ? { kind: "tag", name: tag.name } : { kind: "tag", ...tag };
+  const person = parsePersonOrigin(param);
+  if (person !== null) {
+    return person.from === null ? { kind: "person", handle: person.handle } : { kind: "person", ...person };
   }
-  if (param.startsWith("tag:")) return { kind: "tag", name: param.slice("tag:".length) };
-  if (param.startsWith("u:")) return { kind: "person", handle: param.slice("u:".length) };
   if (param === "history" || param === "saved" || param === "profile") return { kind: param };
   return { kind: "feed" };
 }
