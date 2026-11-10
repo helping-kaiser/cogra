@@ -2314,13 +2314,15 @@ folded coordinates decide is the **destination**, not whether the act counts.
 cell carries a total coefficient $c(\xi) \in [0,1]$: the geometric mean of
 the **magnitudes** of its mandatory folded coordinates —
 $\sqrt{|\bar{p}_d\,\bar{p}_i|}$ (Opinion), $\sqrt{|e\,f|}$ (Reference),
-$|u\,f\,r|^{1/3}$ (Invitation), $\sqrt{|c\,e|}$ (Accept/Ratify), and
+$\sqrt{|u\,f|}$ (Invitation), $\sqrt{|c\,e|}$ (Accept/Ratify), and
 likewise for the families that never resolve outward (Publish and Owner on
 $a$, Affinity on $a, t$, Tag on $r, c$, Review on $e, f$, Send on $i$, Bid on
 $g, u$, Join Request on $u, f$, Participant on $i, r$). Where a family's legs
 carry separate coordinates the mandatory set is the **A-leg's** — a T-leg
 records where an act points, not what its author felt about pointing there.
-A family carrying no authored coordinate at all (Registration and the control
+Invitation therefore uses its A-leg coordinates $u, f$ for both the
+coefficient and the positivity gate; its T-leg relevance $r$ is a raw-context
+coordinate and enters neither. A family carrying no authored coordinate at all (Registration and the control
 records) has an empty geometric mean and coefficient $1$.
 
 Taking magnitudes is what makes the coefficient *total*: a maximally hostile
