@@ -1747,9 +1747,10 @@ remain specified in the full paper's terminal sections only.
 
 Six structural invariants for all edges and hyper-edges:
 
-1. Every edge projection inherits its parent act's authoritative logical
-   time $\mathbb{T}^{\text{act}}_q$ and carries its own maturity scalar
-   $\tau_e$.
+1. Every edge projection inherits its parent act's logical time
+   $\mathbb{T}^{\text{act}}_q$ — the Lamport summary of the order of record,
+   never an input to precedence (`ax:graph:act-causality`) — and carries its
+   own maturity scalar $\tau_e$.
 2. Every edge's stored sentiment is a $3\times3$ extended slice
    $\boldsymbol{\Psi}_e$ constructed via the canonical pipeline.
 3. Every edge exposes the raw path-view interface
