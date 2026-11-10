@@ -455,6 +455,41 @@ class TabNavigationTest {
     }
 
     @Test
+    fun theReadersOwnResultOpensTheirProfileInExploresStackWithExploreLit() {
+        search.respond = { _, _ ->
+            Outcome.Success(
+                SearchPage(
+                    hits = listOf(SearchHit(SearchNode.Person("u1", "jakob", "Jakob", null), score = null)),
+                    endCursor = null,
+                    hasNextPage = false,
+                    hasMorePeople = false,
+                ),
+            )
+        }
+        memberOnTheFeed()
+        openExploreTab()
+        compose.onNodeWithTag("explore.searchField.input", useUnmergedTree = true).performTextInput("jakob")
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodesWithTag("explore.result:1", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("explore.result:1", useUnmergedTree = true).performClick()
+        waitUntilOn { onTop<Profile>() }
+        waitForTag("profile.identity.name")
+
+        // A screen belongs to the stack it was opened from whatever its
+        // subject; the originating root stays lit (BottomNav.prompt.md;
+        // design/readme.md §13, jakob 2026-11-10).
+        val route = navController.currentBackStackEntry?.toRoute<Profile>()
+        assertThat(route?.handle).isEqualTo("jakob")
+        assertThat(route?.from).isEqualTo("search")
+        assertLit("search")
+
+        pressBack()
+        waitUntilOn { onTop<Explore>() }
+        waitForTag("explore.result:1")
+    }
+
+    @Test
     fun theExploreSlotAtExploresTopStaysPut() {
         memberOnTheFeed()
         openExploreTab()

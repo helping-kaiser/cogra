@@ -132,7 +132,6 @@ data class ExploreDoors(
     val onOpenPost: (postId: String) -> Unit,
     val onOpenComment: (postId: String, commentId: String) -> Unit,
     val onOpenPerson: (handle: String) -> Unit,
-    val onOpenOwnProfile: () -> Unit,
     val onOpenTopic: (name: String) -> Unit,
     val onOpenYourTopics: () -> Unit,
 )
@@ -541,7 +540,7 @@ private fun Results(
 /** The answer laid out as served (`layoutResults`); a guest's reads Newest. */
 @Composable
 private fun rememberResultItems(state: ExploreUiState, now: Instant): List<ResultItem> =
-    remember(state.results, state.guest, state.reader, now) {
+    remember(state.results, state.guest, now) {
         state.results?.let {
             layoutResults(
                 hits = it.hits,
@@ -549,7 +548,6 @@ private fun rememberResultItems(state: ExploreUiState, now: Instant): List<Resul
                 hasMorePeople = it.hasMorePeople,
                 context = ResultsContext(
                     query = it.query,
-                    reader = state.reader,
                     order = if (state.guest) SearchOrder.NEWEST else it.filter.order,
                     now = now,
                 ),
@@ -645,7 +643,7 @@ private fun ResultKind.mark(): MarkKind = when (this) {
 private fun ResultDoor.open(doors: ExploreDoors) = when (this) {
     is ResultDoor.Post -> doors.onOpenPost(postId)
     is ResultDoor.Comment -> doors.onOpenComment(postId, commentId)
-    is ResultDoor.Person -> if (own) doors.onOpenOwnProfile() else doors.onOpenPerson(handle)
+    is ResultDoor.Person -> doors.onOpenPerson(handle)
     is ResultDoor.Topic -> doors.onOpenTopic(name)
 }
 
