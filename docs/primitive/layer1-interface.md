@@ -485,6 +485,9 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | local width $W_{\text{loc}}$ | width fence + safety-threshold rule | guild dashboards | L1·closure | consume only; recompute to audit |
 | published contributing width, evaluated fence, and verdict | — (evidence for the committed standing package) | any verifier | L1·verify | consume only; replayable evidence |
 | Vcert accepted boxes, path-incidence transcript, and proof-tree root | — (evidence for the retired staged construction only) | verifier of that construction | L1·verify | no conserved-standing rung, stamp, headroom, or bound |
+| released Bcert2/Fcert2 source and manifest hashes | — (integrity locators; the binding change is the announced formula edition) | public reproducibility | L1·verify | consume only; a hash never substitutes for replay |
+| per-epoch certificate commitment (contributing width, evaluated fence, and verdict; the source hash is an integrity locator) | standing-package validity | public audit | L1·closure | consume only; the commitment binds, the hash only locates |
+| path-depth flow shares, clipping rates, and one-boundary standing movement | — | monitoring dashboards | L1·verify | diagnostics; may not override the binding certificate |
 | attested boundary timestamp, closure cause | boundary-accountability replay | guild dashboards | L1·verify | consume only |
 | title $\mathrm{owner}^{(k)}$ | recognition (iii), authorization and parties | guild routing | L1·closure ⋆ | consume kernel value; read downstream; a recomputable summary of the partition (`rem:graph:title-certificate-is-summary`) |
 | standing $\alpha_i$ | gate | reward amplifier $(1+\alpha_C)$ | L1·closure ⋆ | consume kernel value; read downstream |
