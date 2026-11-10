@@ -2605,10 +2605,12 @@ override them.
 ### 11.1 Thermodynamic boundary
 
 **(`ax:epoch:thermodynamic-boundary`.)** Internal quantities flow undamped.
-The Boltzmann factor $e^{-\beta H_\tau}$ is applied once, per edge, at the
-observation boundary (via $\tilde{w}(e)$); its consumers are the raw-graph
+The Boltzmann factor $e^{-\beta H_\tau}$ is applied once at observation
+boundaries, which differ across subsystems: per edge for the raw-graph
 traversals (feed ranking, the raw signed double-cover service, bridge
-Channel 1). $\beta$ also enters the projected standing core $Q$ (§11.4) —
+Channel 1, via $\tilde{w}(e)$), and per creator-epoch for the terminal
+reward distribution (via $e^{-\beta H_\tau^{(C)}}$,
+`eq:transport:reward-formula`); both share $\beta$. $\beta$ also enters the projected standing core $Q$ (§11.4) —
 it is a binding constant, while raw damping is a terminal default.
 $\beta = 2\ln 2 \approx 1.386$; maximum-entropy edges damp to $\approx 38\%$
 of raw weight.
