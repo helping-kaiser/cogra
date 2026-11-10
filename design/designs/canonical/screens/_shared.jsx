@@ -335,7 +335,11 @@ function ApkLine() {
    nothing reads as if a reader consented to data handling by registering.
 
    Both live here because `Join` and `JoinErrors` draw one form, and a legal
-   line spelled twice is a legal line that drifts. */
+   line spelled twice is a legal line that drifts.
+
+   The names are the `join` prefix's (round 28): the lines are `terms` and
+   `privacy`, as Settings' About rows name the same two documents, and each
+   line's door is its `open`. */
 function JoinTermsLine() {
   return (
     <p
@@ -347,8 +351,9 @@ function JoinTermsLine() {
         letterSpacing: "var(--text-body-small--letter-spacing)",
         color: "var(--text-secondary)",
       }}
+      data-node="terms"
     >
-      By creating your account you accept the <a href="#">Terms</a>.
+      By creating your account you accept the <a href="#" data-node="open">Terms</a>.
     </p>
   );
 }
@@ -364,8 +369,9 @@ function JoinPrivacyNotice() {
         letterSpacing: "var(--text-body-small--letter-spacing)",
         color: "var(--text-secondary)",
       }}
+      data-node="privacy"
     >
-      How CoGra handles your data: the <a href="#">Privacy Policy</a>.
+      How CoGra handles your data: the <a href="#" data-node="open">Privacy Policy</a>.
     </p>
   );
 }
@@ -3812,11 +3818,16 @@ function RestoreBody({ value = "", error }) {
    is no field, and no lost-code line either — the line exists because a
    browser whose code is gone cannot re-key. `error` is the field's M3 error
    line, `RestoreError`'s words for the same secret refused; `value` seeds the
-   field with the code that was pressed. */
+   field with the code that was pressed.
+
+   The names are the `settingsBackup` prefix's (round 28), the credential
+   family's: the code asked for is the proof, `current`; the line under it
+   `lostNote`; the commit with its reason `commit`; and the thing to know last
+   `note`, as `KeyCeremony` names its code paragraph. */
 function SettingsBackupBody({ app = false, value = "", error }) {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -3825,6 +3836,7 @@ function SettingsBackupBody({ app = false, value = "", error }) {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           A new recovery code
         </h1>
@@ -3836,6 +3848,7 @@ function SettingsBackupBody({ app = false, value = "", error }) {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           A new code re-encrypts your key and replaces the old backup — recovery always uses the
           newest one. Your current code was made on 12.08.2026.
@@ -3852,10 +3865,11 @@ function SettingsBackupBody({ app = false, value = "", error }) {
                 placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX"
                 value={value}
                 error={error}
+                node="current"
               />
             </div>
             <div style={{ marginTop: 8 }}>
-              <QuietNote>
+              <QuietNote node="lostNote">
                 Lost it? This browser can&apos;t make a new code without the current one. If the Android app holds your
                 key, make the new code there.
               </QuietNote>
@@ -3869,6 +3883,7 @@ function SettingsBackupBody({ app = false, value = "", error }) {
             label="Create a new recovery code"
             reason="Waiting for your current recovery code"
             waiting={!app && !value && !error}
+            node="commit"
           />
         </div>
 
@@ -3880,6 +3895,7 @@ function SettingsBackupBody({ app = false, value = "", error }) {
             letterSpacing: "var(--text-body-small--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="note"
         >
           The new code is shown once and never stored. Have somewhere to write it down before you go
           on — the old code keeps working until the new one is confirmed.

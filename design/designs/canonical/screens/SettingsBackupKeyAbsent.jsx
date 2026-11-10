@@ -28,15 +28,20 @@
 
    NO ESCAPE HATCH EITHER. The compose and pad boards end in one because a
    draft or a pick is waiting on the key; nothing is staged here, so the back
-   arrow is the whole way out — `WalletKeyAbsent`'s shape. */
+   arrow is the whole way out — `WalletKeyAbsent`'s shape.
+
+   REGISTERED under the `settingsBackup` prefix (round 28): the panel is
+   `notice` — its `title`, its `help`, its line `body` and `restore`, the key
+   card's names (`feed.keyCard`) — then the page's `title` and `body`. */
+export const NODE = "settingsBackup";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
-        <NoticePanel title="Your key isn't on this browser" helpLabel="Your key" corner="large">
-          <NoticeLine>Making a new code needs the key itself. Your current recovery code keeps working.</NoticeLine>
-          <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
+        <NoticePanel title="Your key isn't on this browser" helpLabel="Your key" corner="large" node="notice">
+          <NoticeLine node="body">Making a new code needs the key itself. Your current recovery code keeps working.</NoticeLine>
+          <Button variant="inverse" style={{ width: "100%" }} node="restore">Restore the key</Button>
         </NoticePanel>
 
         <h1
@@ -46,6 +51,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           A new recovery code
         </h1>
@@ -57,6 +63,7 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           A new code re-encrypts your key and replaces the old backup — recovery always uses the
           newest one. Your current code was made on 12.08.2026.

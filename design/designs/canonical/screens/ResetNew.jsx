@@ -26,7 +26,11 @@
 
    THE QUIET NOTE IS `Reset`'s, VERBATIM, and it matters more here. A reader
    who has just finished a password reset is exactly the reader most likely
-   to believe their key came back with it. */
+   to believe their key came back with it.
+
+   REGISTERED under the `reset` prefix (round 28): `title`, `body`, the field
+   `password` (`ChangePassword`'s name for the new one), `commit` and `note`. */
+export const NODE = "reset";
 export function Screen() {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "32px 24px", overflow: "hidden" }}>
@@ -37,6 +41,7 @@ export function Screen() {
           lineHeight: "var(--text-headline-small--line-height)",
           fontWeight: "var(--text-headline-small--font-weight)",
         }}
+        data-node="title"
       >
         Set a new password
       </h1>
@@ -48,20 +53,21 @@ export function Screen() {
           letterSpacing: "var(--text-body-medium--letter-spacing)",
           color: "var(--text-secondary)",
         }}
+        data-node="body"
       >
         Setting a new password signs out every device. You sign in again with the new one.
       </p>
 
       <div style={{ marginTop: 32 }}>
-        <PasswordField id="new-password" label="New password" autoComplete="new-password" account="sol@solferreira.art" value="" hint="At least 12 characters." />
+        <PasswordField id="new-password" label="New password" autoComplete="new-password" account="sol@solferreira.art" value="" hint="At least 12 characters." node="password" />
       </div>
 
       <div style={{ marginTop: 24 }}>
-        <WaitingCommit id="reset-new" label="Set the new password" reason="Waiting for a new password" />
+        <WaitingCommit id="reset-new" label="Set the new password" reason="Waiting for a new password" node="commit" />
       </div>
 
       <div style={{ marginTop: 24 }}>
-        <QuietNote>
+        <QuietNote node="note">
           This restores your sign-in only. Your key stays wherever it is — restoring the key is its own step, with your
           recovery code.
         </QuietNote>

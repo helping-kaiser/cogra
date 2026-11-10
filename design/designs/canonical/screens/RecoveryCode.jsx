@@ -23,11 +23,17 @@
    screenshot would punish exactly them, on the one screen where losing what
    they took means losing the key. Storing the code in a screenshot is not
    recommended; blocking it is not how this screen says so. The asymmetry is
-   the ruling — not a gap for a later pass to close. */
+   the ruling — not a gap for a later pass to close.
+
+   REGISTERED under the `recoveryCode` prefix (round 28, seam 254 A1), with
+   `RecoveryCodeMismatch`: the empty band `header`, `title`, and the card
+   `code`, holding the master's parts — the code's `value`, the `explainer`,
+   `copy`, the confirm field `confirm` and `done`. */
+export const NODE = "recoveryCode";
 export function Screen() {
   return (
     <>
-      <PageHeader />
+      <PageHeader node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -36,15 +42,17 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Your recovery code
         </h1>
 
         <div style={{ marginTop: 24 }}>
-          <Card>
+          <Card node="code">
             <RecoveryCode
               code="7Q3ZD-XK9P2-M4TVE-0RH8N-1WYB6C"
               explainer="This is the only way to restore your key. It is shown once and never stored — keep it offline, written down, somewhere safe."
+              node="code"
             />
           </Card>
         </div>

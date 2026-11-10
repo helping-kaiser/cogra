@@ -18,7 +18,12 @@
 
    NO MARK, NO ARROW, NO ERROR COLOUR, for `VerifyExpired`'s reasons: a mail
    link has no previous screen of ours, and the dead link is not the
-   reader's failure. The paragraph is blessed (jakob 2026-10-05). */
+   reader's failure. The paragraph is blessed (jakob 2026-10-05).
+
+   REGISTERED under the `reset` prefix (round 28), `VerifyExpired`'s names:
+   `title`, `body`, and the plain way on `onward`; the outlined act that opens
+   the request again is `again` (the web's id, kept). */
+export const NODE = "reset";
 export function Screen() {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "32px 24px", overflow: "hidden" }}>
@@ -29,6 +34,7 @@ export function Screen() {
           lineHeight: "var(--text-headline-small--line-height)",
           fontWeight: "var(--text-headline-small--font-weight)",
         }}
+        data-node="title"
       >
         This link doesn't work anymore
       </h1>
@@ -40,16 +46,17 @@ export function Screen() {
           letterSpacing: "var(--text-body-medium--letter-spacing)",
           color: "var(--text-secondary)",
         }}
+        data-node="body"
       >
         It may have expired or already been used. A reset link works once and expires after 15 minutes — ask for a
         fresh one.
       </p>
 
       <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
-        <Button variant="outline" style={{ width: "100%" }}>
+        <Button variant="outline" style={{ width: "100%" }} node="again">
           Reset your password
         </Button>
-        <Button variant="text" style={{ width: "100%" }}>
+        <Button variant="text" style={{ width: "100%" }} node="onward">
           Sign in
         </Button>
       </div>

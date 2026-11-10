@@ -34,11 +34,17 @@
 
    THE PLATFORM NOUN IS THE `wording` CHIP (jakob 2026-10-05, E13), as on
    `KeyElsewhere` and `Restore`: the key lives `only in this browser` or `only in this app`, and is read from either. The app renderings are blessed
-   (jakob 2026-10-05; copy-voice, *The collected rulings' entry lines*). */
+   (jakob 2026-10-05; copy-voice, *The collected rulings' entry lines*).
 
-function SecretBlock({ label, value, copyLabel }) {
+   REGISTERED under the `yourKey` prefix (round 28, seam 254 A1), with
+   `YourKeyAbsent` and `YourKeyGate`: the key paragraph `body`, the card
+   `exportCard` (a name that does not bar the sidecar's `actor key`) with its
+   `title` and its two blocks `pem` and `hex` — each its
+   `label`, `copy` and `value` — and the quiet note `note`. */
+
+function SecretBlock({ label, value, copyLabel, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }} data-node={node}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span
           style={{
@@ -48,14 +54,16 @@ function SecretBlock({ label, value, copyLabel }) {
             fontWeight: "var(--text-label-large--font-weight)",
             letterSpacing: "var(--text-label-large--letter-spacing)",
           }}
+          data-node={node && "label"}
         >
           {label}
         </span>
-        <InlineAction ariaLabel={copyLabel} onClick={() => {}}>
+        <InlineAction ariaLabel={copyLabel} onClick={() => {}} node={node && "copy"}>
           Copy
         </InlineAction>
       </div>
       <p
+        data-node={node && "value"}
         style={{
           margin: 0,
           padding: "12px",
@@ -78,10 +86,11 @@ function SecretBlock({ label, value, copyLabel }) {
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `keyLives: this.props.wording === "app" ? "This key signs everything you publish, and it lives only in this app. Store a copy somewhere safe and you keep it whatever happens to CoGra. Anyone who has a copy can act as you." : "This key signs everything you publish, and it lives only in this browser. Store a copy somewhere safe and you keep it whatever happens to CoGra. Anyone who has a copy can act as you.", keyRead: this.props.wording === "app" ? "Nothing here is sent anywhere — the key is read from this app and shown." : "Nothing here is sent anywhere — the key is read from this browser and shown."`;
 
+export const NODE = "yourKey";
 export function Screen() {
   return (
     <>
-      <PageHeader title="Your key" backHref="/settings" backLabel="Back to settings" />
+      <PageHeader title="Your key" backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 32px", overflow: "hidden" }}>
         <p
           style={{
@@ -91,11 +100,12 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           {"{{keyLives}}"}
         </p>
 
-        <Card ariaLabel="Your actor key">
+        <Card ariaLabel="Your actor key" node="exportCard">
           <h2
             style={{
               margin: 0,
@@ -103,6 +113,7 @@ export function Screen() {
               lineHeight: "var(--text-title-medium--line-height)",
               fontWeight: "var(--text-title-medium--font-weight)",
             }}
+            data-node="title"
           >
             Your actor key
           </h2>
@@ -110,15 +121,17 @@ export function Screen() {
             label="PEM (PKCS#8)"
             copyLabel="Copy the PEM block"
             value={"-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIHq2ZP9c1sVe0mQ4bT8xLp3RkA6yNfW5jChD7uXsG2vB\n-----END PRIVATE KEY-----"}
+            node="pem"
           />
           <SecretBlock
             label="Raw hex — Ed25519 private key"
             copyLabel="Copy the raw hex"
             value="7ab664ff5cd6c55ed264386d3f312e9dd1900eb235f5b98c2843eee5ec1b6bc1"
+            node="hex"
           />
         </Card>
 
-        <QuietNote>{"{{keyRead}}"}</QuietNote>
+        <QuietNote node="note">{"{{keyRead}}"}</QuietNote>
       </div>
     </>
   );

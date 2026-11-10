@@ -12,11 +12,15 @@
    number here would be a countdown the product does not have, and a guess.
    And it accuses no field and no account: the backoff arms identically for
    an email that has no account behind it, which is what keeps the line from
-   telling a stranger that one exists. */
+   telling a stranger that one exists.
+
+   REGISTERED under the `signIn` prefix (round 28): `SignInError`'s names, the
+   backoff's line its `fault`. */
+export const NODE = "signIn";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -25,6 +29,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Sign in to CoGra
         </h1>
@@ -36,31 +41,32 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           Welcome back — your feed is where you left it.
         </p>
 
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-          <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="sol@solferreira.art" />
-          <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="saltmarsh-tide" />
-          <Checkbox label="Don't remember this account on this device" />
-          <p role="alert" style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", color: "var(--error)" }}>
+          <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="sol@solferreira.art" node="email" />
+          <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="saltmarsh-tide" node="password" />
+          <Checkbox label="Don't remember this account on this device" node="forget" />
+          <p role="alert" style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", color: "var(--error)" }} data-node="fault">
             Too many tries in a row. Wait a moment, then try again.
           </p>
-          <Button style={{ width: "100%" }}>Sign in</Button>
+          <WaitingCommit id="signin" label="Sign in" waiting={false} node="commit" />
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column" }}>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="forgot">
             Forgot password?
           </Button>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="invite">
             New here? Enter your invite
           </Button>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="browse">
             Just looking? Browse the feed →
           </Button>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="apk">
             On Android? Download the app (APK)
           </Button>
         </div>
