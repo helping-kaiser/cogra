@@ -2855,8 +2855,8 @@ burn increment $\Delta B_i^{(k)} = B_i^{(k)} - B_i^{(k-1)}$ is
 marker-defined: $B_i^{(k)}$ is the settled amount derived from the accepted
 set $A(k)$ at the recognized final marker $m_k$, and the increment sums $i$'s
 destruction amounts first represented by accepted records at this marker
-(`def:comparator:marker-burn-snapshot`) — positive even when $i$ authors no
-act, zero when the marker accepts no previously uncounted destruction. Then:
+(`def:comparator:marker-burn-snapshot`) — possibly positive even when $i$
+authors no act, zero when the marker accepts no previously uncounted destruction. Then:
 
 $$b_i^{(k)} = b_i^{(k-1)} + \Delta B_i^{(k)} - \Delta N_i^{(k)}\,\theta^{(k)}, \qquad N_i^{(k)} = N_i^{(k-1)} + \Delta N_i^{(k)}$$
 
