@@ -165,11 +165,13 @@ record at one point in the order. Two clauses:
 >
 > **Member.** `a` is a member of `C` iff `a` is not banned, and
 > `a`'s own `≺`-latest {Participant, Leave} element toward `C` is
-> a Participant that strictly `≺`-follows the latest recognized
-> De-invite toward `(C, prof(a))`, where one exists.
+> a recognized Participant (Backing, below) that strictly
+> `≺`-follows the latest recognized De-invite toward
+> `(C, prof(a))`, where one exists.
 
 Where no De-invite exists, the member clause reduces to the
-canonical fold — the ordinary join/leave path is unchanged.
+canonical fold over recognized Participants — the ordinary
+join/leave path is unchanged.
 
 On top of the fold sit CoGra's two published policy clauses, the
 authority policy `𝒫`:
@@ -195,9 +197,11 @@ authority policy `𝒫`:
   gesture is the cancelling Invitation that nets the bundle to
   `(0,0)`; a bundle carried past zero is withdrawn all the same,
   and an Invitation that is not strictly positive on both
-  coordinates backs nothing. A withdrawal `≺`-following the
-  Participant does not undo the membership it backed. In
-  open chats, any Participant is recognized as-is.
+  coordinates backs nothing. Backing is required to become a
+  member, not to remain one: a withdrawal `≺`-following the
+  Participant does not undo the membership it backed, and a
+  Participant by an actor who is already a member needs no
+  backing. In open chats, any Participant is recognized as-is.
 
 **Three act shapes, keyed on leg role.** Participant is a
 movement record — *from A to T* (§2) — so departure is
