@@ -1114,6 +1114,7 @@ label.
 | `test:unit:a-profile-picture-is-the-authors-own-still`                                                         | a_profile_picture_is_the_authors_own_still                                                  |
 | `test:unit:a-quarter-turn-swaps-the-probed-dimensions`                                                         | a_quarter_turn_swaps_the_probed_dimensions                                                  |
 | `test:unit:a-ranked-cursor-round-trips-with-its-pin`                                                           | a_ranked_cursor_round_trips_with_its_pin                                                    |
+| `test:unit:a-ranked-read-pins-an-ingested-epoch`                                                               | a_ranked_read_pins_an_ingested_epoch                                                        |
 | `test:unit:a-renamed-file-is-still-refused`                                                                    | a_renamed_file_is_still_refused                                                             |
 | `test:unit:a-rendition-over-the-cap-is-refused-before-it-is-read`                                              | a_rendition_over_the_cap_is_refused_before_it_is_read                                       |
 | `test:unit:a-restore-time-allows-the-skew-and-no-more`                                                         | a_restore_time_allows_the_skew_and_no_more                                                  |
