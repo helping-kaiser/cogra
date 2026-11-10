@@ -55,7 +55,7 @@ anything not in the feedback closure below is a Layer 2's to reimplement
   objects, plus that contract at epoch closure. The burn amount map is
   neutral because the primitive records a destroyed magnitude and declines
   to price it. The primitive knows
-  nothing of clusters, terminal read-sites, or guild policy.
+  nothing of clusters, feeds, or rewards.
   (`subsec:introduction:two-layers-derived`)
 - **Layer 1 (Peer Network)** — the root of the stack, and the binding.
   Reads the imported frame as the network's source, welds it onto a public
