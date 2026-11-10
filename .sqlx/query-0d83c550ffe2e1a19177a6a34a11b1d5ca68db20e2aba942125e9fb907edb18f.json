@@ -1,0 +1,118 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT epoch, closed_at, theta_charged_micro, closure_cause,\n                marker_policy, marker_edition,\n                wall_num, wall_den, width_num, width_den, rung_num, rung_den,\n                proposal_num, proposal_den, delivered_num, delivered_den,\n                theta_next_micro\n         FROM l1_epochs WHERE epoch > $1 ORDER BY epoch",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "closed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "theta_charged_micro",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "closure_cause",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "marker_policy",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "marker_edition",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "wall_num",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "wall_den",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "width_num",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "width_den",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
+        "name": "rung_num",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 11,
+        "name": "rung_den",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 12,
+        "name": "proposal_num",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 13,
+        "name": "proposal_den",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 14,
+        "name": "delivered_num",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 15,
+        "name": "delivered_den",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 16,
+        "name": "theta_next_micro",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "0d83c550ffe2e1a19177a6a34a11b1d5ca68db20e2aba942125e9fb907edb18f"
+}

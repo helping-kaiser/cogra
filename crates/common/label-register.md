@@ -31,6 +31,7 @@ label.
 | `test:unit:a-non-canonical-scalar-is-refused`                                                       | a_non_canonical_scalar_is_refused                                                       |
 | `test:unit:a-one-zero-standing-is-inert-not-severed`                                                | a_one_zero_standing_is_inert_not_severed                                                |
 | `test:unit:a-pre-digest-binds-the-act-id-it-was-formed-for`                                         | a_pre_digest_binds_the_act_id_it_was_formed_for                                         |
+| `test:unit:a-ratio-is-exact`                                                                        | a_ratio_is_exact                                                                        |
 | `test:unit:a-reserved-key-at-a-known-ceiling-stays-refused-on-read`                                 | a_reserved_key_at_a_known_ceiling_stays_refused_on_read                                 |
 | `test:unit:a-small-order-key-forges-nothing-under-strict-verification`                              | a_small_order_key_forges_nothing_under_strict_verification                              |
 | `test:unit:a-tampered-lock-record-refuses`                                                          | a_tampered_lock_record_refuses                                                          |

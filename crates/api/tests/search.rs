@@ -1182,6 +1182,7 @@ async fn claim_pair(
             epoch,
             attested_at: chrono::Utc::now(),
             records: vec![record],
+            closure: Default::default(),
         },
     )
     .await

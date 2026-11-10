@@ -77,6 +77,7 @@ async fn land(pool: &PgPool, epoch: i64, records: Vec<PublishedRecord>) {
             epoch,
             attested_at,
             records,
+            closure: Default::default(),
         },
     )
     .await

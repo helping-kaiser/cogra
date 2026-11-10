@@ -16,7 +16,7 @@ use common::l1::handshake::Proposal;
 use common::l1::identifier::ActId;
 use common::l1::wire;
 use http_body_util::BodyExt;
-use l1_standin::{StandIn, StandInConfig};
+use l1_standin::StandIn;
 use postgres_store::PgPool;
 use serde_json::{Value, json};
 use tower::ServiceExt;
@@ -30,7 +30,7 @@ const GC: i64 = 8;
 /// The stand-in's act price in micro-units. The solvency tests fund an
 /// author in multiples of it, so they state what they mean — "enough for
 /// two acts, not three" — instead of a magic number.
-const THETA_MICRO: i64 = StandInConfig::DEFAULT_THETA_MICRO;
+const THETA_MICRO: i64 = l1_standin::REFERENCE_THETA_MICRO;
 
 struct Citer {
     app: axum::Router,

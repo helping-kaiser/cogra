@@ -1310,6 +1310,7 @@ impl Rig {
                 attested_at: chrono::DateTime::from_timestamp(1_850_000_000 + epoch * 60, 0)
                     .expect("instant"),
                 records,
+                closure: Default::default(),
             },
         )
         .await
