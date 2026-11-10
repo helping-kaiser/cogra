@@ -140,7 +140,9 @@ extension-ceiling]` at key 0 — CoGra produces `[1,1,1,1]` — a
 validated text body at key 1, and an extension map at key 2 whose
 keys ≥ 100 belong to guilds. The envelope never carries the node's
 type (the L1 act fixes it) and conformance is a binary L2 admission
-gate at prepare, never a scoring input.
+gate at prepare, never a scoring input. Its serialized length is
+bounded by `max_payload_bytes`, which is L1's `M_payload`
+(``def:graph:act-payload-projection``).
 
 The reserved range (keys 4–99, PCE §4.2) is read two ways. A payload
 CoGra authors — the one a device checks before it signs — carries no
