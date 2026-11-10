@@ -51,6 +51,11 @@ tower-http = { version = "0.7", default-features = false, features = ["limit", "
 # ceiling" from "the connection broke" and answer 413 rather than 500 —
 # the same downcast axum's own `Bytes` extractor performs.
 http-body-util = { version = "0.1" }
+# The parser async-graphql classifies a request's content type with, so
+# the `/graphql` handler decides which body is a multipart upload exactly
+# as the library's own parse does and never bounds one by the other's
+# ceiling.
+mime = { version = "0.3" }
 async-graphql = { version = "7" }
 async-graphql-axum = { version = "7" }
 

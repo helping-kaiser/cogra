@@ -1511,3 +1511,58 @@ async fn email_change_link_check_answers_the_same_signed_in_as_another_account(p
     assert_eq!(rig.link_check(Some(&alice), &link).await, anonymous);
     assert_eq!(rig.link_check(Some(&bob), &link).await, anonymous);
 }
+
+/// A carve-out change's link is a link like any other when it reaches
+/// the confirm: another account presenting it is told it belongs to
+/// another account, and its own account's confirm takes it as the
+/// new-address proof — the whole proof the carve-out needs — rather than
+/// as a wrong code against a change that has no code.
+///
+/// A carve-out link submitted to the confirm answers by whose it is, and applies its own account's change.
+/// ´claim:auth:a-carve-out-link-confirms-as-a-link´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_carve_out_link_at_the_confirm_answers_as_a_link(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let (user, _) = rig
+        .seed_unverified("alice", "typo@example.com", PASSWORD)
+        .await;
+    rig.seed_user("mallory", "m@example.com", PASSWORD).await;
+    let token = rig.access_token("typo@example.com", PASSWORD).await;
+    let intruder = rig.access_token("m@example.com", PASSWORD).await;
+    rig.request_change(&token, "right@example.com", PASSWORD)
+        .await;
+    let link = rig.mailer.latest_code_for("right@example.com");
+
+    let refused = rig.confirm(&intruder, &link).await;
+    assert_eq!(codes(&refused), vec!["EMAIL_CHANGE_OTHER_ACCOUNT"]);
+
+    let applied = rig.confirm(&token, &link).await;
+    assert_eq!(codes(&applied), Vec::<&str>::new(), "{applied}");
+    assert_eq!(rig.stored_email(user).await, "right@example.com");
+    assert!(rig.verified(user).await);
+}
+
+const REQUEST_RESET: &str = "mutation($input: RequestPasswordResetInput!) {
+    requestPasswordReset(input: $input) { ok }
+}";
+
+/// A reset routes through the verified address only (auth.md "Password
+/// reset"): an address no one has proved gets no reset mail, though the
+/// answer is the same silent success, and a verified one still does.
+///
+/// A password reset mails only a verified address, answering the same success either way.
+/// ´claim:auth:a-reset-mails-only-a-verified-address´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_reset_mails_only_a_verified_address(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_unverified("alice", "unproved@example.com", PASSWORD)
+        .await;
+    rig.seed_user("bob", "proved@example.com", PASSWORD).await;
+    for (email, mails) in [("unproved@example.com", 0), ("proved@example.com", 1)] {
+        let answer = rig
+            .gql(None, REQUEST_RESET, json!({ "input": { "email": email } }))
+            .await;
+        assert_eq!(answer["requestPasswordReset"]["ok"], true);
+        assert_eq!(rig.mailer.count_for(email), mails, "{email}");
+    }
+}

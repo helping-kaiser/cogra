@@ -2,14 +2,14 @@
 
 > **Provenance.** This document is a derived reference extracted from the
 > **PeerNetworks Layer 1** specification by the **Peer Team** (Peer Network,
-> v0.25.0), reproducing its binding surface for the purpose
+> v0.31.1), reproducing its binding surface for the purpose
 > of building CoGra as a Layer 2 on it. It is not the normative source —
 > the PeerNetworks paper is. Licensed under CC-BY-4.0; see
 > [LICENSE-DOCS](../../LICENSE-DOCS).
 
-**Derived file — hard facts only.** v0.25.0 ships as the flat source
-(`PeerNetwork_PeerNetwork_v0.25.0_flat.tex`). It carries the **Edition 4**
-body rewrite (the authored-act ontology, the admission handshake, the
+**Derived file — hard facts only.** v0.31.1 ships as the flat source
+(`PeerNetwork_PeerNetwork_v0.31.1_flat.tex`). It carries the **Edition 4**
+act-ownership refoundation (authored acts, the admission handshake, the
 authoritative act order) and the **Edition 5** refoundation of standing as
 one conserved allocation operator. This reference draws two scopes from it:
 
@@ -29,8 +29,8 @@ one conserved allocation operator. This reference draws two scopes from it:
 Proofs and motivation prose are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 374 distinct anchor names,
-`anchor_set_hash = 88c0e4d9e51bfa34091d363236c61db1a3f8838047faad0f883617ade4ca83f4`
+anchor-stability contract: 450 distinct anchor names,
+`anchor_set_hash = 2ad892124e020ab7058fd06746f100a450d9da0ab93e8f5383e3b2cb33f0c100`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
@@ -48,12 +48,14 @@ anything not in the feedback closure below is a Layer 2's to reimplement
 
 - **The burn primitive** — the frame source. Not a layer of the stack but
   what lies beneath it: a non-repayable, publicly verifiable, costly action
-  together with the record it leaves (`def:comparator:burn-primitive`). Any
-  system satisfying requirements R1–R11 (§1.1) is a *realization*; the
-  network reads a realization through exactly four interface objects and
-  nothing else. The burn value map is neutral because the primitive records
-  a destroyed magnitude and declines to price it. The primitive knows
-  nothing of clusters, terminal read-sites, or guild policy.
+  together with the record it leaves (`def:comparator:burn-primitive`). A
+  *realization* satisfies requirements R1–R11 (§1.1); its use at epoch
+  closure also satisfies the marker-bound settlement contract (§1.2). The
+  network reads a realization through exactly four mathematical interface
+  objects, plus that contract at epoch closure. The burn amount map is
+  neutral because the primitive records a destroyed magnitude and declines
+  to price it. The primitive knows
+  nothing of clusters, feeds, or rewards.
   (`subsec:introduction:two-layers-derived`)
 - **Layer 1 (Peer Network)** — the root of the stack, and the binding.
   Reads the imported frame as the network's source, welds it onto a public
@@ -70,62 +72,72 @@ anything not in the feedback closure below is a Layer 2's to reimplement
 | Part | Comparator role | Owns / prices |
 |---|---|---|
 | The burn primitive (beneath Layer 1) | frame source — supplies the neutral exogenous scalar | owns nothing of the graph (`rem:comparator:neutrality-from-silence`) |
-| Layer 1 (Network) | the binding — welds the frame onto $G$, publishes the standing field, the ledger, and every closure constant | owns the public infrastructure; prices nothing of its own |
-| Terminal complement | read-sites — downstream services may consume $\alpha_i$, title, and other published values at terminal sites | named only in `tbl:symbols:boundary`; mechanisms not specified in the closure edition |
+| Layer 1 (Network) | the binding — compiles complete actor-authored vouches, derives source-relative safe standing flow, forms the balance/count mediant, and publishes the standing field, hop matrices, emission fractions, and certificates | owns the public infrastructure; prices nothing of its own |
+| Layer 2 (Guilds) | readouts — consume $\alpha_i$ to attribute and reward; identity association and payload carriage are likewise Layer 2 (consumers, of which guilds are the economic kind) | each owns its own pool and recursion; none owns frame or graph |
 
 (`tbl:introduction:layer-roles`)
 
 The map from an actor to the *person* behind it is never represented at
 Layer 1: it has no feedback read-site, hence terminal. Severing it changes
-no $\alpha_i$, no $W_{\text{end}}^{(k)}(u \to i)$, no title, and no gate.
+no $\alpha_i$, no $\Pi_{ui}$, no title, and no reward.
 (`rem:comparator:identity-is-layer-2`)
 
 ### 1.1 The burn interface and requirements R1–R11
 
 **The Burn Interface (`def:comparator:burn-interface`).** A realization
-exposes exactly four objects to the network, and the network reads nothing
-else of it:
+exposes exactly four mathematical objects to the network:
 
-- **(B) burn value** — the map $B : \mathbb{A} \to \mathbb{R}_{\ge 0}$
+- **(B) burn amount** — the map $B : \mathbb{A} \to \mathbb{R}_{\ge 0}$
   recording, at each address, the magnitude destroyed there; $B_i$ is its
   fiber at the address the network binds to actor $i$ (§14.1).
 - **($\mathbb{A}$) address space** — the opaque index set of that map. An
   address is a name the primitive can write against; the primitive makes no
   claim that it is a person, a holder, or an identity.
 - **($B_{\max}$) capacity bound** — the published bound on aggregate burn
-  value attainable before the realization opens to external acquisition
+  amount attainable before the realization opens to external acquisition,
+  with zero published for an empty pre-opening interval
   (`def:comparator:bootstrap-capacity`).
-- **($c_{\mathrm{u}}$) unit-cost projection** — the published cost, in the
-  external denomination the realization prices in, of acquiring one unit of
-  burn value at that realization's own terms.
+- **($c_{\mathrm{u}}$) unit-cost projection** — the published positive
+  amount-proportional cost per burn unit, in the published external
+  denomination and at the published terms.
 
 The first two are the frame; the last two are constants the network reads
-and never re-derives. Everything else a realization carries — an economy,
-instruments, prices, phases, an operator — is its own: no such quantity
-enters a network published-quantity formula
-(`rem:comparator:surface-readings`).
+and never re-derives. **Public audit evidence:** the settlement depth, the
+R7 provenance, the separately published recording-event costs (R10), and
+the applicable operator bound and proof or statement of absence (R11) are
+evidence for checking the realization, not additional computational
+inputs. Everything else a realization carries — an economy, instruments,
+prices, phases, an operator — is its own: no such quantity enters a network
+published-quantity formula (`rem:comparator:surface-readings`).
 
 **Burn Primitive Requirements (`post:comparator:burn-primitive`).** A
-system failing any of these is not a realization; a system meeting all of
-them is one. R1–R5 are the frame requirements; R6–R11 are what the
-network's machinery additionally reads.
+realization must satisfy every requirement below; its use at epoch closure
+additionally requires the marker-bound settlement contract (§1.2). R1–R5
+are the frame requirements; R6–R11 are additional obligations of a
+realization.
 
 - **R1 exogenous origin** — $B$ is not derived from $G$; no network
   operation writes it.
 - **R2 neutrality** — the primitive records a destroyed magnitude and
   confers no claim at its own level: no value, no redemption, no
   entitlement; it declines to price the record.
-- **R3 non-transferability** — no operation moves, merges, reassigns, or
-  pools burn value across addresses.
-- **R4 settlement-pinned monotone valuation** — (a) a value is pinned at a
-  settlement event; (b) successive pinned values at an address are
-  non-decreasing; (c) between settlements the published value never exceeds
-  the value the next settlement pins; (d) a published value is revisable
-  only downward, only as far as the last pinned value, and only when the
-  ordering of events at a settlement boundary is itself revised; (e) the
-  realization publishes a **settlement depth** beyond which no ordering is
-  revised, so a value sampled at or below it is order-free and equals its
-  pinned value.
+- **R3 non-transferability** — no operation of the primitive moves,
+  merges, reassigns, or pools recorded burn amount across addresses. This
+  restricts recorded source; it is not an invariance of the standing
+  comparison. Records may be aggregated into a settlement structure provided
+  every record's attributed address and burn amount remain unchanged and
+  publicly recoverable.
+- **R4 settlement-pinned monotone amount** — (a) an amount is pinned at a
+  settlement event; (b) successive pinned amounts at an address are
+  non-decreasing; (c) between settlements the published amount never
+  exceeds the amount the next settlement pins; (d) a published amount is
+  revisable only downward, only as far as the last pinned amount, and only
+  when the history containing a not-yet-final settlement boundary is
+  replaced by an alternative history in which that boundary is absent;
+  (e) the realization publishes a **settlement depth**, together with the
+  finality assumptions under which it holds, beyond which no history
+  containing a settlement boundary is replaced, so an amount sampled at or
+  below that depth equals its pinned amount.
 - **R5 bindability** — addresses are opaque, permanent, and carry no
   identity claim; the network's map from actors into $\mathbb{A}$ is the
   frame binding (`def:comparator:frame-binding`).
@@ -139,17 +151,164 @@ network's machinery additionally reads.
 - **R8 instantaneous costliness, append-only record** — what a burn
   destroys is priced at the instant it occurs; its record is never removed;
   no operation maps a record back to what was destroyed.
-- **R9 bootstrap capacity** — the realization publishes $B_{\max}$.
-- **R10 unit-cost projection** — the realization publishes $c_{\mathrm{u}}$,
-  so a burn-value quantity reads as an outlay by multiplication;
-  necessarily $c_{\mathrm{u}} \ge 1$.
+- **R9 bootstrap capacity** — the realization publishes a non-negative
+  bound $B_{\max}$ on the aggregate burn amount attainable before it opens
+  to external acquisition. If external acquisition is available from the
+  realization's start, that interval is empty: the realization publishes
+  $B_{\max} = 0$ and states why. This zero bounds only the empty interval,
+  not burn amount attainable thereafter.
+- **R10 unit-cost projection** — the realization publishes a positive
+  $c_{\mathrm{u}}$, its denomination, and the terms under which it applies;
+  its units are external denomination per burn unit, and a burn amount
+  times $c_{\mathrm{u}}$ is the amount-proportional outlay at those terms.
+  If a burn unit is exactly one unit of what is destroyed, the realization
+  may use that unit as its external denomination; when the destruction is
+  the only amount-proportional outlay, $c_{\mathrm{u}} = 1$ in that
+  denomination. Any additional cost per recording event is published
+  separately, with its denomination and terms, as public audit evidence.
+  R7 provenance establishes the backing destruction, not a numerical lower
+  bound on $c_{\mathrm{u}}$ in an arbitrary denomination.
 - **R11 operator bound** — if a realization has an operator that accrues
-  burn value from operating it, the realization bounds that operator's burn
-  value by a result it proves and publishes; the network reads the bound as
-  an interface constant and re-proves nothing.
+  burn amount from operating it, the realization bounds that operator's
+  burn amount by a result it proves and publishes. If no role accrues burn
+  amount from operating the realization, it publishes a statement of that
+  absence, identifying why its rules provide no such accrual; no proof of a
+  zero bound is required. The bound and proof, or the statement of absence,
+  are required public audit evidence, not an additional computational
+  input to the network.
 
-R1–R11 name the burn-primitive requirements only. The safety-threshold
-premises are X1–X7 (§11.8).
+R1–R11 name the burn-primitive requirements and M1–M5 the marker-bound
+settlement conditions (§1.2). The safety-threshold premises are X1–X9
+(§11.8).
+
+### 1.2 Marker-bound burn settlement
+
+**Burn Accumulator (`def:comparator:burn-accumulator`).** A record of the
+realization's history that carries or accumulates burn and extends the
+settlement lineage, depending on and extending the record before it.
+Appending one is open to any party; no party holds a privilege over the
+lineage. The lineage $L(m)$ of a record $m$ is the set of burn records it
+depends on. This realization-side object satisfies the append-only,
+non-negative, settlement-pinned and provenance-auditable requirements of
+`post:comparator:burn-primitive`.
+
+**Epoch Marker (`def:comparator:epoch-marker`).** A burn accumulator that
+the deployment's published marker policy recognizes by its form, one per
+epoch index; Layer 1 reads epoch markers at epoch closure past the
+settlement depth. The form is the deployment's published placement rule and
+may be producible by the host alone. An accumulator without the form may
+lie in a marker's lineage but carries no epoch index and closes nothing.
+$m_k$ is the marker of epoch $k$; $m_0$ is reserved for the empty initial
+boundary.
+
+**Marker-Bound Burn Settlement
+(`post:comparator:marker-bound-settlement`).** A realization used at epoch
+closure supplies settled lineage in addition to meeting R1–R11. The
+deployment publishes a **marker policy**: its recognition and acceptance
+rule selects the epoch markers among the burn accumulators and determines
+which burn records each marker accepts. A history is admissible only if its
+recognized markers satisfy all five conditions:
+
+- **M1 lineage succession** — the policy identifies $m_0$ (index zero, no
+  predecessor, empty accepted set and snapshot) and at most one marker at
+  each later index together with its immediate predecessor $m_{k-1}$; no
+  index is skipped. $m_k$ depends on and extends $m_{k-1}$, and
+  $L(m_{k-1}) \subseteq L(m_k)$. A recognized marker fixes its lineage,
+  predecessor, marker-policy identity and edition, and the immutable public
+  data the policy reads. The realization subjects recognized markers and
+  their lineage to its settlement and publishes the settlement depth (R4(e))
+  with the finality assumptions under which it protects each marker, its
+  lineage and its interpretation data.
+- **M2 network acceptance** — the policy determines a finite accepted set
+  $A(k)$ per recognized marker, with $A(0) = \varnothing$ and
+  $A(k-1) \subseteq A(k) \subseteq L(m_k)$ for $k \ge 1$;
+  $C(k) = A(k) \setminus A(k-1)$. Lineage, accepted sets and both
+  containments are read within one history. Every reader recovers the same complete $A(k)$ from the marker's fixed
+  interpretation data and its predecessor's accepted set, without a private
+  choice or a later observation; a commitment requires a uniquely verifiable
+  public opening of the complete set. For every accepted record $r$, every
+  reader can verify its lineage membership, its genuine underlying
+  destruction $d(r)$, the non-negative amount $\mu(d(r))$, and the
+  attributed address $a(d(r)) \in \mathbb{A}$; the identity, amount and
+  attribution belong to the destruction and agree across its valid
+  referring records. A record failing verification
+  contributes nothing, and a candidate accepting it is not recognized;
+  missing contents or evidence prevent recognition and never license
+  omitting a member of $A(k)$. A candidate naming a burn outside its lineage,
+  or omitting a burn its predecessor accepted, is not recognized. Lineage
+  burns need not be accepted; one already in $L(m_{k-1})$ may first be
+  accepted by $m_k$.
+- **M3 causal dependence** — $m_k$ exists only in histories containing its
+  lineage, which for $k \ge 1$ contains $m_{k-1}$. A history that loses a
+  lineage member does not contain the same recognized marker, even if it
+  copies the marker's written contents; losing an accepted burn loses the
+  marker that accepted it and every successor depending on that marker.
+- **M4 single counting** — each destruction represented by an accepted
+  record contributes its amount exactly once, at the first marker accepting
+  a record for it; further referring records, re-read ancestry, or a changed
+  referring record, asserted address or accumulation mechanism add nothing.
+- **M5 epoch registration** — closed epochs and recognized markers
+  correspond one-to-one and in order: epoch $k \ge 1$ closes against $m_k$
+  and binds it. No epoch closes without its recognized marker; no
+  recognized marker index is skipped or closed twice. $m_0$ names the empty
+  boundary, not a closed epoch; a recognized marker whose epoch is not yet
+  closed is pending; an accumulator the policy does not recognize closes no
+  epoch and accepts no burn.
+
+The deployment publishes its marker policy before genesis, fixed for that
+marker sequence, together with its identity and edition, the epoch-marker
+placement rule, and the cadence. The policy has authority over acceptance
+within the two bounds; settlement supplies the lineage bound. A burn in a
+marker's lineage remains eligible under these bounds at every successor,
+whether or not it is accepted. No marker is obliged to accept it; neither
+acceptance time nor eventual acceptance is specified.
+
+**Marker Burn Snapshot (`def:comparator:marker-burn-snapshot`).** Fix an
+admissible history, the published marker policy, and $m_k$ final at the
+published settlement depth under the stated finality assumptions. With
+$D(j) = \{d(r) : r \in A(j)\} \setminus \{d(r) : r \in A(j-1)\}$, the
+destructions first represented by an accepted record at $m_j$, the settled
+burn amount through $m_k$ is
+
+$$B^{(k)}(a) = \sum_{j=1}^{k} \sum_{d \in D(j),\ a(d) = a} \mu(d), \qquad B^{(0)}(a) = 0$$
+
+(`eq:comparator:marker-burn-snapshot`). The epoch-$k$ instance of the
+burn-interface map $B$ is $B^{(k)}$, and
+$B_i^{(k)} = B^{(k)}(\mathrm{key}(i))$. The increment
+$\Delta B^{(k)}(a) = B^{(k)}(a) - B^{(k-1)}(a)$ sums the destructions first
+accepted at $m_k$, which may have records in an earlier marker's lineage. A
+destruction's contributing epoch is its first acceptance under the marker
+policy, not its first appearance in the history or a reader's observation
+time. The map records gross accepted amounts; the residual balance
+subtracts consummated debits.
+
+**Marker Settlement Consistency
+(`prop:comparator:marker-settlement-consistency`).** Readers accepting the
+same recognized final marker under the same marker policy obtain one settled
+lineage view, accepted burn set, burn snapshot and increment. Each
+address's settled amount is non-decreasing along the recognized marker
+sequence (`lem:comparator:frame-stability`). Revising a boundary snapshot
+requires replacing its recognized marker, which the published finality
+assumptions exclude beyond the settlement depth. No first-following-marker
+guarantee, acceptance time, eventual acceptance, eventual marker production
+or positive standing follows. The epoch package binds every closure
+component to the same recognized final marker and published marker policy
+(`post:epoch:final-edge-set`, §11.6).
+
+**A Finality Breach Halts Layer 1
+(`rem:comparator:finality-breach-halts`).** A replacement beyond the
+published settlement depth is a failure of the realization's R4(e).
+Closed epochs, ledgers, standing and title stand: Layer 1 halts at the last
+closed epoch, rewrites nothing, and can close no further epoch under that
+marker policy (M5). Re-anchoring or following the replaced history is a
+published deployment decision outside Layer 1's guarantee
+(`case:deployment:realization-obligations-finality-breach-reanchor`,
+`case:deployment:realization-obligations-finality-breach-follow`); Layer 1
+specifies no resumption procedure. Where the epoch marker's form is
+host-only, the host's continued production of epoch markers is a liveness
+dependency of the epoch sequence: a host that stops producing them leaves
+the network at its last closed epoch, with the published re-anchor response
+(§13) as the deployment remedy.
 
 ---
 
@@ -176,10 +335,10 @@ epoch write set becomes the next public edge set — six rule groups:
   endpoints (`def:graph:registration`);
 - **(final state)** the proposed completed edge set and final post-debit
   balance/count pairs (`def:epoch:proposed-final-act-state`);
-- **(conserved standing)** the complete conserved standing package — fold
-  cells and their coefficients, the base allocation matrix, wall-clamped
-  activation, the accepted tilt rung, source emission, and the certified
-  equilibrium (`def:network:conserved-standing-package`) — which feeds
+- **(conserved standing)** the complete conserved standing package — the
+  base allocation matrix, wall-clamped activation, the accepted tilt rung,
+  the depth mass, source emission, and the certified equilibrium
+  (`def:network:conserved-standing-package`) — which feeds
   W2a/W2b through the published final standing and stamps;
 - **(final gates)** the write rule: **W1** solvency (debited)
   $b_i \ge \theta^{(k)}$, **W2a** individual final safety
@@ -203,10 +362,10 @@ values read — directly, through other values, **or through a binding
 validity predicate** — into any rule in $\mathcal{A}$. A value belongs to
 the closure not only when it appears arithmetically in W1/W2 or
 recognition, but also when its validity decides which value may appear
-there: the complete-act fold, the base allocation matrix, the emission
-fractions, the accepted tilt rung, the declared hull box, and the
-certificate verdict all lie in $\overline{\mathcal{A}}$ — they determine
-which equilibrium, and therefore which final standing, reaches W2. A
+there: the fold, the base allocation matrix, the emission fractions, the
+hop matrices, the hull box, and the certificate verdict at each rung all
+lie in $\overline{\mathcal{A}}$ — they determine which rung is accepted,
+and therefore which final standing, reaches W2. A
 **proof transcript** is
 different: it is *evidence about* a binding value with no alternative
 arithmetic read-site — replacing a valid transcript with another proof of
@@ -214,8 +373,8 @@ the same committed statement changes no standing. Transcripts are
 verification objects, not closure inputs.
 
 A read-site is *terminal* when its output is consumed only by an agent (a
-user, a terminal service, a guild, an advertiser, or another downstream
-policy) and never re-enters the forward evolution of $E$. An object is then
+user, a guild, an advertiser) and never re-enters the forward evolution of
+$E$. An object is then
 
 - **Layer 1 (binding)** iff it lies in $\overline{\mathcal{A}}$ — it
   influences admission;
@@ -266,12 +425,16 @@ audited but not authored (`rem:transport:guild-grant-preconditions`).
 of final-set admission: the accepted record set, the final post-debit
 ledger, the binding constants, the formation and recognition rules, the
 complete conserved standing package, final standing and stamps, and the
-W1/W2 validity verdicts. The base allocation matrix, the emission fractions,
-the accepted tilt rung, and the certificate verdict are
-binding because changing any of them may change final standing and
+W1/W2 validity verdicts. The base allocation matrix, the accepted tilt
+rung, the depth mass, the emission fractions, and the certificate verdict
+are binding because changing any of them may change final standing and
 therefore final-set admission. Everything else the network publishes is
-terminal. Permission is decided per read-site by a single question — *does
-this re-enter $E$?*
+terminal. Commercial assertions read by terminal consumers keep the
+semantic limit of `rem:graph:settlement-reputation`, and their
+interpretation is terminal; standing recipient resolution reads the epoch
+title fold (`post:epoch:settlement-standing-title-coupling`) and is part of
+the binding surface. Permission is decided per read-site by a single
+question — *does this re-enter $E$?*
 (`rem:network:boundary-one-sentence`, `post:transport:guild-grant`)
 
 ---
@@ -303,22 +466,23 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 
 | Object | Feedback read-site | Terminal read-site | Verdict | Permission |
 |---|---|---|---|---|
-| accepted edge set $E_k$ + accepted authoritative act sequence $\mathcal{Q}_k$ (acts, honest $\mathbb{T}^{\text{act}}_q$) | substrate of all of $\mathcal{A}$ | — | L1·closure | consume only; agreement on $\mathcal{Q}_k$, not merely $E_k$ |
-| binding constants + formula pins $\beta,\eta,\nu,\rho_{\text{pol}},\theta,m_\theta,N_{\text{epoch}},\delta_{\text{pos}},L_{\text{vch}},M_{\text{payload}}$; standing-census/compiler/coefficient/activation/allocator/certificate formula editions | standing activation / gate / formation / package validity / epoch target | — | L1·closure | consume only; no silent formula-edition change |
+| accepted edge set $E_k$ + accepted authoritative act sequence $\mathcal{Q}_k$ (acts, key of record $(k, \mathrm{pos}_k(q))$, honest $\mathbb{T}^{\text{act}}_q$) | substrate of all of $\mathcal{A}$ | — | L1·closure | consume only; agreement on $\mathcal{Q}_k$, not merely $E_k$; $\mathbb{T}^{\text{act}}_q$ itself is a recomputable summary of the order of record with no ordering authority (L1·verify) |
+| binding constants + formula pins $\beta,\eta,\nu,\rho_{\text{pol}},\theta,m_\theta,N_{\text{epoch}},\delta_{\text{pos}},L_{\text{hop}},M_{\text{payload}}$; standing-census/compiler/coefficient/activation/allocator/certificate formula editions, structural wall floor and reduced controller constants, and controller formula edition | standing activation / gate / formation / package validity / epoch target | — | L1·closure | consume only; no silent formula-edition change |
 | canonical raw defaults: $q$, raw depth $L$, the canonical raw path-composition rule | — | feed / raw bridge / raw signed services | **L2** | reimplement freely at terminal read-sites |
 | host-cached $\tilde{w}_{\text{spam}}, \tilde{w}_{\max}, \tilde{w}_{\max}^{\text{Op}}, \tilde{w}(e), \epsilon(e)$ | — | client convenience, raw diagnostics | L1·by-product | ignore and recompute freely |
-| burn snapshot $B_i^{(k)}$ | gate via $\alpha$ | — | interface·input | consume only |
+| burn snapshot $B_i^{(k)}$, derived from the complete accepted set recovered and verified through the marker policy's chosen package encoding (§1.2, `post:epoch:final-edge-set`) | gate via $\alpha$ | — | interface·input | consume only |
 | identity order $\prec^*$, $\mathrm{pos}(e)$ | replay tie-break | — | L1·verify | consume only; consistency-audited |
 | write rule $W1{:}\,b_i \ge \theta$, $W2a{:}\,\rho_{\text{act}} \ge \rho_\theta$, $W2b{:}\,\rho_{\text{ep}} \ge \rho_{\text{eff}}$ | is admission | — | L1·closure | consume only |
 | closure rule (write) | is admission | — | L1·closure | consume only |
 | set price | closure rule | — | L1·closure | consume only |
-| $\theta$ / $\rho_\theta$ / $\rho_{\text{pol}}$ / $\rho_{\text{eff}}$ | floor validity / stamps / door | congestion dashboards | L1·closure | consume only; dial constrained by clamp, published |
+| $\theta$ / $\rho_\theta$ / $\rho_{\text{pol}}$ / $\rho_{\text{eff}}$ | floor validity / stamps / door | — | L1·closure | consume only; policy dial constrained by led wall, published |
+| wall controller inputs, proposal and delivered wall | next-wall calculation and burn-image schedule | — | L1·closure | replay published reduced state and formula; no private inputs |
 | door headroom $H_k$ | — | congestion dashboards | L1·verify | consume only; outcome, no actuator |
 | recognition predicate (i)–(vi) | is admission | — | L1·closure | consume only |
 | formation rule (identifier algebra; endpoint typing; handshake) | is admission | — | L1·closure | consume only |
 | dependent-set partition | validity replay | guild dashboards | L1·verify | consume only; recompute to audit |
 | act-folding compiler + base allocation matrix $\mathsf{A}$ | via the transport → standing → W2 | guild audit dashboards | L1·closure | consume only; recompute to audit |
-| per-author folds, inviter revocation, recipient resolution | via the base matrix → standing → W2 | terminal authored-history displays | L1·closure | consume only |
+| per-author folds, complete person-vouch compilation, recipient resolution | via the base matrix → standing → W2 | terminal authored-history displays | L1·closure | consume only |
 | cell coefficients $c(\xi)$, domain weights $\omega_D$, self-retention base $\kappa_{\text{self}}$ | via the base matrix → standing → W2 | guild audit/display | L1·closure | consume only |
 | recipient activations $\bar{g}_{\text{vch}}(x_j)$ | via every tilted allocation score | terminal diagnostics | L1·closure | consume only |
 | hop allocation matrices $\Lambda^{(r)}$, depth mass $\mathfrak{m}_m$ | via the conserved transport | terminal allocation diagnostics | L1·closure | consume only |
@@ -327,12 +491,16 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | residual balances $b_i$, action counts $N_i$ | source pairs of the standing mediant; W1 | ledger dashboards | L1·closure | consume only |
 | source emission $\mathfrak{e}_u$, transport entries $\Pi_{ui}$ | standing mediant → W2 | guild/readout diagnostics | L1·closure | consume only |
 | action + epoch stamps $\rho_{\text{act}}, \rho_{\text{ep}}$ | W2a / W2b | guild dashboards | L1·closure | consume only |
-| standing certificate $\mathcal{K}_k$ + binding verdict | selects the accepted tilt rung | guild dashboards | L1·closure | consume only; recompute to audit |
+| standing certificate $\mathcal{K}_k$ + binding verdict | selects the greatest passing tilt rung (`def:epoch:tilt-backoff-grid`) | guild dashboards | L1·closure | consume only; recompute to audit |
 | local width $W_{\text{loc}}$ | width fence + safety-threshold rule | guild dashboards | L1·closure | consume only; recompute to audit |
-| accepted interval boxes, path-incidence transcript, fixed-point residual reports | — (evidence for the committed package) | any verifier | L1·verify | consume only; replayable evidence |
+| published contributing width, evaluated fence, and verdict | — (evidence for the committed standing package) | any verifier | L1·verify | consume only; replayable evidence |
+| Vcert accepted boxes, path-incidence transcript, and proof-tree root | — (evidence for the retired staged construction only) | verifier of that construction | L1·verify | no conserved-standing rung, stamp, headroom, or bound |
+| released Bcert2/Fcert2 source and manifest hashes | — (integrity locators; the binding change is the announced formula edition) | public reproducibility | L1·verify | consume only; a hash never substitutes for replay |
+| per-epoch certificate commitment (contributing width, evaluated fence, and verdict; the source hash is an integrity locator) | standing-package validity | public audit | L1·closure | consume only; the commitment binds, the hash only locates |
+| path-depth flow shares, clipping rates, and one-boundary standing movement | — | monitoring dashboards | L1·verify | diagnostics; may not override the binding certificate |
 | attested boundary timestamp, closure cause | boundary-accountability replay | guild dashboards | L1·verify | consume only |
-| title $\mathrm{owner}^{(k)}$ | recognition (iii) | guild routing | L1·closure ⋆ | consume kernel value; read downstream |
-| standing $\alpha_i$ | gate | reward amplifier $(1+\alpha_C)$ | L1·closure ⋆ | consume kernel value; read downstream |
+| title $\mathrm{owner}^{(k)}$ | recognition (iii), authorization and parties | guild routing | L1·closure ⋆ | consume kernel value; read downstream; a recomputable summary of the partition (`rem:graph:title-certificate-is-summary`) |
+| standing $\alpha_i$ | gate | reward amplifier $(1+\hat{\alpha}_C)$ | L1·closure ⋆ | consume kernel value; read downstream |
 | ownership thread, Item genesis | title → recognition (iii) | terminal display | L1·closure | consume only; may recompute |
 | settlement acts Bid / Accept / Ratify / Withdraw / Rescind | recognition predicate | terminal reputation / dispute policy | L1·closure (records/rules) | consume recognition result; terminal policy free |
 | parallel bundles, all other folds | — | the guild / user | L2 | **reimplement freely** (`rem:graph:authored-act-bundle-consumers`) |
@@ -355,16 +523,14 @@ adds binding intermediate values because W2 consumes their result and their
 validity selects which relational schedule may take effect — but they are
 not straddlers. (`subsec:symbols:boundary`)
 
-Two reclassifications against the pre-Edition-4 ledger, both explicit in the
-source: the **raw damped-weight and parity formulas are terminal defaults**
-— $q$, raw depth $L$, $\tilde{w}(e)$, $\epsilon(e)$, and the derived raw
-constants ($\tilde{w}_{\text{spam}}, \tilde{w}_{\max},
-\tilde{w}_{\max}^{\text{Op}}$) are (L2) as formulas, (L1·by-product) as
-host-cached values, because standing no longer consumes them
-(`rem:epoch:shared-raw-edge-primitive`, `def:epoch:damped-edge-weight`);
-and the raw-traversal **precision clip is deleted** — Layer 1 publishes no
-raw pruning tolerance ($\epsilon_{\text{clip}}$ has no successor;
-`rem:sorting:raw-pruning-is-implementation`).
+The **raw damped-weight and parity formulas are terminal defaults**: $q$,
+raw depth $L$, $\tilde{w}(e)$, $\epsilon(e)$, and the derived raw constants
+($\tilde{w}_{\text{spam}}, \tilde{w}_{\max}, \tilde{w}_{\max}^{\text{Op}}$)
+are (L2) as formulas and (L1·by-product) as host-cached values, because
+standing is not a raw graph consumer (`rem:epoch:shared-raw-edge-primitive`,
+`def:epoch:damped-edge-weight`). Layer 1 publishes no raw pruning
+tolerance, precision clip, semantic weak-path cutoff, or permanent
+pruned-node state (`rem:sorting:raw-pruning-is-implementation`).
 
 Note: the payload **projection / bytes** are terminal by postulate — no
 closure quantity reads them (removable-projection invariance), so they are
@@ -393,7 +559,12 @@ auditability. Only the structural record is L1·closure.
 > raw damped-edge weighting, raw positive-subgraph composition, and raw
 > bridge-consent policy, provided it publishes the replacement completely.
 > The host's cached raw $\tilde{w}(e)$, $\epsilon(e)$, and derived raw
-> constants are non-authoritative by-products.
+> constants are non-authoritative by-products. A guild may transport richer
+> raw sign information than determinant parity, but rotation information is
+> order-sensitive and does not inherit determinant-based path factorization,
+> so the guild must publish its transported object, composition rule and
+> deterministic replay procedure (`subsec:deployment:completeness`), without
+> changing the conserved standing package or admission rules.
 >
 > The grant does not include any component of the conserved standing package
 > (`def:network:conserved-standing-package`): the fold compiler and its
@@ -415,15 +586,24 @@ auditability. Only the structural record is L1·closure.
 > inputs (accepted edge set, binding constants, burn snapshot), the
 > admission rules, and the derived straddlers — the conserved standing
 > package with its relative-standing field $\alpha_i$ *as gate input* and
-> the title certificate $T^{(k)}$ — which it must consume as published. A
-> guild MAY still *recompute* any such value to audit it; recomputation is
-> an audit right, never an override right.
+> the title certificate $T^{(k)}$ — which it must consume as published
+> (`rem:graph:title-certificate-is-summary`,
+> `cond:graph:boundary-accountability-title-certificate`). A guild MAY
+> still *recompute* any such value to audit it; recomputation is an audit
+> right, never an override right.
 >
 > Deviating from a terminal default forks only the deviating guild (loss
 > of composability); attempting to deviate from a binding value forks the
 > shared graph and is rejected. The binding surface is the accepted-state
 > kernel, admission rules, conserved standing package, standing as gate
 > input, and title — and no larger.
+>
+> For a funded-partition comparison, a standing bound becomes a feed or
+> normalized-share bound only with the stated terminal context fixed
+> (`prop:transport:split-terminal-readout-bounds`). The calculation does not
+> hold creator sets, paths, attribution or guild factors fixed by itself,
+> and it does not establish ranking stability or an end-to-end reward
+> guarantee.
 
 On the admission rules: the write rule ($W1/W2a/W2b$), formation, and
 recognition are value-facing predicates a guild might try to recompute — the
@@ -438,9 +618,14 @@ and $E_k$.
 Grant soundness preconditions (`rem:transport:guild-grant-preconditions`):
 (1) the binding surface is minimal and fixed; (2) straddlers are consumed at
 their kernel value, audited not authored — a guild's own standing/owner has
-no standing in the shared graph; (3) the feedback-but-terminally-consumed
-cell (`frontier:settlement-tie-fabrication`) is flagged, its remedy handed
-to the terminal complement under the grant.
+no standing in the shared graph; (3) terminal interpretation does not
+rewrite binding meaning: commercial assertions may be read through raw
+routing or a terminal reputation conjunction, subject to the semantic limit
+of `rem:graph:settlement-reputation`, and a guild may discount or
+reinterpret those terminal readings, but it may not replace the title fold
+or the standing recipient rule — unrecognized, challenged or
+non-title-transferring Accept/Ratify acts resolve to self
+(`post:epoch:settlement-standing-title-coupling`).
 
 **Computed share vs. realized reward** (PN full §8,
 `rem:transport:guild-economic-autonomy`): the reward formula
@@ -448,8 +633,8 @@ to the terminal complement under the grant.
 produces a deterministic, independently reproducible normalized share $R_C$
 of pool $\mathcal{L}$; unit of account, payout schedule, guild fee/margin,
 eligibility windows, and pool-funding relationship are Layer 2 policy
-reserved to the guild; the sole constraint is publication (§I.12, the
-formula-completeness invariant). No protocol-level fee is extracted from
+reserved to the guild; the sole constraint is publication
+(`subsec:deployment:completeness`, §13). No protocol-level fee is extracted from
 $\mathcal{L}$. *(Full paper only — the closure edition names the reward
 read-site in the ledger without specifying it.)*
 
@@ -482,7 +667,7 @@ $t(n) < 1$ is preserved.
 CAN composition-graph rules (PN full Def B.4): four rules; the
 Layer-1-issued Declaration component enters as a leaf
 keyed on source class; the Rule-2 hyper-edge families are Tag, Review, Send,
-Bid, Invitation, and Reference; the control-edge exclusion covers settlement
+Bid, Invitation, Reference, and Participant; the control-edge exclusion covers settlement
 (Withdraw, Rescind) and conversational (Leave, De-invite A·T) control
 records, with Rule 4 taking precedence over Rule 2 for De-invite legs.
 
@@ -493,16 +678,20 @@ Layer 1 / operator provides: the public append-only graph
 the commitment ledger and standing-compilation infrastructure, and the
 epoch machinery (PN full §6, `subsec:epoch:epoch-boundary`). Publishes the
 binding constants and the host-cached raw defaults (§6 below). From its
-foundation the network reads only the interface constants a realization
-publishes — $B_{\max}$ (R9), $c_{\mathrm{u}}$ (R10), and the R11 operator
-bound; nothing else a realization publishes enters a network formula. The
+foundation the network reads only the two published interface constants
+$B_{\max}$ (R9) and $c_{\mathrm{u}}$ (R10). The applicable operator bound
+and proof or statement of absence (R11) and the separately published
+recording-event costs (R10) are required public audit evidence, not
+additional computational inputs; nothing else a realization publishes
+enters a network formula. The
 network levies no protocol-level fee of its own; no protocol-level fee is
 extracted from content transactions, advertising spend, or guild reward
 pools.
 
 Each guild (PN full §8, `subsec:transport:guild-model`): (a) publishes its complete CAN recursion, all
 guild-specific economic parameters, and its reward formula in full, so any
-participant can independently reproduce every reward computation (§I.12);
+participant can independently reproduce every reward computation
+(`subsec:deployment:completeness`);
 (b) maintains a self-contained reward pool funded by guild-level advertising
 spend, from which it may retain a published fee or operating margin;
 (c) selects its own CAN aggregation function, attribution threshold
@@ -511,17 +700,19 @@ parameters, reward distribution schedule, and bridge composition rule;
 scores, and standing values are public.
 
 Burn consumption (`def:transport:commitment-via-burn`, PN full §8): $B_i \in \mathbb{R}_{\ge 0}$ is
-the cumulative burn-denominated value committed by actor $i$, read from
+the cumulative burn-denominated amount committed by actor $i$, read from
 the burn primitive; costliness and irrevocability are inherited at the
-network's sampling depth (R8). During bootstrapping, aggregate $B_i$ is
-capacity-bounded by $B_{\max}$. All formulas consume $B_i$ as a
-non-negative, non-decreasing, publicly auditable scalar; no surface
-quantity appears. Burn
-granularity (`rem:transport:burn-granularity`): compliant implementations must support precision
-such that the reduced rate $\hat{r}_i = r_i/\nu$ is representable
-to at least 8 significant figures.
+network's sampling depth (R8). During a nonempty pre-opening interval,
+aggregate $B_i$ is capacity-bounded by $B_{\max}$. All formulas consume
+$B_i$ as a non-negative, non-decreasing, publicly auditable scalar; no
+surface quantity appears. Burn granularity
+(`rem:transport:burn-granularity`): compliant implementations must support
+precision sufficient for fair pricing and the deployment's certification;
+a stated numerical precision, such as the reduced rate
+$\hat{r}_i = r_i/\nu$ to 8 significant figures, is an example of such a
+level, not a protocol constant.
 
-Notes on the full paper's terminal defaults: $(1+\alpha_C)$
+Notes on the full paper's terminal defaults: $(1+\hat{\alpha}_C)$
 remains the sole Layer 1 factor in the guild reward formula Eq. (8.2)
 (`eq:transport:reward-formula`); per-creator-epoch entropy is Eq. (8.3)
 (`eq:transport:epoch-entropy`). The default feed S(u,c) (full §7,
@@ -531,8 +722,10 @@ only to the standing projection; raw sorting reads raw records
 unchanged. $q = \tfrac12$ is the canonical default for the raw services; a
 guild may expose $q \ne \tfrac12$ for its own sorting only
 (`rem:sorting:matrix-bfs`). Every relevance calculation consumes only the
-**final** reduced standing of the creator; stage internals have no feed
-read-site (`rem:sorting:final-standing-input`). The bridge transport:
+**final** reduced standing of the creator; the base allocation matrix, hop
+matrices, emission fractions, accepted rung, certificates, fixed-point
+enclosures, and solver iterates have no feed read-site
+(`rem:sorting:final-standing-input`). The bridge transport:
 Channel 2 is stance-signed ($\mathrm{sgn}(p_d(e_{\text{Op}}))$, not
 $\epsilon$), and Channel 3 consent carries an **absolute direct-stance
 veto** (a negative net direct stance
@@ -556,59 +749,83 @@ Stated independently of any mechanism that achieves them.
   non-decrease of the committed quantity $B_i$ is a property of the burn
   primitive the network reads, not a network primitive: what a burn
   destroys is priced at the instant it occurs and its record is never
-  removed (R8), so successive pinned values at an address cannot fall
+  removed (R8), so successive pinned amounts at an address cannot fall
   (R4(b)); the network's frame stability at its own sampling depth follows
   (`lem:comparator:frame-stability`).
 - **Authoritative Ordering (`post:introduction:authoritative-act-order`).**
   The host chooses a total **authoritative order** over the accepted
-  authored acts of each epoch and assigns each act a logical time by its
-  position (`def:graph:authoritative-act-order`). The order is semantically
-  authoritative: it is not forced by incidence, but it must place every
-  declared dependency earlier, and it is published so that any two
-  participants holding the same ordered sequence $\mathcal{Q}_k$ reproduce
-  the same result. *Agreement on $\mathcal{Q}_k$ — not merely on the edge
-  set — is required.* (Supersedes the pre-Edition-4 ordering-consistency
-  postulate: edges no longer own Lamport times, and no order-independence
-  is claimed.)
+  authored acts of each epoch. The order of record is the lexicographic
+  pair of epoch and position; each act's logical time summarizes replay of
+  that order (`def:graph:authoritative-act-order`). The order is
+  semantically authoritative: it is not forced by incidence, but it must
+  place every asserted parent and declared dependency earlier, and it is
+  published so that any two participants holding the same ordered sequence
+  $\mathcal{Q}_k$ and the remaining shared epoch inputs reproduce the same
+  result. *Agreement on $\mathcal{Q}_k$ is required for formation and
+  order-sensitive raw quantities.* The settled burn snapshot is derived from
+  the recognized marker's accepted set under the deployment's published
+  marker policy (§1.2), bound to the same package
+  (`post:epoch:final-edge-set`); act order alone does not determine
+  acceptance or that snapshot.
 - **Epoch Edge-Set Provision (`post:introduction:epoch-edge-set`).** At each
   epoch boundary $k$ the operator provides a finite edge set
   $E_k \subseteq E$ that is causally closed
   ($e' \in E_k \wedge e \prec e' \Rightarrow e \in E_k$) and monotone
   ($E_{k-1} \subseteq E_k$). $E_k$ is the sole topological input to the
   epoch-$k$ computation; the mechanism by which the operator forms it is
-  out of scope. The settled sampling depth that makes frame stability hold
-  is a property of $E_k$, not of any global clock.
+  out of scope. The settlement margin applies to the recognized marker, its
+  lineage and fixed interpretation (`post:epoch:final-edge-set`); it does
+  not choose edge membership or require a global clock.
 - **Mechanism-agnostic (`rem:introduction:mechanism-agnostic`).** Any
   mechanism — a strict append log, an ordered cluster-closure write, a
   frontier-finality gadget — delivering a monotone $E_k$ together with an
-  authoritative order $\mathcal{Q}_k$ on which honest participants agree is
-  compliant. Agreement on the *ordered sequence* $\mathcal{Q}_k$, not
-  merely on the set $E_k$, is what the downstream computation consumes
-  (`lem:graph:ordered-replay-determinism`).
+  authoritative order $\mathcal{Q}_k$ and the shared settled epoch package
+  of `post:epoch:final-edge-set` on which honest participants agree is
+  compliant. Downstream computation consumes that complete package
+  (`lem:graph:ordered-replay-determinism`,
+  `prop:epoch:epoch-replay-determinism`).
+- **Epoch history.** The epoch history is the recognized epoch-marker
+  sequence read past the settlement depth
+  (`rem:epoch:epoch-history-is-the-marker-sequence`, §11.6). A replacement
+  beyond the published settlement depth halts Layer 1 at the last closed
+  epoch (`rem:comparator:finality-breach-halts`, §1.2).
 - **Host Contract (`post:network:host-contract`).** The host operates the
   boundary and publishes the results; its entire authority is what it
   publishes each boundary. One self-contained final-state package: **(i)
   accepted records** — the final write set $\mathcal{Q}_k$, final edge set
-  $E_k$, dependent-set partition, realized size, closure cause, attested
-  boundary timestamp; **(ii) final ledger** — settled boundary burn state,
-  final residual balances, final action counts, accepted-act increments,
-  debit vintages; **(iii) act folding** — complete acts, per-author folds,
-  inviter revocation, cell coefficients, recipient resolution, the base
-  allocation matrix; **(iv) the transport** — domain weights and profiles,
-  the tilt shape, the depth mass, source emission fractions, and the hop
-  allocation matrices they assemble; **(v) the accepted rung** — the
-  certificate evaluated at each attempted rung of the published grid, its
-  failure mode, the accepted $t_k$, the declared hull box, and the
-  fixed-point enclosure; **(vi) final standing and admission** — the
-  equilibrium $\boldsymbol{x}^*$, the transport entries $\Pi_{ui}$, final
-  standing, final action and epoch stamps, door headroom, W1/W2 verdicts;
-  **(vii) shared closure outputs and policy** — the title certificate,
+  $E_k$, dependent-set partition formed by merging overlapping principal
+  closures against the history finalized before the epoch, realized size,
+  closure cause, attested boundary timestamp; **(ii) final ledger** —
+  settled boundary burn state, final residual balances, final action
+  counts, accepted-act increments, debit vintages; **(iii) semantic
+  projection** — every accepted Actor-authored (complete) act, per-author
+  folds, each act's fold cell and coefficient, its recipient resolution,
+  and the base allocation matrix the published domain weights and profiles
+  determine from them; **(iv) allocation and transport** — the tilt profile
+  shape, the accepted rung $t_k$ with the certificate verdict (pass, fail or
+  indecisive) of every rung of the published grid attempted above it, the
+  depth mass, the source emission fractions, and the conserved transport
+  with the hop allocation matrices it composes; **(v) final standing and
+  admission** — the declared rate hull box, the standing certificate
+  $\mathcal{K}_k$, the fixed-point enclosure, the equilibrium
+  $\boldsymbol{x}^*$, the transport entries $\Pi_{ui}$, final standing,
+  final action and epoch stamps, door headroom, W1/W2 verdicts; **(vi)
+  shared closure outputs and policy** — the title certificate,
   settlement-recognition result, epoch target size, min/max durations, the
-  policy-floor and safety-threshold schedules, and the margin factor
-  $m_\theta = 5/4$, all under no-silent-change; **(viii) reproducibility
-  evidence** — formula editions, declared constants, interval boxes,
-  residual bounds. Every binding value is reproducible from the accepted
-  records, final ledger, public formulas, and constants. Previous standing,
+  policy-floor and safety-threshold schedules, the margin factor
+  $m_\theta = 5/4$, the wall in force, the deployment's fixed structural
+  declaration $\rho_{\theta,\min} \in \{\rho^*, 3/37\}$ (published beside
+  $\nu$ before its first epoch, with its exact defining object and
+  published X8 comparison procedure, `def:epoch:safety-wall-floor`), the
+  controller edition and reduced constants, the completed-epoch
+  contributing width and accepted rung, and the proposal and delivered led
+  wall whose burn image is the threshold schedule
+  (`def:epoch:wall-controller`), all under no-silent-change; **(vii)
+  reproducibility evidence** — formula editions, declared constants,
+  interval boxes, residual bounds, and reports sufficient for any
+  participant to rerun the calculation. Every binding value is reproducible from
+  the accepted records, final ledger, explicit public previous-wall state,
+  public formulas, and constants. Previous standing,
   warm starts, and cached solver state are not package inputs. **No hashes,
   roots, or source digests are normative.** A finite implementation must
   publish a standing enclosure narrow enough to decide every binding
@@ -620,15 +837,19 @@ Stated independently of any mechanism that achieves them.
 **Verification model** (`subsec:introduction:verification-model`): every
 computation that can feed admission is specified by published formula over
 the public record and independently reproducible from records and constants
-alone. For standing, verification has three explicit layers: the epoch
-certificate commits the folded cells, their recipients, and the base
-allocation matrix; the transport and the exact balance/count mediant are
-replayed from public action masses and residual balances; and the
-graph-dependent certificate $\mathcal{K}_k$ checks the declared hull box
-against the chartered margin. An uncertifiable rung falls back down the
-published grid to the no-tilt anchor, which always certifies; if all
-relational flow into an actor is zero, that actor's standing is exactly
-their own neutral source.
+alone. For standing, verification checks the completed ledger and
+accepted-act census, reproduces fold cells, base allocation and source
+emission, and evaluates the declared certificate at each attempted rung
+(`subsec:deployment:conserved-standing-reproducibility`). The published
+procedure accepts the greatest proved passing rung; independent replay
+checks the conserved equilibrium through a certified residual enclosure
+(`def:epoch:tilt-backoff-grid`,
+`lem:dynamics:fixed-point-residual-enclosure`). The certificate is the
+evaluated width fence, not a selected-path certificate
+(`def:dynamics:conserved-standing-certificate`). Certified convergence
+within an epoch does not bound movement across epochs or establish
+controller tracking; those observations and their declared responses are
+published under `post:deployment:centralized-monitoring`.
 Centralized phase: verification as audit (results apply before
 verification; constants being calibrated, not yet locked). Decentralized
 phase: verification as gate (nothing failing verification takes effect).
@@ -649,27 +870,29 @@ formation, package validity, or the epoch target;
 | $\eta$ | 0.05 (bleed; enters the core $Q$) | `def:graph:path-view-extraction` |
 | $\nu$ | 0.10 (illustrative numéraire, burn units per action-credit; structural after lock) | `def:comparator:numeraire` |
 | $\rho_{\text{pol}}$ | 1 (canonical default policy floor; dimensionless, host-dialed) | `def:epoch:policy-floor` |
-| $\theta$ | $\approx 0.05281$ at reference (burn units per action; **algorithmic per-epoch output**, one-boundary lead, never a host input; defined by the width-fence inversion $\theta = \nu\,\lambda_Q^{-1}(1/(m_\theta W_{\text{loc}}))$ at reference $W_{\text{loc}} = 1$) | `def:epoch:safety-threshold` |
-| $\rho_\theta = \theta/\nu$ | $\approx 0.5281$ at reference (the wall) | `def:epoch:safety-floor` |
+| $\theta$ | $\approx 0.0501855$ at reference (burn units per action; the burn image $\theta = \nu\rho_\theta$ of the published wall; **algorithmic per-epoch output**, one-boundary lead, never a host input) | `def:epoch:safety-threshold` |
+| $\rho_\theta = \theta/\nu$ | $\approx 0.501855$ at reference (the wall: the delivered output of the wall controller, $\rho_\theta \ge \rho_{\theta,\min}$; reference evaluation: the canonical interim controller at $W_{\text{loc}} = 1$ and the chartered rung with cumulative profile $S_{\text{char}} = 15/8$, previous wall initialized at its target, `ver:floor:fixture-regime`) | `def:epoch:safety-wall`, `def:epoch:canonical-interim-wall-controller` |
+| $\rho_{\theta,\min}$ | structural wall floor, declared once by the deployment before its first epoch, beside $\nu$ in its structural tier, from the chartered set $\{\rho^*, 3/37\}$: the exact ridge image $\rho^* = p^*/(1-p^*) \approx 0.072857922$ (certified enclosure $[0.072857886, 0.072858002]$) or the rational $3/37 \approx 0.081081081$; fixed for the deployment, never an epoch dial or host-policy choice | `def:epoch:safety-wall-floor` |
+| floor price, floor capacity | $\nu\rho_{\theta,\min}$ (minimum per-act price) and $1/(\nu\rho_{\theta,\min})$ (maximum real capacity per burn unit): $\approx 0.007285792$ and $\approx 137.253435$ for $\rho^*$, $\approx 0.008108108$ and $\approx 123.333333$ for $3/37$, at $\nu = 0.10$ | `cor:epoch:floor-economics` |
+| $a$, $r$, $d$ | $0.10$, $1/4$, $1/20$ (wall-controller absolute step, relative step, and relative deadband, on the reduced axis; performance calibration constants, not safety premises) | `def:epoch:canonical-interim-wall-controller` |
 | $\rho_{\text{eff}}$ | $\max(\rho_{\text{pol}}, \rho_\theta)$; $= \rho_{\text{pol}} = 1$ on any valid certificate (derived) | `def:epoch:participation-floor` |
-| $m_\theta$ | $5/4$ (chartered margin factor; one dial read four ways) | `def:epoch:safety-threshold` |
+| $m_\theta$ | $5/4$ (chartered margin factor: the certificate margin $m_\theta\,\mathcal{K}_k \le 1$, the fence slack $1 - 1/m_\theta = 0.20$, and the controller target $q(W)$) | `def:epoch:safety-threshold` |
 | $N_{\text{epoch}}$ | 10000 (illustrative **target** act budget, denominated in accepted authored acts; not yet locked) | `def:epoch:epoch-act-budget` |
-| $\delta_{\text{pos}}$ | 500 (illustrative burn-snapshot buffer, chosen to exceed the settlement depth the realization publishes, R4(e); not yet locked) | `post:epoch:final-edge-set` |
+| $\delta_{\text{pos}}$ | 500 (illustrative settlement-stability depth at which the network reads the recognized final epoch marker $m_k$, chosen to exceed the settlement depth the realization publishes with its finality assumptions, R4(e); protects the marker, its lineage and its fixed interpretation — edge membership stays the closure rule's; not yet locked) | `post:epoch:final-edge-set` |
 | $L_{\text{hop}}$ | 4 (chartered transport depth, in hops of the conserved transport) | `def:epoch:standing-depth-mass` |
 | $\gamma$ | $1/4$ (chartered activation exponent; **not** the reciprocal of $L_{\text{hop}}$) | `def:epoch:responsive-vouch-activation` |
 | $Q(1)$ | $\approx 0.6975$ (activation normalization of the deployed core) | `def:epoch:responsive-vouch-activation` |
 | $\kappa_{\text{self}}$, $\omega_D$ | unity (self-retention base and every published domain weight; reference values pending the calibration lock) | `tbl:epoch:standing-domain-weights` |
-| certificate screen $\mathcal{K}_k$ | a rung is accepted iff $m_\theta\,\mathcal{K}_k \le 1$; the anchor $t_k = 0$ always certifies | `def:dynamics:conserved-standing-certificate` |
-| $M_{\text{payload}}$ | deployment-calibrated; **per act, aggregate over a hyper-edge's projections** | `def:graph:act-payload-projection` |
+| certificate screen $\mathcal{K}_k$ | a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$; the accepted rung $t_k$ is the greatest rung the deployment's declared certification procedure proves passing — a rung it leaves INDECISIVE is passed over; the anchor $t_k = 0$ always certifies | `def:dynamics:conserved-standing-certificate`, `def:epoch:tilt-backoff-grid` |
+| $M_{\text{payload}}$ | deployment-calibrated; **per act, aggregate over a hyper-edge's projections**, stated in bytes of the deployment's declared payload encoding | `def:graph:act-payload-projection` |
 
 Canonical raw defaults and derived raw constants (terminal formulas,
 host-cached values are by-products — §3): $q = \tfrac12$ (raw diversity
 preference), raw feed depth $L = L_{\text{feed}} = 4$,
 $\tilde{w}_{\text{spam}} \approx 0.011$, $\tilde{w}_{\max} \approx 0.986$
 (the raw edge-weight ceiling, `thm:graph:raw-weight-ceiling`),
-$\tilde{w}_{\max}^{\text{Op}} \approx 0.502$. The pre-Edition-4 raw
-precision clip $\epsilon_{\text{clip}}$ is **deleted with no successor**
-(`rem:sorting:raw-pruning-is-implementation`).
+$\tilde{w}_{\max}^{\text{Op}} \approx 0.503$. Layer 1 publishes no raw
+precision clip (`rem:sorting:raw-pruning-is-implementation`).
 
 The comparator's single burn-unit→action join is the **numéraire** $\nu$; the
 participation floor is a *pair* — the host-dialed $\rho_{\text{pol}}$ and the
@@ -682,17 +905,24 @@ reference calibration $(\nu, \rho_{\text{pol}}) = (0.10, 1)$, $\rho_{\text{eff}}
 No netting-clip constant exists: the stance-aggregation clip is the fixed
 $\mathrm{clip}_{[-1,1]}$ in `def:epoch:net-stance`, not a calibrated value.
 
-*Interface constants* — $B_{\max}$ (R9), $c_{\mathrm{u}} \ge 1$ (R10), and
-the settlement depth (R4(e)) — are published by the realization, read as
-constants, and re-derived nowhere. A realization's own fees, splits, phase
+*Interface constants* — $B_{\max}$ (R9; zero, with its explanation, for an
+empty pre-opening interval) and the positive unit-cost projection
+$c_{\mathrm{u}}$ (R10, with its denomination and terms) — are published by
+the realization, read as constants, and re-derived nowhere. The settlement
+depth with its finality assumptions (R4(e)), R7 provenance, separately
+published recording-event costs, and the R11 operator bound and proof or
+statement of absence are public audit evidence, not computational inputs
+(`def:comparator:burn-interface`). A realization's own fees, splits, phase
 leads, and any ceiling derived from them are its design; the network
 neither names nor recomputes them (`rem:comparator:surface-readings`).
-$c_{\mathrm{u}}$ turns a burn-value quantity into an outlay in the
-realization's external denomination by multiplication — the admission
-benchmarks of §7.1 (`eq:comparator:admission-benchmark-deposits`). The
-minimum deposit $\delta_{\min} = \rho_{\text{eff}}\,\nu\,c_{\mathrm{u}}$,
-the door price projected through $c_{\mathrm{u}}$, is the sole user-facing
-quantity carried in that external denomination
+$c_{\mathrm{u}}$ turns a burn-amount quantity into an amount-proportional
+outlay in the realization's published external denomination by
+multiplication — the admission benchmarks of §7.1
+(`eq:comparator:admission-benchmark-deposits`); total outlay also includes
+any separately published recording-event costs. The amount-proportional
+door outlay $\delta_{\min} = \rho_{\text{eff}}\,\nu\,c_{\mathrm{u}}$ is the
+door price projected through $c_{\mathrm{u}}$ at the published terms;
+recording-event costs are reported separately
 (`subsec:necessity:floor-as-numeraire`). Illustrative Layer 1 constants are
 subject to empirical calibration during the centralized deployment phase and
 are not yet locked.
@@ -705,7 +935,7 @@ $\mathcal{A}$ is the six rule groups of `def:network:admission-closure`
 (§2): **formation** (identifier algebra, endpoint typing, asserted parents,
 dependent sets, the approval handshake, the authoritative order — §8.1,
 §8.2, §9); the **final state** (the proposed completed edge set and final
-post-debit pairs — §11.6); **conserved standing** (the package that produces
+post-debit pairs — §11.4); **conserved standing** (the package that produces
 final standing — §11.4); the **final gates** (the write rule W1/W2a/W2b +
 the act budget — §7.1); **recognition** (§7.2); and the **write** (the
 host's admission of the final set — §11.6). The write rule decides *who may
@@ -740,10 +970,14 @@ A record by actor $i$ is writable in epoch $k$ iff all three sub-gates hold
    when the door has headroom (the membrane, not a wall).
 
 An insolvent actor (W1) restores capacity immediately by committing burns.
-Re-crossing the wall (W2a) requires some combination of new burns raising
-$r_i$ directly and new incoming allocation from actors whose rates exceed
-the current standing, lifting the mediant within the transported-rate hull
-(`prop:epoch:final-standing-hull`).
+Re-crossing the wall (W2a) requires the recomputed final standing to pass
+it: an accepted burn raises the actor's own source rate and a complete
+eligible person-directed act may add higher-rate support, but neither
+intervention alone guarantees that result — passing certificates do not
+imply monotonic standing under an accepted burn or act
+(`thm:epoch:burn-response`;
+monotone regimes `cor:epoch:burn-monotone-regimes`; bounds
+`prop:epoch:finite-standing-response`).
 
 Actor states (`tbl:epoch:actor-states`), by (W2a $\rho_{\text{act}} \ge
 \rho_\theta$, W1 $b \ge \theta$): **Active** (✓/✓, may act); **Band** (✓/✓,
@@ -761,12 +995,13 @@ one $\theta$-debit, competes under W1/W2a/W2b, consumes epoch write
 capacity, and receives the same final stamp as every other same-author act
 — **no special Registration branch and no live-value newcomer formula**. A
 candidate actor has prior count zero; with no relational flow its stamp is
-its own source rate (`prop:epoch:final-standing-embedding`), and a current
+its own source rate (`prop:epoch:final-standing-hull`), and a current
 high-rate external vouch may lift it under the ordinary hull. **Same-epoch
 topology creates no source** (`cor:epoch:same-epoch-source-hull`): a
 same-epoch cohort whose source rates all lie below $\rho_\theta$ cannot
 mutually vouch itself above the wall; only a current external positive-rate
-source lifts a newly registered actor.
+source lifts a newly registered actor. This is the equal-contributing-rate
+regime, not a theorem for heterogeneous funded partitions.
 
 **Universal per-act burn benchmarks
 (`cor:epoch:universal-burn-benchmarks`).** For an unsupported actor
@@ -775,10 +1010,11 @@ proposing $m \ge 1$ epoch acts:
 $$B_{\mathrm{W1}}(m) = m\theta, \qquad B_{\mathrm{safety}}(m) = 2m\theta,
 \qquad B_{\mathrm{door}}(m) = m(\theta + \nu\rho_{\text{eff}}),$$
 
-projected through the published unit cost as outlays in the realization's
-external denomination $\delta(m) = B(m)\,c_{\mathrm{u}}$ (R10;
-`eq:comparator:admission-benchmark-deposits`,
-`subsec:comparator:capacity-and-admission-benchmarks`). These are
+projected through the published unit cost as amount-proportional outlays in
+the realization's external denomination $\delta(m) = B(m)\,c_{\mathrm{u}}$
+(R10; `eq:comparator:admission-benchmark-deposits`,
+`subsec:comparator:capacity-and-admission-benchmarks`); total outlay also
+includes any separately published costs of the recording events used. These are
 final-state gate benchmarks, not prices that guarantee selection into the
 finite write set; there is no universal admission price. Band dwell is
 linear and exact (`rem:epoch:band-dwell`); re-entry from below either
@@ -803,8 +1039,7 @@ by record integrity, never adjudicated by title logic. No payload datum
 enters the act identifier, so identity, pointer resolution, and title
 survive every payload state. Two actors listing "the same" real-world
 referent create two Items with two ownership threads; out-of-band truth is
-deterred by accountability cost and witnessed by `frontier:item-genesis`.
-Genesis is an ordinary gated append. Title at Layer 1 is title over a
+subject to accountability cost. Genesis is an ordinary gated append. Title at Layer 1 is title over a
 **registered claim**, never custody of a referent
 (`rem:graph:item-identity-limit`).
 
@@ -816,15 +1051,29 @@ act it confirms ($\mathrm{accepts}$). These references are act-owned
 *metadata, not graph incidence*: an Accept or Ratify names its settlement
 partner by act identity, and its edge projection is incident only to its
 two actor endpoints, never to the Offer. Because the references are
-declared causal parents, any authoritative order forces
-$\text{Bid} \prec \text{Accept} \prec \text{Ratify}$
-(`rem:graph:title-order-irrelevance`).
+causal parents, a compliant order places
+$\text{Bid} \prec \text{Accept} \prec \text{Ratify}$ by the key of record;
+a finalized placement or stamp violation is evidence under ordering
+accountability (§8.2, `rem:graph:title-order-irrelevance`).
 
 **Finalization epoch (`def:graph:act-finalization-epoch`).**
 $\mathrm{ep}(q) = \min\{k : q \in \mathcal{Q}_k\}$ — well-defined by
 monotonicity of the accepted act history. Two acts are *co-epochal* iff
 their finalization epochs are equal. Title consumes acts at
 $\mathrm{ep}(\cdot)$ granularity only.
+
+**Settlement parties (`def:graph:settlement-parties`).** For a Bid act
+opening an Offer on Item $n_i$, the *buyer* is the author of the Bid; the
+*Item* is reached from the Bid's T-leg through the Offer; the *seller* is
+the certified owner $\mathrm{owner}^{(k-1)}(n_i)$ at the boundary preceding
+the Ratify's finalization epoch $k = \mathrm{ep}(q_{\text{Ratify}})$, or the
+genesis owner if the thread is fresh and its genesis finalizes in that
+epoch. Parties and Item are functions of the record alone. The Item
+endpoint of a Bid is a minted identifier and may dangle: a Bid on an
+unanchored Item forms and is fold-neutral; once the genesis finalizes, the
+Item enters the fold at that boundary, a candidate whose Ratify finalizes
+in that epoch uses the fresh-thread rule, and a later one reads the
+certified owner.
 
 **Settlement Recognition (`def:graph:settlement-recognition`).** A
 settlement candidate on Item $n_i$ in epoch edge set $E_k$ is a triple of
@@ -838,28 +1087,33 @@ all six clauses hold:
   in $E_k$.
 - **(ii) Reference binding.** The Accept's and Ratify's settlement
   references both resolve to the Bid act identifier.
-- **(iii) Authorization.** The author of the Accept is the certified owner
-  $\mathrm{owner}^{(k-1)}(n_i)$ at the boundary preceding the Ratify's
-  finalization epoch $k = \mathrm{ep}(q_{\text{Ratify}})$ (the genesis owner
-  if the thread is fresh). Clause (iii) reads the prior title certificate
-  back into admission — the straddler.
+- **(iii) Authorization and parties.** The Accept is authored by the seller
+  and targets the buyer; the Ratify is authored by the buyer and targets
+  the seller (the Accept's author). Clause (iii) reads the prior title
+  certificate and the Bid's authorship; the title certificate it reads back
+  into admission is the straddler. A Ratify authored by anyone but the buyer, an Accept whose
+  target is not the buyer, or a Ratify whose target is not the Accept's
+  author fails (iii): the acts are written and never bind, their standing
+  resolves to the author's self-retention channel, and no host
+  accountability attaches (`rem:graph:settlement-party-mismatch`).
 - **(iv) Buyer consent.** No buyer Withdraw on this Offer satisfies
   $\mathrm{ep}(\text{Withdraw}) \le \mathrm{ep}(\text{Ratify})$.
 - **(v) Seller consent.** No seller Rescind on this Offer satisfies
   $\mathrm{ep}(\text{Rescind}) \le \mathrm{ep}(\text{Ratify})$.
 - **(vi) Well-formedness.** $\text{Bid} \prec \text{Accept} \prec
   \text{Ratify}$ — retained as a well-formedness check on the handshake
-  chain (each party observes the prior record), forced by the settlement
-  references and carrying no tie-breaking force.
+  chain (each party observes the prior record), carrying no tie-breaking
+  force.
 
 Clauses (iv) and (v) are the **epoch-quantized consent rule**: a cancellation
 co-epochal with, or earlier than, the commit defeats it; a cancellation in a
 strictly later epoch is inert — the sale is final *at the certificate*, not
 at the Ratify (`rem:graph:regret-window`). A recognized candidate whose
 Ratify finalizes at boundary $k$ with no defeating cancel is *unchallenged
-at $k$*. The predicate reads set membership, $\mathrm{ep}(\cdot)$ indices,
-and the reference-forced chain — no $\mathrm{pos}(e)$, no residual sub-epoch
-order (`rem:graph:settlement-clause-structure`). Parallel settlement
+at $k$*. The predicate reads set membership, pointer resolution, the prior
+certificate and the Bid's authorship, $\mathrm{ep}(\cdot)$ indices, and the
+handshake chain — no $\mathrm{pos}(e)$, no sub-epoch order, no Lamport
+comparability (`rem:graph:settlement-clause-structure`). Parallel settlement
 records are consumed exclusively through this predicate
 (`rem:graph:authored-act-bundle-consumers`).
 
@@ -868,9 +1122,11 @@ buyer); Accepted→Committed (Ratify, buyer); Accepted→Dead (Withdraw, buyer);
 Accepted→Dead (Rescind, seller). Dead and Committed are absorbing. No death
 by inaction: no count, window, or throughput measure enters the lifecycle
 map. Cleanup is an authored choice, never a silent timeout. Cancellation is
-best-effort at the boundary: ties favor the cancel, so any cancel submitted
-in an epoch strictly before the commit's finalization epoch is safe
-regardless of latency (`rem:graph:cancellation-best-effort`).
+best-effort at the boundary: a cancel defeats a candidate only when written
+at or before the commit's finalization boundary, and no record class has a
+write right. Submission alone carries no delivery guarantee, so a withheld
+cancel can be defeated however early it was submitted; the tie rule favors
+a written cancel (`rem:graph:cancellation-best-effort`).
 
 **Ownership Thread (`def:graph:ownership-thread`).** The **boundary-indexed**
 chain rooted at the genesis Owner record, extended at each epoch boundary by
@@ -882,8 +1138,25 @@ title force.
 **Title Certificate (`def:graph:title-certificate`).** The map
 $\mathrm{owner}^{(k)} : \text{Items} \to V_u \cup \{\varnothing\}$ sending
 each Item to the terminal actor of its ownership thread, or $\varnothing$ if
-no genesis Owner edge resolves it. Layer 1 publishes $\mathrm{owner}^{(k)}$
-alongside the epoch certificate.
+no genesis Owner edge has finalized for it: an Item has no certified owner
+before the boundary of its genesis epoch. Finalization epochs are numbered
+from 1; boundary 0 is the empty state before epoch 1, at which every Item
+has value $\varnothing$. An act placed in an epoch 0, a position outside 1
+to $|\mathcal{Q}_k|$, a repeated (epoch, position), or a missing position
+means the epoch has no order of record; such a certificate is malformed and
+refused before any replay. Layer 1 publishes $\mathrm{owner}^{(k)}$
+alongside the epoch certificate as a recomputable summary of the epoch
+partition (`rem:graph:title-certificate-is-summary`): title means the
+recomputed fold, and a published value that differs from it is a
+title-certificate fault (`def:graph:title-certificate-fault`). Boundary
+accountability obliges the certificate to publish $\mathrm{owner}^{(k)}$
+equal to the fold recomputed from the partition it certifies
+(`cond:graph:boundary-accountability-title-certificate`, the fourth
+obligation of `post:graph:boundary-accountability`); a proven fault is
+attributed to the host under the deployment's published review and
+sanctions mechanism, reorders and deletes nothing, recomputes no other
+finalized quantity, and does not authorize verifier refusal of a finalized
+epoch.
 
 **Settlement Consumption (`def:graph:settlement-consumption`).** Let
 $C_k(n_i)$ be the recognized, unchallenged candidates on $n_i$ whose Ratify
@@ -911,7 +1184,7 @@ ordering of unconstrained acts enters nowhere. Handshake well-formedness is
 fixed by the public, non-tombstonable settlement references; conflict
 resolution reads only set membership, $\mathrm{ep}(\cdot)$ indices, and
 that chain — never the tombstonable dependency projection. Closure
-selection is title-invisible: the write rule decides membership only, never
+selection is title-invisible: the closure rule decides membership only, never
 recognition or tie-break (`rem:graph:title-order-irrelevance`).
 
 **Settlement reputation: stance, not parity
@@ -922,9 +1195,12 @@ This is forced by the Quadrant Law: a coerced and unfair Accept with both
 parameters negative has $\epsilon = +1$ — correct for routing coherence,
 wrong as a verdict. Routing reads coherence; stance consumers read stance.
 The closure-side gate is recipient resolution on Accept/Ratify: the act
-reaches the counterparty only when it is title-transferring under the epoch
-title fold and all its mandatory coordinates are strictly positive; otherwise
-it resolves to its author (§11.3).
+reaches the counterparty only when its candidate is recognized,
+unchallenged, and title-transferring under the epoch title fold and all its
+mandatory folded coordinates are strictly positive; otherwise it resolves
+to its author while remaining weighed, priced, and counted (§11.3). A
+successful transfer is event-persistent: a later resale does not revoke it
+(`post:epoch:settlement-standing-title-coupling`).
 
 The full paper's **terminal default** for the read-site
 (`rem:graph:settlement-reputation`): three authored edges carry three signed
@@ -933,9 +1209,8 @@ $\mathrm{sgn}(c_{\text{Acc}})$, and buyer confirmation
 $\mathrm{sgn}(c_{\text{Rat}})$ — and **positive commercial reputation holds
 iff all three stance marginals are positive** (the *conjunction*, reading the
 $p_d$ marginal row; not the parity product $\prod\epsilon(e)$, which would
-reward predatory-meets-coerced). This is a terminal L2 read-site: CoGra is
-free to adopt or replace it — the interface records the reference default, it
-does not bind it. (`subsec:necessity:stance-marginal-reputation`)
+reward predatory-meets-coerced). This is a terminal Layer-2 read-site
+(`subsec:necessity:stance-marginal-reputation`).
 
 **Cross-layer (`rem:graph:settlement-cross-layer`):** Layer 1 holds no value,
 locks nothing, adjudicates nothing; it records Offers and ownership changes. A
@@ -944,8 +1219,9 @@ mechanism is terminal. Layer 1 supplies the deterministic commit anchor: the
 **epoch certificate** in which the settlement is recognized, unchallenged, and
 title-transferring — not the Ratify, which is no longer the point of no return
 (`rem:graph:regret-window`). The residual exposure is boundary censorship — a
-host suppressing a co-epochal cancel while writing the commit
-(`frontier:boundary-censorship`, `rem:epoch:consent-exposure`).
+host suppressing a cancel while writing the commit, which leaves no Layer-1
+trace (`rem:epoch:consent-exposure`); its written-side accountability is
+`post:graph:boundary-accountability`.
 
 ---
 
@@ -999,7 +1275,7 @@ hyper-edge's A- and T-projections are not two records later joined into one
 act: they are two graph projections of one already-formed act, sharing by
 construction one act identifier, author, payload lifecycle, dependency
 projection, causal-parent set, approval witness, debit, count increment,
-stamp, and authoritative time.
+stamp, and authoritative logical time.
 
 **Act identifier and minted-node identity (`def:graph:act-identifier`).**
 The actor chooses a unique author-local sequence value $s_q$ fixed before
@@ -1007,8 +1283,10 @@ submission; the act identifier is
 $\mathrm{actid}(q) = \mathsf{act}(\mathrm{author}(q), s_q,
 \mathrm{family}(q))$ — no host-assigned time, no minted target, so it
 exists before host salting, verification, ordering, and time assignment.
-Edge-projection identifiers derive from it by role
-($\mathsf{edge}(\mathrm{actid}(q), A/T)$), and a node minted by a genesis
+Record identifiers project it by role with one constructor
+($\mathsf{record}(\mathrm{actid}(q), \mathrm{binary})$,
+$\mathsf{record}(\mathrm{actid}(q), A)$,
+$\mathsf{record}(\mathrm{actid}(q), T)$), and a node minted by a genesis
 act takes identity $\mathsf{mint}(\mathrm{actid}(q))$ — the minted node
 names its genesis *act*, never itself. A monotone author-local sequence
 makes accidental reuse directly detectable; distinct accepted acts never
@@ -1105,7 +1383,7 @@ independently folded projections, substitute an unrelated incoming edge for
 an A-projection, or select a T-projection whose parent act it cannot
 resolve. Layer 1 reads bundles in **exactly two** places
 (`rem:graph:authored-act-bundle-consumers`): the **standing** projection
-(net stance + recipient resolution + inviter revocation, §11.3) and
+(net stance + recipient resolution, §11.3) and
 **title** (the epoch-quantized settlement fold, §7.2). Every other reading
 — current profile (latest), membership, decay, amended-vs-accumulated
 display — is Layer-2-free. A parallel *genesis* is rejected by record
@@ -1144,10 +1422,11 @@ and thereafter immutable. Passive out-degree
 (`lem:graph:passive-out-degree`): Content, Type, Comment, and Message
 source Tag and Review terminal legs; Offer sources Review legs but no Tag;
 Item additionally sources a Bid leg; Chat additionally sources Send,
-Invitation, and De-invite legs; Profile additionally sources the derived
+Invitation, De-invite, and Participant legs; Profile additionally sources the derived
 Reputation component; and every passive type sources Reference terminal
-legs — Reference's A-leg may source from any passive node (the universal
-citing artifact). Edges between actors may be asymmetric; each edge
+legs — Reference's A-leg may land on any passive node (the universal
+citing artifact), which then sources one author-fixed Reference/T terminal
+leg. Edges between actors may be asymmetric; each edge
 carries independent sentiment parameters set unilaterally by its
 originating actor (`rem:graph:asymmetry`).
 
@@ -1200,21 +1479,32 @@ package speak.
 *asserted parents*: prior-act references, structural fields of its body,
 defining the directed acyclic causal-parent relation (backward-only by
 construction, acyclic within a batch by the topological formation check).
-Semantics: the act is admissible only into an epoch whose history contains
-every asserted parent earlier. The settlement reference is the settlement
+Semantics: the act is admissible only into an epoch that contains, or whose
+history contains, every asserted parent earlier
+(`cond:graph:authoritative-order-parent-placement`). The settlement reference is the settlement
 family's instance of this field. An asserted parent is metadata, not graph
 incidence, and adds no endpoint pre-degree — asserted parents and declared
 dependencies in a scoring formula are prohibited (the $\tau$-farming lint,
 `rem:graph:act-ordering-relations`).
 
-**Dependent act set (`def:graph:dependent-act-set`).** A *dependent set* is
-a set of formed acts closed under the causal-parent relation, taken
-together with both edge projections of every hyper-edge act in it. The
-shared-parent grouping of a hyper-edge's projections is not a directed
-parent: it groups without ordering, so admitting both projections together
-creates no causal cycle. Minimal dependent sets are the closures of a
-single act. The dependent set is the sole unit of the write: written whole
-or not at all. Conflict grouping by causality is rejected — cancels and
+**Dependent act set (`def:graph:dependent-act-set`).** Fix the history $H$
+finalized before the epoch's write. A *dependent set* is a set of formed
+acts outside $H$ closed under the causal-parent relation — every causal
+ancestor of every member is in $H$ or in the set — taken together with both
+edge projections of every hyper-edge act in it; earlier pieces of the same
+final union do not enlarge $H$. The shared-parent grouping of a
+hyper-edge's projections is not a directed parent: it groups without
+ordering, so admitting both projections together creates no causal cycle.
+For a closed candidate final union $S$, the *principal closure* of
+$q \in S$ is $q$ with all its causal ancestors outside $H$; joining two
+principal closures whenever they intersect, the union of the closures in
+each connected component is one block of the **dependent-set partition**.
+The blocks cover $S$, are pairwise disjoint, are each closed relative to
+$H$, and do not depend on processing order or on any dependency-compliant
+permutation. Two acts sharing a causal parent outside $H$ therefore belong
+to one block, and that parent is counted and debited once; a shared parent
+already in $H$ does not by itself join their blocks. Each dependent block
+is the unit of the write: written whole or not at all. Conflict grouping by causality is rejected — cancels and
 commits are concurrent by construction, and the regret window depends on
 it; conflict protection is boundary accountability, not write-unit
 grouping (`rem:graph:dependency-closure-excludes-conflicts`).
@@ -1238,8 +1528,9 @@ opening material beside carriage, a binding-yet-concealing commitment
 residue in the structural record, one-way tombstoning. The dependency
 projection is the actor's finite canonical dependency list
 $\mathrm{deps}(q)$ — each element naming one authored act, never an
-individual leg, declaring that $q$'s authoritative time must exceed each
-member's; the declaration grants no inclusion right. States: full-empty /
+individual leg, declaring that $q$'s key of record must exceed each
+member's (`cond:graph:authoritative-order-dependency-placement`); the
+declaration grants no inclusion right. States: full-empty /
 full / tombstoned (list and opening removed, the binding commitment residue
 remaining — the anchor a later opening reopens). Tombstoning changes no
 identity, order, time, count, debit, standing, feed, CAN, title, or
@@ -1255,7 +1546,12 @@ recognition quantity.
    the hash of the canonical structural body plus both pre-digests, and the
    actor signs it. The pre-commitment exists before host salting, binds the
    exact proposal, cannot be transplanted to another act identifier,
-   carries no host order, and grants no inclusion.
+   carries no host order, and grants no inclusion. The nonce's entropy
+   custody is the actor's when it is client-generated; the host receives
+   it at proposal, validates its checkable part at append (format, length,
+   freshness, and non-reuse across the author's acts), and custodies and
+   removes it with the payload (`subsec:deployment:concealment-entropy`,
+   `rem:graph:erasure-floor`).
 2. **Verified act (`def:graph:verified-act`).** The host verifies the actor
    signature, act-identifier uniqueness, canonical formation, hyper-edge
    A/T consistency, public protocol references, carriage and dependency
@@ -1281,13 +1577,32 @@ recognition quantity.
 4. **Ordering fraud proof (`def:graph:ordering-fraud-proof`,
    `post:graph:ordering-accountability`).** For an accepted act, a fraud
    proof is the ordinary full opening of its dependency projection; it
-   succeeds iff the finalized order violates the committed dependency list.
-   A successful proof may trigger fault attribution, operator slashing, or
-   deployment sanctions — but it does **not** reorder the epoch, delete the
-   act, reverse counts or debits, recompute historical standing, or
-   reverse title. The authoritative order stays authoritative even when
-   proven non-compliant; by finalizing an act the host attests it held and
-   validated the full dependency opening.
+   succeeds iff some dependency is absent from finalized history or has a
+   key of record not strictly below the act's. A successful proof may
+   trigger fault attribution, operator slashing, or deployment sanctions —
+   but it does **not** reorder the epoch, delete the act, reverse counts or
+   debits, recompute historical standing, or reverse title. The
+   authoritative order stays authoritative even when proven non-compliant
+   (a *compliant* order satisfies both placement conditions); by finalizing
+   an act the host attests it held and validated the full dependency
+   opening.
+
+**Post-finalization faults (`def:graph:parent-placement-fault`,
+`def:graph:stamp-fault`, `def:graph:title-certificate-fault`).** A
+*parent-placement fault* is an asserted parent of a finalized act that is
+absent from finalized history or sits at a key of record not strictly below
+the act's; the public finalized record proves it, with no
+removable-projection opening. It carries the dependency case's consequences
+— attribution and sanctions, no reordering, deletion, recomputation, or
+reversal (`cond:graph:ordering-accountability-parent-placement`). A *stamp
+fault* is a published logical time that differs from the recomputed
+$\mathbb{T}^{\text{act}}_q$; it is attributed to the host as the sole
+stamper, and the order of record and every derived quantity stand
+(`cond:graph:ordering-accountability-stamp`). A *title-certificate fault*
+is a published $\mathrm{owner}^{(k)}(n_i)$ that differs from the recomputed
+fold (§7.2). None of these proofs authorizes verifier refusal of a
+finalized epoch: finalization is irreversible, and no
+replacement-agreement mechanism is specified.
 
 **Act authentication requirements
 (`post:graph:act-authentication-requirements`,
@@ -1301,61 +1616,94 @@ removable-projection binding; (vii) ordering accountability. **The
 specification prescribes properties, not a cryptographic realization:
 signature schemes, commitment schemes, hash functions, salts, serialization
 formats, key management, proof encodings, and algorithm migration are
-deployment concerns.** Any implementation satisfying the postulate is
+deployment concerns.** The handshake constructions above are one reference
+realization: encode is the deployment's declared canonical serialization
+(one encoding per value, published and versioned), $H$ its declared
+collision-resistant hash, and Sign its declared signature scheme; the
+domain-separation tags, nonce and salt formats, and salt entropy floor are
+the deployment's. Any implementation satisfying the postulate is
 compliant.
 
 ### 8.3 Temporal structure
 
 **Authored-act causality (`ax:graph:act-causality`,
-`def:graph:act-incidence-causality`).** Authoritative logical time is
-finalization metadata attached to the accepted act, not an edge-owned
-attribute. Each accepted act is one Lamport event whose causal incidence is
-its complete graph projection: a binary act is a two-way event over its
-source and target; a hyper-edge act a **three-way** event over its
+`def:graph:act-incidence-causality`).** Logical time is finalization
+metadata attached to the accepted act, not an edge-owned attribute; the
+host-published sequence is the order of record, and Lamport time
+summarizes that order. Each accepted act is one Lamport event whose causal
+incidence is its complete graph projection: a binary act is a two-way event
+over its source and target; a hyper-edge act a **three-way** event over its
 initiating Actor, contextual middle node, and semantic target (the middle
 node participates in causal incidence only — no authorship, autonomy, or
 standing authority). Along the host-published sequence, an act's Lamport
 time is one more than the maximum over its incident endpoints' frontiers
-and its predecessors' times (asserted parents ∪ declared dependencies);
-every incident endpoint then advances to the act frontier. The two
-projections of a hyper-edge inherit the one event frontier — never two
-independently timed records.
+and the times of its predecessors (asserted parents ∪ declared
+dependencies); only finalized predecessors at strictly lower keys of record
+contribute, and a missing or non-earlier one contributes nothing
+(`cond:graph:act-incidence-causality-finalized-predecessors`). Every
+incident endpoint then advances to the act frontier. Each endpoint's
+frontier entering epoch $k$ is its frontier at the close of epoch $k-1$,
+carried across an empty epoch; it is zero at genesis and for an endpoint
+with no earlier incidence, and an empty maximum is zero
+(`cond:graph:act-incidence-causality-frontier-carry`). Every time in the
+recurrence is the recursively recomputed value, never an unchecked
+published stamp, so every finalized act has a finite time
+(`prop:graph:act-time-finite`). The two projections of a hyper-edge
+inherit the one event frontier — never two independently timed records.
+$\mathbb{T}^{\text{act}}_q$ is a recomputable summary: anyone with the
+same replay inputs recomputes it, it carries no authority over order or
+finalized consequences, and disjoint incidence can give a later act a
+lower time (`rem:graph:act-time-is-summary`).
 
 **Authoritative act order (`def:graph:authoritative-act-order`).** For
 epoch $k$ the host chooses a finite total order $\mathcal{Q}_k$ of the
-accepted acts and publishes each act's position. The **authoritative causal
-key** is the lexicographic pair
-$(\mathbb{T}^{\text{act}}_q, \mathrm{pos}_k(q))$ — Lamport time, then host
-position totalizing equal frontiers. The order is total and *semantically
-authoritative*: not forced by incidence, but it must linearize every
-asserted parent and declared dependency (each at strictly lower key) while
-placing both edge projections of one hyper-edge at the same key. Where
-this document writes $\prec$ in scoring, maturity, or path viability it
-means authoritative-order precedence, with the internal A→T transition of
-one act permitted at equal key.
+accepted acts and publishes each act's position
+$\mathrm{pos}_k(q_{k,j}) = j$, numbering the acts of the epoch from 1 to
+$|\mathcal{Q}_k|$. The **key of record** is the pair
+$(k, \mathrm{pos}_k(q))$, ordered lexicographically across epochs as well
+as within one epoch (`rem:graph:order-of-record-is-position`). Logical
+time is derived from this order, never the reverse; a time comparison never
+decides precedence, even when a later act has a lower time on disjoint
+endpoints (`rem:graph:cross-epoch-precedence`). The order is total and
+*semantically authoritative*; compliance requires every declared
+dependency and every asserted parent of an act to lie in finalized history
+at a strictly lower key
+(`cond:graph:authoritative-order-dependency-placement`,
+`cond:graph:authoritative-order-parent-placement`), and both edge
+projections of one hyper-edge have the same key. A finalized order that
+violates a placement condition remains the order of record; evidence and
+consequences follow ordering accountability (§8.2). Where this document
+writes $\prec$ in scoring, maturity, or path viability it means precedence
+by the key of record, with the internal A→T transition of one act permitted
+at equal key.
 
 **Host ordering discretion (`rem:graph:host-ordering-discretion`).** For
 acts not ordered by a causal parent or declared dependency, Layer 1
 imposes no arrival-order, fairness, neutrality, or canonical-identifier
 preference — the host may select any dependency-compliant order according
 to its own incentives. **Different valid host choices may produce different
-authoritative causal keys, edge-projection maturities, relation frontiers,
-causal standing paths, standing fields, and final-set admission
-outcomes.** This is authorized boundary discretion. The guarantee is
+authoritative causal keys, edge-projection maturities, and raw folded
+relation frontiers.** Formation and dependency validity read order; the
+write gates, standing, and ledger are evaluated once on the completed final
+union. Permuting a fixed accepted set in a dependency-compliant way, with
+final ledger, epoch title fold, and constants fixed, cannot change standing
+(`post:epoch:standing-epoch-set-determinism`); changing accepted membership
+can. This is authorized boundary discretion. The guarantee is
 public visibility and deterministic replay — *order transparency and
 replay determinism, not incentive-neutral ordering*.
 
 **Ordered-replay determinism (`lem:graph:ordered-replay-determinism`).**
-Fixing the finalized $\mathcal{Q}_k$ and the published constants:
-$\mathbb{T}^{\text{act}}$, $\tau_e$, $\tilde{w}(e)$, $\epsilon(e)$, every
-path parity, the half-score, path distance, the relevance score $S(u,c)$,
-and every CAN value are functions of $\mathcal{Q}_k$ and the constants
-alone — every participant holding the same ordered history reproduces them
-identically; none references $\mathrm{pos}(e)$ beyond the order itself.
-**This supersedes the pre-Edition-4 linearization-invariance lemma**: the
-claim is downgraded from order-independence to determinism given the
-published order. A lower Lamport time is necessary but not sufficient for
-causal ancestry (`rem:graph:causal-frontier-not-ancestry`).
+Fixing the finalized ordered history through epoch $k$ — including
+$\mathcal{Q}_k$ and the incidence and authenticated dependency inputs — and
+the published constants: $\mathbb{T}^{\text{act}}$, $\tau_e$,
+$\tilde{w}(e)$, $\epsilon(e)$, every path parity, the half-score, path
+distance, the relevance score $S(u,c)$, and every CAN value are functions of
+that ordered history and the constants alone — every participant holding
+the same ordered history reproduces them identically; none references
+$\mathrm{pos}(e)$, and no quantity reads host discretion beyond the
+published sequences. A lower recomputed Lamport time is necessary but not
+sufficient for causal ancestry
+(`rem:graph:causal-frontier-not-ancestry`).
 
 **Edge-projection maturity (`def:graph:edge-projection-maturity`).** For
 $e \in \mathrm{edges}(q)$:
@@ -1383,18 +1731,30 @@ $H_\tau = 0$ at $\tau_e = 0$; applied once at the thermodynamic boundary.
 
 Fields the structural record carries, per act: author binding; the act
 identifier; family; endpoints/incidence per projection with role; the
-authoritative act time; the authored parameters $p_d, p_i$ and domain label
-$D$ with mask $\mathbf{a}_D$ and routing tier per projection; derived
-parity $\epsilon(e)$ per projection; public protocol references
-(settlement references, license qualifiers); the **payload commitment**
-and the **dependency commitment**; handshake signatures and the approval
-witness. The record is sufficient to recompute the sentiment slice,
-path-view determinant, determinant sign, damped weight, and both
-commitment verifications (`subsec:deployment:sufficiency`).
+finalization epoch and act time $\mathbb{T}^{\text{act}}_q$; the authored
+parameters $p_d, p_i$ and domain label $D$ with mask $\mathbf{a}_D$ and
+routing tier per projection; derived parity $\epsilon(e)$ per projection;
+public protocol references (settlement references, license qualifiers) and
+asserted causal parents; the **payload commitment** and the **dependency
+commitment**; handshake signatures and the approval witness. The record is
+sufficient to recompute the sentiment slice, path-view determinant,
+determinant sign, damped weight, and both commitment verifications
+(`subsec:deployment:sufficiency`).
+
+**Act envelope (`def:graph:act-envelope`).** The abstract published record
+of an accepted act has exactly these fields: act identifier, author, and
+family; structural body; public protocol references and causal parents;
+payload and dependency commitments; admission handshake and approval
+witness; finalization epoch and act time. The payload bytes, salts, and
+dependency opening travel beside the envelope and are not part of it. Its
+serialization, carriage, and transport are deployment concerns.
 
 **Act payload projection (`def:graph:act-payload-projection`).** **Every
 authored act carries a payload projection**: a byte string the network
-never reads, bounded **per act** by $M_{\text{payload}}$. For a hyper-edge
+never reads, bounded **per act** by
+$\mathrm{len}(\mathrm{encode}(Y_q)) \le M_{\text{payload}}$, where encode
+is the deployment's declared payload encoding, so $M_{\text{payload}}$ is
+stated in that encoding's bytes. For a hyper-edge
 act the payload may be a structured, role-addressed object
 $(Y^{\text{act}}, Y^A, Y^T)$ — but this is *one* act payload under one
 commitment and one lifecycle; the role labels are schema fields, never
@@ -1434,7 +1794,7 @@ either removable projection — payload or dependency opening — changes
 neither the edge projections nor any identifier, incidence, role,
 parameter rendering, act time, standing quantity, title quantity, or raw
 graph quantity: $\boldsymbol{\Psi}_e$, $\boldsymbol{\Psi}_e^{[P]}$,
-$\epsilon(e)$, $\tilde{w}(e)$, $W_{\text{end}}^{(k)}$, $\alpha_i$,
+$\epsilon(e)$, $\tilde{w}(e)$, the CAN base value $v(e)$, $\Pi_{ui}$, $\alpha_i$,
 settlement recognition, $\mathrm{owner}^{(k)}$, and every gate are
 identical across all payload states of every act. Removal is
 scoring-neutral: the reduced projection carries the entire Layer-1 closure
@@ -1452,10 +1812,7 @@ content commitment (*witness*) is invariant across phases; only carriage
 migrates. Centralized: Layer 1 tracks payload and salt, removable on
 request. Decentralized: Layer 1 tracks only the witness; payload and salt
 are a terminal carriage obligation. The structural record is identical in
-both. The L1 author has confirmed that Layer-1 carriage of payload and salt
-is optional from the start, so a centralized deployment may already run
-witness-only. CoGra does
-([data-model.md](../implementation/data-model.md#act-payload-carriage)).
+both.
 
 **Payload envelope convention (L2).** The opaque payload MAY carry a structured
 Layer-2 **content-envelope** — a deterministic-CBOR convention; the Peer Content
@@ -1543,8 +1900,8 @@ The damped weight $\tilde{w}(e)$ is the identical **raw per-edge primitive**
 for every raw-graph consumer — feed ranking, the raw signed double-cover
 service, and Channel 1 of bridge transport — with no per-consumer variant
 (**one raw formula for all raw-graph consumers**,
-`rem:epoch:shared-raw-edge-primitive`). Under Edition 4 the raw formula
-itself is a **terminal default** (a guild may replace it, publishing the
+`rem:epoch:shared-raw-edge-primitive`). The raw formula itself is a
+**terminal default** (a guild may replace it, publishing the
 replacement completely; host-cached values are by-products — §3, §4).
 **Standing is not a raw-graph consumer:** it folds complete acts into cells
 and reads the cell coefficient and the wall-clamped recipient activation
@@ -1624,9 +1981,9 @@ fixtures of the original's verification section:
 | Marginal | Leave, De-invite legs (fixed parameters) | $(1.00, 1.00)$ | $0.153$ |
 
 The tier assignment of the remaining edge types follows the census,
-without a worked fixture in the original: Full — Reference/T, Publish,
-Participant/A, Send/A; Half — Invitation/A; Marginal — Reference/A,
-Send/T, Participant/T. The original presents $0.27$–$0.36$ as the
+without a worked fixture in the original: Full — Registration, Reference/T,
+Publish, Participant/A, Send/A; Half — Invitation/A; Marginal — Reference/A,
+Send/T, Participant/T, Withdraw, Rescind. The original presents $0.27$–$0.36$ as the
 reference band for non-Self full-mask edges, Self above it
 (`prop:graph:path-view-determinant-bound`).
 
@@ -1647,8 +2004,12 @@ non-monotone in $\tau$ with minimum near $\tau \approx 0.5$. **Raw
 edge-weight ceiling (`thm:graph:raw-weight-ceiling`):**
 $0 \le \tilde{w}(e) \le \tilde{w}_{\max} < 1$ for every raw edge
 projection and derived reading, every parameter tuple, tier, and maturity
-— so log costs are positive, max-product registers bounded, and every
-optimal bounded raw walk has a simple representative. Maturity crossover:
+— so log costs are positive on routing-live edges and max-product registers
+bounded. When parity is unconstrained and depth has only an upper bound,
+every optimal raw walk has a simple representative with no smaller
+product; this supplies no simple representative of a prescribed parity, so
+signed traversal enforces original-vertex simplicity explicitly
+(`lem:epoch:double-cover-bfs-correctness`). Maturity crossover:
 $g(\tau) = \sqrt{1+\tau^2}\, e^{-\beta H_\tau} > 1$ iff
 $\tau > \tau^* \approx 0.94$ (`def:epoch:maturity-crossover`,
 `prop:epoch:crossover-location`).
@@ -1688,8 +2049,8 @@ view and preserves determinant sign exactly.
 
 ### 8.9 Derived path quantities consumed by raw traversal
 
-- **Path matrix (`def:graph:path-matrix`):** for a directed path
-  $p = (e_1, \dots, e_d)$ viable under the authoritative order:
+- **Path matrix (`def:graph:path-matrix`):** for a directed raw snapshot
+  path $p = (e_1, \dots, e_d)$ (`def:graph:raw-snapshot-path`):
   $P(p) = \boldsymbol{\Psi}_{e_1}^{[P]} \cdots \boldsymbol{\Psi}_{e_d}^{[P]}$.
 - **Determinant product (`thm:graph:determinant-product`):**
   $\det(P(p)) = \prod_{e\in p} \det(\boldsymbol{\Psi}_e^{[P]})$.
@@ -1699,8 +2060,10 @@ view and preserves determinant sign exactly.
   `eq:graph:half-score`):** at $q = \tfrac12$ the path score is
   $\prod_{e\in p} \big(|\det \boldsymbol{\Psi}_e^{[P]}|^{1/2}\sqrt{1+\tau_e^2}\, e^{-\beta H_\tau(e)}\big) = \prod_{e\in p}\tilde{w}(e)$
   (Dijkstra-compatible), consumed by the raw-graph traversals (feed ranking,
-  the raw signed double-cover service, bridge Channel 1); standing reads the
-  relation-layer quantities, not $\tilde{w}$ paths (§11.4).
+  the raw signed double-cover service, bridge Channel 1); standing compiles
+  complete acts into cells and reads their coefficients, the wall-clamped
+  activation and the emission fractions, not $\tilde{w}$ paths
+  (§11.3–11.4).
   $q = \tfrac12$ is the canonical default; a guild may expose
   $q \ne \tfrac12$ for its own sorting at matrix-BFS cost
   (`rem:sorting:matrix-bfs`).
@@ -1715,10 +2078,12 @@ view and preserves determinant sign exactly.
   projections plus current derived readings traversed, at most $L$. **Raw
   path viability does not require edge times to increase**: raw feed and
   bridge services measure connectivity in the current public snapshot, not
-  a chronological event chain. The host-published act order remains binding
-  for act acceptance, maturity, bundle folds, title, standing, and the
-  derived Self-edge parameters — it is not a path constraint on terminal
-  snapshot traversal. (Supersedes the pre-Edition-4 path-viability axiom.)
+  a chronological event chain. The host-published act order governs
+  dependency formation, authoritative placement, edge-projection maturity,
+  and order-sensitive raw bundle folds; standing, the ledger, and the write
+  gates are evaluated once on the completed final union, and title reads
+  membership and epoch. The act order is not a path constraint on terminal
+  snapshot traversal.
 - **Exactness (`rem:sorting:raw-pruning-is-implementation`):** the
   canonical raw feed, signed, and bridge services are exact bounded-depth
   max-product computations on $G_k^{\text{raw}}$. Layer 1 publishes no raw
@@ -1727,8 +2092,8 @@ view and preserves determinant sign exactly.
   a terminal Layer-2 choice that must publish its own error, cutoff, and
   tie semantics.
 - **Ordered-replay determinism (`lem:graph:ordered-replay-determinism`):**
-  see §8.3 — all of the above are deterministic functions of
-  $(\mathcal{Q}_k, \text{constants})$; different valid host orders may
+  see §8.3 — all of the above are deterministic functions of the finalized
+  ordered history and the constants; different valid host orders may
   differ (`rem:graph:host-ordering-discretion`).
 
 Excised from the closure edition (terminal): the general $W_q$
@@ -1745,32 +2110,50 @@ remain specified in the full paper's terminal sections only.
 
 ### 9.1 Universal principles (`subsec:nodes:universal-principles`)
 
-Six structural invariants for all edges and hyper-edges:
+Eight structural invariants for all edges and hyper-edges:
 
-1. Every edge projection inherits its parent act's authoritative logical
-   time $\mathbb{T}^{\text{act}}_q$ and carries its own maturity scalar
-   $\tau_e$.
-2. Every edge's stored sentiment is a $3\times3$ extended slice
+1. Every record is initiated at its author: the source of a binary edge or
+   A-leg is the act's author, and a T-leg's passive source is the act's
+   middle node, fixed by that same author. Author metadata, the
+   act-identifier author component, the frame-bound key, and the initiating
+   source endpoint are one actor by construction
+   (`prop:graph:author-source-identity`).
+2. Every edge projection inherits its parent act's logical time
+   $\mathbb{T}^{\text{act}}_q$ — the Lamport summary of the order of record,
+   never an input to precedence (`ax:graph:act-causality`) — and carries its
+   own maturity scalar $\tau_e$.
+3. Every edge's stored sentiment is a $3\times3$ extended slice
    $\boldsymbol{\Psi}_e$ constructed via the canonical pipeline.
-3. Every edge exposes the raw path-view interface
+4. Every edge exposes the raw path-view interface
    $\boldsymbol{\Psi}_e^{[P]}$, its determinant magnitude, and its
-   determinant sign.
-4. Every hyper-edge act projects into two binary legs whose path-view
-   determinants and determinant signs multiply.
-5. Boundary damping $e^{-\beta H_\tau}$ is applied at observation, not to
+   determinant sign (`def:graph:dual-view-architecture`; the Scalar and
+   Attribution Views are terminal reads, §8.6).
+5. Every hyper-edge act decomposes into an A-leg and a T-leg for raw-graph
+   and CAN consumers, whose path-view determinants and determinant signs multiply
+   (`thm:graph:hyper-edge-reduction`); standing consumes the matched pair
+   once as one complete act, never as independently reachable legs
+   (`cor:graph:standing-act-atomicity`).
+6. Boundary damping $e^{-\beta H_\tau}$ is applied at observation, not to
    stored tensors.
-6. Every act carries a separable payload commitment; payload bytes and
-   payload state enter no Layer-1 closure formula.
+7. Every authored act carries a payload commitment; payload bytes and
+   payload state enter the canonical pipeline nowhere
+   (`prop:graph:removable-projection-invariance`). Nodes carry nothing:
+   every node-level quantity is a declared fold over incident records
+   (`ax:graph:authored-act-ontology`, `def:graph:canonical-folds`).
+8. Standing authority is assigned by the closed census of
+   `def:epoch:standing-recipient-resolution`. Positive determinant parity, a
+   grounded target, a strong raw edge weight, or a passive artifact's
+   incoming weight is never sufficient by itself to create a person-vouch.
 
 **Canonical Tensor Pipeline (`post:nodes:canonical-tensor-pipeline`).** For
 every edge (binary or hyper-edge leg): (1) role assignment — domain
 parameters assigned to directional ($p_d$) and intensity ($p_i$) roles;
 single-parameter edges set the missing role to 1; (2) extended slice via the
 master formula with the domain's bilinear mask; (3) path-view extraction
-with $\eta$-softening; (4) temporal attributes — the inherited act time,
-$\tau_e$, $H_\tau(e)$ computed under the authoritative order; (5) closure
-extraction — per-edge $|\det \boldsymbol{\Psi}_e^{[P]}|^{1/2}$,
-$\epsilon(e)$, $\tilde{w}(e)$. Single-parameter row collapse (Owner,
+with $\eta$-softening; (4) temporal augmentation of $\boldsymbol{\Psi}_e$ by
+the maturity scalar $\tau_e$ (the augmented tensor is terminal, §8.9);
+(5) interface extraction — the path view $\boldsymbol{\Psi}_e^{[P]}$, beside
+the terminal Scalar and Attribution Views (§8.6). Single-parameter row collapse (Owner,
 Publish, Send/A) is a census property, not an incentive surface
 (`rem:nodes:row-collapse`).
 
@@ -1789,17 +2172,18 @@ Affinity → Type; Tag → Taggable; Review → Reviewable; Owner/Bid → Ownabl
 Join Request, Invitation/A, Send/A, Leave, De-invite/A, Participant/A →
 Chat; Participant/T → Chat; Withdraw/Rescind → Offer; Invitation/T → invitee's Profile;
 De-invite/T → de-invitee's Profile. Reference is trait-independent on both
-ends: its A-leg sources from any passive citing artifact, and its T-leg
-targets any existing passive node, including a Profile, never an Actor
-(`rem:nodes:reference-author-allocation`).
+ends: its A-leg lands on any passive node, the citing artifact, which
+sources the author-fixed T-leg toward any existing passive node, including a
+Profile, never an Actor (`lem:graph:passive-out-degree`,
+`rem:nodes:reference-author-allocation`).
 
 **Reviews are commentary, never state (`rem:graph:reviews-commentary`).**
 Every passive node type implements Reviewable: anything that exists in the
 graph admits attributed public commentary. A Review transitions no
 settlement state, moves no title, binds no tag, creates no membership, and
-enters no admission quantity. Universal Reviewability is **standing-inert**,
-and the inertness is semantic rather than topological: a Review cell always
-resolves to its author, and no raw Review leg or
+enters no admission quantity. Universal Reviewability **allocates to no
+person**, and that is semantic rather than topological: a Review is still
+weighed, and weighed home, and no raw Review leg or
 Review-created Comment can lend upstream standing to a third party's later
 Reference — a later Reference is evaluated as its own complete act, through
 its own author (`def:graph:act-edge-projection`,
@@ -1911,9 +2295,8 @@ Both components are derived certificate recomputations
 (`def:graph:derived-raw-edges`, `def:graph:derived-self-reading`), excluded
 from the record set, bundles, action counts, and the payload schema. **The
 reading is a deterministic function of the current final standing: there is
-no freeze, no previous-standing memory, and no below-wall branch** — the
-pre-Edition-4 last-valid-pair freeze is deleted; below the wall, standing
-uses the wall-clamped *activation* instead (§11.4), which is a property of
+no freeze, no previous-standing memory, and no below-wall branch** — below
+the wall, standing uses the wall-clamped *activation* instead (§11.4), which is a property of
 the standing solve, not of the raw reading.
 
 - **Declaration** (Actor → Profile): derived — recomputed from the epoch
@@ -1939,8 +2322,8 @@ feed/bridge/CAN properties only, not the standing activation: zero at zero;
 strictly monotone increasing in $\alpha_j$; $\tilde{w}(e_{\text{Rep}}) < 1$
 always; concave; positive parity; both components synchronized at every
 epoch boundary; feed-through hierarchy (profile-bridged ceiling
-$(\tilde{w}_{\max}^{\text{Op}})^2 \cdot \tilde{w}_{\max} \approx 0.249$ vs
-direct-Opinion ceiling $\approx 0.502$ — the bridge is always at least
+$(\tilde{w}_{\max}^{\text{Op}})^2 \cdot \tilde{w}_{\max} \approx 0.250$ vs
+direct-Opinion ceiling $\approx 0.503$ — the bridge is always at least
 2× weaker); raw $\tau$-channel ceiling at frozen $p$:
 $\sup_\tau \tilde{w}(e_{\text{Rep}})(p_0;\tau) = |\det \boldsymbol{\Psi}^{[P]}(p_0)|^{1/2}\sqrt{2} < 1$.
 Self-loop paths Actor→Profile→Actor produce no register update in raw
@@ -1951,7 +2334,7 @@ traversal (`prop:nodes:self-loop-neutral`).
 $\text{Actor}_i \xrightarrow{\text{Op}} \text{Profile}_j \xrightarrow{\text{Rep}} \text{Actor}_j$.
 **Raw profile-bridge amplification
 (`def:nodes:raw-profile-bridge-amplification`):**
-$A(\hat{\alpha}_j) = \tilde{w}(e_{\text{Rep}})(\alpha_j)\cdot(1 + \alpha_j)$,
+$A(\hat{\alpha}_j) = \tilde{w}(e_{\text{Rep}})(\alpha_j)\cdot(1 + \hat{\alpha}_j)$,
 strictly increasing, $A(0) = 0$ — a terminal reader of the published
 standing, not a second run of the standing machinery.
 
@@ -1965,11 +2348,11 @@ standing, not a second run of the standing machinery.
 | Affinity | Actor → Type | Epistemic | $(0,1,0,1)$ | Marginal | association $a$, attraction $t$ ($p_d = a$, $p_i = t$) | relevance, not verdict; its sign is coherence, not a recipient; the cell resolves home |
 | Owner | Actor → Item | Economic | $(1,1,1,1)$ ↑promoted | Full | attachment $a \in [-1,1]$ ($p_d = a$, $p_i = 1$) | at $a = 0$ anchors the title thread but is routing-inert — title is sentiment-blind; orphaned Owner edges persist without title force |
 | **Join Request** | Actor → Chat | Relational | $(1,1,1,1)$ ↑promoted | **Half** | urgency $u \in [-1,1]$, formality $f \in [-1,1]$ ($p_d = u$, $p_i = f$) | a proposal, not participation: creates no membership, alters no Chat state (`edge:nodes:join-request`) |
-| Accept | Actor(seller) → Actor(buyer) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | comfort $c$, equity $e$ ($p_d = c$, $p_i = e$) | settlement reference → Bid act; not binding — title moves only at Ratify; person-directed: only positive-coordinate Accepts fold into the standing projection |
+| Accept | Actor(seller) → Actor(buyer) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | comfort $c$, equity $e$ ($p_d = c$, $p_i = e$) | settlement reference → Bid act; not binding — title transfers only at the epoch boundary; person-directed: resolves outward to the buyer only when its folded $(c, e)$ are both strictly positive and the settlement event is recognized, unchallenged, and title-transferring under the epoch title fold, otherwise to the seller's self-retention channel; the settlement event is event-persistent — a later resale does not revoke the earlier transfer (`post:epoch:settlement-standing-title-coupling`) |
 | Ratify | Actor(buyer) → Actor(seller) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | final comfort $c$, final equity $e$ | settlement reference must match the Accept's, plus the exact Accept reference; the commit record (final at the certificate); same recipient-resolution rule |
 | Withdraw | Actor(buyer) → Offer | Minimal | $(0,0,0,1)$ | Marginal | $p_d = p_i = 1$ fixed; $\epsilon = +1$ forced | control record — weighed and priced, always resolving home |
 | Rescind | Actor(seller) → Offer | Minimal | $(0,0,0,1)$ | Marginal | $p_d = p_i = 1$ fixed; $\epsilon = +1$ forced | seller's sole escape from a non-binding Accept before commit; control record |
-| **Leave** | Actor → Chat | Minimal | $(0,0,0,1)$ | Marginal | type-fixed $p_d = p_i = 1$; $\epsilon = +1$ forced | unilateral departure/dissociation declaration; **unconditional** (no membership precondition — a Leave from a never-member is a valid public record); no effect on standing, title, settlement, or gates; exit record of the terminal membership fold (`edge:nodes:leave`, `subsec:necessity:unrestricted-departure`) |
+| **Leave** | Actor → Chat | Minimal | $(0,0,0,1)$ | Marginal | type-fixed $p_d = p_i = 1$; $\epsilon = +1$ forced | unilateral departure/dissociation declaration; **unconditional** (no membership precondition — a Leave from a never-member is a valid public record); allocates nothing outward and has no title, settlement, or gate effect, but is a priced act — debited, counted, and weighed at self at coefficient 1 (`rem:epoch:control-acts-resolve-to-self`); exit record of the terminal membership fold (`edge:nodes:leave`, `subsec:necessity:unrestricted-departure`) |
 
 Sentiment about a departure composes through Opinion (on the Chat or the
 Profile), never through the control record: a rage-quit is Leave plus a
@@ -1982,19 +2365,17 @@ assigned domain and mask and may occupy different tiers;
 $\epsilon(\mathcal{H}) = \epsilon(e_A)\cdot\epsilon(e_T)$. The **A-leg**
 is Actor → Passive (the initiating side), the **T-leg** Passive → terminal
 target; both are projections of one act (`def:graph:act-edge-projection`).
-(Pre-Edition-4 census tables named these legs "L1/L2"; the current census
-names them /A and /T.)
 
 | Hyper-edge | Legs | Leg domains (masks, tiers) | Params (roles A / T) |
 |---|---|---|---|
 | Tag | Actor → Passive → Type | Epistemic $(0,1,0,1)$ M / Epistemic $(0,1,0,1)$ M | relevance $r \in [-1,1]$, confidence $c \in [0,1]$; A: $p_d = r, p_i = c$; T: $p_d = c, p_i = r$ |
-| Review | Actor → Passive → Comment | Tribal $(1,1,1,1)$ F / Epistemic $(0,1,0,1)$ M | enthusiasm $e$, effort $f$; A: $p_d = e, p_i = f$; T: $p_d = f, p_i = e$. Commentary, never state; standing-inert as a family |
+| Review | Actor → Passive → Comment | Tribal $(1,1,1,1)$ F / Epistemic $(0,1,0,1)$ M | enthusiasm $e$, effort $f$; A: $p_d = e, p_i = f$; T: $p_d = f, p_i = e$. Commentary, never state; allocates to no person — weighed home as a family |
 | Bid | Actor → Item → Offer | Economic ↑promoted, both legs **Half** | signed generosity $g \in [-1,1]$, urgency $u \in [0,1]$; A: $p_d = g, p_i = u$; T: $p_d = u, p_i = g$. Both legs carry $\epsilon = \mathrm{sgn}(g)$, so composed parity is $+1$: a predatory Bid is parity-visible per leg, parity-neutral as a composition; the buyer's stance is read by stance consumers (`cor:nodes:bid-leg-parity`) |
-| **Participant** | Actor → Chat → Chat | Relational $(1,1,1,1)$ ↑ F / Epistemic $(0,1,0,1)$ M | interactivity $i \in [-1,1]$, responsibility $r \in [-1,1]$, continuity $c \in [0,1]$; A: $p_d = i, p_i = r$; T: $p_d = c, p_i = 1$ type-fixed (forced $\epsilon = +1$, `lem:nodes:self-loop-neutral`). **A-leg whence, T-leg whither** — one meaning, *I move from A to T*, in four instantiations: **found** (both legs on $\mathsf{mint}(\mathrm{actid})$), **join** (both on $C_1$), **found successor** (A on $C_0$, T on the mint), **move** (A on $C_0$, T on $C_1$). There is no shape branch to test and no field a reader must consult; the terminal target alone decides whether the act mints, so found and found successor mint and join and move do not (§8.1). Origin is unchecked at formation — a move from a chat the author was never in is a decorated join. The A-leg's $(i, r)$ are the act's mandatory coordinates; the T-leg's $c$ is authored, semantically vacuous in the join and found cases, and **not** mandatory, so a choice on a meaningless field never moves its author's coefficient. The T-leg's damped weight is bounded by the Marginal family supremum, a function of $c$ alone (`thm:graph:raw-weight-ceiling`). The membership fold reads leg roles, never family incidence (§9.8) (`edge:nodes:participant`) |
-| **Invitation** | Actor → Chat → Profile(invitee) | Relational $(1,1,1,1)$ ↑ **Half** / Epistemic $(0,1,0,1)$ M | urgency $u \in [-1,1]$, formality $f \in [-1,1]$, relevance $r \in [0,1]$; A: $p_d = u, p_i = f$; T: $p_d = r, p_i = 1$ (forced $+1$ for $r > 0$). A public, priced, authored vouch that the invitee fits the community; a proposal, not participation. The terminal leg targets the invitee's **Profile**, never the Actor — influence reaches the invitee only through their standing-dependent activation (wall-clamped, §11.4). Revocable per author (§9.8) (`edge:nodes:hyper-invitation`, `subsec:necessity:invitation-profile-terminus`) |
-| **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs excluded from the standing projection — a De-invite never vouches for its target. Sole closure-visible effect: per-author suppression of the author's own Invitation bundle toward the same (Chat, Profile) incidence (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
-| Send | Actor → Chat → Message | Relational $(1,1,1,1)$ ↑ F / Minimal $(0,0,0,1)$ M | importance $i \in [-1,1]$; A: $p_d = i, p_i = 1$; T: $p_d = 1, p_i = i$. **Renamed from "Write"** (`edge:nodes:hyper-send`): *write* is the protocol act (§8.2); a Send is carried into the graph by a write, it is not one. **Not membership-gated**: a Layer-1 membership precondition would drag membership into the admission closure (`rem:nodes:membership-is-terminal`). Standing role none: sending into a Chat endorses no one |
-| Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; A: $p_d = f, p_i = e$; T: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches the allocation destination: a **complete** Reference whose T-leg targets Profile$_i$ with strictly-positive folded $(e, f)$ resolves its fold cell to Actor $i$; every other Reference resolves to its author's self-retention channel — weighed and priced either way, but reaching no one else (still read by feed, raw signed traversal, CAN, provenance, terminal policy). The artifact supplies context, never transferable standing: incoming weight on the citing artifact enters no cell (§11.3, `def:epoch:standing-recipient-resolution`). Self-reference resolves home; withdrawal is per-leg net stance (`edge:nodes:hyper-reference`, `rem:nodes:reference-author-allocation`) |
+| **Participant** | Actor → Chat → Chat | Relational $(1,1,1,1)$ ↑ F / Epistemic $(0,1,0,1)$ M | interactivity $i \in [-1,1]$, responsibility $r \in [-1,1]$, continuity $c \in [0,1]$; A: $p_d = i, p_i = r$; T: $p_d = c, p_i = 1$ type-fixed (forced $\epsilon = +1$, `lem:nodes:self-loop-neutral`). **A-leg whence, T-leg whither** — one meaning, *I move from A to T*, in four instantiations: **found** (both legs on $\mathsf{mint}(\mathrm{actid})$), **join** (both on $C_1$), **found successor** (A on $C_0$, T on the mint), **move** (A on $C_0$, T on $C_1$). There is no shape branch to test and no field a reader must consult; the terminal target alone decides whether the act mints, so found and found successor mint and join and move do not (§8.1). Origin is unchecked at formation — a move from a chat the author was never in is a decorated join. The A-leg's $(i, r)$ are the act's mandatory coordinates; the T-leg's $c$ is authored, semantically vacuous in the join and found cases, and **not** mandatory, so a choice on a meaningless field never moves its author's coefficient. The T-leg's path-view determinant is a function of $c$ alone, and its damped weight is bounded by the parameter-uniform Marginal family supremum $\sqrt{\eta}\,\tilde{w}_{\max}^{\text{Op}} \approx 0.113$ (`thm:graph:raw-weight-ceiling`). The membership fold reads leg roles, never family incidence (§9.8) (`edge:nodes:participant`) |
+| **Invitation** | Actor → Chat → Profile(invitee) | Relational $(1,1,1,1)$ ↑ **Half** / Epistemic $(0,1,0,1)$ M | urgency $u \in [-1,1]$, formality $f \in [-1,1]$, relevance $r \in [0,1]$; A: $p_d = u, p_i = f$; T: $p_d = r, p_i = 1$ (forced $+1$ for $r > 0$). A public, priced, authored vouch that the invitee fits the community; a proposal, not participation. The A-leg's $(u, f)$ are the act's mandatory coordinates: when the folded $u, f$ are strictly positive after netting, the inviter may compile one complete hyper-vouch toward the invitee's bound Actor, at the coefficient $\sqrt{|u\,f|}$, the geometric mean of their magnitudes; the T-leg's $r$ is raw context and enters neither that coefficient nor its positivity gate. The terminal leg targets the invitee's **Profile**, never the Actor — influence reaches the invitee only through their standing-dependent activation (wall-clamped, §11.4). Withdrawn by its author through a cancelling Invitation that nets the bundle to $(0, 0)$ (§9.8) (`edge:nodes:hyper-invitation`, `subsec:necessity:invitation-profile-terminus`) |
+| **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs are control records resolving to their author, absent from person-vouch compilation — a De-invite never vouches for its target (`rem:epoch:control-acts-resolve-to-self`). It withdraws nothing: it allocates nothing outward and has no effect on its author's Invitation bundle, which a cancelling Invitation withdraws (§9.8). It is still a priced act — debited, counted, and weighed at self at coefficient 1. Its reading is the Layer-2 membership fold (`def:nodes:canonical-membership-fold`) (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
+| Send | Actor → Chat → Message | Relational $(1,1,1,1)$ ↑ F / Minimal $(0,0,0,1)$ M | importance $i \in [-1,1]$; A: $p_d = i, p_i = 1$; T: $p_d = 1, p_i = i$. *Write* is the protocol act (§8.2), and no edge family may shadow it (`edge:nodes:hyper-send`): a Send is carried into the graph by a write, it is not one. **Not membership-gated**: a Layer-1 membership precondition would drag membership into the admission closure (`rem:nodes:membership-is-terminal`). Resolves to its author, weighed and priced like every accepted act, and endorses no one: not the Chat's participants, invitees, referenced Profiles, or Message reviewers (`tbl:epoch:standing-recipient-resolution`) |
+| Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; A: $p_d = f, p_i = e$; T: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches the allocation destination: a **complete** Reference whose T-leg targets Profile$_i$ with strictly-positive folded $(e, f)$ resolves its fold cell to Actor $i$; every other Reference resolves to its author's self-retention channel — weighed and priced either way, but reaching no one else (still read by feed, raw signed traversal, CAN, provenance, terminal policy). The artifact supplies context, never transferable standing: incoming weight on the citing artifact enters no cell (§11.3, `def:epoch:standing-recipient-resolution`). Self-reference resolves home. Withdrawn by its author through netting (`lem:epoch:authored-vouch-withdrawable`) (`edge:nodes:hyper-reference`, `rem:nodes:reference-author-allocation`) |
 
 There is no combined Actor → Actor → Chat request edge: joining is the binary
 Join Request (Actor → Chat), and inviting is the Invitation hyper-edge (Chat
@@ -2085,7 +2466,7 @@ Invitation are proposals. They establish no membership and do not substitute
 for the Participant edge. A Chat membership signal exists only when the
 joining actor authors a Participant edge. Ignoring a proposal requires no
 graph action. A Join Request allocates to nobody but its author; an
-inviter's own complete, positive, unsuppressed Invitation act may instead
+inviter's own complete, positive Invitation act may instead
 compile into a person-vouch toward the invitee.
 
 **Canonical Membership Fold — the full paper's Layer-2 default
@@ -2112,18 +2493,18 @@ hygiene. Under this default, De-invite
 records are **advisory**: they enter only through a published chat/guild
 policy $\mathcal{P}$ naming an authority set (published per
 `subsec:deployment:completeness`). Where $\mathcal{P}$ recognizes one, the
-conservative rule governs — a recognized De-invite defeats membership only if
+conservative rule governs — a recognized De-invite defeats membership iff
 it strictly $\prec$-follows the $\prec$-maximal element of $M(a,C)$ (a
 concurrent or earlier one is inert, mirroring the epoch title fold), and a
 Participant strictly $\prec$-following the De-invite re-establishes membership
 unless $\mathcal{P}$ specifies ban semantics. **This fold is not part of the
-L1 interface**: membership is a Layer-2 read-site, so it is CoGra's to define,
-adopt, or replace — the interface fixes only the boundary (next paragraph),
-never the mechanism.
+L1 interface**: membership is a Layer-2 read-site — the interface fixes only
+the boundary (next paragraph), never the mechanism.
 
 **Membership is terminal (`rem:nodes:membership-is-terminal`).** No
-admission rule reads $\mathrm{member}^{(k)}$ — it feeds neither the write
-rule (W1/W2a/W2b), nor formation, nor settlement recognition. Two terminal
+admission rule reads $\mathrm{member}^{(k)}$ — it feeds neither the gate,
+nor capacity, nor settlement recognition (`def:network:admission-closure`).
+Two terminal
 services may derive different membership from the same $E_k$ without
 forking the graph (contrast title, which recognition clause (iii) reads
 back). This is why Leave and De-invite append unconditionally: a
@@ -2132,24 +2513,27 @@ admission closure and enlarge the binding surface
 (`subsec:necessity:unrestricted-departure` — "who may expel" is a terminal
 policy verdict).
 
-**Inviter Revocation (`def:epoch:inviter-revocation`).** Author $j$'s
-Invitation act toward incidence (Chat $C$, Profile $P$) is **absent** from
-fold-cell compilation iff the latest **epoch index** represented in $j$'s own
-{Invitation, De-invite} records with that incidence contains a De-invite —
-ties within an epoch favouring the revocation; a later complete Invitation at
-a subsequent epoch re-establishes the act. The rule is **epoch-quantized,
-not order-read**, and obligatorily so: no standing quantity may read
-host-assigned order or any intra-epoch "latest"
-(`post:epoch:standing-epoch-set-determinism`), and the $\prec$-maximal
-element is free among acts with no declared dependency, so a host could
-otherwise decide suppression by placement. Suppression is
-strictly per-author — it never affects another author's invitation — and is
-a suppression predicate, not a parameter contribution. No control edge
-enters any stance sum. "Conviction sums; consent toggles": stance bundles
-aggregate with inertia, but a vouch-of-fitness is live consent, and live
-consent is latest-record-wins — the same cancel-over-commit shape as
-settlement's epoch-quantized consent rule. Each toggle is a priced act;
-oscillation dilutes $r_j$ irrevocably.
+**Authored vouches are withdrawable
+(`lem:epoch:authored-vouch-withdrawable`).** Every authored vouch that
+stance aggregation folds — Opinion, Reference, and Invitation — is
+withdrawable by its author through netting within the accepted epoch set.
+Standing consumes no family-specific withdrawal rule and no tie rule; the
+fold is invariant under every dependency-compliant permutation
+(`post:epoch:standing-epoch-set-determinism`). For an Invitation with
+mandatory A-leg pair $(u, f)$, a cancelling Invitation with $(-u, -f)$
+toward the same incidence nets the author's bundle to $(0, 0)$, which fails
+the strictly-positive gate (`def:epoch:effective-act-contribution`) and is
+weighed home at coefficient zero; a later positive Invitation re-establishes
+the vouch. Netting is strictly per-author: no act withdraws another author's
+vouch. Each withdrawal and re-establishment is a priced act — it increments
+the author's act count and irrevocably lowers the author's commitment rate. A De-invite withdraws
+nothing: it has no effect on its author's Invitation bundle and allocates
+nothing outward; it is still a priced act — debited, counted, and weighed at
+self at coefficient 1 (`rem:epoch:control-acts-resolve-to-self`) — and its
+reading is the Layer-2 membership fold above. Settlement acts (Accept,
+Ratify) are singleton cells and withdraw through the epoch-quantized
+settlement consent of `def:graph:settlement-recognition`, not through
+netting.
 
 ---
 
@@ -2192,14 +2576,13 @@ at minting, immutable, surviving payload removal, published with the
 self-sufficient edge record. No read-site of $(a, o)$ or of $l$ is ever read
 back into the decision of what may append to $G$, so the whole license field
 belongs to the terminal complement. **Judging a degree on either axis,
-checking compliance, and enforcing terms are Layer 2 acts** — CoGra's, and
-published per the formula-completeness invariant
-(App. I, `subsec:deployment:completeness`); see
-[platform-guidelines.md §5](../instances/platform-guidelines.md#5-license-and-provenance-obligations).
+checking compliance, and enforcing terms are Layer 2 acts**, published per
+the formula-completeness invariant
+(App. I, `subsec:deployment:completeness`).
 A more demanding pair still acts indirectly: it lowers adoption, hence
-betweenness centrality $S_C$, hence a creator's guild reward $R_C$ —
-partially offsetting the standing amplifier
-(`rem:content:license-guild-interaction`, a terminal reward-economics
+betweenness centrality $S_C$, hence a creator's guild reward $R_C$, while
+$r_C$ and $\alpha_C$ partially offset it via the standing amplifier
+$(1+\hat{\alpha}_C)$ (`rem:content:license-guild-interaction`, a terminal reward-economics
 consequence, not a Layer-1 formula).
 
 **Deferred by the spec:** what constitutes a valid public use record at a
@@ -2218,10 +2601,12 @@ override them.
 ### 11.1 Thermodynamic boundary
 
 **(`ax:epoch:thermodynamic-boundary`.)** Internal quantities flow undamped.
-The Boltzmann factor $e^{-\beta H_\tau}$ is applied once, per edge, at the
-observation boundary (via $\tilde{w}(e)$); its consumers are the raw-graph
+The Boltzmann factor $e^{-\beta H_\tau}$ is applied once at observation
+boundaries, which differ across subsystems: per edge for the raw-graph
 traversals (feed ranking, the raw signed double-cover service, bridge
-Channel 1). $\beta$ also enters the projected standing core $Q$ (§11.4) —
+Channel 1, via $\tilde{w}(e)$), and per creator-epoch for the terminal
+reward distribution (via $e^{-\beta H_\tau^{(C)}}$,
+`eq:transport:reward-formula`); both share $\beta$. $\beta$ also enters the projected standing core $Q$ (§11.4) —
 it is a binding constant, while raw damping is a terminal default.
 $\beta = 2\ln 2 \approx 1.386$; maximum-entropy edges damp to $\approx 38\%$
 of raw weight.
@@ -2237,24 +2622,27 @@ per-act $\theta$-debits, summed over actor $i$'s accepted acts $a$, each
 debited at its writing-epoch price and never re-calibrated (the debit
 schedule is the sole vintage object). $r_i \ge 0$, $=0$ iff $b_i = 0$;
 decreasing under action ($\theta$ off the numerator, $+1$ on the
-denominator), non-decreasing in $B_i$. Published per-actor scalars;
+denominator), non-decreasing in $B_i$ at fixed $N_i$ — a destruction amount
+raises the gross frame once the deployment's marker policy accepts it.
+Published per-actor scalars;
 derivable from the primitive's public record, the committed act count, and
 the published $\theta$-debit schedule without graph traversal. The frame is
 verified by recompute-and-verify-provenance, never scan-and-total
 (`rem:comparator:auditability`).
 
-**Funding is a Layer-2 freedom (`rem:gates:guild-funding`).** Nothing in
-the sustaining frontier assumes who funds an actor's burn value: a burn is
-funder-unconstrained and requires no recipient consent, and the resulting $B_i$
-accrues to the actor's address whoever paid for it
-(`def:comparator:imported-frame`). A terminal Layer-2 community may choose,
-under its own policy, to supply a member's sustaining burn — Layer 1
-neither prescribes nor prices that choice (`post:transport:guild-grant`).
-This relocates **who bears the source cost** without faking it: the frame
-is non-transferable across addresses (`def:comparator:frame-binding`), and
-funding a member's own burns raises only that member's own source. The
-comparator sees a funded member exactly as it sees a self-funded one — the
-burn is real either way.
+**Funding is a Layer-2 freedom (`rem:gates:guild-funding`).** The
+deployment's marker policy determines whether a destruction amount is
+accepted at an actor's address, whoever supplies it
+(`def:comparator:imported-frame`, `post:comparator:marker-bound-settlement`);
+payment or lineage membership does not ensure acceptance or a sufficient
+accepted amount. A terminal Layer-2 community may choose, under its own
+policy, to supply a member's sustaining burn — Layer 1 neither prescribes
+nor prices that choice (`post:transport:guild-grant`). Accepted funding
+raises only the named member's own residual source: the recorded source
+stays bound to its address (`def:comparator:frame-binding`). It fixes no
+direction for the recomputed standing (`cor:epoch:burn-monotone-regimes`,
+`prop:epoch:finite-standing-response`), freezes no other allocation
+coefficient, and selects no uncertified rung.
 
 ### 11.3 Act folding and the base allocation matrix
 
@@ -2267,25 +2655,38 @@ $$\bar{p}_d^{(a \to t)} = \mathrm{clip}_{[-1,1]}\Big(\sum_e p_d(e)\Big), \qquad 
 
 The fold is per author, family, source, target, and full incidence — it
 never nets across authors ("one author's revision could erase another's
-vouch", `subsec:necessity:per-author-netting`). The compiler may fold
+vouch", `subsec:necessity:per-author-netting`). Each eligible equivalence
+class yields one set of folded coordinates and one cell coefficient,
+independently of its member count. The compiler may fold
 revisions of one authored semantic incidence but may not pair independently
 folded A- and T-legs, replace an A-leg with unrelated incoming weight, or
 create a complete act from unmatched records. Excluded from stance
 aggregation: **derived Self-edge components** (not authored records, hence
 no bundle); the settlement records **Accept and Ratify** (recognition and
 standing read individual records); the **control records** Withdraw,
-Rescind, Leave, De-invite/A·T; and every family that resolves to its author
-where the fold would otherwise be used only to create standing. Feed
-ranking, raw signed traversal, CAN, title, payload display, and settlement
+Rescind, Leave, De-invite/A·T; and every family that may never resolve
+outward (Publish, Owner, Affinity, Tag, Review, Send, Bid, Join Request,
+Participant), whose fold could only create its author's own standing. Each
+excluded authored act is a singleton cell whose coordinates are read
+directly. Opinion, Reference, and Invitation fold into cells whatever a
+cell's destination — parallel Opinions by one author on one content target
+or one hostile person target form one cell with one coefficient that resolves
+home: eligibility for stance aggregation is a property of the family, never of
+an act's destination. Feed ranking, raw signed traversal, CAN, title, payload display, and settlement
 recognition continue to read their declared raw records or bundles — **net
 stance is one input to act folding, never a mutation of the record**, and it
 never merges, hides, or removes payload projections
 (`prop:graph:removable-projection-invariance`).
 
-Aggregation properties (`prop:epoch:net-stance-properties`): order-free once
-the epoch record set and bundle folds are fixed; range-safe (the clip
-returns parameters to the master formula's domain); **priced** (every
-revision increments $N_j$, irrevocably diluting $r_j$); append-only.
+Aggregation properties (`prop:epoch:net-stance-properties`): order-stable (a
+function of the accepted epoch set, invariant under every
+dependency-compliant permutation of $\mathcal{Q}_k$); range-safe (the clip
+returns parameters to the master formula's domain); person-vouch gate (a
+net-hostile mixed-sign stance and a coherent-hostile $(-,-)$ stance alike fail
+the strictly-positive coordinate clause and compile no person-vouch, whatever
+their raw parity); **priced** (every
+revision is an accepted act — one $\theta$-debit and one count increment,
+irrevocably diluting $r_j$); append-only.
 Sum-then-clip is deliberate: walking back accumulated conviction costs
 counter-acts in proportion to it — flip-flops are expensive, stance is
 sticky (`rem:epoch:conviction-inertia`). A prior $(0.5, 0.5)$ act is
@@ -2297,10 +2698,12 @@ $b_j$): severance is burn-priced
 
 **Standing fold cells (`def:epoch:standing-fold-cell`,
 `rem:epoch:compiled-acts-fold-into-cells`).** After the per-author net-stance
-fold and inviter revocation, the compiler groups the accepted acts of one
+fold, the compiler groups the eligible acts of one
 **full incidence** (author, family, source, semantic target, and — for
-hyper-edges — middle) into **fold cells** $\xi$, the order-free unit of
-standing input. A cell's identity is the deterministic full-incidence bundle
+hyper-edges — middle) into one **fold cell** $\xi$ per equivalence class,
+retaining the member acts as witnesses; each aggregation-excluded act is a
+singleton cell. The cell is the order-free unit of standing input and
+contributes one folded coefficient, never one copy per member. A cell's identity is the deterministic full-incidence bundle
 key, not a new act identifier; a hyper-edge act is one cell, never two
 (`cor:graph:standing-act-atomicity`). A cell is a derived reading: no new
 act, edge projection, payload, debit, count increment, or Lamport event.
@@ -2314,13 +2717,15 @@ folded coordinates decide is the **destination**, not whether the act counts.
 cell carries a total coefficient $c(\xi) \in [0,1]$: the geometric mean of
 the **magnitudes** of its mandatory folded coordinates —
 $\sqrt{|\bar{p}_d\,\bar{p}_i|}$ (Opinion), $\sqrt{|e\,f|}$ (Reference),
-$|u\,f\,r|^{1/3}$ (Invitation), $\sqrt{|c\,e|}$ (Accept/Ratify), and
+$\sqrt{|u\,f|}$ (Invitation), $\sqrt{|c\,e|}$ (Accept/Ratify), and
 likewise for the families that never resolve outward (Publish and Owner on
 $a$, Affinity on $a, t$, Tag on $r, c$, Review on $e, f$, Send on $i$, Bid on
 $g, u$, Join Request on $u, f$, Participant on $i, r$). Where a family's legs
 carry separate coordinates the mandatory set is the **A-leg's** — a T-leg
 records where an act points, not what its author felt about pointing there.
-A family carrying no authored coordinate at all (Registration and the control
+Invitation therefore uses its A-leg coordinates $u, f$ for both the
+coefficient and the positivity gate; its T-leg relevance $r$ is a raw-context
+coordinate and enters neither. A family carrying no authored coordinate at all (Registration and the control
 records) has an empty geometric mean and coefficient $1$.
 
 Taking magnitudes is what makes the coefficient *total*: a maximally hostile
@@ -2341,7 +2746,7 @@ Actor or the permanently bound Profile of an Actor:
 | Act class | Recipient |
 |---|---|
 | Positive Opinion on Profile$_j$ | Actor $j$ |
-| Complete positive Invitation (unsuppressed) | the invitee |
+| Complete positive Invitation | the invitee |
 | Complete positive Reference to Profile$_j$ | Actor $j$ |
 | Accept / Ratify, title-transferring under the epoch title fold | the counterparty |
 | Accept / Ratify otherwise | self |
@@ -2353,8 +2758,7 @@ Actor or the permanently bound Profile of an Actor:
 Self is a destination, not a defect: a self-resolved cell lands on the
 diagonal of the base matrix, priced and counted like any other. The
 settlement rows read the epoch title fold and nothing else
-(`post:epoch:settlement-standing-title-coupling`); the revocation rows read
-epoch indices with ties favouring the revocation. Syntax alone never selects
+(`post:epoch:settlement-standing-title-coupling`). Syntax alone never selects
 a non-self recipient — a cell whose target identifier is not anchored in the
 completed set resolves home by the same rule
 (`rem:epoch:allocation-index-set`), which keeps resolution and allocation
@@ -2366,23 +2770,33 @@ Withdraw, Rescind, Leave, and De-invite/A·T are accepted acts, so they are
 weighed and consume their author's allocation — they simply never direct any
 of it outward. De-invite is the case that makes this load-bearing: its fixed
 raw parameters are positive, and treating raw positivity as regard would turn
-expulsion into standing support. The family's only compilation-visible effect
-on another act is **inviter revocation**
-(`def:epoch:inviter-revocation`): actor $a$'s Invitation toward $(C, P)$ is
-absent iff the latest epoch index in $a$'s Invitation/De-invite records for
-that pair contains a De-invite, ties within an epoch favouring the
-revocation, and a later Invitation re-establishing the act. The rule is
-epoch-quantized rather than order-read — no standing quantity may read
-host-assigned order (`post:epoch:standing-epoch-set-determinism`) — and
-strictly per author. **Conviction sums; consent toggles**: stance bundles
-aggregate with inertia, but a vouch-of-fitness is live consent, and live
-consent is latest-record-wins.
+expulsion into standing support. The control family never enters the
+person-vouch projection: a De-invite directs nothing outward and leaves its
+author's Invitation bundle untouched — it is still a priced act, one
+$\theta$-debit and one count increment, weighed at self at coefficient $1$ —
+and its reading is the Layer-2 membership fold alone
+(`def:nodes:canonical-membership-fold`).
+
+**Authored vouches are withdrawable
+(`lem:epoch:authored-vouch-withdrawable`, stated in full in §9.8).** Opinion,
+Reference, and Invitation are withdrawn by their author through netting
+within the accepted epoch set — a cancelling Invitation with $(-u, -f)$ nets
+the bundle to $(0, 0)$ and is weighed home at coefficient zero — with no
+family-specific withdrawal rule and no tie rule
+(`post:epoch:standing-epoch-set-determinism`); each withdrawal and
+re-establishment is a priced act. Accept and Ratify withdraw through the
+epoch-quantized settlement consent of `def:graph:settlement-recognition`
+instead. The only lever a host retains over a standing fold is an act's epoch
+of inclusion.
 
 **Base allocation matrix (`def:epoch:domain-weighted-base-allocation`,
-`eq:epoch:domain-weighted-base-allocation`).** Each cell carries a published
-act-level domain profile $\delta_D(\xi) \ge 0$ with $\sum_D \delta_D(\xi) =
-1$, so a hyper-edge act spreads one unit across the domains of its
-projections and is never double-counted (`def:epoch:standing-domain-profile`).
+`eq:epoch:domain-weighted-base-allocation`).** Each cell carries its act
+family's declared public domain profile $\delta_D(\xi) \ge 0$ with
+$\sum_D \delta_D(\xi) = 1$, supported on the domains of that family's act
+projections, so a hyper-edge act spreads one unit across them and is never
+double-counted (`def:epoch:standing-domain-profile`). No equal split is
+assumed; a deployment using unequal domain weights publishes each family's
+profile.
 With published nonnegative domain weights $\omega_D$ and the published
 self-retention base $\kappa_{\text{self}} > 0$
 (`def:epoch:self-retention-base`), the **base allocation score** of the
@@ -2391,7 +2805,9 @@ ordered Actor pair $(u, j)$ is
 $$\mathsf{A}_{uj} = \kappa_{\text{self}}\,\mathbf{1}_{u=j} + \sum_{\xi:\ \mathrm{src}(\xi)=u,\ \mathrm{res}(\xi)=j} c(\xi) \sum_D \omega_D\,\delta_D(\xi) \;\ge\; 0,$$
 
 with $\mathsf{A}_{uu} \ge \kappa_{\text{self}} > 0$, so every anchored Actor
-has a well-defined row even having authored nothing. **$\mathsf{A}$ is the
+has a well-defined row even having authored nothing. The sum reads each
+cell's coefficient once, without a multiplier for its number of member acts;
+ledger action counts and debits still read every accepted act. **$\mathsf{A}$ is the
 sole standing-relevant reading of the epoch's acts: no standing quantity
 reads the Action Graph beyond it.** Reference values for both constants are
 unity, pending the calibration lock.
@@ -2406,9 +2822,13 @@ Actor *spends* on, in the same unit their own activity consumes.
 
 **Artifacts allocate nothing (`prop:epoch:artifact-non-allocation`).**
 Changing raw incidence on a passive node — a Chat, Content item, Item, Type,
-Comment, Message, Offer, or Profile — leaves every entry of $\mathsf{A}$
-unchanged, and therefore leaves every transported share and every standing
-value unchanged. This is structural, not a guard: only accepted
+Comment, Message, Offer, or Profile — while preserving the compiled cells,
+their coefficients, recipients and domain profiles, the final ledger, and the
+effective constants, leaves every entry of $\mathsf{A}$ unchanged, and
+therefore leaves the transport, the standing map, and its certified
+equilibrium unchanged. The premise excludes adding or removing Actor-authored
+artifact acts: those enter the fold and the ledger and can crowd out outward
+allocation. This is structural, not a guard: only accepted
 Actor-authored acts fold into cells, and an artifact has no row to allocate
 from and no authorship to inherit. Popularity is visible to feed and bridge,
 and invisible here.
@@ -2417,11 +2837,11 @@ Compilation properties (`prop:epoch:act-folding-properties`):
 **author-owned** (every cell is sourced by the author of the complete act
 that creates it); **passive-independent** (passive context identifies the act
 and its semantic target but contributes no upstream standing weight);
-**standing-atomic**; **record-preserving** (incomplete, hostile, suppressed,
-and self-resolving records stay public and readable by every non-standing
+**standing-atomic**; **record-preserving** (incomplete, hostile, and
+self-resolving records stay public and readable by every non-standing
 consumer); **range-safe**; **self-inclusive**; **deterministic**. **Folding
 precedes allocation** (`rem:epoch:folding-precedes-allocation`): the compiler
-reconstructs complete acts, applies folds and revocations, resolves each cell,
+reconstructs complete acts, applies bundle folds, resolves each cell,
 and emits $\mathsf{A}$ — only then does anything allocate. The exclusion of
 passive nodes therefore happens once, in the compiler, rather than being
 re-checked at every hop.
@@ -2431,8 +2851,13 @@ re-checked at every hop.
 **Proposed final epoch state (`def:epoch:proposed-final-act-state`).** Fix
 a proposed write set $\mathcal{Q}_k$. For each actor $i$, the accepted-act
 increment $\Delta N_i^{(k)}$ counts proposed epoch-$k$ **acts** (one binary
-record, one complete hyper-edge, or one Registration each count one). With
-the settled boundary burn increment $\Delta B_i^{(k)}$:
+record, one complete hyper-edge, or one Registration each count one). The
+burn increment $\Delta B_i^{(k)} = B_i^{(k)} - B_i^{(k-1)}$ is
+marker-defined: $B_i^{(k)}$ is the settled amount derived from the accepted
+set $A(k)$ at the recognized final marker $m_k$, and the increment sums $i$'s
+destruction amounts first represented by accepted records at this marker
+(`def:comparator:marker-burn-snapshot`) — possibly positive even when $i$
+authors no act, zero when the marker accepts no previously uncounted destruction. Then:
 
 $$b_i^{(k)} = b_i^{(k-1)} + \Delta B_i^{(k)} - \Delta N_i^{(k)}\,\theta^{(k)}, \qquad N_i^{(k)} = N_i^{(k-1)} + \Delta N_i^{(k)}$$
 
@@ -2440,7 +2865,12 @@ $$b_i^{(k)} = b_i^{(k-1)} + \Delta B_i^{(k)} - \Delta N_i^{(k)}\,\theta^{(k)}, \
 debit vintages stay consummated. Every standing, path,
 admission-fraction, stamp, and gate quantity associated with
 $\mathcal{Q}_k$ is computed from this **completed tentative state**
-$E_k = E_{k-1} \cup \Delta E_k$.
+$E_k = E_{k-1} \cup \Delta E_k$, using the same recognized final marker,
+published marker policy, settled lineage view, accepted burn sets, accepted
+write set, and writing epoch's debit vintage. The next controller price is
+derived from this epoch's contributing width and takes effect with the
+one-boundary lead; a marker never retroactively chooses the price of a
+consummated act.
 
 **Epoch-quantized standing (`post:epoch:standing-quantization`).** Standing
 is defined only for a completed epoch edge set: one simultaneous standing
@@ -2488,7 +2918,7 @@ depth** — its numerical coincidence with $L_{\text{hop}} = 4$ is a
 coincidence, and routing one through the other is a defect.
 
 **Safety-wall clamp (`def:epoch:safety-wall-clamped-activation`).** Every
-standing evaluation uses the **effective** activation
+hop allocation evaluates the **effective** activation
 
 $$\bar{g}_{\text{vch}}(x) = g_{\text{vch}}(\max(x, \rho_\theta))$$
 
@@ -2552,12 +2982,15 @@ independently of the fixed point that has not yet been computed.
 index is $m^*$. History travels on the back of balance: the **emission
 fraction** of source $u$ is
 
-$$\mathfrak{e}_u = \min\!\left(1,\ \frac{b_u^{(k)}}{\theta\, N_u^{(k)}}\right) = \min\!\left(1,\ \frac{\hat{r}_u}{\rho_\theta}\right) \in [0, 1],$$
+$$\mathfrak{e}_u = \min\!\left(1,\ \frac{b_u^{(k)}}{\theta^{(k)}\, N_u^{(k)}}\right) = \min\!\left(1,\ \frac{\hat{r}_u}{\rho_\theta}\right) \in [0, 1],$$
 
 the source's own reduced rate measured against the safety wall and capped at
 one; the exported capacity $b_u/\theta$ *is* the ledger's remaining-action
 capacity up to integrality, which is why no new constant was minted to state
-it. Emission is a property of the source's **pair**, never of one of its
+it. The source pair is the completed epoch-$k$ pair of the marker-defined
+state, and the threshold $\theta^{(k)}$ is the writing-epoch price used for
+the debit, never the next epoch's controller output; emission and
+contributing width read this same ledger. Emission is a property of the source's **pair**, never of one of its
 relations — a per-recipient fraction is prohibited, because the tilt is the
 sole chartered modulator of a source's relative odds.
 
@@ -2575,16 +3008,21 @@ $\boldsymbol{\Pi}(\boldsymbol{x})$ is the published operator that the
 mediant, the certificate, and every boundary artifact consume; $\Pi_{ui}$
 replaces any notion of a per-pair standing flow. Unexported mass returns home
 (`rem:epoch:emission-self-inertia`): a depleted Actor's own row weights its
-own near-zero rate *more* heavily, so rehabilitation shifts from the
-community toward the Actor's own ledger — a price, never a ban, since one
-burn raises $b_u$, $\hat{r}_u$, and $\mathfrak{e}_u$ together. No Actor
+own near-zero rate *more* heavily. An accepted burn raises the Actor's
+residual balance and own source rate, and its emission until saturation;
+these ledger changes do not by themselves prove that the coupled standing
+rises — a reached recipient can decrease even at the anchor — and recovery is
+assessed on the recomputed final state (`prop:epoch:finite-standing-response`).
+No Actor
 exports more history than its present balance could pay for at today's action
 price (`thm:epoch:emission-export-bound`).
 
 **Tilt backoff (`def:epoch:tilt-backoff-grid`, `alg:epoch:tilt-backoff`).**
 The accepted strength $t_k$ is the greatest element of the published finite
 grid $\mathcal{G}_t$ (chartered depth $J_{\text{tilt}}$, terminating at zero)
-whose certificate passes. Backoff preserves the shape exactly — a lower rung
+whose certificate the deployment's declared certification procedure proves
+passing. A lower accepted rung is a performance outcome with a passing
+certificate, not an unsafe epoch. Backoff preserves the shape exactly — a lower rung
 is **the same signal at lower volume**, never a signal substitution — and
 each rung is independently certified rather than inferred from a higher one.
 The anchor $t_k = 0$ is the exact no-tilt allocation rule and always
@@ -2595,15 +3033,26 @@ different axis (`rem:epoch:tilt-backoff-is-not-export-backoff`). A rung can
 fail two ways and the certificate must say which
 (`rem:epoch:certificate-failure-versus-indecisive-enclosure`): a
 *certificate failure* proves the fence does not hold and the graph moved; an
-*indecisive enclosure* proves nothing and calls for tighter interval
-arithmetic, not a lower rung.
+*indecisive enclosure* proves nothing and is published as INDECISIVE, never
+as FAIL. A rung the declared procedure leaves indecisive is passed over; the
+procedure's precision and refinement policy is the deployment's published,
+versioned choice, and a more refined published procedure may accept a higher
+rung. Every accepted rung still carries a proved pass.
 
 **Raw signed double-cover service (`subsec:epoch:raw-signed-service`).** The
-double-cover traversal survives as a public raw-graph service for consumers
+double-cover traversal is a public raw-graph service for consumers
 needing signed raw-path evidence (the canonical bridge-consent
 calculation). It reads the sign already computed for raw ranking and **does
 not compute standing** — standing and feed share neither one activation nor
-one traversal (`rem:dynamics:standing-feed-separation`).
+one traversal (`rem:dynamics:standing-feed-separation`). Its exact traversal
+(`alg:epoch:exact-signed-raw-traversal`,
+`lem:epoch:double-cover-bfs-correctness`) enumerates path prefixes simple in
+the original raw snapshot to depth $L$, with no pruning threshold; time and
+memory are $O\big(n + m + (L+1)\sum_{d=0}^{L}\Delta^d\big)$ for $n$ vertices,
+$m$ raw edges, and maximum outgoing raw-edge count $\Delta$ (parallel
+projections included) — polynomial in $\Delta$ with a
+degree that grows with $L$, not a constant-factor enlargement of the feed
+traversal.
 
 ### 11.5 Final standing
 
@@ -2643,9 +3092,12 @@ read-sites read it.
 **Properties:** (1) bidirectional response
 (`prop:epoch:final-standing-response`) —
 $\mathrm{sgn}(\partial\alpha_i/\partial \Pi_{ui}) = \mathrm{sgn}(r_u -
-\alpha_i)$: a higher-rate source lifts, a lower-rate source dilutes, and
-Layer 1 provides no target veto
-(`rem:comparator:conserved-allocation-scope`); (2) hull bound
+\alpha_i)$ for fixed other flows: a higher-rate source lifts, a lower-rate
+source dilutes, and Layer 1 provides no target veto
+(`rem:comparator:conserved-allocation-scope`). This is a partial derivative
+of the mediant, not a sign theorem for a complete accepted act or burn, which
+also changes counts, emission, and other coefficients
+(`prop:epoch:finite-standing-response`); (2) hull bound
 (`prop:epoch:final-standing-hull`) — $\alpha_i$ lies in the transported-rate
 hull $[\min r_u, \max r_u]$ over the sources with $\Pi_{ui} > 0$, at every
 state of the solve and not merely at the fixed point, and that contributing
@@ -2653,12 +3105,13 @@ set is fixed by the base scores and the ledger alone, so the hull is known
 before the solve begins; (3) strong-embedding limit
 (`prop:epoch:final-standing-embedding`) — as incoming transported action mass
 dominates the own pair, $\alpha_i$ approaches the transported-mass-weighted
-source average (dense-cluster fairness: the pooled leave-one-out
-burn-per-action of the support base, `rem:epoch:dense-cluster-fairness`);
+source average — the relevant limit is that dominance over the own retained
+mass, not density or address count alone, and a funded partition can change
+individual coordinates or the maximum (`rem:epoch:dense-cluster-fairness`);
 with zero relational flow, $\alpha_i = r_i$ exactly; (4) equal-rate
 invariance (`prop:epoch:equal-rate-standing-invariance`) — if every
-contributing source carries the same reduced rate, $\alpha_i$ is exactly that
-rate at every state, every rung, every profile and depth mass. A community of
+contributing source carries the same reduced rate $c$, $\alpha_i = \nu c$
+exactly, at every state, every rung, every profile and depth mass. A community of
 equal rate cannot lift itself, and no arrangement of regard inside it changes
 any member's standing.
 
@@ -2667,11 +3120,18 @@ any member's standing.
 `thm:epoch:closed-cluster-rate-identity`).** Call a set $S$ of Actors
 *closed* when $\mathsf{A}_{uj} = 0$ whenever exactly one of $u, j$ lies in
 $S$ — a property of the base matrix alone, checkable before the solve. Then
-the **transported-mass-weighted** mean standing of $S$ equals $\nu$ times its
-aggregate residual balance over its aggregate action mass, at every state of
-the solve. The weighting is mandatory: the identity holds for the
-$\tilde{N}_i$-weighted mean only, and any restatement that drops the weight
-is false. Standing transport within a closed community is purely
+the **transported-mass-weighted** mean standing of $S$ equals its ledger
+ratio, at every state of the solve:
+
+$$\frac{\sum_{i \in S} \tilde{N}_i\,\alpha_i^{(k)}}{\sum_{i \in S} \tilde{N}_i} = \frac{\sum_{u \in S} b_u^{(k)}}{\sum_{u \in S} N_u^{(k)}}$$
+
+(`eq:epoch:closed-cluster-mean`). The weighting is mandatory: the identity
+holds for the $\tilde{N}_i$-weighted mean only, and any restatement that drops
+the weight is false. For a cluster closed in both compared states, with $N$
+its aggregate action count and $R$ its reduced weighted mean, an accepted internal burn increment $\Delta B$ at
+fixed counts raises $R$ by exactly $\Delta B/(\nu N)$, and one additional
+internal accepted act without additional burn changes it by
+$-(R + \theta/\nu)/(N+1)$; neither identity fixes an individual coordinate. Standing transport within a closed community is purely
 distributive — no internal arrangement of regard, tilt, or transport may
 raise or lower what the community's ledger can back. Exact closure is a
 limit, not a field condition: a boundary carrying base-allocation weight at
@@ -2683,32 +3143,35 @@ detaches a cluster's mean from its ledger and is inadmissible; one that
 verbatim, which is exactly what source emission does
 (`cor:epoch:conserving-source-root-criterion`).
 
-**Full-pair source transport is a current nonclaim
-(`rem:epoch:full-pair-source-transport`).** The mediant transports the
-*full*, unscaled current source pair $(b_u^{(k)}, N_u^{(k)})$ with no
-source-root attenuation: emission never scales the pair itself, only the
-transport entries that route it, so what a sub-wall source withholds from
-its recipients it retains at its own self column rather than losing. A
-fully depleted source ($b_u = 0$) gives $\mathfrak{e}_u = 0$ exactly, so
-its transport row collapses to the identity and the source reaches no
-target at all. What survives depletion is graduated: a partially-depleted
-source ($0 < \hat{r}_u < \rho_\theta$) still exports the fraction
-$\hat{r}_u/\rho_\theta$, carrying low-rate mass onward, so
-rate-proportional dilution persists, priced and bounded by the hull. The
-specification makes **no** claim that every unit of relational standing
-pressure is continuously backed by positive current residual balance;
-replacing graduated export with a hard source-root eligibility cutoff is an
-open question (`frontier:source-root-eligibility`).
+**Full pairs and bounded export
+(`rem:epoch:full-pair-source-transport`).** The mediant reads each
+contributing source's *full* current pair $(b_u^{(k)}, N_u^{(k)})$: emission
+apportions the source's row between export and self-retention before that
+pair is transported and never scales the pair itself, so what a sub-wall
+source withholds from its recipients it retains at its own self column. A
+fully depleted source ($b_u = 0$) has $\mathfrak{e}_u = 0$, retains an
+identity row, and sends no count mass to another Actor. A partially depleted
+source ($0 < \hat{r}_u < \rho_\theta$) exports at most the fraction
+$\hat{r}_u/\rho_\theta$ of its row, so its total exported count mass is at
+most $b_u/\theta$ (`thm:epoch:emission-export-bound`); low-rate incoming
+allocation can dilute a target within the contributing source-rate hull —
+priced and bounded, not forbidden. The graduated rule is the chartered one
+(`rem:epoch:source-emission-rationale`): a hard source-rate cutoff would
+change that rule, not complete an unresolved part of it.
 
 **Dilution cost (`prop:epoch:dilution-cost`):** coordinated low-rate
 endorsement is $\theta$-priced exactly — each ballast action debits
 $\theta$, sustained dilution pressure of $n$ endorsers costs $n\theta$ per
 epoch-action, and total grip is bounded by spent balance$/\theta$
-(capacity per burn unit $= 1/\theta \approx 18.94$ at the chartered
-value): grip is rented, not owned. Amplification by multiplicity is closed by
-conservation rather than by any per-path rule — a source apportions one unit
-however many acts it authors, so additional acts redistribute that unit
-instead of adding to it. Griefing is bounded by four independent constraints
+(capacity per burn unit $= 1/\theta \approx 19.93$ at the delivered
+reference price): grip is rented, not owned. Cross-target copying of pair mass is
+excluded by row conservation rather than by any per-path rule — a source
+apportions one unit however many acts it authors, so additional acts
+redistribute that unit instead of adding to it. This is not immunity to
+funded address partition: actual export and dilution can change within the
+fibre-capacity and source-mixture bounds (`prop:epoch:split-fibre-capacity`,
+`prop:epoch:split-pair-displacement`). Pricing and source conservation impose
+no individual response sign. Griefing is bounded by four independent constraints
 (`rem:epoch:griefing-resistance`): only acts their author authored enter that
 author's row; every act is priced and count-dilutive; outward allocation is
 one conserved unit; and what a depleted history can export is bounded by what
@@ -2731,19 +3194,33 @@ $\mathcal{K}_k$ makes the fixed point unique on it and every orbit converge
 geometrically (`thm:dynamics:certified-conserved-standing-uniqueness`,
 `thm:dynamics:within-epoch-fixed-point-convergence`); and the solution does
 not depend on where the solver started
-(`cor:dynamics:standing-initialization-independence`). The orbit and
-bifurcation apparatus of the earlier scalar regime is quarantined as
-non-normative (`subsec:dynamics:quarantined-residuals`).
+(`cor:dynamics:standing-initialization-independence`). At every accepted
+rung, single-step non-normal amplification is excluded in the infinity norm.
+The oscillator, onset, and drift apparatus is quarantined from the normative
+dynamics of the conserved map: its onset classifications are not results
+about that map (`subsec:dynamics:quarantined-apparatus-scope`), and the
+contraction certificate depends on none of it.
 
-**Monotonicity in burn is claimed only at the anchor
-(`prop:epoch:no-tilt-commitment-monotonicity`).** At $t_k = 0$ the transport
-is state-independent and a burn raises the standing of everyone the burner's
-allocation reaches, including the burner. At $t_k > 0$ **no such claim is
-made**: the transport then depends on the state it is used to compute, and
-whether final standing is monotone in an underlying burn is open
-(`frontier:tilted-monotonicity`). Terminal reward monotonicity in the
-*published* standing input is a separate retained property and does not
-discharge this one.
+**Burn and act response (`prop:epoch:no-tilt-commitment-monotonicity`,
+`thm:epoch:burn-response`).** At the anchor $t_k = 0$, with counts, base
+allocation, safety threshold, and source emission held fixed — an additional
+accepted destruction at a strictly saturated source — the transport is
+independent of the solver state and of the perturbation, and
+$\partial\alpha_i/\partial b_u = \Pi_{ui}/\tilde{N}_i > 0$: the burn raises
+the standing of everyone the burner's allocation reaches, including the
+burner. Below saturation a burn changes emission, and this derivative does
+not apply. Beyond that regime the answer is negative: passing certificates
+do not imply monotonic standing under an accepted burn or an accepted act. At
+a fixed positive accepted rung a saturated burn can lower the burner's own
+standing, a reached sibling's, or a structurally unreached sibling's; at the
+anchor a depleted-source burn can lower a reached recipient; for selected
+rungs no finite universal bound holds on standing loss per unit of burn
+increment; and one additional accepted act without additional burn has no
+universal direction. The surviving positive regimes and the quantitative
+bounds are `cor:epoch:burn-monotone-regimes`,
+`prop:epoch:burn-response-bound`, and `prop:epoch:finite-standing-response`.
+Terminal reward monotonicity in the *published* standing input is a separate
+property and does not discharge this one.
 
 ### 11.6 Epoch boundary, the final act sequence, and the raw reading
 
@@ -2768,9 +3245,15 @@ for dependency formation and authoritative placement; W1/W2a/W2b,
 standing, and the ledger are evaluated once on the completed final union,
 and no prefix of $\mathcal{Q}_k$ carries a normative standing value.
 **Selection among valid ordered sequences is host discretion** (the spec
-fixes the constraints, not the algorithm); the certificate publishes the
-ordered dependent-set partition so validity is replayable, and the chosen
-sequence, once published, is the agreed $\mathcal{Q}_k$. Conflict
+fixes the constraints, not the algorithm). The certificate publishes the
+disjoint dependent-set partition of the membership of $\mathcal{Q}_k$ —
+overlapping principal closures merged relative to the history finalized
+before this epoch (`def:graph:dependent-act-set`) — together with each act's
+authoritative position. The blocks cover the final union, earlier blocks do
+not discharge another block's closure obligations, and blocks may interleave
+in the sequence: positions order acts, not the construction of the
+partition. Validity is thus replayable, and the chosen sequence, once
+published, is the agreed $\mathcal{Q}_k$. Conflict
 recognition reads only membership and epoch, never residual sub-epoch
 order. The epoch's **regime** is certificate-derived: *binding* iff
 $|\mathcal{Q}_k| = N_{\text{epoch}}$, *slack* otherwise. Binding-regime
@@ -2780,21 +3263,50 @@ consume them (`rem:epoch:admission-statistics-quarantine`).
 **Final epoch edge set (`post:epoch:final-edge-set`).** $E_k = E_{k-1} \cup
 \Delta E_k$ — monotone by construction, causally closed by the dependency
 closure, satisfying `post:introduction:epoch-edge-set` with no appeal to
-any global position coordinate. Commitment rates are computed from $B_i$
-and $N_i$ accumulated within $E_k$; the boundary burn state is provided
-alongside, sampled at the settlement-stability depth $\delta_{\text{pos}}$
-— chosen to exceed the settlement depth the realization publishes (R4(e)),
-so every sampled value is order-free and equal to its last pinned value
-(`lem:comparator:frame-stability`). $\delta_{\text{pos}}$ buffers the *burn
-snapshot*, not edge membership. Any participant
-accepting the same $E_k$ (and $\mathcal{Q}_k$) reproduces every epoch-$k$
-quantity from the published constants alone.
+any global position coordinate. Commitment rates are computed from the
+completed residual balances and action counts. Every component of the
+closure reads the same recognized final marker $m_k$
+(`post:comparator:marker-bound-settlement`, §1.2), in one settled history under one
+published marker policy (`cond:comparator:marker-epoch-registration`). The
+published **epoch package** binds the marker policy by its identity and fixed
+edition; the marker's settled lineage view, fixed interpretation data,
+accepted sets, and public verification evidence to its burn snapshot and
+increment; the accepted write set with its authoritative sequence
+$\mathcal{Q}_k$ and edge projection $E_k$; the preceding completed state
+(that of $m_{k-1}$); and the writing epoch's debit vintage and constants.
+The boundary burn state $\{B_i^{(k)}\}$ is derived from $A(k)$, counting each
+represented destruction once; its increment counts $D(k)$, the destructions
+first represented by accepted records at $m_k$
+(`def:comparator:marker-burn-snapshot`). A burn outside $A(k)$ contributes
+nothing to the snapshot; no reader may omit a member of the accepted set or
+import a burn through a later observation; an accepted package cannot mix
+marker histories or marker-policy editions, drop predecessor acceptance, or
+substitute an unchecked asserted total for the verified accepted amount.
+
+The network reads $m_k$ at the settlement-stability depth
+$\delta_{\text{pos}}$, chosen to exceed the settlement depth the realization
+publishes (R4(e)), under the finality assumptions of
+`cond:comparator:marker-lineage-succession`. $\delta_{\text{pos}}$ protects
+the marker, its lineage, and its fixed interpretation, not edge membership.
+Residual balances, standing, emission, and contributing width all use this
+one settled read and the writing epoch's debit vintage; the next controller
+price cannot replace that vintage. Any participant accepting the complete
+package, with the same published constants, compiler edition, and
+certificate procedure, reproduces every epoch-$k$ quantity. The epoch history
+is the recognized epoch-marker sequence of the admissible history, read past
+the settlement depth, with the empty initial boundary and pending markers
+distinguished by M5 (§1.2). Epochs number certificates from 1, and positions
+number acts within one certificate from 1; neither reads the realization's
+own order, and the unsettled part of its history is never read
+(`rem:epoch:epoch-history-is-the-marker-sequence`).
 
 **Log position (`def:epoch:log-position`).** $\mathrm{pos}(e)$, the
-zero-based rank under the identity-key order $\prec^*$ (lexicographic
-$(\mathbb{T}^{\text{act}}, \mathrm{author}, \mathrm{src}, \mathrm{tgt})$,
-refining the authoritative order), survives only as a deterministic
-**audit coordinate**: epoch membership is the closure rule's, and no
+zero-based rank within the written record set under the identity-key order
+$\prec^*$ — which first compares the epoch-position key of record
+(`def:graph:authoritative-act-order`) and, within an equal key, the
+lexicographic tie-break $(\mathbb{T}^{\text{act}}, \mathrm{author},
+\mathrm{src}, \mathrm{tgt})$, so it refines the authoritative order — is
+a deterministic **audit coordinate** and nothing more: epoch membership is the closure rule's, and no
 scoring, recognition, or boundary quantity consumes it. $\prec^*$ retains
 exactly one consumer — an optional audit tie-break within the
 authoritative order.
@@ -2809,7 +3321,7 @@ memory, no below-wall branch**. It has no effect on standing.
 (`alg:epoch:conserved-standing-computation`):**
 
 ```text
- 1: Input: proposed 𝒬_k, settled boundary burn state, E_{k−1}, constants
+ 1: Input: proposed 𝒬_k, shared marker-defined epoch package, E_{k−1}
  2: Validate formation + dependent-set closure
  3: Form tentative E_k = E_{k−1} ∪ ΔE_k          (def:epoch:proposed-final-act-state)
  4: Apply all count increments and θ-debits; reject if any b_i^(k) < 0
@@ -2819,7 +3331,8 @@ memory, no below-wall branch**. It has no effect on standing.
  6: Read emission fractions 𝔢_u and contributing widths from 𝖠 + the ledger
                                                   (def:epoch:source-emission)
  7: For each rung t of 𝒢_t, greatest first: evaluate 𝒦_k over ℬ_k;
-    break when m_θ·𝒦_k ≤ 1                       (alg:epoch:tilt-backoff)
+    break when the declared procedure proves m_θ·𝒦_k ≤ 1;
+    record each rung above as FAILED or INDECISIVE  (alg:epoch:tilt-backoff)
  8: Solve the unique equilibrium x* at the accepted rung t_k
                                     (thm:dynamics:certified-conserved-standing-uniqueness)
  9: Compute transport entries Π_ui and final standing α^(k)
@@ -2833,15 +3346,17 @@ memory, no below-wall branch**. It has no effect on standing.
 ```
 
 **Epoch Replay Determinism (`prop:epoch:epoch-replay-determinism`).** Given
-$E_k$, the boundary burn state, the debit schedule, the published
-constants, the projection-compiler version, and the declared certificate
-procedure, the entire epoch-$k$ derivation — rates, fold cells,
-coefficients, the base matrix, emission fractions, the accepted rung, the
-transport, final standing, title, the raw Self-edge reading, activations,
-stamps, headroom, and the certificate — is deterministic: a function of the
-authoritative order
-$\mathcal{Q}_k$ (`lem:graph:ordered-replay-determinism`), invariant under
-every payload state.
+the shared epoch package — its published marker policy with identity and
+fixed edition, the marker's lineage and acceptance evidence, $E_k$, the
+marker-defined burn state and increment, the prior completed state, the
+writing epoch's debit vintage, and the published constants — together with
+the projection-compiler version and the declared certificate procedure, the
+entire epoch-$k$ derivation — rates, fold cells, coefficients, the base
+matrix, emission fractions, the accepted rung, the transport, final standing,
+title, the raw Self-edge reading, activations, stamps, headroom, and the
+certificate — is deterministic: for these fixed inputs a function of the
+authoritative order $\mathcal{Q}_k$ (`lem:graph:ordered-replay-determinism`),
+invariant under every payload state.
 
 ### 11.7 The θ-debit ledger and the two-gate write rule
 
@@ -2851,9 +3366,11 @@ increments its count:
 
 $$b_i \mathrel{-}= \theta^{(k)}, \qquad N_i \mathrel{+}= 1.$$
 
-A hyper-edge is one act: one $\theta$, one stamp. The debit is consummated
-at the writing epoch's price and **never re-calculated** (the sole vintage
-object). $\theta$ is the **only** debited object — no gate, door, stamp, or
+A hyper-edge is one act: one $\theta$, one stamp. The debited amount is the
+epoch's published charged value (`def:epoch:safety-threshold`) — the same
+value read by W1, the safety wall, emission, and capacity. The debit is
+consummated at the writing epoch's price and **never re-calculated** (the sole
+vintage object). $\theta$ is the **only** debited object — no gate, door, stamp, or
 average moves a balance. **Capacity *is* the balance:** remaining actions
 $= \lfloor b_i/\theta \rfloor$, restored immediately by burning. Standing
 prices nothing and no per-epoch capacity object is derived. Two samplings
@@ -2888,7 +3405,10 @@ actuator.
 
 One price runs the whole height, and a family of derived floors divides the
 roles a single threshold would otherwise conflate
-(`subsec:epoch:floor-governance`). The mantra: **ν joins, θ debits, ρ_pol
+(`subsec:epoch:floor-governance`). The network publishes a reduced **safety
+wall** $\rho_\theta$ with one-boundary lead and a chartered positive floor;
+the safety threshold $\theta = \nu\,\rho_\theta$ is its burn image. The
+mantra: **ν joins, θ debits, ρ_pol
 admits, m_θ margins; ρ_θ walls, ρ_eff doors, and the stamps measure.** Two
 axes, never conflated — the **price axis** ($\nu$, $\theta$) and the
 **gate/position axis** ($\rho_{\text{pol}}, \rho_\theta, \rho_{\text{eff}}$).
@@ -2903,31 +3423,131 @@ Price axis:
   operating point — structural; moving it is a *migration event*, not a dial
   turn.
 - **Safety price $\theta$ (`def:epoch:safety-threshold`).** The per-act
-  **debited** price and the minimum burn value behind a write the
-  coupled dynamics certifiably tolerate (burn units per action). The **only** debited
-  object (W1). **An algorithmic output of the epoch computation, never a host
-  input** — certificate $k$ carries $\theta^{(k+1)}$ (one-boundary lead),
-  governed by premises X1–X7 (derivability, sufficiency with X2b width
-  dominance, step-boundedness, hysteresis, lead, publication, declared
-  covariance); the algorithm is a calibration deliverable. Chartered interim rule
-  $\theta^{(k+1)} = \nu\,\lambda_Q^{-1}\!\big(1/(m_\theta\, W_{\text{loc}}^{(k)})\big)$
-  with **margin factor $m_\theta = 5/4$** (fence slack
-  $\mu = 1 - 1/m_\theta = 0.20$; X3 per-boundary step bound; X4 Schmitt
-  hysteresis; escalation to $m_\theta = 1.5$ if p95 one-boundary
-  $W_{\text{loc}}$ growth exceeds $\sqrt{m_\theta} = 1.118$).
+  **debited** price (burn units per action): the burn image
+  $\theta = \nu\,\rho_\theta$ of the published safety wall. The **only**
+  debited object (W1). **An algorithmic output of the epoch computation, never
+  a host input** — certificate $k$ carries $\theta^{(k+1)}$, the value in
+  force at boundary $k+1$ (one-boundary lead). The published $\theta^{(k+1)}$
+  is the value charged; its representation (exact, or on a grid the
+  deployment declares) and the arithmetic producing it are the deployment's,
+  which certifies premises X1–X9 for that charged value:
+  - (X1) *derivability* — $\rho_\theta^{(k+1)}$ is a function of the epoch-$k$
+    certificate and the published constants alone, replayable by any
+    participant;
+  - (X2) *in-epoch certification* — the accepted rung is the greatest element
+    of $\mathcal{G}_t$ whose certificate the declared procedure proves passing
+    at the wall in force and on the epoch's own contributing width,
+    $m_\theta\,\mathcal{K}_k \le 1$; the anchor always certifies, and
+    higher-rung failures and indecisive enclosures stay distinct and
+    published;
+  - (X3) *step bound* — $|\rho_\theta^{(k+1)} - \rho_\theta^{(k)}| \le
+    \min(a,\ r\,\rho_\theta^{(k)})$ for published $a > 0$, $0 < r < 1$;
+  - (X4) *hysteresis* — the published relative deadband applies to the
+    floored proposal before X3, with no unpublished latch;
+  - (X5) *lead* — one-boundary lead; a width excursion reprices neither the
+    epoch nor any consummated debit vintage;
+  - (X6) *publication* — beside $\mathcal{K}_k$, the accepted rung $t_k$, and
+    $W_{\text{loc}}^{(k)}$: the wall in force, the controller edition and
+    constants, its proposal, the next wall, and its burn image
+    (`post:network:host-contract`);
+  - (X7) *covariance* — the controller is numéraire-blind; reduced inputs and
+    constants are invariant under a change of burn unit, and $\theta$ scales
+    exactly with $\nu$;
+  - (X8) *floor* — every published wall satisfies
+    $\rho_\theta \ge \rho_{\theta,\min} > 0$, at zero width and on an empty
+    live domain too, compared against the declared floor's exact defining
+    object;
+  - (X9) *input quarantine* — only the previous wall, the completed-epoch
+    width, and the accepted rung, with published constants, enter the
+    controller; boundary-demand and admission statistics are excluded
+    (`rem:epoch:admission-statistics-quarantine`).
 
-Gate axis (the five-ρ family — three floors plus two stamps):
+  **Margin factor $m_\theta = 5/4$** (fence slack
+  $\mu = 1 - 1/m_\theta = 0.20$) is a published constant. No requirement
+  bounds or predicts the following epoch's width, and neither a width-growth
+  escalation nor a calibration window enters the controller.
+
+**Wall controller (`def:epoch:wall-controller`).** For a published constant
+and formula edition $\Gamma$, the next wall is
+
+$$\rho_\theta^{(k+1)} = C_\Gamma\big(\rho_\theta^{(k)},\ W_{\text{loc}}^{(k)},\ t_k\big), \qquad C_\Gamma : [\rho_{\theta,\min}, \infty) \times [0, \infty) \times \mathcal{G}_t \to [\rho_{\theta,\min}, \infty),$$
+
+a deterministic map whose inputs are the wall in force and the completed
+epoch's contributing width and accepted rung — closure-side data published
+with the certificate. No prior standing vector is an input; the map and every
+constant it reads live on the reduced axis and never read $\nu$. The
+controller is memory-one: no growth window, private latch, or unpublished
+history. Its edition, constants, inputs, proposal, and delivered wall are
+replayable (`post:network:host-contract`).
+
+**Canonical interim wall controller
+(`def:epoch:canonical-interim-wall-controller`).** Fix the chartered rung
+$t_{\text{char}} = \max \mathcal{G}_t$ and its cumulative tilt
+$S_{\text{char}} > 0$ at the deepest supported depth $m^*$ ($15/8$ for the
+chartered profile); profile and depth are constants of the controller, not
+measured inputs. With $G = \lambda_{\text{vch}}$ the deployed per-hop
+reduced-standing log-gain, the target proposal for completed-epoch width $W$
+is
+
+$$q(W) = \begin{cases} \rho_{\theta,\min}, & W = 0, \\ \max\big\{\rho_{\theta,\min},\ G^{-1}\big(1/(2\,m_\theta\,S_{\text{char}}\,W)\big)\big\}, & W > 0, \end{cases}$$
+
+the least wall at or above the floor at which the chartered rung's evaluated
+certificate passes on that width. For previous wall $\rho$, put
+$e = q(W) - \rho$; the deadband sets $e_d = 0$ when $|e| \le d\,\rho$ and
+$e_d = e$ otherwise, and
+
+$$C_\Gamma(\rho, W, t) = \rho + \mathrm{sgn}(e_d)\,\min\big(|e_d|,\ a,\ r\rho\big), \qquad \mathrm{sgn}(0) = 0.$$
+
+The order is proposal, floor, deadband, then step cap; release outside the
+deadband is symmetric, and the rung argument $t$ is published but unused by
+this interim map. The interim settings are $a = 0.10$ (absolute reduced
+increment), $r = 1/4$ (relative step), and $d = 1/20$ (relative deadband) —
+performance calibration constants, not safety premises; $m_\theta$ stays
+fixed. For zero width, including an empty live domain, the proposal returns
+the floor without evaluating an inverse; the delivered wall still obeys the
+deadband and step cap. The proposal and the delivered wall are both
+published, followed by the burn image
+$\theta^{(k+1)} = \nu\,C_\Gamma(\rho, W, t)$, with one-boundary lead; no
+consummated debit is recalculated. The clean-gain inversion
+$\lambda_Q^{-1}(1/(m_\theta W))$ is a screening diagnostic
+(`cor:dynamics:minimal-safe-rung`), not in general the least wall for the
+deployed certificate. The controller is total, its proposal and delivered
+wall never fall below $\rho_{\theta,\min}$, and the delivered wall satisfies
+X3 (`prop:epoch:wall-controller-total`). Safety does not depend on it: under
+the hypotheses of `thm:dynamics:certified-conserved-standing-uniqueness`,
+every finite wall at or above $\rho_{\theta,\min}$ admits a greatest rung proved
+passing on the completed epoch's own width, at which the fixed point is
+unique (`prop:epoch:safety-independent-of-controller`).
+
+**Reference values.** The reference fixture runs the canonical controller at
+$W_{\text{loc}} = 1$, $S_{\text{char}} = 15/8$, $m_\theta = 5/4$, with the
+previous wall initialized to the target, which the deadband holds
+(`ver:floor:fixture-regime`). Target, previous, and delivered wall are then
+$\rho_\theta \approx 0.501855$, where
+$G(\rho_\theta) = 1/(2 \cdot \tfrac54 \cdot \tfrac{15}{8}) \approx 0.2133$;
+the price is $\theta = \nu\,\rho_\theta \approx 0.0501855$ and the real
+capacity per burn unit $1/\theta \approx 19.93$. The fixture selects neither
+floor declaration and delivers the same wall under both
+(`ver:floor:fixture-declaration-invariant`). This initialization specifies a
+reference evaluation, not an attracting fixed point of the coupled epoch
+dynamics.
+
+Gate axis (the five-ρ family — policy floor, safety wall, effective floor,
+and two stamps):
 
 - **Policy floor $\rho_{\text{pol}}$ (`def:epoch:policy-floor`).** The host's
   dimensionless standing dial against spam/Sybil pressure. Announced at
   boundary $k$, effective at $k+1$, persisting until re-announced. Purely
   extensive: it excludes, but cannot reprice a survivor's actions. Canonical
   default $1$.
-- **Safety floor $\rho_\theta = \theta/\nu$ (`def:epoch:safety-floor`) — the
-  wall.** The gate-axis image of the per-act price. Binding read-sites:
-  the **W2a** comparator, the **below-wall activation clamp key**
-  (`def:epoch:safety-wall-clamped-activation`), and the width fence pin
-  $\lambda(\rho_\theta)\,W_{\text{loc}}\,m_\theta = 1$.
+- **Safety wall $\rho_\theta$ (`def:epoch:safety-wall`) — the wall.** The
+  published reduced position at which the standing activation is clamped,
+  $\rho_\theta \ge \rho_{\theta,\min} > 0$, published with one-boundary lead;
+  $\rho_\theta = \theta/\nu$ is the gate-axis image of the per-act price, the
+  wall and the price being one coordinate pair, not independently adjustable
+  quantities. Binding read-sites: the **W2a** comparator, the **below-wall
+  activation clamp key** (`def:epoch:safety-wall-clamped-activation`), and
+  the epoch's certificate, which it parameterizes (X2).
 - **Effective floor $\rho_{\text{eff}} = \max(\rho_{\text{pol}}, \rho_\theta)$
   (`def:epoch:participation-floor`) — the door.** Derived, not dialed; $=
   \rho_{\text{pol}}$ on every valid certificate (the $\max$ is fault
@@ -2939,6 +3559,56 @@ Gate axis (the five-ρ family — three floors plus two stamps):
   (`def:epoch:final-act-stamps`).** The standing-derived **measurements** the
   write rule gates: the act-owned reduced final standing at W2a, and its
   act-weighted mean at W2b. Measurements, never floors; never debited.
+
+**Structural wall floor (`def:epoch:safety-wall-floor`).** The chartered
+floor set is exactly $\{\rho^*, 3/37\}$. $\rho^* = p^*/(1-p^*)$ is the exact
+ridge image, $p^*$ being the unique maximizer on $(0,1)$ of the clean
+full-depth elasticity (`rem:dynamics:elasticity-profile`): an exact real
+defined by the activation, not a grid endpoint or rounded root, certified in
+$[0.072857886,\ 0.072858002]$ ($\rho^* \approx 0.072857922$) and strictly
+below $3/37 \approx 0.081081081$, so either declaration gives
+$\rho_{\theta,\min} \ge \rho^* > 0$. Before its first epoch the deployment
+publicly declares $\rho_{\theta,\min} \in \{\rho^*, 3/37\}$ beside $\nu$ in
+its structural tier. The declaration is fixed for the deployment: changing
+it is a public structural change with regenerated evidence, never an epoch
+dial or host-policy choice, and any third value requires its own derivation.
+The floor is distinct from the wall in force, the policy floor, the effective
+floor, and the width-dependent clean-screen diagnostic; it guarantees a
+positive debit and defined capacity and emission denominators even at zero
+contributing width, and does not assert that the chartered rung passes at
+every width. Both declared floors lie strictly below the default policy door
+$1$ (`ver:floor:below-door`), which bounds the floor, not every wall.
+
+**The selection criterion (`rem:epoch:floor-is-a-landmark`).** Neither
+declaration is a default; the selection criterion is what the deployment
+certifies. The exact ridge $\rho^*$ suits a published comparison procedure
+that certifies X8 against a certified enclosure of an exact real, with
+refine-or-reject; the rational $3/37$ suits a representation proving the
+floor side of X8 by exact rational comparison. X8 compares against the
+declared floor's exact defining object — $\rho^*$, never an enclosure
+midpoint, or $3/37$. A difference enclosure straddling zero is indecisive:
+refine the wall and ridge enclosures or reject the proposed wall and any
+package requiring it. The ridge is the chartered reason for both floors —
+beyond it clean elasticity decreases — and economic positivity and this
+leverage landmark are structural choices, not consequences of X2. The
+deployment assesses economic suitability under
+`cond:deployment:wall-calibration` and `cond:deployment:parameter-comparisons`
+(§13.1).
+
+**Floor economics (`cor:epoch:floor-economics`).** At every published wall,
+$\theta = \nu\rho_\theta \ge \nu\rho_{\theta,\min} > 0$ (minimum price per act)
+and $1/\theta \le 1/(\nu\rho_{\theta,\min})$ (maximum real remaining-action
+capacity per burn unit); integer remaining acts obey
+$\lfloor b/\theta \rfloor \le \lfloor b/(\nu\rho_{\theta,\min}) \rfloor$. At
+$\nu = 0.10$:
+
+| Declaration | $\rho_{\theta,\min}$ | Minimum price $\nu\rho_{\theta,\min}$ | Maximum capacity $1/(\nu\rho_{\theta,\min})$ |
+|---|---|---|---|
+| ridge $\rho^*$ | $\approx 0.072857922$ | $\approx 0.007285792$ | $\approx 137.253435$ |
+| rational $3/37$ | $\approx 0.081081081$ | $\approx 0.008108108$ | $\approx 123.333333$ |
+
+Emission saturates exactly when $\hat{r}_u \ge \rho_\theta$; at a wall above
+the floor, being above $\rho_{\theta,\min}$ alone is insufficient.
 
 **Certificate validity (`eq:epoch:floor-validity`).** A certificate is valid
 only if $\rho_{\text{pol}} \ge \rho_\theta$ (equivalently
@@ -2957,10 +3627,13 @@ the stamps, gated against these floors.
 **Host authority (`rem:epoch:operator-authority-floor`).** The host's entire
 floor authority is the $\rho_{\text{pol}}$ schedule — announced with
 one-boundary lead, valid only above the led safety threshold, auditable ex
-ante. $\theta$ and $\nu$ are not host dials ($\theta$ is algorithmic, $\nu$ a
-migration constant). The safeguard remains visibility: the full formula is
-public, so any participant can compute the economic consequence of any
-value. The dials lock only after empirical calibration.
+ante. $\theta$, $\nu$, and $\rho_{\theta,\min}$ are not host dials ($\theta$
+is algorithmic, $\nu$ a migration constant, $\rho_{\theta,\min}$ a fixed
+structural declaration). The fence clearance belongs to the accepted rung at
+the published wall (X2) and X3 bounds controller motion; the wall cannot
+cross its structural floor, and ridge clearance follows from either floor
+declaration and X8, not from X2. The safeguard is visibility plus the clamp,
+not trust.
 
 **Recoinage (`prop:epoch:compensation`, `rem:epoch:capacity-crush`).** Under
 $(\nu, \rho_{\text{pol}}) \to (c\nu, \rho_{\text{pol}}/c)$ the door product
@@ -2968,10 +3641,18 @@ $\rho_{\text{pol}}\nu$ (admission set, per-act door benchmark) is invariant,
 the gate axis $\{\rho_{\text{pol}}, \rho_{\text{act}}, \rho_{\text{ep}}\}$
 is exactly invariant (stamps and floors co-scale), and reduced quantities
 scale by $1/c$; W1/W2a are $\theta$-mediated per the X7 declaration. The
-historical capacity-crush is dissolved: the retroactive repricing branch
+controller's covariance (`prop:epoch:wall-controller-covariance`): under
+recoinage proper — every burn-denominated value and $\nu$ scaled by $c$ —
+its reduced inputs, constants, and next wall are unchanged and its burn image
+scales to $c\,\theta^{(k+1)}$; a structural migration $\nu \to c\nu$ at a
+fixed burn ledger, compensated ($\rho_{\text{pol}} \to \rho_{\text{pol}}/c$)
+or not, publishes its transformed reduced inputs and the resulting wall and
+threshold, with no homogeneity of $C_\Gamma$ and no invariance of W1 or W2a
+claimed.
+The historical capacity-crush is dissolved: the retroactive repricing branch
 was deleted by the $\theta$-debit ledger — a consummated debit is never
 re-calculated, so there is **no frozen stock to crush**. The door product
-is no longer an independent charter surface; the host publishes
+is not an independent charter surface; the host publishes
 $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 (`rem:epoch:dial-scope`).
 
@@ -2981,20 +3662,21 @@ $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 
 | Quantity | Closure consumer | Notes |
 |---|---|---|
-| $\epsilon(e)$, $\epsilon(p)$ | raw signed double-cover service (`alg:epoch:double-cover-bfs`), feed ranking | parity routing; coherence bit, never a favor bit; **terminal formula** — no standing read-site |
+| $\epsilon(e)$, $\epsilon(p)$ | raw signed double-cover service (`alg:epoch:exact-signed-raw-traversal`), feed ranking | parity routing; coherence bit, never a favor bit; **terminal formula** — no standing read-site |
 | $\lvert\det \boldsymbol{\Psi}_e^{[P]}\rvert^{1/2}$ | $\tilde{w}(e)$ | coherence factor |
-| $\mathbb{T}^{\text{act}}_q$, $\tau_e$, $H_\tau(e)$ | act time: authoritative order + formation + boundary replay; $\tau_e, H_\tau$: $\tilde{w}(e)$ | act time is closure; raw maturity and entropy are terminal (feed/bridge only) |
-| causal parents, declared dependencies | formation rule; authoritative-order compliance ($\mathrm{DepOK}$); causal closure of $E_k$ | backward-only metadata; never a scoring input (the $\tau$-farming lint) |
+| key of record $(k, \mathrm{pos}_k(q))$; $\mathbb{T}^{\text{act}}_q$, $\tau_e$, $H_\tau(e)$ | key of record: authoritative order + formation + boundary replay; $\tau_e, H_\tau$: $\tilde{w}(e)$ | the act time is a recomputable Lamport summary of the order of record **(L1·verify)**, never an input to precedence; raw maturity and entropy are terminal (feed/bridge only) |
+| causal parents, declared dependencies | formation rule; authoritative-order compliance ($\mathrm{DepOK}$ and parent placement); causal closure of $E_k$ | backward-only metadata; never a scoring input (the $\tau$-farming lint) |
 | handshake objects ($C^{\text{pre}}_q$, verified act, approval witness) | formation — only approved verified acts are orderable | fraud proofs are verification evidence |
 | $\tilde{w}(e)$ | raw-graph traversals: feed ranking, the raw signed double-cover service, bridge Channel 1 | **one raw formula for all raw-graph consumers**; the formula itself is a terminal default (§3); standing is not a raw consumer |
 | stance marginals $p_d, p_i$ | recipient resolution (folded coordinates); settlement-adjacent stance reads | stance decides the destination; terminal stance consumers named in the ledger |
 | fold cells $\xi$, coefficients $c(\xi)$ | base allocation matrix → transport → mediant → gate | the act-folding layer (§11.3) |
 | $\bar{g}_{\text{vch}}(x)$ | every tilted allocation score in the standing solve | wall-clamped; below-wall constant |
 | base matrix $\mathsf{A}$, emission $\mathfrak{e}_u$, accepted rung $t_k$, certificate $\mathcal{K}_k$ | assemble the transport → standing → W2 | binding intermediate values, not straddlers |
+| wall-controller inputs ($\rho_\theta^{(k)}$, $W_{\text{loc}}^{(k)}$, $t_k$), proposal, delivered wall | next-wall calculation and the burn-image schedule $\theta^{(k+1)}$ | memory-one; replayed from the published reduced state and formula, no private inputs (`def:epoch:wall-controller`) |
 | transport entries $\Pi_{ui}$ | the standing mediant | sole relational input to standing |
-| settlement references | recognition clauses (i)–(ii); forced handshake chain | act-identity resolution |
-| ownership thread | title certificate; recognition clause (iii) | title as straddler |
-| $\mathrm{owner}^{(k)}$ | recognition clause (iii) | terminal routing/display read it downstream |
+| settlement references | recognition clauses (i)–(ii); handshake chain as causal parents, placed $\mathrm{Bid} \prec \mathrm{Accept} \prec \mathrm{Ratify}$ by a compliant order | act-identity resolution |
+| ownership thread | title certificate; recognition clause (iii), authorization and parties | title as straddler |
+| $\mathrm{owner}^{(k)}$ | recognition clause (iii), authorization and parties; standing recipient resolution reads the epoch title fold (`post:epoch:settlement-standing-title-coupling`) | terminal routing/display read it downstream |
 | payload structural witness | act integrity; removable-projection invariance | (L1·verify) — retained by Layer 1 across phases; bytes never read by Layer 1 |
 | terminal complement | — | feed, reward, attribution, bridge transport, identity association, payload rendering, licensing, membership policy, raw scoring formulas: named only in `tbl:symbols:boundary` |
 
@@ -3003,13 +3685,13 @@ $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 ## 13 Deployment invariants (`app:deployment`)
 
 Apply in both deployment phases; what changes is the consequence of failed
-verification, not the specification. Seven invariants bind the closure
+verification, not the specification. Eight invariants bind the closure
 surface; the full paper's `app:deployment` additionally documents five
 terminal invariants (client-reproducible feed ranking, device-local
 computation scope, concealment-entropy custody, auditable terminal
 centrality, attribution-view insulation of CAN enrichment), reproduced by
-their own owners, and one realization-side invariant (end of this
-section).
+their own owners, one realization-side invariant, and three postulates of
+operator duties (both at the end of this section).
 
 - **Continuous Public Availability of Graph State
   (`subsec:deployment:public-availability`).** Every edge record —
@@ -3022,19 +3704,28 @@ section).
   available only while in full projection, and Layer-1 verification never
   requires them. For standing, edge availability alone is insufficient: the
   verifier must also determine that no accepted complete act was omitted —
-  allocation-input completeness
+  projection completeness
   (`prop:deployment:allocation-input-completeness`) and the public declared
   inputs and formula editions supply that binding.
 - **Final Epoch State Agreement
   (`subsec:deployment:final-epoch-state-agreement`).** At each boundary the
   operator publishes the authoritative ordered act sequence $\mathcal{Q}_k$
-  and its record projection, the monotone edge set $E_k$; any participant
-  accepting $\mathcal{Q}_k$ replays identical epoch results. **Agreement on
-  the ordered sequence is required — agreement on the edge set alone is
-  insufficient**, since acts the host may place in either order yield
-  order-dependent results. (Supersedes the pre-Edition-4 epoch-edge-set
-  agreement invariant.) The act identifier exposes equivocation rather than
-  absorbing it: distinct records claiming one act identifier fail formation.
+  and its record projection, the monotone edge set $E_k$. The epoch package
+  also binds the deployment's published marker policy with its identity and
+  fixed edition, the final marker, the settled lineage view, the accepted
+  burn sets and their verification evidence, the burn snapshot and
+  increment, the preceding completed state, and the writing epoch's debit
+  vintage and constants (`post:epoch:final-edge-set`); each closed epoch
+  binds its own recognized marker, one-to-one and in order (M5,
+  `cond:comparator:marker-epoch-registration`). Participants accepting the
+  same complete package replay identical epoch results. **Agreement on the
+  ordered sequence is required — agreement on the edge set alone is
+  insufficient for formation and order-sensitive raw quantities** such as
+  edge-projection maturity. Standing is invariant under dependency-compliant
+  permutations with accepted membership, final ledger, epoch title fold,
+  and constants fixed (`post:epoch:standing-epoch-set-determinism`). The act
+  identifier exposes equivocation rather than absorbing it: distinct records
+  claiming one act identifier fail formation.
 - **Immutability of Published Records (`subsec:deployment:immutability`).**
   Once an edge record or ledger entry is published, its structural fields
   cannot be silently altered. Changes require new acts.
@@ -3049,18 +3740,28 @@ section).
 - **Transparency of Protocol Constants and Formulas
   (`subsec:deployment:transparency-of-protocol-formulas`).** The network
   protocol constants ($\beta, \eta, q, \nu, \rho_{\text{pol}}, \theta,
-  m_\theta, N_{\text{epoch}}, \delta_{\text{pos}}, L, L_{\text{vch}},
+  m_\theta, N_{\text{epoch}}, \delta_{\text{pos}}, L, L_{\text{hop}},
   M_{\text{payload}}$), the derived effective floor $\rho_{\text{eff}}$,
   the published boundary triple (target size, min/max durations), the
   derived raw constants ($\tilde{w}_{\text{spam}}, \tilde{w}_{\max},
-  \tilde{w}_{\max}^{\text{Op}}$), **and the standing-census, complete-act
+  \tilde{w}_{\max}^{\text{Op}}$), **the standing-census, complete-act
   compiler, coefficient, projected-activation, path-selection, allocator,
-  mediant, scalar-encoding, and certificate formula editions**, together
-  with the interface constants the network reads from its realization and
-  surfaces unmodified (`subsec:deployment:realization-obligations`), are
-  known to all clients and do not change without clients being able to
-  detect the change and invalidate affected cached computations before it
-  applies.
+  mediant, scalar-encoding, certificate, and wall-controller formula
+  editions**, the marker policy with its identity and edition, the
+  deployment's structural floor declaration
+  $\rho_{\theta,\min} \in \{\rho^*, 3/37\}$ with its exact defining object
+  and X8 comparison procedure, and the controller's reduced constants
+  $a, r, d$, together with the interface constants the network reads from
+  its realization and surfaces unmodified
+  (`subsec:deployment:realization-obligations`), are known to all clients
+  and do not change without clients being able to detect the change and
+  invalidate affected cached computations before it applies. The marker
+  policy is published before genesis and stays fixed for the interpretation
+  of that marker sequence; a different policy cannot reinterpret a
+  recognized marker or erase predecessor acceptance. The floor declaration
+  is published once, beside $\nu$, before the first epoch; changing it is a
+  publicly identified structural change with regenerated evidence, never a
+  host-policy or epoch dial.
 - **Self-Sufficient Edge Record (`subsec:deployment:sufficiency`).** The
   published record for each edge contains exactly the fields required to
   recompute $\tilde{w}(e)$, $\epsilon(e)$, the CAN base value, and the
@@ -3077,29 +3778,64 @@ section).
   input, intermediate value, validity verdict, and output of the conserved
   standing package (`def:network:conserved-standing-package`) is
   independently derivable from $E_k$, the completed final ledger, and the
-  published constants and formula editions. **No server-maintained
-  allocation counter, hidden recipient assignment, unpublished tilt rung,
-  private model weight, or uncommitted certificate box may enter standing.**
-  The replay sequence: derive final balances and counts → reconstruct
-  complete acts → apply folds and revocations → cell coefficients and
-  recipient resolution → assemble the base allocation matrix → read emission
-  fractions → evaluate the certificate down the tilt grid → solve the
-  equilibrium and the transport → recompute the mediant → derive final
-  standing, stamps, and W2 decisions. Allocation-input completeness and
-  dynamic safety are orthogonal checks
+  published constants and formula editions. The completed ledger is derived
+  from the shared marker's accepted burn sets under the deployment's marker
+  policy, their verified snapshot and increment, the prior completed state,
+  the accepted write set, and the writing epoch's debit vintage
+  (`post:epoch:final-edge-set`). **No server-maintained relation counter,
+  unpublished emission fraction, private model weight, or unpublished
+  certificate verdict may enter standing.** The replay sequence: recover the
+  marker policy and its edition, the final marker's interpretation data, and
+  the complete accepted sets $A(j)$ with their evidence; check genesis,
+  unique succession, lineage dependence, depth and finality assumptions,
+  both acceptance bounds, evidence availability, and destruction identity,
+  amount and address attribution; derive $C(j)$ and $D(j)$ and recompute the
+  snapshot → derive residual balances and counts from that snapshot and
+  increment, the preceding completed state, the accepted acts, and the
+  writing epoch's debit vintage → reconstruct complete acts → apply per-author
+  folds and recipient resolution to every accepted act → cell coefficients
+  and domain profiles → assemble the base allocation matrix → recompute every
+  emission fraction and the contributing width from the same completed
+  ledger and debit vintage → evaluate the certificate at each attempted rung
+  → iterate the conserved map at the accepted rung to the published residual
+  → derive final standing, projected activations, stamps, and W2 decisions.
+  Projection completeness and dynamic safety are orthogonal checks
   (`rem:deployment:completeness-safety-orthogonal`); a valid package
-  requires both.
+  requires both, and controller replay is a separate obligation.
+- **Canonical Standing Encoding
+  (`subsec:deployment:canonical-standing-encoding`,
+  `post:deployment:canonical-standing-publication`).** The host publishes
+  the conserved standing package in a canonical encoding — a declared
+  ordering of Actors and of each row's support, a declared representation
+  for every rational quantity, and a declared rounding disclosure for every
+  inexact value — itself published and versioned under no-silent-change.
+  The encoded fields include the floor declaration with its exact defining
+  object and comparison procedure, the controller edition and reduced
+  constants, the wall in force, the completed-epoch width and accepted rung,
+  the proposal, and the delivered next wall with its burn image; the
+  declaration prescribes no exact-real codec. The prior wall is explicit
+  public controller state, not a prior standing-vector input, and the
+  in-force debit vintage stays distinct from the led output. The encoded
+  certificate verdict includes every attempted rung and whether it failed
+  or was indecisive. A recomputation either matches the published bits or
+  finds a discrepancy to attribute. The byte serialization is the
+  deployment's, published and versioned with its deterministic certification
+  and replay procedure (`cond:deployment:canonical-encoding`,
+  `cond:deployment:canonical-replay`, §13.1); the same procedure must
+  reproduce the same verdicts, including INDECISIVE. Publishing an encoding
+  badly is a deployment defect; not declaring one is a protocol defect.
 - **Formula Completeness (`subsec:deployment:completeness`).** The published
   material — protocol constants; edge-type specifications and census; tensor
   pipeline; path-view extraction; mask and tier rules; determinant sign and
   damped weight; **net stance, cell coefficients, recipient resolution,
   domain weights, activations, the tilt grid and emission rule, control-act
-  self-resolution and inviter revocation**; the **write rule (W1/W2a/W2b),
-  closure rule, formation rule + handshake, and the θ-debit ledger**;
-  settlement recognition and the **epoch title fold**; the conserved
-  derivation sequence and certificate definitions; the
-  safety-price/five-ρ-floor family — is jointly sufficient to reproduce the
-  server's output from published records alone. Terminal mechanisms are not
+  self-resolution and vouch withdrawal by netting**; the **write rule
+  (W1/W2a/W2b), closure rule, formation rule + handshake, and the θ-debit
+  ledger**; settlement recognition and the **epoch title fold**; the
+  conserved derivation sequence and certificate definitions; the
+  safety price, the five-ρ family (§11.8), the structural wall floor, and
+  the wall controller — is jointly
+  sufficient to reproduce the server's output from published records alone. Terminal mechanisms are not
   part of this invariant; **if a terminal service publishes a mechanism,
   the grant requires that terminal mechanism's own completeness** — a guild
   that reimplements a terminal default publishes its own complete
@@ -3107,15 +3843,85 @@ section).
 
 **Realization Obligations (`subsec:deployment:realization-obligations`).**
 The deployment runs against a realization that publishes, and keeps
-published, the R7 audit quantities, $B_{\max}$ (R9), $c_{\mathrm{u}}$ (R10),
-the settlement depth (R4(e)), and — where the realization has an operator
-accruing burn value — the R11 operator bound. The network carries all of it
-to participants unmodified and without access control; the deployment adds
-no channel by which a published quantity could be silently dropped,
-replaced, or amended in transit. Two duties: *publication* on the
-realization, *non-occlusion* on the deployment. Design space: a pointer to
-the realization's own publication, a mirror in the network's append-log, or
-a periodic published snapshot beside the network's own constants.
+published, the R7 audit quantities; $B_{\max}$ (R9), a published zero with
+its explanation for an empty pre-opening interval; $c_{\mathrm{u}}$ (R10)
+with its denomination and terms, and any separately published
+recording-event costs; the settlement depth (R4(e)) with the finality
+assumptions under which it holds; and — where the realization has an
+operator accruing burn amount — the R11 operator bound and its proof, or
+else a statement of that absence with its explanation. Settlement depth,
+provenance, recording-event costs, and the operator evidence are public
+audit evidence, not computational inputs. The deployment publishes its
+marker policy with its fixed edition, epoch-marker placement rule, and
+cadence (`post:comparator:marker-bound-settlement`); every reader can
+recover the complete accepted sets and their evidence from the policy's
+package encoding. The network carries all of it to participants unmodified
+and without access control; the deployment adds no channel by which a
+published quantity could be silently dropped, replaced, or amended in
+transit. Two duties: *publication* on the realization, *non-occlusion* on
+the deployment. Design space: a pointer to the realization's own
+publication, a mirror in the network's append-log, or a periodic published
+snapshot beside the network's own constants. A breach of the finality
+assumptions has the halt consequence of
+`rem:comparator:finality-breach-halts` (§1.2) and one of two published
+deployment responses; which one follows is the deployment's published
+policy, and neither is a Layer-1 rule:
+
+- **Re-anchor (`case:deployment:realization-obligations-finality-breach-reanchor`).**
+  Keep every closed epoch as published and resume by a published
+  marker-policy edition change naming a fresh initial epoch marker in the
+  surviving history, with a published ledger-continuity decision.
+- **Follow (`case:deployment:realization-obligations-finality-breach-follow`).**
+  Follow the replaced history, re-deriving the epochs whose markers were lost
+  under a published marker-policy edition change; name the superseded
+  certificates and the point of divergence, and publish the
+  ledger-continuity decision.
+
+### 13.1 Operator duties
+
+Three postulates bind the deployment's operator; each condition below is
+one published duty.
+
+**Calibration declarations (`post:deployment:calibration-declarations`).**
+Before an edition takes effect, the deployment publishes these declarations
+and retains the material needed to replay that edition.
+
+| Condition | Duty |
+|---|---|
+| `cond:deployment:standing-parameters` | Publish the tilt profile and backoff grid, the depth mass and its deepest supported depth, the self-retention base, the domain weights, and each act family's normalized domain profile, with their defining formulas and admissibility evidence. |
+| `cond:deployment:wall-calibration` | Publish the numéraire, policy-floor schedule, structural floor declaration and its exact defining object, margin, controller edition, initialization, reduced constants, and arithmetic and comparison procedure. Evaluate both chartered floors against the declared economic and work criteria; neither is a default. Publish proposal and delivered wall separately, including the floor, deadband and step-cap order, preserve the debit vintage in force, and certify the charged value. A floor switch is a public structural change with regenerated evidence; a third floor needs its own derivation. |
+| `cond:deployment:boundary-policy` | Publish the epoch target size, minimum and maximum durations, policy-floor schedule, threshold announcement lead, candidate-set search policy and trial budget, validation timeout, solver availability target, and fallback, with a constant-change adaptation window during which cadence retargeting is frozen. |
+| `cond:deployment:canonical-encoding` | Publish and version one canonical encoding of the standing package, with round-trip evidence. |
+| `cond:deployment:canonical-replay` | Publish the deterministic certification procedure with its precision, refinement, equality handling, and stopping limits, and every attempted rung with its PASS, FAIL, or INDECISIVE verdict. |
+
+**Centralized-phase monitoring (`post:deployment:centralized-monitoring`).**
+During the centralized phase the operator publishes reproducible
+observations, their procedures, thresholds, persistence windows, and review
+schedule, and records the disposition of each threshold crossing; a missed
+target never waives the floor, a passing certificate, exact standing, or X9.
+
+| Condition | Duty |
+|---|---|
+| `cond:deployment:certificate-monitoring` | Publish per accepted epoch the evaluated certificate, contributing width, accepted rung, enclosure radius, standing movement, transported mass by hop, and below-wall fraction, with fallback and rung frequencies that distinguish FAIL from INDECISIVE. |
+| `cond:deployment:title-certificate-monitoring` | Recompute $\mathrm{owner}^{(k)}$ from the published partition at every boundary, compare it with the published certificate, and publish every disagreement with its evidence; a disagreement triggers the published review, not a rewrite of the certificate. |
+| `cond:deployment:emission-experience` | Publish the wall in force, the emission-fraction distribution, exported mass, and community sag and fading-Actor observations against a declared experience envelope, with the declared response; no response silently changes the source-emission rule. |
+| `cond:deployment:controller-performance` | Publish the controller's response model, hypotheses, tested range, and tracking, steady-error, settling, and chatter observations, and calibrate $a$, $r$, $d$ within the published edition; a failed target prompts review, not margin escalation or a new controller input. |
+| `cond:deployment:standing-work` | Measure and publish, per accepted epoch and per trial set, the standing work against a declared scale and duration budget, including the load at which the duration target is missed. |
+| `cond:deployment:cadence-maturity` | Whenever the boundary triple changes, measure raw maturity drift and the resulting raw feed/bridge observations, and publish the adaptation window with evidence that cadence retargeting stays frozen throughout it. |
+
+**Deployment evidence publication (`post:deployment:calibration-evidence`).**
+Each required calibration publishes its inputs or acquisition procedure,
+formula and implementation editions, workload, comparison method,
+acceptance criteria declared before evaluation, results, and limitations; a
+failed criterion is reported with its disposition.
+
+| Condition | Duty |
+|---|---|
+| `cond:deployment:parameter-comparisons` | For a proposed change to tilt, depth, domain weights, self-retention, bleed, inverse temperature, or the floor/numéraire/controller declaration, publish baseline and candidate inputs, affected derived quantities, and comparison criteria, and regenerate the affected proof and fixture evidence. |
+| `cond:deployment:payload-cache-envelope` | Publish the payload cap, encoding and indexing overhead, device/cache budget, traversal depth, workload, and retention horizon used for capacity sizing, and reject a cap/workload combination that exceeds the declared cache budget. |
+| `cond:deployment:boundary-search-evidence` | Publish boundary-search trial counts and elapsed-time envelopes with their hardware, arithmetic, residual target, and timeout/fallback settings, and show that any adopted exact reuse yields the same certified outputs as complete validation on the declared comparison inputs. |
+| `cond:deployment:terminal-regression` | For a standing-edition change, publish regression inputs and deltas for each terminal consumer that reads standing, with its declared tolerance and response to a failed criterion. |
+| `cond:deployment:complete-act-conformance` | Publish compiler/replay evidence covering parallel acts, complete-act identity, fold cells, recipient resolution, domain profiles, and base allocation, and reproduce the accepted-act census under projection completeness. |
 
 ---
 
@@ -3135,25 +3941,32 @@ objects live only in the boundary ledger** (§3).
 
 | Symbol | Definition | Ref |
 |---|---|---|
-| $B_i$ | The imported frame, fiber-wise: $B_i := B(\mathrm{key}(i))$ with $\mathrm{key}(i) \in \mathbb{A}$, the network's reading of the magnitude the burn primitive records as destroyed. Non-decreasing at sampling depth, publicly auditable, irrevocable — all properties of the primitive, none of the network's. **(interface·input)** | `def:comparator:imported-frame` |
-| $B_{\max}$ | Bootstrap capacity bound: the maximum aggregate frame value attainable before a realization opens to external acquisition of burn value; an interface constant the realization publishes (R9) and the network re-derives nowhere. **(interface·input)** | `def:comparator:bootstrap-capacity` |
+| $B_i$ | The imported frame, fiber-wise: $B_i := B(\mathrm{key}(i))$ with $\mathrm{key}(i) \in \mathbb{A}$, the network's reading of the magnitude the burn primitive records as destroyed. Non-decreasing at sampling depth, publicly auditable, irrevocable — all properties of the primitive, none of the network's. The epoch-$k$ instance is the marker burn snapshot $B^{(k)}$, read at the recognized final marker $m_k$. **(interface·input)** | `def:comparator:imported-frame`, `def:comparator:marker-burn-snapshot` |
+| $B_{\max}$ | Bootstrap capacity bound: a bound on aggregate frame amount attainable before a realization opens to external acquisition of burn amount; an interface constant the realization publishes (R9) and the network re-derives nowhere. If external acquisition is available from the start, the interval is empty and the published bound is zero; later burn amount is not capped by that zero. **(interface·input)** | `def:comparator:bootstrap-capacity` |
 | $q$ (act) | Authored act: the atomic public record — unit of formation, admission, ordering, dependency declaration, action counting, θ-debit, and final-set authorship. | `def:graph:authored-act` |
 | $\mathrm{actid}(q)$ | Act identifier $\mathsf{act}(\mathrm{author}, s_q, \mathrm{family})$; no host time, no minted target; mints nodes as $\mathsf{mint}(\mathrm{actid}(q))$. | `def:graph:act-identifier` |
 | $\mathrm{edges}(q)$, roles | Edge projection of an act (one binary edge, or A + T); a projection owns only incidence, role, and rendering. | `def:graph:act-edge-projection` |
 | $\mathcal{Q}_k$ | Authoritative ordered authored-act sequence of epoch $k$; positions published; the agreed object. | `def:graph:authoritative-act-order` |
 | $E_k$, $\Delta E_k$ | Epoch snapshot edge set $E_{k-1} \cup \Delta E_k$; the record projection of $\mathcal{Q}_k$; substrate of all of $\mathcal{A}$. | `post:epoch:final-edge-set` |
-| $\mathbb{T}^{\text{act}}_q$ | Authoritative logical time: act-owned finalization metadata; the causal key is the pair $(\mathbb{T}^{\text{act}}_q, \mathrm{pos}_k(q))$. | `ax:graph:act-causality`, `def:graph:act-incidence-causality` |
+| $\mathbb{T}^{\text{act}}_q$ **(L1·verify)** | Recomputable logical-time summary: act-owned finalization metadata, the Lamport summary of the order of record; it carries no ordering authority. | `ax:graph:act-causality`, `def:graph:act-incidence-causality` |
+| $\Phi_k(q)$ | Key of record $(k, \mathrm{pos}_k(q))$, compared lexicographically across and within epochs; precedence $\prec$ reads it. | `def:graph:authoritative-act-order` |
+| $\mathrm{DepOK}_k(q)$ | Every declared dependency of $q$ lies in finalized history at a strictly lower key of record. | `cond:graph:authoritative-order-dependency-placement` |
 | $\prec$ (L1·closure), $\prec^*$ **(L1·verify)** | Authoritative-order precedence; identity-key refinement (audit tie-break only). | `def:graph:authoritative-act-order`, `def:epoch:log-position` |
-| $C^{\text{pre}}_q$, $V_q$, $\sigma^{\text{app}}_q$ | Proposal pre-commitment, host-sealed verified act, and approval witness of the admission handshake. | `def:graph:proposal-pre-commitment`, `def:graph:verified-act`, `def:graph:approval-witness` |
+| $C^{\text{pre}}_q$, $V_q$, $\sigma^{\text{app}}_q$ | Proposal pre-commitment, host-salted verified act, and approval witness of the admission handshake. | `def:graph:proposal-pre-commitment`, `def:graph:verified-act`, `def:graph:approval-witness` |
 | $\mathrm{deps}(q)$, dependency commitment | Actor-authored removable dependency projection and its retained binding commitment; tombstonable, reopenable for fraud proof **(L1·verify** when opened**)**. | `def:graph:act-dependency-projection`, `def:graph:ordering-fraud-proof` |
 | $\nu$ | Numéraire: burn units per action-credit, the sole join between the burn units the primitive records in and the action economy (applied per act by the θ-debit); bond-kernel denominator. Structural; moving it is a migration event. | `def:comparator:numeraire` |
 | $\rho_{\text{pol}}$ | Policy floor: the host's dimensionless gate-axis dial; announced at $k$, effective at $k+1$; valid iff $\rho_{\text{pol}}\nu \ge \theta$. Canonical default $1$. | `def:epoch:policy-floor` |
-| $\theta$ | Safety threshold (burn units per action): the minimum burn value behind a write the coupled dynamics tolerate. Algorithmic per-epoch output (X1–X7), one-boundary lead; never a host input. | `def:epoch:safety-threshold` |
-| $\rho_\theta$, $\rho_{\text{eff}}$ | Safety floor $\theta/\nu$ (the wall: W2a, the activation-clamp key, the fence pin) and effective floor $\max(\rho_{\text{pol}}, \rho_\theta)$ (the door: W2b, the per-act door benchmark). | `def:epoch:safety-floor`, `def:epoch:participation-floor` |
-| $m_\theta$ | Chartered margin factor $5/4$: contraction-certificate margin (a rung certifies iff $m_\theta\,\mathcal{K}_k \le 1$), fence slack, escalation clause. | `def:epoch:safety-threshold` |
+| $\theta$ | Safety threshold (burn units per action): the safety wall's burn image $\theta = \nu\rho_\theta$, published with one-boundary lead under X1–X9; algorithmic per-epoch output, never a host input. | `def:epoch:safety-threshold` |
+| $\rho_\theta$, $\rho_{\text{eff}}$ | Safety wall $\theta/\nu$ (W2a's comparator, the below-wall activation-clamp key, and the published reduced position parameterizing the epoch's certificate; $\rho_\theta \ge \rho_{\theta,\min}$) and effective floor $\max(\rho_{\text{pol}}, \rho_\theta)$ (the door: W2b, the per-act door benchmark). | `def:epoch:safety-wall`, `def:epoch:participation-floor` |
+| $\rho^*$, $\rho_{\theta,\min}$ | Exact reduced ridge $p^*/(1-p^*)$, defined by the unique clean-elasticity maximum and certified by enclosure; and the declared structural wall floor, the deployment's fixed public declaration from $\{\rho^*, 3/37\}$ before its first epoch, beside $\nu$ — a change is public and structural, with regenerated evidence. | `def:epoch:safety-wall-floor` |
+| $C_\Gamma$ | Wall controller: the published reduced map, with formula and constant edition $\Gamma$, from the previous wall, completed-epoch width, and accepted rung to the led wall; its proposal and delivered output are public; no prior standing vector or $\nu$ is an input. | `def:epoch:wall-controller` |
+| $a$, $r$, $d$ | The controller's absolute reduced step, relative step (a fraction of the wall in force), and relative deadband, applied before the step cap. | `def:epoch:canonical-interim-wall-controller` |
+| $m_\theta$ | Published margin factor, chartered $5/4$ and carried in the constants ledger: the certificate margin (a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$), the fence slack $1 - 1/m_\theta$, and the controller target $q(W)$. | `def:epoch:safety-threshold` |
 | $\beta$, $\eta$ | Inverse temperature $2\ln 2 \approx 1.386$; bleed $0.05$ — binding (both enter the deployed core $Q$). | `ax:epoch:thermodynamic-boundary`, `def:graph:path-view-extraction` |
 | $N_{\text{epoch}}$ | Epoch **target** act budget, denominated in accepted authored acts. | `def:epoch:epoch-act-budget` |
-| $\delta_{\text{pos}}$ | Burn-snapshot buffer (settlement-stability depth), chosen to exceed the settlement depth a realization publishes (R4(e)) so the frame is sampled settled; buffers the burn snapshot, not membership. | `post:epoch:final-edge-set` |
+| burn accumulator | A record of the realization's history carrying or accumulating burn and extending the settlement lineage; appending one is open to any party. | `def:comparator:burn-accumulator` |
+| $m_k$ | Epoch marker: the burn accumulator the deployment's published marker policy recognizes by its form as epoch $k$'s, bound by closed epoch $k$ one-to-one and in order (M5); $m_0$ names the empty initial boundary, and an unclosed recognized marker is pending. | `def:comparator:epoch-marker`, `cond:comparator:marker-epoch-registration` |
+| $\delta_{\text{pos}}$ | Snapshot buffer (settlement-stability depth), chosen to exceed the settlement depth a realization publishes (R4(e)) so the weld reads the recognized final marker, its lineage, and its fixed accepted view under the published finality assumptions; edge membership is the closure rule's. | `post:epoch:final-edge-set` |
 | $M_{\text{payload}}$ | Maximum payload byte length **per act** (aggregate over a hyper-edge's projections); the structural bound is L1·closure, payload bytes terminal. | `def:graph:act-payload-projection` |
 | $L_{\text{hop}}$, $\gamma$ | Chartered transport depth 4, in hops of the conserved transport; and the chartered activation exponent $1/4$, which is deliberately not routed through it. | `def:epoch:standing-depth-mass`, `def:epoch:responsive-vouch-activation` |
 
@@ -3171,7 +3984,7 @@ objects live only in the boundary ledger** (§3).
 | Symbol | Definition | Ref |
 |---|---|---|
 | $\alpha_i$ | Final epoch standing: the comparator realized on the graph, gauge fixed by the neutral source; the conserved equilibrium coordinate = the exact post-debit balance/count mediant under the conserved transport. Binding where the gate reads it (through the stamps); terminal read-sites read it downstream per the ledger. Bounded in the contributing-rate hull. Enters the raw Self-edge reading via $p_i = \alpha_i/(\nu+\alpha_i)$. | `def:epoch:final-standing` |
-| $\mathrm{owner}^{(k)}$ | Title certificate $\text{Items} \to V_u \cup \{\varnothing\}$; recognition reads it, terminal services may read it. | `def:graph:title-certificate` |
+| $\mathrm{owner}^{(k)}$ | Title certificate $\text{Items} \to V_u \cup \{\varnothing\}$: a recomputable summary of the partition, where disagreement is a title-certificate fault; recognition reads it, terminal services may read it. | `def:graph:title-certificate`, `def:graph:title-certificate-fault` |
 
 "The only straddlers are $\alpha_i$ and $\mathrm{owner}^{(k)}$." The standing
 package's intermediate values are binding but not straddlers (§2).
@@ -3185,9 +3998,9 @@ package's intermediate values are binding but not straddlers (§2).
 | $b_i$ | Residual balance $B_i - \sum_a \theta^{(k_a)}$ (imported frame net of consummated per-act debits, each vintage-frozen); numerator of $r_i$ and the object of W1. | `def:comparator:residual-balance` |
 | $b_i^{(k)}, N_i^{(k)}$ | Proposed final post-debit pairs of the completed tentative state — the standing inputs. | `def:epoch:proposed-final-act-state` |
 | $\bar{p}_d, \bar{p}_i$ | Net stance of a same-author full-incidence bundle: sum-then-clip to $[-1,1]$; standing projection only. | `def:epoch:net-stance` |
-| $\xi$, $\mathcal{R}_k$, $c(\xi)$ | Standing fold cell (one accepted Actor-authored act folded with its full-incidence bundle), the epoch's eligible cell set, and the cell's total effective coefficient — the geometric mean of the **magnitudes** of its mandatory folded coordinates, in $[0,1]$. | `def:epoch:standing-fold-cell`, `def:epoch:effective-act-contribution` |
+| $\xi$, $\mathcal{R}_k$, $c(\xi)$ | Standing fold cell (for families eligible for net stance, the equivalence class of accepted Actor-authored acts with equal author, family, source, target, and full incidence; each aggregation-excluded act is a singleton cell), the epoch's eligible cell set, and the cell's total effective coefficient — one per cell, never one per member — the geometric mean of the **magnitudes** of its mandatory folded coordinates, in $[0,1]$. | `def:epoch:standing-fold-cell`, `def:epoch:effective-act-contribution` |
 | recipient resolution | Published order-free operator sending each cell to a person recipient or to the author's self-retention channel; strictly positive coordinates, author ownership, live consent, and an anchored person target are what send it outward. Every cell is weighed either way; no glyph. | `def:epoch:standing-recipient-resolution`, `post:epoch:universal-act-weighing` |
-| inviter revocation | Per-author suppression predicate for Invitation acts when the latest epoch index in the same-incidence record set contains a De-invite; no glyph. | `def:epoch:inviter-revocation` |
+| vouch withdrawal | Per-author netting of signed mandatory coordinates, order-free, no tie rule, priced: a cancelling Opinion, Reference, or Invitation nets its author's bundle — for an Invitation, $(-u, -f)$ nets it to $(0, 0)$ — which fails the strictly-positive gate and resolves home at coefficient zero. A De-invite withdraws nothing: it allocates nothing outward and leaves its author's Invitation bundle unchanged, but stays a priced act weighed at self at coefficient 1. No glyph. | `lem:epoch:authored-vouch-withdrawable` |
 | control-act class | Withdraw, Rescind, Leave, De-invite/A·T: type-fixed records, weighed and priced, always resolving to their author. | `rem:epoch:control-acts-resolve-to-self` |
 | $\mathsf{A}_{uj}$, $\kappa_{\text{self}}$, $\omega_D$, $\delta_D(\xi)$ | Base allocation matrix over the anchored Actors — the sole standing-relevant reading of the epoch's acts — with the self-retention base, the published domain weights, and the act-level domain profile. | `def:epoch:domain-weighted-base-allocation`, `def:epoch:standing-domain-profile` |
 | $g_{\text{vch}}(x)$, $\bar{g}_{\text{vch}}(x)$ | Responsive activation $\big(Q(p(x))/Q(1)\big)^{1/4}$ and its safety-wall clamp $g_{\text{vch}}(\max(x, \rho_\theta))$ — the sole standing activation; below-wall constant, zero derivative. | `def:epoch:responsive-vouch-activation`, `def:epoch:safety-wall-clamped-activation` |
@@ -3197,20 +4010,20 @@ package's intermediate values are binding but not straddlers (§2).
 | $\mathfrak{e}_u$, $\mathfrak{E}$ | Source emission fraction $\min(1, \hat{r}_u/\rho_\theta)$ and its diagonal: history travels on the back of balance; a property of the source's pair, never of one relation. | `def:epoch:source-emission` |
 | $\boldsymbol{\Pi}(\boldsymbol{x})$, $\Pi_{ui}$, $\tilde{b}_i$, $\tilde{N}_i$ | Conserved transport — emission applied once to the depth-mass mixture of hop products — its entries, and the transported pair mass. Sole relational input to standing; every row sums to one. | `def:epoch:finite-depth-conserved-transport`, `post:epoch:standing-pair-mass-conservation` |
 | $\boldsymbol{x}^*$, $\mathcal{B}_k$ | The epoch's unique conserved equilibrium and the rate-hull box it is solved on, known before the solve begins. | `def:epoch:conserved-standing-equilibrium`, `prop:epoch:final-standing-hull` |
-| $\mathcal{K}_k$ | Conserved standing certificate; a rung is accepted iff $m_\theta\,\mathcal{K}_k \le 1$, and its verdict distinguishes certificate failure from indecisive enclosure. | `def:dynamics:conserved-standing-certificate` |
+| $\mathcal{K}_k$ | Conserved standing certificate; a rung passes iff $m_\theta\,\mathcal{K}_k \le 1$, the accepted rung is the greatest one the declared procedure proves passing, and the verdict distinguishes certificate failure from indecisive enclosure. | `def:dynamics:conserved-standing-certificate` |
 | $\rho_{\text{act}}(q)$, $\rho_{\text{ep}}^{(k)}$ | Final act stamp (act-owned reduced final standing) and act-weighted epoch stamp. | `def:epoch:final-act-stamps` |
-| $W^+(v), W^-(v)$ | Raw double-cover parity registers — terminal raw-service state, read by no standing quantity. | `def:epoch:double-cover-bfs-state` |
+| $W^+(v), W^-(v)$ | Raw double-cover output registers: the maximum positive- and negative-parity path products to $v$ over paths simple in the raw snapshot, summarizing the enumerated path prefixes (which, not the registers, are the extension state) — terminal raw-service outputs, read by no standing quantity. | `def:epoch:double-cover-bfs-state` |
 | $\mathrm{pos}(e)$ **(L1·verify)** | Audit position under the identity-key linearization; consumed by no formula. | `def:epoch:log-position` |
 | ownership thread, Item genesis | Boundary-indexed title chain; declarative genesis act minting the Item's identity. | `def:graph:ownership-thread`, `def:graph:item-genesis-act` |
 | set price | Average member-author raw rate over a dependent set at the closing burn snapshot; consumed by the closure rule and nothing else — averaging can clear the door, never mask a member below $\theta$. | `post:epoch:final-act-sequence-write-rule` |
 | $W_k$ regime | Binding iff $|\mathcal{Q}_k| = N_{\text{epoch}}$, else slack; boundary-side data, quarantined from $\nu$-side formulas. | `post:epoch:final-act-sequence-closure` |
 | door headroom $H_k$ | $\sum_i \Delta N_i^{(k)}(\hat{\alpha}_i^{(k)} - \rho_{\text{eff}})$: epoch stamp surplus over the door; congestion diagnostic **(L1·verify)**, no actuator. | `eq:epoch:final-epoch-headroom` |
-| $W_{\text{loc}}$ | Local width: the width-fence input of the safety-threshold rule. | `subsec:epoch:floor-governance` |
+| $W_{\text{loc}}$ | Binding local contributing width: the maximum over live target rows of the additive width of the admitted source-rate set; it feeds the current epoch's certificate and, separately, the next-wall controller. | `def:dynamics:local-width` |
 | settlement references | Act-identity references $\mathrm{settles}$ / $\mathrm{accepts}$ (Accept/Ratify → Bid/Accept acts); metadata, not incidence; forced causal parents. | `def:graph:settlement-act-reference` |
 | Accept / Ratify | Direct Actor-to-Actor settlement consent (non-binding alone) / commit; Relational, promoted, Half tier; resolves to the counterparty only when title-transferring under the epoch title fold. | `edge:nodes:accept`, `edge:nodes:ratify` |
 | Withdraw / Rescind / Leave / De-invite | Control records; Minimal, Marginal, forced $+1$; weighed and priced, always resolving home. | §9 |
 | $\tau^*$ | Maturity crossover $\approx 0.94$ (raw channel). | `prop:epoch:crossover-location` |
-| Dynamics machinery **(certificates (L1·closure); interval evidence (L1·verify); the rest (—) shared dynamics)** | Activation properties (`prop:dynamics:responsive-vouch-activation-bound`, `-monotonicity`, `-concavity`), the wall clamp (`prop:dynamics:safety-wall-clamp`), hull invariance without a certificate (`thm:dynamics:conserved-standing-existence`), certified uniqueness and geometric convergence (`thm:dynamics:certified-conserved-standing-uniqueness`, `thm:dynamics:within-epoch-fixed-point-convergence`), initialization independence (`cor:dynamics:standing-initialization-independence`, `rem:dynamics:warm-start-independence`), the standing map-shock bound (`prop:dynamics:standing-map-shock-bound`). The earlier orbit/bifurcation apparatus is quarantined as non-normative rederivation obligations (`subsec:dynamics:quarantined-residuals`). | `app:dynamics` |
+| Dynamics machinery **(certificates (L1·closure); interval evidence (L1·verify); the rest (—) shared dynamics)** | Activation properties (`prop:dynamics:responsive-vouch-activation-bound`, `-monotonicity`, `-concavity`), the wall clamp (`prop:dynamics:safety-wall-clamp`), hull invariance without a certificate (`thm:dynamics:conserved-standing-existence`), certified uniqueness and geometric convergence (`thm:dynamics:certified-conserved-standing-uniqueness`, `thm:dynamics:within-epoch-fixed-point-convergence`), initialization independence (`cor:dynamics:standing-initialization-independence`, `rem:dynamics:warm-start-independence`), the standing map-shock bound (`prop:dynamics:standing-map-shock-bound`). The oscillator, onset, and drift apparatus is quarantined from the normative dynamics of the conserved map; its onset classifications are not results about that map (`subsec:dynamics:quarantined-apparatus-scope`). | `app:dynamics` |
 
 ### 14.5 Terminal objects (full paper only)
 
@@ -3243,11 +4056,16 @@ $H_\tau$ temporal entropy (`def:graph:temporal-entropy`) ·
 $|\det \boldsymbol{\Psi}_e^{[P]}|^{1/2}$ determinant score ·
 $\psi_\pm, \psi_+, \sigma_{\text{sig}}$ clamps (`def:graph:sentiment-slice`) ·
 $\mathrm{clip}_{[-1,1]}$ (net-stance fold) · $\mathrm{sat}(x) = x/(1+x)$
-(the Möbius map shared by bond kernel and CAN saturation) — tag-exempt
-operators. **Not shared mathematics:** the parity bits $\epsilon(e)$ and
+(the Möbius map shared by bond kernel and CAN saturation) ·
+$\lambda_{\text{vch}}(x)$, the exact deployed per-hop reduced-standing
+log-gain of the activation ($G$ of the wall controller, §11.8;
+`def:dynamics:tilt-gain-coordinates`) · $\lambda_Q(x)$, the clean
+full-depth gain envelope that screens every active maximizing path through
+at most $L_{\text{hop}}$ hops and is not the exact per-hop gain
+(`prop:dynamics:clean-gain-domination`) — tag-exempt operators. **Not shared mathematics:** the parity bits $\epsilon(e)$ and
 $\epsilon(p)$ and the raw damped weight $\tilde{w}(e)$ are terminal-default
-raw formulas (§3); the act time $\mathbb{T}^{\text{act}}_q$ is closure; the
-maturity scalar $\tau_e$ is terminal (raw channel only); the activations
+raw formulas (§3); the act time $\mathbb{T}^{\text{act}}_q$ is a
+recomputable L1·verify summary; the maturity scalar $\tau_e$ is terminal (raw channel only); the activations
 $g_{\text{vch}}, \bar{g}_{\text{vch}}$ are closure.
 
 ### 14.7 Vocabulary disambiguation (from the collision registers)
@@ -3260,10 +4078,13 @@ Word register (closure edition symbol index, *Word Collisions*):
   projections, one payload, one debit, one stamp, one time.
 - **floor** — distinct objects, one word, never an edge-claim: the
   numéraire $\nu$ (Layer 1 burn-unit→action join) | the policy floor
-  $\rho_{\text{pol}}$, the safety floor $\rho_\theta = \theta/\nu$ (the wall),
-  the effective floor $\rho_{\text{eff}} = \max(\rho_{\text{pol}}, \rho_\theta)$
-  (the door) | the safety price $\theta$ | "through the floor" (the binding
-  axiom). Never a redemption floor of a realization's own economy — a
+  $\rho_{\text{pol}}$, the safety wall $\rho_\theta = \theta/\nu$, the
+  effective floor $\rho_{\text{eff}} = \max(\rho_{\text{pol}}, \rho_\theta)$
+  (the door) | the declared structural wall floor
+  $\rho_{\theta,\min} \in \{\rho^*, 3/37\}$, distinct from the wall in force
+  and from the width-dependent clean-screen diagnostic $\rho_{\theta,\min}(W)$
+  (always written with its width) | the safety price $\theta$ | "through the
+  floor" (the binding axiom). Never a redemption floor of a realization's own economy — a
   distinct object the network never reads
   (`rem:comparator:surface-readings`). Never conflate the price axis ($\nu$,
   $\theta$) with the position axis ($\rho_{\text{pol}}, \rho_\theta,
@@ -3305,14 +4126,14 @@ Word register (closure edition symbol index, *Word Collisions*):
   gone; no glyph.
 
 Glyph register highlights:
-$\epsilon \in \{+1,-1\}$ (parity) — the pre-Edition-4 collision partner
-$\epsilon_{\text{clip}}$ is deleted · $N_i$ vs $N_{\text{epoch}}$ ·
+$N_i$ vs $N_{\text{epoch}}$ ·
 $\mathbb{T}^{\text{act}}_q$ (act time) vs $\mathbb{T}_{\partial k}$
 (boundary slot of derived readings) vs $\mathrm{pos}(e)$ (audit
 coordinate) · $x$ is reserved for reduced standing · $g_{\text{vch}}$
 (activation) vs $g$ (Bid generosity) · $\Pi_{ui}$ (transport entry) vs
 $W_{\text{loc}}$ (local width) · $\mathfrak{m}_m$ (depth mass) vs $m_\theta$
-(margin factor) vs $m^*$ (supported depth) ·
+(margin factor) vs $m^*$ (supported depth) vs $m_k$ (epoch marker; an
+epoch's act count is written $|\mathcal{Q}_k|$) ·
 $L_{\text{hop}}$ (transport) vs $L$/$L_{\text{feed}}$ (raw) · index $a$
 (an opaque address in $\mathbb{A}$ vs actor label after frame binding) ·
 $B_{\max}$ vs $B_i$ ("max" subscript). **Full

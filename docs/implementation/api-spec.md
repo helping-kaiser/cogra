@@ -299,6 +299,23 @@ ceiling. Both postures carry the *same* ceilings: a looser dev
 budget stops being a preview of release, and a document refused
 only in production is the failure this rule exists to prevent.
 
+**The request body is bounded before the parse.** A `/graphql`
+body that is not a multipart upload is at most **320 KiB**,
+measured the same way. The longest operation either client sends
+is about 6 KB with its fragments; the widest content gesture is a
+media post at every text cap — 10 740 characters, at most six
+bytes each once JSON-encoded — at about 75 KB; and the widest
+request of all is a relay carrying the longest batch one prepare
+can stage under the shipped signing budget ("A list is bounded by
+the longest batch"), a thousand entries at about 210 bytes each.
+320 KiB is the smallest multiple of 64 KiB above 1.5× that relay,
+and a standing test re-measures both requests against it. A multipart upload answers to the media transport's own
+ceiling instead (twice the larger upload cap, under "Content
+authoring"). A body past its ceiling is refused at
+the HTTP layer with **413** and never reaches the GraphQL parse:
+a declared length is refused unread, an undeclared one is cut at
+the ceiling.
+
 **Introspection is disabled in release builds** — not secrecy
 (the repo is public; the contract travels as the checked-in
 `schema.graphql`, which both clients generate from) but
@@ -373,6 +390,8 @@ never by convenience:
   array with a stable `extensions.code`. The `message` is a
   developer-facing fallback; internal detail stays in the server log
   and never reaches the client, which sees only the `INTERNAL` code.
+  One refusal comes before GraphQL at all: a body past its ceiling
+  (see "Query budgets") answers HTTP 413, never a GraphQL response.
 - **Expected business failures** — a bad value or a rule rejection the
   end user should see and act on — are *data*, not transport errors:
   every mutation payload carries `userErrors: [UserError!]!`, each entry
@@ -3334,6 +3353,19 @@ These bind every mutation below.
   budget** — one unit per entry that funds a fresh address, none for
   an applicant already funded — in the same all-or-nothing charge,
   with the same refusal.
+- **A list is bounded by the longest batch.** `submitProposals`,
+  `approveActs` and `approveApplicants` carry at most as many
+  entries as one prepare can stage under the signing budget. A
+  batch is spent whole from its class's window and the daily
+  backstop, so the longest are the netting batches — a severance's
+  counter-records (the stance window), a reference withdrawal's
+  (the claim window) — and an approval batch (the approval
+  window); every other prepare stages at most its minting record
+  with ten tags and ten citations. A longer list is refused whole,
+  `BAD_INPUT` on the list field, before any entry is read. An
+  application named twice in one approval batch is one vouch,
+  charged once; named twice with different stances, the repeat is
+  refused `BAD_INPUT` at its entry.
 - **The viewer is the actor; `actAs` names a Collective acting
   through them.** No mutation takes an author argument — the
   authenticated viewer in the execution context initiates every
@@ -4178,7 +4210,7 @@ input PrepareReferenceInput {
 }
 
 "Withdrawing one citation. Records are never deleted, and
- Reference withdrawal is per-leg net stance — not the Tag rule
+ Reference withdrawal is netting of the author's bundle — not the Tag rule
  beside it, which is a newest-wins (0, 0) only because a
  tag's confidence cannot be netted. Both citation parameters are
  signed, so a withdrawal is the severance shape: the counter-records
@@ -4753,8 +4785,7 @@ input PrepareChatLeaveInput {
  the payload. Prepared only for the chat authority the per-chat
  contract designates, and only against a passed
  decision:disavow_member proposal; the membership fold ignores
- anything else (a freelance De-invite merely revokes the author's
- own prior Invitation vouch)."
+ anything else."
 input PrepareDeInviteInput {
   chat: UUID!
   member: UUID!

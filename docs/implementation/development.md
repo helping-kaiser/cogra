@@ -49,7 +49,10 @@ behaves like the make targets; variables already set in the shell win
 over file values. A value with spaces is double-quoted: dotenvy stops
 reading at the first line it cannot parse, leaving every later variable
 unset, and the binary logs an error at startup naming that line's
-variable.
+variable. Every interval and timeout the API reads is a positive number of
+seconds (or milliseconds), and every age and lifetime a positive, finite
+one: zero, a negative value, `NaN` or `inf` refuses to start rather than
+breaking the loop or the bound it sets.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -68,7 +71,7 @@ variable.
 | `L1_EPOCH_CLOSE_INTERVAL_SECS` | *(unset)* | The stand-in's epoch clock: the API host closes an epoch on this interval, so writes land without a manual `l1-dev close`; unset, an epoch closes only on `l1-dev close` or at the stand-in's 10,000-act budget, so a small instance's writes wait indefinitely. Production on the stand-in sets it too ([deployment.md "Configuration"](deployment.md#configuration)) |
 | `STAGED_WRITE_GC_EPOCHS` | `8` | Epochs before an unlanded staged write is collected ([data-model.md "Staged writes"](data-model.md#staged-writes)) |
 | `L1_STANDIN_SETTLEMENT_DELAY_EPOCHS` | `0` | Epoch closes a stand-in admission burn waits before it settles; `0` settles at the request. Above zero it opens the pending window a real realization's settlement depth has — the applicant's Registration then reads `RELAYING` until the burn settles ([auth.md "Approval and landing"](auth.md#approval-and-landing)) |
-| `SESSION_SIGNING_SEED` | *(unset)* | 32-byte hex seed of the Ed25519 session-signing key ([auth.md](auth.md#tokens)); unset in dev, an ephemeral key is generated and sessions die with the process |
+| `SESSION_SIGNING_SEED` | *(unset)* | 32-byte hex seed of the Ed25519 session-signing key ([auth.md](auth.md#tokens)). A release build refuses to start without it; unset in a dev build, an ephemeral key is generated and sessions die with the process |
 | `DEV_MAILER_LOG` | *(unset)* | Dev mailer log file (`tmp_dev/mailer.log` in `.env.example`, gitignored): every outbound message is also appended there, so hand tests read out-of-band secrets from one file; unset, no file logging |
 | `MAILER` | `dev` | Outbound mail: `dev` logs every message and sends none; `smtp` delivers through `SMTP_URL` from `MAIL_FROM`, outside the request, and logs the recipient's domain and the subject but never the body. Any other value refuses to start, and so does `SMTP_URL` set while `MAILER` is `dev` |
 | `SMTP_URL` | *(unset)* | The SMTP server, in lettre's URL form `scheme://user:pass@host:port/ehlo-name?tls=…` with the user and password percent-encoded. `smtps://` is TLS from the first byte (default port 465), `smtp://…?tls=required` is STARTTLS or no session (587). `smtp://…?tls=opportunistic` (587) and bare `smtp://` (25) are refused with credentials, which would cross the link unencrypted. Certificates are checked against the OS trust store, so the host needs its CA bundle. A secret: it carries the provider's password, and the server never prints it |
@@ -123,18 +126,19 @@ variable.
 | `MEDIA_ORPHAN_MAX_AGE_SECS` | `86400` | How long an asset no parent references survives before the reaper collects it and its object |
 | `MEDIA_UPLOAD_PART_SIZE_BYTES` | `8388608` | How large a piece a resumable upload is cut into ([api-spec.md "Resuming a large upload"](api-spec.md#content-authoring)). Refused below 5 MiB, the floor S3 puts under every part but the last — a smaller cut would accept every part and then fail to assemble. It also decides what a blip costs: a dropped connection loses at most the part in flight |
 | `MEDIA_UPLOAD_SESSION_TTL_SECS` | `86400` | How long an unfinished upload survives before the media reaper aborts it and releases its parts. A day, matching `MEDIA_ORPHAN_MAX_AGE_SECS` — an upload nobody finished and an asset nobody attached are the same abandoned compose |
-| `MEDIA_FFMPEG` | `ffmpeg` | The ffmpeg the ingest worker drives — a name looked up on `PATH`, or a path. Probed once at startup for an H.264 and an AAC encoder, and for the HDR tone map's filters |
+| `MEDIA_FFMPEG` | `ffmpeg` | The ffmpeg the ingest worker drives — a name looked up on `PATH`, or a path. Probed once at startup for an H.264 and an AAC encoder, and for the HDR tone map's filters. It runs with `PATH` as its whole environment, reads its input through the `file` protocol alone, and stops writing one byte past the destination's video cap |
 | `MEDIA_TRANSCODE_TIMEOUT_SECS` | `1800` | The longest one re-encode may run before ffmpeg is killed and the job retried; a job is failed after its third attempt |
 | `MEDIA_INGEST_POLL_SECS` | `2` | How long an idle ingest worker waits before looking for a `processing` asset again. A worker that just settled one claims the next at once |
 | `MEDIA_INGEST_LEASE_SECS` | `60` | How long a worker's claim on a job holds without renewal; renewed every third of itself while the job runs. The most a crash delays the job that was in flight; a graceful stop hands it back at once. At least 3 |
 | `MEDIA_INGEST_WORKERS` | `1` | Ingest workers in this process. Each runs one ffmpeg at a time and ffmpeg spreads an encode over every core, so more only help once uploads queue behind each other |
+| `MEDIA_PROCESS_PERMITS` | `8` | Uploads held in memory for processing at once, process-wide; at least 1. An upload takes a permit once its bytes have fully arrived and holds it until its asset is stored, so a slow sender never holds one, and an upload with none free waits its turn. One upload in memory is at most twice the larger byte cap (200 MiB at the defaults), so eight bound upload processing at 1.6 GiB, a fifth of the API unit's 8 GiB memory limit |
 | `MEDIA_STALE_UPLOADS_EXPIRY` | `24h` | The store-side backstop, for the uploads a crash orphans before their session row exists (compose-only). MinIO implements it as a server setting, not as an S3 `AbortIncompleteMultipartUpload` lifecycle rule — it rejects such a rule — and the expiry matches the TTL above: the same abandoned upload, seen from both sides. Another store needs the lifecycle rule instead |
 | `MEDIA_STALE_UPLOADS_CLEANUP_INTERVAL` | `6h` | How often the store looks for them (compose-only) |
 | `RANKER_URL` | `http://localhost:8090/graphql` | The server ranker pod `feedRanking` relays to ([miner-api.md](miner-api.md)); ranking never runs in the API process |
 | `RANKER_TIMEOUT_MS` | `10000` | The bound on one relay call, the wait for an in-flight slot included; a slower pod answers `INTERNAL`. Provisional until the first warm round trip is measured |
 | `RANKER_MAX_IN_FLIGHT` | `8` | Concurrent pod calls at most; a call that gets no slot within the timeout answers `INTERNAL`. Provisional |
 | `BREACH_CHECK` | `hibp` | The password breach corpus ([auth.md "Password requirements"](auth.md#password-requirements)): `hibp` (live range API) or `off` (offline dev — no lookup) |
-| `CLIENT_IP_SOURCE` | `ConnectInfo` | Client-IP derivation ([auth.md "Rate limiting"](auth.md#rate-limiting)): `ConnectInfo` (socket peer) by default; `RightmostXForwardedFor` only behind a reverse proxy that is the sole ingress |
+| `CLIENT_IP_SOURCE` | `ConnectInfo` | Client-IP derivation ([auth.md "Rate limiting"](auth.md#rate-limiting)): `ConnectInfo` (socket peer) by default; `RightmostXForwardedFor` only behind a reverse proxy that is the sole ingress. Any other value refuses to start: every other source reads a header a client can set |
 | `GENESIS_HANDLE` | `genesis` | The Genesis Moderator's handle (`make bootstrap`) |
 | `GENESIS_DISPLAY_NAME` | `Genesis Moderator` | The Genesis Moderator's display name |
 | `GENESIS_EMAIL` | `genesis@cogra.local` | The operator login that reaches the genesis account |

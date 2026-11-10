@@ -102,21 +102,19 @@ downstream can revive a dead hop.
 ### 3.2 The fold — per-author net stance
 
 Before any weight is derived, the ranker folds the raw records.
-Same-author bundles — key **(author, target, edge type)** — net by
+Same-author bundles — key **(author, target, edge type)**, a
+hyper-edge's target being its full incidence (both legs' targets,
+as L1 folds, ``def:epoch:net-stance``) — net by
 sum-then-clip into one effective edge with parameters
 `(p̄_d, p̄_i)`, hyper-edge legs netted per-leg, temporal attributes
 taken from the bundle's `≺`-newest member. Excluded from folding,
 read per-record: the settlement handshake (Bid, Accept, Ratify).
-Control records never enter feed traversal at all (§4). An
-author's Invitation legs toward a `(Chat, Profile)` pair are
-suppressed iff the latest epoch index represented in that
-author's own {Invitation, De-invite} records with that incidence
-contains a De-invite — ties within an epoch favouring the
-revocation; a later complete Invitation at a subsequent epoch
-re-establishes the act. The rule is epoch-quantized, not
-order-read — L1's inviter-revocation rule
-(``def:epoch:inviter-revocation``), adopted as the fold's rule
-here.
+Control records never enter feed traversal at all (§4). One
+exception to per-leg netting: an Invitation's T-leg is inert
+whenever the same author's A-leg bundle toward that
+`(Chat, Profile)` is inert — netted to zero on either parameter
+(§3.1). The T-leg's relevance lies in `[0, 1]` and cannot be
+netted, and reach and attribution stand or fall together (below).
 
 This mirrors L1's net-stance fold (``def:epoch:net-stance``;
 [layer1-interface.md §11.3](layer1-interface.md#113-act-folding-and-the-base-allocation-matrix))
@@ -174,7 +172,7 @@ orders each bundle for the fold and anchors epoch age.
 | Family | Feed traversal |
 |---|---|
 | Opinion, Publish, Affinity, Owner, Join Request, Accept, Ratify | Traversable at the folded `w̃` (handshake edges per-record). |
-| Hyper-edges: Review, Send, Bid, Invitation, Participant | Traversable as their two legs — one hop each, each with its own leg parameters (``thm:graph:hyper-edge-reduction``). An **ordinary-role** Review's T-leg — a comment edit — is channel-gated (**Edit legs**, below), and so is a Participant's movement T-leg (**Chat lineages**, below); genesis legs are ordinary hops. |
+| Hyper-edges: Review, Send, Bid, Invitation, Participant | Traversable as their two legs — one hop each, each with its own leg parameters (``thm:graph:hyper-edge-reduction``). An **ordinary-role** Review's T-leg — a comment edit — is channel-gated (**Edit legs**, below), and so is a Participant's movement T-leg (**Chat lineages**, below); an Invitation's T-leg is inert while its author's A-leg bundle is (§3.2); genesis legs are ordinary hops. |
 | Reference | A-leg an ordinary hop; the citation T-leg is channel-gated (**References**, below) — not a free out-edge of the carrier. |
 | Tag | A-leg an ordinary hop; the topic T-leg is channel-gated exactly like a citation (**Tags**, below). |
 | Control records: Withdraw, Rescind, Leave, De-invite | **Never traversed.** They carry procedure, not stance (type-fixed parameters); routing feed signal along a De-invite would surface an expellee *because* they were expelled. Mirrors ``rem:epoch:control-acts-resolve-to-self``. |

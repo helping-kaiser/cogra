@@ -170,6 +170,31 @@ const META_BOXES: [&[u8; 4]; 3] = [b"udta", b"meta", b"uuid"];
 /// concerned.
 const CONTAINERS: [&[u8; 4]; 6] = [b"moov", b"trak", b"mdia", b"minf", b"stbl", b"edts"];
 
+/// How many [`CONTAINERS`] deep the strip walks before it refuses.
+///
+/// Five is the deepest these boxes nest in a movie: ISO/IEC 14496-12
+/// places `moov` at the top level, `trak` only in `moov`, `mdia` and
+/// `edts` only in `trak`, `minf` only in `mdia` and `stbl` only in
+/// `minf`, so `moov` → `trak` → `mdia` → `minf` → `stbl` is the longest
+/// chain, and everything inside `stbl` is a leaf to the strip. The bound
+/// exists because the walk recurses once per level and a box header is
+/// only eight bytes: an upload under the cap can nest millions of levels,
+/// which would run the thread out of stack and abort the whole process —
+/// a panic boundary does not catch a stack overflow.
+const MAX_CONTAINER_DEPTH: usize = 5;
+
+/// The depth one level inside a container at `depth`, refused past
+/// [`MAX_CONTAINER_DEPTH`].
+fn descend(depth: usize) -> Result<usize, MediaError> {
+    let inner = depth + 1;
+    if inner > MAX_CONTAINER_DEPTH {
+        return Err(MediaError::Malformed(
+            "containers nested deeper than a movie nests them",
+        ));
+    }
+    Ok(inner)
+}
+
 const CHUNK_OFFSET_32: &[u8; 4] = b"stco";
 const CHUNK_OFFSET_64: &[u8; 4] = b"co64";
 
@@ -242,18 +267,26 @@ fn boxes(bytes: &[u8], from: usize, to: usize) -> Result<Vec<BoxRef>, MediaError
 }
 
 /// Every metadata box in the tree, as absolute ranges in the original
-/// file. Containers are descended into; anything else is a leaf.
+/// file. Containers are descended into; anything else is a leaf. `depth`
+/// is how many containers enclose this run of boxes.
 fn metadata_ranges(
     bytes: &[u8],
     from: usize,
     to: usize,
+    depth: usize,
     out: &mut Vec<(usize, usize)>,
 ) -> Result<(), MediaError> {
     for item in boxes(bytes, from, to)? {
         if META_BOXES.contains(&&item.fourcc) {
             out.push((item.start, item.len));
         } else if CONTAINERS.contains(&&item.fourcc) {
-            metadata_ranges(bytes, item.start + item.header, item.start + item.len, out)?;
+            metadata_ranges(
+                bytes,
+                item.start + item.header,
+                item.start + item.len,
+                descend(depth)?,
+                out,
+            )?;
         }
     }
     Ok(())
@@ -284,7 +317,7 @@ fn shift_before(removals: &[(usize, usize)], position: u64) -> u64 {
 #[cfg(test)]
 fn carries_metadata(bytes: &[u8]) -> bool {
     let mut found = Vec::new();
-    metadata_ranges(bytes, 0, bytes.len(), &mut found).is_ok() && !found.is_empty()
+    metadata_ranges(bytes, 0, bytes.len(), 0, &mut found).is_ok() && !found.is_empty()
 }
 
 /// Rewrites the container without its metadata boxes.
@@ -310,14 +343,14 @@ fn carries_metadata(bytes: &[u8]) -> bool {
 /// ranges rather than as a single total.
 pub fn strip_metadata(bytes: &[u8]) -> Result<Vec<u8>, MediaError> {
     let mut removals = Vec::new();
-    metadata_ranges(bytes, 0, bytes.len(), &mut removals)?;
+    metadata_ranges(bytes, 0, bytes.len(), 0, &mut removals)?;
     if removals.is_empty() {
         return Ok(bytes.to_vec());
     }
     removals.sort_unstable();
 
     let mut out = Vec::with_capacity(bytes.len());
-    rewrite(bytes, 0, bytes.len(), &removals, &mut out)?;
+    rewrite(bytes, 0, bytes.len(), 0, &removals, &mut out)?;
     Ok(out)
 }
 
@@ -331,10 +364,17 @@ pub fn strip_metadata(bytes: &[u8]) -> Result<Vec<u8>, MediaError> {
 /// containers that looked unaffected is precisely the bug that leaves a
 /// file parsing perfectly and playing garbage. Only a true leaf is
 /// copied without being looked into.
+///
+/// `depth` counts the enclosing containers exactly as
+/// [`metadata_ranges`] does. The walk that collected the removals has
+/// already refused anything deeper, so the bound is never reached here;
+/// it is kept so that neither recursion leans on the other for its
+/// safety.
 fn rewrite(
     bytes: &[u8],
     from: usize,
     to: usize,
+    depth: usize,
     removals: &[(usize, usize)],
     out: &mut Vec<u8>,
 ) -> Result<(), MediaError> {
@@ -367,6 +407,7 @@ fn rewrite(
                 bytes,
                 item.start + item.header,
                 item.start + item.len,
+                descend(depth)?,
                 removals,
                 out,
             )?;
@@ -569,10 +610,30 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
     Ok(Probe {
         width,
         height,
-        duration_ms: Some(u64::try_from(mp4.duration().as_millis()).unwrap_or(u64::MAX)),
+        duration_ms: Some(duration_ms(mp4.moov.mvhd.duration, mp4.timescale())?),
         signal,
         audio_aac,
     })
+}
+
+/// The movie's duration in milliseconds, from the `mvhd` header's
+/// duration and timescale (ticks per second).
+///
+/// Computed here rather than through `Mp4Reader::duration`, which divides
+/// by the timescale unchecked: a header stating zero ticks per second
+/// would panic the probe, and one stating an absurd duration would
+/// overflow the multiplication. Both are refused as malformed — a movie
+/// that cannot say how long it is has nothing for this reader to report.
+fn duration_ms(duration: u64, timescale: u32) -> Result<u64, MediaError> {
+    if timescale == 0 {
+        return Err(MediaError::Malformed("the movie states no timescale"));
+    }
+    duration
+        .checked_mul(1000)
+        .map(|ticks| ticks / u64::from(timescale))
+        .ok_or(MediaError::Malformed(
+            "the movie states a duration past any clock",
+        ))
 }
 
 #[cfg(test)]
@@ -1033,6 +1094,93 @@ pub(crate) mod tests {
         let after = probe(&strip_metadata(&dirty).expect("a valid container"))
             .expect("the repaired file probes");
         assert_eq!(before, after, "the same movie, minus what named its author");
+    }
+
+    /// `depth` `moov` boxes, each the only child of the one before it.
+    fn nested_containers(depth: usize) -> Vec<u8> {
+        let mut out = Vec::with_capacity(depth * 8);
+        for level in 0..depth {
+            let size = u32::try_from((depth - level) * 8).expect("a chain that fits a box size");
+            out.extend_from_slice(&size.to_be_bytes());
+            out.extend_from_slice(b"moov");
+        }
+        out
+    }
+
+    /// One upload of nested containers costs eight bytes a level, so a
+    /// file well under the cap can ask the walk for a hundred thousand
+    /// levels. It is refused as malformed rather than followed down until
+    /// the thread's stack runs out and takes the process with it.
+    ///
+    /// A container nested deeper than any MP4 nests is refused as malformed rather than walked.
+    /// ´claim:media:a-deeply-nested-video-is-refused´
+    #[test]
+    fn a_container_chain_deeper_than_any_movie_is_refused() {
+        let deep = nested_containers(100_000);
+        assert!(matches!(
+            strip_metadata(&deep),
+            Err(MediaError::Malformed(_))
+        ));
+    }
+
+    /// Rewrites a fixture's `mvhd` timescale, the movie's ticks per second.
+    fn patch_movie_timescale(bytes: &[u8], timescale: u32) -> Vec<u8> {
+        let moov = boxes(bytes, 0, bytes.len())
+            .expect("a parseable box tree")
+            .into_iter()
+            .find(|item| &item.fourcc == b"moov")
+            .expect("a moov box");
+        let mvhd = boxes(bytes, moov.start + moov.header, moov.start + moov.len)
+            .expect("a parseable moov")
+            .into_iter()
+            .find(|item| &item.fourcc == b"mvhd")
+            .expect("an mvhd box");
+        let body = mvhd.start + mvhd.header;
+        assert_eq!(
+            bytes[body], 0,
+            "a version-0 mvhd: version/flags, creation and modification \
+             times, then the timescale"
+        );
+        let at = body + 4 + 4 + 4;
+        let mut out = bytes.to_vec();
+        out[at..at + 4].copy_from_slice(&timescale.to_be_bytes());
+        out
+    }
+
+    /// A movie stating zero ticks per second has no duration to read: it is
+    /// refused as malformed, never divided by.
+    ///
+    /// A movie whose header states a zero timescale is refused as malformed.
+    /// ´claim:media:a-zero-timescale-is-refused´
+    #[test]
+    fn a_zero_timescale_is_refused() {
+        let movie = movie(h264(1920, 1080), 2_500);
+        assert!(probe(&patch_movie_timescale(&movie, 1000)).is_ok());
+        assert!(matches!(
+            probe(&patch_movie_timescale(&movie, 0)),
+            Err(MediaError::Malformed(_))
+        ));
+    }
+
+    /// The deepest chain a movie carries — `moov` → `trak` → `mdia` →
+    /// `minf` → `stbl` — is walked as ever, and one container more inside
+    /// it is refused.
+    ///
+    /// The depth bound admits the deepest container chain a movie carries and nothing deeper.
+    /// ´claim:media:the-depth-bound-admits-every-movie´
+    #[test]
+    fn the_depth_bound_admits_the_deepest_real_chain() {
+        let (dirty, _) = located_movie(true);
+        assert!(strip_metadata(&dirty).is_ok(), "five levels are a movie");
+
+        let mut stbl = boxed(b"edts", &boxed(b"udta", b"x"));
+        for fourcc in [b"stbl", b"minf", b"mdia", b"trak", b"moov"] {
+            stbl = boxed(fourcc, &stbl);
+        }
+        assert!(
+            matches!(strip_metadata(&stbl), Err(MediaError::Malformed(_))),
+            "a sixth level is not"
+        );
     }
 
     /// A container without an H.264 video track is refused, whatever its

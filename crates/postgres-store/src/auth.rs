@@ -282,13 +282,13 @@ pub async fn revoke_invite_link(
 }
 
 /// Whether the link can stage a new applicant now: live, and — for a
-/// single-use link — its one slot not held by an application through it
-/// (invitations.md §4 "Link modes"). Applications carry no timer, so a
-/// waiting one holds the slot exactly as an approved, landed or rejected
-/// one does: account creation uses the link up, and only the reaper
-/// deleting a never-verified account frees it (auth.md "Expiry"). The
-/// one reckoning — registration, `inviteLinkCheck` and
-/// `InviteLink.usable` all read it here.
+/// single-use link — its one slot not yet used (invitations.md §4 "Link
+/// modes"). Account creation uses the link up for good (auth.md
+/// "Invite-link generation"), so the slot is the link's own `used_at`
+/// stamp, written by [`register_account`], rather than the application
+/// row: an applicant's deletion and the reaper both remove that row, and
+/// neither gives the slot back. The one reckoning — registration,
+/// `inviteLinkCheck` and `InviteLink.usable` all read it here.
 pub async fn invite_link_usable<'e>(
     executor: impl PgExecutor<'e>,
     id: Uuid,
@@ -299,10 +299,7 @@ pub async fn invite_link_usable<'e>(
                WHERE l.id = $1
                  AND l.revoked_at IS NULL
                  AND l.expires_at > NOW()
-                 AND (NOT l.single_use OR NOT EXISTS(
-                     SELECT 1 FROM auth_applications a
-                     WHERE a.invite_link_id = l.id
-                 ))
+                 AND (NOT l.single_use OR l.used_at IS NULL)
            ) AS "usable!""#,
         id,
     )
@@ -333,9 +330,10 @@ pub enum RegisterOutcome {
 ///
 /// The link row is locked for the transaction and its usability read
 /// again under the lock, so two registrations racing for one single-use
-/// slot queue there: the second reads the first's committed application
-/// and refuses (PostgreSQL "Explicit Locking", row-level locks under
-/// Read Committed).
+/// slot queue there: the second reads the first's committed `used_at`
+/// stamp and refuses (PostgreSQL "Explicit Locking", row-level locks
+/// under Read Committed). The stamp is the first registration's instant;
+/// a multi-use link keeps it too, as the time it was first used.
 #[allow(clippy::too_many_arguments)]
 pub async fn register_account(
     pool: &PgPool,
@@ -420,6 +418,12 @@ pub async fn register_account(
         application_id,
         account_id,
         issuer,
+        invite_link_id,
+    )
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query!(
+        "UPDATE auth_invite_links SET used_at = COALESCE(used_at, NOW()) WHERE id = $1",
         invite_link_id,
     )
     .execute(&mut *tx)
@@ -3023,13 +3027,10 @@ pub enum ApplicantDeletion {
 /// never deadlock. An approval that funds the account either commits
 /// first and is refused here, or waits and finds the account gone.
 ///
-/// Email and handle are freed with the account. The account's single-use
-/// invite slot is NOT meant to be: a single-use invite is consumed for
-/// good at account creation (jakob, round-3 ruling). Today
-/// [`invite_link_usable`] reads a vanished application row as a free
-/// slot, so this delete — like the reaper's — frees it as a side effect.
-/// Nothing here frees it on purpose; the link's own used-at stamp, read
-/// by that predicate, fixes both paths at once.
+/// Email and handle are freed with the account; its single-use invite
+/// slot is not: a single-use invite is consumed for good at account
+/// creation (jakob, round-3 ruling), and [`invite_link_usable`] reads the
+/// link's own `used_at` stamp, which outlives the account.
 pub async fn delete_applicant_account(
     pool: &PgPool,
     account_id: Uuid,
@@ -3185,6 +3186,18 @@ pub enum IssueLockOutcome {
     AtCap,
     /// The account is gone.
     NoAccount,
+}
+
+/// How many device locks the account holds — the count the live cap in
+/// [`issue_device_lock`] is held against, read before an issue spends its
+/// budget so a refusal at the cap spends none.
+pub async fn device_locks_held(pool: &PgPool, user_id: Uuid) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "held!" FROM auth_device_locks WHERE user_id = $1"#,
+        user_id,
+    )
+    .fetch_one(pool)
+    .await
 }
 
 /// Stores a fresh device lock (data-model.md `auth_device_locks`) under

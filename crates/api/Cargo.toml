@@ -40,6 +40,7 @@ tokio-util         = { workspace = true }
 axum               = { workspace = true }
 tower-http         = { workspace = true }
 http-body-util     = { workspace = true }
+mime               = { workspace = true }
 # `tempfile` is what makes an uploaded body spool to disk instead of
 # being buffered in memory: without it a concurrent burst of uploads is a
 # memory-exhaustion primitive rather than a queue of temporary files.

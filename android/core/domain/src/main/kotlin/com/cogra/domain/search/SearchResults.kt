@@ -49,8 +49,12 @@ sealed interface ResultDoor {
     /** Search-into-a-thread: the thread opens landed on the comment. */
     data class Comment(val postId: String, val commentId: String) : ResultDoor
 
-    /** Another person's profile; [own] is the reader's own (ExplorePerson.md:25). */
-    data class Person(val handle: String, val own: Boolean) : ResultDoor
+    /**
+     * A person's profile — the reader's own included (ExplorePerson.md:31),
+     * which opens in Explore's stack like anyone's: a screen belongs to the
+     * stack it was opened from, whatever its subject (BottomNav.prompt.md).
+     */
+    data class Person(val handle: String) : ResultDoor
 
     data class Topic(val name: String) : ResultDoor
 }
@@ -119,8 +123,6 @@ private fun SearchNode.section(): SearchSection = when (this) {
 /** What the layout reads its rows against. */
 data class ResultsContext(
     val query: String,
-    /** The signed-in reader's id; null for a guest. */
-    val reader: String?,
     val order: SearchOrder,
     val now: Instant,
     val zone: ZoneId = ZoneId.systemDefault(),
@@ -162,7 +164,7 @@ private fun SearchHit.row(position: Int, context: ResultsContext): ResultItem.Ro
             name = node.displayName?.takeIf { it.isNotBlank() } ?: "@${node.handle}",
             sub = ResultSub.Handle(node.handle),
             src = node.avatarUrl,
-            door = ResultDoor.Person(node.handle, own = context.reader != null && node.id == context.reader),
+            door = ResultDoor.Person(node.handle),
         )
         is SearchNode.Tag -> {
             val cue = cueOf(context.query)
