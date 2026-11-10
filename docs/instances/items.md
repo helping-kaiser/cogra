@@ -120,8 +120,9 @@ The consequences CoGra's UX must surface honestly:
 
 - **The regret window.** Consent is epoch-quantized: a Withdraw
   or Rescind co-epochal with (or earlier than) the Ratify defeats
-  the sale; one in a strictly later epoch is inert. Until the
-  boundary certificate, either side can still walk.
+  the sale; one in a strictly later epoch is inert. A cancel
+  counts only once written at or before the Ratify's finalization
+  boundary — submission alone guarantees nothing.
 - **Ties consume.** Conflicting co-epochal commits from one owner
   consume *all* candidates without transfer — the incumbent
   retains title, and the Item stays fully transferable at later
@@ -178,7 +179,7 @@ transfer is purely rail-side:
   before the Bid lands, and the Bid payload carries the escrow
   pointer — an offer is funded, willing capital, never a free
   option. Cancelling is the ordinary Withdraw — the offer dies
-  instantly on L1 — and the refund follows on the platform's
+  once the Withdraw is written — and the refund follows on the platform's
   next attestation sweep.
 - **Payment releases against the epoch certificate** in which
   the settlement is recognized and title-transferring — the
@@ -267,7 +268,7 @@ tradeable claim.
 ## What this doc is not
 
 - **Not the settlement spec.** The recognition predicate, the
-  title fold, order-freeness, and the frontier caveats live in
+  title fold, and order-freeness live in
   [layer1-interface.md §7.2](../primitive/layer1-interface.md#72-settlement-recognition).
 - **Not the marketplace rail.** Escrow shapes, the covenant, and
   transaction mechanics live in

@@ -4178,7 +4178,7 @@ input PrepareReferenceInput {
 }
 
 "Withdrawing one citation. Records are never deleted, and
- Reference withdrawal is per-leg net stance — not the Tag rule
+ Reference withdrawal is netting of the author's bundle — not the Tag rule
  beside it, which is a newest-wins (0, 0) only because a
  tag's confidence cannot be netted. Both citation parameters are
  signed, so a withdrawal is the severance shape: the counter-records
@@ -4753,8 +4753,7 @@ input PrepareChatLeaveInput {
  the payload. Prepared only for the chat authority the per-chat
  contract designates, and only against a passed
  decision:disavow_member proposal; the membership fold ignores
- anything else (a freelance De-invite merely revokes the author's
- own prior Invitation vouch)."
+ anything else."
 input PrepareDeInviteInput {
   chat: UUID!
   member: UUID!

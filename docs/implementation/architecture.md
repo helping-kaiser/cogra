@@ -357,7 +357,9 @@ failure: authentication gates the *service*, write standing gates
 the *graph* ([auth.md](auth.md)). The product surfaces the state
 and its restoration flow — an insolvent actor (W1) restores
 capacity immediately by committing burns; re-crossing the wall
-(W2a) takes new burns and admissible vouch-positive connections.
+(W2a) needs the recomputed standing to pass it, which neither new
+burns nor admissible vouch-positive connections guarantee
+(``thm:epoch:burn-response``).
 Who funds the debits is economics
 ([economics.md](../primitive/economics.md)).
 
