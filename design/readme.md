@@ -10790,6 +10790,53 @@ Every new string is in its board's docblock and copy-voice, *blessed
   registry grows **140 → 143 screens**, **5599 → 5775** board paths,
   **1689 → 1750** distinct.
 
+### Round 29, the review's first answers — 2026-11-10
+
+jakob's review of rounds 20–27 and his rulings on seam 254's drawn items,
+act 1: what was fully ruled.
+
+- **A commit never moves.** A state that adds lines above a foot scrolls
+  the fields under it, the post edits' reading: `CommentEditVideo`'s
+  gate had pushed `Sign the edit` 15px down, `ReplyVideo`'s refused
+  second clip pushed `Next` out of the frame, `ReplyMediaErrors`' five
+  refusals 10px down. Measured on every edit, compose, reply and seal
+  state: each commit now stands where its rest state puts it.
+- **A deleted holder's row on the post's opinions** is `ProfileStances`'
+  row: `postDetail.opinionsSheet.redactedOpinion`, keyed by the actor's
+  id — `opinion`'s rule names the handle, so it takes its own segment, as
+  `redactedRow` did — a door to `ProfileDeleted`, whose arrow reads
+  `Back to the post`. The ninth holder makes the post's count nine.
+- **The reply seal mirrors the post seal.** Its `tags` chip draws the
+  Tags row in both readings (the chips while they fit, `7 tags` and its
+  door), its `state` chip the two refusals: the unlanded citation's row
+  with `Remove it`, the commit staying, and `This shouldn't have
+  happened` in the commit's place with `Discard the reply`.
+  `ReplySeal.md` carries the post seal's lines at reply scale.
+- **A kept pick is drawn in reach.** `PostDetail`'s `key` and `review`
+  carry the page up 160px, `FeedScrolled`'s way; History and Saved are
+  tall boards and hold every pending line inside their frames.
+- **The stream lights its origin's root**; a shared link lights Feed, and
+  a tag page keeps the root it was opened from (*A stack is where a
+  screen was opened FROM*, `Reel.md`, `BottomNav`'s prompt).
+- **The profile's figures count bundles**: the people on each side, a
+  revision counted only inside one person's bundle (§7).
+- **The device's committed filter wins**: a newly saved default opens
+  only a feed with none committed (`FeedSheet.md`, `SettingsReading.md`).
+- **A words comment's edit takes a video** (backlog 148's (a)), as law in
+  `CommentEdit.md`; the staged line holds until the edit's video path
+  ships.
+- **The blessings.** Rounds 20–27's strings and calls are blessed (jakob
+  2026-11-10) but the words of Cancel while Set signs.
+- **Not settled here**: the seam's missing hairlines on `ExplorePerson`
+  draw at 1:1 and vanish only in a canvas zoomed below about half, a
+  raster's, not the board's; the reply seal's one-citation row (`Reference`,
+  its ×, no pair) against the post seal's name over its pair; how a words
+  comment's empty media block reads.
+- **The gate**: edges **2159 → 2166** (the reply seal's seven); flows hold
+  at **227**, none re-blessed. The registry holds at **143 screens**,
+  **5775 → 5781** board paths, **1750 → 1756** distinct
+  (`redactedOpinion` and its five parts).
+
 ---
 
 ## 14. The canvases
