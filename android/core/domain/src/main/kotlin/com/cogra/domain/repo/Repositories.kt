@@ -33,6 +33,8 @@ import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.references.ReferenceClaim
+import com.cogra.domain.stance.HeldOpinion
+import com.cogra.domain.stance.OpinionDirection
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceKind
 import com.cogra.domain.stance.StancePair
@@ -487,6 +489,13 @@ interface ProfileRepository {
      * counts, each labelled and never merged.
      */
     suspend fun figures(actorId: String): Outcome<ProfileFigures>
+
+    /**
+     * One direction of a person's opinions page (`ProfileStances`), read whole
+     * and folded: one row per person, strongest first (`foldHeldOpinions`).
+     * The figures count records; this lists people (open-questions Q35).
+     */
+    suspend fun opinions(actorId: String, direction: OpinionDirection): Outcome<List<HeldOpinion>>
 
     /**
      * The full intended field set — the edit form holds every field.

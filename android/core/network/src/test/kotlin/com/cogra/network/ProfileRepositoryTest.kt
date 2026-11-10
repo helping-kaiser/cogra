@@ -12,6 +12,7 @@ import com.cogra.domain.RecordAbout
 import com.cogra.domain.RecordAct
 import com.cogra.domain.RecordLink
 import com.cogra.domain.identity.EndLocalSession
+import com.cogra.domain.stance.OpinionDirection
 import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.auth.AuthGuard
@@ -131,5 +132,92 @@ class ProfileRepositoryTest {
         val sent = server.takeRequest().body.readUtf8()
         assertThat(sent).containsMatch("genesis:\\s*true")
         assertThat(sent).containsMatch("toKind:\\s*USER")
+    }
+
+    // -- The opinions page (ProfileStances): the whole set, folded to people --
+
+    private fun opinion(
+        id: String,
+        author: String,
+        target: String?,
+        d: Double,
+        i: Double,
+        epoch: Int,
+        person: String,
+        severed: Boolean = false,
+    ) = """{"node":{"__typename":"Record","id":"$id","authorId":"$author","targetId":${target?.let { "\"$it\"" } ?: "null"},
+        "pDirected":$d,"pInterest":$i,"severed":$severed,"payloadMarked":false,
+        "landingEpoch":$epoch,"actTime":0,"position":0,$person}}"""
+
+    private fun user(id: String, handle: String, name: String?, status: String = "NORMAL") =
+        """{"__typename":"User","id":"$id","handle":"$handle",
+           "displayName":{"__typename":"ModeratedText","value":${name?.let { "\"$it\"" } ?: "null"},"status":"$status"},
+           "avatar":null}"""
+
+    private fun onPage(edges: List<String>, next: String?) =
+        """{"data":{"user":{"__typename":"User","id":"u2","incomingRecords":{"__typename":"RecordConnection",
+           "edges":[${edges.joinToString(",")}],
+           "pageInfo":{"__typename":"PageInfo","hasNextPage":${next != null},"endCursor":${next?.let { "\"$it\"" } ?: "null"}}}}}}"""
+
+    @Test
+    fun theOnSetIsReadWholeAcrossPagesAndFoldedToOneRowPerAuthor() = runTest {
+        enqueue(
+            onPage(
+                listOf(
+                    opinion("r1", "a-ada", "u2", 0.4, 0.2, 1, "\"author\":${user("ada", "ada", "Ada Okonkwo")}"),
+                    opinion("r2", "a-kel", "u2", 0.1, 0.1, 1, "\"author\":${user("kel", "kel", null)}"),
+                ),
+                next = "c1",
+            ),
+        )
+        enqueue(
+            onPage(
+                listOf(
+                    // Ada's revision: a second record of the same bundle.
+                    opinion("r3", "a-ada", "u2", 0.3, 0.1, 2, "\"author\":${user("ada", "ada", "Ada Okonkwo")}"),
+                    // A deleted account keeps its row, its name gone, its handle the door.
+                    opinion("r4", "a-del", "u2", 0.2, 0.2, 2, "\"author\":${user("del", "gone", null, "REDACTED")}"),
+                ),
+                next = null,
+            ),
+        )
+
+        val rows = (repo().opinions("u2", OpinionDirection.ON) as Outcome.Success).value
+
+        assertThat(rows.map { it.holderId }).containsExactly("a-ada", "a-del", "a-kel").inOrder()
+        assertThat(rows[0].pair.pDirected).isEqualTo(0.7)
+        assertThat(rows[0].holder.displayName).isEqualTo("Ada Okonkwo")
+        assertThat(rows[1].holder.redacted).isTrue()
+        assertThat(rows[1].holder.handle).isEqualTo("gone")
+        assertThat(rows[1].holder.actorId).isEqualTo("del")
+        server.takeRequest()
+        assertThat(server.takeRequest().body.readUtf8()).containsMatch("\"after\"\\s*:\\s*\"c1\"")
+    }
+
+    @Test
+    fun theBySetRowsAreThePeopleItIsAbout() = runTest {
+        enqueue(
+            """{"data":{"user":{"__typename":"User","id":"u2","outgoingRecords":{"__typename":"RecordConnection",
+               "edges":[
+                 ${opinion("r1", "a-u2", "a-mira", 0.4, 0.5, 1, "\"target\":${user("mira", "mira", "Mira Voss")}")},
+                 ${opinion("r2", "a-u2", "a-x", -0.2, 0.1, 1, "\"target\":null")}
+               ],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}}""",
+        )
+
+        val rows = (repo().opinions("u2", OpinionDirection.BY) as Outcome.Success).value
+
+        assertThat(rows.map { it.holder.handle }).containsExactly("mira", null).inOrder()
+        // An address no account fronts keeps its row, named by that address.
+        assertThat(rows[1].holderId).isEqualTo("a-x")
+        assertThat(server.takeRequest().body.readUtf8()).containsMatch("toKind:\\s*USER")
+    }
+
+    @Test
+    fun aFailedPageFailsTheWholeRead() = runTest {
+        enqueue(onPage(listOf(opinion("r1", "a-ada", "u2", 0.4, 0.2, 1, "\"author\":${user("ada", "ada", null)}")), "c1"))
+        server.enqueue(MockResponse().setResponseCode(500))
+
+        assertThat(repo().opinions("u2", OpinionDirection.ON)).isInstanceOf(Outcome.Failed::class.java)
     }
 }
