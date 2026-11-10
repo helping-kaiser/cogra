@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { extractInviteId } from "@/lib/onboarding/invite-input";
+import { joinHref } from "@/lib/onboarding/join-origin";
 import { FormTextField } from "@/lib/ui2/form-fields";
 import { LinkRow, LinkStack } from "@/lib/ui2/link-stack";
 import { TaskPage } from "@/lib/ui2/task-page";
@@ -38,7 +39,7 @@ export function InviteEntry({ invalid = false }: { invalid?: boolean } = {}) {
       setMalformed(true);
       return;
     }
-    router.push(`/join/${id}`);
+    router.push(joinHref(id, "door"));
   };
 
   return (

@@ -5,6 +5,7 @@ import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
 import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
+import { renderToString } from "react-dom/server";
 
 import { createGuardedClient } from "@/lib/session/browser-guard";
 import { HiddenProvider } from "@/lib/hidden/provider";
@@ -28,8 +29,16 @@ export function renderWithProviders(
     writeSigner,
     stanceData,
     cache = new InMemoryCache(),
+    hydrate = false,
   }: {
     store?: TokenStore;
+    /**
+     * Arrive cold: server-render the tree, then hydrate it, as a reload or a
+     * shared link does. The first client commit then reads the session's
+     * server snapshot (`resolving`), not the store — the window a surface
+     * that waits for its reader must survive.
+     */
+    hydrate?: boolean;
     /**
      * The client's cache, for a test that needs what an earlier surface (the
      * feed) left in it before the first render. Fresh by default.
@@ -49,7 +58,7 @@ export function renderWithProviders(
     "http://localhost/graphql",
     (link) => new ApolloClient({ cache, link }),
   );
-  const result = render(
+  const tree = (
     <SessionProvider store={store}>
       <ApolloProvider client={client}>
         <AuthRuntimeProvider>
@@ -62,7 +71,10 @@ export function renderWithProviders(
           </RegistrationProvider>
         </AuthRuntimeProvider>
       </ApolloProvider>
-    </SessionProvider>,
+    </SessionProvider>
   );
-  return { store, client, ...result };
+  if (!hydrate) return { store, client, ...render(tree) };
+  const container = document.body.appendChild(document.createElement("div"));
+  container.innerHTML = renderToString(tree);
+  return { store, client, ...render(tree, { container, hydrate: true }) };
 }

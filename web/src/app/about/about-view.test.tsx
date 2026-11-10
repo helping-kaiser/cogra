@@ -66,4 +66,17 @@ describe("About CoGra", () => {
     render(<AboutView />);
     expect(screen.getByTestId("about.header.back")).toHaveAccessibleName("Back");
   });
+
+  // Join.md:23 — About's Back brings the form back, and the form keeps the
+  // way it was reached, so its own Back still leads where it did (:13, :15).
+  it("back_returns_to_the_join_form_it_was_opened_from_keeping_its_door", () => {
+    const id = "0198c9a2-1f6b-7c31-9d70-3a4f5b6c7d8e";
+    search = new URLSearchParams(`from=join&invite=${id}&door=1`);
+    const { unmount } = render(<AboutView />);
+    expect(screen.getByTestId("about.header.back")).toHaveAttribute("href", `/join/${id}?from=door`);
+    unmount();
+    search = new URLSearchParams(`from=join&invite=${id}`);
+    render(<AboutView />);
+    expect(screen.getByTestId("about.header.back")).toHaveAttribute("href", `/join/${id}`);
+  });
 });

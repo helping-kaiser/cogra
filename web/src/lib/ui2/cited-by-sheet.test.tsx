@@ -136,6 +136,16 @@ describe("CitedBySheet", () => {
     expect(screen.getByTestId("cited-by-sheet-row-1").className).toMatch(/\bpx-6\b/);
   });
 
+  // CitedBy draws the post's list at the raised class (88%) — the opinions
+  // lists' class (BottomSheet.prompt.md); the comment's, stacked over the
+  // thread, at the master's default (CommentCitedByEmpty, 62%).
+  it("takes the board's height class: raised on the detail, the default stacked over a thread", () => {
+    const { rerender } = render(<CitedBySheet open onClose={() => {}} artifacts={ARTIFACTS} />);
+    expect(screen.getByTestId("cited-by-sheet").style.maxHeight).toContain("88dvh");
+    rerender(<CitedBySheet open onClose={() => {}} artifacts={[]} stacked />);
+    expect(screen.getByTestId("cited-by-sheet").style.maxHeight).toContain("62dvh");
+  });
+
   it("takes the next tonal rung when it opens over another sheet", () => {
     const { rerender } = render(<CitedBySheet open onClose={() => {}} artifacts={ARTIFACTS} testId="flat" />);
     expect(screen.getByTestId("flat").className).toContain("bg-surface-container-high");
