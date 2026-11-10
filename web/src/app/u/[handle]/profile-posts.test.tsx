@@ -475,3 +475,44 @@ describe("ProfilePosts — the posts view (ProfilePosts.md)", () => {
     scroller.remove();
   });
 });
+
+// W-ORIGIN-CHAIN-U: someone's profile hands what it opens the origin it was
+// itself opened with (`u:ada/saved`; `back-origin.ts`, the chain), so the
+// post and the trace keep lit the root its stack began in, and their way back
+// returns to the profile as it was opened (BottomNav.prompt.md; readme §13).
+describe("the profile's doors carry the origin it was opened with", () => {
+  const from = (slot: HTMLElement) => new URL(slot.getAttribute("href") ?? "", "http://x").searchParams.get("from");
+
+  it("someones_profile_opened_from_saved_hands_its_posts_and_their_scores_that_origin", async () => {
+    serveAda();
+    serveChronicle();
+    servePosts({ "": { posts: [adas("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" from="saved" />);
+    await openPostsTab();
+    expect(screen.getByTestId("profile-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=u%3Aada%2Fsaved");
+    const score = screen.getByTestId(byNode("profile.posts.card.actionRow.score", "p1"));
+    expect(from(score)).toBe("u:ada/saved");
+    expect(traceBack(originOf(from(score)))).toEqual({ href: "/u/ada?from=saved", label: "Back to the profile" });
+  });
+
+  it("someones_profile_opened_with_no_origin_hands_none", async () => {
+    serveAda();
+    serveChronicle();
+    servePosts({ "": { posts: [adas("p1")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    await openPostsTab();
+    expect(screen.getByTestId("profile-post-p1-link")).toHaveAttribute("href", "/posts/p1?from=u%3Aada");
+  });
+
+  // W-REEL-OWN-BACK-NOUN (Reel.md:85; ProfilePosts.md:45).
+  it("your_own_profile_reached_by_handle_opens_a_stream_back_to_your_profile_in_its_stack", async () => {
+    server.use(meAs("u-ada", "ada"));
+    serveAda();
+    serveChronicle();
+    servePosts({ "": { posts: [adas("v1", "9:16")], next: null } });
+    renderWithProviders(<ProfileScreen handle="ada" from="search" />, { store: signedIn("u-ada") });
+    await openPostsTab();
+    fireEvent.click(screen.getByTestId("profile-post-v1-stream-link"));
+    expect(streamBack(heldStream()!.snapshot.origin)).toEqual({ href: "/u/ada?from=search", label: "Back to your profile" });
+  });
+});

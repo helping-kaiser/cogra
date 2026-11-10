@@ -1663,8 +1663,10 @@ CREATE INDEX auth_refresh_tokens_user_idx
 -- applicant slot) unless the inviter opens it to multi-use (many
 -- applicants stage through the same link until expiry — the queue
 -- scales, the vouching never does). A single-use link's slot is
--- used up by the account registered through it; rejecting that
--- application does not free it. Revocation sets revoked_at and
+-- used up by the account registered through it, for good: used_at
+-- stamps the first registration, and neither rejecting that
+-- application, nor deleting or reaping the account, frees it.
+-- Revocation sets revoked_at and
 -- stops new staging only: applications already staged stay
 -- approvable (auth.md "Invite-link generation").
 --
@@ -1677,7 +1679,8 @@ CREATE TABLE auth_invite_links (
     single_use   BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     expires_at   TIMESTAMPTZ  NOT NULL,
-    revoked_at   TIMESTAMPTZ
+    revoked_at   TIMESTAMPTZ,
+    used_at      TIMESTAMPTZ
 );
 CREATE INDEX auth_invite_links_inviter_idx
     ON auth_invite_links (inviter_id);

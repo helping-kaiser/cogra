@@ -247,6 +247,29 @@ async fn the_live_lock_cap_answers_rate_limited(pool: PgPool) {
     assert_eq!(lock_rows(&rig.pool, alice).await, 2);
 }
 
+/// A refusal at the cap stores nothing, its budget unit included: with a
+/// window of two and a cap of one, an issue, a refusal at the cap and a
+/// discard leave the second issue still to spend.
+///
+/// A refusal at the live-lock cap spends none of the account's issue budget.
+/// ´claim:custody:a-cap-refusal-spends-no-budget´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_refusal_at_the_cap_spends_no_issue_budget(pool: PgPool) {
+    let mut limits = RateLimitConfig::unlimited();
+    limits.device_lock_issue_account.limit = 2;
+    limits.device_lock_issue_account.window_secs = 3600.0;
+    limits.device_lock_live_cap = 1;
+    let rig = WireRig::new(pool, limits);
+    rig.seed_member("alice", "alice@example.com").await;
+    let token = rig.log_in("alice@example.com").await;
+
+    let first = issue(&rig, &token).await;
+    let refused = rig.gql_raw(Some(&token), ISSUE, json!({})).await;
+    assert_eq!(transport_code(&refused), Some("RATE_LIMITED"));
+    discard(&rig, &token, &first.id).await;
+    issue(&rig, &token).await;
+}
+
 /// The cap holds under a burst: issues racing at the cap's edge serialize
 /// on the account, so exactly the cap's worth land and the rest refuse.
 ///

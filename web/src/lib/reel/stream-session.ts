@@ -33,6 +33,8 @@
 import type { Outcome } from "@/lib/api/outcome";
 import type { PostView } from "@/lib/api/content-api";
 
+import { personHref, personOrigin } from "@/lib/ui/back-origin";
+
 import { isStreamClip } from "./stream-clip";
 
 /** Where the stream was opened from — what it narrows, and where back goes. */
@@ -51,9 +53,15 @@ export type StreamOrigin =
        * screen was opened FROM").
        */
       readonly from?: string | null;
+      /**
+       * Your own profile reached by its handle (`/u/<you>` — a feed chip, a
+       * search result), inside the stack it was opened in rather than at the
+       * Profile tab's root: the way back returns there, still naming it yours.
+       */
+      readonly byHandle?: boolean;
     };
 
-/** The way back, by the stream's noun table (Reel.md:79; readme §13, the nav-noun sweep). */
+/** The way back, by the stream's noun table (Reel.md:79, :85; readme §13, the nav-noun sweep). */
 export function streamBack(origin: StreamOrigin): { readonly href: string; readonly label: string } {
   switch (origin.kind) {
     case "feed":
@@ -63,12 +71,31 @@ export function streamBack(origin: StreamOrigin): { readonly href: string; reado
     case "history":
       return { href: "/history", label: "Back to History" };
     case "profile":
-      return origin.own
+      // "Back to the profile from another's posts and Back to your profile
+      // from the reader's own" (Reel.md:85) — wherever your own was reached.
+      return origin.own && origin.byHandle !== true
         ? { href: "/profile", label: "Back to your profile" }
         : {
-            href: `/u/${encodeURIComponent(origin.handle)}${origin.from ? `?from=${encodeURIComponent(origin.from)}` : ""}`,
-            label: "Back to the profile",
+            href: personHref(origin.handle, origin.from ?? null),
+            label: origin.own ? "Back to your profile" : "Back to the profile",
           };
+  }
+}
+
+/**
+ * The origin token of the list the stream narrowed — what a drill-in from that
+ * list carries as its `from` — or null for the feed's. The stream's doors chain
+ * it (`streamFrom`), and the shell's one table reads the lit root off it.
+ */
+export function streamOriginToken(origin: StreamOrigin): string | null {
+  switch (origin.kind) {
+    case "feed":
+      return null;
+    case "saved":
+    case "history":
+      return origin.kind;
+    case "profile":
+      return origin.own && origin.byHandle !== true ? "profile" : personOrigin(origin.handle, origin.from ?? null);
   }
 }
 

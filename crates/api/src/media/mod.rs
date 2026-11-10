@@ -392,11 +392,17 @@ impl MediaConfig {
                 "MEDIA_MAX_VIDEO_UPLOAD_BYTES",
                 base.max_video_upload_bytes,
             )?,
-            orphan_reaper_interval_secs: env_parsed(
+            orphan_reaper_interval_secs: crate::boot::positive_secs(
                 "MEDIA_ORPHAN_REAPER_INTERVAL_SECS",
-                base.orphan_reaper_interval_secs,
+                env_parsed(
+                    "MEDIA_ORPHAN_REAPER_INTERVAL_SECS",
+                    base.orphan_reaper_interval_secs,
+                )?,
             )?,
-            orphan_max_age_secs: env_parsed("MEDIA_ORPHAN_MAX_AGE_SECS", base.orphan_max_age_secs)?,
+            orphan_max_age_secs: crate::boot::positive_finite_secs(
+                "MEDIA_ORPHAN_MAX_AGE_SECS",
+                env_parsed("MEDIA_ORPHAN_MAX_AGE_SECS", base.orphan_max_age_secs)?,
+            )?,
             upload_part_size_bytes: {
                 let size = env_parsed("MEDIA_UPLOAD_PART_SIZE_BYTES", base.upload_part_size_bytes)?;
                 if size < MIN_MULTIPART_PART_BYTES {
@@ -407,16 +413,22 @@ impl MediaConfig {
                 }
                 size
             },
-            upload_session_ttl_secs: env_parsed(
+            upload_session_ttl_secs: crate::boot::positive_finite_secs(
                 "MEDIA_UPLOAD_SESSION_TTL_SECS",
-                base.upload_session_ttl_secs,
+                env_parsed(
+                    "MEDIA_UPLOAD_SESSION_TTL_SECS",
+                    base.upload_session_ttl_secs,
+                )?,
             )?,
             ffmpeg: env_or("MEDIA_FFMPEG", &base.ffmpeg),
-            transcode_timeout_secs: env_parsed(
+            transcode_timeout_secs: crate::boot::positive_secs(
                 "MEDIA_TRANSCODE_TIMEOUT_SECS",
-                base.transcode_timeout_secs,
+                env_parsed("MEDIA_TRANSCODE_TIMEOUT_SECS", base.transcode_timeout_secs)?,
             )?,
-            ingest_poll_secs: env_parsed("MEDIA_INGEST_POLL_SECS", base.ingest_poll_secs)?,
+            ingest_poll_secs: crate::boot::positive_secs(
+                "MEDIA_INGEST_POLL_SECS",
+                env_parsed("MEDIA_INGEST_POLL_SECS", base.ingest_poll_secs)?,
+            )?,
             ingest_lease_secs: {
                 let lease = env_parsed("MEDIA_INGEST_LEASE_SECS", base.ingest_lease_secs)?;
                 if lease < 3 {

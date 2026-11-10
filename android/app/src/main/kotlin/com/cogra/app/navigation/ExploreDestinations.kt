@@ -58,9 +58,10 @@ private fun ShellScope.ExploreDestination(entry: NavBackStackEntry) {
             onOpenComment = { postId, commentId ->
                 navController.navigate(PostDetail(postId, from = POST_FROM_SEARCH, commentId = commentId))
             },
+            // The reader's own row opens their profile here too, Explore lit:
+            // a screen belongs to the stack it was opened from whatever its
+            // subject (BottomNav.prompt.md; design/readme.md §13, jakob 2026-11-10).
             onOpenPerson = { handle -> navController.navigate(Profile(handle, from = SEARCH_ORIGIN)) },
-            // The reader's own row opens their own profile (ExplorePerson.md:25).
-            onOpenOwnProfile = { navController.selectTab(TopLevelTab.PROFILE, onReselect = {}) },
             onOpenTopic = { name -> navController.navigate(Topic(name, from = TOPIC_FROM_SEARCH)) },
             onOpenYourTopics = { navController.navigate(YourTopics) },
         ),

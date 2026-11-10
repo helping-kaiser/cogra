@@ -35,7 +35,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { fetchHashtagDetail, type HashtagDetail } from "@/lib/api/topics-api";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
 import { ActorChip } from "@/lib/ui/actor-chip";
-import { backFor } from "@/lib/ui/back-origin";
+import { backFor, tagOrigin } from "@/lib/ui/back-origin";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
@@ -98,6 +98,13 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
   // table; History.md:57: `Back to History`; Explore mid-query, `Back to the
   // search`), the feed otherwise.
   const back = backFor(from);
+  // EVERY DOOR OUT OF THE PAGE NAMES IT AND THE ORIGIN IT WAS OPENED WITH
+  // (`tagOrigin`, the chain; jakob 2026-11-10, grandfathered): what it opens
+  // reads `Back to #<thattag>` (readme §13's origin-noun tables) and keeps lit
+  // the root this page was itself opened from — the feed's, Explore's or the
+  // profile's.
+  const doorFrom = tagOrigin(name, from);
+  const doorQuery = `?from=${encodeURIComponent(doorFrom)}`;
   const header = (
     <PageHeader backHref={back.href} backScroll={false} backLabel={back.label} backTestId="topic-back" inGutter />
   );
@@ -183,9 +190,10 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
                 <li key={node.id} {...{ [SEEN_ATTRIBUTE]: node.id }}>
                   <PostCard
                     post={node}
-                    href={`/posts/${node.id}`}
+                    href={`/posts/${node.id}${doorQuery}`}
                     // THE SCORE OPENS ITS TRACE, whose back arrow reads `Back to #<thattag>`.
-                    scoreOrigin={{ kind: "tag", name }}
+                    scoreOrigin={{ kind: "tag", name, from }}
+                    authorFrom={doorFrom}
                     testId={`topic-post-${node.id}`}
                     authorTestId={`topic-author-${node.id}`}
                     stanceTestId={`topic-stance-${node.id}`}
@@ -206,12 +214,13 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
                         displayName={node.author.displayName.value}
                         avatarUrl={node.author.avatar?.url}
                         testId={`topic-comment-author-${node.id}`}
+                        from={doorFrom}
                       />
                     )}
                     <p className="text-body-medium">{node.content.value}</p>
                     {parentPost && (
                       <Link
-                        href={`/posts/${parentPost.id}`}
+                        href={`/posts/${parentPost.id}${doorQuery}`}
                         data-testid={`topic-comment-post-${node.id}`}
                         className="text-body-small text-on-surface-variant underline"
                       >

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM auth_invite_links l\n               WHERE l.id = $1\n                 AND l.revoked_at IS NULL\n                 AND l.expires_at > NOW()\n                 AND (NOT l.single_use OR l.used_at IS NULL)\n           ) AS \"usable!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "usable!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "2154c8f9a94a0a035cb2bfda1bb822f9aa7aeffa4967022aaeb9bcfb23ed2f69"
+}

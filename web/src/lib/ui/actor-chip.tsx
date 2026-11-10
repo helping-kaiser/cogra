@@ -45,6 +45,7 @@ export function ActorChip({
   testId,
   node,
   here = false,
+  from = null,
 }: {
   handle: string;
   displayName: string | null | undefined;
@@ -59,6 +60,11 @@ export function ActorChip({
    * inert — no link, no state layer, nothing to focus.
    */
   here?: boolean;
+  /**
+   * Where the chip's door says the reader came from, so the profile names it
+   * on its way back and keeps lit the root it belongs to (`back-origin.ts`).
+   */
+  from?: string | null;
 }) {
   const name = displayName?.trim() ? displayName : handle;
   const parts = (
@@ -100,7 +106,7 @@ export function ActorChip({
   // carries the chip's emphasis and the handle reads beside it, quieter.
   return (
     <Link
-      href={`/u/${handle}`}
+      href={from === null || from === "" ? `/u/${handle}` : `/u/${handle}?from=${encodeURIComponent(from)}`}
       {...testAttributes(node, testId)}
       className="cg-state cg-focus inline-flex min-h-6 min-w-0 items-center gap-2 rounded-full text-on-surface"
     >

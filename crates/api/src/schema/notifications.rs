@@ -126,7 +126,7 @@ impl NotificationType {
             .data::<DataLoader<ActorByIdLoader>>()?
             .load_one(self.row.actor_id)
             .await?
-            .ok_or_else(|| async_graphql::Error::new("a notification's actor vanished"))?;
+            .ok_or_else(|| super::faults::Fault::new("a notification's actor vanished"))?;
         Ok(Actor::User(User {
             identity,
             viewer_session: None,
@@ -232,9 +232,7 @@ pub(crate) async fn hydrate(
         .collect();
     ids.sort_unstable();
     ids.dedup();
-    let content = crate::nodes::resolve_content_many(pool, &ids)
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    let content = crate::nodes::resolve_content_many(pool, &ids).await?;
     let rest: Vec<Uuid> = ids
         .iter()
         .filter(|id| !content.contains_key(id))
@@ -257,7 +255,7 @@ pub(crate) async fn hydrate(
     rows.into_iter()
         .map(|row| {
             let kind = Kind::parse(&row.kind).ok_or_else(|| {
-                async_graphql::Error::new(format!("unknown notification kind {}", row.kind))
+                super::faults::Fault::new(format!("unknown notification kind {}", row.kind))
             })?;
             Ok(NotificationType {
                 subject: resolve(row.subject_id),
