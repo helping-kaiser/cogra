@@ -1,25 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="invite_title">Join CoGra</string>
-    <string name="invite_explainer">CoGra is invite-only: someone who knows you vouches you in. Paste your invite link (or its code) below.</string>
-    <string name="invite_input">Invite link or code</string>
-    <string name="invite_check">Check invite</string>
+    <!-- The invite door (InviteEntry; JoinInvalid is its unusable reading). copy-voice: the invite door, JoinInvalid's lines. -->
+    <string name="invite_title">Enter your invite</string>
+    <string name="invite_lead">CoGra is invite-only. Paste your invite link to get started.</string>
+    <string name="invite_invalid_title">This invite can\'t be used anymore</string>
+    <string name="invite_invalid_lead">It may have expired or already been used. Ask the person who invited you for a new link.</string>
+    <string name="invite_input">Invite link</string>
+    <string name="invite_not_a_link">That doesn\'t look like an invite link.</string>
     <string name="invite_continue">Continue</string>
-    <string name="invite_vouched_by">@%1$s is vouching for you.</string>
-    <string name="invite_malformed">That doesn\'t contain an invite code.</string>
-    <string name="invite_not_found">This invite doesn\'t exist. Check the link with the person who sent it.</string>
-    <string name="invite_unusable">This invite can\'t be used any more — it expired, was revoked, or its slot is taken. Ask your inviter for a new one.</string>
-    <string name="invite_login_instead">Already a member? Sign in</string>
-    <string name="invite_browse">Just looking? Browse the feed</string>
+    <string name="invite_continuing">Continuing…</string>
+    <string name="invite_waiting">Waiting for your invite link</string>
+    <string name="invite_browse">Just looking? Browse the feed →</string>
+    <string name="invite_expired">This invite link has expired.</string>
 
-    <string name="apply_title">Your account</string>
-    <string name="apply_handle">Handle</string>
-    <string name="apply_handle_rules">3–30 characters: a–z, 0–9, _</string>
-    <string name="apply_password_rules">At least 12 characters.</string>
-    <string name="apply_continue">Create account</string>
-    <string name="apply_handle_taken">That handle is taken.</string>
-    <string name="apply_email_in_use">That email already belongs to an account — sign in instead.</string>
-    <string name="apply_bad_input">Check the highlighted field.</string>
+    <!-- Join (Join, JoinErrors). copy-voice: the collected rulings' entry lines, the registration's two legal lines, the refusals. -->
+    <string name="join_heading">\@%1$s invited you</string>
+    <string name="join_lead">CoGra is invite-only — a member vouches for you, and \@%1$s\'s approval brings you in.</string>
+    <string name="join_help">About CoGra</string>
+    <string name="join_handle">Handle</string>
+    <string name="join_handle_hint">3–30 characters: a–z, 0–9, _</string>
+    <string name="join_email">Email</string>
+    <string name="join_password">Password</string>
+    <string name="join_password_hint">At least 12 characters.</string>
+    <string name="join_terms">By creating your account you accept the Terms.</string>
+    <string name="join_terms_door">Terms</string>
+    <string name="join_privacy">How CoGra handles your data: the Privacy Policy.</string>
+    <string name="join_privacy_door">Privacy Policy</string>
+    <string name="join_create">Create account</string>
+    <string name="join_creating">Creating account…</string>
+    <string name="join_waiting">Waiting for a handle, your email and a password</string>
+    <string name="join_handle_shape">A handle is 3–30 characters: a–z, 0–9, _.</string>
+    <string name="join_email_shape">That doesn\'t look like an email address.</string>
+    <string name="join_password_short">A password is at least 12 characters.</string>
+    <string name="join_password_long">A password is at most 128 characters.</string>
+    <string name="join_handle_taken">That handle is taken.</string>
+    <string name="join_email_in_use">That email already has an account.</string>
+    <string name="join_password_breached">That password has turned up in a data breach — pick another one.</string>
+
+    <!-- Shared by the door and the form. -->
+    <string name="entry_sign_in">Already have an account? Sign in</string>
+    <string name="entry_no_answer">That didn\'t send. Try again.</string>
+    <string name="entry_not_through">That didn\'t go through. Try again.</string>
+    <string name="entry_rate_limited">Too many tries. Wait a little, then try again.</string>
 
     <string name="backup_title">Your key, your actor</string>
     <string name="backup_explainer">Your identity on the graph is a key that exists only on this phone. A recovery code lets you restore it if this phone is ever lost — we store only an encrypted copy that the code unlocks.</string>
@@ -31,11 +53,6 @@
     <string name="backup_decline_confirm">I accept the risk</string>
     <string name="backup_decline_cancel">Go back</string>
 
-    <string name="error_generic">Something went wrong. Try again.</string>
     <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
     <string name="error_key_in_use">This phone\'s signing key already belongs to another account. Sign in to that account to use it — a key can only ever back one account.</string>
-    <string name="error_weak_password">Passwords need at least 12 characters and can\'t be a known breached password.</string>
-    <string name="error_rate_limited">Too many attempts — wait a moment and try again.</string>
-    <string name="login_email">Email</string>
-    <string name="login_password">Password</string>
 </resources>

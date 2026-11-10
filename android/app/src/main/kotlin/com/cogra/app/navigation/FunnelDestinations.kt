@@ -4,7 +4,9 @@
 package com.cogra.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -17,9 +19,10 @@ import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
 import com.cogra.feature.auth.RestoreRoute
 import com.cogra.feature.invites.VouchAskRoute
-import com.cogra.feature.onboarding.ApplyRoute
 import com.cogra.feature.onboarding.InviteEntryRoute
+import com.cogra.feature.onboarding.JoinRoute
 import com.cogra.feature.onboarding.KeyCeremonyRoute
+import com.cogra.feature.onboarding.R as OnboardingR
 import com.cogra.feature.settings.ChangeEmailLinkedRoute
 import com.cogra.feature.settings.DeleteAccountConfirmedRoute
 import kotlinx.coroutines.launch
@@ -33,27 +36,11 @@ internal fun NavGraphBuilder.funnel(shell: ShellScope) = with(shell) {
             // route-derived pattern cannot express (defaulted args
             // encode as query parameters) — so the patterns are
             // explicit, plus the bare /join landing.
-            navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}/join/{inviteId}" },
-            navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}/join" },
+            navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}$JOIN_PATH/{inviteId}" },
+            navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}$JOIN_PATH" },
         ),
-    ) { entry ->
-        val route = entry.toRoute<InviteEntry>()
-        InviteEntryRoute(
-            deepLinkedInviteId = route.inviteId,
-            onUsableLink = { id -> navController.navigate(Apply(id)) },
-            onLogInInstead = { navController.navigate(Login) },
-            onBrowseFeed = { navController.navigate(Feed) },
-            onBack = { navController.popBackStack() },
-        )
-    }
-    composable<Apply> { entry ->
-        // A successful register flips the token store; the phase
-        // holder navigates.
-        ApplyRoute(
-            inviteId = entry.toRoute<Apply>().inviteId,
-            onBack = { navController.popBackStack() },
-        )
-    }
+    ) { entry -> InviteEntryDestination(entry.toRoute<InviteEntry>()) }
+    composable<Join> { entry -> JoinDestination(entry.toRoute<Join>()) }
     composable<KeyCeremony> {
         KeyCeremonyRoute(
             onDone = { navController.popBackStack() },
@@ -242,4 +229,67 @@ private fun ShellScope.openFromLanding(route: Any) {
         navController.selectTab(TopLevelTab.PROFILE, onReselect = {})
     }
     navController.navigate(route)
+}
+
+/**
+ * THE INVITE DOOR (InviteEntry.md, JoinInvalid.md). Its arrow is a link to
+ * the bare view, never history, and system Back opens the same.
+ *
+ * A link opened from outside the app is checked at once: a live one opens
+ * the form in the door's place, over whatever the link opened over — the
+ * signed-in state included, since an invite link ignores sign-in (Join.md:7)
+ * — and a dead one leaves that state as it was under one snackbar, never
+ * the door's unusable reading (JoinInvalid.md:9-11).
+ */
+@Composable
+private fun ShellScope.InviteEntryDestination(route: InviteEntry) {
+    val expired = stringResource(OnboardingR.string.invite_expired)
+    InviteEntryRoute(
+        arrivalInviteId = route.inviteId,
+        openedInvalid = route.invalid,
+        onJoin = { id, inviter ->
+            navController.navigate(Join(id, inviter)) {
+                if (route.inviteId != null) popUpTo<InviteEntry> { inclusive = true }
+            }
+        },
+        onDeadArrival = {
+            leaveLanding()
+            announce(expired)
+        },
+        onSignIn = { navController.navigate(Login) },
+        onBrowseFeed = { navController.startOnFeedRoot() },
+        onBack = { navController.startOnFeedRoot() },
+    )
+}
+
+/**
+ * THE FORM (Join.md). Back returns to the door the link was pasted at, or
+ * to the state an arrival opened it over; the "?" opens About with a plain
+ * Back; a spent link turns the form into the door's unusable reading.
+ *
+ * A made account flips the token store. Signed out, the phase holder then
+ * lands the applicant on the feed. Over a signed-in state, where the phase
+ * does not change, the form lands it itself: this device switches to the
+ * new account and the applicant days begin on the feed (Join.md:51).
+ */
+@Composable
+private fun ShellScope.JoinDestination(route: Join) {
+    val overSignedIn = remember { signedIn == true }
+    JoinRoute(
+        inviteId = route.inviteId,
+        inviterHandle = route.inviterHandle,
+        onBack = {
+            if (navController.previousBackStackEntry != null) {
+                navController.popBackStack()
+            } else {
+                navController.startOnFeedRoot()
+            }
+        },
+        onAbout = { navController.navigate(About(plainBack = true)) },
+        onSignIn = { navController.navigate(Login) },
+        onSpent = {
+            navController.navigate(InviteEntry(invalid = true)) { popUpTo<Join> { inclusive = true } }
+        },
+        onCreated = { if (overSignedIn) navController.startOnFeedRoot() },
+    )
 }

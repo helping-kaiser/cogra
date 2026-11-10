@@ -48,6 +48,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.cogra.app.R
 import com.cogra.app.ui.CograBottomBar
 import com.cogra.app.ui.DeviceLockKeeper
@@ -185,12 +186,15 @@ private fun CograNavGraphContent(
         if (phase == AuthPhase.SIGNED_OUT) authState.deletion.onSessionEnded(Instant.now())
         val from = navigatedPhase
         navigatedPhase = phase
-        // A cold start that opened an email-change or deletion link signed in
-        // is already where it should be: the landing is the destination.
-        val destination = navController.currentBackStackEntry?.destination
+        // A cold start that opened an email-change, deletion or invite link
+        // signed in is already where it should be: the landing is the
+        // destination (an invite link ignores sign-in, Join.md:7).
+        val entry = navController.currentBackStackEntry
+        val destination = entry?.destination
         val onLinkLanding = destination?.hasRoute(ChangeEmailLinked::class) == true ||
             destination?.hasRoute(DeleteAccountConfirmed::class) == true ||
-            destination?.hasRoute(VouchAsk::class) == true
+            destination?.hasRoute(VouchAsk::class) == true ||
+            (destination?.hasRoute(InviteEntry::class) == true && entry.toRoute<InviteEntry>().inviteId != null)
         // An applicant's account deleted from here: the session ended because
         // the account is gone, so the reader lands signed out on the bare view
         // under one snackbar, never on sign-in (DeleteAccount.md:29).
@@ -232,10 +236,11 @@ private fun CograNavGraphContent(
 
     // Warm-start App Links: launchMode="singleTask" delivers them via
     // onNewIntent, which Navigation does not observe by itself — the
-    // deep-link docs require forwarding to handleDeepLink. A join link is
-    // gated on signed-out — a signed-in session ignores join links, cold
-    // and warm alike; the email change's and the deletion's links answer
-    // either way (the deletion's link is the capability, session or none).
+    // deep-link docs require forwarding to handleDeepLink. Every link here
+    // answers signed in as well as signed out: an invite link ignores
+    // sign-in and opens over the signed-in state (Join.md:7), and the email
+    // change's and the deletion's links answer either way (the deletion's
+    // link is the capability, session or none).
     val phaseNow by rememberUpdatedState(phase)
     val activity = LocalActivity.current as? ComponentActivity
     // THE SYSTEM'S "MANAGE SPACE" DOOR (Settings.md: settings opens with
@@ -260,7 +265,8 @@ private fun CograNavGraphContent(
                 return@Consumer
             }
             val path = newIntent.data?.path
-            val answersSignedIn = path?.startsWith(EMAIL_CHANGE_PATH) == true ||
+            val answersSignedIn = path?.startsWith(JOIN_PATH) == true ||
+                path?.startsWith(EMAIL_CHANGE_PATH) == true ||
                 path?.startsWith(DELETE_ACCOUNT_PATH) == true ||
                 path?.startsWith(VOUCH_PATH) == true
             if (phaseNow == AuthPhase.SIGNED_OUT || (answersSignedIn && phaseNow == AuthPhase.SIGNED_IN)) {
