@@ -2237,24 +2237,27 @@ per-act $\theta$-debits, summed over actor $i$'s accepted acts $a$, each
 debited at its writing-epoch price and never re-calibrated (the debit
 schedule is the sole vintage object). $r_i \ge 0$, $=0$ iff $b_i = 0$;
 decreasing under action ($\theta$ off the numerator, $+1$ on the
-denominator), non-decreasing in $B_i$. Published per-actor scalars;
+denominator), non-decreasing in $B_i$ at fixed $N_i$ — a destruction amount
+raises the gross frame once the deployment's marker policy accepts it.
+Published per-actor scalars;
 derivable from the primitive's public record, the committed act count, and
 the published $\theta$-debit schedule without graph traversal. The frame is
 verified by recompute-and-verify-provenance, never scan-and-total
 (`rem:comparator:auditability`).
 
-**Funding is a Layer-2 freedom (`rem:gates:guild-funding`).** Nothing in
-the sustaining frontier assumes who funds an actor's burn value: a burn is
-funder-unconstrained and requires no recipient consent, and the resulting $B_i$
-accrues to the actor's address whoever paid for it
-(`def:comparator:imported-frame`). A terminal Layer-2 community may choose,
-under its own policy, to supply a member's sustaining burn — Layer 1
-neither prescribes nor prices that choice (`post:transport:guild-grant`).
-This relocates **who bears the source cost** without faking it: the frame
-is non-transferable across addresses (`def:comparator:frame-binding`), and
-funding a member's own burns raises only that member's own source. The
-comparator sees a funded member exactly as it sees a self-funded one — the
-burn is real either way.
+**Funding is a Layer-2 freedom (`rem:gates:guild-funding`).** The
+deployment's marker policy determines whether a destruction amount is
+accepted at an actor's address, whoever supplies it
+(`def:comparator:imported-frame`, `post:comparator:marker-bound-settlement`);
+payment or lineage membership does not ensure acceptance or a sufficient
+accepted amount. A terminal Layer-2 community may choose, under its own
+policy, to supply a member's sustaining burn — Layer 1 neither prescribes
+nor prices that choice (`post:transport:guild-grant`). Accepted funding
+raises only the named member's own residual source: the recorded source
+stays bound to its address (`def:comparator:frame-binding`). It fixes no
+direction for the recomputed standing (`cor:epoch:burn-monotone-regimes`,
+`prop:epoch:finite-standing-response`), freezes no other allocation
+coefficient, and selects no uncertified rung.
 
 ### 11.3 Act folding and the base allocation matrix
 
@@ -2617,9 +2620,12 @@ $\boldsymbol{\Pi}(\boldsymbol{x})$ is the published operator that the
 mediant, the certificate, and every boundary artifact consume; $\Pi_{ui}$
 replaces any notion of a per-pair standing flow. Unexported mass returns home
 (`rem:epoch:emission-self-inertia`): a depleted Actor's own row weights its
-own near-zero rate *more* heavily, so rehabilitation shifts from the
-community toward the Actor's own ledger — a price, never a ban, since one
-burn raises $b_u$, $\hat{r}_u$, and $\mathfrak{e}_u$ together. No Actor
+own near-zero rate *more* heavily. An accepted burn raises the Actor's
+residual balance and own source rate, and its emission until saturation;
+these ledger changes do not by themselves prove that the coupled standing
+rises — a reached recipient can decrease even at the anchor — and recovery is
+assessed on the recomputed final state (`prop:epoch:finite-standing-response`).
+No Actor
 exports more history than its present balance could pay for at today's action
 price (`thm:epoch:emission-export-bound`).
 
@@ -2690,9 +2696,12 @@ read-sites read it.
 **Properties:** (1) bidirectional response
 (`prop:epoch:final-standing-response`) —
 $\mathrm{sgn}(\partial\alpha_i/\partial \Pi_{ui}) = \mathrm{sgn}(r_u -
-\alpha_i)$: a higher-rate source lifts, a lower-rate source dilutes, and
-Layer 1 provides no target veto
-(`rem:comparator:conserved-allocation-scope`); (2) hull bound
+\alpha_i)$ for fixed other flows: a higher-rate source lifts, a lower-rate
+source dilutes, and Layer 1 provides no target veto
+(`rem:comparator:conserved-allocation-scope`). This is a partial derivative
+of the mediant, not a sign theorem for a complete accepted act or burn, which
+also changes counts, emission, and other coefficients
+(`prop:epoch:finite-standing-response`); (2) hull bound
 (`prop:epoch:final-standing-hull`) — $\alpha_i$ lies in the transported-rate
 hull $[\min r_u, \max r_u]$ over the sources with $\Pi_{ui} > 0$, at every
 state of the solve and not merely at the fixed point, and that contributing
@@ -2782,15 +2791,26 @@ not depend on where the solver started
 bifurcation apparatus of the earlier scalar regime is quarantined as
 non-normative (`subsec:dynamics:quarantined-residuals`).
 
-**Monotonicity in burn is claimed only at the anchor
-(`prop:epoch:no-tilt-commitment-monotonicity`).** At $t_k = 0$ the transport
-is state-independent and a burn raises the standing of everyone the burner's
-allocation reaches, including the burner. At $t_k > 0$ **no such claim is
-made**: the transport then depends on the state it is used to compute, and
-whether final standing is monotone in an underlying burn is open
-(`frontier:tilted-monotonicity`). Terminal reward monotonicity in the
-*published* standing input is a separate retained property and does not
-discharge this one.
+**Burn and act response (`prop:epoch:no-tilt-commitment-monotonicity`,
+`thm:epoch:burn-response`).** At the anchor $t_k = 0$, with counts, base
+allocation, safety threshold, and source emission held fixed — an additional
+accepted destruction at a strictly saturated source — the transport is
+independent of the solver state and of the perturbation, and
+$\partial\alpha_i/\partial b_u = \Pi_{ui}/\tilde{N}_i > 0$: the burn raises
+the standing of everyone the burner's allocation reaches, including the
+burner. Below saturation a burn changes emission, and this derivative does
+not apply. Beyond that regime the answer is negative: passing certificates
+do not imply monotonic standing under an accepted burn or an accepted act. At
+a fixed positive accepted rung a saturated burn can lower the burner's own
+standing, a reached sibling's, or a structurally unreached sibling's; at the
+anchor a depleted-source burn can lower a reached recipient; for selected
+rungs no finite universal bound holds on standing loss per unit of burn
+increment; and one additional accepted act without additional burn has no
+universal direction. The surviving positive regimes and the quantitative
+bounds are `cor:epoch:burn-monotone-regimes`,
+`prop:epoch:burn-response-bound`, and `prop:epoch:finite-standing-response`.
+Terminal reward monotonicity in the *published* standing input is a separate
+property and does not discharge this one.
 
 ### 11.6 Epoch boundary, the final act sequence, and the raw reading
 
