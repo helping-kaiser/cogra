@@ -816,15 +816,29 @@ act it confirms ($\mathrm{accepts}$). These references are act-owned
 *metadata, not graph incidence*: an Accept or Ratify names its settlement
 partner by act identity, and its edge projection is incident only to its
 two actor endpoints, never to the Offer. Because the references are
-declared causal parents, any authoritative order forces
-$\text{Bid} \prec \text{Accept} \prec \text{Ratify}$
-(`rem:graph:title-order-irrelevance`).
+causal parents, a compliant order places
+$\text{Bid} \prec \text{Accept} \prec \text{Ratify}$ by the key of record;
+a finalized placement or stamp violation is evidence under ordering
+accountability (§8.2, `rem:graph:title-order-irrelevance`).
 
 **Finalization epoch (`def:graph:act-finalization-epoch`).**
 $\mathrm{ep}(q) = \min\{k : q \in \mathcal{Q}_k\}$ — well-defined by
 monotonicity of the accepted act history. Two acts are *co-epochal* iff
 their finalization epochs are equal. Title consumes acts at
 $\mathrm{ep}(\cdot)$ granularity only.
+
+**Settlement parties (`def:graph:settlement-parties`).** For a Bid act
+opening an Offer on Item $n_i$, the *buyer* is the author of the Bid; the
+*Item* is reached from the Bid's T-leg through the Offer; the *seller* is
+the certified owner $\mathrm{owner}^{(k-1)}(n_i)$ at the boundary preceding
+the Ratify's finalization epoch $k = \mathrm{ep}(q_{\text{Ratify}})$, or the
+genesis owner if the thread is fresh and its genesis finalizes in that
+epoch. Parties and Item are functions of the record alone. The Item
+endpoint of a Bid is a minted identifier and may dangle: a Bid on an
+unanchored Item forms and is fold-neutral; once the genesis finalizes, the
+Item enters the fold at that boundary, a candidate whose Ratify finalizes
+in that epoch uses the fresh-thread rule, and a later one reads the
+certified owner.
 
 **Settlement Recognition (`def:graph:settlement-recognition`).** A
 settlement candidate on Item $n_i$ in epoch edge set $E_k$ is a triple of
@@ -838,28 +852,33 @@ all six clauses hold:
   in $E_k$.
 - **(ii) Reference binding.** The Accept's and Ratify's settlement
   references both resolve to the Bid act identifier.
-- **(iii) Authorization.** The author of the Accept is the certified owner
-  $\mathrm{owner}^{(k-1)}(n_i)$ at the boundary preceding the Ratify's
-  finalization epoch $k = \mathrm{ep}(q_{\text{Ratify}})$ (the genesis owner
-  if the thread is fresh). Clause (iii) reads the prior title certificate
-  back into admission — the straddler.
+- **(iii) Authorization and parties.** The Accept is authored by the seller
+  and targets the buyer; the Ratify is authored by the buyer and targets
+  the seller (the Accept's author). Clause (iii) reads the prior title
+  certificate and the Bid's authorship back into admission — the
+  straddler. A Ratify authored by anyone but the buyer, an Accept whose
+  target is not the buyer, or a Ratify whose target is not the Accept's
+  author fails (iii): the acts are written and never bind, their standing
+  resolves to the author's self-retention channel, and no host
+  accountability attaches (`rem:graph:settlement-party-mismatch`).
 - **(iv) Buyer consent.** No buyer Withdraw on this Offer satisfies
   $\mathrm{ep}(\text{Withdraw}) \le \mathrm{ep}(\text{Ratify})$.
 - **(v) Seller consent.** No seller Rescind on this Offer satisfies
   $\mathrm{ep}(\text{Rescind}) \le \mathrm{ep}(\text{Ratify})$.
 - **(vi) Well-formedness.** $\text{Bid} \prec \text{Accept} \prec
   \text{Ratify}$ — retained as a well-formedness check on the handshake
-  chain (each party observes the prior record), forced by the settlement
-  references and carrying no tie-breaking force.
+  chain (each party observes the prior record), carrying no tie-breaking
+  force.
 
 Clauses (iv) and (v) are the **epoch-quantized consent rule**: a cancellation
 co-epochal with, or earlier than, the commit defeats it; a cancellation in a
 strictly later epoch is inert — the sale is final *at the certificate*, not
 at the Ratify (`rem:graph:regret-window`). A recognized candidate whose
 Ratify finalizes at boundary $k$ with no defeating cancel is *unchallenged
-at $k$*. The predicate reads set membership, $\mathrm{ep}(\cdot)$ indices,
-and the reference-forced chain — no $\mathrm{pos}(e)$, no residual sub-epoch
-order (`rem:graph:settlement-clause-structure`). Parallel settlement
+at $k$*. The predicate reads set membership, pointer resolution, the prior
+certificate and the Bid's authorship, $\mathrm{ep}(\cdot)$ indices, and the
+handshake chain — no $\mathrm{pos}(e)$, no sub-epoch order, no Lamport
+comparability (`rem:graph:settlement-clause-structure`). Parallel settlement
 records are consumed exclusively through this predicate
 (`rem:graph:authored-act-bundle-consumers`).
 
