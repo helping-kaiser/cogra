@@ -572,6 +572,48 @@ describe("the data path (CD-SR1..CD-SR4)", () => {
     expect(asked.nodes[0]).toContain(POST_ID);
   });
 
+  // A RELOAD OR A SHARED LINK (W-TRACE-COLD-RELOAD): the page hydrates, so its
+  // first commit reads the session as still resolving — no reader yet. The
+  // open's one fetch waits for the reader, then goes once (CD-SR2).
+  it("a_cold_load_waits_for_the_reader_then_fetches_once_as_them", async () => {
+    const asked: Asked = { traces: [], nodes: [] };
+    server.use(...traceHandlers(ownAnswer(), asked));
+    renderWithProviders(<TraceView address={FEED_ADDRESS} level={{ kind: "entry" }} />, {
+      store: asReader(SOL.id),
+      hydrate: true,
+    });
+    await waitFor(() => expect(paths()).toHaveLength(4));
+    expect(asked.traces).toEqual([{ viewer: SOL.id, target: POST_ID }]);
+    expect(screen.queryByTestId("feedEntry-fault")).not.toBeInTheDocument();
+  });
+
+  it("a_signed_out_cold_load_reads_the_borrowed_vantage_and_never_hangs", async () => {
+    const asked: Asked = { traces: [], nodes: [] };
+    server.use(...traceHandlers(borrowedAnswer(), asked));
+    // A guest browses a borrowed view (CD-5); used after, so it takes precedence.
+    server.use(
+      gqlLink.query("BorrowedView", () =>
+        HttpResponse.json({
+          data: {
+            borrowedView: {
+              __typename: "User",
+              id: MIRA.id,
+              handle: MIRA.handle,
+              displayName: { __typename: "ModeratedText", value: MIRA.displayName },
+              avatar: null,
+            },
+          },
+        }),
+      ),
+    );
+    // Signed out: the token store reads an empty device.
+    window.localStorage.clear();
+    renderWithProviders(<TraceView address={FEED_ADDRESS} level={{ kind: "entry" }} />, { hydrate: true });
+    await waitFor(() => expect(paths().length).toBeGreaterThan(0));
+    expect(asked.traces).toEqual([{ viewer: MIRA.id, target: POST_ID }]);
+    expect(screen.queryByTestId("feedEntry-fault")).not.toBeInTheDocument();
+  });
+
   it("a_trace_whose_ranking_fails_shows_the_house_line_and_retry — no answer", async () => {
     const { asked } = render("offline");
     expect(await screen.findByTestId("feedEntry-fault")).toHaveTextContent(
