@@ -48,11 +48,13 @@ anything not in the feedback closure below is a Layer 2's to reimplement
 
 - **The burn primitive** — the frame source. Not a layer of the stack but
   what lies beneath it: a non-repayable, publicly verifiable, costly action
-  together with the record it leaves (`def:comparator:burn-primitive`). Any
-  system satisfying requirements R1–R11 (§1.1) is a *realization*; the
-  network reads a realization through exactly four interface objects and
-  nothing else. The burn value map is neutral because the primitive records
-  a destroyed magnitude and declines to price it. The primitive knows
+  together with the record it leaves (`def:comparator:burn-primitive`). A
+  *realization* satisfies requirements R1–R11 (§1.1); its use at epoch
+  closure also satisfies the marker-bound settlement contract (§1.2). The
+  network reads a realization through exactly four mathematical interface
+  objects, plus that contract at epoch closure. The burn amount map is
+  neutral because the primitive records a destroyed magnitude and declines
+  to price it. The primitive knows
   nothing of clusters, terminal read-sites, or guild policy.
   (`subsec:introduction:two-layers-derived`)
 - **Layer 1 (Peer Network)** — the root of the stack, and the binding.
@@ -83,49 +85,59 @@ no $\alpha_i$, no $W_{\text{end}}^{(k)}(u \to i)$, no title, and no gate.
 ### 1.1 The burn interface and requirements R1–R11
 
 **The Burn Interface (`def:comparator:burn-interface`).** A realization
-exposes exactly four objects to the network, and the network reads nothing
-else of it:
+exposes exactly four mathematical objects to the network:
 
-- **(B) burn value** — the map $B : \mathbb{A} \to \mathbb{R}_{\ge 0}$
+- **(B) burn amount** — the map $B : \mathbb{A} \to \mathbb{R}_{\ge 0}$
   recording, at each address, the magnitude destroyed there; $B_i$ is its
   fiber at the address the network binds to actor $i$ (§14.1).
 - **($\mathbb{A}$) address space** — the opaque index set of that map. An
   address is a name the primitive can write against; the primitive makes no
   claim that it is a person, a holder, or an identity.
 - **($B_{\max}$) capacity bound** — the published bound on aggregate burn
-  value attainable before the realization opens to external acquisition
+  amount attainable before the realization opens to external acquisition,
+  with zero published for an empty pre-opening interval
   (`def:comparator:bootstrap-capacity`).
-- **($c_{\mathrm{u}}$) unit-cost projection** — the published cost, in the
-  external denomination the realization prices in, of acquiring one unit of
-  burn value at that realization's own terms.
+- **($c_{\mathrm{u}}$) unit-cost projection** — the published positive
+  amount-proportional cost per burn unit, in the published external
+  denomination and at the published terms.
 
 The first two are the frame; the last two are constants the network reads
-and never re-derives. Everything else a realization carries — an economy,
-instruments, prices, phases, an operator — is its own: no such quantity
-enters a network published-quantity formula
-(`rem:comparator:surface-readings`).
+and never re-derives. **Public audit evidence:** the settlement depth, the
+R7 provenance, the separately published recording-event costs (R10), and
+the applicable operator bound and proof or statement of absence (R11) are
+evidence for checking the realization, not additional computational
+inputs. Everything else a realization carries — an economy, instruments,
+prices, phases, an operator — is its own: no such quantity enters a network
+published-quantity formula (`rem:comparator:surface-readings`).
 
 **Burn Primitive Requirements (`post:comparator:burn-primitive`).** A
-system failing any of these is not a realization; a system meeting all of
-them is one. R1–R5 are the frame requirements; R6–R11 are what the
-network's machinery additionally reads.
+realization must satisfy every requirement below; its use at epoch closure
+additionally requires the marker-bound settlement contract (§1.2). R1–R5
+are the frame requirements; R6–R11 are additional obligations of a
+realization.
 
 - **R1 exogenous origin** — $B$ is not derived from $G$; no network
   operation writes it.
 - **R2 neutrality** — the primitive records a destroyed magnitude and
   confers no claim at its own level: no value, no redemption, no
   entitlement; it declines to price the record.
-- **R3 non-transferability** — no operation moves, merges, reassigns, or
-  pools burn value across addresses.
-- **R4 settlement-pinned monotone valuation** — (a) a value is pinned at a
-  settlement event; (b) successive pinned values at an address are
-  non-decreasing; (c) between settlements the published value never exceeds
-  the value the next settlement pins; (d) a published value is revisable
-  only downward, only as far as the last pinned value, and only when the
-  ordering of events at a settlement boundary is itself revised; (e) the
-  realization publishes a **settlement depth** beyond which no ordering is
-  revised, so a value sampled at or below it is order-free and equals its
-  pinned value.
+- **R3 non-transferability** — no operation of the primitive moves,
+  merges, reassigns, or pools recorded burn amount across addresses. This
+  restricts recorded source; it is not an invariance of the standing
+  comparison. Records may be aggregated into a settlement structure provided
+  every record's attributed address and burn amount remain unchanged and
+  publicly recoverable.
+- **R4 settlement-pinned monotone amount** — (a) an amount is pinned at a
+  settlement event; (b) successive pinned amounts at an address are
+  non-decreasing; (c) between settlements the published amount never
+  exceeds the amount the next settlement pins; (d) a published amount is
+  revisable only downward, only as far as the last pinned amount, and only
+  when the history containing a not-yet-final settlement boundary is
+  replaced by an alternative history in which that boundary is absent;
+  (e) the realization publishes a **settlement depth**, together with the
+  finality assumptions under which it holds, beyond which no history
+  containing a settlement boundary is replaced, so an amount sampled at or
+  below that depth equals its pinned amount.
 - **R5 bindability** — addresses are opaque, permanent, and carry no
   identity claim; the network's map from actors into $\mathbb{A}$ is the
   frame binding (`def:comparator:frame-binding`).
@@ -139,17 +151,35 @@ network's machinery additionally reads.
 - **R8 instantaneous costliness, append-only record** — what a burn
   destroys is priced at the instant it occurs; its record is never removed;
   no operation maps a record back to what was destroyed.
-- **R9 bootstrap capacity** — the realization publishes $B_{\max}$.
-- **R10 unit-cost projection** — the realization publishes $c_{\mathrm{u}}$,
-  so a burn-value quantity reads as an outlay by multiplication;
-  necessarily $c_{\mathrm{u}} \ge 1$.
+- **R9 bootstrap capacity** — the realization publishes a non-negative
+  bound $B_{\max}$ on the aggregate burn amount attainable before it opens
+  to external acquisition. If external acquisition is available from the
+  realization's start, that interval is empty: the realization publishes
+  $B_{\max} = 0$ and states why. This zero bounds only the empty interval,
+  not burn amount attainable thereafter.
+- **R10 unit-cost projection** — the realization publishes a positive
+  $c_{\mathrm{u}}$, its denomination, and the terms under which it applies;
+  its units are external denomination per burn unit, and a burn amount
+  times $c_{\mathrm{u}}$ is the amount-proportional outlay at those terms.
+  If a burn unit is exactly one unit of what is destroyed, the realization
+  may use that unit as its external denomination; when the destruction is
+  the only amount-proportional outlay, $c_{\mathrm{u}} = 1$ in that
+  denomination. Any additional cost per recording event is published
+  separately, with its denomination and terms, as public audit evidence.
+  R7 provenance establishes the backing destruction, not a numerical lower
+  bound on $c_{\mathrm{u}}$ in an arbitrary denomination.
 - **R11 operator bound** — if a realization has an operator that accrues
-  burn value from operating it, the realization bounds that operator's burn
-  value by a result it proves and publishes; the network reads the bound as
-  an interface constant and re-proves nothing.
+  burn amount from operating it, the realization bounds that operator's
+  burn amount by a result it proves and publishes. If no role accrues burn
+  amount from operating the realization, it publishes a statement of that
+  absence, identifying why its rules provide no such accrual; no proof of a
+  zero bound is required. The bound and proof, or the statement of absence,
+  are required public audit evidence, not an additional computational
+  input to the network.
 
-R1–R11 name the burn-primitive requirements only. The safety-threshold
-premises are X1–X7 (§11.8).
+R1–R11 name the burn-primitive requirements and M1–M5 the marker-bound
+settlement conditions (§1.2). The safety-threshold premises are X1–X9
+(§11.8).
 
 ---
 
