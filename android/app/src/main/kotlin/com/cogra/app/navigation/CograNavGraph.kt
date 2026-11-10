@@ -194,7 +194,7 @@ private fun CograNavGraphContent(
         val onLinkLanding = destination?.hasRoute(ChangeEmailLinked::class) == true ||
             destination?.hasRoute(DeleteAccountConfirmed::class) == true ||
             destination?.hasRoute(VouchAsk::class) == true ||
-            (destination?.hasRoute(InviteEntry::class) == true && entry.toRoute<InviteEntry>().inviteId != null)
+            (destination?.hasRoute(InviteEntry::class) == true && entry?.toRoute<InviteEntry>()?.inviteId != null)
         // An applicant's account deleted from here: the session ended because
         // the account is gone, so the reader lands signed out on the bare view
         // under one snackbar, never on sign-in (DeleteAccount.md:29).
