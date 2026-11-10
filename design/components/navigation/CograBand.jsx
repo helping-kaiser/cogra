@@ -87,7 +87,7 @@ export function CograBand({ trailing, chats = true, bell = true, unread = false,
         <span style={{ display: "inline-flex", color: "var(--primary)" }} aria-hidden="true" data-node={node && "mark"}>
           <Icon name="mark" size={24} pickColor="var(--primary-container)" />
         </span>
-        <span style={{ fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: 600 }} data-node={node && "wordmark"}>
+        <span style={{ fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", lineHeight: "var(--text-title-large--line-height)", fontWeight: 600 }} data-node={node && "wordmark"}>
           cogra
         </span>
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", minWidth: 0 }}>

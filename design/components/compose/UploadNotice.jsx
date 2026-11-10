@@ -69,7 +69,7 @@ function Ring({ progress = 0.55, size = 18 }) {
 export function UploadStatusLine({ done, total, progress, media = "pictures", failed = false, message = "One picture didn't upload.", onRetry, node }) {
   if (failed) {
     return (
-      <p style={{ margin: 0, textAlign: "center", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node}>
+      <p style={{ margin: 0, textAlign: "center", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node}>
         <span style={{ color: "var(--error)" }} data-node={node && "message"}>{message}</span>{" "}
         <span style={{ color: "var(--text-secondary)" }} data-node={node && "wait"}>Signing waits for it.</span>{" "}
         <InlineAction size="lg" onClick={onRetry} style={{ display: "inline" }} node={node && "retry"}>
@@ -85,6 +85,8 @@ export function UploadStatusLine({ done, total, progress, media = "pictures", fa
         data-node={node && "line"}
         style={{
           fontSize: "var(--text-body-medium)",
+          letterSpacing: "var(--text-body-medium--letter-spacing)",
+          fontWeight: "var(--text-body-medium--font-weight)",
           lineHeight: "var(--text-body-medium--line-height)",
           color: "var(--text-secondary)",
         }}
@@ -99,7 +101,7 @@ export function UploadStatusLine({ done, total, progress, media = "pictures", fa
    `retry` and `remove` inside it. */
 export function UploadErrorLine({ message = "One picture didn't upload.", onRetry, onRemove, node }) {
   return (
-    <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }} data-node={node}>
+    <p style={{ margin: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }} data-node={node}>
       <span style={{ color: "var(--error)" }} data-node={node && "message"}>{message}</span>{" "}
       {onRetry && (
         <>

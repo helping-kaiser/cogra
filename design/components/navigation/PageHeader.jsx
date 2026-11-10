@@ -57,6 +57,7 @@ export function PageHeader({ title, backHref, backLabel, onBack, action, node })
             style={{
               margin: 0,
               fontSize: "var(--text-title-large)",
+              letterSpacing: "var(--text-title-large--letter-spacing)",
               lineHeight: "var(--text-title-large--line-height)",
               fontWeight: "var(--text-title-large--font-weight)",
               // A page title is a name and never wraps — a two-line header

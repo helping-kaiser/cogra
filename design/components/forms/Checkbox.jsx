@@ -59,6 +59,7 @@ export function Checkbox({ label, checked = false, onChange, id, node }) {
       <span
         style={{
           fontSize: "var(--text-body-medium)",
+          fontWeight: "var(--text-body-medium--font-weight)",
           lineHeight: "var(--text-body-medium--line-height)",
           letterSpacing: "var(--text-body-medium--letter-spacing)",
         }}

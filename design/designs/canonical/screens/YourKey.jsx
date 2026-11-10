@@ -71,6 +71,8 @@ function SecretBlock({ label, value, copyLabel, node }) {
           borderRadius: "var(--radius-extra-small)",
           fontFamily: "var(--font-mono)",
           fontSize: "var(--text-body-small)",
+          letterSpacing: "var(--text-body-small--letter-spacing)",
+          fontWeight: "var(--text-body-small--font-weight)",
           lineHeight: "var(--text-body-small--line-height)",
           whiteSpace: "pre-wrap",
           overflowWrap: "anywhere",
@@ -96,6 +98,7 @@ export function Screen() {
           style={{
             margin: 0,
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
@@ -110,6 +113,7 @@ export function Screen() {
             style={{
               margin: 0,
               fontSize: "var(--text-title-medium)",
+              letterSpacing: "var(--text-title-medium--letter-spacing)",
               lineHeight: "var(--text-title-medium--line-height)",
               fontWeight: "var(--text-title-medium--font-weight)",
             }}

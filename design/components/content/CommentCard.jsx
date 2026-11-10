@@ -201,6 +201,8 @@ export function CommentCard({
       style={{
         margin: 0,
         fontSize: "var(--text-body-medium)",
+        letterSpacing: "var(--text-body-medium--letter-spacing)",
+        fontWeight: "var(--text-body-medium--font-weight)",
         lineHeight: "var(--text-body-medium--line-height)",
         ...(folds && !unfolded ? { display: "-webkit-box", WebkitLineClamp: clampLines, WebkitBoxOrient: "vertical", overflow: "hidden" } : null),
       }}
@@ -288,7 +290,7 @@ export function CommentCard({
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
         {author && <ActorChip handle={author.handle} displayName={author.displayName} node={node && "authorChip"} />}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
-          {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{timestamp}</span>}
+          {timestamp && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)" }}>{timestamp}</span>}
           <OverflowMenu items={items} ariaLabel="More on this comment" node={node && "menu"} />
         </div>
       </div>
@@ -343,6 +345,8 @@ export function CommentCard({
             <span
               style={{
                 fontSize: "var(--text-label-small)",
+                letterSpacing: "var(--text-label-small--letter-spacing)",
+                fontWeight: "var(--text-label-small--font-weight)",
                 lineHeight: "var(--text-label-small--line-height)",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
@@ -370,6 +374,7 @@ export function CommentCard({
                 <span
                   style={{
                     fontSize: "var(--text-label-large)",
+                    letterSpacing: "var(--text-label-large--letter-spacing)",
                     lineHeight: "var(--text-label-large--line-height)",
                     fontWeight: targetDetail.removed ? 400 : "var(--text-label-large--font-weight)",
                     ...(targetDetail.removed ? { color: "var(--text-secondary)" } : null),
@@ -380,7 +385,7 @@ export function CommentCard({
                 >
                   {targetDetail.title}
                 </span>
-                <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{targetDetail.sub}</span>
+                <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{targetDetail.sub}</span>
               </span>
             </button>
             {/* THE CONNECTOR. A rule down from the head's mark — centred on its
@@ -449,6 +454,8 @@ export function CommentCard({
             cursor: "pointer",
             fontFamily: "var(--font-sans)",
             fontSize: "var(--text-label-medium)",
+            lineHeight: "var(--text-label-medium--line-height)",
+            letterSpacing: "var(--text-label-medium--letter-spacing)",
             fontWeight: "var(--text-label-medium--font-weight)",
             color: "var(--text-secondary)",
           }}

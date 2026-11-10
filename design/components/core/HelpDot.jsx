@@ -58,6 +58,8 @@ export function HelpDot({ ariaLabel = "What is this?", onOpen, variant = "page",
           ...ring,
           fontFamily: "var(--font-sans)",
           fontSize: "var(--text-label-large)",
+          lineHeight: "var(--text-label-large--line-height)",
+          letterSpacing: "var(--text-label-large--letter-spacing)",
           fontWeight: "var(--text-label-large--font-weight)",
         }}
       >

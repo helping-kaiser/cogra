@@ -83,6 +83,7 @@ function ActsFooterSlow({ subline, node }) {
       style={{
         textAlign: "center",
         fontSize: "var(--text-label-small)",
+        fontWeight: "var(--text-label-small--font-weight)",
         lineHeight: "var(--text-label-small--line-height)",
         letterSpacing: "var(--text-label-small--letter-spacing)",
         color: "var(--tertiary)",
@@ -107,6 +108,7 @@ function ActsFooterLine({ count, onOpen, node }) {
     padding: 0,
     fontFamily: "var(--font-sans)",
     fontSize: "var(--text-label-small)",
+    fontWeight: "var(--text-label-small--font-weight)",
     lineHeight: "var(--text-label-small--line-height)",
     letterSpacing: "var(--text-label-small--letter-spacing)",
     color: "var(--text-secondary)",

@@ -56,7 +56,7 @@ export function Screen() {
         <div style={{ ...REGION, display: "{{picturesShown}}" }}>
           <AddDisc />
           <Button variant="outline">Choose from your files</Button>
-          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+          <span style={{ fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             …or drop them here.
           </span>
         </div>

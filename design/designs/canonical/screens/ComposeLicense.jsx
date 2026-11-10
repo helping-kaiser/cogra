@@ -44,7 +44,7 @@ export function Screen() {
           <LicenseAxis axis="record" name="license-provenance" tiers={PROVENANCE_TIERS} chosen={0} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
-            <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+            <span style={{ flex: 1, fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
               <LicenseSummary license={{ attribution: 1, provenance: 0 }} />
             </span>
             <Button>Done</Button>

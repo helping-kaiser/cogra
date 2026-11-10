@@ -204,7 +204,7 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
       {showAxes && (
         <div
           aria-hidden="true"
-          style={{ position: "absolute", inset: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
+          style={{ position: "absolute", inset: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
         >
           <span style={{ position: "absolute", left: 0, top: "50%", width: `${AXIS_GUTTER_X_PX - 6}px`, transform: "translateY(-50%)", textAlign: "right", whiteSpace: "nowrap" }} data-node={node && "left"}>
             {axes.left}
@@ -392,7 +392,7 @@ export function AttachmentPad({ value = 0, onChange, fieldRef, showAxes = true, 
       {showAxes && (
         <div
           aria-hidden="true"
-          style={{ position: "absolute", inset: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
+          style={{ position: "absolute", inset: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
         >
           <span style={{ position: "absolute", left: 0, top: "50%", width: `${AXIS_GUTTER_X_PX - 6}px`, transform: "translateY(-50%)", textAlign: "right", whiteSpace: "nowrap" }} data-node={node && "left"}>
             {axes.left}

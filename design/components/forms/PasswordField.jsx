@@ -123,6 +123,7 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
           data-node={node && "support"}
           style={{
             fontSize: "var(--text-body-small)",
+            fontWeight: "var(--text-body-small--font-weight)",
             lineHeight: "var(--text-body-small--line-height)",
             letterSpacing: "var(--text-body-small--letter-spacing)",
             color: error ? "var(--error)" : "var(--text-secondary)",

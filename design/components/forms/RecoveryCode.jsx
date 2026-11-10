@@ -86,6 +86,7 @@ export function RecoveryCode({ code, explainer, onConfirmed, error, defaultTyped
           textAlign: "center",
           fontFamily: "var(--font-mono)",
           fontSize: "var(--text-body-large)",
+          fontWeight: "var(--text-body-large--font-weight)",
           lineHeight: "var(--text-body-large--line-height)",
           letterSpacing: "0.05em",
         }}
@@ -93,12 +94,12 @@ export function RecoveryCode({ code, explainer, onConfirmed, error, defaultTyped
       >
         {code}
       </p>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", color: "var(--text-secondary)" }} data-node={part("explainer")}>{explainer}</p>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", color: "var(--text-secondary)" }} data-node={part("explainer")}>{explainer}</p>
       <Button variant="text" size="sm" selfStart onClick={onCopy} node={part("copy")}>
         Copy
       </Button>
       {copy !== null && (
-        <p role="status" style={{ margin: 0, fontSize: "var(--text-body-medium)" }} data-node={part("copied")}>
+        <p role="status" style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)" }} data-node={part("copied")}>
           {copy === "copied" ? "Code copied" : "This browser would not let the page copy. Select the code and copy it yourself."}
         </p>
       )}

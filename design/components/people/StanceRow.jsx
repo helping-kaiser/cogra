@@ -70,8 +70,8 @@ export function StanceRow({ name: nameGiven, handle, src, redacted = false, pDir
     >
       <MonogramAvatar name={name} size={40} src={redacted ? undefined : src} redacted={redacted} node={node && "avatar"} />
       <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", ...(redacted ? { color: "var(--text-secondary)" } : null) }} data-node={node && "name"}>{name}</span>
-        {!redacted && <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>@{handle}</span>}
+        <span style={{ fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", ...(redacted ? { color: "var(--text-secondary)" } : null) }} data-node={node && "name"}>{name}</span>
+        {!redacted && <span style={{ fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>@{handle}</span>}
       </span>
       {!onOpenHistory && <StanceValue pDirected={pDirected} pInterest={pInterest} zeroLabel={zeroLabel} node={node && "value"} />}
     </button>

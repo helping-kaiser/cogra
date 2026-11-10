@@ -43,6 +43,7 @@ const CELL = {
 const WORDS = {
   fontFamily: "var(--font-sans)",
   fontSize: "var(--text-label-large)",
+  lineHeight: "var(--text-label-large--line-height)",
   fontWeight: "var(--text-label-large--font-weight)",
   letterSpacing: "var(--text-label-large--letter-spacing)",
 };

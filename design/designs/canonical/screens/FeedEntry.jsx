@@ -98,6 +98,8 @@ export function Screen() {
               cursor: "pointer",
               fontFamily: "var(--font-sans)",
               fontSize: "var(--text-label-small)",
+              letterSpacing: "var(--text-label-small--letter-spacing)",
+              fontWeight: "var(--text-label-small--font-weight)",
               lineHeight: "var(--text-label-small--line-height)",
               color: "var(--text-secondary)",
               textAlign: "left",
@@ -110,7 +112,7 @@ export function Screen() {
             </span>
             <span
               aria-hidden="true"
-              style={{ flex: "none", color: "var(--on-surface)", fontSize: "var(--text-body-small)", fontWeight: 500 }}
+              style={{ flex: "none", color: "var(--on-surface)", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: 500 }}
               data-node="value"
             >
               {SCORE_MORE_PATHS.value}

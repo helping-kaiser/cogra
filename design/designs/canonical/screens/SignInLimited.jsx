@@ -26,6 +26,7 @@ export function Screen() {
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
@@ -37,6 +38,7 @@ export function Screen() {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
@@ -50,7 +52,7 @@ export function Screen() {
           <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="sol@solferreira.art" node="email" />
           <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="saltmarsh-tide" node="password" />
           <Checkbox label="Don't remember this account on this device" node="forget" />
-          <p role="alert" style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", color: "var(--error)" }} data-node="fault">
+          <p role="alert" style={{ margin: 0, fontSize: "var(--text-body-medium)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", color: "var(--error)" }} data-node="fault">
             Too many tries in a row. Wait a moment, then try again.
           </p>
           <WaitingCommit id="signin" label="Sign in" waiting={false} node="commit" />

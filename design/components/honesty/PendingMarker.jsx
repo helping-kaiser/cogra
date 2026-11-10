@@ -39,7 +39,7 @@ export function PendingMarker({ label = "Still settling", inline = false, node }
     with the pressed layer and the focus ring every control carries. */
 export function EditedMarker({ label = "Edited", onInspect, node }) {
   if (!onInspect) {
-    return <p style={{ margin: 0, fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }} data-node={node}>{label}</p>;
+    return <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", color: "var(--text-secondary)" }} data-node={node}>{label}</p>;
   }
   return (
     <button
@@ -55,6 +55,9 @@ export function EditedMarker({ label = "Edited", onInspect, node }) {
         cursor: "pointer",
         fontFamily: "var(--font-sans)",
         fontSize: "var(--text-label-small)",
+        lineHeight: "var(--text-label-small--line-height)",
+        letterSpacing: "var(--text-label-small--letter-spacing)",
+        fontWeight: "var(--text-label-small--font-weight)",
         color: "var(--text-secondary)",
         textDecoration: "underline",
       }}

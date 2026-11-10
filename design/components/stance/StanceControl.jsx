@@ -587,6 +587,8 @@ export function StanceControl({
             WebkitTouchCallout: "none",
             fontFamily: "var(--font-sans)",
             fontSize: "var(--text-label-large)",
+            lineHeight: "var(--text-label-large--line-height)",
+            letterSpacing: "var(--text-label-large--letter-spacing)",
             fontWeight: "var(--text-label-large--font-weight)",
             color: "var(--primary)",
             ...(overMedia ? OVER_MEDIA_ANCHOR : null),
@@ -646,7 +648,7 @@ export function StanceControl({
             <span
               className="cg-exact"
               aria-hidden="true"
-              style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+              style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
               data-node={node && "exact"}
             >
               {formatStancePair(restingPair)}
@@ -791,6 +793,8 @@ export function StanceControl({
                   color: "var(--primary)",
                   fontFamily: "var(--font-sans)",
                   fontSize: "var(--text-label-large)",
+                  lineHeight: "var(--text-label-large--line-height)",
+                  letterSpacing: "var(--text-label-large--letter-spacing)",
                   fontWeight: "var(--text-label-large--font-weight)",
                 }}
               >
@@ -812,7 +816,7 @@ export function StanceControl({
             {explaining ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }} data-node={node && (explaining === "zero" ? "zeroPanel" : "helpPanel")}>
                 {(explaining === "zero" ? unreachableHelp(axes, targetLabel) : help ?? padHelp(axes)).map((line) => (
-                  <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
+                  <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)" }}>
                     <HelpLine line={line} />
                   </p>
                 ))}
