@@ -298,7 +298,9 @@ published deployment decision outside Layer 1's guarantee
 `case:deployment:realization-obligations-finality-breach-follow`); Layer 1
 specifies no resumption procedure. Where the epoch marker's form is
 host-only, the host's continued production of epoch markers is a liveness
-dependency of the epoch sequence.
+dependency of the epoch sequence: a host that stops producing them leaves
+the network at its last closed epoch, with the published re-anchor response
+(§13) as the deployment remedy.
 
 ---
 
@@ -3847,7 +3849,20 @@ transit. Two duties: *publication* on the realization, *non-occlusion* on
 the deployment. Design space: a pointer to the realization's own
 publication, a mirror in the network's append-log, or a periodic published
 snapshot beside the network's own constants. A breach of the finality
-assumptions halts Layer 1 (§13.1).
+assumptions has the halt consequence of
+`rem:comparator:finality-breach-halts` (§1.2) and one of two published
+deployment responses; which one follows is the deployment's published
+policy, and neither is a Layer-1 rule:
+
+- **Re-anchor (`case:deployment:realization-obligations-finality-breach-reanchor`).**
+  Keep every closed epoch as published and resume by a published
+  marker-policy edition change naming a fresh initial epoch marker in the
+  surviving history, with a published ledger-continuity decision.
+- **Follow (`case:deployment:realization-obligations-finality-breach-follow`).**
+  Follow the replaced history, re-deriving the epochs whose markers were lost
+  under a published marker-policy edition change; name the superseded
+  certificates and the point of divergence, and publish the
+  ledger-continuity decision.
 
 ### 13.1 Operator duties
 
@@ -3894,25 +3909,6 @@ failed criterion is reported with its disposition.
 | `cond:deployment:boundary-search-evidence` | Publish boundary-search trial counts and elapsed-time envelopes with their hardware, arithmetic, residual target, and timeout/fallback settings, and show that any adopted exact reuse yields the same certified outputs as complete validation on the declared comparison inputs. |
 | `cond:deployment:terminal-regression` | For a standing-edition change, publish regression inputs and deltas for each terminal consumer that reads standing, with its declared tolerance and response to a failed criterion. |
 | `cond:deployment:complete-act-conformance` | Publish compiler/replay evidence covering parallel acts, complete-act identity, fold cells, recipient resolution, domain profiles, and base allocation, and reproduce the accepted-act census under projection completeness. |
-
-**Finality breach (`rem:comparator:finality-breach-halts`).** A replacement
-beyond the published settlement depth is a failure of the realization's
-finality assumptions: closed epochs, ledgers, standing, and title stand,
-and Layer 1 halts at the last closed epoch and rewrites nothing. Where the
-epoch marker's form is host-only, the host's continued production of
-markers is a liveness dependency of the epoch sequence, with the re-anchor
-response as the deployment remedy. Which response follows a breach is the
-deployment's published policy; neither is a Layer-1 rule:
-
-- **Re-anchor (`case:deployment:realization-obligations-finality-breach-reanchor`).**
-  Keep every closed epoch as published and resume by a published
-  marker-policy edition change naming a fresh initial epoch marker in the
-  surviving history, with a published ledger-continuity decision.
-- **Follow (`case:deployment:realization-obligations-finality-breach-follow`).**
-  Follow the replaced history, re-deriving the epochs whose markers were lost
-  under a published marker-policy edition change; name the superseded
-  certificates and the point of divergence, and publish the
-  ledger-continuity decision.
 
 ---
 
