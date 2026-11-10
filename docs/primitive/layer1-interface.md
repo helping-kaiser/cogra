@@ -633,8 +633,8 @@ non-title-transferring Accept/Ratify acts resolve to self
 produces a deterministic, independently reproducible normalized share $R_C$
 of pool $\mathcal{L}$; unit of account, payout schedule, guild fee/margin,
 eligibility windows, and pool-funding relationship are Layer 2 policy
-reserved to the guild; the sole constraint is publication (§I.12, the
-formula-completeness invariant). No protocol-level fee is extracted from
+reserved to the guild; the sole constraint is publication
+(`subsec:deployment:completeness`, §13). No protocol-level fee is extracted from
 $\mathcal{L}$. *(Full paper only — the closure edition names the reward
 read-site in the ledger without specifying it.)*
 
@@ -690,7 +690,8 @@ pools.
 
 Each guild (PN full §8, `subsec:transport:guild-model`): (a) publishes its complete CAN recursion, all
 guild-specific economic parameters, and its reward formula in full, so any
-participant can independently reproduce every reward computation (§I.12);
+participant can independently reproduce every reward computation
+(`subsec:deployment:completeness`);
 (b) maintains a self-contained reward pool funded by guild-level advertising
 spend, from which it may retain a published fee or operating margin;
 (c) selects its own CAN aggregation function, attribution threshold
