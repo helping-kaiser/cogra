@@ -52,7 +52,7 @@
 
    LEAVING UNSIGNED KEEPS THEM (B3). The back arrow — and the system's Back —
    leave every remaining pick kept on this device, and the settings page's
-   Key backup group carries a quiet row, `3 kept picks waiting`, that opens
+   Key backup group carries a quiet row, `4 kept picks waiting`, that opens
    this review again. "Never silently" stays honest without a nag: the row is
    the one place the waiting batch is named, and nothing else reminds. The
    row shows only while the key is here and unsigned picks wait; if the key
