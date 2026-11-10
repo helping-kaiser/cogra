@@ -259,7 +259,10 @@ async fn a_copied_landing_position_numbers_from_one(pool: PgPool) {
         .bind(position)
         .execute(&pool)
         .await;
-        assert!(refused.is_err(), "({epoch}, {position}) is no landing position");
+        assert!(
+            refused.is_err(),
+            "({epoch}, {position}) is no landing position"
+        );
     }
 }
 

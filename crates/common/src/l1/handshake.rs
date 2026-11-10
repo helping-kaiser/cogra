@@ -373,7 +373,11 @@ pub enum MalformedOrder {
     #[error("record {act} names epoch {named} inside epoch {epoch}")]
     MisplacedRecord { act: String, named: i64, epoch: i64 },
     #[error("record {act} sits at position {position}, outside {FIRST_POSITION}..={len}")]
-    PositionOutOfRange { act: String, position: i64, len: i64 },
+    PositionOutOfRange {
+        act: String,
+        position: i64,
+        len: i64,
+    },
     #[error("position {position} of epoch {epoch} is repeated")]
     RepeatedPosition { epoch: i64, position: i64 },
 }
@@ -552,12 +556,20 @@ mod tests {
         );
         assert!(matches!(
             package(1, &[0, 1]).check_order_of_record(),
-            Err(MalformedOrder::PositionOutOfRange { position: 0, len: 2, .. })
+            Err(MalformedOrder::PositionOutOfRange {
+                position: 0,
+                len: 2,
+                ..
+            })
         ));
         // A gap: three records, positions 1, 2 and 4 — 3 is missing.
         assert!(matches!(
             package(1, &[1, 2, 4]).check_order_of_record(),
-            Err(MalformedOrder::PositionOutOfRange { position: 4, len: 3, .. })
+            Err(MalformedOrder::PositionOutOfRange {
+                position: 4,
+                len: 3,
+                ..
+            })
         ));
         assert_eq!(
             package(2, &[1, 1]).check_order_of_record(),

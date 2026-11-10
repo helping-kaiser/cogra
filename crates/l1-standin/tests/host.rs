@@ -132,7 +132,11 @@ async fn handshake_lands_a_record(pool: PgPool) {
     assert!((balance.burned_total - 3.0).abs() < 1e-9);
 
     let since = host.epochs_since(0).await.expect("epochs");
-    assert_eq!(since.len(), 1, "the empty boundary 0 reads the whole sequence");
+    assert_eq!(
+        since.len(),
+        1,
+        "the empty boundary 0 reads the whole sequence"
+    );
     assert_eq!(since[0], package);
     assert!(host.epochs_since(1).await.expect("epochs").is_empty());
 }

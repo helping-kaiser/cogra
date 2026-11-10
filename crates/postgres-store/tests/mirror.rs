@@ -232,8 +232,14 @@ async fn the_mirror_tables_refuse_a_numbering_without_an_order_of_record(pool: P
         .bind(position)
     };
     assert!(insert("a", 0, 1).execute(&pool).await.is_err(), "epoch 0");
-    assert!(insert("a", 1, 0).execute(&pool).await.is_err(), "position 0");
-    insert("a", 1, 1).execute(&pool).await.expect("1, 1 is fine");
+    assert!(
+        insert("a", 1, 0).execute(&pool).await.is_err(),
+        "position 0"
+    );
+    insert("a", 1, 1)
+        .execute(&pool)
+        .await
+        .expect("1, 1 is fine");
     assert!(insert("b", 1, 1).execute(&pool).await.is_err(), "a repeat");
     assert!(
         sqlx::query("INSERT INTO mirror_epochs (epoch, attested_at) VALUES (0, NOW())")

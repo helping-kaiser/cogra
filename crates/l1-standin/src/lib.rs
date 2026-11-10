@@ -465,12 +465,10 @@ impl StandIn {
 /// The last closed epoch; the empty boundary 0 before the first close,
 /// since epochs number from 1 (layer1-interface.md §11.6).
 async fn last_closed_epoch(conn: &mut PgConnection) -> Result<i64, StandInError> {
-    Ok(
-        sqlx::query_scalar!("SELECT MAX(epoch) FROM l1_epochs")
-            .fetch_one(conn)
-            .await?
-            .unwrap_or(EMPTY_BOUNDARY),
-    )
+    Ok(sqlx::query_scalar!("SELECT MAX(epoch) FROM l1_epochs")
+        .fetch_one(conn)
+        .await?
+        .unwrap_or(EMPTY_BOUNDARY))
 }
 
 /// Settles every admission burn due by `epoch`: marks it settled and
