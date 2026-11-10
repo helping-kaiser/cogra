@@ -1250,8 +1250,9 @@ package speak.
 *asserted parents*: prior-act references, structural fields of its body,
 defining the directed acyclic causal-parent relation (backward-only by
 construction, acyclic within a batch by the topological formation check).
-Semantics: the act is admissible only into an epoch whose history contains
-every asserted parent earlier. The settlement reference is the settlement
+Semantics: the act is admissible only into an epoch that contains, or whose
+history contains, every asserted parent earlier
+(`cond:graph:authoritative-order-parent-placement`). The settlement reference is the settlement
 family's instance of this field. An asserted parent is metadata, not graph
 incidence, and adds no endpoint pre-degree — asserted parents and declared
 dependencies in a scoring formula are prohibited (the $\tau$-farming lint,
@@ -1332,13 +1333,32 @@ recognition quantity.
 4. **Ordering fraud proof (`def:graph:ordering-fraud-proof`,
    `post:graph:ordering-accountability`).** For an accepted act, a fraud
    proof is the ordinary full opening of its dependency projection; it
-   succeeds iff the finalized order violates the committed dependency list.
-   A successful proof may trigger fault attribution, operator slashing, or
-   deployment sanctions — but it does **not** reorder the epoch, delete the
-   act, reverse counts or debits, recompute historical standing, or
-   reverse title. The authoritative order stays authoritative even when
-   proven non-compliant; by finalizing an act the host attests it held and
-   validated the full dependency opening.
+   succeeds iff some dependency is absent from finalized history or has a
+   key of record not strictly below the act's. A successful proof may
+   trigger fault attribution, operator slashing, or deployment sanctions —
+   but it does **not** reorder the epoch, delete the act, reverse counts or
+   debits, recompute historical standing, or reverse title. The
+   authoritative order stays authoritative even when proven non-compliant
+   (a *compliant* order satisfies both placement conditions); by finalizing
+   an act the host attests it held and validated the full dependency
+   opening.
+
+**Post-finalization faults (`def:graph:parent-placement-fault`,
+`def:graph:stamp-fault`, `def:graph:title-certificate-fault`).** A
+*parent-placement fault* is an asserted parent of a finalized act that is
+absent from finalized history or sits at a key of record not strictly below
+the act's; the public finalized record proves it, with no
+removable-projection opening. It carries the dependency case's consequences
+— attribution and sanctions, no reordering, deletion, recomputation, or
+reversal (`cond:graph:ordering-accountability-parent-placement`). A *stamp
+fault* is a published logical time that differs from the recomputed
+$\mathbb{T}^{\text{act}}_q$; it is attributed to the host as the sole
+stamper, and the order of record and every derived quantity stand
+(`cond:graph:ordering-accountability-stamp`). A *title-certificate fault*
+is a published $\mathrm{owner}^{(k)}(n_i)$ that differs from the recomputed
+fold (§7.2). None of these proofs authorizes verifier refusal of a
+finalized epoch: finalization is irreversible, and no
+replacement-agreement mechanism is specified.
 
 **Act authentication requirements
 (`post:graph:act-authentication-requirements`,
