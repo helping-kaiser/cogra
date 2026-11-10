@@ -92,19 +92,21 @@ fun StanceRow(
         } else {
             CograAvatar(name = shown, size = AVATAR, url = avatarUrl, testTag = avatar)
         }
+        // The name column takes what the avatar and value leave, and each line
+        // spans it (`flex: 1; flex-direction: column` stretches its spans).
         Column(Modifier.weight(1f)) {
             Text(
                 text = shown,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.let { if (redacted) it.onSurfaceVariant else it.onSurface },
-                modifier = Modifier.dataNode(node?.div("name")),
+                modifier = Modifier.fillMaxWidth().dataNode(node?.div("name")),
             )
             if (!redacted && handle != null) {
                 Text(
                     text = "@$handle",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.dataNode(node?.div("handle")),
+                    modifier = Modifier.fillMaxWidth().dataNode(node?.div("handle")),
                 )
             }
         }

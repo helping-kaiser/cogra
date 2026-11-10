@@ -246,7 +246,12 @@ private fun Empty(state: ProfileStancesUiState) {
     }
     // `padding: 8px 24px` around the empty state's own `8 0`.
     Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
-        EmptyState(testTag = "stances_empty", title = line, node = PROFILE_STANCES / "empty")
+        EmptyState(
+            testTag = "stances_empty",
+            title = line,
+            modifier = Modifier.fillMaxWidth(),
+            node = PROFILE_STANCES / "empty",
+        )
     }
 }
 
