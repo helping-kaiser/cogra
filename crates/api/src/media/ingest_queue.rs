@@ -290,6 +290,16 @@ struct Written {
 }
 
 /// Re-encodes one upload and writes the result, touching no row.
+///
+/// The source's probe runs on the blocking pool: it walks the header
+/// boxes of bytes an author supplied, CPU work like every other pass over
+/// upload bytes, and a runtime thread is not the place for it.
+///
+/// The rendition's size is read off its file before its bytes are. One
+/// over the cap is refused as too long whatever it holds — the same
+/// refusal the pipeline's size check gives, and where ffmpeg stopping at
+/// its `-fs` limit lands — so reading it into memory first would only
+/// spend memory on bytes about to be thrown away.
 async fn run_job(
     blobs: &dyn BlobStore,
     config: &MediaConfig,
@@ -312,7 +322,12 @@ async fn run_job(
     let output = scratch.path().join("rendition.mp4");
 
     let (caps, video_bps) = plan(config, job.scale, &job.options);
-    let source_probe = video::probe(&source).ok();
+    let (source, source_probe) = tokio::task::spawn_blocking(move || {
+        let probe = video::probe(&source).ok();
+        (source, probe)
+    })
+    .await
+    .map_err(|e| JobError::Transient(e.to_string()))?;
     let transfer = transfer_of(source_probe);
     if transfer.is_hdr() && !ffmpeg.tone_maps() {
         return Err(JobError::Refused(REASON_NO_TONE_MAP));
@@ -326,8 +341,9 @@ async fn run_job(
     tokio::fs::write(&input, source)
         .await
         .map_err(|e| JobError::Transient(format!("writing the upload to scratch: {e}")))?;
+    let cap_bytes = caps.video_bytes as u64;
     match ffmpeg
-        .transcode(&input, &output, video_plan, settings.deadline)
+        .transcode(&input, &output, video_plan, cap_bytes, settings.deadline)
         .await
     {
         Ok(()) => {}
@@ -336,6 +352,20 @@ async fn run_job(
             return Err(JobError::Refused(REASON_DID_NOT_ENCODE));
         }
         Err(e) => return Err(JobError::Transient(e.to_string())),
+    }
+
+    let rendition_bytes = tokio::fs::metadata(&output)
+        .await
+        .map_err(|e| JobError::Transient(format!("reading the rendition's size: {e}")))?
+        .len();
+    if rendition_bytes > cap_bytes {
+        tracing::warn!(
+            id = %job.id,
+            rendition_bytes,
+            cap_bytes,
+            "a rendition overran its cap"
+        );
+        return Err(JobError::Refused(REASON_TOO_LONG));
     }
 
     let rendition = tokio::fs::read(&output)
@@ -635,5 +665,103 @@ mod tests {
             matches!(outcome, Err(JobError::Refused(REASON_NO_TONE_MAP))),
             "refused for want of a tone map"
         );
+    }
+
+    /// Runs one post job whose upload is `source` through a stand-in
+    /// ffmpeg: a shell script that records the environment it was started
+    /// with into `env` beside itself, then runs `body` with the output path
+    /// as `$out`.
+    #[cfg(unix)]
+    async fn run_with_fake_ffmpeg(body: &str) -> (Result<Written, JobError>, String) {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = tempfile::tempdir().expect("a scratch dir");
+        let record = dir.path().join("env");
+        let script = dir.path().join("ffmpeg");
+        std::fs::write(
+            &script,
+            format!(
+                "#!/bin/sh\nfor out; do :; done\n\
+                 tr '\\0' '\\n' < /proc/$$/environ > '{}'\n{body}\n",
+                record.display()
+            ),
+        )
+        .expect("the stand-in is written");
+        std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755))
+            .expect("the stand-in is executable");
+
+        let blobs = super::super::blob::in_memory();
+        blobs
+            .put(
+                "ingest/upload.mp4",
+                b"bytes no probe reads".to_vec(),
+                video::MIME,
+            )
+            .await
+            .expect("the upload is stored");
+        let job = store::IngestJob {
+            id: Uuid::new_v4(),
+            author_id: Uuid::new_v4(),
+            storage_key: "ingest/upload.mp4".into(),
+            mime_type: video::MIME.into(),
+            options: serde_json::json!({ "v": 1, "duration_ms": 2_500 }),
+            scale: store::MediaScale::Post,
+            attempts: 1,
+        };
+        let config = MediaConfig::default();
+        let outcome = run_job(
+            &blobs,
+            &config,
+            Some(&Ffmpeg::at(&script)),
+            IngestSettings::from_config(&config),
+            &job,
+            "rendition.mp4",
+        )
+        .await;
+        let env = std::fs::read_to_string(&record).unwrap_or_default();
+        (outcome, env)
+    }
+
+    /// A rendition ffmpeg wrote past the cap is refused as too long off its
+    /// size alone. The stand-in leaves a file one byte over a post's cap
+    /// that is no movie at all: were it read and run through the pipeline
+    /// it would come back as a failed re-encode, so the too-long reason is
+    /// the size check answering before any byte is read.
+    ///
+    /// A rendition over its cap is refused as too long before its bytes are read.
+    /// ´claim:media:an-oversized-rendition-is-refused-unread´
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn a_rendition_over_the_cap_is_refused_before_it_is_read() {
+        let over = MediaConfig::default()
+            .caps_for(super::super::GalleryKind::Post)
+            .video_bytes
+            + 1;
+        let (outcome, _) = run_with_fake_ffmpeg(&format!("truncate -s {over} \"$out\"")).await;
+        assert!(
+            matches!(outcome, Err(JobError::Refused(REASON_TOO_LONG))),
+            "refused as too long by its size"
+        );
+    }
+
+    /// ffmpeg runs with `PATH` and nothing else of the server's
+    /// environment, whose secrets it has no use for.
+    ///
+    /// ffmpeg is started with an environment of PATH alone.
+    /// ´claim:media:ffmpeg-inherits-no-secrets´
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn ffmpeg_sees_path_and_nothing_else() {
+        let (outcome, env) = run_with_fake_ffmpeg("exit 1").await;
+        assert!(
+            matches!(outcome, Err(JobError::Refused(REASON_DID_NOT_ENCODE))),
+            "the stand-in ran and refused"
+        );
+        let names: Vec<&str> = env
+            .lines()
+            .filter_map(|line| line.split('=').next())
+            .filter(|name| !name.is_empty())
+            .collect();
+        assert_eq!(names, ["PATH"], "the child's whole environment: {names:?}");
     }
 }

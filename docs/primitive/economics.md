@@ -64,9 +64,10 @@ they never mix:
   θ-debit. Writing any record costs its author θ off their own
   balance; capacity is the balance
   (``post:epoch:act-debit``). Burn value is recorded by a
-  realization of the burn primitive beneath L1, which prices it in
-  its own external denomination at the unit cost `c_u` it
-  publishes (``post:comparator:burn-primitive``, R10). This money
+  realization of the burn primitive beneath L1, which publishes
+  its amount-proportional unit cost `c_u` in its external
+  denomination, any cost per recording event separately
+  (``post:comparator:burn-primitive``, R10). This money
   is the realization's: CoGra consumes `B_i` and the burn
   benchmarks (`B_W1`/`B_safety`/`B_door`,
   ``cor:epoch:universal-burn-benchmarks`` — gate benchmarks; there

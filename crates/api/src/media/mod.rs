@@ -51,6 +51,8 @@ pub mod transcode;
 pub mod video;
 pub mod webp;
 
+use std::sync::Arc;
+
 use postgres_store::PgPool;
 use postgres_store::media as store;
 use sha2::{Digest, Sha256};
@@ -195,7 +197,65 @@ pub struct MediaConfig {
     /// ffmpeg at a time, and ffmpeg spreads one encode over every core,
     /// so one is the right number until uploads queue behind each other.
     pub ingest_workers: usize,
+    /// How many uploads may be held in memory for processing at once,
+    /// shared by every clone of this config.
+    pub process_permits: ProcessPermits,
 }
+
+/// The process-wide bound on uploads held in memory for processing.
+///
+/// An upload's bytes reach memory only once they have fully arrived — a
+/// single-shot upload is spooled to a temporary file by the multipart
+/// transport before its resolver runs, a resumable one is assembled in the
+/// store — and they stay there while they are stripped, probed, digested
+/// and written to the store. A permit is held for exactly that span: it is
+/// taken after the network has delivered the last byte, so a client that
+/// sends slowly holds a connection and never a permit, and every holder's
+/// work is the server's own, bounded by the file's size.
+///
+/// A request with no permit free waits for one (tokio's semaphore queues
+/// its waiters first come, first served) rather than being refused:
+/// because no holder can be slowed by a client, the wait is bounded by
+/// the uploads ahead of it, each already admitted by its author's upload
+/// rate limit.
+#[derive(Debug, Clone)]
+pub struct ProcessPermits(Arc<tokio::sync::Semaphore>);
+
+impl ProcessPermits {
+    /// `permits` uploads processed at once. Configuration refuses zero
+    /// before it gets here: a semaphore of none would hold every upload
+    /// forever.
+    pub fn new(permits: usize) -> Self {
+        Self(Arc::new(tokio::sync::Semaphore::new(permits)))
+    }
+
+    /// Waits for a permit; holding the returned guard is holding it.
+    pub async fn acquire(
+        &self,
+    ) -> Result<tokio::sync::OwnedSemaphorePermit, tokio::sync::AcquireError> {
+        self.0.clone().acquire_owned().await
+    }
+}
+
+impl Default for ProcessPermits {
+    fn default() -> Self {
+        Self::new(DEFAULT_PROCESS_PERMITS)
+    }
+}
+
+/// How many uploads are processed in memory at once unless configured.
+///
+/// One upload in memory is at most twice the larger byte cap: the
+/// multipart transport admits a file up to that ceiling
+/// ([`MediaConfig::transport_limit_bytes`]) and it is read whole before
+/// the cap refuses it, and an admitted video is held twice over while it
+/// is stripped — the bytes read and the stripped copy. At the default
+/// caps that is 2 × 100 MiB = 200 MiB, so eight permits bound upload
+/// processing at 1.6 GiB, a fifth of the API unit's 8 GiB memory limit
+/// (`deploy/quadlet/cogra-api.container`). The rest is left to what shares
+/// that limit: ffmpeg's encodes, the ingest worker's own source and
+/// rendition, and every other request.
+const DEFAULT_PROCESS_PERMITS: usize = 8;
 
 const DEFAULT_MAX_UPLOAD_BYTES: usize = 10 * 1024 * 1024;
 const DEFAULT_TRANSCODE_TIMEOUT_SECS: u64 = 1800;
@@ -303,6 +363,7 @@ impl Default for MediaConfig {
             ingest_poll_secs: DEFAULT_INGEST_POLL_SECS,
             ingest_lease_secs: DEFAULT_INGEST_LEASE_SECS,
             ingest_workers: DEFAULT_INGEST_WORKERS,
+            process_permits: ProcessPermits::default(),
         }
     }
 }
@@ -379,6 +440,17 @@ impl MediaConfig {
                 lease
             },
             ingest_workers: env_parsed("MEDIA_INGEST_WORKERS", base.ingest_workers)?,
+            process_permits: {
+                let permits = env_parsed("MEDIA_PROCESS_PERMITS", DEFAULT_PROCESS_PERMITS)?;
+                if permits == 0 || permits > tokio::sync::Semaphore::MAX_PERMITS {
+                    anyhow::bail!(
+                        "MEDIA_PROCESS_PERMITS must be between 1 and {}: with none, every \
+                         upload would wait forever",
+                        tokio::sync::Semaphore::MAX_PERMITS
+                    );
+                }
+                ProcessPermits::new(permits)
+            },
         })
     }
 
