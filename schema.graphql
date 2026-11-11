@@ -1872,9 +1872,8 @@ type Mutation {
 	revokeOtherSessions: RevokeSessionsPayload!
 	"""
 	Always succeeds, to avoid revealing whether an account exists. If
-	one does, a single-use reset link goes to its address — and the
-	bare token beside it, which native apps accept as a paste
-	(auth.md "Link URLs").
+	one does, a single-use reset link goes to its address (auth.md
+	"Link URLs").
 	
 	The two budgets differ accordingly (auth.md "Rate limiting"): the
 	per-IP window refuses visibly, while the per-email one trips
