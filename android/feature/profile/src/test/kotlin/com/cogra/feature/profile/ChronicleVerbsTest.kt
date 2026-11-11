@@ -1,5 +1,7 @@
 package com.cogra.feature.profile
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DynamicFeed
 import com.cogra.core.designsystem.v2.atom.ContentRowDisc
 import com.cogra.crypto.Family
 import com.cogra.domain.RecordAbout
@@ -21,6 +23,7 @@ class ChronicleVerbsTest {
         about: RecordAbout? = null,
         handle: String? = null,
         untag: Boolean = false,
+        topic: String? = null,
         opinion: RecordOpinion? = null,
     ) = RecordRow(
         id = "r",
@@ -33,6 +36,7 @@ class ChronicleVerbsTest {
         act = act,
         about = about,
         untag = untag,
+        topic = topic,
     )
 
     private val face = RecordOpinion(0.4, 0.3, severed = false)
@@ -102,6 +106,29 @@ class ChronicleVerbsTest {
         assertThat(discOf(mention)).isEqualTo(ContentRowDisc.Monogram("ada"))
     }
 
+    // copy-voice, *A citation*: one taken back reads `Withdrew a citation`,
+    // whatever it cited, the disc that thing's own.
+    @Test
+    fun aCitationTakenBackReadsWithdrewACitation() {
+        val withdrawn = row(Family.REFERENCE, RecordAct.WITHDRAWAL, about = RecordAbout.POST)
+        assertThat(verbOf(withdrawn, own = true)).isEqualTo(R.string.chronicle_withdrew_citation)
+        assertThat(discOf(withdrawn)).isEqualTo(ContentRowDisc.Glyph(Icons.Filled.DynamicFeed))
+        val withdrawnMention = row(Family.REFERENCE, RecordAct.WITHDRAWAL, about = RecordAbout.PERSON, handle = "ada")
+        assertThat(verbOf(withdrawnMention, own = true)).isEqualTo(R.string.chronicle_withdrew_citation)
+    }
+
+    // copy-voice, *A tag* · *An opinion*: the tag's aside is the tag
+    // (`#saltmaps`), and an opinion on a topic reads `on #saltmaps`.
+    @Test
+    fun aTagAndAnOpinionOnATopicNameTheTopic() {
+        val tag = row(Family.TAG, about = RecordAbout.POST, topic = "saltmaps")
+        assertThat(verbOf(tag, own = true)).isEqualTo(R.string.chronicle_tagged_post)
+        assertThat(asideOf(tag)).isEqualTo(R.string.chronicle_topic to "saltmaps")
+        assertThat(asideOf(row(Family.AFFINITY, topic = "saltmaps", opinion = face)))
+            .isEqualTo(R.string.chronicle_on_topic to "saltmaps")
+        assertThat(asideOf(row(Family.TAG, about = RecordAbout.POST))).isNull()
+    }
+
     @Test
     fun theVerbsAreCopyVoices() {
         val voice = java.io.File("../../../design/guidelines/copy-voice.md").readText().replace(Regex("\\s+"), " ")
@@ -109,7 +136,7 @@ class ChronicleVerbsTest {
         for (verb in listOf(
             "Joined", "Vouched for", "Walked back an opinion", "Tagged a post", "Tagged a comment",
             "Un-tagged a post", "Un-tagged a comment", "Cited a post", "Cited a comment", "Mentioned",
-            "Edited a post", "Edited a comment",
+            "Edited a post", "Edited a comment", "Withdrew a citation",
         )) {
             assertThat(voice).contains("`$verb`")
             assertThat(strings).contains(">$verb</string>")

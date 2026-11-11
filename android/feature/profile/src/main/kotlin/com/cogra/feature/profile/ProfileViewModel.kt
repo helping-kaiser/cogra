@@ -55,8 +55,8 @@ data class ProfileUiState(
     val endCursor: String? = null,
     val hasMore: Boolean = false,
     /**
-     * The header's figures (`ProfileFigures`; Q35 closed toward the drawn
-     * figures, jakob's confirmation pending); null until read, and kept
+     * The header's figures (`ProfileFigures`; Q35, bundles, never
+     * records); null until read, and kept
      * through a failed re-read.
      */
     val figures: ProfileFigures? = null,

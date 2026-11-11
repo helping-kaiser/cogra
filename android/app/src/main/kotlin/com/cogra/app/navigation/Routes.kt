@@ -36,9 +36,18 @@ data object WalletTab
 @Serializable
 data class InviteEntry(val inviteId: String? = null, val invalid: Boolean = false)
 
-/** The application form, holding a checked link and its inviter (`Join`). */
+/**
+ * The application form, holding a checked link and its inviter (`Join`):
+ * the handle, the name the heading says and the picture, as the check served
+ * them (Join.md:9).
+ */
 @Serializable
-data class Join(val inviteId: String, val inviterHandle: String)
+data class Join(
+    val inviteId: String,
+    val inviterHandle: String,
+    val inviterName: String = inviterHandle,
+    val inviterAvatarUrl: String? = null,
+)
 
 @Serializable
 data object Login

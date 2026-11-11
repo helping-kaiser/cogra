@@ -21,6 +21,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.InviterView
 import com.cogra.domain.Outcome
 import com.cogra.domain.identity.Register
 import com.cogra.domain.testing.FakeTokenStore
@@ -58,6 +59,8 @@ class JoinScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
+    private val mira = InviterView(handle = "mira", name = "Mira Voss")
+
     private val filled = JoinUiState(handle = "noor", email = "noor@fieldmail.org", password = "fielddayfield")
 
     private fun show(
@@ -70,7 +73,7 @@ class JoinScreenTest {
         compose.setContent {
             JoinScreen(
                 state = state,
-                inviterHandle = "mira",
+                inviter = mira,
                 onHandleChange = {},
                 onEmailChange = {},
                 onPasswordChange = {},
@@ -99,13 +102,20 @@ class JoinScreenTest {
     @Test
     fun theFaceAndTheNameOverTheFormAreTheInvitersOwn() {
         show()
-        tag("join.inviter").assertExists()
-        tag("join.title").assertTextEquals("@mira invited you")
+        tag("join.avatar").assertExists()
+        tag("join.title").assertTextEquals("Mira Voss invited you")
         tag("join.body").assertTextEquals(
             "CoGra is invite-only — a member vouches for you, and @mira's approval brings you in.",
         )
-        assertThat(top("join.inviter")).isLessThan(top("join.title"))
+        assertThat(top("join.avatar")).isLessThan(top("join.title"))
         assertThat(top("join.title")).isLessThan(top("join.handle"))
+    }
+
+    // Join.md:9 — an inviter with no written name is named by their handle.
+    @Test
+    fun anInviterWithNoWrittenNameIsNamedByTheirHandle() {
+        compose.setContent { JoinScreen(JoinUiState(), InviterView(handle = "mira"), {}, {}, {}, {}) }
+        tag("join.title").assertTextEquals("mira invited you")
     }
 
     // Join.md:11 — ALWAYS the header's arrow reads a plain Back, with no origin noun.
@@ -183,7 +193,7 @@ class JoinScreenTest {
         compose.setContent {
             JoinRoute(
                 inviteId = "0d9e4a71-2f4b-4a1e-9c53-8d54f0a3b2c1",
-                inviterHandle = "mira",
+                inviter = mira,
                 onBack = { left++ },
                 onAbout = { left++ },
                 onSignIn = { left++ },
@@ -219,7 +229,7 @@ class JoinScreenTest {
         compose.setContent {
             JoinRoute(
                 inviteId = "0d9e4a71-2f4b-4a1e-9c53-8d54f0a3b2c1",
-                inviterHandle = "mira",
+                inviter = mira,
                 onBack = {},
                 onAbout = {},
                 onSignIn = {},
@@ -267,7 +277,7 @@ class JoinScreenTest {
         )
         var state by mutableStateOf(filled)
         compose.setContent {
-            JoinScreen(state, "mira", {}, {}, {}, {})
+            JoinScreen(state, mira, {}, {}, {}, {})
         }
         for ((line, expected) in words) {
             state = when (line) {
@@ -337,7 +347,7 @@ class JoinScreenTest {
     @Test
     fun createAccountWaitsOnItsFieldsThenWakes() {
         var state by mutableStateOf(filled.copy(password = ""))
-        compose.setContent { JoinScreen(state, "mira", {}, {}, {}, {}) }
+        compose.setContent { JoinScreen(state, mira, {}, {}, {}, {}) }
         tag("join.commit.action").assertIsNotEnabled()
         tag("join.commit.reason").assertTextEquals("Waiting for a handle, your email and a password")
         state = filled

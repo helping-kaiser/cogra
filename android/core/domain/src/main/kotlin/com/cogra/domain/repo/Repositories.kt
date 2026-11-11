@@ -485,15 +485,15 @@ interface ProfileRepository {
 
     /**
      * The header's three figures (`ProfileFigures`; open-questions Q35,
-     * closed toward the drawn figures, jakob's confirmation pending): record
-     * counts, each labelled and never merged.
+     * ruled 2026-11-10): bundles, never records, each labelled and never
+     * merged.
      */
     suspend fun figures(actorId: String): Outcome<ProfileFigures>
 
     /**
      * One direction of a person's opinions page (`ProfileStances`), read whole
      * and folded: one row per person, strongest first (`foldHeldOpinions`).
-     * The figures count records; this lists people (open-questions Q35).
+     * The opinion figures count exactly these people (open-questions Q35).
      */
     suspend fun opinions(actorId: String, direction: OpinionDirection): Outcome<List<HeldOpinion>>
 
