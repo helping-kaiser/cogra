@@ -752,7 +752,7 @@ async fn an_upload_without_a_verified_session_is_refused_unparsed(pool: PgPool) 
     let (alice, _) = rig.seed_member("alice", "alice@example.com").await;
     let (gone, _) = rig.seed_member("gone", "gone@example.com").await;
     let gone_token = rig.log_in("gone@example.com").await;
-    sqlx::query("UPDATE user_credentials SET password_hash = NULL WHERE actor_id = $1")
+    sqlx::query("UPDATE user_credentials SET email = NULL, password_hash = NULL WHERE actor_id = $1")
         .bind(gone)
         .execute(&pool)
         .await
