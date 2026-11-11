@@ -177,7 +177,13 @@ class StancePadVariantTest {
     // the four pole words, the square's hairlines and knob, the readouts' parts.
     @Test
     fun everyNamedPartOfThePadWearsItsPath() {
-        show(open.copy(landing = StanceLanding(StancePoint(0.4, 0.3), inertDirected = false, inertInterest = false, severance = false)))
+        val landing = StanceLanding(
+            StancePoint(0.4, 0.3),
+            inertDirected = false,
+            inertInterest = false,
+            severance = false,
+        )
+        show(open.copy(landing = landing))
         val field = PAD / "field"
         val parts = listOf("left", "right", "top", "bottom").map { field / it } +
             listOf("zeroAcross", "zeroDown", "knob").map { field / "square" / it } +
@@ -190,7 +196,8 @@ class StancePadVariantTest {
     fun theNamedKnobStandsWhereThePickIs() {
         show(open)
         val square = compose.onNodeWithTag((PAD / "field" / "square").tag, useUnmergedTree = true).fetchSemanticsNode()
-        val knob = compose.onNodeWithTag((PAD / "field" / "square" / "knob").tag, useUnmergedTree = true).fetchSemanticsNode()
+        val knob = compose.onNodeWithTag((PAD / "field" / "square" / "knob").tag, useUnmergedTree = true)
+            .fetchSemanticsNode()
         val side = square.size.width.toFloat()
         val inset = with(compose.density) { knobTravelInset().toPx() }
         val expected = pairKnobAt(PairPoint(0.1, 0.1), side, inset, PairRanges.Signed)
@@ -204,7 +211,8 @@ class StancePadVariantTest {
     @Test
     fun theStandingIsTheWholeContentWide() {
         show(open)
-        val width = compose.onNodeWithTag((PAD / "standing").tag, useUnmergedTree = true).fetchSemanticsNode().size.width
+        val width = compose.onNodeWithTag((PAD / "standing").tag, useUnmergedTree = true)
+            .fetchSemanticsNode().size.width
         assertThat(width.toFloat()).isWithin(1f).of(with(compose.density) { PAD_CONTENT_WIDTH.toPx() })
     }
 }

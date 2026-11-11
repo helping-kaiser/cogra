@@ -316,7 +316,14 @@ private fun PairSquare(
         PairPole(axes.left, Alignment.CenterStart, -PAIR_GUTTER_X, TextAlign.End, node = node?.div("left"))
         PairPole(axes.right, Alignment.CenterEnd, PAIR_GUTTER_X, TextAlign.Start, node = node?.div("right"))
         PairPole(axes.top, Alignment.TopCenter, 0.dp, TextAlign.Center, dy = -PAIR_GUTTER_Y, node = node?.div("top"))
-        PairPole(axes.bottom, Alignment.BottomCenter, 0.dp, TextAlign.Center, dy = PAIR_GUTTER_Y, node = node?.div("bottom"))
+        PairPole(
+            axes.bottom,
+            Alignment.BottomCenter,
+            0.dp,
+            TextAlign.Center,
+            dy = PAIR_GUTTER_Y,
+            node = node?.div("bottom"),
+        )
     }
 }
 
@@ -330,7 +337,13 @@ private fun PairSquare(
  * touch still reaches the field's gesture beneath.
  */
 @Composable
-private fun BoxScope.PairMarks(value: PairPoint, layered: Boolean, ranges: PairRanges, sidePx: Float, square: DataNode?) {
+private fun BoxScope.PairMarks(
+    value: PairPoint,
+    layered: Boolean,
+    ranges: PairRanges,
+    sidePx: Float,
+    square: DataNode?,
+) {
     val dead = MaterialTheme.colorScheme.outlineVariant
     val knob = MaterialTheme.colorScheme.primaryContainer
     val inset = with(LocalDensity.current) { knobTravelInset().toPx() }
@@ -360,7 +373,8 @@ private fun BoxScope.PairMarks(value: PairPoint, layered: Boolean, ranges: PairR
     }
     val at = pairKnobAt(value, sidePx, inset, ranges)
     if (layered) {
-        PairDisc(at, PAIR_KNOB_LAYER_RADIUS, knob.copy(alpha = PAIR_PRESS_ALPHA), inert.dataNode(square?.div("knobLayer")))
+        val layer = knob.copy(alpha = PAIR_PRESS_ALPHA)
+        PairDisc(at, PAIR_KNOB_LAYER_RADIUS, layer, inert.dataNode(square?.div("knobLayer")))
     }
     PairDisc(at, KNOB_RADIUS, knob, inert.dataNode(square?.div("knob")))
 }
@@ -380,7 +394,14 @@ private fun PairDisc(at: Offset, radius: Dp, color: Color, modifier: Modifier) {
 
 /** One pole word, held in its own gutter outside the field and pushed against the edge it names. */
 @Composable
-private fun BoxScope.PairPole(text: String, at: Alignment, dx: Dp, align: TextAlign, dy: Dp = 0.dp, node: DataNode? = null) {
+private fun BoxScope.PairPole(
+    text: String,
+    at: Alignment,
+    dx: Dp,
+    align: TextAlign,
+    dy: Dp = 0.dp,
+    node: DataNode? = null,
+) {
     val sideways = dx != 0.dp
     Text(
         text = text,
