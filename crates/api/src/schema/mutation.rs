@@ -470,8 +470,12 @@ fn reference_refusal(e: ReferencesError) -> PreparePayload {
     }
 }
 
-fn relay_error(e: RelayError, index: usize) -> UserError {
-    let path = vec!["proposals".to_string(), index.to_string()];
+/// The per-entry refusal of a relayed write, at `[list, index]` — the
+/// input list the entry came in (`proposals` on `submitProposals`,
+/// `approvals` on `approveActs`): `UserError.field` is the path to the
+/// offending input field (api-spec.md "Error types").
+fn relay_error(e: RelayError, list: &str, index: usize) -> UserError {
+    let path = vec![list.to_string(), index.to_string()];
     match e {
         RelayError::SignatureInvalid(m) => UserError::at(ErrorCode::SignatureInvalid, m, path),
         RelayError::Wedged(_) => UserError::at(
@@ -4324,7 +4328,7 @@ impl Mutation {
                 }
             };
             if let Err(e) = relay::gate_carried_media(pool, areas, &owned).await {
-                user_errors.push(relay_error(e, i));
+                user_errors.push(relay_error(e, "proposals", i));
                 continue;
             }
             match relay::submit_pre_signed(
@@ -4343,7 +4347,7 @@ impl Mutation {
                     Ok(w) => writes.push(StagedWriteType(w)),
                     Err(e) => user_errors.push(internal(e)),
                 },
-                Err(e) => user_errors.push(relay_error(e, i)),
+                Err(e) => user_errors.push(relay_error(e, "proposals", i)),
             }
         }
         if user_errors.is_empty() {
@@ -4408,7 +4412,7 @@ impl Mutation {
                     Ok(w) => writes.push(StagedWriteType(w)),
                     Err(e) => user_errors.push(internal(e)),
                 },
-                Err(e) => user_errors.push(relay_error(e, i)),
+                Err(e) => user_errors.push(relay_error(e, "approvals", i)),
             }
         }
         if user_errors.is_empty() {
