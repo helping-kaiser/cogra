@@ -1130,6 +1130,12 @@ doesn't know which field is wrong.
   reader can act on (auth.md). Drawn on `RestoreLength`.
 - `That doesn't match the code above.` — the key ceremony's confirm
   field, on RecoveryCodeMismatch.
+- `The two passwords don't match.` — the `Repeat password` field, a
+  local failure on the press, on every form that sets a new password
+  (`Join`, `ResetNew`, `ChangePassword`); drawn on `JoinErrors`, and the
+  `ResetNew` and `ChangePassword` sidecars carry it. The field's label,
+  `Repeat password`, stands under the new password's own, masked like it,
+  with no hint. (*New 2026-11-11, blessed (jakob 2026-11-11, J2).*)
 
 **Local format failures** — each answers on the press, under its own
 field:
@@ -1569,7 +1575,7 @@ Blessed with the audit-states round:
 
 - `Set a new password` · `New password` · `Set the new password` — the
   reset link's destination (`ResetNew`): heading, field label,
-  commitment.
+  commitment; `Repeat password` under the field (*Field errors*).
 - `Setting a new password signs out every device. You sign in again
   with the new one.` — the consequence, said where the act happens
   (auth.md: password reset revokes every session).
@@ -2075,8 +2081,9 @@ footnote said where the act is, plus the half it could not say there:
 `Changing your password signs out every other device. This one stays
 signed in.` `ResetNew`'s *every device* is not a drift — a reset
 revokes the session doing it and a change does not, and the two lines
-exist to keep that difference visible. Fields `Current password` and
-`New password` with `At least 12 characters.`, the commitment `Change
+exist to keep that difference visible. Fields `Current password`,
+`New password` with `At least 12 characters.` and `Repeat password`
+(*Field errors*), the commitment `Change
 password`, and last, the reason the first field is there at all:
 `Your current password is asked for even though you are signed in: a
 live session is not proof enough to change the credential behind it.`

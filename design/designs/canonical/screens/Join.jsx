@@ -44,7 +44,9 @@
    REGISTERED under the `join` prefix (round 28, seam 254 A1), with
    `JoinErrors`: the header's "?" is `help` (`postEdit.header.help`), the
    inviter's picture `avatar`, then `title`, `body`, the fields `handle`,
-   `email` and `password` (the credential family's names), the legal lines
+   `email` and `password` (the credential family's names) and the password's
+   repeat `confirm` (`RecoveryCode`'s name for the field that types a thing
+   back; round 38, jakob's J2: every new password is asked twice), the legal lines
    `terms` and `privacy`, the commit with its reason `commit`, and the account
    switch `signInDoor` — a name that does not bar the sidecar's `Sign in`
    (round 23: a name never forbids its own words). */
@@ -86,7 +88,8 @@ export function Screen() {
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
           <TextField id="handle" label="Handle" kind="handle" value="" hint="3–30 characters: a–z, 0–9, _" node="handle" />
           <TextField id="email" label="Email" type="email" autoComplete="username" value="" node="email" />
-          <PasswordField id="password" label="Password" autoComplete="new-password" value="" hint="At least 12 characters." node="password" />
+          <PasswordField id="password" label="Password" autoComplete="new-password" enterKeyHint="next" value="" hint="At least 12 characters." node="password" />
+          <PasswordField id="password-repeat" label="Repeat password" autoComplete="new-password" value="" node="confirm" />
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
