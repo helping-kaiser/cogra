@@ -116,7 +116,7 @@ WHEN tap Done GIVEN every staged change is the device's own — the people row a
 
 ALWAYS Done carries the Already seen separator and the seen rows under it to the new filter by the same rule as the rows above it, re-derived on the device where every staged change is the device's own and re-queried where Kinds or the topic changed
 
-WHEN tap Done GIVEN the staged filter is the feed's own, nothing changed -> the sheet closes AND the feed is what it was AND focus returns to the trigger AND NEVER the feed re-queries
+WHEN tap Done GIVEN the staged filter is the feed's own, nothing changed -> the sheet closes AND the feed is what it was AND focus returns to the trigger AND NEVER the feed re-queries, since a re-query runs the whole personalized ranking
 
 WHEN tap the scrim -> the sheet closes AND the staged filter is dropped AND the feed is what it was AND NEVER the feed re-queries
 
