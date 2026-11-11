@@ -387,9 +387,9 @@ pub async fn run(
     };
     submit(&publisher.key, role_tag).await?;
 
-    if standin.close_epoch().await?.is_none() {
+    if standin.close_epoch().await?.records.is_empty() {
         return Err(BootstrapError::Relay(
-            "no epoch was closed; the genesis acts were not orderable".into(),
+            "the epoch closed empty; the genesis acts were not orderable".into(),
         ));
     }
     ingest_or_refuse(&boundary, pool).await?;

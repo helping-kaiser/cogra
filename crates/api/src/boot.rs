@@ -16,6 +16,28 @@ use anyhow::Context;
 use axum_client_ip::ClientIpSource;
 use tokio::task::JoinHandle;
 
+/// The stand-in's operating config from the environment: the admission
+/// burns' settlement delay (`L1_STANDIN_SETTLEMENT_DELAY_EPOCHS`) and the
+/// epoch clock (`L1_EPOCH_CLOSE_INTERVAL_SECS`, unset for none). Every
+/// process that closes epochs — the API host, `l1-dev close`, the genesis
+/// bootstrap — builds it here, so each close publishes the boundary triple
+/// the deployment runs under, whichever process ran it.
+pub fn standin_config() -> anyhow::Result<l1_standin::StandInConfig> {
+    let settlement_delay_epochs: i64 = crate::env_or("L1_STANDIN_SETTLEMENT_DELAY_EPOCHS", "0")
+        .parse()
+        .context("L1_STANDIN_SETTLEMENT_DELAY_EPOCHS must be a number of epochs")?;
+    let config = l1_standin::StandInConfig::default()
+        .settling_after(settlement_delay_epochs)
+        .context("L1_STANDIN_SETTLEMENT_DELAY_EPOCHS")?;
+    if std::env::var("L1_EPOCH_CLOSE_INTERVAL_SECS").is_err() {
+        return Ok(config);
+    }
+    let clock = env_positive_secs("L1_EPOCH_CLOSE_INTERVAL_SECS", 0)?;
+    config
+        .clocked_every(clock)
+        .context("L1_EPOCH_CLOSE_INTERVAL_SECS")
+}
+
 /// A whole number of seconds that must be at least one.
 pub fn positive_secs(var: &str, value: u64) -> anyhow::Result<u64> {
     anyhow::ensure!(value > 0, "{var} must be at least 1 second");
