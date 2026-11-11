@@ -770,7 +770,13 @@ const REMOVE_CONFIRM_COPY = {
    `line` slot, and `Remove`'s own slot reads `Retry`, still a text button in
    no colour. `Keep it` keeps its place: the way out is the way out it was.
    One anatomy for both kinds, so the post and the comment fail alike. */
-function RemoveDialog({ kind, overSheet = false, failed = false, node }) {
+/* `removing` IS THE REMOVAL IN FLIGHT (round 37, jakob 2026-11-11: the
+   remove and reject dialogs take the same Close while they sign): past 200ms
+   `Remove` reads `Removing…`, inert and never dimmed, and `Keep it` — reading
+   `Close` from the press itself — closes the dialog while the removal goes
+   on, its wait and its answer on the removed thing's own row. A board draws
+   it unnamed beside the named copies, so no path moves. */
+function RemoveDialog({ kind, overSheet = false, failed = false, removing = false, node }) {
   const { title, body } = REMOVE_CONFIRM_COPY[kind];
   const dialog = (
     <DialogSurface
@@ -780,8 +786,8 @@ function RemoveDialog({ kind, overSheet = false, failed = false, node }) {
       line={failed ? "That didn't send. Try again." : undefined}
       actions={
         <>
-          <Button variant="text" node={node && "remove"}>{failed ? "Retry" : "Remove"}</Button>
-          <Button node={node && "keep"}>Keep it</Button>
+          <Button variant="text" busy={removing} busyLabel="Removing…" node={node && "remove"}>{failed ? "Retry" : "Remove"}</Button>
+          <Button node={node && "keep"}>{removing ? "Close" : "Keep it"}</Button>
         </>
       }
       node={node}
@@ -1790,7 +1796,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }
   const signing = state === "signing" || state === "slow";
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" closing={signing} leaveLabel={chipped ? "{{sealLeave}}" : undefined} />
+      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" closing={signing} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
 
@@ -2053,12 +2059,11 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
      wait and the answer stand at the branch's end (`SigningAfterClose`). A
      board drawing that moment passes `chipped` (its `state` chip's
      `signing`) or `signChip` (a `state` chip of its own). */
-  const templated = chipped || signChip;
   return (
     <>
       <WizardHeader
         title="What you sign"
-        leaveLabel={templated ? "{{replyLeave}}" : "Leave — the reply is discarded"}
+        leaveLabel="Leave — the reply is discarded"
         stageLabel="Last step"
         help="How signing works"
       />
@@ -2567,7 +2572,7 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
           edit and the edit goes on (round 37): the X is named `Close` while it
           signs — `EditCompose`'s `signing` chip — and the wait and the answer
           stand on the edited card (`SigningAfterClose`). */}
-      <WizardHeader title="Edit post" leaveLabel={holes ? "{{editLeave}}" : "Leave — the edit is discarded"} help="Editing" node="header" />
+      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         {/* The fields scroll under the pinned foot, the wizard reading: a
             form taller than the phone runs on under it, and the foot stays
@@ -2671,7 +2676,7 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
           commit reads `Signing the edit…` past 200ms — `CommentEdit`'s
           `signing` chip — and the wait and the answer stand on the edited
           card in the thread (`SigningAfterClose`). */}
-      <WizardHeader title="Edit comment" leaveLabel={holes ? "{{editLeave}}" : "Leave — the edit is discarded"} help="Editing" node="header" />
+      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
           <QuietNote node="target">Your comment on "The long way home".</QuietNote>
@@ -2728,7 +2733,18 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             citation's withdrawal at its two counter-records (`CommentEditActs`). */}
         <EditGate holes={holes} done={0} total={1} />
         <ActsFooter count={5} node="acts" />
-        <Button style={{ width: "100%" }} node="sign">{holes ? "{{editSign}}" : "Sign the edit"}</Button>
+        {holes ? (
+          <>
+            <div style={{ display: "{{signRestShown}}" }}>
+              <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+            </div>
+            <div style={{ display: "{{signBusyShown}}" }}>
+              <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
+            </div>
+          </>
+        ) : (
+          <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+        )}
       </div>
     </>
   );

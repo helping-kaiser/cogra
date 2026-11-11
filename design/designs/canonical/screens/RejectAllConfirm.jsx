@@ -30,28 +30,54 @@
    them at once does not make it mean more.
 
    REGISTERED under the `invites` prefix (design ⇄ impl seam 078), named as
-   `RejectConfirm` names its dialog. */
+   `RejectConfirm` names its dialog. 
+   THE `answer` CHIP'S `closing` IS THE CLOSING CLOSED ON (round 37, jakob
+   2026-11-11: the reject dialogs take the same Close while they sign): past
+   200ms `Close them` reads `Closing them…`, and `Keep them` reads `Close` from the
+   press itself; it, the scrim, Back and Escape close the dialog and the
+   closing goes on, its wait and its answer on the application's own row on
+   Invites. The copy is drawn unnamed, so no path moves. */
 export const NODE = "invites";
+export const PROPS = { answer: { editor: "enum", options: ["asking", "closing"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "closing" ? "none" : "block", closingShown: this.props.answer === "closing" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
       <InvitesBody />
 
-      <DialogSurface
-        node="dialog"
-        onScrimPress={() => {}}
-        title="Close all 4 applications from this link?"
-        body={[
-          "All four leave your list and all four people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
-          "This is your call and nobody else's. Any member can still vouch any of them in, and each gets a link to ask with.",
-        ]}
-        actions={
-          <>
-            <Button variant="text" node="close">Close them</Button>
-            <Button node="keep">Keep them</Button>
-          </>
-        }
-      />
+      <div style={{ display: "{{askingShown}}" }}>
+        <DialogSurface
+          node="dialog"
+          onScrimPress={() => {}}
+          title="Close all 4 applications from this link?"
+          body={[
+            "All four leave your list and all four people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
+            "This is your call and nobody else's. Any member can still vouch any of them in, and each gets a link to ask with.",
+          ]}
+          actions={
+            <>
+              <Button variant="text" node="close">Close them</Button>
+              <Button node="keep">Keep them</Button>
+            </>
+          }
+        />
+      </div>
+      <div style={{ display: "{{closingShown}}" }}>
+        <DialogSurface
+          onScrimPress={() => {}}
+          title="Close all 4 applications from this link?"
+          body={[
+            "All four leave your list and all four people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
+            "This is your call and nobody else's. Any member can still vouch any of them in, and each gets a link to ask with.",
+          ]}
+          actions={
+            <>
+              <Button variant="text" busy busyLabel="Closing them…">Close them</Button>
+              <Button>Close</Button>
+            </>
+          }
+        />
+      </div>
     </>
   );
 }
