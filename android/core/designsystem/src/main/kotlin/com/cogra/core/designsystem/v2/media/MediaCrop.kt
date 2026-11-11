@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -47,6 +46,7 @@ import com.canhub.cropper.CropImageView
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.CograChip
+import com.cogra.core.designsystem.v2.atom.HouseSlider
 import com.cogra.core.designsystem.v2.atom.QuietNote
 import com.cogra.core.designsystem.v2.atom.bleedHorizontally
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
@@ -503,7 +503,7 @@ private fun CropZoom(state: CropState, testTag: String?, node: DataNode? = null)
 
 @Composable
 private fun ZoomSlider(state: CropState, testTag: String?) {
-    Slider(
+    HouseSlider(
         value = state.zoom,
         onValueChange = state::zoomTo,
         valueRange = CROP_ZOOM_MIN..CROP_ZOOM_MAX,
@@ -512,6 +512,8 @@ private fun ZoomSlider(state: CropState, testTag: String?) {
             .height(Layout.TouchTargetMin)
             .semantics { contentDescription = CROP_ZOOM_NAME }
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+        thumbTag = testTag?.let { "${it}_thumb" },
+        trackTag = testTag?.let { "${it}_track" },
     )
 }
 
