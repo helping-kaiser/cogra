@@ -8227,7 +8227,7 @@ newer-version message, which he widened.
 - **The post seal's key notice keeps the header's "?"** beside its own,
   by the stopper exception, as its reply-scale twin does.
 - **A signed reply lands by scrolling the thread to its card** (K6.6's
-  direction): the return anchors to the new card at its branch's end.
+  direction): the return anchors to the new card on its parent.
   `ReplySettled` keeps its drawn offset.
 - **Once a seal's commit is pressed, the way out only closes it** (round
   37, jakob 2026-11-11). From the press Back reads `Close` and the X is named
@@ -11190,7 +11190,7 @@ press everything else would be missleading").
   (`SigningAfterClose`, the patterns page). The wait is the commit's own
   in-flight label in the pending marker's quiet register where the act will
   show — a post's `Signing and publishing…` at the feed's head, a reply's
-  `Signing comment…` at its branch's end, an edit's `Signing…` under the
+  `Signing comment…` on its parent, an edit's `Signing…` under the
   edited card; nothing stands as a card before its signature. The failure
   stands in the same place in the failure voice with `Retry`: an edit's is the
   row's `That didn't sign.`; a post's and a reply's, which never became a
@@ -11218,7 +11218,12 @@ press everything else would be missleading").
   wait stands on its row (`Removing…`, `Closing it…`), each dialog's
   `answer` chip drawing `removing` or `closing`; the failure's words on the
   row wait for jakob (backlog 167). Backlog 155 and 156 close.
-- **The gate**: GATE_PLACEHOLDER
+- **The gate**: one board added, `SigningAfterClose`, a reference plate on
+  the patterns page; edges **2178 → 2179** (`Settings`' handle `Retry`, a
+  self edge), the seals' Back edges gaining their Close case; flows hold at
+  **227**. The signing, removing and closing copies and the Handle row's
+  states are drawn unnamed beside the named controls, so the registry holds
+  at **169 screens**, **6134** board paths, **1934** distinct.
 
 ---
 

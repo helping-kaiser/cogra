@@ -1,6 +1,6 @@
 # SigningAfterClose · `spec:design:behavior-signing-after-close`
 
-ALWAYS a signed act whose surface was closed while it signed shows its wait and its failure where it lands AND never on the snackbar
+ALWAYS a signed act whose surface was closed while it signed shows its wait and its failure where it lands, never on the snackbar
 
 WHEN a seal, the reply's seal or an edit is closed GIVEN its commit was pressed -> the surface leaves AND the act goes on AND NEVER the act is cancelled
 
@@ -12,11 +12,11 @@ WHEN the post's signing does not go through GIVEN its seal was closed -> the fee
 
 WHEN press New post GIVEN the post's line reads Your post didn't sign. -> the draft card leads the screen AND Continue resumes the draft at its seal
 
-WHEN the reply's signing has not answered GIVEN its seal was closed -> the branch it answers opens AND at the branch's end the line Signing comment… stands in the pending marker's quiet register AND NEVER a card stands for the reply before its signature is taken
+WHEN the reply's signing has not answered GIVEN its seal was closed -> the branch it answers opens AND on the parent it answers the line Signing comment… stands in the pending marker's quiet register AND NEVER a card stands for the reply before its signature is taken
 
-WHEN the reply's signing is taken GIVEN its seal was closed -> the line goes AND the reply settles at the branch's end wearing Still settling
+WHEN the reply's signing is taken GIVEN its seal was closed -> the line goes AND the reply settles on its parent wearing Still settling
 
-WHEN the reply's signing does not go through GIVEN its seal was closed -> at the branch's end the line reads Your comment didn't sign. in the failure voice followed by Retry AND NEVER the snackbar carries the failure
+WHEN the reply's signing does not go through GIVEN its seal was closed -> on the parent it answers the line reads Your comment didn't sign. in the failure voice followed by Retry AND NEVER the snackbar carries the failure
 
 WHEN the edit's signing has not answered GIVEN the edit was closed -> the edited card stands as it was AND the line under it reads Signing… in the pending marker's quiet register
 

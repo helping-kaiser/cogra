@@ -1083,7 +1083,7 @@ a quick answer never flashes a word.
   the seals, the edits and the dialogs.
 - `Signing and publishing…`, `Signing comment…` and `Signing…` — a
   post's, a reply's and an edit's wait after `Close`, where each will
-  stand: the feed's head, the end of the branch it answers, under the
+  stand: the feed's head, the parent it answers, under the
   edited card, in the pending marker's quiet register. **Drawn** on
   `SigningAfterClose`.
 - `Your post didn't sign.` and `Your comment didn't sign.` — a post's or

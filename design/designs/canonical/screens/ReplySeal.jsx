@@ -51,8 +51,8 @@
    2026-11-11: Close on every seal). From the press on `Sign comment` the act
    is done: past 200ms it reads `Signing comment…` over Back, which reads
    `Close` from the press itself; it, the arrow and the X close the seal and
-   the reply goes on, its wait and its answer at the end of the branch it
-   answers (`SigningAfterClose`). */
+   the reply goes on, its wait and its answer on the parent it answers,
+   where the new reply settles (`SigningAfterClose`). */
 export const PROPS = {
   tags: { editor: "enum", options: ["none", "two", "seven"], default: "none" },
   state: { editor: "enum", options: ["rest", "refused", "bug", "tagRefused", "signing"], default: "rest" },

@@ -48,4 +48,4 @@ WHEN tap the seal's back arrow or Back GIVEN Sign comment was not pressed -> the
 
 WHEN press Sign comment -> Back reads Close in its place from the press itself AND the header X is named Close AND NEVER Close dims
 
-WHEN press Close, the header back arrow, the header X or the system's Back GIVEN Sign comment was pressed and has not answered -> the seal closes AND the reply goes on, its wait and its answer at the end of the branch it answers as SigningAfterClose draws them AND NEVER the act is cancelled
+WHEN press Close, the header back arrow, the header X or the system's Back GIVEN Sign comment was pressed and has not answered -> the seal closes AND the reply goes on, its wait and its answer on the parent it answers, where the new reply settles as SigningAfterClose draws them AND NEVER the act is cancelled

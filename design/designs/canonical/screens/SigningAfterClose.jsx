@@ -31,9 +31,8 @@
      card will stand. Its draft stays on the device until the signature is
      taken, so after a failure New post leads with the draft card, and
      Continue resumes it (`ComposeDraft`).
-   · reply — the thread, at the end of the branch it answers, where
-     `ReplySettled` puts the new card; the branch opens as the landing opens
-     it.
+   · reply — the thread, on the parent it answers, in the slot `ReplySettled`
+     draws the new card in; the branch opens as the landing opens it.
    · edit — the edited card itself, the reader's own post in the feed,
      unchanged until the edit is taken.
 

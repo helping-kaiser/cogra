@@ -22,6 +22,6 @@ WHEN the last upload lands GIVEN Sign comment was not pressed -> the upload line
 
 WHEN press Sign comment GIVEN an upload is running -> Back reads Close in its place from the press itself AND the header X is named Close
 
-WHEN press Close, the header back arrow, the header X or the system's Back GIVEN Sign comment was pressed while the uploads ran -> the seal closes AND the uploads finish AND the signing proceeds once the last upload lands AND its wait and its answer stand at the end of the branch it answers as SigningAfterClose draws them AND NEVER the reply is cancelled
+WHEN press Close, the header back arrow, the header X or the system's Back GIVEN Sign comment was pressed while the uploads ran -> the seal closes AND the uploads finish AND the signing proceeds once the last upload lands AND its wait and its answer stand on the parent it answers, where the new reply settles as SigningAfterClose draws them AND NEVER the reply is cancelled
 
-WHEN an upload fails GIVEN the seal was closed after Sign comment was pressed -> nothing is signed AND the branch's end reads Your comment didn't sign. followed by Retry
+WHEN an upload fails GIVEN the seal was closed after Sign comment was pressed -> nothing is signed AND the parent it answers reads Your comment didn't sign. followed by Retry

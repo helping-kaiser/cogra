@@ -2056,7 +2056,7 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
   const named = REPLY_TARGETS[target];
   /* From the press on Sign comment the way out only closes the seal and the
      reply goes on (round 37): Back reads `Close`, the X is named so, and the
-     wait and the answer stand at the branch's end (`SigningAfterClose`). A
+     wait and the answer stand on the parent it answers (`SigningAfterClose`). A
      board drawing that moment passes `chipped` (its `state` chip's
      `signing`) or `signChip` (a `state` chip of its own). */
   return (
@@ -3005,8 +3005,8 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
 function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, pick = false, node }) {
   const card = node && "commentCard";
   /* A REPLY SENT AND CLOSED ON (round 37, `SigningAfterClose`): the branch
-     opens as a landing opens it, and where the new card would stand at the
-     branch's end the reply's wait or its failure stands instead — the
+     opens as a landing opens it, and where the new card settles on its
+     parent the reply's wait or its failure stands instead — the
      commit's own in-flight label in the pending marker's quiet register, or
      the failure line with Retry. Nothing is drawn as a card before its
      signature is taken. */
