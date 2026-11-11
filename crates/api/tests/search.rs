@@ -1,7 +1,7 @@
 //! `Query.search` and the finder over the one matcher (api-spec.md
 //! "Search"; search-surface packet B1): what the index holds, how a
-//! query matches it, the order and the keyset over it, the kind and
-//! seen-list filters, and the three refusals.
+//! query matches it, the order and the keyset over it, the kind filter,
+//! that the seen-list never narrows it, and the three refusals.
 //!
 //! Content is seeded through the store's own writers, so the authoring
 //! instants — the recency key — are chosen by the test; the database's
@@ -28,9 +28,9 @@ use uuid::Uuid;
 
 type Timestamp = chrono::DateTime<chrono::Utc>;
 
-const SEARCH: &str = r#"query($query: String!, $kinds: [NodeKind!], $includeSeen: Boolean,
+const SEARCH: &str = r#"query($query: String!, $kinds: [NodeKind!],
                                $first: Int, $after: String, $last: Int, $before: String) {
-  search(query: $query, kinds: $kinds, includeSeen: $includeSeen,
+  search(query: $query, kinds: $kinds,
          first: $first, after: $after, last: $last, before: $before) {
     edges {
       cursor
@@ -839,103 +839,6 @@ async fn search_declares_no_seen_argument(pool: PgPool) {
     assert!(refused, "{response}");
 }
 
-/// With a session, `includeSeen: false` drops what the viewer has seen
-/// — wherever they saw it — and the default keeps it.
-///
-/// includeSeen false drops the nodes on the viewer's seen-list, and the default keeps them.
-/// ´claim:search:include-seen-false-drops-seen-nodes´
-#[sqlx::test(migrations = "../../migrations")]
-async fn include_seen_false_drops_seen_nodes(pool: PgPool) {
-    let rig = rig(pool);
-    rig.seed_member("reader", "reader@example.test").await;
-    let token = rig.log_in("reader@example.test").await;
-    let sol = person(&rig.pool, "saltine", None).await;
-    let read = post(&rig.pool, sol, 1, Some("Salt read"), None, "x").await;
-    post(&rig.pool, sol, 2, Some("Salt fresh"), None, "x").await;
-    seen(&rig, &token, read).await;
-    seen(&rig, &token, sol).await;
-
-    let kept = search(&rig, Some(&token), json!({ "query": "salt" })).await;
-    assert_eq!(
-        names(&kept),
-        vec!["User:saltine", "Post:Salt fresh", "Post:Salt read"]
-    );
-    let dropped = search(
-        &rig,
-        Some(&token),
-        json!({ "query": "salt", "includeSeen": false }),
-    )
-    .await;
-    assert_eq!(names(&dropped), vec!["Post:Salt fresh"]);
-    assert_eq!(dropped["totalCount"], 1);
-}
-
-/// The exclusion runs server-side, so a page still carries as many
-/// results as were asked for, and the next page picks up where it ended.
-/// The three newest are seen, so a client-side filter would serve two.
-///
-/// The seen-list exclusion keeps page sizes whole.
-/// ´claim:search:include-seen-false-keeps-page-sizes´
-#[sqlx::test(migrations = "../../migrations")]
-async fn include_seen_false_keeps_page_sizes(pool: PgPool) {
-    let rig = rig(pool);
-    rig.seed_member("reader", "reader@example.test").await;
-    let token = rig.log_in("reader@example.test").await;
-    let sol = person(&rig.pool, "sol", None).await;
-    let mut posts = Vec::new();
-    for n in 0..10 {
-        posts.push(post(&rig.pool, sol, n, Some(&format!("Salt {n}")), None, "x").await);
-    }
-    for id in &posts[7..] {
-        seen(&rig, &token, *id).await;
-    }
-
-    let first = search(
-        &rig,
-        Some(&token),
-        json!({ "query": "salt", "includeSeen": false, "first": 5 }),
-    )
-    .await;
-    assert_eq!(
-        names(&first),
-        vec![
-            "Post:Salt 6",
-            "Post:Salt 5",
-            "Post:Salt 4",
-            "Post:Salt 3",
-            "Post:Salt 2"
-        ]
-    );
-    assert_eq!(first["pageInfo"]["hasNextPage"], true);
-    let second = search(
-        &rig,
-        Some(&token),
-        json!({ "query": "salt", "includeSeen": false, "first": 5,
-                "after": first["pageInfo"]["endCursor"] }),
-    )
-    .await;
-    assert_eq!(names(&second), vec!["Post:Salt 1", "Post:Salt 0"]);
-    assert_eq!(second["pageInfo"]["hasNextPage"], false);
-}
-
-/// Without a session there is no seen-list to read: `includeSeen: false`
-/// is ignored rather than refused.
-///
-/// includeSeen is ignored without a session.
-/// ´claim:search:include-seen-needs-a-session´
-#[sqlx::test(migrations = "../../migrations")]
-async fn include_seen_is_ignored_without_a_session(pool: PgPool) {
-    let rig = rig(pool);
-    rig.seed_member("reader", "reader@example.test").await;
-    let token = rig.log_in("reader@example.test").await;
-    let sol = person(&rig.pool, "sol", None).await;
-    let read = post(&rig.pool, sol, 1, Some("Salt"), None, "x").await;
-    seen(&rig, &token, read).await;
-
-    let found = search(&rig, None, json!({ "query": "salt", "includeSeen": false })).await;
-    assert_eq!(names(&found), vec!["Post:Salt"]);
-}
-
 /// A blank query is the field before anything is typed: an empty
 /// connection, never an error.
 ///
@@ -1263,9 +1166,9 @@ async fn claim_pair(
     .expect("ingests");
 }
 
-const SCOPED: &str = r#"query($query: String!, $kinds: [NodeKind!], $includeSeen: Boolean,
+const SCOPED: &str = r#"query($query: String!, $kinds: [NodeKind!],
                                $first: Int, $after: String, $last: Int, $before: String) {
-  search(query: $query, kinds: $kinds, includeSeen: $includeSeen,
+  search(query: $query, kinds: $kinds,
          first: $first, after: $after, last: $last, before: $before) {
     edges {
       node {
@@ -1833,8 +1736,8 @@ async fn a_handle_scope_with_text_returns_no_profile_row(pool: PgPool) {
 /// A cue search keeps the matcher's order and keyset: the topics
 /// section first, then content — exact title first, then newest first
 /// across posts and comments alike; every page forward and backward
-/// yields the one-shot order; the seen exclusion applies inside a cue
-/// too.
+/// yields the one-shot order; a node the reader has seen keeps its place
+/// inside a cue too.
 ///
 /// Scoped pages keep the matcher's order and are stable in both directions.
 /// ´claim:search:scoped-pages-are-stable-and-complete´
@@ -1912,14 +1815,14 @@ async fn scoped_pages_are_stable_and_complete(pool: PgPool) {
 
     let seen_comment = comments[3];
     seen(&rig, &token, seen_comment).await;
-    let unseen = scoped(
+    let after_seeing = scoped(
         &rig,
         Some(&token),
-        json!({ "query": "@sol salt", "first": 100, "includeSeen": false }),
+        json!({ "query": "@sol salt", "first": 100 }),
     )
     .await;
-    assert_eq!(unseen["totalCount"], 14);
-    assert!(!hits(&unseen).contains(&as_comment(seen_comment)));
+    assert_eq!(after_seeing["totalCount"], 15);
+    assert_eq!(hits(&after_seeing), expected, "seeing narrows nothing");
 }
 
 /// A removed comment's current version is a tombstone: it is never found

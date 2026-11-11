@@ -3401,11 +3401,10 @@ type Query {
 	filter drops sections and keeps the rest's semantics. COLLECTIVE,
 	CHAT, CHAT_MESSAGE, ITEM and OFFER join with their slices and read
 	empty until then. An empty `kinds` list means the same as null (no
-	narrowing). `includeSeen: false` drops nodes on the reader's
-	seen-list (`User.viewHistory`); it needs a session and is ignored
-	without one. Full semantics in the Search section.
+	narrowing). The reader's seen-list never narrows a search. Full
+	semantics in the Search section.
 	"""
-	search(query: String!, kinds: [NodeKind!], includeSeen: Boolean = true, order: ReadOrder = NEWEST, viewer: UUID, first: Int, after: String, last: Int, before: String): SearchConnection!
+	search(query: String!, kinds: [NodeKind!], order: ReadOrder = NEWEST, viewer: UUID, first: Int, after: String, last: Int, before: String): SearchConnection!
 	"""
 	The chronological listing (roadmap "Slice 2"): every post,
 	newest-first — pending entries, then landed entries in landing

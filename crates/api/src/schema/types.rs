@@ -4738,7 +4738,7 @@ impl User {
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
         let node_kinds = history_node_kinds(kinds);
         let request =
-            super::query::search_request(ctx, parsed, Some(node_kinds.as_slice()), None).await?;
+            super::query::search_request(ctx, parsed, Some(node_kinds.as_slice())).await?;
         let list = Some(postgres_store::search::ReaderList::History(
             self.identity.id,
         ));
@@ -5052,7 +5052,7 @@ impl User {
             None => None,
         };
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
-        let request = super::query::search_request(ctx, parsed, Some(kinds), None).await?;
+        let request = super::query::search_request(ctx, parsed, Some(kinds)).await?;
         let list = Some(postgres_store::search::ReaderList::Saved(self.identity.id));
         let past_people =
             !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_PEOPLE);
