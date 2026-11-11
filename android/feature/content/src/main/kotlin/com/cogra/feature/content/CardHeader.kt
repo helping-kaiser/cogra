@@ -61,6 +61,11 @@ internal fun ContentCardHeader(
     node: DataNode? = null,
     /** The registered sheet the ⋮ raises (`feed.menuSheet`), when its board registers one. */
     menuSheetNode: DataNode? = null,
+    /**
+     * THE AUTHOR IS THE PAGE THE CARD STANDS ON (ProfilePosts.md:25,
+     * ProfileComments.md:21): the chip is inert, its drawing unchanged.
+     */
+    authorHere: Boolean = false,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -73,7 +78,7 @@ internal fun ContentCardHeader(
                 ActorChip(
                     handle = it.handle,
                     displayName = it.displayName,
-                    onOpen = { onOpenActor(it.handle) },
+                    onOpen = if (authorHere) null else ({ onOpenActor(it.handle) }),
                     avatarUrl = it.avatar?.url,
                     testTag = "${testTagPrefix}_author",
                     node = node?.div("authorChip"),

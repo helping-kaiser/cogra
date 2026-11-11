@@ -5,6 +5,7 @@
 package com.cogra.domain
 
 import com.cogra.crypto.Family
+import com.cogra.domain.saved.CommentTarget
 import java.time.Instant
 
 /** A fresh access + refresh token pair (auth.md "Tokens"). */
@@ -903,6 +904,21 @@ data class ProfileView(
  * at all — never a false zero (the master draws each figure it is handed).
  */
 data class ProfileFigures(val posts: Int?, val opinionsOn: Int?, val opinionsBy: Int?)
+
+/**
+ * ONE CARD OF A PROFILE'S COMMENTS VIEW (ProfileComments.md:3): the person's
+ * comment as the comment card draws it listed away from its thread — the
+ * comment itself (its `replyCount` the "View n replies" line), what it
+ * answers (the card's `On …` pointer) and its thread's post, where every one
+ * of the card's doors lands.
+ */
+data class ProfileComment(
+    val comment: CommentView,
+    /** What the comment answers; null when nothing resolves, and the card draws no pointer. */
+    val target: CommentTarget?,
+    /** The thread's root post: where the pointer, Reply and the replies line land. */
+    val threadPostId: String?,
+)
 
 /** A tappable link from a chronicle row into the content it touched. */
 sealed interface RecordLink {

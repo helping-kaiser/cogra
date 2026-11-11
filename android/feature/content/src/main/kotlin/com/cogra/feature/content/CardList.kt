@@ -124,6 +124,13 @@ internal fun ListCommentCard(
     node: DataNode,
     testTagPrefix: String,
     actions: CardActions,
+    /** The feed's head row (Saved, History), or the line a profile lists its comments in. */
+    shape: CommentCardShape = CommentCardShape.Thread,
+    authorHere: Boolean = false,
+    /** The head row's door where it differs from what it names — the line shape's lands on the thread. */
+    onOpenTarget: (() -> Unit)? = null,
+    /** The reply's door where it differs from the thread aimed at the comment — an applicant's lock. */
+    onReply: (() -> Unit)? = null,
 ) {
     val doors = actions.doors
     // THE CARD AS THIS DEVICE KNOWS IT NOW: removed here or anywhere since the
@@ -144,7 +151,7 @@ internal fun ListCommentCard(
         testTagPrefix = testTagPrefix,
         revealed = actions.reveals.isRevealed(comment.id, comment.sensitiveMark()),
         onReveal = { actions.onReveal(comment.id, comment.sensitiveMark()) },
-        onOpenTarget = {
+        onOpenTarget = onOpenTarget ?: {
             when (target) {
                 is CommentTarget.Post -> doors.onOpenPost(target.id)
                 is CommentTarget.Comment -> threadPostId?.let { doors.onOpenComment(it, target.id, false) }
@@ -152,13 +159,15 @@ internal fun ListCommentCard(
             }
         },
         onOpenPlace = { threadPostId?.let { doors.onOpenComment(it, comment.id, false) } },
-        onReply = { threadPostId?.let { doors.onOpenComment(it, comment.id, true) } },
+        onReply = onReply ?: { threadPostId?.let { doors.onOpenComment(it, comment.id, true) } },
         onShare = { threadPostId?.let { actions.onShare(actions.shareUrls.comment(it, comment.id)) } },
         onOpenActor = doors.onOpenActor,
         onOpenTopic = doors.onOpenTopic,
         onCite = { actions.onCitePost(comment.id) },
         onLicense = { licenseOpen = true },
         stanceControl = actions.stanceControl,
+        shape = shape,
+        authorHere = authorHere,
     )
     if (licenseOpen) {
         LicenseSheet(license = comment.license, onDismiss = { licenseOpen = false })
