@@ -1863,12 +1863,23 @@
         "CommentMenuOwn",
         "FeedPostMenu",
         "FeedPostMenuOwn",
+        "HistoryCommentMenu",
+        "HistoryCommentMenuOwn",
+        "HistoryPostMenu",
+        "HistoryPostMenuOwn",
+        "ProfileCommentsMenu",
+        "ProfileCommentsMenuOwn",
+        "ProfilePostsMenu",
+        "ProfilePostsMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
-        "RemoveMenu"
+        "RemoveMenu",
+        "SavedCommentMenu",
+        "SavedPostMenu",
+        "TagPageMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 7 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 18 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1881,9 +1892,20 @@
         "CommentMenuOwn",
         "FeedPostMenu",
         "FeedPostMenuOwn",
+        "HistoryCommentMenu",
+        "HistoryCommentMenuOwn",
+        "HistoryPostMenu",
+        "HistoryPostMenuOwn",
+        "ProfileCommentsMenu",
+        "ProfileCommentsMenuOwn",
+        "ProfilePostsMenu",
+        "ProfilePostsMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
-        "RemoveMenu"
+        "RemoveMenu",
+        "SavedCommentMenu",
+        "SavedPostMenu",
+        "TagPageMenu"
       ]
     },
     {
@@ -1891,10 +1913,11 @@
       "description": "Mention in a new post on another's profile stages exactly what citing stages — a Reference edge. The word records only that the far end is a person, and the wizard it opens is the same one.",
       "status": "resolved",
       "startsOn": [
+        "FeedProfileMenu",
         "ProfileMenu"
       ],
       "steps": [
-        "start · «Mention in a new post» — to ComposePick on 1 board → ComposePick",
+        "start · «Mention in a new post» — to ComposePick on 2 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1903,6 +1926,7 @@
         "ComposePick",
         "ComposeWords",
         "ComposeCited",
+        "FeedProfileMenu",
         "ProfileMenu"
       ]
     },
@@ -4073,13 +4097,13 @@
       "description": "A card's own Save, its ⋮'s first row reading Unsave in Saved, takes it out of the list, the list closing over it, and the line offers Undo; Undo puts the card back where it was.",
       "status": "resolved",
       "steps": [
-        "start · Saved · 4 «post overflow ⋮ — the card's own Save» → ReaderPostMenu — the reader's sheet (master) — its first row reads Unsave, every card here being kept; Unsave there lands on SavedUndo",
-        "ReaderPostMenu · 1 «Save» → SavedUndo — Unsave, the menu opened from a card in Saved — the sheet closes, the card goes, the list closes over it, and the line offers Undo; the last of them leaves SavedEmpty",
+        "start · Saved · 4 «post overflow ⋮ — the card's own Save» → SavedPostMenu — the reader's sheet over Saved — its first row reads Unsave, every card here being kept; Unsave there lands on SavedUndo (round 36)",
+        "SavedPostMenu · 1 «Unsave» → SavedUndo — the menu closes, the card goes, the list closes over it, and the line offers Undo; the last of them leaves SavedEmpty",
         "end · SavedUndo · 16 «Undo» → Saved — the card comes back where it was and the list is as it was"
       ],
       "boards": [
         "Saved",
-        "ReaderPostMenu",
+        "SavedPostMenu",
         "SavedUndo"
       ]
     },
@@ -5441,6 +5465,12 @@
       ],
       "endpoint": []
     },
+    "FeedProfileMenu": {
+      "flows": [
+        "mention-someone"
+      ],
+      "endpoint": []
+    },
     "FeedRemoved": {
       "flows": [
         "reply-to-a-post",
@@ -5579,6 +5609,18 @@
         "read-your-history"
       ]
     },
+    "HistoryCommentMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "HistoryCommentMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "HistoryEmpty": {
       "flows": [
         "find-nothing-read-yet",
@@ -5618,6 +5660,18 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
+      ],
+      "endpoint": []
+    },
+    "HistoryPostMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "HistoryPostMenuOwn": {
+      "flows": [
+        "cite-a-post"
       ],
       "endpoint": []
     },
@@ -6103,6 +6157,18 @@
       ],
       "endpoint": []
     },
+    "ProfileCommentsMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "ProfileCommentsMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "ProfileDeleted": {
       "flows": [
         "hide-a-deleted-account",
@@ -6253,6 +6319,18 @@
         "read-someones-posts"
       ]
     },
+    "ProfilePostsMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "ProfilePostsMenuOwn": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "ProfileStances": {
       "flows": [
         "publish-a-post",
@@ -6312,8 +6390,7 @@
     "ReaderPostMenu": {
       "flows": [
         "cite-a-post",
-        "hide-someone-from-their-post",
-        "unsave-and-undo"
+        "hide-someone-from-their-post"
       ],
       "endpoint": []
     },
@@ -6771,6 +6848,12 @@
         "unsave-and-undo"
       ]
     },
+    "SavedCommentMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
     "SavedEmpty": {
       "flows": [
         "find-nothing-saved-yet",
@@ -6790,6 +6873,13 @@
         "publish-a-video",
         "publish-words",
         "search-what-you-saved"
+      ],
+      "endpoint": []
+    },
+    "SavedPostMenu": {
+      "flows": [
+        "cite-a-post",
+        "unsave-and-undo"
       ],
       "endpoint": []
     },
@@ -7106,6 +7196,12 @@
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author"
+      ],
+      "endpoint": []
+    },
+    "TagPageMenu": {
+      "flows": [
+        "cite-a-post"
       ],
       "endpoint": []
     },
