@@ -2490,8 +2490,8 @@ pub struct InviteLinkCheck {
     /// The issuing actor's handle.
     pub inviter_handle: String,
     /// The issuing actor as a public profile — the face and the name the
-    /// registration form stands under. Nullable as every actor reference
-    /// is (`Application.approver`).
+    /// registration form stands under; its handle is `inviterHandle`'s
+    /// value. Nullable as every actor reference is (`Application.approver`).
     pub inviter: Option<Actor>,
     pub expires_at: DateTime<Utc>,
 }
