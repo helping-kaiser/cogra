@@ -57,12 +57,11 @@ export const EMPTY_SIGN_WORDS = {
    moment over the same pad, so the same answer — the quiet line where the
    fault line would stand, `Set it anyway` dimmed, no Retry, and `Keep it` the
    way back to the pick. */
-export function EmptySignConfirm({ targetLabel, vouchIn = false, busy: busyGiven = false, sent = false, failed = false, writeRule = false, onConfirm, onCancel, inline = false }) {
+export function EmptySignConfirm({ targetLabel, vouchIn = false, busy = false, failed = false, writeRule = false, onConfirm, onCancel, inline = false }) {
   const words = EMPTY_SIGN_WORDS;
-  const busy = busyGiven || sent;
   return (
     /* The scrim, Escape and Back take `Keep it`, the safe answer — and, as
-       it does, cancel until the act is being sent and close after. */
+       it does, close the dialog and the pad once the act signs. */
     <DialogSurface
       inline={inline}
       onScrimPress={onCancel}
@@ -94,16 +93,16 @@ export function EmptySignConfirm({ targetLabel, vouchIn = false, busy: busyGiven
           >
             {busy ? words.busy : failed ? "Retry" : words.confirm}
           </button>
-          {/* THE WAY OUT STAYS LIVE WHILE IT SIGNS, `SeveranceConfirm`'s rule
-              for one act (round 31): `Keep it` truly cancels until the act is
-              being sent, then reads `Close` and only leaves. */}
+          {/* ONCE `Set it anyway` IS PRESSED THE ACT IS DONE, `SeveranceConfirm`'s
+              rule: while it signs `Keep it` reads `Close` and only leaves, the
+              act going on. */}
           <button
             type="button"
             onClick={onCancel}
             className={BUTTON_CLASS}
             style={buttonStyle({ variant: "primary" })}
           >
-            {sent ? words.close : words.keep}
+            {busy ? words.close : words.keep}
           </button>
         </>
       }

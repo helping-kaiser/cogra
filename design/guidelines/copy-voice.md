@@ -185,6 +185,11 @@ The product is **CoGra** in prose. The wordmark is lowercase `cogra`.
 Handles are shown with `@`. A person or group is an *actor* internally
 and never on screen — on screen they have a name and a handle.
 
+**A person is named by handle, never by a gendered pronoun** (jakob
+2026-11-11, T4: the app holds no gender). Where a line would say *he*,
+*she*, *him*, *her*, *his* or *hers* of a person, it names them by handle:
+`@ada's own opinion rides the post`.
+
 **A `#name` is a TAG on screen and a topic in the record** (jakob's
 rulings, 2026-09-09 and 2026-11-11: "tags is the learned name … tags
 everywhere"). *Tags* is the word people already use for this, and the
@@ -825,8 +830,10 @@ DO, the way the sound toggle already does:
   the profiles, `VouchAsk`, the tag page's origin table and the stream
   alike — and it is the cold entry's label on a post, a comment or a
   profile, whose root is Feed (readme §4, *Navigation*).
-- `Close` — the viewer's X, which IS shutting a layer.
-- `Open the stream` — a portrait clip's door on a card, the one media door
+- `Close` — the viewer's X, which IS shutting a layer; and, for the same
+  reason, a signing surface's way out once its commit is pressed (*In-flight
+  labels*).
+- `Open the stream` — a portrait or square clip's door on a card, the one media door
   that leads somewhere other than its post: the verb and the stream's own
   common noun (`Back to the stream`'s), one control one verb. Never the
   clip's alt text, which says what the clip shows and not what the tap
@@ -1008,7 +1015,9 @@ jakob 2026-10-16). jakob's own words, picked 2026-10-02 (F7) and
 
 - `You can comment once you're in.` — the comment sheet's foot and a
   comment's `Reply`.
-- `You can invite once you're in.` — the profile's `Invites`.
+- `You can invite once you're in.` — the profile's `Invites`, and an
+  applicant or a guest who opens the Invites page's own address, where
+  app-open lands for them (jakob 2026-11-11, T2, **blessed**).
 - `You can vouch once you're in.` — an applicant who opens someone's ask
   link, where app-open lands for them (jakob 2026-10-02, **blessed**).
 
@@ -1054,16 +1063,18 @@ a quick answer never flashes a word.
 - `Signing…` — the line under the face while a press-and-hold signs.
   A hold has no label to swap, so the target's row carries it, in the
   pending marker's quiet register. **Drawn** on `RowSigning`. The same
-  line carries a pad's or a dialog's act after `Close` shut it, the act
-  being sent (jakob 2026-11-11). **Drawn** on `PadFailed`'s `closed`.
-- `Close` — the way out of a pad, the alternates, the walk-back or the
-  empty sign once their act is being sent (jakob 2026-11-11). It takes
-  `Cancel`'s place, or `Keep it`'s, in the same control: until the send
-  begins that word truly cancels and nothing lands; from then on the act
-  is expected to happen, so the word would promise what it cannot do,
-  and `Close` says only what the press does — it shuts a layer (*The
-  stream and the viewer*). The wait passes to the target's row.
-  **Drawn** on `PadFailed`'s `sending`.
+  line carries a pad's or a dialog's act after `Close` shut it (jakob
+  2026-11-11). **Drawn** on `PadFailed`'s `closed`.
+- `Close` — the way out of a signing surface once its commit is
+  pressed (jakob 2026-11-11): the pad, the alternates, the walk-back,
+  the empty sign, the handle change. Once someone submits, the act is
+  done and nothing cancels it, so `Cancel` or `Keep it` would promise
+  what the press cannot do; past 200ms, beside the in-flight label, the
+  same control in the same place reads `Close`, which says only what
+  the press does — it shuts a layer (*The stream and the viewer*) so the
+  reader need not wait. The wait passes to the target's row. **Drawn**
+  on `PadFailed`'s `setting`, `SeveranceConfirm`'s `signing` and
+  `EmptySignConfirm`'s `setting`.
 
 Every other commit follows the same construction and needs no separate
 entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes
@@ -1539,6 +1550,13 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     every pick still kept, the profile's seal, back to the edit, and the
     picture's seal, back to the crop (the two seals' *blessed (jakob
     2026-10-05)*).
+  - **The app itself breaking** — no surface is left to carry a notice,
+    so the page says the bug notice's first line alone, `This shouldn't
+    have happened`, with one action, `Reload` (jakob 2026-11-11, T11).
+    The notice's other sentences stay off it: a crash cannot promise
+    that nothing was signed or spent, and the page has no report door.
+    **Drawn** on `AppCrash`. (*New 2026-11-11, drafted — wording
+    jakob's at review.*)
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide,
 the default license; not a code): it reverts, and the target's row says `That didn't go
@@ -3430,7 +3448,7 @@ piece of borrowed vocabulary and it is load-bearing: a step does not
 says that.
 
 **What a step is, in words**: `Your opinion of @ada` · `@ada published
-it`, with `Her own opinion rides the post` under the second. A publish is
+it`, with `@ada's own opinion rides the post` under the second. A publish is
 a step like any other, and what makes it one is the opinion the author
 signed with it — which the composer's seal already told them.
 
@@ -4105,14 +4123,16 @@ settling` wear:
   post's publication date, always present, so the line never leans on
   that post having a title.
 - The line is a door, in the tappable-marker form `Edited` wears
-  (underline, quiet ink), and opens the post it names. Checking costs
-  one tap, and nothing asks a question: no dialog, no confirm step, no
+  (underline, quiet ink), and opens the post it names over the
+  composer; Back returns to the composer with the draft as it was left.
+  Checking costs one tap, and nothing asks a question: no dialog, no confirm step, no
   gate.
 - Where several published posts match, the line names and opens the
   **earliest** — the origin, and stable: a later repost never repoints
   it.
-- Only the author's own published posts count. A match in drafts alone,
-  or in someone else's post, draws nothing.
+- Only the author's own published posts count, a post the author
+  signed that is still settling among them. A match in drafts alone, or
+  in someone else's post, draws nothing.
 - **The date reads the way the chronicle's datelines do** (*Change
   histories*): day and month in the viewer's locale conventions on the
   clients, English on the boards — `12 September` — with the year

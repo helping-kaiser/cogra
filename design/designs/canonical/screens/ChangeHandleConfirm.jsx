@@ -22,8 +22,10 @@
    THE WAIT IS `Change it`'s (jakob 2026-10-05, the final brief; the severance
    dialog's precedent): the change is sent from the dialog, so the dialog stays
    up until it answers, `Change it` reads `Changing handle…` once the wait
-   passes 200ms, and `Keep it`, the scrim and Back are locked meanwhile —
-   locked, never dimmed. Only a well-formed handle reaches this dialog: one
+   passes 200ms. Once `Change it` is pressed nothing cancels the change
+   (jakob 2026-11-11): from 200ms `Keep it` reads `Close`, live, and it — the
+   scrim, Escape and Back too — closes the dialog while the change goes on.
+   Where its wait and its answer show after that is not drawn yet. Only a well-formed handle reaches this dialog: one
    that breaks the field's rules is answered by the field's own line on
    `Change handle`'s press, and the dialog never opens.
 

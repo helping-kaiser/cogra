@@ -52,7 +52,7 @@ WHEN tap a post's pictures -> the post opens
 
 WHEN tap a post's clip GIVEN the clip is wider than tall -> the post opens on its clip
 
-WHEN tap a post's clip GIVEN the clip is portrait -> the stream opens
+WHEN tap a post's clip GIVEN the clip is at least as tall as it is wide, portrait or square -> the stream opens
 
 WHEN tap a post's author chip -> that author's profile opens
 

@@ -31,7 +31,7 @@ export function MonogramAvatar({
   src?: string | null;
   node?: DataNode;
 }) {
-  return <Avatar name={name} src={src} size={SIZES[size]} node={node} />;
+  return <Avatar name={name} src={src} size={SIZES[size]} tier={size} node={node} />;
 }
 
 /**
@@ -77,7 +77,7 @@ export function ActorChip({
         {name}
       </span>
       <span
-        className="min-w-0 shrink truncate text-[length:var(--text-label-medium)] text-on-surface-variant"
+        className="min-w-0 shrink truncate text-label-medium text-on-surface-variant"
         {...testAttributes(part(node, "handle"))}
       >
         @{handle}
@@ -101,9 +101,8 @@ export function ActorChip({
   // keeps its full width. The two-stage yield is flexbox's own arithmetic: the
   // name's `flex-shrink: 999` absorbs the squeeze ahead of the handle's 1.
   //
-  // THE HANDLE IS DRAWN AT LABEL-MEDIUM'S SIZE IN THE READING WEIGHT: the
-  // master sets its size alone and leaves the weight to the ground, so the name
-  // carries the chip's emphasis and the handle reads beside it, quieter.
+  // THE HANDLE IS LABEL-MEDIUM WHOLE, in the quiet ink (`ActorChip.jsx`,
+  // round 28): smaller than the name, so the name carries the chip.
   return (
     <Link
       href={from === null || from === "" ? `/u/${handle}` : `/u/${handle}?from=${encodeURIComponent(from)}`}

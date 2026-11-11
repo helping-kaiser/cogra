@@ -4,6 +4,10 @@ ALWAYS one shape holds for every picture in the post
 
 WHEN tap a shape chip -> every picture in the post takes that shape
 
+WHEN tap a shape chip -> each picture keeps its scale and its position AND the shape's frame changes around it AND NEVER the picture shrinks to fit the new frame
+
+WHEN tap a shape chip GIVEN a picture's scale would stand below the new shape's fill -> that picture's scale rises to the fill, the zoom slider's floor, and no further
+
 WHEN drag inside the crop viewport -> the framed picture moves within the shape
 
 WHEN pinch inside the crop viewport -> the framed picture zooms within the shape AND the zoom slider follows

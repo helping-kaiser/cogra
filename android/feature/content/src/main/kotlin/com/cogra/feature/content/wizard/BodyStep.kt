@@ -56,7 +56,6 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
-import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
@@ -301,7 +300,7 @@ private fun ClipTrayRow(state: ComposeWizardState, clip: PickedAsset, onRemove: 
                 state.skipsCoverStep -> stringResource(R.string.content_video_body_caption_vertical)
                 else -> "A video is the whole post. Its cover comes next."
             },
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .weight(1f)
@@ -317,7 +316,7 @@ private fun ClipTrayRow(state: ComposeWizardState, clip: PickedAsset, onRemove: 
 @Composable
 private fun PictureTrayRow(state: ComposeWizardState, onRemove: (String) -> Unit) {
     val caption = "The first one is the cover."
-    val style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight)
+    val style = MaterialTheme.typography.labelSmall
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     val captionWidth = with(density) { measurer.measure(caption, style).size.width.toDp() }

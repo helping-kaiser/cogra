@@ -1689,7 +1689,7 @@
       "x": -3900,
       "y": 0,
       "w": 3480,
-      "h": 4851,
+      "h": 4864,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -2228,6 +2228,15 @@
       "file": "SealDiscardConfirm.dc.html",
       "title": "Seal · discard this post?",
       "x": 1440,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "AppCrash.dc.html",
+      "title": "Crash · this shouldn't have happened",
+      "x": 1920,
       "y": 1928,
       "w": 390,
       "h": 844,
