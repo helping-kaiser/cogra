@@ -269,3 +269,70 @@ pub async fn netted_bundle(
         in_flight: row.in_flight,
     })
 }
+
+/// The given records a citation withdrawal signed (api-spec.md
+/// `RecordAct.WITHDRAWAL`): the counter-records that netted a citation
+/// bundle — (author, citing artifact, target) — back to `(0, 0)` from a
+/// standing that said something, every record of the batch. The reading
+/// is [`common::l1::fold::walk_back_records`], the walk-back's own, applied
+/// to each citation bundle a given record folds into: a withdrawal is the
+/// severance shape on this family, and recognised by it, so no marker on
+/// the record is needed.
+///
+/// Each bundle is read whole, in the published order, as T-legs in the
+/// orientation [`netted_bundle`] sums — relevance from `p_i`, support from
+/// `p_d` — because the batch a withdrawal stages is that sum's, and the
+/// shape compares against it. Payload-marked and census-unknown legs fold
+/// into no bundle and are never one.
+pub async fn withdrawal_records(
+    pool: &PgPool,
+    record_ids: &[String],
+) -> Result<std::collections::HashSet<String>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"WITH bundles AS (
+               SELECT DISTINCT r.author, l.source, l.target
+               FROM mirror_record_legs l
+               JOIN mirror_records r ON r.record_id = l.record_id
+               WHERE l.record_id = ANY($1)
+                 AND l.leg = 't' AND l.family = 'reference'
+                 AND NOT r.payload_marked
+                 AND NOT l.census_unknown
+           )
+           SELECT b.record_id AS "record_id!", br.author AS "author!",
+                  b.source AS "source!", b.target AS "target!",
+                  b.p_i AS "relevance!", b.p_d AS "support!"
+           FROM bundles k
+           JOIN mirror_record_legs b
+             ON b.leg = 't' AND b.family = 'reference'
+            AND b.source = k.source AND b.target = k.target
+           JOIN mirror_records br
+             ON br.record_id = b.record_id AND br.author = k.author
+           WHERE NOT br.payload_marked
+             AND NOT b.census_unknown
+           ORDER BY br.author, b.source, b.target,
+                    br.epoch, br.act_time, br.position"#,
+        record_ids,
+    )
+    .fetch_all(pool)
+    .await?;
+    let wanted: std::collections::HashSet<&str> = record_ids.iter().map(String::as_str).collect();
+    let mut found = std::collections::HashSet::new();
+    for bundle in
+        rows.chunk_by(|a, b| (&a.author, &a.source, &a.target) == (&b.author, &b.source, &b.target))
+    {
+        let pairs: Vec<(f64, f64)> = bundle
+            .iter()
+            .map(|row| (row.relevance, row.support))
+            .collect();
+        let marks = common::l1::fold::walk_back_records(&pairs)
+            .map_err(|e| sqlx::Error::Decode(Box::new(e)))?;
+        found.extend(
+            bundle
+                .iter()
+                .zip(marks)
+                .filter(|(row, withdrawn)| *withdrawn && wanted.contains(row.record_id.as_str()))
+                .map(|(row, _)| row.record_id.clone()),
+        );
+    }
+    Ok(found)
+}

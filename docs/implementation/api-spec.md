@@ -843,6 +843,11 @@ enum RecordAct {
    standing that said something, and every record of a severance
    batch that did. An empty sign is never one."
   WALK_BACK
+  "A record a citation withdrawal signed: every counter-record that
+   netted its author's citation bundle — (author, citing artifact,
+   target) — back to (0, 0) from a standing that said something,
+   recognised by the same shape as a walk-back's batch."
+  WITHDRAWAL
   "The Opinion that vouched someone in: of an account's approval
    vouches, the first to land, which landed the account — the record
    behind User.invitedBy. Any later vouch-Opinion is ORDINARY."
@@ -911,7 +916,11 @@ A walk-back is the act that lands a bundle that says something at
 there, or a severance batch, every record of it. The batch is
 recognised by its shape — the counter-records the sum standing before
 it stages — compared whatever order the host published them in,
-since a batch's records declare no dependency on one another. Which
+since a batch's records declare no dependency on one another. A
+citation's withdrawal is the same shape on the Reference family: the
+counter-records that net an (author, citing artifact, target) bundle
+to `(0, 0)` (`prepareReferenceWithdrawal`), read off that bundle
+the same way — the record carries no marker of it. Which
 vouch landed an account is the application ledger's: the first of
 the account's approval vouches to land, the one `User.invitedBy`
 names. The `genesis` filter on the record reads keeps exactly the

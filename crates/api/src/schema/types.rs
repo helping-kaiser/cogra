@@ -767,7 +767,8 @@ impl Record {
     }
 
     /// What the record did beyond its family (`RecordAct`): a genesis, a
-    /// walk-back, the vouch that landed an account, or ordinary.
+    /// walk-back, a citation withdrawal, the vouch that landed an account,
+    /// or ordinary.
     async fn act(&self, ctx: &Context<'_>) -> async_graphql::Result<RecordAct> {
         Ok(ctx
             .data::<DataLoader<crate::loaders::RecordActLoader>>()?
@@ -958,6 +959,11 @@ pub enum RecordAct {
     /// that did — the batch the sum before it stages. An empty sign is
     /// never one.
     WalkBack,
+    /// A record a citation withdrawal signed: every counter-record that
+    /// netted its author's citation bundle — (author, citing artifact,
+    /// target) — back to `(0, 0)` from a standing that said something,
+    /// recognised by the same shape as a walk-back's batch.
+    Withdrawal,
     /// The Opinion that vouched someone in: of an account's approval
     /// vouches, the first to land, which landed the account — the record
     /// behind `User.invitedBy`. Any later vouch-Opinion is ORDINARY.
