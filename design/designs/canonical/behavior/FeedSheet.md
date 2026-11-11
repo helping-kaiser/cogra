@@ -26,7 +26,7 @@ WHEN tap feed.filterSheet.people.sign.for, feed.filterSheet.people.sign.against 
 
 WHEN tap feed.filterSheet.people.everyone GIVEN feed.filterSheet.people.yourPeople is on -> feed.filterSheet.people.sign goes AND its chosen word is kept for feed.filterSheet.people.yourPeople's return
 
-ALWAYS the filter's topic chips are the topics the reader holds an opinion for
+ALWAYS the filter's topic chips are the topics the reader holds an opinion for, a tag whose feeling the reader signed and that has not yet landed among them
 
 ALWAYS at most one topic chip is on
 
