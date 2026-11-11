@@ -35,20 +35,40 @@
 
    THE PAD IS STILL OPEN BEHIND THE WASH, as `SeveranceConfirm`'s board
    explains: the dialog's scrim covers it, and the pad is drawn on its own
-   board rather than a second time under a dim. */
-export const PROPS = { context: { editor: "enum", options: ["opinion", "vouchIn"], default: "opinion" } };
-export const VALS = `opinionShown: this.props.context === "opinion" ? "contents" : "none", vouchInShown: this.props.context === "vouchIn" ? "contents" : "none"`;
+   board rather than a second time under a dim.
+
+   THE `answer` CHIP DRAWS THE WAIT, `SeveranceConfirm`'s chip (jakob
+   2026-11-11: once someone submits there is no cancel). `setting` is the
+   dialog past 200ms after `Set it anyway`: the act reads `Setting…`, inert
+   and never dimmed, and `Keep it` reads `Close`, filled and live in its
+   slot — it closes the dialog and the pad beneath, and the act goes on, its
+   wait on the target's row as `PadFailed`'s `closed` moment draws it. */
+export const PROPS = {
+  context: { editor: "enum", options: ["opinion", "vouchIn"], default: "opinion" },
+  answer: { editor: "enum", options: ["asking", "setting"], default: "asking" },
+};
+export const VALS = `opinionShown: this.props.context === "opinion" ? "contents" : "none", vouchInShown: this.props.context === "vouchIn" ? "contents" : "none", askingShown: this.props.answer === "setting" ? "none" : "contents", settingShown: this.props.answer === "setting" ? "contents" : "none"`;
 
 export function Screen() {
   return (
     <>
       <div style={{ display: "{{opinionShown}}" }}>
         <ProfileOtherBody />
-        <EmptySignConfirm targetLabel="@ada" />
+        <div style={{ display: "{{askingShown}}" }}>
+          <EmptySignConfirm targetLabel="@ada" />
+        </div>
+        <div style={{ display: "{{settingShown}}" }}>
+          <EmptySignConfirm targetLabel="@ada" busy />
+        </div>
       </div>
       <div style={{ display: "{{vouchInShown}}" }}>
         <InvitesBody />
-        <EmptySignConfirm targetLabel="@rafa" vouchIn />
+        <div style={{ display: "{{askingShown}}" }}>
+          <EmptySignConfirm targetLabel="@rafa" vouchIn />
+        </div>
+        <div style={{ display: "{{settingShown}}" }}>
+          <EmptySignConfirm targetLabel="@rafa" vouchIn busy />
+        </div>
       </div>
     </>
   );
