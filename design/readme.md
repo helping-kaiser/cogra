@@ -11085,6 +11085,55 @@ clients already key them by the wire id (seam 263). jakob ruled the re-key
   families, and no (path, key) repeats on any board beyond the chip copies
   that stood before.
 
+### Round 35, squares join the stream; impl's thirteen asks — 2026-11-11
+
+jakob's answers to round 30's stream questions ("1. a) yes", "2. yes") and
+to impl's thirteen asks (T1–T13, "as rec" on all but T2; T2 then ruled
+option b), with two of his hand-test findings (seam 275).
+
+- **A clip at least as tall as it is wide opens the stream** — portrait
+  or square; only a clip wider than tall opens its post. The stream
+  carries every such clip of the list it was opened from, in that list's
+  order (`Reel`, `Main`, `History`, `Saved`, `ProfilePosts`, `TagPage`,
+  `FeedShapes`; the `post media` edges' stream case and `watch-the-stream`
+  read `portrait or square`). Of the sample clips, the lakeside is
+  portrait, the grapes square, the canoe landscape.
+- **The stream on web** pages by the arrow keys and the wheel as the
+  swipes do; a clip that reaches its end loops; the stream carries posts'
+  clips only. Law only.
+- **Settling counts.** The already-published marker counts a post the
+  author signed that is still settling, and its door opens the post over
+  the composer, Back returning to the draft as it was left. The One-tag
+  chips count a signed feeling not yet landed. The profile's posts view
+  lists a settling post, wearing `Still settling` with its score slot
+  bare — `ProfilePosts`' `posts` chip at `settling`, the second post.
+- **The filter's Done keeps the filter that was set** when the new
+  ranking fails, and the feed shows the failure with Retry; no board draws
+  that fault yet (backlog 155).
+- **The rank drill-down prints no sum line**; the arithmetic closes in its
+  drawn figures (`RankRecords`).
+- **A kept approval's pad reopens on the vouch that was kept** (`Invites`).
+  An applicant or a guest at the Invites page's own address lands where
+  app-open lands for them, with `You can invite once you're in.`
+  (*blessed*); an invite link a guest opens is unchanged.
+- **A person is named by handle, never by a gendered pronoun**
+  (copy-voice, *Naming*): the publish step reads `@ada's own opinion
+  rides the post`. The sweep's one other drawn hit waits for jakob
+  (backlog 156).
+- **The crash surface** is `AppCrash`: `This shouldn't have happened`,
+  the bug notice's first line alone, with `Reload`, on the plain landing
+  (`VerifyExpired`'s form), registered under `crash` (*drafted — wording
+  jakob's at review*).
+- **Every 32px disc's letter is label-medium**; the weight 500 is the
+  disc's own at every size (backlog 152 closed).
+- **Chats · coming soon registers** under `chats`: its header, card and
+  bottom bar, the drill-in names `Notifications` uses.
+- **The crop's shape switch keeps the framing**: each picture keeps its
+  scale and position and the frame changes around it; only the fill floor
+  lifts a scale (`ComposeCrop`). The verification mail's paste line is
+  not in the design tree (the mails' words live outside it).
+- **The gate**: GATE_PENDING
+
 ---
 
 ## 14. The canvases
