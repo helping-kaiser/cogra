@@ -120,10 +120,7 @@ export function CropStep({
             <li key={each.id} className="flex-none">
               <button
                 type="button"
-                {...testAttributes(
-                  instance(part(node, "pictures"), "thumb", String(index + 1)),
-                  `${testIdPrefix}-crop-pick-${index}`,
-                )}
+                data-testid={`${testIdPrefix}-crop-pick-${index}`}
                 aria-label={`Frame picture ${index + 1} of ${assets.length}`}
                 aria-current={index === focused}
                 onClick={() => onFocus(index)}
@@ -132,8 +129,16 @@ export function CropStep({
                 }`}
               >
                 {/* Each tile shows ITS OWN framing, so the strip reads as the
-                    set of choices already made rather than as the originals. */}
-                <MediaThumb src={previews[each.id] ?? null} crop={each.crop} testId={`${testIdPrefix}-crop-tile-${index}`} />
+                    set of choices already made rather than as the originals.
+                    THE TILE IS THE REGISTERED THUMB (ComposeCrop.dc.html: the
+                    48px tile carries `composeCrop.pictures.thumb`, the span
+                    around it the outline), so the button stays a plain test id. */}
+                <MediaThumb
+                  src={previews[each.id] ?? null}
+                  crop={each.crop}
+                  node={instance(part(node, "pictures"), "thumb", String(index + 1))}
+                  testId={`${testIdPrefix}-crop-tile-${index}`}
+                />
               </button>
             </li>
           ))}
