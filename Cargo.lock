@@ -171,6 +171,7 @@ dependencies = [
  "lettre",
  "mime",
  "mp4",
+ "multer",
  "object_store",
  "postgres-store",
  "quoted_printable",
