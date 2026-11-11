@@ -53,7 +53,7 @@ import {
 import {
   addTo,
   addedLedger,
-  clipOf,
+  bodyClipOf,
   editBlocked,
   editClaims,
   editUploads,
@@ -66,16 +66,19 @@ import {
   uploadsFailed,
   uploadsPending,
   withAltText,
+  withAutoCover,
+  withClip,
   withNewCover,
   withUpload,
   type EditGallery,
 } from "@/lib/compose/comment-edit";
 import { COMMENT_ATTACHMENT_CAP } from "@/lib/compose/comment-media";
 import { newComposeId } from "@/lib/compose/ids";
-import { COMMENT_SCALE, screenPick, TOO_MANY_COMMENT, VIDEO_AT_EDIT, type PickRefusal } from "@/lib/compose/pick";
-import { usePreviewUrls } from "@/lib/compose/previews";
-import { runUpload } from "@/lib/compose/uploads";
-import { sensitiveReasonProblem, type PickedAsset } from "@/lib/compose/wizard";
+import { COMMENT_SCALE, screenPick, TOO_MANY_COMMENT, type PickRefusal } from "@/lib/compose/pick";
+import { useObjectUrl, usePreviewUrls } from "@/lib/compose/previews";
+import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
+import { kindOf, sensitiveReasonProblem, type CoverAsset, type PickedAsset } from "@/lib/compose/wizard";
+import { captureFrameZero } from "@/lib/ui2/media/video";
 import type { SealFault } from "@/lib/compose/seal-fault";
 import { useWaitedPast, SLOW_NETWORK_MS } from "@/lib/ui2/waiting-commit";
 import { CENTERED } from "@/lib/ui2/media/crop";
@@ -206,6 +209,12 @@ export function CommentEditor({
   // `+ Cite something`): every pick lands in the batch as it is made.
   const [picking, setPicking] = useState<"tags" | "references" | null>(null);
   const started = useRef(new Set<string>());
+  // The editor as last committed, for the one decision an await can outlive
+  // (`pick`): a ref written after commit, never during render.
+  const latest = useRef(editing);
+  useEffect(() => {
+    latest.current = editing;
+  }, [editing]);
 
   useEffect(() => {
     let cancelled = false;
@@ -224,26 +233,90 @@ export function CommentEditor({
   // ---- the bytes the edit takes ---------------------------------------------
 
   const uploads = useMemo(() => editUploads(editing.gallery), [editing.gallery]);
-  const local = useMemo(() => (cropping === null ? uploads : [...uploads, cropping]), [uploads, cropping]);
+  // A clip's own bytes are never drawn as a picture: its tile wears its frame
+  // 0, minted below, and the preview hook mints only what an <img> can show.
+  const local = useMemo(() => {
+    const stills = uploads.filter((asset) => kindOf(asset) !== "video");
+    return cropping === null ? stills : [...stills, cropping];
+  }, [uploads, cropping]);
   const localPreviews = usePreviewUrls(local);
+  const clip = bodyClipOf(editing.gallery);
+  const addedClip = clip?.kind === "addedClip" ? clip : undefined;
+  // THE PICKED CLIP'S TILE WEARS ITS FRAME 0 (ReplyVideo.md:9 — the stored
+  // face, the same one the clip's leg uploads as its taken still).
+  const clipFace = useObjectUrl(addedClip?.autoCover?.file ?? null);
   const previews = useMemo(
-    () => ({ ...keptPreviews(editing.gallery), ...localPreviews }),
-    [editing.gallery, localPreviews],
+    () => ({
+      ...keptPreviews(editing.gallery),
+      ...localPreviews,
+      ...(addedClip !== undefined && clipFace !== null ? { [addedClip.asset.id]: clipFace } : {}),
+    }),
+    [editing.gallery, localPreviews, addedClip, clipFace],
   );
-  const clip = clipOf(editing.gallery);
+
+  const step = (id: string) => (upload: PickedAsset["upload"]) =>
+    setEditing((current) => ({ ...current, gallery: withUpload(current.gallery, id, upload) }));
+
+  /** Where the picked clip's silent frame lands — handed to the leg like `step`. */
+  const placeFace = (clipId: string) => (face: CoverAsset | null) =>
+    setEditing((current) => ({ ...current, gallery: withAutoCover(current.gallery, clipId, face) }));
+
+  /**
+   * The picked clip's leg: its frame 0 first — taken silently, the face a
+   * coverless clip stores (the feed-video rulings) — then the clip, at the
+   * comment's scale, on the reply composer's own path (`runVideoUpload`). A
+   * retry reuses the frame it already took — unless that frame was refused
+   * outright, when the clip goes faceless rather than failing on it forever:
+   * a taken face is silent, and a failed one counts as none (`effectiveCover`).
+   */
+  const sendClip = async (asset: PickedAsset, taken: CoverAsset | null) => {
+    // A frame that already landed stays landed, and one refused outright is
+    // left as it failed — `effectiveCover` reads a failed taken face as none —
+    // so only the clip goes again.
+    if (
+      taken !== null &&
+      (taken.upload.kind === "done" || (taken.upload.kind === "failed" && !taken.upload.retryable))
+    ) {
+      await runVideoUpload(client, guard, asset, null, step(asset.id), () => {}, COMMENT_SCALE);
+      return;
+    }
+    // A frame whose upload failed retryably rides the leg again (its own steps
+    // reset it); a clip with none yet takes its frame 0 first.
+    let face = taken;
+    if (face === null) {
+      const frame = await captureFrameZero(asset.file).catch(() => null);
+      const taking: CoverAsset | null =
+        frame === null ? null : { id: newComposeId(), file: frame, frame: 0, upload: { kind: "waiting" } };
+      face = taking;
+      placeFace(asset.id)(taking);
+    }
+    await runVideoUpload(
+      client,
+      guard,
+      asset,
+      face,
+      step(asset.id),
+      face === null ? () => {} : step(face.id),
+      COMMENT_SCALE,
+    );
+  };
 
   useEffect(() => {
     for (const asset of uploads) {
       if (asset.upload.kind !== "waiting" || started.current.has(asset.id)) continue;
       started.current.add(asset.id);
+      if (kindOf(asset) === "video") {
+        void sendClip(asset, addedClip?.asset.id === asset.id ? addedClip.autoCover : null);
+        continue;
+      }
       // A comment's pictures keep their own shape (no ratio); a clip's face
       // is cut to the comment pager's square.
       const ratio = clip?.newCover?.id === asset.id ? COMMENT_COVER_RATIO : undefined;
-      void runUpload(client, guard, asset, ratio, (upload) =>
-        setEditing((current) => ({ ...current, gallery: withUpload(current.gallery, asset.id, upload) })),
-      );
+      void runUpload(client, guard, asset, ratio, step(asset.id));
     }
-  }, [uploads, clip, client, guard]);
+    // `sendClip` and `step` close over nothing that changes but the setter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uploads, clip, addedClip, client, guard]);
 
   const pendingUploads = uploadsPending(editing.gallery);
   const failedUploads = uploadsFailed(editing.gallery);
@@ -543,23 +616,52 @@ export function CommentEditor({
     }
   };
 
-  // `+ Add pictures · N of 4`: screened file by file against the comment's
-  // cap and its pictures-or-one-video grammar; what is refused says why under
-  // the pictures, never in a dialog (CommentEdit.md).
+  // `+ Add pictures · N of 4`, or `+ Add pictures or a video` on a body of
+  // words alone: screened file by file against the comment's cap and its
+  // pictures-or-one-video grammar; what is refused says why under the
+  // pictures, never in a dialog (CommentEdit.md). "Words alone" is the edit's
+  // own state, so a comment whose pictures this edit removed takes a clip
+  // (CommentEditVideo.md:5 — the clip leaving makes "the comment its words").
   const pick = async (files: readonly File[]) => {
     const outcome = await screenPick(
       files,
       { hasVideo: clip !== undefined, count: editing.gallery.length },
       EDIT_SCALE,
     );
-    const refused: PickRefusal[] = [...outcome.refusals];
+    if (outcome.refusals.length > 0) setRefusals((current) => [...current, ...outcome.refusals]);
+    const [first] = outcome.accepted;
+    if (first === undefined) return;
     if (outcome.kind === "video") {
-      for (const file of outcome.accepted) {
-        refused.push({ id: newComposeId(), name: file.name, reason: VIDEO_AT_EDIT, file });
+      // The screening awaits the clip's bytes, so the body may have moved
+      // under it — a second pick that landed first. A clip never mixes in and
+      // never drops in silence: it is refused in the grammar's own words.
+      const now = latest.current.gallery;
+      if (now.length > 0) {
+        const reason = bodyClipOf(now) !== undefined ? EDIT_SCALE.oneVideo : EDIT_SCALE.mixedBody;
+        setRefusals((current) => [...current, { id: newComposeId(), name: first.name, reason, file: first }]);
+        return;
       }
+      // The clip arrives as the comment's video with its cover row
+      // (CommentEdit.md:23), and starts uploading at once (ReplyVideo.md:5).
+      const asset: PickedAsset = {
+        id: newComposeId(),
+        file: first,
+        crop: CENTERED,
+        altText: "",
+        upload: { kind: "waiting" },
+        kind: "video",
+      };
+      update((current) => ({ gallery: withClip(current.gallery, asset) }), true);
+      return;
     }
-    if (refused.length > 0) setRefusals((current) => [...current, ...refused]);
-    if (outcome.kind !== "picture" || outcome.accepted.length === 0) return;
+    if (bodyClipOf(latest.current.gallery) !== undefined) {
+      const reason = EDIT_SCALE.mixedBody;
+      setRefusals((current) => [
+        ...current,
+        ...outcome.accepted.map((file) => ({ id: newComposeId(), name: file.name, reason, file })),
+      ]);
+      return;
+    }
     const picked = outcome.accepted.map((file) => ({ id: newComposeId(), file }));
     update((current) => ({ gallery: addTo(current.gallery, picked) }), true);
   };
@@ -604,7 +706,8 @@ export function CommentEditor({
                   // export starts uploading (CoverCrop.md).
                   if (clip !== undefined) {
                     const face = cropping;
-                    update((current) => ({ gallery: withNewCover(current.gallery, clip.mediaId, face) }), true);
+                    const clipId = pictureId(clip);
+                    update((current) => ({ gallery: withNewCover(current.gallery, clipId, face) }), true);
                   }
                   setCropping(null);
                 },
@@ -643,7 +746,9 @@ export function CommentEditor({
           })
         }
         onRemoveCover={() => {
-          if (clip !== undefined) update((current) => ({ gallery: withNewCover(current.gallery, clip.mediaId, null) }));
+          if (clip === undefined) return;
+          const clipId = pictureId(clip);
+          update((current) => ({ gallery: withNewCover(current.gallery, clipId, null) }));
         }}
         onTags={(tags) => update(() => ({ tags }))}
         onReferences={(references) => update(() => ({ references }))}
@@ -711,7 +816,13 @@ export function CommentEditor({
             ? null
             : describingPicture?.kind === "kept" && describingPicture.video
               ? describingPicture.coverUrl
-              : (previews[describing] ?? null)
+              : describingPicture?.kind === "addedClip"
+                ? // The clip's face, never its undecoded bytes: the face it
+                  // was given here, or its frame 0.
+                  ((describingPicture.newCover !== null ? previews[describingPicture.newCover.id] : undefined) ??
+                  previews[describing] ??
+                  null)
+                : (previews[describing] ?? null)
         }
         crop={null}
         value={describingPicture === undefined ? "" : pictureAltText(describingPicture)}
@@ -719,7 +830,9 @@ export function CommentEditor({
           const id = describing;
           if (id !== null) update((current) => ({ gallery: withAltText(current.gallery, id, altText) }), true);
         }}
-        video={describingPicture?.kind === "kept" && describingPicture.video}
+        video={
+          describingPicture?.kind === "addedClip" || (describingPicture?.kind === "kept" && describingPicture.video)
+        }
         testId="comment-edit-describe-sheet"
       />
       <HelpDialog
