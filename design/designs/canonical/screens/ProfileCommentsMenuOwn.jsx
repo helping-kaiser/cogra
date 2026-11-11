@@ -1,10 +1,10 @@
 /* YOUR OWN PROFILE'S COMMENTS VIEW, YOUR COMMENT'S MENU OPEN (round 36;
    jakob 2026-11-11, H5 and H7). The reader's own comment on their own
    Comments tab raises the own comment's menu (ProfileComments.md) — Save,
-   Cite, Remove, Cited by, Opinions on this, License terms, and no Report —
-   over the profile, unstacked, as `ProfileCommentsMenu`. The card is the
-   tab's own comment card, `ProfileComments`' shape, holding the reader's own
-   comment as `FeedCommentShapes` words it.
+   Cite, Edit, Remove, Cited by, Opinions on this, License terms, and no
+   Report — over the profile, unstacked, as `ProfileCommentsMenu`. The card is
+   the tab's own comment card, `ProfileComments`' shape, holding the reader's
+   own comment as `FeedCommentShapes` words it.
 
    REGISTERED under the `profile` prefix, `profile.menuSheet`, told apart by
    board. */

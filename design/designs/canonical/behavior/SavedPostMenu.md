@@ -15,3 +15,5 @@ WHEN tap saved.menuSheet.license -> the menu closes AND the post's terms come up
 WHEN tap saved.menuSheet.report -> the menu closes AND the report confirm rises over Saved, its title reading Report this post? AND NEVER anything is sent yet
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes
+
+ALWAYS saved.menuSheet.hide reads Unhide with the author's handle GIVEN the author is already hidden, the hidden author's post still standing here, and keeps its one name whatever it reads, as the reader's post menu reads it

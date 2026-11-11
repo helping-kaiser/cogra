@@ -22,4 +22,4 @@ WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN pos
 
 WHEN the removal is taken GIVEN postDetail.dialog was closed while it answered -> the line goes AND the post stands as its mark, Removed by its author
 
-WHEN the removal does not go through GIVEN postDetail.dialog was closed while it answered -> the post's own row on its detail, under its words stands as it was AND says so in the failure voice with Retry, its words waiting for jakob (backlog 167) AND NEVER the snackbar carries the failure
+WHEN the removal does not go through GIVEN postDetail.dialog was closed while it answered -> the post's own row on its detail, under its words stands as it was AND says That didn't sign. in the failure voice followed by Retry, which asks the same act again, AND NEVER the snackbar carries the failure

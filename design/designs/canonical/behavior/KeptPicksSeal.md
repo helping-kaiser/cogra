@@ -56,4 +56,6 @@ WHEN press Sign the picks -> Back reads Close in its place from the press itself
 
 WHEN press Close, the header back arrow, the header X or the system's Back GIVEN Sign the picks was pressed and has not answered -> the seal leaves for where the review was opened from AND the batch goes on as a whole AND each target's row reads Signing… under its face until the batch answers AND NEVER the act is cancelled
 
-WHEN the signing does not go through GIVEN the seal was closed while it signed -> nothing is signed AND every pick stays kept AND the Key backup group's row reopens the review AND NEVER the snackbar carries the failure
+WHEN the signing does not go through GIVEN the seal was closed while it signed -> nothing is signed AND every pick stays kept AND the Key backup group's row reads That didn't sign. in the failure voice under its label followed by Retry AND NEVER the snackbar carries the failure
+
+WHEN tap Retry on the Key backup group's row -> the whole batch is asked to sign again AND each target's row reads Signing… under its face until the batch answers

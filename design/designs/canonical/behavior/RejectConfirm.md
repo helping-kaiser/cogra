@@ -32,4 +32,4 @@ WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Clo
 
 WHEN the closing is taken GIVEN the dialog was closed while it answered -> the line goes AND the row leaves this reader's list AND the applicant is told
 
-WHEN the closing does not go through GIVEN the dialog was closed while it answered -> the application's own row on Invites stands as it was AND says so in the failure voice with Retry, its words waiting for jakob (backlog 167) AND NEVER the snackbar carries the failure
+WHEN the closing does not go through GIVEN the dialog was closed while it answered -> the application's own row on Invites stands as it was AND says That didn't sign. in the failure voice followed by Retry, which asks the same act again, AND NEVER the snackbar carries the failure

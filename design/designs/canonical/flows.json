@@ -250,8 +250,8 @@
     },
     {
       "name": "edit-your-comment",
-      "description": "Edit on your own comment opens the edit surface; the signed edit settles back into the thread it belongs to.",
-      "start": { "board": "ReplyMedia", "via": 6 },
+      "description": "Edit in your own comment's menu opens the edit surface; the signed edit settles back into the thread it belongs to.",
+      "start": { "board": "CommentMenuOwn", "via": 8 },
       "end": { "board": "CommentEdit", "via": 12, "case": "signed — the thread reopened where it was left, the edit settling on its card" }
     },
     {
