@@ -16,9 +16,11 @@
    `Signs as #saltmaps` as its second line — so the promise about the record
    and the gesture that makes it are one thing. A tap on it stages it, and so
    does the name field's keyboard action key — and either way the picker stays
-   open (jakob, 2026-10-01; `TagPicker`): the row moves up into the staged
-   section with its × and the name stays in the field, so the stage is seen
-   right under where it was made — and heard, `PickAnnouncement`'s `Added — in
+   open (jakob, 2026-10-01; `TagPicker`): the row moves to the top of the
+   staged section, the list's first rows above the results, with its ×, and
+   the name stays in the field, so the stage is seen right under where it was
+   made — at most the three newest staged stand there, so the results stay in
+   sight while the reader types — and heard, `PickAnnouncement`'s `Added — in
    the staged list.` — and the reader clears the field to name the next tag.
    Nothing is staged on this board yet, so the status message is mounted and
    silent. Here the typed name is also a

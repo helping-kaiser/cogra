@@ -33,7 +33,7 @@
 
    REGISTERED AS `profileStances` (the web's minted ids): `header`, `tabRow`
    (its `onTab` and `byTab`, one copy per `tab` value), `list` and in it a
-   `row` per person, keyed by the handle of the person it names — the path
+   `row` per person, keyed by the id of the person it names — the path
    follows the drawing, as `notifications.list.notification` does — and
    `empty` in the list's place.
 
@@ -71,14 +71,14 @@ export function Screen() {
         <TabBar ariaLabel="Which direction" value="by" tabs={DIRECTIONS} node="tabRow" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "{{rowsShown}}", flexDirection: "column", paddingTop: 4 }} data-node="list">
-        <StanceRow name="Tobias Lindqvist" handle="tobias" pDirected={0.7} pInterest={0.4} node="row" nodeKey="tobias" />
+        <StanceRow name="Tobias Lindqvist" handle="tobias" pDirected={0.7} pInterest={0.4} node="row" nodeKey={TOBIAS.id} />
         <div style={{ display: "{{solRow}}" }}>
-          <StanceRow name="Sol Ferreira" handle="sol" pDirected={0.6} pInterest={0.3} node="row" nodeKey="sol" />
+          <StanceRow name="Sol Ferreira" handle="sol" pDirected={0.6} pInterest={0.3} node="row" nodeKey={SOL.id} />
         </div>
-        <StanceRow name="Mira Voss" handle="mira" src="inviter.jpg" pDirected={0.4} pInterest={0.5} node="row" nodeKey="mira" />
+        <StanceRow name="Mira Voss" handle="mira" src="inviter.jpg" pDirected={0.4} pInterest={0.5} node="row" nodeKey={MIRA.id} />
         <StanceRow redacted pDirected={0.2} pInterest={0.2} node="redactedRow" nodeKey="9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98" />
-        <StanceRow name="Kel Moreau" handle="kel" pDirected={0} pInterest={0.35} node="row" nodeKey="kel" />
-        <StanceRow name="Juno Baptiste" handle="juno" pDirected={-0.2} pInterest={0.1} node="row" nodeKey="juno" />
+        <StanceRow name="Kel Moreau" handle="kel" pDirected={0} pInterest={0.35} node="row" nodeKey={KEL.id} />
+        <StanceRow name="Juno Baptiste" handle="juno" pDirected={-0.2} pInterest={0.1} node="row" nodeKey={JUNO.id} />
       </div>
       <div style={{ flex: 1, display: "{{emptyShown}}", padding: "8px 24px" }}>
         <EmptyState title="{{emptyLine}}" node="empty" />

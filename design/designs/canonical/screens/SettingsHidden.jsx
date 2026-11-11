@@ -26,7 +26,7 @@
 
    REGISTERED under the `settings` prefix (design ⇄ impl seam 059/061, the Hide
    packet): the page is `Settings`', and the sheet is `hiddenSheet`, its rows
-   `account`s keyed by the hidden person's handle.
+   `account`s keyed by the hidden person's id.
 
    A DELETED ACCOUNT STAYS HIDDEN, AND ITS ROW IS DRAWN (jakob 2026-10-07,
    HA-3 / ruling 56; the settings round, 2026-10-13). Hiding acts on an actor,
@@ -60,7 +60,7 @@ export function Screen() {
               </InlineAction>
             }
             node="account"
-            nodeKey="juno"
+            nodeKey={JUNO.id}
           />
           <ContentRow
             variant="chronicle"
@@ -76,7 +76,7 @@ export function Screen() {
               </InlineAction>
             }
             node="account"
-            nodeKey="ada"
+            nodeKey={ADA.id}
           />
           <ContentRow
             variant="chronicle"
@@ -92,7 +92,7 @@ export function Screen() {
               </InlineAction>
             }
             node="account"
-            nodeKey="tobias"
+            nodeKey={TOBIAS.id}
           />
           <ContentRow
             variant="chronicle"

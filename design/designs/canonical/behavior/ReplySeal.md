@@ -20,11 +20,15 @@ WHEN the signing does not go through GIVEN no answer reached the seal -> the fau
 
 WHEN the signing is refused for one staged citation GIVEN the cited post never landed -> that citation's row reads This post didn't land, so it can't be cited. followed by Remove it AND Sign comment stays AND NEVER Retry appears
 
+WHEN the signing is refused for one staged tag GIVEN the tag never landed -> the Tags row reads back as before AND under its value the line This tag didn't land. stands in the failure voice followed by Remove it AND Sign comment stays AND NEVER Retry appears AND NEVER a reason is given
+
 WHEN the signing is refused for one staged act GIVEN the act's target landed -> the notice This shouldn't have happened takes the place of Sign comment AND Try again, Report a problem and Discard the reply stand with it AND everything above the foot stays as it was AND NEVER a line in the failure voice appears
 
 WHEN tap Discard the reply under the notice This shouldn't have happened -> the discard dialog Discard this reply? opens over the seal with Nothing is kept. AND NEVER the reply is discarded unasked
 
 WHEN the write rule refuses the reply -> nothing is staged or spent AND the notice says the reply is still here AND NEVER Retry appears
+
+ALWAYS the Reference row reads the one staged citation by its name over its pair, its remove control beside it, GIVEN one citation is staged
 
 ALWAYS the References row reads N cited and a bare count of the citations GIVEN two or more citations are staged
 
@@ -35,6 +39,8 @@ ALWAYS the Tags row reads the staged tags as chips GIVEN they fit the row
 ALWAYS the Tags row reads N tags and a bare count of the tags GIVEN more tags are staged than the row holds
 
 WHEN tap the Tags row GIVEN it reads N tags -> the tags sheet opens over the seal
+
+ALWAYS the citations sheet and the tags sheet the reply's seal opens are the post seal's own sheets, drawn once and raised from both seals
 
 WHEN the key leaves while the reply is written -> Sign comment leads to the reply-scale key notice with restore or discard
 

@@ -26,7 +26,7 @@ WHEN the signing has not answered 200ms after the press -> Sign the picks reads 
 
 WHEN the signing has not answered 5s after the press -> the subline under the total reads Still signing — the network is slow right now. AND NEVER a progress indicator appears
 
-WHEN the signing is taken -> the seal leaves for where the review was opened from AND the snackbar reads Signed 3 things, still settling. with the count of the batch AND each target's anchor wears Still settling until its record is ordered AND the settings row that reopened the review goes
+WHEN the signing is taken -> the seal leaves for where the review was opened from AND the snackbar reads Signed 4 things, still settling. with the count of the batch AND each target's anchor wears Still settling until its record is ordered AND the settings row that reopened the review goes
 
 WHEN the signing does not go through GIVEN no answer reached the seal -> the fault line and Retry take the commit's place AND nothing is signed AND every pick stays kept
 

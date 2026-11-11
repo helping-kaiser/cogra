@@ -6,6 +6,9 @@ export interface EmptySignConfirmProps {
   vouchIn?: boolean;
   /** The signing is in flight (past 200ms): the act reads `Setting…` and goes inert, never dimmed. */
   busy?: boolean;
+  /** The act is being sent (implies `busy`): `Keep it` reads `Close` and only
+   *  leaves. Until then `Keep it`, the scrim, Escape and Back truly cancel. */
+  sent?: boolean;
   /** The signing did not go through; the dialog stays open, says so, and the act's slot reads `Retry`. */
   failed?: boolean;
   /** The write rule refused the sign: the quiet line `WRITE_RULE_WORDS.dialog`, `Set it anyway` dimmed, no Retry — `SeveranceConfirm`'s state. */
