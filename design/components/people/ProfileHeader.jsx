@@ -227,7 +227,7 @@ export function ProfileHeader({
         </div>
         <div className="cg-profile-name" style={{ gridArea: "name", alignSelf: "end", display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
           <h1
-            style={{ margin: 0, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere", color: redacted ? "var(--text-secondary)" : undefined }}
+            style={{ margin: 0, fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere", color: redacted ? "var(--text-secondary)" : undefined }}
             data-node={node && "name"}
           >
             {name}
@@ -236,7 +236,7 @@ export function ProfileHeader({
               carry it — a drill-in is titled @handle, so it passes showHandle
               false (jakob 2026-09-01). A redacted actor has none to repeat. */}
           {showHandle && !redacted && (
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>
+            <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>
               @{handle}
             </span>
           )}
@@ -249,14 +249,14 @@ export function ProfileHeader({
           collapsing — a space kept, not a space lost. */}
       {bio &&
         (typeof bio === "string" ? (
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "bio"}>
+          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "bio"}>
             {bio}
           </p>
         ) : (
           bio
         ))}
       {website && (
-        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--primary)", overflowWrap: "anywhere" }} data-node={node && "website"}>
+        <span style={{ fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--primary)", overflowWrap: "anywhere" }} data-node={node && "website"}>
           {website}
         </span>
       )}

@@ -54,6 +54,8 @@ export const GESTURE_ZONE = 16;
 const TIME = {
   fontFamily: "var(--font-sans)",
   fontSize: "var(--text-label-small)",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
+  fontWeight: "var(--text-label-small--font-weight)",
   lineHeight: "var(--text-label-small--line-height)",
   fontVariantNumeric: "tabular-nums",
   color: "#fff",

@@ -15,7 +15,7 @@ export function Screen() {
     <>
       <WizardHeader title="Reply" leaveLabel="Leave — the reply is discarded" />
       <div style={{ padding: "12px 24px 0", display: "flex", flexDirection: "column", gap: 12 }}>
-        <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
+        <p style={{ margin: 0, fontSize: "var(--text-body-large)", letterSpacing: "var(--text-body-large--letter-spacing)", fontWeight: "var(--text-body-large--font-weight)", lineHeight: "var(--text-body-large--line-height)" }}>
           Eighteen seconds of the same headland, if the light comes through at all.
         </p>
         <MediaThumb src="comment-camera.jpg" alt="" width={160} height={160} fit="contain" video duration="0:18" />

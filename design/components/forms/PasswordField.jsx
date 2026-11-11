@@ -83,7 +83,13 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
             color: "var(--on-surface)",
             padding: "8px 12px",
             fontFamily: "var(--font-sans)",
+            // The whole body-large role, the text field's input's (round 28,
+            // seam 254 item 7): an input inherits no type, so a role half-set
+            // draws the browser's own leading.
             fontSize: "var(--text-body-large)",
+            lineHeight: "var(--text-body-large--line-height)",
+            letterSpacing: "var(--text-body-large--letter-spacing)",
+            fontWeight: "var(--text-body-large--font-weight)",
           }}
         />
         <button
@@ -117,6 +123,7 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
           data-node={node && "support"}
           style={{
             fontSize: "var(--text-body-small)",
+            fontWeight: "var(--text-body-small--font-weight)",
             lineHeight: "var(--text-body-small--line-height)",
             letterSpacing: "var(--text-body-small--letter-spacing)",
             color: error ? "var(--error)" : "var(--text-secondary)",

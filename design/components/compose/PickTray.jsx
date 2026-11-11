@@ -63,7 +63,7 @@ export function PickTray({ count, onShowAll, showAllLabel = "Show all", caption,
       <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: clip ? "hidden" : undefined }}>
         {children}
         {caption && (
-          <span style={{ flex: 1, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+          <span style={{ flex: 1, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             {caption}
           </span>
         )}

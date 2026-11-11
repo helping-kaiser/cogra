@@ -117,6 +117,8 @@ export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Sea
               color: "inherit",
               fontFamily: "var(--font-sans)",
               fontSize: "var(--text-body-large)",
+              letterSpacing: "var(--text-body-large--letter-spacing)",
+              fontWeight: "var(--text-body-large--font-weight)",
               lineHeight: "var(--text-body-large--line-height)",
               outline: "none",
             }}
@@ -129,6 +131,8 @@ export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Sea
               data-node={node && "input"}
               style={{
                 fontSize: "var(--text-body-large)",
+                letterSpacing: "var(--text-body-large--letter-spacing)",
+                fontWeight: "var(--text-body-large--font-weight)",
                 lineHeight: "var(--text-body-large--line-height)",
                 whiteSpace: "nowrap",
                 overflow: "hidden",

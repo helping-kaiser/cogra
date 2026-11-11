@@ -60,7 +60,7 @@ export function Screen() {
           <LicenseAxis axis="record" name="default-license-provenance" tiers={PROVENANCE_TIERS} chosen={0} node="record" />
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }} data-node="foot">
-            <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node="summary">
+            <span style={{ flex: 1, fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node="summary">
               <LicenseSummary />
             </span>
             <Button node="done">Done</Button>

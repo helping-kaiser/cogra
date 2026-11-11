@@ -425,14 +425,14 @@ export function StanceValue({ pDirected, pInterest, showPair = true, zeroLabel =
       style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
       data-node={node}
     >
-      <span aria-hidden="true" style={{ fontSize: "var(--text-title-medium)" }} data-node={node && "face"}>
+      <span aria-hidden="true" style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", letterSpacing: "var(--text-title-medium--letter-spacing)", fontWeight: "var(--text-title-medium--font-weight)" }} data-node={node && "face"}>
         {readout.emoji}
       </span>
       {showPair && (
         <span
           className="cg-exact"
           aria-hidden="true"
-          style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+          style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
           data-node={node && "exact"}
         >
           {formatStancePair(pair)}
@@ -656,7 +656,7 @@ function ReadoutLine({ emoji, exact, spoken, style, node }) {
       {/* NEVER WRAPS. This sits in the post card's affordance row, which is one
           line by rule — a pair broken across two text lines reads as a two-line
           block even when the row height has not changed. */}
-      <span className="cg-exact" aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }} data-node={node && "exact"}>
+      <span className="cg-exact" aria-hidden="true" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)", whiteSpace: "nowrap" }} data-node={node && "exact"}>
         {exact}
       </span>
       {/* The spoken reading is the same in both modes: geek mode is a drawing
@@ -775,7 +775,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, words, head, onExp
   const said = useSettled(sentence !== undefined ? sentence : spoken);
   if (sentence !== undefined) {
     return (
-      <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)", ...style }} data-node={node}>
+      <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)", ...style }} data-node={node}>
         <span aria-hidden="true">{sentence}</span>
         <span style={SR_ONLY}>{said}</span>
       </p>
@@ -783,6 +783,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, words, head, onExp
   }
   const labelInk = {
     fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)",
     letterSpacing: "var(--text-label-small--letter-spacing)",
     fontWeight: "var(--text-label-small--font-weight)",
     color: "var(--text-secondary)",
@@ -826,17 +827,17 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, words, head, onExp
               aria-expanded={zeroShown}
               onClick={onExplainZero}
               className="cg-state cg-focus cg-hit"
-              style={{ flex: "none", background: "none", border: 0, padding: 0, cursor: "pointer", fontSize: "var(--text-title-medium)", lineHeight: 1.2 }}
+              style={{ flex: "none", background: "none", border: 0, padding: 0, cursor: "pointer", fontSize: "var(--text-title-medium)", letterSpacing: "var(--text-title-medium--letter-spacing)", fontWeight: "var(--text-title-medium--font-weight)", lineHeight: 1.2 }}
               data-node={node && "zero"}
             >
               <span aria-hidden="true">{emoji}</span>
             </button>
           ) : (
-            <span aria-hidden="true" style={{ flex: "none", fontSize: "var(--text-title-medium)", lineHeight: 1.2 }} data-node={node && "face"}>
+            <span aria-hidden="true" style={{ flex: "none", fontSize: "var(--text-title-medium)", letterSpacing: "var(--text-title-medium--letter-spacing)", fontWeight: "var(--text-title-medium--font-weight)", lineHeight: 1.2 }} data-node={node && "face"}>
               {emoji}
             </span>
           )}
-          <span aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "words"}>
+          <span aria-hidden="true" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)" }} data-node={node && "words"}>
             {words}
           </span>
         </span>
@@ -845,7 +846,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, words, head, onExp
         <span style={{ fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)", lineHeight: 1.2 }} data-node={node && "face"}>
           {emoji}
         </span>
-        <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", color: big ? "var(--on-surface)" : "var(--text-secondary)", whiteSpace: "nowrap" }} data-node={node && "exact"}>
+        <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: big ? "var(--on-surface)" : "var(--text-secondary)", whiteSpace: "nowrap" }} data-node={node && "exact"}>
           {pair}
         </span>
       </span>
@@ -918,7 +919,7 @@ export function AttachmentLandingLine({ rawSum, pick, style, node }) {
     <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", ...style }}>
       <ReadoutBlock {...backingBlock(BACKING_AFTER_LABEL, landing)} node={node} />
       {capped && (
-        <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "cap"}>
+        <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)" }} data-node={node && "cap"}>
           {`Adds up to ${formatDimension(raw)}; your feed reads it capped at ${formatDimension(landing)}.`}
         </p>
       )}
@@ -946,7 +947,7 @@ export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, onExplai
           reads in the same shape and opens nothing. */}
       <ReadoutBlock {...landingParts(landing, names)} onExplainZero={landing && landing.empty ? undefined : onExplainZero} zeroShown={zeroShown} node={node} />
       {keepsBorrowed && (
-        <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "borrowed"}>
+        <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)" }} data-node={node && "borrowed"}>
           {BORROWED_KEPT_LINE}
         </p>
       )}
