@@ -13,13 +13,13 @@
    together, in one batch the reader reviews first). Each pick is one
    opinion and one act, so the acts card reads each back on its own row —
    what it is on, and its pair as `StanceReadout` reads it — counts them in
-   things, `3 things, signed together`, and carries the multi-act subline
+   things, `4 things, signed together`, and carries the multi-act subline
    every seal of more than one act carries: `They land together, or none
    does.`
 
    THE COMMIT NAMES WHAT IT SIGNS (`SealFooter`'s rule): `Sign the
    opinions`. Signed, the batch leaves the seal for where the review was
-   opened from, with the usual settled snackbar in its batch form, `Signed 3
+   opened from, with the usual settled snackbar in its batch form, `Signed 4
    things, still settling.`, and each target's anchor wears `Still settling`
    until its record is ordered. The X leaves with every pick still kept, as
    leaving the review does.

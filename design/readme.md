@@ -8023,7 +8023,7 @@ batch the reader reviews first (jakob, 2026-09-30).
   readout form, spoken as the readout speaks it (`stance`). `Sign them`
   leads to `KeptPicksSeal`, the standard seal with the picks as its acts,
   one `Opinion` row each, all or nothing; signed, the batch returns where
-  the review was opened from with `Signed 3 things, still settling.` The
+  the review was opened from with `Signed 4 things, still settling.` The
   seal idiom is untouched and nothing on it is removable.
 - **The × drops at once** — no confirm, no undo; nothing was signed, and
   the pick is made again from its pad. The last drop closes the review

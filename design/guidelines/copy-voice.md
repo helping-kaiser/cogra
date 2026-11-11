@@ -2265,7 +2265,7 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
   picks…` in flight). The commit names the batch by the review's own
   word, because the batch can hold a feeling beside the opinions (seam
   248; *new 2026-10-29, blessed (jakob 2026-11-10)*).
-- Signed: the settled snackbar in its batch form, `Signed 3 things, still
+- Signed: the settled snackbar in its batch form, `Signed 4 things, still
   settling.` — the signed-opinion snackbar's own opening, without a
   `Current opinion`, since a batch holds more than one target.
 - The settings row, last in `Key backup`: `4 kept picks waiting` (`1 kept

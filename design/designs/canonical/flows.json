@@ -715,7 +715,7 @@
         { "board": "Restore", "via": 4, "to": "KeptPicksReview" },
         { "board": "KeptPicksReview", "via": 3 }
       ],
-      "end": { "board": "KeptPicksSeal", "via": 4, "case": "signed, all together — back where the review was opened from, with the snackbar Signed 3 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone" }
+      "end": { "board": "KeptPicksSeal", "via": 4, "case": "signed, all together — back where the review was opened from, with the snackbar Signed 4 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone" }
     },
     {
       "name": "take-a-stance-without-the-key",
