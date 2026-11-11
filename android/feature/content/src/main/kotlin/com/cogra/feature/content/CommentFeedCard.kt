@@ -290,6 +290,9 @@ private fun LinePointer(target: CommentTarget, node: DataNode, onOpen: () -> Uni
     val words = stringResource(R.string.content_card_on, row.label)
     Row(
         modifier = Modifier
+            // The pointer stands across the card, a block in its column
+            // (`CommentCard.jsx`: the button stretches in the card's flex column).
+            .fillMaxWidth()
             .clip(RoundedCornerShape(Space.x2))
             .dataNode(node)
             .clickable(role = Role.Button, onClick = onOpen),
