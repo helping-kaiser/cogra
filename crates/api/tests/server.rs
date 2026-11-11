@@ -742,7 +742,12 @@ async fn invite_link_check_reads_the_capability_anonymously(pool: PgPool) {
 /// (´claim:server:an-invite-link-reads-anonymously´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn invite_link_check_names_the_inviter_as_a_public_profile(pool: PgPool) {
-    let link = seed_link(&pool, "inviter", chrono::Utc::now() + chrono::Duration::days(1)).await;
+    let link = seed_link(
+        &pool,
+        "inviter",
+        chrono::Utc::now() + chrono::Duration::days(1),
+    )
+    .await;
     let data = gql(
         test_app(pool),
         format!(
@@ -759,12 +764,19 @@ async fn invite_link_check_names_the_inviter_as_a_public_profile(pool: PgPool) {
     assert!(inviter["displayName"]["value"].is_string());
     assert!(inviter["avatar"].is_null(), "no picture was ever set");
     assert!(inviter["email"].is_null(), "private to the account itself");
-    assert!(inviter["accountState"].is_null(), "private to the account itself");
+    assert!(
+        inviter["accountState"].is_null(),
+        "private to the account itself"
+    );
 }
 
 /// Seeds a credentialed account and one reset link for it expiring at
 /// `expires_at`, returning the link's bare token.
-async fn seed_reset(pool: &PgPool, handle: &str, expires_at: chrono::DateTime<chrono::Utc>) -> String {
+async fn seed_reset(
+    pool: &PgPool,
+    handle: &str,
+    expires_at: chrono::DateTime<chrono::Utc>,
+) -> String {
     let key = common::l1::client::ActorKey::generate();
     let user = uuid::Uuid::new_v4();
     let mut conn = pool.acquire().await.expect("conn");
@@ -780,13 +792,24 @@ async fn seed_reset(pool: &PgPool, handle: &str, expires_at: chrono::DateTime<ch
     .expect("actor");
     drop(conn);
     let hash = api::auth::hash_password("a strong password").expect("hash");
-    postgres_store::genesis::insert_credentials(pool, user, &format!("{handle}@example.com"), &hash)
-        .await
-        .expect("credentials");
+    postgres_store::genesis::insert_credentials(
+        pool,
+        user,
+        &format!("{handle}@example.com"),
+        &hash,
+    )
+    .await
+    .expect("credentials");
     let secret = api::auth::new_secret();
-    postgres_store::auth::create_password_reset(pool, uuid::Uuid::new_v4(), user, &secret.hash, expires_at)
-        .await
-        .expect("reset");
+    postgres_store::auth::create_password_reset(
+        pool,
+        uuid::Uuid::new_v4(),
+        user,
+        &secret.hash,
+        expires_at,
+    )
+    .await
+    .expect("reset");
     secret.token
 }
 
@@ -803,7 +826,12 @@ fn reset_check(token: &str) -> String {
 /// ´claim:server:a-reset-link-check-never-consumes´
 #[sqlx::test(migrations = "../../migrations")]
 async fn password_reset_link_check_reads_without_consuming(pool: PgPool) {
-    let live = seed_reset(&pool, "resetter", chrono::Utc::now() + chrono::Duration::minutes(15)).await;
+    let live = seed_reset(
+        &pool,
+        "resetter",
+        chrono::Utc::now() + chrono::Duration::minutes(15),
+    )
+    .await;
     for _ in 0..2 {
         let data = gql(test_app(pool.clone()), reset_check(&live)).await;
         assert_eq!(data["passwordResetLinkCheck"], true);
@@ -820,12 +848,23 @@ async fn password_reset_link_check_reads_without_consuming(pool: PgPool) {
     let data = gql(test_app(pool.clone()), reset_check(&live)).await;
     assert_eq!(data["passwordResetLinkCheck"], false, "a used link");
 
-    let stale = seed_reset(&pool, "late", chrono::Utc::now() - chrono::Duration::minutes(1)).await;
+    let stale = seed_reset(
+        &pool,
+        "late",
+        chrono::Utc::now() - chrono::Duration::minutes(1),
+    )
+    .await;
     let data = gql(test_app(pool.clone()), reset_check(&stale)).await;
-    assert_eq!(data["passwordResetLinkCheck"], false, "a link past its time");
+    assert_eq!(
+        data["passwordResetLinkCheck"], false,
+        "a link past its time"
+    );
 
     let data = gql(test_app(pool), reset_check("no-such-token")).await;
-    assert_eq!(data["passwordResetLinkCheck"], false, "a token nothing knows");
+    assert_eq!(
+        data["passwordResetLinkCheck"], false,
+        "a token nothing knows"
+    );
 }
 
 /// (´claim:server:an-invite-link-reads-anonymously´)

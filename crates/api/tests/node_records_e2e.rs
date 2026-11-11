@@ -1255,23 +1255,31 @@ async fn the_profile_figures_count_bundles_never_revisions(pool: PgPool) {
           incomingRecords(family: OPINION, payloadMarked: false, first: 0) { totalCount bundleCount }
         }
       }"#;
-    let one = rig
-        .gql(FIGURES, json!({ "id": alice, "post": post }))
-        .await;
+    let one = rig.gql(FIGURES, json!({ "id": alice, "post": post })).await;
     assert_eq!(one["user"]["on"]["bundleCount"], json!(1), "{one}");
-    assert_eq!(one["user"]["on"]["totalCount"], json!(3), "inside the bundle: {one}");
+    assert_eq!(
+        one["user"]["on"]["totalCount"],
+        json!(3),
+        "inside the bundle: {one}"
+    );
     assert_eq!(one["user"]["by"]["bundleCount"], json!(1), "{one}");
     assert_eq!(one["user"]["by"]["totalCount"], json!(3), "{one}");
     assert_eq!(one["user"]["posts"]["bundleCount"], json!(1), "{one}");
     assert_eq!(one["user"]["posts"]["totalCount"], json!(1), "{one}");
-    assert_eq!(one["post"]["incomingRecords"]["bundleCount"], json!(1), "{one}");
-    assert_eq!(one["post"]["incomingRecords"]["totalCount"], json!(3), "{one}");
+    assert_eq!(
+        one["post"]["incomingRecords"]["bundleCount"],
+        json!(1),
+        "{one}"
+    );
+    assert_eq!(
+        one["post"]["incomingRecords"]["totalCount"],
+        json!(3),
+        "{one}"
+    );
 
     rig.stance(carol, &carol_key, alice, 0.3, 0.3).await;
     rig.stance(alice, &alice_key, carol, 0.3, 0.3).await;
-    let two = rig
-        .gql(FIGURES, json!({ "id": alice, "post": post }))
-        .await;
+    let two = rig.gql(FIGURES, json!({ "id": alice, "post": post })).await;
     assert_eq!(two["user"]["on"]["bundleCount"], json!(2), "{two}");
     assert_eq!(two["user"]["by"]["bundleCount"], json!(2), "{two}");
     assert_eq!(two["user"]["on"]["totalCount"], json!(4), "{two}");

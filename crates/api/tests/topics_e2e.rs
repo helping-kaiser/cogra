@@ -643,11 +643,18 @@ async fn a_record_names_the_topic_it_ends_at(pool: PgPool) {
         "the Hashtag the topic page reads"
     );
     let stances = topic_of("AFFINITY");
-    assert_eq!(stances.len(), 1, "the follow is an Affinity toward the Type: {listing}");
+    assert_eq!(
+        stances.len(),
+        1,
+        "the follow is an Affinity toward the Type: {listing}"
+    );
     assert_eq!(stances[0]["name"]["value"], "saltmaps");
     let publishes = topic_of("PUBLISH");
     assert!(!publishes.is_empty(), "{listing}");
-    assert!(publishes.iter().all(Value::is_null), "a post is no topic: {listing}");
+    assert!(
+        publishes.iter().all(Value::is_null),
+        "a post is no topic: {listing}"
+    );
 }
 
 /// Prepare only — no signing, no landing. The registry row is written in
