@@ -213,6 +213,8 @@ const ADA = { handle: "ada", displayName: "Ada Okonkwo" };
 const TOBIAS = { handle: "tobias", displayName: "Tobias Lindqvist" };
 const SOL = { handle: "sol", displayName: "Sol Ferreira" };
 const MIRA = { handle: "mira", displayName: "Mira Voss" };
+const MAREN = { handle: "maren", displayName: "Maren Holt" };
+const MATEO = { handle: "mateo", displayName: "Mateo Ruiz" };
 
 /* @tobias's comment at the thread's top — spelled once, because the thread
    draws it and the reply composer aimed at it quotes it. */
@@ -278,6 +280,18 @@ const SOL_POST = {
   comments: 2,
   opinions: 4,
   license: { attribution: 0.5, provenance: 0.5 },
+  menuItems: CARD_MENU,
+};
+
+/* @mira's words post — the one History's and Saved's searches both find. */
+const MIRA_WORDS_POST = {
+  author: MIRA,
+  content: "Honey's back at the stand by the sea wall — the first jars since June.",
+  timestamp: "5h",
+  score: "4.30",
+  comments: 1,
+  opinions: 3,
+  license: { attribution: 0, provenance: 0 },
   menuItems: CARD_MENU,
 };
 
