@@ -5433,6 +5433,10 @@ copy-voice, *The intro*). The intro's lines are carried over, blessed by use
 (jakob 2026-10-06), so the line waits for his word: by the rule it reads
 `@mira's link is your first way in to everyone else, and theirs to you.`
 
+Closed by round 38 (jakob 2026-11-11): the line reads `@mira's link is your
+first way in to everyone else, and theirs to you.`, on the board and in
+copy-voice.
+
 ### 159 · The profile card's menu for someone already hidden has no host board · *design* · **filed 2026-11-11**
 
 Round 36 (H3) wrote the law: on a hidden person's profile card the Hide row
@@ -5482,10 +5486,6 @@ their own cards still pass `CARD_MENU`: `LadderMax`, `LadderSmall`,
 `sheet.card.html`) pass the license row themselves, so the card's own append
 draws it twice, and no Report. Closed menus draw no row, so no pixel moves;
 a mechanical sweep.
-
-Closed by round 38 (jakob 2026-11-11): the line reads `@mira's link is your
-first way in to everyone else, and theirs to you.`, on the board and in
-copy-voice.
 
 ### 165 · After Close: where a profile change lands · *design* · **filed 2026-11-11**
 
