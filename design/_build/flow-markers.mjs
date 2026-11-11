@@ -39,6 +39,45 @@ const guestBand = [
 ];
 const secondComments = (n) => ({ n, find: 'aria-label="1 comment"', tag: "button" });
 
+// The card menus on their hosts (round 36): `FeedPostMenu`'s, `FeedPostMenuOwn`'s,
+// `CommentMenu`'s and `CommentMenuOwn`'s numbers, the first row's words and the
+// Hide row's handle per board.
+const readerMenuMarks = (save, hide) => [
+  { n: 1, find: save, tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: hide, tag: "button" },
+  { n: 4, find: ">License terms</button>", tag: "button" },
+  { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 6, find: ">Report</button>", tag: "button" },
+];
+const ownPostMenuMarks = [
+  { n: 1, find: ">Save</button>", tag: "button" },
+  { n: 2, find: ">Edit</button>", tag: "button" },
+  { n: 3, find: ">Mark as sensitive</button>", tag: "button" },
+  { n: 4, find: ">Remove</button>", tag: "button" },
+  { n: 5, find: ">License terms</button>", tag: "button" },
+  { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+];
+const commentMenuMarks = (save) => [
+  { n: 1, find: save, tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: ">License terms</button>", tag: "button" },
+  { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 5, find: ">Opinions on this</button>", tag: "button" },
+  { n: 6, find: ">Cited by</button>", tag: "button" },
+  { n: 7, find: ">Report</button>", tag: "button" },
+];
+const ownCommentMenuMarks = [
+  { n: 1, find: ">Save</button>", tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: ">License terms</button>", tag: "button" },
+  { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 5, find: ">Opinions on this</button>", tag: "button" },
+  { n: 6, find: ">Cited by</button>", tag: "button" },
+  { n: 7, find: ">Remove</button>", tag: "button" },
+];
+
 // The details stage's controls, shared by the stage and by the stage drawn
 // against its caps — one anatomy, so one marker list.
 const composeDetails = [
@@ -654,6 +693,29 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">License terms</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+  ],
+  // The host-card menus (round 36, backlog 149): each host's sheet numbered as
+  // the feed's or the detail's numbers the same sheet — the badge is an
+  // identity, not a position — scanExempt like every menu board.
+  HistoryPostMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),
+  SavedPostMenu: readerMenuMarks(">Unsave</button>", ">Hide @ada</button>"),
+  TagPageMenu: readerMenuMarks(">Save</button>", ">Hide @tobias</button>"),
+  ProfilePostsMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),
+  HistoryPostMenuOwn: ownPostMenuMarks,
+  ProfilePostsMenuOwn: ownPostMenuMarks,
+  HistoryCommentMenu: commentMenuMarks(">Save</button>"),
+  SavedCommentMenu: commentMenuMarks(">Unsave</button>"),
+  ProfileCommentsMenu: commentMenuMarks(">Save</button>"),
+  HistoryCommentMenuOwn: ownCommentMenuMarks,
+  ProfileCommentsMenuOwn: ownCommentMenuMarks,
+  // The profile card's menu (round 36, H2): `ProfileMenu`'s rows less Share,
+  // Report at the tail.
+  FeedProfileMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Mention in a new post</button>", tag: "button" },
+    { n: 3, find: ">Hide @mira</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Report</button>", tag: "button" },
   ],
   FeedRemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
@@ -1964,7 +2026,7 @@ Object.assign(FLOW_MARKERS, {
     // next free number. Drawn on the chip's `your-people` copy.
     { n: 9, find: 'data-sign="', tag: "label", all: true },
   ],
-  // Two password fields, one reveal affordance: the toggle is the same control
+  // Three password fields, one reveal affordance: the toggle is the same control
   // drawn twice, so it carries one number on both — the rule the repeated
   // per-post controls keep.
   ChangePassword: [
@@ -1973,6 +2035,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'data-field="New password"', tag: "div" },
     { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 5, find: ">Change password</button>", tag: "button" },
+    { n: 6, find: 'data-field="Repeat password"', tag: "div" },
   ],
   ChangeHandle: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
@@ -2015,9 +2078,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'data-field="Handle"', tag: "div" },
     { n: 3, find: 'data-field="Email"', tag: "div" },
     { n: 4, find: 'data-field="Password"', tag: "div" },
-    { n: 5, find: 'aria-label="Show password"', tag: "button" },
+    // One reveal control drawn on both password fields (ChangePassword's rule).
+    { n: 5, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 6, find: ">Create account</button>", tag: "button" },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
+    // The password asked twice (round 38, jakob's J2).
+    { n: 11, find: 'data-field="Repeat password"', tag: "div" },
     // The two legal doors (jakob 2026-10-09, ruling 76): the accept
     // sentence's Terms above the commit, the privacy notice at the foot.
     { n: 9, find: ">Terms</a>", tag: "a" },
@@ -2072,9 +2138,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'data-field="Handle"', tag: "div" },
     { n: 3, find: 'data-field="Email"', tag: "div" },
     { n: 4, find: 'data-field="Password"', tag: "div" },
-    { n: 5, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 6, find: ">Create account</button>", tag: "button" },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
+    { n: 10, find: 'data-field="Repeat password"', tag: "div" },
     // The two legal doors, as on Join (jakob 2026-10-09, ruling 76).
     { n: 8, find: ">Terms</a>", tag: "a" },
     { n: 9, find: ">Privacy Policy</a>", tag: "a" },
@@ -2140,8 +2207,9 @@ Object.assign(FLOW_MARKERS, {
   // No back arrow: a mail link has no previous screen of ours behind it.
   ResetNew: [
     { n: 1, find: 'data-field="New password"', tag: "div" },
-    { n: 2, find: 'aria-label="Show password"', tag: "button" },
+    { n: 2, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 3, find: ">Set the new password</button>", tag: "button" },
+    { n: 4, find: 'data-field="Repeat password"', tag: "div" },
   ],
   KeyCeremony: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -3052,6 +3120,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Deleted account<", tag: "button" },
     { n: 5, find: 'aria-label="Close a deleted account&#x27;s application"', tag: "button" },
     { n: 10, find: ">Retry</button>", tag: "button" },
+    // The people you let in (the `letIn` chip; round 38, jakob's J3): every
+    // row opens its person's profile, a deleted one's the deleted account's
+    // page — one act, one edge.
+    { n: 11, find: 'data-node="invites.person"', tag: "button", all: true },
+    { n: 11, find: 'data-node="invites.redactedPerson"', tag: "button" },
   ],
   RejectAllConfirm: [
     { n: 1, find: ">Close them</button>", tag: "button" },

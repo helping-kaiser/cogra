@@ -442,6 +442,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedProfileMenu.dc.html",
+      "title": "Feed · the profile card's menu",
+      "x": 12000,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedWordsSensitive.dc.html",
       "title": "Feed · a words-only post, veiled",
       "x": 8160,
@@ -560,10 +569,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -7670,
+      "x": -7960,
       "y": 0,
-      "w": 7250,
-      "h": 5519,
+      "w": 7540,
+      "h": 5545,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -760,6 +769,15 @@
       "file": "TagPageHidden.dc.html",
       "title": "A tag's page · someone just hidden",
       "x": 1920,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageMenu.dc.html",
+      "title": "A tag's page · the post menu",
+      "x": 2400,
       "y": 2120,
       "w": 390,
       "h": 844,

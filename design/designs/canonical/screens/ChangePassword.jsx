@@ -12,11 +12,12 @@
    because a reset revokes the session doing it too; a change from settings
    keeps this one, and the difference is the whole reason both lines exist.
 
-   TWO FIELDS, AND THE FIRST IS PROOF, NOT CONFIRMATION. `ResetNew` settled the
-   no-confirm rule — a typo is answered by looking, not by typing it twice — and
-   nothing here reopens it. The current password is there because a live session
-   is not proof enough to change the credential behind it, which is a fact worth
-   saying rather than a hoop worth resenting; the last line says it.
+   THE FIRST FIELD IS PROOF; THE NEW ONE IS ASKED TWICE. The current password
+   is there because a live session is not proof enough to change the credential
+   behind it, which is a fact worth saying rather than a hoop worth resenting;
+   the last line says it. The new password takes `Repeat password` under it, as
+   on every form that sets one (jakob 2026-11-11, J2), refused on the press with
+   `The two passwords don't match.` the way this form refuses a short one.
 
    DRAWN AT REST. Validation is on submit (§13), so an untouched form has
    nothing marked; the marked states are their own boards when they are
@@ -25,8 +26,9 @@
 
    REGISTERED under the `changePassword` prefix (design ⇄ impl seam 082, the
    settings packet). The credential family names a field for what it changes
-   and the proof `current`: here `current` and `password`; the commit with its
-   reason is `commit`. */
+   and the proof `current`: here `current`, `password` and its repeat `confirm`
+   (`RecoveryCode`'s name for the field that types a thing back; round 38); the
+   commit with its reason is `commit`. */
 export const NODE = "changePassword";
 export function Screen() {
   return (
@@ -68,10 +70,15 @@ export function Screen() {
             id="change-new-password"
             label="New password"
             autoComplete="new-password"
+            enterKeyHint="next"
             value=""
             hint="At least 12 characters."
             node="password"
           />
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          <PasswordField id="change-new-password-repeat" label="Repeat password" autoComplete="new-password" value="" node="confirm" />
         </div>
 
         <div style={{ marginTop: 24 }}>

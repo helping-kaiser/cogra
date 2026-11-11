@@ -5255,10 +5255,18 @@ stopped there. Two families stay unregistered until a board draws them:
   - **Saved's card menus** — a post card's and a comment card's ⋮:
     `saved.menuSheet` and the sheets beneath it under `saved`.
   - **The profile's posts view** — a post card's ⋮: `profile.menuSheet`,
-    told apart from the profile's own menu by board (item 64).
+    told apart from the profile's own menu by board, as `postDetail.menuSheet`
+    serves the post's and the comment's menus.
   - **The profile's comments view** — the comment card's own ⋮ (round 28,
     seam 254 A3, held undrawn by jakob 2026-11-10): `profile.menuSheet` on
     its own board, as the posts view's.
+
+The second family is closed by round 36 (jakob 2026-11-11, H1–H7): one menu
+board per place a card's menu is raised — History's four, Saved's two, the
+profile views' four, the tag page's and the profile card's on the feed —
+`history.menuSheet`, `saved.menuSheet`, `tagPage.menuSheet`, `profile.menuSheet`
+and `feed.menuSheet`. The sheets beneath are drawn once and not per host
+(backlog 161). The first family, a kept pick on the other cards, stays open.
 
 ### 150 · Re-key the registry's topic paths to tags · *system* · **filed 2026-11-11**
 
@@ -5416,7 +5424,7 @@ drawn faults are a next page's (`ProfileMoreFailed`, Notifications'
 jakob: the feed's failed read, drawn once — its line and where the band and
 the filter trigger stand over it.
 
-### 158 · One more gendered pronoun on a drawn line · *design* · **filed 2026-11-11**
+### 158 · One more gendered pronoun on a drawn line · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 35's sweep under the handle rule (copy-voice, *Naming*): the intro's
 vouch card reads `You are here because @mira invited you. Her link is your
@@ -5424,6 +5432,56 @@ first way in to everyone else, and theirs to you.` (`OnboardingVouch`;
 copy-voice, *The intro*). The intro's lines are carried over, blessed by use
 (jakob 2026-10-06), so the line waits for his word: by the rule it reads
 `@mira's link is your first way in to everyone else, and theirs to you.`
+
+### 159 · The profile card's menu for someone already hidden has no host board · *design* · **filed 2026-11-11**
+
+Round 36 (H3) wrote the law: on a hidden person's profile card the Hide row
+reads `Unhide`, Settings · hidden accounts' word (ProfileMenu.md). The ruling
+drew it as a setting on the feed's profile-card menu (`FeedProfileMenu`), but a
+hidden person's rows leave the feed (FeedHidden.md), so no such card stands
+there; it stands in History and Saved. Ways: (a) a History-hosted profile-card
+menu board with a `hidden` setting, `history.menuSheet` (rec — History is where
+the ruling places the card); (b) the same on Saved; (c) the law line alone.
+
+### 160 · The own profile's Posts and Comments views as a setting on their host boards · *system* · **filed 2026-11-11**
+
+Round 36 (H7) asked for the own views as a setting on "Profile · the posts
+view" and "Profile · the comments view". A chip copy keys every node inside
+it by the chip's value and records the chip as the outermost nodes' key rule
+(`node-paths.mjs`), so wrapping the drawn header and list re-keys the
+registered `profile.header`, `profile.identity…` and `profile.posts…` paths on
+those boards — a key-rule change readme §13 allows only as an announced
+breaking change. The own views are drawn beneath the own menu boards
+(`ProfilePostsMenuOwn`, `ProfileCommentsMenuOwn`). Ways: (a) two host boards
+of their own beside the others, additions only (rec); (b) the setting, with
+the re-key announced to impl; (c) the menu boards stand for the own views.
+
+### 161 · The sheets a host menu's rows open: drawn once, but which path · *system* · **filed 2026-11-11**
+
+The sheet node law (readme §13) says a host card's ⋮ and the rows it opens
+take the host's prefix (`feed.licenseSheet`); round 36 (H7) draws the
+license, report and remove sheets once and not per host. So License, Report
+and Remove from History, Saved, the tag page and the profile views raise a
+drawn sheet (`FeedPostLicense`, `FeedReportConfirm`, `FeedRemoveConfirm`,
+`CommentLicense`, `ReportConfirm`, `CommentRemoveConfirm`, as the graph names
+them) whose path no host registers. Ways for impl: (a) the host's prefix by
+the law, registered when a board draws it; (b) the drawn sheet's own path
+wherever raised, the thread's reading of the law.
+
+### 162 · Card fixtures on a few boards still carry Save and Cite only · *system* · **filed 2026-11-11**
+
+Round 36 (F2) handed the shared post and comment fixtures the menu their
+sheets draw (`readerCardMenu`, `COMMENT_CARD_MENU`). The boards that spell
+their own cards still pass `CARD_MENU`: `LadderMax`, `LadderSmall`,
+`LadderStates`, `LadderTopics`, `ReplyMedia`; and the component specimens
+(`content.card.html`, `media.card.html`, `sensitive.card.html`,
+`sheet.card.html`) pass the license row themselves, so the card's own append
+draws it twice, and no Report. Closed menus draw no row, so no pixel moves;
+a mechanical sweep.
+
+Closed by round 38 (jakob 2026-11-11): the line reads `@mira's link is your
+first way in to everyone else, and theirs to you.`, on the board and in
+copy-voice.
 
 ### 165 · After Close: where a profile change lands · *design* · **filed 2026-11-11**
 
@@ -5458,3 +5516,73 @@ its failure there in the failure voice with `Retry`. Which words: (a)
 and a closing are signed acts]; (b) `That didn't go through.`, the row
 pattern for an unsigned one. Also for jakob: on the reject dialogs the way out
 reads `Close` beside `Closing it…` — the same verb twice in one row.
+
+### 170 · Invites with nothing but the people you let in · *design* · **filed 2026-11-11**
+
+Round 38 (jakob's J3). `InvitesEmpty`, the teaching state, stands when no
+application waits and no link is live (`Invites.md`: "the empty Invites
+stands" once a revoke leaves nothing). A member who has let people in and
+has nothing waiting or live then meets the teaching state, and the people
+they let in are on no screen. For jakob: (a) the people keep the page out of
+the teaching state — `Invites` with both empty halves' lines and the section;
+(b) `InvitesEmpty` gains the section under its teaching body; (c) as drawn,
+the list only while the page has applications or links. Lean: (b), the one
+board a long-standing member reaches most.
+
+### 171 · People you let in, none yet: absent or a quiet line · *design* · **filed 2026-11-11**
+
+Round 38. The ruling drew the section absent until someone is let in, "if the
+screen's other sections show a quiet empty line instead, mirror THAT". They
+do (`No applications waiting.`, `No live links.`), but mirroring needs a new
+line no one has blessed, so the section stands absent (`Invites.md`). For
+jakob: keep it absent, or a quiet line in the halves' register (a draft, by
+their construction: `No one let in yet.`). Lean: absent — the two halves stand
+because something can arrive in them now; this one fills only by the
+reader's own act.
+
+### 172 · `Waiting for both passwords` over three fields · *design* · **filed 2026-11-11**
+
+Round 38 (J2). `ChangePassword` now asks for the current password and the
+new one twice; its commit's waiting line still reads `Waiting for both
+passwords` (blessed 2026-10-05), and now stands while any of the three is
+empty. `Join`'s `Waiting for a handle, your email and a password` and
+`ResetNew`'s `Waiting for a new password` still read true. For jakob: keep it
+(the new one asked twice is still one password), or a new line (a draft:
+`Waiting for your passwords`). Lean: keep.
+
+### 173 · Names and handles outside the actor chip: no rule yet · *design* · **filed 2026-11-11**
+
+Round 38, jakob's question with J1 ("whats our general rule for long handles
+/names"). The rule stands only for the chip and its rows (`ActorChip`: never
+wraps, the name ellipsizes, the handle stays whole until it alone cannot fit;
+`ContentRow`'s one-line title), the why-line (`FeedTagShapes.md`) and the
+wide anchor (`ProfileOther.md`, `TagPage.md`). Measured at the longest legal
+handle (`@` and 30 `m`, label-large ≈ 330px) and a 50-character name on the
+390px boards: a handle has no break point, so every running-text place that
+holds one overflows its box — `Join`'s heading (a name with no space: 316px
+past the screen, centred, clipped both sides), the task card's title
+(`ApplicantRejected`, 60px past), the dialog title and body
+(`ChangeHandleConfirm`, 377px and 107px past the dialog), the snackbar's
+message (77px past its box), the post title's `— @ada` (`FeedEntry`, 83px);
+one-line places clip without an ellipsis — the page title `@ada`
+(`ProfileOther`, `PageHeader`'s nowrap, 261px past) and the chronicle's
+aside `on @ada` (`Profile`, 24px past); the profile's own handle line
+overflows 69px; and the rows' one-line titles ellipsize as ruled but lose
+the sentence — `Notifications`' `@ada commented on your post` shows the
+handle and nothing of what happened. A name with spaces wraps everywhere
+it can. For jakob: one rule for running text (break a token anywhere, as the
+profile's name already does with `overflow-wrap: anywhere`) and one for
+one-line places (ellipsize the handle inside the sentence and keep the
+sentence's words, the wide anchor's form). The full table is the round's
+hand-back (`r38` in dev-state).
+
+### 174 · People you let in: a long list, a hidden person · *design* · **filed 2026-11-11**
+
+Round 38. The section lists every person the reader ever vouched in, newest
+first, with no cap and no paging; and nothing says whether a person the
+reader has hidden stands in it. For jakob: whether the list pages as a
+profile's lists do (`ProfileMoreFailed`'s `Couldn't load more` family) past a
+count, and whether a hidden person's row stands (the hide law keeps a hidden
+account out of feeds, not out of the reader's own records). Lean: page past
+the page size the lists share; a hidden person stays, as their row is the
+reader's own record.
