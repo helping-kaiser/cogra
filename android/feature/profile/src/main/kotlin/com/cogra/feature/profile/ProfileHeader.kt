@@ -42,7 +42,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -194,9 +193,9 @@ private fun figuresWidth(figures: List<Figure>): Dp {
     return with(LocalDensity.current) { px.toDp() } + FIGURES_GAP * (figures.size - 1)
 }
 
-/** `label-small` at weight 500 (`ProfileHeader.jsx` `Figure`). */
+/** `label-small` whole, its weight the role's 500 (`ProfileHeader.jsx` `Figure`). */
 @Composable
-private fun figureLabelStyle() = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium)
+private fun figureLabelStyle() = MaterialTheme.typography.labelSmall
 
 /**
  * The figures' one line: each a number over its label, 20 apart, never

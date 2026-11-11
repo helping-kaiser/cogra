@@ -261,6 +261,7 @@ private fun Fault(onRetry: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(16.dp)) {
         Text(
             stringResource(R.string.error_transport),
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.weight(1f).testTag("stances_transport_error"),
         )

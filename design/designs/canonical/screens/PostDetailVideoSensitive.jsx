@@ -1,7 +1,7 @@
 /* THE SENSITIVE VARIANT OF THE VIDEO POST'S DETAIL VIEW (jakob 2026-09-24,
    the detail clip's veil face). Reached the same two ways as `PostDetailVideo`
-   — the stream's score element, or an ordinary tap on a clip that is not
-   portrait — but the post itself is sensitive and unrevealed.
+   — the stream's score element, or an ordinary tap on a clip wider than
+   tall — but the post itself is sensitive and unrevealed.
 
    THE VEIL COVERS THE BODY AS ONE. Title and topics stay readable — that is
    `SensitiveVeil`'s own law, not something this board re-decides — while the

@@ -2299,7 +2299,10 @@ entry first". What stands:
   carries the chip's value as its key (`history.searchField` under
   `search` and under `kinds`; jakob 2026-10-06, seam 069); an element
   two chips draw keys each copy by its own chip's value, and its rule
-  names both chips (`postEdit.sign`; seam 248). Every
+  names both chips (`postEdit.sign`; seam 248). A board's `VALS` — its
+  `renderVals()` — read only `this.props`, never the DOM or a canvas
+  global, so a harness renders one setting at a time by its chip values
+  and no state needs a board of its own (seam 270). Every
   other board renders the annotations stripped, so a name reaches a built board only once it
   is registered in `designs/canonical/nodes.json`, which the render
   writes. **Registered paths are append-only**: a collision fails the
@@ -2422,7 +2425,7 @@ The rulings the layer rests on:
   rather than pinned to one of them, so the flow claims every place it
   is offered and the census grows as boards are drawn. Where the
   control's outcome depends on **what it was pressed on** — a post's
-  media, which opens a picture's post or a portrait clip's stream —
+  media, which opens a picture's post or a portrait or square clip's stream —
   `case` or `to` narrows the start to the journey meant, the same
   narrowing a given start edge already takes. It is still one control
   everywhere; without a narrowing, divergence is still a failure.
@@ -2723,9 +2726,9 @@ item 33, jakob's rulings the same day).
   in that strip, so a control there is not a control but a swipe that
   closes the app. The bar is inset from it, and the stream's seek line
   rides above the bottom bar rather than under it.
-- **The stream carries portrait clips only** — clips taller than they
-  are wide. Square and landscape clips keep the ordinary grammar, a
-  tap to their post. **It is the list it was opened from narrowed to
+- **The stream carries portrait and square clips** — clips at least
+  as tall as they are wide (squares since round 35). A landscape clip
+  keeps the ordinary grammar, a tap to its post. **It is the list it was opened from narrowed to
   them**, in that list's order — the feed, Saved's cards, History's rows,
   a profile's posts (jakob 2026-10-12; Saved, History's sibling, round
   26): the same graph, the same order, a mechanical
@@ -2733,8 +2736,8 @@ item 33, jakob's rulings the same day).
   is the reassurance only a product that ranks two ways needs. What
   says it instead is the **score on the rail** — the reader's own
   reach into this post, the same number the card wore.
-- **A portrait clip's tap opens the stream; any other media's tap
-  opens the post.** From the clip detail, tapping the clip
+- **A portrait or square clip's tap opens the stream; any other
+  media's tap opens the post.** From the clip detail, tapping the clip
   expands back into the stream with the reader's place held.
 - **The detail door on a reel is the score element** — the exact
   element a feed card wears, so the way in is a thing the reader has
@@ -7298,7 +7301,7 @@ transport. jakob's ruling, drawn as `PostDetailVideoSensitive`:
   makes the per-post law hold when a surface wraps the card from
   outside.
 - The board is a **declared entry** in the graph's own idiom —
-  the same detail any non-portrait clip tap opens, in the state
+  the same detail any clip wider than tall opens, in the state
   the record brings, not a different tap.
 
 ### The v1.0.0 scope cut — 2026-09-25
@@ -9771,9 +9774,9 @@ each).
   amendment to the viewer's black-to-the-edges. Boards stay the
   inset-zero case (*The viewer-grammar close*).
 - **The stream is the list it was opened from**, narrowed to its portrait
-  clips in that list's order — the feed, History, a profile's posts, and
-  a tag's page, whose stream carries only the clips tagged with that tag
-  (jakob 2026-11-11). It
+  and square clips (squares since round 35) in that list's order — the
+  feed, History, a profile's posts, and a tag's page, whose stream
+  carries only the clips tagged with that tag (jakob 2026-11-11). It
   pages vertically both ways from the tapped clip, never wraps and never
   moves on by itself; the last clip carries `That's the last clip here.`
   at its caption's head, and a load that does not come keeps the clip
@@ -10487,13 +10490,12 @@ jakob after his hand test.
   row's quiet register — `You can't sign right now. Nothing was signed or
   spent.` where the fault line stands — the act dimmed, no Retry, `Keep
   it` the way back. The board's `answer` chip draws it.
-- **The way out while Set signs.** Until the act is being sent, Cancel,
-  the press outside, Back and Escape truly cancel: the pad closes, nothing
-  lands, the row untouched. Once it is being sent the same button reads
-  `Close` and only leaves: the wait passes to the target's row, a hold's
-  (`Signing…`, then the face and the snackbar, or `That didn't sign.`
-  with a Retry that asks the same pick again). `PadFailed`'s `moment` chip
-  draws `setting`, `sending` and `closed` (round 31).
+- **The way out while Set signs.** Once Set is pressed nothing cancels
+  the act: past 200ms Cancel reads `Close`, and it, the press outside, Back
+  and Escape only close the pad; the wait passes to the target's row, a
+  hold's (`Signing…`, then the face and the snackbar, or `That didn't
+  sign.` with a Retry that asks the same pick again). `PadFailed`'s
+  `moment` chip draws `setting` and `closed` (round 34).
 - **The key-absent pad's "?"** says only what its notice does not: where
   the key lives, and what waits for the restore.
 - **The target label's family**: `this post`, `this comment`, `@ada`,
@@ -10505,7 +10507,7 @@ jakob after his hand test.
   `(0, 0)` landing over anything standing.
 - **Every new string above was merged under the autonomy order and is
   blessed (jakob 2026-11-10)**; the way out while Set signs is jakob's
-  2026-11-11 rule (round 31). Backlog 147 banks the type sites round 20 left.
+  2026-11-11 rule (round 34). Backlog 147 banks the type sites round 20 left.
 - **The gate**: edges hold at **2127**, flows at **227**, the registry
   at **100 screens**; no board added — two boards gain a chip.
 
@@ -10982,17 +10984,8 @@ jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
   Salome Ward, Nadia Rask.
 - **The search sections' cap of three** is the rule on every sectioned
   surface, Saved and History included (backlog 141).
-- **The way out while an act signs.** Cancel and Close are the way out of a
-  pad that stalls. Until the app begins sending the act — the proposal,
-  `submitProposals` — Cancel, the press outside, Back and Escape truly
-  cancel: nothing lands, the row untouched. From that instant the act is
-  expected to happen; the same button reads `Close`, only leaves, and the
-  wait passes to the target's row (`Signing…`, then the face and the
-  snackbar, or `That didn't sign.` with Retry). A regretted Set is walked
-  back afterwards. `PadFailed`'s `moment` draws `setting`, `sending` and
-  `closed`. The alternates take it; the walk-back and the empty sign take
-  it on `Keep it`, a walk-back cancelling only until the first of its acts
-  is being sent. The hold keeps no exit once it fires.
+- **The way out while an act signs** is round 34's: once the commit is
+  pressed nothing cancels it, and `Close` only leaves.
 - **The deleted account's disc and the removed thing's tile** keep the
   reserved fill and wear a 1px solid `--border-field` ring inside their
   box, one treatment on every surface (`REDACTED_RING`). The ring against
@@ -11084,6 +11077,102 @@ clients already key them by the wire id (seam 263). jakob ruled the re-key
   cards, 54 person rows, 2411 nodes inside them), none outside those
   families, and no (path, key) repeats on any board beyond the chip copies
   that stood before.
+
+### Round 34, once submitted there is no cancel — 2026-11-11
+
+jakob's answer to round 31's first question: "once someone submits there
+is no more cancel. afterwards they can just close the ui to not have to
+wait (network issues) but the act is done"; one rule for every signing
+surface.
+
+- **Once a commit is pressed, the act is done: nothing cancels it.** The
+  way out only closes the surface so the reader need not wait. Past 200ms,
+  beside the in-flight label, the control that read `Cancel` or `Keep it`
+  reads `Close` in the same place, live and never dimmed; inside the 200ms
+  nothing on screen changes, and a press on the way out closes the surface
+  all the same.
+- **The pad and the alternates.** Closed mid-signing, the wait passes to
+  the target's row as a hold's (`Signing…`, then the face and the
+  snackbar, or `That didn't sign.` with Retry). `StanceControl`'s and
+  `StanceAlternates`' `signing` keep one waiting state, `busy`, which reads
+  `Close`; `PadFailed`'s `moment` draws `failed`, `setting` (`Close` beside
+  `Setting…`) and `closed`. `PadStanding`, `ApprovePad`, `VouchAskPad`,
+  `VouchBackPad` and `TagPageHeldPad` write the same lines; the staging
+  pads sign nothing.
+- **The walk-back and the empty sign.** While their act signs, `Keep it`
+  reads `Close`; it, the scrim, Back and Escape close the dialog and the pad
+  beneath, and the act — a walk-back's whole batch — goes on, its wait on
+  the target's row. `SeveranceConfirm`'s `answer` chip draws `signing`;
+  `EmptySignConfirm` gains `answer` (`asking`, `setting`).
+- **The handle change.** `ChangeHandleConfirm`'s `Keep it` reads `Close`
+  once `Change it` is pressed and the change goes on. Where its wait and its
+  answer show after that is not drawn (backlog 155).
+- **The seals and the edits keep their held exits** until each has a drawn
+  place for an act on its way, landed and failed after leaving (backlog
+  155); the remove and close dialogs' ways out while they answer are
+  backlog 156.
+- **Boards.** A board's `VALS` read only `this.props`; impl's harness
+  renders one setting at a time (seam 270), and backlog 151 closes.
+- **The gate**: no board added; three boards gain or change a chip
+  (`PadFailed`, `SeveranceConfirm`, `EmptySignConfirm`), none registered.
+  The registry holds at **167 screens**, **6120** board paths, **1920**
+  distinct.
+
+### Round 35, squares join the stream; impl's thirteen asks — 2026-11-11
+
+jakob's answers to round 30's stream questions ("1. a) yes", "2. yes") and
+to impl's thirteen asks (T1–T13, "as rec" on all but T2; T2 then ruled
+option b), with two of his hand-test findings (seam 275).
+
+- **A clip at least as tall as it is wide opens the stream** — portrait
+  or square; only a clip wider than tall opens its post. The stream
+  carries every such clip of the list it was opened from, in that list's
+  order (`Reel`, `Main`, `History`, `Saved`, `ProfilePosts`, `TagPage`,
+  `FeedShapes`; the `post media` edges' stream case and `watch-the-stream`
+  read `portrait or square`). Of the sample clips, the lakeside is
+  portrait, the grapes square, the canoe landscape.
+- **The stream on web** pages by the arrow keys and the wheel as the
+  swipes do; a clip that reaches its end loops; the stream carries posts'
+  clips only. Law only.
+- **Settling counts.** The already-published marker counts a post the
+  author signed that is still settling, and its door opens the post over
+  the composer, Back returning to the draft as it was left. The One-tag
+  chips count a signed feeling not yet landed. The profile's posts view
+  lists a settling post, wearing `Still settling` with its score slot
+  bare — `ProfilePosts`' `posts` chip at `settling`, the second post.
+- **The filter's Done keeps the filter that was set** when the new
+  ranking fails, and the feed shows the failure with Retry; no board draws
+  that fault yet (backlog 157).
+- **The rank drill-down prints no sum line**; the arithmetic closes in its
+  drawn figures (`RankRecords`).
+- **A kept approval's pad reopens on the vouch that was kept** (`Invites`).
+  An applicant or a guest at the Invites page's own address lands where
+  app-open lands for them, with `You can invite once you're in.`
+  (*blessed*); an invite link a guest opens is unchanged.
+- **A person is named by handle, never by a gendered pronoun**
+  (copy-voice, *Naming*): the publish step reads `@ada's own opinion
+  rides the post`. The sweep's one other drawn hit waits for jakob
+  (backlog 158).
+- **The crash surface** is `AppCrash`: `This shouldn't have happened`,
+  the bug notice's first line alone, with `Reload`, on the plain landing
+  (`VerifyExpired`'s form), registered under `crash` (*drafted — wording
+  jakob's at review*).
+- **Every 32px disc's letter is label-medium**; the weight 500 is the
+  disc's own at every size (backlog 152 closed).
+- **Chats · coming soon registers** under `chats`: its header, card and
+  bottom bar, the drill-in names `Notifications` uses.
+- **The crop's shape switch keeps the framing**: each picture keeps its
+  scale and position and the frame changes around it; only the fill floor
+  lifts a scale (`ComposeCrop`). The verification mail's paste line is
+  not in the design tree (the mails' words live outside it).
+- **The gate**: edges **2177 → 2178** (`AppCrash`'s `Reload`); flows
+  hold at **227**, two re-blessed (`watch-the-stream`, its start now
+  `portrait or square`; the already-published marker's flow, its door
+  now over the composer). The registry **167 → 169 screens**, **6120 →
+  6134** board paths, **1920 → 1934** distinct — `crash.*` and
+  `chats.*` added, nothing removed. The fifteen boards that draw the
+  numeric 32 disc change only the letter's role inside the fixed 32px
+  box.
 
 ---
 

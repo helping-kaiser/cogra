@@ -5274,7 +5274,7 @@ key rules naming *Your topics* (`heldTopic`, `redactedTopic` in
 `node-paths.mjs`) move with them. `about.topic` is a help dialog's subject
 and keeps its word.
 
-### 151 · The pickers' states, one at a time · *system* · **filed 2026-11-11**
+### 151 · The pickers' states, one at a time · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 31 (seam 254 item 14). The pickers' `state` chips (`TagPicker`:
 `picking`, `cap`, `fault`, `none`, `seven`; `ReferencePicker` the same with
@@ -5292,10 +5292,14 @@ values in place of its holes for a board opened outside the canvas, so
 every chip board in the tree measures at its default (a build change,
 every chip board's standalone geometry moves); (c) the harness evaluates
 the board's own `VALS` for a chosen value. The sheet `Show all` raises is
-drawn (`TagPickerShowAll`, `ReferencePickerShowAll`); this item stays open
-for the per-state measuring alone.
+drawn (`TagPickerShowAll`, `ReferencePickerShowAll`). Closed by round 34:
+impl took (c) (seam 270) — its harness evaluates a board's `VALS` for the
+chip values asked for and renders one setting at a time, so no per-state
+board is built. Its one condition is the rule for every board (readme §13,
+*Canvas pages and flows*'s registry law): `renderVals()` reads only
+`this.props`.
 
-### 152 · The disc's letter: which role at 32px, which weight · *design* · **filed 2026-11-11**
+### 152 · The disc's letter: which role at 32px, which weight · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 32 (seam 267, ask 3). `MonogramAvatar` takes its letter's role by
 size: the named `md` disc (32px) is `label-medium`, a numeric 32 (`QuotedRow`,
@@ -5309,6 +5313,10 @@ role weight is overridden: the 56px-and-up and `lg` discs take
 `headline-small`, weight 400, and draw 500. For jakob: which role a 32px
 disc takes, and whether the large discs' 500 is the disc's own weight (kept,
 named) or the role's 400.
+
+Closed by round 35 (jakob 2026-11-11: T12 "as rec"; round 32 "all fine"):
+every 32px disc takes `label-medium`, the numeric 32 included, and the 500 is
+the disc's own weight at every size, named in `MonogramAvatar`'s note.
 
 ### 153 · One author's two cards share a key · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
@@ -5332,3 +5340,73 @@ the live rows' say "id". A rule is reworded only in a named breaking change
 (readme's registry law): for jakob and impl, whether to reword the four in
 the next one, and whether "actor id" and the person's id are one wire field
 (both clients mint the live rows from `User.id`, seam 263).
+
+### 155 · After Close: where a seal's, an edit's and the handle change's act shows · *design* · **filed 2026-11-11**
+
+Round 34 (jakob 2026-11-11: once someone submits there is no cancel; Close
+only leaves). The pads and the stance dialogs had a drawn place for the act
+after Close — the target's row (`RowSigning`, `PadFailed`'s `closed`). These
+surfaces hold the reader while they sign (readme §13, *The curate rulings*:
+"While a seal signs, it holds the reader") and have no drawn place for at
+least one of on its way, landed, failed:
+
+- the post seal (`ComposeSeal`, `ComposeSealUploading`, `SealSigning`,
+  `SealSigningSlow`): landed — the post's detail wearing `Still settling` and
+  the snackbar; on its way and failed — none (the kill law's "ordinary
+  failure notice" is not drawn; the snackbar never carries a failure);
+- the reply seal (`ReplySeal`, `ReplySealUploading`): landed — the thread
+  scrolled to the new card; on its way and failed — none;
+- the comment and post edits (`CommentEdit`, `CommentEditVideo`,
+  `EditCompose`, `EditComposeVideo`, `EditWords`): landed — the card wearing
+  `Still settling`; on its way and failed — none;
+- the profile and avatar seals (`ProfileEditSeal`, `AvatarSeal`): landed —
+  the profile and the snackbar; on its way and failed — none;
+- the kept picks' seal (`KeptPicksSeal`): landed — the snackbar and each
+  anchor's `Still settling`; on its way — each target's row could carry
+  `Signing…`, but the review is opened from settings, not from the targets;
+  failed — none for a batch that lands together or not at all;
+- the handle change (`ChangeHandleConfirm`, Close written): landed — the
+  snackbar and the Handle row; on its way and failed — none (the Email row's
+  `Change pending` is a change with a side owed, not one in flight; the
+  Hidden accounts row's `That didn't go through.` with Retry is the nearest
+  failure on a settings row); `That handle is taken.` after Close — none.
+
+Options, per surface or for all: (a) keep the held exits on seals and edits
+(the curate ruling) and name them the exception to "one rule"; (b) Close on
+every seal, its wait and answer carried by one app-level line or card (to be
+drawn) — a pending row on the surface the act lands on, its failure there
+with Retry; (c) Close on every seal, and on leaving the draft is kept so the
+failure re-raises the seal on the next visit. Lean: (b), the feed's `Still
+settling` card's place for the post and the target's row for the rest,
+drawn once as a pattern board.
+
+### 156 · The remove and close dialogs' way out while they answer · *design* · **filed 2026-11-11**
+
+Round 34's sweep. `RemoveConfirm`, `FeedRemoveConfirm`,
+`CommentRemoveConfirm`, `RejectConfirm` and `RejectAllConfirm` stay up
+until their act answers, but their scrim (and Keep it) lines carry no GIVEN:
+"the dialog closes AND nothing is removed" reads as a cancel while the
+removal signs, which the ruling rules out. For jakob: whether they take the
+stance dialogs' line (`Keep it` / `Keep them` reads `Close` past 200ms and
+only leaves), and where the act then shows — a removal's landed mark is
+drawn (`Removed by its author`), its failure after leaving is not; a closed
+application leaves the list, its failure after leaving is not drawn.
+
+### 157 · The feed's failed re-query has no drawing · *design* · **filed 2026-11-11**
+
+Round 35 (T8, seam 256-B-14). `FeedSheet.md` rules that Done keeps the
+filter that was set when the new ranking fails, and the feed shows the
+failure with Retry. No board draws a feed whose whole read failed — the
+drawn faults are a next page's (`ProfileMoreFailed`, Notifications'
+`Couldn't load more`) and a whole profile's (`ProfileUnreachable`). For
+jakob: the feed's failed read, drawn once — its line and where the band and
+the filter trigger stand over it.
+
+### 158 · One more gendered pronoun on a drawn line · *design* · **filed 2026-11-11**
+
+Round 35's sweep under the handle rule (copy-voice, *Naming*): the intro's
+vouch card reads `You are here because @mira invited you. Her link is your
+first way in to everyone else, and theirs to you.` (`OnboardingVouch`;
+copy-voice, *The intro*). The intro's lines are carried over, blessed by use
+(jakob 2026-10-06), so the line waits for his word: by the rule it reads
+`@mira's link is your first way in to everyone else, and theirs to you.`

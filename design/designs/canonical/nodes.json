@@ -59,6 +59,14 @@
         ]
       }
     },
+    "AppCrash": {
+      "prefix": "crash",
+      "keys": {},
+      "nodes": {
+        "crash.reload": [],
+        "crash.title": []
+      }
+    },
     "ApplicantEmail": {
       "prefix": "changeEmail",
       "keys": {},
@@ -1037,6 +1045,24 @@
         "changePassword.password.reveal": [],
         "changePassword.password.support": [],
         "changePassword.title": []
+      }
+    },
+    "ChatsComingSoon": {
+      "prefix": "chats",
+      "keys": {},
+      "nodes": {
+        "chats.bottomBar": [],
+        "chats.bottomBar.composeSlot": [],
+        "chats.bottomBar.feedSlot": [],
+        "chats.bottomBar.profileSlot": [],
+        "chats.bottomBar.searchSlot": [],
+        "chats.bottomBar.walletSlot": [],
+        "chats.comingSoonCard": [],
+        "chats.comingSoonCard.line": [],
+        "chats.comingSoonCard.title": [],
+        "chats.header": [],
+        "chats.header.back": [],
+        "chats.header.title": []
       }
     },
     "CitedBy": {

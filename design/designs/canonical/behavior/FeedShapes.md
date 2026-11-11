@@ -12,4 +12,4 @@ ALWAYS a clip's stored still crops exactly as its clip does
 
 ALWAYS nothing but the 4:5 clamp bounds a clip's height in a feed card
 
-ALWAYS a clip taller than wide is its card's door to the stream, named Open the stream, and never by the clip's alt text
+ALWAYS a clip at least as tall as it is wide, portrait or square, is its card's door to the stream, named Open the stream, and never by the clip's alt text

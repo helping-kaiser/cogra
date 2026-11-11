@@ -24,7 +24,7 @@ ALWAYS a card's score on the tag page is the figure the latest fetch of its thin
 
 ALWAYS at most one clip plays on the tag page, by the feed's stage law
 
-WHEN tap a portrait clip on the tag page -> the stream opens on it, carrying only the clips tagged with this tag, taller than they are wide, in the tag page's order AND the bar keeps the root the tag page was opened from
+WHEN tap a portrait or square clip on the tag page -> the stream opens on it, carrying only the clips tagged with this tag that are at least as tall as they are wide, in the tag page's order AND the bar keeps the root the tag page was opened from
 
 WHEN tap a clip wider than tall on the tag page -> the post opens
 
