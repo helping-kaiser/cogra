@@ -40,7 +40,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
@@ -95,11 +94,10 @@ fun AddressCard(
             modifier = Modifier.dataNode(node?.div("address")),
         )
         if (caption != null) {
-            // The master sets label-small's size, leading and tracking only —
-            // the weight is the ground's (PayoutAddress.jsx), never the role's 500.
+            // label-small whole, the master's caption (PayoutAddress.jsx).
             Text(
                 text = caption,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Normal),
+                style = MaterialTheme.typography.labelSmall,
                 color = quiet,
                 // A block at the card's width, as the master's span stands in its column.
                 modifier = Modifier

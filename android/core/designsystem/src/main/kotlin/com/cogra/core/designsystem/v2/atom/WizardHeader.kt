@@ -28,7 +28,6 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
-import com.cogra.core.designsystem.v2.token.TypeTokens
 
 /**
  * The wizard's header band, as every canonical Compose board draws it: a 48dp
@@ -166,11 +165,11 @@ fun WizardHeader(
 
         // The seal's "Last step" — the one place a wizard header states where
         // the reader is, a plain note rather than a step count: `label-small`
-        // by its size and leading alone, in the secondary ink.
+        // whole, in the secondary ink.
         if (trailingNote != null) {
             Text(
                 text = trailingNote,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 modifier = Modifier

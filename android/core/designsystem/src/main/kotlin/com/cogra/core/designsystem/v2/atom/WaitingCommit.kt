@@ -3,9 +3,11 @@ package com.cogra.core.designsystem.v2.atom
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,6 +19,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Space
@@ -115,13 +118,23 @@ fun WaitingCommit(
                     .then(if (faultTestTag != null) Modifier.testTag(faultTestTag) else Modifier),
             )
         }
-        CograButton(
-            text = if (participle) inFlightLabel else label,
-            onClick = { if (!inFlight) onCommit() },
-            enabled = !waiting,
-            modifier = Modifier
-                .fillMaxWidth()
-                .dataNode(node?.div("action")),
-        )
+        // THE DRAWN 40dp STAYS THE LAYOUT'S (`cg-hit`, readme §10): Material's
+        // button reserves its 48dp minimum IN LAYOUT through
+        // `minimumInteractiveComponentSize`, which stood every surface carrying
+        // this commit 8dp taller than its board. `LocalMinimumInteractiveComponentSize`
+        // unspecified is Material's documented switch for that reservation; the
+        // 48dp TARGET is still kept, by Compose's own pointer input, which
+        // answers a touch within `ViewConfiguration.minimumTouchTargetSize` of a
+        // smaller control (the touch bounds the tests assert).
+        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+            CograButton(
+                text = if (participle) inFlightLabel else label,
+                onClick = { if (!inFlight) onCommit() },
+                enabled = !waiting,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .dataNode(node?.div("action")),
+            )
+        }
     }
 }

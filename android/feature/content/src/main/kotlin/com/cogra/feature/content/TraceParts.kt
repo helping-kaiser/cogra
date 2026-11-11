@@ -232,7 +232,6 @@ internal fun PathRow(
             Text(
                 text = through,
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -277,7 +276,6 @@ internal fun MorePathsRow(label: String, value: String, name: String, onUnfold: 
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Normal,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f).dataNode(row / "label"),
         )
@@ -320,7 +318,6 @@ internal fun RecordRow(key: String, what: String, age: String, pair: StancePoint
             Text(
                 text = age,
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.alignByBaseline().dataNode(DataNode("feedEntry.record.when")),
             )
@@ -331,7 +328,6 @@ internal fun RecordRow(key: String, what: String, age: String, pair: StancePoint
                 text = key,
                 style = MaterialTheme.typography.labelSmall,
                 fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
