@@ -56,7 +56,7 @@ export interface FeedFilterProps {
    * nothing is a row spent on nothing.
    */
   topics?: readonly string[];
-  /** Opens the full "Your topics" list — everything held, including against. */
+  /** Opens the full "Your tags" list — everything held, including against. */
   onOpenTopics?: () => void;
   /** Passed through to the sheet — see `FeedFilterSheetProps.peopleRows`. */
   peopleRows?: JSX.Element;
@@ -86,7 +86,7 @@ export interface FeedFilterSheetProps {
   foot?: JSX.Element;
   /** The topics the viewer may narrow to — see `FeedFilterProps.topics`. */
   topics?: readonly string[];
-  /** Opens the full "Your topics" list. */
+  /** Opens the full "Your tags" list. */
   onOpenTopics?: () => void;
   /** What the People section holds, for a static board that draws it once
    *  per state under its own chip (`FeedPeopleRows` per copy). Omitted, the

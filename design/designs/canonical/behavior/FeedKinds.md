@@ -18,8 +18,10 @@ ALWAYS a reply is a comment targeting a comment: as standalone content a reply c
 
 ALWAYS feed.commentCard carries no view-replies line
 
-WHEN feed.commentCard is tapped outside its head row and its own controls -> the post's comment section opens scrolled to that comment
+WHEN feed.commentCard is tapped outside feed.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment
 
 WHEN feed.commentCard.actionRow.reply is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
+
+ALWAYS the comments sheet a feed card raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
 
 WHEN feed.tagCard.actionRow.compose, Tag a new post with it, is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags

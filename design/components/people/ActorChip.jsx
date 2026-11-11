@@ -32,12 +32,26 @@ import React from "react";
    is the reserved surface — the same one a redaction mark and an unloaded tile
    use — which says a space was kept rather than lost.
 
+   THE KEPT SPACE WEARS A RING, ONE TREATMENT ON EVERY SURFACE (jakob
+   2026-11-11: it "must work on all surfaces we have so we dont need different
+   colors for different screens"). The reserved fill alone is the sheet's own
+   tone (1.00:1 there) and at most 1.28:1 against any surface, so the disc
+   keeps that fill and gains a 1px solid ring in `--border-field`, which
+   clears 3:1 against every surface in both themes (readme §13, round 31).
+   The ring is drawn inside the disc's box: a deleted account's disc measures
+   what a live one does at every size. `NodeMark`'s removed tile takes the
+   same ring (`REDACTED_RING`).
+
    THE NAME SLOT SPEAKS IN THE SYSTEM'S VOICE, NOT THE PERSON'S. `Deleted
    account` in `text-secondary`, because it is the product saying what happened
    and not somebody's chosen name; drawn at full strength it would read as an
    account actually called that. The handle goes altogether: it was redacted at
    execution and the stored form is a uniqueness device, so printing anything
    there would be inventing a handle the reader could try to reach. */
+
+/* The kept space's ring, assigned once (above): every mark whose payload went
+   wears it, inside its own box. */
+export const REDACTED_RING = { border: "1px solid var(--border-field)", boxSizing: "border-box" };
 
 /* The word in the name's place, assigned once. The moderation variant is
    proposed and unblessed (guidelines/copy-voice.md, awaiting blessing) — the
@@ -72,7 +86,7 @@ export function MonogramAvatar({ name, size = "sm", src, redacted = false, node 
   const initial = redacted ? null : (name ?? "").trim().charAt(0).toUpperCase() || "?";
   const box =
     typeof size === "number"
-      ? { height: `${size}px`, width: `${size}px`, fontSize: size >= 56 ? "var(--text-headline-small)" : "var(--text-label-large)" }
+      ? { height: `${size}px`, width: `${size}px`, fontSize: size >= 56 ? "var(--text-headline-small)" : "var(--text-label-large)", lineHeight: size >= 56 ? "var(--text-headline-small--line-height)" : "var(--text-label-large--line-height)", letterSpacing: size >= 56 ? "var(--text-headline-small--letter-spacing)" : "var(--text-label-large--letter-spacing)", fontWeight: size >= 56 ? "var(--text-headline-small--font-weight)" : "var(--text-label-large--font-weight)" }
       : size === "lg"
         ? { height: "64px", width: "64px", fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", letterSpacing: "var(--text-headline-small--letter-spacing)", fontWeight: "var(--text-headline-small--font-weight)" }
         : size === "md"
@@ -90,6 +104,7 @@ export function MonogramAvatar({ name, size = "sm", src, redacted = false, node 
         overflow: "hidden",
         borderRadius: "var(--radius-full)",
         background: redacted ? "var(--surface-container-high)" : "var(--secondary-container)",
+        ...(redacted ? REDACTED_RING : null),
         color: "var(--on-secondary-container)",
         fontWeight: 500,
       }}

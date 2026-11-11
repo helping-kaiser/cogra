@@ -42,7 +42,8 @@
    the order section, its seen toggle with it, is left out whole: the sheet
    holds the kinds and the foot. Beneath the wash a guest's results stand
    newest first, the topics section first, a tag bare-edged and a post with
-   its age (`ExploreSearch`'s guest law). */
+   its age (`ExploreSearch`'s guest law). Beneath the wash the sections wear
+   `ExploreSearch`'s captions, `Tags` and `Posts and comments`. */
 export const NODE = "explore";
 export const PROPS = { reader: { editor: "enum", options: ["member", "guest"], default: "member" } };
 export const VALS = `memberShown: this.props.reader === "guest" ? "none" : "flex", guestShown: this.props.reader === "guest" ? "flex" : "none", orderShown: this.props.reader === "guest" ? "none" : "block"`;
@@ -55,11 +56,15 @@ export function Screen() {
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "{{memberShown}}", flexDirection: "column" }} data-node-chip="reader" data-node-key="member">
+          <SectionLabel node="tagsLabel">Tags</SectionLabel>
           <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} node="result" nodeKey="1" />
+          <SectionLabel node="contentLabel">Posts and comments</SectionLabel>
           <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="2" />
         </div>
         <div style={{ display: "{{guestShown}}", flexDirection: "column" }} data-node-chip="reader" data-node-key="guest">
+          <SectionLabel node="tagsLabel">Tags</SectionLabel>
           <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" onOpen={() => {}} node="result" nodeKey="1" />
+          <SectionLabel node="contentLabel">Posts and comments</SectionLabel>
           <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" value="3d" onOpen={() => {}} node="result" nodeKey="2" />
         </div>
       </div>

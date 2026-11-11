@@ -42,7 +42,7 @@ export const HISTORY_DOOR_LABEL = "See how this opinion built";
    carries the bundle's own `severed`: walked back speaks `Walked back`;
    absent or false, the (0, 0) `Says nothing`. */
 /* `node` / `nodeKey` are the data-node name and key its placer gives the row
-   (seam 248) — keyed by the holder's handle. The row takes them, and names
+   (seam 248) — keyed by the person's id. The row takes them, and names
    its parts `avatar`, `name`, `handle` and `value` (the readout's `face` and
    `exact` inside it); the history door, where it stands, is `history`. Given
    none, the row renders exactly as before. */

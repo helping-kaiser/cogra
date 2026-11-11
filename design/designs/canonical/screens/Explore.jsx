@@ -31,7 +31,7 @@
    to the full list, and a door needs somewhere to lead.
 
    IT SITS BETWEEN THE HERO AND THE RECENTS, which is the page's own order —
-   the Sky is everyone's graph, Your topics is the reader's own shelf, Recent
+   the Sky is everyone's graph, Your tags is the reader's own shelf, Recent
    is the device's scratch. `ContentRow`'s `door` variant is the master for
    exactly this, and its disc carries the `#` every
    topic in this system wears, because no icon set has a topic glyph and §5
@@ -76,7 +76,7 @@ export function Screen() {
           </Card>
         </div>
         <div style={{ padding: "0 var(--space-6) var(--space-2)" }}>
-          <ContentRow variant="door" title="Your topics" second="5 held" letter="#" onOpen={() => {}} node="topics" />
+          <ContentRow variant="door" title="Your tags" second="5 held" letter="#" onOpen={() => {}} node="topics" />
         </div>
         <SectionLabel node="recentLabel">Recent</SectionLabel>
         <RecentRow text="@sol salt" node="recent" nodeKey="sol-salt" />

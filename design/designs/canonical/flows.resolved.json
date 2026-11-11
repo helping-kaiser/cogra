@@ -2422,7 +2422,7 @@
         "start · KeyElsewhere · 2 «Restore the key» → Restore",
         "Restore · 4 «Restore the key» → KeptPicksReview — key restored, with picks kept pending — the kept picks' review opens, the restore's snackbar riding in over it; they sign together, in one batch the reader looks over first",
         "KeptPicksReview · 3 «Sign them» → KeptPicksSeal — the standard seal, the kept picks its what-you-sign list",
-        "end · KeptPicksSeal · 4 «Sign the picks» → back — signed, all together — back where the review was opened from, with the snackbar Signed 3 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone"
+        "end · KeptPicksSeal · 4 «Sign the picks» → back — signed, all together — back where the review was opened from, with the snackbar Signed 4 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone"
       ],
       "boards": [
         "KeyElsewhere",
@@ -3998,10 +3998,10 @@
     },
     {
       "name": "walk-your-topics",
-      "description": "Your topics, Explore's door, lists every topic held; a row opens that topic's page, held, and its stance face opens the pad in the topic family's own words.",
+      "description": "Your tags, Explore's door, lists every topic held; a row opens that topic's page, held, and its stance face opens the pad in the topic family's own words.",
       "status": "resolved",
       "steps": [
-        "start · Explore · 10 «Your topics (the door)» → YourTopics",
+        "start · Explore · 10 «Your tags (the door)» → YourTopics",
         "YourTopics · 2 «topic rows» → TagPageHeld — the topic's own page — held, which every row on this list is",
         "end · TagPageHeld · 15 «stance face (the topic, held)» → TagPageHeldPad — tap — the pad blooms over the held topic wearing the Affinity family's own words, and held it carries `Disconnect`: the same ceremony every held record has, said in the topic's own vocabulary and at this topic's own price"
       ],

@@ -44,6 +44,7 @@ export function Screen() {
       <CograBand trailing={<FeedFilter value={EVERY_KIND} node="filterTrigger" />} node="band" />
       <FeedList>
         <CommentFeedCard
+          id={TOBIAS_COMMENT_ID}
           author={TOBIAS}
           content="That stretch after the second bend is the reason I keep a camera in the glovebox."
           timestamp="1h"
@@ -54,7 +55,7 @@ export function Screen() {
           node="commentCard"
         />
         <ProfileFeedCard person={MIRA} src="inviter.jpg" bio="Runs the stand by the sea wall — honey from the headland hives." score="11.70" node="profileCard" />
-        <TagFeedCard name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" node="tagCard" />
+        <TagFeedCard id={SALTMAPS_TAG_ID} name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" node="tagCard" />
         <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} node="card" />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
