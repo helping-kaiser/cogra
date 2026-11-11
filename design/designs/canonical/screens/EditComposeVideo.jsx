@@ -59,12 +59,12 @@ export const PROPS = {
   upload: { editor: "enum", options: ["none", "uploading"], default: "none" },
   signing: { editor: "enum", options: ["none", "signing"], default: "none" },
 };
-export const VALS = `editLeave: this.props.signing === "signing" ? "Close" : "Leave — the edit is discarded", editSign: this.props.signing === "signing" ? "Signing the edit…" : "Sign the edit", doorShown: this.props.upload === "uploading" ? "none" : "flex", coverShown: this.props.upload === "uploading" ? "flex" : "none", gateShown: this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex"`;
+export const VALS = `signRestShown: this.props.signing === "signing" ? "none" : "block", signBusyShown: this.props.signing === "signing" ? "block" : "none", doorShown: this.props.upload === "uploading" ? "none" : "flex", coverShown: this.props.upload === "uploading" ? "flex" : "none", gateShown: this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex"`;
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="{{editLeave}}" help="Editing" node="header" />
+      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         {/* The fields scroll under the pinned foot, the post edit's reading:
             with a chosen cover and the gate drawn, the form runs taller than
@@ -138,7 +138,12 @@ export function Screen() {
         <div style={{ display: "{{gateShown}}", flexDirection: "column" }} {...chipCopy("upload", "uploading")}>
           <ActsFooter count={4} node="acts" />
         </div>
-        <Button style={{ width: "100%" }} node="sign">{"{{editSign}}"}</Button>
+        <div style={{ display: "{{signRestShown}}" }}>
+          <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+        </div>
+        <div style={{ display: "{{signBusyShown}}" }}>
+          <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
+        </div>
       </div>
     </>
   );

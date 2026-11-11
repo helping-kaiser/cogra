@@ -58,7 +58,7 @@ export const PROPS = {
   body: { editor: "enum", options: ["pictures", "words"], default: "pictures" },
   signing: { editor: "enum", options: ["none", "signing"], default: "none" },
 };
-export const VALS = `editLeave: this.props.signing === "signing" ? "Close" : "Leave — the edit is discarded", editSign: this.props.signing === "signing" ? "Signing the edit…" : "Sign the edit", liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none", picturesShown: this.props.body === "words" ? "none" : "flex", addLabel: this.props.body === "words" ? "+ Add pictures or a video" : "+ Add pictures · 1 of 4"`;
+export const VALS = `signRestShown: this.props.signing === "signing" ? "none" : "block", signBusyShown: this.props.signing === "signing" ? "block" : "none", liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none", picturesShown: this.props.body === "words" ? "none" : "flex", addLabel: this.props.body === "words" ? "+ Add pictures or a video" : "+ Add pictures · 1 of 4"`;
 
 export function Screen() {
   return <CommentEditBody holes bodyChip />;

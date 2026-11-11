@@ -42,11 +42,11 @@
    on; the edited card carries the wait and the answer (`SigningAfterClose`). */
 export const NODE = "postEdit";
 export const PROPS = { signing: { editor: "enum", options: ["none", "signing"], default: "none" } };
-export const VALS = `editLeave: this.props.signing === "signing" ? "Close" : "Leave — the edit is discarded", editSign: this.props.signing === "signing" ? "Signing the edit…" : "Sign the edit"`;
+export const VALS = `signRestShown: this.props.signing === "signing" ? "none" : "block", signBusyShown: this.props.signing === "signing" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="{{editLeave}}" help="Editing" node="header" />
+      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minHeight: 0 }} data-node="body">
           <FieldLabel node="label">What do you want to publish?</FieldLabel>
@@ -81,7 +81,12 @@ export function Screen() {
         </div>
 
         <ActsFooter count={3} node="acts" />
-        <Button style={{ width: "100%" }} node="sign">{"{{editSign}}"}</Button>
+        <div style={{ display: "{{signRestShown}}" }}>
+          <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+        </div>
+        <div style={{ display: "{{signBusyShown}}" }}>
+          <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
+        </div>
       </div>
     </>
   );

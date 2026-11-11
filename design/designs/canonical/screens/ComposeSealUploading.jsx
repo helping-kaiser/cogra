@@ -33,12 +33,12 @@
    (`SigningAfterClose`); the draft is kept. */
 
 export const PROPS = { state: { editor: "enum", options: ["rest", "signing"], default: "rest" } };
-export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none", sealLeave: this.props.state === "signing" ? "Close" : "Leave — your draft is kept"`;
+export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none"`;
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" leaveLabel="{{sealLeave}}" />
+      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Sunday at the tide market — 4 pictures.</QuietNote>
 

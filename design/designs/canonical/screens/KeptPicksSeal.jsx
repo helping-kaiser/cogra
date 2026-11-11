@@ -63,19 +63,19 @@
    snackbar counts it and each anchor wears `Still settling`. Its failure is
    all-or-nothing and has no drawn place once the review is closed — every
    pick stays kept, and where that is said waits for jakob (backlog 166).
-   The labels ride the chip as words, so the foot's and the header's names
-   stay one each. */
+   The signing foot is drawn beside the rest one and carries no
+   names, so the foot's paths stay one each. */
 export const NODE = "keptPicksSeal";
 export const PROPS = {
   approval: { editor: "enum", options: ["none", "waiting"], default: "none" },
   state: { editor: "enum", options: ["rest", "signing"], default: "rest" },
 };
-export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none", keptSign: this.props.state === "signing" ? "Signing the picks…" : "Sign the picks", keptBack: this.props.state === "signing" ? "Close" : "Back", keptLeave: this.props.state === "signing" ? "Close" : "Leave — your picks are kept"`;
+export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none", footRestShown: this.props.state === "signing" ? "none" : "flex", footBusyShown: this.props.state === "signing" ? "flex" : "none"`;
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="{{keptLeave}}" stageLabel="Last step" help="How signing works" node="header" />
+      <WizardHeader title="What you sign" leaveLabel="Leave — your picks are kept" stageLabel="Last step" help="How signing works" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <ActsCard
           node="acts"
@@ -109,7 +109,12 @@ export function Screen() {
         {/* `Sign the picks`: the batch can hold a feeling beside the
             opinions (seam 248), and a pick is the review's own word for each
             of its rows (copy-voice, the kept picks' review). */}
-        <SealFooter signLabel="{{keptSign}}" backLabel="{{keptBack}}" node="foot" />
+        <div style={{ display: "{{footRestShown}}", flexDirection: "column" }}>
+          <SealFooter signLabel="Sign the picks" busyLabel="Signing the picks…" node="foot" />
+        </div>
+        <div style={{ display: "{{footBusyShown}}", flexDirection: "column" }}>
+          <SealFooter signLabel="Sign the picks" busy busyLabel="Signing the picks…" />
+        </div>
       </div>
     </>
   );

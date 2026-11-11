@@ -8,12 +8,12 @@
    which reads `Close` from the press itself; it, the arrow and the X close
    the seal and the change goes on. Its wait and its answer belong where it lands, the profile, by `SigningAfterClose`'s edit form — the profile's own head standing as it was with the row line under it; that placement is not drawn yet (backlog 165). */
 export const PROPS = { state: { editor: "enum", options: ["rest", "signing"], default: "rest" } };
-export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none", sealLeave: this.props.state === "signing" ? "Close" : "Leave"`;
+export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none"`;
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="{{sealLeave}}" stageLabel="Last step" help="Changing your profile" />
+      <WizardHeader title="What you sign" leaveLabel="Leave" stageLabel="Last step" help="Changing your profile" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MonogramAvatar name="Sol Ferreira" size={64} />

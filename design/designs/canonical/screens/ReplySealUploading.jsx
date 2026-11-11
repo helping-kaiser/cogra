@@ -40,7 +40,7 @@
    An upload that fails after Close signs nothing and says so at the branch's
    end, as a failed signing does (`SigningAfterClose`). */
 export const PROPS = { state: { editor: "enum", options: ["rest", "signing"], default: "rest" } };
-export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none", replyLeave: this.props.state === "signing" ? "Close" : "Leave — the reply is discarded"`;
+export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none"`;
 
 export function Screen() {
   return <ReplySealBody uploading={{ done: 1, total: 2 }} signChip />;

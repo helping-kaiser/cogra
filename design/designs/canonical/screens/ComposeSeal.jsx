@@ -36,7 +36,7 @@
    the feed's head (`SigningAfterClose`). `SealSigning` draws the same
    moment whole. */
 export const PROPS = { state: { editor: "enum", options: ["rest", "tagRefused", "signing"], default: "rest" } };
-export const VALS = `restCardShown: this.props.state === "tagRefused" ? "none" : "flex", tagRefusedShown: this.props.state === "tagRefused" ? "flex" : "none", restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none", sealLeave: this.props.state === "signing" ? "Close" : "Leave — your draft is kept"`;
+export const VALS = `restCardShown: this.props.state === "tagRefused" ? "none" : "flex", tagRefusedShown: this.props.state === "tagRefused" ? "flex" : "none", restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none"`;
 
 export function Screen() {
   return <ComposeSealBody chipped />;
