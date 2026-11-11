@@ -11,8 +11,8 @@
 //! FORBIDDEN and EMAIL_NOT_VERIFIED are never emitted (no acting gate),
 //! pinned by the applicant tests; no limiter guards these verbs.
 //!
-//! A deleted member's account is seeded as its erasure husk — a redacted
-//! profile version — which the erasure engine will write.
+//! A deleted member's account is the husk the real deletion executor
+//! leaves (`WireRig::execute_deletion`).
 
 mod rig;
 
@@ -428,15 +428,7 @@ async fn a_deleted_account_can_be_hidden(pool: PgPool) {
     let rig = rig(pool);
     let (_, token) = reader(&rig, "reader").await;
     let gone = person(&rig.pool, "gone").await;
-    sqlx::query(
-        "INSERT INTO actor_profile_versions
-             (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'erasure', 99, 99, 1)",
-    )
-    .bind(gone)
-    .execute(&rig.pool)
-    .await
-    .expect("husk");
+    rig.execute_deletion(gone).await;
     hide(&rig, &token, gone).await;
     let page = hidden(&rig, &token, json!({})).await;
     assert_eq!(ids(&page), vec![gone]);
