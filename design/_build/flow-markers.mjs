@@ -39,6 +39,45 @@ const guestBand = [
 ];
 const secondComments = (n) => ({ n, find: 'aria-label="1 comment"', tag: "button" });
 
+// The card menus on their hosts (round 36): `FeedPostMenu`'s, `FeedPostMenuOwn`'s,
+// `CommentMenu`'s and `CommentMenuOwn`'s numbers, the first row's words and the
+// Hide row's handle per board.
+const readerMenuMarks = (save, hide) => [
+  { n: 1, find: save, tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: hide, tag: "button" },
+  { n: 4, find: ">License terms</button>", tag: "button" },
+  { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 6, find: ">Report</button>", tag: "button" },
+];
+const ownPostMenuMarks = [
+  { n: 1, find: ">Save</button>", tag: "button" },
+  { n: 2, find: ">Edit</button>", tag: "button" },
+  { n: 3, find: ">Mark as sensitive</button>", tag: "button" },
+  { n: 4, find: ">Remove</button>", tag: "button" },
+  { n: 5, find: ">License terms</button>", tag: "button" },
+  { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+];
+const commentMenuMarks = (save) => [
+  { n: 1, find: save, tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: ">License terms</button>", tag: "button" },
+  { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 5, find: ">Opinions on this</button>", tag: "button" },
+  { n: 6, find: ">Cited by</button>", tag: "button" },
+  { n: 7, find: ">Report</button>", tag: "button" },
+];
+const ownCommentMenuMarks = [
+  { n: 1, find: ">Save</button>", tag: "button" },
+  { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+  { n: 3, find: ">License terms</button>", tag: "button" },
+  { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  { n: 5, find: ">Opinions on this</button>", tag: "button" },
+  { n: 6, find: ">Cited by</button>", tag: "button" },
+  { n: 7, find: ">Remove</button>", tag: "button" },
+];
+
 // The details stage's controls, shared by the stage and by the stage drawn
 // against its caps — one anatomy, so one marker list.
 const composeDetails = [
@@ -653,6 +692,29 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">License terms</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">Cite in a new post</button>", tag: "button" },
+  ],
+  // The host-card menus (round 36, backlog 149): each host's sheet numbered as
+  // the feed's or the detail's numbers the same sheet — the badge is an
+  // identity, not a position — scanExempt like every menu board.
+  HistoryPostMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),
+  SavedPostMenu: readerMenuMarks(">Unsave</button>", ">Hide @ada</button>"),
+  TagPageMenu: readerMenuMarks(">Save</button>", ">Hide @tobias</button>"),
+  ProfilePostsMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),
+  HistoryPostMenuOwn: ownPostMenuMarks,
+  ProfilePostsMenuOwn: ownPostMenuMarks,
+  HistoryCommentMenu: commentMenuMarks(">Save</button>"),
+  SavedCommentMenu: commentMenuMarks(">Unsave</button>"),
+  ProfileCommentsMenu: commentMenuMarks(">Save</button>"),
+  HistoryCommentMenuOwn: ownCommentMenuMarks,
+  ProfileCommentsMenuOwn: ownCommentMenuMarks,
+  // The profile card's menu (round 36, H2): `ProfileMenu`'s rows less Share,
+  // Report at the tail.
+  FeedProfileMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Mention in a new post</button>", tag: "button" },
+    { n: 3, find: ">Hide @mira</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Report</button>", tag: "button" },
   ],
   FeedRemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },

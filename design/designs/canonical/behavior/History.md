@@ -4,6 +4,8 @@ ALWAYS History is the reader's seen-list, the list slice-3 ranking filters the f
 
 ALWAYS a content joins History the first time it was fully in the viewport
 
+ALWAYS the reader's own posts and comments join History as anything else does, and their cards' ⋮ opens the own menus
+
 ALWAYS only the top-layer content joins History: a post as itself, and never its author's avatar or handle, its citations or its tags
 
 ALWAYS reading a post's comments never adds the commenters' profiles to History

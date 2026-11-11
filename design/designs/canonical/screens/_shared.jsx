@@ -244,6 +244,29 @@ const TOBIAS_COMMENT_ID = "8c7296e7-8e4b-45b1-9889-279e7a713f9c";
 const CITE_ROW = { label: "Cite in a new post", onSelect: () => {}, node: "cite" };
 const SAVE_ROW = { label: "Save", onSelect: () => {}, node: "save" };
 const CARD_MENU = [SAVE_ROW, CITE_ROW];
+/* THE REPORT ROW, AT THE SHEET TAIL OF EVERY OTHER-PERSON MENU (jakob
+   2026-10-09, ruling 75). Minimal and via mail for MVP: the row opens a
+   confirm sheet naming the thing (`ReportConfirm`), the commit sends the
+   report out, and no report machinery exists until proposals/moderation
+   land. It sits LAST — below even the license — because it is the one row
+   a reader reaches for about someone else's conduct, not about using the
+   thing, and the tail is where the rows that take or send something have
+   always lived. It NEVER connects to Report-a-problem: reporting content
+   must not read as reporting the app (jakob). Own menus carry no Report —
+   a reader has nothing to report themselves for. `tail` tells a card's own ⋮
+   the same: the card appends the license, and the row stays after it. */
+const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report", tail: true };
+/* A POST CARD'S OWN ⋮ IS THE MENU THE BOARDS DRAW (round 36): the reader's
+   post menu (`READER_POST_MENU`) less the license the card appends — Save,
+   Cite, Hide with the author's handle, then Report after the license — so a
+   card and the sheet its ⋮ raises cannot disagree. A board drawing a card of
+   the reader's own hands it the own rows instead (`FeedPostMenuOwn`). */
+const readerCardMenu = (handle) => [
+  SAVE_ROW,
+  CITE_ROW,
+  { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" },
+  REPORT_ROW,
+];
 
 /* A POST'S BODY IS WORDS XOR MEDIA (post.md). Every fixture with a picture
    carries its words as the DESCRIPTION — the caption beside the body — and no
@@ -261,7 +284,7 @@ const ADA_POST = {
   comments: 3,
   opinions: 9,
   license: { attribution: 1, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("ada"),
 };
 
 const TOBIAS_POST = {
@@ -273,7 +296,7 @@ const TOBIAS_POST = {
   comments: 1,
   opinions: 2,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("tobias"),
 };
 
 const SOL_POST = {
@@ -292,7 +315,7 @@ const SOL_POST = {
   comments: 2,
   opinions: 4,
   license: { attribution: 0.5, provenance: 0.5 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("sol"),
 };
 
 /* @mira's words post — the one History's and Saved's searches both find. */
@@ -305,7 +328,7 @@ const MIRA_WORDS_POST = {
   comments: 1,
   opinions: 3,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("mira"),
 };
 
 /* The gallery post (media slice, 2026-08-31): four pictures at one crop shape,
@@ -328,7 +351,7 @@ const MIRA_GALLERY_POST = {
   comments: 2,
   opinions: 9,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("mira"),
 };
 
 /* CograBand moved into the system (components/navigation/CograBand.jsx) the
@@ -676,17 +699,6 @@ const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {}, node: "lice
    where the post's menu has always put it: the rarest act, and the one that
    takes the content away. */
 const REMOVE_ROW = { label: "Remove", onSelect: () => {}, node: "remove" };
-/* THE REPORT ROW, AT THE SHEET TAIL OF EVERY OTHER-PERSON MENU (jakob
-   2026-10-09, ruling 75). Minimal and via mail for MVP: the row opens a
-   confirm sheet naming the thing (`ReportConfirm`), the commit sends the
-   report out, and no report machinery exists until proposals/moderation
-   land. It sits LAST — below even the license — because it is the one row
-   a reader reaches for about someone else's conduct, not about using the
-   thing, and the tail is where the rows that take or send something have
-   always lived. It NEVER connects to Report-a-problem: reporting content
-   must not read as reporting the app (jakob). Own menus carry no Report —
-   a reader has nothing to report themselves for. */
-const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report" };
 const OWN_POST_MENU = [
   SAVE_ROW,
   CITE_ROW,
@@ -695,7 +707,15 @@ const OWN_POST_MENU = [
   REMOVE_ROW,
   LICENSE_ROW,
 ];
-const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" }, LICENSE_ROW, REPORT_ROW];
+/* The reader's post menu for a post by `handle`, so a host whose drawn card
+   is someone else's than @ada's names its author in the Hide row
+   (`TagPageMenu`'s @tobias). */
+const readerPostMenu = (handle) => [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" }, LICENSE_ROW, REPORT_ROW];
+const READER_POST_MENU = readerPostMenu("ada");
+/* SAVED'S MENUS READ `Unsave` FIRST (Saved.md: every card there is kept), the
+   row keeping its one name, `save`, whatever its label reads. */
+const UNSAVE_ROW = { ...SAVE_ROW, label: "Unsave" };
+const keptMenu = (rows) => rows.map((row) => (row === SAVE_ROW ? UNSAVE_ROW : row));
 /* THE COMMENT'S MENU IS WHERE ITS OPINIONS LIVE (backlog item 55; jakob ruled
    both doors, and this is the comment's). A post's door is a count row on its
    detail surface; a comment has no detail surface of its own — it lives inside a
@@ -740,6 +760,11 @@ const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REP
    menu row would be a second door to one act; and a comment's sensitive mark
    rides its edit, which is where the post's row sends the reader too. */
 const OWN_COMMENT_MENU = [...CARD_MENU, REMOVE_ROW, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
+/* A COMMENT CARD'S OWN ⋮ IS THE COMMENT'S MENU (round 36), the post card's
+   rule (`readerCardMenu`): the rows less the license the card appends, the
+   report row standing after it. */
+const COMMENT_CARD_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+const OWN_COMMENT_CARD_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 
 /* THE THINK-TWICE DIALOG BEHIND AN AUTHOR'S `Remove`, ONE ANATOMY PER KIND
    (`RemoveConfirm`'s, shared the moment the comment's confirm drew it a second
@@ -2807,7 +2832,7 @@ const TOBIAS_REPLIES = [
     timestamp: "35m",
     onReply: () => {},
     license: { attribution: 0, provenance: 0 },
-    menuItems: CARD_MENU,
+    menuItems: COMMENT_CARD_MENU,
   },
   {
     id: "t2",
@@ -2816,7 +2841,7 @@ const TOBIAS_REPLIES = [
     timestamp: "28m",
     onReply: () => {},
     license: { attribution: 0, provenance: 0 },
-    menuItems: CARD_MENU,
+    menuItems: COMMENT_CARD_MENU,
   },
 ];
 
@@ -2862,10 +2887,10 @@ const REMOVED_COMMENT_SCROLL = 440;
    differently with your own comments"). The 3h comment and the landed reply
    wear `CommentCard`'s `own` — `Edit` beside `Reply` in the affordance row,
    the anatomy `ReplyMedia` drew first — and their ⋮ holds the own menu's acts
-   (`OWN_COMMENT_MENU`'s `Remove` after Save and Cite; the card appends the
-   license). The removed comment keeps `own` but loses `Edit` with its payload:
-   there is nothing left on it to edit, the same reason its ⋮ goes. */
-const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
+   (`OWN_COMMENT_MENU`'s rows; the card appends the license). The removed
+   comment keeps `own` but loses `Edit` with its payload: there is nothing
+   left on it to edit, the same reason its ⋮ goes. */
+const OWN_THREAD_MENU = OWN_COMMENT_CARD_MENU;
 
 /* @sol's 3h comment, the one with a branch under it — drawn as the reader's own
    or as someone else's, so its words are written once. */
@@ -2884,7 +2909,7 @@ const SOL_THREAD_COMMENT = {
       timestamp: "40m",
       onReply: () => {},
       license: { attribution: 0, provenance: 0 },
-      menuItems: CARD_MENU,
+      menuItems: COMMENT_CARD_MENU,
     },
     {
       id: "r2",
@@ -2893,7 +2918,7 @@ const SOL_THREAD_COMMENT = {
       timestamp: "22m",
       onReply: () => {},
       license: { attribution: 0, provenance: 0 },
-      menuItems: CARD_MENU,
+      menuItems: COMMENT_CARD_MENU,
     },
   ],
 };
@@ -2990,7 +3015,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
       topics={["glovebox", "coastroad"]}
       references={1}
       license={{ attribution: 0, provenance: 0 }}
-      menuItems={CARD_MENU}
+      menuItems={COMMENT_CARD_MENU}
     >
       {landed ? settledReply : null}
     </CommentCard>
@@ -3018,7 +3043,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         onReply={() => {}}
         replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CARD_MENU}
+        menuItems={COMMENT_CARD_MENU}
       />
       {shown ? (
         <>
@@ -3027,7 +3052,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
           </li>
           <li style={{ display: shown.applicant, flexDirection: "column", listStyle: "none" }} {...readerCopy("applicant")}>
             <ul style={NESTED_LIST}>
-              <CommentCard {...solComment} menuItems={CARD_MENU} node={card} />
+              <CommentCard {...solComment} menuItems={COMMENT_CARD_MENU} node={card} />
             </ul>
           </li>
         </>
@@ -3065,7 +3090,7 @@ const MIRA_CLIP_POST = {
   comments: 2,
   opinions: 6,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("mira"),
 };
 
 /* ── The other two clip shapes (video-cover round, 2026-09-10) ─────────────
@@ -3115,7 +3140,7 @@ const TOBIAS_CANOE_POST = {
   score: "4.80",
   comments: 1,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("tobias"),
 };
 
 const ADA_GRAPES_POST = {
@@ -3128,7 +3153,7 @@ const ADA_GRAPES_POST = {
   score: "3.60",
   comments: 4,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("ada"),
 };
 
 /* The bottom bar's height — what the stream's own chrome has to clear. */
@@ -4722,9 +4747,10 @@ const FEED_LEAD_TITLE = {
    `Cited by` and `Opinions on this`, the license closing it. Your own
    comment's adds `Remove` among the acts (`CommentMenuOwn`), as everywhere.
    The card appends the license row itself, so the rows handed it stop short
-   of it. */
-const FEED_COMMENT_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
-const FEED_OWN_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+   of it, and the report row, marked `tail`, stays after it: the card's ⋮
+   ends License terms · Report, as `CommentMenu` reads. */
+const FEED_COMMENT_MENU = COMMENT_CARD_MENU;
+const FEED_OWN_COMMENT_MENU = OWN_COMMENT_CARD_MENU;
 /* WHAT THE HEAD ROW NAMES, PER TARGET (the closing batch, jakob 2026-10-01).
    · AN UNTITLED POST — a text post's title is optional — is named by its
      first words in the title's place, the way the quote names a comment:
@@ -4801,11 +4827,16 @@ function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = 
    other card wears. The row reads opinion · score · share: the kind's own act
    is the chat glyph, and its slot waits for chats. Its ⋮ is the profile's own
    menu, less the share row the row already carries; the card opens the
-   profile. */
+   profile. Report closes it, at the sheet tail of every other-person menu
+   (ruling 75; jakob 2026-11-11, H2), as the deleted account's card already
+   had it. Each row keeps the name the profile menu gives it, so the menu
+   board that draws it open (`FeedProfileMenu`) names it as `ProfileMenu`
+   does. */
 const FEED_PROFILE_MENU = (handle) => [
   SAVE_ROW,
-  { label: "Mention in a new post", onSelect: () => {} },
-  { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {} },
+  { label: "Mention in a new post", onSelect: () => {}, node: "mention" },
+  { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" },
+  REPORT_ROW,
 ];
 const FEED_BIO = {
   margin: 0,
@@ -4883,6 +4914,122 @@ function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false, no
   );
 }
 
+/* THE HOST TOPS THE CARD MENUS ARE RAISED OVER (round 36, backlog 149):
+   History's and Saved's top viewport, drawn at the phone's own 844 as
+   `HistoryHidden` and `SavedUndo` draw theirs — the header, the search (and
+   History's trigger), then the cards the board hands in. Named as `History`
+   and `Saved` name them. */
+function HistoryTop({ children }) {
+  return (
+    <>
+      <PageHeader title="History" backHref="#" backLabel="Back to your profile" node="header" />
+      <div style={{ flex: "none" }}>
+        <SearchBar placeholder="Search your history" ariaLabel="Search your history" node="searchField" />
+        <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
+          <FilterTrigger reading="Everything" ariaLabel="What your history shows" node="filterTrigger" />
+        </div>
+      </div>
+      <FeedList>
+        <HistoryDayDivider node="day" nodeKey="today">
+          Today
+        </HistoryDayDivider>
+        {children}
+      </FeedList>
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
+    </>
+  );
+}
+function SavedTop({ children }) {
+  return (
+    <>
+      <PageHeader title="Saved" backHref="#" backLabel="Back to your profile" node="header" />
+      <div style={{ flex: "none" }}>
+        <SearchBar placeholder="Search what you saved" ariaLabel="Search what you saved" node="searchField" />
+      </div>
+      <FeedList>{children}</FeedList>
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
+    </>
+  );
+}
+/* @sol's own comment on @mira's gallery post, as `FeedCommentShapes` draws
+   the reader's own comment card — its words, age, tags and score — keyed by
+   an id where a menu board names it (round 36). */
+const SOL_OWN_COMMENT = {
+  id: "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58",
+  author: SOL,
+  content: "The honey stand is half the reason I take the coast road at all.",
+  timestamp: "3h",
+  parent: MIRA_GALLERY_POST,
+  topics: ["tidemarket"],
+  score: "5.20",
+  own: true,
+};
+/* A PROFILE'S POSTS OR COMMENTS VIEW, ITS TOP VIEWPORT (round 36): the page
+   `ProfilePosts` and `ProfileComments` draw — @ada's — or the reader's own,
+   whose header is `ProfileOwnBody`'s; the tab row lit on `tab`, the list named
+   `posts` or `comments` as those boards name it, holding the cards handed in. */
+function ProfileTabTop({ own = false, tab, children }) {
+  return (
+    <>
+      {own ? <ProfileBand node="band" /> : <PageHeader title="@ada" backHref="#" backLabel="Back to feed" node="header" />}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ padding: "0 16px" }}>
+          {own ? (
+            <ProfileHeader
+              node="identity"
+              handle="sol"
+              displayName="Sol Ferreira"
+              bio="Field notes from the flats — salt, paper, and whatever the wind allows."
+              website="solferreira.art"
+              posts={5}
+              stancesOn={5}
+              stancesTaken={5}
+              own
+              invitesWaiting
+              onEdit={() => {}}
+              onInvites={() => {}}
+              onAvatarChange={() => {}}
+              onCounts={() => {}}
+              menu={ownProfileMenu()}
+            />
+          ) : (
+            <ProfileHeader
+              node="identity"
+              handle="ada"
+              displayName="Ada Okonkwo"
+              avatarSrc="comment-camera.jpg"
+              bio="A dozen tries at the third headland light and counting."
+              posts={12}
+              stancesOn={6}
+              stancesTaken={6}
+              onCounts={() => {}}
+              onCommit={() => {}}
+              onMessage={() => {}}
+              menu={otherProfileMenu()}
+              showHandle={false}
+            />
+          )}
+        </div>
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value={tab} tabs={CHRONICLE_TABS} node="tabRow" />
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 0 0 0" }} data-node={tab}>
+          {children}
+        </div>
+      </div>
+      <BottomNav active={own ? "profile" : "feed"} slots={ALL_SLOTS} inline node="bottomBar" />
+    </>
+  );
+}
+/* A card's menu, open over its host (round 36): the sheet every menu board
+   draws — `FeedPostMenu`'s — handed its rows, each row named by its `node`. */
+function CardMenuSheet({ items, ariaLabel = "Post actions" }) {
+  return (
+    <BottomSheet open ariaLabel={ariaLabel} node="menuSheet">
+      {items.map((item) => (
+        <SheetItem key={item.label} label={item.label} node={item.node} />
+      ))}
+    </BottomSheet>
+  );
+}
 /* THE TAG CARD — why it reaches you, and a glimpse (jakob's pick,
    2026-10-01). jakob's story for it: "this is a hashtag that ranks high for
    you (based on your graph) and there might be some interesting stuff to
