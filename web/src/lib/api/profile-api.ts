@@ -102,11 +102,12 @@ export async function fetchMyProfile(
 }
 
 /**
- * THE HEADER'S THREE FIGURES (ProfileHeader; open-questions.md Q35, closed
- * toward the drawn figures 2026-10-28, jakob's confirmation pending): record
- * counts, each labelled and never merged — the posts published (their genesis
- * Publish records, never an edit), the Opinion records toward the person, and
- * the Opinion records they gave toward people.
+ * THE HEADER'S THREE FIGURES (ProfileHeader; open-questions.md Q35, ruled by
+ * jakob 2026-11-10): they count BUNDLES, never records — each labelled and
+ * never merged — the posts published (one genesis Publish record each, never
+ * an edit), the people holding an opinion on the person, and the people they
+ * hold one on. One person's opinions toward one target are one, however often
+ * revised (`RecordConnection.bundleCount`).
  */
 export type ProfileFigures = {
   /** Null where the count cannot be stated — the contract's room; the figure is then not drawn. */
@@ -131,8 +132,8 @@ export async function fetchProfileFigures(
   if (user === null || user === undefined) return success(null);
   return success({
     posts: user.posts.totalCount ?? null,
-    opinionsOn: user.opinionsOn.totalCount ?? null,
-    opinionsBy: user.opinionsBy.totalCount ?? null,
+    opinionsOn: user.opinionsOn.bundleCount ?? null,
+    opinionsBy: user.opinionsBy.bundleCount ?? null,
   });
 }
 
@@ -268,6 +269,9 @@ export function rowLabel(node: RecordNode, own = false): string {
       return node.pDirected === 0 && node.pInterest === 0 ? `Un-tagged ${what}` : `Tagged ${what}`;
     }
     case "REFERENCE":
+      // One taken back reads its own verb (copy-voice, *A citation*): the act
+      // the server reads off the counter-batch's shape (`RecordAct`).
+      if (node.act === "WITHDRAWAL") return "Withdrew a citation";
       // The cited node's class is the whole distinction (edges.md): a person
       // cited is a mention.
       if (node.terminal?.__typename === "User") return "Mentioned";
@@ -300,19 +304,23 @@ function toRow(node: RecordNode, own: boolean): RecordRow {
   const target = targetWords(node.target);
   const cited = targetWords(node.terminal);
   // The aside names the target: an opinion's `on @mira` · `on a post` ·
-  // `on a comment`, a vouch's `@rafa`, a mention's `@ada`. A topic's
-  // `#saltmaps` (an Affinity's or a Tag's) is not on the wire: its Type is no
-  // Node the read resolves.
+  // `on a comment` · `on #saltmaps`, a vouch's `@rafa`, a mention's `@ada`, a
+  // tag's `#saltmaps` (copy-voice, *The chronicle's verbs*). A Type is no Node,
+  // so the topic arrives on its own field (`Record.topic`).
+  const topic = node.topic?.name.value ? `#${node.topic.name.value}` : null;
+  const onWhat = target.aside ?? topic;
   const aside =
     family === "opinion"
       ? node.act === "VOUCH"
         ? target.aside
-        : target.aside === null
+        : onWhat === null
           ? null
-          : `on ${target.aside}`
-      : family === "citation" && node.terminal?.__typename === "User"
-        ? cited.aside
-        : null;
+          : `on ${onWhat}`
+      : family === "tag"
+        ? topic
+        : family === "citation" && node.terminal?.__typename === "User"
+          ? cited.aside
+          : null;
   // The second line is the target's own words: a review its comment, a
   // citation the cited thing's, anything else the post or comment it names.
   const snippet =

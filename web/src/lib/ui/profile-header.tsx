@@ -21,11 +21,10 @@
 //
 // THE FIGURES, EACH LABELLED, NEVER MERGED (ProfileHeader.jsx; readme §7):
 // `Posts`, then `Opinions on them` and `Opinions by them` (`… you` on one's
-// own). They count RECORDS, never a fold — open-questions.md Q35, closed
-// toward the drawn figures on 2026-10-28 under the autonomy order, jakob's
-// confirmation pending: the posts published (genesis Publish records, never
-// an edit), the Opinion records toward the person, and the Opinion records
-// they gave toward people (`ProfileFigures`). While they fit the column
+// own). They count BUNDLES, never records — open-questions.md Q35, ruled by
+// jakob 2026-11-10: the posts published (genesis Publish records, never
+// an edit), the people holding an opinion on the person, and the people
+// they hold one on (`ProfileFigures`). While they fit the column
 // beside the avatar they stand under the name; where they do not, they move
 // under the avatar-and-name block — a container query on the header's own
 // width, 96px of avatar and gap plus the labels' width in rem.
