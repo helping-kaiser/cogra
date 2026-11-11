@@ -12,7 +12,21 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(nav.search),
 }));
 
-const server = startMswServer();
+// THE LINK IS READ FIRST (ResetNew.md: a used or expired link opens
+// ResetExpired "AND NEVER ResetNew opens"): every test holding a link answers
+// the read-only check, live unless it says otherwise.
+const resetCheck = (live: boolean) =>
+  gqlLink.query("PasswordResetLinkCheck", () =>
+    HttpResponse.json({ data: { passwordResetLinkCheck: live } }),
+  );
+
+const server = startMswServer(resetCheck(true));
+
+/** ResetForm on a held link, once its check has answered live. */
+async function renderNew() {
+  renderWithProviders(<ResetForm />);
+  await screen.findByRole("heading", { level: 1, name: "Set a new password" });
+}
 
 const requestOk = gqlLink.mutation("RequestPasswordReset", () =>
   HttpResponse.json({
@@ -117,8 +131,8 @@ describe("the new password (ResetNew)", () => {
     nav.search = "token=token-1";
   });
 
-  it("holds the link's own secret and never asks for it; no header, one field, one commitment", () => {
-    renderWithProviders(<ResetForm />);
+  it("holds the link's own secret and never asks for it; no header, one field, one commitment", async () => {
+    await renderNew();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Set a new password");
     expect(
       screen.getByText("Setting a new password signs out every device. You sign in again with the new one."),
@@ -141,14 +155,14 @@ describe("the new password (ResetNew)", () => {
         });
       }),
     );
-    renderWithProviders(<ResetForm />);
+    await renderNew();
     fillConfirm();
     await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/login"));
     expect(JSON.stringify(seen)).toContain("token-1");
   });
 
   it("a_short_password_answers_on_the_field_and_re_checks_live", async () => {
-    renderWithProviders(<ResetForm />);
+    await renderNew();
     fillConfirm("short");
     expect(await screen.findByText("A password is at least 12 characters.")).toBeInTheDocument();
     expect(screen.queryByText("At least 12 characters.")).not.toBeInTheDocument();
@@ -158,7 +172,7 @@ describe("the new password (ResetNew)", () => {
 
   it("a_breached_password_reads_on_the_field", async () => {
     server.use(confirmRefused("WEAK_PASSWORD"));
-    renderWithProviders(<ResetForm />);
+    await renderNew();
     fillConfirm();
     expect(
       await screen.findByText("That password has turned up in a data breach — pick another one."),
@@ -168,7 +182,7 @@ describe("the new password (ResetNew)", () => {
 
   it("renders a rate-limited confirm as a backoff, not a connectivity failure", async () => {
     server.use(rateLimited("ConfirmPasswordReset"));
-    renderWithProviders(<ResetForm />);
+    await renderNew();
     fillConfirm();
     expect(await screen.findByRole("alert")).toHaveTextContent("Too many tries. Wait a little, then try again.");
     expect(nav.replace).not.toHaveBeenCalled();
@@ -176,7 +190,7 @@ describe("the new password (ResetNew)", () => {
 
   it("no_answer_keeps_the_field_and_says_it_above_the_commit", async () => {
     server.use(gqlLink.mutation("ConfirmPasswordReset", () => HttpResponse.error()));
-    renderWithProviders(<ResetForm />);
+    await renderNew();
     fillConfirm();
     expect(await screen.findByRole("alert")).toHaveTextContent("That didn't send. Try again.");
     expect(screen.getByTestId("reset_password")).toHaveValue("long enough password");
@@ -191,7 +205,7 @@ describe("the spent link (ResetExpired)", () => {
 
   it("a_link_spent_while_the_form_stood_opens_reset_expired_and_never_changes_the_password", async () => {
     server.use(confirmRefused("RESET_TOKEN_INVALID"));
-    renderWithProviders(<ResetForm />);
+    await renderNew();
     fillConfirm();
     expect(await screen.findByRole("heading", { level: 1, name: "This link doesn't work anymore" })).toBeInTheDocument();
     expect(
@@ -205,5 +219,43 @@ describe("the spent link (ResetExpired)", () => {
     expect(nav.replace).toHaveBeenCalledWith("/reset");
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
     expect(nav.replace).toHaveBeenCalledWith("/login");
+  });
+});
+
+// ResetNew.md:37 · ResetExpired.md:3 — the link is checked before the form.
+describe("the link's check (ResetNew · ResetExpired)", () => {
+  beforeEach(() => {
+    nav.search = "token=token-1";
+  });
+
+  it("a_reset_link_already_used_or_past_its_time_opens_reset_expired_and_never_reset_new", async () => {
+    let asked: unknown = null;
+    server.use(
+      gqlLink.query("PasswordResetLinkCheck", ({ variables }) => {
+        asked = variables;
+        return HttpResponse.json({ data: { passwordResetLinkCheck: false } });
+      }),
+    );
+    renderWithProviders(<ResetForm />);
+    expect(screen.queryByRole("heading", { level: 1, name: "Set a new password" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "This link doesn't work anymore" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("New password")).not.toBeInTheDocument();
+    expect(asked).toEqual({ token: "token-1" });
+  });
+
+  it("a_live_link_opens_reset_new_once_the_check_answers", async () => {
+    renderWithProviders(<ResetForm />);
+    expect(screen.queryByLabelText("New password")).not.toBeInTheDocument();
+    expect(await screen.findByLabelText("New password")).toBeInTheDocument();
+  });
+
+  it("a_check_that_gets_no_answer_opens_the_form_whose_press_still_meets_a_spent_link", async () => {
+    server.use(
+      gqlLink.query("PasswordResetLinkCheck", () => HttpResponse.error()),
+      confirmRefused("RESET_TOKEN_INVALID"),
+    );
+    await renderNew();
+    fillConfirm();
+    expect(await screen.findByRole("heading", { level: 1, name: "This link doesn't work anymore" })).toBeInTheDocument();
   });
 });
