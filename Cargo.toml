@@ -56,6 +56,10 @@ http-body-util = { version = "0.1" }
 # as the library's own parse does and never bounds one by the other's
 # ceiling.
 mime = { version = "0.3" }
+# The multipart parser async-graphql itself rides, used directly for its
+# per-field size limits: the library gives every multipart field the file
+# cap, so the `/graphql` handler parses the envelope with its own limits.
+multer = { version = "3" }
 async-graphql = { version = "7" }
 async-graphql-axum = { version = "7" }
 

@@ -312,6 +312,20 @@ describe("SavedScreen — a feed of kept things", () => {
     expect(screen.getByTestId("saved-person-u3-link")).toHaveAttribute("href", "/u/mira?from=saved");
   });
 
+  it("an_author_chip_opens_the_profile_its_back_arrow_reading_back_to_saved", async () => {
+    // ProfileOther.md:73: "ALWAYS the back arrow reads … Back to Saved from
+    // Saved" — the chip's door carries the origin, so the profile names it and
+    // keeps Profile lit (shell.test.tsx, `from=saved`).
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(screen.getByTestId(byNode("saved.card.authorChip", "p1"))).toHaveAttribute("href", expect.stringMatching(/^\/u\/[^?]+\?from=saved$/));
+    expect(screen.getByTestId(byNode("saved.commentCard.authorChip", "c1"))).toHaveAttribute(
+      "href",
+      expect.stringMatching(/^\/u\/[^?]+\?from=saved$/),
+    );
+  });
+
   it("the_back_arrow_reads_back_to_your_profile", async () => {
     serve(THREE);
     renderWithProviders(<SavedScreen />, { store: signedIn() });

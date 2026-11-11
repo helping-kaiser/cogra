@@ -506,6 +506,7 @@ function SavedCard({
           stream={{ href: streamHref(node.id), onOpen: () => onOpenStream(node.id) }}
           testId={`saved-post-${node.id}`}
           authorTestId={`saved-author-${node.id}`}
+          doorFrom={FROM}
           stanceTestId={`saved-stance-${node.id}`}
           comments={comments(node)}
           onOpenComments={() => onOpenComments(node)}
