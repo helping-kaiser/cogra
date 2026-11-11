@@ -1,6 +1,6 @@
 # Reel · `spec:design:behavior-reel`
 
-ALWAYS the stream carries only clips at least as tall as they are wide, portrait or square, from the list it was opened from narrowed to them in that list's order — the feed it narrowed, Saved's cards, History's rows, the profile's posts or a tag page's list, whose clips are the ones tagged with that tag — and by no ranking of its own
+ALWAYS the stream carries every clip at least as tall as it is wide, portrait or square, of the list it was opened from and only those, that list narrowed to them in its order, a clip wider than tall staying out of the stream and opening its post — the feed it narrowed, Saved's cards, History's rows, the profile's posts or a tag page's list, whose clips are the ones tagged with that tag — and by no ranking of its own
 
 ALWAYS no header labels the stream
 
