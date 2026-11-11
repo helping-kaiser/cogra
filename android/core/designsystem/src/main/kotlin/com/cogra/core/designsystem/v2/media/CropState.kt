@@ -260,9 +260,9 @@ class CropState internal constructor(initial: CropFraming) {
 
     /**
      * Points the window at a shape, and on a real switch **changes only
-     * the window** (jakob 2026-11-11: "when swapping from tall to square
-     * or wide the image shrinks. i would just expect the rectangle/frame
-     * to change").
+     * the window** (ComposeCrop.md: "each picture keeps its scale and its
+     * position AND the shape's frame changes around it AND NEVER the picture
+     * shrinks to fit the new frame"; jakob's hand test 2026-11-11).
      *
      * The picture stays where it is on the stage; the new shape's window
      * keeps the old one's centre and its zoom — the slider does not move —

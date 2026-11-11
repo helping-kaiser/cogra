@@ -24,10 +24,13 @@ import org.robolectric.annotation.Config
  * from tall to square or wide the image shrinks. i would just expect the
  * rectangle/frame to change").
  *
- * ComposeCrop.md says only that every picture takes the tapped shape; the
- * board draws Tall alone. So the picture's stage keeps its size, and the
- * window keeps its centre and zoom, slid inside the picture only as far as
- * the new shape forces.
+ * ComposeCrop.md (round 35): "WHEN tap a shape chip -> each picture keeps
+ * its scale and its position AND the shape's frame changes around it AND
+ * NEVER the picture shrinks to fit the new frame". In android's window
+ * model the picture's stage keeps its size, and the window keeps its centre
+ * and its zoom — measured against each shape's own fill, so it never stands
+ * below the new fill (the sidecar's next line) — slid inside the picture
+ * only as far as the new shape forces.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(

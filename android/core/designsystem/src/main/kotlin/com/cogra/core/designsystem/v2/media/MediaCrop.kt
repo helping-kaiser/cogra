@@ -104,9 +104,8 @@ fun MediaCrop(
     /**
      * The stage the picture is laid out in, width ÷ height. It does NOT
      * follow [shape]: a shape switch changes only the window, never the
-     * picture under it (jakob 2026-11-11: "when swapping from tall to
-     * square or wide the image shrinks. i would just expect the
-     * rectangle/frame to change"). The default is the viewport
+     * picture under it (ComposeCrop.md: "NEVER the picture shrinks to fit the
+     * new frame"). The default is the viewport
      * `ComposeCrop` draws, 390 × 488; the avatar's square stage passes 1.
      */
     stageRatio: Float = COMPOSE_CROP_STAGE_RATIO,
