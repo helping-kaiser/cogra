@@ -132,7 +132,7 @@ class CropState internal constructor(initial: CropFraming) {
      */
     internal fun onWindowChanged(next: CropFraming, pictureRatio: Float) {
         this.pictureRatio = pictureRatio
-        if (!seeded) return
+        if (!seeded || pinching) return
         if (!next.matches(framedAspect, pictureRatio)) return
         framing = next
     }
@@ -368,26 +368,51 @@ class CropState internal constructor(initial: CropFraming) {
     /**
      * One step of a two-finger gesture, in the viewport's pixels
      * ([CropWindowMath.pinched]): the window scales about [centroidX]/
-     * [centroidY] by [zoom] and travels by [panX]/[panY].
-     *
-     * The window it starts from is the one the view is **drawing**, not
-     * [framing]: a second finger can land mid-drag, while the library is
-     * still moving the window and has not yet reported where it is, and
-     * starting from the last reported framing would snap the window back
-     * to it.
+     * [centroidY] by [zoom] and travels by [panX]/[panY]. The picture is
+     * laid out whole and never zoomed ([CropWindowMath.fitted]), so the
+     * fingers' pixels map onto it by one fixed scale for the whole gesture.
      */
     @Suppress("LongParameterList")
     internal fun pinchBy(centroidX: Float, centroidY: Float, panX: Float, panY: Float, zoom: Float) {
         val view = view ?: return
         val fill = fill() ?: return
         val whole = view.wholeImageRect ?: return
-        val rect = view.cropRect ?: return
-        val drawn = view.cropWindowRect ?: return
-        val onScreen = ScreenWindow(drawn.left, drawn.top, drawn.width(), drawn.height())
-        val shown = CropWindowMath.framingOf(rect, whole)
-        val next = CropWindowMath.pinched(shown, fill, onScreen, centroidX, centroidY, panX, panY, zoom)
-        if (next != shown) moveTo(next)
+        if (whole.width() <= 0 || whole.height() <= 0) return
+        val picture = CropWindowMath.fitted(
+            stageWidth = view.width.toFloat(),
+            stageHeight = view.height.toFloat(),
+            pictureRatio = whole.width().toFloat() / whole.height().toFloat(),
+        )
+        val next = CropWindowMath.pinched(framing, fill, picture, centroidX, centroidY, panX, panY, zoom)
+        if (next != framing) moveTo(next)
     }
+
+    /**
+     * A second finger has landed: from here until every finger is up the
+     * window is the pinch's alone.
+     *
+     * The framing is taken from the window the view is **drawing** — a
+     * second finger can land mid-drag, while the library is still moving
+     * the window and has not yet reported where it is, and starting from
+     * the last reported framing would snap the window back to it. Reports
+     * the view makes while the pinch runs are its own echoes of the
+     * windows the pinch placed, so they are not recorded over it.
+     */
+    internal fun pinchStart() {
+        pinching = true
+        val view = view ?: return
+        val whole = view.wholeImageRect ?: return
+        val rect = view.cropRect ?: return
+        val shown = CropWindowMath.framingOf(rect, whole)
+        if (shown.matches(framedAspect, whole.width().toFloat() / whole.height().toFloat())) framing = shown
+    }
+
+    /** Every finger is up: the view's reports are the author's again. */
+    internal fun pinchEnd() {
+        pinching = false
+    }
+
+    private var pinching = false
 
     /** The window at [scale] of [fill], about [around]'s centre, slid inside the picture. */
     private fun windowAt(fill: CropFraming, scale: Float, around: CropFraming): CropFraming {
@@ -679,9 +704,9 @@ internal object CropWindowMath {
      * The one-finger drag moves the window where the finger goes, so two
      * fingers do the same — the window scales about the fingers' centroid
      * by the step's [zoom] (fingers spreading grow it, closing shrink it)
-     * and travels with the centroid's [panX]/[panY]. [onScreen] is the
-     * window as the viewport draws it, which is what turns the fingers'
-     * pixels into fractions of the picture.
+     * and travels with the centroid's [panX]/[panY]. [picture] is where
+     * the viewport draws the picture, which is what turns the fingers'
+     * pixels into fractions of it.
      *
      * **The size comes from the fill, never from the fingers.** The new
      * window is [fill] over a scale held between the fill and the ceiling,
@@ -695,7 +720,7 @@ internal object CropWindowMath {
     fun pinched(
         window: CropFraming,
         fill: CropFraming,
-        onScreen: ScreenWindow,
+        picture: ScreenWindow,
         centroidX: Float,
         centroidY: Float,
         panX: Float,
@@ -703,21 +728,33 @@ internal object CropWindowMath {
         zoom: Float,
     ): CropFraming {
         if (window.width <= 0f || window.height <= 0f || fill.width <= 0f) return window
-        if (onScreen.width <= 0f || onScreen.height <= 0f) return window
+        if (picture.width <= 0f || picture.height <= 0f) return window
         val step = if (zoom.isFinite() && zoom > 0f) zoom else 1f
-        val perPixelX = window.width / onScreen.width
-        val perPixelY = window.height / onScreen.height
+        val perPixelX = 1f / picture.width
+        val perPixelY = 1f / picture.height
 
         val scale = (fill.width / window.width / step).coerceIn(CROP_ZOOM_MIN, CROP_ZOOM_MAX)
         val width = fill.width / scale
         val height = fill.height / scale
         val factor = width / window.width
 
-        val cx = window.left + (centroidX - onScreen.left) * perPixelX
-        val cy = window.top + (centroidY - onScreen.top) * perPixelY
+        val cx = (centroidX - picture.left) * perPixelX
+        val cy = (centroidY - picture.top) * perPixelY
         val left = cx - (cx - window.left) * factor + panX * perPixelX
         val top = cy - (cy - window.top) * factor + panY * perPixelY
         return slidInside(CropFraming(left, top, left + width, top + height))
+    }
+
+    /**
+     * Where a stage of [stageWidth] × [stageHeight] draws a picture of
+     * [pictureRatio] (width ÷ height) laid out whole and centred — the
+     * cropper's `FIT_CENTER` at zoom 1.
+     */
+    fun fitted(stageWidth: Float, stageHeight: Float, pictureRatio: Float): ScreenWindow {
+        if (stageWidth <= 0f || stageHeight <= 0f || pictureRatio <= 0f) return ScreenWindow(0f, 0f, 0f, 0f)
+        val width = minOf(stageWidth, stageHeight * pictureRatio)
+        val height = width / pictureRatio
+        return ScreenWindow((stageWidth - width) / 2f, (stageHeight - height) / 2f, width, height)
     }
 
     /**

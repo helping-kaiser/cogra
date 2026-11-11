@@ -1,12 +1,15 @@
 package com.cogra.core.designsystem.v2.media
 
 import android.net.Uri
+import android.os.Build
+import android.util.TypedValue
+import android.view.ViewConfiguration
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateCentroid
+import androidx.compose.foundation.gestures.calculateCentroidSize
 import androidx.compose.foundation.gestures.calculatePan
-import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,8 +31,10 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
@@ -218,7 +223,7 @@ private fun CropViewport(
             // shape, so the stage looks the way the board draws it; the
             // picture inside it is fitted whole rather than filling it.
             .aspectRatio(frameRatio)
-            .twoFingerPinch(state)
+            .twoFingerPinch(state, minimumScalingSpan())
             .onPreviewKeyEvent { event -> panByKey(event, state) }
             .focusable()
             .semantics {
@@ -239,6 +244,12 @@ private fun CropViewport(
                     // The whole picture, always: this single line is what
                     // makes "nothing is cut off at rest" true.
                     scaleType = CropImageView.ScaleType.FIT_CENTER
+                    // ...and it stays whole. The library's auto-zoom blows the
+                    // picture up, animated, whenever a settled window is under
+                    // half the stage — the picture jumping under a finger that
+                    // has just let go, and under the fingers of a pinch whose
+                    // start settles a drag. The window is what moves here.
+                    isAutoZoomEnabled = false
                     setFixedAspectRatio(true)
                     // The library's own pinch is OFF: it sizes the window to the
                     // fingers' separate horizontal and vertical spread and never
@@ -406,24 +417,68 @@ private fun panByKey(event: KeyEvent, state: CropState): Boolean {
  * only pointers down both before and after an event, so neither a landing
  * nor a lifting finger makes the window jump.
  */
-private fun Modifier.twoFingerPinch(state: CropState): Modifier = pointerInput(state) {
+private fun Modifier.twoFingerPinch(state: CropState, minimumSpan: Float): Modifier = pointerInput(state, minimumSpan) {
     awaitEachGesture {
         awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
         var pinching = false
-        do {
-            val event = awaitPointerEvent(PointerEventPass.Initial)
-            if (!pinching && event.changes.count { it.pressed } >= 2) pinching = true
-            if (pinching) {
-                val centroid = event.calculateCentroid(useCurrent = false)
-                if (centroid.isSpecified) {
-                    val pan = event.calculatePan()
-                    state.pinchBy(centroid.x, centroid.y, pan.x, pan.y, event.calculateZoom())
+        try {
+            do {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                if (!pinching && event.changes.count { it.pressed } >= 2) {
+                    pinching = true
+                    state.pinchStart()
                 }
-                event.changes.forEach { it.consume() }
-            }
-        } while (event.changes.any { it.pressed })
+                if (pinching) {
+                    val centroid = event.calculateCentroid(useCurrent = false)
+                    if (centroid.isSpecified) {
+                        val pan = event.calculatePan()
+                        state.pinchBy(centroid.x, centroid.y, pan.x, pan.y, event.pinchZoom(minimumSpan))
+                    }
+                    event.changes.forEach { it.consume() }
+                }
+            } while (event.changes.any { it.pressed })
+        } finally {
+            // Also on a cancelled gesture (the stage leaving mid-pinch), or the
+            // view's reports would stay ignored.
+            if (pinching) state.pinchEnd()
+        }
     }
 }
+
+/**
+ * `calculateZoom`'s own ratio — the fingers' spread now over their spread
+ * before (`calculateCentroidSize`) — taken only while the fingers stand at
+ * least [minimumSpan] apart on both sides of the event, and 1 otherwise.
+ *
+ * That floor is the platform's: `ScaleGestureDetector` reads no scale
+ * below `ViewConfiguration.getScaledMinimumScalingSpan` (27 mm), because
+ * as two fingers close on each other the ratio of two small spans swings
+ * wildly — fingers crossing would otherwise flick the window from the
+ * fill to the ceiling in one event. Below it the fingers still carry the
+ * window; they just stop resizing it.
+ */
+private fun PointerEvent.pinchZoom(minimumSpan: Float): Float {
+    // A centroid size is the mean distance to the centroid: half a two-finger span.
+    val now = calculateCentroidSize(useCurrent = true) * 2f
+    val before = calculateCentroidSize(useCurrent = false) * 2f
+    return if (now >= minimumSpan && before >= minimumSpan) now / before else 1f
+}
+
+/** The platform's minimum pinch span in pixels (`ScaleGestureDetector`'s). */
+@Composable
+private fun minimumScalingSpan(): Float {
+    val context = LocalContext.current
+    return remember(context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ViewConfiguration.get(context).scaledMinimumScalingSpan.toFloat()
+        } else {
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, MIN_SCALING_SPAN_MM, context.resources.displayMetrics)
+        }
+    }
+}
+
+/** `config_minScalingSpan`, the framework's value before the API 29 accessor. */
+private const val MIN_SCALING_SPAN_MM = 27f
 
 /**
  * The stage `ComposeCrop` draws its viewport at: 390 × 488. Fixed for every

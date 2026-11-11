@@ -329,13 +329,13 @@ class CropStateTest {
 
     // -- Two fingers (jakob 2026-11-11: the sliver) --
     //
-    // A half-size square window in the middle of a square picture, drawn at
-    // 75..225 px of a 300 px stage: one pixel is 1/300 of the picture.
+    // A half-size square window in the middle of a square picture drawn whole
+    // over a 300 px stage: the window sits at 75..225 px, one pixel is 1/300.
 
-    private val drawnAt = ScreenWindow(left = 75f, top = 75f, width = 150f, height = 150f)
+    private val picture = ScreenWindow(left = 0f, top = 0f, width = 300f, height = 300f)
 
     private fun pinch(zoom: Float, cx: Float = 150f, cy: Float = 150f, panX: Float = 0f, panY: Float = 0f) =
-        CropWindowMath.pinched(centred, CropFraming.Whole, drawnAt, cx, cy, panX, panY, zoom)
+        CropWindowMath.pinched(centred, CropFraming.Whole, picture, cx, cy, panX, panY, zoom)
 
     private fun CropFraming.assertIs(l: Float, t: Float, r: Float, b: Float) {
         assertThat(left).isWithin(TOLERANCE).of(l)
@@ -393,6 +393,14 @@ class CropStateTest {
         pinch(zoom = Float.NaN).assertIs(0.25f, 0.25f, 0.75f, 0.75f)
         CropWindowMath.pinched(centred, CropFraming.Whole, ScreenWindow(0f, 0f, 0f, 0f), 1f, 1f, 1f, 1f, 2f)
             .assertIs(0.25f, 0.25f, 0.75f, 0.75f)
+    }
+
+    @Test
+    fun thePictureIsDrawnWholeAndCentredOnTheStage() {
+        // A square picture on the 4:5 stage at 411 × 514: 411 wide, 51.5 down.
+        assertThat(CropWindowMath.fitted(411f, 514f, 1f)).isEqualTo(ScreenWindow(0f, 51.5f, 411f, 411f))
+        // A 1:2 picture there: 257 wide (514 × 0.5), 77 in from each side.
+        assertThat(CropWindowMath.fitted(411f, 514f, 0.5f)).isEqualTo(ScreenWindow(77f, 0f, 257f, 514f))
     }
 
     // -- A shape switch changes only the frame (jakob 2026-11-11) --
