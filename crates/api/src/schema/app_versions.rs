@@ -8,8 +8,7 @@
 //! The registry is not record-backed, so its cursor is its own — a keyset
 //! over `(releasedAt, component, version)`, which the primary key makes
 //! unique — and the landing-order helpers do not apply. Bad page
-//! arguments refuse exactly as theirs do: a message-only validation
-//! error.
+//! arguments refuse exactly as theirs do: `BAD_INPUT`.
 
 use async_graphql::connection::{Connection, Edge};
 use async_graphql::{Context, Object, SimpleObject};
