@@ -8,6 +8,8 @@ WHEN tap a shape chip -> each picture keeps its scale and its position AND the s
 
 WHEN tap a shape chip GIVEN a picture's scale would stand below the new shape's fill -> that picture's scale rises to the fill, the zoom slider's floor, and no further
 
+WHEN tap a shape chip GIVEN a picture's edge would stand inside the new shape's frame -> that picture shifts just enough that its edge meets the frame's AND NEVER further
+
 WHEN drag inside the crop viewport -> the framed picture moves within the shape
 
 WHEN pinch inside the crop viewport -> the framed picture zooms within the shape AND the zoom slider follows

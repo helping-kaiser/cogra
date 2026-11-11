@@ -38,7 +38,7 @@ export function Screen() {
           bundle={mkBundle(0.1, 0.1)}
           onReply={() => {}}
           license={{ attribution: 0, provenance: 0 }}
-          menuItems={CARD_MENU}
+          menuItems={COMMENT_CARD_MENU}
         />
         <CommentCard
           author={SOL}
@@ -53,7 +53,7 @@ export function Screen() {
           onEdit={() => {}}
           onReply={() => {}}
           license={{ attribution: 0, provenance: 0 }}
-          menuItems={CARD_MENU}
+          menuItems={OWN_COMMENT_CARD_MENU}
         />
       </CommentsSheet>
     </>

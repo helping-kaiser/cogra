@@ -187,8 +187,16 @@ export function CommentCard({
   // Same rule as PostCard: the license is a rare read, so it arrives from the
   // menu rather than sitting on the comment, and it comes up in a sheet over
   // the thread rather than on the card. It rode the payload, so a redacted
-  // record has none to show.
-  const items = license && !redacted ? [...menuItems, { label: LICENSE_MENU_LABEL, onSelect: () => {} }] : menuItems;
+  // record has none to show. A row marked `tail` stands after the license, as
+  // on `PostCard`: the report row, at the sheet tail (ruling 75).
+  const items =
+    license && !redacted
+      ? [
+          ...menuItems.filter((item) => !item.tail),
+          { label: LICENSE_MENU_LABEL, onSelect: () => {} },
+          ...menuItems.filter((item) => item.tail),
+        ]
+      : menuItems;
   /* THE VEIL TAKES THE WHOLE BODY, words and pictures as one block. A comment
      has no title to leave outside it, so what carries the informed choice is
      the frame the card already wears — the author, the timestamp, the topics,

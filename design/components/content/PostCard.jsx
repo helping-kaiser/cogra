@@ -201,9 +201,15 @@ export function PostCard({
   //
   // It CLOSES the menu rather than leading it: the rows the menu was opened for
   // come first, the rarest read last — the order the author's own menu has
-  // always had, and the one the menu boards draw.
+  // always had, and the one the menu boards draw. A row marked `tail` stands
+  // after it — the report row, which sits at the sheet tail of every
+  // other-person menu, below even the license (ruling 75).
   const items = license && !redacted
-    ? [...menuItems, { label: LICENSE_MENU_LABEL, onSelect: () => {} }]
+    ? [
+        ...menuItems.filter((item) => !item.tail),
+        { label: LICENSE_MENU_LABEL, onSelect: () => {} },
+        ...menuItems.filter((item) => item.tail),
+      ]
     : menuItems;
 
   const heading = title ? (

@@ -23,19 +23,23 @@
    THE `moment` CHIP DRAWS THE WAIT BEFORE THE ANSWER, AND ITS WAY OUT
    (jakob 2026-11-11: once Set is pressed the act is done; nothing cancels
    it, and the way out only closes the pad so the reader need not wait).
-   `setting` is the pad past 200ms: `Setting…` in Set's slot, inert and never
-   dimmed, the pick, the field and the landing line as they were — and
-   beside it `Close`, in the place `Cancel` stood. `closed` is that Close
+   `pressed` is the pad inside the first 200ms after Set (jakob 2026-11-11:
+   "swap at the press everything else would be missleading"): the way out
+   already reads `Close`, in the place `Cancel` stood, while Set still reads
+   `Set`, unchanged and refusing a second press — the one exception to the
+   200ms law. `setting` is the pad past 200ms: `Setting…` in Set's slot,
+   inert and never dimmed, the pick, the field and the landing line as they
+   were — and beside it `Close`. `closed` is that Close
    pressed: the pad closes and the act goes on, its wait carried by the
    target's own row — `Signing…` under Ada's face in the pending marker's
    quiet register, the face still the standing's and the anchor refusing a
    second hold. It ends as a hold ends (`RowSigning`): signed, the face moves
    and the snackbar confirms; not signed, the row says `That didn't sign.`
    with a Retry that asks the same pick again. A press outside the pad, Back
-   and Escape do what Close does — inside the first 200ms too, while the
-   button still reads `Cancel`. `failed` is this board's own moment. */
-export const PROPS = { moment: { editor: "enum", options: ["failed", "setting", "closed"], default: "failed" } };
-export const VALS = `failedShown: this.props.moment === "failed" ? "block" : "none", settingShown: this.props.moment === "setting" ? "block" : "none", closedShown: this.props.moment === "closed" ? "block" : "none", washShown: this.props.moment === "closed" ? "none" : "block"`;
+   and Escape do what Close does, from the press on. `failed` is this
+   board's own moment. */
+export const PROPS = { moment: { editor: "enum", options: ["failed", "pressed", "setting", "closed"], default: "failed" } };
+export const VALS = `failedShown: this.props.moment === "failed" ? "block" : "none", pressedShown: this.props.moment === "pressed" ? "block" : "none", settingShown: this.props.moment === "setting" ? "block" : "none", closedShown: this.props.moment === "closed" ? "block" : "none", washShown: this.props.moment === "closed" ? "none" : "block"`;
 
 const PULLED_BACK = { pDirected: -0.55, pInterest: -0.15 };
 
@@ -46,6 +50,9 @@ export function Screen() {
       <FeedList>
         <div style={{ display: "{{failedShown}}" }}>
           <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={PULLED_BACK} stanceSigning="failed" />
+        </div>
+        <div style={{ display: "{{pressedShown}}" }}>
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={PULLED_BACK} stanceSigning="pressed" />
         </div>
         <div style={{ display: "{{settingShown}}" }}>
           <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={PULLED_BACK} stanceSigning="busy" />

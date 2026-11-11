@@ -4,7 +4,19 @@ ALWAYS Invites carries no bottom bar
 
 ALWAYS New invite heads the column, a filled button at the column's full width
 
-ALWAYS the page reads Applications, then Live links, in that order
+ALWAYS the page reads Applications, then Live links, in that order, with People you let in between them GIVEN the reader has vouched someone in
+
+ALWAYS the section People you let in is absent, its label with it, GIVEN the reader has vouched no one in
+
+ALWAYS People you let in holds one row per person the reader vouched in, the newest first, each in the application row's anatomy without its control: the person's picture, else the monogram from their name, their display name, else their handle, and at the row's end when they were let in, in the page's age form, as 2d
+
+ALWAYS a row in People you let in carries no control of its own and wears the chevron of a row that opens
+
+WHEN tap invites.person -> that person's profile opens AND its back arrow reads Back to Invites
+
+ALWAYS invites.redactedPerson keeps its place and its age, its disc keeping its space and filled with nothing, invites.redactedPerson.title reading Deleted account in the system's voice and no handle under it GIVEN the person's account was deleted
+
+WHEN tap invites.redactedPerson -> the deleted account's page opens AND its back arrow reads Back to Invites
 
 ALWAYS both sections stand whenever one of them holds something, a section with nothing in it keeping its label
 

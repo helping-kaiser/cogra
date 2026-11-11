@@ -43,7 +43,7 @@
    2026-10-05, the 134 residue's 3b) — the seal's grammar unchanged
    (`ComposeSealUploading`). `UploadStatusLine` stands over the foot and `Sign
    the edit` stays enabled. Pressed, its label swaps in place to `Signing the
-   edit…`, the ways out locked with it, and signing proceeds the moment the
+   edit…`, the X named `Close` from the press, and signing proceeds the moment the
    bytes land, with no second press. An upload that fails drops the held press:
    the line takes its fault reading — `One picture didn't upload. Signing waits
    for it.` with `Retry` — `Sign the edit` reads itself again, disabled until
@@ -69,7 +69,7 @@
    round's 1). An edit has no acts card, so `ActsFooter` carries the seals'
    line as its subline, `Still signing — the network is slow right now.`,
    counted from the press and gone when the signing answers, with `Sign the
-   edit` reading `Signing the edit…` and the ways out locked, undimmed, as on
+   edit` reading `Signing the edit…` and the X named `Close`, as on
    `SealSigningSlow`. It holds for every edit's signing, gated or not, and for
    all five edit boards; this chip draws it once. The `signing` chip's `slow`
    draws it; with `upload` at `failed` it draws nothing, because a failed
@@ -88,7 +88,11 @@
 
    REGISTERED under the `postEdit` prefix (seam 248): the names are
    `EditComposeBody`'s, and each chip-drawn copy keeps its element's path,
-   keyed by the chip value that draws it (`chipCopy`). */
+   keyed by the chip value that draws it (`chipCopy`). 
+   CLOSE WHILE IT SIGNS (round 37, jakob 2026-11-11): the `signing` chip's
+   `slow` is the edit past its press, so its header's X is named `Close` and
+   it and the arrow close the edit while the edit goes on; the edited card
+   carries the wait and the answer (`SigningAfterClose`). */
 export const NODE = "postEdit";
 export const PROPS = {
   target: { editor: "enum", options: ["live", "removed"], default: "live" },

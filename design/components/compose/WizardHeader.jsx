@@ -48,6 +48,10 @@ export function WizardHeader({
   onBack,
   onLeave,
   leaveLabel = "Leave — your draft is kept",
+  /* From the press on a seal's or an edit's commit the X and the arrow only
+     close the surface — the act goes on (jakob 2026-11-11) — so the X is
+     named `Close` while it signs. */
+  closing = false,
   stageLabel,
   help,
   onHelp,
@@ -65,7 +69,7 @@ export function WizardHeader({
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
           <button
             type="button"
-            aria-label={leaveLabel}
+            aria-label={closing ? "Close" : leaveLabel}
             onClick={onLeave}
             className="cg-state cg-focus"
             style={{

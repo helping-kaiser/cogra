@@ -44,4 +44,8 @@ ALWAYS the citations sheet and the tags sheet the reply's seal opens are the pos
 
 WHEN the key leaves while the reply is written -> Sign comment leads to the reply-scale key notice with restore or discard
 
-WHEN tap the seal's back arrow or Back -> the composer returns one stage back with the words and media as they were
+WHEN tap the seal's back arrow or Back GIVEN Sign comment was not pressed -> the composer returns one stage back with the words and media as they were
+
+WHEN press Sign comment -> Back reads Close in its place from the press itself AND the header X is named Close AND NEVER Close dims
+
+WHEN press Close, the header back arrow, the header X or the system's Back GIVEN Sign comment was pressed and has not answered -> the seal closes AND the reply goes on, its wait and its answer on the parent it answers, where the new reply settles as SigningAfterClose draws them AND NEVER the act is cancelled

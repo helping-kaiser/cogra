@@ -22,7 +22,7 @@ ALWAYS the picks on the seal sign together or none of them signs
 
 WHEN press Sign the picks -> Sign the picks refuses a second press until the signing answers AND NEVER a severance confirmation is asked AND NEVER Sign the picks dims
 
-WHEN the signing has not answered 200ms after the press -> Sign the picks reads Signing the picks… AND the header back arrow, Back and the header X refuse a press AND NEVER they dim AND NEVER a spinner appears
+WHEN the signing has not answered 200ms after the press -> Sign the picks reads Signing the picks… AND NEVER a spinner appears
 
 WHEN the signing has not answered 5s after the press -> the subline under the total reads Still signing — the network is slow right now. AND NEVER a progress indicator appears
 
@@ -44,10 +44,16 @@ ALWAYS no line about an approval stands GIVEN no approval was kept
 
 WHEN tap Open Invites -> Invites opens, where the kept approval waits as its own card AND NEVER the approval is signed with the picks AND every pick stays kept
 
-WHEN press the header back arrow -> the kept picks' review comes back, one stage behind, every pick still in it
+WHEN press the header back arrow GIVEN Sign the picks was not pressed -> the kept picks' review comes back, one stage behind, every pick still in it
 
-WHEN press Back -> the kept picks' review comes back, one stage behind, every pick still in it
+WHEN press Back GIVEN Sign the picks was not pressed -> the kept picks' review comes back, one stage behind, every pick still in it
 
-WHEN press the header X, Leave — your picks are kept -> the flow is left for where the review was opened from AND NEVER anything is signed AND every pick stays kept AND the Key backup group's row reopens the review
+WHEN press the header X, Leave — your picks are kept GIVEN Sign the picks was not pressed -> the flow is left for where the review was opened from AND NEVER anything is signed AND every pick stays kept AND the Key backup group's row reopens the review
 
 WHEN tap the header's ? -> the signing text opens
+
+WHEN press Sign the picks -> Back reads Close in its place from the press itself AND the header X is named Close AND NEVER Close dims
+
+WHEN press Close, the header back arrow, the header X or the system's Back GIVEN Sign the picks was pressed and has not answered -> the seal leaves for where the review was opened from AND the batch goes on as a whole AND each target's row reads Signing… under its face until the batch answers AND NEVER the act is cancelled
+
+WHEN the signing does not go through GIVEN the seal was closed while it signed -> nothing is signed AND every pick stays kept AND the Key backup group's row reopens the review AND NEVER the snackbar carries the failure

@@ -48,10 +48,18 @@
    REGISTERED under the `postEdit` prefix (seam 248), `EditComposeBody`'s
    names; the clip's block is `video`, the cover's `cover` (its door `add` and
    `note` at rest, the chosen face `thumb` and `change` once one is chosen),
-   and the count's two readings are the `upload` chip's copies of `acts`. */
+   and the count's two readings are the `upload` chip's copies of `acts`. 
+   THE `signing` CHIP DRAWS THE EDIT CLOSED ON (round 37, jakob 2026-11-11:
+   Close on every edit). From the press on `Sign the edit` the act is done:
+   past 200ms the commit reads `Signing the edit…`, and the header's X —
+   named `Close` from the press — and its arrow close the edit while it goes
+   on; the edited card carries the wait and the answer (`SigningAfterClose`). */
 export const NODE = "postEdit";
-export const PROPS = { upload: { editor: "enum", options: ["none", "uploading"], default: "none" } };
-export const VALS = `doorShown: this.props.upload === "uploading" ? "none" : "flex", coverShown: this.props.upload === "uploading" ? "flex" : "none", gateShown: this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex"`;
+export const PROPS = {
+  upload: { editor: "enum", options: ["none", "uploading"], default: "none" },
+  signing: { editor: "enum", options: ["none", "signing"], default: "none" },
+};
+export const VALS = `signRestShown: this.props.signing === "signing" ? "none" : "block", signBusyShown: this.props.signing === "signing" ? "block" : "none", doorShown: this.props.upload === "uploading" ? "none" : "flex", coverShown: this.props.upload === "uploading" ? "flex" : "none", gateShown: this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex"`;
 
 export function Screen() {
   return (
@@ -130,7 +138,12 @@ export function Screen() {
         <div style={{ display: "{{gateShown}}", flexDirection: "column" }} {...chipCopy("upload", "uploading")}>
           <ActsFooter count={4} node="acts" />
         </div>
-        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+        <div style={{ display: "{{signRestShown}}" }}>
+          <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+        </div>
+        <div style={{ display: "{{signBusyShown}}" }}>
+          <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
+        </div>
       </div>
     </>
   );

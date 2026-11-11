@@ -1,6 +1,8 @@
 # JoinErrors · `spec:design:behavior-join-errors`
 
-WHEN press Create account GIVEN the handle is taken and the password is shorter than 12 characters -> the Handle field's line reads That handle is taken. AND the Password field's line reads A password is at least 12 characters. AND NEVER the Email field changes
+WHEN press Create account GIVEN the handle is taken and the password is shorter than 12 characters and Repeat password differs from it -> the Handle field's line reads That handle is taken. AND the Password field's line reads A password is at least 12 characters. AND the Repeat password field's line reads The two passwords don't match. AND NEVER the Email field changes
+
+ALWAYS each field is checked on its own at the press, so Repeat password's mismatch line stands beside Password's own line
 
 ALWAYS each errored field takes M3's error state, its outline and its label in the error colour, with its line in place of its hint
 
@@ -10,9 +12,13 @@ ALWAYS the fields keep what was typed through the refusal
 
 WHEN typing in the Password field GIVEN it carries its error line -> the field re-checks the length as the text changes AND the line goes once the password reaches 12 characters AND the hint At least 12 characters. returns
 
+WHEN typing in Password or Repeat password GIVEN Repeat password carries The two passwords don't match. -> the line re-checks as the text changes AND it goes once the two passwords match AND NEVER a hint takes its place
+
 WHEN typing in the Handle field GIVEN it carries That handle is taken. -> the line stands AND NEVER it goes before the next press of Create account
 
 WHEN typing in a field that carries no error line -> NEVER the field turns to its error state before the next press of Create account
+
+ALWAYS the heading names the inviter by the whole display name, else by the handle with its @, and wraps as running text, the name never cut
 
 ALWAYS the header's arrow reads a plain Back, with no origin noun
 
@@ -22,9 +28,9 @@ WHEN press the header's back arrow GIVEN the link was held from the arrival -> t
 
 WHEN press the header's back arrow GIVEN the form opened over the signed-in state -> the layer closes onto the signed-in state, untouched
 
-WHEN press the password's reveal control GIVEN the password is hidden -> the password shows AND the control is named Hide password
+WHEN press a password field's reveal control GIVEN its password is hidden -> that field's password shows AND its control is named Hide password
 
-WHEN press the password's reveal control GIVEN the password shows -> the password hides AND the control is named Show password
+WHEN press a password field's reveal control GIVEN its password shows -> that field's password hides AND its control is named Show password
 
 WHEN press Create account -> Create account refuses a second press until the registration answers AND NEVER Create account dims
 
@@ -52,6 +58,6 @@ ALWAYS the line By creating your account you accept the Terms. stands directly a
 
 ALWAYS the notice How CoGra handles your data: the Privacy Policy. stands at the form's foot, its own line with Privacy Policy a door, and never inside the accept sentence
 
-ALWAYS Create account stands disabled with Waiting for a handle, your email and a password right above it GIVEN Handle, Email or Password is empty
+ALWAYS Create account stands disabled with Waiting for a handle, your email and a password right above it GIVEN Handle, Email, Password or Repeat password is empty
 
-WHEN all three fields hold a character -> Create account wakes AND the line Waiting for a handle, your email and a password goes
+WHEN all four fields hold a character -> Create account wakes AND the line Waiting for a handle, your email and a password goes
