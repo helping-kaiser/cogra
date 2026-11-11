@@ -115,13 +115,12 @@ export function HeaderBar({
             </button>
           )}
           {/* The stage's name, then the screen's one "?" — `WizardHeader`'s
-              own pair, in that order. The label takes the role's size and
-              leading only: the master sets no weight, so it is the ground's. */}
+              own pair, in that order. The label is label-small whole. */}
           {stageLabel ? (
             <span className="flex items-center gap-2">
               <span
                 {...testAttributes(part(node, "stage"), "header-stage")}
-                className="whitespace-nowrap text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] text-on-surface-variant"
+                className="whitespace-nowrap text-label-small text-on-surface-variant"
               >
                 {stageLabel}
               </span>

@@ -26,7 +26,6 @@ import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-nod
 import { BottomSheet, SHEET_RAISED } from "../bottom-sheet";
 import { InlineAction } from "../inline-action";
 import { PillButton } from "../pill-button";
-import { LABEL_SMALL_PLAIN } from "../plain-type";
 import { MediaThumb } from "./media-thumb";
 import type { Crop } from "../media/crop";
 
@@ -237,10 +236,10 @@ export function PickedSheet({
           );
         })}
       </ul>
-      {/* PickedSheet.jsx: the footnote at the body's weight, then the Done row
+      {/* PickedSheet.jsx: the footnote in label-small whole, then the Done row
           on its own 8 · 16 · 8 inset — 16 from the sheet's edge, not the
           column's 24. */}
-      <p className={`m-0 px-6 pt-3 ${LABEL_SMALL_PLAIN} text-on-surface-variant`} {...testAttributes(part(node, "note"))}>
+      <p className="m-0 px-6 pt-3 text-label-small text-on-surface-variant" {...testAttributes(part(node, "note"))}>
         The first one is the cover.
       </p>
       <div className="flex justify-end px-4 py-2">

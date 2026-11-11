@@ -19,7 +19,6 @@ import { useId, useRef, useState } from "react";
 
 import { InlineAction } from "@/lib/ui2/inline-action";
 import { PillButton } from "@/lib/ui2/pill-button";
-import { LABEL_SMALL_PLAIN } from "@/lib/ui2/plain-type";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { RefusedFileRow } from "@/lib/ui2/compose/refused-file";
 import { countReading, FieldCount } from "@/lib/ui2/text-field";
@@ -295,7 +294,7 @@ function MediaBody({
 
       {assets.length > 0 && (
         // `PickTray.jsx`: the count in label-small, `Show all` as the small
-        // InlineAction, the caption at the body's weight.
+        // InlineAction, the caption label-small whole.
         <div className="flex flex-none flex-col gap-1.5 border-b border-outline-variant px-6 pb-3 pt-1">
           {/* NO "Show all" ON A CLIP (ComposePickVideo): that sheet reorders a
               set and names its cover, and one clip is neither — its cover is
@@ -364,7 +363,7 @@ function MediaBody({
                 picture tiles; past that the tiles stand alone. A staged clip
                 is one tile, so its caption always stands. */}
             {(holdsVideo || assets.length <= CAPTION_ROOM) && (
-            <span data-testid="wizard-tray-caption" className={`min-w-0 flex-1 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
+            <span data-testid="wizard-tray-caption" className={`min-w-0 flex-1 text-label-small text-on-surface-variant`}>
               {!holdsVideo
                 ? "The first one is the cover."
                 : // THE CAPTION TAKES THE SETTLED FACT once the cover step has
@@ -467,7 +466,7 @@ function MediaBody({
               >
                 Choose from your files
               </PillButton>
-              <span className={`${LABEL_SMALL_PLAIN} text-on-surface-variant`}>…or drop them here.</span>
+              <span className={`text-label-small text-on-surface-variant`}>…or drop them here.</span>
             </>
           )}
           {error && (
