@@ -80,8 +80,15 @@ class CropState internal constructor(initial: CropFraming) {
      */
     internal var view: CropImageView? = null
 
-    /** The window's shape the attached view has already been pointed at. */
-    private var framedAspect: CropAspect? = null
+    /**
+     * The window's shape the attached view has already been pointed at.
+     *
+     * Snapshot state because [zoom] reads it first: a plain field read
+     * while it was still null left the slider's composition depending on
+     * nothing at all, so it never recomposed and stood at 1× however far
+     * a pinch or a drag had zoomed.
+     */
+    private var framedAspect: CropAspect? by mutableStateOf(null)
 
     /**
      * A framing that outlived its view and is waiting for the picture to
