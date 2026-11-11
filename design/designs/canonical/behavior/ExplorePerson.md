@@ -8,9 +8,9 @@ ALWAYS explore.profilesDoor reads See all profiles and closes the people section
 
 ALWAYS no explore.profilesDoor stands GIVEN three people or fewer match
 
-ALWAYS the content after the people section stands by the search's own order, its full matches first and its seam where the order is Ranked, and never under a caption of its own
+ALWAYS the content after the people section stands by the search's own order, its full matches first and its seam where the order is Ranked, under explore.contentLabel reading Posts and comments
 
-ALWAYS the topics stand as their own section between the people and the content, under no caption of their own
+ALWAYS the topics stand as their own section between the people and the content, under explore.tagsLabel reading Tags
 
 ALWAYS explore.seam stands once in each section that has an unscored rest, keyed by the section, the people's before explore.profilesDoor, GIVEN the order is Ranked
 

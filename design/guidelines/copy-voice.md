@@ -4243,6 +4243,12 @@ names and titles, never bodies — fewer words reach further.`
 (`ExploreNone`); and the results' "?", named `How searching works`, over
 the *Searching* dialog.
 
+**The result sections' captions** (jakob 2026-11-11, *blessed*): every
+section of an answer stands under its own quiet caption, `SectionLabel`'s,
+the one `Profiles` already wore — `Profiles` · `Tags` · `Posts and
+comments`, in the answer's order (`ExplorePerson`, `ExploreSearch`,
+`ExploreFilter`).
+
 ## The search-scope line
 
 From backlog item 105's ruling (readme §13, the indirect kinds are

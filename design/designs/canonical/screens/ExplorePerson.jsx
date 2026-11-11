@@ -50,8 +50,12 @@
    its head with its own seam, keyed by the section: Salome Ward stands past
    the people's seam, unranked and bare-edged, before the door; `saltcrust`
    past the topics'; the 2024 rubbing past the content's, wearing its date.
-   The topics section takes no caption, as the content takes none: the
-   people's door is the one section end the reader acts on. */
+
+   EVERY SECTION IS CAPTIONED (jakob 2026-11-11, Q2): `Profiles`, `Tags`,
+   `Posts and comments`, each the people's own `SectionLabel`, so the last
+   tag and the first post no longer run together. The captions are
+   `tagsLabel` and `contentLabel` beside `profilesLabel`; the people's door
+   stays the one section end the reader acts on. */
 export const NODE = "explore";
 export function Screen() {
   return (
@@ -71,9 +75,11 @@ export function Screen() {
             See all profiles
           </Button>
         </div>
+        <SectionLabel node="tagsLabel">Tags</SectionLabel>
         <ReferenceRow kind="topic" name="saltmaps" rank="3.40" onOpen={() => {}} node="result" nodeKey="4" />
         <Seam node="seam" nodeKey="topics" />
         <ReferenceRow kind="topic" name="saltcrust" onOpen={() => {}} node="result" nodeKey="5" />
+        <SectionLabel node="contentLabel">Posts and comments</SectionLabel>
         <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="6" />
         <Seam node="seam" nodeKey="content" />
         <ReferenceRow kind="post" name="First try at a rubbing" value="06.09.2024" onOpen={() => {}} node="result" nodeKey="7" />
