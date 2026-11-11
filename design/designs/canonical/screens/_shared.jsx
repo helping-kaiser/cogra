@@ -1890,20 +1890,28 @@ function ReplyPadBody() {
    label is singular here — it names the EDGE staged rather than the block it
    sits in (copy-voice), and one edge is a reference. `fault` is the seal's
    unlanded-citation line, `citedOneRow`'s: the row reads back as before and
-   the line stands under its value (seam 254 item 11). */
+   the line stands under its value (seam 254 item 11).
+
+   THE NAME STANDS OVER ITS PAIR (round 30, jakob 2026-11-11, Q8 (c)): the
+   row keeps its singular label and its ×, and under the name it reads the
+   pair the citation signs, `citedOneRow`'s two lines — the gentle default
+   the post seal's one citation draws. */
 const replyCitedRow = (fault) => ({
   label: "Reference",
   countNoun: "citation",
   value: (
     <span style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
-      <button
-        type="button"
-        aria-label={`${REPLY_CITATION} — set how it relates`}
-        className="cg-state cg-focus"
-        style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
-      >
-        {REPLY_CITATION} — @juno
-      </button>
+      <span style={{ flex: 1, display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
+        <button
+          type="button"
+          aria-label={`${REPLY_CITATION} — set how it relates`}
+          className="cg-state cg-focus"
+          style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
+        >
+          {REPLY_CITATION} — @juno
+        </button>
+        <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
+      </span>
       <button
         type="button"
         aria-label={`Remove ${REPLY_CITATION}`}

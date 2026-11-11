@@ -28,6 +28,8 @@ WHEN tap Discard the reply under the notice This shouldn't have happened -> the 
 
 WHEN the write rule refuses the reply -> nothing is staged or spent AND the notice says the reply is still here AND NEVER Retry appears
 
+ALWAYS the Reference row reads the one staged citation by its name over its pair, its remove control beside it, GIVEN one citation is staged
+
 ALWAYS the References row reads N cited and a bare count of the citations GIVEN two or more citations are staged
 
 WHEN tap the References row GIVEN two or more citations are staged -> the citations sheet opens over the seal
