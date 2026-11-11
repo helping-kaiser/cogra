@@ -1465,9 +1465,6 @@
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
-        "postDetail.threadSheet.commentCard.actionRow.edit": [
-          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
-        ],
         "postDetail.threadSheet.commentCard.actionRow.reply": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
@@ -1631,9 +1628,6 @@
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
-        "postDetail.threadSheet.commentCard.actionRow.edit": [
-          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
-        ],
         "postDetail.threadSheet.commentCard.actionRow.reply": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
@@ -1782,6 +1776,7 @@
         "postDetail.menuSheet.cite": [],
         "postDetail.menuSheet.citedBy": [],
         "postDetail.menuSheet.dragHandle": [],
+        "postDetail.menuSheet.edit": [],
         "postDetail.menuSheet.license": [],
         "postDetail.menuSheet.opinions": [],
         "postDetail.menuSheet.remove": [],
@@ -1795,9 +1790,6 @@
         "postDetail.threadSheet.commentCard.actionRow": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
-          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
-        ],
-        "postDetail.threadSheet.commentCard.actionRow.edit": [
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
         "postDetail.threadSheet.commentCard.actionRow.reply": [
@@ -1977,9 +1969,6 @@
         "postDetail.threadSheet.commentCard.actionRow": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
-          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
-        ],
-        "postDetail.threadSheet.commentCard.actionRow.edit": [
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
         "postDetail.threadSheet.commentCard.actionRow.reply": [
@@ -6621,9 +6610,6 @@
         "history.commentCard.actionRow": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
-        "history.commentCard.actionRow.edit": [
-          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
-        ],
         "history.commentCard.actionRow.reply": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
@@ -6674,6 +6660,7 @@
         "history.menuSheet.cite": [],
         "history.menuSheet.citedBy": [],
         "history.menuSheet.dragHandle": [],
+        "history.menuSheet.edit": [],
         "history.menuSheet.license": [],
         "history.menuSheet.opinions": [],
         "history.menuSheet.remove": [],
@@ -9855,9 +9842,6 @@
         "profile.comments.commentCard.actionRow": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
-        "profile.comments.commentCard.actionRow.edit": [
-          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
-        ],
         "profile.comments.commentCard.actionRow.reply": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
@@ -9914,6 +9898,7 @@
         "profile.menuSheet.cite": [],
         "profile.menuSheet.citedBy": [],
         "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.edit": [],
         "profile.menuSheet.license": [],
         "profile.menuSheet.opinions": [],
         "profile.menuSheet.remove": [],
@@ -9947,9 +9932,6 @@
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
         "profile.comments.commentCard.actionRow": [
-          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
-        ],
-        "profile.comments.commentCard.actionRow.edit": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
         "profile.comments.commentCard.actionRow.reply": [
@@ -12184,9 +12166,6 @@
         "postDetail.threadSheet.commentCard.actionRow": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
           "ffa1b4f3-1efd-4363-9237-3ad8e739b8f5",
-          "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
-        ],
-        "postDetail.threadSheet.commentCard.actionRow.edit": [
           "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220"
         ],
         "postDetail.threadSheet.commentCard.actionRow.reply": [

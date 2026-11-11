@@ -763,14 +763,14 @@
     },
     {
       "name": "edit-your-comment",
-      "description": "Edit on your own comment opens the edit surface; the signed edit settles back into the thread it belongs to.",
+      "description": "Edit in your own comment's menu opens the edit surface; the signed edit settles back into the thread it belongs to.",
       "status": "resolved",
       "steps": [
-        "start · ReplyMedia · 6 «Edit (own comment)» → CommentEdit",
+        "start · CommentMenuOwn · 8 «Edit» → CommentEdit — the menu closes and the comment's edit opens over the thread (round 41 — Edit is a row in the own comment's menu, never a button on the card)",
         "end · CommentEdit · 12 «Sign the edit» → ReplySettled — signed — the thread reopened where it was left, the edit settling on its card"
       ],
       "boards": [
-        "ReplyMedia",
+        "CommentMenuOwn",
         "CommentEdit",
         "ReplySettled"
       ]
@@ -4595,9 +4595,12 @@
     "CommentMenuOwn": {
       "flows": [
         "cite-a-post",
+        "edit-your-comment",
         "remove-your-comment"
       ],
-      "endpoint": []
+      "endpoint": [
+        "edit-your-comment"
+      ]
     },
     "CommentNotFound": {
       "flows": [
@@ -6669,11 +6672,9 @@
     },
     "ReplyMedia": {
       "flows": [
-        "edit-your-comment",
         "remove-your-comment"
       ],
       "endpoint": [
-        "edit-your-comment",
         "remove-your-comment"
       ]
     },

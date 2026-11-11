@@ -6,7 +6,7 @@ ALWAYS Saved is a feed of every saveable kind, each as its own feed card: a post
 
 ALWAYS every card in Saved is the same card the feed draws, fully live, and Saved draws no card of its own
 
-ALWAYS the reader's own comment's card wears Edit in its row, as in the thread, and the reader's own post's menu holds Edit, with Unsave leading it
+ALWAYS the menu of the reader's own post or comment holds Edit, with Unsave leading it, and no card carries an Edit button
 
 ALWAYS Saved stands newest first, by when the reader saved each thing, never by when it was written or seen
 
