@@ -54,12 +54,12 @@ data class CropFraming(
 /**
  * The framing of one picture, and the handle the screen drives it by.
  *
- * The geometry itself belongs to the cropper library: [CropImageView]
- * owns the window, the drag, the pinch and the ratio, and this class is
- * the Compose-side mirror of what it currently holds plus the commands
- * the invisible accessibility route needs. Keeping the arithmetic out of
- * here is the point of adopting a cropper at all — the last two rounds of
- * crop bugs were all in geometry we wrote ourselves.
+ * The one-finger geometry belongs to the cropper library: [CropImageView]
+ * owns the window, the drag, the corner handles and the ratio, and this
+ * class is the Compose-side mirror of what it currently holds plus the
+ * commands the invisible accessibility route, the slider and the pinch
+ * need. The pinch is ours because the library's cannot hold a ratio
+ * ([pinchBy]).
  *
  * [framing] is `rememberSaveable`, so a half-framed crop survives
  * rotation and process death; the view is re-attached to it on the way
@@ -80,8 +80,15 @@ class CropState internal constructor(initial: CropFraming) {
      */
     internal var view: CropImageView? = null
 
-    /** The window's shape the attached view has already been pointed at. */
-    private var framedAspect: CropAspect? = null
+    /**
+     * The window's shape the attached view has already been pointed at.
+     *
+     * Snapshot state because [zoom] reads it first: a plain field read
+     * while it was still null left the slider's composition depending on
+     * nothing at all, so it never recomposed and stood at 1× however far
+     * a pinch or a drag had zoomed.
+     */
+    private var framedAspect: CropAspect? by mutableStateOf(null)
 
     /**
      * A framing that outlived its view and is waiting for the picture to
@@ -132,7 +139,7 @@ class CropState internal constructor(initial: CropFraming) {
      */
     internal fun onWindowChanged(next: CropFraming, pictureRatio: Float) {
         this.pictureRatio = pictureRatio
-        if (!seeded) return
+        if (!seeded || pinching) return
         if (!next.matches(framedAspect, pictureRatio)) return
         framing = next
     }
@@ -148,6 +155,7 @@ class CropState internal constructor(initial: CropFraming) {
      */
     internal fun beginAttach() {
         pendingRestore = framing.takeIf { it != CropFraming.Whole }
+        reshapeFrom = null
         seeded = false
     }
 
@@ -192,6 +200,15 @@ class CropState internal constructor(initial: CropFraming) {
         val ratio = whole.width().toFloat() / whole.height().toFloat()
         pictureRatio = ratio
         holdCeiling(view, whole)
+        val next = restore?.let { carriedAcrossShapes(it, ratio) }
+        reshapeFrom = null
+        if (next != null) {
+            pendingRestore = null
+            seeded = true
+            framing = next
+            view.cropRect = CropWindowMath.rectOf(next, whole)
+            return true
+        }
         if (restore != null && restore.matches(framedAspect, ratio)) {
             pendingRestore = null
             seeded = true
@@ -242,17 +259,24 @@ class CropState internal constructor(initial: CropFraming) {
     }
 
     /**
-     * Points the window at a shape, re-framing against the **original**
-     * whenever the shape actually changed.
+     * Points the window at a shape, and on a real switch **changes only
+     * the window** (ComposeCrop.md: "each picture keeps its scale and its
+     * position AND the shape's frame changes around it AND NEVER the picture
+     * shrinks to fit the new frame"; jakob's hand test 2026-11-11).
      *
-     * The reset is the whole fix: switching Tall to Square used to carry
-     * the tall window's position into the square one, which left the
-     * author somewhere they never chose and no way back to the rest of
-     * the picture (jakob 2026-08-31).
+     * The picture stays where it is on the stage; the new shape's window
+     * keeps the old one's centre and its zoom — the slider does not move —
+     * and is slid back inside the picture only as far as its new shape
+     * forces ([reshaped]). Every part of the picture stays reachable from
+     * there, which is what the earlier reset was protecting.
      */
     internal fun frameTo(view: CropImageView, aspect: CropAspect) {
         val previous = framedAspect
         if (previous == aspect) return
+        // Taken before the library hears of the new shape: its own re-layout
+        // reports a window of that shape, which would otherwise be recorded
+        // over the framing being carried.
+        val kept = framing
         framedAspect = aspect
         view.setAspectRatio(aspect.x, aspect.y)
         // Only a real switch re-frames. The first application is just
@@ -260,24 +284,40 @@ class CropState internal constructor(initial: CropFraming) {
         // resetting there would throw away a framing that survived a
         // rotation — the one thing the saveable state exists to keep.
         if (previous == null) return
-        framing = CropFraming.Whole
-        pendingRestore = null
-        // The new shape opens on its own largest window, never on the
-        // previous shape's. The picture this framing describes is on
-        // screen only once its own window has been placed against it;
-        // before that the view is between pictures, and the re-frame is
-        // the decode's to do against the right bitmap.
-        val present = seeded
-        seeded = false
-        if (present) reopen(view)
+        framing = kept
+        val whole = view.wholeImageRect?.takeIf { it.width() > 0 && it.height() > 0 }
+        if (!seeded || whole == null) {
+            // The view is between pictures: the framing is carried to the
+            // decode, which re-shapes it against the right bitmap.
+            reshapeFrom = previous
+            return
+        }
+        val ratio = whole.width().toFloat() / whole.height().toFloat()
+        holdCeiling(view, whole)
+        moveTo(CropWindowMath.reshaped(kept, previous.ratio, aspect.ratio, ratio))
     }
 
     /**
-     * Puts the window back to the whole picture at the current ratio.
-     *
-     * This is what a shape switch runs: the new shape re-frames against
-     * the **original**, never against whatever the previous shape's
-     * window happened to be (jakob 2026-08-31).
+     * The shape a carried framing was made at, when the post's shape moved
+     * on while its picture was off the stage ([frameTo]).
+     */
+    private var reshapeFrom: CropAspect? = null
+
+    /**
+     * A framing carried in from before a shape switch, re-shaped to the
+     * current shape ([CropWindowMath.reshaped]) — or null when there was no
+     * switch, or the framing was never one of the shape it is said to be.
+     */
+    private fun carriedAcrossShapes(restore: CropFraming, pictureRatio: Float): CropFraming? {
+        val from = reshapeFrom ?: return null
+        val to = framedAspect ?: return null
+        if (!restore.matches(from, pictureRatio)) return null
+        return CropWindowMath.reshaped(restore, from.ratio, to.ratio, pictureRatio)
+    }
+
+    /**
+     * Puts the window back to the opening window at the current shape —
+     * TalkBack's `Reset framing`, re-framed against the **original**.
      */
     fun reset() {
         framing = CropFraming.Whole
@@ -341,6 +381,55 @@ class CropState internal constructor(initial: CropFraming) {
             CropFraming(framing.left + dx, framing.top + dy, framing.right + dx, framing.bottom + dy),
         ),
     )
+
+    /**
+     * One step of a two-finger gesture, in the viewport's pixels
+     * ([CropWindowMath.pinched]): the window scales about [centroidX]/
+     * [centroidY] by [zoom] and travels by [panX]/[panY]. The picture is
+     * laid out whole and never zoomed ([CropWindowMath.fitted]), so the
+     * fingers' pixels map onto it by one fixed scale for the whole gesture.
+     */
+    @Suppress("LongParameterList")
+    internal fun pinchBy(centroidX: Float, centroidY: Float, panX: Float, panY: Float, zoom: Float) {
+        val view = view ?: return
+        val fill = fill() ?: return
+        val whole = view.wholeImageRect ?: return
+        if (whole.width() <= 0 || whole.height() <= 0) return
+        val picture = CropWindowMath.fitted(
+            stageWidth = view.width.toFloat(),
+            stageHeight = view.height.toFloat(),
+            pictureRatio = whole.width().toFloat() / whole.height().toFloat(),
+        )
+        val next = CropWindowMath.pinched(framing, fill, picture, centroidX, centroidY, panX, panY, zoom)
+        if (next != framing) moveTo(next)
+    }
+
+    /**
+     * A second finger has landed: from here until every finger is up the
+     * window is the pinch's alone.
+     *
+     * The framing is taken from the window the view is **drawing** — a
+     * second finger can land mid-drag, while the library is still moving
+     * the window and has not yet reported where it is, and starting from
+     * the last reported framing would snap the window back to it. Reports
+     * the view makes while the pinch runs are its own echoes of the
+     * windows the pinch placed, so they are not recorded over it.
+     */
+    internal fun pinchStart() {
+        pinching = true
+        val view = view ?: return
+        val whole = view.wholeImageRect ?: return
+        val rect = view.cropRect ?: return
+        val shown = CropWindowMath.framingOf(rect, whole)
+        if (shown.matches(framedAspect, whole.width().toFloat() / whole.height().toFloat())) framing = shown
+    }
+
+    /** Every finger is up: the view's reports are the author's again. */
+    internal fun pinchEnd() {
+        pinching = false
+    }
+
+    private var pinching = false
 
     /** The window at [scale] of [fill], about [around]'s centre, slid inside the picture. */
     private fun windowAt(fill: CropFraming, scale: Float, around: CropFraming): CropFraming {
@@ -626,6 +715,84 @@ internal object CropWindowMath {
         }
     }
 
+    /**
+     * One step of a two-finger gesture: the window follows the fingers.
+     *
+     * The one-finger drag moves the window where the finger goes, so two
+     * fingers do the same — the window scales about the fingers' centroid
+     * by the step's [zoom] (fingers spreading grow it, closing shrink it)
+     * and travels with the centroid's [panX]/[panY]. [picture] is where
+     * the viewport draws the picture, which is what turns the fingers'
+     * pixels into fractions of it.
+     *
+     * **The size comes from the fill, never from the fingers.** The new
+     * window is [fill] over a scale held between the fill and the ceiling,
+     * so its shape is the fill's — the post's shape — exactly, however the
+     * two fingers sit relative to each other. Taking the fingers' own
+     * horizontal and vertical spread as the window's width and height is
+     * the cropper's multi-touch path, and what made jakob's sliver
+     * (2026-11-11).
+     */
+    @Suppress("LongParameterList")
+    fun pinched(
+        window: CropFraming,
+        fill: CropFraming,
+        picture: ScreenWindow,
+        centroidX: Float,
+        centroidY: Float,
+        panX: Float,
+        panY: Float,
+        zoom: Float,
+    ): CropFraming {
+        if (window.width <= 0f || window.height <= 0f || fill.width <= 0f) return window
+        if (picture.width <= 0f || picture.height <= 0f) return window
+        val step = if (zoom.isFinite() && zoom > 0f) zoom else 1f
+        val perPixelX = 1f / picture.width
+        val perPixelY = 1f / picture.height
+
+        val scale = (fill.width / window.width / step).coerceIn(CROP_ZOOM_MIN, CROP_ZOOM_MAX)
+        val width = fill.width / scale
+        val height = fill.height / scale
+        val factor = width / window.width
+
+        val cx = (centroidX - picture.left) * perPixelX
+        val cy = (centroidY - picture.top) * perPixelY
+        val left = cx - (cx - window.left) * factor + panX * perPixelX
+        val top = cy - (cy - window.top) * factor + panY * perPixelY
+        return slidInside(CropFraming(left, top, left + width, top + height))
+    }
+
+    /**
+     * Where a stage of [stageWidth] × [stageHeight] draws a picture of
+     * [pictureRatio] (width ÷ height) laid out whole and centred — the
+     * cropper's `FIT_CENTER` at zoom 1.
+     */
+    fun fitted(stageWidth: Float, stageHeight: Float, pictureRatio: Float): ScreenWindow {
+        if (stageWidth <= 0f || stageHeight <= 0f || pictureRatio <= 0f) return ScreenWindow(0f, 0f, 0f, 0f)
+        val width = minOf(stageWidth, stageHeight * pictureRatio)
+        val height = width / pictureRatio
+        return ScreenWindow((stageWidth - width) / 2f, (stageHeight - height) / 2f, width, height)
+    }
+
+    /**
+     * A window of shape [from] carried over to shape [to] on a picture of
+     * [pictureRatio] (all width ÷ height): the same centre and the same
+     * zoom — measured against each shape's own fill — slid back inside the
+     * picture only as far as the new shape needs. Only the frame changes
+     * (jakob 2026-11-11).
+     */
+    fun reshaped(window: CropFraming, from: Float, to: Float, pictureRatio: Float): CropFraming {
+        val before = largestWindow(from, pictureRatio)
+        val after = largestWindow(to, pictureRatio)
+        if (window.width <= 0f || before.width <= 0f) return after
+        val zoom = (before.width / window.width).coerceIn(CROP_ZOOM_MIN, CROP_ZOOM_MAX)
+        val width = after.width / zoom
+        val height = after.height / zoom
+        val cx = (window.left + window.right) / 2f
+        val cy = (window.top + window.bottom) / 2f
+        return slidInside(CropFraming(cx - width / 2f, cy - height / 2f, cx + width / 2f, cy + height / 2f))
+    }
+
     /** The window as fractions of the picture it was cut from. */
     fun framingOf(rect: Rect, whole: Rect): CropFraming {
         if (whole.width() <= 0 || whole.height() <= 0) return CropFraming.Whole
@@ -645,6 +812,13 @@ internal object CropWindowMath {
         whole.top + (window.bottom * whole.height()).toInt(),
     )
 }
+
+/**
+ * The window as the viewport draws it, in the viewport's own pixels — the
+ * bridge between where the fingers are and where the window is in the
+ * picture. Plain floats so the gesture arithmetic runs on the JVM.
+ */
+internal data class ScreenWindow(val left: Float, val top: Float, val width: Float, val height: Float)
 
 private fun CropFraming.offsetBy(dx: Float, dy: Float): CropFraming =
     CropFraming(left + dx, top + dy, right + dx, bottom + dy)
