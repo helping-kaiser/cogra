@@ -451,6 +451,23 @@ describe("History — the seen-list as a feed (History.md)", () => {
     expect(screen.getByTestId("history-tag-t1-link")).toHaveAttribute("href", "/topics/saltmaps?from=history");
   });
 
+  it("an_author_chip_opens_the_profile_its_back_arrow_reading_back_to_history", async () => {
+    // ProfileOther.md:73: "ALWAYS the back arrow reads … Back to History from
+    // History" — the chip's door carries the origin (shell.test.tsx keeps
+    // Profile lit on `from=history`).
+    serveHistory(() => page(ALL));
+    render();
+    await screen.findByTestId("history-list");
+    expect(screen.getByTestId(byNode("history.card.authorChip", "p1"))).toHaveAttribute(
+      "href",
+      expect.stringMatching(/^\/u\/[^?]+\?from=history$/),
+    );
+    expect(screen.getByTestId(byNode("history.commentCard.authorChip", "c1"))).toHaveAttribute(
+      "href",
+      expect.stringMatching(/^\/u\/[^?]+\?from=history$/),
+    );
+  });
+
   it("a_tag_card_reaching_the_reader_through_no_one_stands_no_through_line", async () => {
     // History.md:59.
     serveHistory(() => page([TAG]));

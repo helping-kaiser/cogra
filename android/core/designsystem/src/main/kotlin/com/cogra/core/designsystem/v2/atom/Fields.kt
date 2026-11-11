@@ -46,7 +46,6 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
-import com.cogra.core.designsystem.v2.token.TypeTokens
 import kotlin.math.roundToInt
 import androidx.compose.ui.semantics.error as markError
 
@@ -384,9 +383,9 @@ private fun FieldLabelRow(
         if (optional) {
             Text(
                 text = optionalLabel,
-                // `FieldLabel`'s corner: `label-small` by its size and leading
-                // alone, quiet, on the label's baseline.
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                // `FieldLabel`'s corner: `label-small` whole, quiet, on the
+                // label's baseline.
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .alignByBaseline()

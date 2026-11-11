@@ -853,11 +853,7 @@ async fn an_opinion_carried_from_the_application_ends_the_borrowing_at_landing(p
         .find(|w| w.proposal.body.family == Family::Registration)
         .expect("the admission Registration");
     sign(&pool, &standin, &boundary, &key, registration.id).await;
-    standin
-        .close_epoch()
-        .await
-        .expect("closes")
-        .expect("publishes");
+    standin.close_epoch().await.expect("closes");
     api::ingest::ingest_pending(&boundary, &pool, api::ingest::DEFAULT_GC_AFTER_EPOCHS)
         .await
         .expect("ingests");

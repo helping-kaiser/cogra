@@ -651,7 +651,7 @@ export function ProfileScreen({
                       data-testid="profile.identity.actionRow.message"
                       onClick={() =>
                         phase === "signedIn"
-                          ? router.push(`/chats?from=${encodeURIComponent(personOrigin(profile.handle))}`)
+                          ? router.push(`/chats?from=${encodeURIComponent(personOrigin(profile.handle, openedFrom))}`)
                           : setJoinOpen(true)
                       }
                       className={`${buttonClassName({ variant: "outline" })} flex-none`}

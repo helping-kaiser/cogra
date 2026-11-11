@@ -99,6 +99,82 @@ function sameArea(a: CropArea | null, b: CropArea | null): boolean {
   return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
 }
 
+/** A width and a height — CSS pixels for the frame, the source's own for a picture. */
+export type Size = { readonly width: number; readonly height: number };
+
+/**
+ * The picture as the frame lays it at 1× — react-easy-crop 6.2.4
+ * `computeSizes`, `objectFit: "contain"`: fitted whole into the box, and never
+ * scaled past its own pixels (a picture smaller than the box stands at its own
+ * size).
+ */
+export function fittedPicture(source: Size, box: Size): Size {
+  if (source.width <= box.width && source.height <= box.height) return source;
+  const aspect = source.width / source.height;
+  return box.width / box.height > aspect
+    ? { width: box.height * aspect, height: box.height }
+    : { width: box.width, height: box.width / aspect };
+}
+
+/**
+ * The cut — the library's `getCropSize`: the largest rectangle of the shape's
+ * ratio inside both the fitted picture and the box.
+ */
+export function cutOf(picture: Size, box: Size, ratio: number): Size {
+  const width = Math.min(picture.width, box.width);
+  const height = Math.min(picture.height, box.height);
+  return width > height * ratio ? { width: height * ratio, height } : { width, height: width / ratio };
+}
+
+/**
+ * The source's own extent, read back off the measured rectangle: the same cut
+ * in source pixels and as a share of the picture (`areaPercent`'s note above).
+ * Null until the frame has measured the picture.
+ */
+export function sourceOf(crop: Crop): Size | null {
+  const { area, areaPercent } = crop;
+  if (!usableArea(area) || !usableArea(areaPercent)) return null;
+  return { width: (area.width * 100) / areaPercent.width, height: (area.height * 100) / areaPercent.height };
+}
+
+/**
+ * The framing a picture keeps when the post's shape changes from ratio `from`
+ * to ratio `to`: the shape changes around the picture, never the picture.
+ *
+ * WHY THE ZOOM MOVES. A post's viewport takes the shape's own ratio at the
+ * frame's full width, and the library lays the picture at 1× to fit that box —
+ * so at an unchanged zoom a wide box draws a portrait picture at less than
+ * half the size a tall one does (hand test 2026-11-11: "when swapping from tall
+ * to square or wide the image shrinks"). The zoom is rescaled so the picture
+ * stands at the size it stood, and the offset — the picture's centre from the
+ * box's, in CSS pixels — stays, so the new shape is centred on what the old
+ * one was.
+ *
+ * ONLY THE CROP'S OWN BOUNDS MOVE THEM (ComposeCrop.md:29 — never below the
+ * fill or past about 4×): the zoom is held between the two, and the offset
+ * where an edge of the picture meets the cut's (the library's
+ * `restrictPosition`), each by the least that bound asks.
+ *
+ * The measured rectangle always goes: it is the old shape's (`area` above).
+ * Without a measurement or a frame width there is nothing to keep the picture
+ * at, and the position and zoom stay as they were.
+ */
+export function reshape(crop: Crop, from: number, to: number, frameWidth: number | null): Crop {
+  const kept: Crop = { ...crop, area: null, areaPercent: null };
+  const source = sourceOf(crop);
+  if (source === null || frameWidth === null || !(frameWidth > 0) || from === to) return kept;
+  const box = (ratio: number): Size => ({ width: frameWidth, height: frameWidth / ratio });
+  const before = fittedPicture(source, box(from));
+  const after = fittedPicture(source, box(to));
+  const zoom = clampZoom((clampZoom(crop.zoom) * before.width) / after.width);
+  const cut = cutOf(after, box(to), to);
+  const hold = (offset: number, picture: number, window: number) => {
+    const limit = Math.abs((picture * zoom) / 2 - window / 2);
+    return Math.max(-limit, Math.min(limit, offset));
+  };
+  return { ...kept, zoom, x: hold(crop.x, after.width, cut.width), y: hold(crop.y, after.height, cut.height) };
+}
+
 /**
  * Whether a stored area can still be used to encode.
  *

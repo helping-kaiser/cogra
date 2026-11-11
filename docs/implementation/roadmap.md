@@ -212,7 +212,11 @@ coordinate. The gates' call-sites are real; the real substrate brings
 the real stamps at the swap.
 
 Everywhere else the stand-in follows the contract's rule with its
-numbers. Epochs number from 1, and the acts of each epoch from 1. Every
+numbers. Epochs number from 1, and the acts of each epoch from 1. An
+epoch closes on the stand-in's clock, whether or not anything is
+orderable, and never early when its act budget fills; each package
+publishes its boundary triple — the act budget as target size, a
+minimum duration of 0 and the clock's interval as maximum. Every
 close charges the wall in force and runs one step of the canonical
 interim wall controller (layer1-interface.md §11.8); with no standing
 solve its width input is the constant 1, so θ sits at the reference,

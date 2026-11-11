@@ -60,6 +60,7 @@ import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
 import { buttonClassName } from "./button";
 import { Card } from "./card";
+import { useClampFold } from "./clamp-fold";
 import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { NodeMark } from "./node-mark";
@@ -83,14 +84,11 @@ import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
 import { TopicsLine } from "./topics-line";
 
-/* A LONG COMMENT FOLDS AT TWO LINES under `More` (FeedCommentShapes.md, the
-   caption's precedent); the card is still the door to its thread. A render
-   cannot measure, so the opener is offered on the master's estimate: about
-   half an em to the glyph at `body-medium`, 45 characters to the thread
-   shape's line, which hangs 44px in. */
-const CLAMP_LINES = 2;
-const CHARS_PER_LINE = 45;
-
+/* A LONG COMMENT FOLDS AT TWO LINES under `More` (FeedCommentShapes.md:29,
+   the caption's precedent); the card is still the door to its thread. The
+   master offers the opener on a character estimate because a static render
+   cannot measure; the card measures the clamped words (`clamp-fold.ts`), so a
+   comment that fits its two lines carries no opener. */
 /**
  * An applicant's Reply answers in place (ProfileComments.md:29; the comment
  * foot's twin, staged-surfaces.md): locked, never gone, never the composer.
@@ -309,7 +307,9 @@ export function CommentFeedCard({
   const words = redacted ? "" : (comment.content.value ?? "");
   // A profile's list draws the words whole (`CommentCard`'s `clampLines`,
   // off outside the feed).
-  const folds = !line && words.length > CLAMP_LINES * CHARS_PER_LINE;
+  const clamped = !line && !unfolded;
+  const [holdWords, folds] = useClampFold(clamped, words);
+  const wordsClass = `text-body-medium ${clamped ? "line-clamp-2" : ""}`;
   // In the line shape the words are no door: the card is reached through
   // its pointer, its Reply and its replies line (ProfileComments.md:23-27).
   const wordsDoor = line ? null : place;
@@ -353,10 +353,14 @@ export function CommentFeedCard({
     <>
       {words !== "" &&
         (wordsDoor === null ? (
-          <p className={`text-body-medium ${folds && !unfolded ? "line-clamp-2" : ""}`}>{words}</p>
+          <p ref={holdWords} className={wordsClass}>
+            {words}
+          </p>
         ) : (
           <Link href={wordsDoor} data-testid={`${testId}-link`} className="block">
-            <p className={`text-body-medium ${folds && !unfolded ? "line-clamp-2" : ""}`}>{words}</p>
+            <p ref={holdWords} className={wordsClass}>
+              {words}
+            </p>
           </Link>
         ))}
       {/* A COMMENT IS WORDS FIRST and its pictures join them: inset at the
@@ -393,6 +397,9 @@ export function CommentFeedCard({
             testId={`${testId}-author`}
             node={part(node, "authorChip")}
             here={authorHere}
+            // The chip is a door like the card's others: it carries the
+            // list's origin (ProfileOther.md:73, `Back to Saved from Saved`).
+            from={from}
           />
         )}
         <div className="flex flex-none items-center gap-3">
@@ -500,6 +507,7 @@ export function CommentFeedCard({
           }))}
           references={comment.references.length}
           testIdPrefix={testId}
+          from={from}
         />
       )}
     </>
@@ -517,9 +525,8 @@ export function CommentFeedCard({
           className="cg-state cg-focus cg-hit flex max-w-full items-center gap-2 rounded-small text-left text-on-surface-variant"
         >
           <Icon name={head.kind === "comment" ? "chat_bubble" : "dynamic_feed"} size={14} />
-          {/* The label-small SIZE in the reading weight: the master sets the size
-              and line alone, so the pointer reads quieter than a label. */}
-          <span className="truncate text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)]">
+          {/* label-small whole (`CommentCard.jsx`, round 28). */}
+          <span className="truncate text-label-small">
             On {head.label}
           </span>
         </Link>
@@ -539,13 +546,14 @@ export function CommentFeedCard({
             <span className="flex min-w-0 flex-col">
               <span
                 data-testid={`${testId}-head-title`}
-                // The removal line in the system's voice: the title's size at
-                // the body's weight, in the quiet ink (`CommentCard.jsx`: the
-                // label-large size with weight 400 — the register `Deleted
-                // account` takes). The size alone, so no role brings its 500.
+                // The removal line in the system's voice: label-large whole but
+                // for its weight, the body's 400, in the quiet ink — the master's
+                // one-part override (`CommentCard.jsx`: `fontWeight:
+                // targetDetail.removed ? 400 : …`), the register `Deleted
+                // account` takes.
                 className={`truncate ${
                   head.removed
-                    ? "text-[length:var(--text-label-large)]/[var(--text-label-large--line-height)] text-on-surface-variant"
+                    ? "text-label-large [font-weight:400] text-on-surface-variant"
                     : "text-label-large"
                 }`}
               >

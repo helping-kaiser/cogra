@@ -31,7 +31,8 @@ pub use wall::{DECLARATION, Declaration, REFERENCE_THETA_MICRO, REFERENCE_WALL};
 use std::sync::Arc;
 
 use common::l1::handshake::{
-    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EMPTY_BOUNDARY, EpochPackage,
+    AccountBalance, ApprovalWitness, BoundaryPolicy, BurnSettlement, BurnTicket, EMPTY_BOUNDARY,
+    EpochPackage,
 };
 use common::l1::identifier::ActId;
 use common::l1::{PreSignedProposal, StructuralBody, VerifiedAct};
@@ -66,6 +67,12 @@ pub struct StandInConfig {
     /// burn reads pending until that many epochs have closed, the window
     /// a real realization's settlement depth opens (R4(e)).
     pub settlement_delay_epochs: i64,
+    /// The epoch clock: the maximum duration of an epoch, in seconds
+    /// (`L1_EPOCH_CLOSE_INTERVAL_SECS`, development.md). [`close_loop`]
+    /// closes an epoch on this interval, whatever it holds; `None` runs no
+    /// clock, and an epoch closes only when the host is asked to
+    /// (`l1-dev close`).
+    pub epoch_clock_secs: Option<u64>,
 }
 
 impl StandInConfig {
@@ -77,9 +84,34 @@ impl StandInConfig {
             epoch_target_acts,
             max_payload_bytes,
             settlement_delay_epochs: 0,
+            epoch_clock_secs: None,
         };
         config.check()?;
         Ok(config)
+    }
+
+    /// The same config with the epoch clock running every `secs` seconds —
+    /// checked, since a zero interval is no clock at all.
+    pub fn clocked_every(mut self, secs: u64) -> Result<Self, StandInError> {
+        self.epoch_clock_secs = Some(secs);
+        self.check()?;
+        Ok(self)
+    }
+
+    /// The boundary triple every close publishes (layer1-interface.md §5
+    /// host contract (vi)): the act budget as the target, the declared
+    /// minimum duration, and the clock as the maximum. The stand-in never
+    /// closes early on a filled target — a close that fills it only names
+    /// it as its cause — so the target's minimum-duration arm never fires
+    /// and the minimum is 0.
+    pub fn boundary(&self) -> BoundaryPolicy {
+        BoundaryPolicy {
+            target_acts: self.epoch_target_acts,
+            min_duration_secs: DECLARATION.min_epoch_duration_secs,
+            max_duration_secs: self
+                .epoch_clock_secs
+                .map(|secs| i64::try_from(secs).unwrap_or(i64::MAX)),
+        }
     }
 
     /// The same config with admission burns settling after `epochs`
@@ -112,6 +144,15 @@ impl StandInConfig {
                 self.settlement_delay_epochs
             )));
         }
+        if self
+            .epoch_clock_secs
+            .is_some_and(|secs| secs == 0 || i64::try_from(secs).is_err())
+        {
+            return Err(StandInError::Host(format!(
+                "the epoch clock must be a positive number of seconds, got {:?}",
+                self.epoch_clock_secs
+            )));
+        }
         Ok(())
     }
 }
@@ -122,6 +163,7 @@ impl Default for StandInConfig {
             epoch_target_acts: 10_000,
             max_payload_bytes: 64 * 1024,
             settlement_delay_epochs: 0,
+            epoch_clock_secs: None,
         }
     }
 }
@@ -441,9 +483,10 @@ impl StandIn {
     /// Close the current epoch: fix the authoritative ordered act sequence,
     /// assign causal keys and maturities, consummate θ-debits, publish
     /// (close.rs). A host/dev operation — the seam consumers never call it;
-    /// the real substrate closes on its own clock. Returns the published
-    /// package, or None when nothing was orderable.
-    pub async fn close_epoch(&self) -> Result<Option<EpochPackage>, StandInError> {
+    /// the real substrate closes on its own clock. Every close publishes a
+    /// package: one with nothing orderable is an epoch of zero acts, closed
+    /// on its duration, and its controller steps like any other.
+    pub async fn close_epoch(&self) -> Result<EpochPackage, StandInError> {
         close::close_epoch(self).await
     }
 
@@ -521,7 +564,7 @@ pub trait DevSubstrate {
     /// Close the current epoch, standing in for the substrate's own clock.
     fn close_epoch(
         &self,
-    ) -> impl std::future::Future<Output = Result<Option<EpochPackage>, StandInError>> + Send;
+    ) -> impl std::future::Future<Output = Result<EpochPackage, StandInError>> + Send;
 
     /// Read back a sealed act, so an interrupted bootstrap can resume.
     fn sealed_act(
@@ -535,7 +578,7 @@ impl DevSubstrate for StandIn {
         StandIn::credit_burn(self, address, amount_micro).await
     }
 
-    async fn close_epoch(&self) -> Result<Option<EpochPackage>, StandInError> {
+    async fn close_epoch(&self) -> Result<EpochPackage, StandInError> {
         StandIn::close_epoch(self).await
     }
 
@@ -544,23 +587,31 @@ impl DevSubstrate for StandIn {
     }
 }
 
-/// The dev clock: close an epoch on a fixed interval, playing the real
-/// substrate closing on its own clock. Spawned by the API host when the
-/// interval is configured (development.md); an idle tick publishes
-/// nothing, and manual `l1-dev close` stays available for deterministic
-/// tests.
-pub async fn close_loop(standin: StandIn, interval_secs: u64) {
+/// The epoch clock: close an epoch every `epoch_clock_secs`, playing the
+/// real substrate closing on its own clock (layer1-interface.md §11.6: an
+/// epoch closes when its maximum duration has elapsed, whatever it holds).
+/// Spawned by the API host when the clock is configured (development.md);
+/// an idle tick publishes an epoch of zero acts. A config with no clock
+/// has nothing to run, and the loop returns. Manual `l1-dev close` stays
+/// available for deterministic tests.
+pub async fn close_loop(standin: StandIn) {
+    let Some(interval_secs) = standin.config().epoch_clock_secs else {
+        tracing::warn!("the epoch clock was started with no interval configured");
+        return;
+    };
     let mut ticker = tokio::time::interval(std::time::Duration::from_secs(interval_secs));
     ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     loop {
         ticker.tick().await;
         match standin.close_epoch().await {
-            Ok(Some(package)) => tracing::info!(
+            Ok(package) if package.records.is_empty() => {
+                tracing::debug!(epoch = package.epoch, "clock closed an empty epoch")
+            }
+            Ok(package) => tracing::info!(
                 epoch = package.epoch,
                 records = package.records.len(),
                 "interval close published an epoch"
             ),
-            Ok(None) => {}
             Err(e) => tracing::error!(error = %e, "interval close failed; will retry"),
         }
     }

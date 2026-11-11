@@ -70,7 +70,6 @@ import com.cogra.core.designsystem.v2.compose.licenseSummary
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
-import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
@@ -552,7 +551,7 @@ private fun ActsTotal(acts: Int, slow: Boolean) {
         if (note != null) {
             Text(
                 text = note,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                style = MaterialTheme.typography.labelSmall,
                 color = if (slow) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .testTag(if (slow) "wizard_seal_slow" else "wizard_seal_note")
@@ -576,9 +575,8 @@ private fun ActsCount(count: Int, noun: String) {
     val spoken = actsCountReading(count, noun)
     Text(
         text = "$count",
-        // `ActsCard.jsx` COUNT: label-small's size, leading and tracking, at
-        // the ground's weight.
-        style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+        // `ActsCard.jsx` COUNT: label-small whole.
+        style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.semantics { contentDescription = spoken },
     )
