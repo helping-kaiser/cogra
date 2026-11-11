@@ -28,6 +28,7 @@ use super::types::{
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
+use crate::ratelimit::{self, RateLimitConfig};
 use crate::search::{self, IndexKind, ScopedKind};
 
 /// Connectivity report for the API process and its store.
@@ -101,7 +102,11 @@ impl Query {
             .ok_or_else(|| super::faults::Fault::new("invite link without inviter"))?;
         Ok(Some(InviteLinkCheck {
             usable: store::invite_link_usable(pool, id).await?,
-            inviter_handle: inviter.handle,
+            inviter_handle: inviter.handle.clone(),
+            inviter: Some(Actor::User(User {
+                identity: inviter,
+                viewer_session: None,
+            })),
             expires_at: link.expires_at,
         }))
     }
@@ -153,6 +158,31 @@ impl Query {
                     new_email: change.new_email,
                 }),
         )
+    }
+
+    /// Anonymous check of a password-reset link, so the app opens the
+    /// expired-link screen rather than a form that can only fail. True
+    /// while the link is live — the token known, unused and unexpired —
+    /// the predicate `confirmPasswordReset` consumes it under.
+    /// It reads and never writes: nothing is consumed. Unknown, malformed,
+    /// used and expired all answer false alike, and the answer carries
+    /// nothing about the account the link belongs to. Spends the per-IP
+    /// token-confirmation budget, a tripped one answering RATE_LIMITED.
+    async fn password_reset_link_check(
+        &self,
+        ctx: &Context<'_>,
+        token: String,
+    ) -> async_graphql::Result<bool> {
+        let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        super::mutation::guard_window(
+            ctx,
+            ratelimit::scope::CONFIRM_IP,
+            &super::mutation::request_ip(ctx)?,
+            limits.confirm_ip,
+        )
+        .await?;
+        Ok(store::password_reset_live(pool, &crate::auth::hash_of(&token)).await?)
     }
 
     /// The viewer's own account, resolved from the request's auth token.

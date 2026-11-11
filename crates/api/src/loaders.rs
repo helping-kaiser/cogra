@@ -286,16 +286,18 @@ impl Loader<String> for SeveringRecordLoader {
 }
 
 /// What a record did beyond its family (`Record.act`), keyed on the record
-/// identifier: every record of a page asks once. The three readings are
-/// three independent reads — the mirror's genesis shape, the stance
-/// bundles a walk-back is read off, the application ledger's landing
-/// vouches — run side by side for the whole batch. A record none of them
-/// names is absent, which the resolver reads as ORDINARY.
+/// identifier: every record of a page asks once. The four readings are
+/// four independent reads — the mirror's genesis shape, the stance
+/// bundles a walk-back is read off, the citation bundles a withdrawal is
+/// read off, the application ledger's landing vouches — run side by side
+/// for the whole batch. A record none of them names is absent, which the
+/// resolver reads as ORDINARY.
 ///
 /// The precedence is `RecordAct`'s declared order. The readings cannot
 /// actually meet — a genesis is a minting act or a Registration, a
-/// walk-back and a vouch are Opinions or Affinities — but the order is the
-/// contract's, so it is applied rather than assumed.
+/// walk-back and a vouch are Opinions or Affinities, a withdrawal a
+/// Reference — but the order is the contract's, so it is applied rather
+/// than assumed.
 pub struct RecordActLoader(PgPool);
 
 impl Loader<String> for RecordActLoader {
@@ -303,7 +305,7 @@ impl Loader<String> for RecordActLoader {
     type Error = LoadError;
 
     async fn load(&self, keys: &[String]) -> Result<HashMap<String, RecordAct>, LoadError> {
-        let (genesis, walked_back, vouches) = tokio::try_join!(
+        let (genesis, walked_back, withdrawn, vouches) = tokio::try_join!(
             async {
                 postgres_store::mirror::genesis_records(&self.0, keys)
                     .await
@@ -311,6 +313,11 @@ impl Loader<String> for RecordActLoader {
             },
             async {
                 postgres_store::stance::walk_back_records(&self.0, keys)
+                    .await
+                    .map_err(LoadError::from_display)
+            },
+            async {
+                postgres_store::references::withdrawal_records(&self.0, keys)
                     .await
                     .map_err(LoadError::from_display)
             },
@@ -327,6 +334,8 @@ impl Loader<String> for RecordActLoader {
                     RecordAct::Genesis
                 } else if walked_back.contains(id) {
                     RecordAct::WalkBack
+                } else if withdrawn.contains(id) {
+                    RecordAct::Withdrawal
                 } else if vouches.contains(id) {
                     RecordAct::Vouch
                 } else {

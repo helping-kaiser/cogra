@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.cogra.app.BuildConfig
+import com.cogra.domain.InviterView
 import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
 import com.cogra.feature.auth.RestoreRoute
@@ -248,7 +249,7 @@ private fun ShellScope.InviteEntryDestination(route: InviteEntry) {
         arrivalInviteId = route.inviteId,
         openedInvalid = route.invalid,
         onJoin = { id, inviter ->
-            navController.navigate(Join(id, inviter)) {
+            navController.navigate(Join(id, inviter.handle, inviter.name, inviter.avatarUrl)) {
                 if (route.inviteId != null) popUpTo<InviteEntry> { inclusive = true }
             }
         },
@@ -277,7 +278,7 @@ private fun ShellScope.JoinDestination(route: Join) {
     val overSignedIn = remember { signedIn == true }
     JoinRoute(
         inviteId = route.inviteId,
-        inviterHandle = route.inviterHandle,
+        inviter = InviterView(route.inviterHandle, route.inviterName, route.inviterAvatarUrl),
         onBack = {
             if (navController.previousBackStackEntry != null) {
                 navController.popBackStack()

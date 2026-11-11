@@ -1328,6 +1328,12 @@ type InviteLinkCheck {
 	The issuing actor's handle.
 	"""
 	inviterHandle: String!
+	"""
+	The issuing actor as a public profile — the face and the name the
+	registration form stands under; its handle is `inviterHandle`'s
+	value. Nullable as every actor reference is (`Application.approver`).
+	"""
+	inviter: Actor
 	expiresAt: DateTime!
 }
 
@@ -3212,6 +3218,17 @@ type Query {
 	"""
 	emailChangeLinkCheck(token: String!): EmailChangeLinkCheck
 	"""
+	Anonymous check of a password-reset link, so the app opens the
+	expired-link screen rather than a form that can only fail. True
+	while the link is live — the token known, unused and unexpired —
+	the predicate `confirmPasswordReset` consumes it under.
+	It reads and never writes: nothing is consumed. Unknown, malformed,
+	used and expired all answer false alike, and the answer carries
+	nothing about the account the link belongs to. Spends the per-IP
+	token-confirmation budget, a tripped one answering RATE_LIMITED.
+	"""
+	passwordResetLinkCheck(token: String!): Boolean!
+	"""
 	The viewer's own account, resolved from the request's auth token.
 	Null when the request is unauthenticated.
 	"""
@@ -3559,7 +3576,8 @@ type Record {
 	family: RecordFamily!
 	"""
 	What the record did beyond its family (`RecordAct`): a genesis, a
-	walk-back, the vouch that landed an account, or ordinary.
+	walk-back, a citation withdrawal, the vouch that landed an account,
+	or ordinary.
 	"""
 	act: RecordAct!
 	"""
@@ -3587,6 +3605,14 @@ type Record {
 	The raw L1 identifier of `terminal`; null on binary families.
 	"""
 	terminalId: String
+	"""
+	The topic the record ends at: the Type its terminal leg reaches —
+	a Tag's topic — or, on a binary family, its target's — an Opinion
+	or Affinity toward a topic. A Type is a commons, not a node CoGra
+	carries a row for, so `terminal` and `target` cannot type it; this
+	does. Null when the record's far end is no Type.
+	"""
+	topic: Hashtag
 	"""
 	The authored directed parameter, as the actor's leg renders it.
 	"""
@@ -3684,6 +3710,13 @@ enum RecordAct {
 	"""
 	WALK_BACK
 	"""
+	A record a citation withdrawal signed: every counter-record that
+	netted its author's citation bundle — (author, citing artifact,
+	target) — back to `(0, 0)` from a standing that said something,
+	recognised by the same shape as a walk-back's batch.
+	"""
+	WITHDRAWAL
+	"""
 	The Opinion that vouched someone in: of an account's approval
 	vouches, the first to land, which landed the account — the record
 	behind `User.invitedBy`. Any later vouch-Opinion is ORDINARY.
@@ -3717,6 +3750,18 @@ type RecordConnection {
 	GraphQL's `Int` is 32-bit, and saturating beats failing the read.
 	"""
 	totalCount: Int
+	"""
+	How many bundles this filter's records fold into, across every
+	page: one author's records in one family toward one target (and,
+	on a hyper-edge, one terminal) are one bundle, however often it was
+	revised — the count a figure of people reads, where `totalCount`
+	counts each revision. A payload-marked record folds through no
+	bundle and counts as its own. Null on a ranking slice's records,
+	which are a reach, not a filter.
+	
+	Saturates at [`i32::MAX`] as `totalCount` does.
+	"""
+	bundleCount: Int
 }
 
 """

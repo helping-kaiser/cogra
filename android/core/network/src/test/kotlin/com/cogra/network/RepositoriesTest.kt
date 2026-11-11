@@ -7,6 +7,7 @@ package com.cogra.network
 import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.InviterView
 import com.cogra.domain.Outcome
 import com.cogra.domain.WriteState
 import com.cogra.domain.identity.EndLocalSession
@@ -70,6 +71,29 @@ class RepositoriesTest {
 
         enqueue("""{"data":{"inviteLinkCheck":null}}""")
         assertThat((onboarding.checkInviteLink("id") as Outcome.Success).value).isNull()
+    }
+
+    // Join.md:9 — the face and the name over the form are the inviter's: the
+    // written name, else the handle, and the picture unless it is redacted.
+    @Test
+    fun inviteCheckCarriesTheInvitersFaceAndName() = runTest {
+        val onboarding = OnboardingRepositoryImpl(client, guard())
+        fun answer(name: String, avatarStatus: String) = enqueue(
+            """{"data":{"inviteLinkCheck":{"__typename":"InviteLinkCheck",
+               "usable":true,"inviterHandle":"mira","expiresAt":"2027-01-01T00:00:00+00:00",
+               "inviter":{"__typename":"User","handle":"mira",
+                 "displayName":{"__typename":"ModeratedText","value":"$name"},
+                 "avatar":{"__typename":"MediaAttachment","url":"https://media.test/mira.webp",
+                   "status":"$avatarStatus"}}}}}""",
+        )
+        answer("Mira Voss", "NORMAL")
+        val named = checkNotNull((onboarding.checkInviteLink("id") as Outcome.Success).value)
+        assertThat(named.inviter).isEqualTo(InviterView("mira", "Mira Voss", "https://media.test/mira.webp"))
+
+        answer(" ", "REDACTED")
+        val bare = checkNotNull((onboarding.checkInviteLink("id") as Outcome.Success).value)
+        assertThat(bare.inviter).isEqualTo(InviterView("mira"))
+        assertThat(server.takeRequest().body.readUtf8()).contains("inviter")
     }
 
     @Test

@@ -767,7 +767,8 @@ impl Record {
     }
 
     /// What the record did beyond its family (`RecordAct`): a genesis, a
-    /// walk-back, the vouch that landed an account, or ordinary.
+    /// walk-back, a citation withdrawal, the vouch that landed an account,
+    /// or ordinary.
     async fn act(&self, ctx: &Context<'_>) -> async_graphql::Result<RecordAct> {
         Ok(ctx
             .data::<DataLoader<crate::loaders::RecordActLoader>>()?
@@ -817,6 +818,19 @@ impl Record {
     /// The raw L1 identifier of `terminal`; null on binary families.
     async fn terminal_id(&self) -> Option<String> {
         self.0.terminal().map(|leg| leg.target.clone())
+    }
+
+    /// The topic the record ends at: the Type its terminal leg reaches —
+    /// a Tag's topic — or, on a binary family, its target's — an Opinion
+    /// or Affinity toward a topic. A Type is a commons, not a node CoGra
+    /// carries a row for, so `terminal` and `target` cannot type it; this
+    /// does. Null when the record's far end is no Type.
+    async fn topic(&self) -> Option<HashtagType> {
+        let far_end = self.0.terminal().or_else(|| self.0.target())?;
+        match NodeId::parse(&far_end.target) {
+            Ok(NodeId::Name(name)) => Some(HashtagType { name }),
+            _ => None,
+        }
     }
 
     /// The authored directed parameter, as the actor's leg renders it.
@@ -945,6 +959,11 @@ pub enum RecordAct {
     /// that did — the batch the sum before it stages. An empty sign is
     /// never one.
     WalkBack,
+    /// A record a citation withdrawal signed: every counter-record that
+    /// netted its author's citation bundle — (author, citing artifact,
+    /// target) — back to `(0, 0)` from a standing that said something,
+    /// recognised by the same shape as a walk-back's batch.
+    Withdrawal,
     /// The Opinion that vouched someone in: of an account's approval
     /// vouches, the first to land, which landed the account — the record
     /// behind `User.invitedBy`. Any later vouch-Opinion is ORDINARY.
@@ -2466,6 +2485,10 @@ pub struct InviteLinkCheck {
     pub usable: bool,
     /// The issuing actor's handle.
     pub inviter_handle: String,
+    /// The issuing actor as a public profile — the face and the name the
+    /// registration form stands under; its handle is `inviterHandle`'s
+    /// value. Nullable as every actor reference is (`Application.approver`).
+    pub inviter: Option<Actor>,
     pub expires_at: DateTime<Utc>,
 }
 
@@ -5554,6 +5577,28 @@ impl RecordConnectionFields {
             return Ok(Some(0));
         };
         let total = mirror::count_records(pool, filter).await?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+
+    /// How many bundles this filter's records fold into, across every
+    /// page: one author's records in one family toward one target (and,
+    /// on a hyper-edge, one terminal) are one bundle, however often it was
+    /// revised — the count a figure of people reads, where `totalCount`
+    /// counts each revision. A payload-marked record folds through no
+    /// bundle and counts as its own. Null on a ranking slice's records,
+    /// which are a reach, not a filter.
+    ///
+    /// Saturates at [`i32::MAX`] as `totalCount` does.
+    #[graphql(complexity = 0)]
+    async fn bundle_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        if self.slice.is_some() {
+            return Ok(None);
+        }
+        let Some(filter) = &self.filter else {
+            return Ok(Some(0));
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let total = mirror::count_bundles(pool, filter).await?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
     }
 }

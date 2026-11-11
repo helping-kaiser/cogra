@@ -11,11 +11,11 @@
 // arrow names the profile it came from, and the bar rides, lit for the root
 // that profile was opened from.
 //
-// THE FIGURE COUNTS RECORDS; THE PAGE LISTS PEOPLE (open-questions.md Q35).
-// `Opinions on them` counts every Opinion record aimed at the person — a
-// revision is a record of its own — while `On them` draws one row per person,
-// at the opinion they hold now (`held-opinions.ts`). The two can differ, and
-// each says what its words say.
+// THE FIGURE AND THE PAGE COUNT THE SAME PEOPLE (open-questions.md Q35, ruled
+// 2026-11-10): `Opinions on them` counts the bundles of unmarked Opinion
+// records aimed at the person — one per person, however often revised — and
+// `On them` draws one row per person, at the opinion they hold now
+// (`held-opinions.ts`).
 //
 // THE WHOLE SET IS READ, 100 RECORDS A PAGE, BEFORE A ROW IS DRAWN: the order
 // is strongest first, and a bundle's place is not known until its last record
