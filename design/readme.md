@@ -11078,6 +11078,46 @@ clients already key them by the wire id (seam 263). jakob ruled the re-key
   families, and no (path, key) repeats on any board beyond the chip copies
   that stood before.
 
+### Round 34, once submitted there is no cancel — 2026-11-11
+
+jakob's answer to round 31's first question: "once someone submits there
+is no more cancel. afterwards they can just close the ui to not have to
+wait (network issues) but the act is done"; one rule for every signing
+surface.
+
+- **Once a commit is pressed, the act is done: nothing cancels it.** The
+  way out only closes the surface so the reader need not wait. Past 200ms,
+  beside the in-flight label, the control that read `Cancel` or `Keep it`
+  reads `Close` in the same place, live and never dimmed; inside the 200ms
+  nothing on screen changes, and a press on the way out closes the surface
+  all the same.
+- **The pad and the alternates.** Closed mid-signing, the wait passes to
+  the target's row as a hold's (`Signing…`, then the face and the
+  snackbar, or `That didn't sign.` with Retry). `StanceControl`'s and
+  `StanceAlternates`' `signing` keep one waiting state, `busy`, which reads
+  `Close`; `PadFailed`'s `moment` draws `failed`, `setting` (`Close` beside
+  `Setting…`) and `closed`. `PadStanding`, `ApprovePad`, `VouchAskPad`,
+  `VouchBackPad` and `TagPageHeldPad` write the same lines; the staging
+  pads sign nothing.
+- **The walk-back and the empty sign.** While their act signs, `Keep it`
+  reads `Close`; it, the scrim, Back and Escape close the dialog and the pad
+  beneath, and the act — a walk-back's whole batch — goes on, its wait on
+  the target's row. `SeveranceConfirm`'s `answer` chip draws `signing`;
+  `EmptySignConfirm` gains `answer` (`asking`, `setting`).
+- **The handle change.** `ChangeHandleConfirm`'s `Keep it` reads `Close`
+  once `Change it` is pressed and the change goes on. Where its wait and its
+  answer show after that is not drawn (backlog 155).
+- **The seals and the edits keep their held exits** until each has a drawn
+  place for an act on its way, landed and failed after leaving (backlog
+  155); the remove and close dialogs' ways out while they answer are
+  backlog 156.
+- **Boards.** A board's `VALS` read only `this.props`; impl's harness
+  renders one setting at a time (seam 270), and backlog 151 closes.
+- **The gate**: no board added; three boards gain or change a chip
+  (`PadFailed`, `SeveranceConfirm`, `EmptySignConfirm`), none registered.
+  The registry holds at **167 screens**, **6120** board paths, **1920**
+  distinct.
+
 ---
 
 ## 14. The canvases

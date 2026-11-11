@@ -5336,3 +5336,54 @@ the live rows' say "id". A rule is reworded only in a named breaking change
 (readme's registry law): for jakob and impl, whether to reword the four in
 the next one, and whether "actor id" and the person's id are one wire field
 (both clients mint the live rows from `User.id`, seam 263).
+
+### 155 · After Close: where a seal's, an edit's and the handle change's act shows · *design* · **filed 2026-11-11**
+
+Round 34 (jakob 2026-11-11: once someone submits there is no cancel; Close
+only leaves). The pads and the stance dialogs had a drawn place for the act
+after Close — the target's row (`RowSigning`, `PadFailed`'s `closed`). These
+surfaces hold the reader while they sign (readme §13, *The curate rulings*:
+"While a seal signs, it holds the reader") and have no drawn place for at
+least one of on its way, landed, failed:
+
+- the post seal (`ComposeSeal`, `ComposeSealUploading`, `SealSigning`,
+  `SealSigningSlow`): landed — the post's detail wearing `Still settling` and
+  the snackbar; on its way and failed — none (the kill law's "ordinary
+  failure notice" is not drawn; the snackbar never carries a failure);
+- the reply seal (`ReplySeal`, `ReplySealUploading`): landed — the thread
+  scrolled to the new card; on its way and failed — none;
+- the comment and post edits (`CommentEdit`, `CommentEditVideo`,
+  `EditCompose`, `EditComposeVideo`, `EditWords`): landed — the card wearing
+  `Still settling`; on its way and failed — none;
+- the profile and avatar seals (`ProfileEditSeal`, `AvatarSeal`): landed —
+  the profile and the snackbar; on its way and failed — none;
+- the kept picks' seal (`KeptPicksSeal`): landed — the snackbar and each
+  anchor's `Still settling`; on its way — each target's row could carry
+  `Signing…`, but the review is opened from settings, not from the targets;
+  failed — none for a batch that lands together or not at all;
+- the handle change (`ChangeHandleConfirm`, Close written): landed — the
+  snackbar and the Handle row; on its way and failed — none (the Email row's
+  `Change pending` is a change with a side owed, not one in flight; the
+  Hidden accounts row's `That didn't go through.` with Retry is the nearest
+  failure on a settings row); `That handle is taken.` after Close — none.
+
+Options, per surface or for all: (a) keep the held exits on seals and edits
+(the curate ruling) and name them the exception to "one rule"; (b) Close on
+every seal, its wait and answer carried by one app-level line or card (to be
+drawn) — a pending row on the surface the act lands on, its failure there
+with Retry; (c) Close on every seal, and on leaving the draft is kept so the
+failure re-raises the seal on the next visit. Lean: (b), the feed's `Still
+settling` card's place for the post and the target's row for the rest,
+drawn once as a pattern board.
+
+### 156 · The remove and close dialogs' way out while they answer · *design* · **filed 2026-11-11**
+
+Round 34's sweep. `RemoveConfirm`, `FeedRemoveConfirm`,
+`CommentRemoveConfirm`, `RejectConfirm` and `RejectAllConfirm` stay up
+until their act answers, but their scrim (and Keep it) lines carry no GIVEN:
+"the dialog closes AND nothing is removed" reads as a cancel while the
+removal signs, which the ruling rules out. For jakob: whether they take the
+stance dialogs' line (`Keep it` / `Keep them` reads `Close` past 200ms and
+only leaves), and where the act then shows — a removal's landed mark is
+drawn (`Removed by its author`), its failure after leaving is not; a closed
+application leaves the list, its failure after leaving is not drawn.
