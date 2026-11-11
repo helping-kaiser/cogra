@@ -353,6 +353,219 @@ async fn an_upload_at_its_cap_is_not_held_to_the_json_ceiling(pool: PgPool) {
     );
 }
 
+/// A router whose upload transport ceiling is 8 MiB, so a test can tell a
+/// refusal at the JSON ceiling from one at the upload ceiling without
+/// streaming two hundred megabytes.
+fn small_upload_app(pool: PgPool) -> axum::Router {
+    let (mut ctx, auth) = rig::api_context(
+        pool,
+        Arc::new(api::mailer::DevMailer::new(None)),
+        api::ratelimit::RateLimitConfig::unlimited(),
+    );
+    ctx.media.max_upload_bytes = 4 * 1024 * 1024;
+    ctx.media.max_video_upload_bytes = 4 * 1024 * 1024;
+    let uploads = rig::upload_routing(&ctx);
+    api::app(
+        api::schema::build(ctx),
+        auth,
+        axum_client_ip::ClientIpSource::ConnectInfo,
+        uploads,
+    )
+    .layer(axum::Extension(axum::extract::ConnectInfo(
+        std::net::SocketAddr::from(([127, 0, 0, 1], 9999)),
+    )))
+}
+
+/// The multipart boundary the hand-built envelopes below use.
+const BOUNDARY: &str = "cogra-test-boundary";
+
+/// The most an envelope the server refuses may have made it pull: both
+/// non-file fields at the JSON ceiling plus room for boundaries, part
+/// headers and the chunk in flight — far below the 8 MiB transport of
+/// [`small_upload_app`].
+const PULLED_BEFORE_REFUSAL: usize = 2 * JSON_CEILING + 128 * 1024;
+
+/// Posts an anonymous multipart body that opens with `opening` and then
+/// repeats `filler` forever, and counts the bytes the server pulls from it
+/// before it answers. A body that never ends can only be answered by a
+/// refusal while it streams, and the count shows how much of it the server
+/// read first.
+async fn post_endless_multipart(
+    app: axum::Router,
+    opening: Vec<u8>,
+    filler: &'static [u8],
+) -> (axum::response::Response, usize) {
+    use async_graphql::futures_util::{StreamExt, stream};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    let pulled = Arc::new(AtomicUsize::new(0));
+    let counter = pulled.clone();
+    let body = stream::once(async move { axum::body::Bytes::from(opening) })
+        .chain(stream::repeat_with(move || {
+            axum::body::Bytes::from_static(filler)
+        }))
+        .map(move |chunk| {
+            counter.fetch_add(chunk.len(), Ordering::Relaxed);
+            Ok::<_, std::io::Error>(chunk)
+        });
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/graphql")
+                .header(
+                    "content-type",
+                    format!("multipart/form-data; boundary={BOUNDARY}"),
+                )
+                .body(Body::from_stream(body))
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+    (response, pulled.load(Ordering::Relaxed))
+}
+
+/// The opening of a multipart part named `name`, up to its first data byte.
+fn part_opening(name: &str) -> String {
+    format!("--{BOUNDARY}\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n")
+}
+
+/// A complete `operations` part for an `uploadMedia` of the file mapped
+/// as `0`, and the `map` part that maps it.
+fn upload_operations_and_map() -> String {
+    let operations = serde_json::json!({
+        "query": "mutation($input: UploadMediaInput!) { uploadMedia(input: $input) { media { id } } }",
+        "variables": { "input": { "file": null }},
+    });
+    format!(
+        "{}{operations}\r\n{}{{\"0\":[\"variables.input.file\"]}}\r\n",
+        part_opening("operations"),
+        part_opening("map"),
+    )
+}
+
+/// An anonymous multipart request whose `operations` field outgrows the
+/// JSON ceiling is refused with the JSON path's 413 while it streams,
+/// having been read no further than the ceiling — not up to the upload
+/// transport ceiling every multipart field used to share.
+///
+/// A multipart operations field past the JSON ceiling is refused with 413 while it streams.
+/// ´claim:server:multipart-operations-has-the-json-ceiling´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_oversized_multipart_operations_field_is_refused_while_it_streams(pool: PgPool) {
+    let opening = format!("{}{{\"query\":\"{{ __typename }}#", part_opening("operations"));
+    let (response, pulled) =
+        post_endless_multipart(small_upload_app(pool), opening.into_bytes(), &[b'x'; 8192]).await;
+    assert!(
+        pulled <= PULLED_BEFORE_REFUSAL,
+        "the server pulled {pulled} bytes of an endless operations field"
+    );
+    assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    assert_eq!(body_json(response).await["code"], "PAYLOAD_TOO_LARGE");
+}
+
+/// The same holds for the `map` field: past the JSON ceiling it is
+/// refused with 413 while it streams.
+///
+/// A multipart map field past the JSON ceiling is refused with 413 while it streams.
+/// ´claim:server:multipart-map-has-the-json-ceiling´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_oversized_multipart_map_field_is_refused_while_it_streams(pool: PgPool) {
+    let operations = serde_json::json!({ "query": "{ __typename }" });
+    let opening = format!(
+        "{}{operations}\r\n{}{{\"0\":[\"",
+        part_opening("operations"),
+        part_opening("map"),
+    );
+    let (response, pulled) =
+        post_endless_multipart(small_upload_app(pool), opening.into_bytes(), &[b'x'; 8192]).await;
+    assert!(
+        pulled <= PULLED_BEFORE_REFUSAL,
+        "the server pulled {pulled} bytes of an endless map field"
+    );
+    assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    assert_eq!(body_json(response).await["code"], "PAYLOAD_TOO_LARGE");
+}
+
+/// A part header block that never ends is held by the multipart parser
+/// until its blank line arrives, outside any field's limit, so it answers
+/// to the envelope's own budget: refused with 413 while it streams.
+///
+/// A multipart part header block that never ends is refused with 413 while it streams.
+/// ´claim:server:multipart-headers-are-bounded´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_endless_multipart_part_header_is_refused_while_it_streams(pool: PgPool) {
+    let opening = format!(
+        "--{BOUNDARY}\r\nContent-Disposition: form-data; name=\"operations\"\r\nX-Pad: "
+    );
+    let (response, pulled) =
+        post_endless_multipart(small_upload_app(pool), opening.into_bytes(), &[b'a'; 8192]).await;
+    assert!(
+        pulled <= PULLED_BEFORE_REFUSAL,
+        "the server pulled {pulled} bytes of an endless part header"
+    );
+    assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    assert_eq!(body_json(response).await["code"], "PAYLOAD_TOO_LARGE");
+}
+
+/// An envelope of endless tiny parts — each one empty and none of them a
+/// file — is bounded by the envelope's budget rather than read up to the
+/// upload ceiling.
+///
+/// An endless run of tiny multipart parts is refused with 413 while it streams.
+/// ´claim:server:multipart-part-count-is-bounded´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_endless_run_of_tiny_multipart_parts_is_refused_while_it_streams(pool: PgPool) {
+    const TINY_PART: &[u8] =
+        b"--cogra-test-boundary\r\nContent-Disposition: form-data; name=\"x\"\r\n\r\n\r\n";
+    let (response, pulled) =
+        post_endless_multipart(small_upload_app(pool), Vec::new(), TINY_PART).await;
+    assert!(
+        pulled <= PULLED_BEFORE_REFUSAL,
+        "the server pulled {pulled} bytes of endless tiny parts"
+    );
+    assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    assert_eq!(body_json(response).await["code"], "PAYLOAD_TOO_LARGE");
+}
+
+/// One request carries at most one file. Every file part is spooled to
+/// a temporary file held open until the request ends, so a file count
+/// bounded only by bytes would let one request hold a descriptor per
+/// tiny part; the second file part is refused as a malformed envelope
+/// before it is spooled.
+///
+/// A multipart request with a second file part is refused as malformed.
+/// ´claim:server:multipart-carries-one-file´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_second_multipart_file_is_refused(pool: PgPool) {
+    let file = |name: &str| {
+        format!(
+            "--{BOUNDARY}\r\nContent-Disposition: form-data; name=\"{name}\"; filename=\"a.webp\"\r\n\
+             Content-Type: image/webp\r\n\r\nRIFF\r\n"
+        )
+    };
+    let body = format!(
+        "{}{}{}--{BOUNDARY}--\r\n",
+        upload_operations_and_map(),
+        file("0"),
+        file("1"),
+    );
+    let response = small_upload_app(pool)
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/graphql")
+                .header(
+                    "content-type",
+                    format!("multipart/form-data; boundary={BOUNDARY}"),
+                )
+                .body(Body::from(body))
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+}
+
 /// Behind the proxy the API reads the client from the rightmost
 /// `X-Forwarded-For` hop, and a request that reaches it without one —
 /// a server-side render dialling the API directly — is refused as the
