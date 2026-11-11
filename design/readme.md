@@ -10955,7 +10955,9 @@ jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
   At most the three newest staged show, newest on top, so a reader typing
   still sees the results. Past three, `Show all` under them — the pick
   tray's door, its words and control — opens the sheet the seals open
-  (`ComposeTags`, `ComposeCitations`); nothing unfolds in place. The cap
+  (`TagsSheet`, `CitedSheet`), drawn over the picker on `TagPickerShowAll`
+  and `ReferencePickerShowAll` with the picker beneath at `seven`; Done
+  returns to the picker; nothing unfolds in place. The cap
   line stands in the head, under the rule or the filter. The `state` chip
   adds `none` and `seven`; `cap` draws ten staged, three shown and the
   door, the results dimmed. Sample sets: the tags `SEAL_TAGS_MANY` and,
@@ -10990,11 +10992,12 @@ jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
   `PostOpinions`, `FeedProfileShapes`, `SettingsHidden`, `Invites`,
   `ProfileDeleted` and `KeptPicksReview`, the ring 1px `#8c7165` in light.
 - **Not drawn here** (backlog 151): each picker state on a board of its own
-  for the harness, and the sheet raised over the picker.
-- **The gate**: edges **2167 → 2169** (the two doors); flows hold at
-  **227**, none re-blessed. The registry holds at **167 screens**, **6111 →
-  6113** board paths, **1915 → 1917** distinct (`tagPicker.staged.door`,
-  `referencePicker.staged.door`).
+  for the harness.
+- **The gate**: **2 boards added** (`TagPickerShowAll`, `ReferencePickerShowAll`,
+  unregistered as the seals' sheet boards are); edges **2167 → 2177** (the two
+  doors, the sheets' four each); flows hold at **227**, none re-blessed. The
+  registry holds at **167 screens**, **6111 → 6113** board paths, **1915 →
+  1917** distinct (`tagPicker.staged.door`, `referencePicker.staged.door`).
 
 ---
 

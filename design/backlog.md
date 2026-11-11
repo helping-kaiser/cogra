@@ -5284,6 +5284,6 @@ with its markers and edges; (b) the shell writes each board's default
 values in place of its holes for a board opened outside the canvas, so
 every chip board in the tree measures at its default (a build change,
 every chip board's standalone geometry moves); (c) the harness evaluates
-the board's own `VALS` for a chosen value. Also undrawn: the sheet raised
-over the picker by `Show all` — the edges land on the seals' own sheet
-boards (`ComposeTags`, `ComposeCitations`), drawn over the seal.
+the board's own `VALS` for a chosen value. The sheet `Show all` raises is
+drawn (`TagPickerShowAll`, `ReferencePickerShowAll`); this item stays open
+for the per-state measuring alone.
