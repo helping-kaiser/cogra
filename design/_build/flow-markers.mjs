@@ -902,6 +902,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Mark</button>", tag: "button" },
     { n: 7, find: ">Sign and publish</button>", tag: "button" },
     { n: 8, find: ">Back</button>", tag: "button" },
+    // The `state` chip's `tagRefused` (round 30): the unlanded tag's line.
+    { n: 9, find: ">Remove it</button>", tag: "button" },
   ],
   // The seal at more than one staged citation (item 70): `ComposeSeal`'s own
   // eight controls, and the References row that has become a door.

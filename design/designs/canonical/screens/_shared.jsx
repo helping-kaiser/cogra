@@ -1571,7 +1571,11 @@ const TAGS_ROW_HOLDS = 2;
    reason — the reply seal reads its staged tags as the post seal does (seam
    254 item 10, jakob 2026-11-10: "the reply seal mirrors the post seal
    exactly"). */
-const sealTagsRow = (tags) =>
+/* `fault` is the unlanded tag's line (round 30, jakob 2026-11-11, Q7):
+   `This tag didn't land.` with `Remove it` under the chips, no reason given —
+   the unlanded citation's row (`citedOneRow`'s `fault`), at the Tags row. */
+const SEAL_UNLANDED_TAG = "This tag didn't land.";
+const sealTagsRow = (tags, fault) =>
   tags.length > TAGS_ROW_HOLDS
     ? tagsRow(tags.length)
     : {
@@ -1585,6 +1589,7 @@ const sealTagsRow = (tags) =>
         ),
         count: String(tags.length),
         countNoun: "tag",
+        ...(fault ? { fault } : null),
       };
 
 /* The post's staged set past the first, written once: the seal that COUNTS
@@ -1723,25 +1728,42 @@ const WRITE_RULE_HELP = "Why signing waits";
    under `ActsFooter` (jakob 2026-10-05). */
 const SEAL_SLOW_LINE = "Still signing — the network is slow right now.";
 
-function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
+/* `chipped` is `ComposeSeal`'s own drawing of its `state` chip (round 30):
+   the acts card at rest and the card whose one staged tag never landed —
+   `state` `tagRefused` stages that tag alone, as the reply seal's `refused`
+   stages its one citation — each behind its hole (`ComposeSeal`'s VALS). */
+function composeSealCard({ cited, tags, state }) {
+  return (
+    <ActsCard
+      rows={[
+        { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
+        sealTagsRow(tags, state === "tagRefused" ? { message: SEAL_UNLANDED_TAG, onRemove: () => {} } : undefined),
+        cited > 1
+          ? citedRow(cited)
+          : citedOneRow(state === "refused" ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined),
+      ]}
+      total={`${1 + tags.length + cited} things, signed together`}
+      note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}
+      noteTone={state === "slow" ? "slow" : "quiet"}
+    />
+  );
+}
+
+function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }) {
   return (
     <>
       <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
 
-        <ActsCard
-          rows={[
-            { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
-            sealTagsRow(tags),
-            cited > 1
-              ? citedRow(cited)
-              : citedOneRow(state === "refused" ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined),
-          ]}
-          total={`${1 + tags.length + cited} things, signed together`}
-          note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}
-          noteTone={state === "slow" ? "slow" : "quiet"}
-        />
+        {chipped ? (
+          <>
+            <div style={{ display: "{{restCardShown}}", flexDirection: "column" }}>{composeSealCard({ cited, tags, state })}</div>
+            <div style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }}>{composeSealCard({ cited, tags: [tags[0]], state: "tagRefused" })}</div>
+          </>
+        ) : (
+          composeSealCard({ cited, tags, state })
+        )}
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" />
@@ -1928,20 +1950,23 @@ const replyCitedRow = (fault) => ({
    with `Remove it` and the commit stays (`SealFaultRow`); `bug` — any other
    refusal of one staged act: `This shouldn't have happened` takes the
    commit's place, with `Try again`, then `Report a problem` and `Discard the
-   reply` (`SealFaultBug`, whose docblock names the reply's noun).
+   reply` (`SealFaultBug`, whose docblock names the reply's noun);
+   `tagRefused` — the one staged tag never landed, so the Tags row says
+   `This tag didn't land.` with `Remove it`, the commit staying (round 30,
+   the post seal's own state at reply scale).
 
    `chipped` is `ReplySeal`'s own drawing of both as chips: every card the
    `tags` and `state` chips can draw, and both feet, each behind its hole
    (`ReplySeal`'s VALS). */
 const REPLY_TAG_SETS = { none: [], two: SEAL_TAGS, seven: SEAL_TAGS_MANY };
 
-function replySealCard({ named, cited, tags, refused }) {
+function replySealCard({ named, cited, tags, refused, tagRefused = false }) {
   const acts = 1 + tags.length + cited;
   return (
     <ActsCard
       rows={[
         { label: "Comment", value: named.act, count: "1", countNoun: "comment" },
-        ...(tags.length ? [sealTagsRow(tags)] : []),
+        ...(tags.length ? [sealTagsRow(tags, tagRefused ? { message: SEAL_UNLANDED_TAG, onRemove: () => {} } : undefined)] : []),
         ...(cited === 1 ? [replyCitedRow(refused ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined)] : cited > 1 ? [citedRow(cited)] : []),
         ...ADD_ROWS,
       ]}
@@ -1989,8 +2014,12 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
                   {replySealCard({ named, cited: one, tags: staged, refused: one === 1 })}
                 </div>
               )),
+            ).concat(
+              <div key="tagRefused" style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }}>
+                {replySealCard({ named, cited: 0, tags: [SEAL_TAGS[0]], tagRefused: true })}
+              </div>,
             )
-          : replySealCard({ named, cited, tags, refused: state === "refused" })}
+          : replySealCard({ named, cited, tags, refused: state === "refused", tagRefused: state === "tagRefused" })}
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow

@@ -18,6 +18,8 @@ WHEN the signing does not go through GIVEN no answer reached the seal -> the fau
 
 WHEN the signing is refused for one staged citation GIVEN the cited post never landed -> that citation's row reads This post didn't land, so it can't be cited. followed by Remove it AND Sign and publish stays AND NEVER Retry appears
 
+WHEN the signing is refused for one staged tag GIVEN the tag never landed -> the Tags row reads back as before AND under its value the line This tag didn't land. stands in the failure voice followed by Remove it AND Sign and publish stays AND NEVER Retry appears AND NEVER a reason is given
+
 WHEN the signing is refused for one staged act GIVEN the act's target landed -> the notice This shouldn't have happened takes the place of Sign and publish AND Try again, Report a problem and Discard the post stand with it AND everything above the foot stays as it was AND NEVER a line in the failure voice appears
 
 WHEN the signing is refused by the write rule -> the notice You can't sign right now takes the place of Sign and publish AND Keep the draft, sign later stands under it AND everything above the foot stays as it was AND NEVER Retry appears AND NEVER the notice takes the error colour
