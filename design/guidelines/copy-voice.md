@@ -1013,7 +1013,9 @@ jakob 2026-10-16). jakob's own words, picked 2026-10-02 (F7) and
 
 - `You can comment once you're in.` — the comment sheet's foot and a
   comment's `Reply`.
-- `You can invite once you're in.` — the profile's `Invites`.
+- `You can invite once you're in.` — the profile's `Invites`, and an
+  applicant or a guest who opens the Invites page's own address, where
+  app-open lands for them (jakob 2026-11-11, T2, **blessed**).
 - `You can vouch once you're in.` — an applicant who opens someone's ask
   link, where app-open lands for them (jakob 2026-10-02, **blessed**).
 

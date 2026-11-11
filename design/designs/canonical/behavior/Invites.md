@@ -106,6 +106,8 @@ WHEN pull down GIVEN the page stands all the way at its top -> the page refreshe
 
 WHEN a member opens an ask link GIVEN the asker already waits in their invites -> Invites opens AND the snackbar reads @noor is already waiting in your invites.
 
+WHEN the Invites page's own address opens GIVEN the reader is an applicant or a guest -> the reader lands where app-open lands for them AND the snackbar reads You can invite once you're in. AND NEVER this page opens
+
 WHEN tap the back arrow -> the screen Invites was opened from comes back, in the state it was left
 
 ALWAYS the back arrow reads Back to your profile from the reader's own profile, Back to Notifications from Notifications, and Back to Kept picks from the kept picks' review or their seal
