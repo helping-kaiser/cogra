@@ -1,13 +1,19 @@
 package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -301,48 +307,62 @@ fun CommentsSheet(
     // there collapses Material's expanded anchor and pins the sheet to the
     // top of the window, the very top of the glass included.
     CograSheetHost(onDismissRequest = onDismiss) {
-        // THE THREAD SHEET IS ONE NAMED SHEET (`postDetail.threadSheet`), over
-        // the detail or over a list alike — as the detail's one menu sheet is.
-        CograSheetSurface(
-            tallest = true,
-            testTag = THREAD_SHEET.tag,
-            handleTestTag = (THREAD_SHEET / "dragHandle").tag,
-        ) {
-            SheetTitle(
-                text = stringResource(R.string.content_comments_heading),
-                modifier = Modifier
-                    .padding(horizontal = Space.x6, vertical = Space.x1)
-                    .dataNode(THREAD_SHEET / "title"),
-            )
-            // The foot is drawn last and the list carries the weight, so a
-            // foot that grows takes its room from the thread above it and the
-            // sheet stays exactly at its ceiling. The keyboard pads from
-            // inside the same height ([CograSheetSurface]), for the same
-            // reason.
-            // THE COMMENTS' MENUS SAVE THROUGH THE ONE OVERLAY, their aftermath
-            // on this sheet's own snackbar — the page's is beneath the sheet.
-            CompositionLocalProvider(LocalSavedHost provides savedHost) {
-                CommentsList(
-                    state = state,
-                    listState = listState,
-                    viewerId = viewerId,
-                    signedIn = signedIn,
-                    modifier = Modifier.weight(1f),
-                    onLoadMoreComments = onLoadMoreComments,
-                    onReplyTo = { c -> depart { onReplyTo(c) } },
-                    onEditComment = { c -> depart { onEditComment(c) } },
-                    onLoadMoreReplies = onLoadMoreReplies,
-                    onReveal = onReveal,
-                    onOpenActor = onOpenActor,
-                    onOpenTopic = onOpenTopic,
-                    onReference = onReference,
-                    onLicense = onLicense,
-                    onRemoveComment = { comment -> removeFor = comment },
-                    stanceControl = stanceControl,
+        // THE SNACKBAR RIDES ABOVE THE SHEET, NEVER IN IT (`SettingsUnhidden.jsx`,
+        // "The line rides above the sheet"; `Snackbar.jsx`'s fixed, centred
+        // placement, 16 off the foot of a surface with no bar): a host laid in
+        // the sheet's column took the foot's room — pushing the comment field
+        // up — and stood at the column's start edge.
+        Box {
+            // THE THREAD SHEET IS ONE NAMED SHEET (`postDetail.threadSheet`), over
+            // the detail or over a list alike — as the detail's one menu sheet is.
+            CograSheetSurface(
+                tallest = true,
+                testTag = THREAD_SHEET.tag,
+                handleTestTag = (THREAD_SHEET / "dragHandle").tag,
+            ) {
+                SheetTitle(
+                    text = stringResource(R.string.content_comments_heading),
+                    modifier = Modifier
+                        .padding(horizontal = Space.x6, vertical = Space.x1)
+                        .dataNode(THREAD_SHEET / "title"),
                 )
+                // The foot is drawn last and the list carries the weight, so a
+                // foot that grows takes its room from the thread above it and the
+                // sheet stays exactly at its ceiling. The keyboard pads from
+                // inside the same height ([CograSheetSurface]), for the same
+                // reason.
+                // THE COMMENTS' MENUS SAVE THROUGH THE ONE OVERLAY, their aftermath
+                // on this sheet's own snackbar — the page's is beneath the sheet.
+                CompositionLocalProvider(LocalSavedHost provides savedHost) {
+                    CommentsList(
+                        state = state,
+                        listState = listState,
+                        viewerId = viewerId,
+                        signedIn = signedIn,
+                        modifier = Modifier.weight(1f),
+                        onLoadMoreComments = onLoadMoreComments,
+                        onReplyTo = { c -> depart { onReplyTo(c) } },
+                        onEditComment = { c -> depart { onEditComment(c) } },
+                        onLoadMoreReplies = onLoadMoreReplies,
+                        onReveal = onReveal,
+                        onOpenActor = onOpenActor,
+                        onOpenTopic = onOpenTopic,
+                        onReference = onReference,
+                        onLicense = onLicense,
+                        onRemoveComment = { comment -> removeFor = comment },
+                        stanceControl = stanceControl,
+                    )
+                }
+                CommentsFoot(signedIn, { depart(onAddComment) }, onSignInOrJoin)
             }
-            CommentsFoot(signedIn, { depart(onAddComment) }, onSignInOrJoin)
-            CograSnackbarHost(snackbar)
+            CograSnackbarHost(
+                snackbar,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
+                    .padding(bottom = SNACKBAR_FOOT),
+                testTag = THREAD_SNACKBAR_TAG,
+            )
         }
     }
     // OVER THE THREAD, the sheet beneath whole and inert (CommentRemoveConfirm.md:3):
@@ -351,6 +371,16 @@ fun CommentsSheet(
     // reader's place and every unfolded branch hold (CommentRemoved.md:19).
     removeFor?.let { comment -> CommentRemoveConfirm(comment, onClose = { removeFor = null }) }
 }
+
+/** The thread sheet's own snackbar: the design registers no node for it yet. */
+internal const val THREAD_SNACKBAR_TAG = "comments_snackbar"
+
+/**
+ * The snackbar's lift off the screen's foot over a sheet (`Snackbar.jsx`
+ * `offset={16}` on a surface with no bar), less the 12dp the house snackbar
+ * already insets itself by (`CograSnackbar`).
+ */
+private val SNACKBAR_FOOT = 4.dp
 
 /** The comment's think-twice dialog (CommentRemoveConfirm): the post's anatomy, the comment's nouns. */
 @Composable
