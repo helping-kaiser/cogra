@@ -11444,7 +11444,7 @@ lists should not be uncapped in default state"), drawn for his review.
   `AppCrash`; scan-exempt, a pattern exemplar, registering nothing).
   `Invites` gains `letIn`'s `more` and `more-opened` and `sections`'
   `only-let-in`, and one edge (its door, via 12). Over round 41 the registry
-  grows to **185 screens**, **7121 → 7122** board paths, **2002 → 2003**
+  grows to **185 screens**, **7116 → 7117** board paths, **1999 → 2000**
   distinct — `invites.peopleDoor` and three
   more `invites.person` keys; nothing removed. Backlog 173 closed; 180–184
   filed.
