@@ -3683,7 +3683,8 @@ function ReportProblemBody({ words }) {
    default; `Settings` passes its reader chip's hole. `recoveryStatus`,
    `backupFootnote` and `clearingFootnote` are the three readings `backup`
    decides, and default to its; `EraseConfirm` passes its backup chip's holes,
-   so the page under its dialog agrees with the dialog.
+   so the page under its dialog agrees with the dialog. `install` is the
+   install row's display (round 39) — left out, the row is not drawn.
 
    The element names are the `settings` prefix's (design ⇄ impl seam 059/061):
    `Settings` and `SettingsHidden` register them, and every other board this
@@ -3694,7 +3695,7 @@ function ReportProblemBody({ words }) {
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
-function SettingsBody({ handleChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote } = {}) {
+function SettingsBody({ handleChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -3870,7 +3871,8 @@ function SettingsBody({ handleChip = false, backup = "made", forget = false, kep
             and the seen list last: it is a copy of the server's and returns
             on the next sign-in (PR-52), so the words never claim it is lost.
 
-            THE WIPE IS THE GROUP'S ONE ROW (jakob 2026-10-13: "Settings
+            THE WIPE IS THE GROUP'S LAST ROW, and its one row wherever the
+            install row is not shown (jakob 2026-10-13: "Settings
             needs the wipe everything from this device yes. ofcourse with
             warnings and stuff"). `Erase everything from this browser` — in
             the app `…from this app` — is an action row, quiet like `Sign
@@ -3892,7 +3894,25 @@ function SettingsBody({ handleChip = false, backup = "made", forget = false, kep
           }
           node="clearing"
         >
-          <SettingsRow action label="Erase everything from this browser" onOpen={() => {}} node="erase" />
+          {install === undefined ? (
+            <SettingsRow action label="Erase everything from this browser" onOpen={() => {}} node="erase" />
+          ) : (
+            /* THE INSTALL ROW (round 39, jakob 2026-11-11, seam 285): one row
+               that adds the web app to the home screen, in the group whose
+               rows concern the app on this device. It leads the group, the
+               wipe staying last. It stands only where the browser can install
+               the app and it is not installed already, so `install` is its
+               display — absent on every board but `Settings`' chip. The
+               hairline after it is the group's own, drawn inside the wrapper
+               so an absent row leaves the card as it was. */
+            <div>
+              <div style={{ display: install }}>
+                <SettingsRow label="Add CoGra to your home screen" onOpen={() => {}} node="install" />
+                <div aria-hidden="true" style={{ height: 1, marginLeft: "var(--space-4)", background: "var(--border-hairline)" }} />
+              </div>
+              <SettingsRow action label="Erase everything from this browser" onOpen={() => {}} node="erase" />
+            </div>
+          )}
         </SettingsGroup>
 
         <SettingsGroup

@@ -1709,6 +1709,15 @@ Object.assign(FLOW_MARKERS, {
     // The wipe (jakob 2026-10-13), the Clearing data group's one row,
     // numbered by the same identity rule — the next free number.
     { n: 28, find: ">Erase everything from this browser</span>", tag: "button" },
+    // The install row (round 39), leading the Clearing data group on the
+    // `install` chip — the next free number.
+    { n: 30, find: ">Add CoGra to your home screen</span>", tag: "button" },
+  ],
+  // The install row's help where the browser cannot ask (round 39): the
+  // `HelpDialog` pair, the page beneath wired on `Settings`.
+  SettingsInstallHelp: [
+    { n: 1, find: ">Close</button>", tag: "button" },
+    { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   // The release chronicle: the way out, and one door per release — the same
   // control drawn three times, so one number.

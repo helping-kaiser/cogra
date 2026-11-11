@@ -41,7 +41,7 @@ export function Screen() {
           score="6.30"
           comments={1}
           license={{ attribution: 1, provenance: 0 }}
-          menuItems={CARD_MENU}
+          menuItems={readerCardMenu("ada")}
           bundle={null}
         />
         <PostCard
@@ -51,7 +51,7 @@ export function Screen() {
           topics={[OVERLONG_TOPIC]}
           score="4.10"
           comments={2}
-          menuItems={CARD_MENU}
+          menuItems={readerCardMenu("ada")}
           bundle={null}
         />
         <PostCard

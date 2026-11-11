@@ -5433,6 +5433,10 @@ copy-voice, *The intro*). The intro's lines are carried over, blessed by use
 (jakob 2026-10-06), so the line waits for his word: by the rule it reads
 `@mira's link is your first way in to everyone else, and theirs to you.`
 
+Closed by round 38 (jakob 2026-11-11): the line reads `@mira's link is your
+first way in to everyone else, and theirs to you.`, on the board and in
+copy-voice.
+
 ### 159 · The profile card's menu for someone already hidden has no host board · *design* · **filed 2026-11-11**
 
 Round 36 (H3) wrote the law: on a hidden person's profile card the Hide row
@@ -5456,7 +5460,7 @@ breaking change. The own views are drawn beneath the own menu boards
 of their own beside the others, additions only (rec); (b) the setting, with
 the re-key announced to impl; (c) the menu boards stand for the own views.
 
-### 161 · The sheets a host menu's rows open: drawn once, but which path · *system* · **filed 2026-11-11**
+### 161 · The sheets a host menu's rows open: drawn once, but which path · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
 The sheet node law (readme §13) says a host card's ⋮ and the rows it opens
 take the host's prefix (`feed.licenseSheet`); round 36 (H7) draws the
@@ -5468,6 +5472,10 @@ them) whose path no host registers. Ways for impl: (a) the host's prefix by
 the law, registered when a board draws it; (b) the drawn sheet's own path
 wherever raised, the thread's reading of the law.
 
+Closed by round 39, by (b) — round 32's law, which round 36's graph follows:
+the menu a host card raises takes the host's prefix; the license, report and
+remove sheets its rows raise are drawn once and keep one path (readme §13).
+
 ### 162 · Card fixtures on a few boards still carry Save and Cite only · *system* · **filed 2026-11-11**
 
 Round 36 (F2) handed the shared post and comment fixtures the menu their
@@ -5478,10 +5486,6 @@ their own cards still pass `CARD_MENU`: `LadderMax`, `LadderSmall`,
 `sheet.card.html`) pass the license row themselves, so the card's own append
 draws it twice, and no Report. Closed menus draw no row, so no pixel moves;
 a mechanical sweep.
-
-Closed by round 38 (jakob 2026-11-11): the line reads `@mira's link is your
-first way in to everyone else, and theirs to you.`, on the board and in
-copy-voice.
 
 ### 165 · After Close: where a profile change lands · *design* · **filed 2026-11-11**
 
@@ -5586,3 +5590,23 @@ count, and whether a hidden person's row stands (the hide law keeps a hidden
 account out of feeds, not out of the reader's own records). Lean: page past
 the page size the lists share; a hidden person stays, as their row is the
 reader's own record.
+
+### 175 · Settings with the install row outgrows its board · *system* · **filed 2026-11-11**
+
+Round 39. `Settings`' frame is 3046px, the page whole with 32px under the last
+footnote. The `install` chip's `shown` adds the row (57px with its hairline),
+so the delete group's footnote ends at 3071 and its last 25px are cut;
+`absent` is unchanged. For jakob: (a) the frame grows to 3103, `absent` then
+drawing 89px of surface under the footnote [lean — a frame is the page, and
+nothing on the default moves]; (b) the clip stands, the row being what the
+setting shows; (c) the shown page as a board of its own.
+
+### 176 · The ladder's redacted records: which menu · *design* · **filed 2026-11-11**
+
+Round 39 (backlog 162). `LadderStates` draws a post removed by its author and
+one removed as illegal with `CARD_MENU` — Save and Cite — and its note says a
+redacted record keeps its menu, citable because it never left the graph. No
+board draws a redacted card's open menu (`FeedRemoved`'s just-removed card
+passes none). For jakob: (a) the reader's card menu, Hide and Report included
+(`readerCardMenu`); (b) Save and Cite only, as drawn [lean — what is hidden
+or reported is the payload, and it is gone]; (c) no menu, `FeedRemoved`'s.

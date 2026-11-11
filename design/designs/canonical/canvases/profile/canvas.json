@@ -182,10 +182,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -5640,
+      "x": -5930,
       "y": 0,
-      "w": 5220,
-      "h": 8496,
+      "w": 5510,
+      "h": 8591,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -562,6 +562,15 @@
       "file": "EraseConfirm.dc.html",
       "title": "Settings · erasing everything from this browser",
       "x": 8160,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsInstallHelp.dc.html",
+      "title": "Settings · adding to your home screen, in Safari",
+      "x": 8640,
       "y": 1928,
       "w": 390,
       "h": 844,
