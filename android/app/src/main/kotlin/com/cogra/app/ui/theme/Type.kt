@@ -40,19 +40,23 @@ internal val FigtreeFamily = FontFamily(
 
 private val Baseline = Typography()
 
-/** `--text-display-large--letter-spacing: -0.015625rem`, one rem being 16sp. */
+/**
+ * The trackings Compose's baseline rounds off the design's tokens
+ * (`design/tokens/typography.css`, Material Web's typescale, one rem 16sp):
+ * Compose draws -0.2, 0.2 and 0.2 where the tokens say -0.25, 0.15 and 0.25.
+ * `TypographyTest` pins every role's four parts to the token file.
+ */
 private val DISPLAY_LARGE_TRACKING = (-0.25).sp
+private val TITLE_MEDIUM_TRACKING = 0.15.sp
+private val BODY_MEDIUM_TRACKING = 0.25.sp
 
 /**
  * Material 3's fifteen roles with the family swapped and nothing else touched
- * (design.md §3) but display-large's tracking, set to the design token. Each
+ * (design.md §3) but the three rounded trackings, set to the tokens. Each
  * role copies the baseline rather than restating its size, so a deviation
  * from the M3 scale cannot arrive by transcription error.
  */
 internal val CograTypography = Typography(
-    // The one part the design's tokens differ from Compose's baseline: Material
-    // Web's display-large tracking is -0.25px where Compose rounds it to -0.2sp
-    // (`design/tokens/typography.css`, which `TypographyTest` pins every role to).
     displayLarge = Baseline.displayLarge.copy(fontFamily = FigtreeFamily, letterSpacing = DISPLAY_LARGE_TRACKING),
     displayMedium = Baseline.displayMedium.copy(fontFamily = FigtreeFamily),
     displaySmall = Baseline.displaySmall.copy(fontFamily = FigtreeFamily),
@@ -60,10 +64,10 @@ internal val CograTypography = Typography(
     headlineMedium = Baseline.headlineMedium.copy(fontFamily = FigtreeFamily),
     headlineSmall = Baseline.headlineSmall.copy(fontFamily = FigtreeFamily),
     titleLarge = Baseline.titleLarge.copy(fontFamily = FigtreeFamily),
-    titleMedium = Baseline.titleMedium.copy(fontFamily = FigtreeFamily),
+    titleMedium = Baseline.titleMedium.copy(fontFamily = FigtreeFamily, letterSpacing = TITLE_MEDIUM_TRACKING),
     titleSmall = Baseline.titleSmall.copy(fontFamily = FigtreeFamily),
     bodyLarge = Baseline.bodyLarge.copy(fontFamily = FigtreeFamily),
-    bodyMedium = Baseline.bodyMedium.copy(fontFamily = FigtreeFamily),
+    bodyMedium = Baseline.bodyMedium.copy(fontFamily = FigtreeFamily, letterSpacing = BODY_MEDIUM_TRACKING),
     bodySmall = Baseline.bodySmall.copy(fontFamily = FigtreeFamily),
     labelLarge = Baseline.labelLarge.copy(fontFamily = FigtreeFamily),
     labelMedium = Baseline.labelMedium.copy(fontFamily = FigtreeFamily),

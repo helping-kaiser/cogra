@@ -9,11 +9,13 @@ import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontListFontFamily
 import androidx.compose.ui.text.font.ResourceFont
+import androidx.compose.ui.unit.TextUnit
 import com.cogra.app.R
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import java.io.File
+import kotlin.math.abs
 
 /** Material 3's fifteen roles, paired with how to read one off a [Typography]. */
 private val ROLES: Map<String, (Typography) -> TextStyle> = mapOf(
@@ -63,32 +65,40 @@ class TypographyTest {
                 ?: error("no token --text-$name")
         fun rem(name: String): Float = token(name).removeSuffix("rem").toFloat() * PX_PER_REM
 
-        for ((role, read) in ROLES) {
+        val off = ROLES.flatMap { (role, read) ->
             val kebab = role.replace(Regex("([a-z])([A-Z])")) {
                 "${it.groupValues[1]}-${it.groupValues[2].lowercase()}"
             }
             val style = read(CograTypography)
-            assertWithMessage("$role size").that(style.fontSize.value).isWithin(EPS).of(rem(kebab))
-            assertWithMessage("$role leading").that(style.lineHeight.value).isWithin(EPS).of(rem("$kebab--line-height"))
-            assertWithMessage("$role tracking").that(style.letterSpacing.value)
-                .isWithin(EPS).of(rem("$kebab--letter-spacing"))
-            assertWithMessage("$role weight").that(style.fontWeight?.weight)
-                .isEqualTo(token("$kebab--font-weight").toInt())
+            listOfNotNull(
+                part(role, "size", style.fontSize.value, rem(kebab)),
+                part(role, "leading", style.lineHeight.value, rem("$kebab--line-height")),
+                part(role, "tracking", style.letterSpacing.value, rem("$kebab--letter-spacing")),
+                part(
+                    role,
+                    "weight",
+                    style.fontWeight?.weight?.toFloat() ?: 0f,
+                    token("$kebab--font-weight").toFloat(),
+                ),
+            )
         }
+        assertWithMessage("parts off the token").that(off).isEmpty()
     }
 
+    private fun part(role: String, what: String, drawn: Float, token: Float): String? =
+        if (abs(drawn - token) <= EPS) null else "$role $what: $drawn, token $token"
+
+    /**
+     * Every part but tracking is Compose's baseline: where Compose rounds a
+     * role's tracking off the token (display-large, title-medium,
+     * body-medium), the token wins, pinned by the test above.
+     */
     @Test
     fun `the M3 scale is otherwise unmodified`() {
         for ((role, read) in ROLES) {
             assertWithMessage(role)
-                .that(read(CograTypography))
-                .isEqualTo(
-                    read(baseline).copy(fontFamily = FigtreeFamily).let {
-                        // The token's -0.25 over Compose's rounded -0.2, pinned above.
-                        val tokenTracking = CograTypography.displayLarge.letterSpacing
-                        if (role == "displayLarge") it.copy(letterSpacing = tokenTracking) else it
-                    },
-                )
+                .that(read(CograTypography).copy(letterSpacing = TextUnit.Unspecified))
+                .isEqualTo(read(baseline).copy(fontFamily = FigtreeFamily, letterSpacing = TextUnit.Unspecified))
         }
     }
 
