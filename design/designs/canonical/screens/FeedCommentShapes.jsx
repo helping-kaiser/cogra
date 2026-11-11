@@ -70,6 +70,7 @@ export function Screen() {
           score="9.80"
         />
         <CommentFeedCard
+          id="69155950-5cc8-4aef-9581-6f55ca1a0693"
           author={TOBIAS}
           content="Eighteen seconds of the same headland, if the light comes through at all."
           timestamp="30m"
@@ -88,6 +89,7 @@ export function Screen() {
           node="commentCard"
         />
         <CommentFeedCard
+          id="54796e94-2cc9-4915-8dca-acf6b174f4db"
           author={SOL}
           content="Turned them to the window before they went in the bowl."
           timestamp="1h"
