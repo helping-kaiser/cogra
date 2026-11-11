@@ -31,7 +31,6 @@ import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.REMOVE_VIDEO
 import com.cogra.core.designsystem.v2.media.ThumbBadge
-import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.domain.datelineWords
@@ -190,7 +189,7 @@ private fun ClipBlock(
 
 /**
  * `ComposeUploading`'s aside: `Pictures upload while you write — signing
- * waits for them.`, label-small at the ground weight, centred, standing
+ * waits for them.`, label-small whole, centred, standing
  * directly above Next while an upload runs (the board's `flex: 1` pushes it
  * there).
  */
@@ -198,7 +197,7 @@ private fun ClipBlock(
 internal fun UploadAside() {
     Text(
         text = "Pictures upload while you write — signing waits for them.",
-        style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+        style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
         modifier = Modifier

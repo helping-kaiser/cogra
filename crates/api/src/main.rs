@@ -14,7 +14,7 @@ use api::onboarding::OnboardingConfig;
 use api::ratelimit::RateLimitConfig;
 use api::schema::ApiContext;
 use api::shutdown::{self, Drained, Signals};
-use l1_standin::{StandIn, StandInConfig};
+use l1_standin::StandIn;
 use tokio_util::sync::CancellationToken;
 use tokio_util::task::TaskTracker;
 use tracing_subscriber::EnvFilter;
@@ -66,8 +66,8 @@ fn auth_config() -> anyhow::Result<AuthConfig> {
 /// logged as soon as the subscriber is up. Every knob read here is an operational parameter
 /// documented in development.md, and each has a deployable default except
 /// where absence is itself the setting: an unset
-/// `L1_EPOCH_CLOSE_INTERVAL_SECS` leaves epochs to close on the act budget
-/// or a manual `l1-dev close`, and `BREACH_CHECK=off` exists only so
+/// `L1_EPOCH_CLOSE_INTERVAL_SECS` runs no epoch clock, leaving epochs to
+/// close on a manual `l1-dev close`, and `BREACH_CHECK=off` exists only so
 /// offline dev can skip the live HIBP range API (auth.md "Password
 /// requirements").
 ///
@@ -97,15 +97,7 @@ async fn main() -> anyhow::Result<()> {
         .context("running Postgres migrations")?;
     tracing::info!("PostgreSQL connected, migrations applied");
 
-    let settlement_delay_epochs: i64 = env_or("L1_STANDIN_SETTLEMENT_DELAY_EPOCHS", "0")
-        .parse()
-        .context("L1_STANDIN_SETTLEMENT_DELAY_EPOCHS must be a number of epochs")?;
-    let standin = StandIn::new(
-        pool.clone(),
-        StandInConfig::default()
-            .settling_after(settlement_delay_epochs)
-            .context("L1_STANDIN_SETTLEMENT_DELAY_EPOCHS")?,
-    );
+    let standin = StandIn::new(pool.clone(), api::boot::standin_config()?);
     let boundary = StandInBoundary(standin.clone());
     let ingest_interval = api::boot::env_positive_secs("L1_INGEST_INTERVAL_SECS", 2)?;
     let gc_after_epochs: i64 = env_or(
@@ -124,12 +116,8 @@ async fn main() -> anyhow::Result<()> {
         ),
     );
 
-    if std::env::var("L1_EPOCH_CLOSE_INTERVAL_SECS").is_ok() {
-        let close_interval = api::boot::env_positive_secs("L1_EPOCH_CLOSE_INTERVAL_SECS", 0)?;
-        api::boot::spawn_supervised(
-            "epoch clock",
-            l1_standin::close_loop(standin.clone(), close_interval),
-        );
+    if let Some(close_interval) = standin.config().epoch_clock_secs {
+        api::boot::spawn_supervised("epoch clock", l1_standin::close_loop(standin.clone()));
         tracing::info!(
             interval_secs = close_interval,
             "epoch interval close active"

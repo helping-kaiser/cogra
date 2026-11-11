@@ -1538,7 +1538,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: ">Feed score</span>", tag: "button", all: true },
     { n: 14, find: ">· 1 reference<", tag: "button" },
     { n: 15, find: 'aria-label="3 comments"', tag: "button" },
-    { n: 15, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 15, find: 'aria-label="1 comment"', tag: "button", all: true },
     ...nav(16),
   ],
   ProfileComments: [
@@ -2152,6 +2152,7 @@ Object.assign(FLOW_MARKERS, {
   Verified: [{ n: 1, find: ">Back to CoGra</button>", tag: "button" }],
   // Neither draws a back arrow: a mail link has no previous screen of ours.
   VerifiedApp: [{ n: 1, find: ">Go to the feed</button>", tag: "button" }],
+  AppCrash: [{ n: 1, find: ">Reload</button>", tag: "button" }],
   VerifyExpired: [
     { n: 1, find: ">Resend the link</button>", tag: "button" },
     { n: 2, find: ">Go to the feed</button>", tag: "button" },

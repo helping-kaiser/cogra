@@ -70,7 +70,8 @@ function Raw({ html, tag = "div", style }) {
 // (extra `renderVals` entries, one code string like `keyTitle: this.props
 // .wording === "app" ? "…" : "…"`); its markup then carries `{{name}}` holes
 // the canvas substitutes live — how a generated board keeps a tweak chip
-// beyond the theme. It may also export FRAME ({ width, height }) where the
+// beyond the theme. VALS read only `this.props` (no DOM, no canvas globals),
+// so a harness can render one setting at a time (seam 270). It may also export FRAME ({ width, height }) where the
 // state it draws is not a portrait phone — the rotated viewer, and nothing
 // else so far; the canvas entry carries the same size.
 import { shell } from "./shell.mjs";

@@ -110,6 +110,7 @@ fun LoginScreen(
             state.error?.let {
                 Text(
                     text = stringResource(it.loginMessage()),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("login_error"),
                 )
@@ -119,6 +120,7 @@ fun LoginScreen(
                     // SignIn.md:71's drawn no-answer line — also the device
                     // lock's leg, which keeps the session for this retry.
                     text = stringResource(R.string.login_no_answer),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("login_transport_error"),
                 )

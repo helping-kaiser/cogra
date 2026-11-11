@@ -41,7 +41,6 @@ import com.cogra.core.designsystem.v2.media.VideoPlayer
 import com.cogra.core.designsystem.v2.media.cappedToTallestTile
 import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.core.designsystem.v2.token.Space
-import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.feature.content.R
 
 /**
@@ -181,7 +180,7 @@ private fun CoverPreview(model: Any?, durationMs: Int, ratio: Float, noFrames: B
             // an empty tile is chrome — the word says what belongs there.
             Text(
                 text = "No frame",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .align(Alignment.Center)

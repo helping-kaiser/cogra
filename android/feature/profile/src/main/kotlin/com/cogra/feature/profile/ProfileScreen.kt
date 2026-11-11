@@ -425,6 +425,7 @@ private fun ProfileBody(
             Column(Modifier.fillMaxSize().padding(24.dp)) {
                 Text(
                     text = stringResource(R.string.error_transport),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("profile_transport_error"),
                 )

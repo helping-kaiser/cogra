@@ -59,7 +59,7 @@ export function Screen() {
             variant="chronicle"
             face={{ pDirected: 0.1, pInterest: 0.1 }}
             title="@ada published it"
-            second="Her own opinion rides the post"
+            second="@ada's own opinion rides the post"
             trailing="2h"
             onOpen={() => {}}
             node="step"

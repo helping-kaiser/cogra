@@ -19,7 +19,6 @@ import { BottomSheet, SHEET_RAISED } from "../bottom-sheet";
 import { HelpDialog, HELP_TOPICS } from "../help-dialog";
 import { HelpDot } from "../help-dot";
 import { PillButton } from "../pill-button";
-import { LABEL_SMALL_PLAIN } from "../plain-type";
 import { TextField } from "../text-field";
 import { ALT_TEXT_MAX_CHARS, altTextProblem } from "../media/caps";
 import { cropAspect, cropPreviewStyle } from "../media/crop-preview";
@@ -108,7 +107,7 @@ export function DescribeSheet({
             <h2 className="m-0 text-title-large">
               {video ? "Describe the video" : "Describe this picture"}
             </h2>
-            <p className={`m-0 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
+            <p className={`m-0 text-label-small text-on-surface-variant`}>
               Read aloud to people who can&apos;t see it.
             </p>
           </div>

@@ -71,16 +71,15 @@ import {
    that fails leaves the pad where it was, at the pick, with the fault line
    above the commit row and `Retry`, outlined, in Set's slot — a failed signed
    act re-raises its own surface, and here the surface never went away.
-   CANCEL TRULY CANCELS UNTIL THE ACT IS BEING SENT, THEN IT READS `Close`
-   (jakob 2026-11-11). Cancel and Close are the way out of a pad that stalls.
-   From the press on Set until the app begins sending the act, Cancel — and
-   the press outside, Back and Escape — closes the pad and nothing lands: the
-   target's row is untouched, no line under the face, no snackbar. From that
-   instant the act is expected to happen, and the same button, in the same
-   place, reads `Close`: it only leaves the pad, and the wait moves to the
-   target's row as a hold's does — `Signing…` under the face, then the face
-   and the snackbar, or `That didn't sign.` with a Retry that asks the same
-   pick again. A Set the reader regrets is walked back afterwards. THE ALTERNATES
+   ONCE SET IS PRESSED THE ACT IS DONE: NOTHING CANCELS IT (jakob 2026-11-11).
+   The way out only closes the pad, so the reader need not wait. Past 200ms,
+   beside `Setting…`, the button that read `Cancel` reads `Close`, in the same
+   place; inside the 200ms nothing on screen changes, and a press on it — or
+   outside, Back, Escape — closes the pad as Close does. Closed, the act goes
+   on and its wait moves to the target's row as a hold's does — `Signing…`
+   under the face, then the face and the snackbar, or `That didn't sign.` with
+   a Retry that asks the same pick again. A Set the reader regrets is walked
+   back afterwards. THE ALTERNATES
    WAIT THE SAME WAY (ask 14): their commit reads `Signing…`, a fault keeps
    them up with `Retry` in its slot, and the write rule's notice takes the
    landing line's and the action row's place, as on the pad.
@@ -314,10 +313,8 @@ export function StanceControl({
   pendingPick,
   pendingReview = false,
   /* A SIGNED ACT IN FLIGHT, OR ONE THAT DID NOT GO THROUGH (the failure
-     pack). `"busy"` is the wait past 200ms before the act is being sent,
-     `"sent"` the wait once it is (round 31: a surface's Cancel reads `Close`
-     from then on, and on the row the two read alike), `"failed"` the signing
-     that did not complete. With the pad closed it is the hold's, and the target's row
+     pack). `"busy"` is the wait past 200ms (a surface's way out reads
+     `Close`), `"failed"` the signing that did not complete. With the pad closed it is the hold's, and the target's row
      carries it under the face; with the pad open it is Set's, and the pad's
      commit row carries it; with the alternates up it is theirs, and with the
      walk-back or the empty sign raised it is that dialog's (seam 245, asks
@@ -417,15 +414,14 @@ export function StanceControl({
   React.useEffect(() => {
     if (!open) return undefined;
     /* Over the walk-back's dialog, Escape is the dialog's `Keep it`: the pad
-       beneath stays parked — and, like `Keep it`, it cancels the dialog's
-       act until that act is being sent, and closes the dialog after
-       (round 31). */
+       beneath stays parked — and, like `Keep it`, once the dialog's act is
+       signing it closes the dialog and the pad, the act going on. */
     const onKey = (event) => {
       if (event.key !== "Escape") return;
       if (confirming !== null || emptyAsk !== null) {
         if (confirming !== null) setConfirming(null);
         else setEmptyAsk(null);
-        if (signing === "sent") closeAll();
+        if (signing === "busy") closeAll();
       } else closeAll();
     };
     document.addEventListener("keydown", onKey);
@@ -523,21 +519,20 @@ export function StanceControl({
      over the pad — the walk-back, the empty sign — sends its own, so the
      signing is the dialog's while one is up; the pad's while it is open
      beneath none; the alternates' while they stand in its place (seam 245,
-     ask 14); the row's while nothing is open. CANCEL BEFORE THE SEND
-     CANCELS; CLOSE AFTER IT LEAVES (round 31): a surface closed while
-     `"busy"` takes its act with it and the row is untouched; a surface
-     closed with `Close` while `"sent"` passes the wait to the target's row —
-     `Signing…` under the face, the anchor refusing a second hold — and it
-     ends there as a hold's would: the face moves and the snackbar confirms,
-     or the row says it did not sign, with Retry. An anchor whose hold is
-     still signing refuses a second hold. */
+     ask 14); the row's while nothing is open. CLOSE MID-SIGNING CLOSES THE
+     SURFACE, NEVER THE SIGNING: the act was committed and nothing calls it
+     back, so its wait passes to the target's row — `Signing…` under the
+     face, the anchor refusing a second hold — and it ends there as a hold's
+     would: the face moves and the snackbar confirms, or the row says it did
+     not sign, with Retry. An anchor whose hold is still signing refuses a
+     second hold. */
   const dialogUp = confirming !== null || emptyAsk !== null;
   const rowSigning = open || alternates ? undefined : signing;
   const padSigning = open && !dialogUp ? signing : undefined;
   const altSigning = alternates && !dialogUp ? signing : undefined;
   const dialogSigning = dialogUp ? signing : undefined;
-  const anchorBusy = rowSigning === "busy" || rowSigning === "sent";
-  const padWaiting = padSigning === "busy" || padSigning === "sent";
+  const anchorBusy = rowSigning === "busy";
+  const padWaiting = padSigning === "busy";
   /* The face, ringed while a hold is under way — the ring centred on it, the
      face's own box unchanged, so nothing beside it moves. */
   const ringed = holding || holdProgress !== undefined;
@@ -893,7 +888,7 @@ export function StanceControl({
                 </button>
               )}
               <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })} data-node={node && "cancel"}>
-                {padSigning === "sent" ? "Close" : "Cancel"}
+                {padWaiting ? "Close" : "Cancel"}
               </button>
               <button
                 type="button"
@@ -952,13 +947,12 @@ export function StanceControl({
           records={Math.max(1, confirming.records)}
           alreadySevered={confirming.alreadySevered === true}
           busy={dialogSigning === "busy"}
-          sent={dialogSigning === "sent"}
           failed={dialogSigning === "failed"}
           writeRule={dialogSigning === "writeRule"}
           names={axes}
           onCancel={() => {
             setConfirming(null);
-            if (dialogSigning === "sent") closeAll();
+            if (dialogSigning === "busy") closeAll();
           }}
           onConfirm={() => {
             apply(confirming.pick ?? ORIGIN, confirming.landed, Math.max(1, confirming.records));
@@ -973,12 +967,11 @@ export function StanceControl({
           targetLabel={targetLabel}
           vouchIn={vouchesIn}
           busy={dialogSigning === "busy"}
-          sent={dialogSigning === "sent"}
           failed={dialogSigning === "failed"}
           writeRule={dialogSigning === "writeRule"}
           onCancel={() => {
             setEmptyAsk(null);
-            if (dialogSigning === "sent") closeAll();
+            if (dialogSigning === "busy") closeAll();
           }}
           onConfirm={() => {
             applyEmpty(emptyAsk.pick, emptyAsk.landed);

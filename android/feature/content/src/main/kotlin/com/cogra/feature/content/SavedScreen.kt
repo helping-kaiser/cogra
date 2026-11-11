@@ -485,6 +485,7 @@ private fun SavedLoadFailed(onRefresh: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(Space.x4)) {
         Text(
             stringResource(SavedR.string.saved_load_failed),
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.weight(1f).testTag("saved_transport_error"),
         )
@@ -542,6 +543,7 @@ private fun SavedMoreFailed(onRetry: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = Space.x4)) {
         Text(
             stringResource(SavedR.string.saved_more_failed),
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.testTag("saved_more_failed"),
         )

@@ -92,11 +92,11 @@ ALWAYS the kept approval's second line reads Not fully registered yet GIVEN the 
 
 WHEN tap the kept approval's row GIVEN the key is elsewhere -> the key notice opens, as a kept pick's face does AND NEVER the approval pad opens
 
-WHEN tap the kept approval's row GIVEN the key is back -> the approval pad opens on that applicant
+WHEN tap the kept approval's row GIVEN the key is back -> the approval pad opens on that applicant, standing on the vouch that was kept, AND NEVER the pad stands on its default
 
 WHEN tap the kept approval's row GIVEN it reads Not fully registered yet -> the snackbar reads @noor has to finish registering before you can approve AND NEVER the approval pad opens
 
-WHEN tap the kept approval's row GIVEN it reads Ready for your approval -> the approval pad opens on that applicant AND it signs only there
+WHEN tap the kept approval's row GIVEN it reads Ready for your approval -> the approval pad opens on that applicant, standing on the vouch that was kept, AND it signs only there AND NEVER the pad stands on its default
 
 WHEN tap the kept approval's close -> the dialog asking to close that application opens, the one every row's close raises
 
@@ -105,6 +105,8 @@ WHEN the close of a kept approval is taken -> the row leaves AND the kept vouch 
 WHEN pull down GIVEN the page stands all the way at its top -> the page refreshes AND the platform's own refresh indicator shows
 
 WHEN a member opens an ask link GIVEN the asker already waits in their invites -> Invites opens AND the snackbar reads @noor is already waiting in your invites.
+
+WHEN the Invites page's own address opens GIVEN the reader is an applicant or a guest -> the reader lands where app-open lands for them AND the snackbar reads You can invite once you're in. AND NEVER this page opens
 
 WHEN tap the back arrow -> the screen Invites was opened from comes back, in the state it was left
 

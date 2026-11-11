@@ -143,11 +143,8 @@ fun FilterSection(
     ) {
         Text(
             text = label,
-            // The label sets label-large's size and weight on the sheet's own
-            // body leading, as the master's span does (it sets no line height).
-            style = MaterialTheme.typography.labelLarge.copy(
-                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
-            ),
+            // label-large whole (`OrderSection.jsx` FilterSection, round 28).
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.fillMaxWidth().dataNode(node?.let { it / "label" }),
         )
