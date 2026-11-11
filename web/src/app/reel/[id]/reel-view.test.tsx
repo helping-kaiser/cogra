@@ -14,7 +14,7 @@
 
 import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import type { HeldAnswer } from "@/lib/feed/derive";
 import { forgetStream, heldStream, openStream, type StreamOrigin } from "@/lib/reel/stream-session";
@@ -34,6 +34,7 @@ import { StageHost } from "@/lib/ui2/media/stage-host";
 import { VideoPlayer } from "@/lib/ui2/media/video-player";
 import { resetVideoStageForTests } from "@/lib/ui2/media/video-stage";
 import { byNode } from "@/test/data-node";
+import { fakeClampLayout } from "@/test/fake-clamp-layout";
 import { intersectEach, setsPageVisibility, suppressesAutoplay, turnsTheScreen, whenObserved } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -213,6 +214,9 @@ describe("the stream's chrome (Reel.md:5-19)", () => {
   });
 
   it("the_seek_target_and_mores_target_never_overlap (Reel.md:15; Reel.jsx:28-31)", () => {
+    // A caption its two lines cut, so `More` stands (`clamp-fold.ts`).
+    const layout = fakeClampLayout(10);
+    onTestFinished(() => layout.restore());
     mountStream();
     // The seek line's foot stands 4px above the bar and its 48px target rises
     // to 52px; the caption stands at 66, so `More`'s own 48px target — its
@@ -247,14 +251,33 @@ describe("the stream's chrome (Reel.md:5-19)", () => {
     delete (navigator as unknown as Record<string, unknown>).share;
   });
 
-  it("the caption carries the handle, the title and the description with More (ReelCaption)", () => {
-    mountStream();
-    expect(screen.getByTestId(byNode("reel.caption.handle"))).toHaveTextContent("@mira");
-    expect(screen.getByTestId(byNode("reel.caption.title"))).toHaveTextContent("Clip p1");
-    expect(screen.getByTestId(byNode("reel.caption.description"))).toHaveTextContent("The light over the lake, p1");
-    const more = screen.getByTestId(byNode("reel.caption.more"));
-    fireEvent.click(more);
-    expect(more).toHaveAttribute("aria-expanded", "true");
+  // `More` stands only where the two lines cut the caption (`clamp-fold.ts`);
+  // jsdom lays nothing out, so the stand-in layout sets the line's width.
+  it("the caption carries the handle, the title and the description, with More where its two lines cut it (ReelCaption)", () => {
+    const layout = fakeClampLayout(10);
+    try {
+      mountStream();
+      expect(screen.getByTestId(byNode("reel.caption.handle"))).toHaveTextContent("@mira");
+      expect(screen.getByTestId(byNode("reel.caption.title"))).toHaveTextContent("Clip p1");
+      expect(screen.getByTestId(byNode("reel.caption.description"))).toHaveTextContent("The light over the lake, p1");
+      const more = screen.getByTestId(byNode("reel.caption.more"));
+      fireEvent.click(more);
+      expect(more).toHaveAttribute("aria-expanded", "true");
+      expect(more).toHaveTextContent("Less");
+    } finally {
+      layout.restore();
+    }
+  });
+
+  it("a caption that fits its two lines carries no More (ReelCaption)", () => {
+    const layout = fakeClampLayout(40);
+    try {
+      mountStream();
+      expect(screen.getByTestId(byNode("reel.caption.description"))).toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("reel.caption.more"))).not.toBeInTheDocument();
+    } finally {
+      layout.restore();
+    }
   });
 });
 
