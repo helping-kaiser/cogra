@@ -736,6 +736,32 @@ async fn invite_link_check_reads_the_capability_anonymously(pool: PgPool) {
     assert!(data["inviteLinkCheck"].is_null());
 }
 
+/// The check names its inviter as a public profile — the face and the
+/// name Join stands its form under — and leaves every private field of
+/// that account unread for an anonymous caller.
+/// (´claim:server:an-invite-link-reads-anonymously´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn invite_link_check_names_the_inviter_as_a_public_profile(pool: PgPool) {
+    let link = seed_link(&pool, "inviter", chrono::Utc::now() + chrono::Duration::days(1)).await;
+    let data = gql(
+        test_app(pool),
+        format!(
+            "{{ inviteLinkCheck(id: \"{link}\") {{ inviterHandle inviter {{ \
+             handle displayName {{ value status }} \
+             ... on User {{ avatar {{ url }} email accountState }} }} }} }}"
+        ),
+    )
+    .await;
+    let inviter = &data["inviteLinkCheck"]["inviter"];
+    assert_eq!(inviter["handle"], "inviter");
+    assert_eq!(inviter["handle"], data["inviteLinkCheck"]["inviterHandle"]);
+    assert_eq!(inviter["displayName"]["status"], "NORMAL");
+    assert!(inviter["displayName"]["value"].is_string());
+    assert!(inviter["avatar"].is_null(), "no picture was ever set");
+    assert!(inviter["email"].is_null(), "private to the account itself");
+    assert!(inviter["accountState"].is_null(), "private to the account itself");
+}
+
 /// (´claim:server:an-invite-link-reads-anonymously´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn invite_link_check_reads_expiry_as_unusable(pool: PgPool) {

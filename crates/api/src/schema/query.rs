@@ -101,7 +101,11 @@ impl Query {
             .ok_or_else(|| super::faults::Fault::new("invite link without inviter"))?;
         Ok(Some(InviteLinkCheck {
             usable: store::invite_link_usable(pool, id).await?,
-            inviter_handle: inviter.handle,
+            inviter_handle: inviter.handle.clone(),
+            inviter: Some(Actor::User(User {
+                identity: inviter,
+                viewer_session: None,
+            })),
             expires_at: link.expires_at,
         }))
     }

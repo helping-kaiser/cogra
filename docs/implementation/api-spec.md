@@ -5699,6 +5699,10 @@ type InviteLinkCheck {
   usable: Boolean!
   "The issuing actor's handle."
   inviterHandle: String!
+  "The issuing actor as a public profile — the face and the name the
+   registration form stands under (Join). Nullable as every actor
+   reference is (Application.approver)."
+  inviter: Actor
   expiresAt: DateTime!
 }
 
