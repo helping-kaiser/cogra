@@ -103,7 +103,7 @@ export interface PostCardProps {
    * the pad closed, Set's state with it open; or a read-side comfort's
    * revert said on the row. Pass-through to `StanceControl`'s `signing`.
    */
-  stanceSigning?: "busy" | "failed" | "writeRule" | "comfortFailed";
+  stanceSigning?: "pressed" | "busy" | "failed" | "writeRule" | "comfortFailed";
   /** Forwarded to `StanceControl`'s `holdProgress`: the hold's ring drawn standing at this 0–1 fill, for a board. */
   stanceHoldProgress?: number;
   /** Forwarded to `StanceControl`'s `knobHeld`: the pad's knob drawn under the finger, its pressed layer around it, for a board. */

@@ -18,7 +18,7 @@ WHEN the change has answered within 200ms of Change it -> NEVER the label Changi
 
 ALWAYS nothing cancels the change GIVEN Change it was pressed
 
-WHEN the change has not answered 200ms after Change it -> Keep it reads Close in the same place, filled and live AND NEVER Close dims
+WHEN tap Change it -> Keep it reads Close in the same place from the press itself, filled and live AND NEVER Close dims
 
 WHEN tap Close, tap the scrim, press system Back or press Escape GIVEN the change is in flight -> the dialog closes AND the change goes on AND NEVER the change is cancelled
 

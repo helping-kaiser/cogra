@@ -10491,11 +10491,11 @@ jakob after his hand test.
   spent.` where the fault line stands — the act dimmed, no Retry, `Keep
   it` the way back. The board's `answer` chip draws it.
 - **The way out while Set signs.** Once Set is pressed nothing cancels
-  the act: past 200ms Cancel reads `Close`, and it, the press outside, Back
-  and Escape only close the pad; the wait passes to the target's row, a
+  the act: from the press Cancel reads `Close`, and it, the press outside,
+  Back and Escape only close the pad; the wait passes to the target's row, a
   hold's (`Signing…`, then the face and the snackbar, or `That didn't
   sign.` with a Retry that asks the same pick again). `PadFailed`'s
-  `moment` chip draws `setting` and `closed` (round 34).
+  `moment` chip draws `pressed`, `setting` and `closed` (rounds 34, 37).
 - **The key-absent pad's "?"** says only what its notice does not: where
   the key lives, and what waits for the restore.
 - **The target label's family**: `this post`, `this comment`, `@ada`,
@@ -11086,11 +11086,10 @@ wait (network issues) but the act is done"; one rule for every signing
 surface.
 
 - **Once a commit is pressed, the act is done: nothing cancels it.** The
-  way out only closes the surface so the reader need not wait. Past 200ms,
-  beside the in-flight label, the control that read `Cancel` or `Keep it`
-  reads `Close` in the same place, live and never dimmed; inside the 200ms
-  nothing on screen changes, and a press on the way out closes the surface
-  all the same.
+  way out only closes the surface so the reader need not wait. From the
+  press itself the control that read `Cancel` or `Keep it` reads `Close` in
+  the same place, live and never dimmed (round 37); the in-flight label
+  stands beside it once 200ms pass.
 - **The pad and the alternates.** Closed mid-signing, the wait passes to
   the target's row as a hold's (`Signing…`, then the face and the
   snackbar, or `That didn't sign.` with Retry). `StanceControl`'s and

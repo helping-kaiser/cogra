@@ -24,14 +24,16 @@ export interface StanceAlternatesProps {
   busy?: boolean;
   /**
    * The commit's signing, as `StanceControl`'s `signing` hands it while the
-   * alternates are up (dialog host only). "busy" — past 200ms the commit
-   * reads `Signing…` and goes inert, never dimmed, and `Cancel` reads `Close`:
-   * nothing cancels the act, Close only leaves. "failed" — `That didn't
+   * alternates are up (dialog host only). "pressed" — the first 200ms:
+   * `Cancel` already reads `Close`, the commit keeps its label and refuses a
+   * second press. "busy" — past 200ms the commit reads `Signing…` and goes
+   * inert, never dimmed, beside `Close`: nothing cancels the act, Close only
+   * leaves. "failed" — `That didn't
    * send. Try again.` above the action row, and an outlined `Retry` in the
    * commit's slot. "writeRule" — the write rule's notice where the landing
    * line and the action row were, with its own "?" and `Not now`; no Retry.
    */
-  signing?: "busy" | "failed" | "writeRule" | "keyAbsent";
+  signing?: "pressed" | "busy" | "failed" | "writeRule" | "keyAbsent";
   /**
    * The typed fields' text mid-typing, for a board — `{ pDirected: "1.5" }`.
    * The pick is the clamped value; the field shows what was typed until it

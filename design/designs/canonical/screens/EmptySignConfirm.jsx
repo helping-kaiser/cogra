@@ -42,7 +42,10 @@
    dialog past 200ms after `Set it anyway`: the act reads `Setting…`, inert
    and never dimmed, and `Keep it` reads `Close`, filled and live in its
    slot — it closes the dialog and the pad beneath, and the act goes on, its
-   wait on the target's row as `PadFailed`'s `closed` moment draws it. */
+   wait on the target's row as `PadFailed`'s `closed` moment draws it.
+   `Keep it` reads `Close` from the press itself (jakob 2026-11-11: "swap at
+   the press"); only the act's own label waits the 200ms — the pad's
+   `pressed` moment, drawn on `PadFailed` alone. */
 export const PROPS = {
   context: { editor: "enum", options: ["opinion", "vouchIn"], default: "opinion" },
   answer: { editor: "enum", options: ["asking", "setting"], default: "asking" },
