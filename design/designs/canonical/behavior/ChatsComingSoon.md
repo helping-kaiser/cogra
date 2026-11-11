@@ -10,7 +10,7 @@ ALWAYS the chats' coming-soon page serves every signed-in reader state with one 
 
 ALWAYS the coming-soon page offers no action and names no date
 
-ALWAYS the chats' coming-soon page wears the header's back arrow and the bottom bar with all five slots, the slot of the root it was opened from lit
+ALWAYS the chats' coming-soon page wears chats.header.back and chats.bottomBar with all five slots, the slot of the root it was opened from lit
 
 ALWAYS the back arrow reads Back to feed, Back to Explore, Back to Wallet or Back to your profile, by the root the chats icon was tapped on, GIVEN the page was opened from the band's chats icon
 
@@ -20,12 +20,12 @@ WHEN tap the back arrow -> the screen it was opened from comes back, in the stat
 
 WHEN press Android's system Back -> the screen it was opened from comes back, exactly as the back arrow's press brings it
 
-WHEN tap the bottom bar's Feed -> the feed opens
+WHEN tap chats.bottomBar.feedSlot -> the feed opens
 
-WHEN tap the bottom bar's Explore -> Explore opens
+WHEN tap chats.bottomBar.searchSlot -> Explore opens
 
-WHEN tap the bottom bar's New post -> a new post's pick stage opens
+WHEN tap chats.bottomBar.composeSlot -> a new post's pick stage opens
 
-WHEN tap the bottom bar's Wallet -> the wallet's coming-soon door opens
+WHEN tap chats.bottomBar.walletSlot -> the wallet's coming-soon door opens
 
-WHEN tap the bottom bar's Profile -> the reader's own profile opens
+WHEN tap chats.bottomBar.profileSlot -> the reader's own profile opens

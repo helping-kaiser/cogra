@@ -44,16 +44,22 @@
    reads the root it was tapped on — `Back to feed`, the state this board
    draws, `Back to Explore`, `Back to Wallet` or `Back to your profile` — and
    from a profile's `Message` it reads `Back to the profile`. Every label is
-   already blessed. */
+   already blessed.
+
+   REGISTERED under the `chats` prefix (round 35, jakob 2026-11-11, T13), a
+   drill-in page's names as `Notifications` registers them — the band's other
+   icon's page: `header`, `bottomBar` with its five slots — and the card
+   `comingSoonCard`, as `WalletComingSoon` names it. */
+export const NODE = "chats";
 export function Screen() {
   return (
     <>
-      <PageHeader title="Chats" backHref="#" backLabel="Back to feed" />
+      <PageHeader title="Chats" backHref="#" backLabel="Back to feed" node="header" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 0 0" }}>
-        <ComingSoonCard thing="Chats" line="Your conversations will be here." />
+        <ComingSoonCard thing="Chats" line="Your conversations will be here." node="comingSoonCard" />
         <div style={{ flex: 1 }} />
       </div>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
