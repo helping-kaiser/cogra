@@ -104,8 +104,8 @@ mutation PrepareReference($input: PrepareReferenceInput!) {
 }
 
 # Withdrawing one reference (D11). Records are never deleted and
-# reference withdrawal is per-leg net stance, so this is the severance
-# shape: the server assembles counter-records until the
+# a reference is withdrawn by its author through netting, so this is the
+# severance shape: the server assembles counter-records until the
 # (author, artifact, target) bundle reaches (0, 0). The returned batch
 # IS the quoted cost — one priced act per write — and it is what the
 # confirm reports before anything is signed.
