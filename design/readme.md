@@ -11132,7 +11132,14 @@ option b), with two of his hand-test findings (seam 275).
   scale and position and the frame changes around it; only the fill floor
   lifts a scale (`ComposeCrop`). The verification mail's paste line is
   not in the design tree (the mails' words live outside it).
-- **The gate**: GATE_PENDING
+- **The gate**: edges **2177 → 2178** (`AppCrash`'s `Reload`); flows
+  hold at **227**, two re-blessed (`watch-the-stream`, its start now
+  `portrait or square`; the already-published marker's flow, its door
+  now over the composer). The registry **167 → 169 screens**, **6120 →
+  6134** board paths, **1920 → 1934** distinct — `crash.*` and
+  `chats.*` added, nothing removed. The fifteen boards that draw the
+  numeric 32 disc change only the letter's role inside the fixed 32px
+  box.
 
 ---
 
