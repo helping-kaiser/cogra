@@ -52,6 +52,9 @@ export function QuotedRow({ title, snippet, name, src, mark, attach = false, nod
             letterSpacing: "var(--text-label-large--letter-spacing)",
             lineHeight: "var(--text-label-large--line-height)",
             fontWeight: "var(--text-label-large--font-weight)",
+            // TEXT THAT WRAPS (round 40): `The long way home — @…` breaks a
+            // handle too long for the row inside the word, never cut.
+            overflowWrap: "anywhere",
           }}
           data-node={node && "title"}
         >

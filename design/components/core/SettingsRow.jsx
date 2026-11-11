@@ -193,7 +193,7 @@ export function SettingsRow({
         {label}
       </span>
       {status && (
-        <span style={{ ...STATUS_TYPE, overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "status"}>
+        <span style={{ ...STATUS_TYPE, overflow: "hidden", textOverflow: "ellipsis", overflowWrap: "anywhere" }} data-node={node && "status"}>
           {status}
         </span>
       )}
