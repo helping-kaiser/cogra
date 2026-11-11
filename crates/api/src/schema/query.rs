@@ -28,7 +28,7 @@ use super::types::{
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
-use crate::ratelimit::{RateLimitConfig, scope};
+use crate::ratelimit::{self, RateLimitConfig};
 use crate::search::{self, IndexKind, ScopedKind};
 
 /// Connectivity report for the API process and its store.
@@ -177,7 +177,7 @@ impl Query {
         let limits = ctx.data::<RateLimitConfig>()?;
         super::mutation::guard_window(
             ctx,
-            scope::CONFIRM_IP,
+            ratelimit::scope::CONFIRM_IP,
             &super::mutation::request_ip(ctx)?,
             limits.confirm_ip,
         )
