@@ -11329,6 +11329,46 @@ rounds 34 + 35 ("as rec", "sounds fine", "blessed").
   `invites.person`, `invites.redactedPerson` with their parts, and the two
   rows' key rules; nothing removed.
 
+### Round 39, the install row; four leftovers — 2026-11-11
+
+jakob's ruling on the installable web app (seam 285: "and yes ask design to
+add this to settings"; "A row in Settings" in the design session). The row's
+details are a proposal drawn for his review.
+
+- **The install row.** `Add CoGra to your home screen` (*review-pending*), a
+  `SettingsRow` with its chevron and no second line, leads the Clearing data
+  group — the group whose rows concern the app on this device; the wipe stays
+  its last row. Where the browser asks by itself (Android Chrome) the tap
+  raises its own install prompt; where it installs only by hand (iOS
+  Safari) the tap raises `SettingsInstallHelp`, `HelpDialog`'s shape titled
+  by the row: `In Safari, tap Share, then Add to Home Screen.`
+  (*review-pending*) and `Close`. Installed, or in a browser that can do
+  neither, the row is absent; the android app never shows it. Drawn on
+  `Settings`' `install` chip (`absent`, the default — the page as every
+  other board draws it, 0 of 147 named boxes moved, measured; `shown`). The
+  shown page outgrows the board's frame by 25px (backlog 175).
+- **The sheets a host menu raises keep one path** (backlog 161 closed): the
+  menu takes the host's prefix, the license, report and remove sheets it
+  raises do not — §13's sheet node law now reads so.
+- **The fixtures' menus** (backlog 162 closed): the ladder boards and
+  `ReplyMedia` take the menu their sheet draws, the specimens drop their
+  doubled license and gain Report. Every rendered board is byte-identical —
+  a closed menu renders no row. The ladder's two redacted records keep Save
+  and Cite (backlog 176). `SigningAfterClose`'s own card drew the license
+  twice; it takes the filtered own menu.
+- **The intro's vouch note** in copy-voice reads as the board does — `A
+  friend who's already in has to let you in. Ask around once you have
+  verified your email.`, jakob's 2026-10-07 wording (rulings item 59).
+- **`ChangePassword`'s press** lists in the graph the refusals its sidecar
+  states: the wrong current password, the refused new one, the mismatch,
+  the spent re-auth budget.
+- **The gate**: one board added (`SettingsInstallHelp`, profile page, beside
+  `EraseConfirm`); `Settings` gains the `install` chip. Three edges added
+  (the row, the dialog's Close and scrim), **2265** in check-flows' count;
+  flows hold at **227**. The registry grows to **182 screens**, **6799 →
+  6946** board paths, **1996 → 2000** distinct — `settings.clearing.install`
+  with its label and chevron, and `settings.dialog.close`; nothing removed.
+
 ---
 
 ## 14. The canvases

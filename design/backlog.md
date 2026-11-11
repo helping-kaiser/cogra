@@ -5590,3 +5590,23 @@ count, and whether a hidden person's row stands (the hide law keeps a hidden
 account out of feeds, not out of the reader's own records). Lean: page past
 the page size the lists share; a hidden person stays, as their row is the
 reader's own record.
+
+### 175 · Settings with the install row outgrows its board · *system* · **filed 2026-11-11**
+
+Round 39. `Settings`' frame is 3046px, the page whole with 32px under the last
+footnote. The `install` chip's `shown` adds the row (57px with its hairline),
+so the delete group's footnote ends at 3071 and its last 25px are cut;
+`absent` is unchanged. For jakob: (a) the frame grows to 3103, `absent` then
+drawing 89px of surface under the footnote [lean — a frame is the page, and
+nothing on the default moves]; (b) the clip stands, the row being what the
+setting shows; (c) the shown page as a board of its own.
+
+### 176 · The ladder's redacted records: which menu · *design* · **filed 2026-11-11**
+
+Round 39 (backlog 162). `LadderStates` draws a post removed by its author and
+one removed as illegal with `CARD_MENU` — Save and Cite — and its note says a
+redacted record keeps its menu, citable because it never left the graph. No
+board draws a redacted card's open menu (`FeedRemoved`'s just-removed card
+passes none). For jakob: (a) the reader's card menu, Hide and Report included
+(`readerCardMenu`); (b) Save and Cite only, as drawn [lean — what is hidden
+or reported is the payload, and it is gone]; (c) no menu, `FeedRemoved`'s.
