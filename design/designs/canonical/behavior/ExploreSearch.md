@@ -8,6 +8,8 @@ ALWAYS what the ranker cannot score stands behind a visible seam, newest first G
 
 ALWAYS the results stand in the search's sections, people, then topics, then content, under either order
 
+ALWAYS each section stands under its caption, explore.tagsLabel reading Tags over the topics and explore.contentLabel reading Posts and comments over the content, under either order
+
 ALWAYS each section stands its own ranked head and then its own rest, and explore.seam closes the head of each section that has a rest, one per section, keyed people, topics or content GIVEN the order is Ranked
 
 ALWAYS explore.searchField.clear stands at the field's end, spoken Clear search, GIVEN a query stands in explore.searchField

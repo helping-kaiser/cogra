@@ -63,6 +63,9 @@
    its own ranked head and then its own rest, so the seam is the CONTENT
    section's, keyed `content`, and a topic past its own section's head would
    stand behind a `topics` seam of its own (`ExplorePerson` draws all three).
+   Each section is captioned, under either order, as `ExplorePerson`'s are
+   (jakob 2026-11-11): `Tags` (`tagsLabel`) and `Posts and comments`
+   (`contentLabel`).
    The field carries its clear × while a query stands (`SearchBar`'s
    `onClear`, `Clear search`). */
 export const NODE = "explore";
@@ -78,7 +81,9 @@ export function Screen() {
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "{{rankedShown}}", flexDirection: "column" }} data-node-chip="order" data-node-key="ranked">
+          <SectionLabel node="tagsLabel">Tags</SectionLabel>
           <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} node="result" nodeKey="1" />
+          <SectionLabel node="contentLabel">Posts and comments</SectionLabel>
           <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="2" />
           <ReferenceRow
             kind="comment"
@@ -97,7 +102,9 @@ export function Screen() {
           <ReferenceRow kind="post" name="First try at a rubbing" value="06.09.2024" onOpen={() => {}} node="result" nodeKey="4" />
         </div>
         <div style={{ display: "{{newestShown}}", flexDirection: "column" }} data-node-chip="order" data-node-key="newest">
+          <SectionLabel node="tagsLabel">Tags</SectionLabel>
           <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" onOpen={() => {}} node="result" nodeKey="1" />
+          <SectionLabel node="contentLabel">Posts and comments</SectionLabel>
           <ReferenceRow
             kind="comment"
             name="The wax-stick ones read like weather charts…"

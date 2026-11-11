@@ -81,15 +81,15 @@ const STRIP = / data-node(?:-key|-chip)?="[^"]*"/g;
 // node whose segment has no rule here fails the build, so no key ships
 // without its rule written down.
 export const KEY_RULES = {
-  account: "the hidden account's handle, without @ (the hidden-accounts sheet)",
+  account: "the hidden person's id, the lowercase UUID the wire carries (the hidden-accounts sheet)",
   act: "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
   actRow: "the row's position in the acts card, counted from 1 (ActsCard)",
-  application: "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
+  application: "the asker's id, the lowercase UUID the wire carries (Invites' applications, a kept approval's row among them)",
   axis: "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)",
   block: "the kind of thing the block holds — post, comment, person or topic (FeedEntryKinds' blocks)",
-  card: "the author's handle, without @ (PostCard)",
+  card: "the post's id, the lowercase UUID the wire carries (PostCard)",
   citation: "the citation's position in the list, newest first, counted from 1 (the cited-by sheet)",
-  commentCard: "the comment author's handle, without @ (CommentCard)",
+  commentCard: "the comment's id, the lowercase UUID the wire carries (CommentCard)",
   dateline: "the release's version, lowercased, each run of other characters one - (What's new's datelines)",
   day: "the divider's words, lowercased, each run of other characters one - (History's day dividers)",
   entry: "the saved thing's title, or an untitled post's stand-in (a words post's first line, a media post's kind and author's handle: Pictures by @ada, A video by @ada), lowercased, each run of other characters one - (Saved)",
@@ -99,11 +99,11 @@ export const KEY_RULES = {
   heldTopic: "the held topic's name, without # (Your topics)",
   link: "the invite link's id, the link's last path segment (Invites' live links)",
   notification: "the notification's position in the list, newest first, counted from 1 (Notifications)",
-  opinion: "the opinion holder's handle, without @ (the opinions sheet)",
+  opinion: "the opinion holder's id, the lowercase UUID the wire carries (the opinions sheet)",
   picture: "the picture's position in the post's media, counted from 1 (PickedSheet)",
   pick: "the kept pick's position in the kept picks' review, counted from 1 (KeptPicksReview)",
   path: "the path's position in the list, strongest first, counted from 1 (the score's trace)",
-  profileCard: "the person's handle, without @ (the profile feed card)",
+  profileCard: "the person's id, the lowercase UUID the wire carries (the profile feed card)",
   record: "the record's key, as the row prints it (the score's trace)",
   recent: "the recent query's words, lowercased, each run of other characters one -, none leading or trailing (Explore's recents)",
   redactedAccount: "the deleted account's actor id, the lowercase UUID the wire carries (the hidden-accounts sheet, where a deleted account has no handle left to key by)",
@@ -112,10 +112,10 @@ export const KEY_RULES = {
   redactedRow: "the deleted account's actor id, the lowercase UUID the wire carries (the opinions page, where a person who deleted their account has no handle left to key by)",
   redactedOpinion: "the deleted holder's actor id, the lowercase UUID the wire carries (the opinions sheet, where a holder who deleted their account has no handle left to key by)",
   release: "the release's version, lowercased, each run of other characters one - (What's new's release cards)",
-  row: "the handle of the person the row names, without @ — the opinion's holder on the On tab, the one it is held on on the By tab (the opinions page)",
+  row: "the id of the person the row names, the lowercase UUID the wire carries — the opinion's holder on the On tab, the one it is held on on the By tab (the opinions page)",
   result: "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
   tag: "the tag's name, without # (TopicsLine, TopicRemovable)",
-  tagCard: "the tag's name, without # (the tag feed card)",
+  tagCard: "the tag's id, the lowercase UUID the wire carries (the tag feed card)",
   topic: "the topic's title, lowercased, each run of other characters one -, none leading or trailing (About's topics)",
   thumb: "the picture's position in the draft's media, counted from 1 (PickedRow)",
   tier: "the reading's position on its license axis, the least asked first, counted from 1 (LicenseAxis)",
@@ -123,21 +123,19 @@ export const KEY_RULES = {
   session: "the session's position in the list, this device first, counted from 1 (Settings' sessions)",
   stagedReference: "the reference's position in the staged set, counted from 1 (the screen that stages it)",
   step: "the step's position along its path, from the path's start, counted from 1 (the score's trace)",
-  viewReplies: "the comment author's handle, without @ — the key of the card the line hangs under (CommentCard)",
+  viewReplies: "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (CommentCard)",
 };
 
-// A PATH'S OWN RULE, where its segment's rule cannot tell its instances apart
-// (round 27, seam 252). A profile's posts view lists one author's posts, so
-// `card`'s rule — the author's handle — gives every card the same key; there
-// the card keys by what does tell them apart, the post's id as the wire
-// carries it (the web's minted ids, kept). A registered rule is never
-// reworded, so the segment keeps its rule everywhere else and this table names
-// the one path that differs. Keyed by full path; it wins over `KEY_RULES`.
-export const PATH_KEY_RULES = {
-  "profile.posts.card": "the post's id, the lowercase UUID the wire carries (a profile's posts view, where every card has the one author)",
-  "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (a profile's comments view, where every card has the one author)",
-  "profile.comments.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (a profile's comments view)",
-};
+// WHAT HAS AN ID ON THE WIRE IS KEYED BY THAT ID (round 33, seam 264): a post,
+// comment, profile or tag card, and a row that names a person, keys by its
+// thing's id as the wire carries it — never by a handle or a name, which two
+// instances on one list can share (one author's two cards). A rule is
+// reworded only in a named, announced breaking change (the readme's registry
+// law).
+//
+// A PATH'S OWN RULE, where its segment's rule cannot tell its instances apart:
+// keyed by full path, it wins over `KEY_RULES`. None stands today.
+export const PATH_KEY_RULES = {};
 
 // The key rule of a chip-drawn state duplicate (above): one rule for every
 // chip, named by the chip, since the key is the chip's value wherever it is.

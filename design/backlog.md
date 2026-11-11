@@ -2810,11 +2810,11 @@ topic stance row and with it the face, the accessible path and the same
 else in the ruling moved: `TagPageHeld` still wires no gate, for the
 reason given.
 
-### 82 · A tag page reached from Your topics goes back to the wrong place · *design* · **ruled + wired**
+### 82 · A tag page reached from Your tags goes back to the wrong place · *design* · **ruled + wired**
 
 Surfaced by the topic round 2026-09-14. The tag round ruled the page a
 subpage of search, so its arrow is a LINK back to Explore rather than
-history — `Back to Explore`, always. Your topics is now a second route
+history — `Back to Explore`, always. Your tags is now a second route
 to it, one level further out, so a reader who opens `#saltmaps` from
 their own list and presses back lands on Explore rather than on the list
 they came from.
@@ -2825,7 +2825,7 @@ the skip is accepted as the cost of a link. The tag round's reasoning
 for a link is real and this round did not disturb it.
 
 Ruled by jakob 2026-09-15 — back goes where the reader came from, and
-the label names that origin: `Back to Explore`, `Back to Your topics`,
+the label names that origin: `Back to Explore`, `Back to Your tags`,
 `Back to feed`. A cold entry with no history, which is what a shared URL
 is, falls back to `Back to Explore`. The whole family carries it —
 `TagPage`, `TagPageHeld`, `TagPageEmpty` — as the graph's `back`
@@ -4935,7 +4935,7 @@ make alone:
   words, as the card anchor rests. The tag page leaves about 254px and
   fits handles to roughly twenty characters.
 - **The filter's topic door under a borrowed view.** The topic chips
-  become the vantage's topics, but `All your topics` opens the reader's
+  become the vantage's topics, but `All your tags` opens the reader's
   own list, and no page lists another account's topics. Keep, drop
   under a borrowed view, or re-voice to a page still owed. Until ruled
   the door stands as drawn. Note too that a guest now sees the
@@ -5021,6 +5021,9 @@ not make alone:
   Carving them out returns them to an uncapped people section, which is
   what the web client serves today. If the cap stays, the server may
   need a per-section `first` (seam 224).
+  - **Ruled yes** (jakob 2026-11-11): three per section before `See all …`
+    on every sectioned surface; the boards' notes say it as the rule
+    (round 31).
 - **Saved's own people-only narrowing.** Saved has no kind filter, so
   `See all profiles` there opens a state of Saved's own — the query kept,
   the people alone. It is described in `SavedSearch.md`, not drawn, and
@@ -5201,6 +5204,13 @@ before and after.
 - **Closed in round 27** (seam 252, item 12; found by android): ~~`ProfileHeader`'s
   figures — the label set label-small without its tracking, the value
   title-medium without its tracking~~. Both now set the role whole.
+- **Closed in round 32** (seam 267, found by impl): six sites that choose
+  their size by a condition (`fontSize: c ? "var(--text-a)" :
+  "var(--text-b)"`), a pattern the round-28 sweep did not match — `PostCard`'s
+  title and body, `NodeMark`'s letter, `MonogramAvatar`'s numeric branch and
+  the two conditional faces (`StanceControl`, `StanceReadout`). Each now
+  sets every part under the same condition; the faces keep their emoji
+  leading (`1`, `1.2`).
 
 ### 148 · Does a words comment's edit take a video? · *design* · **filed 2026-10-29** · **closed 2026-11-10**
 
@@ -5220,8 +5230,8 @@ it on its own.`
 - **Ruled (a)** (jakob 2026-11-10: "all comments can hold
   words/images/one video. there is no specific 'text-comment'"), built in
   round 29 as law: `CommentEdit.md` and its docblock, the staged-surfaces
-  row. A words comment's edit is not drawn: how its empty media block
-  reads is open (readme §13, round 29).
+  row. Drawn in round 30 (jakob 2026-11-11, "draw it"): `CommentEdit`'s
+  `body` chip at `words`, the media block reduced to its add row.
 
 ### 149 · What round 27's registrations left undrawn · *system* · **filed 2026-10-29**
 
@@ -5249,3 +5259,76 @@ stopped there. Two families stay unregistered until a board draws them:
   - **The profile's comments view** — the comment card's own ⋮ (round 28,
     seam 254 A3, held undrawn by jakob 2026-11-10): `profile.menuSheet` on
     its own board, as the posts view's.
+
+### 150 · Re-key the registry's topic paths to tags · *system* · **filed 2026-11-11**
+
+Round 30 (jakob 2026-11-11, Q4: "tags everywhere") took *topic* off every
+label; the registry is append-only, so the paths that carry the word stay
+until a re-key round agreed with the implementation side renames them:
+`explore.topics` (with `.chevron`, `.disc`, `.second`, `.title`), the four
+kind chips `…kinds.topicsChip` (explore, feed, history and settings filter
+sheets), `feed.filterSheet.topic` (with `.allTopics`, `.hint`, `.label`,
+`.tag`), the `yourTopics` prefix whole (`header`, `empty`, `heldTopic`,
+`redactedTopic` and their parts), and `explore.seam`'s `topics` key. The
+key rules naming *Your topics* (`heldTopic`, `redactedTopic` in
+`node-paths.mjs`) move with them. `about.topic` is a help dialog's subject
+and keeps its word.
+
+### 151 · The pickers' states, one at a time · *system* · **filed 2026-11-11**
+
+Round 31 (seam 254 item 14). The pickers' `state` chips (`TagPicker`:
+`picking`, `cap`, `fault`, `none`, `seven`; `ReferencePicker` the same with
+`filter`) draw every copy at once on a board opened outside the canvas: a
+`{{hole}}` the canvas substitutes stays literal, so `display:` is dropped
+and each copy shows. The tree's other multi-state families stand one board
+per state under one prefix (`TagPickerTyping`, `TagPickerRefused`; round
+28's `signIn` states), but the chips' paths are registered on the two
+boards and append-only, so splitting them keeps the chips and adds the
+boards beside them. Three ways, for jakob and the implementation side:
+(a) a board per state beside the chip (`TagPickerCap`, `TagPickerSeven`,
+`TagPickerNone`, `TagPickerFault`, and the citation picker's five), each
+with its markers and edges; (b) the shell writes each board's default
+values in place of its holes for a board opened outside the canvas, so
+every chip board in the tree measures at its default (a build change,
+every chip board's standalone geometry moves); (c) the harness evaluates
+the board's own `VALS` for a chosen value. The sheet `Show all` raises is
+drawn (`TagPickerShowAll`, `ReferencePickerShowAll`); this item stays open
+for the per-state measuring alone.
+
+### 152 · The disc's letter: which role at 32px, which weight · *design* · **filed 2026-11-11**
+
+Round 32 (seam 267, ask 3). `MonogramAvatar` takes its letter's role by
+size: the named `md` disc (32px) is `label-medium`, a numeric 32 (`QuotedRow`,
+the only one) `label-large`, so one size draws two roles. Boards that draw
+the numeric 32: `DiscardConfirm`, `FeedEntry`, `FeedEntryKinds`,
+`FeedEntryMoved`, `RankHop`, `RankPath`, `RankRecords`, `ReplyCompose`,
+`ReplyComposeComment`, `ReplyMediaErrors`, `ReplyPictures`,
+`ReplyPicturesWeb`, `ReplyVideo`, `ReplyVideoFailed`, `VouchedIn`. And the
+disc's own style sets `fontWeight: 500` after its role, so every branch's
+role weight is overridden: the 56px-and-up and `lg` discs take
+`headline-small`, weight 400, and draw 500. For jakob: which role a 32px
+disc takes, and whether the large discs' 500 is the disc's own weight (kept,
+named) or the role's 400.
+
+### 153 · One author's two cards share a key · *system* · **filed 2026-11-11** · **closed 2026-11-11**
+
+Android's collision report (G4, seam 263): list cards were keyed by their
+author's handle, so one person's two cards on one list took one key. Closed
+by round 33 (jakob 2026-11-11, "12. as rec"; seam 264): what has an id on the
+wire is keyed by that id — post, comment, profile and tag cards, and the
+person rows (`invites.application`, `profileStances.list.row`,
+`settings.hiddenSheet.list.account`, `postDetail.opinionsSheet.opinion`), by
+the lowercase UUID the wire carries; everything inside a card follows its
+key. No path moved.
+
+### 154 · The redacted twins' rules still explain themselves by the handle · *system* · **filed 2026-11-11**
+
+Round 33. `redactedAccount`, `redactedApplication`, `redactedRow` and
+`redactedOpinion` key by the deleted person's actor id, and each rule ends
+"where … has no handle left to key by" — written when the live twin keyed by
+handle. The live rows now key by the person's id too, so the clause explains
+a difference that is gone, and the rules call the same id "actor id" where
+the live rows' say "id". A rule is reworded only in a named breaking change
+(readme's registry law): for jakob and impl, whether to reword the four in
+the next one, and whether "actor id" and the person's id are one wire field
+(both clients mint the live rows from `User.id`, seam 263).

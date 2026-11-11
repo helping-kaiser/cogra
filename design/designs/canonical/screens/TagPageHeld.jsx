@@ -21,7 +21,7 @@
    POSITIVE HERE, AND THAT IS NOT THE PREDICATE. This board draws a held topic
    whose association is positive, which is also what the topic feed admits. A
    NEGATIVE Affinity is held exactly as much: it stands as a public record, it
-   shows in Your topics with its own face, and its one difference is that its
+   shows in Your tags with its own face, and its one difference is that its
    topic never narrows anyone's feed. Nothing on this page marks that
    difference, because on this page there is none.
 

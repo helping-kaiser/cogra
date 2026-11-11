@@ -34,7 +34,8 @@ export interface NodeMarkProps {
   onCard?: boolean;
   /**
    * The thing's payload went (a removed post): the tile keeps its space and
-   * fills with nothing; a person's disc takes `MonogramAvatar`'s `redacted`.
+   * fills with nothing, ringed 1px in `--border-field` inside its box on
+   * either fill (`REDACTED_RING`); a person's disc takes `MonogramAvatar`'s `redacted`.
    * Defaults to false.
    */
   redacted?: boolean;
@@ -73,7 +74,7 @@ export interface ReferenceRowProps {
   /**
    * Which record family `pair` belongs to, where the `kind` does not answer it.
    * A topic row usually carries a TAG (`"tag"`, the default for that kind); on
-   * *Your topics* it carries the viewer's own AFFINITY toward the Type, both
+   * *Your tags* it carries the viewer's own AFFINITY toward the Type, both
    * axes signed and read through the twenty faces, so that list passes
    * `"stance"`. Omitted, the kind decides and nothing drawn changes.
    */

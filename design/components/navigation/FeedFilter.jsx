@@ -500,18 +500,18 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
 
           ONLY THE ONES HELD *FOR* (jakob's predicate). Held is a netted bundle
           that is not (0, 0), and that includes a topic held AGAINST — a public
-          record like any other, and listed as such on Your topics. It is absent
+          record like any other, and listed as such on Your tags. It is absent
           here because an association below nothing is not something to read
           more of, and the hint says so rather than leaving a reader to wonder
           why one of their own topics is missing.
 
           AND THE DOOR OUT IS THE FULL LIST. This section holds what can narrow
-          the feed; Your topics holds everything held, and the page a row opens
+          the feed; Your tags holds everything held, and the page a row opens
           is where a topic is walked back.
 
           LAST IN THE BODY, because it is the section that grows. */}
       {topics.length > 0 && (
-        <FilterSection label="One topic" hint="Topics you hold and are for. A topic you hold against stays a record — it just never narrows a feed." node={node && "topic"}>
+        <FilterSection label="One tag" hint="Tags you hold and are for. A tag you hold against stays a record — it just never narrows a feed." node={node && "topic"}>
           {topics.map((topic) => (
             <Chip
               key={topic}
@@ -523,7 +523,7 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
             />
           ))}
           <div style={{ flexBasis: "100%" }}>
-            <Button variant="text" size="sm" selfStart onClick={onOpenTopics} node={node && "allTopics"}>All your topics</Button>
+            <Button variant="text" size="sm" selfStart onClick={onOpenTopics} node={node && "allTopics"}>All your tags</Button>
           </div>
         </FilterSection>
       )}
