@@ -129,6 +129,13 @@ updates:
       # rides bite ROBOLECTRIC-417 instead.
       - dependency-name: "org.robolectric:robolectric"
         versions: ["[4.17,)"]
+      # Each androidAll* pin is the framework image of ONE Android API
+      # level (26, 32, 33, 36), fetched by exact version for the offline
+      # resolver. A higher version number is another API level's image,
+      # never an update: bumping the api-26 pin to the Android 17 image
+      # failed every Robolectric test at dependency resolution (CI
+      # 2026-11-10). The pins move by hand with robolectric itself.
+      - dependency-name: "org.robolectric:android-all-instrumented"
   - package-ecosystem: npm
     directory: /web
     schedule:
