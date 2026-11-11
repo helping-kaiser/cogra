@@ -5456,7 +5456,7 @@ breaking change. The own views are drawn beneath the own menu boards
 of their own beside the others, additions only (rec); (b) the setting, with
 the re-key announced to impl; (c) the menu boards stand for the own views.
 
-### 161 · The sheets a host menu's rows open: drawn once, but which path · *system* · **filed 2026-11-11**
+### 161 · The sheets a host menu's rows open: drawn once, but which path · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
 The sheet node law (readme §13) says a host card's ⋮ and the rows it opens
 take the host's prefix (`feed.licenseSheet`); round 36 (H7) draws the
@@ -5467,6 +5467,10 @@ drawn sheet (`FeedPostLicense`, `FeedReportConfirm`, `FeedRemoveConfirm`,
 them) whose path no host registers. Ways for impl: (a) the host's prefix by
 the law, registered when a board draws it; (b) the drawn sheet's own path
 wherever raised, the thread's reading of the law.
+
+Closed by round 39, by (b) — round 32's law, which round 36's graph follows:
+the menu a host card raises takes the host's prefix; the license, report and
+remove sheets its rows raise are drawn once and keep one path (readme §13).
 
 ### 162 · Card fixtures on a few boards still carry Save and Cite only · *system* · **filed 2026-11-11**
 

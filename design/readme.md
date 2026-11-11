@@ -2317,9 +2317,11 @@ entry first". What stands:
   raised: the thread is `postDetail.threadSheet` from a feed, History or
   Saved card, a profile's posts and the stream alike, and what it raises
   is the detail's (`postDetail.menuSheet`, `.licenseSheet`, `.dialog`).
-  A sheet a host's own card raises — the card's ⋮ and the rows it opens —
-  is drawn over that host, so it takes the host's prefix
-  (`feed.menuSheet`, `feed.licenseSheet`). One rule, two readings.
+  The menu a host's own card raises — the card's ⋮ — is drawn over that
+  host, so it takes the host's prefix (`feed.menuSheet`,
+  `history.menuSheet`). The sheets its rows raise — license, report,
+  remove — are drawn once and keep that one path wherever they are raised
+  (round 32; round 36's graph).
 - **`_build/check-help-notes.mjs` holds the "? contents" notes to
   copy-voice** (item 109): each note section names a dialog of
   copy-voice's *The "?" dialogs* and must carry its blessed text, and
