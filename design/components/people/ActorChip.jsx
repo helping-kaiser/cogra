@@ -81,12 +81,20 @@ export const REDACTED_ACTOR_NAME = "Deleted account";
 export const HIDE_ACTOR_LABEL = (handle, redacted = false) =>
   redacted || !handle ? "Hide this account" : `Hide ${handle}`;
 
+/* THE LETTER'S ROLE FOLLOWS THE DISC'S SIZE, ONE RULE (round 35, jakob
+   2026-11-11, T12; backlog 152). 24px takes label-small; 32px label-medium,
+   the named `md` size's role, and a numeric 32 takes the same; 64px and every
+   numeric size from 56px up headline-small; any other numeric size
+   label-large. THE WEIGHT IS THE DISC'S OWN: every letter stands at 500
+   whatever its role says, the large discs' headline-small included (jakob,
+   round 32: "all fine"), so a monogram reads at one weight at every size. */
 export function MonogramAvatar({ name, size = "sm", src, redacted = false, node }) {
   const [failed, setFailed] = React.useState(false);
   const initial = redacted ? null : (name ?? "").trim().charAt(0).toUpperCase() || "?";
+  const role = typeof size === "number" ? (size >= 56 ? "headline-small" : size === 32 ? "label-medium" : "label-large") : null;
   const box =
     typeof size === "number"
-      ? { height: `${size}px`, width: `${size}px`, fontSize: size >= 56 ? "var(--text-headline-small)" : "var(--text-label-large)", lineHeight: size >= 56 ? "var(--text-headline-small--line-height)" : "var(--text-label-large--line-height)", letterSpacing: size >= 56 ? "var(--text-headline-small--letter-spacing)" : "var(--text-label-large--letter-spacing)", fontWeight: size >= 56 ? "var(--text-headline-small--font-weight)" : "var(--text-label-large--font-weight)" }
+      ? { height: `${size}px`, width: `${size}px`, fontSize: `var(--text-${role})`, lineHeight: `var(--text-${role}--line-height)`, letterSpacing: `var(--text-${role}--letter-spacing)`, fontWeight: `var(--text-${role}--font-weight)` }
       : size === "lg"
         ? { height: "64px", width: "64px", fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", letterSpacing: "var(--text-headline-small--letter-spacing)", fontWeight: "var(--text-headline-small--font-weight)" }
         : size === "md"

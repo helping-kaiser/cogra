@@ -2,7 +2,7 @@
    §13, the reel round). Reached two ways, and it is the same screen both times:
    the score element on the stream's rail, where the clip SHRINKS to the top
    still playing and the body rises beneath it; or the ordinary tap on a clip
-   that is not portrait, from any card.
+   wider than tall, from any card.
 
    THE CLIP STANDS ABOVE THE CARD, not inside it — which is why the author chip
    leads the card rather than the screen. On every other surface the chip sits

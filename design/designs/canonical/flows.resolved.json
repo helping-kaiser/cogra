@@ -1680,7 +1680,7 @@
     },
     {
       "name": "watch-the-stream",
-      "description": "A portrait clip's tap, wherever a post is drawn, opens the stream — the list it was tapped in, narrowed to clips taller than they are wide in that list's order, swiped onward from there.",
+      "description": "A portrait or square clip's tap, wherever a post is drawn, opens the stream — the list it was tapped in, narrowed to clips at least as tall as they are wide in that list's order, swiped onward from there.",
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
@@ -1709,7 +1709,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait clip — the stream opens on 24 boards → Reel",
+        "start · «post media» — a portrait or square clip — the stream opens on 24 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
@@ -4258,7 +4258,7 @@
       "status": "resolved",
       "steps": [
         "start · ComposeDetailsReused",
-        "end · ComposeDetailsReused · 14 «Already in your post from 12 September. (the marker's door)» → PostDetail — the post the line names — the earliest of the author's published posts the media stands in; no dialog, no confirm step, no gate"
+        "end · ComposeDetailsReused · 14 «Already in your post from 12 September. (the marker's door)» → PostDetail — the post the line names — the earliest of the author's published posts the media stands in, opened over the composer, Back returning to the draft as it was left; no dialog, no confirm step, no gate"
       ],
       "boards": [
         "ComposeDetailsReused",
