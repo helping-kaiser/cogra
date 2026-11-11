@@ -4835,7 +4835,7 @@ const FEED_BIO = {
 const FEED_DELETED_PROFILE_MENU = PROFILE_DELETED_MENU.filter((row) => row.label !== "Share this profile");
 
 /* NAMED BY ITS PLACER (design ⇄ impl seam 062/063): `History` registers it as
-   `profileCard`, keyed by the person's handle, the card's own parts named as
+   `profileCard`, keyed by the person's id (round 33), the card's own parts named as
    `PostCard` names them and the lead's as `avatar`, `name`, `handle`, with the
    bio as `bio`. */
 function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false, node }) {

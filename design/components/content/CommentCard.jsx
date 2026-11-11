@@ -163,7 +163,7 @@ export function CommentCard({
   score,
   onOpenScore,
   /* THE DATA-NODE NAME its placer gives this card (design ⇄ impl seam 002),
-     keyed by the author's handle — `PostCard`'s rule. Given one, it names the
+     keyed by the comment's `id` — `PostCard`'s rule. Given one, it names the
      card's media too: `media`, `frame` per item, and a clip's `soundDisc`;
      its author's `authorChip` and its ⋮ `menu` (as `PostCard` names them),
      the mark a removed comment wears `removalMark` (as

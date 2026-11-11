@@ -25,7 +25,7 @@
    the surface the reader asked from.
 
    REGISTERED under the `postDetail` prefix (seam 248): the sheet is
-   `opinionsSheet`, each row an `opinion` keyed by its holder's handle — a
+   `opinionsSheet`, each row an `opinion` keyed by its holder's id — a
    person is content, so the row keys by who, never by position.
 
    A DELETED HOLDER'S ROW (round 29, seam 254 item 12; `ProfileStances`'

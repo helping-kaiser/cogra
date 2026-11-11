@@ -33,7 +33,7 @@
 
    REGISTERED AS `profileStances` (the web's minted ids): `header`, `tabRow`
    (its `onTab` and `byTab`, one copy per `tab` value), `list` and in it a
-   `row` per person, keyed by the handle of the person it names — the path
+   `row` per person, keyed by the id of the person it names — the path
    follows the drawing, as `notifications.list.notification` does — and
    `empty` in the list's place.
 

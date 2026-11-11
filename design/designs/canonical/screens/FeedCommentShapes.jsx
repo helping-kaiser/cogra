@@ -45,7 +45,7 @@
 
    REGISTERED under the feed's own prefix (jakob 2026-10-02), as `FeedCover`
    is for a post's clip: the two clip cards alone are named, `commentCard`,
-   keyed by their authors, so the stage law's lines name a comment's clip by
+   keyed by their ids, so the stage law's lines name a comment's clip by
    `feed.commentCard.media.frame` beside a post's `feed.card.media.frame`, and
    its discs by `soundDisc` and `playDisc`. */
 export const NODE = "feed";
