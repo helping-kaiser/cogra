@@ -225,6 +225,26 @@ class TabNavigationTest {
         waitForTag("saved.bottomBar")
     }
 
+    // ProfileMenu.md:17 — another person's ⋮ `Mention in a new post` opens the
+    // post wizard fresh, the person riding along as a staged reference (jakob's
+    // round-2 hand test: the tap only closed the sheet).
+    @Test
+    fun mentionOnAnotherPersonsProfileOpensTheWizardWithThePersonStaged() {
+        memberOnTheFeed()
+        compose.onNodeWithTag("feed.card.authorChip").performClick()
+        waitUntilOn { onTop<Profile>() }
+        waitForTag("profile.identity.name")
+
+        compose.onNodeWithTag("profile.identity.actionRow.menu").performScrollTo().performClick()
+        waitForTag("profile.menuSheet.mention")
+        compose.onNodeWithTag("profile.menuSheet.mention").performClick()
+
+        waitUntilOn { onTop<ComposePost>() }
+        val route = navController.currentBackStackEntry?.toRoute<ComposePost>()
+        assertThat(route?.referenceTargetId).isEqualTo("author-1")
+        assertThat(route?.postId).isNull()
+    }
+
     // ProfileOwnMenu.md: the own ⋮'s History row opens History in the Profile
     // tab's stack. History.md:125 keeps the Profile slot lit, the bar wears the
     // registered `history.bottomBar`, and the back arrow brings the reader's

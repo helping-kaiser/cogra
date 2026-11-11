@@ -34,6 +34,8 @@
     <string name="profile_edit">Edit profile</string>
     <string name="profile_invites">Invites</string>
     <string name="profile_invites_locked">You can invite once you\'re in.</string>
+    <!-- An applicant's Mention in a new post (ProfileMenu.md:19). -->
+    <string name="profile_mention_locked">You can post once you\'re in.</string>
     <string name="profile_message">Message</string>
     <!-- The wide anchor's target on a deleted account (ProfileDeleted.md:23). -->
     <string name="profile_target_account">this account</string>
