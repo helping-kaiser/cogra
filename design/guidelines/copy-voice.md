@@ -3706,8 +3706,9 @@ recorded so the registry is whole.
   stays readable.`
 - **5** — `Someone brings you in` · `You are here because @mira invited
   you. @mira's link is your first way in to everyone else, and theirs
-  to you.` (the inviter by handle, *Naming*; jakob 2026-11-11), with the quiet note `The friend who sent you this invite has to
-  let you in. Ask them once you have verified your email.`
+  to you.` (the inviter by handle, *Naming*; jakob 2026-11-11), with the quiet note `A friend who's already in has to let you
+  in. Ask around once you have verified your email.` (*blessed (jakob
+  2026-10-07)*)
 
 ## About
 
