@@ -509,12 +509,12 @@ type CancelEmailChangePayload {
 }
 
 """
-A record's place in the authoritative order: its landing epoch and
-causal key (𝕋^act, pos).
+A record's place in the authoritative order: the key of record
+(epoch, position), compared lexicographically — the landing epoch
+first, then the position in that epoch's published order.
 """
 type CausalKey {
 	landingEpoch: Int!
-	actTime: Int!
 	position: Int!
 }
 
@@ -3619,7 +3619,9 @@ type Record {
 	"""
 	landedAt: DateTime!
 	"""
-	Authoritative act time — the first component of the causal key.
+	Act time 𝕋^act: the recomputable summary of the order the record
+	carries. It decides no precedence — the key of record
+	(`landingEpoch`, `position`) orders.
 	"""
 	actTime: Int!
 	"""
