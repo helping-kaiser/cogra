@@ -138,7 +138,7 @@
    board and into `nodes.json`. */
 
 export const NODE = "settings";
-export const FRAME = { width: 390, height: 3046 };
+export const FRAME = { width: 390, height: 3103 };
 export const PROPS = {
   reader: { editor: "enum", options: ["member", "applicant"], default: "member" },
   handle: { editor: "enum", options: ["rest", "changing", "failed", "taken"], default: "rest" },

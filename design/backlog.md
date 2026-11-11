@@ -5606,7 +5606,7 @@ account out of feeds, not out of the reader's own records). Lean: page past
 the page size the lists share; a hidden person stays, as their row is the
 reader's own record.
 
-### 175 · Settings with the install row outgrows its board · *system* · **filed 2026-11-11**
+### 175 · Settings with the install row outgrows its board · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 39. `Settings`' frame is 3046px, the page whole with 32px under the last
 footnote. The `install` chip's `shown` adds the row (57px with its hairline),
@@ -5624,4 +5624,6 @@ redacted record keeps its menu, citable because it never left the graph. No
 board draws a redacted card's open menu (`FeedRemoved`'s just-removed card
 passes none). For jakob: (a) the reader's card menu, Hide and Report included
 (`readerCardMenu`); (b) Save and Cite only, as drawn [lean — what is hidden
-or reported is the payload, and it is gone]; (c) no menu, `FeedRemoved`'s.
+or reported is the payload, and it is gone]; (c) no menu, `FeedRemoved`'s.Closed by round 41, by (a): the frame is 3103px; a row's second line costs
+nothing (54px inside the 56px minimum), so no other setting needs more.
+
