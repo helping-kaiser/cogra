@@ -631,6 +631,8 @@ export function StanceControl({
               aria-hidden="true"
               style={{
                 fontSize: overMedia ? "var(--size-face-over-media)" : "var(--text-title-large)",
+                letterSpacing: overMedia ? undefined : "var(--text-title-large--letter-spacing)",
+                fontWeight: overMedia ? undefined : "var(--text-title-large--font-weight)",
                 lineHeight: 1,
                 opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
                 filter: restingFace === null ? "grayscale(1)" : "none",

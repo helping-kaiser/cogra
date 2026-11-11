@@ -5204,6 +5204,13 @@ before and after.
 - **Closed in round 27** (seam 252, item 12; found by android): ~~`ProfileHeader`'s
   figures — the label set label-small without its tracking, the value
   title-medium without its tracking~~. Both now set the role whole.
+- **Closed in round 32** (seam 267, found by impl): six sites that choose
+  their size by a condition (`fontSize: c ? "var(--text-a)" :
+  "var(--text-b)"`), a pattern the round-28 sweep did not match — `PostCard`'s
+  title and body, `NodeMark`'s letter, `MonogramAvatar`'s numeric branch and
+  the two conditional faces (`StanceControl`, `StanceReadout`). Each now
+  sets every part under the same condition; the faces keep their emoji
+  leading (`1`, `1.2`).
 
 ### 148 · Does a words comment's edit take a video? · *design* · **filed 2026-10-29** · **closed 2026-11-10**
 
@@ -5287,3 +5294,18 @@ every chip board's standalone geometry moves); (c) the harness evaluates
 the board's own `VALS` for a chosen value. The sheet `Show all` raises is
 drawn (`TagPickerShowAll`, `ReferencePickerShowAll`); this item stays open
 for the per-state measuring alone.
+
+### 152 · The disc's letter: which role at 32px, which weight · *design* · **filed 2026-11-11**
+
+Round 32 (seam 267, ask 3). `MonogramAvatar` takes its letter's role by
+size: the named `md` disc (32px) is `label-medium`, a numeric 32 (`QuotedRow`,
+the only one) `label-large`, so one size draws two roles. Boards that draw
+the numeric 32: `DiscardConfirm`, `FeedEntry`, `FeedEntryKinds`,
+`FeedEntryMoved`, `RankHop`, `RankPath`, `RankRecords`, `ReplyCompose`,
+`ReplyComposeComment`, `ReplyMediaErrors`, `ReplyPictures`,
+`ReplyPicturesWeb`, `ReplyVideo`, `ReplyVideoFailed`, `VouchedIn`. And the
+disc's own style sets `fontWeight: 500` after its role, so every branch's
+role weight is overridden: the 56px-and-up and `lg` discs take
+`headline-small`, weight 400, and draw 500. For jakob: which role a 32px
+disc takes, and whether the large discs' 500 is the disc's own weight (kept,
+named) or the role's 400.

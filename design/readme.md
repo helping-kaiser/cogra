@@ -2303,6 +2303,14 @@ entry first". What stands:
   render, and so does a registered path that stops rendering — a
   rename is a breaking change for the implementation side, made only
   by deleting the path from `nodes.json` by hand in a reviewed PR.
+- **A sheet's path names the sheet, not the host it is raised over**
+  (rounds 27, 28). A sheet drawn once keeps one path wherever it is
+  raised: the thread is `postDetail.threadSheet` from a feed, History or
+  Saved card, a profile's posts and the stream alike, and what it raises
+  is the detail's (`postDetail.menuSheet`, `.licenseSheet`, `.dialog`).
+  A sheet a host's own card raises — the card's ⋮ and the rows it opens —
+  is drawn over that host, so it takes the host's prefix
+  (`feed.menuSheet`, `feed.licenseSheet`). One rule, two readings.
 - **`_build/check-help-notes.mjs` holds the "? contents" notes to
   copy-voice** (item 109): each note section names a dialog of
   copy-voice's *The "?" dialogs* and must carry its blessed text, and
@@ -10993,6 +11001,43 @@ jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
   `ProfileDeleted` and `KeptPicksReview`, the ring 1px `#8c7165` in light.
 - **Not drawn here** (backlog 151): each picker state on a board of its own
   for the harness.
+
+### Round 32, impl's asks the rulings already decide — 2026-11-11
+
+Seam 267 and seam 256 section B, the part an existing ruling or law settles.
+Nothing is drawn differently except the type.
+
+- **Every role is set whole, conditional sizes too** (jakob 2026-11-10).
+  Round 28's sweep matched a size written as one string; a size chosen by a
+  condition never matched. Six sites: `PostCard`'s title (title-medium,
+  headline-small on the detail) and body (body-medium, body-large), the node
+  mark's letter, the numeric disc's letter, and two emoji faces
+  (`StanceControl`, `StanceReadout`). Each sets every part under the same
+  condition; the faces keep their emoji leading, `1` and `1.2`, as round 28's
+  faces do. The numeric disc keeps the role it took (backlog 152), and the
+  disc's own weight 500 still stands over every branch's role weight.
+- **Measured** headless, Figtree loaded, before against after: 157 boards
+  restyled, 107 with a moved box. 77 move under half a pixel, widths only:
+  the faces lose an inherited 0.1px, the post titles in title-medium take
+  0.15px where they inherited 0.5px (68 boards), the detail titles 0 (25).
+  30 move vertically: a body-medium post body at 0.25px rewraps one line
+  shorter, −20px (29 feed, History, Saved, ladder and applicant boards; 40px
+  on `RowSigning`, two bodies). Discs, marks and the node mark's letter take
+  their role's leading inside fixed boxes, no box moved.
+- **The comment cards' head row is `target`**, the line pointer's name (round
+  28, `profile.comments.commentCard.target`): `feed.commentCard.target`,
+  `history.commentCard.target`, `saved.commentCard.target`, on every board
+  that draws the thread shape. The sidecars write the path.
+- **Law.** The tag page names `Back to Saved from Saved`; the reply seal's
+  sheets are the post seal's; the thread raised from a feed, History or Saved
+  card and from the stream is `postDetail.threadSheet`, beside the
+  host-prefixed sheets (beside the append-only registry law above); the feed's unchanged Done names its
+  reason, the ranker's cost; the profile comment's doors land on the comment;
+  Android's Back at Explore's and Profile's roots opens Feed's root, as
+  Wallet's does — the start destination is the bottom of every back stack
+  (Android's navigation principles).
+- **The gate**: the registry holds at **167 screens**, **6113 → 6120** board
+  paths, **1917 → 1920** distinct, none renamed or removed.
 - **The gate**: **2 boards added** (`TagPickerShowAll`, `ReferencePickerShowAll`,
   unregistered as the seals' sheet boards are); edges **2167 → 2177** (the two
   doors, the sheets' four each); flows hold at **227**, none re-blessed. The
