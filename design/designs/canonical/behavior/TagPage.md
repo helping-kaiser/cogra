@@ -24,6 +24,10 @@ ALWAYS a card's score on the tag page is the figure the latest fetch of its thin
 
 ALWAYS at most one clip plays on the tag page, by the feed's stage law
 
+WHEN tap a portrait clip on the tag page -> the stream opens on it, carrying only the clips tagged with this tag, taller than they are wide, in the tag page's order AND the bar keeps the root the tag page was opened from
+
+WHEN tap a clip wider than tall on the tag page -> the post opens
+
 WHEN scroll settles at the tag page's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in the tag page's order
 
 WHEN an overscroll bounce settles back at the tag page's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in the tag page's order
@@ -32,7 +36,7 @@ ALWAYS the word follow appears nowhere on the tag page
 
 WHEN tap the back arrow -> the reader returns to where they came from AND the arrow's label names that origin
 
-ALWAYS the back arrow reads Back to Explore from Explore at rest, Back to the search from Explore mid-query, Back to Your topics from Your topics, Back to feed from the feed in any of its states, Back to the post from a post's tags-and-references sheet, Back to the comments from a comment's chips in the thread, Back to the profile from a profile's posts, Back to History from History and Back to with the other tag's name from another tag's page
+ALWAYS the back arrow reads Back to Explore from Explore at rest, Back to the search from Explore mid-query, Back to Your tags from Your tags, Back to feed from the feed in any of its states, Back to the post from a post's tags-and-references sheet, Back to the comments from a comment's chips in the thread, Back to the profile from a profile's posts, Back to History from History and Back to with the other tag's name from another tag's page
 
 ALWAYS the back arrow reads Back to Explore and leads to Explore GIVEN the page was entered with no history behind it
 

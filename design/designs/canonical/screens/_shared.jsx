@@ -1154,8 +1154,8 @@ function ProfileOwnBody({ tail = null }) {
             bio="Field notes from the flats — salt, paper, and whatever the wind allows."
             website="solferreira.art"
             posts={5}
-            stancesOn={9}
-            stancesTaken={14}
+            stancesOn={5}
+            stancesTaken={5}
             own
             /* AN APPLICATION IS WAITING (the invites round). @rafa's proofs
                are both in and nobody but Sol can act on it, so the row that
@@ -1212,8 +1212,8 @@ function ProfileOtherBody({ bundle } = {}) {
             avatarSrc="comment-camera.jpg"
             bio="A dozen tries at the third headland light and counting."
             posts={12}
-            stancesOn={48}
-            stancesTaken={31}
+            stancesOn={6}
+            stancesTaken={6}
             bundle={bundle}
             onCounts={() => {}}
             onCommit={() => {}}
@@ -1254,8 +1254,8 @@ function ProfileDeletedBody() {
             redacted
             bio={<RedactedContent reason="account" when="3d" node="removalMark" />}
             posts={7}
-            stancesOn={22}
-            stancesTaken={19}
+            stancesOn={6}
+            stancesTaken={6}
             onCounts={() => {}}
             onCommit={() => {}}
             menu={deletedProfileMenu()}
@@ -1571,7 +1571,11 @@ const TAGS_ROW_HOLDS = 2;
    reason — the reply seal reads its staged tags as the post seal does (seam
    254 item 10, jakob 2026-11-10: "the reply seal mirrors the post seal
    exactly"). */
-const sealTagsRow = (tags) =>
+/* `fault` is the unlanded tag's line (round 30, jakob 2026-11-11, Q7):
+   `This tag didn't land.` with `Remove it` under the chips, no reason given —
+   the unlanded citation's row (`citedOneRow`'s `fault`), at the Tags row. */
+const SEAL_UNLANDED_TAG = "This tag didn't land.";
+const sealTagsRow = (tags, fault) =>
   tags.length > TAGS_ROW_HOLDS
     ? tagsRow(tags.length)
     : {
@@ -1585,6 +1589,7 @@ const sealTagsRow = (tags) =>
         ),
         count: String(tags.length),
         countNoun: "tag",
+        ...(fault ? { fault } : null),
       };
 
 /* The post's staged set past the first, written once: the seal that COUNTS
@@ -1630,7 +1635,7 @@ const KEPT_PICKS = [
   { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 } },
   { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 }, consequence: "This takes you back to zero." },
   { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 }, removed: "Removed by its author" },
-  { kind: "topic", name: "saltmaps", sub: "Topic", pair: { pDirected: 0.6, pInterest: 0.35 } },
+  { kind: "topic", name: "saltmaps", sub: "Tag", pair: { pDirected: 0.6, pInterest: 0.35 } },
 ];
 /* The family word a kept pick's seal row names it by: an opinion on a post
    or a person, a feeling about a topic. */
@@ -1723,25 +1728,42 @@ const WRITE_RULE_HELP = "Why signing waits";
    under `ActsFooter` (jakob 2026-10-05). */
 const SEAL_SLOW_LINE = "Still signing — the network is slow right now.";
 
-function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
+/* `chipped` is `ComposeSeal`'s own drawing of its `state` chip (round 30):
+   the acts card at rest and the card whose one staged tag never landed —
+   `state` `tagRefused` stages that tag alone, as the reply seal's `refused`
+   stages its one citation — each behind its hole (`ComposeSeal`'s VALS). */
+function composeSealCard({ cited, tags, state }) {
+  return (
+    <ActsCard
+      rows={[
+        { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
+        sealTagsRow(tags, state === "tagRefused" ? { message: SEAL_UNLANDED_TAG, onRemove: () => {} } : undefined),
+        cited > 1
+          ? citedRow(cited)
+          : citedOneRow(state === "refused" ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined),
+      ]}
+      total={`${1 + tags.length + cited} things, signed together`}
+      note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}
+      noteTone={state === "slow" ? "slow" : "quiet"}
+    />
+  );
+}
+
+function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }) {
   return (
     <>
       <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
 
-        <ActsCard
-          rows={[
-            { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
-            sealTagsRow(tags),
-            cited > 1
-              ? citedRow(cited)
-              : citedOneRow(state === "refused" ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined),
-          ]}
-          total={`${1 + tags.length + cited} things, signed together`}
-          note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}
-          noteTone={state === "slow" ? "slow" : "quiet"}
-        />
+        {chipped ? (
+          <>
+            <div style={{ display: "{{restCardShown}}", flexDirection: "column" }}>{composeSealCard({ cited, tags, state })}</div>
+            <div style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }}>{composeSealCard({ cited, tags: [tags[0]], state: "tagRefused" })}</div>
+          </>
+        ) : (
+          composeSealCard({ cited, tags, state })
+        )}
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" />
@@ -1868,20 +1890,28 @@ function ReplyPadBody() {
    label is singular here — it names the EDGE staged rather than the block it
    sits in (copy-voice), and one edge is a reference. `fault` is the seal's
    unlanded-citation line, `citedOneRow`'s: the row reads back as before and
-   the line stands under its value (seam 254 item 11). */
+   the line stands under its value (seam 254 item 11).
+
+   THE NAME STANDS OVER ITS PAIR (round 30, jakob 2026-11-11, Q8 (c)): the
+   row keeps its singular label and its ×, and under the name it reads the
+   pair the citation signs, `citedOneRow`'s two lines — the gentle default
+   the post seal's one citation draws. */
 const replyCitedRow = (fault) => ({
   label: "Reference",
   countNoun: "citation",
   value: (
     <span style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
-      <button
-        type="button"
-        aria-label={`${REPLY_CITATION} — set how it relates`}
-        className="cg-state cg-focus"
-        style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
-      >
-        {REPLY_CITATION} — @juno
-      </button>
+      <span style={{ flex: 1, display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
+        <button
+          type="button"
+          aria-label={`${REPLY_CITATION} — set how it relates`}
+          className="cg-state cg-focus"
+          style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
+        >
+          {REPLY_CITATION} — @juno
+        </button>
+        <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
+      </span>
       <button
         type="button"
         aria-label={`Remove ${REPLY_CITATION}`}
@@ -1928,20 +1958,23 @@ const replyCitedRow = (fault) => ({
    with `Remove it` and the commit stays (`SealFaultRow`); `bug` — any other
    refusal of one staged act: `This shouldn't have happened` takes the
    commit's place, with `Try again`, then `Report a problem` and `Discard the
-   reply` (`SealFaultBug`, whose docblock names the reply's noun).
+   reply` (`SealFaultBug`, whose docblock names the reply's noun);
+   `tagRefused` — the one staged tag never landed, so the Tags row says
+   `This tag didn't land.` with `Remove it`, the commit staying (round 30,
+   the post seal's own state at reply scale).
 
    `chipped` is `ReplySeal`'s own drawing of both as chips: every card the
    `tags` and `state` chips can draw, and both feet, each behind its hole
    (`ReplySeal`'s VALS). */
 const REPLY_TAG_SETS = { none: [], two: SEAL_TAGS, seven: SEAL_TAGS_MANY };
 
-function replySealCard({ named, cited, tags, refused }) {
+function replySealCard({ named, cited, tags, refused, tagRefused = false }) {
   const acts = 1 + tags.length + cited;
   return (
     <ActsCard
       rows={[
         { label: "Comment", value: named.act, count: "1", countNoun: "comment" },
-        ...(tags.length ? [sealTagsRow(tags)] : []),
+        ...(tags.length ? [sealTagsRow(tags, tagRefused ? { message: SEAL_UNLANDED_TAG, onRemove: () => {} } : undefined)] : []),
         ...(cited === 1 ? [replyCitedRow(refused ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined)] : cited > 1 ? [citedRow(cited)] : []),
         ...ADD_ROWS,
       ]}
@@ -1989,8 +2022,12 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
                   {replySealCard({ named, cited: one, tags: staged, refused: one === 1 })}
                 </div>
               )),
+            ).concat(
+              <div key="tagRefused" style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }}>
+                {replySealCard({ named, cited: 0, tags: [SEAL_TAGS[0]], tagRefused: true })}
+              </div>,
             )
-          : replySealCard({ named, cited, tags, refused: state === "refused" })}
+          : replySealCard({ named, cited, tags, refused: state === "refused", tagRefused: state === "tagRefused" })}
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow
@@ -2545,8 +2582,17 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
    so the foot reads five. Sign is the confirmation; no dialog asks again.
 
    THE FIELDS SCROLL UNDER THE PINNED FOOT, the post edit's reading: a comment
-   with its citations drawn runs taller than the phone. */
-function CommentEditBody({ holes = false } = {}) {
+   with its citations drawn runs taller than the phone.
+
+   `bodyChip` IS `CommentEdit`'s `body` chip (round 30, jakob 2026-11-11, Q14:
+   "draw it"): at `words` the comment holds words alone, so the media block
+   draws only its add row, `+ Add pictures or a video` — the reply composer's
+   own row under its words (`ReplyComposeBody`), since a comment holds words,
+   pictures or one video (jakob 2026-11-10). The block's label, thumbnail and
+   describe row stand only while a picture does; the add row stays the one
+   `pictures.add`, its words a hole. */
+function CommentEditBody({ holes = false, bodyChip = false } = {}) {
+  const shown = (hole) => (bodyChip ? `{{${hole}}}` : "flex");
   return (
     <>
       <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
@@ -2557,12 +2603,18 @@ function CommentEditBody({ holes = false } = {}) {
           <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." node="words" />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="pictures">
-            <FieldLabel node="label">Pictures</FieldLabel>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} node="thumb" nodeKey="1" />
-              <InlineAction size="sm" node="add">+ Add pictures · 1 of 4</InlineAction>
+            <div style={{ display: shown("picturesShown"), flexDirection: "column" }}>
+              <FieldLabel node="label">Pictures</FieldLabel>
             </div>
-            <DescribeCounter described={1} total={1} onDescribe={() => {}} node="describeRow" />
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: shown("picturesShown") }}>
+                <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} node="thumb" nodeKey="1" />
+              </div>
+              <InlineAction size="sm" node="add">{bodyChip ? "{{addLabel}}" : "+ Add pictures · 1 of 4"}</InlineAction>
+            </div>
+            <div style={{ display: shown("picturesShown"), flexDirection: "column" }}>
+              <DescribeCounter described={1} total={1} onDescribe={() => {}} node="describeRow" />
+            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
@@ -4479,7 +4531,7 @@ const AFFINITY_SEVERANCE = {
   gone: (name) => `No opinion towards ${name}.`,
   zero: "No opinion",
   landing: "This leaves you with no opinion towards it.",
-  help: "Disconnect takes everything you've said about the topic to nothing. It has its own confirmation, and each thing you've said is cleared by its own signature.",
+  help: "Disconnect takes everything you've said about the tag to nothing. It has its own confirmation, and each thing you've said is cleared by its own signature.",
   helpAlternates: "Disconnect takes everything to nothing, and each thing you've said is cleared by its own signature.",
 };
 
@@ -4925,7 +4977,7 @@ const HELD_TOPICS = [
 /* WHAT THE FEED FILTER MAY NARROW TO — derived, never listed twice. The topic
    feed admits POSITIVE association only (jakob's predicate), so the section's
    chips are the held set minus the ones held against; deriving it here means
-   the filter and Your topics can never disagree about who is missing and why. */
+   the filter and Your tags can never disagree about who is missing and why. */
 const FEED_TOPICS = HELD_TOPICS.filter((topic) => topic.pair.pDirected > 0).map((topic) => topic.name);
 
 /* THE PEOPLE SECTION IN BOTH ITS STATES, for the two boards that host the
