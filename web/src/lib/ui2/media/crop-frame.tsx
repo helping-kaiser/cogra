@@ -51,7 +51,7 @@
 // the round trip altogether. (react-easy-crop 6.2.3, `README.md` — the props
 // table and `initialCroppedAreaPercentages`.)
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type Ref } from "react";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
@@ -100,6 +100,7 @@ export function CropFrame({
   onChange,
   alt = "",
   zoomSlider = false,
+  viewportRef,
   testId = "crop-frame",
   node,
 }: {
@@ -108,6 +109,8 @@ export function CropFrame({
   crop?: Crop;
   onChange: (next: Crop) => void;
   alt?: string;
+  /** The viewport, for a host that re-frames against its width (`reshape`). */
+  viewportRef?: Ref<HTMLDivElement>;
   /** Draws `CropZoom` under the cut (ComposeCrop: "the zoom slider stands under the crop on both platforms"). */
   zoomSlider?: boolean;
   testId?: string;
@@ -210,13 +213,21 @@ export function CropFrame({
           the library draws the round crop area and the scrim around it, which
           is what AvatarCrop boards. */}
       <div
+        ref={viewportRef}
         {...testAttributes(part(node, "viewport"), testId)}
         style={{ aspectRatio: cssRatio(typeof shape === "string" ? SHAPE_RATIO[shape] : 1) }}
         className="relative -mx-6 overflow-hidden bg-surface-container-high"
         onKeyDown={onKeyDown}
         onKeyDownCapture={onArrow}
       >
+        {/* ONE CROPPER PER SHAPE (`key`): on a change of its cut the library
+            scales the offset by the cut's growth, which keeps a framing
+            through a window resize (react-easy-crop 6.2.4
+            `recomputeCropPosition`) — on a shape change it would move the
+            picture the host has just kept in place (`reshape`). A fresh
+            cropper takes the offset it is handed, bounded only. */}
         <Cropper
+          key={ratioOf(shape)}
           image={src}
           aspect={ratioOf(shape)}
           crop={{ x: crop.x, y: crop.y }}

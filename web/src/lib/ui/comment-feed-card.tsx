@@ -60,6 +60,7 @@ import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
 import { buttonClassName } from "./button";
 import { Card } from "./card";
+import { useClampFold } from "./clamp-fold";
 import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { NodeMark } from "./node-mark";
@@ -83,14 +84,11 @@ import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
 import { TopicsLine } from "./topics-line";
 
-/* A LONG COMMENT FOLDS AT TWO LINES under `More` (FeedCommentShapes.md, the
-   caption's precedent); the card is still the door to its thread. A render
-   cannot measure, so the opener is offered on the master's estimate: about
-   half an em to the glyph at `body-medium`, 45 characters to the thread
-   shape's line, which hangs 44px in. */
-const CLAMP_LINES = 2;
-const CHARS_PER_LINE = 45;
-
+/* A LONG COMMENT FOLDS AT TWO LINES under `More` (FeedCommentShapes.md:29,
+   the caption's precedent); the card is still the door to its thread. The
+   master offers the opener on a character estimate because a static render
+   cannot measure; the card measures the clamped words (`clamp-fold.ts`), so a
+   comment that fits its two lines carries no opener. */
 /**
  * An applicant's Reply answers in place (ProfileComments.md:29; the comment
  * foot's twin, staged-surfaces.md): locked, never gone, never the composer.
@@ -309,7 +307,9 @@ export function CommentFeedCard({
   const words = redacted ? "" : (comment.content.value ?? "");
   // A profile's list draws the words whole (`CommentCard`'s `clampLines`,
   // off outside the feed).
-  const folds = !line && words.length > CLAMP_LINES * CHARS_PER_LINE;
+  const clamped = !line && !unfolded;
+  const [holdWords, folds] = useClampFold(clamped, words);
+  const wordsClass = `text-body-medium ${clamped ? "line-clamp-2" : ""}`;
   // In the line shape the words are no door: the card is reached through
   // its pointer, its Reply and its replies line (ProfileComments.md:23-27).
   const wordsDoor = line ? null : place;
@@ -353,10 +353,14 @@ export function CommentFeedCard({
     <>
       {words !== "" &&
         (wordsDoor === null ? (
-          <p className={`text-body-medium ${folds && !unfolded ? "line-clamp-2" : ""}`}>{words}</p>
+          <p ref={holdWords} className={wordsClass}>
+            {words}
+          </p>
         ) : (
           <Link href={wordsDoor} data-testid={`${testId}-link`} className="block">
-            <p className={`text-body-medium ${folds && !unfolded ? "line-clamp-2" : ""}`}>{words}</p>
+            <p ref={holdWords} className={wordsClass}>
+              {words}
+            </p>
           </Link>
         ))}
       {/* A COMMENT IS WORDS FIRST and its pictures join them: inset at the
