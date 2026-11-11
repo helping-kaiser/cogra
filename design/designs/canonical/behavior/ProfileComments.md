@@ -34,6 +34,10 @@ WHEN tap Reply on a comment GIVEN the reader is an applicant -> the snackbar rea
 
 WHEN tap a comment's ⋮ GIVEN the comment is the reader's own -> the own comment's menu opens
 
+ALWAYS a comment's row wears Edit GIVEN the comment is the reader's own, as in the thread
+
+WHEN tap Edit on a comment -> the comment's edit opens
+
 WHEN tap a comment's ⋮ GIVEN the comment is someone else's -> the comment's menu opens
 
 WHEN tap the ⋮ in the actions row -> the profile's menu opens over the page

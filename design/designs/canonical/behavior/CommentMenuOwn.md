@@ -8,6 +8,10 @@ ALWAYS the reader's own comment's menu opens unstacked over its host GIVEN it wa
 
 ALWAYS the menu carries no Report row, the own menus' rule
 
+ALWAYS the reader's own comment's card wears Edit in its row on every host it stands in — the thread, a list's comment card, the own profile's Comments tab, History and Saved — and the menu carries no Edit row, the card's Edit being the one door to the edit
+
+WHEN tap Edit on the reader's own comment's card -> the comment's edit opens over the surface the card stands on
+
 WHEN tap Save -> the reader's own comment is kept in the one Saved list beside posts and people AND the menu closes AND the snackbar reads Saved.
 
 WHEN tap Unsave -> the menu closes AND postDetail.snackbar reads Removed from Saved. with Undo on postDetail.snackbar.action

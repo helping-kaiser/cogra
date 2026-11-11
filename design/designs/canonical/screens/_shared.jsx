@@ -4891,8 +4891,11 @@ const FEED_OWN_COMMENT_MENU = OWN_COMMENT_CARD_MENU;
      the title's place reads `Removed by its author`, the removal mark's own
      line, over the author, who stays; its mark keeps its space empty.
 
-   YOUR OWN COMMENT (`own`) is the same card, its ⋮ opening your own menu;
-   nothing else about it changes — the feed card carries no Edit.
+   YOUR OWN COMMENT (`own`) is the same card, its ⋮ opening your own menu,
+   and its row wearing `Edit` as the thread's own card does (`CommentCard`'s
+   `own`; jakob 2026-11-11, M3: "whenever you look at your own card you may
+   want to edit it") — on every host this card stands in. The menu keeps no
+   Edit row: the card's Edit is the one door to the edit.
 
    A LONG COMMENT folds at two lines under `More`, the caption's precedent
    (`FEED_COMMENT_CLAMP_LINES`); the card is still the door to its thread.
@@ -4942,6 +4945,8 @@ function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = 
       onOpenScore={() => {}}
       onReply={() => {}}
       replyGlyph
+      own={own}
+      onEdit={own ? () => {} : undefined}
       onShare={() => {}}
       license={{ attribution: 0, provenance: 0 }}
       menuItems={own ? FEED_OWN_COMMENT_MENU : FEED_COMMENT_MENU}
