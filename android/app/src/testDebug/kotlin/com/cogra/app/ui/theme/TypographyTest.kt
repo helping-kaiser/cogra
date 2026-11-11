@@ -82,7 +82,13 @@ class TypographyTest {
         for ((role, read) in ROLES) {
             assertWithMessage(role)
                 .that(read(CograTypography))
-                .isEqualTo(read(baseline).copy(fontFamily = FigtreeFamily))
+                .isEqualTo(
+                    read(baseline).copy(fontFamily = FigtreeFamily).let {
+                        // The token's -0.25 over Compose's rounded -0.2, pinned above.
+                        val tokenTracking = CograTypography.displayLarge.letterSpacing
+                        if (role == "displayLarge") it.copy(letterSpacing = tokenTracking) else it
+                    },
+                )
         }
     }
 

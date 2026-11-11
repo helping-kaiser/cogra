@@ -6,6 +6,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.cogra.app.R
 
 /**
@@ -39,13 +40,20 @@ internal val FigtreeFamily = FontFamily(
 
 private val Baseline = Typography()
 
+/** `--text-display-large--letter-spacing: -0.015625rem`, one rem being 16sp. */
+private val DISPLAY_LARGE_TRACKING = (-0.25).sp
+
 /**
  * Material 3's fifteen roles with the family swapped and nothing else touched
- * (design.md §3). Each role copies the baseline rather than restating its size,
- * so a deviation from the M3 scale cannot arrive by transcription error.
+ * (design.md §3) but display-large's tracking, set to the design token. Each
+ * role copies the baseline rather than restating its size, so a deviation
+ * from the M3 scale cannot arrive by transcription error.
  */
 internal val CograTypography = Typography(
-    displayLarge = Baseline.displayLarge.copy(fontFamily = FigtreeFamily),
+    // The one part the design's tokens differ from Compose's baseline: Material
+    // Web's display-large tracking is -0.25px where Compose rounds it to -0.2sp
+    // (`design/tokens/typography.css`, which `TypographyTest` pins every role to).
+    displayLarge = Baseline.displayLarge.copy(fontFamily = FigtreeFamily, letterSpacing = DISPLAY_LARGE_TRACKING),
     displayMedium = Baseline.displayMedium.copy(fontFamily = FigtreeFamily),
     displaySmall = Baseline.displaySmall.copy(fontFamily = FigtreeFamily),
     headlineLarge = Baseline.headlineLarge.copy(fontFamily = FigtreeFamily),
