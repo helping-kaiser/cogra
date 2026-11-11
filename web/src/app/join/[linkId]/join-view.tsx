@@ -39,12 +39,19 @@ import { LINK_ROW } from "@/lib/ui2/link-stack";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { NO_ANSWER, NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "@/lib/ui2/task-page";
 import { WaitingCommit } from "@/lib/ui2/waiting-commit";
 import { buttonClassName } from "@/lib/ui/button";
 import { TransportError } from "@/lib/ui/transport-error";
 
 import { InviteEntry } from "../invite-entry";
+
+// The board's registered nodes (nodes.json `join`, round 28): the inviter's
+// face, the heading that names them, and the line under it.
+const JOIN_AVATAR: DataNode = { path: "join.avatar" };
+const JOIN_TITLE: DataNode = { path: "join.title" };
+const JOIN_BODY: DataNode = { path: "join.body" };
 
 const HANDLE_SHAPE = "A handle is 3–30 characters: a–z, 0–9, _.";
 const EMAIL_SHAPE = "That doesn't look like an email address.";
@@ -150,7 +157,7 @@ export function JoinView({ linkId, origin = "arrival" }: { linkId: string; origi
   }
 
   return (
-    <JoinPage inviteId={inviteId} inviter={check.inviterHandle} origin={origin}>
+    <JoinPage inviteId={inviteId} inviter={inviterOf(check)} origin={origin}>
       {phase === "signedOut" && <ApplyForm inviteId={inviteId} onSpent={() => setSpent(true)} />}
       {phase === "signedIn" && accountState === "MEMBER" && (
         <div className="mt-8 flex flex-col gap-2">
@@ -166,6 +173,23 @@ export function JoinView({ linkId, origin = "arrival" }: { linkId: string; origi
   );
 }
 
+/**
+ * Who the heading and the face name (Join.md: "ALWAYS the face and the name
+ * over the form are the link's inviter's"): the written name, else the handle
+ * — the name every person row reads (`OpinionHolder.name`). The picture is
+ * theirs unless it was redacted or never set, and the monogram stands in.
+ */
+export function inviterOf(check: InviteCheck): { name: string; handle: string; avatarUrl: string | null } {
+  const inviter = check.inviter;
+  const handle = inviter?.handle ?? check.inviterHandle;
+  const avatar = inviter?.__typename === "User" ? inviter.avatar : null;
+  return {
+    name: inviter?.displayName.value?.trim() || handle,
+    handle,
+    avatarUrl: avatar === null || avatar === undefined || avatar.status === "REDACTED" ? null : avatar.url,
+  };
+}
+
 /** The header with its "?", and the inviter's face and name over the form. */
 function JoinPage({
   inviteId,
@@ -174,7 +198,7 @@ function JoinPage({
   children,
 }: {
   inviteId: string;
-  inviter: string;
+  inviter: { name: string; handle: string; avatarUrl: string | null };
   origin: JoinOrigin;
   children: React.ReactNode;
 }) {
@@ -192,12 +216,12 @@ function JoinPage({
       }
     >
       <div className="flex flex-col items-center text-center">
-        <MonogramAvatar name={inviter} size={64} />
-        <h1 data-testid="invite_inviter" className="m-0 mt-4 text-headline-small">
-          @{inviter} invited you
+        <MonogramAvatar name={inviter.name} src={inviter.avatarUrl} size={64} node={JOIN_AVATAR} />
+        <h1 {...testAttributes(JOIN_TITLE)} className="m-0 mt-4 text-headline-small">
+          {inviter.name} invited you
         </h1>
-        <p className="m-0 mt-2 text-body-medium text-on-surface-variant">
-          CoGra is invite-only — a member vouches for you, and @{inviter}&apos;s approval brings you in.
+        <p {...testAttributes(JOIN_BODY)} className="m-0 mt-2 text-body-medium text-on-surface-variant">
+          CoGra is invite-only — a member vouches for you, and @{inviter.handle}&apos;s approval brings you in.
         </p>
       </div>
       {children}
