@@ -129,8 +129,9 @@ fun CardListHost(
     }
 }
 
+/** The host below its DI: what [CardListHost] stands, with its hooks handed in (and what its tests drive). */
 @Composable
-private fun HostedCardsScope(
+internal fun HostedCardsScope(
     doors: CardDoors,
     routes: HostedCardRoutes,
     hooks: CardHooks,
