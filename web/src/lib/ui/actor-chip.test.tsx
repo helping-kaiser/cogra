@@ -42,12 +42,11 @@ describe("ActorChip", () => {
     expect(handle.className).toMatch(/\bshrink\b/);
   });
 
-  // The master sets the handle's SIZE alone (label-medium) and leaves the
-  // weight to the reading ground — no role class that would bring 500 with it.
-  it("draws the handle at label-medium's size without the role's weight", () => {
+  // The master sets the handle's whole role (`ActorChip.jsx`, round 28).
+  it("draws the handle in label-medium whole", () => {
     const { handle } = mount();
-    expect(handle.className).toContain("text-[length:var(--text-label-medium)]");
-    expect(handle.className.split(" ")).not.toContain("text-label-medium");
+    expect(handle.className.split(" ")).toContain("text-label-medium");
+    expect(handle.className).not.toContain("text-[length:");
   });
 
   it("is a pressable surface with a focus ring", () => {

@@ -104,7 +104,7 @@ function Disc({ disc }: { disc: ContentRowDisc }) {
       return (
         <span
           aria-hidden="true"
-          className="grid size-10 place-items-center rounded-full bg-surface-container-high text-title-medium"
+          className="grid size-10 place-items-center rounded-full bg-surface-container-high text-title-medium [line-height:1]"
         >
           {ZERO_BUNDLE_EMOJI}
         </span>
@@ -119,7 +119,7 @@ function Disc({ disc }: { disc: ContentRowDisc }) {
       return (
         <span
           aria-hidden="true"
-          className="grid size-10 place-items-center rounded-full bg-primary text-title-medium text-on-primary"
+          className="grid size-10 place-items-center rounded-full bg-primary text-title-medium [line-height:1] text-on-primary"
         >
           {disc.letter}
         </span>
@@ -220,18 +220,9 @@ export function ContentRow({
         )}
         {second !== undefined && second !== null && second !== "" && (
           <span
-            // A door's second line takes label-small's size, leading and
-            // tracking, the weight the ground's (ContentRow.jsx `TYPE`), as the
-            // trailing word below does; the chronicle's is body-medium whole.
-            className={`${ELLIPSIS} ${variant === "door" ? "text-[length:var(--text-label-small)]" : "text-body-medium"} text-on-surface-variant`}
-            style={
-              variant === "door"
-                ? {
-                    lineHeight: "var(--text-label-small--line-height)",
-                    letterSpacing: "var(--text-label-small--letter-spacing)",
-                  }
-                : undefined
-            }
+            // A door's second line is label-small whole, the chronicle's
+            // body-medium whole (ContentRow.jsx `TYPE`, round 28).
+            className={`${ELLIPSIS} ${variant === "door" ? "text-label-small" : "text-body-medium"} text-on-surface-variant`}
             {...testAttributes(part(node, "second"), `${testId}-second`)}
           >
             {second}
@@ -242,15 +233,9 @@ export function ContentRow({
         <span className="flex flex-none flex-col items-end gap-0.5">
           {trailing !== undefined && (
             <span
-              // The master sets label-small's size, leading and tracking; the
-              // weight is the ground's (ContentRow.jsx `TYPE`), a quiet fact.
-              // Leading and tracking ride the style, read off the role's own
-              // tokens, so a <button> and a <div> row draw one tracking.
-              className="text-[length:var(--text-label-small)] text-on-surface-variant"
-              style={{
-                lineHeight: "var(--text-label-small--line-height)",
-                letterSpacing: "var(--text-label-small--letter-spacing)",
-              }}
+              // label-small whole, weight included (ContentRow.jsx `TYPE`,
+              // round 28): a quiet fact, one tracking on a <button> or a <div>.
+              className="text-label-small text-on-surface-variant"
               {...testAttributes(part(node, "trailing"), `${testId}-trailing`)}
             >
               {trailing}
