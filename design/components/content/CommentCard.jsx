@@ -176,10 +176,11 @@ export function CommentCard({
      carries the card's own key. Given none, the card renders exactly as
      before. */
   node,
-  /* THE CARD'S KEY WHERE ITS AUTHOR CANNOT TELL IT APART (round 27) — a
-     profile's comments view lists one author's comments, so its placer keys
-     each by the comment's id (`PATH_KEY_RULES`). `PostCard`'s `nodeKey`.
-     Given none, the author's handle keys the card. */
+  /* THE COMMENT'S ID, as the wire carries it (round 33, seam 264): what keys
+     the card and its `viewReplies` line when it is named — what has an id on
+     the wire is keyed by that id. Draws nothing. A placer may key the card
+     itself with `nodeKey`, `PostCard`'s; given none, `id` keys it. */
+  id,
   nodeKey,
   children,
 }) {
@@ -313,7 +314,7 @@ export function CommentCard({
     >
       {/* `attach` squares the top-left corner so a row flag (TaggedRow) fuses
           with the card (jakob's review, the tag round). */}
-      <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={Boolean(onOpen)} node={node} nodeKey={node && (nodeKey ?? author?.handle)}>
+      <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={Boolean(onOpen)} node={node} nodeKey={node && (nodeKey ?? id)}>
         {/* The comment's TARGET pointer (jakob 2026-09-01): where a comment
             shows OUT of its thread — the profile's comments view, a search
             result — the card leads with what it answers, one line, one tap to
@@ -441,7 +442,7 @@ export function CommentCard({
           type="button"
           onClick={onOpenReplies}
           data-node={node && "viewReplies"}
-          data-node-key={node && (nodeKey ?? author?.handle)}
+          data-node-key={node && (nodeKey ?? id)}
           className="cg-state cg-focus cg-hit"
           style={{
             alignSelf: "flex-start",
