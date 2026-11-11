@@ -6621,6 +6621,9 @@
         "history.commentCard.actionRow": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
+        "history.commentCard.actionRow.edit": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
         "history.commentCard.actionRow.reply": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
@@ -7271,6 +7274,155 @@
         "history.menuSheet.markSensitive": [],
         "history.menuSheet.remove": [],
         "history.menuSheet.save": [],
+        "history.searchField": [],
+        "history.searchField.glyph": [],
+        "history.searchField.input": []
+      }
+    },
+    "HistoryProfileMenu": {
+      "prefix": "history",
+      "keys": {
+        "history.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)",
+        "history.profileCard": "the person's id, the lowercase UUID the wire carries (the profile feed card)"
+      },
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.description": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.media": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.media.frame": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/1"
+        ],
+        "history.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.opener": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.tagsLine": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.tagsLine.counts": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.tagsLine.tag": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/photography",
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c/coastroad"
+        ],
+        "history.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.card.title": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "history.day": [
+          "today"
+        ],
+        "history.filterTrigger": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": [],
+        "history.menuSheet": [],
+        "history.menuSheet.dragHandle": [],
+        "history.menuSheet.hide": [],
+        "history.menuSheet.mention": [],
+        "history.menuSheet.report": [],
+        "history.menuSheet.save": [],
+        "history.profileCard": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.actionRow": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.actionRow.score": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.actionRow.score.value": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.actionRow.share": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.actionRow.stance": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.actionRow.stance.anchor": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.actionRow.stance.anchor.face": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.avatar": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.bio": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.handle": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.menu": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
+        "history.profileCard.name": [
+          "cdbd41fc-faec-4c16-9813-7f718b8a0989"
+        ],
         "history.searchField": [],
         "history.searchField.glyph": [],
         "history.searchField.input": []
@@ -9684,6 +9836,9 @@
         "profile.comments.commentCard.actionRow": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
+        "profile.comments.commentCard.actionRow.edit": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
         "profile.comments.commentCard.actionRow.reply": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
@@ -9744,6 +9899,92 @@
         "profile.menuSheet.opinions": [],
         "profile.menuSheet.remove": [],
         "profile.menuSheet.save": [],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfileCommentsOwn": {
+      "prefix": "profile",
+      "keys": {
+        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (CommentCard)"
+      },
+      "nodes": {
+        "profile.band": [],
+        "profile.band.bell": [],
+        "profile.band.chats": [],
+        "profile.band.gear": [],
+        "profile.band.mark": [],
+        "profile.band.wordmark": [],
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.comments": [],
+        "profile.comments.commentCard": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.actionRow": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.actionRow.edit": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.actionRow.reply": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.actionRow.stance": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.actionRow.stance.anchor": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.actionRow.stance.anchor.face": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.authorChip": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.authorChip.avatar": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.authorChip.handle": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.authorChip.name": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.menu": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.comments.commentCard.target": [
+          "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
+        ],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.edit": [],
+        "profile.identity.actionRow.invites": [],
+        "profile.identity.actionRow.invites.dot": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.avatar": [],
+        "profile.identity.bio": [],
+        "profile.identity.changeBadge": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.handle": [],
+        "profile.identity.name": [],
+        "profile.identity.website": [],
         "profile.tabRow": [],
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
@@ -10556,6 +10797,132 @@
         "profile.menuSheet.markSensitive": [],
         "profile.menuSheet.remove": [],
         "profile.menuSheet.save": [],
+        "profile.posts": [],
+        "profile.posts.card": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.comments": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.comments.count": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.score": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.score.value": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.share": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.exact": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.actionRow.stance.anchor.face": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.avatar": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.handle": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.authorChip.name": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.description": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.media": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.media.dots": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.media.frame": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/1",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/2"
+        ],
+        "profile.posts.card.menu": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.opener": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.tagsLine": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.tagsLine.tag": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/fieldnotes",
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5/saltmaps"
+        ],
+        "profile.posts.card.timestamp": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.posts.card.title": [
+          "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
+        ],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfilePostsOwn": {
+      "prefix": "profile",
+      "keys": {
+        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (PostCard)",
+        "profile.posts.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "profile.band": [],
+        "profile.band.bell": [],
+        "profile.band.chats": [],
+        "profile.band.gear": [],
+        "profile.band.mark": [],
+        "profile.band.wordmark": [],
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.edit": [],
+        "profile.identity.actionRow.invites": [],
+        "profile.identity.actionRow.invites.dot": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.avatar": [],
+        "profile.identity.bio": [],
+        "profile.identity.changeBadge": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.handle": [],
+        "profile.identity.name": [],
+        "profile.identity.website": [],
         "profile.posts": [],
         "profile.posts.card": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
