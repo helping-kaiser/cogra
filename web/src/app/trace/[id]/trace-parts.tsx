@@ -158,14 +158,14 @@ export function PathRow({
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         {trace}
         <span
-          className="overflow-hidden text-ellipsis whitespace-nowrap text-label-small text-on-surface-variant [font-weight:400]"
+          className="overflow-hidden text-ellipsis whitespace-nowrap text-label-small text-on-surface-variant"
           {...testAttributes(part(node, "through"))}
         >
           {through}
         </span>
       </span>
       <span
-        className="flex-none text-[length:var(--text-body-small)] [line-height:normal] [font-weight:500]"
+        className="flex-none text-body-small [font-weight:500]"
         {...testAttributes(part(node, "value"))}
       >
         {value}
@@ -202,7 +202,7 @@ export function RecordRow({
         >
           {what}
         </span>
-        <span className="flex-none text-label-small text-on-surface-variant [font-weight:400]" {...testAttributes(part(self, "when"))}>
+        <span className="flex-none text-label-small text-on-surface-variant" {...testAttributes(part(self, "when"))}>
           {when}
         </span>
       </span>
@@ -211,7 +211,7 @@ export function RecordRow({
           <StanceValue pDirected={pair.pDirected} pInterest={pair.pInterest} node={part(self, "pair")} />
         </span>
         <span
-          className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-right font-mono text-label-small text-on-surface-variant [font-weight:400]"
+          className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-right font-mono text-label-small text-on-surface-variant"
           {...testAttributes(part(self, "key"))}
         >
           {record.id}

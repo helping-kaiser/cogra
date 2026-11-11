@@ -517,9 +517,8 @@ export function CommentFeedCard({
           className="cg-state cg-focus cg-hit flex max-w-full items-center gap-2 rounded-small text-left text-on-surface-variant"
         >
           <Icon name={head.kind === "comment" ? "chat_bubble" : "dynamic_feed"} size={14} />
-          {/* The label-small SIZE in the reading weight: the master sets the size
-              and line alone, so the pointer reads quieter than a label. */}
-          <span className="truncate text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)]">
+          {/* label-small whole (`CommentCard.jsx`, round 28). */}
+          <span className="truncate text-label-small">
             On {head.label}
           </span>
         </Link>
@@ -539,13 +538,14 @@ export function CommentFeedCard({
             <span className="flex min-w-0 flex-col">
               <span
                 data-testid={`${testId}-head-title`}
-                // The removal line in the system's voice: the title's size at
-                // the body's weight, in the quiet ink (`CommentCard.jsx`: the
-                // label-large size with weight 400 — the register `Deleted
-                // account` takes). The size alone, so no role brings its 500.
+                // The removal line in the system's voice: label-large whole but
+                // for its weight, the body's 400, in the quiet ink — the master's
+                // one-part override (`CommentCard.jsx`: `fontWeight:
+                // targetDetail.removed ? 400 : …`), the register `Deleted
+                // account` takes.
                 className={`truncate ${
                   head.removed
-                    ? "text-[length:var(--text-label-large)]/[var(--text-label-large--line-height)] text-on-surface-variant"
+                    ? "text-label-large [font-weight:400] text-on-surface-variant"
                     : "text-label-large"
                 }`}
               >
