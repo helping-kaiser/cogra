@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_SUMMARY","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_RING","sourcePath":"components/people/ActorChip.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_DETENT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"WRITE_RULE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_LANDING_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"10843b4e42c2","components/compose/ActsFooter.jsx":"3fb19573d483","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"844de2c8a2e8","components/compose/CropViewport.jsx":"c4b931d32ceb","components/compose/DescribeSheet.jsx":"ead574ef5e67","components/compose/MediaThumb.jsx":"265ce811b66d","components/compose/PickPrompt.jsx":"7a356c5728b8","components/compose/PickTray.jsx":"5d92808db554","components/compose/PickedRow.jsx":"b1212a429566","components/compose/PickedSheet.jsx":"0180f7c09701","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"7b60d0e194f1","components/compose/StagedReference.jsx":"2d9e849083b5","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"fbb646ecfc48","components/compose/UploadNotice.jsx":"d1d3933a7955","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"03fd19c00711","components/content/CommentCard.jsx":"951bfe0a4310","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"03398f19f306","components/content/PostCard.jsx":"6396eda4f950","components/content/ReferenceRow.jsx":"433144561933","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"77046da6d778","components/content/TopicsLine.jsx":"8bab72cbe7be","components/core/BottomSheet.jsx":"e641791e6304","components/core/Button.jsx":"a8359b22860b","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"e43ba48979a2","components/core/ContentRow.jsx":"83f7aef1c7c3","components/core/FactRow.jsx":"7196fc76f42d","components/core/HelpDot.jsx":"566410f88427","components/core/JoinPrompt.jsx":"f0a947a6e9d9","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6a5b54419cab","components/core/QuotedRow.jsx":"d692206411e2","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"e6a8af8cfe17","components/core/Snackbar.jsx":"c36839b728ef","components/forms/Checkbox.jsx":"3180057f58c7","components/forms/LicenseChooser.jsx":"56e693589613","components/forms/PasswordField.jsx":"afed26cbc07c","components/forms/RecoveryCode.jsx":"34a651073c95","components/forms/SearchBar.jsx":"565d6c9b57fc","components/forms/TextField.jsx":"d2badc3d9193","components/honesty/NoticePanel.jsx":"c3b0521519c4","components/honesty/PendingMarker.jsx":"f7be64bd7cbd","components/honesty/SensitiveVeil.jsx":"128dd210dbdb","components/honesty/TransportError.jsx":"acbff9ddcc19","components/media/DetailClip.jsx":"f125292ccbf5","components/media/MediaAttachment.jsx":"d8a3fb9ff897","components/media/MediaViewer.jsx":"2872a69c9ca5","components/media/ReelCaption.jsx":"738874f44d36","components/media/ReelRail.jsx":"578bb7793144","components/media/VideoControls.jsx":"cf8d7e6bf12a","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"ece534d47fb9","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"561da982a156","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"fbefb06fed14","components/navigation/FeedFilter.jsx":"00f152374147","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"6253e911ba26","components/navigation/PageHeader.jsx":"b9ffd20a19cb","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"05778c8415f3","components/people/ActorChip.jsx":"ef90ac81244e","components/people/ProfileHeader.jsx":"63e389896405","components/people/StanceRow.jsx":"16cff8a3f459","components/proposed/ExplainableNumber.jsx":"c5d5a2a8d6a2","components/stance/EmptySignConfirm.jsx":"05f4eb334b04","components/stance/SeveranceConfirm.jsx":"e7fc86215414","components/stance/StanceAlternates.jsx":"c0f8d00e4237","components/stance/StanceControl.jsx":"b1ced767c6ea","components/stance/StancePad.jsx":"ffb7a2b6ab15","components/stance/StanceReadout.jsx":"6ba270306254","components/stance/StanceSlider.jsx":"a432f68b7a15","components/states/ComingSoonCard.jsx":"854240576390","components/states/EmptyState.jsx":"ee17e47230be","components/wallet/EarnedChart.jsx":"35896e97b452","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"df9591e83c28","components/wallet/WalletBalance.jsx":"5c0847c535ef","components/wallet/WashCard.jsx":"75438d50d294","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"sensitiveSourceLine","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"snapAttachment","sourcePath":"components/stance/StancePad.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_SUMMARY","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_RING","sourcePath":"components/people/ActorChip.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"EMPTY_SIGN_WORDS","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"EmptySignConfirm","sourcePath":"components/stance/EmptySignConfirm.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_DETENT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"WRITE_RULE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_WITHDRAWN_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"EMPTY_LANDING_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"10843b4e42c2","components/compose/ActsFooter.jsx":"3fb19573d483","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"844de2c8a2e8","components/compose/CropViewport.jsx":"c4b931d32ceb","components/compose/DescribeSheet.jsx":"ead574ef5e67","components/compose/MediaThumb.jsx":"265ce811b66d","components/compose/PickPrompt.jsx":"7a356c5728b8","components/compose/PickTray.jsx":"5d92808db554","components/compose/PickedRow.jsx":"b1212a429566","components/compose/PickedSheet.jsx":"0180f7c09701","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"7b60d0e194f1","components/compose/StagedReference.jsx":"2d9e849083b5","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"fbb646ecfc48","components/compose/UploadNotice.jsx":"d1d3933a7955","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"03fd19c00711","components/content/CommentCard.jsx":"951bfe0a4310","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"130585e3a4df","components/content/PostCard.jsx":"6396eda4f950","components/content/ReferenceRow.jsx":"433144561933","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"77046da6d778","components/content/TopicsLine.jsx":"8bab72cbe7be","components/core/BottomSheet.jsx":"f74b1a758605","components/core/Button.jsx":"a8359b22860b","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"e43ba48979a2","components/core/ContentRow.jsx":"52b4585c4d98","components/core/FactRow.jsx":"7196fc76f42d","components/core/HelpDot.jsx":"566410f88427","components/core/JoinPrompt.jsx":"7d188d1047f8","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6a5b54419cab","components/core/QuotedRow.jsx":"d382938db1e8","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"f2b5b1346f78","components/core/Snackbar.jsx":"411029338e74","components/forms/Checkbox.jsx":"3180057f58c7","components/forms/LicenseChooser.jsx":"56e693589613","components/forms/PasswordField.jsx":"afed26cbc07c","components/forms/RecoveryCode.jsx":"34a651073c95","components/forms/SearchBar.jsx":"565d6c9b57fc","components/forms/TextField.jsx":"d2badc3d9193","components/honesty/NoticePanel.jsx":"c3b0521519c4","components/honesty/PendingMarker.jsx":"f7be64bd7cbd","components/honesty/SensitiveVeil.jsx":"128dd210dbdb","components/honesty/TransportError.jsx":"acbff9ddcc19","components/media/DetailClip.jsx":"f125292ccbf5","components/media/MediaAttachment.jsx":"d8a3fb9ff897","components/media/MediaViewer.jsx":"2872a69c9ca5","components/media/ReelCaption.jsx":"738874f44d36","components/media/ReelRail.jsx":"578bb7793144","components/media/VideoControls.jsx":"cf8d7e6bf12a","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"8ee19f8163c3","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"561da982a156","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"fbefb06fed14","components/navigation/FeedFilter.jsx":"00f152374147","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"6253e911ba26","components/navigation/PageHeader.jsx":"cca3f47af811","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"05778c8415f3","components/people/ActorChip.jsx":"b9226c473f15","components/people/ProfileHeader.jsx":"b23746184ef4","components/people/StanceRow.jsx":"16cff8a3f459","components/proposed/ExplainableNumber.jsx":"c5d5a2a8d6a2","components/stance/EmptySignConfirm.jsx":"05f4eb334b04","components/stance/SeveranceConfirm.jsx":"e7fc86215414","components/stance/StanceAlternates.jsx":"c0f8d00e4237","components/stance/StanceControl.jsx":"b1ced767c6ea","components/stance/StancePad.jsx":"ffb7a2b6ab15","components/stance/StanceReadout.jsx":"6ba270306254","components/stance/StanceSlider.jsx":"a432f68b7a15","components/states/ComingSoonCard.jsx":"854240576390","components/states/EmptyState.jsx":"ee17e47230be","components/wallet/EarnedChart.jsx":"35896e97b452","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"df9591e83c28","components/wallet/WalletBalance.jsx":"5c0847c535ef","components/wallet/WashCard.jsx":"75438d50d294","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nameInLine","sourcePath":"components/people/ActorChip.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"sensitiveSourceLine","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"snapAttachment","sourcePath":"components/stance/StancePad.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"tagUnreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
 
 (() => {
 
@@ -2659,317 +2659,6 @@ function Caret() {
 __ds_scope.Caret = Caret;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/Caret.jsx", error: String((e && e.message) || e) }); }
 
-// components/core/BottomSheet.jsx
-try { (() => {
-/* The bottom sheet (backlog item 3; readme §7, *Intentional additions*). The
-   product never built one, so three surfaces were each
-   improvising: the overflow menu, the license terms, a filter.
-
-   WHY A SHEET AND NOT A DIALOG. A dialog is a question the reader has to answer
-   before anything else can happen. A sheet is a drawer of choices they opened and
-   can drop — so it comes from the edge they pulled it from, and the scrim, a
-   swipe down, Back and Escape all put it away. Choosing a dialog for a drawer is
-   how a product starts asking permission to show a menu.
-
-   IT IS MODAL — M3's modal bottom sheet (readme §4, *Sheets*; jakob
-   2026-10-01). It dims and covers what it was opened over, and assistive tech
-   is told what the eye is: focus moves into the sheet when it opens, stays
-   inside while it is up, and returns to the control that opened it when it
-   closes (readme §10). Nothing beneath the scrim takes a tap.
-
-   A SHEET THAT HOLDS A CHOICE IS ONE OF TWO KINDS (readme §4, *Sheets*).
-   A STAGING SHEET COMMITS ON ITS COMMIT, AND EVERY OTHER WAY OUT DISCARDS (the
-   sheet law): it stages the choice until its `Done` — or whatever its foot
-   names — and the scrim, a swipe down, Back and Escape leave everything as it
-   was. AN EDITING SHEET APPLIES LIVE (jakob 2026-10-02, the editing-sheet
-   exemption): each change applies the moment it is made, so every way out,
-   `Done` included, just closes it and what was applied stands. The editing
-   sheets are four — `ComposeTags`, `ComposePicked`, `EditPicked` and
-   `ComposeCitations`; every other sheet that holds a choice stages. A menu's
-   row is its own commit; a sheet that only lists has nothing to apply.
-
-   Rules it keeps:
-   · `surfaceContainerHigh` at the 28px rung — a rung higher when it is
-     `stacked` — TOP CORNERS ONLY: the bottom edge is the screen's, and a
-     rounded bottom on a surface flush to the edge draws a gap that is not
-     there.
-   · The grab handle is `outlineVariant`, 32×4, and it is not a button: it marks
-     the handle area a drag starts from, and says which edge this came from and
-     which way it goes back.
-   · THE DRAG IS M3's. The sheet follows the finger from its handle area, and
-     from a list at its scroll-top; it dismisses past about 25 % of its height
-     or on a downward fling, and otherwise snaps back. No intermediate detents —
-     `tallest` included. A sheet hosting a pad drags only from the handle and
-     title zone; the field owns every pointer that starts on it.
-   · It covers the bottom bar rather than sitting above it. A sheet is a decision
-     surface; a navigation bar under it would offer to leave mid-decision.
-   · Scrim at 50%, and pressing it closes. Escape closes. Both because a drawer
-     the reader opened is a drawer the reader can drop.
-   · Never open beside the opinion pad: one parked surface at a time, and the pad
-     owns the same corner of the screen.
-   · Enters over 400ms from the bottom, leaves over 200ms to the bottom
-     (`tokens/transitions.css`) — a dismissal exits the edge it entered from. */
-
-/* THE TALLEST SHEET IS A CLASS, AND IT IS THE CEILING OVER ALL OF THEM (jakob's
-   ruling, the sheets-and-video round). A sheet's top edge never rises above a
-   72px sliver measured from the top of the SAFE AREA — Android below the status
-   bar and the display cutout, web from the viewport top. The rounded top corners
-   keep a strip of the surface behind visible, and no sheet ever touches the safe
-   area: a drawer that reached the top edge would be a screen, and a reader who
-   cannot see what they left cannot tell a drawer from a destination.
-
-   The ceiling caps every height class rather than replacing any. `maxHeight`
-   keeps its 62% default and the raised 88% class stays what a sheet asks for
-   when its content needs the room; `height` pins a sheet at a size instead of
-   letting content set it, for the footed filter whose Done row is pinned beneath
-   its scrolling sections. Each is held under the ceiling by `min()`, so no class
-   can out-grow the sliver on a screen short enough for its percentage to reach
-   it.
-
-   `tallest` IS THAT CLASS ASKED FOR BY NAME — the comments sheet, whose pinned
-   composer row needs the surface itself to own the height (readme §13,
-   2026-08-28). It pins the sheet at the ceiling and the children manage their
-   own scrolling. */
-const SHEET_CEILING = "calc(100% - 72px - env(safe-area-inset-top, 0px))";
-
-/* FOCUS IN, CONTAINED, RETURNED (readme §10) — every modal surface's, the sheet's
-   and the dialog's alike. While `active`, focus moves to the surface, Tab cycles
-   inside it, and Escape asks `onEscape` for the way out (a sheet's discard, a
-   dialog's safe answer); when it ends, focus goes back to whatever held it
-   before — the control that opened the surface. */
-const FOCUS_STOPS = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-function useModalFocus(surfaceRef, active, onEscape) {
-  const escape = React.useRef(onEscape);
-  escape.current = onEscape;
-  React.useEffect(() => {
-    if (!active) return undefined;
-    const opener = document.activeElement;
-    if (surfaceRef.current) surfaceRef.current.focus();
-    const onKey = event => {
-      if (event.key === "Escape" && escape.current) escape.current();
-      if (event.key !== "Tab" || !surfaceRef.current) return;
-      const stops = surfaceRef.current.querySelectorAll(FOCUS_STOPS);
-      if (stops.length === 0) return;
-      const first = stops[0];
-      const last = stops[stops.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      if (opener && typeof opener.focus === "function") opener.focus();
-    };
-  }, [active, surfaceRef]);
-}
-
-/* `stacked` is the sheet that opens over another sheet — the comment's menu and
-   the comment's license, both over the comments thread. A SHEET OVER A SHEET IS
-   DRAWN AS LAYERS. Left flat, the upper sheet's wash resolves beneath the lower
-   sheet's surface: nothing dims, and two surfaces of one colour meet at a
-   shadowless seam. Stacked, the sheet takes the layer above, so the wash it
-   already draws — the same `--scrim-dialog` — falls BETWEEN the two and dims
-   what it covers, while the sheet below keeps its top edge, its handle and its
-   title visible above this one. Its surface takes the next tonal rung,
-   `surfaceContainerHighest`: elevation is tonal (`tokens/semantic.css`), and two
-   surfaces at one rung claim one elevation. */
-function BottomSheet({
-  open = false,
-  onClose,
-  ariaLabel,
-  children,
-  inline = false,
-  maxHeight = "62%",
-  height,
-  tallest = false,
-  stacked = false,
-  node
-}) {
-  const [shown, setShown] = React.useState(open);
-  const [closing, setClosing] = React.useState(false);
-  React.useEffect(() => {
-    if (open) {
-      setShown(true);
-      setClosing(false);
-      return undefined;
-    }
-    if (!shown) return undefined;
-    setClosing(true);
-    const timer = setTimeout(() => {
-      setShown(false);
-      setClosing(false);
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [open, shown]);
-  const surfaceRef = React.useRef(null);
-  useModalFocus(surfaceRef, open && !inline, onClose);
-
-  /* The wash's layer; the surface rides one above it, so a stacked sheet's wash
-     clears the sheet below instead of sliding under it. */
-  const washLayer = stacked ? 42 : 40;
-  const surface = /*#__PURE__*/React.createElement("div", {
-    ref: surfaceRef,
-    tabIndex: inline ? undefined : -1,
-    role: "dialog",
-    "aria-modal": inline ? undefined : "true",
-    "aria-label": ariaLabel,
-    className: inline ? undefined : closing ? "cg-sheet-out" : "cg-sheet-in",
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 0,
-      background: stacked ? "var(--surface-container-highest)" : "var(--surface-dialog)",
-      color: "var(--on-surface)",
-      borderRadius: "var(--radius-extra-large) var(--radius-extra-large) 0 0",
-      /* BORDER-BOX: a height class is the surface's whole height, its
-         padding inside it (seam 248) — `DialogSurface`'s rule for its
-         width. Content-box drew 88% + 32px (91.8% of an 844 frame) and
-         put the tallest sheet's top edge 40px from the safe area, under
-         the 72px sliver. */
-      boxSizing: "border-box",
-      padding: "var(--space-2) 0 calc(var(--space-6) + env(safe-area-inset-bottom, 0px))",
-      // The surface takes focus only to hand it on; it is not a control.
-      outline: "none",
-      ...(inline ? {
-        position: "relative",
-        width: "100%"
-      } : {
-        position: "fixed",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: washLayer + 1,
-        ...(tallest ? {
-          height: SHEET_CEILING,
-          overflow: "hidden"
-        } : height ? {
-          height: `min(${height}, ${SHEET_CEILING})`,
-          overflow: "hidden"
-        } : {
-          maxHeight: `min(${maxHeight}, ${SHEET_CEILING})`,
-          overflowY: "auto"
-        })
-      })
-    },
-    "data-node": node
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      alignSelf: "center",
-      height: "4px",
-      width: "32px",
-      flex: "none",
-      borderRadius: "var(--radius-full)",
-      background: "var(--border-hairline)",
-      marginBottom: "var(--space-3)"
-    },
-    "data-node": node && "dragHandle"
-  }), children);
-  if (inline) return surface;
-  if (!shown) return null;
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    "aria-hidden": "true",
-    onPointerDown: onClose,
-    className: closing ? "cg-scrim-out" : "cg-scrim-in",
-    style: {
-      position: "fixed",
-      inset: 0,
-      zIndex: washLayer,
-      background: "var(--scrim-dialog)"
-    }
-  }), surface);
-}
-
-/* One row in a sheet: `label-large`, the 48px minimum, left-aligned, one line.
-   No icons in the list — a mixed list of iconned and un-iconned rows is how an
-   icon set starts to look accidental (§5). */
-function SheetItem({
-  label,
-  onSelect,
-  ariaLabel,
-  node
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onSelect,
-    "aria-label": ariaLabel,
-    "data-node": node,
-    className: "cg-state cg-focus",
-    style: {
-      display: "flex",
-      alignItems: "center",
-      minHeight: "var(--touch-target-min)",
-      border: 0,
-      background: "none",
-      padding: "0 var(--space-6)",
-      cursor: "pointer",
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      letterSpacing: "var(--text-label-large--letter-spacing)",
-      fontWeight: "var(--text-label-large--font-weight)",
-      color: "var(--on-surface)",
-      textAlign: "left"
-    }
-  }, label);
-}
-
-/* A sheet's own heading, when the choices need naming. `title-medium`, sentence
-   case, and never a close button beside it: the scrim and Escape already do that,
-   and a third way out is a third thing to read.
-
-   `trailing` is the slot for what the heading line carries besides its name — the
-   screen's one "?", or the switch the sheet exists for. It is the heading's own
-   row, so a sheet that needs one stops assembling a heading by hand; a close
-   control is still the one thing it never takes. */
-function SheetTitle({
-  children,
-  trailing,
-  node
-}) {
-  const heading = {
-    fontSize: "var(--text-title-medium)",
-    letterSpacing: "var(--text-title-medium--letter-spacing)",
-    lineHeight: "var(--text-title-medium--line-height)",
-    fontWeight: "var(--text-title-medium--font-weight)"
-  };
-  if (!trailing) {
-    return /*#__PURE__*/React.createElement("h2", {
-      style: {
-        margin: 0,
-        padding: "0 var(--space-6) var(--space-2)",
-        ...heading
-      },
-      "data-node": node
-    }, children);
-  }
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-2)",
-      padding: "0 var(--space-6) var(--space-2)"
-    },
-    "data-node": node
-  }, /*#__PURE__*/React.createElement("h2", {
-    style: {
-      margin: 0,
-      flex: 1,
-      ...heading
-    }
-  }, children), trailing);
-}
-__ds_scope.useModalFocus = useModalFocus;
-__ds_scope.BottomSheet = BottomSheet;
-__ds_scope.SheetItem = SheetItem;
-__ds_scope.SheetTitle = SheetTitle;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/BottomSheet.jsx", error: String((e && e.message) || e) }); }
-
 // components/people/ActorChip.jsx
 try { (() => {
 /* The actor chip / row and its avatar (readme §7): the compact
@@ -3199,12 +2888,379 @@ function ActorChip({
     "data-node": node && "handle"
   }, "@", handle));
 }
+
+/* A NAME INSIDE A ONE-LINE PLACE (jakob 2026-11-11, round 40). A page title, a
+   menu row, a row's title and its aside never wrap; where a handle stands in
+   their words — `@ada commented on your post`, `Hide @ada`, `on @mira` — the
+   HANDLE is what is cut with "…", and the words around it keep their room
+   first: `@mmmmmmmm… commented on your post`. The chip's own arithmetic at line
+   scale: the words are `flex: none`, the handle the one part that yields
+   (`minWidth: 0` and the clip). Every one-line master clips its own line at
+   the end ("…", the why-line's way — `Through @ada`) and passes its text
+   through `nameInLine`: where the handle ENDS the line (`Hide @ada`, `on
+   @mira`, a title that is only `@ada`) the end clip already cuts the handle
+   and keeps the words, so the text returns untouched; only words AFTER the
+   handle split the line, so a line that fits draws exactly what it drew. The
+   first handle is the one that yields. */
+const HANDLE_IN_LINE = /(?<![\w@])@[A-Za-z0-9_]+/;
+const LINE_WORDS = {
+  flex: "none",
+  whiteSpace: "pre"
+};
+function nameInLine(text) {
+  if (typeof text !== "string") return text;
+  const found = HANDLE_IN_LINE.exec(text);
+  if (!found) return text;
+  const before = text.slice(0, found.index);
+  const after = text.slice(found.index + found[0].length);
+  if (!after.trim()) return text;
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "flex",
+      minWidth: 0,
+      whiteSpace: "nowrap"
+    },
+    "data-name-line": ""
+  }, before && /*#__PURE__*/React.createElement("span", {
+    style: LINE_WORDS
+  }, before), /*#__PURE__*/React.createElement("span", {
+    style: {
+      minWidth: 0,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }
+  }, found[0]), after && /*#__PURE__*/React.createElement("span", {
+    style: LINE_WORDS
+  }, after));
+}
 __ds_scope.REDACTED_RING = REDACTED_RING;
 __ds_scope.REDACTED_ACTOR_NAME = REDACTED_ACTOR_NAME;
 __ds_scope.HIDE_ACTOR_LABEL = HIDE_ACTOR_LABEL;
 __ds_scope.MonogramAvatar = MonogramAvatar;
 __ds_scope.ActorChip = ActorChip;
+__ds_scope.nameInLine = nameInLine;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/people/ActorChip.jsx", error: String((e && e.message) || e) }); }
+
+// components/core/BottomSheet.jsx
+try { (() => {
+const { nameInLine } = __ds_scope;
+/* The bottom sheet (backlog item 3; readme §7, *Intentional additions*). The
+   product never built one, so three surfaces were each
+   improvising: the overflow menu, the license terms, a filter.
+
+   WHY A SHEET AND NOT A DIALOG. A dialog is a question the reader has to answer
+   before anything else can happen. A sheet is a drawer of choices they opened and
+   can drop — so it comes from the edge they pulled it from, and the scrim, a
+   swipe down, Back and Escape all put it away. Choosing a dialog for a drawer is
+   how a product starts asking permission to show a menu.
+
+   IT IS MODAL — M3's modal bottom sheet (readme §4, *Sheets*; jakob
+   2026-10-01). It dims and covers what it was opened over, and assistive tech
+   is told what the eye is: focus moves into the sheet when it opens, stays
+   inside while it is up, and returns to the control that opened it when it
+   closes (readme §10). Nothing beneath the scrim takes a tap.
+
+   A SHEET THAT HOLDS A CHOICE IS ONE OF TWO KINDS (readme §4, *Sheets*).
+   A STAGING SHEET COMMITS ON ITS COMMIT, AND EVERY OTHER WAY OUT DISCARDS (the
+   sheet law): it stages the choice until its `Done` — or whatever its foot
+   names — and the scrim, a swipe down, Back and Escape leave everything as it
+   was. AN EDITING SHEET APPLIES LIVE (jakob 2026-10-02, the editing-sheet
+   exemption): each change applies the moment it is made, so every way out,
+   `Done` included, just closes it and what was applied stands. The editing
+   sheets are four — `ComposeTags`, `ComposePicked`, `EditPicked` and
+   `ComposeCitations`; every other sheet that holds a choice stages. A menu's
+   row is its own commit; a sheet that only lists has nothing to apply.
+
+   Rules it keeps:
+   · `surfaceContainerHigh` at the 28px rung — a rung higher when it is
+     `stacked` — TOP CORNERS ONLY: the bottom edge is the screen's, and a
+     rounded bottom on a surface flush to the edge draws a gap that is not
+     there.
+   · The grab handle is `outlineVariant`, 32×4, and it is not a button: it marks
+     the handle area a drag starts from, and says which edge this came from and
+     which way it goes back.
+   · THE DRAG IS M3's. The sheet follows the finger from its handle area, and
+     from a list at its scroll-top; it dismisses past about 25 % of its height
+     or on a downward fling, and otherwise snaps back. No intermediate detents —
+     `tallest` included. A sheet hosting a pad drags only from the handle and
+     title zone; the field owns every pointer that starts on it.
+   · It covers the bottom bar rather than sitting above it. A sheet is a decision
+     surface; a navigation bar under it would offer to leave mid-decision.
+   · Scrim at 50%, and pressing it closes. Escape closes. Both because a drawer
+     the reader opened is a drawer the reader can drop.
+   · Never open beside the opinion pad: one parked surface at a time, and the pad
+     owns the same corner of the screen.
+   · Enters over 400ms from the bottom, leaves over 200ms to the bottom
+     (`tokens/transitions.css`) — a dismissal exits the edge it entered from. */
+
+/* THE TALLEST SHEET IS A CLASS, AND IT IS THE CEILING OVER ALL OF THEM (jakob's
+   ruling, the sheets-and-video round). A sheet's top edge never rises above a
+   72px sliver measured from the top of the SAFE AREA — Android below the status
+   bar and the display cutout, web from the viewport top. The rounded top corners
+   keep a strip of the surface behind visible, and no sheet ever touches the safe
+   area: a drawer that reached the top edge would be a screen, and a reader who
+   cannot see what they left cannot tell a drawer from a destination.
+
+   The ceiling caps every height class rather than replacing any. `maxHeight`
+   keeps its 62% default and the raised 88% class stays what a sheet asks for
+   when its content needs the room; `height` pins a sheet at a size instead of
+   letting content set it, for the footed filter whose Done row is pinned beneath
+   its scrolling sections. Each is held under the ceiling by `min()`, so no class
+   can out-grow the sliver on a screen short enough for its percentage to reach
+   it.
+
+   `tallest` IS THAT CLASS ASKED FOR BY NAME — the comments sheet, whose pinned
+   composer row needs the surface itself to own the height (readme §13,
+   2026-08-28). It pins the sheet at the ceiling and the children manage their
+   own scrolling. */
+const SHEET_CEILING = "calc(100% - 72px - env(safe-area-inset-top, 0px))";
+
+/* FOCUS IN, CONTAINED, RETURNED (readme §10) — every modal surface's, the sheet's
+   and the dialog's alike. While `active`, focus moves to the surface, Tab cycles
+   inside it, and Escape asks `onEscape` for the way out (a sheet's discard, a
+   dialog's safe answer); when it ends, focus goes back to whatever held it
+   before — the control that opened the surface. */
+const FOCUS_STOPS = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+function useModalFocus(surfaceRef, active, onEscape) {
+  const escape = React.useRef(onEscape);
+  escape.current = onEscape;
+  React.useEffect(() => {
+    if (!active) return undefined;
+    const opener = document.activeElement;
+    if (surfaceRef.current) surfaceRef.current.focus();
+    const onKey = event => {
+      if (event.key === "Escape" && escape.current) escape.current();
+      if (event.key !== "Tab" || !surfaceRef.current) return;
+      const stops = surfaceRef.current.querySelectorAll(FOCUS_STOPS);
+      if (stops.length === 0) return;
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (opener && typeof opener.focus === "function") opener.focus();
+    };
+  }, [active, surfaceRef]);
+}
+
+/* `stacked` is the sheet that opens over another sheet — the comment's menu and
+   the comment's license, both over the comments thread. A SHEET OVER A SHEET IS
+   DRAWN AS LAYERS. Left flat, the upper sheet's wash resolves beneath the lower
+   sheet's surface: nothing dims, and two surfaces of one colour meet at a
+   shadowless seam. Stacked, the sheet takes the layer above, so the wash it
+   already draws — the same `--scrim-dialog` — falls BETWEEN the two and dims
+   what it covers, while the sheet below keeps its top edge, its handle and its
+   title visible above this one. Its surface takes the next tonal rung,
+   `surfaceContainerHighest`: elevation is tonal (`tokens/semantic.css`), and two
+   surfaces at one rung claim one elevation. */
+function BottomSheet({
+  open = false,
+  onClose,
+  ariaLabel,
+  children,
+  inline = false,
+  maxHeight = "62%",
+  height,
+  tallest = false,
+  stacked = false,
+  node
+}) {
+  const [shown, setShown] = React.useState(open);
+  const [closing, setClosing] = React.useState(false);
+  React.useEffect(() => {
+    if (open) {
+      setShown(true);
+      setClosing(false);
+      return undefined;
+    }
+    if (!shown) return undefined;
+    setClosing(true);
+    const timer = setTimeout(() => {
+      setShown(false);
+      setClosing(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [open, shown]);
+  const surfaceRef = React.useRef(null);
+  useModalFocus(surfaceRef, open && !inline, onClose);
+
+  /* The wash's layer; the surface rides one above it, so a stacked sheet's wash
+     clears the sheet below instead of sliding under it. */
+  const washLayer = stacked ? 42 : 40;
+  const surface = /*#__PURE__*/React.createElement("div", {
+    ref: surfaceRef,
+    tabIndex: inline ? undefined : -1,
+    role: "dialog",
+    "aria-modal": inline ? undefined : "true",
+    "aria-label": ariaLabel,
+    className: inline ? undefined : closing ? "cg-sheet-out" : "cg-sheet-in",
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 0,
+      background: stacked ? "var(--surface-container-highest)" : "var(--surface-dialog)",
+      color: "var(--on-surface)",
+      borderRadius: "var(--radius-extra-large) var(--radius-extra-large) 0 0",
+      /* BORDER-BOX: a height class is the surface's whole height, its
+         padding inside it (seam 248) — `DialogSurface`'s rule for its
+         width. Content-box drew 88% + 32px (91.8% of an 844 frame) and
+         put the tallest sheet's top edge 40px from the safe area, under
+         the 72px sliver. */
+      boxSizing: "border-box",
+      padding: "var(--space-2) 0 calc(var(--space-6) + env(safe-area-inset-bottom, 0px))",
+      // The surface takes focus only to hand it on; it is not a control.
+      outline: "none",
+      ...(inline ? {
+        position: "relative",
+        width: "100%"
+      } : {
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: washLayer + 1,
+        ...(tallest ? {
+          height: SHEET_CEILING,
+          overflow: "hidden"
+        } : height ? {
+          height: `min(${height}, ${SHEET_CEILING})`,
+          overflow: "hidden"
+        } : {
+          maxHeight: `min(${maxHeight}, ${SHEET_CEILING})`,
+          overflowY: "auto"
+        })
+      })
+    },
+    "data-node": node
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      alignSelf: "center",
+      height: "4px",
+      width: "32px",
+      flex: "none",
+      borderRadius: "var(--radius-full)",
+      background: "var(--border-hairline)",
+      marginBottom: "var(--space-3)"
+    },
+    "data-node": node && "dragHandle"
+  }), children);
+  if (inline) return surface;
+  if (!shown) return null;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    onPointerDown: onClose,
+    className: closing ? "cg-scrim-out" : "cg-scrim-in",
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: washLayer,
+      background: "var(--scrim-dialog)"
+    }
+  }), surface);
+}
+
+/* One row in a sheet: `label-large`, the 48px minimum, left-aligned, one line.
+   No icons in the list — a mixed list of iconned and un-iconned rows is how an
+   icon set starts to look accidental (§5). A ONE-LINE PLACE (round 40): a
+   handle in the label — `Hide @ada` — is the part cut with "…", the words keep
+   their room (`nameInLine`). */
+function SheetItem({
+  label,
+  onSelect,
+  ariaLabel,
+  node
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onSelect,
+    "aria-label": ariaLabel,
+    "data-node": node,
+    className: "cg-state cg-focus",
+    style: {
+      /* One line, clipped at its end: a block whose padding centres the
+         label-large line in the 48px minimum, so the ellipsis can ride it. */
+      display: "block",
+      width: "100%",
+      boxSizing: "border-box",
+      minHeight: "var(--touch-target-min)",
+      border: 0,
+      background: "none",
+      padding: "calc((var(--touch-target-min) - var(--text-label-large--line-height)) / 2) var(--space-6)",
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      letterSpacing: "var(--text-label-large--letter-spacing)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      color: "var(--on-surface)",
+      textAlign: "left"
+    }
+  }, nameInLine(label));
+}
+
+/* A sheet's own heading, when the choices need naming. `title-medium`, sentence
+   case, and never a close button beside it: the scrim and Escape already do that,
+   and a third way out is a third thing to read.
+
+   `trailing` is the slot for what the heading line carries besides its name — the
+   screen's one "?", or the switch the sheet exists for. It is the heading's own
+   row, so a sheet that needs one stops assembling a heading by hand; a close
+   control is still the one thing it never takes. */
+function SheetTitle({
+  children,
+  trailing,
+  node
+}) {
+  const heading = {
+    fontSize: "var(--text-title-medium)",
+    letterSpacing: "var(--text-title-medium--letter-spacing)",
+    lineHeight: "var(--text-title-medium--line-height)",
+    fontWeight: "var(--text-title-medium--font-weight)"
+  };
+  if (!trailing) {
+    return /*#__PURE__*/React.createElement("h2", {
+      style: {
+        margin: 0,
+        padding: "0 var(--space-6) var(--space-2)",
+        ...heading
+      },
+      "data-node": node
+    }, children);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)",
+      padding: "0 var(--space-6) var(--space-2)"
+    },
+    "data-node": node
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: 0,
+      flex: 1,
+      ...heading
+    }
+  }, children), trailing);
+}
+__ds_scope.useModalFocus = useModalFocus;
+__ds_scope.BottomSheet = BottomSheet;
+__ds_scope.SheetItem = SheetItem;
+__ds_scope.SheetTitle = SheetTitle;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/BottomSheet.jsx", error: String((e && e.message) || e) }); }
 
 // components/honesty/PendingMarker.jsx
 try { (() => {
@@ -6018,7 +6074,7 @@ __ds_scope.WizardFooter = WizardFooter;
 
 // components/navigation/PageHeader.jsx
 try { (() => {
-const { Icon } = __ds_scope;
+const { Icon, nameInLine } = __ds_scope;
 /* The house page header (Android's TopAppBar): a back arrow, the page title, and
    an optional trailing action — one pattern for every inner surface. Tab roots
    carry no back arrow.
@@ -6053,6 +6109,10 @@ function PageHeader({
   action,
   node
 }) {
+  /* Only a title that names a handle yields its room to the action: a plain
+     title keeps its whole width, as it always has (the seals' "What you sign"
+     beside the widest trailing group). */
+  const namesSomeone = typeof title === "string" && /(?<![\w@])@[A-Za-z0-9_]/.test(title);
   return /*#__PURE__*/React.createElement("header", {
     style: {
       display: "flex",
@@ -6067,7 +6127,10 @@ function PageHeader({
     style: {
       display: "flex",
       alignItems: "center",
-      gap: "var(--space-2)"
+      gap: "var(--space-2)",
+      ...(namesSomeone ? {
+        minWidth: 0
+      } : null)
     }
   }, (backHref || onBack) && /*#__PURE__*/React.createElement("a", {
     href: backHref ?? "#",
@@ -6096,11 +6159,17 @@ function PageHeader({
       fontWeight: "var(--text-title-large--font-weight)",
       // A page title is a name and never wraps — a two-line header
       // steals the content's first row (seen on the seals, where the
-      // trailing group is widest).
-      whiteSpace: "nowrap"
+      // trailing group is widest). A ONE-LINE PLACE (round 40): a
+      // title too long for the band is cut with "…" — a name or handle
+      // standing in its words is the part cut, the words keep their
+      // room (`nameInLine`) — and the trailing action keeps its width.
+      whiteSpace: "nowrap",
+      minWidth: 0,
+      overflow: "hidden",
+      textOverflow: "ellipsis"
     },
     "data-node": node && "title"
-  }, title)), action);
+  }, nameInLine(title))), action);
 }
 __ds_scope.PageHeader = PageHeader;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/navigation/PageHeader.jsx", error: String((e && e.message) || e) }); }
@@ -6690,7 +6759,8 @@ function Snackbar({
     "data-node": node
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      minWidth: 0
+      minWidth: 0,
+      overflowWrap: "anywhere"
     },
     "data-node": node && "message"
   }, message), action && /*#__PURE__*/React.createElement("button", {
@@ -6772,8 +6842,12 @@ const { buttonStyle, BUTTON_CLASS, useModalFocus } = __ds_scope;
    and returns to what opened it (readme §10). */
 // The whole headline-small role, tracking included — left out, the title
 // inherited the body's 0.5px (seam 248; seam 245's ask-6/7 pattern).
+// TEXT THAT WRAPS (round 40): the title, the body and the line wrap at their
+// spaces, and a handle or name too long for the dialog breaks inside the word
+// rather than running off it — never an ellipsis.
 const DIALOG_TITLE_STYLE = {
   margin: 0,
+  overflowWrap: "anywhere",
   fontSize: "var(--text-headline-small)",
   lineHeight: "var(--text-headline-small--line-height)",
   letterSpacing: "var(--text-headline-small--letter-spacing)",
@@ -6783,6 +6857,7 @@ const DIALOG_BODY_STYLE = {
   display: "flex",
   flexDirection: "column",
   gap: "var(--space-4)",
+  overflowWrap: "anywhere",
   fontSize: "var(--text-body-medium)",
   fontWeight: "var(--text-body-medium--font-weight)",
   lineHeight: "var(--text-body-medium--line-height)",
@@ -6791,6 +6866,7 @@ const DIALOG_BODY_STYLE = {
 };
 const DIALOG_LINE_STYLE = {
   margin: 0,
+  overflowWrap: "anywhere",
   fontSize: "var(--text-body-medium)",
   fontWeight: "var(--text-body-medium--font-weight)",
   lineHeight: "var(--text-body-medium--line-height)",
@@ -9711,7 +9787,7 @@ __ds_scope.ExplainableNumber = ExplainableNumber;
 
 // components/content/OverflowMenu.jsx
 try { (() => {
-const { Icon, BottomSheet, SheetItem } = __ds_scope;
+const { Icon, BottomSheet, SheetItem, nameInLine } = __ds_scope;
 /* The overflow menu on a piece of content.
 
    EVERY post and every comment carries one. Genesis content always declares a
@@ -9832,6 +9908,9 @@ function OverflowMenu({
       [align]: 0,
       zIndex: 21,
       minWidth: "12rem",
+      // Material 3's menu maximum, 280dp: a row naming a long handle
+      // cuts the handle (`nameInLine`) instead of growing off the screen.
+      maxWidth: "17.5rem",
       display: "flex",
       flexDirection: "column",
       borderRadius: "var(--radius-medium)",
@@ -9849,12 +9928,15 @@ function OverflowMenu({
     },
     className: "cg-state cg-focus",
     style: {
-      display: "flex",
-      alignItems: "center",
+      // One line clipped at its end (`SheetItem`'s block form).
+      display: "block",
+      boxSizing: "border-box",
       minHeight: "var(--touch-target-min)",
       border: 0,
       background: "none",
-      padding: "0 var(--space-4)",
+      padding: "calc((var(--touch-target-min) - var(--text-label-large--line-height)) / 2) var(--space-4)",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
       cursor: "pointer",
       fontFamily: "var(--font-sans)",
       fontSize: "var(--text-label-large)",
@@ -9863,9 +9945,10 @@ function OverflowMenu({
       fontWeight: "var(--text-label-large--font-weight)",
       color: "var(--on-surface)",
       textAlign: "left",
-      whiteSpace: "nowrap"
+      whiteSpace: "nowrap",
+      minWidth: 0
     }
-  }, item.label)))));
+  }, nameInLine(item.label))))));
 }
 __ds_scope.OverflowMenu = OverflowMenu;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/OverflowMenu.jsx", error: String((e && e.message) || e) }); }
@@ -13147,7 +13230,7 @@ __ds_scope.TaggedRow = TaggedRow;
 
 // components/core/ContentRow.jsx
 try { (() => {
-const { Icon, MonogramAvatar, REDACTED_ACTOR_NAME, PendingMarker, EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue, ZERO_BUNDLE_EMOJI } = __ds_scope;
+const { Icon, MonogramAvatar, REDACTED_ACTOR_NAME, nameInLine, PendingMarker, EMPTY_PICK_LABEL, SEVERED_LABEL, StanceValue, ZERO_BUNDLE_EMOJI } = __ds_scope;
 /* THE IDENTITY ROW — the card-lite line every list in this product is built
    from: a 40px disc saying who or what, two lines of words saying which and
    when, and whatever the list keeps on its trailing edge.
@@ -13235,6 +13318,28 @@ const TYPE = {
     fontWeight: "var(--text-body-medium--font-weight)",
     lineHeight: "var(--text-body-medium--line-height)",
     letterSpacing: "var(--text-body-medium--letter-spacing)"
+  }
+};
+
+/* How the aside yields (round 40): a bare handle as the chip's handle does,
+   words naming a handle by giving up the handle first, plain words never. */
+const ASIDE_FLEX = {
+  none: {
+    flex: "none"
+  },
+  bare: {
+    flexShrink: 1,
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap"
+  },
+  words: {
+    flexShrink: 1,
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap"
   }
 };
 const TONES = {
@@ -13373,8 +13478,14 @@ function ContentRow({
     textOverflow: "ellipsis",
     whiteSpace: "nowrap"
   };
+  const asideHandle = typeof titleAside !== "string" ? "none" : /^@[A-Za-z0-9_]+$/.test(titleAside) ? "bare" : /(?<![\w@])@[A-Za-z0-9_]/.test(titleAside) ? "words" : "none";
   const heading = /*#__PURE__*/React.createElement("span", {
     style: {
+      ...(asideHandle === "bare" ? {
+        flexShrink: 999
+      } : asideHandle === "words" ? {
+        flexShrink: 0.001
+      } : null),
       fontSize: "var(--text-label-large)",
       lineHeight: "var(--text-label-large--line-height)",
       letterSpacing: "var(--text-label-large--letter-spacing)",
@@ -13385,7 +13496,7 @@ function ContentRow({
       ...ellipsis
     },
     "data-node": node && "title"
-  }, title);
+  }, nameInLine(title));
   /* The row's own box, and the part of it that presses. With no `action` they
      are the same element, exactly as every list has always drawn it; with one,
      the box is a plain div and the press is the button inside it — the card's
@@ -13476,10 +13587,10 @@ function ContentRow({
     style: {
       ...TYPE["label-small"],
       color: "var(--text-secondary)",
-      flex: "none"
+      ...ASIDE_FLEX[asideHandle]
     },
     "data-node": node && "aside"
-  }, titleAside)) : heading, second && /*#__PURE__*/React.createElement("span", {
+  }, asideHandle === "words" ? nameInLine(titleAside) : titleAside)) : heading, second && /*#__PURE__*/React.createElement("span", {
     style: {
       ...TYPE[shape.second],
       color: "var(--text-secondary)",
@@ -13881,7 +13992,10 @@ function QuotedRow({
       fontSize: "var(--text-label-large)",
       letterSpacing: "var(--text-label-large--letter-spacing)",
       lineHeight: "var(--text-label-large--line-height)",
-      fontWeight: "var(--text-label-large--font-weight)"
+      fontWeight: "var(--text-label-large--font-weight)",
+      // TEXT THAT WRAPS (round 40): `The long way home — @…` breaks a
+      // handle too long for the row inside the word, never cut.
+      overflowWrap: "anywhere"
     },
     "data-node": node && "title"
   }, title), snippet && /*#__PURE__*/React.createElement("span", {
@@ -14152,7 +14266,8 @@ function SettingsRow({
     style: {
       ...STATUS_TYPE,
       overflow: "hidden",
-      textOverflow: "ellipsis"
+      textOverflow: "ellipsis",
+      overflowWrap: "anywhere"
     },
     "data-node": node && "status"
   }, status));
@@ -15413,6 +15528,10 @@ function BorrowedViewBand({
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
+      // TEXT THAT WRAPS (round 40): the line wraps at its spaces, and a
+      // handle too long for the band breaks inside the word, never cut.
+      minWidth: 0,
+      overflowWrap: "anywhere",
       fontSize: "var(--text-body-small)",
       fontWeight: "var(--text-body-small--font-weight)",
       lineHeight: "var(--text-body-small--line-height)",
@@ -17341,7 +17460,10 @@ function ProfileHeader({
       letterSpacing: "var(--text-body-small--letter-spacing)",
       fontWeight: "var(--text-body-small--font-weight)",
       lineHeight: "var(--text-body-small--line-height)",
-      color: "var(--text-secondary)"
+      color: "var(--text-secondary)",
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
     },
     "data-node": node && "handle"
   }, "@", handle)), figuresCell)), bio && (typeof bio === "string" ? /*#__PURE__*/React.createElement("p", {
