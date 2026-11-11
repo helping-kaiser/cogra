@@ -15,6 +15,8 @@
 // race is the lane's question for jakob, who owns whether uploads wait for the
 // details step or an `updateMedia` carries a late description.
 
+import { useRef } from "react";
+
 import { Chip } from "@/lib/ui2/chip";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { useCanPinch } from "@/lib/ui2/media/touch";
@@ -50,7 +52,8 @@ export function CropStep({
    */
   locked?: boolean;
   focused: number;
-  onShape: (next: PostShape) => void;
+  /** `frameWidth` is the viewport's width at the tap (`reshape`), null before layout. */
+  onShape: (next: PostShape, frameWidth: number | null) => void;
   onFocus: (index: number) => void;
   onCrop: (id: string, crop: Crop) => void;
   onNext: () => void;
@@ -59,6 +62,9 @@ export function CropStep({
   node?: DataNode;
 }) {
   const canPinch = useCanPinch();
+  // THE SHAPE CHANGES AROUND THE PICTURE (`reshape`): what keeps each picture
+  // at the size it stood at is the width it was laid at, read at the tap.
+  const viewport = useRef<HTMLDivElement>(null);
   const asset = assets[focused];
   if (asset === undefined) return null;
 
@@ -80,7 +86,7 @@ export function CropStep({
               testId={`${testIdPrefix}-shape-${option}`}
               node={part(node, `shapes.${option}Chip`)}
               selected={option === shape}
-              onClick={() => onShape(option)}
+              onClick={() => onShape(option, viewport.current?.clientWidth || null)}
             >
               {POST_SHAPES[option].label}
             </Chip>
@@ -94,6 +100,7 @@ export function CropStep({
         crop={asset.crop}
         onChange={(next) => onCrop(asset.id, next)}
         zoomSlider
+        viewportRef={viewport}
         testId={`${testIdPrefix}-crop-frame`}
         node={node}
       />

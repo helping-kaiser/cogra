@@ -18,7 +18,7 @@ import type { GalleryEntryDraft } from "@/lib/api/content-api";
 import type { KnownMedia } from "@/lib/api/media-api";
 import { ledgerEntry, type MediaLedger } from "@/lib/compose/payload-expectation";
 import type { Crop } from "@/lib/ui2/media/crop";
-import { CENTERED } from "@/lib/ui2/media/crop";
+import { CENTERED, reshape } from "@/lib/ui2/media/crop";
 import { POST_SHAPES, type PostShape } from "@/lib/ui2/media/aspect";
 import type { License } from "@/lib/license";
 import { PUBLIC_DOMAIN } from "@/lib/license";
@@ -631,7 +631,11 @@ export type WizardAction =
   | { type: "autoCoverUpload"; upload: AssetUpload }
   | { type: "reorder"; from: number; to: number }
   | { type: "focus"; index: number }
-  | { type: "shape"; shape: PostShape }
+  /**
+   * `frameWidth` is the crop viewport's width at the tap, which is what lets
+   * each picture keep the size it stood at (`reshape`); null where none is known.
+   */
+  | { type: "shape"; shape: PostShape; frameWidth?: number | null }
   | { type: "crop"; id: string; crop: Crop }
   | { type: "altText"; id: string; altText: string }
   | { type: "upload"; id: string; upload: AssetUpload }
@@ -786,16 +790,19 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       // re-framing happens against the ORIGINAL picture, never against the last
       // crop. The measured area is the previous shape's rectangle, so keeping
       // it would bake the old shape into the upload; dropping it makes the
-      // cropper measure a fresh one from the media. The position and zoom stay,
-      // so a reader who framed three pictures and then tried another shape
-      // keeps where they had put each one.
+      // cropper measure a fresh one from the media. Each picture keeps the
+      // size and the place it stood at, and only the shape changes around it
+      // (`reshape`), so a reader who framed three pictures and then tried
+      // another shape keeps what they had chosen for each one.
       if (action.shape === state.shape) return state;
+      const from = POST_SHAPES[state.shape].ratio;
+      const to = POST_SHAPES[action.shape].ratio;
       return {
         ...state,
         shape: action.shape,
         assets: state.assets.map((asset) => ({
           ...asset,
-          crop: { ...asset.crop, area: null, areaPercent: null },
+          crop: reshape(asset.crop, from, to, action.frameWidth ?? null),
         })),
       };
     }
