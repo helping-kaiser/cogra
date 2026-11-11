@@ -382,6 +382,51 @@ impl WireRig {
         (id, key)
     }
 
+    /// Deletes an account the way production does, so a suite reads the
+    /// husk the executor writes rather than one built by hand: a deletion
+    /// opened and confirmed through the store's own verbs with no grace,
+    /// then one tick of the real executor (`api::deletion::tick`), which
+    /// claims it, redacts the identity and closes it. A person seeded
+    /// without a login gets one first, since a deletion belongs to an
+    /// account; an existing login is left as it is.
+    pub async fn execute_deletion(&self, user_id: uuid::Uuid) {
+        postgres_store::genesis::insert_credentials(
+            &self.pool,
+            user_id,
+            &format!("{user_id}@deleted.test"),
+            &api::auth::hash_password(MEMBER_PASSWORD).expect("hash"),
+        )
+        .await
+        .expect("credentials");
+        let token_hash = user_id.as_bytes().to_vec();
+        let opened = postgres_store::auth::open_account_deletion(
+            &self.pool,
+            uuid::Uuid::new_v4(),
+            user_id,
+            &token_hash,
+            false,
+            chrono::Utc::now() + chrono::Duration::hours(1),
+        )
+        .await
+        .expect("opens");
+        assert!(
+            matches!(opened, Some(postgres_store::auth::DeletionRequest::Opened)),
+            "the deletion opened: {opened:?}"
+        );
+        postgres_store::auth::confirm_account_deletion(&self.pool, &token_hash, false, 0.0)
+            .await
+            .expect("confirms")
+            .expect("the link confirms");
+        let tick = api::deletion::tick(
+            &api::l1::StandInBoundary(self.standin.clone()),
+            &self.pool,
+            &api::media::MediaAreas::in_memory(),
+        )
+        .await
+        .expect("ticks");
+        assert_eq!(tick.executed, vec![user_id], "the executor ran: {tick:?}");
+    }
+
     /// A session for a seeded account.
     pub async fn log_in(&self, email: &str) -> String {
         let login = self

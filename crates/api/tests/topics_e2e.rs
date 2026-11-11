@@ -88,6 +88,11 @@ impl Rig {
     }
 
     async fn seed_member(&self, handle: &str, email: &str) -> (Uuid, ActorKey) {
+        self.seed_member_funded(handle, email, 10_000_000).await
+    }
+
+    /// A member whose burn credits the given balance, in micro-units.
+    async fn seed_member_funded(&self, handle: &str, email: &str, burn: i64) -> (Uuid, ActorKey) {
         let key = ActorKey::generate();
         let id = Uuid::new_v4();
         let mut conn = self.pool.acquire().await.expect("conn");
@@ -111,7 +116,7 @@ impl Rig {
         .await
         .expect("credentials");
         self.standin
-            .credit_burn(&key.address(), 10_000_000)
+            .credit_burn(&key.address(), burn)
             .await
             .expect("burn");
         (id, key)
@@ -827,6 +832,94 @@ async fn tagging_something_that_is_not_content_is_refused(pool: PgPool) {
         json!(["target"]),
         "{refused}"
     );
+}
+
+/// A reply's topics take the same rules as a post's (api-spec.md
+/// `PrepareCommentInput.tags`: "same rules as on a Post"): an eleventh
+/// topic refuses the list, an illegal name and a canonical repeat refuse
+/// at their entry's name, a negative confidence at its entry's
+/// confidence — each refusing the whole batch, comment and all.
+///
+/// A reply's topics are refused by the post's rules, each refusal naming the same field and staging nothing.
+/// ´claim:topics:a-replys-topics-take-the-posts-rules´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_replys_topics_take_the_posts_refusals(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig.landed_post(&token, &ak, "A post", json!([])).await;
+
+    let eleven: Vec<Value> = (0..11).map(|i| tag(&format!("t{i}"))).collect();
+    let cases = [
+        (json!(eleven), json!(["tags"])),
+        (
+            json!([tag("ok"), tag("has space")]),
+            json!(["tags", "1", "name"]),
+        ),
+        (
+            json!([tag("rust"), tag("#Rust")]),
+            json!(["tags", "1", "name"]),
+        ),
+        (
+            json!([{ "name": "rust", "pDirected": 0.1, "pInterest": -0.5 }]),
+            json!(["tags", "0", "pInterest"]),
+        ),
+    ];
+    for (tags, field) in cases {
+        let refused = rig
+            .gql(
+                Some(&token),
+                PREPARE_COMMENT,
+                json!({ "input": {
+                    "target": post,
+                    "content": "a reply",
+                    "license": { "attribution": 0.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
+                    "pInterest": 0.1,
+                    "tags": tags,
+                }}),
+            )
+            .await;
+        let refusals = errors(&refused, "prepareComment");
+        assert_eq!(refusals[0]["code"], "BAD_INPUT", "for {tags}: {refused}");
+        assert_eq!(refusals[0]["field"], field, "for {tags}: {refused}");
+        assert!(
+            refused["prepareComment"]["writes"].is_null(),
+            "nothing staged for {tags}"
+        );
+    }
+    assert!(
+        rig.registry_names().await.is_empty(),
+        "a refused batch registers no name"
+    );
+}
+
+/// A standalone tag is a priced act like any other: an author whose
+/// balance cannot carry one act is refused at prepare with the write
+/// rule's code and no field (api-spec.md "Errors are tiered": the
+/// failed write-rule pre-check is the canonical expected failure).
+///
+/// A standalone tag the balance cannot carry is refused by the write rule, staging nothing.
+/// ´claim:topics:an-unaffordable-tag-fails-the-write-rule´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unaffordable_standalone_tag_fails_the_write_rule(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig.landed_post(&token, &ak, "A post", json!([])).await;
+
+    rig.seed_member_funded(
+        "broke",
+        "broke@example.com",
+        l1_standin::REFERENCE_THETA_MICRO / 2,
+    )
+    .await;
+    let broke = rig.log_in("broke@example.com").await;
+    let refused = rig.prepare_tag(&broke, &post, tag("rust")).await;
+    let refusals = errors(&refused, "prepareTag");
+    assert_eq!(refusals[0]["code"], "WRITE_RULE_FAILED", "{refused}");
+    assert_eq!(refusals[0]["field"], Value::Null, "{refused}");
+    assert!(refused["prepareTag"]["writes"].is_null(), "{refused}");
 }
 
 /// Tagging needs a member session.

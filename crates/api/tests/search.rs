@@ -421,21 +421,7 @@ async fn a_redacted_handle_never_matches_redacted(pool: PgPool) {
     let sol = person(&rig.pool, "sol", Some("Sol Brine")).await;
     person(&rig.pool, "kel", None).await;
 
-    sqlx::query(
-        "INSERT INTO actor_profile_versions
-             (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'policy', 99, 99, 1)",
-    )
-    .bind(sol)
-    .execute(&rig.pool)
-    .await
-    .expect("tombstone");
-    sqlx::query("UPDATE actors SET handle = $2 WHERE id = $1")
-        .bind(sol)
-        .bind(format!("redacted-user-{sol}"))
-        .execute(&rig.pool)
-        .await
-        .expect("sentinel");
+    rig.execute_deletion(sol).await;
 
     for typed in ["redacted", "sol", "brine", &sol.to_string()] {
         let found = search(&rig, None, json!({ "query": typed })).await;
@@ -1696,15 +1682,7 @@ async fn an_unknown_handle_scope_with_text_reads_empty(pool: PgPool) {
     let rig = rig(pool);
     let sol = person(&rig.pool, "sol", None).await;
     post_as(&rig.pool, sol, &minted("sol", 1), 1, Some("Salt maps")).await;
-    sqlx::query(
-        "INSERT INTO actor_profile_versions
-             (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'policy', 99, 99, 1)",
-    )
-    .bind(sol)
-    .execute(&rig.pool)
-    .await
-    .expect("tombstone");
+    rig.execute_deletion(sol).await;
 
     for typed in [
         "@nobody salt",

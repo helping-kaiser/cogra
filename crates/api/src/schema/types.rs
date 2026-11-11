@@ -1601,8 +1601,7 @@ impl User {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        validate_page_args(first, last, after.as_deref(), before.as_deref())
-            .map_err(|e| super::query::bad_input(e.message))?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())?;
         let kinds = saved_kinds(kinds.as_deref())?;
         let parsed = crate::search::parse(query.as_deref().unwrap_or("")).map_err(|_| {
             super::query::bad_input(format!(
@@ -1682,8 +1681,7 @@ impl User {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        validate_page_args(first, last, after.as_deref(), before.as_deref())
-            .map_err(|e| super::query::bad_input(e.message))?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())?;
         let backward = last.is_some() || before.is_some();
         let cursor = match if backward { &before } else { &after } {
             Some(raw) => Some(
@@ -1748,8 +1746,7 @@ impl User {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        validate_page_args(first, last, after.as_deref(), before.as_deref())
-            .map_err(|e| super::query::bad_input(e.message))?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())?;
         let backward = last.is_some() || before.is_some();
         let cursor = match if backward { &before } else { &after } {
             Some(raw) => Some(
@@ -1860,8 +1857,7 @@ impl User {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        validate_page_args(first, last, after.as_deref(), before.as_deref())
-            .map_err(|e| super::query::bad_input(e.message))?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())?;
         let served = history_kinds(kinds.as_deref())?;
         let parsed = crate::search::parse(query.as_deref().unwrap_or("")).map_err(|_| {
             super::query::bad_input(format!(
@@ -4010,7 +4006,7 @@ pub struct ReferenceCandidate {
 pub(super) fn list_limit(limit: Option<i32>) -> async_graphql::Result<u32> {
     let limit = limit.unwrap_or(DEFAULT_PAGE_SIZE);
     if !(0..=MAX_PAGE_SIZE).contains(&limit) {
-        return Err(async_graphql::Error::new(format!(
+        return Err(super::query::bad_input(format!(
             "limit must lie in 0..={MAX_PAGE_SIZE}"
         )));
     }
@@ -5698,12 +5694,8 @@ pub struct KeysetPage {
 }
 
 /// The page arguments every connection field accepts, checked once
-/// (api-spec.md "Pagination").
-///
-/// Both connection helpers used to check a subset of these, so the same
-/// input was refused differently depending on which field a client hit
-/// — and one of the two delegated the missing rules to the library,
-/// which answers in its own words.
+/// (api-spec.md "Pagination"), and refused as `BAD_INPUT` wherever the
+/// field — one rule set, one answer, whichever connection a client hits.
 pub fn validate_page_args(
     first: Option<i32>,
     last: Option<i32>,
@@ -5711,15 +5703,15 @@ pub fn validate_page_args(
     before: Option<&str>,
 ) -> async_graphql::Result<()> {
     if first.is_some_and(|n| n > MAX_PAGE_SIZE) || last.is_some_and(|n| n > MAX_PAGE_SIZE) {
-        return Err(async_graphql::Error::new(format!(
+        return Err(super::query::bad_input(format!(
             "first/last may be at most {MAX_PAGE_SIZE}"
         )));
     }
     if first.is_some_and(|n| n < 0) || last.is_some_and(|n| n < 0) {
-        return Err(async_graphql::Error::new("first/last must be non-negative"));
+        return Err(super::query::bad_input("first/last must be non-negative"));
     }
     if (first.is_some() || after.is_some()) && (last.is_some() || before.is_some()) {
-        return Err(async_graphql::Error::new(
+        return Err(super::query::bad_input(
             "paginate forward (first/after) or backward (last/before), not both",
         ));
     }
@@ -5766,7 +5758,7 @@ pub fn encode_landing_cursor(key: CursorKey) -> String {
 /// A cursor without the trailing id is accepted and paginates on the
 /// key alone — one issued before the id was carried stays usable.
 fn decode_landing_cursor(cursor: &str) -> async_graphql::Result<CursorKey> {
-    let invalid = || async_graphql::Error::new("invalid cursor");
+    let invalid = || super::query::bad_input("invalid cursor");
     let raw = B64.decode(cursor).map_err(|_| invalid())?;
     let text = String::from_utf8(raw).map_err(|_| invalid())?;
     let parts: Vec<&str> = text.split(':').collect();
