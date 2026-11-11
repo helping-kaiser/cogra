@@ -10487,13 +10487,12 @@ jakob after his hand test.
   row's quiet register — `You can't sign right now. Nothing was signed or
   spent.` where the fault line stands — the act dimmed, no Retry, `Keep
   it` the way back. The board's `answer` chip draws it.
-- **The way out while Set signs.** Until the act is being sent, Cancel,
-  the press outside, Back and Escape truly cancel: the pad closes, nothing
-  lands, the row untouched. Once it is being sent the same button reads
-  `Close` and only leaves: the wait passes to the target's row, a hold's
-  (`Signing…`, then the face and the snackbar, or `That didn't sign.`
-  with a Retry that asks the same pick again). `PadFailed`'s `moment` chip
-  draws `setting`, `sending` and `closed` (round 31).
+- **The way out while Set signs.** Once Set is pressed nothing cancels
+  the act: past 200ms Cancel reads `Close`, and it, the press outside, Back
+  and Escape only close the pad; the wait passes to the target's row, a
+  hold's (`Signing…`, then the face and the snackbar, or `That didn't
+  sign.` with a Retry that asks the same pick again). `PadFailed`'s
+  `moment` chip draws `setting` and `closed` (round 34).
 - **The key-absent pad's "?"** says only what its notice does not: where
   the key lives, and what waits for the restore.
 - **The target label's family**: `this post`, `this comment`, `@ada`,
@@ -10505,7 +10504,7 @@ jakob after his hand test.
   `(0, 0)` landing over anything standing.
 - **Every new string above was merged under the autonomy order and is
   blessed (jakob 2026-11-10)**; the way out while Set signs is jakob's
-  2026-11-11 rule (round 31). Backlog 147 banks the type sites round 20 left.
+  2026-11-11 rule (round 34). Backlog 147 banks the type sites round 20 left.
 - **The gate**: edges hold at **2127**, flows at **227**, the registry
   at **100 screens**; no board added — two boards gain a chip.
 
@@ -10982,17 +10981,8 @@ jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
   Salome Ward, Nadia Rask.
 - **The search sections' cap of three** is the rule on every sectioned
   surface, Saved and History included (backlog 141).
-- **The way out while an act signs.** Cancel and Close are the way out of a
-  pad that stalls. Until the app begins sending the act — the proposal,
-  `submitProposals` — Cancel, the press outside, Back and Escape truly
-  cancel: nothing lands, the row untouched. From that instant the act is
-  expected to happen; the same button reads `Close`, only leaves, and the
-  wait passes to the target's row (`Signing…`, then the face and the
-  snackbar, or `That didn't sign.` with Retry). A regretted Set is walked
-  back afterwards. `PadFailed`'s `moment` draws `setting`, `sending` and
-  `closed`. The alternates take it; the walk-back and the empty sign take
-  it on `Keep it`, a walk-back cancelling only until the first of its acts
-  is being sent. The hold keeps no exit once it fires.
+- **The way out while an act signs** is round 34's: once the commit is
+  pressed nothing cancels it, and `Close` only leaves.
 - **The deleted account's disc and the removed thing's tile** keep the
   reserved fill and wear a 1px solid `--border-field` ring inside their
   box, one treatment on every surface (`REDACTED_RING`). The ring against
