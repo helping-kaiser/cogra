@@ -499,6 +499,15 @@ describe("History — the seen-list as a feed (History.md)", () => {
     expect(push).toHaveBeenCalledWith("/compose?tag=saltmaps");
   });
 
+  it("a_person_cards_mention_opens_the_composer_with_the_person_staged", async () => {
+    // ProfileMenu.md:17, on the profile card's own ⋮ (FeedProfileShapes.md).
+    serveHistory(() => page([PERSON]));
+    render();
+    fireEvent.click(await screen.findByTestId(byNode("history.profileCard.menu", "u3")));
+    fireEvent.click(screen.getByTestId("history-person-u3-menu-mention"));
+    expect(push).toHaveBeenCalledWith("/compose?reference=u3");
+  });
+
   it("an_empty_tag_keeps_its_card_and_its_glimpse_reads_one_quiet_line", async () => {
     serveHistory(() => page([{ node: tagNode("t2", "mudflats", false), firstSeenAt: hoursAgo(1) }]));
     render();
