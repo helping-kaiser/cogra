@@ -182,7 +182,7 @@ export function JoinView({ linkId, origin = "arrival" }: { linkId: string; origi
 export function inviterOf(check: InviteCheck): { name: string; handle: string; avatarUrl: string | null } {
   const inviter = check.inviter;
   const handle = inviter?.handle ?? check.inviterHandle;
-  const avatar = inviter?.__typename === "User" ? inviter.avatar : null;
+  const avatar = inviter !== null && inviter !== undefined && "avatar" in inviter ? inviter.avatar : null;
   return {
     name: inviter?.displayName.value?.trim() || handle,
     handle,
