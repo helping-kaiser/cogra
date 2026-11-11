@@ -11267,10 +11267,11 @@ rounds 34 + 35 ("as rec", "sounds fine", "blessed").
 - **Long names and handles** (jakob's question with J1): swept, not ruled —
   backlog 173 lists every family drawn outside `ActorChip`, what the tree
   says and what the markup does at the longest legal handle and name.
-- **The gate**: no board added; `Invites` gains the `letIn` chip. Edges
-  **2178 → 2183** (each form's `Repeat password`, the people's rows); flows
-  hold at **227**, none re-blessed. The registry holds at **169 screens**,
-  **6134 → 6162** board paths, **1934 → 1958** distinct — `join.confirm`,
+- **The gate**: no board added; `Invites` gains the `letIn` chip. Five
+  edges added (each form's `Repeat password`, the people's rows), **2261**
+  in check-flows' count; flows hold at **227**, none re-blessed. The
+  registry holds at **181 screens**, **6771 → 6799** board paths, **1972 →
+  1996** distinct — `join.confirm`,
   `reset.confirm`, `changePassword.confirm` and `invites.peopleLabel`,
   `invites.person`, `invites.redactedPerson` with their parts, and the two
   rows' key rules; nothing removed.
