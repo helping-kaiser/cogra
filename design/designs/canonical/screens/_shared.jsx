@@ -685,8 +685,9 @@ const REMOVE_ROW = { label: "Remove", onSelect: () => {}, node: "remove" };
    thing, and the tail is where the rows that take or send something have
    always lived. It NEVER connects to Report-a-problem: reporting content
    must not read as reporting the app (jakob). Own menus carry no Report —
-   a reader has nothing to report themselves for. */
-const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report" };
+   a reader has nothing to report themselves for. `tail` tells a card's own ⋮
+   the same: the card appends the license, and the row stays after it. */
+const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report", tail: true };
 const OWN_POST_MENU = [
   SAVE_ROW,
   CITE_ROW,
@@ -4722,7 +4723,8 @@ const FEED_LEAD_TITLE = {
    `Cited by` and `Opinions on this`, the license closing it. Your own
    comment's adds `Remove` among the acts (`CommentMenuOwn`), as everywhere.
    The card appends the license row itself, so the rows handed it stop short
-   of it. */
+   of it, and the report row, marked `tail`, stays after it: the card's ⋮
+   ends License terms · Report, as `CommentMenu` reads. */
 const FEED_COMMENT_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 const FEED_OWN_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 /* WHAT THE HEAD ROW NAMES, PER TARGET (the closing batch, jakob 2026-10-01).
