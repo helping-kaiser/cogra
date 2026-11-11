@@ -172,4 +172,47 @@ class StancePadVariantTest {
         compose.onNodeWithTag("${TAG}_stance").assertDoesNotExist()
         compose.onNodeWithTag(PAD.tag).assertExists()
     }
+
+    // Ruling 40 (the pad tails): every part the master names wears its path —
+    // the four pole words, the square's hairlines and knob, the readouts' parts.
+    @Test
+    fun everyNamedPartOfThePadWearsItsPath() {
+        val landing = StanceLanding(
+            StancePoint(0.4, 0.3),
+            inertDirected = false,
+            inertInterest = false,
+            severance = false,
+        )
+        show(open.copy(landing = landing))
+        val field = PAD / "field"
+        val parts = listOf("left", "right", "top", "bottom").map { field / it } +
+            listOf("zeroAcross", "zeroDown", "knob").map { field / "square" / it } +
+            listOf("label", "face").flatMap { listOf(PAD / "standing" / "pick" / it, PAD / "landing" / it) }
+        for (part in parts) compose.onNodeWithTag(part.tag, useUnmergedTree = true).assertExists()
+    }
+
+    // The named knob IS the drawn knob: its box centres on the pick, inside the square.
+    @Test
+    fun theNamedKnobStandsWhereThePickIs() {
+        show(open)
+        val square = compose.onNodeWithTag((PAD / "field" / "square").tag, useUnmergedTree = true).fetchSemanticsNode()
+        val knob = compose.onNodeWithTag((PAD / "field" / "square" / "knob").tag, useUnmergedTree = true)
+            .fetchSemanticsNode()
+        val side = square.size.width.toFloat()
+        val inset = with(compose.density) { knobTravelInset().toPx() }
+        val expected = pairKnobAt(PairPoint(0.1, 0.1), side, inset, PairRanges.Signed)
+        val centre = knob.boundsInRoot.center - square.boundsInRoot.topLeft
+        assertThat(centre.x).isWithin(1f).of(expected.x)
+        assertThat(centre.y).isWithin(1f).of(expected.y)
+        assertThat(knob.boundsInRoot.width).isWithin(1f).of(with(compose.density) { (KNOB_RADIUS * 2).toPx() })
+    }
+
+    // The readouts are blocks the pad's whole content wide (StanceStanding's div).
+    @Test
+    fun theStandingIsTheWholeContentWide() {
+        show(open)
+        val width = compose.onNodeWithTag((PAD / "standing").tag, useUnmergedTree = true)
+            .fetchSemanticsNode().size.width
+        assertThat(width.toFloat()).isWithin(1f).of(with(compose.density) { PAD_CONTENT_WIDTH.toPx() })
+    }
 }

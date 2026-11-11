@@ -29,14 +29,14 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * The open pad's field side: the 272dp pad less its 16dp padding and the
- * 56dp gutter on each side the pole words stand in (StanceControl.jsx
- * `17rem`, StancePad.jsx `AXIS_GUTTER_X_PX`). The field takes what the
- * gutters leave — [PairField] draws it at its measured width; this is the
- * number that width comes to on the pad. Its own box is the whole
+ * The open pad's field side: the pad's 17rem content box less the 56dp
+ * gutter on each side the pole words stand in (StanceControl.jsx `17rem`,
+ * content-box; StancePad.jsx `AXIS_GUTTER_X_PX`) — 160dp. The field takes
+ * what the gutters leave — [PairField] draws it at its measured width; this
+ * is the number that width comes to on the pad. Its own box is the whole
  * `[-1, +1]²`.
  */
-internal val FIELD_SIZE = PAD_WIDTH - 16.dp * 2 - PAIR_GUTTER_X * 2
+internal val FIELD_SIZE = PAD_CONTENT_WIDTH - PAIR_GUTTER_X * 2
 
 /** The knob's radius — one 20dp disc in `primaryContainer` (`KNOB_DIAMETER_PX`). */
 internal val KNOB_RADIUS = 10.dp

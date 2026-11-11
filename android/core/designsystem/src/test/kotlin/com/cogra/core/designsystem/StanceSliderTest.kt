@@ -1,5 +1,6 @@
 package com.cogra.core.designsystem
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,6 +14,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
+import com.cogra.core.designsystem.v2.atom.HOUSE_SLIDER_THUMB
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -95,5 +97,24 @@ class StanceSliderTest {
         }
         assertEquals(0.0, reported, 0.0)
         assertEquals(Double.POSITIVE_INFINITY, 1.0 / reported, 0.0)
+    }
+
+    @Test
+    fun bothFamilySlidersDrawTheHouseDot() {
+        // StanceSlider.jsx: a range input in `primary` — the house slider's
+        // 16dp dot (CropViewport.jsx `CropZoom`), never Material's 4dp handle.
+        compose.setContent {
+            Column {
+                StanceSlider(label = "Directed", value = 0.1, onChange = {}, testTag = "stance")
+                LabeledSlider(label = "Relevance", value = 0.5, onChange = {}, testTag = "labeled")
+            }
+        }
+        for (tag in listOf("stance_thumb", "labeled_thumb")) {
+            val size = compose.onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().size
+            with(compose.density) {
+                assertEquals(HOUSE_SLIDER_THUMB.toPx(), size.width.toFloat(), 1f)
+                assertEquals(HOUSE_SLIDER_THUMB.toPx(), size.height.toFloat(), 1f)
+            }
+        }
     }
 }

@@ -542,9 +542,11 @@ rule covers all three button variants:
   round): never hidden, and never left live only to refuse on press — the
   reader sees the commitment exists and reads what it is waiting for.
   The reason is one quiet line right above the commit, in the voice for
-  what something waits on — `Waiting for both passwords` — and the
+  what something waits on — `Waiting for your email` — and the
   commit's description (`WaitingCommit`; drawn on every credential and
-  entry form, jakob 2026-10-05; the reasons blessed the same day).
+  entry form, jakob 2026-10-05; the reasons blessed the same day). A wait
+  that explains itself carries no line — change password's three fields
+  (jakob 2026-11-11).
   **The law gates commits; a handoff that only prefills another app's
   draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
   by email` stays live from an empty field, because what it enforces is
@@ -7693,9 +7695,10 @@ page.
   `OWN_COMMENT_MENU`). The row stands as the last of the acts: after
   Save and Cite, before the two readings, with the license closing the
   menu. That is the own-post menu's place for it, and the place
-  `ChatMessageMenuOwn` takes at message scale. The menu has no Edit
-  row, because the card carries Edit. It has no sensitive row, because
-  a comment's mark rides its edit. Every comment ⋮ edge gains the
+  `ChatMessageMenuOwn` takes at message scale. `Edit` stands before it,
+  the own-post menu's place, and is the one door to the comment's edit:
+  no card carries an Edit button (jakob 2026-11-11). It has no sensitive
+  row, because a comment's mark rides its edit. Every comment ⋮ edge gains the
   own-comment case.
 - **The confirm is the post's dialog with the nouns swapped**
   (`CommentRemoveConfirm`). `RemoveConfirm`'s body moved to `_shared` as
@@ -7911,10 +7914,9 @@ jakob's rulings from his review of the day's rounds.
 - **Your own comments say so in the thread** (jakob: "'own' should be
   added to the existing boards so it is clear that you can interact
   differently with your own comments"). @sol's 3h comment and the landed
-  reply wear `CommentCard`'s `own`: `Edit` beside `Reply`, the anatomy
-  `ReplyMedia` drew first, wired to `CommentEdit` on `ReplyEntry` and
-  `ReplySettled`. Their ⋮ holds the own menu's acts. The removed comment
-  keeps `own` and loses `Edit` with its payload.
+  reply carry the own menu in their ⋮, `Edit` among its rows, wired to
+  `CommentEdit` from `CommentMenuOwn`. The removed comment loses its ⋮
+  with its payload.
 - **A pick stages and the picker stays open** (both pickers, the shared
   anatomy's law). A row tap stages at once, and so does the tag
   picker's action key on the typed name; the reader goes on picking.
@@ -11368,6 +11370,50 @@ details are a proposal drawn for his review.
   flows hold at **227**. The registry grows to **182 screens**, **6799 →
   6946** board paths, **1996 → 2000** distinct — `settings.clearing.install`
   with its label and chevron, and `settings.dialog.close`; nothing removed.
+
+### Round 41, Unhide on a hidden person's card, Edit on your own, the last failure places — 2026-11-11
+
+jakob's answers to rounds 36–39 (M1–M3, R2, S1–S6, I1–I2), executed.
+
+- **Unhide wherever a hidden person's card lands** (M1). The hide row reads
+  `Unhide @ada` — Settings' word in the row's own form (`UNHIDE_ACTOR_LABEL`,
+  beside `HIDE_ACTOR_LABEL` on `ActorChip`), answered by Settings' snackbar
+  with Undo — on every host where a hidden person's post, profile card or
+  profile still stands: History until its next load (posts) and for good
+  (the profile card), Saved, the tag's page, and a post or profile reached
+  by a link or a search. The feed never holds such a card; a comment's menu
+  has no hide row. Drawn: `HistoryPostMenu`'s `author` hidden and
+  `HistoryProfileMenu` (new). The row keeps its name, `hide`.
+- **Your own card offers Edit wherever it stands, in its ⋮** (M3; jakob
+  2026-11-11: "this belongs in the three dot bottom sheet as always"). The
+  own comment's menu carries `Edit` on every host — Save · Cite · Edit ·
+  Remove · Cited by · Opinions on this · License terms, the own post menu's
+  place for it — and no card carries an Edit button, the thread's included:
+  `CommentCard` has no Edit affordance, and the registered
+  `postDetail.threadSheet.commentCard.actionRow.edit` is deleted, a named
+  breaking change. The own post's menu already holds Edit on every host. The own profile's posts and comments
+  views are boards of their own (M2): `ProfilePostsOwn`, `ProfileCommentsOwn`,
+  and the own profile's tabs lead to them.
+- **The last failure places after Close** (S3–S5). A profile or picture
+  change: the line under the profile's head, `Signing…` then `That didn't
+  sign.` with `Retry` (`Profile`'s `change`; `SigningAfterClose`'s `act`
+  `profile`). The kept picks' batch: the Key backup row reads `That didn't
+  sign.` with `Retry`, signing the whole batch again (`Settings`' `kept`). A
+  removal: the same line under the card (`FeedRemoveConfirm`'s
+  `closedFailed`); a closed application's row says it too, law only (backlog
+  190). The dialogs' own failure while open keeps `That didn't send. Try
+  again.` `Your post didn't sign.` and `Your comment didn't sign.` are kept as
+  drawn for now (S1); replies and edits keep no draft (S2).
+- **Change password waits silently** (R2): the line `Waiting for both
+  passwords` is gone; the registered `changePassword.commit.reason` is deleted
+  with it, a named breaking change.
+- **The install row's words are blessed** (I1); the row stays in Clearing
+  data (I2). **Settings' frame is 3103px** (backlog 175).
+- **Not drawn, at jakob:** Close on the plain forms (S6, backlog 191) — the
+  entry forms have no place a guest sees a result, and a page whose only way
+  out is a back arrow has no drawn precedent for that arrow reading Close.
+  Backlog 176 stays open: `FeedRemoved.md` says a removed card carries no
+  menu.
 
 ---
 

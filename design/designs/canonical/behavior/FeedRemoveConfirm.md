@@ -22,4 +22,4 @@ WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN fee
 
 WHEN the removal is taken GIVEN feed.dialog was closed while it answered -> the line goes AND the card stands in its place as its mark, Removed by its author
 
-WHEN the removal does not go through GIVEN feed.dialog was closed while it answered -> the card's own row in the feed, under its words stands as it was AND says so in the failure voice with Retry, its words waiting for jakob (backlog 167) AND NEVER the snackbar carries the failure
+WHEN the removal does not go through GIVEN feed.dialog was closed while it answered -> the card's own row in the feed, under its words stands as it was AND says That didn't sign. in the failure voice followed by Retry, which asks the same act again, AND NEVER the snackbar carries the failure

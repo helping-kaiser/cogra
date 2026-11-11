@@ -66,9 +66,6 @@ export interface CommentCardProps {
    */
   stancePendingReview?: boolean;
   onReply?: () => void;
-  onEdit?: () => void;
-  /** The viewer authored this comment, so the edit affordance shows. */
-  own?: boolean;
   targetLabel?: string;
   /**
    * Where this comment shows OUT of its thread — a profile's comments view, a
@@ -121,7 +118,7 @@ export interface CommentCardProps {
   replyOpacity?: string | number;
   /** Shows `ShareButton`, closing the row — the feed card's. A thread passes none. */
   onShare?: () => void;
-  /** Extra affordances in the same row as the stance control, Reply and Edit. */
+  /** Extra affordances in the same row as the stance control and Reply. */
   actions?: React.ReactNode;
   /** The overflow menu's rows; the license entry is appended after them, and a row marked `tail` (the report row) stands after the license. */
   menuItems?: readonly { label: string; onSelect?: () => void; tail?: boolean }[];
@@ -143,7 +140,7 @@ export interface CommentCardProps {
   onOpenScore?: () => void;
   /** The comment's id, the lowercase UUID the wire carries — keys the card, and its `viewReplies` line, when it is named (round 33). Draws nothing. */
   id?: string;
-  /** The data-node name its placer gives this card — keyed by the comment's id (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its media: `media` (`frame` per item, keyed by its position from 1, a clip's `soundDisc` or `playDisc`; `dots`) and its affordance row: `actionRow`, holding `stance`, `score`, `reply` (the glyph form, or the thread's text button), `edit` and `share`; its author's `authorChip` and its ⋮ `menu`; and a removed comment's mark `removalMark`, `RedactedContent`'s `line`, `detail` and `when` inside it. */
+  /** The data-node name its placer gives this card — keyed by the comment's id (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its media: `media` (`frame` per item, keyed by its position from 1, a clip's `soundDisc` or `playDisc`; `dots`) and its affordance row: `actionRow`, holding `stance`, `score`, `reply` (the glyph form, or the thread's text button) and `share`; its author's `authorChip` and its ⋮ `menu`; and a removed comment's mark `removalMark`, `RedactedContent`'s `line`, `detail` and `when` inside it. */
   node?: string;
   /** The card's key, given by its placer in place of `id`. Given none, `id` keys the card. */
   nodeKey?: string;

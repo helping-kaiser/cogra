@@ -3,7 +3,7 @@
    round), so a single picture fills the square, display-cropped and centred —
    the bytes still travel uncropped — multiples share the fixed square pager,
    and the viewer's own
-   comment wears Edit and — once edited — the Edited marker. The sheet is the
+   comment wears — once edited — the Edited marker, its Edit a row in its ⋮. The sheet is the
    comments sheet of readme §13, unchanged.
 
    A COMMENT'S VIDEO PLAYS LIKE A POST'S (jakob 2026-09-02): muted autoplay
@@ -49,8 +49,6 @@ export function Screen() {
             { src: "gallery-honey.jpg", ratio: "1 / 1", fit: "cover", alt: "A jar of honey in low sun." },
           ]}
           edited
-          own
-          onEdit={() => {}}
           onReply={() => {}}
           license={{ attribution: 0, provenance: 0 }}
           menuItems={OWN_COMMENT_CARD_MENU}
