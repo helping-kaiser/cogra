@@ -284,13 +284,9 @@ impl Rig {
         self.ingest_under(self.cfg.gc_after_epochs).await
     }
 
-    /// Closes an epoch (something must be orderable) and ingests it.
+    /// Closes an epoch, empty or not, and ingests it.
     async fn close(&self) -> api::ingest::IngestOutcome {
-        self.standin
-            .close_epoch()
-            .await
-            .expect("closes")
-            .expect("an epoch publishes");
+        self.standin.close_epoch().await.expect("closes");
         self.ingest().await
     }
 
@@ -326,11 +322,7 @@ impl Rig {
         let host_key = self.standin.host_public_key().await.expect("host key");
         let witness = ticker.approve(&pre, &sealed, &host_key).expect("approves");
         self.standin.approve(witness).await.expect("approval");
-        self.standin
-            .close_epoch()
-            .await
-            .expect("closes")
-            .expect("the ticker publishes");
+        self.standin.close_epoch().await.expect("closes");
         self.ingest_under(gc_after_epochs).await
     }
 
@@ -1001,11 +993,7 @@ async fn the_landing_evaluation_is_idempotent_under_concurrent_ingest(pool: PgPo
     rig.sign(&mira.key, a.id).await;
     rig.sign(&kel.key, b.id).await;
     rig.sign_registration(&noa).await;
-    rig.standin
-        .close_epoch()
-        .await
-        .expect("closes")
-        .expect("publishes");
+    rig.standin.close_epoch().await.expect("closes");
 
     let (x, y) = tokio::join!(
         api::ingest::ingest_pending(&rig.boundary, &rig.pool, rig.cfg.gc_after_epochs),
@@ -1690,11 +1678,7 @@ async fn the_carried_batch_is_released_once(pool: PgPool) {
         .await;
     rig.sign(&mira.key, vouch.id).await;
     rig.sign_registration(&noa).await;
-    rig.standin
-        .close_epoch()
-        .await
-        .expect("closes")
-        .expect("publishes");
+    rig.standin.close_epoch().await.expect("closes");
 
     let (ingested, raced) = tokio::join!(
         api::ingest::ingest_pending(&rig.boundary, &rig.pool, rig.cfg.gc_after_epochs),

@@ -448,6 +448,7 @@ label.
 | `test:integration:an-edit-pick-rides-the-signed-record`                                                        | an_edit_pick_rides_the_signed_record                                                        |
 | `test:integration:an-edit-swaps-the-poster-without-touching-the-clip`                                          | an_edit_swaps_the_poster_without_touching_the_clip                                          |
 | `test:integration:an-empty-bundle-reads-as-zero-and-costs-no-severance`                                        | an_empty_bundle_reads_as_zero_and_costs_no_severance                                        |
+| `test:integration:an-empty-epoch-crosses-the-seam`                                                             | an_empty_epoch_crosses_the_seam                                                             |
 | `test:integration:an-empty-key-list-reads-empty`                                                               | an_empty_key_list_reads_empty                                                               |
 | `test:integration:an-empty-kind-list-narrows-no-history`                                                       | an_empty_kind_list_narrows_no_history                                                       |
 | `test:integration:an-empty-kind-list-narrows-nothing`                                                          | an_empty_kind_list_narrows_nothing                                                          |
