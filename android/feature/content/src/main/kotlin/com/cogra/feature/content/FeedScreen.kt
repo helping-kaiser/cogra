@@ -1056,6 +1056,7 @@ private fun KindCard(
             viewerId = actions.viewerId,
             onOpen = { doors.onOpenActor(card.profile.handle) },
             onShare = { actions.onShare(kinds.shareUrls.profile(card.profile.handle)) },
+            onMention = { actions.onCitePost(card.profile.id) },
             stanceControl = actions.stanceControl,
         )
         is FeedCard.Tag -> TagFeedCard(topic = card.topic, node = FEED / "tagCard", actions = tags)
