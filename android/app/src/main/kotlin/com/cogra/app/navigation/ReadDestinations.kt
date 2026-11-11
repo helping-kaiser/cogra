@@ -24,13 +24,17 @@ import com.cogra.feature.content.CHATS_FROM_FEED
 import com.cogra.feature.content.CHATS_FROM_MESSAGE
 import com.cogra.feature.content.CHATS_FROM_OWN_PROFILE
 import com.cogra.feature.content.CardDoors
+import com.cogra.feature.content.CardListHost
 import com.cogra.feature.content.ChatsComingSoonRoute
 import com.cogra.feature.content.FeedKindDoors
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.HistoryDoors
 import com.cogra.feature.content.HistoryRoute
+import com.cogra.feature.content.HostedCardRoutes
+import com.cogra.feature.content.POST_FROM_OWN_PROFILE
 import com.cogra.feature.content.PostDetailRoute
 import com.cogra.feature.content.SavedRoute
+import com.cogra.feature.content.postFromProfile
 import com.cogra.feature.home.ApplicationSurface
 import com.cogra.feature.home.NewerVersionAnnouncement
 import com.cogra.feature.home.VouchedInScreen
@@ -42,6 +46,8 @@ import com.cogra.feature.profile.HISTORY_ORIGIN
 import com.cogra.feature.profile.NOTIFICATIONS_ORIGIN
 import com.cogra.feature.profile.OPINIONS_ORIGIN
 import com.cogra.feature.profile.POST_ORIGIN
+import com.cogra.feature.profile.ProfileCards
+import com.cogra.feature.profile.ProfileCardsHost
 import com.cogra.feature.profile.ProfileRoute
 import com.cogra.feature.profile.ProfileStancesRoute
 import com.cogra.feature.profile.SAVED_ORIGIN
@@ -82,7 +88,13 @@ internal fun NavGraphBuilder.readDrillIns(shell: ShellScope) {
         shell.ScoresOpenOver(origin) { shell.PostDetailDestination(entry) }
     }
     composable<Topic> { entry -> shell.TopicDestination(entry) }
-    composable<Profile> { entry -> shell.ProfileDestination(entry) }
+    // A PROFILE'S CARDS WEAR THEIR SCORES TOO (ProfilePosts.md:39-41): each
+    // opens its trace over the profile, the arrow naming it.
+    composable<Profile> { entry ->
+        val handle = entry.toRoute<Profile>().handle
+        val origin = if (handle == null) TraceOrigin.OwnProfile else TraceOrigin.Profile(handle)
+        shell.ScoresOpenOver(origin) { shell.ProfileDestination(entry) }
+    }
     // THE OPINIONS PAGE (ProfileStances.md): opened from a profile's figures,
     // in that profile's stack — the bar keeps lit the root the stack began
     // in, never Feed by default (:55, :57) — and a row's person opens over it
@@ -317,6 +329,10 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
     if (ownRoot) hiltViewModel<RootBellViewModel>(entry)
     val tabRoot = TopLevelTab.PROFILE.isRoot(entry)
     if (tabRoot) AnotherTabsRootBack()
+    // A POST OR THREAD OPENED FROM HERE NAMES THE PROFILE ON THE WAY BACK
+    // (ProfilePosts.md:47-49; Profile.md: `Back to your profile`).
+    val postFrom = route.handle?.let(::postFromProfile) ?: POST_FROM_OWN_PROFILE
+    val cardsHost = profileCardsHost(entry, postFrom)
     ProfileRoute(
         handle = route.handle,
         // The bar's Profile slot re-tapped over this root (Profile.md:61-63).
@@ -329,7 +345,7 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
         onEdit = { navController.navigate(ProfileEdit) },
         onOpenSettings = { navController.navigate(Settings) },
         onOpenInvites = { navController.navigate(Invites()) },
-        onOpenPost = { id -> navController.navigate(PostDetail(id)) },
+        onOpenPost = { id -> navController.navigate(PostDetail(id, from = postFrom)) },
         // The own-profile tab has no back arrow; another
         // actor's profile is a drill-in.
         onBack = if (route.handle == null) null else ({ navController.navigateUp() }),
@@ -358,7 +374,47 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
         onMessage = { navController.navigate(ChatsComingSoon(CHATS_FROM_MESSAGE)) },
         // The figures' one door: the opinions page, in this profile's stack.
         onOpenOpinions = { navController.navigate(ProfileStances(route.handle)) },
+        cardsHost = cardsHost,
     )
+}
+
+/**
+ * THE PROFILE'S CARD TABS DRAW THE FEED'S OWN CARDS (ProfilePosts.md:3,
+ * ProfileComments.md:3), hosted here so the profile never depends on the feed's
+ * module: every door lands in this profile's stack, each post and thread naming
+ * the profile on its way back ([postFrom]), and a post card's count raises the
+ * thread over the profile, its return read as the feed reads it.
+ */
+@Composable
+private fun ShellScope.profileCardsHost(entry: NavBackStackEntry, postFrom: String): ProfileCardsHost {
+    val thread = entry.threadReturn(navController)
+    val accountId by authState.accountId.collectAsStateWithLifecycle()
+    val doors = CardDoors(
+        onOpenPost = { id -> navController.navigate(PostDetail(id, from = postFrom)) },
+        onOpenComment = { postId, commentId, aimReply ->
+            navController.navigate(PostDetail(postId, from = postFrom, commentId = commentId, aimReply = aimReply))
+        },
+        onOpenActor = { handle -> navController.navigate(Profile(handle)) },
+        onOpenTopic = { name -> navController.navigate(Topic(name)) },
+    )
+    val routes = HostedCardRoutes(
+        viewerId = accountId,
+        signedIn = signedIn,
+        onEditPost = { id -> navController.navigate(ComposePost(id)) },
+        onCitePost = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
+        onReply = { target -> navController.openReplyWizard(target) },
+        onEditComment = { commentId, parentTitle -> navController.navigate(EditComment(commentId, parentTitle)) },
+        onSignInOrJoin = { navController.navigate(Login) },
+        onRequireAccount = { requireJoin() }.takeIf { signedIn == false },
+        commentsReturn = thread.value,
+        onCommentsReturnConsumed = thread.onConsumed,
+        onCommentsDepart = thread.onDepart,
+    )
+    return { notify, content ->
+        CardListHost(doors = doors, routes = routes, tag = "profile", notify = notify) { hosted ->
+            content(ProfileCards(post = hosted.post, comment = hosted.comment, covered = hosted.covered))
+        }
+    }
 }
 
 /**
