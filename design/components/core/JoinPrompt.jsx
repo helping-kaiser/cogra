@@ -53,8 +53,12 @@ import { useModalFocus } from "./BottomSheet.jsx";
    and returns to what opened it (readme §10). */
 // The whole headline-small role, tracking included — left out, the title
 // inherited the body's 0.5px (seam 248; seam 245's ask-6/7 pattern).
+// TEXT THAT WRAPS (round 40): the title, the body and the line wrap at their
+// spaces, and a handle or name too long for the dialog breaks inside the word
+// rather than running off it — never an ellipsis.
 const DIALOG_TITLE_STYLE = {
   margin: 0,
+  overflowWrap: "anywhere",
   fontSize: "var(--text-headline-small)",
   lineHeight: "var(--text-headline-small--line-height)",
   letterSpacing: "var(--text-headline-small--letter-spacing)",
@@ -64,6 +68,7 @@ const DIALOG_BODY_STYLE = {
   display: "flex",
   flexDirection: "column",
   gap: "var(--space-4)",
+  overflowWrap: "anywhere",
   fontSize: "var(--text-body-medium)",
   fontWeight: "var(--text-body-medium--font-weight)",
   lineHeight: "var(--text-body-medium--line-height)",
@@ -72,6 +77,7 @@ const DIALOG_BODY_STYLE = {
 };
 const DIALOG_LINE_STYLE = {
   margin: 0,
+  overflowWrap: "anywhere",
   fontSize: "var(--text-body-medium)",
   fontWeight: "var(--text-body-medium--font-weight)",
   lineHeight: "var(--text-body-medium--line-height)",

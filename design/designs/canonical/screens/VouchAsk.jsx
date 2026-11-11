@@ -68,7 +68,7 @@ export function Screen() {
         <Card style={{ flex: "none" }} node="ask">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <MonogramAvatar name="noor" size="lg" node="avatar" />
-            <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", letterSpacing: "var(--text-title-medium--letter-spacing)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }} data-node="title">
+            <h2 style={{ margin: 0, minWidth: 0, overflowWrap: "anywhere", fontSize: "var(--text-title-medium)", letterSpacing: "var(--text-title-medium--letter-spacing)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }} data-node="title">
               @noor is asking to be vouched in
             </h2>
           </div>

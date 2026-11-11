@@ -77,7 +77,10 @@ export function Snackbar({ message, action, onAction, onDismiss, durationMs = 40
           }}
           data-node={node}
         >
-          <span style={{ minWidth: 0 }} data-node={node && "message"}>
+          {/* TEXT THAT WRAPS (round 40): a name in the message breaks at its
+              spaces, and an unbroken handle breaks inside the word rather than
+              running off the surface — never an ellipsis. */}
+          <span style={{ minWidth: 0, overflowWrap: "anywhere" }} data-node={node && "message"}>
             {message}
           </span>
           {action && (

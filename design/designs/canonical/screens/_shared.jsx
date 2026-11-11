@@ -580,9 +580,14 @@ function TaskCard({ title, body, tone, children, node }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        {/* TEXT THAT WRAPS (round 40): the title and the body wrap at their
+            spaces; a handle too long for the card breaks inside the word —
+            `All set — waiting on @…` is never cut. */}
         <h2
           style={{
             margin: 0,
+            minWidth: 0,
+            overflowWrap: "anywhere",
             fontSize: "var(--text-title-medium)",
             letterSpacing: "var(--text-title-medium--letter-spacing)",
             lineHeight: "var(--text-title-medium--line-height)",
@@ -594,7 +599,7 @@ function TaskCard({ title, body, tone, children, node }) {
         </h2>
         <Icon name="mark" size={20} pickColor="var(--primary-container)" style={{ flex: "none", color: "var(--primary)" }} />
       </div>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node={node && "body"}>{body}</p>
+      <p style={{ margin: 0, overflowWrap: "anywhere", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node={node && "body"}>{body}</p>
       {children}
     </Card>
   );
@@ -5549,7 +5554,7 @@ function VouchBackHint({ node }) {
    never disagree about what a pad's own voice looks like. */
 function PadLine({ children }) {
   return (
-    <p style={{ margin: 0, fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+    <p style={{ margin: 0, overflowWrap: "anywhere", fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
       {children}
     </p>
   );
@@ -6066,6 +6071,7 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
             key={line}
             style={{
               margin: "8px 0 0",
+              overflowWrap: "anywhere",
               fontSize: "var(--text-body-medium)",
               fontWeight: "var(--text-body-medium--font-weight)",
               lineHeight: "var(--text-body-medium--line-height)",
