@@ -86,6 +86,8 @@ async fn confirm_password_reset_with_a_spent_token_is_reset_token_invalid(pool: 
     )
     .await;
     let token = rig.mailer.latest_token_for("forgetful@example.com");
+    let body = rig.mailer.latest_body_for("forgetful@example.com");
+    assert!(!body.contains("paste"), "the reset link alone: {body}");
     let confirm = json!({ "input": {
         "resetToken": token,
         "newPassword": "a fresh strong password",

@@ -115,8 +115,7 @@ pub(crate) fn code_mail(to: String, code: &str) -> Mail {
 
 /// The new-address half of an email change: the change link, or — on the
 /// unverified carve-out — the account's verification link, which is the
-/// carve-out's whole proof (auth.md "Link URLs"). The bare token rides
-/// beside the URL, the fallback native apps accept as a paste.
+/// carve-out's whole proof (auth.md "Link URLs").
 pub(crate) fn link_mail(to: String, requires_code: bool, web_origin: &str, token: &str) -> Mail {
     let (subject, line, path) = if requires_code {
         (
@@ -131,32 +130,31 @@ pub(crate) fn link_mail(to: String, requires_code: bool, web_origin: &str, token
         to,
         subject: subject.into(),
         body: format!(
-            "{line} (valid {EMAIL_CHANGE_TTL_HOURS} h): {web_origin}/{path}?token={token}\nOr paste the token in the app: {token}"
+            "{line} (valid {EMAIL_CHANGE_TTL_HOURS} h): {web_origin}/{path}?token={token}"
         ),
     }
 }
 
 /// The account-deletion confirmation, to the verified address on file
-/// (auth.md "Self-service deletion"). The link is the capability; the bare
-/// token rides beside the URL, the fallback native apps accept as a paste
+/// (auth.md "Self-service deletion"). The link is the capability
 /// (auth.md "Link URLs").
 pub(crate) fn deletion_mail(to: String, web_origin: &str, token: &str) -> Mail {
     Mail {
         to,
         subject: "Confirm the deletion of your CoGra account".into(),
         body: format!(
-            "Confirm the deletion of your account (link valid {DELETION_LINK_TTL_DAYS} days): {web_origin}/delete-account?token={token}\nOr paste the token in the app: {token}\n\nOpening the link starts a {DELETION_GRACE_DAYS}-day grace period; until it ends, you can cancel from any device."
+            "Confirm the deletion of your account (link valid {DELETION_LINK_TTL_DAYS} days): {web_origin}/delete-account?token={token}\n\nOpening the link starts a {DELETION_GRACE_DAYS}-day grace period; until it ends, you can cancel from any device."
         ),
     }
 }
 
-/// The password-reset link and its bare token (auth.md "Password reset").
+/// The password-reset link (auth.md "Password reset").
 pub(crate) fn reset_mail(to: String, web_origin: &str, token: &str) -> Mail {
     Mail {
         to,
         subject: "Reset your CoGra password".into(),
         body: format!(
-            "Reset your password: {web_origin}/reset?token={token}\nOr paste the token in the app: {token}\n\nValid {PASSWORD_RESET_TTL_MINUTES} minutes."
+            "Reset your password: {web_origin}/reset?token={token}\n\nValid {PASSWORD_RESET_TTL_MINUTES} minutes."
         ),
     }
 }
@@ -2317,9 +2315,8 @@ impl Mutation {
     }
 
     /// Always succeeds, to avoid revealing whether an account exists. If
-    /// one does, a single-use reset link goes to its address — and the
-    /// bare token beside it, which native apps accept as a paste
-    /// (auth.md "Link URLs").
+    /// one does, a single-use reset link goes to its address (auth.md
+    /// "Link URLs").
     ///
     /// The two budgets differ accordingly (auth.md "Rate limiting"): the
     /// per-IP window refuses visibly, while the per-email one trips

@@ -333,6 +333,7 @@ async fn verification_tokens_are_single_purpose(pool: PgPool) {
             body.contains("/verify?token="),
             "verification mail must carry the link URL"
         );
+        assert!(!body.contains("paste"), "the link alone: {body}");
         body.lines()
             .find_map(|l| l.split("token=").nth(1))
             .expect("token")
