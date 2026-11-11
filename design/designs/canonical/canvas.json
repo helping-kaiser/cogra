@@ -1262,6 +1262,24 @@
       "page": "profile"
     },
     {
+      "file": "ProfilePostsOwn.dc.html",
+      "title": "Profile · your own posts view",
+      "x": 6720,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileCommentsOwn.dc.html",
+      "title": "Profile · your own comments view",
+      "x": 7200,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ExplorePerson.dc.html",
       "title": "Explore · a person found",
       "x": 1920,

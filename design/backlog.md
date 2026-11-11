@@ -5466,6 +5466,10 @@ breaking change. The own views are drawn beneath the own menu boards
 of their own beside the others, additions only (rec); (b) the setting, with
 the re-key announced to impl; (c) the menu boards stand for the own views.
 
+Closed by round 41, by (a) (jakob 2026-11-11, M2 "as rec"): `ProfilePostsOwn`
+and `ProfileCommentsOwn`, the own head over the own cards, additions only; the
+own profile's tabs lead to them.
+
 ### 161 · The sheets a host menu's rows open: drawn once, but which path · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
 The sheet node law (readme §13) says a host card's ⋮ and the rows it opens
