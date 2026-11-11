@@ -11,3 +11,5 @@ WHEN tap tagPage.menuSheet.license -> the menu closes AND the post's terms come 
 WHEN tap tagPage.menuSheet.report -> the menu closes AND the report confirm rises over the tag's page, its title reading Report this post? AND NEVER anything is sent yet
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes
+
+ALWAYS tagPage.menuSheet.hide reads Unhide with the author's handle GIVEN the author is already hidden, the hidden author's post still standing here, and keeps its one name whatever it reads, as the reader's post menu reads it

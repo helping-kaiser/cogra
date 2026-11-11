@@ -12,7 +12,11 @@ WHEN tap history.menuSheet.save GIVEN the post is kept -> the sheet closes AND t
 
 WHEN tap history.menuSheet.cite -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
 
-WHEN tap history.menuSheet.hide -> the sheet closes AND History stands as it stood, every card in its place AND history.snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
+WHEN tap history.menuSheet.hide GIVEN the author is not hidden -> the sheet closes AND History stands as it stood, every card in its place AND history.snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
+
+ALWAYS history.menuSheet.hide reads Unhide with the author's handle GIVEN the author is hidden, the post standing in the History that was open when the hide was made, and keeps its one name whatever it reads
+
+WHEN tap history.menuSheet.hide GIVEN the author is hidden -> the sheet closes AND the author is unhidden AND History stands as it stood AND history.snackbar reads @ada is unhidden — their posts can reach your feed again. with Undo AND NEVER a confirm step appears
 
 WHEN tap history.menuSheet.license -> the menu closes AND the post's terms come up in a sheet over History
 

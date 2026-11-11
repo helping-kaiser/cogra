@@ -5437,7 +5437,7 @@ Closed by round 38 (jakob 2026-11-11): the line reads `@mira's link is your
 first way in to everyone else, and theirs to you.`, on the board and in
 copy-voice.
 
-### 159 · The profile card's menu for someone already hidden has no host board · *design* · **filed 2026-11-11**
+### 159 · The profile card's menu for someone already hidden has no host board · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 36 (H3) wrote the law: on a hidden person's profile card the Hide row
 reads `Unhide`, Settings · hidden accounts' word (ProfileMenu.md). The ruling
@@ -5447,7 +5447,13 @@ there; it stands in History and Saved. Ways: (a) a History-hosted profile-card
 menu board with a `hidden` setting, `history.menuSheet` (rec — History is where
 the ruling places the card); (b) the same on Saved; (c) the law line alone.
 
-### 160 · The own profile's Posts and Comments views as a setting on their host boards · *system* · **filed 2026-11-11**
+Closed by round 41 (jakob 2026-11-11, M1: "the unhide should be visible
+whenever we land on a card of a hidden account"): the row reads `Unhide @ada`,
+the row's own form, on every host where a hidden person's post, card or
+profile stands; drawn on `HistoryProfileMenu` and `HistoryPostMenu`'s `author`
+hidden, the row keeping its name `hide`.
+
+### 160 · The own profile's Posts and Comments views as a setting on their host boards · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 36 (H7) asked for the own views as a setting on "Profile · the posts
 view" and "Profile · the comments view". A chip copy keys every node inside
@@ -5459,6 +5465,10 @@ breaking change. The own views are drawn beneath the own menu boards
 (`ProfilePostsMenuOwn`, `ProfileCommentsMenuOwn`). Ways: (a) two host boards
 of their own beside the others, additions only (rec); (b) the setting, with
 the re-key announced to impl; (c) the menu boards stand for the own views.
+
+Closed by round 41, by (a) (jakob 2026-11-11, M2 "as rec"): `ProfilePostsOwn`
+and `ProfileCommentsOwn`, the own head over the own cards, additions only; the
+own profile's tabs lead to them.
 
 ### 161 · The sheets a host menu's rows open: drawn once, but which path · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
@@ -5487,7 +5497,7 @@ their own cards still pass `CARD_MENU`: `LadderMax`, `LadderSmall`,
 draws it twice, and no Report. Closed menus draw no row, so no pixel moves;
 a mechanical sweep.
 
-### 165 · After Close: where a profile change lands · *design* · **filed 2026-11-11**
+### 165 · After Close: where a profile change lands · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 37. `ProfileEditSeal` and `AvatarSeal` read `Close` from the press
 and the change goes on; by `SigningAfterClose`'s edit form its wait and its
@@ -5498,7 +5508,11 @@ with `Retry` under the name, the edit form [lean]; (b) the settings row
 that opened the edit carries them; (c) the profile change keeps its seal
 held, the named exception.
 
-### 166 · After Close: the kept picks' all-or-nothing failure · *design* · **filed 2026-11-11**
+Closed by round 41, by (a) (jakob 2026-11-11, S3): the line under the profile's
+head reads `Signing…` and then `That didn't sign.` with `Retry` (`Profile`'s
+`change` chip; `SigningAfterClose`'s `act` `profile`).
+
+### 166 · After Close: the kept picks' all-or-nothing failure · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 37. `KeptPicksSeal` reads `Close` from the press and the batch goes on
 as a whole, its wait on each target's row (`Signing…`). A batch fails all
@@ -5510,7 +5524,11 @@ closed. For jakob: (a) the Key backup row (`4 kept picks waiting`) carries
 signs the whole batch; (c) the review's seal keeps its exits held, the named
 exception.
 
-### 167 · A removal's and a closing's failure words on their row · *design* · **filed 2026-11-11**
+Closed by round 41, by (a) (jakob 2026-11-11, S4): the Key backup row reads
+`That didn't sign.` with `Retry`, which signs the whole batch again
+(`Settings`' `kept` chip); the wait stays on each target's row.
+
+### 167 · A removal's and a closing's failure words on their row · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 37. After `Close` on `RemoveConfirm`, `FeedRemoveConfirm`,
 `CommentRemoveConfirm`, `RejectConfirm` and `RejectAllConfirm` the act's
@@ -5520,6 +5538,11 @@ its failure there in the failure voice with `Retry`. Which words: (a)
 and a closing are signed acts]; (b) `That didn't go through.`, the row
 pattern for an unsigned one. Also for jakob: on the reject dialogs the way out
 reads `Close` beside `Closing it…` — the same verb twice in one row.
+
+Closed by round 41 (jakob 2026-11-11, S5 "as rec"): `That didn't sign.` with
+`Retry` on the row, drawn on `FeedRemoveConfirm`'s `closedFailed`; the
+application's row is law only (backlog 190). `Close` beside `Closing it…`
+stays as drawn.
 
 ### 170 · Invites with nothing but the people you let in · *design* · **filed 2026-11-11**
 
@@ -5548,7 +5571,7 @@ their construction: `No one let in yet.`). Lean: absent — the two halves stand
 because something can arrive in them now; this one fills only by the
 reader's own act.
 
-### 172 · `Waiting for both passwords` over three fields · *design* · **filed 2026-11-11**
+### 172 · `Waiting for both passwords` over three fields · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 38 (J2). `ChangePassword` now asks for the current password and the
 new one twice; its commit's waiting line still reads `Waiting for both
@@ -5557,6 +5580,11 @@ empty. `Join`'s `Waiting for a handle, your email and a password` and
 `ResetNew`'s `Waiting for a new password` still read true. For jakob: keep it
 (the new one asked twice is still one password), or a new line (a draft:
 `Waiting for your passwords`). Lean: keep.
+
+Closed by round 41 (jakob 2026-11-11, R2: "super self explaining… remove
+it"): the line is gone; `Change password` simply stays disabled until the
+three fields hold something. The registered `changePassword.commit.reason`
+is deleted with it, a named breaking change for impl.
 
 ### 173 · Names and handles outside the actor chip: no rule yet · *design* · **filed 2026-11-11**
 
@@ -5600,7 +5628,7 @@ reader's own record. Round 40 answers the length: three, the newest, then
 `Show all`, which opens the rest in place (`Invites`' `letIn` chip, `more`
 and `more-opened`); whether a hidden person's row stands is still open.
 
-### 175 · Settings with the install row outgrows its board · *system* · **filed 2026-11-11**
+### 175 · Settings with the install row outgrows its board · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 39. `Settings`' frame is 3046px, the page whole with 32px under the last
 footnote. The `install` chip's `shown` adds the row (57px with its hairline),
@@ -5609,6 +5637,9 @@ so the delete group's footnote ends at 3071 and its last 25px are cut;
 drawing 89px of surface under the footnote [lean — a frame is the page, and
 nothing on the default moves]; (b) the clip stands, the row being what the
 setting shows; (c) the shown page as a board of its own.
+
+Closed by round 41, by (a): the frame is 3103px; a row's second line costs
+nothing (54px inside the 56px minimum), so no other setting needs more.
 
 ### 176 · The ladder's redacted records: which menu · *design* · **filed 2026-11-11**
 
@@ -5681,3 +5712,45 @@ saying nothing waits, since no such line is blessed. For jakob: (a) no line,
 as drawn [lean — the button and the people already say the page is alive];
 (b) the halves' own `No applications waiting.` under `New invite`; (c) a new
 line (a draft: `Nothing new is waiting for you.`).
+
+Round 41 (jakob 2026-11-11, "fine for now lets keep it there" read with "all
+things that i did not say anything to … are blessed"): left open, because
+`FeedRemoved.md` reads "the removed card carries no feed.card.menu" and
+`ProfileComments.md` gives a removed comment no menu, while `LadderStates.md`
+gives a removed post a menu without the license row. The rule is his: one
+menu for every redacted card, or the ladder's and the feed's kept apart.
+
+### 190 · A closed application failing after Close: its row on Invites · *design* · **filed 2026-11-11**
+
+Round 41 (S5). The law reads on `RejectConfirm` and `RejectAllConfirm`: a
+closing closed on that does not go through leaves the application's row (or
+the group's rows) as they were, saying `That didn't sign.` with `Retry`. The
+row is drawn by `InvitesBody`, which round 40 is reshaping in parallel (the
+three-then-show-all cap), so no state is drawn yet. For the next round: a
+`closedFailed` value on `RejectConfirm`'s `answer`, the line under the row,
+as `FeedRemoveConfirm` draws it.
+
+### 191 · Close on the plain forms (S6): the arrow, and where a guest's result lands · *design* · **filed 2026-11-11**
+
+jakob 2026-11-11, S6: "should be close no? submit is submit". Round 41 swept
+the forms whose commit is a submit and not a signing; none draws a state in
+which the commit is pending, and none says its exits hold — each sidecar's
+back-arrow line ("settings returns AND NEVER the password changes") speaks of
+leaving before the press. Two things have no drawn precedent:
+(1) a page whose one way out is the header's back arrow (ChangePassword,
+ChangeEmail, ChangeEmailConfirm, ApplicantEmail, Join, SignIn, Reset,
+InviteEntry, YourKeyGate) — the seals rename a foot `Back` to `Close` and name
+their X `Close`, but no board renames an arrow. Ways: (a) the arrow is named
+`Close` from the press and leaves, the seal's X form [lean]; (b) the arrow
+keeps its name and only its act changes; (c) a foot `Close` is added.
+(2) where the result shows. Settings forms have rows (`Change pending`, the
+Handle row's `Changing handle…` / `That didn't go through.` + `Retry`); a
+password change's Retry would need the typed passwords again, so its failure
+reopens the form rather than retrying. The report sheets have no told
+outcome beyond their snackbar. The entry forms (Join, SignIn, Reset,
+ResetNew, InviteEntry, VerifyExpired's resend) leave a guest with no place a
+result can be told: (a) they keep their exits held while they submit, the
+named exception [lean — a guest who closes has nothing to come back to];
+(b) Close, and the result is lost unless it lands while the app is open
+(the feed's snackbar); (c) Close, and a signed-in landing tells it at the
+next open.

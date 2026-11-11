@@ -189,3 +189,7 @@ WHEN tap Delete account GIVEN User.deletionPath reads LOCKED -> the snackbar rea
 ALWAYS a handle change closed on while in flight carries its wait and its answer on settings.credentials.handle, the old handle standing as its value until the change is taken
 
 WHEN tap settings.credentials.handle GIVEN its second line reads Changing handle… -> NEVER the form opens
+
+ALWAYS settings.backup.kept reads That didn't sign. in the failure voice in its second line followed by Retry in its trailing slot GIVEN the kept picks' batch was closed on while it signed and did not go through, the row inert apart from its Retry
+
+WHEN tap Retry on settings.backup.kept -> the whole batch is asked to sign again AND each target's row reads Signing… under its face until the batch answers AND NEVER part of the batch is signed alone

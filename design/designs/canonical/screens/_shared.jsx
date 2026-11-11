@@ -17,6 +17,7 @@ const {
   MonogramAvatar,
   ActorChip,
   HIDE_ACTOR_LABEL,
+  UNHIDE_ACTOR_LABEL,
   REDACTED_ACTOR_NAME,
   ProfileHeader,
   EmptyState,
@@ -1208,8 +1209,13 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
    `Profile` and `ProfileOwnMenu` register them, and every other board this
    page stands on renders them stripped. The chronicle's acts are keyed by their
    position, newest first — two acts can read alike, and an act shows nothing
-   else that is its own. */
-function ProfileOwnBody({ tail = null }) {
+   else that is its own.
+
+   `headLine` is the line under the head: where a profile or picture change
+   closed on while it signs shows its wait and its failure (round 41, S3;
+   `SigningAfterClose`'s edit form, the head standing as it was until the
+   change is taken). Given none, nothing stands there. */
+function ProfileOwnBody({ tail = null, headLine = null }) {
   return (
     <>
       <ProfileBand node="band" />
@@ -1238,6 +1244,7 @@ function ProfileOwnBody({ tail = null }) {
             menu={ownProfileMenu()}
           />
         </div>
+        {headLine}
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
         <ChronicleList node="chronicle">
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} node="act" nodeKey="1" />
@@ -3523,14 +3530,16 @@ function WhatsNewBody({ newer }) {
    wait*).
 
    `waiting` false draws the live commit alone, for a state whose fields are
-   filled.
+   filled. A form with no `reason` waits silently: the commit disabled and no
+   line (`ChangePassword`, jakob 2026-11-11, R2 — a self-evident wait says
+   nothing).
 
    `node` names the pair where a registered board places it (design ⇄ impl
    seam 002): the line is its `reason` and the button its `action`. */
 function WaitingCommit({ id, label, reason, waiting = true, node }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node={node}>
-      {waiting && (
+      {waiting && reason && (
         <span
           id={`${id}-waits`}
           data-node={node && "reason"}
@@ -3546,7 +3555,7 @@ function WaitingCommit({ id, label, reason, waiting = true, node }) {
           {reason}
         </span>
       )}
-      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting ? `${id}-waits` : undefined} node={node && "action"}>
+      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting && reason ? `${id}-waits` : undefined} node={node && "action"}>
         {label}
       </Button>
     </div>
@@ -3700,7 +3709,7 @@ function ReportProblemBody({ words }) {
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
-function SettingsBody({ handleChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
+function SettingsBody({ handleChip = false, keptChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -3849,9 +3858,32 @@ function SettingsBody({ handleChip = false, backup = "made", forget = false, kep
             node="recovery"
           />
           <SettingsRow label="Your key" onOpen={() => {}} node="key" />
-          {keptPicks > 0 && (
-            <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
-          )}
+          {keptPicks > 0 &&
+            (keptChip ? (
+              /* THE KEPT PICKS' BATCH AFTER CLOSE (round 41; jakob 2026-11-11,
+                 S4 (a)): Close on `KeptPicksSeal` leaves for this page while
+                 the batch goes on, its wait on each target's row; a batch
+                 that fails fails whole, and says so here — `That didn't
+                 sign.` in this row's second line with `Retry` in the trailing
+                 slot, which signs the whole batch again: the Handle row's
+                 failed form below. The failed state is a drawn copy; the rest
+                 row alone carries the name. */
+              <div>
+                <div style={{ display: "{{keptRestShown}}" }}>
+                  <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
+                </div>
+                <div style={{ display: "{{keptFailedShown}}" }}>
+                  <SettingsRow
+                    label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`}
+                    status={<span role="alert" style={{ color: "var(--text-failure)" }}>That didn&apos;t sign.</span>}
+                    trailing={<InlineAction size="sm" onClick={() => {}}>Retry</InlineAction>}
+                    inert
+                  />
+                </div>
+              </div>
+            ) : (
+              <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
+            ))}
         </SettingsGroup>
 
         {/* WHAT CLEARING THIS DATA ERASES (jakob 2026-10-13, seams 164 and
@@ -4894,8 +4926,11 @@ const FEED_OWN_COMMENT_MENU = OWN_COMMENT_CARD_MENU;
      the title's place reads `Removed by its author`, the removal mark's own
      line, over the author, who stays; its mark keeps its space empty.
 
-   YOUR OWN COMMENT (`own`) is the same card, its ⋮ opening your own menu;
-   nothing else about it changes — the feed card carries no Edit.
+   YOUR OWN COMMENT (`own`) is the same card, its ⋮ opening your own menu,
+   and its row wearing `Edit` as the thread's own card does (`CommentCard`'s
+   `own`; jakob 2026-11-11, M3: "whenever you look at your own card you may
+   want to edit it") — on every host this card stands in. The menu keeps no
+   Edit row: the card's Edit is the one door to the edit.
 
    A LONG COMMENT folds at two lines under `More`, the caption's precedent
    (`FEED_COMMENT_CLAMP_LINES`); the card is still the door to its thread.
@@ -4945,6 +4980,8 @@ function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = 
       onOpenScore={() => {}}
       onReply={() => {}}
       replyGlyph
+      own={own}
+      onEdit={own ? () => {} : undefined}
       onShare={() => {}}
       license={{ attribution: 0, provenance: 0 }}
       menuItems={own ? FEED_OWN_COMMENT_MENU : FEED_COMMENT_MENU}

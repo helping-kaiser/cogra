@@ -4,6 +4,8 @@ WHEN tap the ⋮ on profile.comments.commentCard GIVEN the profile is the reader
 
 ALWAYS the own comment's menu on the own profile reads Save or Unsave, then Cite in a new post, then Remove, then profile.menuSheet.citedBy, then Opinions on this, then License terms, the own comment menu's rows, and carries no Report row
 
+ALWAYS the reader's own comment's card beneath wears Edit in its row, as in the thread
+
 WHEN tap profile.menuSheet.remove -> the menu closes AND the think-twice dialog comes up over the profile
 
 WHEN tap profile.menuSheet.opinions -> the menu closes AND the comment's opinions sheet comes up over the profile

@@ -33,3 +33,11 @@ ALWAYS a line of this pattern stands until its act answers or Retry is pressed, 
 WHEN the signing is refused for a staged citation or tag GIVEN the surface was closed -> the line reads the failure as any failure reads AND the post's draft carries the refusal to its seal at the next press
 
 WHEN the app opens again GIVEN it was closed while a signing was in flight -> the signing's outcome shows where it lands, as this pattern draws it
+
+WHEN a profile or picture change's signing has not answered GIVEN its seal was closed -> the reader's own profile stands as it was AND the line under its head reads Signing… in the pending marker's quiet register
+
+WHEN a profile or picture change's signing is taken GIVEN its seal was closed -> the line goes AND the head shows the change AND the snackbar confirms as the seal's landing does
+
+WHEN a profile or picture change's signing does not go through GIVEN its seal was closed -> the head stands as it was AND the line under it reads That didn't sign. in the failure voice followed by Retry AND NEVER the snackbar carries the failure
+
+ALWAYS a reply or an edit keeps no draft, and after its failure Retry is the way back

@@ -81,6 +81,15 @@ export const REDACTED_ACTOR_NAME = "Deleted account";
 export const HIDE_ACTOR_LABEL = (handle, redacted = false) =>
   redacted || !handle ? "Hide this account" : `Hide ${handle}`;
 
+/* THE SAME ROW FOR A PERSON ALREADY HIDDEN (round 41; jakob 2026-11-11, M1:
+   "the unhide should be visible whenever we land on a card of a hidden
+   account"). Wherever a hidden person's card or post still stands — History
+   until its next load, Saved, the tag page, a post or profile reached by a
+   link — the hide row reads Settings · hidden accounts' word, `Unhide`, in
+   the row's own form: the handle after it, the redacted fallback after it. */
+export const UNHIDE_ACTOR_LABEL = (handle, redacted = false) =>
+  redacted || !handle ? "Unhide this account" : `Unhide ${handle}`;
+
 /* THE LETTER'S ROLE FOLLOWS THE DISC'S SIZE, ONE RULE (round 35, jakob
    2026-11-11, T12; backlog 152). 24px takes label-small; 32px label-medium,
    the named `md` size's role, and a numeric 32 takes the same; 64px and every

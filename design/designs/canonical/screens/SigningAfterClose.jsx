@@ -35,16 +35,24 @@
      draws the new card in; the branch opens as the landing opens it.
    · edit — the edited card itself, the reader's own post in the feed,
      unchanged until the edit is taken.
+   · profile — a profile or picture change (`ProfileEditSeal`, `AvatarSeal`;
+     round 41, jakob 2026-11-11, S3 (a)): the profile's own head, which stands
+     as it was until the change is taken, the line under it in the edit's
+     words — `Signing…`, then `That didn't sign.` with `Retry`.
+
+   REPLIES AND EDITS KEEP NO DRAFT (jakob 2026-11-11, S2: "fine"): after a
+   failure, `Retry` is the way back; only a post's draft stays on the device.
 
    A PROPOSAL (round 37): the failure of content that never became a card had
    no drawn precedent. `Your post didn't sign.` and `Your comment didn't
-   sign.` are the two new strings, review-pending in copy-voice. */
+   sign.` are the two new strings, kept as drawn by jakob for now (2026-11-11,
+   S1: "keep as drawn for now"). */
 export const FRAME = { width: 390, height: 844 };
 export const PROPS = {
-  act: { editor: "enum", options: ["post", "reply", "edit"], default: "post" },
+  act: { editor: "enum", options: ["post", "reply", "edit", "profile"], default: "post" },
   moment: { editor: "enum", options: ["signing", "failed"], default: "signing" },
 };
-export const VALS = `feedShown: this.props.act === "reply" ? "none" : "block", threadShown: this.props.act === "reply" ? "block" : "none", postSigningShown: this.props.act === "post" && this.props.moment === "signing" ? "block" : "none", postFailedShown: this.props.act === "post" && this.props.moment === "failed" ? "block" : "none", editShown: this.props.act === "edit" ? "block" : "none", editSigningShown: this.props.act === "edit" && this.props.moment === "signing" ? "block" : "none", editFailedShown: this.props.act === "edit" && this.props.moment === "failed" ? "block" : "none", replySigningShown: this.props.act === "reply" && this.props.moment === "signing" ? "block" : "none", replyFailedShown: this.props.act === "reply" && this.props.moment === "failed" ? "block" : "none"`;
+export const VALS = `feedShown: this.props.act === "reply" || this.props.act === "profile" ? "none" : "block", profileShown: this.props.act === "profile" ? "block" : "none", profileSigningShown: this.props.act === "profile" && this.props.moment === "signing" ? "block" : "none", profileFailedShown: this.props.act === "profile" && this.props.moment === "failed" ? "block" : "none", threadShown: this.props.act === "reply" ? "block" : "none", postSigningShown: this.props.act === "post" && this.props.moment === "signing" ? "block" : "none", postFailedShown: this.props.act === "post" && this.props.moment === "failed" ? "block" : "none", editShown: this.props.act === "edit" ? "block" : "none", editSigningShown: this.props.act === "edit" && this.props.moment === "signing" ? "block" : "none", editFailedShown: this.props.act === "edit" && this.props.moment === "failed" ? "block" : "none", replySigningShown: this.props.act === "reply" && this.props.moment === "signing" ? "block" : "none", replyFailedShown: this.props.act === "reply" && this.props.moment === "failed" ? "block" : "none"`;
 
 /* The line stands at a card's inset, under the card it belongs to (or, for a
    post, where its card will stand), one line by the row rule. */
@@ -85,6 +93,20 @@ export function Screen() {
           <ThreadDetail />
           <CommentsThreadSheet afterClose="failed" scrolledBy={12} />
         </div>
+      </div>
+      <div style={{ display: "{{profileShown}}" }}>
+        <ProfileOwnBody
+          headLine={
+            <>
+              <div style={{ display: "{{profileSigningShown}}", ...LINE }}>
+                <PendingMarker label="Signing…" />
+              </div>
+              <div style={{ display: "{{profileFailedShown}}", ...LINE }}>
+                <SigningPending row onRetry={() => {}} />
+              </div>
+            </>
+          }
+        />
       </div>
     </>
   );

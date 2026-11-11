@@ -24,7 +24,7 @@ ALWAYS feed.commentCard stays readable GIVEN the post it answers was removed
 
 ALWAYS the compact veil takes a veiled feed.commentCard's words and feed.commentCard.target stays readable
 
-ALWAYS feed.commentCard's menu is the reader's own comment menu GIVEN the comment is the reader's own, and nothing else on the card changes
+ALWAYS feed.commentCard's menu is the reader's own comment menu and its row wears Edit GIVEN the comment is the reader's own, and nothing else on the card changes
 
 ALWAYS a long comment folds at two lines under More
 

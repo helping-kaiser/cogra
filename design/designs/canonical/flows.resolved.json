@@ -45,12 +45,14 @@
         "PostNotFound",
         "Profile",
         "ProfileComments",
+        "ProfileCommentsOwn",
         "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "ProfileStances",
         "ProfileUnreachable",
         "RankHop",
@@ -68,7 +70,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 62 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -118,12 +120,14 @@
         "PostNotFound",
         "Profile",
         "ProfileComments",
+        "ProfileCommentsOwn",
         "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "ProfileStances",
         "ProfileUnreachable",
         "RankHop",
@@ -231,6 +235,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "Reel",
         "ReelSensitive",
         "Removed",
@@ -243,7 +248,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 35 boards → ReplyEntry",
+        "start · «comment count» on 36 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -278,6 +283,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "Reel",
         "ReelSensitive",
         "Removed",
@@ -563,6 +569,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "Reel",
         "ReelSensitive",
         "Removed",
@@ -572,7 +579,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 27 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 28 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -597,6 +604,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "Reel",
         "ReelSensitive",
         "Removed",
@@ -811,12 +819,14 @@
         "PostNotFound",
         "Profile",
         "ProfileComments",
+        "ProfileCommentsOwn",
         "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "ProfileStances",
         "ProfileUnreachable",
         "RankHop",
@@ -834,7 +844,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 62 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
         "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
@@ -884,12 +894,14 @@
         "PostNotFound",
         "Profile",
         "ProfileComments",
+        "ProfileCommentsOwn",
         "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "ProfileStances",
         "ProfileUnreachable",
         "RankHop",
@@ -951,12 +963,14 @@
         "PostNotFound",
         "Profile",
         "ProfileComments",
+        "ProfileCommentsOwn",
         "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "ProfileStances",
         "ProfileUnreachable",
         "RankHop",
@@ -974,7 +988,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 62 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -1024,12 +1038,14 @@
         "PostNotFound",
         "Profile",
         "ProfileComments",
+        "ProfileCommentsOwn",
         "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "ProfileStances",
         "ProfileUnreachable",
         "RankHop",
@@ -1091,12 +1107,14 @@
         "PostNotFound",
         "Profile",
         "ProfileComments",
+        "ProfileCommentsOwn",
         "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "ProfileStances",
         "ProfileUnreachable",
         "RankHop",
@@ -1114,7 +1132,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 62 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1162,12 +1180,14 @@
         "PostNotFound",
         "Profile",
         "ProfileComments",
+        "ProfileCommentsOwn",
         "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "ProfileStances",
         "ProfileUnreachable",
         "RankHop",
@@ -1402,14 +1422,16 @@
         "Profile",
         "ProfileApplicant",
         "ProfileComments",
+        "ProfileCommentsOwn",
         "ProfileDeleted",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
-        "ProfilePosts"
+        "ProfilePosts",
+        "ProfilePostsOwn"
       ],
       "steps": [
-        "start · «the figures row» on 8 boards → ProfileStances",
+        "start · «the figures row» on 10 boards → ProfileStances",
         "end · arrival at ProfileStances"
       ],
       "boards": [
@@ -1417,11 +1439,13 @@
         "Profile",
         "ProfileApplicant",
         "ProfileComments",
+        "ProfileCommentsOwn",
         "ProfileDeleted",
         "ProfileOther",
         "ProfileOtherHeld",
         "ProfileOtherHidden",
-        "ProfilePosts"
+        "ProfilePosts",
+        "ProfilePostsOwn"
       ]
     },
     {
@@ -1914,10 +1938,11 @@
       "status": "resolved",
       "startsOn": [
         "FeedProfileMenu",
+        "HistoryProfileMenu",
         "ProfileMenu"
       ],
       "steps": [
-        "start · «Mention in a new post» — to ComposePick on 2 boards → ComposePick",
+        "start · «Mention in a new post» — to ComposePick on 3 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1927,6 +1952,7 @@
         "ComposeWords",
         "ComposeCited",
         "FeedProfileMenu",
+        "HistoryProfileMenu",
         "ProfileMenu"
       ]
     },
@@ -1981,6 +2007,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "Removed",
         "Saved",
         "SavedSearch",
@@ -1991,7 +2018,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» — to FeedEntry on 40 boards → FeedEntry",
+        "start · «Feed score» — to FeedEntry on 41 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -2034,6 +2061,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
+        "ProfilePostsOwn",
         "Removed",
         "Saved",
         "SavedSearch",
@@ -5675,6 +5703,12 @@
       ],
       "endpoint": []
     },
+    "HistoryProfileMenu": {
+      "flows": [
+        "mention-someone"
+      ],
+      "endpoint": []
+    },
     "HistorySearch": {
       "flows": [
         "publish-a-post",
@@ -6169,6 +6203,16 @@
       ],
       "endpoint": []
     },
+    "ProfileCommentsOwn": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "see-who-stands-with-someone"
+      ],
+      "endpoint": []
+    },
     "ProfileDeleted": {
       "flows": [
         "hide-a-deleted-account",
@@ -6328,6 +6372,19 @@
     "ProfilePostsMenuOwn": {
       "flows": [
         "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "ProfilePostsOwn": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "see-who-stands-with-someone",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records"
       ],
       "endpoint": []
     },

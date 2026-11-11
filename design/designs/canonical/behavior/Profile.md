@@ -73,3 +73,7 @@ WHEN pull down GIVEN the profile stands all the way at its top -> the profile re
 ALWAYS the system draws no refresh indicator of its own
 
 ALWAYS a return to the profile keeps the list below profile.tabRow and its place as they were left, and reads profile.identity's facts again beneath them, so a signed edit or a changed handle shows on arrival, and the list never moves under the returning reader
+
+ALWAYS a line under the head reads Signing… in the pending marker's quiet register GIVEN a profile or picture change was closed on while it signs, the head standing as it was until the change is taken
+
+ALWAYS the line under the head reads That didn't sign. in the failure voice followed by Retry GIVEN that change did not go through, and stands until Retry or the next change

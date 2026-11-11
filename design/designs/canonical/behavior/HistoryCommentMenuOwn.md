@@ -4,6 +4,8 @@ WHEN tap the ⋮ on history.commentCard GIVEN the comment is the reader's own ->
 
 ALWAYS history.menuSheet reads Save or Unsave, then Cite in a new post, then Remove, then history.menuSheet.citedBy, then Opinions on this, then License terms, the own comment menu's rows, and carries no Report row
 
+ALWAYS the reader's own comment's card beneath wears Edit in its row, as in the thread
+
 WHEN tap history.menuSheet.remove -> the menu closes AND the think-twice dialog comes up over History
 
 WHEN tap history.menuSheet.opinions -> the menu closes AND the comment's opinions sheet comes up over History

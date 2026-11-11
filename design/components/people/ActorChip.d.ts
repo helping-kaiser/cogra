@@ -35,6 +35,13 @@ export declare const REDACTED_ACTOR_NAME: string;
 export declare const HIDE_ACTOR_LABEL: (handle?: string | null, redacted?: boolean) => string;
 
 /**
+ * The hide row for a person already hidden: `Unhide @ada`, or `Unhide this
+ * account` for a redacted actor — the same row in Settings · hidden
+ * accounts' word, wherever a hidden person's card or post still stands.
+ */
+export declare const UNHIDE_ACTOR_LABEL: (handle?: string | null, redacted?: boolean) => string;
+
+/**
  * The circular avatar: a photo where there is one, the monogram where there is
  * not. Decorative either way — the adjacent text names the actor, so the photo
  * carries no alt text. A broken image falls back to the monogram silently.
