@@ -57,9 +57,11 @@ import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.LoadingState
 import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
+import com.cogra.core.designsystem.v2.media.LocalVideoSurfaceType
 import com.cogra.core.designsystem.v2.media.ScrollStageHost
 import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SensitiveSource
+import com.cogra.core.designsystem.v2.media.VideoSurfaceType
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
 import com.cogra.domain.LicenseChoice
@@ -333,7 +335,14 @@ fun CommentsSheet(
                 // reason.
                 // THE COMMENTS' MENUS SAVE THROUGH THE ONE OVERLAY, their aftermath
                 // on this sheet's own snackbar — the page's is beneath the sheet.
-                CompositionLocalProvider(LocalSavedHost provides savedHost) {
+                // A CLIP IN THE THREAD DRAWS INSIDE THE SHEET ([LocalVideoSurfaceType]):
+                // a SurfaceView escapes every Compose clip, and over the sheet's
+                // translucent scrim a clip scrolled past the list's top stood
+                // above the sheet up to the top of the screen.
+                CompositionLocalProvider(
+                    LocalSavedHost provides savedHost,
+                    LocalVideoSurfaceType provides VideoSurfaceType.TextureView,
+                ) {
                     CommentsList(
                         state = state,
                         listState = listState,
