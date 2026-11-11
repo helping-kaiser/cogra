@@ -92,11 +92,11 @@ ALWAYS the kept approval's second line reads Not fully registered yet GIVEN the 
 
 WHEN tap the kept approval's row GIVEN the key is elsewhere -> the key notice opens, as a kept pick's face does AND NEVER the approval pad opens
 
-WHEN tap the kept approval's row GIVEN the key is back -> the approval pad opens on that applicant
+WHEN tap the kept approval's row GIVEN the key is back -> the approval pad opens on that applicant, standing on the vouch that was kept, AND NEVER the pad stands on its default
 
 WHEN tap the kept approval's row GIVEN it reads Not fully registered yet -> the snackbar reads @noor has to finish registering before you can approve AND NEVER the approval pad opens
 
-WHEN tap the kept approval's row GIVEN it reads Ready for your approval -> the approval pad opens on that applicant AND it signs only there
+WHEN tap the kept approval's row GIVEN it reads Ready for your approval -> the approval pad opens on that applicant, standing on the vouch that was kept, AND it signs only there AND NEVER the pad stands on its default
 
 WHEN tap the kept approval's close -> the dialog asking to close that application opens, the one every row's close raises
 
