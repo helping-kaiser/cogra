@@ -69,7 +69,6 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
-import com.cogra.core.designsystem.v2.token.TypeTokens
 import kotlin.math.abs
 
 /**
@@ -182,7 +181,7 @@ fun PickedRow(
         }
         Text(
             text = caption,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f).dataNode(node?.div("caption")),
         )
@@ -256,14 +255,14 @@ fun DescribeCounter(
             )
             Text(
                 text = "· $described of $total described",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.dataNode(node?.div("count")),
             )
         }
         Text(
             text = "Read aloud to people who can't see it.",
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.dataNode(node?.div("reason")),
         )
@@ -370,7 +369,7 @@ fun PickedSheet(
 private fun PickedSheetFoot(onDone: () -> Unit, tags: SheetTags) {
     Text(
         text = "The first one is the cover.",
-        style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+        style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(top = Space.x3).tagged(tags.nodePart("note")),
     )
@@ -637,7 +636,7 @@ private fun RowActions(
         if (picture.described) {
             Text(
                 text = "Described",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.tagged(tags.nodePart("described")),
             )

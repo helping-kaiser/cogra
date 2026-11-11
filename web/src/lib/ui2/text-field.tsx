@@ -266,7 +266,7 @@ export function TextField({
           // Some corners say more than "Optional" — where the words land is
           // what makes them worth writing (the sensitive sheet's reason).
           <span
-            className="text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] text-on-surface-variant"
+            className="text-label-small text-on-surface-variant"
             {...testAttributes(part(node, "corner"))}
           >
             {optionalLabel}

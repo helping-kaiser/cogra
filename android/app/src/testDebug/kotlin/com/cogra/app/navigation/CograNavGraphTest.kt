@@ -6,6 +6,7 @@ package com.cogra.app.navigation
 
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.BackEventCompat
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -53,6 +54,7 @@ import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ScriptedInvitesRepository
+import com.cogra.feature.profile.COMMENTS_ORIGIN
 import com.cogra.feature.profile.FEED_ORIGIN
 import java.time.Instant
 import com.google.common.truth.Truth.assertThat
@@ -623,6 +625,58 @@ class CograNavGraphTest {
         assertThat(compose.onAllNodesWithTag("profile.identity.actionRow.edit").fetchSemanticsNodes()).isEmpty()
         assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
     }
+
+    /**
+     * THE DEVICE'S BACK GESTURE DOES WHAT THE HEADER'S ARROW DOES from a
+     * profile opened out of the thread (ProfileOther.md:73, `Back to the
+     * comments`): the post comes back with its thread raised over it (jakob's
+     * round-2 hand test, 2026-11-11). The thread is a modal sheet — its own
+     * window — so it must not rise over the gesture's preview of the post: on a
+     * device that window took the gesture, the sheet flashed and the reader
+     * stayed on the profile. Robolectric has no window focus to lose, so the
+     * flash is what this pins, then where the completed gesture lands.
+     */
+    @Test
+    fun theBackGestureFromACommentersProfileLandsOnThePostWithItsThread() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        content.details["p1"] = com.cogra.domain.PostDetail(
+            post = com.cogra.domain.testing.testPost("p1"),
+            comments = com.cogra.domain.Page(
+                listOf(com.cogra.domain.testing.testComment("c1")),
+                endCursor = null,
+                hasNextPage = false,
+            ),
+        )
+        profiles.others["commenter"] =
+            com.cogra.domain.testing.testProfile(id = "author-2", handle = "commenter")
+        render()
+        waitForTag("feed.card:p1")
+        compose.onNodeWithTag("feed.card:p1").performClick()
+        waitForTag("postDetail.card.actionRow.comments")
+        compose.onNodeWithTag("postDetail.card.actionRow.comments").performClick()
+        waitForTag("postDetail.threadSheet.commentCard:c1")
+
+        compose.onNodeWithTag("postDetail.threadSheet.commentCard.authorChip").performClick()
+        waitForTag("profile.identity.name")
+        assertThat(navController.currentBackStackEntry?.toRoute<Profile>()?.from).isEqualTo(COMMENTS_ORIGIN)
+
+        val dispatcher = compose.activity.onBackPressedDispatcher
+        compose.runOnIdle { dispatcher.dispatchOnBackStarted(backEvent(0f)) }
+        compose.runOnIdle { dispatcher.dispatchOnBackProgressed(backEvent(GESTURE_MIDWAY)) }
+        compose.waitForIdle()
+        // NEVER the thread's window over the preview.
+        assertThat(compose.onAllNodesWithTag("postDetail.threadSheet").fetchSemanticsNodes()).isEmpty()
+
+        compose.runOnIdle { dispatcher.onBackPressed() }
+        waitForTag("postDetail.threadSheet.commentCard:c1")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
+    }
+
+    private fun backEvent(progress: Float) =
+        BackEventCompat(touchX = 0f, touchY = 400f, progress = progress, swipeEdge = BackEventCompat.EDGE_LEFT)
 
     @Test
     fun theProfileEditSavesAndConfirms() {
@@ -1582,3 +1636,6 @@ class CograNavGraphTest {
         }
     }
 }
+
+/** Partway through a back gesture, the preview standing. */
+private const val GESTURE_MIDWAY = 0.4f

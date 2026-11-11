@@ -545,18 +545,36 @@ pub struct WallStep {
     pub theta_next_micro: i64,
 }
 
+/// The published boundary triple an epoch closed under (§5 host contract
+/// (vi); §11.6, "Final-set closure"): an epoch closes at the earliest
+/// moment its write set fills the target with the minimum duration
+/// elapsed, or the maximum duration has elapsed.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct BoundaryPolicy {
+    /// N_epoch, the target size in acts.
+    pub target_acts: i64,
+    /// The minimum duration, in seconds.
+    pub min_duration_secs: i64,
+    /// The maximum duration, in seconds — the host's epoch clock. `None`
+    /// where the host published no maximum: no clock was running, so the
+    /// epoch closed when the host was asked to close it, or the epoch
+    /// closed before the host published its triple.
+    pub max_duration_secs: Option<i64>,
+}
+
 /// The closure outputs of one epoch beyond its records (§5 host contract
 /// (i), (ii) and (vi)): the dependent-set partition and closure cause, the
-/// final ledger with the debit vintage, the wall controller's step, and the
-/// marker policy. The deployment's fixed declarations — numéraire, floor,
-/// controller edition and constants — are published once per deployment,
-/// not here.
+/// boundary triple it closed under, the final ledger with the debit
+/// vintage, the wall controller's step, and the marker policy. The
+/// deployment's fixed declarations — numéraire, floor, controller edition
+/// and constants — are published once per deployment, not here.
 ///
 /// `Default` is the empty value, for fixtures of consumers that read the
 /// records alone; no host publishes it.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct EpochClosure {
     pub cause: ClosureCause,
+    pub boundary: BoundaryPolicy,
     /// The dependent-set partition of 𝒬_k (§8.2, "Dependent act set"),
     /// each block as the positions of its acts in ascending order, blocks
     /// ordered by their first position.

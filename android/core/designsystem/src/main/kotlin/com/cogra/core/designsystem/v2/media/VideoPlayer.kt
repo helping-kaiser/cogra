@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +43,8 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.PlayerSurface
+import androidx.media3.ui.compose.SURFACE_TYPE_SURFACE_VIEW
+import androidx.media3.ui.compose.SURFACE_TYPE_TEXTURE_VIEW
 import androidx.media3.ui.compose.state.rememberPresentationState
 import androidx.media3.ui.compose.state.rememberProgressStateWithTickInterval
 import coil3.compose.AsyncImage
@@ -77,6 +80,35 @@ object VideoSound {
     fun reset() {
         _muted.value = true
     }
+}
+
+/**
+ * WHICH SURFACE A CLIP DRAWS INTO, as the host it stands in decides.
+ *
+ * A `SurfaceView` is the default and the documented preference — lower power,
+ * truer frame timing, HDR and secure output
+ * (developer.android.com/media/media3/ui/surface, "SurfaceView should
+ * therefore be preferred over TextureView where possible"). It is also a
+ * separate layer the system compositor places behind the window
+ * (`AndroidExternalSurface`'s reference), so no Compose clip reaches it: a
+ * clip scrolled past the top of a list stands outside the list's bounds.
+ * Inside an opaque page that never shows; inside a modal sheet's own window,
+ * whose scrim is translucent, the clip draws past the sheet's edge up to the
+ * top of the screen (jakob's hand test, 2026-11-11). A host whose list scrolls
+ * inside a sheet therefore asks for `SURFACE_TYPE_TEXTURE_VIEW`, which draws
+ * inside the view hierarchy and is clipped like any other content — the one
+ * case the surface page names TextureView for: where `SurfaceView` "does not
+ * meet your needs".
+ */
+val LocalVideoSurfaceType = staticCompositionLocalOf { VideoSurfaceType.SurfaceView }
+
+/** Media3's two Compose surface types, named here so a host need not depend on `media3-ui-compose`. */
+enum class VideoSurfaceType(internal val media3: Int) {
+    /** The default: its own compositor layer, unclipped by Compose. */
+    SurfaceView(SURFACE_TYPE_SURFACE_VIEW),
+
+    /** Drawn inside the view hierarchy, clipped like any other content. */
+    TextureView(SURFACE_TYPE_TEXTURE_VIEW),
 }
 
 /**
@@ -328,6 +360,7 @@ fun VideoPlayer(
         if (!displaced) {
             PlayerSurface(
                 player = player,
+                surfaceType = LocalVideoSurfaceType.current.media3,
                 modifier = (
                     if (videoAspectRatio != null) {
                         Modifier.fillMaxWidth().aspectRatio(videoAspectRatio)

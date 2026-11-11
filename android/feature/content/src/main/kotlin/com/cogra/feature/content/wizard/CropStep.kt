@@ -152,11 +152,13 @@ internal fun ColumnScope.CropFrames(
         // a scroll container clips along its axis, and the ring must not be cut.
         Row(
             modifier = Modifier
+                // The node wears the strip as the board lays it out, the gutter's width;
+                // the ring room it bleeds into is the scroll's, not the strip's.
+                .dataNode(node?.div("pictures"))
                 .bleedHorizontally(RING_ROOM)
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .padding(horizontal = RING_ROOM)
-                .dataNode(node?.div("pictures")),
+                .padding(horizontal = RING_ROOM),
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
             picked.forEachIndexed { index, asset ->

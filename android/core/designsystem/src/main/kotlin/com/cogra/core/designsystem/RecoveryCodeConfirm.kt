@@ -46,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import kotlinx.coroutines.launch
 
 /**
@@ -78,10 +79,19 @@ fun RecoveryCodeConfirm(
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = code,
-            style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace),
+            // `RecoveryCode.jsx`: body-large whole in the platform monospace,
+            // its one named override the wider tracking (0.05em).
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontFamily = FontFamily.Monospace,
+                letterSpacing = CODE_TRACKING,
+            ),
             modifier = Modifier.testTag("recovery_code"),
         )
-        Text(explainer)
+        Text(
+            text = explainer,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -130,6 +140,9 @@ fun RecoveryCodeConfirm(
         }
     }
 }
+
+/** The code's wider tracking (`RecoveryCode.jsx` `letterSpacing: 0.05em`). */
+private val CODE_TRACKING = 0.05.em
 
 /**
  * The keyboard a recovery code is typed on: the password variation keeps

@@ -344,8 +344,9 @@ describe("the compose wizard", () => {
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
     const stage = await screen.findByText("Last step");
-    expect(stage.className).toContain("text-[length:var(--text-label-small)]");
-    expect(stage.className).not.toContain("text-label-small ");
+    // label-small whole (`WizardHeader.jsx` stage, round 28).
+    expect(stage.className.split(" ")).toContain("text-label-small");
+    expect(stage.className).not.toContain("text-[length:");
     const help = screen.getByRole("button", { name: "How signing works" });
     expect(stage.compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
