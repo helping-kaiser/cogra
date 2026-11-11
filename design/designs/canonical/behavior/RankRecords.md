@@ -8,6 +8,8 @@ ALWAYS the line Added up, these go past the limit an opinion can reach, so the s
 
 ALWAYS the unclipped sum reads beside the step's pair in exact values GIVEN the records' sum passes the limit and the reader shows exact values
 
+ALWAYS no level of the drill-down prints a sum line, exact values shown or not, the arithmetic closing in the drawn figures themselves, and the unclipped sum beside a clipped step's pair is the one sum it reads
+
 ALWAYS a record says what it is in its step's own title, the words RankPath gives the step for its family and its giver
 
 ALWAYS a record row is inert
