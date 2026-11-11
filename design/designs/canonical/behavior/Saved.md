@@ -30,6 +30,8 @@ WHEN saved.commentCard is tapped outside its head row and its own controls -> th
 
 WHEN the comment glyph on a saved.commentCard is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
 
+ALWAYS the comments sheet a Saved card raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
+
 WHEN tap a portrait clip on saved.card -> the stream opens on that clip, Saved's cards narrowed to their portrait clips in Saved's order, AND its back arrow reads Back to Saved
 
 WHEN tap saved.card.media GIVEN it is not a portrait clip -> the post opens as it does from the feed AND its back arrow reads Back to Saved

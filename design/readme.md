@@ -2303,6 +2303,14 @@ entry first". What stands:
   render, and so does a registered path that stops rendering — a
   rename is a breaking change for the implementation side, made only
   by deleting the path from `nodes.json` by hand in a reviewed PR.
+- **A sheet's path names the sheet, not the host it is raised over**
+  (rounds 27, 28). A sheet drawn once keeps one path wherever it is
+  raised: the thread is `postDetail.threadSheet` from a feed, History or
+  Saved card, a profile's posts and the stream alike, and what it raises
+  is the detail's (`postDetail.menuSheet`, `.licenseSheet`, `.dialog`).
+  A sheet a host's own card raises — the card's ⋮ and the rows it opens —
+  is drawn over that host, so it takes the host's prefix
+  (`feed.menuSheet`, `feed.licenseSheet`). One rule, two readings.
 - **`_build/check-help-notes.mjs` holds the "? contents" notes to
   copy-voice** (item 109): each note section names a dialog of
   copy-voice's *The "?" dialogs* and must carry its blessed text, and

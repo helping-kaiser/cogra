@@ -50,6 +50,8 @@ WHEN history.commentCard is tapped outside its head row and its own controls -> 
 
 WHEN the comment glyph on a history.commentCard is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
 
+ALWAYS the comments sheet a History card raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
+
 WHEN tap a portrait clip on history.card -> the stream opens on that clip, History's rows narrowed to their portrait clips in History's order, AND its back arrow reads Back to History
 
 WHEN tap history.card.media GIVEN it is not a portrait clip -> the post opens as it does from the feed AND its back arrow reads Back to History
