@@ -390,7 +390,7 @@ impl Query {
         ids: Vec<Uuid>,
     ) -> async_graphql::Result<Vec<Option<Node>>> {
         if ids.len() > super::types::MAX_PAGE_SIZE as usize {
-            return Err(async_graphql::Error::new(format!(
+            return Err(bad_input(format!(
                 "at most {} ids per lookup",
                 super::types::MAX_PAGE_SIZE
             )));
@@ -637,8 +637,7 @@ impl Query {
         before: Option<String>,
     ) -> async_graphql::Result<SearchConnection> {
         let pool = ctx.data::<PgPool>()?;
-        validate_page_args(first, last, after.as_deref(), before.as_deref())
-            .map_err(|e| bad_input(e.message))?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())?;
         let ranked_for = match (order.unwrap_or_default(), viewer) {
             (ReadOrder::Ranked, None) => {
                 return Err(bad_input("order: RANKED ranks for a viewer; name one"));
@@ -900,9 +899,7 @@ async fn lookup_actor(
             Ok(folded) => Ok(store::actor_identity_by_handle(pool, &folded).await?),
             Err(_) => Ok(None),
         },
-        _ => Err(async_graphql::Error::new(
-            "provide exactly one of id or handle",
-        )),
+        _ => Err(bad_input("provide exactly one of id or handle")),
     }
 }
 
