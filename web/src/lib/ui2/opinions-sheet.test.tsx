@@ -86,6 +86,13 @@ describe("OpinionsSheet", () => {
     expect(screen.getByRole("img", { name: "Says nothing, +0.00 / +0.00" })).toBeInTheDocument();
   });
 
+  // ProfileOther.md:73: "… Back to the post from a post's author chip, opinions
+  // or references"; PostOpinions.md:15.
+  it("hands the profile the origin the sheet was given", () => {
+    render(<OpinionsSheet open onClose={() => {}} on="post" opinions={HOLDERS} node={NODE} from="post:p1:saved" />);
+    expect(rows()[0]).toHaveAttribute("href", "/u/mira?from=post%3Ap1%3Asaved");
+  });
+
   it("opens the person's profile, and drops itself on the way", () => {
     const onClose = vi.fn();
     render(<OpinionsSheet open onClose={onClose} on="post" opinions={HOLDERS} node={NODE} />);

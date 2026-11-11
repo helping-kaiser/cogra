@@ -572,6 +572,8 @@ describe("FeedView", () => {
     expect(score).toHaveAttribute("href", "/trace/p1?from=feed&kind=post&settling=1");
   });
 
+  // TagPage.md:35: "… Back to feed from the feed in any of its states" — the
+  // chip carries the feed as its origin, where a cold page reads Back to Explore.
   it("carries the post's topics on one line, each chip navigating to its topic route", async () => {
     server.use(
       ...rankedFeed([post("p1", "First", false, [topicClaim("rust")])]),
@@ -580,7 +582,7 @@ describe("FeedView", () => {
     expect(await screen.findByTestId(byNode("feed.card.tagsLine.tag", "p1/rust"))).toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1-topic-rust-link")).toHaveAttribute(
       "href",
-      "/topics/rust",
+      "/topics/rust?from=feed",
     );
   });
 

@@ -38,6 +38,7 @@
 
 import { useCallback, useRef, useState } from "react";
 
+import { tagPageHref } from "./back-origin";
 import { instance, part, testAttributes, type DataNode } from "./data-node";
 import { useMeasureEffect } from "./measure-effect";
 import { TopicChip } from "./topic-chip";
@@ -115,6 +116,7 @@ export function TopicsLine({
   onOpen,
   onOpenReferences,
   node,
+  from = null,
 }: {
   topics: readonly TopicsLineEntry[];
   /** How many citations the node carries — a number on a card, never a row. */
@@ -129,6 +131,11 @@ export function TopicsLine({
   onOpen?: () => void;
   /** A summary card: the counts open the sheet, the chips still navigate. */
   onOpenReferences?: () => void;
+  /**
+   * The origin a chip's door carries, so the tag's page names the list it was
+   * opened from (TagPage.md:33, :35; `back-origin.ts`).
+   */
+  from?: string | null;
 }) {
   const candidates = topics.slice(0, VISIBLE_CHIPS);
   const lineRef = useRef<HTMLElement | null>(null);
@@ -207,7 +214,7 @@ export function TopicsLine({
     <TopicChip
       key={topic.name}
       name={topic.name}
-      href={onOpen ? undefined : `/topics/${topic.name}`}
+      href={onOpen ? undefined : tagPageHref(topic.name, from)}
       capped
       testId={`${testIdPrefix}-topic-${topic.name}`}
       node={instance(node, "tag", topic.name)}

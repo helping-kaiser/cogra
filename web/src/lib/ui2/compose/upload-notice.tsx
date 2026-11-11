@@ -147,12 +147,12 @@ export function UploadErrorLine({
   node?: DataNode;
 }) {
   const link = "cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary";
-  // The line takes label-small's size at the ground's weight (`UploadNotice.jsx`);
+  // The line is label-small whole (`UploadNotice.jsx`, round 28);
   // its two words are the master's small InlineActions.
   return (
     <p
       {...testAttributes(node, testId)}
-      className="m-0 text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)]"
+      className="m-0 text-label-small"
     >
       <span className="text-error" {...testAttributes(part(node, "message"))}>
         {message}

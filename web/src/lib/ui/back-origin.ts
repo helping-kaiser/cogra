@@ -11,6 +11,9 @@ import { FROM_YOUR_TOPICS, YOUR_TOPICS_HREF } from "@/lib/topics/your-topics";
 export type BackTarget = { readonly href: string; readonly label: string };
 
 const ORIGINS: Record<string, BackTarget> = {
+  // The feed, named: a screen whose cold entry wears another root's label
+  // still reads `Back to feed` from the feed (TagPage.md:35).
+  feed: { href: "/feed", label: "Back to feed" },
   saved: { href: "/saved", label: "Back to Saved" },
   // The reader's seen-list (History.md:47-61: every door out of History
   // reads `Back to History`).
@@ -99,9 +102,15 @@ export function personHref(handle: string, from: string | null = null): string {
 }
 
 /**
- * A post's own detail as the score's origin: `post:<id>`, then `:<via>` — the
- * detail's own `from` (`trace-session.ts`, `originParam`).
+ * A post's own detail as an origin — the score's, and the doors out of the
+ * detail's author chip and sheets (ProfileOther.md:73, TagPage.md:35): `post:<id>`,
+ * then `:<via>`, the detail's own `from` (`trace-session.ts`, `originParam`).
  */
+export function postOrigin(postId: string, via: string | null = null): string {
+  return via === null || via === "" ? `post:${postId}` : `post:${postId}:${via}`;
+}
+
+/** The post a `from` names, with the origin its detail was opened with; null where it names none. */
 export function parsePostOrigin(from: string | null | undefined): { postId: string; via: string | null } | null {
   if (typeof from !== "string" || !from.startsWith("post:")) return null;
   const [postId, ...via] = from.slice("post:".length).split(":");
@@ -126,9 +135,20 @@ export function carriedOrigin(from: string | null | undefined): string | null | 
 
 const FEED: BackTarget = { href: "/feed", label: "Back to feed" };
 
-/** Where the back arrow goes and what it reads, by the `from` the page was opened with. */
-export function backFor(from: string | null | undefined): BackTarget {
-  if (from === null || from === undefined) return FEED;
+/**
+ * The cold entry of a tag's page — no origin behind it, a shared URL: `Back to
+ * Explore` (TagPage.md:37; design readme §4, "a cold entry wears its root's
+ * label: … `Back to Explore` on a tag page").
+ */
+export const EXPLORE_COLD: BackTarget = { href: "/explore", label: "Back to Explore" };
+
+/**
+ * Where the back arrow goes and what it reads, by the `from` the page was
+ * opened with; `cold` where it names no origin — the feed, but for a screen
+ * whose cold entry wears another root's label.
+ */
+export function backFor(from: string | null | undefined, cold: BackTarget = FEED): BackTarget {
+  if (from === null || from === undefined) return cold;
   // A row on a profile's opinions page reads `Back to the opinions`
   // (ProfileStances.md:41; copy-voice, the list named by what it holds) and
   // returns to the page on the tab it was left on, opened with the origin it
@@ -154,5 +174,13 @@ export function backFor(from: string | null | undefined): BackTarget {
   // reader left (copy-voice.md:721-722; PostDetailVideo.md:33).
   const clip = streamClipOf(from);
   if (clip !== null) return { href: streamHref(clip), label: "Back to the stream" };
-  return ORIGINS[from] ?? FEED;
+  // A post's detail reads `Back to the post` (ProfileOther.md:73, its author
+  // chip, opinions and references; TagPage.md:35, its tags-and-references
+  // sheet), and returns to the detail opened with the origin it was opened with.
+  const post = parsePostOrigin(from);
+  if (post !== null && post.postId !== "") {
+    const via = post.via === null ? "" : `?from=${encodeURIComponent(post.via)}`;
+    return { href: `/posts/${encodeURIComponent(post.postId)}${via}`, label: "Back to the post" };
+  }
+  return ORIGINS[from] ?? cold;
 }

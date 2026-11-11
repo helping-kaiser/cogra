@@ -141,8 +141,8 @@ function CommentCount({
     <>
       <Icon name="chat_bubble" size={18} />
       {count > 0 && (
-        // The count takes the row's size at the normal leading (PostCard.jsx).
-        <span aria-hidden="true" className="[line-height:normal]" {...testAttributes(part(node, "count"))}>
+        // The count reads the door's label-large whole (PostCard.jsx).
+        <span aria-hidden="true" {...testAttributes(part(node, "count"))}>
           {count}
         </span>
       )}
@@ -185,7 +185,7 @@ export function PostCard({
   onOpenMedia,
   stream,
   authorHere = false,
-  authorFrom = null,
+  doorFrom = null,
   onOpenMenu,
   menuOpen = false,
   node,
@@ -297,8 +297,12 @@ export function PostCard({
    * (ProfilePosts.md:25, `ActorChip`'s `here`).
    */
   authorHere?: boolean;
-  /** The `from` the author chip's profile is opened with (`ActorChip`'s `from`). */
-  authorFrom?: string | null;
+  /**
+   * The origin every door out of the card carries — its author chip, its tag
+   * chips and its sheet's rows — so what they open names where the card stood
+   * (`back-origin.ts`).
+   */
+  doorFrom?: string | null;
 }) {
   const detail = variant === "detail";
   const router = useRouter();
@@ -490,7 +494,7 @@ export function PostCard({
             testId={authorTestId}
             node={part(node, "authorChip")}
             here={authorHere}
-            from={authorFrom}
+            from={doorFrom}
           />
         )}
         <div className="flex flex-none items-center gap-3">
@@ -498,9 +502,8 @@ export function PostCard({
             <time
               dateTime={post.createdAt}
               {...testAttributes(part(node, "timestamp"), `${testId}-timestamp`)}
-              // The body-small SIZE on the header line's own 24px leading
-              // (PostCard.jsx: the timestamp sets its size alone).
-              className="flex-none text-[length:var(--text-body-small)] [line-height:1.5rem] text-on-surface-variant"
+              // body-small whole (PostCard.jsx, round 28).
+              className="flex-none text-body-small text-on-surface-variant"
             >
               {stamp}
             </time>
@@ -674,6 +677,7 @@ export function PostCard({
             node={part(node, "tagsLine")}
             onOpen={detail ? () => setRefsOpen(true) : undefined}
             onOpenReferences={detail ? undefined : () => setRefsOpen(true)}
+            from={doorFrom}
           />
           {/* THE SHEET RIDES THE CARD, not the page: the same card is the feed's
               summary, the profile's and the detail's, and every one of them
@@ -683,6 +687,7 @@ export function PostCard({
             onClose={() => setRefsOpen(false)}
             topics={post.topics}
             references={post.references}
+            from={doorFrom}
             testId={`${testId}-refs-sheet`}
           />
         </>
