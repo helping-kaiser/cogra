@@ -103,6 +103,7 @@ struct AppState {
     schema: ApiSchema,
     auth: AuthConfig,
     multipart: multipart::MultipartLimits,
+    anonymous_upload_absorb_bytes: usize,
     uploads: UploadRouting,
 }
 
@@ -137,6 +138,14 @@ struct AppState {
 /// multipart body holds its `operations` and `map` fields to the same
 /// ceiling, and the rest of its envelope to
 /// [`multipart::MULTIPART_ENVELOPE_BYTES`].
+///
+/// A multipart body is parsed only for a verified viewer. Every multipart
+/// request is an `uploadMedia`, which needs a session, and its parse
+/// spools the file to a temporary file before any resolver could refuse
+/// it; so a request whose headers carry no viewer — no bearer, one that
+/// does not verify, or one whose account has no login — is answered by
+/// [`refuse_anonymous_upload`] without a byte of its body reaching the
+/// parser.
 async fn graphql_handler(
     State(state): State<AppState>,
     client_ip: Result<ClientIp, axum_client_ip::Rejection>,
@@ -164,6 +173,14 @@ async fn graphql_handler(
     };
 
     let parsed = match multipart_type {
+        Some(_) if viewer.is_none() => {
+            return refuse_anonymous_upload(
+                &parts.headers,
+                body,
+                state.anonymous_upload_absorb_bytes,
+            )
+            .await;
+        }
         Some(mime) => {
             match multipart::receive_batch_multipart(
                 &mime,
@@ -382,6 +399,101 @@ fn body_too_large() -> axum::response::Response {
     )
 }
 
+/// The answer to a multipart request with no verified viewer
+/// (api-spec.md "Uploads need a session at the door").
+///
+/// **The answer is the one an unauthenticated `uploadMedia` always got**:
+/// a `200` GraphQL response, `data: null`, one error coded
+/// `UNAUTHENTICATED`, in the library's own response type and media type.
+/// Both clients refresh and replay on exactly that code in the `errors`
+/// array — and on nothing else: a non-2xx status reaches neither client
+/// as a GraphQL error, so a `401` here would turn "your access token
+/// expired" into "the network failed".
+///
+/// **Refusing is not the same as not reading.** The decision is made from
+/// the headers; but an HTTP/1.1 server that answers and closes while the
+/// client is still sending makes its TCP stack reset the connection, and
+/// "the reset packet might erase the client's unacknowledged input
+/// buffers before they can be read" (RFC 9112 §9.6) — the response
+/// written for the client never arrives. OkHttp and the browsers send a
+/// request whole before reading its answer, and the web's uploads pass
+/// through the Next.js proxy, which answers a reset upstream with its own
+/// `500`. So the body is *absorbed* — each frame pulled and dropped, never
+/// parsed, never spooled, never held — up to `absorb_bytes`, and the
+/// answer goes out on a connection left clean for its next request.
+///
+/// A body that declares more than that, or turns out to carry more, is
+/// answered at once with `Connection: close`: no client of this API sends
+/// an upload that large in one request, so only a caller that has already
+/// left the contract meets the reset.
+async fn refuse_anonymous_upload(
+    headers: &HeaderMap,
+    body: axum::body::Body,
+    absorb_bytes: usize,
+) -> axum::response::Response {
+    let fits = declared_length(headers).is_none_or(|declared| declared <= absorb_bytes);
+    let absorbed = fits && absorb(body, absorb_bytes).await;
+    let mut response = unauthenticated_upload();
+    if !absorbed {
+        response.headers_mut().insert(
+            axum::http::header::CONNECTION,
+            axum::http::HeaderValue::from_static("close"),
+        );
+    }
+    response
+}
+
+/// Pulls a body to its end and drops every frame, unless it carries more
+/// than `limit` bytes or fails first; whether it reached its end.
+async fn absorb(mut body: axum::body::Body, limit: usize) -> bool {
+    use http_body_util::BodyExt;
+    let mut seen = 0usize;
+    while let Some(frame) = body.frame().await {
+        let Ok(frame) = frame else {
+            return false;
+        };
+        if let Some(data) = frame.data_ref() {
+            seen = seen.saturating_add(data.len());
+            if seen > limit {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+/// The `UNAUTHENTICATED` answer [`refuse_anonymous_upload`] gives, in the
+/// shape the resolvers' own refusal takes once the library serialises it
+/// (`the_upload_door_answers_as_the_resolvers_do` in the integration suite
+/// pins the two together).
+fn unauthenticated_upload() -> axum::response::Response {
+    let mut error = async_graphql::ServerError::new("authentication required", None);
+    let mut extensions = async_graphql::ErrorExtensionValues::default();
+    extensions.set("code", "UNAUTHENTICATED");
+    error.extensions = Some(extensions);
+    let response: GraphQLResponse = async_graphql::Response::from_errors(vec![error]).into();
+    let mut response = response.into_response();
+    response.extensions_mut().insert(NeverCompress);
+    response
+}
+
+/// How much of a refused upload's body the server pulls and drops before
+/// it answers (see [`refuse_anonymous_upload`]): the largest single
+/// request either client sends, plus its envelope.
+///
+/// Both clients send a still in one request up to its cap, and a video in
+/// one request only below [`media::RESUMABLE_THRESHOLD_BYTES`]; the
+/// envelope is the `operations` and `map` fields at their ceiling and the
+/// rest at [`multipart::MULTIPART_ENVELOPE_BYTES`]. At the defaults this
+/// is 10 MiB + 704 KiB.
+fn anonymous_upload_absorb_bytes(media: &MediaConfig) -> usize {
+    media
+        .max_upload_bytes
+        .max(media::RESUMABLE_THRESHOLD_BYTES)
+        .saturating_add(GRAPHQL_JSON_BODY_LIMIT_BYTES.saturating_mul(2))
+        .saturating_add(multipart::MULTIPART_ENVELOPE_BYTES)
+}
+
 /// The viewer a request's `Authorization: Bearer <token>` header carries
 /// (auth.md "Access token"), for every route that reads one.
 ///
@@ -592,6 +704,7 @@ pub fn app(
             schema,
             auth,
             multipart,
+            anonymous_upload_absorb_bytes: anonymous_upload_absorb_bytes(&uploads.media),
             uploads,
         })
 }

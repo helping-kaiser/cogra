@@ -56,8 +56,8 @@ import { ActsSheet } from "@/lib/ui2/compose/edit-acts";
 import { BackingEditPad } from "@/lib/ui2/compose/backing-edit-pad";
 import { CoverCrop } from "@/lib/ui2/compose/cover-crop";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
-import { CENTERED, type Crop } from "@/lib/ui2/media/crop";
-import type { PostShape } from "@/lib/ui2/media/aspect";
+import { CENTERED, reshape, type Crop } from "@/lib/ui2/media/crop";
+import { POST_SHAPES, type PostShape } from "@/lib/ui2/media/aspect";
 import { signedValues } from "@/lib/topics/draft";
 import { usePreviewUrls } from "@/lib/compose/previews";
 import { newComposeId } from "@/lib/compose/ids";
@@ -561,7 +561,21 @@ export function PostEditRoute({
             shape={cropping.shape}
             locked={cropping.locked}
             focused={cropping.focused}
-            onShape={(shape) => setCropping({ ...cropping, shape })}
+            // The shape changes around each picture, as compose's does
+            // (`reshape`; the wizard's `shape` action).
+            onShape={(shape, frameWidth) => {
+              if (shape === cropping.shape) return;
+              const from = POST_SHAPES[cropping.shape].ratio;
+              const to = POST_SHAPES[shape].ratio;
+              setCropping({
+                ...cropping,
+                shape,
+                assets: cropping.assets.map((asset) => ({
+                  ...asset,
+                  crop: reshape(asset.crop, from, to, frameWidth),
+                })),
+              });
+            }}
             onFocus={(focused) => setCropping({ ...cropping, focused })}
             onCrop={(id, crop: Crop) =>
               setCropping({

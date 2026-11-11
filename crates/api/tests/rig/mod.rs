@@ -23,9 +23,37 @@ use axum_client_ip::ClientIpSource;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::PgPool;
 
-/// The full ApiContext over a test pool, with the ephemeral session
-/// key it was built under — `api::app` wants both. The ranker pod is the
-/// dev default address, which no suite but the ranked feed's ever calls.
+/// The session-signing seed every rig context is built under, so a suite
+/// can mint a token the server itself could have minted — an expired one.
+pub const SESSION_SEED: [u8; 32] = [7; 32];
+
+/// An access token for `user_id`, signed with the rig's session key, that
+/// expired an hour ago: well-formed and genuine, refused only for its age.
+pub fn expired_access_token(user_id: uuid::Uuid) -> String {
+    use ed25519_dalek::pkcs8::EncodePrivateKey;
+    use ed25519_dalek::pkcs8::spki::der::pem::LineEnding;
+    let pem = ed25519_dalek::SigningKey::from_bytes(&SESSION_SEED)
+        .to_pkcs8_pem(LineEnding::LF)
+        .expect("pem");
+    let key = jsonwebtoken::EncodingKey::from_ed_pem(pem.as_bytes()).expect("key");
+    let issued = chrono::Utc::now() - chrono::Duration::minutes(75);
+    let claims = serde_json::json!({
+        "sub": user_id,
+        "iat": issued.timestamp(),
+        "exp": (issued + chrono::Duration::minutes(15)).timestamp(),
+        "jti": uuid::Uuid::new_v4(),
+    });
+    jsonwebtoken::encode(
+        &jsonwebtoken::Header::new(jsonwebtoken::Algorithm::EdDSA),
+        &claims,
+        &key,
+    )
+    .expect("token")
+}
+
+/// The full ApiContext over a test pool, with the rig's session key it
+/// was built under — `api::app` wants both. The ranker pod is the dev
+/// default address, which no suite but the ranked feed's ever calls.
 pub fn api_context(
     pool: PgPool,
     mailer: Arc<dyn Mailer>,
@@ -42,7 +70,7 @@ pub fn api_context_with_ranker(
     ranker: &RankerConfig,
 ) -> (ApiContext, AuthConfig) {
     let standin = StandIn::new(pool.clone(), StandInConfig::default());
-    let auth = AuthConfig::ephemeral().expect("auth config");
+    let auth = AuthConfig::from_seed(SESSION_SEED).expect("auth config");
     (
         ApiContext {
             pool,
@@ -241,6 +269,32 @@ impl WireRig {
         let mailer = Arc::new(TestMailer::default());
         let (app, standin, slice_reads) =
             connect_info_app_with_ranker(pool.clone(), mailer.clone(), rate_limits, ranker);
+        Self {
+            app,
+            pool,
+            standin,
+            mailer,
+            slice_reads,
+        }
+    }
+
+    /// A rig whose media limits are the given ones.
+    pub fn with_media(pool: PgPool, rate_limits: RateLimitConfig, media: MediaConfig) -> Self {
+        let mailer = Arc::new(TestMailer::default());
+        let (mut ctx, auth) = api_context(pool.clone(), mailer.clone(), rate_limits);
+        ctx.media = media;
+        let standin = ctx.boundary.0.clone();
+        let slice_reads = ctx.slice_reads.clone();
+        let uploads = upload_routing(&ctx);
+        let app = api::app(
+            api::schema::build(ctx),
+            auth,
+            ClientIpSource::ConnectInfo,
+            uploads,
+        )
+        .layer(axum::Extension(axum::extract::ConnectInfo(
+            std::net::SocketAddr::from(([127, 0, 0, 1], 9999)),
+        )));
         Self {
             app,
             pool,
