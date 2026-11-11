@@ -121,7 +121,8 @@ class HostedCardsTest {
         }
     }
 
-    private fun shown(tag: String) = compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()
+    private fun shown(tag: String) =
+        compose.onAllNodesWithTag(tag, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
 
     // ProfilePosts.md:3 — the post card as the feed draws it, wearing
     // `profile.posts.card` keyed by the post's id; its words open the post.
@@ -138,7 +139,9 @@ class HostedCardsTest {
     @Test
     fun aHostedPostsAuthorChipIsInert() {
         host { it.post(post(), posts) }
-        compose.onNodeIn("profile.posts.card:p1", "profile.posts.card.authorChip").performClick()
+        // An inert chip is no control of its own: it merges into the card.
+        compose.onNodeIn("profile.posts.card:p1", "profile.posts.card.authorChip", useUnmergedTree = true)
+            .performClick()
         assertThat(opened).isEmpty()
     }
 
@@ -167,7 +170,11 @@ class HostedCardsTest {
     fun replyOpensTheThreadAimedAtTheCommentAndTheWordsAreNoDoor() {
         host { it.comment(comment(), cards, replies, null) }
         compose.onNodeWithText("The glovebox camera earns its keep.").performClick()
-        compose.onNodeIn("profile.comments.commentCard:c1", "profile.comments.commentCard.authorChip").performClick()
+        compose.onNodeIn(
+            "profile.comments.commentCard:c1",
+            "profile.comments.commentCard.authorChip",
+            useUnmergedTree = true,
+        ).performClick()
         assertThat(opened).isEmpty()
         compose.onNodeIn("profile.comments.commentCard:c1", "profile.comments.commentCard.actionRow.reply")
             .performClick()
