@@ -149,9 +149,8 @@ query CitingRecords($id: UUID!, $after: String) {
         pDirected
         pInterest
         payloadMarked
-        # The causal key: which record in a bundle is newest.
+        # The key of record: which record in a bundle is newest.
         landingEpoch
-        actTime
         position
         # The middle node of the hyper act: the artifact the citation was
         # built into, which is what the row names.
