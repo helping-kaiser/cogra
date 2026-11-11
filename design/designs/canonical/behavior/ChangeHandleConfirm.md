@@ -20,7 +20,17 @@ ALWAYS nothing cancels the change GIVEN Change it was pressed
 
 WHEN tap Change it -> Keep it reads Close in the same place from the press itself, filled and live AND NEVER Close dims
 
-WHEN tap Close, tap the scrim, press system Back or press Escape GIVEN the change is in flight -> the dialog closes AND the change goes on AND NEVER the change is cancelled
+WHEN tap Close, tap the scrim, press system Back or press Escape GIVEN the change is in flight -> the dialog and the form close to settings AND the change goes on AND settings.credentials.handle reads Changing handle… in its second line, as Settings' handle chip draws it AND NEVER the change is cancelled
+
+WHEN the change is taken GIVEN the dialog was closed while it was in flight -> the snackbar reads Your handle is now, then the new handle AND settings.credentials.handle reads the new handle AND its second line goes
+
+WHEN the change does not go through GIVEN the dialog was closed while it was in flight -> settings.credentials.handle still reads the old handle AND its second line reads That didn't go through. in the failure voice AND Retry stands in its trailing slot AND NEVER the snackbar carries the failure
+
+WHEN the new handle is taken GIVEN the dialog was closed while it was in flight -> settings.credentials.handle still reads the old handle AND its second line reads That handle is taken. in the failure voice AND NEVER the handle changes
+
+WHEN tap settings.credentials.handle GIVEN its second line reads That handle is taken. -> the form opens with the new handle still typed AND the New handle field reads That handle is taken.
+
+WHEN tap Retry on settings.credentials.handle -> the same change is asked again AND the second line reads Changing handle… once 200ms pass without an answer
 
 WHEN tap Change it GIVEN the new handle is free -> settings returns AND the snackbar reads Your handle is now, then the new handle, as Your handle is now @solferreira. AND the Handle row reads the new handle AND the old handle is free for anyone at once AND links to the old handle stop resolving to the reader
 

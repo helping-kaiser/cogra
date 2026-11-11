@@ -175,3 +175,7 @@ WHEN tap Delete account GIVEN User.deletionPath reads IMMEDIATE or BY_LINK and n
 ALWAYS Delete account wears the locked look, visibly inactive at the disabled opacity and still tappable GIVEN User.deletionPath reads LOCKED
 
 WHEN tap Delete account GIVEN User.deletionPath reads LOCKED -> the snackbar reads You can delete your account once your registration lands. AND NEVER the deletion's request screen opens AND NEVER anything is deleted
+
+ALWAYS a handle change closed on while in flight carries its wait and its answer on settings.credentials.handle, the old handle standing as its value until the change is taken
+
+WHEN tap settings.credentials.handle GIVEN its second line reads Changing handle… -> NEVER the form opens

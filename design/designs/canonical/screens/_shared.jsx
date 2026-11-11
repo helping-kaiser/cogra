@@ -3609,7 +3609,7 @@ function ReportProblemBody({ words }) {
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
-function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote } = {}) {
+function SettingsBody({ handleChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -3849,7 +3849,45 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
           node="credentials"
         >
           <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
-          <SettingsRow label="Handle" value="@sol" onOpen={() => {}} node="handle" />
+          {handleChip ? (
+            /* THE HANDLE CHANGE AFTER CLOSE (round 37, jakob 2026-11-11: "yep"):
+               the dialog and the form leave to settings and the change goes on;
+               its wait and its answer stand on this row — the change's own
+               in-flight label in the second line, the row refusing a second
+               open until the answer comes (the row-line pattern); a failure as
+               the hidden-accounts row says one, `That didn't go through.` with
+               `Retry` in the trailing slot; a handle someone took first in the
+               dialog's own words, the row still opening the form. The old
+               handle stands as the value until the change is taken. The
+               states are drawn copies; the rest row alone carries the names. */
+            <div>
+              <div style={{ display: "{{handleRestShown}}" }}>
+                <SettingsRow label="Handle" value="@sol" onOpen={() => {}} node="handle" />
+              </div>
+              <div style={{ display: "{{handleChangingShown}}" }}>
+                <SettingsRow label="Handle" value="@sol" status="Changing handle…" inert />
+              </div>
+              <div style={{ display: "{{handleFailedShown}}" }}>
+                <SettingsRow
+                  label="Handle"
+                  value="@sol"
+                  status={<span role="alert" style={{ color: "var(--text-failure)" }}>That didn&apos;t go through.</span>}
+                  trailing={<InlineAction size="sm" onClick={() => {}}>Retry</InlineAction>}
+                  inert
+                />
+              </div>
+              <div style={{ display: "{{handleTakenShown}}" }}>
+                <SettingsRow
+                  label="Handle"
+                  value="@sol"
+                  status={<span role="alert" style={{ color: "var(--text-failure)" }}>That handle is taken.</span>}
+                  onOpen={() => {}}
+                />
+              </div>
+            </div>
+          ) : (
+            <SettingsRow label="Handle" value="@sol" onOpen={() => {}} node="handle" />
+          )}
           <SettingsRow
             label="Email"
             value="sol@solferreira.art"
