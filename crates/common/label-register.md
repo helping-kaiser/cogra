@@ -29,6 +29,7 @@ label.
 | `test:unit:a-newer-format-content-payload-reads-its-known-fields-marked-newer`                      | a_newer_format_content_payload_reads_its_known_fields_marked_newer                      |
 | `test:unit:a-newer-format-profile-payload-reads-its-known-fields-marked-newer`                      | a_newer_format_profile_payload_reads_its_known_fields_marked_newer                      |
 | `test:unit:a-non-canonical-scalar-is-refused`                                                       | a_non_canonical_scalar_is_refused                                                       |
+| `test:unit:a-nonce-digest-binds-its-author-and-nonce`                                               | a_nonce_digest_binds_its_author_and_nonce                                               |
 | `test:unit:a-one-zero-standing-is-inert-not-severed`                                                | a_one_zero_standing_is_inert_not_severed                                                |
 | `test:unit:a-pre-digest-binds-the-act-id-it-was-formed-for`                                         | a_pre_digest_binds_the_act_id_it_was_formed_for                                         |
 | `test:unit:a-ratio-is-exact`                                                                        | a_ratio_is_exact                                                                        |

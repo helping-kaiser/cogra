@@ -113,11 +113,7 @@ async fn handshake_lands_a_record(pool: PgPool) {
     let actor = funded_actor(&host, 3 * THETA).await;
     let act_id = submit(&host, &actor, registration(&actor)).await;
 
-    let package = host
-        .close_epoch()
-        .await
-        .expect("closes")
-        .expect("non-empty");
+    let package = host.close_epoch().await.expect("closes");
     assert_eq!(package.epoch, 1, "epochs number from 1");
     assert_eq!(package.records.len(), 1);
     let record = &package.records[0];
@@ -173,7 +169,7 @@ async fn each_close_charges_the_wall_in_force(pool: PgPool) {
     submit(&host, &bob, child).await;
     submit(&host, &bob, opinion(&bob, 1, "carol", vec![])).await;
 
-    let first = host.close_epoch().await.expect("closes").expect("epoch 1");
+    let first = host.close_epoch().await.expect("closes");
     let closure = &first.closure;
     assert_eq!(closure.theta_charged_micro, THETA);
     assert_eq!(closure.cause, ClosureCause::DurationElapsed);
@@ -227,7 +223,7 @@ async fn each_close_charges_the_wall_in_force(pool: PgPool) {
     assert_eq!(closure.ledger, ledger);
 
     submit(&host, &alice, opinion(&alice, 1, &bob.address(), vec![])).await;
-    let second = host.close_epoch().await.expect("closes").expect("epoch 2");
+    let second = host.close_epoch().await.expect("closes");
     assert_eq!(second.closure.theta_charged_micro, THETA);
     assert_eq!(second.closure.ledger.len(), 1);
     assert_eq!(second.closure.ledger[0].action_count, 2);
@@ -255,7 +251,7 @@ async fn the_price_leads_by_one_boundary(pool: PgPool) {
     let host = standin(pool.clone());
     let alice = funded_actor(&host, 20 * THETA).await;
     submit(&host, &alice, registration(&alice)).await;
-    host.close_epoch().await.expect("closes").expect("epoch 1");
+    host.close_epoch().await.expect("closes");
 
     sqlx::query(
         "UPDATE l1_epochs SET theta_charged_micro = 52810,
@@ -280,7 +276,7 @@ async fn the_price_leads_by_one_boundary(pool: PgPool) {
     );
 
     submit(&host, &alice, opinion(&alice, 1, "bob", vec![])).await;
-    let second = host.close_epoch().await.expect("closes").expect("epoch 2");
+    let second = host.close_epoch().await.expect("closes");
     assert_eq!(second.closure.theta_charged_micro, THETA);
     let historical = &host.epochs_since(0).await.expect("epochs")[0];
     assert_eq!(historical.closure.theta_charged_micro, 52_810);
@@ -300,7 +296,7 @@ async fn the_price_leads_by_one_boundary(pool: PgPool) {
     assert_eq!(host.current_theta().await.expect("θ"), 60_000);
 
     submit(&host, &alice, opinion(&alice, 2, "carol", vec![])).await;
-    let third = host.close_epoch().await.expect("closes").expect("epoch 3");
+    let third = host.close_epoch().await.expect("closes");
     assert_eq!(
         third.closure.theta_charged_micro, 60_000,
         "epoch 3 charges what epoch 2 delivered"
@@ -335,34 +331,152 @@ async fn a_filled_budget_is_the_closure_cause(pool: PgPool) {
     for seq in 0..3 {
         submit(&host, &alice, opinion(&alice, seq, "bob", vec![])).await;
     }
-    let full = host.close_epoch().await.expect("ok").expect("epoch 1");
+    let full = host.close_epoch().await.expect("ok");
     assert_eq!(full.closure.cause, ClosureCause::TargetFilled);
-    let rest = host.close_epoch().await.expect("ok").expect("epoch 2");
+    let rest = host.close_epoch().await.expect("ok");
     assert_eq!(rest.closure.cause, ClosureCause::DurationElapsed);
 }
 
-/// An epoch with nothing approved in it publishes no package at all.
-/// ´claim:close:an-empty-epoch-publishes-nothing´
+/// An epoch with nothing approved in it closes all the same
+/// (layer1-interface.md §11.6: at its maximum duration, whatever it holds):
+/// a package of zero acts, closed on its duration, with no partition and no
+/// ledger line, charging the wall in force and stepping the controller at
+/// the declared width. A run of idle closes numbers its epochs in order and
+/// holds θ at the reference — a width of 0 would propose the floor and
+/// step the wall down at every one — and the act that arrives afterwards
+/// lands in the next epoch at that price.
+///
+/// An epoch with nothing orderable closes on its duration, and idle closes hold θ.
+/// ´claim:close:an-empty-epoch-closes-on-its-duration´
 #[sqlx::test(migrations = "../../migrations")]
-async fn empty_close_publishes_nothing(pool: PgPool) {
-    let host = standin(pool);
-    assert!(host.close_epoch().await.expect("ok").is_none());
-    assert!(host.epochs_since(0).await.expect("ok").is_empty());
-}
-
-/// The close loop publishes an approved act on its interval, with no close asked for.
-/// ´claim:close:the-interval-loop-publishes-without-being-asked´
-#[sqlx::test(migrations = "../../migrations")]
-async fn close_loop_publishes_on_the_interval(pool: PgPool) {
-    let host = standin(pool);
-    let clock = tokio::spawn(l1_standin::close_loop(host.clone(), 1));
+async fn an_empty_epoch_closes_on_its_duration(pool: PgPool) {
+    use common::l1::handshake::{ClosureCause, Ratio};
+    let host = standin(pool.clone());
+    for expected in 1..=12 {
+        let empty = host.close_epoch().await.expect("closes");
+        assert_eq!(empty.epoch, expected);
+        assert!(empty.records.is_empty());
+        let closure = &empty.closure;
+        assert_eq!(closure.cause, ClosureCause::DurationElapsed);
+        assert!(closure.dependent_sets.is_empty() && closure.ledger.is_empty());
+        assert_eq!(closure.theta_charged_micro, THETA);
+        let step = closure.wall.as_ref().expect("the controller steps");
+        assert_eq!(
+            (step.width, step.accepted_rung),
+            (Ratio::ONE, Ratio::ZERO),
+            "the declared width, not a count of the epoch's acts"
+        );
+        assert_eq!(step.delivered, l1_standin::REFERENCE_WALL);
+        assert_eq!(step.theta_next_micro, THETA);
+        assert_eq!(host.current_theta().await.expect("θ"), THETA);
+    }
+    let stored: Vec<(i64, i64)> =
+        sqlx::query_as("SELECT epoch, act_count FROM l1_epochs ORDER BY epoch")
+            .fetch_all(&pool)
+            .await
+            .expect("the epoch rows");
+    assert_eq!(stored, (1..=12).map(|e| (e, 0)).collect::<Vec<_>>());
 
     let actor = funded_actor(&host, 3 * THETA).await;
     let act_id = submit(&host, &actor, registration(&actor)).await;
+    let landed = host.close_epoch().await.expect("closes");
+    assert_eq!((landed.epoch, landed.records.len()), (13, 1));
+    assert_eq!(landed.records[0].act_id, act_id);
+    assert_eq!(landed.closure.theta_charged_micro, THETA);
+
+    let since = host.epochs_since(0).await.expect("epochs");
+    assert_eq!(
+        since.iter().map(|p| p.epoch).collect::<Vec<_>>(),
+        (1..=13).collect::<Vec<_>>(),
+        "the ingest read returns the empty epochs in order"
+    );
+    assert_eq!(since[12], landed);
+    assert!(since[..12].iter().all(|p| p.records.is_empty()));
+}
+
+/// Every package carries the boundary triple it closed under: the act
+/// budget as its target, a minimum of 0, and the clock's interval as its
+/// maximum — none where no clock runs. The ingest read returns it.
+///
+/// Each package publishes its target size and its minimum and maximum durations.
+/// ´claim:close:each-package-publishes-its-boundary-triple´
+#[sqlx::test(migrations = "../../migrations")]
+async fn each_package_publishes_its_boundary_triple(pool: PgPool) {
+    use common::l1::handshake::BoundaryPolicy;
+    let unclocked = standin(pool.clone());
+    let first = unclocked.close_epoch().await.expect("closes");
+    assert_eq!(
+        first.closure.boundary,
+        BoundaryPolicy {
+            target_acts: 10_000,
+            min_duration_secs: 0,
+            max_duration_secs: None,
+        }
+    );
+    let clocked = StandIn::new(
+        pool,
+        StandInConfig::new(25, 1024)
+            .and_then(|c| c.clocked_every(3))
+            .expect("config"),
+    );
+    let second = clocked.close_epoch().await.expect("closes");
+    assert_eq!(
+        second.closure.boundary,
+        BoundaryPolicy {
+            target_acts: 25,
+            min_duration_secs: l1_standin::DECLARATION.min_epoch_duration_secs,
+            max_duration_secs: Some(3),
+        }
+    );
+    assert_eq!(l1_standin::DECLARATION.min_epoch_duration_secs, 0);
+    assert_eq!(
+        clocked.epochs_since(0).await.expect("epochs"),
+        vec![first, second]
+    );
+    assert!(matches!(
+        StandInConfig::default().clocked_every(0),
+        Err(StandInError::Host(_))
+    ));
+}
+
+/// The close loop closes on its interval with no close asked for: empty
+/// epochs while nothing is approved, and the approved act in the next
+/// epoch after it arrives.
+///
+/// The close loop publishes on its interval, empty epochs included, with no close asked for.
+/// ´claim:close:the-interval-loop-publishes-without-being-asked´
+#[sqlx::test(migrations = "../../migrations")]
+async fn close_loop_publishes_on_the_interval(pool: PgPool) {
+    let host = StandIn::new(
+        pool,
+        StandInConfig::new(10_000, 1024)
+            .and_then(|c| c.clocked_every(1))
+            .expect("config"),
+    );
+    let clock = tokio::spawn(l1_standin::close_loop(host.clone()));
 
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
+    while host.epochs_since(0).await.expect("epochs").is_empty() {
+        assert!(
+            std::time::Instant::now() < deadline,
+            "the clock never closed an empty epoch"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    }
+    let idle = host.epochs_since(0).await.expect("epochs");
+    assert!(idle[0].records.is_empty(), "nothing was approved yet");
+    assert_eq!(idle[0].closure.boundary.max_duration_secs, Some(1));
+
+    let actor = funded_actor(&host, 3 * THETA).await;
+    let act_id = submit(&host, &actor, registration(&actor)).await;
     let package = loop {
-        if let Some(package) = host.epochs_since(0).await.expect("epochs").pop() {
+        if let Some(package) = host
+            .epochs_since(0)
+            .await
+            .expect("epochs")
+            .into_iter()
+            .find(|p| !p.records.is_empty())
+        {
             break package;
         }
         assert!(
@@ -379,7 +493,7 @@ async fn close_loop_publishes_on_the_interval(pool: PgPool) {
 /// Three distinct formation failures — a Registration targeting someone
 /// else's Profile, a fixed-parameter family given non-fixed (p_d, p_i),
 /// and a payload over M_payload — all reject at seal. None produces a
-/// Layer-1 object, so a subsequent close has nothing to publish.
+/// Layer-1 object, so a subsequent close publishes an empty epoch.
 ///
 /// A proposal that fails formation rejects at seal and leaves no Layer 1 object behind.
 /// ´claim:seal:formation-failures-leave-no-record-behind´
@@ -407,7 +521,7 @@ async fn seal_rejects_formation_failures(pool: PgPool) {
         Err(StandInError::Formation(_))
     ));
 
-    assert!(host.close_epoch().await.expect("ok").is_none());
+    assert!(host.close_epoch().await.expect("ok").records.is_empty());
 }
 
 /// Three authentication failures reject at seal: an author address that
@@ -554,7 +668,7 @@ async fn an_authors_nonce_is_never_reused(pool: PgPool) {
     host.approve(alice.approve(&first, &sealed, &host_key).expect("approves"))
         .await
         .expect("approval accepted");
-    let package = host.close_epoch().await.expect("closes").expect("epoch 1");
+    let package = host.close_epoch().await.expect("closes");
     assert_eq!(package.records.len(), 1);
     let (nonce_held, digest_kept): (bool, bool) = sqlx::query_as(
         "SELECT nonce IS NOT NULL, nonce_digest IS NOT NULL FROM l1_acts WHERE act_id = $1",
@@ -664,7 +778,7 @@ async fn approve_verifies_the_witness(pool: PgPool) {
 
     host.approve(witness.clone()).await.expect("approves");
     host.approve(witness).await.expect("idempotent");
-    let package = host.close_epoch().await.expect("ok").expect("one act");
+    let package = host.close_epoch().await.expect("ok");
     assert_eq!(package.records.len(), 1);
 }
 
@@ -683,12 +797,12 @@ async fn insolvent_authors_defer_until_funded(pool: PgPool) {
         .expect("underfunded burn");
     submit(&host, &actor, registration(&actor)).await;
 
-    assert!(host.close_epoch().await.expect("ok").is_none());
+    assert!(host.close_epoch().await.expect("ok").records.is_empty());
 
     host.credit_burn(&actor.address(), THETA)
         .await
         .expect("burn");
-    let package = host.close_epoch().await.expect("ok").expect("lands now");
+    let package = host.close_epoch().await.expect("ok");
     assert_eq!(package.records.len(), 1);
 }
 
@@ -753,7 +867,8 @@ async fn a_burn_request_is_idempotent_by_its_key(pool: PgPool) {
 /// With a settlement delay, a burn reads pending and B_i stays untouched
 /// until that many epochs have closed; the close that reaches the due
 /// epoch settles it and credits B_i, and the act it funds lands at the
-/// close after. Idle closes publish nothing and so count nothing.
+/// close after. An empty epoch is an epoch: idle closes count toward the
+/// delay like any other.
 ///
 /// A burn under a settlement delay stays pending, B_i untouched, until the delay's epochs have closed.
 /// ´claim:standin:a-burn-settles-after-its-delay´
@@ -783,24 +898,20 @@ async fn a_burn_settles_after_its_delay(pool: PgPool) {
         0.0
     );
     submit(&host, &applicant, registration(&applicant)).await;
+    let epoch_1 = host.close_epoch().await.expect("ok");
     assert!(
-        host.close_epoch().await.expect("ok").is_none(),
-        "the funded act is insolvent while the burn is pending, and an idle close counts nothing"
+        epoch_1.records.is_empty(),
+        "the funded act is insolvent while the burn is pending"
     );
-
-    let ticker = funded_actor(&host, 10 * THETA).await;
-    submit(&host, &ticker, registration(&ticker)).await;
-    host.close_epoch().await.expect("ok").expect("epoch 1");
     assert_eq!(
         host.burn_settlement(&ticket).await.expect("reads"),
         BurnSettlement::Pending,
         "requested at the empty boundary 0 with a delay of 2: due at epoch 2"
     );
-    submit(&host, &ticker, opinion(&ticker, 1, "bob", vec![])).await;
-    let epoch_2 = host.close_epoch().await.expect("ok").expect("epoch 2");
-    assert_eq!(epoch_2.epoch, 2);
+    let epoch_2 = host.close_epoch().await.expect("ok");
+    assert_eq!(epoch_2.epoch, 2, "the empty epoch 1 counted");
     assert!(
-        epoch_2.records.iter().all(|r| r.author == ticker.address()),
+        epoch_2.records.is_empty(),
         "the burn settles at this close, after its selection"
     );
     assert_eq!(
@@ -809,7 +920,7 @@ async fn a_burn_settles_after_its_delay(pool: PgPool) {
             pinned_micro: 3 * THETA
         }
     );
-    let package = host.close_epoch().await.expect("ok").expect("epoch 3");
+    let package = host.close_epoch().await.expect("ok");
     assert_eq!(package.records[0].author, applicant.address());
 }
 
@@ -840,7 +951,7 @@ async fn dependencies_defer_and_order(pool: PgPool) {
 
     let orphan_dep = ActId::new("ghost", 1, Family::Opinion).expect("ok");
     submit(&host, &alice, opinion(&alice, 1, "bob", vec![orphan_dep])).await;
-    assert!(host.close_epoch().await.expect("ok").is_none());
+    assert!(host.close_epoch().await.expect("ok").records.is_empty());
 
     submit(
         &host,
@@ -849,7 +960,7 @@ async fn dependencies_defer_and_order(pool: PgPool) {
     )
     .await;
     submit(&host, &alice, reg).await;
-    let package = host.close_epoch().await.expect("ok").expect("lands");
+    let package = host.close_epoch().await.expect("ok");
     assert_eq!(package.records.len(), 2);
     let pos = |id: &ActId| {
         package
@@ -903,7 +1014,7 @@ async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
         deps: vec![],
     };
     submit(&host, &publisher, tag).await;
-    let package = host.close_epoch().await.expect("ok").expect("lands");
+    let package = host.close_epoch().await.expect("ok");
     assert_eq!(package.records.len(), 1);
     let record = &package.records[0];
     assert_eq!(record.legs.len(), 2);
@@ -978,7 +1089,7 @@ async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
     )
     .await;
 
-    let package = host.close_epoch().await.expect("ok").expect("lands");
+    let package = host.close_epoch().await.expect("ok");
     assert_eq!(package.records.len(), 2);
 }
 
@@ -1011,7 +1122,7 @@ async fn publish_toward_an_existing_mint_revises_rather_than_mints(pool: PgPool)
         deps: vec![],
     };
     submit(&host, &author, revise).await;
-    let package = host.close_epoch().await.expect("ok").expect("lands");
+    let package = host.close_epoch().await.expect("ok");
     assert_eq!(package.records.len(), 1);
     assert_eq!(package.records[0].family, Family::Publish);
     assert_eq!(package.records[0].legs[0].target, existing);
@@ -1049,7 +1160,7 @@ async fn founding_participant_self_loops_at_its_own_mint(pool: PgPool) {
     };
     submit(&host, &founder, found).await;
 
-    let package = host.close_epoch().await.expect("ok").expect("lands");
+    let package = host.close_epoch().await.expect("ok");
     assert_eq!(package.records.len(), 1);
     let record = &package.records[0];
     assert_eq!(record.family, Family::Participant);
@@ -1086,10 +1197,10 @@ async fn maturity_grows_with_prior_degree(pool: PgPool) {
     let bob = funded_actor(&host, 10 * THETA).await;
 
     submit(&host, &alice, registration(&alice)).await;
-    host.close_epoch().await.expect("ok").expect("epoch 1");
+    host.close_epoch().await.expect("ok");
 
     submit(&host, &bob, opinion(&bob, 0, &alice.address(), vec![])).await;
-    let package = host.close_epoch().await.expect("ok").expect("epoch 2");
+    let package = host.close_epoch().await.expect("ok");
     assert_eq!(package.epoch, 2);
     let leg = &package.records[0].legs[0];
     assert!((leg.tau - 0.5).abs() < 1e-12);
@@ -1097,11 +1208,12 @@ async fn maturity_grows_with_prior_degree(pool: PgPool) {
     assert_eq!(all[0].records[0].legs[0].tau, 0.0);
 }
 
-/// With the epoch target act budget set to 1, the epoch fills at one act
-/// and closes on approve, so each of two submitted acts lands in its own
-/// epoch.
+/// With the epoch target act budget set to 1, a close takes one act and
+/// leaves the other approved, so each of two submitted acts lands in its
+/// own epoch. The budget caps the epoch; it does not close it — the clock
+/// does.
 ///
-/// An epoch closes as soon as the act budget fills, so each act lands in its own epoch.
+/// A close takes no more acts than the budget, so under a budget of 1 each act lands in its own epoch.
 /// ´claim:close:the-act-budget-caps-the-epoch´
 #[sqlx::test(migrations = "../../migrations")]
 async fn act_budget_caps_the_epoch(pool: PgPool) {
@@ -1116,8 +1228,8 @@ async fn act_budget_caps_the_epoch(pool: PgPool) {
     let alice = funded_actor(&host, 10 * THETA).await;
     submit(&host, &alice, registration(&alice)).await;
     submit(&host, &alice, opinion(&alice, 1, "bob", vec![])).await;
-    host.close_epoch().await.expect("ok").expect("epoch 1");
-    host.close_epoch().await.expect("ok").expect("epoch 2");
+    host.close_epoch().await.expect("ok");
+    host.close_epoch().await.expect("ok");
     let packages = host.epochs_since(0).await.expect("ok");
     assert_eq!(packages.len(), 2, "one act per epoch under a budget of 1");
     assert_eq!(packages[0].records.len(), 1);
@@ -1156,10 +1268,8 @@ async fn approving_does_not_close_an_epoch(pool: PgPool) {
         host.epochs_since(0).await.expect("ok").is_empty(),
         "the act budget is full twice over and nothing has closed"
     );
-    host.close_epoch()
-        .await
-        .expect("ok")
-        .expect("the clock closes it");
+    let closed = host.close_epoch().await.expect("the clock closes it");
+    assert_eq!(closed.records.len(), 1, "one act under a budget of 1");
 }
 
 /// The stand-in's own tables hold the numbering, so even a writer that
@@ -1173,8 +1283,9 @@ async fn approving_does_not_close_an_epoch(pool: PgPool) {
 async fn the_tables_refuse_a_numbering_without_an_order_of_record(pool: PgPool) {
     let zero = sqlx::query(
         "INSERT INTO l1_epochs
-             (epoch, act_count, theta_charged_micro, closure_cause, marker_policy, marker_edition)
-         VALUES (0, 0, 50186, 'duration', 'stand-in: the epoch close', 1)",
+             (epoch, act_count, theta_charged_micro, closure_cause, marker_policy, marker_edition,
+              target_acts, min_duration_secs)
+         VALUES (0, 0, 50186, 'duration', 'stand-in: the epoch close', 1, 10000, 0)",
     )
     .execute(&pool)
     .await;
@@ -1188,7 +1299,7 @@ async fn the_tables_refuse_a_numbering_without_an_order_of_record(pool: PgPool) 
     let alice = funded_actor(&host, 10 * THETA).await;
     let first = submit(&host, &alice, registration(&alice)).await;
     let second = submit(&host, &alice, opinion(&alice, 1, "bob", vec![])).await;
-    let package = host.close_epoch().await.expect("ok").expect("lands");
+    let package = host.close_epoch().await.expect("ok");
     assert_eq!(package.records.len(), 2);
 
     let position_zero = sqlx::query("UPDATE l1_acts SET position = 0 WHERE act_id = $1")

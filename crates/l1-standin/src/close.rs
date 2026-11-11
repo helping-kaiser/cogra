@@ -61,7 +61,9 @@
 //! A close loads every accepted act's time and the whole node-state table,
 //! and writes back every node it touched. Cost therefore grows with total
 //! history, not with epoch size. That is accepted for a substrate that is
-//! thrown away, and budgeted rather than hidden.
+//! thrown away, and budgeted rather than hidden. A close with nothing
+//! approved loads none of it: the clock closes an epoch on every tick,
+//! most of them empty, and an empty one costs a few statements.
 //!
 //! **Budget: an epoch of 40 acts over an empty history closes in ≤ 150 ms**
 //! (measured 2026-09-04 on the dev database at 28 ms; the budget carries
@@ -74,8 +76,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use common::l1::census::LegRole;
 use common::l1::handshake::{
-    ClosureCause, EpochClosure, EpochPackage, FIRST_POSITION, LedgerLine, MarkerPolicy,
-    PublishedLeg, PublishedRecord, Ratio, WallStep,
+    BoundaryPolicy, ClosureCause, EpochClosure, EpochPackage, FIRST_POSITION, LedgerLine,
+    MarkerPolicy, PublishedLeg, PublishedRecord, Ratio, WallStep,
 };
 use common::l1::identifier::NodeId;
 use sqlx::PgConnection;
@@ -403,7 +405,13 @@ fn linearizes(
 /// by this epoch settle in the same transaction, after the selection: a
 /// burn pinned by epoch k funds acts from epoch k + 1 on, never the epoch
 /// it was pinned in.
-pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage>, StandInError> {
+///
+/// A close with nothing orderable — nothing approved, or every approved
+/// act deferred — publishes an epoch of zero acts: the epoch closes on its
+/// duration, empty or not (§11.6, "Final-set closure"), and its controller
+/// steps from the wall in force at the declared width like any other. An
+/// idle close skips the history load, which only a selection reads.
+pub(crate) async fn close_epoch(standin: &StandIn) -> Result<EpochPackage, StandInError> {
     standin.config().check()?;
     let mut tx = standin.pool().begin().await?;
 
@@ -423,10 +431,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
     )
     .fetch_all(&mut *tx)
     .await?;
-    if rows.is_empty() {
-        tx.rollback().await?;
-        return Ok(None);
-    }
 
     let mut candidates = Vec::with_capacity(rows.len());
     for row in &rows {
@@ -446,10 +450,47 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
         });
     }
 
+    let config = standin.config();
+    let (selection, state, counts) = if candidates.is_empty() {
+        (Selection::default(), LedgerState::default(), HashMap::new())
+    } else {
+        let (mut state, counts) = load_ledger_state(&mut tx, &candidates).await?;
+        let selection = select_and_order(
+            candidates,
+            &mut state,
+            epoch,
+            theta,
+            config.epoch_target_acts,
+        )?;
+        (selection, state, counts)
+    };
+
+    let closure = closure_outputs(&selection, &state, &counts, wall_in_force, theta, config)?;
+    let attested_at = persist(&mut tx, epoch, &selection, &closure).await?;
+    crate::settle_due(&mut tx, epoch).await?;
+    let package = EpochPackage {
+        epoch,
+        attested_at,
+        records: selection.records,
+        closure,
+    };
+    publishable(&package)?;
+    tx.commit().await?;
+
+    Ok(package)
+}
+
+/// The ledger state a selection reads, loaded under the close's lock: every
+/// accepted act's time, the candidates' authors' accounts (locked, with
+/// their action counts before this epoch), and the node-state table.
+async fn load_ledger_state(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    candidates: &[Candidate],
+) -> Result<(LedgerState, HashMap<String, i64>), StandInError> {
     let accepted_times: HashMap<String, i64> = sqlx::query!(
         r#"SELECT act_id, act_time AS "act_time!" FROM l1_acts WHERE status = 'accepted'"#
     )
-    .fetch_all(&mut *tx)
+    .fetch_all(&mut **tx)
     .await?
     .into_iter()
     .map(|r| (r.act_id, r.act_time))
@@ -462,7 +503,7 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
          WHERE address = ANY($1) FOR UPDATE",
         &author_list,
     )
-    .fetch_all(&mut *tx)
+    .fetch_all(&mut **tx)
     .await?;
     let counts: HashMap<String, i64> = accounts
         .iter()
@@ -476,39 +517,19 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
     let mut frontiers: HashMap<String, i64> = HashMap::new();
     let mut degrees: HashMap<String, i64> = HashMap::new();
     for r in sqlx::query!("SELECT node_id, frontier, degree FROM l1_node_state")
-        .fetch_all(&mut *tx)
+        .fetch_all(&mut **tx)
         .await?
     {
         frontiers.insert(r.node_id.clone(), r.frontier);
         degrees.insert(r.node_id, r.degree);
     }
-    let mut state = LedgerState {
+    let state = LedgerState {
         accepted_times,
         balances,
         frontiers,
         degrees,
     };
-
-    let budget = standin.config().epoch_target_acts;
-    let selection = select_and_order(candidates, &mut state, epoch, theta, budget)?;
-    if selection.records.is_empty() {
-        tx.rollback().await?;
-        return Ok(None);
-    }
-
-    let closure = closure_outputs(&selection, &state, &counts, wall_in_force, theta, budget)?;
-    let attested_at = persist(&mut tx, epoch, &selection, &closure).await?;
-    crate::settle_due(&mut tx, epoch).await?;
-    let package = EpochPackage {
-        epoch,
-        attested_at,
-        records: selection.records,
-        closure,
-    };
-    publishable(&package)?;
-    tx.commit().await?;
-
-    Ok(Some(package))
+    Ok((state, counts))
 }
 
 /// The wall in force at the next close: what the last closed epoch's
@@ -546,19 +567,26 @@ fn stored_ratio(numerator: i64, denominator: i64) -> Result<Ratio, StandInError>
     })
 }
 
-/// The closure outputs of a selected epoch: why it closed, its partition,
-/// its final ledger at the debit vintage it was charged, and one controller
-/// step from the wall in force under the deployment's declared inputs.
+/// The closure outputs of a closed epoch: why it closed and under which
+/// boundary triple, its partition, its final ledger at the debit vintage it
+/// was charged, and one controller step from the wall in force under the
+/// deployment's declared inputs.
+///
+/// An empty epoch steps at the declared width too. Under the Standing
+/// simplification the width input is the declared constant, not a count of
+/// the epoch's acts; a zero width would propose the floor, and the wall
+/// would step down at every idle close.
 fn closure_outputs(
     selection: &Selection,
     state: &LedgerState,
     counts_before: &HashMap<String, i64>,
     wall_in_force: Ratio,
     theta: i64,
-    budget: i64,
+    config: &crate::StandInConfig,
 ) -> Result<EpochClosure, StandInError> {
+    let boundary = config.boundary();
     let size = i64::try_from(selection.records.len()).unwrap_or(i64::MAX);
-    let cause = if size >= budget {
+    let cause = if size >= boundary.target_acts {
         ClosureCause::TargetFilled
     } else {
         ClosureCause::DurationElapsed
@@ -580,6 +608,7 @@ fn closure_outputs(
         .map_err(wall_fault)?;
     Ok(EpochClosure {
         cause,
+        boundary,
         dependent_sets: selection.dependent_sets.clone(),
         ledger,
         theta_charged_micro: theta,
@@ -731,8 +760,9 @@ async fn persist(
               marker_policy, marker_edition,
               wall_num, wall_den, width_num, width_den, rung_num, rung_den,
               proposal_num, proposal_den, delivered_num, delivered_den,
-              theta_next_micro)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+              theta_next_micro, target_acts, min_duration_secs, max_duration_secs)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
+                 $18, $19, $20)
          RETURNING closed_at",
         epoch,
         selection.records.len() as i64,
@@ -751,6 +781,9 @@ async fn persist(
         step.delivered.numerator(),
         step.delivered.denominator(),
         step.theta_next_micro,
+        closure.boundary.target_acts,
+        closure.boundary.min_duration_secs,
+        closure.boundary.max_duration_secs,
     )
     .fetch_one(&mut **tx)
     .await?;
@@ -790,7 +823,7 @@ pub(crate) async fn epochs_since(
                 marker_policy, marker_edition,
                 wall_num, wall_den, width_num, width_den, rung_num, rung_den,
                 proposal_num, proposal_den, delivered_num, delivered_den,
-                theta_next_micro
+                theta_next_micro, target_acts, min_duration_secs, max_duration_secs
          FROM l1_epochs WHERE epoch > $1 ORDER BY epoch",
         after,
     )
@@ -838,6 +871,11 @@ pub(crate) async fn epochs_since(
         })?;
         let mut package = load_epoch(&mut conn, e.epoch, e.closed_at).await?;
         package.closure.cause = cause;
+        package.closure.boundary = BoundaryPolicy {
+            target_acts: e.target_acts,
+            min_duration_secs: e.min_duration_secs,
+            max_duration_secs: e.max_duration_secs,
+        };
         package.closure.theta_charged_micro = e.theta_charged_micro;
         package.closure.wall = wall;
         package.closure.marker = MarkerPolicy {
