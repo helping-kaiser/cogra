@@ -919,9 +919,8 @@ pub(super) async fn search_request(
         search::Parsed::Blank => None,
         search::Parsed::Unscoped(text) => {
             let kinds = served_kinds(kinds);
-            (!kinds.is_empty()).then(|| {
-                search_store::SearchRequest::Match(search::unscoped(text, &kinds, false))
-            })
+            (!kinds.is_empty())
+                .then(|| search_store::SearchRequest::Match(search::unscoped(text, &kinds, false)))
         }
         search::Parsed::Scoped {
             scope,
