@@ -3042,6 +3042,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Deleted account<", tag: "button" },
     { n: 5, find: 'aria-label="Close a deleted account&#x27;s application"', tag: "button" },
     { n: 10, find: ">Retry</button>", tag: "button" },
+    // The people you let in (the `letIn` chip; round 38, jakob's J3): every
+    // row opens its person's profile, a deleted one's the deleted account's
+    // page — one act, one edge.
+    { n: 11, find: 'data-node="invites.person"', tag: "button", all: true },
+    { n: 11, find: 'data-node="invites.redactedPerson"', tag: "button" },
   ],
   RejectAllConfirm: [
     { n: 1, find: ">Close them</button>", tag: "button" },

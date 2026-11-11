@@ -872,6 +872,8 @@ Kept picks` — the arrow from the kept picks' review or their seal, the
 named surface by its title, as `Back to Saved` and `Back to History`
 are (blessed, jakob 2026-10-06). Its other origins take
 nouns already blessed: `Back to your profile`, `Back to Notifications`.
+The profile's table adds `Back to Invites`, from the people you let in
+(round 38, by the same construction — *its wording jakob's at review*).
 
 **The citation's pair** (`RefPair`), where the field and its readout are
 `aria-hidden` and these words are what is said in their place:
@@ -3858,6 +3860,13 @@ surfaces teaches faster than four near-synonyms would.
 you": only one of those rows is waiting on the reader and the other is
 waiting on its own applicant, so a caption claiming both would make the
 second row a lie. Who is waited on is the ROW's to say.
+
+**`People you let in`** stands between them once the reader has vouched
+someone in: each row the person's name and when, no line of status —
+nothing waits on anyone there (*new 2026-11-11, blessed (jakob
+2026-11-11, J3)*). A row opens the person's profile, whose arrow reads
+`Back to Invites`, the named surface by its title as `Back to Kept
+picks` is.
 
 **An application's second line is its status, and it names the
 reader's fact and not the mechanism** (jakob 2026-09-15). Which proof
