@@ -1509,7 +1509,7 @@
       "description": "A card's own Save, its ⋮'s first row reading Unsave in Saved, takes it out of the list, the list closing over it, and the line offers Undo; Undo puts the card back where it was.",
       "start": { "board": "Saved", "via": 4 },
       "waypoints": [
-        { "board": "ReaderPostMenu", "via": 1, "to": "SavedUndo" }
+        { "board": "SavedPostMenu", "via": 1, "to": "SavedUndo" }
       ],
       "end": { "board": "SavedUndo", "via": 16, "to": "Saved" }
     },
