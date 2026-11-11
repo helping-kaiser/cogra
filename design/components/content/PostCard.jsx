@@ -153,6 +153,10 @@ export function PostCard({
      stand, before the share. Additive: given none, the card renders exactly
      as before. */
   act,
+  /* THE POST'S ID, as the wire carries it (round 33, seam 264): what keys
+     the card when it is named — what has an id on the wire is keyed by that
+     id. Draws nothing. */
+  id,
   node,
   nodeKey,
 }) {
@@ -625,7 +629,7 @@ export function PostCard({
      the card instead of floating beside its curve (jakob's review, the tag
      round). */
   return (
-    <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={door} node={node} nodeKey={node && (nodeKey ?? author?.handle)}>
+    <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={door} node={node} nodeKey={node && (nodeKey ?? id)}>
       {veil ? <SensitiveScope>{body}</SensitiveScope> : body}
     </Card>
   );

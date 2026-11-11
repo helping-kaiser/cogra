@@ -38,7 +38,7 @@
    REGISTERED under the `postDetail` prefix (round 27, seam 252): the thread at
    rest is the post's detail with its sheet raised, named as `CommentMenu`
    names it — the detail beneath, the sheet `threadSheet`, each top-level
-   comment `commentCard` keyed by its author. @sol's two readings are the
+   comment `commentCard` keyed by its id. @sol's two readings are the
    `reader` chip's copies of one card. THE `pick` CHIP draws a kept pick on
    @tobias's comment (`PickCopies`), adding the stance control's `pending`
    line to `threadSheet.commentCard`. */

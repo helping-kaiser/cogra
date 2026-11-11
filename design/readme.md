@@ -2288,9 +2288,12 @@ entry first". What stands:
   supplies the prefix, and `render-screens` (`_build/node-paths.mjs`)
   joins each segment with its annotated ancestors into the full path
   on the built board — `feed.card.actionRow.score`. A repeated
-  instance carries `data-node-key`, a content key (the author's
-  handle, the tag's name; a position only where content has none),
-  and so does every node inside it: the implementation side diffs
+  instance carries `data-node-key`, a content key — what has an id on
+  the wire is keyed by that id (a post, comment, profile or tag card
+  and a row naming a person, by the lowercase UUID the wire carries;
+  round 33, seam 264), else a name or slug its list holds once (a tag
+  chip inside a card by its name), a position only where content has
+  none — and so does every node inside it: the implementation side diffs
   (path, key), never DOM order. A copy a board's tweak chip draws once
   per value is one element in several states: it keeps one path and
   carries the chip's value as its key (`history.searchField` under
@@ -2302,7 +2305,10 @@ entry first". What stands:
   writes. **Registered paths are append-only**: a collision fails the
   render, and so does a registered path that stops rendering — a
   rename is a breaking change for the implementation side, made only
-  by deleting the path from `nodes.json` by hand in a reviewed PR.
+  by deleting the path from `nodes.json` by hand in a reviewed PR. A
+  key rule changes the same way, only in a named, announced breaking
+  change: its old rule entries leave `nodes.json` by hand, and the
+  render registers the new rule; the paths stay (round 33).
 - **A sheet's path names the sheet, not the host it is raised over**
   (rounds 27, 28). A sheet drawn once keeps one path wherever it is
   raised: the thread is `postDetail.threadSheet` from a feed, History or
@@ -11043,6 +11049,41 @@ Nothing is drawn differently except the type.
   doors, the sheets' four each); flows hold at **227**, none re-blessed. The
   registry holds at **167 screens**, **6111 → 6113** board paths, **1915 →
   1917** distinct (`tagPicker.staged.door`, `referencePicker.staged.door`).
+
+### Round 33, list cards and person rows keyed by id — 2026-11-11
+
+Android's collision report (G4; backlog 153): list cards were keyed by their
+author's handle, so one person's two cards on a list shared a key. Both
+clients already key them by the wire id (seam 263). jakob ruled the re-key
+("12. as rec"), a breaking change named and announced (seam 264).
+
+- **What has an id on the wire is keyed by that id.** Post cards
+  (`feed`, `postDetail`, `history`, `saved` `.card`) by the post's id;
+  comment cards (`feed`, `history`, `saved` `.commentCard`,
+  `postDetail.threadSheet.commentCard`) and their `viewReplies` by the
+  comment's; profile cards by the person's; tag cards by the tag's; and the
+  person rows — `invites.application`, `profileStances.list.row`,
+  `settings.hiddenSheet.list.account`, `postDetail.opinionsSheet.opinion` —
+  by the person's. Every id is the lowercase UUID the wire carries. A card's
+  nodes follow its key (`<id>/1`, `<id>/coastroad`); the chips inside a card
+  stay by name, the redacted twins by actor id, and rows keyed by position,
+  slug, link id or tag name stand as they were. The profile views' own path
+  rules fold into the segments' rules.
+- **The sample ids.** `PostCard` and `CommentCard` take the thing's `id` and
+  key by it when named; every sample post, comment, person and tag carries
+  one id, spelled once beside it in `_shared.jsx` (or beside a board's own
+  sample), in the form `ProfilePosts` first drew, so one sample thing keys
+  the same on every board.
+- **The breaking change, by hand.** The 91 old rule entries left
+  `nodes.json` in their own commit; the render registered the id rules. No
+  path was added, renamed or removed.
+- **The gate**: **60 boards** re-keyed, each byte-identical to before once
+  `data-node-key` is stripped — nothing drawn moved. The registry holds at
+  **167 screens**, **6120** board paths, **1920** distinct; **2577** key
+  entries changed (71 post cards, 26 comment cards, 10 profile cards, 5 tag
+  cards, 54 person rows, 2411 nodes inside them), none outside those
+  families, and no (path, key) repeats on any board beyond the chip copies
+  that stood before.
 
 ---
 
