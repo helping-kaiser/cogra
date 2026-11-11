@@ -304,8 +304,7 @@ departs, in lowercase after a `·`:
   axis rule). `Everyone` is the app's default and has no word there; a
   reader whose saved default is `Your people` reads the move back as
   `everyone` — the row's label in lowercase, the axis rule's own state
-  word (seam 248; *new 2026-10-29, merged under the autonomy order,
-  review pending*). Under `Your
+  word (seam 248; *new 2026-10-29, blessed (jakob 2026-11-10)*). Under `Your
   people`, a sign off its `Either` default joins the same extra:
   `your people, for`, `your people, against` (*drafted 2026-10-12 —
   jakob's at review*; the `against` reading outgrows the 154px budget
@@ -439,7 +438,7 @@ noun):
   `Your recovery code brings it here. A pick you keep waits on this
   browser until then, and you review every kept pick before it's
   signed.` — in the app, `…waits in this app until then…` (seam 245, ask
-  17; merged under the autonomy order, 2026-10-28; review pending).)*
+  17; new 2026-10-28, blessed (jakob 2026-11-10)).)*
 - **Why signing waits** (the write rule's notice — the seal
   and the stance pad): There's a limit to how many signed actions can
   go through in a short time — it keeps the network safe from flooding.
@@ -575,7 +574,7 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
   one dropped while a clip is staged; the batch's first clip is the body.
   `A comment carries one video.` is its comment-scale twin, drawn on
   `ReplyVideo`'s `batch` chip (round 27): refused, never swapped in. (Seam 245,
-  ask 13 H; *merged under the autonomy order, 2026-10-28; review pending*.)
+  ask 13 H; *new 2026-10-28, blessed (jakob 2026-11-10)*.)
 
 - `A video can't join an edit yet — post it on its own.` — a video picked
   at an edit while the edit's video path is staged (`EditWords`' `+ Add
@@ -585,14 +584,14 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
   honestly in the meantime — *yet* is load-bearing, the way out is a post
   of its own, and *join* is the composer's own verb (`a video can join
   them`). `Remove it` alone, as every refusal. (Seam 248; *new
-  2026-10-29, merged under the autonomy order, review pending*; it leaves
+  2026-10-29, blessed (jakob 2026-11-10)*; it leaves
   with its staged row.)
 
 **The empty pick step says nothing.** With nothing picked, Next stays
 inert and no line asks for a pick: a refusal answers a file, never the
 absence of one, and the words path is silent the same way
 (`ComposeWords`). Never `Pick at least one picture.` (seam 245, ask 13 E;
-*merged under the autonomy order, 2026-10-28; review pending*).
+*new 2026-10-28, blessed (jakob 2026-11-10)*).
 
 **Screens say MB; the caps are MiB** — MB on every user-facing surface,
 never MiB (jakob 2026-10-02). The limit enforced is the binary
@@ -660,7 +659,7 @@ Retry (`UploadErrorLine` with both ways out):
   one line for every failure, with `Retry` (each failed one tries again)
   and `Remove them` (each failed one leaves); at the gate it reads `3
   pictures didn't upload. Signing waits for them.` (Seam 245, ask 13 G;
-  *merged under the autonomy order, 2026-10-28; review pending*.)
+  *new 2026-10-28, blessed (jakob 2026-11-10)*.)
 
   The transport voice would write it *That didn't upload. Try again.*;
   the line is drawn short because Retry stands beside it and the pair
@@ -693,8 +692,8 @@ and the way back to it from an edit:
 - `Reading the video…` — the frame strip's caption while the device cuts
   the clip's frames, standing only once they are 200 ms late (readme §4,
   *Loading*), never a spinner; the in-flight grammar, saying what is
-  happening (seam 245, ask 13 G; *merged under the autonomy order,
-  2026-10-28; review pending*).
+  happening (seam 245, ask 13 G; *new 2026-10-28, blessed (jakob
+  2026-11-10)*).
 
 ## The crops' how-to line
 
@@ -829,8 +828,7 @@ DO, the way the sound toggle already does:
   that leads somewhere other than its post: the verb and the stream's own
   common noun (`Back to the stream`'s), one control one verb. Never the
   clip's alt text, which says what the clip shows and not what the tap
-  does (round 26, seam 250; *merged under the autonomy order, review
-  pending*).
+  does (round 26, seam 250; *blessed (jakob 2026-11-10)*).
 
 **The way back names where it goes** (readme §4, *Navigation*): on a
 read drill-in the arrow's name is its origin's noun, from the screen's
@@ -955,8 +953,8 @@ boards already speak, recorded so the registry is whole:
   `SignIn`, `Join`, `ChangePassword` and every form with a password).
 - **The wizard's two ends** — `Back a step`, the arrow on every wizard
   stage but the first: the post's pick step, whose arrow leaves toward
-  where compose began, is named `Back` (seam 245, ask 13 D; *merged under
-  the autonomy order, 2026-10-28; review pending*); the X says what leaving keeps: `Leave — your
+  where compose began, is named `Back` (seam 245, ask 13 D; *new
+  2026-10-28, blessed (jakob 2026-11-10)*); the X says what leaving keeps: `Leave — your
   draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
   the edit is discarded` (a comment edit and a post edit), and a bare `Leave` on the
   profile's and the picture's seals and the picture's crop.
@@ -983,8 +981,8 @@ boards already speak, recorded so the registry is whole:
   describe sheet's `Describe this picture` · `Describe this video`; the
   sensitive sheet and its switch `Mark as sensitive`; the first picture's
   badge `Cover` wherever a picked set is shown — the tray, Show all and the
-  details row (the row's badge kept, seam 245 ask 13 F; *merged under the
-  autonomy order, 2026-10-28; review pending*).
+  details row (the row's badge kept, seam 245 ask 13 F; *new 2026-10-28,
+  blessed (jakob 2026-11-10)*).
 - **The edit's** — `What the edit signs`, the acts sheet's name
   (`EditActs`, `CommentEditActs`), and `The license never changes`, the
   lock beside the License row it cannot change (`EditCompose` and its
@@ -1287,8 +1285,8 @@ sentence that counts or speaks of the act says **citation** — `Up to 10
 citations per post.`, `Your citation didn't land`, `3 cited`, `+ Cite
 something`. **References** stays a label only: the block that holds them
 and the seal's row (`Reference`, `References`, `Tags & references`).
-Never `Up to 10 references per post.` (*new 2026-10-29, merged under the
-autonomy order, review pending*.)
+Never `Up to 10 references per post.` (*new 2026-10-29, blessed (jakob
+2026-11-10)*.)
 
 **`Cited · 3`** — the staged-citations sheet's title, `Picked · 3`'s
 shape for the same job: a staged collection named by what it is and how
@@ -1487,8 +1485,8 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   words take the fault line's place with the fact the cost line above
   raises, `You can't sign right now. Nothing was signed or spent.`, in the
   same quiet register; the act dims and no Retry is offered (seam 245, ask
-  15). **Drawn** on `SeveranceConfirm`'s `answer` chip. *(Merged under the
-  autonomy order, 2026-10-28; review pending.)*
+  15). **Drawn** on `SeveranceConfirm`'s `answer` chip. *(New 2026-10-28,
+  blessed (jakob 2026-11-10).)*
 - **One staged act refused** (the field-level refusal on
   `references.<index>.target`; jakob 2026-10-01). A target that landed
   never stops answering, so two cases exist, and they read nothing
@@ -2260,18 +2258,17 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
   picks are kept`, and the commit `Sign the picks` (`Signing the
   picks…` in flight). The commit names the batch by the review's own
   word, because the batch can hold a feeling beside the opinions (seam
-  248; *new 2026-10-29, merged under the autonomy order, review
-  pending*).
+  248; *new 2026-10-29, blessed (jakob 2026-11-10)*).
 - Signed: the settled snackbar in its batch form, `Signed 3 things, still
   settling.` — the signed-opinion snackbar's own opening, without a
   `Current opinion`, since a batch holds more than one target.
-- The settings row, last in `Key backup`: `3 kept picks waiting` (`1 kept
+- The settings row, last in `Key backup`: `4 kept picks waiting` (`1 kept
   pick waiting` in the singular). No status line.
 
 The kept-picks rulings (jakob 2026-10-02) add these, each *new
 2026-10-02, blessed (jakob 2026-10-02)*:
 
-- A dropped row is spoken in the pickers' status idiom: `Removed — 2
+- A dropped row is spoken in the pickers' status idiom: `Removed — 3
   picks left.` (`Removed — 1 pick left.` in the singular).
 - A row whose target was removed or redacted wears the target's removal
   mark in the name's place — `Removed by its author`, `Removed under the
@@ -2284,8 +2281,7 @@ The kept-picks rulings (jakob 2026-10-02) add these, each *new
 - The write rule at this scale: the fact ends `Nothing was signed or
   spent — your picks are still kept.`, and the way out reads `Not now`.
 - **A target with nothing to be named by is named by its kind** (seam
-  248; *new 2026-10-29, merged under the autonomy order, review
-  pending*): `A post`, `A comment`, `A person` — the row's name where the
+  248; *new 2026-10-29, blessed (jakob 2026-11-10)*): `A post`, `A comment`, `A person` — the row's name where the
   target's read got no answer, the review's and the seal's alike, and
   `A comment` for a comment with no words of its own. The row still
   signs, because the pick is real; a topic needs no read, its `#name`
@@ -2415,7 +2411,9 @@ words, recorded so the registry is whole:
 
 - **The page** — the figures `Posts` · `Opinions on you` · `Opinions by
   you` on one's own, `Opinions on them` · `Opinions by them` on
-  another's; the own page's `Edit profile`. The chronicle's tabs `Posts` ·
+  another's, each opinion figure counting people, never records — one
+  person's bundle is one, however often revised (jakob 2026-11-10); the
+  own page's `Edit profile`. The chronicle's tabs `Posts` ·
   `Comments` · `Everything`, named `What the chronicle shows`; its rows
   `Published a post` (the post's title under it), `Commented` (the
   comment's words), `Gave an opinion` (`on @mira`), and `Updated your
@@ -2429,8 +2427,7 @@ words, recorded so the registry is whole:
   — yours would be the first.`; `No opinions by @ada yet.` · `No opinions
   on you yet.` · `No opinions by you yet.` · `No opinions on this account
   yet.` — and a deleted account, which will give none again, `This
-  account gave no opinions.` (*merged under the autonomy order, review
-  pending*).
+  account gave no opinions.` (*blessed (jakob 2026-11-10)*).
 - **The edit** (`ProfileEdit`) — titled `Edit profile`, its fields
   `Display name` · `Bio` · `Website`, and `Your handle changes in
   Settings.`
@@ -2447,7 +2444,7 @@ words, recorded so the registry is whole:
   signed-change line (`AvatarSeal`).
 
 **The chronicle's verbs, one per family it lists** (seam 245, ask 10;
-*merged under the autonomy order, 2026-10-28; review pending* — the
+*new 2026-10-28, blessed (jakob 2026-11-10)* — the
 lines blessed above stand as they are). A row's title is the act, past
 tense, its actor the profile's owner and never named; the aside names
 the target; the second line, where there is one, is the target's own
@@ -2482,7 +2479,7 @@ words. A record is one row, whatever gesture signed it.
   profile`. The disc `person`.
 
 **A member's empty chronicle says only that** (seam 245, ask 11;
-*merged under the autonomy order, 2026-10-28; review pending*): a tab
+*new 2026-10-28, blessed (jakob 2026-11-10)*): a tab
 with nothing in it reads `Nothing here yet.` at `EmptyState`, the line
 alone. A member knows why their own is empty, and another's needs no
 reason; only the applicant's empty chronicle says what fills it and
@@ -2750,8 +2747,8 @@ the state's head (`Interested, no side taken`); its explanation replaces
 the pad's body in place: `It still counts among your opinions.` (on a
 person, `It still counts among your opinions — @ada stays under Your
 people.`; on a topic, `It still counts among your opinions — #saltmaps
-stays on Your topics.` — *merged under the autonomy order, 2026-10-28;
-review pending*) / `It shapes no one's feed, earns nothing, and nothing passes
+stays on Your topics.` — *new 2026-10-28, blessed (jakob 2026-11-10)*) /
+`It shapes no one's feed, earns nothing, and nothing passes
 on through you.` / `Walk it back is different: its own act, confirmed
 and paid for, that leaves a clean slate.` (a topic's, `Disconnect is
 different: …`), then `Back to the pad`. While the reader still borrows a
@@ -2787,7 +2784,7 @@ snackbar his ruling.*) The pad's landing under that pick reads in the
 landing's own shape, `Resulting opinion 🤷 Says nothing.` — never the
 walk-back's `This takes you back to zero.`, which is false where nothing
 stands. (*Drafted 2026-10-28 from the blessed `Says nothing` (seam 245,
-ask 20); merged under the autonomy order, 2026-10-28; review pending.*)
+ask 20); new 2026-10-28, blessed (jakob 2026-11-10).*)
 Over the standing an empty sign left, a `(0, 0)` landing is the
 walk-back's again: that record stands, so `This takes you back to zero.`
 is true there and `Walk it all back?` asks.
@@ -2864,7 +2861,7 @@ the registry is whole:
   `@ada` (`this account` once no name is left), a topic its tag
   `#saltmaps`. The label always stands mid-sentence, lowercase; the one
   line that opens on it, the vouch-in warning, only ever names a person.
-  (*Merged under the autonomy order, 2026-10-28; review pending.*)
+  (*New 2026-10-28, blessed (jakob 2026-11-10).*)
 - **The non-drag door** — `Choose your opinion on this post`, the
   hidden-until-focused control beside every face, its target the face's
   own.
@@ -3552,8 +3549,8 @@ every card and detail already draws:
   (`PostDetailVideoSensitive`, `ReelSensitive`). The words-only veil
   carries the same source line on its plate (jakob 2026-10-06, the check
   round's 5) — no new words.
-- **Both marks at once** (round 27, seam 252) — *merged under the autonomy
-  order, review pending*. Where the author's warning and the platform's
+- **Both marks at once** (round 27, seam 252) — *blessed (jakob
+  2026-11-10)*. Where the author's warning and the platform's
   verdict both stand, the line names both, the author's first with its
   reason, then the verdict in the edit's blessed words: `The author's
   warning — One rubbing includes a dead seabird. Also veiled by the
@@ -3849,7 +3846,7 @@ reading.` and `This is your call and nobody else's. Any member can still
 vouch any of them in, and each gets a link to ask with.`
 
 The count is the sentence's, so it takes the count's English (seam 248;
-*new 2026-10-29, merged under the autonomy order, review pending*). A
+*new 2026-10-29, blessed (jakob 2026-11-10)*). A
 group never holds `Close all` below two, so two is the smallest the
 dialog meets, and two is a pair: `Both leave your list and both people
 are told.` and `…Any member can still vouch either of them in, and each
@@ -4261,8 +4258,8 @@ results would stand — the way, not an apology:
 ## The drawn gaps' words
 
 Round 24's strings (readme §13, *Round 24, the drawn gaps*), each *new
-2026-10-29, merged under the autonomy order, review pending* unless it
-reuses a blessed line, which is named:
+2026-10-29, blessed (jakob 2026-11-10)* unless it reuses a line blessed
+before, which is named:
 
 - **The pickers at the batch's ten**: `Up to 10 citations per post.` ·
   `Up to 10 citations per comment.` · `Up to 10 tags per post.` · `Up to
@@ -4276,7 +4273,7 @@ reuses a blessed line, which is named:
   answer says the house line's noun form over `Retry`, `Can't reach the
   server — tags can't load right now.` (`TagPicker`) and `Can't reach the
   server — results can't load right now.` (`ReferencePicker`), *new
-  2026-10-29, merged under the autonomy order, review pending*; an empty
+  2026-10-29, blessed (jakob 2026-11-10)*; an empty
   list and a read in flight say nothing.
 - **Invites' empty halves**: `No applications waiting.` · `No live links.`
   (`Invites`' `sections` chip). A copy that failed says the comfort's

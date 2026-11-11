@@ -66,6 +66,10 @@ ALWAYS a filter committed with Done lasts on this device until the reader change
 
 ALWAYS a filter committed with Done never travels to another device and never changes the reader's saved default in Settings
 
+WHEN the reader saves a new default in Settings GIVEN a filter committed with Done stands on this device -> the feed keeps opening with the committed filter AND NEVER the new default replaces it
+
+ALWAYS the feed opens with the reader's saved default GIVEN no filter committed with Done stands on this device
+
 ALWAYS the trigger speaks only the deviations from the reader's default
 
 ALWAYS the trigger speaks a deviation back toward the app's default like any other GIVEN the reader's own default differs from the app's

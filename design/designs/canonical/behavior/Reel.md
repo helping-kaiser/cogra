@@ -16,6 +16,10 @@ ALWAYS reel.seekLine's ink stays a 3px line and its touch target is 48dp, rising
 
 ALWAYS reel.bottomBar stays on the stream
 
+ALWAYS reel.bottomBar lights the root of the stack the stream was opened from, the root its list stands in
+
+ALWAYS reel.bottomBar lights Feed GIVEN the stream was reached with no origin, as from a shared link
+
 ALWAYS reel.rail reads, top to bottom, reel.rail.author, reel.rail.stance, reel.rail.comments, reel.rail.share and reel.rail.score
 
 ALWAYS reel.rail.score is the same figure the card wears, the one the latest fetch of the post found

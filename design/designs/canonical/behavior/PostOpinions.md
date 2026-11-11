@@ -6,7 +6,13 @@ ALWAYS postDetail.opinionsSheet lists everyone holding an opinion on the post, t
 
 ALWAYS postDetail.opinionsSheet's rows stand strongest first, by the for-or-against value, down past nothing into the ones held against
 
-ALWAYS postDetail.opinionsSheet holds as many postDetail.opinionsSheet.opinion rows as postDetail.card.opinions counts
+ALWAYS postDetail.opinionsSheet holds as many rows, postDetail.opinionsSheet.opinion and postDetail.opinionsSheet.redactedOpinion together, as postDetail.card.opinions counts
+
+ALWAYS postDetail.opinionsSheet.redactedOpinion stands for a holder whose account was deleted, where its value puts it, postDetail.opinionsSheet.redactedOpinion.name reading Deleted account in the system's voice, with the reserved disc and no handle line
+
+ALWAYS postDetail.opinionsSheet.redactedOpinion keeps the opinion it holds, read as any row's
+
+WHEN tap postDetail.opinionsSheet.redactedOpinion -> the deleted account's page opens AND its back arrow reads Back to the post
 
 ALWAYS postDetail.opinionsSheet.opinion carries the person, postDetail.opinionsSheet.opinion.avatar, postDetail.opinionsSheet.opinion.name and postDetail.opinionsSheet.opinion.handle, and their public opinion, postDetail.opinionsSheet.opinion.value, its face leading and its pair in the reader's reading mode
 
