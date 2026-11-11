@@ -68,8 +68,8 @@ breaking the loop or the bound it sets.
 | `API_HOST` | `0.0.0.0` | API bind address |
 | `API_PORT` | `8080` | API bind port |
 | `L1_INGEST_INTERVAL_SECS` | `2` | Mirror-ingestion poll interval of the API server |
-| `L1_EPOCH_CLOSE_INTERVAL_SECS` | *(unset)* | The stand-in's epoch clock: the API host closes an epoch on this interval, so writes land without a manual `l1-dev close`; unset, an epoch closes only on `l1-dev close` or at the stand-in's 10,000-act budget, so a small instance's writes wait indefinitely. Production on the stand-in sets it too ([deployment.md "Configuration"](deployment.md#configuration)) |
-| `STAGED_WRITE_GC_EPOCHS` | `8` | Epochs before an unlanded staged write is collected ([data-model.md "Staged writes"](data-model.md#staged-writes)) |
+| `L1_EPOCH_CLOSE_INTERVAL_SECS` | *(unset)* | The stand-in's epoch clock, and the maximum duration every epoch package publishes: the API host closes an epoch on this interval whether or not anything is orderable, so writes land without a manual `l1-dev close` and an idle interval is an epoch of zero acts — at 3 s, 28,800 epochs a day. Everything counted in epochs therefore counts wall time. Unset, there is no clock: an epoch closes only on `l1-dev close`, so a small instance's writes wait indefinitely. Production on the stand-in sets it too ([deployment.md "Configuration"](deployment.md#configuration)) |
+| `STAGED_WRITE_GC_EPOCHS` | `1200` | Epochs before an unlanded staged write is collected ([data-model.md "Staged writes"](data-model.md#staged-writes)) — about one hour at a 3-second epoch clock |
 | `L1_STANDIN_SETTLEMENT_DELAY_EPOCHS` | `0` | Epoch closes a stand-in admission burn waits before it settles; `0` settles at the request. Above zero it opens the pending window a real realization's settlement depth has — the applicant's Registration then reads `RELAYING` until the burn settles ([auth.md "Approval and landing"](auth.md#approval-and-landing)) |
 | `SESSION_SIGNING_SEED` | *(unset)* | 32-byte hex seed of the Ed25519 session-signing key ([auth.md](auth.md#tokens)). A release build refuses to start without it; unset in a dev build, an ephemeral key is generated and sessions die with the process |
 | `DEV_MAILER_LOG` | *(unset)* | Dev mailer log file (`tmp_dev/mailer.log` in `.env.example`, gitignored): every outbound message is also appended there, so hand tests read out-of-band secrets from one file; unset, no file logging |
@@ -382,7 +382,7 @@ dev-only surfaces (burn credit, epoch close) plus mirror ingestion.
 cargo run -p api --bin l1-dev keygen
 cargo run -p api --bin l1-dev burn <address> <micro>
 cargo run -p api --bin l1-dev submit <seed-hex> <family> <target> [middle] [p_d] [p_i] [payload]
-cargo run -p api --bin l1-dev close     # close the current epoch
+cargo run -p api --bin l1-dev close     # close the current epoch, empty or not
 cargo run -p api --bin l1-dev ingest    # pull published epochs into the mirror
 cargo run -p api --bin l1-dev rebuild   # wipe the mirror and re-ingest everything
 cargo run -p api --bin l1-dev balance <address>

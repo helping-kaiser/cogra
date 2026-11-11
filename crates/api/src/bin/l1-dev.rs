@@ -24,7 +24,7 @@ use common::l1::Family;
 use common::l1::client::ActorKey;
 use common::l1::handshake::{FIRST_EPOCH, Proposal, StructuralBody};
 use common::l1::identifier::NodeId;
-use l1_standin::{StandIn, StandInConfig};
+use l1_standin::StandIn;
 use postgres_store::mirror;
 
 use api::ingest::DEFAULT_GC_AFTER_EPOCHS as GC_AFTER_EPOCHS;
@@ -34,7 +34,7 @@ async fn connect() -> anyhow::Result<(postgres_store::PgPool, StandIn)> {
         std::env::var("DATABASE_URL").context("DATABASE_URL must be set (see .env.example)")?;
     let pool = postgres_store::connect(&database_url).await?;
     postgres_store::run_migrations(&pool).await?;
-    let standin = StandIn::new(pool.clone(), StandInConfig::default());
+    let standin = StandIn::new(pool.clone(), api::boot::standin_config()?);
     Ok((pool, standin))
 }
 
@@ -171,16 +171,14 @@ async fn main() -> anyhow::Result<()> {
         }
         "close" => {
             let (_, standin) = connect().await?;
-            match standin.close_epoch().await? {
-                Some(package) => println!(
-                    "epoch {} closed with {} record(s), charged θ {} µ; next θ {} µ",
-                    package.epoch,
-                    package.records.len(),
-                    package.closure.theta_charged_micro,
-                    standin.current_theta().await?
-                ),
-                None => println!("nothing orderable — no epoch closed"),
-            }
+            let package = standin.close_epoch().await?;
+            println!(
+                "epoch {} closed with {} record(s), charged θ {} µ; next θ {} µ",
+                package.epoch,
+                package.records.len(),
+                package.closure.theta_charged_micro,
+                standin.current_theta().await?
+            );
         }
         "ingest" => {
             let (pool, standin) = connect().await?;
