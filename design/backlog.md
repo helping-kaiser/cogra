@@ -5341,7 +5341,7 @@ the live rows' say "id". A rule is reworded only in a named breaking change
 the next one, and whether "actor id" and the person's id are one wire field
 (both clients mint the live rows from `User.id`, seam 263).
 
-### 155 · After Close: where a seal's, an edit's and the handle change's act shows · *design* · **filed 2026-11-11**
+### 155 · After Close: where a seal's, an edit's and the handle change's act shows · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 34 (jakob 2026-11-11: once someone submits there is no cancel; Close
 only leaves). The pads and the stance dialogs had a drawn place for the act
@@ -5380,7 +5380,15 @@ failure re-raises the seal on the next visit. Lean: (b), the feed's `Still
 settling` card's place for the post and the target's row for the rest,
 drawn once as a pattern board.
 
-### 156 · The remove and close dialogs' way out while they answer · *design* · **filed 2026-11-11**
+Closed by round 37 (jakob 2026-11-11: "b) sounds best please go for this
+option first"; the handle "yep"): every seal and edit reads `Close` from the
+press, and `SigningAfterClose` draws a post's, a reply's and an edit's wait
+and failure where each lands; the handle change carries its wait, its
+failure and `That handle is taken.` on the Handle row (`Settings`' `handle`
+chip). Narrowed out: the profile and avatar seals' landing place (165) and
+the kept picks' failure place (166).
+
+### 156 · The remove and close dialogs' way out while they answer · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 34's sweep. `RemoveConfirm`, `FeedRemoveConfirm`,
 `CommentRemoveConfirm`, `RejectConfirm` and `RejectAllConfirm` stay up
@@ -5391,6 +5399,12 @@ stance dialogs' line (`Keep it` / `Keep them` reads `Close` past 200ms and
 only leaves), and where the act then shows — a removal's landed mark is
 drawn (`Removed by its author`), its failure after leaving is not; a closed
 application leaves the list, its failure after leaving is not drawn.
+
+Closed by round 37 (jakob 2026-11-11, "yes"): `Keep it` / `Keep them` reads
+`Close` from the press and only leaves; the act's wait stands on the removed
+thing's or the application's own row (`Removing…`, `Closing it…`), drawn on
+each dialog's `removing` or `closing` setting. The failure's words on that
+row are 167.
 
 ### 157 · The feed's failed re-query has no drawing · *design* · **filed 2026-11-11**
 
@@ -5410,3 +5424,37 @@ first way in to everyone else, and theirs to you.` (`OnboardingVouch`;
 copy-voice, *The intro*). The intro's lines are carried over, blessed by use
 (jakob 2026-10-06), so the line waits for his word: by the rule it reads
 `@mira's link is your first way in to everyone else, and theirs to you.`
+
+### 165 · After Close: where a profile change lands · *design* · **filed 2026-11-11**
+
+Round 37. `ProfileEditSeal` and `AvatarSeal` read `Close` from the press
+and the change goes on; by `SigningAfterClose`'s edit form its wait and its
+failure would stand on the profile's own head, which stands as it was until
+the change is taken. No board draws the profile with that row line. For
+jakob: (a) the profile's head carries `Signing…` and `That didn't sign.`
+with `Retry` under the name, the edit form [lean]; (b) the settings row
+that opened the edit carries them; (c) the profile change keeps its seal
+held, the named exception.
+
+### 166 · After Close: the kept picks' all-or-nothing failure · *design* · **filed 2026-11-11**
+
+Round 37. `KeptPicksSeal` reads `Close` from the press and the batch goes on
+as a whole, its wait on each target's row (`Signing…`). A batch fails all
+together, every pick staying kept and the Key backup group's row still
+reopening the review, but no drawn place says it failed once the review is
+closed. For jakob: (a) the Key backup row (`4 kept picks waiting`) carries
+`That didn't sign.` with `Retry` in its second line, the settings row form
+[lean]; (b) each target's row says `That didn't sign.` with a Retry that
+signs the whole batch; (c) the review's seal keeps its exits held, the named
+exception.
+
+### 167 · A removal's and a closing's failure words on their row · *design* · **filed 2026-11-11**
+
+Round 37. After `Close` on `RemoveConfirm`, `FeedRemoveConfirm`,
+`CommentRemoveConfirm`, `RejectConfirm` and `RejectAllConfirm` the act's
+wait stands on its row (`Removing…`, `Closing it…`, `Closing them…`) and
+its failure there in the failure voice with `Retry`. Which words: (a)
+`That didn't sign.`, the row pattern for a signed act [lean, if a removal
+and a closing are signed acts]; (b) `That didn't go through.`, the row
+pattern for an unsigned one. Also for jakob: on the reject dialogs the way out
+reads `Close` beside `Closing it…` — the same verb twice in one row.

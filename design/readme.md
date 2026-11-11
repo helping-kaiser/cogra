@@ -11175,6 +11175,51 @@ option b), with two of his hand-test findings (seam 275).
   numeric 32 disc change only the letter's role inside the fixed 32px
   box.
 
+### Round 37, Close on every signing surface; the act shows where it lands — 2026-11-11
+
+jakob's answers to round 34's four questions (Q34-1 "b) sounds best please
+go for this option first", Q34-2 "yep", Q34-3 "yes", Q34-4 "swap at the
+press everything else would be missleading").
+
+- **The way out reads `Close` from the press**, the one named exception to
+  the 200ms law: the commit's own in-flight label still waits the 200ms.
+  `PadFailed`'s `moment` chip gains `pressed` (`Close` beside `Set`);
+  `StanceControl`'s and `StanceAlternates`' `signing` gain `"pressed"`. The
+  dialogs' drawn waiting states already showed `Close` and gain no setting.
+- **The pattern: an act's wait and its failure where it lands**
+  (`SigningAfterClose`, the patterns page). The wait is the commit's own
+  in-flight label in the pending marker's quiet register where the act will
+  show — a post's `Signing and publishing…` at the feed's head, a reply's
+  `Signing comment…` at its branch's end, an edit's `Signing…` under the
+  edited card; nothing stands as a card before its signature. The failure
+  stands in the same place in the failure voice with `Retry`: an edit's is the
+  row's `That didn't sign.`; a post's and a reply's, which never became a
+  card, are `Your post didn't sign.` and `Your comment didn't sign.`
+  (*drafted — review-pending*). A post's draft stays on the device until the
+  signature is taken, so New post's draft card reaches it. Never the
+  snackbar.
+- **Every seal and edit closes from the press**: Back reads `Close`, the X is
+  named so, and they and the back arrow close the surface while the act goes
+  on. Each board gains a `signing` setting (`ComposeSeal`, `ReplySeal`,
+  `ComposeSealUploading`, `ReplySealUploading`, `ProfileEditSeal`,
+  `AvatarSeal`, `KeptPicksSeal` on `state`; `CommentEdit`,
+  `CommentEditVideo`, `EditComposeVideo`, `EditWords` on `signing`);
+  `EditCompose`'s `signing: slow`, `SealSigning` and `SealSigningSlow`
+  already drew it. A press held at the upload gate is the act: Close leaves,
+  the uploads finish and the signing proceeds; an upload failing after Close
+  is the post's or the reply's failure in the pattern. `SealFooter` and
+  `WizardHeader` gain `closing`. The profile change's landing place (backlog
+  165) and the kept picks' failure place (166) wait for jakob.
+- **The handle change** leaves the dialog and the form for settings; the
+  Handle row carries `Changing handle…`, `That didn't go through.` with
+  `Retry`, and `That handle is taken.`, the row still opening the form
+  (`Settings`' `handle` chip).
+- **The remove and reject dialogs** read `Close` from the press; their act's
+  wait stands on its row (`Removing…`, `Closing it…`), each dialog's
+  `answer` chip drawing `removing` or `closing`; the failure's words on the
+  row wait for jakob (backlog 167). Backlog 155 and 156 close.
+- **The gate**: GATE_PLACEHOLDER
+
 ---
 
 ## 14. The canvases
