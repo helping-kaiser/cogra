@@ -65,11 +65,13 @@ class ProfileRepositoryTest {
         target: String = "null",
         terminal: String = "null",
         pair: String = "0.4,0.3",
+        topic: String = "null",
     ): String {
         val (d, i) = pair.split(",")
         return """{"node":{"__typename":"Record","id":"$id","family":"$family","act":"$act",
            "targetId":"t","terminalId":null,"landedAt":"2026-10-20T10:00:00Z",
-           "pDirected":$d,"pInterest":$i,"severed":false,"target":$target,"terminal":$terminal}}"""
+           "pDirected":$d,"pInterest":$i,"severed":false,"target":$target,"terminal":$terminal,
+           "topic":$topic}}"""
     }
 
     @Test
@@ -114,15 +116,41 @@ class ProfileRepositoryTest {
         assertThat(joined.act).isEqualTo(RecordAct.GENESIS)
     }
 
-    // ProfileHeader's figures (Q35, closed toward the drawn figures): three
-    // record counts, each a `totalCount` read with `first: 0`.
+    // copy-voice, the chronicle's verbs: a tag's aside is its topic, served as
+    // `Record.topic` since a Type is no Node; a withdrawn citation's act reads
+    // through, and an act this build does not know reads ordinary.
     @Test
-    fun theFiguresAreTheThreeRecordCounts() = runTest {
+    fun aRowCarriesItsTopicAndAWithdrawal() = runTest {
+        tokenStore.save(AuthTokens("a", "r", "u1"))
+        val post = """{"__typename":"Post","id":"p1","title":{"value":"Salt maps"},"content":{"value":"x"}}"""
+        val saltmaps = """{"__typename":"Hashtag","name":{"__typename":"ModeratedText","value":"saltmaps"}}"""
+        val rows = listOf(
+            record("r1", "TAG", "ORDINARY", target = post, topic = saltmaps, pair = "1,0.5"),
+            record("r2", "REFERENCE", "WITHDRAWAL", target = post, terminal = post, pair = "-0.5,-0.5"),
+            record("r3", "OPINION", "SOMETHING_NEWER", target = post),
+        ).joinToString(",")
+        enqueue(
+            """{"data":{"records":{"__typename":"RecordConnection","edges":[$rows],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+        )
+
+        val page = (repo().authorRecords("u1", null, 20, null) as Outcome.Success).value.items
+
+        assertThat(page[0].topic).isEqualTo("saltmaps")
+        assertThat(page[1].act).isEqualTo(RecordAct.WITHDRAWAL)
+        assertThat(page[1].topic).isNull()
+        assertThat(page[2].act).isEqualTo(RecordAct.ORDINARY)
+    }
+
+    // ProfileHeader's figures (Q35, ruled 2026-11-10): Posts a `totalCount`,
+    // the opinion figures `bundleCount`s over unmarked records, each `first: 0`.
+    @Test
+    fun theFiguresCountPostsAndTheBundlesOfOpinions() = runTest {
         enqueue(
             """{"data":{"user":{"__typename":"User","id":"u1",
                "posts":{"__typename":"RecordConnection","totalCount":5},
-               "opinionsOn":{"__typename":"RecordConnection","totalCount":9},
-               "opinionsBy":{"__typename":"RecordConnection","totalCount":null}}}}""",
+               "opinionsOn":{"__typename":"RecordConnection","bundleCount":9},
+               "opinionsBy":{"__typename":"RecordConnection","bundleCount":null}}}}""",
         )
         val figures = (repo().figures("u1") as Outcome.Success).value
         assertThat(figures.posts).isEqualTo(5)
@@ -132,6 +160,8 @@ class ProfileRepositoryTest {
         val sent = server.takeRequest().body.readUtf8()
         assertThat(sent).containsMatch("genesis:\\s*true")
         assertThat(sent).containsMatch("toKind:\\s*USER")
+        assertThat(sent).containsMatch("payloadMarked:\\s*false")
+        assertThat(sent).contains("bundleCount")
     }
 
     // -- The opinions page (ProfileStances): the whole set, folded to people --

@@ -1,6 +1,6 @@
 // The global search, lifted into outcomes (api-spec.md "Search", `Query.search`).
 // A public read: a guest searches too, and a signed-in reader's token rides
-// along so `includeSeen` and `RANKED` have a session to read.
+// along so `RANKED` has a session to read.
 
 import type { ApolloClient } from "@apollo/client";
 
@@ -34,7 +34,6 @@ export type SearchAsk = {
   readonly query: string;
   /** Null narrows nothing. */
   readonly kinds: readonly NodeKind[] | null;
-  readonly includeSeen: boolean;
   readonly order: ReadOrder;
   /** The reader, for RANKED; null under NEWEST. */
   readonly viewer: string | null;
@@ -55,7 +54,6 @@ export async function fetchSearchPage(
       variables: {
         query: ask.query,
         kinds: ask.kinds === null ? null : [...ask.kinds],
-        includeSeen: ask.includeSeen,
         order: ask.order,
         viewer: ask.order === "RANKED" ? ask.viewer : null,
         after,

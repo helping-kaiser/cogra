@@ -455,10 +455,10 @@ async fn a_request_mails_the_link_and_schedules_nothing(pool: PgPool) {
 }
 
 /// The mail carries the deletion link on the web origin's
-/// `/delete-account` path, with the bare token beside it (auth.md "Link
-/// URLs").
+/// `/delete-account` path alone, never an offer to paste its token
+/// (auth.md "Link URLs").
 ///
-/// The deletion mail carries the delete-account link URL and the bare token.
+/// The deletion mail carries the delete-account link URL and never offers its token for a paste.
 /// ´claim:deletion:the-mail-carries-the-link-url´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_deletion_mail_carries_the_link_url(pool: PgPool) {
@@ -474,7 +474,7 @@ async fn the_deletion_mail_carries_the_link_url(pool: PgPool) {
         )),
         "the link URL is on the web origin's /delete-account path: {body}"
     );
-    assert!(body.contains(&format!("Or paste the token in the app: {token}")));
+    assert!(!body.contains("paste"), "no paste offer: {body}");
     let confirmed = confirm(&rig, &token, None).await;
     assert_eq!(
         codes(&confirmed, "confirmAccountDeletion"),

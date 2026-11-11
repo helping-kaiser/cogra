@@ -81,6 +81,12 @@ mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
   }
 }
 
+# The reset link's read-only check (api-spec.md `passwordResetLinkCheck`): a
+# link used or past its time opens ResetExpired, never the form (ResetNew.md).
+query PasswordResetLinkCheck($token: String!) {
+  passwordResetLinkCheck(token: $token)
+}
+
 mutation ConfirmPasswordReset($input: ConfirmPasswordResetInput!) {
   confirmPasswordReset(input: $input) {
     ok

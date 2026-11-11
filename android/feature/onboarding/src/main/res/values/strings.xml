@@ -14,7 +14,7 @@
     <string name="invite_expired">This invite link has expired.</string>
 
     <!-- Join (Join, JoinErrors). copy-voice: the collected rulings' entry lines, the registration's two legal lines, the refusals. -->
-    <string name="join_heading">\@%1$s invited you</string>
+    <string name="join_heading">%1$s invited you</string>
     <string name="join_lead">CoGra is invite-only — a member vouches for you, and \@%1$s\'s approval brings you in.</string>
     <string name="join_help">About CoGra</string>
     <string name="join_handle">Handle</string>

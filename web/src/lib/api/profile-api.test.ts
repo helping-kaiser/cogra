@@ -114,8 +114,8 @@ describe("rowLabel", () => {
   });
 });
 
-// THE HEADER'S FIGURES (open-questions.md Q35, closed 2026-10-28, jakob's
-// confirmation pending): three record counts, each its own `totalCount`.
+// THE HEADER'S FIGURES (open-questions.md Q35, ruled 2026-11-10): bundles,
+// never records — Posts a `totalCount`, the two opinion figures `bundleCount`s.
 describe("fetchProfileFigures", () => {
   it("reads the three counts off the one read", async () => {
     let asked: unknown;
@@ -128,8 +128,8 @@ describe("fetchProfileFigures", () => {
               __typename: "User",
               id: "u-1",
               posts: { __typename: "RecordConnection", totalCount: 5 },
-              opinionsOn: { __typename: "RecordConnection", totalCount: 1204 },
-              opinionsBy: { __typename: "RecordConnection", totalCount: null },
+              opinionsOn: { __typename: "RecordConnection", bundleCount: 1204 },
+              opinionsBy: { __typename: "RecordConnection", bundleCount: null },
             },
           },
         });
@@ -142,12 +142,16 @@ describe("fetchProfileFigures", () => {
 
   // The query's own recipes, read from the document the client sends, so a
   // count quietly changing its filter fails here.
-  it("asks for genesis Publish records, Opinions toward the person, and theirs toward people", () => {
+  it("asks for genesis Publish records, and the bundles of unmarked Opinions toward the person and theirs toward people", () => {
     const document = readFileSync(join(process.cwd(), "src", "lib", "graphql", "profile.graphql"), "utf-8");
     const figures = document.slice(document.indexOf("query ProfileFigures"));
     expect(figures).toContain("posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 0)");
-    expect(figures).toContain("opinionsOn: incomingRecords(family: OPINION, first: 0)");
-    expect(figures).toContain("opinionsBy: outgoingRecords(family: OPINION, toKind: USER, first: 0)");
+    expect(figures).toContain(
+      "opinionsOn: incomingRecords(family: OPINION, payloadMarked: false, first: 0) {\n      bundleCount",
+    );
+    expect(figures).toContain(
+      "opinionsBy: outgoingRecords(family: OPINION, toKind: USER, payloadMarked: false, first: 0) {\n      bundleCount",
+    );
   });
 });
 

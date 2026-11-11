@@ -1,7 +1,7 @@
 // The global search over the real contract (api-spec.md "Search",
 // `Query.search`). A public read: the guard sends it anonymous for a guest
-// and with the session's token for a reader, so `includeSeen` and `RANKED`
-// have someone to read. web's twin is `web/src/lib/api/search-api.ts`.
+// and with the session's token for a reader, so `RANKED` has someone to
+// read. web's twin is `web/src/lib/api/search-api.ts`.
 
 package com.cogra.network.repo
 
@@ -39,7 +39,6 @@ class SearchRepositoryImpl @Inject constructor(
                 kinds = Optional.presentIfNotNull(
                     SEARCH_KINDS.filter { it in ask.kinds }.map { it.toWire() }.takeIf { it.isNotEmpty() },
                 ),
-                includeSeen = Optional.present(ask.includeSeen),
                 order = Optional.present(if (ranked) ReadOrder.RANKED else ReadOrder.NEWEST),
                 viewer = Optional.presentIfNotNull(ask.viewer.takeIf { ranked }),
                 after = Optional.presentIfNotNull(after),

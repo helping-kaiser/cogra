@@ -156,13 +156,13 @@ export async function fetchHeldOpinions(
  * One direction of a person's opinions page, strongest first:
  *
  * - `on` — everyone holding an opinion on them, a row per author: the
- *   records the `Opinions on them` figure counts.
+ *   people the `Opinions on them` figure counts.
  * - `by` — everyone they hold an opinion on, a row per person it is about:
- *   the records the `Opinions by them` figure counts.
+ *   the people the `Opinions by them` figure counts.
  *
- * THE FIGURE COUNTS RECORDS; THE PAGE LISTS PEOPLE (open-questions.md Q35).
- * A revised opinion is three records and one row, so a figure may read more
- * than its list holds — each says what its words say.
+ * THE FIGURE COUNTS WHAT THE PAGE LISTS (open-questions.md Q35, ruled
+ * 2026-11-10): a revised opinion is three records, one bundle and one row,
+ * and the figure reads the bundle (`RecordConnection.bundleCount`).
  */
 export async function fetchProfileOpinions(
   client: ApolloClient,

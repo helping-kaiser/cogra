@@ -6,12 +6,15 @@
 // Comments, Profiles, Tags — but their SEMANTICS ARE SEARCH'S: no chip on
 // means every kind (:7), where the feed's empty set means nothing.
 //
-// THE ORDER AND THE SEEN TOGGLE ARE THE READER'S DEFAULT (:11-15, the one
-// default object; SettingsReading.md: "search's order and its already-seen
-// toggle follow the reader's saved default, and search's kinds stay search's
-// own"): set in Settings' What your feed shows, the app's until the reader
-// sets their own — [READER_SEARCH_DEFAULT] is the app's, [searchDefault] the
-// reader's.
+// THE ORDER IS THE READER'S DEFAULT (:11-13, the one default object;
+// SettingsReading.md): set in Settings' What your feed shows, the app's until
+// the reader sets their own — [READER_SEARCH_DEFAULT] is the app's,
+// [searchDefault] the reader's. Search takes only the order from it; the
+// default's seen toggle is the feed's alone.
+//
+// SEARCH NEVER LOOKS AT THE SEEN-LIST (jakob's ruling 2026-11-11, seam 296;
+// api-spec.md "The seen-list never narrows a search"): the filter holds no
+// seen toggle and the request names none.
 
 package com.cogra.domain.search
 
@@ -24,8 +27,6 @@ data class SearchFilter(
     /** The kinds on; none on reads every kind. */
     val kinds: Set<FeedKind> = emptySet(),
     val order: SearchOrder = SearchOrder.RANKED,
-    /** `Show what you've already seen`. */
-    val seen: Boolean = false,
 ) {
     /** A kind chip's tap: on joins, off leaves. */
     fun toggle(kind: FeedKind): SearchFilter = copy(kinds = if (kind in kinds) kinds - kind else kinds + kind)
@@ -37,25 +38,24 @@ data class SearchFilter(
 /** The kinds in the list's own order (`FEED_KINDS`). */
 val SEARCH_KINDS: List<FeedKind> = listOf(FeedKind.POST, FeedKind.COMMENT, FeedKind.PROFILE, FeedKind.TAG)
 
-/** CoGra's own default for search's shared axes (ExploreFilter.md:15): Ranked, seen off. */
+/** CoGra's own default for search's shared axis (ExploreFilter.md:15): Ranked. */
 val READER_SEARCH_DEFAULT: SearchFilter = SearchFilter()
 
-/** The reader's saved feed default as search reads it: its order and seen toggle, search's own kinds (none). */
+/** The reader's saved feed default as search reads it: its order alone, search's own kinds (none). */
 fun FeedFilter.searchDefault(): SearchFilter = SearchFilter(
     order = when (order) {
         FeedOrder.RANKED -> SearchOrder.RANKED
         FeedOrder.NEWEST -> SearchOrder.NEWEST
     },
-    seen = showSeen,
 )
 
 /**
  * A GUEST'S SEARCH (ExploreSearch.md:65; ExploreFilter.md:41): newest first,
- * no rank, no seen toggle — no viewpoint to rank from, no seen-list to keep
- * out. Only the kinds are the guest's to choose.
+ * no rank — no viewpoint to rank from. Only the kinds are the guest's to
+ * choose.
  */
 fun guestSearchFilter(kinds: Set<FeedKind> = emptySet()): SearchFilter =
-    SearchFilter(kinds = kinds, order = SearchOrder.NEWEST, seen = true)
+    SearchFilter(kinds = kinds, order = SearchOrder.NEWEST)
 
 /** The trigger's head: what the kinds read as. */
 sealed interface KindsHead {
@@ -74,9 +74,9 @@ sealed interface KindsHead {
  * The trigger's reading (ExploreFilter.md:17; ExploreSearch.md:17;
  * ExploreUnscoped.md:9): the kinds' head, then only the deviations from the
  * reader's default — [order] when the order differs (a deviation back toward
- * the app's default included), [seen] when the toggle does.
+ * the app's default included).
  */
-data class SearchFilterReading(val head: KindsHead, val order: SearchOrder?, val seen: Boolean?)
+data class SearchFilterReading(val head: KindsHead, val order: SearchOrder?)
 
 fun SearchFilter.reading(against: SearchFilter): SearchFilterReading = SearchFilterReading(
     head = when (kinds.size) {
@@ -86,5 +86,4 @@ fun SearchFilter.reading(against: SearchFilter): SearchFilterReading = SearchFil
         else -> KindsHead.Some(kinds.size)
     },
     order = order.takeIf { it != against.order },
-    seen = seen.takeIf { it != against.seen },
 )

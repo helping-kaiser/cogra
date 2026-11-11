@@ -222,8 +222,8 @@ export function ExploreView({
   });
 
   // WHOSE FILTER THIS IS. The phase resolves after the first paint, and with
-  // it the filter: the account's committed one, or a guest's — newest, with
-  // no seen toggle (ExploreSearch.md:65; ExploreFilter.md:41). A filter the
+  // it the filter: the account's committed one, or a guest's — newest
+  // (ExploreSearch.md:65; ExploreFilter.md:41). A filter the
   // reader chose here belongs to whoever chose it, so a change of reader
   // falls back to that reader's own (React's "adjusting state when a prop
   // changes", derived rather than synced in an effect).
@@ -300,7 +300,6 @@ export function ExploreView({
             {
               query: text,
               kinds: wireKinds(value.kinds),
-              includeSeen: guest ? true : value.seen,
               order: wireOrder(value.order),
               viewer: reader,
             },
@@ -326,7 +325,7 @@ export function ExploreView({
         });
       })();
     },
-    [client, guard, guest, reader],
+    [client, guard, reader],
   );
 
   // THE RESULTS REFINE AS THE READER TYPES (ExploreSearch.md:3), once typing
@@ -371,7 +370,6 @@ export function ExploreView({
         {
           query: answering.query,
           kinds: wireKinds(answering.filter.kinds),
-          includeSeen: guest ? true : answering.filter.seen,
           order: wireOrder(answering.filter.order),
           viewer: reader,
         },
@@ -397,7 +395,7 @@ export function ExploreView({
             hasNextPage: outcome.value.hasNextPage,
           },
     );
-  }, [client, guard, guest, loadingMore, reader, results]);
+  }, [client, guard, loadingMore, reader, results]);
 
   // THE QUERY RIDES THE URL (readme §13, *A process … restores*): entering a
   // search adds one history entry, so the browser's Back from a standing
@@ -843,7 +841,7 @@ function Seam({ section }: { section: string }) {
 
 /**
  * THE SEARCH FILTER SHEET (ExploreFilter.md; ExploreFilter.jsx). It STAGES:
- * a chip, an order or the seen toggle changes only the staged copy and nothing
+ * a chip or an order changes only the staged copy and nothing
  * behind the sheet moves (:25-29); Reset stages the default and asks nothing
  * (:31); Done closes and re-queries once (:33); the scrim, a swipe down, Back
  * and Escape drop what is staged (:35-37).
@@ -896,15 +894,14 @@ function FilterSheet({
           </Chip>
         ))}
       </FilterSection>
-      {/* A GUEST HAS NO VIEWPOINT TO RANK FROM AND NO SEEN-LIST (ExploreSearch.md:65;
-          ExploreFilter.md:41): their search reads newest, so no order stands to pick. */}
+      {/* A GUEST HAS NO VIEWPOINT TO RANK FROM (ExploreSearch.md:65; ExploreFilter.md:41):
+          their search reads newest, so no order stands to pick. The section draws no
+          seen toggle for anyone: search never looks at the seen-list (seam 296). */}
       {!guest && (
         <OrderSection
           options={SEARCH_ORDERS}
           order={staged.order}
           onOrder={(order) => onStage({ ...staged, order })}
-          seen={staged.seen}
-          onSeen={(seen) => onStage({ ...staged, seen })}
           node={part(sheet, "order")}
         />
       )}

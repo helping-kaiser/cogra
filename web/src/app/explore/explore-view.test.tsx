@@ -110,7 +110,8 @@ function answer(hits: readonly Hit[], { hasNextPage = false, hasMorePeople = fal
 type Ask = {
   query: string;
   kinds: string[] | null;
-  includeSeen: boolean | null;
+  /** Whether the request named a seen variable at all (seam 296: it never does). */
+  namesSeen: boolean;
   order: string | null;
   viewer: string | null;
   after: string | null;
@@ -124,7 +125,7 @@ function serveSearch(respond: (ask: Ask) => ReturnType<typeof answer> | null | P
       const ask: Ask = {
         query: variables.query as string,
         kinds: (variables.kinds as string[] | null | undefined) ?? null,
-        includeSeen: (variables.includeSeen as boolean | null | undefined) ?? null,
+        namesSeen: "includeSeen" in variables,
         order: (variables.order as string | null | undefined) ?? null,
         viewer: (variables.viewer as string | null | undefined) ?? null,
         after: (variables.after as string | null | undefined) ?? null,
@@ -399,12 +400,27 @@ describe("Explore searching", () => {
     expect(asks.map((ask) => ask.query)).toEqual(["salt"]);
   });
 
-  it("explore_filter_md_7_15_explore_search_md_21_the_default_asks_every_kind_ranked_hiding_seen", async () => {
+  it("explore_filter_md_7_15_explore_search_md_21_the_default_asks_every_kind_ranked_and_names_no_seen", async () => {
     const asks = serveSearch(() => answer([]));
     renderExplore();
     type("salt");
     await waitFor(() => expect(asks).toHaveLength(1));
-    expect(asks[0]).toMatchObject({ kinds: null, order: "RANKED", includeSeen: false, viewer: "me" });
+    expect(asks[0]).toMatchObject({ kinds: null, order: "RANKED", namesSeen: false, viewer: "me" });
+  });
+
+  // Seam 296: a filter kept while search still had a seen switch reads past
+  // it — no seen variable is sent and the trigger names no seen deviation.
+  it("seam_296_a_filter_kept_with_a_seen_toggle_asks_no_seen_rule", async () => {
+    window.localStorage.setItem(
+      "cogra.explore.filter.me",
+      JSON.stringify({ kinds: [], order: "ranked", seen: true }),
+    );
+    const asks = serveSearch(() => answer([]));
+    renderExplore();
+    type("salt");
+    await waitFor(() => expect(asks).toHaveLength(1));
+    expect(asks[0]).toMatchObject({ order: "RANKED", namesSeen: false });
+    expect(screen.getByTestId(byNode("explore.filterTrigger"))).toHaveTextContent("Everything");
   });
 
   it("explore_search_md_5_7_13_ranked_rows_carry_their_rank_and_the_seam_stands_before_the_unscored", async () => {
@@ -650,8 +666,10 @@ describe("the search filter sheet", () => {
       "aria-pressed",
       "true",
     );
-    const seen = within(sheet).getByRole("checkbox", { name: "Show what you've already seen" });
-    expect(seen).not.toBeChecked();
+    // Seam 296 (jakob, 2026-11-11): search never looks at the seen-list, so
+    // the search filter draws no seen switch for a reader either.
+    expect(within(sheet).queryByRole("checkbox", { name: "Show what you've already seen" })).toBeNull();
+    expect(within(sheet).queryByTestId("explore.filterSheet.order.seen")).toBeNull();
     const foot = within(sheet).getByTestId(byNode("explore.filterSheet.foot"));
     expect(within(foot).getAllByRole("button").map((button) => button.textContent)).toEqual(["Reset", "Done"]);
   });
@@ -664,14 +682,13 @@ describe("the search filter sheet", () => {
     fireEvent.click(within(sheet).getByTestId("explore.filterSheet.kinds.postsChip"));
     fireEvent.click(within(sheet).getByTestId("explore.filterSheet.kinds.topicsChip"));
     fireEvent.click(within(sheet).getByTestId(byNode("explore.filterSheet.order.picker.newestOption")));
-    fireEvent.click(within(sheet).getByRole("checkbox", { name: "Show what you've already seen" }));
     await new Promise((resolve) => setTimeout(resolve, 20));
     // Nothing behind the sheet moves before Done.
     expect(asks).toHaveLength(1);
     fireEvent.click(within(sheet).getByTestId(byNode("explore.filterSheet.foot.done")));
     await waitFor(() => expect(asks).toHaveLength(2));
-    expect(asks[1]).toMatchObject({ kinds: ["POST", "HASHTAG"], order: "NEWEST", includeSeen: true });
-    expect(screen.getByTestId(byNode("explore.filterTrigger"))).toHaveTextContent("2 kinds · newest · showing seen");
+    expect(asks[1]).toMatchObject({ kinds: ["POST", "HASHTAG"], order: "NEWEST", namesSeen: false });
+    expect(screen.getByTestId(byNode("explore.filterTrigger"))).toHaveTextContent("2 kinds · newest");
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(asks).toHaveLength(2);
   });

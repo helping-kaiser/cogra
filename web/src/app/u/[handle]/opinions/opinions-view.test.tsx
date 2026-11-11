@@ -233,7 +233,7 @@ describe("OpinionsScreen", () => {
   });
 
   // THE RECORDS ARE NOT THE ROWS (open-questions.md Q35; seam 247 rider 1):
-  // the figure counts three records for a twice-revised opinion, the page
+  // a twice-revised opinion is three records and one bundle, and the page
   // draws one row at the opinion held now.
   it("folds a revised opinion into one row at its standing value", async () => {
     server.use(

@@ -54,14 +54,15 @@ import com.cogra.core.designsystem.v2.atom.HelpDot
 import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.core.designsystem.v2.atom.WaitingCommit
 import com.cogra.core.designsystem.v2.media.CograAvatar
+import com.cogra.domain.InviterView
 
-/** Join is drawn but not registered in `nodes.json`: the board's evident path. */
+/** Join's registered prefix (`nodes.json` `join`, round 28). */
 val JOIN = DataNode("join")
 
 @Composable
 fun JoinRoute(
     inviteId: String,
-    inviterHandle: String,
+    inviter: InviterView,
     onBack: () -> Unit,
     onAbout: () -> Unit,
     onSignIn: () -> Unit,
@@ -79,7 +80,7 @@ fun JoinRoute(
     val unlessWaiting: (() -> Unit) -> () -> Unit = { action -> { if (!state.inFlight) action() } }
     JoinScreen(
         state = state,
-        inviterHandle = inviterHandle,
+        inviter = inviter,
         onHandleChange = viewModel::onHandleChange,
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
@@ -96,7 +97,7 @@ fun JoinRoute(
 @Composable
 fun JoinScreen(
     state: JoinUiState,
-    inviterHandle: String,
+    inviter: InviterView,
     onHandleChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -130,7 +131,7 @@ fun JoinScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 32.dp),
         ) {
-            Inviter(inviterHandle)
+            Inviter(inviter)
             Spacer(Modifier.height(32.dp))
             Fields(state, onHandleChange, onEmailChange, onPasswordChange, onSubmit)
             Spacer(Modifier.height(24.dp))
@@ -195,19 +196,20 @@ private fun Actions(state: JoinUiState, onSubmit: () -> Unit, onSignIn: () -> Un
 }
 
 /**
- * The face and the name over the form are the link's inviter's (Join.md:9).
- * The invite check carries the inviter's handle only, so the face is the
- * handle's monogram and the heading names the handle.
+ * The face and the name over the form are the link's inviter's (Join.md:9):
+ * their picture, or the monogram where there is none, and the heading naming
+ * them by their written name, else their handle. The line under it keeps the
+ * handle — `@mira's approval brings you in`, as the board writes it.
  */
 @Composable
-private fun Inviter(handle: String) {
+private fun Inviter(inviter: InviterView) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        CograAvatar(name = handle, size = 64.dp, testTag = (JOIN / "inviter").tag)
+        CograAvatar(name = inviter.name, size = 64.dp, url = inviter.avatarUrl, testTag = (JOIN / "avatar").tag)
         Text(
-            text = stringResource(R.string.join_heading, handle),
+            text = stringResource(R.string.join_heading, inviter.name),
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
             modifier = Modifier
@@ -216,7 +218,7 @@ private fun Inviter(handle: String) {
                 .dataNode(JOIN / "title"),
         )
         Text(
-            text = stringResource(R.string.join_lead, handle),
+            text = stringResource(R.string.join_lead, inviter.handle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

@@ -119,7 +119,20 @@ data class InviteCheck(
     val usable: Boolean,
     val inviterHandle: String,
     val expiresAt: Instant,
-)
+    /**
+     * The inviter's written name, else their handle — the name Join's heading
+     * says (Join.md:9: the face and the name are the inviter's).
+     */
+    val inviterName: String = inviterHandle,
+    /** The inviter's picture; null is the monogram (redacted or never set). */
+    val inviterAvatarUrl: String? = null,
+) {
+    /** Who Join stands its form under. */
+    val inviter: InviterView get() = InviterView(inviterHandle, inviterName, inviterAvatarUrl)
+}
+
+/** The link's inviter, as Join draws them: the face, the name, the handle. */
+data class InviterView(val handle: String, val name: String = handle, val avatarUrl: String? = null)
 
 /** The viewer's own application row (`User.application`). */
 data class ApplicationView(
@@ -894,11 +907,11 @@ data class ProfileView(
 
 /**
  * THE PROFILE HEADER'S FIGURES (design/readme.md §7 `ProfileHeader`;
- * open-questions Q35, closed 2026-10-28 toward the drawn figures, jakob's
- * confirmation pending). Each counts RECORDS, never a fold: [posts] the
- * genesis Publish records of the person's posts — never an edit; [opinionsOn]
- * the Opinion records aimed at the person; [opinionsBy] the Opinion records
- * they gave toward people. A revision is one more record, so it counts.
+ * open-questions Q35, ruled by jakob 2026-11-10). Each counts BUNDLES, never
+ * records: [posts] the person's posts — one genesis Publish record each,
+ * never an edit; [opinionsOn] the people holding an opinion on the person;
+ * [opinionsBy] the people they hold one on. One person's opinions toward one
+ * target are one, however often revised.
  * A figure the server did not serve is null, and the header draws it not
  * at all — never a false zero (the master draws each figure it is handed).
  */
@@ -949,12 +962,17 @@ data class RecordRow(
      * (`Tagged a post`, `on a comment`); null where no node CoGra carries is.
      */
     val about: RecordAbout? = null,
+    /**
+     * The topic the record ends at, without its `#` — a Tag's, or an
+     * opinion's on a topic (`Record.topic`); null on every other record.
+     */
+    val topic: String? = null,
     /** A tag signed at `(0, 0)` — the un-tag, read as withdrawn (hashtag.md §4). */
     val untag: Boolean = false,
 )
 
 /** What one record did beyond its family (`RecordAct`, api-spec.md). */
-enum class RecordAct { GENESIS, WALK_BACK, VOUCH, ORDINARY }
+enum class RecordAct { GENESIS, WALK_BACK, WITHDRAWAL, VOUCH, ORDINARY }
 
 /** The kind of node a chronicle row's act is about. */
 enum class RecordAbout { POST, COMMENT, PERSON }

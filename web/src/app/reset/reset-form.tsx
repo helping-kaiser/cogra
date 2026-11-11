@@ -9,18 +9,19 @@
 // - RESET NEW, at /reset?token=: the mail's link lands here holding its own
 //   secret — no field asks for it (ResetNew.md) — with one password field and
 //   one commitment, no header and no back arrow.
-// - RESET EXPIRED: a link spent or past its 15 minutes (RESET_TOKEN_INVALID on
+// - RESET EXPIRED: a link spent or past its 15 minutes (the link's read-only
+//   check before the form stands, or RESET_TOKEN_INVALID on
 //   the press) — one screen for both, never saying which, and never whose.
 //
 // A taken reset revokes every session, this device's included, so it lands
 // on the sign-in (auth.md "Password reset").
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { hasCode } from "@/lib/api/outcome";
-import { confirmPasswordReset, requestPasswordReset } from "@/lib/api/auth-api";
+import { checkPasswordResetLink, confirmPasswordReset, requestPasswordReset } from "@/lib/api/auth-api";
 import { passwordLength } from "@/lib/onboarding/registration-rules";
 import { buttonClassName } from "@/lib/ui/button";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
@@ -40,9 +41,43 @@ export function ResetForm() {
   const token = useSearchParams().get("token");
   // Keyed by the link it answered, so leaving to /reset finds the request.
   const [expiredFor, setExpiredFor] = useState<string | null>(null);
-  if (token !== null && token !== "" && expiredFor === token) return <ResetExpired />;
-  if (token !== null && token !== "") return <ResetNew token={token} onExpired={() => setExpiredFor(token)} />;
+  const [liveFor, setLiveFor] = useState<string | null>(null);
+  const held = token !== null && token !== "" ? token : null;
+  if (held !== null && expiredFor === held) return <ResetExpired />;
+  if (held !== null && liveFor !== held) {
+    return <ResetCheck token={held} onAnswer={(live) => (live ? setLiveFor : setExpiredFor)(held)} />;
+  }
+  if (held !== null) return <ResetNew token={held} onExpired={() => setExpiredFor(held)} />;
   return <ResetRequest />;
+}
+
+/**
+ * THE LINK IS READ BEFORE THE FORM STANDS (ResetNew.md: a link already used
+ * or past its time opens ResetExpired "AND NEVER ResetNew opens"), so while
+ * the read-only check is out the page stands bare under no header, the way
+ * every reset screen carries none — nothing is drawn that the answer could
+ * take back. A check that gets no answer opens the form: the press itself
+ * still meets a spent link with RESET_TOKEN_INVALID and opens ResetExpired.
+ */
+function ResetCheck({ token, onAnswer }: { token: string; onAnswer: (live: boolean) => void }) {
+  const client = useApolloClient();
+  // The answer lands through the newest callback, while the read runs once per
+  // link (React docs, "Removing Effect Dependencies": an event read from a ref).
+  const answer = useRef(onAnswer);
+  useEffect(() => {
+    answer.current = onAnswer;
+  });
+  useEffect(() => {
+    let cancelled = false;
+    void checkPasswordResetLink(client, token.trim()).then((outcome) => {
+      if (cancelled) return;
+      answer.current(!(outcome.kind === "success" && !outcome.value));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, token]);
+  return <TaskPage>{null}</TaskPage>;
 }
 
 function ResetRequest() {
