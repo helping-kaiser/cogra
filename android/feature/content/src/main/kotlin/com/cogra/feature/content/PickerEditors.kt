@@ -223,7 +223,6 @@ internal suspend fun SearchRepository.tagNames(canonical: String): Outcome<List<
         SearchAsk(
             query = "#$canonical",
             kinds = setOf(FeedKind.TAG),
-            includeSeen = true,
             order = SearchOrder.NEWEST,
             viewer = null,
         ),

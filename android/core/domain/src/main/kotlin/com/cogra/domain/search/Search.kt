@@ -1,6 +1,6 @@
 // The global search's client side (api-spec.md "Search", `Query.search`;
 // slice 2.7). A public read: a guest searches too, and a signed-in reader's
-// session rides along so `includeSeen` and `RANKED` have someone to read.
+// session rides along so `RANKED` has someone to read.
 // web's twin is `web/src/lib/api/search-api.ts`.
 
 package com.cogra.domain.search
@@ -27,7 +27,6 @@ data class SearchAsk(
     val query: String,
     /** The kinds on; empty narrows nothing (every served kind). */
     val kinds: Set<FeedKind>,
-    val includeSeen: Boolean,
     val order: SearchOrder,
     /** The reader, for RANKED; null under NEWEST and for a guest. */
     val viewer: String?,
