@@ -138,6 +138,15 @@ describe("RefsSheet", () => {
     );
   });
 
+  // TagPage.md:35: "… Back to the post from a post's tags-and-references sheet".
+  it("hands the tag's page the origin the sheet was given", () => {
+    open({ from: "post:p1:saved" });
+    expect(screen.getByRole("link", { name: /photography/ })).toHaveAttribute(
+      "href",
+      "/topics/photography?from=post%3Ap1%3Asaved",
+    );
+  });
+
   // THE SHEET IS THE DOOR, NOT THE DESTINATION. Its opener remembers that it
   // was raised, so a row that navigated with the sheet still open left Back
   // restoring the surface AND the sheet over it — a trap with no way out but
@@ -154,6 +163,12 @@ describe("RefsSheet", () => {
     open({ onClose });
     fireEvent.click(screen.getByRole("link", { name: /@mira/ }));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  // ProfileOther.md:73: "… Back to the post from a post's … references".
+  it("hands a person's profile the origin the sheet was given", () => {
+    open({ from: "post:p1" });
+    expect(screen.getByRole("link", { name: /@mira/ })).toHaveAttribute("href", "/u/mira?from=post%3Ap1");
   });
 
   it("sends a reference row to the node it points at", () => {
