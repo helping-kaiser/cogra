@@ -532,6 +532,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: "+ Cite something", tag: "button" },
     { n: 11, find: "signing 5 things", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    { n: 12, find: ">Signing the edit…</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"Sunday at the tide market — @mira — set how it relates\"", tag: "button" },
     { n: 16, find: 'aria-label="Remove Sunday at the tide market — @mira"', tag: "button" },
@@ -973,6 +974,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Mark</button>", tag: "button" },
     { n: 7, find: ">Sign and publish</button>", tag: "button" },
     { n: 8, find: ">Back</button>", tag: "button" },
+    { n: 7, find: ">Signing and publishing…</button>", tag: "button" },
+    { n: 8, find: ">Close</button>", tag: "button" },
     // The `state` chip's `tagRefused` (round 30): the unlanded tag's line.
     { n: 9, find: ">Remove it</button>", tag: "button" },
   ],
@@ -1207,6 +1210,7 @@ Object.assign(FLOW_MARKERS, {
     // Both `upload` copies count alike: a new face rides the Edit record (seam 248).
     { n: 11, find: "signing 3 things", tag: "button", all: true },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    { n: 12, find: ">Signing the edit…</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on CommentEdit.
     { n: 15, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
@@ -1228,6 +1232,7 @@ Object.assign(FLOW_MARKERS, {
     // Both `upload` copies count alike: a new face rides the Edit record (seam 248).
     { n: 11, find: "signing 4 things", tag: "button", all: true },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    { n: 12, find: ">Signing the edit…</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on EditCompose.
     { n: 15, find: 'aria-label="Undo withdrawing #photography"', tag: "button" },
@@ -1288,6 +1293,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Mark</button>", tag: "button" },
     { n: 7, find: ">Sign and publish</button>", tag: "button" },
     { n: 8, find: ">Back</button>", tag: "button" },
+    { n: 7, find: ">Signing and publishing…</button>", tag: "button" },
+    { n: 8, find: ">Close</button>", tag: "button" },
   ],
   ComposePickWeb: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -1313,6 +1320,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Changing your picture"', tag: "button" },
     { n: 4, find: ">Sign the change</button>", tag: "button" },
     { n: 5, find: ">Back</button>", tag: "button" },
+    { n: 4, find: ">Signing the change…</button>", tag: "button" },
+    { n: 5, find: ">Close</button>", tag: "button" },
   ],
 });
 
@@ -1641,6 +1650,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Changing your profile"', tag: "button" },
     { n: 4, find: ">Sign the change</button>", tag: "button" },
     { n: 5, find: ">Back</button>", tag: "button" },
+    { n: 4, find: ">Signing the change…</button>", tag: "button" },
+    { n: 5, find: ">Close</button>", tag: "button" },
   ],
 });
 
@@ -1666,6 +1677,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: ">Sign out everywhere else</span>", tag: "button" },
     { n: 12, find: ">Password</span>", tag: "button" },
     { n: 13, find: ">Handle</span>", tag: "button" },
+    { n: 13, find: ">That handle is taken.</span>", tag: "button" },
+    { n: 29, find: ">Retry</button>", tag: "button" },
     { n: 14, find: ">Email</span>", tag: "button" },
     { n: 15, find: ">Don&#x27;t remember this account on this device</span>", tag: "button" },
     { n: 16, find: ">Sign out</span>", tag: "button" },
@@ -2352,6 +2365,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Mark</button>", tag: "button" },
     { n: 9, find: ">Sign comment</button>", tag: "button" },
     { n: 10, find: ">Back</button>", tag: "button" },
+    { n: 9, find: ">Signing comment…</button>", tag: "button" },
+    { n: 10, find: ">Close</button>", tag: "button" },
     { n: 11, find: 'aria-label="Manage the 7 tags"', tag: "button", all: true },
     { n: 12, find: ">Remove it</button>", tag: "button", all: true },
     { n: 13, find: 'aria-label="Remove Tide tables', tag: "button", all: true },
@@ -2494,6 +2509,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: "+ Add a tag", tag: "button" },
     { n: 9, find: "signing 3 things", tag: "button" },
     { n: 10, find: ">Sign the edit</button>", tag: "button" },
+    { n: 10, find: ">Signing the edit…</button>", tag: "button" },
     { n: 11, find: ">Mark</button>", tag: "button" },
     { n: 13, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 14, find: ">Adjust</button>", tag: "button" },
@@ -3221,6 +3237,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: ">Sign the picks</button>", tag: "button" },
     { n: 5, find: ">Back</button>", tag: "button" },
+    { n: 4, find: ">Signing the picks…</button>", tag: "button" },
+    { n: 5, find: ">Close</button>", tag: "button" },
     { n: 6, find: ">Open Invites</button>", tag: "button" },
   ],
   YourKeyGate: [

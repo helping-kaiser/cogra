@@ -16,9 +16,9 @@ WHEN the signing has not answered 200ms after the press -> Sign the change reads
 
 WHEN the signing answers within 200ms of the press -> NEVER Sign the change reads Signing the change…
 
-WHEN the back arrow, Back or the X is pressed GIVEN Sign the change reads Signing the change… -> NEVER the seal is left AND the acts card stays readable
+WHEN the back arrow, Back or the X is pressed GIVEN Sign the change was pressed and has not answered -> the seal closes AND the change goes on AND NEVER the change is cancelled
 
-ALWAYS the back arrow, Back and the X keep their resting face GIVEN Sign the change reads Signing the change…
+ALWAYS Back reads Close and the X is named Close GIVEN Sign the change was pressed and has not answered
 
 WHEN the signing has not answered 5s after the press -> the subline under the total reads Still signing — the network is slow right now. AND NEVER a progress indicator appears
 
@@ -38,8 +38,12 @@ WHEN Sign the change is pressed GIVEN the signing key is not on this device -> t
 
 WHEN tap the key-absent notice's Not now -> the seal comes back as it stood before the press AND nothing is kept or signed
 
-WHEN press the header back arrow -> the picture's crop comes back, one stage behind
+WHEN press the header back arrow GIVEN Sign the change was not pressed -> the picture's crop comes back, one stage behind
 
-WHEN press Back -> the picture's crop comes back, one stage behind
+WHEN press Back GIVEN Sign the change was not pressed -> the picture's crop comes back, one stage behind
 
-WHEN press the header X -> the flow is left AND nothing is signed
+WHEN press the header X GIVEN Sign the change was not pressed -> the flow is left AND nothing is signed
+
+WHEN press Sign the change -> Back reads Close in its place from the press itself AND the header X is named Close AND NEVER Close dims
+
+WHEN press Close, the header back arrow, the header X or the system's Back GIVEN Sign the change was pressed and has not answered -> the seal closes AND the change goes on AND NEVER the act is cancelled

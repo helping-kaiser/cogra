@@ -21,10 +21,15 @@
    REGISTERED under the `postDetail` prefix (seam 248), once the thread was
    named: the detail as `CommentMenu` names it, the thread `threadSheet`, and
    the dialog `dialog` — raised over the sheet, not inside it, as the post's
-   is over the detail. */
+   is over the detail. 
+   THE `answer` CHIP'S `removing` IS THE REMOVAL CLOSED ON (round 37, jakob
+   2026-11-11): past 200ms `Remove` reads `Removing…`, and `Keep it` reads
+   `Close` from the press itself; it, the scrim, Back and Escape close the
+   dialog and the removal goes on, its wait and its answer on the removed
+   thing's own row. The copy is drawn unnamed, so no path moves. */
 export const NODE = "postDetail";
-export const PROPS = { answer: { editor: "enum", options: ["asking", "failed"], default: "asking" } };
-export const VALS = `askingShown: this.props.answer === "failed" ? "none" : "block", failedShown: this.props.answer === "failed" ? "block" : "none"`;
+export const PROPS = { answer: { editor: "enum", options: ["asking", "failed", "removing"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", failedShown: this.props.answer === "failed" ? "block" : "none", removingShown: this.props.answer === "removing" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
@@ -35,6 +40,9 @@ export function Screen() {
       </div>
       <div style={{ display: "{{failedShown}}" }} data-node-chip="answer" data-node-key="failed">
         <RemoveDialog kind="comment" overSheet failed node="dialog" />
+      </div>
+      <div style={{ display: "{{removingShown}}" }}>
+        <RemoveDialog kind="comment" overSheet removing />
       </div>
     </>
   );

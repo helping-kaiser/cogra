@@ -596,6 +596,15 @@
       "page": "patterns"
     },
     {
+      "file": "SigningAfterClose.dc.html",
+      "title": "Signing · after Close, where the act lands",
+      "x": 2880,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "RowSigning.dc.html",
       "title": "Signing · on the target's row, and a comfort's revert",
       "x": 3360,

@@ -6,13 +6,13 @@ WHEN the signing has not answered 200ms after the press -> Sign and publish read
 
 WHEN the signing answers within 200ms of the press -> NEVER Sign and publish reads Signing and publishing…
 
-WHEN the back arrow, Back or the X is pressed GIVEN Sign and publish reads Signing and publishing… -> NEVER the seal is left AND the fact rows stay readable
+WHEN the back arrow, Back or the X is pressed GIVEN Sign and publish was pressed and has not answered -> the seal closes AND the post goes on, its wait and its answer at the feed's head as SigningAfterClose draws them AND NEVER the post is cancelled
 
-ALWAYS the back arrow, Back and the X keep their resting face GIVEN Sign and publish reads Signing and publishing…
+ALWAYS Back reads Close and the X is named Close GIVEN Sign and publish was pressed and has not answered
 
 WHEN the signing has not answered 5s after the press -> the subline under the total reads Still signing — the network is slow right now. AND NEVER a progress indicator appears
 
-WHEN the app opens again GIVEN it was closed while a signing was in flight -> the signing's outcome shows as the ordinary settled or failure notice
+WHEN the app opens again GIVEN it was closed while a signing was in flight -> the signing's outcome shows where the act lands, as SigningAfterClose draws it
 
 WHEN the signing does not go through GIVEN no answer reached the seal -> the fault line and Retry take the place of Sign and publish AND everything above the foot stays as it was
 
@@ -66,8 +66,12 @@ WHEN the sensitive sheet closes on Done GIVEN its switch is on -> the Sensitive 
 
 ALWAYS the Sensitive row offers no control that clears the mark
 
-WHEN press the header back arrow -> the details stage comes back, one stage behind
+WHEN press the header back arrow GIVEN Sign and publish was not pressed -> the details stage comes back, one stage behind
 
-WHEN press Back -> the details stage comes back, one stage behind
+WHEN press Back GIVEN Sign and publish was not pressed -> the details stage comes back, one stage behind
 
-WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X GIVEN Sign and publish was not pressed -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+
+WHEN press Sign and publish -> Back reads Close in its place from the press itself AND the header X is named Close AND NEVER Close dims
+
+WHEN press Close, the header back arrow, the header X or the system's Back GIVEN Sign and publish was pressed and has not answered -> the seal closes AND the post goes on, its wait and its answer at the feed's head as SigningAfterClose draws them AND the draft stays on this device until the signature is taken AND NEVER the act is cancelled

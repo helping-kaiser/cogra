@@ -1069,14 +1069,36 @@ a quick answer never flashes a word.
   2026-11-11). **Drawn** on `PadFailed`'s `closed`.
 - `Close` — the way out of a signing surface once its commit is
   pressed (jakob 2026-11-11): the pad, the alternates, the walk-back,
-  the empty sign, the handle change. Once someone submits, the act is
-  done and nothing cancels it, so `Cancel` or `Keep it` would promise
-  what the press cannot do; past 200ms, beside the in-flight label, the
-  same control in the same place reads `Close`, which says only what
-  the press does — it shuts a layer (*The stream and the viewer*) so the
-  reader need not wait. The wait passes to the target's row. **Drawn**
-  on `PadFailed`'s `setting`, `SeveranceConfirm`'s `signing` and
-  `EmptySignConfirm`'s `setting`.
+  the empty sign, the handle change, every seal and edit, and the
+  remove and reject dialogs. Once someone submits, the act is done and
+  nothing cancels it, so `Cancel`, `Back`, `Keep it` or `Keep them`
+  would promise what the press cannot do; from the press itself — the
+  one exception to the 200ms law, since anything else would mislead —
+  the same control in the same place reads `Close`, which says only
+  what the press does: it shuts a layer (*The stream and the viewer*)
+  so the reader need not wait. The commit's own in-flight label still
+  waits the 200ms. A seal's or an edit's X is named `Close` too. The
+  wait and the answer pass to where the act lands (`SigningAfterClose`).
+  **Drawn** on `PadFailed`'s `pressed` and `setting`,
+  `SeveranceConfirm`'s `signing`, `EmptySignConfirm`'s `setting`,
+  `SealSigning`, and the `signing`, `removing` and `closing` settings of
+  the seals, the edits and the dialogs.
+- `Signing and publishing…`, `Signing comment…` and `Signing…` — a
+  post's, a reply's and an edit's wait after `Close`, where each will
+  stand: the feed's head, the parent it answers, under the
+  edited card, in the pending marker's quiet register. **Drawn** on
+  `SigningAfterClose`.
+- `Your post didn't sign.` and `Your comment didn't sign.` — a post's or
+  a reply's failure after `Close`, in the failure voice with `Retry`,
+  where the card would have stood; built from the row's `That didn't
+  sign.` and the did-not-land notice's family titles (`Your post didn't
+  land`). An edit's failure is the row's own `That didn't sign.` under
+  the card. **Drawn** on `SigningAfterClose`. (*New 2026-11-11, round 37,
+  drafted — review-pending, wording jakob's at review.*)
+- `Changing handle…`, `That didn't go through.` with `Retry`, and `That
+  handle is taken.` — the handle change's wait, failure and refusal on
+  the Handle row after `Close`, the dialog's and the hidden-accounts
+  row's own words. **Drawn** on `Settings`' `handle` chip.
 
 Every other commit follows the same construction and needs no separate
 entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes

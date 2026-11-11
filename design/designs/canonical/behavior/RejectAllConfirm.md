@@ -30,6 +30,14 @@ ALWAYS closing a group removes nothing from the record: each person keeps the ac
 
 WHEN the closing does not go through -> the dialog stays up with its pair AND the line That didn't send. Try again. stands in it AND Close them reads Retry AND the group is still waiting, all of it
 
-WHEN press Keep them -> the dialog closes AND the group is still waiting, all of it
+WHEN press Keep them GIVEN Close them was not pressed -> the dialog closes AND the group is still waiting, all of it
 
-WHEN tap the scrim, press the system's Back or press Escape -> the dialog closes AND nothing is closed
+WHEN tap the scrim, press the system's Back or press Escape GIVEN Close them was not pressed -> the dialog closes AND nothing is closed
+
+WHEN press Close them -> Keep them reads Close in its place from the press itself, filled and live AND NEVER Close dims
+
+WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Close them was pressed and has not answered -> the dialog closes AND the closing goes on AND the group's own rows on Invites reads Closing them… in the pending marker's quiet register until it answers AND NEVER the closing is cancelled
+
+WHEN the closing is taken GIVEN the dialog was closed while it answered -> the line goes AND every application still waiting on that link leaves this list AND each person is told
+
+WHEN the closing does not go through GIVEN the dialog was closed while it answered -> the group's own rows on Invites stands as it was AND says so in the failure voice with Retry, its words waiting for jakob (backlog 167) AND NEVER the snackbar carries the failure
