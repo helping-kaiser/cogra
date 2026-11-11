@@ -450,11 +450,33 @@ class StancePadTest {
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.PaneTitle, "Opinion pad for @ada"))
     }
 
+    /**
+     * The sizing RULE (StanceControl.jsx: `width: "17rem"` with
+     * `padding: var(--card-padding)` and no `box-sizing`, so content-box):
+     * the card is 272 + 2 × 16 = 304dp and its field 272 − 2 × 56 = 160dp,
+     * whatever the screen's width.
+     */
+    private fun assertThePadIsTheBoardsSize() {
+        val pad = compose.onNodeWithTag("${TAG}_stance_pad").fetchSemanticsNode().size
+        val field = compose.field().fetchSemanticsNode().size
+        with(compose.density) {
+            assertThat(pad.width.toFloat()).isWithin(1f).of(304.dp.toPx())
+            assertThat(field.width.toFloat()).isWithin(1f).of(160.dp.toPx())
+            assertThat(field.height.toFloat()).isWithin(1f).of(160.dp.toPx())
+        }
+    }
+
     @Test
-    fun thePadIsTheMastersWidth() {
+    fun thePadIsTheBoardsSizeOnAPixelWideScreen() {
         show(open)
-        val width = compose.onNodeWithTag("${TAG}_stance_pad").fetchSemanticsNode().size.width
-        assertThat(width.toFloat()).isWithin(1f).of(with(compose.density) { PAD_WIDTH.toPx() })
+        assertThePadIsTheBoardsSize()
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h780dp")
+    fun thePadIsTheBoardsSizeOnANarrowerScreen() {
+        show(open)
+        assertThePadIsTheBoardsSize()
     }
 
     // -- The three readouts (PadStanding.md:21; StanceReadout.prompt.md) --
@@ -1477,8 +1499,13 @@ class StancePadTest {
         assertThat(pad).contains("export const AXIS_GUTTER_Y_PX = ${PAIR_GUTTER_Y.value.toInt()};")
         assertThat(pad).contains("export const KNOB_DIAMETER_PX = ${(KNOB_RADIUS * 2).value.toInt()};")
         assertThat(pad).contains("export const FIELD_CORNER_RADIUS_PX = ${FIELD_CORNER.value.toInt()};")
-        // 17rem at the 16px root.
+        // 17rem at the 16px root, as the CONTENT box: the dialog's style sets
+        // no box-sizing, so its card padding lands outside the 17rem.
         assertThat(control).contains("width: \"17rem\"")
-        assertThat(PAD_WIDTH.value).isEqualTo(17f * 16f)
+        val dialog = control.substringAfter("role=\"dialog\"").substringBefore("data-node={node && \"pad\"}")
+        assertThat(dialog).contains("padding: \"var(--card-padding)\"")
+        assertThat(dialog).doesNotContain("boxSizing")
+        assertThat(PAD_CONTENT_WIDTH.value).isEqualTo(17f * 16f)
+        assertThat(PAD_WIDTH).isEqualTo(PAD_CONTENT_WIDTH + PAD_PADDING * 2)
     }
 }
