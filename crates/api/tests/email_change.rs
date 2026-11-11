@@ -34,8 +34,9 @@ impl api::mailer::Mailer for TestMailer {
 }
 
 impl TestMailer {
-    /// The code or token out of the newest message to `to` — the last
-    /// word of the body, per the email-change mail format.
+    /// The code or token out of the newest message to `to` — a link's
+    /// `token=` parameter, else the code after the body's last `: `, per
+    /// the email-change mail formats.
     fn latest_code_for(&self, to: &str) -> String {
         let mails = self.0.lock().expect("mailbox");
         let mail = mails
@@ -43,12 +44,11 @@ impl TestMailer {
             .rev()
             .find(|m| m.to == to)
             .unwrap_or_else(|| panic!("no mail for {to}"));
-        mail.body
-            .rsplit(": ")
-            .next()
-            .expect("code line")
-            .trim()
-            .to_string()
+        match mail.body.split("token=").nth(1) {
+            Some(rest) => rest.split_whitespace().next().expect("link token"),
+            None => mail.body.rsplit(": ").next().expect("code line").trim(),
+        }
+        .to_string()
     }
 
     /// The newest message to `to`, whole.
@@ -472,9 +472,10 @@ async fn request_to_a_taken_address_reads_as_success(pool: PgPool) {
 }
 
 /// The current address receives a 6-digit numeric code; the new address
-/// receives the change link.
+/// receives the change link alone, never an offer to paste its token
+/// (auth.md "Link URLs").
 ///
-/// The current-side code is six digits and the new side gets the change link.
+/// The current-side code is six digits and the new side gets the change link with no paste offer.
 /// ´claim:auth:the-current-side-code-is-six-digits´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_current_side_code_is_six_digits(pool: PgPool) {
@@ -493,6 +494,7 @@ async fn the_current_side_code_is_six_digits(pool: PgPool) {
         "body {:?}",
         link.body
     );
+    assert!(!link.body.contains("paste"), "body {:?}", link.body);
 }
 
 /// Someone else registers the wanted address between the two proofs, so
@@ -1058,6 +1060,7 @@ async fn an_unverified_account_changes_email_by_the_new_link_alone(pool: PgPool)
     assert_eq!(rig.mailer.count_for("typo@example.com"), 0, "no code");
     let link = rig.mailer.latest_for("right@example.com");
     assert!(link.body.contains("/verify?token="), "body {:?}", link.body);
+    assert!(!link.body.contains("paste"), "body {:?}", link.body);
 
     let verified = rig
         .verify(&rig.mailer.latest_code_for("right@example.com"))

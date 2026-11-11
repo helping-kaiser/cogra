@@ -363,11 +363,8 @@ reach, and one URL opens the app where one is installed
   the unverified carve-out mails the verification URL instead
 - Account deletion: `https://<web-origin>/delete-account?token=<token>`
 
-Native apps also accept the pasted link or bare token directly —
-the universal fallback when link verification is unavailable (and
-the dev path: the dev mailer logs the bare token, and composing
-full URLs into mail bodies arrives with the web pages that answer
-them).
+A mail carries the link alone: every link completes its flow on
+the web without the app.
 
 ### Application (the applicant state)
 
