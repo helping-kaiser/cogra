@@ -3615,7 +3615,8 @@ type Record {
 	"""
 	When the record landed: its epoch's attested boundary timestamp
 	(layer1-interface.md, the Host Contract). Wall-clock time for
-	display; `landingEpoch` and the causal key carry the order.
+	display; the key of record (`landingEpoch`, `position`) carries the
+	order.
 	"""
 	landedAt: DateTime!
 	"""

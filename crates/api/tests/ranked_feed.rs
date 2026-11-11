@@ -41,7 +41,7 @@ const SLICE: &str = r#"query($viewer: UUID!, $asOf: Int, $dust: Float, $gamma: F
     asOfEpoch
     nodes(first: $first, after: $after) {
       totalCount
-      edges { cursor node { graphId id kind genesis { landingEpoch actTime position } } }
+      edges { cursor node { graphId id kind genesis { landingEpoch position } } }
       pageInfo { hasNextPage endCursor }
     }
     records(first: $rfirst) {
@@ -703,11 +703,11 @@ async fn slice_nodes_carry_their_genesis_key_and_a_type_carries_none(pool: PgPoo
     let s = full_slice(&rig, f.viewer).await;
     assert_eq!(
         node(&s, &f.p.to_string())["genesis"],
-        json!({ "landingEpoch": 2, "actTime": 201, "position": 2 })
+        json!({ "landingEpoch": 2, "position": 2 })
     );
     assert_eq!(
         node(&s, &prof("a").to_string())["genesis"],
-        json!({ "landingEpoch": 1, "actTime": 101, "position": 2 })
+        json!({ "landingEpoch": 1, "position": 2 })
     );
     assert_eq!(node(&s, &topic("salt").to_string())["genesis"], Value::Null);
 }
