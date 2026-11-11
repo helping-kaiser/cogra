@@ -719,7 +719,7 @@ function HistoryCard({
           stream={{ href: streamHref(node.id), onOpen: () => onOpenStream(node.id) }}
           testId={`history-post-${node.id}`}
           authorTestId={`history-author-${node.id}`}
-          authorFrom={FROM}
+          doorFrom={FROM}
           stanceTestId={`history-stance-${node.id}`}
           comments={comments(node)}
           onOpenComments={() => onOpenComments(node)}

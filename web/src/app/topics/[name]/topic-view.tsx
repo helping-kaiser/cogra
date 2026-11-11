@@ -193,7 +193,7 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
                     href={`/posts/${node.id}${doorQuery}`}
                     // THE SCORE OPENS ITS TRACE, whose back arrow reads `Back to #<thattag>`.
                     scoreOrigin={{ kind: "tag", name, from }}
-                    authorFrom={doorFrom}
+                    doorFrom={doorFrom}
                     testId={`topic-post-${node.id}`}
                     authorTestId={`topic-author-${node.id}`}
                     stanceTestId={`topic-stance-${node.id}`}
