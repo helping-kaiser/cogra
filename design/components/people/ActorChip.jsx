@@ -178,3 +178,29 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
     </a>
   );
 }
+
+/* A NAME INSIDE A ONE-LINE PLACE (jakob 2026-11-11, round 40). A page title, a
+   menu row, a row's title and its aside never wrap; where a handle stands in
+   their words — `@ada commented on your post`, `Hide @ada`, `on @mira` — the
+   HANDLE is what is cut with "…", and the words around it keep their room
+   first: `@mmmmmmmm… commented on your post`. The chip's own arithmetic at line
+   scale: the words are `flex: none`, the handle the one part that yields
+   (`minWidth: 0` and the clip). Every one-line master passes its text through
+   `nameInLine`; text with no handle returns untouched, so a line that fits
+   draws exactly what it drew. The first handle is the one that yields. */
+const HANDLE_IN_LINE = /(?<![\w@])@[A-Za-z0-9_]+/;
+const LINE_WORDS = { flex: "none", whiteSpace: "pre" };
+export function nameInLine(text) {
+  if (typeof text !== "string") return text;
+  const found = HANDLE_IN_LINE.exec(text);
+  if (!found) return text;
+  const before = text.slice(0, found.index);
+  const after = text.slice(found.index + found[0].length);
+  return (
+    <span style={{ display: "flex", minWidth: 0, whiteSpace: "nowrap" }} data-name-line="">
+      {before && <span style={LINE_WORDS}>{before}</span>}
+      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{found[0]}</span>
+      {after && <span style={LINE_WORDS}>{after}</span>}
+    </span>
+  );
+}

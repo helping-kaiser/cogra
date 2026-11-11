@@ -55,5 +55,13 @@ export interface MonogramAvatarProps {
 
 export declare function MonogramAvatar(props: MonogramAvatarProps): JSX.Element;
 
+/**
+ * A one-line place's text with its first `@handle` made the one part that
+ * yields (round 40): the words keep their room, the handle is cut with "…".
+ * Text with no handle, or anything not a string, returns untouched. Every
+ * one-line master (page title, menu row, row title and aside) calls it.
+ */
+export declare function nameInLine(text: React.ReactNode): React.ReactNode;
+
 /** The 1px `--border-field` ring, drawn inside the box, every mark whose payload went wears (a deleted account's disc, a removed thing's tile). */
 export declare const REDACTED_RING: { border: string; boxSizing: "border-box" };
