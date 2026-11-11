@@ -7,10 +7,10 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import com.cogra.core.designsystem.v2.atom.AddressCard
-import com.cogra.core.designsystem.v2.atom.ContentRow
-import com.cogra.core.designsystem.v2.atom.ContentRowDisc
 import com.cogra.core.designsystem.v2.atom.CograPasswordField
 import com.cogra.core.designsystem.v2.atom.CograTextField
+import com.cogra.core.designsystem.v2.atom.ContentRow
+import com.cogra.core.designsystem.v2.atom.ContentRowDisc
 import com.cogra.core.designsystem.v2.atom.FilterSection
 import com.cogra.core.designsystem.v2.atom.WaitingCommit
 import com.cogra.core.designsystem.v2.atom.WizardHeader
