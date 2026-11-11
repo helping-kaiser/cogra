@@ -726,7 +726,9 @@ private fun TabEmpty(tab: ProfileTab, applicantsOwn: Boolean, view: DataNode) {
         title = stringResource(
             if (applicant) R.string.profile_chronicle_empty_applicant else R.string.profile_chronicle_empty,
         ),
-        modifier = Modifier.padding(horizontal = Space.x4),
+        // The state is a block across the view, its line at the start
+        // (`EmptyState.jsx`: a flex column, `alignItems: flex-start`).
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Space.x4),
         registered = true,
     )
 }
