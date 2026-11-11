@@ -8001,10 +8001,16 @@ jakob's rulings closing the day's rounds, executed in one lane.
      (Material's 280dp maximum), `ContentRow` and `ProfileHeader`'s handle
      line carry it.
   3. *Text that wraps* — headings, card titles and bodies, dialog titles
-     and bodies, snackbars, notices, the borrowed-view band: it wraps; a
-     name with spaces breaks at its spaces, an unbroken handle or name
-     breaks inside the word (`overflow-wrap: anywhere`) rather than
-     running off the screen; never an ellipsis. `DialogSurface`,
+     and bodies, snackbars, notices, the borrowed-view band: the sentence
+     wraps at its spaces and is never cut as a whole, and A HANDLE OR A
+     NAME NEVER STANDS ON MORE THAN ONE LINE (jakob 2026-11-11). It is
+     one unit: it moves whole to the next line when the rest of the
+     current one cannot hold it, and past a full line it is cut at its end
+     with "…", case 2's clip; punctuation right after it (`?`, `.`,
+     `,`, `'s`) rides with it, whole, never swallowed by the cut
+     (`nameInText`, beside `nameInLine`). A display name with spaces is the
+     same one unit. `overflow-wrap: anywhere` stays only for other unbroken
+     tokens — an email in a settings status, a pasted URL. `DialogSurface`,
      `Snackbar`, `TaskCard`, `BorrowedViewBand`, `QuotedRow`'s title,
      `SettingsRow`'s status, the pads' and the intro's lines carry it.
 - **The comment card's ⋮ is the comment's menu** (`CommentMenu`, or
@@ -11013,12 +11019,17 @@ jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
   Salome Ward, Nadia Rask.
 - **The search sections' cap of three** is the rule on every sectioned
   surface, Saved and History included (backlog 141).
-- **No list is uncapped in its default state** (jakob 2026-11-11, round
-  40): a list shows three rows, then `Show all` under the third — the
-  pickers' door, an inline action under the rows — which opens the rest
-  in place; the list grows, nothing else leaves the page, and no "show
-  fewer" follows. Drawn on Invites' People you let in; which other lists
-  are feeds that page and which cap waits on jakob (backlog 181).
+- **A list that is one of several things on its page is capped** (jakob
+  2026-11-11, round 40): a section among other content — Invites'
+  sections, a sessions list inside Settings — shows three rows, then
+  `Show all` under the third — the pickers' door, an inline action under
+  the rows — which opens the rest in place; the list grows, nothing else
+  leaves the page, and no "show fewer" follows. A page or sheet whose
+  PURPOSE is the list — History, Saved, Notifications, the profile's
+  chronicle, posts and comments, the tag page, the opinions page, the
+  opinions and cited-by sheets, Your tags, hidden accounts — is a
+  continuous scroll and is never capped. Drawn on Invites' People you
+  let in (backlog 181).
 - **The way out while an act signs** is round 34's: once the commit is
   pressed nothing cancels it, and `Close` only leaves.
 - **The deleted account's disc and the removed thing's tile** keep the
@@ -11409,8 +11420,8 @@ lists should not be uncapped in default state"), drawn for his review.
 - **The three cases are law** (this section, beside the why-line), and the
   masters carry them: the one-line masters clip at their end and, where
   words follow a handle, make the handle the line's one shrinking part
-  (`nameInLine`, beside `ActorChip`); the wrapping masters break an
-  unbroken token inside the word. `OverflowMenu`'s popover takes Material's
+  (`nameInLine`, beside `ActorChip`); in the wrapping masters a handle or name
+  is one unit that never stands on two lines (`nameInText`). `OverflowMenu`'s popover takes Material's
   280dp maximum, so a long row cuts its handle instead of growing off the
   screen; `SheetItem` and the popover's rows set the 48px minimum by their
   padding, so the ellipsis can ride the line. `NamesLong` (*Names · when
@@ -11429,12 +11440,13 @@ lists should not be uncapped in default state"), drawn for his review.
   only to a title that names a handle, so the seals' `What you sign`,
   4.5px past the band's padding beside the widest trailing group, stands
   as drawn.
-- **No list is uncapped in its default state** (the rule beside the
-  search sections' cap): Invites' People you let in shows its three
-  newest and `Show all` under the third, the pickers' door, opening the
-  rest in place (`letIn` chip: `more`, `more-opened`). The waiting
-  applications' three and Live links' cap are not drawn (backlog 180,
-  182); the other uncapped lists wait on jakob's call (backlog 181).
+- **A list among other content is capped; a page that is the list is not**
+  (the rule beside the search sections' cap): Invites' People you let in
+  shows its three newest and `Show all` under the third, the pickers'
+  door, opening the rest in place (`letIn` chip: `more`, `more-opened`).
+  The waiting applications' three and Live links' cap are ruled and not
+  yet drawn (backlog 180, 182); every page whose purpose is its list
+  scrolls on uncapped (backlog 181 closed).
 - **Invites with only let-in people is not the empty state**: `New
   invite` and People you let in stand, the two empty halves gone
   (`sections` chip: `only-let-in`); `InvitesEmpty` stands only while

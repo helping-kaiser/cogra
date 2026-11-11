@@ -5663,7 +5663,10 @@ standing order, groups as they fall, `Show all` under the third [lean — the
 grouping is the queue's ruled order, and its first row is already the
 oldest]; (b) the three oldest across the groups, each under its group's
 label, the rest behind `Show all`; (c) three per group, a door per group.
-And whether a kept approval at the head counts among the three.
+And whether a kept approval at the head counts among the three. Ruled by
+jakob 2026-11-11: (a), the first three rows in the queue's grouped order, to
+build in the next round on Invites; still open: whether the kept approval
+counts among the three.
 
 ### 181 · Which lists page and which cap · *design* · **filed 2026-11-11**
 
@@ -5683,7 +5686,13 @@ tag page's tagged things `TagPage` (no end drawn), Hidden accounts in
 feeds that page and which are lists that take three and `Show all`. Lean:
 History, Saved, Notifications, the chronicle and `TagPage` are feeds that
 page; the sheets, `ProfileStances`, `YourTopics`, Hidden accounts and Live
-links cap.
+links cap. Closed by jakob's ruling 2026-11-11: a list that is one of several
+things on its page caps, and a page or sheet whose purpose is the list is a
+continuous scroll, never capped. Capped: Invites' Applications (backlog 180,
+to build), Live links (182, to build), People you let in (built, round 40).
+Never capped: History, Saved, Notifications, the profile's chronicle, posts
+and comments, `TagPage`, `ProfileStances`, `PostOpinions`, `CitedBy`,
+`YourTopics`, Hidden accounts (readme §13, beside the search sections' cap).
 
 ### 182 · Invites' Live links: the cap is not drawn · *design* · **filed 2026-11-11**
 
@@ -5703,6 +5712,9 @@ handle (13px, `ChangeHandleBody` in `_shared.jsx`, case 3), and
 `OnboardingVouch`'s inviter caption under the stage drawing (151px,
 `IntroCaption`, a caption — case 2, the end clip within the drawing's
 column, its width a drawing choice). The fix is the case's, no new word.
+Ruled by jakob 2026-11-11: fix all three in the next round; `Join`'s heading
+and `ChangeHandle`'s body take the revised case 3 — the name or handle one
+unit, whole on a line or end-cut, never on two lines.
 
 ### 184 · Invites with only let-in people: a line for "nothing waiting" · *design* · **filed 2026-11-11**
 
@@ -5711,7 +5723,8 @@ for you"). The page draws `New invite` and People you let in with no line
 saying nothing waits, since no such line is blessed. For jakob: (a) no line,
 as drawn [lean — the button and the people already say the page is alive];
 (b) the halves' own `No applications waiting.` under `New invite`; (c) a new
-line (a draft: `Nothing new is waiting for you.`).
+line (a draft: `Nothing new is waiting for you.`). Closed by jakob's ruling
+2026-11-11: (a), no line.
 
 Round 41 (jakob 2026-11-11, "fine for now lets keep it there" read with "all
 things that i did not say anything to … are blessed"): left open, because

@@ -10,6 +10,8 @@ ALWAYS a one-line place whose handle ends the line clips at its end, which cuts 
 
 ALWAYS a heading, a card's title and body, a dialog's title and body, a snackbar, a notice and the borrowed-view band wrap at their spaces
 
-ALWAYS a handle or name too long for its line in wrapping text breaks inside the word and never runs past its surface
+ALWAYS a handle or name in wrapping text never stands on two lines: it moves whole to the next line when the rest of the current one cannot hold it
 
-ALWAYS wrapping text never ellipsizes a name or a handle
+ALWAYS a handle or name longer than a full line of wrapping text is cut at its end with an ellipsis, its trailing punctuation kept whole beside it
+
+ALWAYS wrapping text is never ellipsized as a whole
