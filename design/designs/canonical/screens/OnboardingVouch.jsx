@@ -187,7 +187,7 @@ export function Screen() {
       step={5}
       cta="Start reading"
       headline="Someone brings you in"
-      lines={["You are here because @mira invited you. Her link is your first way in to everyone else, and theirs to you."]}
+      lines={["You are here because @mira invited you. @mira's link is your first way in to everyone else, and theirs to you."]}
       note={
         <div style={{ paddingTop: 12 }}>
           <QuietNote node="note">A friend who's already in has to let you in. Ask around once you have verified your email.</QuietNote>

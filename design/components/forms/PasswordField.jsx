@@ -32,9 +32,10 @@ import { Icon } from "../navigation/Icon.jsx";
    never capitalized; and a handle is never `username` — it is not what the
    reader signs in with.
 
-   THE RETURN KEY: `go` by default — a password is the last field of every
-   credential form but one — and `next` where a field follows
-   (`ChangePassword`'s current password). */
+   THE RETURN KEY: `go` by default — a password is the last field of a
+   credential form — and `next` where a field follows (`ChangePassword`'s
+   current password, and the new password above its `Repeat password` on
+   `Join`, `ResetNew` and `ChangePassword`). */
 
 export function PasswordField({ label, value, onChange, autoComplete = "current-password", id, hint, error, account, enterKeyHint = "go", node }) {
   const generated = React.useId();

@@ -11226,6 +11226,56 @@ which keeps the row), and two fixes to the written law (backlog 149).
   `saved.menuSheet.*`, `tagPage.menuSheet.*`, the profile menu's card rows
   and `feed.menuSheet.mention` added, no path, key or key rule changed.
 
+### Round 38, the password twice and the people you let in — 2026-11-11
+
+jakob's hand-test findings (seam 275) and his answers J1–J3 and Q6–Q8 to
+rounds 34 + 35 ("as rec", "sounds fine", "blessed").
+
+- **Every new password is asked twice.** `Join`, `ResetNew` and
+  `ChangePassword` take `Repeat password` under the new password, masked
+  like it, with its own reveal control and no hint; the new password's
+  return key reads `next`. When the two differ, the press refuses with `The
+  two passwords don't match.` under the repeat field (*both blessed*), the
+  way each form refuses a short password — on the press, re-checking as
+  either password changes, the commit waiting on every field. Drawn at rest
+  on all three and refused on `JoinErrors`, beside its other two lines;
+  `ResetNew` and `ChangePassword` draw no refused state, and their sidecars
+  carry the line. The field is `confirm` (`RecoveryCode`'s name for the
+  field that types a thing back). Client-side only: no API field changes.
+- **The people you let in.** `Invites` lists, between the applications and
+  the live links, everyone the reader vouched in, newest first, under
+  `People you let in` (*blessed*): the application's row without its
+  control — face, name, age — opening the person's profile with `Back to
+  Invites` (the profile's table, by its construction; *its wording jakob's at
+  review*). A deleted person's row reads as a deleted asker's does. Absent
+  until someone is let in (backlog 171). Drawn on `Invites`' `letIn` chip
+  (`people`, `deleted`); registered `invites.peopleLabel`, `invites.person`
+  and `invites.redactedPerson`, keyed by the person's id. Its read is owed by
+  the implementation side: the people this account vouched in, newest first,
+  with the time each vouch landed. Open: an Invites with only these people
+  (backlog 170), a long list and a hidden person (backlog 174).
+- **Join's heading names the inviter whole**: `Mira Voss invited you`, the
+  display name else the handle; the heading wraps and never cuts the name.
+- **The intro names the inviter by handle**: `@mira's link is your first way
+  in to everyone else, and theirs to you.` (backlog 158 closed).
+- **The stream's keys and wheel are desktop web's** — a desktop browser, a
+  device with no touch; the loop and posts-only lines hold everywhere.
+- **The crop's shape switch shifts a picture just enough** that its edge
+  meets the new frame, never further, beside the fill floor.
+- **The crash screen's words are blessed** (`This shouldn't have happened`,
+  `Reload`).
+- **Long names and handles** (jakob's question with J1): swept, not ruled —
+  backlog 173 lists every family drawn outside `ActorChip`, what the tree
+  says and what the markup does at the longest legal handle and name.
+- **The gate**: no board added; `Invites` gains the `letIn` chip. Five
+  edges added (each form's `Repeat password`, the people's rows), **2261**
+  in check-flows' count; flows hold at **227**, none re-blessed. The
+  registry holds at **181 screens**, **6771 → 6799** board paths, **1972 →
+  1996** distinct — `join.confirm`,
+  `reset.confirm`, `changePassword.confirm` and `invites.peopleLabel`,
+  `invites.person`, `invites.redactedPerson` with their parts, and the two
+  rows' key rules; nothing removed.
+
 ---
 
 ## 14. The canvases

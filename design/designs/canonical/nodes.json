@@ -1032,6 +1032,10 @@
         "changePassword.commit": [],
         "changePassword.commit.action": [],
         "changePassword.commit.reason": [],
+        "changePassword.confirm": [],
+        "changePassword.confirm.input": [],
+        "changePassword.confirm.label": [],
+        "changePassword.confirm.reveal": [],
         "changePassword.current": [],
         "changePassword.current.input": [],
         "changePassword.current.label": [],
@@ -7876,7 +7880,9 @@
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)",
         "invites.link.copyFault": "the copy chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.linksEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "invites.redactedApplication": "the deleted asker's actor id, the lowercase UUID the wire carries (Invites' applications, where an asker who deleted their account has no handle left to key by)"
+        "invites.person": "the person's id, the lowercase UUID the wire carries (Invites' people you let in)",
+        "invites.redactedApplication": "the deleted asker's actor id, the lowercase UUID the wire carries (Invites' applications, where an asker who deleted their account has no handle left to key by)",
+        "invites.redactedPerson": "the deleted person's id, the lowercase UUID the wire carries (Invites' people you let in, a person whose account was deleted)"
       },
       "nodes": {
         "invites.application": [
@@ -7977,6 +7983,27 @@
           "no-links"
         ],
         "invites.linksLabel": [],
+        "invites.peopleLabel": [],
+        "invites.person": [
+          "b1a7ca95-9571-4509-9e42-d1c45c67b233",
+          "59959e13-ced7-462c-b7cd-c0381ec09b90"
+        ],
+        "invites.person.chevron": [
+          "b1a7ca95-9571-4509-9e42-d1c45c67b233",
+          "59959e13-ced7-462c-b7cd-c0381ec09b90"
+        ],
+        "invites.person.disc": [
+          "b1a7ca95-9571-4509-9e42-d1c45c67b233",
+          "59959e13-ced7-462c-b7cd-c0381ec09b90"
+        ],
+        "invites.person.title": [
+          "b1a7ca95-9571-4509-9e42-d1c45c67b233",
+          "59959e13-ced7-462c-b7cd-c0381ec09b90"
+        ],
+        "invites.person.trailing": [
+          "b1a7ca95-9571-4509-9e42-d1c45c67b233",
+          "59959e13-ced7-462c-b7cd-c0381ec09b90"
+        ],
         "invites.redactedApplication": [
           "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
         ],
@@ -7994,6 +8021,21 @@
         ],
         "invites.redactedApplication.trailing": [
           "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608"
+        ],
+        "invites.redactedPerson": [
+          "e5a3c2d8-7b14-4f9e-8c06-1d9b4a72f3e5"
+        ],
+        "invites.redactedPerson.chevron": [
+          "e5a3c2d8-7b14-4f9e-8c06-1d9b4a72f3e5"
+        ],
+        "invites.redactedPerson.disc": [
+          "e5a3c2d8-7b14-4f9e-8c06-1d9b4a72f3e5"
+        ],
+        "invites.redactedPerson.title": [
+          "e5a3c2d8-7b14-4f9e-8c06-1d9b4a72f3e5"
+        ],
+        "invites.redactedPerson.trailing": [
+          "e5a3c2d8-7b14-4f9e-8c06-1d9b4a72f3e5"
         ]
       }
     },
@@ -8018,6 +8060,10 @@
         "join.commit": [],
         "join.commit.action": [],
         "join.commit.reason": [],
+        "join.confirm": [],
+        "join.confirm.input": [],
+        "join.confirm.label": [],
+        "join.confirm.reveal": [],
         "join.email": [],
         "join.email.input": [],
         "join.email.label": [],
@@ -8049,6 +8095,11 @@
         "join.body": [],
         "join.commit": [],
         "join.commit.action": [],
+        "join.confirm": [],
+        "join.confirm.input": [],
+        "join.confirm.label": [],
+        "join.confirm.reveal": [],
+        "join.confirm.support": [],
         "join.email": [],
         "join.email.input": [],
         "join.email.label": [],
@@ -11941,6 +11992,10 @@
         "reset.commit": [],
         "reset.commit.action": [],
         "reset.commit.reason": [],
+        "reset.confirm": [],
+        "reset.confirm.input": [],
+        "reset.confirm.label": [],
+        "reset.confirm.reveal": [],
         "reset.note": [],
         "reset.password": [],
         "reset.password.input": [],

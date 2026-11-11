@@ -5224,6 +5224,9 @@ const SOL_INVITE_ID = "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15";
 /* The actor id of the asker who deleted their account (`Invites`' `asker`
    chip): the lowercase UUID the wire carries, the row's only key left. */
 const DELETED_ASKER_ID = "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608";
+/* The id of a person the reader let in who has since deleted their account
+   (`Invites`' `letIn` chip at `deleted`): the row's only key left. */
+const DELETED_LET_IN_ID = "e5a3c2d8-7b14-4f9e-8c06-1d9b4a72f3e5";
 /* The askers' ids (round 33): an application row keys by its asker's id,
    the lowercase UUID the wire carries, as every person row does. */
 const ASKER_IDS = {
@@ -5553,8 +5556,8 @@ function KeptApprovalRow({ shown }) {
 /* The element names are the `invites` prefix's (design ⇄ impl seam 078):
    `Invites` and its two closing dialogs register them, and every other board
    this page stands on renders them stripped. An application is keyed by its
-   applicant's handle — a kept approval's row is an application too, at the
-   head — and a group by the id of the link its applications came through. A
+   applicant's id (round 33) — a kept approval's row is an application too, at
+   the head — and a group by the id of the link its applications came through. A
    live link's card is `link`, keyed by the same id; the `revoke` chip draws
    the first one twice, and each copy keeps the link's own key (jakob
    2026-10-07, ruling 39: a chip copy of a keyed instance).
@@ -5575,6 +5578,12 @@ function KeptApprovalRow({ shown }) {
      the asker's actor id, the hidden-accounts sheet's rule. The data does
      not serve this yet: the application carries no redaction signal today
      (seam 248, an API field owed by the implementation side).
+   - `letIn` — THE PEOPLE YOU LET IN (round 38, jakob's J3). `none` draws
+     no section, the state until someone is let in; `people` the section
+     with two people, newest first; `deleted` the second one's account
+     deleted, read as `asker`'s row reads — `redactedPerson`, keyed by the
+     person's id. A person's row is `person`, keyed by the person's id
+     (round 33), under `peopleLabel`.
    - `copy` — A COPY THAT FAILED. Copying is a comfort, not a signature, so it
      answers in the comfort's register on the link's own card: `That didn't
      go through.` with `Retry`, the row line's vehicle (`RowSigning`'s),
@@ -5707,6 +5716,26 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             nodeKey={ASKER_IDS.rafa}
           />
         </div>
+
+        {/* THE PEOPLE YOU LET IN (jakob 2026-11-11, J3): under the waiting
+            applications, every person the reader vouched in, newest first —
+            the application's row without its control, so the chevron says it
+            opens their profile. Absent, label and all, until someone is let in.
+            `shown` is `Invites`' `letIn` chip. */}
+        {shown && (
+          <div style={{ display: shown.people, flexDirection: "column" }}>
+            <SectionLabel node="peopleLabel">People you let in</SectionLabel>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+              <ContentRow variant="chronicle" name={NADIA.displayName} title={NADIA.displayName} trailing="2d" onOpen={() => {}} node="person" nodeKey={NADIA.id} />
+              <div style={{ display: shown.personNamed, flexDirection: "column" }}>
+                <ContentRow variant="chronicle" name={WREN.displayName} title={WREN.displayName} trailing="5d" onOpen={() => {}} node="person" nodeKey={WREN.id} />
+              </div>
+              <div style={{ display: shown.personDeleted, flexDirection: "column" }} data-node-chip="letIn" data-node-key="deleted">
+                <ContentRow variant="chronicle" redacted trailing="5d" onOpen={() => {}} node="redactedPerson" nodeKey={DELETED_LET_IN_ID} />
+              </div>
+            </div>
+          </div>
+        )}
 
         <SectionLabel node="linksLabel">Live links</SectionLabel>
         {shown && (
