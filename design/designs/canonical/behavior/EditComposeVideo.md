@@ -54,7 +54,7 @@ ALWAYS Sign the edit is enabled GIVEN an upload is running
 
 WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a second press AND NEVER anything is signed before the last upload lands AND NEVER Sign the edit dims
 
-WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
+WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND NEVER a spinner appears
 
 ALWAYS the cover the edit set wears its upload's progress as a ring on its thumbnail, the ring drawn once on EditCompose's board at its uploading state GIVEN it is still uploading
 
@@ -70,7 +70,7 @@ WHEN press Sign the edit again GIVEN the count line stands under the acts footer
 
 WHEN the last upload lands GIVEN Sign the edit was pressed while the uploads ran -> signing proceeds AND NEVER a second press is asked
 
-WHEN an upload fails GIVEN Sign the edit was pressed while the uploads ran -> the held press drops AND the gate line takes its fault reading AND Sign the edit reads Sign the edit again AND the header back arrow and the header X answer again AND NEVER anything is signed
+WHEN an upload fails GIVEN Sign the edit was pressed while the uploads ran -> the held press drops AND the gate line takes its fault reading AND Sign the edit reads Sign the edit again AND the header X is named as at rest again AND NEVER anything is signed
 
 ALWAYS Sign the edit is disabled GIVEN the gate line shows its fault reading
 
@@ -84,10 +84,14 @@ WHEN press Remove it under the cover row -> the new cover leaves the batch AND t
 
 WHEN the last upload lands GIVEN Sign the edit was not pressed -> the upload line goes AND Sign the edit stays as it was
 
-WHEN press the header back arrow or the header X GIVEN the batch holds an act -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
+WHEN press the header back arrow or the header X GIVEN the batch holds an act and Sign the edit was not pressed -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
 
-WHEN press the header back arrow GIVEN the batch is empty -> the edit is left toward where it began AND NEVER a dialog asks
+WHEN press the header back arrow GIVEN the batch is empty and Sign the edit was not pressed -> the edit is left toward where it began AND NEVER a dialog asks
 
-WHEN press the header X GIVEN the batch is empty -> the edit is left AND nothing is kept or discarded AND NEVER a dialog asks
+WHEN press the header X GIVEN the batch is empty and Sign the edit was not pressed -> the edit is left AND nothing is kept or discarded AND NEVER a dialog asks
 
 WHEN tap Discard in the dialog Discard the changes? -> the changes are discarded AND the edit is left toward where it began with the post as it was AND NEVER a draft is kept
+
+WHEN press Sign the edit -> the header X is named Close from the press itself AND NEVER the dialog Discard the changes? opens while it signs
+
+WHEN press the header back arrow, the header X or the system's Back GIVEN Sign the edit was pressed and has not answered -> the edit closes AND the edit goes on, its wait and its answer on the edited card as SigningAfterClose draws them AND NEVER the edit is cancelled

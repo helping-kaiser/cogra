@@ -44,15 +44,23 @@
 
    REGISTERED under the `commentEdit` prefix (seam 248), `CommentEditBody`'s
    names; the clip's block is `video`, the cover's `cover`, and the count's
-   two readings are the `upload` chip's copies of `acts`. */
+   two readings are the `upload` chip's copies of `acts`. 
+   THE `signing` CHIP DRAWS THE EDIT CLOSED ON (round 37, jakob 2026-11-11:
+   Close on every edit). From the press on `Sign the edit` the act is done:
+   past 200ms the commit reads `Signing the edit…`, and the header's X —
+   named `Close` from the press — and its arrow close the edit while it goes
+   on; the edited card carries the wait and the answer (`SigningAfterClose`). */
 export const NODE = "commentEdit";
-export const PROPS = { upload: { editor: "enum", options: ["none", "uploading"], default: "none" } };
-export const VALS = `gateShown: this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex"`;
+export const PROPS = {
+  upload: { editor: "enum", options: ["none", "uploading"], default: "none" },
+  signing: { editor: "enum", options: ["none", "signing"], default: "none" },
+};
+export const VALS = `editLeave: this.props.signing === "signing" ? "Close" : "Leave — the edit is discarded", editSign: this.props.signing === "signing" ? "Signing the edit…" : "Sign the edit", gateShown: this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex"`;
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
+      <WizardHeader title="Edit comment" leaveLabel="{{editLeave}}" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         {/* The fields scroll under the pinned foot, the post edit's reading
             (`EditComposeVideo`): with the gate drawn the form runs taller
@@ -111,7 +119,7 @@ export function Screen() {
         <div style={{ display: "{{gateShown}}", flexDirection: "column" }} {...chipCopy("upload", "uploading")}>
           <ActsFooter count={3} node="acts" />
         </div>
-        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+        <Button style={{ width: "100%" }} node="sign">{"{{editSign}}"}</Button>
       </div>
     </>
   );

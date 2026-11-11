@@ -46,12 +46,18 @@
    `tagRefused` (round 30, jakob 2026-11-11, Q7), the seal with one staged
    tag, `#fieldnotes`, that never landed — the Tags row reads back as before
    and under it `This tag didn't land.` with `Remove it`, no reason given,
-   the commit staying: the refused citation's row at the Tags row. */
+   the commit staying: the refused citation's row at the Tags row. 
+   THE `state` CHIP'S `signing` IS THE SEAL CLOSED ON (round 37, jakob
+   2026-11-11: Close on every seal). From the press on `Sign comment` the act
+   is done: past 200ms it reads `Signing comment…` over Back, which reads
+   `Close` from the press itself; it, the arrow and the X close the seal and
+   the reply goes on, its wait and its answer at the end of the branch it
+   answers (`SigningAfterClose`). */
 export const PROPS = {
   tags: { editor: "enum", options: ["none", "two", "seven"], default: "none" },
-  state: { editor: "enum", options: ["rest", "refused", "bug", "tagRefused"], default: "rest" },
+  state: { editor: "enum", options: ["rest", "refused", "bug", "tagRefused", "signing"], default: "rest" },
 };
-export const VALS = `none0Shown: this.props.tags === "none" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", none1Shown: this.props.tags === "none" && this.props.state === "refused" ? "flex" : "none", two0Shown: this.props.tags === "two" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", two1Shown: this.props.tags === "two" && this.props.state === "refused" ? "flex" : "none", seven0Shown: this.props.tags === "seven" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", seven1Shown: this.props.tags === "seven" && this.props.state === "refused" ? "flex" : "none", signShown: this.props.state === "bug" ? "none" : "flex", bugShown: this.props.state === "bug" ? "flex" : "none", tagRefusedShown: this.props.state === "tagRefused" ? "flex" : "none"`;
+export const VALS = `none0Shown: this.props.tags === "none" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", none1Shown: this.props.tags === "none" && this.props.state === "refused" ? "flex" : "none", two0Shown: this.props.tags === "two" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", two1Shown: this.props.tags === "two" && this.props.state === "refused" ? "flex" : "none", seven0Shown: this.props.tags === "seven" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", seven1Shown: this.props.tags === "seven" && this.props.state === "refused" ? "flex" : "none", signShown: this.props.state === "bug" || this.props.state === "signing" ? "none" : "flex", signingShown: this.props.state === "signing" ? "flex" : "none", replyLeave: this.props.state === "signing" ? "Close" : "Leave — the reply is discarded", bugShown: this.props.state === "bug" ? "flex" : "none", tagRefusedShown: this.props.state === "tagRefused" ? "flex" : "none"`;
 
 export function Screen() {
   return <ReplySealBody chipped />;

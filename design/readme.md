@@ -8229,10 +8229,12 @@ newer-version message, which he widened.
 - **A signed reply lands by scrolling the thread to its card** (K6.6's
   direction): the return anchors to the new card at its branch's end.
   `ReplySettled` keeps its drawn offset.
-- **While a seal signs, it holds the reader.** For the label swap's
-  duration the back arrow, Back and the X are inert with the commit; the
-  fact rows stay readable; an app killed mid-sign says the outcome on
-  the next open with the ordinary settled or failure notice. Past 5s
+- **Once a seal's commit is pressed, the way out only closes it** (round
+  37, jakob 2026-11-11). From the press Back reads `Close` and the X is named
+  so; they and the back arrow close the seal and the act goes on, its wait
+  and its answer where it lands (`SigningAfterClose`); a seal left open keeps
+  its fact rows readable; an app killed mid-sign says the outcome on the
+  next open where the act lands. Past 5s
   the acts card's subline swaps to `Still signing — the network is slow
   right now.` in olive `--tertiary` and nothing feigns progress
   (`SealSigningSlow`, `ActsCard`'s `noteTone`) — §4's *Loading* names it

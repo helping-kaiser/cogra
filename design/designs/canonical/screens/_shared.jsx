@@ -1782,9 +1782,15 @@ function composeSealCard({ cited, tags, state }) {
 }
 
 function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }) {
+  /* From the press on Sign and publish the way out only closes the seal and
+     the post goes on (round 37): Back reads `Close`, the X is named so, and
+     the wait and the answer stand at the feed's head (`SigningAfterClose`).
+     A chipped board draws the signing moment as its `state` chip's
+     `signing`, the label swapped past 200ms. */
+  const signing = state === "signing" || state === "slow";
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
+      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" closing={signing} leaveLabel={chipped ? "{{sealLeave}}" : undefined} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
 
@@ -1841,8 +1847,17 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }
               <Button variant="text" style={{ width: "100%" }}>Discard the post</Button>
             </div>
           </>
+        ) : chipped ? (
+          <>
+            <div style={{ display: "{{restFootShown}}", flexDirection: "column" }}>
+              <SealFooter signLabel="Sign and publish" busyLabel="Signing and publishing…" />
+            </div>
+            <div style={{ display: "{{signFootShown}}", flexDirection: "column" }}>
+              <SealFooter signLabel="Sign and publish" busy busyLabel="Signing and publishing…" />
+            </div>
+          </>
         ) : (
-          <SealFooter signLabel="Sign and publish" busy={state === "signing" || state === "slow"} busyLabel="Signing and publishing…" />
+          <SealFooter signLabel="Sign and publish" busy={signing} busyLabel="Signing and publishing…" />
         )}
       </div>
     </>
@@ -2031,13 +2046,19 @@ function ReplySealBugFoot() {
   );
 }
 
-function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent = false, uploading = null, chipped = false }) {
+function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent = false, uploading = null, chipped = false, signChip = false }) {
   const named = REPLY_TARGETS[target];
+  /* From the press on Sign comment the way out only closes the seal and the
+     reply goes on (round 37): Back reads `Close`, the X is named so, and the
+     wait and the answer stand at the branch's end (`SigningAfterClose`). A
+     board drawing that moment passes `chipped` (its `state` chip's
+     `signing`) or `signChip` (a `state` chip of its own). */
+  const templated = chipped || signChip;
   return (
     <>
       <WizardHeader
         title="What you sign"
-        leaveLabel="Leave — the reply is discarded"
+        leaveLabel={templated ? "{{replyLeave}}" : "Leave — the reply is discarded"}
         stageLabel="Last step"
         help="How signing works"
       />
@@ -2088,6 +2109,9 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
             <div style={{ display: "{{signShown}}", flexDirection: "column" }}>
               <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" />
             </div>
+            <div style={{ display: "{{signingShown}}", flexDirection: "column" }}>
+              <SealFooter signLabel="Sign comment" busy busyLabel="Signing comment…" />
+            </div>
             <div style={{ display: "{{bugShown}}", flexDirection: "column", gap: 12 }}>
               <ReplySealBugFoot />
             </div>
@@ -2102,7 +2126,18 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
               ) : (
                 <UploadStatusLine done={uploading.done} total={uploading.total} media={uploading.media} />
               ))}
-            <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" disabled={Boolean(uploading && uploading.failed)} />
+            {signChip ? (
+              <>
+                <div style={{ display: "{{restFootShown}}", flexDirection: "column" }}>
+                  <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" disabled={Boolean(uploading && uploading.failed)} />
+                </div>
+                <div style={{ display: "{{signFootShown}}", flexDirection: "column" }}>
+                  <SealFooter signLabel="Sign comment" busy busyLabel="Signing comment…" />
+                </div>
+              </>
+            ) : (
+              <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" disabled={Boolean(uploading && uploading.failed)} />
+            )}
           </>
         )}
       </div>
@@ -2528,7 +2563,11 @@ function LockedLicenseRow() {
 function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
+      {/* From the press on Sign the edit the X and the arrow only close the
+          edit and the edit goes on (round 37): the X is named `Close` while it
+          signs — `EditCompose`'s `signing` chip — and the wait and the answer
+          stand on the edited card (`SigningAfterClose`). */}
+      <WizardHeader title="Edit post" leaveLabel={holes ? "{{editLeave}}" : "Leave — the edit is discarded"} help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         {/* The fields scroll under the pinned foot, the wizard reading: a
             form taller than the phone runs on under it, and the foot stays
@@ -2627,7 +2666,12 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
   const shown = (hole) => (bodyChip ? `{{${hole}}}` : "flex");
   return (
     <>
-      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
+      {/* From the press on Sign the edit the X and the arrow only close the
+          edit and the edit goes on (round 37): the X is named `Close` and the
+          commit reads `Signing the edit…` past 200ms — `CommentEdit`'s
+          `signing` chip — and the wait and the answer stand on the edited
+          card in the thread (`SigningAfterClose`). */}
+      <WizardHeader title="Edit comment" leaveLabel={holes ? "{{editLeave}}" : "Leave — the edit is discarded"} help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
           <QuietNote node="target">Your comment on "The long way home".</QuietNote>
@@ -2684,7 +2728,7 @@ function CommentEditBody({ holes = false, bodyChip = false } = {}) {
             citation's withdrawal at its two counter-records (`CommentEditActs`). */}
         <EditGate holes={holes} done={0} total={1} />
         <ActsFooter count={5} node="acts" />
-        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+        <Button style={{ width: "100%" }} node="sign">{holes ? "{{editSign}}" : "Sign the edit"}</Button>
       </div>
     </>
   );

@@ -33,7 +33,15 @@
 
    A PATTERN EXEMPLAR (readme §13, *Canvas pages and flows*): only the gated
    commit is this board's own; the header, the acts card and the rows are
-   `ReplySeal`'s controls, wired on that board. */
+   `ReplySeal`'s controls, wired on that board. 
+   THE `state` CHIP'S `signing` IS A PRESS WHILE THE UPLOADS RUN, CLOSED ON
+   (round 37): past 200ms `Signing comment…` stands over `Close`; Close, the
+   arrow and the X leave while the pictures finish and the signing proceeds.
+   An upload that fails after Close signs nothing and says so at the branch's
+   end, as a failed signing does (`SigningAfterClose`). */
+export const PROPS = { state: { editor: "enum", options: ["rest", "signing"], default: "rest" } };
+export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none", replyLeave: this.props.state === "signing" ? "Close" : "Leave — the reply is discarded"`;
+
 export function Screen() {
-  return <ReplySealBody uploading={{ done: 1, total: 2 }} />;
+  return <ReplySealBody uploading={{ done: 1, total: 2 }} signChip />;
 }

@@ -53,15 +53,29 @@
 
    REGISTERED under its own `keptPicksSeal` prefix (seam 248): `header`, the
    card `acts` with one `actRow` per pick, the `approval` line with its
-   `open`, and the foot `foot` with `sign` and `back`. */
+   `open`, and the foot `foot` with `sign` and `back`. 
+   THE `state` CHIP'S `signing` IS THE SEAL CLOSED ON (round 37, jakob
+   2026-11-11: Close on every seal). From the press on `Sign the picks` the
+   batch is done: past 200ms it reads `Signing the picks…` over Back, which
+   reads `Close` from the press itself; it, the arrow and the X leave for
+   where the review was opened from, and the batch goes on as a whole. Its
+   wait is each target's row, `Signing…` under the face; landed, the
+   snackbar counts it and each anchor wears `Still settling`. Its failure is
+   all-or-nothing and has no drawn place once the review is closed — every
+   pick stays kept, and where that is said waits for jakob (backlog 166).
+   The labels ride the chip as words, so the foot's and the header's names
+   stay one each. */
 export const NODE = "keptPicksSeal";
-export const PROPS = { approval: { editor: "enum", options: ["none", "waiting"], default: "none" } };
-export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none"`;
+export const PROPS = {
+  approval: { editor: "enum", options: ["none", "waiting"], default: "none" },
+  state: { editor: "enum", options: ["rest", "signing"], default: "rest" },
+};
+export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none", keptSign: this.props.state === "signing" ? "Signing the picks…" : "Sign the picks", keptBack: this.props.state === "signing" ? "Close" : "Back", keptLeave: this.props.state === "signing" ? "Close" : "Leave — your picks are kept"`;
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="Leave — your picks are kept" stageLabel="Last step" help="How signing works" node="header" />
+      <WizardHeader title="What you sign" leaveLabel="{{keptLeave}}" stageLabel="Last step" help="How signing works" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <ActsCard
           node="acts"
@@ -95,7 +109,7 @@ export function Screen() {
         {/* `Sign the picks`: the batch can hold a feeling beside the
             opinions (seam 248), and a pick is the review's own word for each
             of its rows (copy-voice, the kept picks' review). */}
-        <SealFooter signLabel="Sign the picks" node="foot" />
+        <SealFooter signLabel="{{keptSign}}" backLabel="{{keptBack}}" node="foot" />
       </div>
     </>
   );

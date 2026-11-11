@@ -34,12 +34,19 @@
 
    REGISTERED under the `postEdit` prefix (seam 248), `EditComposeBody`'s
    names; the body block holds `label` and the field `words` where the
-   picture edit's holds `mediaRow`. */
+   picture edit's holds `mediaRow`. 
+   THE `signing` CHIP DRAWS THE EDIT CLOSED ON (round 37, jakob 2026-11-11:
+   Close on every edit). From the press on `Sign the edit` the act is done:
+   past 200ms the commit reads `Signing the edit…`, and the header's X —
+   named `Close` from the press — and its arrow close the edit while it goes
+   on; the edited card carries the wait and the answer (`SigningAfterClose`). */
 export const NODE = "postEdit";
+export const PROPS = { signing: { editor: "enum", options: ["none", "signing"], default: "none" } };
+export const VALS = `editLeave: this.props.signing === "signing" ? "Close" : "Leave — the edit is discarded", editSign: this.props.signing === "signing" ? "Signing the edit…" : "Sign the edit"`;
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
+      <WizardHeader title="Edit post" leaveLabel="{{editLeave}}" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minHeight: 0 }} data-node="body">
           <FieldLabel node="label">What do you want to publish?</FieldLabel>
@@ -74,7 +81,7 @@ export function Screen() {
         </div>
 
         <ActsFooter count={3} node="acts" />
-        <Button style={{ width: "100%" }} node="sign">Sign the edit</Button>
+        <Button style={{ width: "100%" }} node="sign">{"{{editSign}}"}</Button>
       </div>
     </>
   );
