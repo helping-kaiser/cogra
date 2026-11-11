@@ -1546,6 +1546,13 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     every pick still kept, the profile's seal, back to the edit, and the
     picture's seal, back to the crop (the two seals' *blessed (jakob
     2026-10-05)*).
+  - **The app itself breaking** — no surface is left to carry a notice,
+    so the page says the bug notice's first line alone, `This shouldn't
+    have happened`, with one action, `Reload` (jakob 2026-11-11, T11).
+    The notice's other sentences stay off it: a crash cannot promise
+    that nothing was signed or spent, and the page has no report door.
+    **Drawn** on `AppCrash`. (*New 2026-11-11, drafted — wording
+    jakob's at review.*)
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide,
 the default license; not a code): it reverts, and the target's row says `That didn't go
