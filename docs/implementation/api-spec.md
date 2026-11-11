@@ -1254,6 +1254,16 @@ type User implements Node & Actor {
    anyone else's feed. Most recently hidden first; keyset on
    `(hiddenAt, actor id)`. Field-level: viewer-only."
   hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
+  "The people this user vouched in — every account whose admitting
+   vouch, the one `invitedBy` names on that account, is this user's
+   Opinion (auth.md \"Approval and landing\"). A vouch on an account
+   that has not landed, and a later vouch-Opinion on one that has, is
+   not one. Newest vouch first, keyset on the vouch record's
+   landing-order key; `vouchedAt` is that record's `landedAt`. The
+   admission stands whatever followed it: a stance walked back since,
+   or the account deleted since, which reads as every deleted account
+   reads. An invalid cursor is BAD_INPUT. Field-level: viewer-only."
+  vouchedIn(first: Int, after: String, last: Int, before: String): VouchedInConnection
   "The topics the viewer holds — every Type toward which their netted
    Affinity bundle is not (0, 0): the read-side bundle fold (The
    generic stance) taken across every Type at once, and nothing else.
@@ -2029,6 +2039,18 @@ type HiddenActorEdge {
   cursor: String!
   node: Actor!
   hiddenAt: DateTime!
+}
+
+"The people the viewer vouched in (`User.vouchedIn`)."
+type VouchedInConnection {
+  edges: [VouchedInEdge!]!
+  pageInfo: PageInfo!
+}
+"One person the viewer let in, and when the vouch that did it landed."
+type VouchedInEdge {
+  cursor: String!
+  node: Actor!
+  vouchedAt: DateTime!
 }
 
 "The held-topics page (`User.heldTopics`). `totalCount` is how many

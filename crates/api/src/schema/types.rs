@@ -1725,6 +1725,41 @@ impl User {
         Ok(Some(connection))
     }
 
+    /// The people this user vouched in — every account whose admitting
+    /// vouch, the one `invitedBy` names on that account, is this user's
+    /// Opinion (auth.md "Approval and landing"). A vouch on an account
+    /// that has not landed, and a later vouch-Opinion on one that has, is
+    /// not one. Newest vouch first, keyset on the vouch record's
+    /// landing-order key; `vouchedAt` is that record's `landedAt`. The
+    /// admission stands whatever followed it: a stance walked back since,
+    /// or the account deleted since, which reads as every deleted account
+    /// reads. An invalid cursor is BAD_INPUT. Field-level: viewer-only.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn vouched_in(
+        &self,
+        ctx: &Context<'_>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<Option<VouchedInConnection>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        let page = keyset_page(first, after, last, before)
+            .map_err(|e| super::query::bad_input(e.message))?;
+        let rows = store::vouched_in_by(
+            pool,
+            self.identity.id,
+            page.cursor.map(|key| key.order()),
+            page.backward,
+            page.limit + 1,
+        )
+        .await?;
+        hydrate_vouched_in(pool, rows, &page).await.map(Some)
+    }
+
     /// The topics the viewer holds — every Type toward which their netted
     /// Affinity bundle is not `(0, 0)`, the read-side bundle fold taken
     /// across every Type at once, and nothing else: a bundle walked back
@@ -5359,6 +5394,108 @@ pub(crate) async fn hydrate_hidden(
             ))
         })
         .collect())
+}
+
+/// Names the vouched-in connection `VouchedInConnection`, as the contract
+/// does.
+pub struct VouchedInConnectionName;
+
+impl async_graphql::connection::ConnectionNameType for VouchedInConnectionName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "VouchedInConnection".to_string()
+    }
+}
+
+/// Names the vouched-in edge `VouchedInEdge`.
+pub struct VouchedInEdgeName;
+
+impl async_graphql::connection::EdgeNameType for VouchedInEdgeName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "VouchedInEdge".to_string()
+    }
+}
+
+/// `VouchedInEdge`'s own field: when the vouch landed.
+#[derive(SimpleObject)]
+pub struct VouchedInEdgeFields {
+    /// When the viewer's vouch that let this person in landed — the vouch
+    /// record's `landedAt`. The list's order is that record's place in
+    /// the published order, newest first.
+    pub vouched_at: DateTime<Utc>,
+}
+
+/// One person the viewer vouched in.
+pub type VouchedInEdge = Edge<String, Actor, VouchedInEdgeFields, VouchedInEdgeName>;
+
+/// A page of the people the viewer vouched in.
+pub type VouchedInConnection = Connection<
+    String,
+    Actor,
+    async_graphql::connection::EmptyFields,
+    VouchedInEdgeFields,
+    VouchedInConnectionName,
+    VouchedInEdgeName,
+    async_graphql::connection::DisableNodesField,
+>;
+
+/// A page of vouched-in rows, fetched with `limit + 1`, as a connection:
+/// each account through the actor registry, as [`hydrate_hidden`] reads
+/// one, so an account deleted since still resolves as its husk.
+async fn hydrate_vouched_in(
+    pool: &PgPool,
+    mut rows: Vec<store::VouchedIn>,
+    page: &KeysetPage,
+) -> async_graphql::Result<VouchedInConnection> {
+    use async_graphql::ErrorExtensions;
+    let has_more = rows.len() as i64 > page.limit;
+    if has_more {
+        if page.backward {
+            rows.remove(0);
+        } else {
+            rows.pop();
+        }
+    }
+    let (has_previous, has_next) = if page.backward {
+        (has_more, page.cursor.is_some())
+    } else {
+        (page.cursor.is_some(), has_more)
+    };
+    let ids: Vec<Uuid> = rows.iter().map(|r| r.account_id).collect();
+    let mut actors: std::collections::HashMap<Uuid, store::ActorIdentity> =
+        store::actor_identities_by_ids(pool, &ids)
+            .await?
+            .into_iter()
+            .map(|identity| (identity.id, identity))
+            .collect();
+    let mut connection = VouchedInConnection::new(has_previous, has_next);
+    for row in rows {
+        let Some(identity) = actors.remove(&row.account_id) else {
+            continue;
+        };
+        let vouched_at = row.vouched_at.ok_or_else(|| {
+            tracing::error!(
+                epoch = row.epoch,
+                account = %row.account_id,
+                "a vouch record's epoch has no attested instant"
+            );
+            async_graphql::Error::new("the vouch's landing instant is missing")
+                .extend_with(|_, e| e.set("code", "INTERNAL"))
+        })?;
+        connection.edges.push(Edge::with_additional_fields(
+            encode_landing_cursor(CursorKey {
+                epoch: row.epoch,
+                act_time: row.act_time,
+                position: row.position,
+                id: None,
+            }),
+            Actor::User(User {
+                identity,
+                viewer_session: None,
+            }),
+            VouchedInEdgeFields { vouched_at },
+        ));
+    }
+    Ok(connection)
 }
 
 /// Names the search connection `SearchConnection`, as the contract does,
