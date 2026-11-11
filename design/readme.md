@@ -11174,6 +11174,58 @@ option b), with two of his hand-test findings (seam 275).
   numeric 32 disc change only the letter's role inside the fixed 32px
   box.
 
+### Round 36, the host-card menus — 2026-11-11
+
+jakob's answers to the host-menu questions (H1–H7: "as rec" on all but H4,
+which keeps the row), and two fixes to the written law (backlog 149).
+
+- **One menu board per place a card's menu is raised.** History: the
+  post's, the comment's, your own post's, your own comment's
+  (`HistoryPostMenu`, `HistoryCommentMenu`, `HistoryPostMenuOwn`,
+  `HistoryCommentMenuOwn`). Saved: the post's and the comment's, the first
+  row reading `Unsave` (`SavedPostMenu`, `SavedCommentMenu`). The profile's
+  posts and comments views, someone else's and your own
+  (`ProfilePostsMenu`, `ProfilePostsMenuOwn`, `ProfileCommentsMenu`,
+  `ProfileCommentsMenuOwn`). The tag page's post menu (`TagPageMenu`). The
+  profile card's on the feed (`FeedProfileMenu`). Each menu's rows are the
+  feed's or the detail's atom; only the host beneath differs. History and
+  Saved add no row of their own.
+- **The sheets beneath are drawn once**: License, Report and Remove raise
+  the feed's and the thread's drawn sheets over the host, and no host draws
+  its own (backlog 161).
+- **Own content joins History** like anything seen, and its cards raise the
+  own menus (H1).
+- **The profile card's menu ends with Report** (H2): Save · Mention in a
+  new post · Hide · Report. **On a hidden person's card the Hide row reads
+  `Unhide`**, Settings · hidden accounts' word, with that sheet's snackbar
+  (H3, law only — backlog 159).
+- **`Hide @ada` stays on @ada's own posts tab** (H4); its aftermath is the
+  profile menu's: the reader stays on the profile.
+- **A comment's menu rises over a list host unstacked** (H5): the profile's
+  Comments tab, History and Saved; Cited by, Opinions on this, License and
+  Report rise over that host too. Stacked over the thread only when opened
+  in the thread.
+- **A guest's tap on any row of a post's or a comment's menu opens the
+  guest gate** (H6), the profile menu's rule; nothing new is drawn.
+- **A card's own ⋮ is the menu its sheet draws** (F1, F2): the card master
+  appends the license before a `tail` row, so Report stays last; the shared
+  post fixtures carry the reader's post menu less the license, the comment
+  fixtures the comment's. No board's pixels move (closed menus draw no row);
+  the rest of the sweep is backlog 162.
+- **The profile's settling post reads `now`** (`ProfilePosts`' `posts`
+  chip at `settling`), as every drawn settling card does.
+- **Not drawn**: the own profile's posts and comments views as a setting on
+  their host boards would re-key registered paths (backlog 160); the own
+  views stand beneath the own menu boards.
+- **The gate**: graph edge lines **2177 → 2255** (the twelve boards' rows
+  and scrims; eight host doors now land on them); flows hold at **227**,
+  three re-blessed (`unsave-and-undo` through `SavedPostMenu`;
+  `cite-a-post` and `mention-someone`, whose first step now names the new
+  boards' rows). The registry **169 → 181 screens**, **6134 → 6771**
+  board paths, **1934 → 1972** distinct — `history.menuSheet.*`,
+  `saved.menuSheet.*`, `tagPage.menuSheet.*`, the profile menu's card rows
+  and `feed.menuSheet.mention` added, no path, key or key rule changed.
+
 ---
 
 ## 14. The canvases
