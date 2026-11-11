@@ -35,7 +35,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { fetchHashtagDetail, type HashtagDetail } from "@/lib/api/topics-api";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
 import { ActorChip } from "@/lib/ui/actor-chip";
-import { backFor, tagOrigin } from "@/lib/ui/back-origin";
+import { backFor, EXPLORE_COLD, tagOrigin } from "@/lib/ui/back-origin";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
@@ -96,8 +96,9 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
 
   // THE BACK ARROW NAMES THE LIST THE PAGE WAS OPENED FROM (the origin-naming
   // table; History.md:57: `Back to History`; Explore mid-query, `Back to the
-  // search`), the feed otherwise.
-  const back = backFor(from);
+  // search`), and Explore when nothing is behind it (TagPage.md:37: a shared
+  // URL reads `Back to Explore`).
+  const back = backFor(from, EXPLORE_COLD);
   // EVERY DOOR OUT OF THE PAGE NAMES IT AND THE ORIGIN IT WAS OPENED WITH
   // (`tagOrigin`, the chain; jakob 2026-11-10, grandfathered): what it opens
   // reads `Back to #<thattag>` (readme §13's origin-noun tables) and keeps lit

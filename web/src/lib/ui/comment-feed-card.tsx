@@ -503,6 +503,7 @@ export function CommentFeedCard({
           }))}
           references={comment.references.length}
           testIdPrefix={testId}
+          from={from}
         />
       )}
     </>

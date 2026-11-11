@@ -678,6 +678,7 @@ export function PostCard({
             node={part(node, "tagsLine")}
             onOpen={detail ? () => setRefsOpen(true) : undefined}
             onOpenReferences={detail ? undefined : () => setRefsOpen(true)}
+            from={doorFrom}
           />
           {/* THE SHEET RIDES THE CARD, not the page: the same card is the feed's
               summary, the profile's and the detail's, and every one of them
@@ -687,6 +688,7 @@ export function PostCard({
             onClose={() => setRefsOpen(false)}
             topics={post.topics}
             references={post.references}
+            from={doorFrom}
             testId={`${testId}-refs-sheet`}
           />
         </>
