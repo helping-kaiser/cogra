@@ -20,7 +20,17 @@
    WHILE IT SIGNS, THE SEAL HOLDS THE READER (jakob 2026-10-01). The commit's
    label swap locks the back arrow, Back and the X with it, and past 5s the
    acts card's subline says the network is slow — `SealSigning` and
-   `SealSigningSlow` draw the two moments. */
+   `SealSigningSlow` draw the two moments.
+
+   A STAGED TAG THAT NEVER LANDED (round 30, jakob 2026-11-11, Q7) is the
+   `state` chip's `tagRefused`: the seal with its one staged tag,
+   `#fieldnotes`, refused at signing — the Tags row reads back as before and
+   under it `This tag didn't land.` with `Remove it`, no reason given, and
+   `Sign and publish` stays. It is `SealFaultRow`'s unlanded-citation row at
+   the Tags row, the state `ReplySeal`'s `refused` draws at reply scale. */
+export const PROPS = { state: { editor: "enum", options: ["rest", "tagRefused"], default: "rest" } };
+export const VALS = `restCardShown: this.props.state === "tagRefused" ? "none" : "flex", tagRefusedShown: this.props.state === "tagRefused" ? "flex" : "none"`;
+
 export function Screen() {
-  return <ComposeSealBody />;
+  return <ComposeSealBody chipped />;
 }

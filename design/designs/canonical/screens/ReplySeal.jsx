@@ -42,12 +42,16 @@
    row reads back as before and under it `This post didn't land, so it can't
    be cited.` with `Remove it`, the commit staying (`SealFaultRow`);
    `bug`, `This shouldn't have happened` in the commit's place, `Try again` in
-   it, then `Report a problem` and `Discard the reply` (`SealFaultBug`). */
+   it, then `Report a problem` and `Discard the reply` (`SealFaultBug`);
+   `tagRefused` (round 30, jakob 2026-11-11, Q7), the seal with one staged
+   tag, `#fieldnotes`, that never landed — the Tags row reads back as before
+   and under it `This tag didn't land.` with `Remove it`, no reason given,
+   the commit staying: the refused citation's row at the Tags row. */
 export const PROPS = {
   tags: { editor: "enum", options: ["none", "two", "seven"], default: "none" },
-  state: { editor: "enum", options: ["rest", "refused", "bug"], default: "rest" },
+  state: { editor: "enum", options: ["rest", "refused", "bug", "tagRefused"], default: "rest" },
 };
-export const VALS = `none0Shown: this.props.tags === "none" && this.props.state !== "refused" ? "flex" : "none", none1Shown: this.props.tags === "none" && this.props.state === "refused" ? "flex" : "none", two0Shown: this.props.tags === "two" && this.props.state !== "refused" ? "flex" : "none", two1Shown: this.props.tags === "two" && this.props.state === "refused" ? "flex" : "none", seven0Shown: this.props.tags === "seven" && this.props.state !== "refused" ? "flex" : "none", seven1Shown: this.props.tags === "seven" && this.props.state === "refused" ? "flex" : "none", signShown: this.props.state === "bug" ? "none" : "flex", bugShown: this.props.state === "bug" ? "flex" : "none"`;
+export const VALS = `none0Shown: this.props.tags === "none" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", none1Shown: this.props.tags === "none" && this.props.state === "refused" ? "flex" : "none", two0Shown: this.props.tags === "two" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", two1Shown: this.props.tags === "two" && this.props.state === "refused" ? "flex" : "none", seven0Shown: this.props.tags === "seven" && this.props.state !== "refused" && this.props.state !== "tagRefused" ? "flex" : "none", seven1Shown: this.props.tags === "seven" && this.props.state === "refused" ? "flex" : "none", signShown: this.props.state === "bug" ? "none" : "flex", bugShown: this.props.state === "bug" ? "flex" : "none", tagRefusedShown: this.props.state === "tagRefused" ? "flex" : "none"`;
 
 export function Screen() {
   return <ReplySealBody chipped />;

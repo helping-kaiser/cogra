@@ -31,7 +31,7 @@ import { bundleReadout, formatStancePair, formatTagPair, SR_ONLY, tagReadout } f
 
    THE FAMILY IS THE ACT'S, NOT THE KIND'S (the topic round, 2026-09-14). The
    `kind` answers it almost everywhere, because almost everywhere a topic row
-   carries the TAG a reader signed on some content. On *Your topics* the same
+   carries the TAG a reader signed on some content. On *Your tags* the same
    topic row carries an AFFINITY — the viewer's own stance toward the Type,
    both axes signed, read through the twenty faces. Two different records point
    at the same kind of node, so the kind cannot be the whole answer: `pairFamily`

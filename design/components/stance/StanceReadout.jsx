@@ -1043,14 +1043,14 @@ export function alternatesHelp(names) {
 
    THE FIRST LINE NAMES THE LIST THE TARGET STAYS ON, by the label's kind
    (seam 245, ask 18): a person (`@ada`) stays under `Your people`, a topic
-   (`#saltmaps`) on `Your topics` — held is a netted Affinity other than
+   (`#saltmaps`) on `Your tags` — held is a netted Affinity other than
    (0, 0), so one zero keeps it there. A post or a comment sits on no list
    of the reader's, so its line stops at the opinion. */
 export function unreachableHelp(names, targetLabel) {
   const stays = targetLabel.startsWith("@")
     ? `${targetLabel} stays under Your people`
     : targetLabel.startsWith("#")
-      ? `${targetLabel} stays on Your topics`
+      ? `${targetLabel} stays on Your tags`
       : null;
   return [
     stays === null ? "It still counts among your opinions." : `It still counts among your opinions — ${stays}.`,

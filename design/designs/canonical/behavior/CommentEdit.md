@@ -16,6 +16,8 @@ WHEN tap + Add pictures -> the platform's own picker opens AND NEVER a pick stag
 
 ALWAYS the comment edit's add row reads + Add pictures or a video GIVEN the comment holds words alone, no picture and no clip
 
+ALWAYS commentEdit.pictures holds commentEdit.pictures.add alone, with no commentEdit.pictures.label, no commentEdit.pictures.thumb and no commentEdit.pictures.describeRow, GIVEN the comment holds words alone
+
 WHEN tap + Add pictures or a video -> the platform's own picker opens AND NEVER a pick stage opens
 
 WHEN a video is picked from + Add pictures or a video -> the clip arrives as the comment's video with its cover row, as CommentEditVideo draws it

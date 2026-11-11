@@ -25,7 +25,7 @@ surfaces*).
 | The bottom bar's Wallet slot (`nav · Wallet`, 60 edges) | every bottom bar, every reader state, guests included | `WalletComingSoon` | `Wallet — coming soon.` · `Your earnings will be here.` |
 | The band's chats icon (`chats`, 25 edges) | every root band, signed-in readers; a guest's band (`Main`, `FeedBare`, `WalletComingSoon`) sends it to `GuestGate` | `ChatsComingSoon` | `Chats — coming soon.` · `Your conversations will be here.` |
 | `Message` (4 edges) | `ProfileOther`, `ProfileOtherHeld`, `ProfilePosts`, `ProfileComments` | `ChatsComingSoon` | the same page, back arrow `Back to the profile` |
-| The Sky card | `Explore` at rest, between the search field and Your topics | nothing — an announcement, no flow number | `The Sky — coming soon` · `Your sky — every account a star, sized by your own paths to it.` |
+| The Sky card | `Explore` at rest, between the search field and Your tags | nothing — an announcement, no flow number | `The Sky — coming soon` · `Your sky — every account a star, sized by your own paths to it.` |
 
 The edge counts are `graph.json`'s today: every edge whose outcome is
 the door's board. A new board that carries the bar or the band adds
@@ -117,5 +117,5 @@ the same day; they stay as the record of what was asked.)
    Topic holding ships whole inside v1.0.0. The tag round's roadmap
    note ("client-hidden until the topic feed lands") is superseded
    (readme §13 carries the ruled-since mark); the tag page's stance
-   row, Explore's `Your topics` door, `YourTopics` and the filter's
+   row, Explore's `Your tags` door, `YourTopics` and the filter's
    topic section all show, as drawn.
