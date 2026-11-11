@@ -1229,6 +1229,7 @@ label.
 | `test:unit:the-batch-cap-admits-ten-and-refuses-eleven`                                                        | the_batch_cap_admits_ten_and_refuses_eleven                                                 |
 | `test:unit:the-cap-counts-scalars-of-the-trimmed-query`                                                        | the_cap_counts_scalars_of_the_trimmed_query                                                 |
 | `test:unit:the-cap-is-checked-before-the-entries`                                                              | the_cap_is_checked_before_the_entries                                                       |
+| `test:unit:the-cursor-carries-the-key-of-record`                                                               | the_cursor_carries_the_key_of_record                                                        |
 | `test:unit:the-depth-bound-admits-the-deepest-real-chain`                                                      | the_depth_bound_admits_the_deepest_real_chain                                               |
 | `test:unit:the-dev-mailer-is-the-default`                                                                      | the_dev_mailer_is_the_default                                                               |
 | `test:unit:the-disabled-corpus-always-passes`                                                                  | the_disabled_corpus_always_passes                                                           |
