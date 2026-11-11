@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Space
-import com.cogra.core.designsystem.v2.token.TypeTokens
 
 /** `ActsCard.jsx` ROW's 44px floor. */
 private val ACT_ROW_MIN = 44.dp
@@ -89,7 +88,7 @@ fun ActsCard(rows: List<ActsCardRow>, slow: Boolean, modifier: Modifier = Modifi
                     val spoken = actsCountReading(row.count, row.noun)
                     Text(
                         text = "${row.count}",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
                             .dataNode(node?.div("actRow")?.div("count"))
@@ -133,7 +132,7 @@ private fun ActsFooter(acts: Int, slow: Boolean, node: DataNode?) {
         if (note != null) {
             Text(
                 text = note,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                style = MaterialTheme.typography.labelSmall,
                 color = if (slow) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .fillMaxWidth()
