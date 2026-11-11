@@ -99,6 +99,9 @@ export function ProfilePostsList({
                 shareHref={`/posts/${post.id}`}
                 stream={{ href: streamHref(post.id), onOpen: () => onOpenStream(post.id) }}
                 authorHere
+                // Its tag chips and sheet rows name the profile (TagPage.md:35,
+                // `Back to the profile from a profile's posts`).
+                doorFrom={from}
                 testId={`profile-post-${post.id}`}
                 authorTestId={`profile-post-author-${post.id}`}
                 stanceTestId={`profile-post-stance-${post.id}`}
