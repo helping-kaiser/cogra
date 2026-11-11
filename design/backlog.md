@@ -5021,6 +5021,9 @@ not make alone:
   Carving them out returns them to an uncapped people section, which is
   what the web client serves today. If the cap stays, the server may
   need a per-section `first` (seam 224).
+  - **Ruled yes** (jakob 2026-11-11): three per section before `See all …`
+    on every sectioned surface; the boards' notes say it as the rule
+    (round 31).
 - **Saved's own people-only narrowing.** Saved has no kind filter, so
   `See all profiles` there opens a state of Saved's own — the query kept,
   the people alone. It is described in `SavedSearch.md`, not drawn, and
