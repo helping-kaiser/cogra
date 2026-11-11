@@ -1215,3 +1215,78 @@ async fn every_record_a_walk_back_signed_reads_walk_back(pool: PgPool) {
          the pick it took back stays an opinion given"
     );
 }
+
+/// The profile's figures count bundles, never records (open-questions.md
+/// Q35, jakob 2026-11-10): one person who gave Alice three opinions reads
+/// as one on her `Opinions on them`, and Alice's three opinions on that
+/// one person as one on her `Opinions by them`; a second person makes two.
+/// Inside the one person's bundle the revisions still count — three
+/// records, which `totalCount` keeps serving. A post's opinions count the
+/// same way: its holders, not their revisions.
+///
+/// A figure of people counts each person's bundle once, however often it was revised, while the records inside it keep their own count.
+/// ´claim:chronicle:a-figure-counts-bundles-never-revisions´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_profile_figures_count_bundles_never_revisions(pool: PgPool) {
+    let rig = Chronicle::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let (bob, bob_key) = rig.funded_actor("bob").await;
+    let (carol, carol_key) = rig.funded_actor("carol").await;
+    let post = rig.post(alice, &alice_key, "Held").await;
+    for p_d in [0.2, 0.4, -0.1] {
+        rig.stance(bob, &bob_key, alice, p_d, 0.5).await;
+        rig.stance(alice, &alice_key, bob, p_d, 0.5).await;
+        rig.stance(bob, &bob_key, post, p_d, 0.5).await;
+    }
+
+    const FIGURES: &str = r#"query($id: UUID!, $post: UUID!) {
+        user(id: $id) {
+          on: incomingRecords(family: OPINION, payloadMarked: false, first: 0) {
+            totalCount bundleCount
+          }
+          by: outgoingRecords(family: OPINION, toKind: USER, payloadMarked: false, first: 0) {
+            totalCount bundleCount
+          }
+          posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 0) {
+            totalCount bundleCount
+          }
+        }
+        post(id: $post) {
+          incomingRecords(family: OPINION, payloadMarked: false, first: 0) { totalCount bundleCount }
+        }
+      }"#;
+    let one = rig
+        .gql(FIGURES, json!({ "id": alice, "post": post }))
+        .await;
+    assert_eq!(one["user"]["on"]["bundleCount"], json!(1), "{one}");
+    assert_eq!(one["user"]["on"]["totalCount"], json!(3), "inside the bundle: {one}");
+    assert_eq!(one["user"]["by"]["bundleCount"], json!(1), "{one}");
+    assert_eq!(one["user"]["by"]["totalCount"], json!(3), "{one}");
+    assert_eq!(one["user"]["posts"]["bundleCount"], json!(1), "{one}");
+    assert_eq!(one["user"]["posts"]["totalCount"], json!(1), "{one}");
+    assert_eq!(one["post"]["incomingRecords"]["bundleCount"], json!(1), "{one}");
+    assert_eq!(one["post"]["incomingRecords"]["totalCount"], json!(3), "{one}");
+
+    rig.stance(carol, &carol_key, alice, 0.3, 0.3).await;
+    rig.stance(alice, &alice_key, carol, 0.3, 0.3).await;
+    let two = rig
+        .gql(FIGURES, json!({ "id": alice, "post": post }))
+        .await;
+    assert_eq!(two["user"]["on"]["bundleCount"], json!(2), "{two}");
+    assert_eq!(two["user"]["by"]["bundleCount"], json!(2), "{two}");
+    assert_eq!(two["user"]["on"]["totalCount"], json!(4), "{two}");
+
+    let bundle = rig
+        .gql(
+            r#"query($a: UUID!, $t: UUID!) {
+                 records(author: $a, target: $t, family: OPINION, first: 0) { totalCount bundleCount }
+               }"#,
+            json!({ "a": bob, "t": alice }),
+        )
+        .await;
+    assert_eq!(
+        bundle["records"],
+        json!({ "totalCount": 3, "bundleCount": 1 }),
+        "the one person's bundle holds three opinions"
+    );
+}

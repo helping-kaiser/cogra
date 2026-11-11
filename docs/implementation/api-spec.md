@@ -887,7 +887,18 @@ type CommentEdge {
 type RecordConnection {
   edges: [RecordEdge!]!
   pageInfo: PageInfo!
+  "How many records the filter matches, across every page — each
+   revision one."
   totalCount: Int
+  "How many bundles the filter's records fold into, across every
+   page: one author's records in one family toward one target (and,
+   on a hyper-edge, one terminal) are one bundle, however often it
+   was revised — the count a figure of people reads, where
+   totalCount counts each revision. A payload-marked record folds
+   through no bundle and counts as its own. Null on a ranking
+   slice's records (RankHop.records), which are a reach, not a
+   filter. Priced at zero, as totalCount is."
+  bundleCount: Int
 }
 type RecordEdge {
   cursor: String!
@@ -925,9 +936,17 @@ vouch landed an account is the application ledger's: the first of
 the account's approval vouches to land, the one `User.invitedBy`
 names. The `genesis` filter on the record reads keeps exactly the
 GENESIS records (`true`) or the rest (`false`), so a count and the
-rows it counts never disagree; the profile's `Posts` figure is
-`outgoingRecords(family: PUBLISH, toKind: POST, genesis: true)`'s
-`totalCount` ([open-questions.md Q35](../open-questions.md)).
+rows it counts never disagree. The profile's figures count bundles,
+never records ([open-questions.md Q35](../open-questions.md)): one
+person's opinions toward one target are one, however often revised.
+`Posts` is `outgoingRecords(family: PUBLISH, toKind: POST, genesis:
+true)`'s `totalCount` — one genesis per post, so its records are its
+bundles. `Opinions on them` is `incomingRecords(family: OPINION,
+payloadMarked: false)`'s `bundleCount` — the people holding an
+opinion on the person — and `Opinions by them` is
+`outgoingRecords(family: OPINION, toKind: USER, payloadMarked:
+false)`'s — the people they hold one on: exactly the rows the
+opinions page lists, which folds the same unmarked records.
 
 ### Per-field moderation
 

@@ -5583,6 +5583,28 @@ impl RecordConnectionFields {
         let total = mirror::count_records(pool, filter).await?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
     }
+
+    /// How many bundles this filter's records fold into, across every
+    /// page: one author's records in one family toward one target (and,
+    /// on a hyper-edge, one terminal) are one bundle, however often it was
+    /// revised — the count a figure of people reads, where `totalCount`
+    /// counts each revision. A payload-marked record folds through no
+    /// bundle and counts as its own. Null on a ranking slice's records,
+    /// which are a reach, not a filter.
+    ///
+    /// Saturates at [`i32::MAX`] as `totalCount` does.
+    #[graphql(complexity = 0)]
+    async fn bundle_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        if self.slice.is_some() {
+            return Ok(None);
+        }
+        let Some(filter) = &self.filter else {
+            return Ok(Some(0));
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let total = mirror::count_bundles(pool, filter).await?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
 }
 
 /// A page of records, carrying the filter that produced it so the count
