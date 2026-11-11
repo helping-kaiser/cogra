@@ -82,7 +82,6 @@
     "ApplicantFeed": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -191,7 +190,6 @@
     "ApplicantFellThrough": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -317,7 +315,6 @@
     "ApplicantLanding": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -438,7 +435,6 @@
     "ApplicantRejected": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -563,7 +559,6 @@
     "ApplicantWaiting": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -691,7 +686,6 @@
     "ApprovePad": {
       "prefix": "invites",
       "keys": {
-        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
       },
@@ -1042,7 +1036,6 @@
     "CitedBy": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.citedBySheet.citation": "the citation's position in the list, newest first, counted from 1 (the cited-by sheet)",
@@ -1322,12 +1315,9 @@
     "CommentLicense": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "postDetail.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)",
-        "postDetail.threadSheet.commentCard": "the comment author's handle, without @ (CommentCard)",
-        "postDetail.threadSheet.viewReplies": "the comment author's handle, without @ — the key of the card the line hangs under (CommentCard)"
+        "postDetail.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)"
       },
       "nodes": {
         "postDetail.bottomBar": [],
@@ -1497,11 +1487,8 @@
     "CommentMenu": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "postDetail.threadSheet.commentCard": "the comment author's handle, without @ (CommentCard)",
-        "postDetail.threadSheet.viewReplies": "the comment author's handle, without @ — the key of the card the line hangs under (CommentCard)"
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "postDetail.bottomBar": [],
@@ -1663,11 +1650,8 @@
     "CommentMenuOwn": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "postDetail.threadSheet.commentCard": "the comment author's handle, without @ (CommentCard)",
-        "postDetail.threadSheet.viewReplies": "the comment author's handle, without @ — the key of the card the line hangs under (CommentCard)"
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "postDetail.bottomBar": [],
@@ -1829,12 +1813,9 @@
     "CommentRemoveConfirm": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "postDetail.dialog": "the answer chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "postDetail.threadSheet.commentCard": "the comment author's handle, without @ (CommentCard)",
-        "postDetail.threadSheet.viewReplies": "the comment author's handle, without @ — the key of the card the line hangs under (CommentCard)"
+        "postDetail.dialog": "the answer chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "postDetail.bottomBar": [],
@@ -2011,11 +1992,8 @@
     "CommentRemoved": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "postDetail.threadSheet.commentCard": "the comment author's handle, without @ (CommentCard)",
-        "postDetail.threadSheet.viewReplies": "the comment author's handle, without @ — the key of the card the line hangs under (CommentCard)"
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "postDetail.bottomBar": [],
@@ -2444,7 +2422,6 @@
     "DeleteAccountCanceled": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -3538,7 +3515,6 @@
     "Feed": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -3656,7 +3632,6 @@
     "FeedCommentShapes": {
       "prefix": "feed",
       "keys": {
-        "feed.commentCard": "the comment author's handle, without @ (CommentCard)",
         "feed.commentCard.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)"
       },
       "nodes": {
@@ -3739,7 +3714,6 @@
     "FeedCover": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -3858,7 +3832,6 @@
     "FeedDeleting": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -4150,7 +4123,6 @@
     "FeedHidden": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -4272,12 +4244,8 @@
     "FeedKinds": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "feed.commentCard": "the comment author's handle, without @ (CommentCard)",
-        "feed.profileCard": "the person's handle, without @ (the profile feed card)",
-        "feed.tagCard": "the tag's name, without # (the tag feed card)"
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "feed.band": [],
@@ -4506,7 +4474,6 @@
     "FeedNewerVersion": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -4649,7 +4616,6 @@
     "FeedPostLicense": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "feed.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)"
@@ -4784,7 +4750,6 @@
     "FeedPostMenu": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -4909,7 +4874,6 @@
     "FeedPostMenuOwn": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -5044,7 +5008,6 @@
     "FeedRemoveConfirm": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "feed.dialog": "the answer chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
@@ -5195,7 +5158,6 @@
     "FeedRemoved": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -5321,7 +5283,6 @@
     "FeedReportConfirm": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -5445,7 +5406,6 @@
     "FeedSeenTail": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -5594,7 +5554,6 @@
     "FeedSheet": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "feed.filterSheet.people.everyone": "the people chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
@@ -5807,7 +5766,6 @@
     "FeedUnread": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -5926,13 +5884,9 @@
     "History": {
       "prefix": "history",
       "keys": {
-        "history.card": "the author's handle, without @ (PostCard)",
         "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "history.commentCard": "the comment author's handle, without @ (CommentCard)",
-        "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)",
-        "history.profileCard": "the person's handle, without @ (the profile feed card)",
-        "history.tagCard": "the tag's name, without # (the tag feed card)"
+        "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)"
       },
       "nodes": {
         "history.bottomBar": [],
@@ -6212,10 +6166,8 @@
     "HistoryFilter": {
       "prefix": "history",
       "keys": {
-        "history.card": "the author's handle, without @ (PostCard)",
         "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "history.commentCard": "the comment author's handle, without @ (CommentCard)"
+        "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "history.bottomBar": [],
@@ -6370,10 +6322,8 @@
     "HistoryHidden": {
       "prefix": "history",
       "keys": {
-        "history.card": "the author's handle, without @ (PostCard)",
         "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "history.commentCard": "the comment author's handle, without @ (CommentCard)",
         "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)"
       },
       "nodes": {
@@ -6568,11 +6518,7 @@
     },
     "HistorySearch": {
       "prefix": "history",
-      "keys": {
-        "history.card": "the author's handle, without @ (PostCard)",
-        "history.profileCard": "the person's handle, without @ (the profile feed card)",
-        "history.tagCard": "the tag's name, without # (the tag feed card)"
-      },
+      "keys": {},
       "nodes": {
         "history.bottomBar": [],
         "history.bottomBar.composeSlot": [],
@@ -6794,7 +6740,6 @@
     "InviteCreated": {
       "prefix": "invites",
       "keys": {
-        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
       },
@@ -6932,7 +6877,6 @@
     "InviteExpiry": {
       "prefix": "invites",
       "keys": {
-        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
         "invites.expirySheet.expiryOption": "the expiry's length as its row prints it, lowercased, each run of other characters one - (the invite's expiry chooser)",
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
@@ -7057,7 +7001,6 @@
     "InviteNew": {
       "prefix": "invites",
       "keys": {
-        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
       },
@@ -7163,7 +7106,6 @@
     "Invites": {
       "prefix": "invites",
       "keys": {
-        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
         "invites.applicationsEmpty": "the sections chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)",
@@ -7511,7 +7453,6 @@
     "KeyElsewhere": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -7613,7 +7554,6 @@
     "KeyElsewhereNoBackup": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -7844,7 +7784,6 @@
     "PadPending": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -7949,7 +7888,6 @@
     "PadPendingReview": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -8050,7 +7988,6 @@
     "PostDetail": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -8152,7 +8089,6 @@
     "PostDetailHidden": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -8244,7 +8180,6 @@
     "PostLicense": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)"
@@ -8349,11 +8284,9 @@
     "PostOpinions": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.opinionsSheet.empty": "the list chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "postDetail.opinionsSheet.opinion": "the opinion holder's handle, without @ (the opinions sheet)",
         "postDetail.opinionsSheet.redactedOpinion": "the deleted holder's actor id, the lowercase UUID the wire carries (the opinions sheet, where a holder who deleted their account has no handle left to key by)"
       },
       "nodes": {
@@ -8703,10 +8636,7 @@
     },
     "ProfileComments": {
       "prefix": "profile",
-      "keys": {
-        "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (a profile's comments view, where every card has the one author)",
-        "profile.comments.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (a profile's comments view)"
-      },
+      "keys": {},
       "nodes": {
         "profile.bottomBar": [],
         "profile.bottomBar.composeSlot": [],
@@ -9300,7 +9230,6 @@
     "ProfilePosts": {
       "prefix": "profile",
       "keys": {
-        "profile.posts.card": "the post's id, the lowercase UUID the wire carries (a profile's posts view, where every card has the one author)",
         "profile.posts.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "profile.posts.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -9442,7 +9371,6 @@
       "prefix": "profileStances",
       "keys": {
         "profileStances.list.redactedRow": "the deleted account's actor id, the lowercase UUID the wire carries (the opinions page, where a person who deleted their account has no handle left to key by)",
-        "profileStances.list.row": "the handle of the person the row names, without @ — the opinion's holder on the On tab, the one it is held on on the By tab (the opinions page)",
         "profileStances.tabRow": "the tab chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
@@ -9689,7 +9617,6 @@
     "ReaderPostMenu": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -10026,7 +9953,6 @@
     "RejectAllConfirm": {
       "prefix": "invites",
       "keys": {
-        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
       },
@@ -10124,7 +10050,6 @@
     "RejectConfirm": {
       "prefix": "invites",
       "keys": {
-        "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
         "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
         "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
       },
@@ -10222,7 +10147,6 @@
     "RemoveConfirm": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.dialog": "the answer chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
@@ -10333,7 +10257,6 @@
     "RemoveMenu": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -10427,9 +10350,7 @@
     },
     "Removed": {
       "prefix": "postDetail",
-      "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)"
-      },
+      "keys": {},
       "nodes": {
         "postDetail.bottomBar": [],
         "postDetail.bottomBar.composeSlot": [],
@@ -10501,11 +10422,8 @@
     "ReplyEntry": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "postDetail.threadSheet.commentCard": "the comment author's handle, without @ (CommentCard)",
-        "postDetail.threadSheet.viewReplies": "the comment author's handle, without @ — the key of the card the line hangs under (CommentCard)"
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "postDetail.bottomBar": [],
@@ -10662,7 +10580,6 @@
     "ReportConfirm": {
       "prefix": "postDetail",
       "keys": {
-        "postDetail.card": "the author's handle, without @ (PostCard)",
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
@@ -10801,11 +10718,8 @@
     "Saved": {
       "prefix": "saved",
       "keys": {
-        "saved.card": "the author's handle, without @ (PostCard)",
         "saved.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "saved.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
-        "saved.commentCard": "the comment author's handle, without @ (CommentCard)",
-        "saved.profileCard": "the person's handle, without @ (the profile feed card)"
+        "saved.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
       "nodes": {
         "saved.bottomBar": [],
@@ -11051,10 +10965,7 @@
     },
     "SavedSearch": {
       "prefix": "saved",
-      "keys": {
-        "saved.card": "the author's handle, without @ (PostCard)",
-        "saved.profileCard": "the person's handle, without @ (the profile feed card)"
-      },
+      "keys": {},
       "nodes": {
         "saved.bottomBar": [],
         "saved.bottomBar.composeSlot": [],
@@ -11193,11 +11104,7 @@
     },
     "SavedUndo": {
       "prefix": "saved",
-      "keys": {
-        "saved.card": "the author's handle, without @ (PostCard)",
-        "saved.commentCard": "the comment author's handle, without @ (CommentCard)",
-        "saved.profileCard": "the person's handle, without @ (the profile feed card)"
-      },
+      "keys": {},
       "nodes": {
         "saved.bottomBar": [],
         "saved.bottomBar.composeSlot": [],
@@ -11907,7 +11814,6 @@
     "SettingsHidden": {
       "prefix": "settings",
       "keys": {
-        "settings.hiddenSheet.list.account": "the hidden account's handle, without @ (the hidden-accounts sheet)",
         "settings.hiddenSheet.list.redactedAccount": "the deleted account's actor id, the lowercase UUID the wire carries (the hidden-accounts sheet, where a deleted account has no handle left to key by)",
         "settings.sessions.session": "the session's position in the list, this device first, counted from 1 (Settings' sessions)"
       },
@@ -12586,7 +12492,6 @@
     "SettingsUnhidden": {
       "prefix": "settings",
       "keys": {
-        "settings.hiddenSheet.list.account": "the hidden account's handle, without @ (the hidden-accounts sheet)",
         "settings.sessions.session": "the session's position in the list, this device first, counted from 1 (Settings' sessions)"
       },
       "nodes": {
@@ -13321,7 +13226,6 @@
     "VouchBack": {
       "prefix": "feed",
       "keys": {
-        "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
       },
