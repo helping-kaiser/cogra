@@ -64,15 +64,25 @@
    "+ Add a tag" once per tag.
 
    THE PICKED ROW MOVES ABOVE THE RESULTS (jakob, 2026-10-01, overruling the
-   in-list check). The moment a row is picked it leaves the list and stands in
-   the staged section between the name field and the results, a
-   `StagedReference` with its × — the post-MVP chat pickers' idiom exactly
-   (`ChatPickerGroup`): no heading, the rows themselves say what they are.
-   Here two of the index's rows are in. The × un-stages the tag on the spot,
-   and the row goes back to the list if the query still matches it; the
+   in-list check). The moment a row is picked it leaves the results and
+   stands in the staged section, a `StagedReference` with its × — the
+   post-MVP chat pickers' idiom exactly (`ChatPickerGroup`): no heading, the
+   rows themselves say what they are. The × un-stages the tag on the spot,
+   and the row goes back to the results if the query still matches it; the
    composer's chip × still removes it too. The query stays as typed, so the
    list being picked from does not move under the reader. A tag the composer
    already holds stands in the staged section the moment the picker opens.
+
+   THE STAGED ROWS ARE THE LIST'S FIRST ROWS, AT MOST THREE (jakob
+   2026-11-10 and 2026-11-11). The fixed head ends at the name field, the
+   rule and the cap line; below it ONE list scrolls, the staged section its
+   first rows and the results after them. It shows the three newest staged,
+   newest on top, so a reader typing a name still sees the results without
+   scrolling past the stage. Past three, `Show all` stands under them — the
+   pick tray's door, the same words and the same control (`PickTray`) — and
+   opens the sheet that holds every staged tag, the one the seals open
+   (`TagsSheet`, `ComposeTags`); nothing unfolds in place, so there is no
+   "Show fewer". Here two of the index's rows are in.
 
    THE MOVE IS SPOKEN TOO (jakob, 2026-10-01). The row's move is all an eye
    needs; an ear gets `PickAnnouncement`, a polite status message that says
@@ -96,15 +106,20 @@
    REGISTERED under its own `tagPicker` prefix (seam 248), with
    `TagPickerTyping` and `TagPickerRefused`: `header` (its "?" `help`), the
    field `nameField`, the naming `rule`, the `staged` section with one `tag`
-   per staged name, a result row `tag` keyed by its name, the `footnote`, the
-   `announcement` and `done`.
+   per staged name shown and its `door`, a result row `tag` keyed by its
+   name, the `footnote`, the `announcement` and `done`.
 
-   THE `state` CHIP DRAWS THE BATCH AT ITS CAP AND THE READ THAT FAILED (seam
-   248, GAPS B–C; `ReferencePicker`'s chip, the shared anatomy). `cap` is the
-   composer holding its ten tags: `Up to 10 tags per post.` stands above the
-   list — `per comment` from a reply's composer — and every row under it,
-   the typed name's included, is dimmed and takes no tap, the keyboard's
-   action key staging nothing; the staged rows' × still un-stage. `fault` is
+   THE `state` CHIP DRAWS HOW MANY ARE STAGED, THE BATCH AT ITS CAP AND THE
+   READ THAT FAILED (seam 248, GAPS B–C; `ReferencePicker`'s chip, the
+   shared anatomy). `picking` is two staged; `none` is nothing staged, the
+   results the list's first rows; `seven` is more than three, the three
+   newest and `Show all`, the door to `ComposeTags`' sheet. `cap` is the composer holding its ten tags: the three newest and
+   `Show all`, `Up to 10 tags per post.` standing in the head under the rule
+   — `per comment` from a reply's composer — and every result row, the typed
+   name's included, dimmed and taking no tap, the keyboard's action key
+   staging nothing; the staged rows' × still un-stage. A staged tag is never
+   also a result, so `saltmaps` leaves the results wherever it is staged.
+   `fault` is
    the candidates' read that got no answer: the typed name's row still
    stands, because it is the field's own words and needs no read, and the
    house line's noun form takes the candidates' place, `Can't reach the
@@ -114,8 +129,25 @@
    beside a Retry says it twice. An empty list and the read in
    flight stay silent — the typed name's row is already the answer. */
 export const NODE = "tagPicker";
-export const PROPS = { state: { editor: "enum", options: ["picking", "cap", "fault"], default: "picking" } };
-export const VALS = `capShown: this.props.state === "cap" ? "block" : "none", faultShown: this.props.state === "fault" ? "block" : "none", candidatesShown: this.props.state === "fault" ? "none" : "flex", rowsOpacity: this.props.state === "cap" ? "var(--state-disabled)" : "1"`;
+export const PROPS = { state: { editor: "enum", options: ["picking", "cap", "fault", "none", "seven"], default: "picking" } };
+export const VALS = `capShown: this.props.state === "cap" ? "block" : "none", faultShown: this.props.state === "fault" ? "block" : "none", candidatesShown: this.props.state === "fault" ? "none" : "flex", rowsOpacity: this.props.state === "cap" ? "var(--state-disabled)" : "1", twoShown: this.props.state === "picking" || this.props.state === "fault" ? "flex" : "none", sevenShown: this.props.state === "seven" ? "flex" : "none", tenShown: this.props.state === "cap" ? "flex" : "none", saltmapsShown: this.props.state === "seven" || this.props.state === "cap" ? "none" : "flex"`;
+
+/* The staged sets the `state` chip draws, oldest first; the list shows the
+   three newest, newest on top. `seven` is the seal's well-tagged post
+   (`SEAL_TAGS_MANY`), so the sheet it opens is the seals' own; the cap's ten
+   add the tree's other sample tags. */
+const STAGED_SEVEN = SEAL_TAGS_MANY;
+const STAGED_TEN = ["saltmarsh", "saltflats", "fieldnotes", "coastroad", "tidal", "estuary", "cartography", "lowtide", "photography", "tidetables"];
+const newestThree = (tags) => tags.slice(-3).reverse();
+const stagedRows = (tags) => newestThree(tags).map((name) => <StagedReference key={name} kind="topic" name={name} onRemove={() => {}} node="tag" nodeKey={name} />);
+const SHOW_ALL = (
+  <div style={{ display: "flex", padding: "0 12px" }}>
+    <InlineAction size="sm" selfStart node="door">
+      Show all
+    </InlineAction>
+  </div>
+);
+
 export function Screen() {
   return (
     <>
@@ -129,22 +161,39 @@ export function Screen() {
             Letters, digits, dot, dash and underscore. Capitals become lowercase.
           </p>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }} data-node="staged">
-          <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} node="tag" nodeKey="saltmarsh" />
-          <StagedReference kind="topic" name="saltflats" onRemove={() => {}} node="tag" nodeKey="saltflats" />
-        </div>
-        <PickAnnouncement said="Added — in the staged list." node="announcement" />
-      </div>
-      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        {/* The cap line stands in the fixed head, under the rule, in sight
+            however far the list is scrolled (jakob 2026-11-11). */}
         <div style={{ display: "{{capShown}}" }} data-node-chip="state" data-node-key="cap">
           <p style={PICKER_NOTE} data-node="cap">
             Up to 10 tags per post.
           </p>
         </div>
+        <PickAnnouncement said="Added — in the staged list." node="announcement" />
+      </div>
+      {/* ONE SCROLLING LIST: the staged rows are its first rows, the results
+          follow (jakob 2026-11-10), drawn at its top as the edits draw a
+          scrolled column (`ReplyVideo`). */}
+      <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }} data-node="staged">
+          <div style={{ display: "{{twoShown}}", flexDirection: "column", gap: 8 }}>
+            <StagedReference kind="topic" name="saltflats" onRemove={() => {}} node="tag" nodeKey="saltflats" />
+            <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} node="tag" nodeKey="saltmarsh" />
+          </div>
+          <div style={{ display: "{{sevenShown}}", flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="seven">
+            {stagedRows(STAGED_SEVEN)}
+            {SHOW_ALL}
+          </div>
+          <div style={{ display: "{{tenShown}}", flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="cap">
+            {stagedRows(STAGED_TEN)}
+            {SHOW_ALL}
+          </div>
+        </div>
         <div style={{ display: "flex", flexDirection: "column", opacity: "{{rowsOpacity}}" }}>
           <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="salt" />
           <div style={{ display: "{{candidatesShown}}", flexDirection: "column" }}>
-            <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltmaps" />
+            <div style={{ display: "{{saltmapsShown}}", flexDirection: "column" }}>
+              <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltmaps" />
+            </div>
             <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltcrust" />
           </div>
         </div>

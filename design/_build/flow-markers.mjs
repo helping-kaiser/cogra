@@ -564,7 +564,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Done</button>", tag: "button" },
     // The staged section's × (the closing batch, 2026-10-01), appended so no
     // via renumbers.
-    { n: 7, find: 'aria-label="Remove Salt maps of the coast road"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove Salt maps of the coast road"', tag: "button", all: true },
     // The `filter` state's kinds-only sheet (seam 248, GAP A), appended: the
     // kind chips share one via, as `ExploreFilter`'s do, then the foot's pair
     // and the scrim.
@@ -574,6 +574,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: 'class="cg-scrim-in"', tag: "div" },
     // The `fault` state's Retry (round 25, the fault family), appended.
     { n: 12, find: 'data-node="referencePicker.fault.retry"', tag: "button" },
+    // Round 31: the staged rows past the first, the × of each one via 7's
+    // edge, and the door under the three, appended.
+    { n: 7, find: 'aria-label="Remove First try at a rubbing"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove Kel Moreau"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove Nadia Rask"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove Salome Ward"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove Ines Salas"', tag: "button" },
+    { n: 13, find: ">Show all</button>", tag: "button", all: true },
   ],
   /* A reference row per V1.0 kind, each its own edge to its own board (readme
      §13, the V1.0 scope cut): the person, the posts, the comment, numbered in
@@ -2879,6 +2887,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'aria-label="Remove saltflats"', tag: "button" },
     // The `fault` state's Retry (round 25, the fault family), appended.
     { n: 7, find: 'data-node="tagPicker.fault.retry"', tag: "button" },
+    // Round 31: the staged rows of `seven` and `cap`, each × via 6's edge,
+    // and the door under the three, appended.
+    { n: 6, find: 'aria-label="Remove lowtide"', tag: "button", all: true },
+    { n: 6, find: 'aria-label="Remove cartography"', tag: "button" },
+    { n: 6, find: 'aria-label="Remove estuary"', tag: "button" },
+    { n: 6, find: 'aria-label="Remove tidetables"', tag: "button" },
+    { n: 6, find: 'aria-label="Remove photography"', tag: "button" },
+    { n: 8, find: ">Show all</button>", tag: "button", all: true },
   ],
   TagPickerTyping: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },

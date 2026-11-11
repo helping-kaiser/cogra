@@ -186,11 +186,13 @@ function PickAnnouncement({ said = "", node }) {
 }
 
 /* THE PICKERS' CAP LINE (seam 248, GAP B): the batch's ten reached, said once
-   above the rows it stills — the naming rule's register under the field, a
-   fact and not a fault, so never `--error`. */
+   in the fixed head — under the naming rule on the tag picker, under the
+   filter on the citation picker (jakob 2026-11-11) — so it stays in sight
+   however the list below is scrolled. The naming rule's register and its
+   padding, a fact and not a fault, so never `--error`. */
 const PICKER_NOTE = {
   margin: 0,
-  padding: "8px 24px",
+  padding: "0 24px 8px",
   fontSize: "var(--text-body-small)",
   fontWeight: "var(--text-body-small--font-weight)",
   lineHeight: "var(--text-body-small--line-height)",

@@ -1,8 +1,16 @@
 # ReferencePicker · `spec:design:behavior-reference-picker`
 
-ALWAYS referencePicker.staged.stagedReference stands only in the staged section above the results
+ALWAYS referencePicker.staged.stagedReference stands only in the staged section, the first rows of the one scrolling list, above the results
 
-WHEN tap a result row -> the row's target is staged in the composer's references AND the row moves into the staged section AND the status message announces the stage AND NEVER the picker closes
+ALWAYS the staged section shows at most three staged citations, the three newest, newest on top
+
+ALWAYS referencePicker.staged.door reads Show all under the three GIVEN more than three citations are staged
+
+WHEN tap referencePicker.staged.door -> the sheet that holds every staged citation rises over the picker, the one the seals open AND NEVER the staged section unfolds in place
+
+ALWAYS the three staged rows stay above the results while a query is typed, and their × un-stages
+
+WHEN tap a result row -> the row's target is staged in the composer's references AND the row moves to the top of the staged section AND the status message announces the stage AND NEVER the picker closes
 
 WHEN tap the remove control of a staged row -> the row's target is unstaged from the composer's references AND the row leaves the staged section AND the status message announces the unstage AND NEVER the picker closes
 
@@ -32,9 +40,9 @@ WHEN tap referencePicker.filterSheet.foot.done -> the sheet closes AND the resul
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND the staged filter is dropped AND NEVER anything staged applies
 
-ALWAYS referencePicker.cap reads Up to 10 citations per post. above the results GIVEN the composer holds ten citations and was opened from a post's composer or its edit
+ALWAYS referencePicker.cap reads Up to 10 citations per post. in the fixed head under referencePicker.filterTrigger GIVEN the composer holds ten citations and was opened from a post's composer or its edit
 
-ALWAYS referencePicker.cap reads Up to 10 citations per comment. above the results GIVEN the composer holds ten citations and was opened from a reply's composer or a comment's edit
+ALWAYS referencePicker.cap reads Up to 10 citations per comment. in the fixed head under referencePicker.filterTrigger GIVEN the composer holds ten citations and was opened from a reply's composer or a comment's edit
 
 ALWAYS every referencePicker.result is dimmed and takes no tap GIVEN the composer holds ten citations
 

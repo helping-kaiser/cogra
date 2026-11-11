@@ -901,7 +901,10 @@ act) keeps them and says itself.
 
 **A picker's staged row** speaks through its ×: `Remove saltmarsh`,
 `StagedReference`'s own name for the control, once a pick has moved the row
-above the list (the pickers' staged section, jakob 2026-10-01).
+into the staged section, the list's first rows above the results (jakob
+2026-10-01, 2026-11-10). Past three staged, `Show all` under the three
+newest is the pick tray's door in the same words (`PickTray`), opening the
+sheet that holds them all.
 
 **A pick, and its undoing, said aloud** — the pickers' status message
 (`PickAnnouncement`), polite and spoken only, since the row's move is all

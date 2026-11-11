@@ -18,8 +18,15 @@
    well as seen — `PickAnnouncement`, `Added — in the staged list.` and
    `Removed from the staged list.`, the shared anatomy's polite status
    message (`TagPicker`). The composer's cap still
-   bounds the batch — ten references (`ComposeSealCited`) — and how the list
-   reads once the tenth is in is not drawn yet.
+   bounds the batch — ten references (`ComposeSealCited`).
+
+   THE STAGED ROWS ARE THE LIST'S FIRST ROWS, AT MOST THREE (jakob
+   2026-11-10 and 2026-11-11; the shared anatomy, `TagPicker`): below the
+   fixed head one list scrolls, the three newest staged on top of it, newest
+   first, then the results. Past three, the pick tray's `Show all` stands
+   under them and opens the sheet that holds every staged citation, the one
+   the seals open (`CitedSheet`, `ComposeCitations`); nothing unfolds in
+   place.
 
    `Done` AND THE HEADER BACK ARE ONE LEAVE (jakob, 2026-10-01, carried here by
    the shared anatomy `TagPicker` names). Both return to the composer the
@@ -35,7 +42,8 @@
 /* REGISTERED under its own `referencePicker` prefix (seam 248): `header`
    (its "?" `help`), the field `searchField` as Explore names its own, the
    `filterTrigger`, the `staged` section with one `stagedReference` per staged
-   reference (the composer's name and key for it), one `result` per row keyed
+   reference shown (the composer's name and key for it) and its `door`,
+   one `result` per row keyed
    by its place (Explore's rule), the `announcement` and `done`.
 
    THE `state` CHIP DRAWS THE PICKER'S UNDRAWN STATES (seam 248, GAPS A–C).
@@ -43,9 +51,12 @@
    section and its foot, holding the three kinds a citation can point at,
    Posts, Comments and Profiles — because a citation has no order to choose
    and no other narrowing to make; it is `filterSheet`, its `kinds` and its
-   `foot`. `cap` is the picker with the batch at its ten (`ComposeSealCited`):
-   `Up to 10 citations per post.` stands above the results, and the rows
-   under it are dimmed and take no tap — a true refusal, so it dims — while
+   `foot`. `picking` is one citation staged; `none` nothing staged; `seven`
+   more than three, the three newest and `Show all`, the door to
+   `ComposeCitations`' sheet. `cap` is the picker with the batch at
+   its ten (`ComposeSealCited`): the three newest and `Show all`, `Up to 10
+   citations per post.` standing in the head under the filter, and the
+   result rows dimmed and taking no tap — a true refusal, so it dims — while
    the staged rows' × still un-stage, which is how room comes back; from a
    reply's composer it reads `per comment`. `fault` is the results' read
    that got no answer, nothing loaded: the house line's noun form, `Can't
@@ -56,9 +67,39 @@
    result and the read in flight stay SILENT — the list is simply empty
    until rows arrive, the field already saying what was asked. */
 export const NODE = "referencePicker";
-export const PROPS = { state: { editor: "enum", options: ["picking", "filter", "cap", "fault"], default: "picking" } };
-export const VALS = `filterShown: this.props.state === "filter" ? "block" : "none", capShown: this.props.state === "cap" ? "block" : "none", faultShown: this.props.state === "fault" ? "block" : "none", rowsShown: this.props.state === "fault" ? "none" : "flex", rowsOpacity: this.props.state === "cap" ? "var(--state-disabled)" : "1"`;
+export const PROPS = { state: { editor: "enum", options: ["picking", "filter", "cap", "fault", "none", "seven"], default: "picking" } };
+export const VALS = `filterShown: this.props.state === "filter" ? "block" : "none", capShown: this.props.state === "cap" ? "block" : "none", faultShown: this.props.state === "fault" ? "block" : "none", rowsShown: this.props.state === "fault" ? "none" : "flex", rowsOpacity: this.props.state === "cap" ? "var(--state-disabled)" : "1", pickingShown: this.props.state === "picking" ? "flex" : "none", filterRowShown: this.props.state === "filter" ? "flex" : "none", faultRowShown: this.props.state === "fault" ? "flex" : "none", sevenShown: this.props.state === "seven" ? "flex" : "none", tenShown: this.props.state === "cap" ? "flex" : "none"`;
 const CITABLE_KINDS = FEED_KINDS.filter((kind) => kind.value !== "topics");
+
+/* The staged sets the `state` chip draws, oldest first; the list shows the
+   three newest, newest on top, each keyed by its place from the top. The
+   seven begin with the seals' three (`SEAL_CITATIONS`) and end with this
+   board's own staged post; the cap's ten add three of the tree's sample
+   people. */
+const DEFAULT_PAIR = { pDirected: 0.1, pInterest: 0.1 };
+const staged = (kind, name, sub, src, pair = DEFAULT_PAIR) => ({ kind, name, sub, src, pair, onRemove: () => {}, onEdit: () => {} });
+const STAGED_SEVEN = [
+  ...SEAL_CITATIONS,
+  staged("person", "Juno Baptiste", "Person"),
+  staged("person", "Kel Moreau", "Person"),
+  staged("post", "First try at a rubbing", "Post"),
+  staged("post", "Salt maps of the coast road", "Post", "post-photo.jpg"),
+];
+const STAGED_TEN = [...STAGED_SEVEN, staged("person", "Ines Salas", "Person"), staged("person", "Salome Ward", "Person"), staged("person", "Nadia Rask", "Person")];
+const stagedRows = (items) =>
+  items
+    .slice(-3)
+    .reverse()
+    .map((item, i) => <StagedReference key={item.name} kind={item.kind} name={item.name} sub={item.sub} src={item.src} onRemove={() => {}} node="stagedReference" nodeKey={String(i + 1)} />);
+const TODAYS = <StagedReference kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" onRemove={() => {}} node="stagedReference" nodeKey="1" />;
+const SHOW_ALL = (
+  <div style={{ display: "flex", padding: "0 12px" }}>
+    <InlineAction size="sm" selfStart node="door">
+      Show all
+    </InlineAction>
+  </div>
+);
+
 export function Screen() {
   return (
     <>
@@ -68,16 +109,35 @@ export function Screen() {
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
           <FilterTrigger reading="Everything" ariaLabel="What the search shows" node="filterTrigger" />
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }} data-node="staged">
-          <StagedReference kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" onRemove={() => {}} node="stagedReference" nodeKey="1" />
-        </div>
-        <PickAnnouncement said="Added — in the staged list." node="announcement" />
-      </div>
-      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        {/* The cap line stands in the fixed head, under the filter (jakob
+            2026-11-11). */}
         <div style={{ display: "{{capShown}}" }} data-node-chip="state" data-node-key="cap">
           <p style={PICKER_NOTE} data-node="cap">
             Up to 10 citations per post.
           </p>
+        </div>
+        <PickAnnouncement said="Added — in the staged list." node="announcement" />
+      </div>
+      {/* ONE SCROLLING LIST, the staged rows first (`TagPicker`). */}
+      <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }} data-node="staged">
+          <div style={{ display: "{{pickingShown}}", flexDirection: "column" }} data-node-chip="state" data-node-key="picking">
+            {TODAYS}
+          </div>
+          <div style={{ display: "{{filterRowShown}}", flexDirection: "column" }} data-node-chip="state" data-node-key="filter">
+            {TODAYS}
+          </div>
+          <div style={{ display: "{{faultRowShown}}", flexDirection: "column" }} data-node-chip="state" data-node-key="fault">
+            {TODAYS}
+          </div>
+          <div style={{ display: "{{sevenShown}}", flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="seven">
+            {stagedRows(STAGED_SEVEN)}
+            {SHOW_ALL}
+          </div>
+          <div style={{ display: "{{tenShown}}", flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="cap">
+            {stagedRows(STAGED_TEN)}
+            {SHOW_ALL}
+          </div>
         </div>
         <div style={{ display: "{{faultShown}}", padding: "8px 24px" }} data-node-chip="state" data-node-key="fault">
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)" }} data-node="fault">
