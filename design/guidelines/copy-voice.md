@@ -186,12 +186,14 @@ Handles are shown with `@`. A person or group is an *actor* internally
 and never on screen — on screen they have a name and a handle.
 
 **A `#name` is a TAG on screen and a topic in the record** (jakob's
-ruling, 2026-09-09). *Tags* is the word people already use for this;
-*topic* is the L1 author's word for the node, and it belongs to the
-contract, the docs and the graph — never to a label, a count, a
-placeholder, an accessible name, or a "?" text. So the reader is shown
-`Tags`, `+ Add a tag`, `23 tags`, `Tags & references`, `#tag` in a
-search hint.
+rulings, 2026-09-09 and 2026-11-11: "tags is the learned name … tags
+everywhere"). *Tags* is the word people already use for this, and the
+screen says no other: every label, count, page title, filter section,
+placeholder, accessible name and "?" text reads *tag*. *Topic* is the
+L1 author's word for the node, and it belongs to the contract, the docs
+and the graph. So the reader is shown `Tags`, `+ Add a tag`, `23 tags`,
+`Tags & references`, `#tag` in a search hint, `Your tags`, `One tag`,
+`All your tags`, and a kept feeling's kind `Tag`.
 
 The law stops at the code's own names. `TopicChip`, `TopicsLine`,
 `TopicRemovable`, the `topics` prop, `FEED_KINDS`' `topics` value,
@@ -354,8 +356,8 @@ extra `@mira's people`, `@mira's people, for`, `@mira's people,
 against`, which past the pill's 154px collapses to the count like any
 extra — so for most handles it reads `Posts · 1 change`; `Order` over
 `Ranked puts what's closest to @mira first — the view you're browsing
-from. Newest ignores it and lists by time.`; and `One topic` over
-`Topics @mira holds and is for. A topic @mira holds against stays a
+from. Newest ignores it and lists by time.`; and `One tag` over
+`Tags @mira holds and is for. A tag @mira holds against stays a
 record — it just never narrows a feed.` The reader's own axes keep the
 first person: the kinds' line, `Show what you've already seen`, `Also
 show`, `Reset` and the "?". (*new 2026-10-13, drafted — jakob's at
@@ -899,7 +901,10 @@ act) keeps them and says itself.
 
 **A picker's staged row** speaks through its ×: `Remove saltmarsh`,
 `StagedReference`'s own name for the control, once a pick has moved the row
-above the list (the pickers' staged section, jakob 2026-10-01).
+into the staged section, the list's first rows above the results (jakob
+2026-10-01, 2026-11-10). Past three staged, `Show all` under the three
+newest is the pick tray's door in the same words (`PickTray`), opening the
+sheet that holds them all.
 
 **A pick, and its undoing, said aloud** — the pickers' status message
 (`PickAnnouncement`), polite and spoken only, since the row's move is all
@@ -1048,7 +1053,17 @@ a quick answer never flashes a word.
   commitment, in each family's own words.
 - `Signing…` — the line under the face while a press-and-hold signs.
   A hold has no label to swap, so the target's row carries it, in the
-  pending marker's quiet register. **Drawn** on `RowSigning`.
+  pending marker's quiet register. **Drawn** on `RowSigning`. The same
+  line carries a pad's or a dialog's act after `Close` shut it, the act
+  being sent (jakob 2026-11-11). **Drawn** on `PadFailed`'s `closed`.
+- `Close` — the way out of a pad, the alternates, the walk-back or the
+  empty sign once their act is being sent (jakob 2026-11-11). It takes
+  `Cancel`'s place, or `Keep it`'s, in the same control: until the send
+  begins that word truly cancels and nothing lands; from then on the act
+  is expected to happen, so the word would promise what it cannot do,
+  and `Close` says only what the press does — it shuts a layer (*The
+  stream and the viewer*). The wait passes to the target's row.
+  **Drawn** on `PadFailed`'s `sending`.
 
 Every other commit follows the same construction and needs no separate
 entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes
@@ -1495,8 +1510,12 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     the reader's own or anyone else's, and its staged act expired. On
     the row: `This post didn't land, so it can't be cited.` with
     `Remove it`; a comment takes `This comment didn't land, so it can't
-    be cited.` **Drawn** on `SealFaultRow`, where the line wraps to a
+    be cited.` (*blessed (jakob 2026-11-11)*). **Drawn** on `SealFaultRow`, where the line wraps to a
     second line on the row — accepted as drawn.
+  - **A staged tag that never landed** — on the Tags row, under its
+    chips: `This tag didn't land.` with `Remove it`, no reason given (jakob
+    2026-11-11, *blessed*). **Drawn** on `ComposeSeal`'s and `ReplySeal`'s
+    `state` chip, `tagRefused`.
   - **Any other refusal** — a bug the picking stage should have
     blocked. A notice in the commit's place, never the failure voice:
     `This shouldn't have happened` over `That's a fault on our side,
@@ -2246,7 +2265,7 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
 - The review's title, `Kept picks`, and its one line: `These waited on
   this device for your key, and nothing is signed yet. Remove any you no
   longer mean — the rest sign together.` Each row's kind reads `Post` or
-  `Person`, the staged citations' words — `Comment` and `Topic` the same
+  `Person`, the staged citations' words — `Comment` and `Tag` the same
   family's other two (seam 248); its × keeps `StagedReference`'s
   `Remove <name>`.
 - The commit, `Sign them` (the ruling's own words).
@@ -2259,7 +2278,7 @@ rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2
   picks…` in flight). The commit names the batch by the review's own
   word, because the batch can hold a feeling beside the opinions (seam
   248; *new 2026-10-29, blessed (jakob 2026-11-10)*).
-- Signed: the settled snackbar in its batch form, `Signed 3 things, still
+- Signed: the settled snackbar in its batch form, `Signed 4 things, still
   settling.` — the signed-opinion snackbar's own opening, without a
   `Current opinion`, since a batch holds more than one target.
 - The settings row, last in `Key backup`: `4 kept picks waiting` (`1 kept
@@ -2288,11 +2307,11 @@ The kept-picks rulings (jakob 2026-10-02) add these, each *new
   being its own. A removed target is not one of these: it wears its
   removal mark.
 - **One record, two words, by what each surface names.** A kept feeling
-  reads `Topic` on the review and `Feeling` on the seal, and the two
+  reads `Tag` on the review and `Feeling` on the seal, and the two
   agree: the review's second line names what the pick is ON — the
   target's kind, beside `Post` and `Person` — and the seal's row label
   names what is SIGNED — the record's family, beside `Opinion` (seam
-  248). *Topic* there is the held-position word of *Your topics*.
+  248). *Topic* there is the held-position word of *Your tags*.
 - A kept approval beside the picks (jakob 2026-10-05, the B round's 7,
   amended): the review and its seal each carry one quiet line, `An
   approval waits in your invites — go there to sign it.`, ending in the
@@ -2469,7 +2488,7 @@ words. A record is one row, whatever gesture signed it.
 - **A tag** — `Tagged a post` · `Tagged a comment`, the aside the tag
   (`#saltmaps`), the title or words under it; one taken off `Un-tagged
   a post` · `Un-tagged a comment` (`Un-tag`'s past). The disc the `#`
-  monogram, as Explore's `Your topics` door wears it.
+  monogram, as Explore's `Your tags` door wears it.
 - **A citation** — `Cited a post` · `Cited a comment`, the cited
   thing's title or words under it, the disc that thing's own glyph; a
   person cited `Mentioned`, the aside `@ada`, the disc their avatar; one
@@ -2747,7 +2766,7 @@ the state's head (`Interested, no side taken`); its explanation replaces
 the pad's body in place: `It still counts among your opinions.` (on a
 person, `It still counts among your opinions — @ada stays under Your
 people.`; on a topic, `It still counts among your opinions — #saltmaps
-stays on Your topics.` — *new 2026-10-28, blessed (jakob 2026-11-10)*) /
+stays on Your tags.` — *new 2026-10-28, blessed (jakob 2026-11-10)*) /
 `It shapes no one's feed, earns nothing, and nothing passes
 on through you.` / `Walk it back is different: its own act, confirmed
 and paid for, that leaves a clean slate.` (a topic's, `Disconnect is
@@ -3708,14 +3727,14 @@ other stance, and a word borrowed from a product where it is free would
 promise exactly the thing this one refuses. *Docs and code keep the
 word*; boards and this file do not.
 
-**The list is `Your topics`** — the page title, Explore's door, and the
-button that reaches it from the feed filter (`All your topics`). Second
+**The list is `Your tags`** — the page title, Explore's door, and the
+button that reaches it from the feed filter (`All your tags`). Second
 person, because the set is the reader's own acts; no count in the title,
 because the door beside it already carries one (`5 held`). *Held* is the
 word for having a position on a topic, and it is the predicate said
 plainly: a topic is held while the netted pair is not nothing.
 
-**The empty list**: `No topics yet — say how you feel about one from
+**The empty list**: `No tags yet — say how you feel about one from
 its page.` The `Nothing here yet — write the first post.` shape: calm,
 and naming the one thing that would fill it — including where the
 gesture lives, because a reader with no topics has not met the tag
@@ -3741,8 +3760,8 @@ sliders, the typed fields and every spoken readout, so the accessible
 route asks what the drawn one asks. Ruled 2026-09-15; drawn on
 `TagPageHeldPad`.
 
-**The feed filter's section**: label `One topic`, hint `Topics you hold
-and are for. A topic you hold against stays a record — it just never
+**The feed filter's section**: label `One tag`, hint `Tags you hold
+and are for. A tag you hold against stays a record — it just never
 narrows a feed.` The label says the cardinality, because it is the one
 section here that does not combine. The hint answers the question the
 section raises by existing — where is the topic I hold against — rather
@@ -4243,6 +4262,12 @@ names and titles, never bodies — fewer words reach further.`
 (`ExploreNone`); and the results' "?", named `How searching works`, over
 the *Searching* dialog.
 
+**The result sections' captions** (jakob 2026-11-11, *blessed*): every
+section of an answer stands under its own quiet caption, `SectionLabel`'s,
+the one `Profiles` already wore — `Profiles` · `Tags` · `Posts and
+comments`, in the answer's order (`ExplorePerson`, `ExploreSearch`,
+`ExploreFilter`).
+
 ## The search-scope line
 
 From backlog item 105's ruling (readme §13, the indirect kinds are
@@ -4283,7 +4308,7 @@ before, which is named:
   `ProfileUnreachable` blesses; `Loading…` and `Couldn't load more` ·
   `Retry` are blessed.
 - **A kept feeling's seal row**: `Feeling` — the acts card's family word
-  for a pick on a topic, beside `Opinion`; the review's row reads `Topic`
+  for a pick on a topic, beside `Opinion`; the review's row reads `Tag`
   under the name.
 - **The search field's ×**: `Clear search`.
 - **A held topic whose name was removed** reads the blessed `Removed under

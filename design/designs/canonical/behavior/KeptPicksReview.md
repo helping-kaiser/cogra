@@ -6,7 +6,7 @@ ALWAYS the review lists plain picks only, opinions and feelings
 
 ALWAYS keptPicks.announcement is a polite status message mounted at rest, saying nothing and drawing nothing until a drop
 
-ALWAYS a feeling kept on a topic's pad joins the review as a plain pick, its row reading Topic under the topic's name and its pair spoken in the Affinity pad's axis words, How much you like it and How close you want to be
+ALWAYS a feeling kept on a topic's pad joins the review as a plain pick, its row reading Tag under the topic's name and its pair spoken in the Affinity pad's axis words, How much you like it and How close you want to be
 
 ALWAYS a kept vouch-back or approval never joins the review
 

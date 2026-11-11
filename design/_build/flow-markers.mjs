@@ -206,9 +206,9 @@ Object.assign(FLOW_MARKERS, {
     /* The topics door takes the board's next free number, the way the band's
        chats and bell and the card's share all did — the page's numbering is
        append-only, so a row added above the recents does not renumber them. */
-    { n: 10, find: ">Your topics</span>", tag: "button" },
+    { n: 10, find: ">Your tags</span>", tag: "button" },
   ],
-  /* Every row on Your topics opens the same page, so they share one via —
+  /* Every row on Your tags opens the same page, so they share one via —
        the tag page in its HELD state, because a row on this list is held by
        definition. */
   YourTopics: [
@@ -292,7 +292,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "already seen", tag: "label" },
     { n: 5, find: ">Reset</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
-    { n: 7, find: ">All your topics</button>", tag: "button" },
+    { n: 7, find: ">All your tags</button>", tag: "button" },
     { n: 8, find: ">Done</button>", tag: "button" },
     // The People rows (ruling 77): one choice, two rows, one number — on
     // both of the `people` chip's copies.
@@ -485,7 +485,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'data-field="Words"', tag: "div" },
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
-    { n: 6, find: "+ Add pictures · 1 of 4", tag: "button" },
+    // The add row's words are the `body` chip's hole (round 30).
+    { n: 6, find: "{{addLabel}}", tag: "button" },
     { n: 7, find: ">Describe the pictures</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
@@ -563,7 +564,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Done</button>", tag: "button" },
     // The staged section's × (the closing batch, 2026-10-01), appended so no
     // via renumbers.
-    { n: 7, find: 'aria-label="Remove Salt maps of the coast road"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove Salt maps of the coast road"', tag: "button", all: true },
     // The `filter` state's kinds-only sheet (seam 248, GAP A), appended: the
     // kind chips share one via, as `ExploreFilter`'s do, then the foot's pair
     // and the scrim.
@@ -573,6 +574,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: 'class="cg-scrim-in"', tag: "div" },
     // The `fault` state's Retry (round 25, the fault family), appended.
     { n: 12, find: 'data-node="referencePicker.fault.retry"', tag: "button" },
+    // Round 31: the staged rows past the first, the × of each one via 7's
+    // edge, and the door under the three, appended.
+    { n: 7, find: 'aria-label="Remove First try at a rubbing"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove Kel Moreau"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove Nadia Rask"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove Salome Ward"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove Ines Salas"', tag: "button" },
+    { n: 13, find: ">Show all</button>", tag: "button", all: true },
   ],
   /* A reference row per V1.0 kind, each its own edge to its own board (readme
      §13, the V1.0 scope cut): the person, the posts, the comment, numbered in
@@ -902,6 +911,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Mark</button>", tag: "button" },
     { n: 7, find: ">Sign and publish</button>", tag: "button" },
     { n: 8, find: ">Back</button>", tag: "button" },
+    // The `state` chip's `tagRefused` (round 30): the unlanded tag's line.
+    { n: 9, find: ">Remove it</button>", tag: "button" },
   ],
   // The seal at more than one staged citation (item 70): `ComposeSeal`'s own
   // eight controls, and the References row that has become a door.
@@ -953,7 +964,23 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  ComposeKeyAbsent: [
+  // Round 31: the pickers' Show all sheets, `ComposeTags` and
+  // `ComposeCitations` over the picker. scanExempt likewise: only the sheet's
+  // controls and its scrim are numbered; `skip` steps over the picker
+  // beneath, whose staged ×s (eight on the tag picker, nine on the citation
+  // picker, every state's copy) and Done come first in the markup.
+  TagPickerShowAll: [
+    { n: 1, find: "— set how it relates\"", tag: "button", all: true },
+    { n: 2, find: 'aria-label="Remove #', tag: "button", all: true },
+    { n: 3, find: ">Done</button>", tag: "button", skip: 1 },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ReferencePickerShowAll: [
+    { n: 1, find: "— set how it relates\"", tag: "button", all: true },
+    { n: 2, find: 'aria-label="Remove ', tag: "button", all: true, skip: 9 },
+    { n: 3, find: ">Done</button>", tag: "button", skip: 1 },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],  ComposeKeyAbsent: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Change</button>", tag: "button" },
@@ -2876,6 +2903,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'aria-label="Remove saltflats"', tag: "button" },
     // The `fault` state's Retry (round 25, the fault family), appended.
     { n: 7, find: 'data-node="tagPicker.fault.retry"', tag: "button" },
+    // Round 31: the staged rows of `seven` and `cap`, each × via 6's edge,
+    // and the door under the three, appended.
+    { n: 6, find: 'aria-label="Remove lowtide"', tag: "button", all: true },
+    { n: 6, find: 'aria-label="Remove cartography"', tag: "button" },
+    { n: 6, find: 'aria-label="Remove estuary"', tag: "button" },
+    { n: 6, find: 'aria-label="Remove tidetables"', tag: "button" },
+    { n: 6, find: 'aria-label="Remove photography"', tag: "button" },
+    { n: 8, find: ">Show all</button>", tag: "button", all: true },
   ],
   TagPickerTyping: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
@@ -2928,12 +2963,21 @@ Object.assign(FLOW_MARKERS, {
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];
   if (!markers) return html;
-  for (const { n, find, tag, all } of markers) {
+  for (const { n, find, tag, all, skip = 0 } of markers) {
     let from = 0;
     let hits = 0;
+    let skipped = 0;
     for (;;) {
       const at = html.indexOf(find, from);
       if (at === -1) break;
+      /* `skip`: the first matches belong to a covered layer beneath, the
+         same markup a sheet over it repeats (round 31's pickers); only the
+         sheet's are stamped. */
+      if (skipped < skip) {
+        skipped += 1;
+        from = at + find.length;
+        continue;
+      }
       const tagStart = html.lastIndexOf(`<${tag}`, at);
       if (tagStart === -1) throw new Error(`${name}: no <${tag}> before marker ${n} (${find})`);
       const stamped = html.slice(tagStart).replace(new RegExp(`^<(${tag})(?=[\\s>])`), `<$1 data-flow="${n}"`);

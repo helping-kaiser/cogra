@@ -412,6 +412,23 @@ describe("ProfileScreen", () => {
     expect(push).toHaveBeenCalledWith("/chats?from=u%3Aada");
   });
 
+  // ChatsComingSoon.md:17 and :21: the page reads Back to the profile and its
+  // arrow brings the profile back as it was left — opened with the origin it was
+  // opened with, so the profile still names Saved and keeps its root lit.
+  it("hands Chats the profile's own origin on Message", async () => {
+    push.mockClear();
+    server.use(
+      meHandler(),
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" from="saved" />, { store: signedInStore() });
+    fireEvent.click(await screen.findByTestId(byNode("profile.identity.actionRow.message")));
+    expect(push).toHaveBeenCalledWith("/chats?from=u%3Aada%2Fsaved");
+  });
+
   it("asks a guest to join on Message", async () => {
     server.use(
       gqlLink.query("UserProfile", () =>

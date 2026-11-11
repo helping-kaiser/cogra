@@ -1,6 +1,6 @@
 # Explore · `spec:design:behavior-explore`
 
-ALWAYS Explore at rest reads explore.searchField, then explore.skyCard, then Your topics, then Recent
+ALWAYS Explore at rest reads explore.searchField, then explore.skyCard, then Your tags, then Recent
 
 ALWAYS explore.skyCard reads The Sky — coming soon and opens nothing
 
@@ -13,6 +13,8 @@ ALWAYS explore.searchField carries a trailing × GIVEN it holds text
 WHEN tap the trailing × -> explore.searchField empties AND Explore stands at rest
 
 WHEN press system Back GIVEN the searching view stands -> explore.searchField empties AND Explore stands at rest AND NEVER Explore is left
+
+WHEN press Android's system Back GIVEN Explore's root stands at rest -> Feed's root opens for the reader's state AND NEVER the app leaves from the Explore tab
 
 WHEN the reader empties explore.searchField -> Explore stands at rest
 
@@ -36,13 +38,13 @@ ALWAYS explore.band stands bare, with no explore.band.bell, GIVEN the reader is 
 
 ALWAYS no explore.topics stands GIVEN the reader is a guest
 
-ALWAYS explore.topics reads Your topics alone, with no second line, GIVEN the held count has not arrived
+ALWAYS explore.topics reads Your tags alone, with no second line, GIVEN the held count has not arrived
 
-ALWAYS explore.topics reads the held count under Your topics, as 5 held, and 0 held GIVEN the reader holds no topic
+ALWAYS explore.topics reads the held count under Your tags, as 5 held, and 0 held GIVEN the reader holds no topic
 
 ALWAYS an applicant's Explore reads as a member's
 
-ALWAYS Your topics' second line counts the topics the reader holds, the length of the list it opens
+ALWAYS Your tags' second line counts the topics the reader holds, the length of the list it opens
 
 WHEN tap the bar's Explore slot GIVEN Explore is at its top -> NEVER Explore refreshes
 

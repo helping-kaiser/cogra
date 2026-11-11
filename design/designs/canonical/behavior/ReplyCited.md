@@ -4,7 +4,7 @@ WHEN the reference picker hands back a pick -> the reply's seal shows the citati
 
 ALWAYS the reply's seal carries the all-or-nothing subline GIVEN its signature carries more than one thing
 
-ALWAYS a staged citation reads back as itself GIVEN one citation is staged
+ALWAYS a staged citation reads back as itself, its name over its pair under the Reference label, its remove control beside it, GIVEN one citation is staged
 
 WHEN tap a staged citation's name -> the citation's pair sheet opens
 
