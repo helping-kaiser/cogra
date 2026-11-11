@@ -2,6 +2,11 @@ package com.cogra.core.designsystem.v2.media
 
 import android.net.Uri
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
@@ -22,6 +28,8 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
@@ -59,7 +67,7 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * `CropViewport.jsx` `CropZoom`, ComposeCrop.md). Under the cut stands the
  * zoom slider on every crop — its thumb at the framing's zoom between the
  * fill (1×) and about 4×, named `Zoom`, 48dp tall — and a pinch moves it with
- * the window (`setMultiTouchEnabled`). The cut takes focus under the name
+ * the window (`twoFingerPinch`). The cut takes focus under the name
  * `Move the picture`; its arrow keys move the window 1 % of the picture a
  * press, 10 % with Shift, never past the picture's edge. TalkBack keeps its
  * named custom actions for nudge, zoom and reset, and a state description
@@ -88,12 +96,21 @@ fun MediaCrop(
      * `viewport`, `zoom` (with its `input`) and `howTo` line wear its parts.
      */
     node: DataNode? = null,
+    /**
+     * The stage the picture is laid out in, width ÷ height. It does NOT
+     * follow [shape]: a shape switch changes only the window, never the
+     * picture under it (jakob 2026-11-11: "when swapping from tall to
+     * square or wide the image shrinks. i would just expect the
+     * rectangle/frame to change"). The default is the viewport
+     * `ComposeCrop` draws, 390 × 488; the avatar's square stage passes 1.
+     */
+    stageRatio: Float = COMPOSE_CROP_STAGE_RATIO,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        CropViewport(item, shape.ratio, shape.cropAspect, state, mask, bleed, node?.div("viewport")?.tag ?: testTag)
+        CropViewport(item, stageRatio, shape.cropAspect, state, mask, bleed, node?.div("viewport")?.tag ?: testTag)
 
         CropZoom(state = state, testTag = testTag?.let { "${it}_zoom" }, node = node?.div("zoom"))
 
@@ -201,6 +218,7 @@ private fun CropViewport(
             // shape, so the stage looks the way the board draws it; the
             // picture inside it is fitted whole rather than filling it.
             .aspectRatio(frameRatio)
+            .twoFingerPinch(state)
             .onPreviewKeyEvent { event -> panByKey(event, state) }
             .focusable()
             .semantics {
@@ -222,9 +240,12 @@ private fun CropViewport(
                     // makes "nothing is cut off at rest" true.
                     scaleType = CropImageView.ScaleType.FIT_CENTER
                     setFixedAspectRatio(true)
-                    // The pinch the board's note promises: two fingers resize the
-                    // window, held under the ceiling like every other route.
-                    setMultiTouchEnabled(true)
+                    // The library's own pinch is OFF: it sizes the window to the
+                    // fingers' separate horizontal and vertical spread and never
+                    // consults the fixed ratio, while its one-finger drag keeps
+                    // running on the same events — jakob's sliver (2026-11-11).
+                    // Two fingers belong to [twoFingerPinch] instead.
+                    setMultiTouchEnabled(false)
                     // The decode is the only moment a framing can be put
                     // back, so the library's own decode-complete callback
                     // is what places it. Nothing the library reports
@@ -358,6 +379,57 @@ private fun panByKey(event: KeyEvent, state: CropState): Boolean {
     }
     return true
 }
+
+/**
+ * Two fingers on the cut: the window scales about the fingers' centroid and
+ * travels with it ([CropState.pinchBy]), its shape held exactly; one finger
+ * stays the cropper's own drag and corner handles.
+ *
+ * **Why the Initial pass.** Compose delivers each pointer event three times —
+ * Initial (parent to child), Main (child to parent), Final — and a parent may
+ * act on and consume an event in the Initial pass before its children see it
+ * (developer.android.com/develop/ui/compose/touch-input/pointer-input/understand-gestures,
+ * "Event passes" / "Event consumption"). The cropper is an `AndroidView`
+ * child, so `detectTransformGestures`, which listens in the Main pass, would
+ * only hear the fingers after the view had acted on them. Instead the loop
+ * below is that detector's own recipe
+ * (developer.android.com/develop/ui/compose/touch-input/pointer-input/multi-touch):
+ * `awaitEachGesture`, then per event `calculateZoom`, `calculatePan` and
+ * `calculateCentroid`, read in the Initial pass.
+ *
+ * From the moment a second finger is down until every finger is up, each
+ * event is consumed; Compose's view interop answers a consumed event by
+ * sending the view `ACTION_CANCEL`, so a corner drag that was running ends
+ * where it stands and the library's one-finger path cannot run beside the
+ * pinch. A finger lifting mid-pinch does not hand the gesture back: the one
+ * left keeps moving the window, and `calculatePan` / `calculateCentroid` count
+ * only pointers down both before and after an event, so neither a landing
+ * nor a lifting finger makes the window jump.
+ */
+private fun Modifier.twoFingerPinch(state: CropState): Modifier = pointerInput(state) {
+    awaitEachGesture {
+        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        var pinching = false
+        do {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            if (!pinching && event.changes.count { it.pressed } >= 2) pinching = true
+            if (pinching) {
+                val centroid = event.calculateCentroid(useCurrent = false)
+                if (centroid.isSpecified) {
+                    val pan = event.calculatePan()
+                    state.pinchBy(centroid.x, centroid.y, pan.x, pan.y, event.calculateZoom())
+                }
+                event.changes.forEach { it.consume() }
+            }
+        } while (event.changes.any { it.pressed })
+    }
+}
+
+/**
+ * The stage `ComposeCrop` draws its viewport at: 390 × 488. Fixed for every
+ * shape, so a shape switch changes only the window over the picture.
+ */
+const val COMPOSE_CROP_STAGE_RATIO = 390f / 488f
 
 /**
  * THE ZOOM, ON SCREEN (`CropViewport.jsx` `CropZoom`): Material's slider in

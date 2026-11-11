@@ -137,14 +137,12 @@ class CropStateTest {
     // -- The state's own reporting --
 
     @Test
-    fun aShapeSwitchIsWhatResetsTheFramingRatherThanCarryingItOver() {
+    fun resetFramingGoesBackToTheWholePicture() {
         val state = CropState(centred)
 
+        // TalkBack's `Reset framing`: back to the original.
         state.reset()
 
-        // The re-frame is against the original: the next shape starts
-        // from the whole picture, never from where the last one sat
-        // (jakob 2026-08-31).
         assertThat(state.framing).isEqualTo(CropFraming.Whole)
     }
 
@@ -327,6 +325,95 @@ class CropStateTest {
 
         assertThat(clamped.width).isAtLeast(0f)
         assertThat(clamped.height).isAtLeast(0f)
+    }
+
+    // -- Two fingers (jakob 2026-11-11: the sliver) --
+    //
+    // A half-size square window in the middle of a square picture, drawn at
+    // 75..225 px of a 300 px stage: one pixel is 1/300 of the picture.
+
+    private val drawnAt = ScreenWindow(left = 75f, top = 75f, width = 150f, height = 150f)
+
+    private fun pinch(zoom: Float, cx: Float = 150f, cy: Float = 150f, panX: Float = 0f, panY: Float = 0f) =
+        CropWindowMath.pinched(centred, CropFraming.Whole, drawnAt, cx, cy, panX, panY, zoom)
+
+    private fun CropFraming.assertIs(l: Float, t: Float, r: Float, b: Float) {
+        assertThat(left).isWithin(TOLERANCE).of(l)
+        assertThat(top).isWithin(TOLERANCE).of(t)
+        assertThat(right).isWithin(TOLERANCE).of(r)
+        assertThat(bottom).isWithin(TOLERANCE).of(b)
+    }
+
+    @Test
+    fun spreadingTheFingersGrowsTheWindowAboutTheirCentroid() {
+        // Zoom 2 → 2 / 2 = 1×, the fill: the whole picture.
+        pinch(zoom = 2f).assertIs(0f, 0f, 1f, 1f)
+    }
+
+    @Test
+    fun closingTheFingersShrinksTheWindowAboutTheirCentroid() {
+        // 2× / 0.5 = 4×: a quarter-wide window about the centre.
+        pinch(zoom = 0.5f).assertIs(0.375f, 0.375f, 0.625f, 0.625f)
+    }
+
+    @Test
+    fun aPinchNeverGoesPastTheCeilingOrBelowTheFill() {
+        // 2× / 0.1 = 20× → held at 4×; 2× / 10 = 0.2× → held at the fill.
+        pinch(zoom = 0.1f).assertIs(0.375f, 0.375f, 0.625f, 0.625f)
+        pinch(zoom = 10f).assertIs(0f, 0f, 1f, 1f)
+    }
+
+    @Test
+    fun aPinchAboutACornerKeepsThatCornerUnderTheFingers() {
+        // Centroid on the window's top-left (75, 75) = (0.25, 0.25): it stays put.
+        pinch(zoom = 0.5f, cx = 75f, cy = 75f).assertIs(0.25f, 0.25f, 0.5f, 0.5f)
+    }
+
+    @Test
+    fun theFingersTravellingCarryTheWindowWithThem() {
+        // 15 px right, 30 px up at 1/300 a pixel: +0.05, −0.1.
+        pinch(zoom = 1f, panX = 15f, panY = -30f).assertIs(0.30f, 0.15f, 0.80f, 0.65f)
+    }
+
+    @Test
+    fun noArrangementOfFingersChangesTheWindowsShape() {
+        // A square shape on a 1:2 picture: the fill is (0, .25, 1, .75). The
+        // window's shape in pixels is its shape in fractions times 0.5.
+        val fill = CropWindowMath.largestWindow(targetRatio = 1f, pictureRatio = 0.5f)
+        val window = CropFraming(0.25f, 0.375f, 0.75f, 0.625f)
+        val onScreen = ScreenWindow(100f, 100f, 100f, 100f)
+        listOf(0.37f, 0.9f, 1f, 1.3f, 3f).forEach { zoom ->
+            val next = CropWindowMath.pinched(window, fill, onScreen, 103f, 190f, 2f, -7f, zoom)
+            assertThat(next.width / next.height * 0.5f).isWithin(TOLERANCE).of(1f)
+        }
+    }
+
+    @Test
+    fun aDegenerateStepLeavesTheWindowWhereItIs() {
+        pinch(zoom = Float.NaN).assertIs(0.25f, 0.25f, 0.75f, 0.75f)
+        CropWindowMath.pinched(centred, CropFraming.Whole, ScreenWindow(0f, 0f, 0f, 0f), 1f, 1f, 1f, 1f, 2f)
+            .assertIs(0.25f, 0.25f, 0.75f, 0.75f)
+    }
+
+    // -- A shape switch changes only the frame (jakob 2026-11-11) --
+
+    @Test
+    fun aShapeSwitchKeepsTheWindowsCentreAndZoom() {
+        // Square at 2× on a square picture, framing the upper left. Wide's
+        // fill is 1 × 1/1.91 = 0.5236, so at 2× the window is 0.5 × 0.2618.
+        val next = CropWindowMath.reshaped(CropFraming(0.1f, 0.1f, 0.6f, 0.6f), from = 1f, to = 1.91f, pictureRatio = 1f)
+
+        next.assertIs(0.1f, 0.2191f, 0.6f, 0.4809f)
+    }
+
+    @Test
+    fun aShapeSwitchSlidesTheWindowOnlyAsFarAsTheNewShapeNeeds() {
+        // Wide at the fill on a 1:2 picture, at its top: (0, 0, 1, 0.2618).
+        // Tall's fill there is 1 × 0.625; centred on 0.1309 it would start at
+        // −0.1816, so it slides down to the edge and no further.
+        val next = CropWindowMath.reshaped(CropFraming(0f, 0f, 1f, 0.2618f), from = 1.91f, to = 0.8f, pictureRatio = 0.5f)
+
+        next.assertIs(0f, 0f, 1f, 0.625f)
     }
 
     private companion object {

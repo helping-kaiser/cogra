@@ -174,6 +174,8 @@ private fun ColumnScope.CropStage(
         state = crop,
         caption = "Drag to move, pinch to zoom.",
         mask = CropMask.Circle,
+        // `AvatarCrop` draws its stage square (`CropViewport`'s 390).
+        stageRatio = 1f,
         testTag = "avatar_crop",
     )
     Text(
