@@ -338,15 +338,15 @@ private fun BoxScope.CoverMark(coverSrc: Any?, size: Dp) {
 }
 
 /**
- * The neutral tile's word (`MediaThumb.jsx:107-121`): `label-small` at the
- * ground's weight, in the secondary ink, `0 var(--space-2)` in from the
+ * The neutral tile's word (`MediaThumb.jsx:107-121`): `label-small` whole,
+ * in the secondary ink, `0 var(--space-2)` in from the
  * sides.
  */
 @Composable
 private fun BoxScope.NeutralLabel(label: String) {
     Text(
         text = label,
-        style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+        style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
         modifier = Modifier

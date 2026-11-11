@@ -309,12 +309,34 @@ request of all is a relay carrying the longest batch one prepare
 can stage under the shipped signing budget ("A list is bounded by
 the longest batch"), a thousand entries at about 210 bytes each.
 320 KiB is the smallest multiple of 64 KiB above 1.5× that relay,
-and a standing test re-measures both requests against it. A multipart upload answers to the media transport's own
-ceiling instead (twice the larger upload cap, under "Content
-authoring"). A body past its ceiling is refused at
-the HTTP layer with **413** and never reaches the GraphQL parse:
-a declared length is refused unread, an undeclared one is cut at
-the ceiling.
+and a standing test re-measures both requests against it. A
+multipart upload holds its `operations` and `map` fields to the
+same 320 KiB each and the rest of its envelope — boundaries, part
+headers, parts it ignores — to 64 KiB, and carries one file after
+them, which alone answers to the media transport's own ceiling
+(twice the larger upload cap, under "Content authoring"). A body
+past its ceiling is refused at the HTTP layer with **413** and
+never reaches the GraphQL parse: a declared length is refused
+unread, an undeclared one is cut at the ceiling while it streams.
+
+**Uploads need a session at the door.** A multipart body is
+parsed only for a verified viewer — the same bearer verification
+every authenticated operation gets, account login included, done
+from the headers. Every multipart request is an `uploadMedia`,
+which needs a session anyway, and the parse spools the file
+before a resolver could refuse it. A multipart request with no
+verified viewer gets the answer an unauthenticated `uploadMedia`
+always got — `200`, `data: null`, one error coded
+`UNAUTHENTICATED` — so both clients refresh and replay as they do
+for any expired access token. Its body is never parsed: it is
+absorbed and dropped up to the largest request a client sends
+(the still cap or the resumable threshold, whichever is larger,
+plus the envelope — 10 MiB + 704 KiB at the defaults) so the
+answer reaches a client that sends its whole body before reading,
+instead of being lost to the connection reset an early close
+causes (RFC 9112 §9.6). A body that declares or carries more is
+answered at once with `Connection: close`. The ceilings above,
+413 included, are a signed-in request's to meet.
 
 **Introspection is disabled in release builds** — not secrecy
 (the repo is public; the contract travels as the checked-in

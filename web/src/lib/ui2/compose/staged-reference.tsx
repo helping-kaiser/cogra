@@ -70,7 +70,7 @@ function Mark({
   // target keeps the tile's space and fills it with nothing. The registered
   // `mark` is the tile itself — the face it draws — never a box around it.
   return kind === "person" ? (
-    <MonogramAvatar name={name} src={src} redacted={removed} size={32} node={part(node, "mark")} />
+    <MonogramAvatar name={name} src={src} redacted={removed} size={32} tier="md" node={part(node, "mark")} />
   ) : (
     <NodeMark kind={kind} src={src ?? null} redacted={removed} node={part(node, "mark")} />
   );

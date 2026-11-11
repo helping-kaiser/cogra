@@ -12,7 +12,10 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 
 /**
- * The house inline error line: a string resource in the error color.
+ * The house inline error line (`TransportError.jsx`): a string resource in
+ * the error color, set in `body-medium` whole — size, 20sp leading, 0.25sp
+ * tracking, weight — never the inherited `body-large` (round 28, seam 254
+ * item 5).
  * A polite live region, so its appearance is announced — the Compose
  * twin of the web app's `role="alert"`.
  */
@@ -38,6 +41,7 @@ fun ErrorLine(
 ) {
     Text(
         text = text,
+        style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.error,
         modifier = modifier
             .semantics { liveRegion = LiveRegionMode.Polite }

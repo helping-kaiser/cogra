@@ -735,6 +735,7 @@ private fun HistoryCardFor(entry: HistoryEntry, actions: CardActions, tags: TagC
             viewerId = actions.viewerId,
             onOpen = { doors.onOpenActor(card.profile.handle) },
             onShare = { actions.onShare(actions.shareUrls.profile(card.profile.handle)) },
+            onMention = { actions.onCitePost(card.profile.id) },
             stanceControl = actions.stanceControl,
         )
 
@@ -747,6 +748,7 @@ private fun HistoryLoadFailed(onRefresh: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(Space.x4)) {
         Text(
             stringResource(SavedR.string.saved_load_failed),
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.weight(1f).testTag("history_transport_error"),
         )
@@ -803,6 +805,7 @@ private fun HistoryMoreFailed(onRetry: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = Space.x4)) {
         Text(
             stringResource(SavedR.string.saved_more_failed),
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.testTag("history_more_failed"),
         )
