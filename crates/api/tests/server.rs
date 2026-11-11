@@ -452,7 +452,10 @@ fn upload_operations_and_map() -> String {
 /// ´claim:server:multipart-operations-has-the-json-ceiling´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_oversized_multipart_operations_field_is_refused_while_it_streams(pool: PgPool) {
-    let opening = format!("{}{{\"query\":\"{{ __typename }}#", part_opening("operations"));
+    let opening = format!(
+        "{}{{\"query\":\"{{ __typename }}#",
+        part_opening("operations")
+    );
     let (response, pulled) =
         post_endless_multipart(small_upload_app(pool), opening.into_bytes(), &[b'x'; 8192]).await;
     assert!(
@@ -494,9 +497,8 @@ async fn an_oversized_multipart_map_field_is_refused_while_it_streams(pool: PgPo
 /// ´claim:server:multipart-headers-are-bounded´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_endless_multipart_part_header_is_refused_while_it_streams(pool: PgPool) {
-    let opening = format!(
-        "--{BOUNDARY}\r\nContent-Disposition: form-data; name=\"operations\"\r\nX-Pad: "
-    );
+    let opening =
+        format!("--{BOUNDARY}\r\nContent-Disposition: form-data; name=\"operations\"\r\nX-Pad: ");
     let (response, pulled) =
         post_endless_multipart(small_upload_app(pool), opening.into_bytes(), &[b'a'; 8192]).await;
     assert!(
