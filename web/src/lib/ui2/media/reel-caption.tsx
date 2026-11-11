@@ -22,6 +22,7 @@
 
 import { useState, type ReactNode } from "react";
 
+import { useClampFold } from "@/lib/ui/clamp-fold";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
 /** The text veil's word (`SensitiveVeil kind="text"` `revealLabel`). */
@@ -54,17 +55,18 @@ export function ReelCaption({
 }) {
   const [open, setOpen] = useState(false);
   const words = description !== null && description !== "" ? description : null;
+  // `More` ONLY WHERE THE TWO LINES CUT SOMETHING (`clamp-fold.ts`): the
+  // master's static render draws it under every caption because it cannot
+  // measure; a caption that fits carries none.
+  const [holdClamp, folds] = useClampFold(!open, words);
   const clamp = (
     <span
+      ref={holdClamp}
       {...testAttributes(part(node, "description"), `${testId}-description`)}
       // Size only, as drawn (ReelCaption.jsx:62-74): the clamp's two lines
-      // stand in the caption's inherited line box.
-      className="text-[length:var(--text-body-small)]"
-      style={
-        open
-          ? undefined
-          : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }
-      }
+      // stand in the caption's inherited line box. `line-clamp-2` is the
+      // drawn clamp's own four declarations.
+      className={`text-[length:var(--text-body-small)] ${open ? "" : "line-clamp-2"}`}
     >
       {words}
     </span>
@@ -114,7 +116,7 @@ export function ReelCaption({
         ) : (
           clamp
         ))}
-      {words !== null && (
+      {words !== null && folds && (
         <button
           type="button"
           aria-expanded={open}
