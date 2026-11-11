@@ -30,17 +30,15 @@ WHEN press outside the pad, press the system's Back or press Escape GIVEN the fa
 
 WHEN tap the pad's ? -> the pad's four help lines replace its body in place AND Retry is disabled while they show AND NEVER a dialog opens AND NEVER anything is staged
 
-WHEN the pad's signing has not answered 200ms after Set -> Set reads Setting… and refuses a second press AND the pick, the field and the landing line stay as they were AND Cancel stays live AND NEVER Set dims AND NEVER a spinner appears
+ALWAYS nothing cancels the act GIVEN Set was pressed
 
-WHEN tap Cancel GIVEN Set is waiting and the act is not yet being sent -> the pad closes AND nothing lands AND the target's row is untouched AND NEVER a line stands under the face AND NEVER the face moves AND NEVER a snackbar appears
+WHEN the pad's signing has not answered 200ms after Set -> Set reads Setting… and refuses a second press AND the pick, the field and the landing line stay as they were AND Cancel reads Close in the same place AND NEVER Set dims AND NEVER a spinner appears
 
-WHEN press outside the pad, press the system's Back or press Escape GIVEN Set is waiting and the act is not yet being sent -> the pad closes as Cancel closes it AND nothing lands
+WHEN tap Close GIVEN Set is waiting on its signing -> the pad closes AND the act goes on AND the line under the target's face reads Signing… in the pending marker's quiet register AND the anchor refuses a second hold until the signing answers AND NEVER the face moves before the signature is taken
 
-WHEN the app begins sending the act GIVEN the pad is open -> Cancel reads Close in the same place AND Set still reads Setting… and refuses a press
+WHEN press outside the pad, press the system's Back or press Escape GIVEN Set is waiting on its signing -> the pad closes as Close closes it AND the act goes on, carried by the target's row
 
-WHEN tap Close GIVEN the act is being sent -> the pad closes AND the act goes on AND the line under the target's face reads Signing… in the pending marker's quiet register AND the anchor refuses a second hold until the signing answers AND NEVER the face moves before the signature is taken
-
-WHEN press outside the pad, press the system's Back or press Escape GIVEN the act is being sent -> the pad closes as Close closes it AND the act goes on, carried by the target's row
+WHEN tap Cancel, press outside the pad, press the system's Back or press Escape GIVEN Set was pressed under 200ms ago -> the pad closes as Close closes it AND the act goes on, carried by the target's row AND NEVER the act is cancelled
 
 WHEN the signing is taken GIVEN the pad was closed while it signed -> the face on the target moves to the new opinion AND the line under it goes AND the snackbar confirms the signature
 
@@ -48,10 +46,8 @@ WHEN the signing does not go through GIVEN the pad was closed while it signed ->
 
 WHEN tap Retry on the row line GIVEN the pad was closed while it signed -> the same pick is signed again AND NEVER the hold's +0.10 / +0.10 is signed in its place
 
-WHEN the alternates' signing has not answered 200ms after Sign it GIVEN the reader's input is sliders or typed values -> Sign it reads Signing… and refuses a second press AND Cancel stays live AND NEVER Sign it dims
+WHEN the alternates' signing has not answered 200ms after Sign it GIVEN the reader's input is sliders or typed values -> Sign it reads Signing… and refuses a second press AND Cancel reads Close in the same place AND NEVER Sign it dims
 
-WHEN tap Cancel in the alternates GIVEN Sign it is waiting and the act is not yet being sent -> the alternates close AND nothing lands AND the target's row is untouched
-
-WHEN the app begins sending the act GIVEN the alternates are up -> Cancel reads Close in the same place AND tap Close leaves the alternates as Close leaves the pad
+WHEN tap Close in the alternates GIVEN Sign it is waiting on its signing -> the alternates close as Close closes the pad AND the act goes on, carried by the target's row
 
 WHEN the alternates' signing does not go through GIVEN the reader's input is sliders or typed values -> the dialog stays up at the pick AND the line That didn't send. Try again. stands above its action row AND an outlined Retry takes Sign it's slot AND Cancel and Walk it back keep their places

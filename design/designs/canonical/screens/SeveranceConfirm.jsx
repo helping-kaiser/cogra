@@ -60,9 +60,16 @@
    would. NO RETRY: asking again at once meets the same answer, so `Walk it
    back` dims — the dialog's second true refusal, beside a bundle already at
    nothing — and `Keep it` is the way out, back to the pick still parked on
-   the pad. No `error` colour: the write rule refuses nobody's choice. */
-export const PROPS = { answer: { editor: "enum", options: ["asking", "writeRule"], default: "asking" } };
-export const VALS = `askingShown: this.props.answer === "writeRule" ? "none" : "block", writeRuleShown: this.props.answer === "writeRule" ? "block" : "none"`;
+   the pad. No `error` colour: the write rule refuses nobody's choice.
+
+   `signing` is the dialog past 200ms after `Walk it back` (jakob 2026-11-11:
+   once someone submits there is no cancel). The act reads `Walking it back…`,
+   inert and never dimmed, and `Keep it` reads `Close`, filled and live in its
+   slot: it closes the dialog and the pad beneath so the reader need not
+   wait, and the whole walk-back goes on, its wait on the target's row as
+   `PadFailed`'s `closed` moment draws it. */
+export const PROPS = { answer: { editor: "enum", options: ["asking", "signing", "writeRule"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "asking" ? "block" : "none", signingShown: this.props.answer === "signing" ? "block" : "none", writeRuleShown: this.props.answer === "writeRule" ? "block" : "none"`;
 
 export function Screen() {
   return (
@@ -80,6 +87,15 @@ export function Screen() {
           targetLabel="this post"
           bundle={mkBundle(1, 1)}
           records={1}
+        />
+      </div>
+      <div style={{ display: "{{signingShown}}" }}>
+        <SeveranceConfirm
+          pick={{ pDirected: -1, pInterest: -1 }}
+          targetLabel="this post"
+          bundle={mkBundle(1, 1)}
+          records={1}
+          busy
         />
       </div>
       <div style={{ display: "{{writeRuleShown}}" }}>
