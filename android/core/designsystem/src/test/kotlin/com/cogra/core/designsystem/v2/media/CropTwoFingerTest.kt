@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
@@ -12,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.canhub.cropper.CropImageView
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.MediaShape
+import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Rule
 import org.junit.Test
@@ -180,6 +182,26 @@ class CropTwoFingerTest {
             up(1)
             up(0)
         }.assertClean()
+    }
+
+    /** ComposeCrop.md:9 — "the framed picture zooms within the shape AND the zoom slider follows". */
+    @Test
+    fun aPinchMovesTheZoomSliderWithTheWindow() {
+        stage()
+        val c = centre()
+        // Fingers 240 px apart close to 192: the window shrinks to 0.8 of
+        // itself, so the zoom goes from 2× to 2 / 0.8 = 2.5×.
+        Hand().apply {
+            down(0, c + Offset(0f, -120f))
+            down(1, c + Offset(0f, 120f))
+            repeat(STEPS) { move(0 to c + Offset(0f, -120f + (it + 1) * 3f), 1 to c + Offset(0f, 120f - (it + 1) * 3f)) }
+            up(1)
+            up(0)
+        }.assertClean()
+
+        assertThat(state.zoom).isWithin(ZOOM_SLACK).of(2.5f)
+        val slider = compose.onNodeWithTag("${TAG}_zoom").fetchSemanticsNode()
+        assertThat(slider.config[SemanticsProperties.ProgressBarRangeInfo].current).isWithin(ZOOM_SLACK).of(state.zoom)
     }
 
     @Test

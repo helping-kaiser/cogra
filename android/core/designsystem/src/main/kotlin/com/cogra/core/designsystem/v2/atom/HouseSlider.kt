@@ -87,13 +87,25 @@ fun HouseSlider(
                     .height(HOUSE_SLIDER_TRACK)
                     .then(if (trackTag != null) Modifier.testTag(trackTag) else Modifier),
             ) {
+                // Material hands the track the thumb centre's travel — the
+                // slider's width less a thumb — while the board's track runs
+                // the input's full width. So the ground reaches half a thumb
+                // past either end (a Canvas does not clip), and the accent
+                // runs from the input's start to the dot's centre.
                 val corner = CornerRadius(size.height / 2f)
-                drawRoundRect(color = ground, cornerRadius = corner)
-                // The thumb's centre travels between half a thumb in from
-                // either end, so the accent runs to where the dot is drawn.
                 val half = HOUSE_SLIDER_THUMB.toPx() / 2f
-                val reach = half + fraction * (size.width - 2f * half)
-                drawRoundRect(color = accent, size = Size(reach, size.height), cornerRadius = corner, topLeft = Offset.Zero)
+                drawRoundRect(
+                    color = ground,
+                    topLeft = Offset(-half, 0f),
+                    size = Size(size.width + 2f * half, size.height),
+                    cornerRadius = corner,
+                )
+                drawRoundRect(
+                    color = accent,
+                    topLeft = Offset(-half, 0f),
+                    size = Size(half + fraction * size.width, size.height),
+                    cornerRadius = corner,
+                )
             }
         },
     )
