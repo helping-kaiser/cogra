@@ -861,8 +861,10 @@ async fn the_first_vouch_to_land_completes_the_ceremony(pool: PgPool) {
     assert_eq!(me["me"]["application"]["id"], second.to_string());
 }
 
-/// Two vouches confirming in one epoch: the causal key decides, and the
-/// earlier position wins.
+/// Two vouches confirming in one epoch: the key of record decides, and
+/// the earlier position wins — and goes on winning in the provenance reads
+/// when the later position carries the lower act time, as it may on the
+/// real Layer 1 (layer1-interface.md §8.3).
 ///
 /// Two vouches landing in one epoch pick the earlier position.
 /// ´claim:onboarding:one-epoch-picks-the-earlier-position´
@@ -883,21 +885,47 @@ async fn two_vouches_landing_in_one_epoch_pick_the_earlier_position(pool: PgPool
     rig.close().await;
 
     let keys: Vec<(String, i64, i64)> = sqlx::query_as(
-        "SELECT record_id, act_time, position FROM mirror_records WHERE record_id = ANY($1)",
+        "SELECT record_id, epoch, position FROM mirror_records WHERE record_id = ANY($1)",
     )
     .bind(vec![act(&a), act(&b)])
     .fetch_all(&rig.pool)
     .await
     .expect("keys");
     assert_eq!(keys.len(), 2, "both vouches landed");
+    assert_eq!(keys[0].1, keys[1].1, "both vouches landed in one epoch");
     let earliest = keys
         .iter()
-        .min_by_key(|(_, time, position)| (*time, *position))
+        .min_by_key(|(_, epoch, position)| (*epoch, *position))
         .expect("one")
         .0
         .clone();
-    let winner = if earliest == act(&a) { first } else { second };
+    let (winner, winning_voucher) = if earliest == act(&a) {
+        (first, mira.id)
+    } else {
+        (second, kel.id)
+    };
     assert_eq!(rig.landed_paths(noa.account).await, vec![winner]);
+
+    // The earlier position carries the higher act time now: the reads that
+    // name the admitting vouch still pick it, by position.
+    sqlx::query(
+        "UPDATE mirror_records SET act_time = CASE WHEN record_id = $1 THEN 900 ELSE 100 END
+         WHERE record_id = ANY($2)",
+    )
+    .bind(&earliest)
+    .bind(vec![act(&a), act(&b)])
+    .execute(&rig.pool)
+    .await
+    .expect("act times");
+    let voucher = store::admitting_voucher_of(&rig.pool, noa.account)
+        .await
+        .expect("query")
+        .expect("an admitting voucher");
+    assert_eq!(voucher.id, winning_voucher);
+    let vouch = store::admitting_vouch_records(&rig.pool, &[act(&a), act(&b)])
+        .await
+        .expect("query");
+    assert_eq!(vouch, std::collections::HashSet::from([earliest]));
 }
 
 /// After the landing, a later vouch-Opinion lands as an ordinary Opinion

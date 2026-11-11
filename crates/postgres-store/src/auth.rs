@@ -1381,7 +1381,7 @@ pub enum Landing {
 ///    chained Registration (a profile update) asserts the admission one
 ///    as its parent and cannot land before it.
 /// 2. **Vouch fact:** among the account's recorded vouch acts in the
-///    mirror, the earliest by causal key `(act_time, position)` is the
+///    mirror, the earliest by the key of record `(epoch, position)` is the
 ///    first edge, and it wins — whichever path it was decided on, lapsed
 ///    or not (the GC is not final).
 ///
@@ -1433,7 +1433,7 @@ pub async fn evaluate_landing(
     {
         let registration = sqlx::query_scalar!(
             "SELECT record_id FROM mirror_records WHERE family = $1 AND author = $2
-             ORDER BY act_time, position LIMIT 1",
+             ORDER BY epoch, position LIMIT 1",
             registration_family,
             address,
         )
@@ -1445,7 +1445,7 @@ pub async fn evaluate_landing(
              JOIN auth_applications ap ON ap.id = v.application_id
              JOIN mirror_records m ON m.record_id = v.act_id
              WHERE ap.account_id = $1
-             ORDER BY m.act_time, m.position, m.record_id
+             ORDER BY m.epoch, m.position, m.record_id
              LIMIT 1",
             account_id,
         )
@@ -1611,7 +1611,7 @@ pub async fn admitting_voucher_of(
                 JOIN auth_applications ap ON ap.id = v.application_id
                 JOIN mirror_records m ON m.record_id = v.act_id
                 WHERE ap.account_id = $1
-                ORDER BY m.act_time, m.position, m.record_id
+                ORDER BY m.epoch, m.position, m.record_id
                 LIMIT 1),
                (SELECT ap.approver_id
                 FROM auth_applications ap
@@ -1655,7 +1655,7 @@ pub async fn admitting_vouch_records(
                  AND EXISTS (SELECT 1 FROM auth_applications landed
                              WHERE landed.account_id = ap.account_id
                                AND landed.landed_at IS NOT NULL)
-               ORDER BY ap.account_id, m.act_time, m.position, m.record_id
+               ORDER BY ap.account_id, m.epoch, m.position, m.record_id
            ) first
            WHERE first.act_id = ANY($1)"#,
         record_ids,

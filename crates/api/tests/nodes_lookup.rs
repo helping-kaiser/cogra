@@ -11,7 +11,7 @@
 mod rig;
 
 use api::ratelimit::RateLimitConfig;
-use postgres_store::content::{self, LandingOrder};
+use postgres_store::content::{self, LandingOrder, LandingStamp};
 use postgres_store::genesis;
 use rig::WireRig;
 use serde_json::{Value, json};
@@ -53,11 +53,13 @@ fn at(secs: i64) -> chrono::DateTime<chrono::Utc> {
     chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("in range")
 }
 
-fn landed() -> LandingOrder {
-    LandingOrder {
-        landed_epoch: 5,
+fn landed() -> LandingStamp {
+    LandingStamp {
+        order: LandingOrder {
+            landed_epoch: 5,
+            position: 1,
+        },
         act_time: 5,
-        position: 1,
     }
 }
 

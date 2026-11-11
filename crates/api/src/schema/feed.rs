@@ -366,12 +366,12 @@ impl FeedSlice {
     }
 }
 
-/// A record's place in the authoritative order: its landing epoch and
-/// causal key (𝕋^act, pos).
+/// A record's place in the authoritative order: the key of record
+/// (epoch, position), compared lexicographically — the landing epoch
+/// first, then the position in that epoch's published order.
 #[derive(SimpleObject, Clone, Copy)]
 pub struct CausalKey {
     pub landing_epoch: i64,
-    pub act_time: i64,
     pub position: i64,
 }
 
@@ -423,9 +423,8 @@ pub(super) async fn slice_nodes(
             SliceNode {
                 genesis: genesis
                     .get(&graph_id)
-                    .map(|&(landing_epoch, act_time, position)| CausalKey {
+                    .map(|&(landing_epoch, position)| CausalKey {
                         landing_epoch,
-                        act_time,
                         position,
                     }),
                 graph_id,
