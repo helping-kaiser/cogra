@@ -2299,7 +2299,10 @@ entry first". What stands:
   carries the chip's value as its key (`history.searchField` under
   `search` and under `kinds`; jakob 2026-10-06, seam 069); an element
   two chips draw keys each copy by its own chip's value, and its rule
-  names both chips (`postEdit.sign`; seam 248). Every
+  names both chips (`postEdit.sign`; seam 248). A board's `VALS` — its
+  `renderVals()` — read only `this.props`, never the DOM or a canvas
+  global, so a harness renders one setting at a time by its chip values
+  and no state needs a board of its own (seam 270). Every
   other board renders the annotations stripped, so a name reaches a built board only once it
   is registered in `designs/canonical/nodes.json`, which the render
   writes. **Registered paths are append-only**: a collision fails the

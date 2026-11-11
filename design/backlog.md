@@ -5274,7 +5274,7 @@ key rules naming *Your topics* (`heldTopic`, `redactedTopic` in
 `node-paths.mjs`) move with them. `about.topic` is a help dialog's subject
 and keeps its word.
 
-### 151 · The pickers' states, one at a time · *system* · **filed 2026-11-11**
+### 151 · The pickers' states, one at a time · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 31 (seam 254 item 14). The pickers' `state` chips (`TagPicker`:
 `picking`, `cap`, `fault`, `none`, `seven`; `ReferencePicker` the same with
@@ -5292,8 +5292,12 @@ values in place of its holes for a board opened outside the canvas, so
 every chip board in the tree measures at its default (a build change,
 every chip board's standalone geometry moves); (c) the harness evaluates
 the board's own `VALS` for a chosen value. The sheet `Show all` raises is
-drawn (`TagPickerShowAll`, `ReferencePickerShowAll`); this item stays open
-for the per-state measuring alone.
+drawn (`TagPickerShowAll`, `ReferencePickerShowAll`). Closed by round 34:
+impl took (c) (seam 270) — its harness evaluates a board's `VALS` for the
+chip values asked for and renders one setting at a time, so no per-state
+board is built. Its one condition is the rule for every board (readme §13,
+*Canvas pages and flows*'s registry law): `renderVals()` reads only
+`this.props`.
 
 ### 152 · The disc's letter: which role at 32px, which weight · *design* · **filed 2026-11-11**
 
