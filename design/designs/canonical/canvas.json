@@ -1083,7 +1083,7 @@
     },
     {
       "file": "YourTopics.dc.html",
-      "title": "Your topics",
+      "title": "Your tags",
       "x": 1920,
       "y": 0,
       "w": 390,
@@ -1689,7 +1689,7 @@
       "x": -3900,
       "y": 0,
       "w": 3480,
-      "h": 4795,
+      "h": 4864,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -2234,6 +2234,15 @@
       "page": "patterns"
     },
     {
+      "file": "AppCrash.dc.html",
+      "title": "Crash · this shouldn't have happened",
+      "x": 1920,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "YourKeyGate.dc.html",
       "title": "Settings · your key, behind the browser's gate",
       "x": 3840,
@@ -2318,6 +2327,24 @@
       "file": "TagPickerRefused.dc.html",
       "title": "Add a tag · a name it can't take",
       "x": 4320,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "TagPickerShowAll.dc.html",
+      "title": "Add a tag · show all",
+      "x": 4800,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "ReferencePickerShowAll.dc.html",
+      "title": "Cite something · show all",
+      "x": 5280,
       "y": 0,
       "w": 390,
       "h": 844,

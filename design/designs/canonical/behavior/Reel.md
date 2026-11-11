@@ -1,6 +1,6 @@
 # Reel · `spec:design:behavior-reel`
 
-ALWAYS the stream carries only clips taller than they are wide, from the list it was opened from narrowed to them in that list's order — the feed it narrowed, Saved's cards, History's rows, the profile's posts or a tag page's list, whose clips are the ones tagged with that tag — and by no ranking of its own
+ALWAYS the stream carries every clip at least as tall as it is wide, portrait or square, of the list it was opened from and only those, that list narrowed to them in its order, a clip wider than tall staying out of the stream and opening its post — the feed it narrowed, Saved's cards, History's rows, the profile's posts or a tag page's list, whose clips are the ones tagged with that tag — and by no ranking of its own
 
 ALWAYS no header labels the stream
 
@@ -42,6 +42,12 @@ WHEN swipe down on reel.stage GIVEN it is the list's first -> the clip stays AND
 
 ALWAYS the stream never moves on to the next clip by itself
 
+ALWAYS the down arrow key and a turn of the wheel downward page the stream as a swipe up does, and the up arrow key and a turn upward as a swipe down does, the list's first and last clips holding as they hold under a swipe, GIVEN the stream is on web
+
+WHEN the clip on reel.stage reaches its end -> it plays again from its start AND NEVER the next clip takes the screen
+
+ALWAYS the stream carries posts' clips only, and never a comment's clip
+
 ALWAYS reel.caption.notice reads That's the last clip here. at reel.caption's head, on the stream's plate, GIVEN the list holds no clip after the one on screen
 
 WHEN swipe up on reel.stage GIVEN it is the list's last -> the clip stays AND NEVER the stream wraps to the first
@@ -73,6 +79,8 @@ WHEN the write rule refuses a hold's signing -> reel.rail.stance.anchor.face sta
 ALWAYS a line on the stream's plate stands until it is answered, another act is made on the same face or the clip leaves the screen, and never fades on a timer
 
 WHEN tap reel.rail.comments -> the same comments sheet opens over the clip AND the clip stops
+
+ALWAYS the comments sheet the stream raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
 
 WHEN tap reel.rail.share -> the platform's own share sheet opens with the post's link
 

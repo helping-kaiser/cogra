@@ -40,6 +40,8 @@ ALWAYS the Tags row reads N tags and a bare count of the tags GIVEN more tags ar
 
 WHEN tap the Tags row GIVEN it reads N tags -> the tags sheet opens over the seal
 
+ALWAYS the citations sheet and the tags sheet the reply's seal opens are the post seal's own sheets, drawn once and raised from both seals
+
 WHEN the key leaves while the reply is written -> Sign comment leads to the reply-scale key notice with restore or discard
 
 WHEN tap the seal's back arrow or Back -> the composer returns one stage back with the words and media as they were

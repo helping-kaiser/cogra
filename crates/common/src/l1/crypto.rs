@@ -29,6 +29,7 @@ pub mod tags {
     pub const COMMIT_DEPS: &[u8] = b"cogra-l1:commitment:deps:v2";
     pub const HOST_SEAL: &[u8] = b"cogra-l1:host-seal:v2";
     pub const APPROVAL: &[u8] = b"cogra-l1:approval:v2";
+    pub const NONCE_DIGEST: &[u8] = b"cogra-l1:nonce-digest:v1";
 }
 
 /// Salt / nonce length: the published entropy floor of the stand-in, which
@@ -52,6 +53,17 @@ pub fn sha256_tagged(tag: &[u8], parts: &[&[u8]]) -> [u8; 32] {
 /// exists (layer1-interface.md §8.2, "Proposal pre-commitment").
 pub fn pre_digest(tag: &[u8], act_id: &[u8], nonce: &[u8], bytes: &[u8]) -> [u8; 32] {
     sha256_tagged(tag, &[act_id, nonce, bytes])
+}
+
+/// The host's retained image of a proposal nonce: SHA-256 over (tag,
+/// author address, nonce). The host validates non-reuse of the nonce
+/// across the author's acts at append (layer1-interface.md §8.2,
+/// "Proposal pre-commitment") and removes the nonce itself at acceptance,
+/// so this digest is what the check compares once the nonce is gone. It
+/// is one-way over a nonce of [`SALT_LEN`] bytes, and the pre-digests need
+/// the nonce, not its digest, so a kept digest confirms no payload.
+pub fn nonce_digest(author: &str, nonce: &[u8]) -> [u8; 32] {
+    sha256_tagged(tags::NONCE_DIGEST, &[author.as_bytes(), nonce])
 }
 
 /// The host-side binding, concealing commitment over a removable
@@ -315,6 +327,26 @@ mod tests {
         assert_ne!(
             d,
             pre_digest(tags::PRE_DIGEST_DEPS, ACT, &nonce, b"payload")
+        );
+    }
+
+    /// The nonce digest binds the author and the nonce under its own tag:
+    /// the same nonce digests differently for another author, and the
+    /// digest is not the pre-digest of any projection formed over it.
+    ///
+    /// A nonce digest binds its author and its nonce, and nothing else hashes alike.
+    /// ´claim:crypto:a-nonce-digest-binds-its-author-and-nonce´
+    #[test]
+    fn a_nonce_digest_binds_its_author_and_nonce() {
+        let nonce = [9u8; SALT_LEN];
+        let d = nonce_digest("alice", &nonce);
+        assert_eq!(d, nonce_digest("alice", &nonce));
+        assert_ne!(d, nonce_digest("bob", &nonce));
+        assert_ne!(d, nonce_digest("alice", &[8u8; SALT_LEN]));
+        assert_eq!(d, sha256_tagged(tags::NONCE_DIGEST, &[b"alice", &nonce]));
+        assert_ne!(
+            d,
+            sha256_tagged(tags::PRE_DIGEST_CONTENT, &[b"alice", &nonce])
         );
     }
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
-import { MonogramAvatar } from "../people/ActorChip.jsx";
+import { MonogramAvatar, REDACTED_RING } from "../people/ActorChip.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
 import { bundleReadout, formatStancePair, formatTagPair, SR_ONLY, tagReadout } from "../stance/StanceReadout.jsx";
 
@@ -71,7 +71,9 @@ import { bundleReadout, formatStancePair, formatTagPair, SR_ONLY, tagReadout } f
    `redacted` IS A MARK WHOSE PAYLOAD WENT (the closing batch, 2026-10-01):
    a removed post's cover and words left with the rest of it, so its tile
    keeps its space and fills with nothing — `MonogramAvatar`'s own rule for
-   a deleted account's disc, which this passes on for a person.
+   a deleted account's disc, which this passes on for a person — and wears
+   the disc's ring, `REDACTED_RING`, inside its box, on either fill (round
+   31: one treatment on every surface).
 
    `size` is the mark's edge in px, 32 by default. The score's path trace
    ends on the thing it reached at its own avatar size (`PathTrace`), and
@@ -89,7 +91,7 @@ export function NodeMark({ kind, name, src, onCard = false, redacted = false, si
     color: "var(--text-secondary)",
     overflow: "hidden",
   };
-  if (redacted) return <span style={tile} aria-hidden="true" data-node={node} />;
+  if (redacted) return <span style={{ ...tile, ...REDACTED_RING }} aria-hidden="true" data-node={node} />;
   if (kind === "post" && src) {
     return (
       <span style={tile} aria-hidden="true" data-node={node}>
@@ -105,6 +107,8 @@ export function NodeMark({ kind, name, src, onCard = false, redacted = false, si
         ...tile,
         fontFamily: "var(--font-sans)",
         fontSize: small ? "var(--text-label-large)" : "var(--text-title-medium)",
+        lineHeight: small ? "var(--text-label-large--line-height)" : "var(--text-title-medium--line-height)",
+        letterSpacing: small ? "var(--text-label-large--letter-spacing)" : "var(--text-title-medium--letter-spacing)",
         fontWeight: small ? "var(--text-label-large--font-weight)" : "var(--text-title-medium--font-weight)",
       }}
       aria-hidden="true"

@@ -34,7 +34,8 @@ export interface NodeMarkProps {
   onCard?: boolean;
   /**
    * The thing's payload went (a removed post): the tile keeps its space and
-   * fills with nothing; a person's disc takes `MonogramAvatar`'s `redacted`.
+   * fills with nothing, ringed 1px in `--border-field` inside its box on
+   * either fill (`REDACTED_RING`); a person's disc takes `MonogramAvatar`'s `redacted`.
    * Defaults to false.
    */
   redacted?: boolean;

@@ -96,7 +96,7 @@ export function SeveranceConfirm({
        The scrim, Escape and Back take `Keep it`, the safe answer. */
     <DialogSurface
       inline={inline}
-      onScrimPress={busy ? undefined : onCancel}
+      onScrimPress={onCancel}
       title={title}
       body={[
         pickAnchor !== null && (
@@ -155,18 +155,19 @@ export function SeveranceConfirm({
           >
             {busy ? sever.busy ?? "Signing…" : failed ? "Retry" : sever.control}
           </button>
-          {/* THE WAYS OUT ARE LOCKED WHILE IT SIGNS (the precedent
-              `ChangeHandleConfirm` cites): the act was sent from this dialog,
-              so `Keep it`, the scrim, Escape and Back wait for the answer —
-              locked, never dimmed. */}
+          {/* ONCE `Walk it back` IS PRESSED THE WALK-BACK IS DONE (jakob
+              2026-11-11): nothing cancels it. While it signs, `Keep it` reads
+              `Close` in the same place, live, and it — the scrim, Escape and
+              Back too — closes the dialog and the pad beneath, so the reader
+              need not wait: the whole batch goes on, its wait on the target's
+              row as the pad's is. */}
           <button
             type="button"
-            onClick={busy ? undefined : onCancel}
-            aria-disabled={busy || undefined}
+            onClick={onCancel}
             className={BUTTON_CLASS}
-            style={buttonStyle({ variant: "primary", busy })}
+            style={buttonStyle({ variant: "primary" })}
           >
-            Keep it
+            {busy ? "Close" : "Keep it"}
           </button>
         </>
       }

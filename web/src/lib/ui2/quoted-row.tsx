@@ -49,7 +49,7 @@ export function QuotedRow({
         </span>
         {snippet !== null && snippet !== undefined && snippet !== "" && (
           <span
-            className="overflow-hidden text-ellipsis whitespace-nowrap text-label-small text-on-surface-variant [font-weight:400]"
+            className="overflow-hidden text-ellipsis whitespace-nowrap text-label-small text-on-surface-variant"
             {...testAttributes(part(node, "snippet"))}
           >
             {snippet}

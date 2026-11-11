@@ -61,7 +61,7 @@ function PickerMark({
     // with its ground and its corner), never a box around it.
     <span className="flex flex-none">
       {kind === "person" ? (
-        <MonogramAvatar name={name} src={src} size={32} node={node} />
+        <MonogramAvatar name={name} src={src} size={32} tier="md" node={node} />
       ) : (
         <NodeMark kind={kind} src={src} onCard={onCard} node={node} />
       )}

@@ -20,20 +20,22 @@
    as one pad in two moments, and the shell beneath is the everyday feed for
    the reason given there.
 
-   THE `moment` CHIP DRAWS THE WAIT BEFORE THE ANSWER, AND CANCEL IN IT (seam
-   245, ask 16). `setting` is the pad past 200ms: `Setting…` in Set's slot,
-   inert and never dimmed, the pick, the field and the landing line as they
-   were — and `Cancel` live, because the pad is not the act. `cancelled` is
-   that Cancel pressed: the pad closes, and the signing it sent goes on — a
-   sent act cannot be called back — so its wait passes to the target's own
-   row, `Signing…` under Ada's face in the pending marker's quiet register,
-   the face still the standing's and the anchor refusing a second hold. It
-   ends as a hold ends (`RowSigning`): signed, the face moves and the
-   snackbar confirms; not signed, the row says `That didn't sign.` with a
-   Retry that asks the same pick again. A press outside the pad and Escape
-   do what Cancel does. `failed` is this board's own moment. */
-export const PROPS = { moment: { editor: "enum", options: ["failed", "setting", "cancelled"], default: "failed" } };
-export const VALS = `failedShown: this.props.moment === "setting" || this.props.moment === "cancelled" ? "none" : "block", settingShown: this.props.moment === "setting" ? "block" : "none", cancelledShown: this.props.moment === "cancelled" ? "block" : "none", washShown: this.props.moment === "cancelled" ? "none" : "block"`;
+   THE `moment` CHIP DRAWS THE WAIT BEFORE THE ANSWER, AND ITS WAY OUT
+   (jakob 2026-11-11: once Set is pressed the act is done; nothing cancels
+   it, and the way out only closes the pad so the reader need not wait).
+   `setting` is the pad past 200ms: `Setting…` in Set's slot, inert and never
+   dimmed, the pick, the field and the landing line as they were — and
+   beside it `Close`, in the place `Cancel` stood. `closed` is that Close
+   pressed: the pad closes and the act goes on, its wait carried by the
+   target's own row — `Signing…` under Ada's face in the pending marker's
+   quiet register, the face still the standing's and the anchor refusing a
+   second hold. It ends as a hold ends (`RowSigning`): signed, the face moves
+   and the snackbar confirms; not signed, the row says `That didn't sign.`
+   with a Retry that asks the same pick again. A press outside the pad, Back
+   and Escape do what Close does — inside the first 200ms too, while the
+   button still reads `Cancel`. `failed` is this board's own moment. */
+export const PROPS = { moment: { editor: "enum", options: ["failed", "setting", "closed"], default: "failed" } };
+export const VALS = `failedShown: this.props.moment === "failed" ? "block" : "none", settingShown: this.props.moment === "setting" ? "block" : "none", closedShown: this.props.moment === "closed" ? "block" : "none", washShown: this.props.moment === "closed" ? "none" : "block"`;
 
 const PULLED_BACK = { pDirected: -0.55, pInterest: -0.15 };
 
@@ -48,14 +50,14 @@ export function Screen() {
         <div style={{ display: "{{settingShown}}" }}>
           <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={PULLED_BACK} stanceSigning="busy" />
         </div>
-        <div style={{ display: "{{cancelledShown}}" }}>
+        <div style={{ display: "{{closedShown}}" }}>
           <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceSigning="busy" />
         </div>
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
 
       {/* The wash sits over the shell; the parked pad (fixed, above it) stays
-          sharp. Cancelled, the pad is gone and so is its wash. */}
+          sharp. Closed, the pad is gone and so is its wash. */}
       <div aria-hidden="true" style={{ display: "{{washShown}}", position: "absolute", inset: 0, background: "var(--scrim-dialog)" }} />
     </>
   );

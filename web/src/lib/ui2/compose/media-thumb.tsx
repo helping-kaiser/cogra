@@ -262,7 +262,7 @@ export function MediaThumb({
         <span
           aria-label="Didn't upload"
           data-testid={testId ? `${testId}-failed` : undefined}
-          className="absolute right-[3px] top-[3px] grid size-[18px] place-items-center rounded-full bg-error text-[length:var(--text-label-medium)]/[var(--text-label-medium--line-height)] [font-weight:700] text-on-error"
+          className="absolute right-[3px] top-[3px] grid size-[18px] place-items-center rounded-full bg-error text-label-medium [font-weight:700] text-on-error"
         >
           !
         </span>

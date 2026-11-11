@@ -52,4 +52,8 @@ WHEN tap Cancel GIVEN the pad opened as the vouch-back from feed.vouchCard -> th
 
 WHEN tap Cancel GIVEN the pad opened as the vouch-back from the profile of the member who vouched the account in -> the pad closes onto that profile AND nothing is staged
 
+WHEN the signing has not answered 200ms after Set -> Cancel reads Close in the same place, as PadFailed's setting moment draws it
+
+WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Set is waiting on its signing -> the pad closes AND the act goes on, its wait carried by the line under the target's face, as PadFailed's closed moment draws it AND NEVER the act is cancelled
+
 WHEN tap the scrim -> the pad closes onto what it bloomed over AND nothing is staged

@@ -14,6 +14,8 @@ WHEN tap the trailing × -> explore.searchField empties AND Explore stands at re
 
 WHEN press system Back GIVEN the searching view stands -> explore.searchField empties AND Explore stands at rest AND NEVER Explore is left
 
+WHEN press Android's system Back GIVEN Explore's root stands at rest -> Feed's root opens for the reader's state AND NEVER the app leaves from the Explore tab
+
 WHEN the reader empties explore.searchField -> Explore stands at rest
 
 WHEN the reader comes back from an opened result -> the query and the results' scroll stand as they were left

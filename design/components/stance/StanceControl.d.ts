@@ -101,8 +101,9 @@ export interface StanceControlProps {
    */
   pendingReview?: boolean;
   /**
-   * A signed act in flight (`"busy"`, past 200ms) or one that did not go
-   * through (`"failed"`). Pad closed, it is the hold's: the anchor is inert
+   * A signed act in flight (`"busy"`, past 200ms: nothing cancels it, the
+   * pad's Cancel reads `Close`, and closing passes the wait to the row) or
+   * one that did not go through (`"failed"`). Pad closed, it is the hold's: the anchor is inert
    * while busy, and the target's row carries `Signing…` or `SigningPending`'s
    * row line with `Retry` under the face, which has not moved. Pad open, it
    * is Set's: `Setting…`, inert; then the fault line above the commit row and

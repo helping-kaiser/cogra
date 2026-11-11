@@ -50,6 +50,7 @@ export const EMPTY_SIGN_WORDS = {
   confirm: "Set it anyway",
   busy: "Setting…",
   keep: "Keep it",
+  close: "Close",
 };
 
 /* THE WRITE RULE'S NO IS `SeveranceConfirm`'S (seam 245, ask 15): the same
@@ -59,11 +60,11 @@ export const EMPTY_SIGN_WORDS = {
 export function EmptySignConfirm({ targetLabel, vouchIn = false, busy = false, failed = false, writeRule = false, onConfirm, onCancel, inline = false }) {
   const words = EMPTY_SIGN_WORDS;
   return (
-    /* The scrim, Escape and Back take `Keep it`, the safe answer — and wait,
-       as it does, while the act signs. */
+    /* The scrim, Escape and Back take `Keep it`, the safe answer — and, as
+       it does, close the dialog and the pad once the act signs. */
     <DialogSurface
       inline={inline}
-      onScrimPress={busy ? undefined : onCancel}
+      onScrimPress={onCancel}
       title={words.title}
       body={[
         vouchIn ? words.vouchIn(targetLabel) : words.effect(targetLabel),
@@ -92,14 +93,16 @@ export function EmptySignConfirm({ targetLabel, vouchIn = false, busy = false, f
           >
             {busy ? words.busy : failed ? "Retry" : words.confirm}
           </button>
+          {/* ONCE `Set it anyway` IS PRESSED THE ACT IS DONE, `SeveranceConfirm`'s
+              rule: while it signs `Keep it` reads `Close` and only leaves, the
+              act going on. */}
           <button
             type="button"
-            onClick={busy ? undefined : onCancel}
-            aria-disabled={busy || undefined}
+            onClick={onCancel}
             className={BUTTON_CLASS}
-            style={buttonStyle({ variant: "primary", busy })}
+            style={buttonStyle({ variant: "primary" })}
           >
-            {words.keep}
+            {busy ? words.close : words.keep}
           </button>
         </>
       }

@@ -26,7 +26,7 @@ WHEN tap feed.filterSheet.people.sign.for, feed.filterSheet.people.sign.against 
 
 WHEN tap feed.filterSheet.people.everyone GIVEN feed.filterSheet.people.yourPeople is on -> feed.filterSheet.people.sign goes AND its chosen word is kept for feed.filterSheet.people.yourPeople's return
 
-ALWAYS the filter's topic chips are the topics the reader holds an opinion for
+ALWAYS the filter's topic chips are the topics the reader holds an opinion for, a tag whose feeling the reader signed and that has not yet landed among them
 
 ALWAYS at most one topic chip is on
 
@@ -112,11 +112,13 @@ ALWAYS the topic section does not stand GIVEN the feed borrows a view and the bo
 
 WHEN tap Done GIVEN the staged filter changes Kinds or the topic -> the sheet closes AND the feed re-queries once AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the message draws anything
 
+WHEN tap Done GIVEN the staged filter changes Kinds or the topic and the re-query fails -> the sheet closes AND the filter that was set stays committed AND the feed shows the failure with Retry AND NEVER the filter rolls back to the one before
+
 WHEN tap Done GIVEN every staged change is the device's own — the people row and its sign, the order, Show what you've already seen, the kinds of post, Sensitive, Removed or Still settling -> the sheet closes AND the feed re-derives on the device from what it already holds AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the feed re-queries AND NEVER the message draws anything
 
 ALWAYS Done carries the Already seen separator and the seen rows under it to the new filter by the same rule as the rows above it, re-derived on the device where every staged change is the device's own and re-queried where Kinds or the topic changed
 
-WHEN tap Done GIVEN the staged filter is the feed's own, nothing changed -> the sheet closes AND the feed is what it was AND focus returns to the trigger AND NEVER the feed re-queries
+WHEN tap Done GIVEN the staged filter is the feed's own, nothing changed -> the sheet closes AND the feed is what it was AND focus returns to the trigger AND NEVER the feed re-queries, since a re-query runs the whole personalized ranking
 
 WHEN tap the scrim -> the sheet closes AND the staged filter is dropped AND the feed is what it was AND NEVER the feed re-queries
 

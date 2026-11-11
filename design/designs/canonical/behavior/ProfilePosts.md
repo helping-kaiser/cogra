@@ -2,6 +2,8 @@
 
 ALWAYS the posts view lists the person's posts as post cards, never as chronicle entries
 
+ALWAYS the posts view lists a post the person signed that is still settling among the landed ones, its card wearing Still settling and carrying no score, its score slot bare, as the feed's card does
+
 ALWAYS profile.posts.empty below profile.tabRow reads Nothing here yet., the line alone, GIVEN the person has published no post
 
 ALWAYS at most one clip plays in the posts view, by the feed's stage law
@@ -40,13 +42,13 @@ WHEN tap a card's Feed score GIVEN the profile is another's -> the score's trace
 
 WHEN tap a card's Feed score GIVEN the profile is the reader's own -> the score's trace opens AND its back arrow reads Back to your profile
 
-WHEN tap a portrait clip on a card GIVEN the profile is another's -> the stream opens AND its back arrow reads Back to the profile
+WHEN tap a portrait or square clip on a card GIVEN the profile is another's -> the stream opens AND its back arrow reads Back to the profile
 
-WHEN tap a portrait clip on a card GIVEN the profile is the reader's own -> the stream opens AND its back arrow reads Back to your profile
+WHEN tap a portrait or square clip on a card GIVEN the profile is the reader's own -> the stream opens AND its back arrow reads Back to your profile
 
-WHEN tap a card's media GIVEN it is not a portrait clip and the profile is another's -> the post's detail opens AND its back arrow reads Back to the profile
+WHEN tap a card's media GIVEN it is not a portrait or square clip and the profile is another's -> the post's detail opens AND its back arrow reads Back to the profile
 
-WHEN tap a card's media GIVEN it is not a portrait clip and the profile is the reader's own -> the post's detail opens AND its back arrow reads Back to your profile
+WHEN tap a card's media GIVEN it is not a portrait or square clip and the profile is the reader's own -> the post's detail opens AND its back arrow reads Back to your profile
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 

@@ -111,11 +111,7 @@ async fn acceptance_nulls_the_payload_salt_and_nonce_and_keeps_length_and_commit
     let sealed = submit(&host, &actor, registration(&actor)).await;
     let act_id = sealed.proposal.body.act_id();
 
-    let package = host
-        .close_epoch()
-        .await
-        .expect("closes")
-        .expect("non-empty");
+    let package = host.close_epoch().await.expect("closes");
     assert_eq!(custody(&pool, &act_id).await, (true, true, true, 7));
 
     let stored = host
@@ -179,10 +175,7 @@ async fn a_sealed_or_approved_act_keeps_its_payload_until_acceptance(pool: PgPoo
 
     let insolvent = ActorKey::generate();
     let deferred = submit(&host, &insolvent, registration(&insolvent)).await;
-    host.close_epoch()
-        .await
-        .expect("closes")
-        .expect("non-empty");
+    host.close_epoch().await.expect("closes");
     let deferred_id = deferred.proposal.body.act_id();
     assert_eq!(custody(&pool, &deferred_id).await, (false, false, false, 7));
     let stored = host
@@ -201,10 +194,7 @@ async fn every_accepted_act_holds_no_payload_salt_or_nonce(pool: PgPool) {
     let alice = funded_actor(&host, 10 * THETA).await;
     let bob = funded_actor(&host, 10 * THETA).await;
     let alice_reg = submit(&host, &alice, registration(&alice)).await;
-    host.close_epoch()
-        .await
-        .expect("closes")
-        .expect("non-empty");
+    host.close_epoch().await.expect("closes");
     submit(&host, &bob, registration(&bob)).await;
     submit(
         &host,
@@ -217,15 +207,9 @@ async fn every_accepted_act_holds_no_payload_salt_or_nonce(pool: PgPool) {
         ),
     )
     .await;
-    host.close_epoch()
-        .await
-        .expect("closes")
-        .expect("non-empty");
+    host.close_epoch().await.expect("closes");
     submit(&host, &bob, opinion(&bob, 1, &alice.address(), vec![])).await;
-    host.close_epoch()
-        .await
-        .expect("closes")
-        .expect("non-empty");
+    host.close_epoch().await.expect("closes");
 
     let (accepted, holding): (i64, i64) = sqlx::query_as(
         "SELECT COUNT(*),
@@ -249,16 +233,10 @@ async fn the_dependency_salt_survives_acceptance_so_the_fraud_proof_still_opens(
     let alice = funded_actor(&host, 10 * THETA).await;
     let bob = funded_actor(&host, 10 * THETA).await;
     let bob_reg = submit(&host, &bob, registration(&bob)).await;
-    host.close_epoch()
-        .await
-        .expect("closes")
-        .expect("non-empty");
+    host.close_epoch().await.expect("closes");
     let dep = bob_reg.proposal.body.act_id();
     let act = submit(&host, &alice, opinion(&alice, 0, &bob.address(), vec![dep])).await;
-    host.close_epoch()
-        .await
-        .expect("closes")
-        .expect("non-empty");
+    host.close_epoch().await.expect("closes");
 
     let act_id = act.proposal.body.act_id();
     let (deps, deps_salt, pre_commitment, stored): (Vec<String>, Vec<u8>, Vec<u8>, Vec<u8>) =
@@ -289,11 +267,7 @@ async fn a_published_epoch_read_back_after_acceptance_still_marks_its_payload(po
     let bob = funded_actor(&host, 10 * THETA).await;
     submit(&host, &alice, registration(&alice)).await;
     submit(&host, &bob, opinion(&bob, 0, &alice.address(), vec![])).await;
-    let package = host
-        .close_epoch()
-        .await
-        .expect("closes")
-        .expect("non-empty");
+    let package = host.close_epoch().await.expect("closes");
     let marked: Vec<(Family, bool)> = package
         .records
         .iter()
@@ -325,10 +299,7 @@ async fn the_table_refuses_custody_dropped_early_or_in_part(pool: PgPool) {
     .await;
     assert!(early.is_err(), "an approved act keeps its custody");
 
-    host.close_epoch()
-        .await
-        .expect("closes")
-        .expect("non-empty");
+    host.close_epoch().await.expect("closes");
     let partial = sqlx::query("UPDATE l1_acts SET content_salt = '\\x00' WHERE act_id = $1")
         .bind(act_id.to_string())
         .execute(&pool)

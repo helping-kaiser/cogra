@@ -16,14 +16,18 @@
    `ProfileOtherBody` names them — so it takes the page's prefix, where the
    opinions page, a page with its own header and way back, took its own
    (`profileStances`, round 26). The list is `posts`, each `card` in it keyed by
-   the post's id (`PATH_KEY_RULES`: one author's cards share a handle), and
-   `empty` in the cards' place. */
+   the post's id as every post card is, and `empty` in the cards' place.
+
+   A POST STILL SETTLING IN THE LIST (round 35, jakob 2026-11-11, T7) is the
+   `posts` chip's `settling`: the second post, signed and not yet landed,
+   wearing `Still settling` as the feed's card does (FeedSheet.md), its score
+   slot bare; the card keyed by its id in both copies, as `ProfileComments`'
+   `removed` is. */
 export const NODE = "profile";
-export const PROPS = { posts: { editor: "enum", options: ["some", "none"], default: "some" } };
-export const VALS = `someShown: this.props.posts === "none" ? "none" : "flex", noneShown: this.props.posts === "none" ? "block" : "none"`;
-const ADA_POST_ID = "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c";
-const ADA_SECOND_POST_ID = "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a";
+export const PROPS = { posts: { editor: "enum", options: ["some", "none", "settling"], default: "some" } };
+export const VALS = `someShown: this.props.posts === "none" ? "none" : "flex", noneShown: this.props.posts === "none" ? "block" : "none", secondLanded: this.props.posts === "settling" ? "none" : "contents", secondSettling: this.props.posts === "settling" ? "contents" : "none"`;
 const ADA_SECOND_POST = {
+  id: "a2b9d4e1-6c3f-4f7a-8e5d-0b1c2d3e4f5a",
   author: ADA,
   content: "Tunnel closed again this morning. The coast road does not mind.",
   timestamp: "5d",
@@ -58,8 +62,16 @@ export function Screen() {
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="posts" tabs={CHRONICLE_TABS} node="tabRow" />
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }} data-node="posts">
           <div style={{ flex: 1, overflow: "hidden", display: "{{someShown}}", flexDirection: "column", gap: 8, padding: "8px 0 0 0" }}>
-            <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" nodeKey={ADA_POST_ID} />
-            <PostCard {...ADA_SECOND_POST} node="card" nodeKey={ADA_SECOND_POST_ID} />
+            <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
+            <div style={{ display: "{{secondLanded}}" }} data-node-chip="posts" data-node-key="some">
+              <PostCard {...ADA_SECOND_POST} node="card" />
+            </div>
+            {/* The same post still settling: the feed's settling row
+                (FeedSheet.md), `Still settling` worn under the words and the
+                score slot bare, the glyph with no figure (ruling 90). */}
+            <div style={{ display: "{{secondSettling}}" }} data-node-chip="posts" data-node-key="settling">
+              <PostCard {...ADA_SECOND_POST} pending score={null} node="card" />
+            </div>
           </div>
           <div style={{ display: "{{noneShown}}", padding: "8px 16px 0" }}>
             <EmptyState title="Nothing here yet." node="empty" />

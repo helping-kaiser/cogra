@@ -465,9 +465,9 @@ pub async fn has_pending_targeting(
 /// a prepare whose response was lost. Expiring it is what keeps the
 /// serialization whole: the pre-sign leg moves only a row still in
 /// `awaiting_pre_sign`, so a superseded staging can never be signed beside
-/// its successor, and the chain never branches. GC expires by epochs, and
-/// epochs close only as acts land, so on a quiet network an abandoned
-/// staging would otherwise hold the author's next edit for hours.
+/// its successor, and the chain never branches. Without it, an abandoned
+/// staging would hold the author's next edit until GC expires it, a
+/// window counted in epochs.
 ///
 /// Only chained writes (an asserted parent) are touched — the edits and
 /// profile updates this guard serializes — and never a carried act, which

@@ -19,7 +19,7 @@
    REGISTERED under the `profile` prefix (round 27, seam 252), as
    `ProfilePosts` is: a tab of the profile page takes the page's prefix. The
    list is `comments`, each `commentCard` in it keyed by the comment's id
-   (`PATH_KEY_RULES`: one author's cards share a handle), and `empty` in the
+   as every comment card is, and `empty` in the
    cards' place. A card's pointer to what it answers is its `target`; the
    collapsed replies' line hangs under the card, outside its surface, so it is
    `viewReplies` beside the card, keyed by the same id (round 28, seam 254
@@ -75,7 +75,7 @@ export function Screen() {
             target="“The long way home” — @ada"
             onOpenTarget={() => {}}
             node="commentCard"
-            nodeKey={ADA_COMMENT_ID}
+            id={ADA_COMMENT_ID}
           />
           <div style={{ display: "{{secondLive}}" }} data-node-chip="comments" data-node-key="some">
             <CommentCard
@@ -88,7 +88,7 @@ export function Screen() {
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}
               node="commentCard"
-              nodeKey={ADA_SECOND_COMMENT_ID}
+              id={ADA_SECOND_COMMENT_ID}
             />
           </div>
           {/* The same comment removed by its author: the thread's removed
@@ -103,7 +103,7 @@ export function Screen() {
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}
               node="commentCard"
-              nodeKey={ADA_SECOND_COMMENT_ID}
+              id={ADA_SECOND_COMMENT_ID}
             />
           </div>
         </div>
