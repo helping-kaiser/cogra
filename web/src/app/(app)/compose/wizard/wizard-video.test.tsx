@@ -212,11 +212,11 @@ describe("picking a video", () => {
     await pickFiles([aVideo()]);
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next", "composeCrop.next")));
 
-    // WizardHeader's own `stageLabel` slot: the role's size and leading, the
-    // ground's weight — the seal's "Last step" pair.
+    // WizardHeader's own `stageLabel` slot: label-small whole (round 28) — the
+    // seal's "Last step" pair.
     const stage = await screen.findByTestId("header-stage");
     expect(stage).toHaveTextContent("Video only");
-    expect(stage.className).not.toContain("text-label-small ");
+    expect(stage.className.split(" ")).toContain("text-label-small");
   });
 
   // ComposeCoverPlaying: the running preview wears the post detail's

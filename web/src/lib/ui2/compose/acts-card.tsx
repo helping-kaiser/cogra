@@ -25,10 +25,6 @@ import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-nod
 
 import { UploadErrorLine } from "./upload-notice";
 
-/** label-small's size, leading and tracking at the ground's weight — the master sets no weight. */
-const SMALL_GROUND =
-  "text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)]";
-
 export type ActsRow = {
   label: string;
   value: ReactNode;
@@ -66,7 +62,7 @@ const VALUE = "min-w-0 flex-1 truncate text-body-medium";
 
 function Count({ count, noun, node }: { count: number; noun: string; node?: DataNode }) {
   return (
-    <span className={`flex-none ${SMALL_GROUND} text-on-surface-variant`} {...testAttributes(node)}>
+    <span className="flex-none text-label-small text-on-surface-variant" {...testAttributes(node)}>
       <span aria-hidden="true">{count}</span>
       <span className="sr-only">
         {count} {count === 1 ? noun : `${noun}s`}
@@ -138,13 +134,13 @@ function ActionRow({ row, node }: { row: ActsAction; node?: DataNode }) {
       type="button"
       onClick={row.onAct}
       {...(node === undefined ? { "data-testid": row.testId } : testAttributes(node))}
-      className={`cg-state cg-focus cg-hit ${ROW} ${HAIRLINE} w-full cursor-pointer bg-transparent p-0 text-left font-sans ${SMALL_GROUND} [font-weight:var(--text-label-small--font-weight)] text-primary`}
+      className={`cg-state cg-focus cg-hit ${ROW} ${HAIRLINE} w-full cursor-pointer bg-transparent p-0 text-left font-sans text-label-small text-primary`}
     >
       <span className={LABEL} {...testAttributes(part(node, "label"))} />
       <span className="min-w-0 flex-1 whitespace-nowrap" {...testAttributes(part(node, "action"))}>
         {row.action}
       </span>
-      <span className={`flex-none ${SMALL_GROUND} text-on-surface-variant`} {...testAttributes(part(node, "count"))}>
+      <span className="flex-none text-label-small text-on-surface-variant" {...testAttributes(part(node, "count"))}>
         {row.count}
       </span>
     </button>
@@ -203,7 +199,7 @@ export function ActsCard({
           <span
             role={noteTone === "slow" ? "status" : undefined}
             {...testAttributes(part(node, "note"), testId === undefined ? undefined : `${testId}-note`)}
-            className={`${SMALL_GROUND} ${noteTone === "slow" ? "text-tertiary" : "text-on-surface-variant"}`}
+            className={`text-label-small ${noteTone === "slow" ? "text-tertiary" : "text-on-surface-variant"}`}
           >
             {note}
           </span>

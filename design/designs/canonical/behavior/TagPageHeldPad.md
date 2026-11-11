@@ -24,9 +24,9 @@ WHEN tap Disconnect -> the dialog opens titled Disconnect from #saltmaps? AND NE
 
 WHEN tap Cancel -> the pad closes AND nothing is staged AND the topic stays held exactly as it was
 
-WHEN tap Cancel GIVEN Set is waiting and the act is not yet being sent -> the pad closes AND nothing lands AND the target's row is untouched, as PadFailed's setting moment draws it
+WHEN the signing has not answered 200ms after Set -> Cancel reads Close in the same place, as PadFailed's setting moment draws it
 
-WHEN tap Close GIVEN the act is being sent -> the pad closes AND the act goes on, its wait carried by the line under the target's face, as PadFailed's sending and closed moments draw it
+WHEN tap Close, press outside the pad, press the system's Back or press Escape GIVEN Set is waiting on its signing -> the pad closes AND the act goes on, its wait carried by the line under the target's face, as PadFailed's closed moment draws it AND NEVER the act is cancelled
 
 WHEN tap Set GIVEN the pick nets the held bundle to (0, 0) -> the disconnect dialog opens with its cost AND NEVER the pick is refused
 

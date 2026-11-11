@@ -63,10 +63,9 @@ export function ReelCaption({
     <span
       ref={holdClamp}
       {...testAttributes(part(node, "description"), `${testId}-description`)}
-      // Size only, as drawn (ReelCaption.jsx:62-74): the clamp's two lines
-      // stand in the caption's inherited line box. `line-clamp-2` is the
-      // drawn clamp's own four declarations.
-      className={`text-[length:var(--text-body-small)] ${open ? "" : "line-clamp-2"}`}
+      // body-small whole (ReelCaption.jsx, round 28); `line-clamp-2` is the
+      // drawn clamp's own four declarations, read by `clamp-fold.ts`.
+      className={`text-body-small ${open ? "" : "line-clamp-2"}`}
     >
       {words}
     </span>
@@ -79,11 +78,10 @@ export function ReelCaption({
     >
       {notice}
       {handle !== null && (
-        // The board sets the role's SIZE and WEIGHT only (ReelCaption.jsx:48-50);
-        // the line box is the caption's own, inherited.
+        // label-large whole (ReelCaption.jsx, round 28).
         <span
           {...testAttributes(part(node, "handle"), `${testId}-handle`)}
-          className="text-[length:var(--text-label-large)] [font-weight:var(--text-label-large--font-weight)]"
+          className="text-label-large"
         >
           @{handle}
         </span>
@@ -106,9 +104,9 @@ export function ReelCaption({
               type="button"
               onClick={onReveal}
               {...testAttributes(part(node, "show"), `${testId}-show`)}
-              // The text veil's `Show` (`SensitiveVeil kind="text"`): label-small's size
-              // alone, in the button's own weight and line, underlined.
-              className="cg-state cg-focus cg-hit flex-none cursor-pointer border-0 bg-transparent p-0 font-sans text-[length:var(--text-label-small)] [font-weight:400] [line-height:normal] text-on-surface-variant underline"
+              // The text veil's `Show` (`SensitiveVeil kind="text"`): label-small
+              // whole, underlined (round 28).
+              className="cg-state cg-focus cg-hit flex-none cursor-pointer border-0 bg-transparent p-0 font-sans text-label-small text-on-surface-variant underline"
             >
               {SHOW}
             </button>
@@ -122,7 +120,7 @@ export function ReelCaption({
           aria-expanded={open}
           onClick={() => setOpen((shown) => !shown)}
           {...testAttributes(part(node, "more"), `${testId}-more`)}
-          className="cg-state cg-focus cg-hit cursor-pointer self-start border-0 bg-transparent font-sans text-[length:var(--text-label-medium)] [font-weight:var(--text-label-medium--font-weight)] [line-height:normal]"
+          className="cg-state cg-focus cg-hit cursor-pointer self-start border-0 bg-transparent font-sans text-label-medium"
           style={{ padding: "2px 0", color: "#fff" }}
         >
           {open ? "Less" : "More"}

@@ -198,6 +198,7 @@ fun PasswordResetScreen(
             state.error?.let {
                 Text(
                     text = stringResource(it.resetMessage()),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("reset_error"),
                 )
@@ -205,6 +206,7 @@ fun PasswordResetScreen(
             if (state.transportFailed) {
                 Text(
                     text = stringResource(R.string.error_transport),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("reset_transport_error"),
                 )

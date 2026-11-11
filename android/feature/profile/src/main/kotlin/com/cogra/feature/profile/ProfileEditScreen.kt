@@ -152,6 +152,7 @@ fun ProfileEditScreen(
                 state.transportFailed -> {
                     Text(
                         text = stringResource(R.string.error_transport),
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.testTag("profile_edit_transport_error"),
                     )
@@ -223,6 +224,7 @@ fun ProfileEditScreen(
                     if (state.refused) {
                         Text(
                             text = stringResource(R.string.profile_edit_refused),
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.testTag("profile_edit_refused"),
                         )
@@ -230,6 +232,7 @@ fun ProfileEditScreen(
                     if (state.signingFailed) {
                         Text(
                             text = stringResource(R.string.profile_edit_signing_failed),
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.testTag("profile_edit_signing_failed"),
                         )

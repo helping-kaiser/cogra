@@ -139,7 +139,7 @@ function resolveStart(flow, view, fails) {
       return null;
     }
     // A control whose outcome depends on WHAT it was pressed on — a post's media,
-    // which opens a picture's post or a portrait clip's stream — is still one
+    // which opens a picture's post or a portrait or square clip's stream — is still one
     // control everywhere. `case`/`to` narrows the start to the outcome the flow
     // means, the same narrowing a given start edge already takes; without one,
     // every board outcome counts and divergence is still a failure.

@@ -48,9 +48,9 @@ WHEN tap Cancel GIVEN Set is not waiting on its signing -> the pad closes AND no
 
 WHEN press outside the pad, press the system's Back or press Escape GIVEN Set is not waiting on its signing -> the pad closes AND nothing is staged AND the standing opinion is what it was
 
-WHEN tap Cancel GIVEN Set is waiting and the act is not yet being sent -> the pad closes AND nothing lands AND the target's row is untouched, as PadFailed's setting moment draws it
+WHEN the signing has not answered 200ms after Set -> Cancel reads Close in the same place, as PadFailed's setting moment draws it
 
-WHEN tap Close GIVEN the act is being sent -> the pad closes AND the act goes on, its wait carried by the line under the target's face, as PadFailed's sending and closed moments draw it
+WHEN tap Close, press outside the pad, press the system's Back or press Escape GIVEN Set is waiting on its signing -> the pad closes AND the act goes on, its wait carried by the line under the target's face, as PadFailed's closed moment draws it AND NEVER the act is cancelled
 
 WHEN tap the pad's ? -> the pad's four help lines replace its body in place AND Set is disabled while they show AND NEVER a dialog opens AND NEVER anything is staged
 
