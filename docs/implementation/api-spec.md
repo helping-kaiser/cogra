@@ -2712,6 +2712,18 @@ type Query {
    no handle, no current address, no id."
   emailChangeLinkCheck(token: String!): EmailChangeLinkCheck
 
+  "Anonymous check of a password-reset link, so the app opens the
+   expired-link screen rather than a form that can only fail
+   (ResetNew, ResetExpired). True while the link is live — the token
+   known, unused and unexpired — the predicate
+   `confirmPasswordReset` consumes it under. It reads and never
+   writes: nothing is consumed. Unknown, malformed, used and expired
+   all answer false alike, and the answer carries nothing about the
+   account the link belongs to. Spends the per-IP token-confirmation
+   budget, a tripped one answering RATE_LIMITED (auth.md \"Rate
+   limiting\")."
+  passwordResetLinkCheck(token: String!): Boolean!
+
   "The governed network parameters, from the operational carrier —
    all of them, or the named keys. The catalog is network.md's; the
    charter schedule on L1 is binding. Unknown keys are omitted; an

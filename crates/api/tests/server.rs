@@ -762,6 +762,72 @@ async fn invite_link_check_names_the_inviter_as_a_public_profile(pool: PgPool) {
     assert!(inviter["accountState"].is_null(), "private to the account itself");
 }
 
+/// Seeds a credentialed account and one reset link for it expiring at
+/// `expires_at`, returning the link's bare token.
+async fn seed_reset(pool: &PgPool, handle: &str, expires_at: chrono::DateTime<chrono::Utc>) -> String {
+    let key = common::l1::client::ActorKey::generate();
+    let user = uuid::Uuid::new_v4();
+    let mut conn = pool.acquire().await.expect("conn");
+    postgres_store::genesis::insert_actor(
+        &mut conn,
+        user,
+        "user",
+        handle,
+        &key.public_key_bytes(),
+        &key.address(),
+    )
+    .await
+    .expect("actor");
+    drop(conn);
+    let hash = api::auth::hash_password("a strong password").expect("hash");
+    postgres_store::genesis::insert_credentials(pool, user, &format!("{handle}@example.com"), &hash)
+        .await
+        .expect("credentials");
+    let secret = api::auth::new_secret();
+    postgres_store::auth::create_password_reset(pool, uuid::Uuid::new_v4(), user, &secret.hash, expires_at)
+        .await
+        .expect("reset");
+    secret.token
+}
+
+fn reset_check(token: &str) -> String {
+    format!("{{ passwordResetLinkCheck(token: \"{token}\") }}")
+}
+
+/// The reset link's check reads live while the link is, and false for a
+/// link used, one past its time and a token nothing knows — one answer
+/// for all three, so ResetExpired never says which happened. Reading is
+/// not spending: a link checked twice still takes the new password.
+///
+/// A password-reset link's check reads without consuming, live only while the link can still take a new password.
+/// ´claim:server:a-reset-link-check-never-consumes´
+#[sqlx::test(migrations = "../../migrations")]
+async fn password_reset_link_check_reads_without_consuming(pool: PgPool) {
+    let live = seed_reset(&pool, "resetter", chrono::Utc::now() + chrono::Duration::minutes(15)).await;
+    for _ in 0..2 {
+        let data = gql(test_app(pool.clone()), reset_check(&live)).await;
+        assert_eq!(data["passwordResetLinkCheck"], true);
+    }
+    let data = gql(
+        test_app(pool.clone()),
+        format!(
+            "mutation {{ confirmPasswordReset(input: {{ resetToken: \"{live}\", \
+             newPassword: \"a fresh strong password\" }}) {{ ok userErrors {{ code }} }} }}"
+        ),
+    )
+    .await;
+    assert_eq!(data["confirmPasswordReset"]["ok"], true, "{data}");
+    let data = gql(test_app(pool.clone()), reset_check(&live)).await;
+    assert_eq!(data["passwordResetLinkCheck"], false, "a used link");
+
+    let stale = seed_reset(&pool, "late", chrono::Utc::now() - chrono::Duration::minutes(1)).await;
+    let data = gql(test_app(pool.clone()), reset_check(&stale)).await;
+    assert_eq!(data["passwordResetLinkCheck"], false, "a link past its time");
+
+    let data = gql(test_app(pool), reset_check("no-such-token")).await;
+    assert_eq!(data["passwordResetLinkCheck"], false, "a token nothing knows");
+}
+
 /// (´claim:server:an-invite-link-reads-anonymously´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn invite_link_check_reads_expiry_as_unusable(pool: PgPool) {

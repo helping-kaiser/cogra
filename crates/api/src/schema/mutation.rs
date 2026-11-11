@@ -247,7 +247,7 @@ fn ended_change(end: store::EmailChangeEnd) -> UserError {
 /// Counts the attempt against a per-IP or per-key window and refuses
 /// over budget. Storage faults propagate — a broken limiter store must
 /// not silently disable the limits.
-async fn guard_window(
+pub(super) async fn guard_window(
     ctx: &Context<'_>,
     scope: &str,
     key: &str,
@@ -269,7 +269,7 @@ async fn actor_pubkey(pool: &PgPool, user_id: Uuid) -> async_graphql::Result<Opt
 }
 
 /// The request's derived client IP as a limiter key.
-fn request_ip(ctx: &Context<'_>) -> async_graphql::Result<String> {
+pub(super) fn request_ip(ctx: &Context<'_>) -> async_graphql::Result<String> {
     Ok(ctx.data::<RequestIp>()?.0.to_string())
 }
 

@@ -779,7 +779,10 @@ pinned to the offending field (`handle` / `email`).
 2. If an account exists for that email, the server generates a
    single-use, short-lived (default 15 min) reset token and
    emails it as a link.
-3. The user clicks the link, submits a new password (subject to
+3. The user clicks the link; the app checks it first, read-only
+   (`passwordResetLinkCheck`), and a link already used or past its
+   time opens the expired-link screen instead of the form. On a live
+   link the user submits a new password (subject to
    the requirements above). The server validates the token,
    rotates the password hash, and revokes all existing refresh
    tokens for the account — password change is a security event.
@@ -1171,8 +1174,10 @@ limits survive restarts and hold across instances.
   without bound. Visible for the same reason. Discarding is not
   limited — it only deletes the caller's own rows.
 - Token confirmations (`verifyEmail`, `confirmPasswordReset`,
-  `confirmEmailChange`, `confirmAccountDeletion`) — limited per IP. The tokens are
-  high-entropy; the budget bounds guessing anyway.
+  `confirmEmailChange`, `confirmAccountDeletion`) and the reset link's
+  read-only check (`passwordResetLinkCheck`) — one per-IP budget. The
+  tokens are high-entropy; the budget bounds guessing anyway, and a
+  check that answered for free would be a guessing oracle beside it.
 
 A tripped limit is a transport-tier `RATE_LIMITED` fault
 (api-spec.md "Errors are tiered") — with one deliberate

@@ -2262,6 +2262,21 @@ pub async fn create_password_reset(
     Ok(())
 }
 
+/// Whether a reset token is live — known, unused and unexpired — the very
+/// predicate [`consume_password_reset`] takes it under, read without
+/// writing: nothing is consumed, and the answer names no account.
+pub async fn password_reset_live(pool: &PgPool, token_hash: &[u8]) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM auth_password_resets
+               WHERE token_hash = $1 AND used_at IS NULL AND expires_at > NOW()
+           ) AS "live!""#,
+        token_hash,
+    )
+    .fetch_one(pool)
+    .await
+}
+
 /// Consumes a live reset token, returning its account. None when the
 /// token is unknown, expired, or already used.
 pub async fn consume_password_reset(
