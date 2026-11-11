@@ -22,6 +22,7 @@ import {
   parseTagOrigin,
   personHref,
   personOrigin,
+  postOrigin,
   tagOrigin,
   tagPageHref,
 } from "@/lib/ui/back-origin";
@@ -70,7 +71,7 @@ export function traceBack(origin: TraceOrigin): { href: string; label: string } 
 export function originParam(origin: TraceOrigin): string {
   switch (origin.kind) {
     case "post":
-      return `post:${origin.postId}${origin.via === null ? "" : `:${origin.via}`}`;
+      return postOrigin(origin.postId, origin.via);
     case "tag":
       return tagOrigin(origin.name, origin.from ?? null);
     case "person":

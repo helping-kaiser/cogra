@@ -287,13 +287,41 @@ describe("TopicView", () => {
     expect(screen.queryByTestId("topic-transport-error")).not.toBeInTheDocument();
   });
 
-  it("backs to the feed", async () => {
+  // TagPage.md:37: "ALWAYS the back arrow reads Back to Explore and leads to
+  // Explore GIVEN the page was entered with no history behind it".
+  it("backs to Explore when entered with no origin behind it", async () => {
     server.use(
       gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
     );
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
     await screen.findByTestId("topic-name");
-    expect(screen.getByTestId("topic-back")).toHaveAttribute("href", "/feed");
+    const back = screen.getByTestId("topic-back");
+    expect(back).toHaveAttribute("href", "/explore");
+    expect(back).toHaveAttribute("aria-label", "Back to Explore");
+  });
+
+  // TagPage.md:35: "… Back to feed from the feed in any of its states".
+  it("backs to the feed when opened from the feed", async () => {
+    server.use(
+      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
+    );
+    renderWithProviders(<TopicView name="rust" from="feed" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("topic-name");
+    const back = screen.getByTestId("topic-back");
+    expect(back).toHaveAttribute("href", "/feed");
+    expect(back).toHaveAttribute("aria-label", "Back to feed");
+  });
+
+  // TagPage.md:35: "… Back to the post from a post's tags-and-references sheet".
+  it("backs to the post, opened as it was, when opened from its sheet", async () => {
+    server.use(
+      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
+    );
+    renderWithProviders(<TopicView name="rust" from="post:p1:saved" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("topic-name");
+    const back = screen.getByTestId("topic-back");
+    expect(back).toHaveAttribute("href", "/posts/p1?from=saved");
+    expect(back).toHaveAttribute("aria-label", "Back to the post");
   });
 
   // History.md:57: a History tag card's page reads Back to History.
