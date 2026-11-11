@@ -74,8 +74,8 @@ export function ExplainableNumber({
       {...testAttributes(node, testId)}
       className={
         pending === undefined
-          ? "cg-state cg-focus cg-hit -mx-2 inline-flex min-h-12 flex-none items-center gap-1.5 rounded-full px-2 text-[length:var(--text-body-small)] [line-height:normal] text-on-surface-variant"
-          : "cg-state cg-focus cg-hit -mx-2 inline-flex flex-none flex-col items-center gap-0.5 rounded-full px-2 text-[length:var(--text-body-small)] [line-height:normal] text-on-surface-variant"
+          ? "cg-state cg-focus cg-hit -mx-2 inline-flex min-h-12 flex-none items-center gap-1.5 rounded-full px-2 text-body-small text-on-surface-variant"
+          : "cg-state cg-focus cg-hit -mx-2 inline-flex flex-none flex-col items-center gap-0.5 rounded-full px-2 text-body-small text-on-surface-variant"
       }
       // A literal, as the master's: the media dress reads over any frame in
       // both themes (`ExplainableNumber.jsx:65-67`).
