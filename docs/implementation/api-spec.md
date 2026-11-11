@@ -2894,14 +2894,11 @@ type Query {
    rows, never an error. A `kinds` filter drops sections and keeps the
    rest's semantics. COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join
    with their slices and read empty until then. An empty `kinds` list
-   means the same as null (no narrowing). `includeSeen: false` drops
-   nodes on the reader's seen-list (`User.viewHistory`); it needs a
-   session and is ignored without one. Full semantics in the Search
-   section."
+   means the same as null (no narrowing). The reader's seen-list never
+   narrows a search. Full semantics in the Search section."
   search(
     query: String!
     kinds: [NodeKind!]
-    includeSeen: Boolean = true
     order: ReadOrder = NEWEST
     viewer: UUID
     first: Int, after: String, last: Int, before: String
@@ -3229,9 +3226,9 @@ rest's semantics: a filter that excludes people drops the profiles
 and keeps the authored content a person cue or a display-name match
 brings; one that keeps only people keeps just the profiles.
 
-`includeSeen` defaults to `true`, which keeps the anonymous read
-stable; the client passes the reader's "Show what you've already
-seen" filter, which is off by default.
+**The seen-list never narrows a search.** Search reaches every node
+the matcher finds, whether or not the reader has seen it — people and
+topics included.
 
 **Match semantics.** Hashtag names match case-insensitively by
 substring under plain text; handles and Hashtag names match by prefix

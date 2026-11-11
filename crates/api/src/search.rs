@@ -190,21 +190,14 @@ pub fn parse(raw: &str) -> Result<Parsed<'_>, QueryTooLong> {
     })
 }
 
-/// The match request for plain `text` over `kinds`. `exclude_seen_by`
-/// drops nodes on that account's seen-list; `keyed_users_only` serves
-/// only people who front a Profile — the finder's narrowing.
-pub fn unscoped(
-    text: &str,
-    kinds: &[IndexKind],
-    exclude_seen_by: Option<Uuid>,
-    keyed_users_only: bool,
-) -> MatchQuery {
+/// The match request for plain `text` over `kinds`. `keyed_users_only`
+/// serves only people who front a Profile — the finder's narrowing.
+pub fn unscoped(text: &str, kinds: &[IndexKind], keyed_users_only: bool) -> MatchQuery {
     MatchQuery {
         text: text.to_string(),
         like_body: like_body(text),
         title_query: title_query(text),
         kinds: kinds.iter().map(|k| k.as_store().to_string()).collect(),
-        exclude_seen_by,
         keyed_users_only,
     }
 }
@@ -243,7 +236,6 @@ pub fn scoped(
     scope: postgres_store::search::Scope,
     remainder: Option<&str>,
     kinds: &[ScopedKind],
-    exclude_seen_by: Option<Uuid>,
     pending_actor: Option<String>,
 ) -> ScopedQuery {
     ScopedQuery {
@@ -252,7 +244,6 @@ pub fn scoped(
         like_body: remainder.map(like_body).unwrap_or_default(),
         title_query: remainder.and_then(title_query),
         kinds: kinds.iter().map(|k| k.as_store().to_string()).collect(),
-        exclude_seen_by,
         pending_actor,
     }
 }
@@ -412,7 +403,6 @@ mod tests {
             },
             None,
             Scope::Tag.kinds(true),
-            None,
             None,
         );
         assert_eq!(request.text, None);

@@ -177,7 +177,7 @@ class ExploreScreenTest {
 
     @Test
     fun `a guest's results carry ages, no rank and no seam`() {
-        val filter = SearchFilter(order = SearchOrder.NEWEST, seen = true)
+        val filter = SearchFilter(order = SearchOrder.NEWEST)
         render(guest.copy(query = "salt", filter = filter, results = results("salt", filter, post("p1", "Salt maps"))))
         compose.onNodeWithTag("explore.seam:content", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithText("2h", useUnmergedTree = true).assertExists()
@@ -351,20 +351,22 @@ class ExploreScreenTest {
     }
 
     @Test
-    fun `the sheet carries the four kinds and the order section with the seen toggle`() {
+    fun `the sheet carries the four kinds and the order section with no seen toggle`() {
         render(member.copy(query = "salt"))
         compose.onNodeWithTag("explore.filterTrigger", useUnmergedTree = true).performClick()
         listOf("postsChip", "commentsChip", "profilesChip", "topicsChip").forEach {
             compose.onNodeWithTag("explore.filterSheet.kinds.$it").assertExists()
         }
         compose.onNodeWithTag("explore.filterSheet.order.picker.rankedOption", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("explore.filterSheet.order.seen").assertExists()
+        // Seam 296 (jakob, 2026-11-11): search never looks at the seen-list.
+        compose.onNodeWithTag("explore.filterSheet.order.seen", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithText("Show what you've already seen", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithContentDescription("How the filter works").assertExists()
     }
 
     @Test
     fun `a guest's sheet carries no order and no seen toggle`() {
-        render(guest.copy(query = "salt", filter = SearchFilter(order = SearchOrder.NEWEST, seen = true)))
+        render(guest.copy(query = "salt", filter = SearchFilter(order = SearchOrder.NEWEST)))
         compose.onNodeWithTag("explore.filterTrigger", useUnmergedTree = true).performClick()
         compose.onNodeWithTag("explore.filterSheet.kinds.postsChip").assertExists()
         compose.onNodeWithTag("explore.filterSheet.order.seen", useUnmergedTree = true).assertDoesNotExist()

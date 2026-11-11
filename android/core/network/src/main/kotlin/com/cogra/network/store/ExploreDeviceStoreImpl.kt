@@ -46,7 +46,7 @@ class ExploreDeviceStoreImpl @Inject constructor(
     override suspend fun committedFilter(account: String?): SearchFilter? {
         val bytes = store.get(filterName(account)) ?: return null
         val stored = try {
-            Json.decodeFromString<StoredFilter>(bytes.decodeToString())
+            FILTER_JSON.decodeFromString<StoredFilter>(bytes.decodeToString())
         } catch (_: SerializationException) {
             return null
         } catch (_: IllegalArgumentException) {
@@ -55,12 +55,11 @@ class ExploreDeviceStoreImpl @Inject constructor(
         return SearchFilter(
             kinds = stored.kinds.mapNotNull { name -> FeedKind.entries.firstOrNull { it.name == name } }.toSet(),
             order = SearchOrder.entries.firstOrNull { it.name == stored.order } ?: return null,
-            seen = stored.seen,
         )
     }
 
     override suspend fun commitFilter(account: String?, filter: SearchFilter) {
-        val stored = StoredFilter(filter.kinds.map { it.name }, filter.order.name, filter.seen)
+        val stored = StoredFilter(filter.kinds.map { it.name }, filter.order.name)
         store.put(filterName(account), Json.encodeToString(stored).encodeToByteArray())
     }
 
@@ -77,9 +76,16 @@ class ExploreDeviceStoreImpl @Inject constructor(
     }
 
     @Serializable
-    private data class StoredFilter(val kinds: List<String>, val order: String, val seen: Boolean)
+    private data class StoredFilter(val kinds: List<String>, val order: String)
 
     private companion object {
+        /**
+         * A filter kept while search still had a seen toggle carries a `seen`
+         * key (seam 296): it is read past, so the reader's kinds and order
+         * survive the toggle's removal.
+         */
+        val FILTER_JSON = Json { ignoreUnknownKeys = true }
+
         const val GUEST = "guest"
 
         fun recentsName(account: String?) = "explore_recents:${account ?: GUEST}"

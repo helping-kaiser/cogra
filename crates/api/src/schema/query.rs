@@ -603,7 +603,7 @@ impl Query {
         let Ok(search::Parsed::Unscoped(text)) = search::parse(text) else {
             return Ok(Vec::new());
         };
-        let request = search::unscoped(text, &kinds, None, true);
+        let request = search::unscoped(text, &kinds, true);
         let hits = search_store::find(pool, &request, None, false, i64::from(limit)).await?;
         Ok(hydrate(pool, hits)
             .await?
@@ -645,9 +645,8 @@ impl Query {
     /// filter drops sections and keeps the rest's semantics. COLLECTIVE,
     /// CHAT, CHAT_MESSAGE, ITEM and OFFER join with their slices and read
     /// empty until then. An empty `kinds` list means the same as null (no
-    /// narrowing). `includeSeen: false` drops nodes on the reader's
-    /// seen-list (`User.viewHistory`); it needs a session and is ignored
-    /// without one. Full semantics in the Search section.
+    /// narrowing). The reader's seen-list never narrows a search. Full
+    /// semantics in the Search section.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     #[expect(
         clippy::too_many_arguments,
@@ -658,7 +657,6 @@ impl Query {
         ctx: &Context<'_>,
         query: String,
         kinds: Option<Vec<NodeKind>>,
-        #[graphql(default_with = "Some(true)")] include_seen: Option<bool>,
         #[graphql(default_with = "Some(ReadOrder::Newest)")] order: Option<ReadOrder>,
         viewer: Option<Uuid>,
         first: Option<i32>,
@@ -701,13 +699,7 @@ impl Query {
             ))
         })?;
         let empty = || search_page(Vec::new(), had_cursor, backward, false, None, None);
-        let reader = match ctx.data_opt::<Option<Viewer>>() {
-            Some(Some(v)) => Some(v.user_id),
-            _ => None,
-        };
-        let exclude_seen_by = reader.filter(|_| include_seen == Some(false));
-        let Some(request) = search_request(ctx, parsed, kinds.as_deref(), exclude_seen_by).await?
-        else {
+        let Some(request) = search_request(ctx, parsed, kinds.as_deref()).await? else {
             return Ok(empty());
         };
         if let Some(viewer) = ranked_for {
@@ -949,20 +941,13 @@ pub(super) async fn search_request(
     ctx: &Context<'_>,
     parsed: search::Parsed<'_>,
     kinds: Option<&[NodeKind]>,
-    exclude_seen_by: Option<Uuid>,
 ) -> async_graphql::Result<Option<search_store::SearchRequest>> {
     Ok(match parsed {
         search::Parsed::Blank => None,
         search::Parsed::Unscoped(text) => {
             let kinds = served_kinds(kinds);
-            (!kinds.is_empty()).then(|| {
-                search_store::SearchRequest::Match(search::unscoped(
-                    text,
-                    &kinds,
-                    exclude_seen_by,
-                    false,
-                ))
-            })
+            (!kinds.is_empty())
+                .then(|| search_store::SearchRequest::Match(search::unscoped(text, &kinds, false)))
         }
         search::Parsed::Scoped {
             scope,
@@ -977,7 +962,6 @@ pub(super) async fn search_request(
                 named,
                 remainder,
                 &kinds,
-                exclude_seen_by,
                 viewer_address(ctx).await?,
             )))
         }
