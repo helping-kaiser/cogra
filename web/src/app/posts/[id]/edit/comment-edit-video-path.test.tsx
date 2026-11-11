@@ -386,7 +386,8 @@ describe("CommentEdit — a video picked at the edit (CommentEdit.md:23, Comment
     );
     fireEvent.click(screen.getByTestId("coverCrop.next"));
     expect(await screen.findByTestId("commentEdit.gate")).toHaveTextContent(
-      "Uploading 0 of 1 — signing waits for the cover.",
+      // N of M counts every upload the edit took (CommentEdit.md:47): the clip landed, its face goes up.
+      "Uploading 1 of 2 — signing waits for the cover.",
     );
     expect(screen.getByTestId("commentEdit.cover.thumb")).toBeInTheDocument();
     expect(screen.getByTestId("commentEdit.cover.change")).toHaveTextContent("Change the cover");

@@ -257,6 +257,10 @@ export function CommentEditor({
   const step = (id: string) => (upload: PickedAsset["upload"]) =>
     setEditing((current) => ({ ...current, gallery: withUpload(current.gallery, id, upload) }));
 
+  /** Where the picked clip's silent frame lands — handed to the leg like `step`. */
+  const placeFace = (clipId: string) => (face: CoverAsset | null) =>
+    setEditing((current) => ({ ...current, gallery: withAutoCover(current.gallery, clipId, face) }));
+
   /**
    * The picked clip's leg: its frame 0 first — taken silently, the face a
    * coverless clip stores (the feed-video rulings) — then the clip, at the
@@ -266,22 +270,26 @@ export function CommentEditor({
    * a taken face is silent, and a failed one counts as none (`effectiveCover`).
    */
   const sendClip = async (asset: PickedAsset, taken: CoverAsset | null) => {
-    if (taken !== null && taken.upload.kind === "failed" && !taken.upload.retryable) {
-      setEditing((current) => ({ ...current, gallery: withAutoCover(current.gallery, asset.id, null) }));
+    // A frame that already landed stays landed, and one refused outright is
+    // left as it failed — `effectiveCover` reads a failed taken face as none —
+    // so only the clip goes again.
+    if (
+      taken !== null &&
+      (taken.upload.kind === "done" || (taken.upload.kind === "failed" && !taken.upload.retryable))
+    ) {
       await runVideoUpload(client, guard, asset, null, step(asset.id), () => {}, COMMENT_SCALE);
       return;
     }
-    // A frame that already landed stays landed: only the clip goes again.
-    if (taken !== null && taken.upload.kind === "done") {
-      await runVideoUpload(client, guard, asset, null, step(asset.id), () => {}, COMMENT_SCALE);
-      return;
-    }
-    let face: CoverAsset | null = taken === null ? null : { ...taken, upload: { kind: "waiting" } };
+    // A frame whose upload failed retryably rides the leg again (its own steps
+    // reset it); a clip with none yet takes its frame 0 first.
+    let face = taken;
     if (face === null) {
       const frame = await captureFrameZero(asset.file).catch(() => null);
-      face = frame === null ? null : { id: newComposeId(), file: frame, frame: 0, upload: { kind: "waiting" } };
+      const taking: CoverAsset | null =
+        frame === null ? null : { id: newComposeId(), file: frame, frame: 0, upload: { kind: "waiting" } };
+      face = taking;
+      placeFace(asset.id)(taking);
     }
-    setEditing((current) => ({ ...current, gallery: withAutoCover(current.gallery, asset.id, face) }));
     await runVideoUpload(
       client,
       guard,
