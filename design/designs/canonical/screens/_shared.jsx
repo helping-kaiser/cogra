@@ -1204,8 +1204,13 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
    `Profile` and `ProfileOwnMenu` register them, and every other board this
    page stands on renders them stripped. The chronicle's acts are keyed by their
    position, newest first — two acts can read alike, and an act shows nothing
-   else that is its own. */
-function ProfileOwnBody({ tail = null }) {
+   else that is its own.
+
+   `headLine` is the line under the head: where a profile or picture change
+   closed on while it signs shows its wait and its failure (round 41, S3;
+   `SigningAfterClose`'s edit form, the head standing as it was until the
+   change is taken). Given none, nothing stands there. */
+function ProfileOwnBody({ tail = null, headLine = null }) {
   return (
     <>
       <ProfileBand node="band" />
@@ -1234,6 +1239,7 @@ function ProfileOwnBody({ tail = null }) {
             menu={ownProfileMenu()}
           />
         </div>
+        {headLine}
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
         <ChronicleList node="chronicle">
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} node="act" nodeKey="1" />
@@ -3698,7 +3704,7 @@ function ReportProblemBody({ words }) {
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
-function SettingsBody({ handleChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
+function SettingsBody({ handleChip = false, keptChip = false, backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote, install } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -3847,9 +3853,32 @@ function SettingsBody({ handleChip = false, backup = "made", forget = false, kep
             node="recovery"
           />
           <SettingsRow label="Your key" onOpen={() => {}} node="key" />
-          {keptPicks > 0 && (
-            <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
-          )}
+          {keptPicks > 0 &&
+            (keptChip ? (
+              /* THE KEPT PICKS' BATCH AFTER CLOSE (round 41; jakob 2026-11-11,
+                 S4 (a)): Close on `KeptPicksSeal` leaves for this page while
+                 the batch goes on, its wait on each target's row; a batch
+                 that fails fails whole, and says so here — `That didn't
+                 sign.` in this row's second line with `Retry` in the trailing
+                 slot, which signs the whole batch again: the Handle row's
+                 failed form below. The failed state is a drawn copy; the rest
+                 row alone carries the name. */
+              <div>
+                <div style={{ display: "{{keptRestShown}}" }}>
+                  <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
+                </div>
+                <div style={{ display: "{{keptFailedShown}}" }}>
+                  <SettingsRow
+                    label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`}
+                    status={<span role="alert" style={{ color: "var(--text-failure)" }}>That didn&apos;t sign.</span>}
+                    trailing={<InlineAction size="sm" onClick={() => {}}>Retry</InlineAction>}
+                    inert
+                  />
+                </div>
+              </div>
+            ) : (
+              <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
+            ))}
         </SettingsGroup>
 
         {/* WHAT CLEARING THIS DATA ERASES (jakob 2026-10-13, seams 164 and

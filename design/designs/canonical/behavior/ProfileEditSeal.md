@@ -49,3 +49,9 @@ WHEN press the header X GIVEN Sign the change was not pressed -> the flow is lef
 WHEN press Sign the change -> Back reads Close in its place from the press itself AND the header X is named Close AND NEVER Close dims
 
 WHEN press Close, the header back arrow, the header X or the system's Back GIVEN Sign the change was pressed and has not answered -> the seal closes AND the change goes on AND NEVER the act is cancelled
+
+WHEN the change has not answered GIVEN the seal was closed while it signed -> the reader's own profile stands as it was AND the line under its head reads Signing… in the pending marker's quiet register
+
+WHEN the signing does not go through GIVEN the seal was closed while it signed -> the profile's head stands as it was AND the line under it reads That didn't sign. in the failure voice followed by Retry AND NEVER the snackbar carries the failure
+
+WHEN tap Retry under the profile's head -> the same change is asked to sign again AND the line reads Signing… once 200ms pass without an answer

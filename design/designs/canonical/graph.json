@@ -745,6 +745,7 @@
     { "from": "FeedRemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "FeedRemoved", "case": "the card stands as its mark in place — never silent" }, { "terminal": "self", "case": "the removal does not go through — the dialog stays up with its pair, the line That didn't send. Try again. in it, Remove reading Retry (RemoveConfirm's answer chip draws it)", "info": true }] },
     { "from": "FeedRemoveConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the feed as it was" }] },
     { "from": "FeedRemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
+    { "from": "FeedRemoveConfirm", "via": 4, "kind": "advance", "label": "Retry (the removal that did not sign after Close)", "to": [{ "terminal": "self", "case": "the same removal is asked again — the line under the card reads Removing… once 200ms pass (the answer chip's closedFailed, round 41)" }] },
     { "from": "FeedRemoved", "via": 1, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "FeedRemoved", "via": 2, "kind": "advance", "label": "stance face", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands, on the removed post as on any other: the record survives the removal" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }, { "terminal": "self", "case": "press-and-hold, not signed — the face stays where it was, and the row under it says so with Retry (the RowSigning plate)" }, { "terminal": "self", "case": "press-and-hold, refused by the write rule — the face stays where it was, and the row under it says You can't sign right now., quiet, with no Retry (the RowWriteRule plate)" }] },
     { "from": "FeedRemoved", "via": 3, "kind": "detour", "label": "Feed score", "to": [{ "board": "FeedEntry" }] },
@@ -2240,6 +2241,7 @@
     { "from": "Profile", "via": 13, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "Profile", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "terminal": "self", "case": "scrolled — back to the top; at the top, nothing" }] },
     { "from": "Profile", "via": 15, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
+    { "from": "Profile", "via": 16, "kind": "advance", "label": "Retry (a profile or picture change that did not sign)", "to": [{ "terminal": "self", "case": "the same change is asked to sign again — the line under the head reads Signing… once 200ms pass (the change chip, round 41)" }] },
 
     { "from": "ProfileMoreFailed", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "Profile", "case": "the page comes this time — the row gives way to rows" }, { "terminal": "self", "case": "still nothing — the row stays where it stood", "info": true }] },
 
@@ -2400,8 +2402,6 @@
     { "from": "ProfileComments", "via": 15, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "ProfileComments", "via": 16, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
-    { "from": "Settings", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the gear was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
-    { "from": "Settings", "via": 2, "kind": "advance", "label": "Light / Dark / Auto", "to": [{ "terminal": "self", "case": "the page repaints — the choice is this device's, never the account's" }] },
     { "from": "ProfilePostsOwn", "via": 1, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon" }] },
     { "from": "ProfilePostsOwn", "via": 2, "kind": "detour", "label": "profile overflow ⋮", "to": [{ "board": "ProfileOwnMenu", "case": "your own profile's sheet — the two private lists and the share row" }] },
     { "from": "ProfilePostsOwn", "via": 3, "kind": "advance", "label": "settings gear", "to": [{ "board": "Settings" }] },
@@ -2446,6 +2446,8 @@
     { "from": "ProfileCommentsOwn", "via": 19, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "ProfileCommentsOwn", "via": 20, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
+    { "from": "Settings", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the gear was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
+    { "from": "Settings", "via": 2, "kind": "advance", "label": "Light / Dark / Auto", "to": [{ "terminal": "self", "case": "the page repaints — the choice is this device's, never the account's" }] },
     { "from": "Settings", "via": 3, "kind": "advance", "label": "how a stance is taken", "to": [{ "terminal": "self", "case": "one of three — it replaces the pad everywhere" }] },
     { "from": "Settings", "via": 4, "kind": "advance", "label": "Confirm multi-action submits", "to": [{ "terminal": "self", "case": "the switch flips" }] },
     { "from": "Settings", "via": 5, "kind": "advance", "label": "Default license", "to": [{ "board": "SettingsLicense", "case": "the license sheet over settings — the same question the seal asks, set here as what every new post starts from" }] },
@@ -2459,7 +2461,7 @@
     { "from": "Settings", "via": 13, "kind": "advance", "label": "Handle", "to": [{ "board": "ChangeHandle" }] },
     { "from": "Settings", "via": 14, "kind": "advance", "label": "Email", "to": [{ "board": "ChangeEmail", "case": "the request; the confirmation is its own board — also once a change ran out before both sides landed: the row reads the address alone again and opens the request" }, { "board": "ChangeEmailConfirm", "case": "a change already in flight — the row returns to the side still owed" }, { "board": "ApplicantEmail", "case": "an applicant whose address is not verified yet — the applicant's own address change (auth.md's carve-out), never the member's two-sided request" }] },
     { "from": "Settings", "via": 15, "kind": "advance", "label": "Don't remember this account on this device", "to": [{ "terminal": "self", "case": "the switch flips — it decides what signing out clears, and the login form carries the same one" }] },
-    { "from": "Settings", "via": 29, "kind": "advance", "label": "Retry (the handle change that did not go through)", "to": [{ "terminal": "self", "case": "the same change is asked again — the Handle row reads Changing handle… once 200ms pass (the handle chip)" }] },
+    { "from": "Settings", "via": 29, "kind": "advance", "label": "Retry (a row's act that did not go through)", "to": [{ "terminal": "self", "case": "the handle change — the same change is asked again, the Handle row reading Changing handle… once 200ms pass (the handle chip)" }, { "terminal": "self", "case": "the kept picks' batch — the whole batch is asked to sign again, each target's row reading Signing… under its face (the kept chip, round 41)" }] },
     { "from": "Settings", "via": 16, "kind": "advance", "label": "Sign out", "to": [{ "board": "SignIn", "case": "remembered — the session ends and the account stays offered here" }, { "board": "SignIn", "case": "not remembered — the key and the unpublished draft go with the session" }, { "board": "SignOutConfirm", "case": "not remembered, and this device holds the only copy of an unbacked key — it asks first" }] },
     { "from": "SignOutConfirm", "via": 1, "kind": "advance", "label": "Make a recovery code", "to": [{ "board": "SettingsBackupNone", "case": "the backup first — still signed in, and the sign-out no longer needs to ask" }] },
     { "from": "SignOutConfirm", "via": 2, "kind": "advance", "label": "Sign out, keep them locked", "to": [{ "board": "SignIn", "case": "the session ends; the unbacked key, the draft and any picks kept pending stay on this device, sealed until this account signs in here again, online, with its current credentials" }] },

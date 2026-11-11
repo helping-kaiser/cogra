@@ -5497,7 +5497,7 @@ their own cards still pass `CARD_MENU`: `LadderMax`, `LadderSmall`,
 draws it twice, and no Report. Closed menus draw no row, so no pixel moves;
 a mechanical sweep.
 
-### 165 · After Close: where a profile change lands · *design* · **filed 2026-11-11**
+### 165 · After Close: where a profile change lands · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 37. `ProfileEditSeal` and `AvatarSeal` read `Close` from the press
 and the change goes on; by `SigningAfterClose`'s edit form its wait and its
@@ -5508,7 +5508,11 @@ with `Retry` under the name, the edit form [lean]; (b) the settings row
 that opened the edit carries them; (c) the profile change keeps its seal
 held, the named exception.
 
-### 166 · After Close: the kept picks' all-or-nothing failure · *design* · **filed 2026-11-11**
+Closed by round 41, by (a) (jakob 2026-11-11, S3): the line under the profile's
+head reads `Signing…` and then `That didn't sign.` with `Retry` (`Profile`'s
+`change` chip; `SigningAfterClose`'s `act` `profile`).
+
+### 166 · After Close: the kept picks' all-or-nothing failure · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 37. `KeptPicksSeal` reads `Close` from the press and the batch goes on
 as a whole, its wait on each target's row (`Signing…`). A batch fails all
@@ -5520,7 +5524,11 @@ closed. For jakob: (a) the Key backup row (`4 kept picks waiting`) carries
 signs the whole batch; (c) the review's seal keeps its exits held, the named
 exception.
 
-### 167 · A removal's and a closing's failure words on their row · *design* · **filed 2026-11-11**
+Closed by round 41, by (a) (jakob 2026-11-11, S4): the Key backup row reads
+`That didn't sign.` with `Retry`, which signs the whole batch again
+(`Settings`' `kept` chip); the wait stays on each target's row.
+
+### 167 · A removal's and a closing's failure words on their row · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 37. After `Close` on `RemoveConfirm`, `FeedRemoveConfirm`,
 `CommentRemoveConfirm`, `RejectConfirm` and `RejectAllConfirm` the act's
@@ -5530,6 +5538,11 @@ its failure there in the failure voice with `Retry`. Which words: (a)
 and a closing are signed acts]; (b) `That didn't go through.`, the row
 pattern for an unsigned one. Also for jakob: on the reject dialogs the way out
 reads `Close` beside `Closing it…` — the same verb twice in one row.
+
+Closed by round 41 (jakob 2026-11-11, S5 "as rec"): `That didn't sign.` with
+`Retry` on the row, drawn on `FeedRemoveConfirm`'s `closedFailed`; the
+application's row is law only (backlog 190). `Close` beside `Closing it…`
+stays as drawn.
 
 ### 170 · Invites with nothing but the people you let in · *design* · **filed 2026-11-11**
 
@@ -5624,6 +5637,46 @@ redacted record keeps its menu, citable because it never left the graph. No
 board draws a redacted card's open menu (`FeedRemoved`'s just-removed card
 passes none). For jakob: (a) the reader's card menu, Hide and Report included
 (`readerCardMenu`); (b) Save and Cite only, as drawn [lean — what is hidden
-or reported is the payload, and it is gone]; (c) no menu, `FeedRemoved`'s.Closed by round 41, by (a): the frame is 3103px; a row's second line costs
-nothing (54px inside the 56px minimum), so no other setting needs more.
+or reported is the payload, and it is gone]; (c) no menu, `FeedRemoved`'s.
 
+Round 41 (jakob 2026-11-11, "fine for now lets keep it there" read with "all
+things that i did not say anything to … are blessed"): left open, because
+`FeedRemoved.md` reads "the removed card carries no feed.card.menu" and
+`ProfileComments.md` gives a removed comment no menu, while `LadderStates.md`
+gives a removed post a menu without the license row. The rule is his: one
+menu for every redacted card, or the ladder's and the feed's kept apart.
+
+### 190 · A closed application failing after Close: its row on Invites · *design* · **filed 2026-11-11**
+
+Round 41 (S5). The law reads on `RejectConfirm` and `RejectAllConfirm`: a
+closing closed on that does not go through leaves the application's row (or
+the group's rows) as they were, saying `That didn't sign.` with `Retry`. The
+row is drawn by `InvitesBody`, which round 40 is reshaping in parallel (the
+three-then-show-all cap), so no state is drawn yet. For the next round: a
+`closedFailed` value on `RejectConfirm`'s `answer`, the line under the row,
+as `FeedRemoveConfirm` draws it.
+
+### 191 · Close on the plain forms (S6): the arrow, and where a guest's result lands · *design* · **filed 2026-11-11**
+
+jakob 2026-11-11, S6: "should be close no? submit is submit". Round 41 swept
+the forms whose commit is a submit and not a signing; none draws a state in
+which the commit is pending, and none says its exits hold — each sidecar's
+back-arrow line ("settings returns AND NEVER the password changes") speaks of
+leaving before the press. Two things have no drawn precedent:
+(1) a page whose one way out is the header's back arrow (ChangePassword,
+ChangeEmail, ChangeEmailConfirm, ApplicantEmail, Join, SignIn, Reset,
+InviteEntry, YourKeyGate) — the seals rename a foot `Back` to `Close` and name
+their X `Close`, but no board renames an arrow. Ways: (a) the arrow is named
+`Close` from the press and leaves, the seal's X form [lean]; (b) the arrow
+keeps its name and only its act changes; (c) a foot `Close` is added.
+(2) where the result shows. Settings forms have rows (`Change pending`, the
+Handle row's `Changing handle…` / `That didn't go through.` + `Retry`); a
+password change's Retry would need the typed passwords again, so its failure
+reopens the form rather than retrying. The report sheets have no told
+outcome beyond their snackbar. The entry forms (Join, SignIn, Reset,
+ResetNew, InviteEntry, VerifyExpired's resend) leave a guest with no place a
+result can be told: (a) they keep their exits held while they submit, the
+named exception [lean — a guest who closes has nothing to come back to];
+(b) Close, and the result is lost unless it lands while the app is open
+(the feed's snackbar); (c) Close, and a signed-in landing tells it at the
+next open.

@@ -1093,8 +1093,18 @@ a quick answer never flashes a word.
   where the card would have stood; built from the row's `That didn't
   sign.` and the did-not-land notice's family titles (`Your post didn't
   land`). An edit's failure is the row's own `That didn't sign.` under
-  the card. **Drawn** on `SigningAfterClose`. (*New 2026-11-11, round 37,
-  drafted — review-pending, wording jakob's at review.*)
+  the card. **Drawn** on `SigningAfterClose`. (*New 2026-11-11, round 37;
+  kept as drawn by jakob 2026-11-11 for now, S1.*) A reply and an edit keep
+  no draft: after their failure `Retry` is the way back (jakob 2026-11-11,
+  S2).
+- `That didn't sign.` with `Retry` — every other signed act's failure
+  after `Close`, on its own row: a profile or picture change under the
+  profile's head (`Profile`'s `change`), the kept picks' batch on the Key
+  backup row `4 kept picks waiting`, its `Retry` signing the whole batch
+  again (`Settings`' `kept`), a removal under the removed thing's card
+  (`FeedRemoveConfirm`'s `closedFailed`) and a closed application on its
+  row (jakob 2026-11-11, S3–S5, round 41). The dialogs' own failure while
+  they stand open keeps `That didn't send. Try again.`
 - `Changing handle…`, `That didn't go through.` with `Retry`, and `That
   handle is taken.` — the handle change's wait, failure and refusal on
   the Handle row after `Close`, the dialog's and the hidden-accounts
@@ -3062,16 +3072,6 @@ profile menu, because the handle is what a reader recognises and what
 they will look for again in settings. The pair on the other side is
 `Hidden accounts` and `Unhide`.
 
-**Hiding is confirm-free, and the snackbar is the whole ceremony.**
-`@ada is hidden — their posts stay out of your feed.` with `Undo`
-beside it. It says what changed and how far it reaches, which is what
-stops a reader wondering whether they have done something to someone.
-It lands wherever the tap was made, in the same words: over the feed
-(`FeedHidden`), over the post being read (`PostDetailHidden`) and over
-the person's profile (`ProfileOtherHidden`).
-A deleted account has no handle to spell, so hiding one answers `This
-account is hidden — its posts stay out of your feed.`, with the same
-`Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).
 **On a hidden person's card the row turns.** Wherever a hidden person's
 post, profile card or profile still stands — History until its next load,
 Saved, the tag's page, a post or profile reached by a link or a search —
@@ -3083,6 +3083,16 @@ unhidden — their posts can reach your feed again.` with `Undo` (jakob
 hidden) and `HistoryProfileMenu`. (*`Unhide @ada` and `Unhide this
 account` are `Unhide` taking the row's handle, review-pending.*)
 
+**Hiding is confirm-free, and the snackbar is the whole ceremony.**
+`@ada is hidden — their posts stay out of your feed.` with `Undo`
+beside it. It says what changed and how far it reaches, which is what
+stops a reader wondering whether they have done something to someone.
+It lands wherever the tap was made, in the same words: over the feed
+(`FeedHidden`), over the post being read (`PostDetailHidden`) and over
+the person's profile (`ProfileOtherHidden`).
+A deleted account has no handle to spell, so hiding one answers `This
+account is hidden — its posts stay out of your feed.`, with the same
+`Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).
 
 **Saving is confirmed like every other completed act.** `Saved.` The
 sheet closes on the tap, so without the snackbar nothing would answer

@@ -731,6 +731,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Remove</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+    // The `closedFailed` line under the card (round 41, S5): its Retry, the
+    // first in the markup (the failed dialog's Retry stands after the feed).
+    { n: 4, find: ">Retry</button>", tag: "button" },
   ],
   FeedRemoved: [
     { n: 1, find: '<a href="/u/sol', tag: "a" },
@@ -1509,9 +1512,6 @@ const ownProfile = () => [
   { n: 8, find: 'aria-label="Everything"', tag: "button" },
 ];
 Object.assign(FLOW_MARKERS, {
-  Profile: [
-    ...ownProfile(),
-    { n: 9, find: "Salt maps of the coast road — rubbings", tag: "button" },
   // The own profile's Posts and Comments views (round 41, M2): `Profile`'s
   // head to the number, the bell at `Profile`'s 15, the cards after.
   ProfilePostsOwn: [
@@ -1540,9 +1540,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: 'aria-label="Notifications"', tag: "button" },
     ...nav(16),
   ],
+  Profile: [
+    ...ownProfile(),
+    { n: 9, find: "Salt maps of the coast road — rubbings", tag: "button" },
     { n: 9, find: "The third headland light is real", tag: "button" },
     { n: 9, find: "Three weekends of walking the same stretch", tag: "button" },
     ...nav(10),
+    // The `change` chip's failed line under the head (round 41, S3): the next
+    // free number after the bell's 15.
+    { n: 16, find: ">Retry</button>", tag: "button" },
   ],
   // The failed next page is this board's whole subject; the profile beneath it
   // is `Profile`'s and is wired there (the pattern-exemplar exemption).
@@ -1716,7 +1722,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: ">Password</span>", tag: "button" },
     { n: 13, find: ">Handle</span>", tag: "button" },
     { n: 13, find: ">That handle is taken.</span>", tag: "button" },
-    { n: 29, find: ">Retry</button>", tag: "button" },
+    // Retry on a failed row — the handle change's, and the kept picks' batch
+    // (round 41, the `kept` chip): one control, the same signing asked again.
+    { n: 29, find: ">Retry</button>", tag: "button", all: true },
     { n: 14, find: ">Email</span>", tag: "button" },
     { n: 15, find: ">Don&#x27;t remember this account on this device</span>", tag: "button" },
     { n: 16, find: ">Sign out</span>", tag: "button" },
