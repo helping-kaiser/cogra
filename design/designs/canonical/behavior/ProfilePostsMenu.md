@@ -1,6 +1,6 @@
 # ProfilePostsMenu · `spec:design:behavior-profile-posts-menu`
 
-WHEN tap a post card's ⋮ on a profile's Posts tab GIVEN the post is someone else's -> profile.menuSheet rises over the profile AND the profile stands unchanged beneath its wash
+WHEN tap the ⋮ on profile.posts.card GIVEN profile.tabRow.postsTab is lit and the post is someone else's -> profile.menuSheet rises over the profile AND the profile stands unchanged beneath its wash
 
 ALWAYS the post card's menu on the profile reads Save or Unsave, then Cite in a new post, then Hide with the author's handle, then License terms, then profile.menuSheet.report at the sheet tail, the reader's post menu's own rows
 

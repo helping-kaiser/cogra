@@ -1,6 +1,6 @@
 # SavedCommentMenu · `spec:design:behavior-saved-comment-menu`
 
-WHEN tap a comment card's ⋮ in Saved GIVEN the comment is someone else's -> saved.menuSheet rises over Saved, unstacked, AND Saved stands unchanged beneath its wash
+WHEN tap the ⋮ on saved.commentCard GIVEN the comment is someone else's -> saved.menuSheet rises over Saved, unstacked, AND Saved stands unchanged beneath its wash
 
 ALWAYS saved.menuSheet reads Unsave, then Cite in a new post, then saved.menuSheet.citedBy, then Opinions on this, then License terms, then saved.menuSheet.report at the sheet tail, the comment's menu's own rows with the comment kept
 

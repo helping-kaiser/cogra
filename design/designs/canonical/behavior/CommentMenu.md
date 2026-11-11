@@ -2,7 +2,7 @@
 
 ALWAYS the comment's menu opens stacked over the thread GIVEN it was opened in the thread, its wash between the two sheets and the thread's top still in view
 
-ALWAYS the comment's menu opens unstacked over its host GIVEN it was opened from a comment card on a list, the profile's Comments tab, History or Saved, as the feed's post menu rises over the feed
+ALWAYS the comment's menu opens unstacked over its host GIVEN it was opened from a comment's ⋮ in a list, the profile's Comments tab, History or Saved, as the feed's post menu rises over the feed
 
 ALWAYS the comment's menu reads Save or Unsave, then Cite in a new post, then postDetail.menuSheet.citedBy, then Opinions on this, then License terms, then postDetail.menuSheet.report at the sheet tail
 
@@ -28,7 +28,7 @@ WHEN tap License terms -> the menu closes AND the comment's terms come up in a s
 
 WHEN tap postDetail.menuSheet.report -> the menu closes AND postDetail.reportSheet rises stacked over the thread, its postDetail.reportSheet.title reading Report this comment? AND NEVER anything is sent yet
 
-WHEN tap Report GIVEN the menu was opened from a comment card on a list -> the menu closes AND the report confirm rises over the host, its title reading Report this comment? AND NEVER anything is sent yet
+WHEN tap Report GIVEN the menu was opened from a comment's ⋮ in a list -> the menu closes AND the report confirm rises over the host, its title reading Report this comment? AND NEVER anything is sent yet
 
 WHEN a guest taps any row of a comment's menu, on any host -> the guest gate opens, the profile menu's rule
 

@@ -4,7 +4,7 @@ ALWAYS the reader's own comment's menu reads Save or Unsave, then Cite in a new 
 
 ALWAYS the reader's own comment's menu opens stacked over the thread GIVEN it was opened in the thread, the thread scrolled to the comment beneath it
 
-ALWAYS the reader's own comment's menu opens unstacked over its host GIVEN it was opened from a comment card on a list, the own profile's Comments tab, History or Saved
+ALWAYS the reader's own comment's menu opens unstacked over its host GIVEN it was opened from a comment's ⋮ in a list, the own profile's Comments tab, History or Saved
 
 ALWAYS the menu carries no Report row, the own menus' rule
 

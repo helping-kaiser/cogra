@@ -1,6 +1,6 @@
 # ProfileCommentsMenu · `spec:design:behavior-profile-comments-menu`
 
-WHEN tap a comment card's ⋮ on a profile's Comments tab GIVEN the comment is someone else's -> profile.menuSheet rises over the profile, unstacked, AND the profile stands unchanged beneath its wash
+WHEN tap the ⋮ on profile.comments.commentCard GIVEN profile.tabRow.commentsTab is lit and the comment is someone else's -> profile.menuSheet rises over the profile, unstacked, AND the profile stands unchanged beneath its wash
 
 ALWAYS the comment's menu on the profile reads Save or Unsave, then Cite in a new post, then profile.menuSheet.citedBy, then Opinions on this, then License terms, then profile.menuSheet.report at the sheet tail, the comment's menu's own rows
 

@@ -1,6 +1,6 @@
 # ProfileCommentsMenuOwn · `spec:design:behavior-profile-comments-menu-own`
 
-WHEN tap the ⋮ on a comment card on the reader's own Comments tab -> profile.menuSheet rises over the reader's own profile, unstacked, AND the profile stands unchanged beneath its wash
+WHEN tap the ⋮ on profile.comments.commentCard GIVEN the profile is the reader's own and profile.tabRow.commentsTab is lit -> profile.menuSheet rises over the reader's own profile, unstacked, AND the profile stands unchanged beneath its wash
 
 ALWAYS the own comment's menu on the own profile reads Save or Unsave, then Cite in a new post, then Remove, then profile.menuSheet.citedBy, then Opinions on this, then License terms, the own comment menu's rows, and carries no Report row
 

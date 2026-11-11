@@ -1,6 +1,6 @@
 # HistoryCommentMenu · `spec:design:behavior-history-comment-menu`
 
-WHEN tap a comment card's ⋮ in History GIVEN the comment is someone else's -> history.menuSheet rises over History, unstacked, AND History stands unchanged beneath its wash
+WHEN tap the ⋮ on history.commentCard GIVEN the comment is someone else's -> history.menuSheet rises over History, unstacked, AND History stands unchanged beneath its wash
 
 ALWAYS history.menuSheet reads Save or Unsave, then Cite in a new post, then history.menuSheet.citedBy, then Opinions on this, then License terms, then history.menuSheet.report at the sheet tail, the comment's menu's own rows
 

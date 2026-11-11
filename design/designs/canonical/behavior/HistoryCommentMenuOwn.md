@@ -1,6 +1,6 @@
 # HistoryCommentMenuOwn · `spec:design:behavior-history-comment-menu-own`
 
-WHEN tap the ⋮ on a comment card of the reader's own in History -> history.menuSheet rises over History, unstacked, AND History stands unchanged beneath its wash
+WHEN tap the ⋮ on history.commentCard GIVEN the comment is the reader's own -> history.menuSheet rises over History, unstacked, AND History stands unchanged beneath its wash
 
 ALWAYS history.menuSheet reads Save or Unsave, then Cite in a new post, then Remove, then history.menuSheet.citedBy, then Opinions on this, then License terms, the own comment menu's rows, and carries no Report row
 
