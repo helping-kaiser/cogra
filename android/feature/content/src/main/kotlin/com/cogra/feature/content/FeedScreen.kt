@@ -1293,6 +1293,8 @@ internal data class CardPlacement(
     val menuRows: Set<PostMenuRow>,
     /** The own menu's think-twice dialog, where the surface's board registers one (`feed.dialog`). */
     val dialog: DataNode? = null,
+    /** The card stands on its author's own page, a profile's posts view: the chip is inert (ProfilePosts.md:25). */
+    val authorHere: Boolean = false,
 )
 
 /**
@@ -1502,6 +1504,7 @@ private fun CardMenuHeader(
         author = post.author,
         at = post.createdAt,
         onOpenActor = onOpenActor,
+        authorHere = placement.authorHere,
         testTagPrefix = tag,
         menu = if (removed) {
             emptyList()

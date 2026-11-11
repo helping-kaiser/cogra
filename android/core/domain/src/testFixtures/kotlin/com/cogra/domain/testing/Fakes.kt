@@ -47,6 +47,7 @@ import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileComment
 import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
@@ -908,10 +909,13 @@ open class ThrowingProfileRepository : ProfileRepository {
         throw UnsupportedOperationException()
     override suspend fun authorRecords(
         authorId: String,
-        family: Family?,
         first: Int,
         after: String?,
     ): Outcome<Page<RecordRow>> = throw UnsupportedOperationException()
+    override suspend fun profilePosts(authorId: String, after: String?): Outcome<Page<PostView>> =
+        throw UnsupportedOperationException()
+    override suspend fun profileComments(authorId: String, after: String?): Outcome<Page<ProfileComment>> =
+        throw UnsupportedOperationException()
 
     /**
      * The header reads no figures until a test scripts them: a figure the

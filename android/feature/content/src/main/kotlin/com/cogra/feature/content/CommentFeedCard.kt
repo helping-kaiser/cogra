@@ -27,6 +27,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,6 +36,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.DynamicFeed
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -42,12 +45,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -61,8 +66,12 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.v2.atom.ButtonKind
+import com.cogra.core.designsystem.v2.atom.ButtonSize
+import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.token.StateTokens
 import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.CommentView
 import com.cogra.domain.saved.CommentTarget
@@ -80,6 +89,13 @@ private val MARK = 32.dp
 private val CONNECTOR_INSET = 15.dp
 private val CONNECTOR = 2.dp
 private val HUNG_INSET = 25.dp
+
+/** The line shape's pointer glyph (`CommentCard.jsx` `Icon size={14}`). */
+private val POINTER_GLYPH = 14.dp
+
+/** The replies line hangs 28dp in under the card, its rule 24dp long (`CommentCard.jsx` 455, 465). */
+private val REPLIES_INSET = 28.dp
+private val REPLIES_RULE = 24.dp
 
 @Composable
 internal fun CommentFeedCard(
@@ -105,12 +121,20 @@ internal fun CommentFeedCard(
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
     /** The own comment's Remove row (`FEED_OWN_COMMENT_MENU`); null on someone else's. */
     onRemove: (() -> Unit)? = null,
+    /** How the card names what it answers: the feed's head row, or the line a listed comment leads with. */
+    shape: CommentCardShape = CommentCardShape.Thread,
+    /** The card stands on its author's own page — a profile's comments view — so the chip is inert. */
+    authorHere: Boolean = false,
 ) {
     val card = node.keyed(comment.id)
+    val line = shape as? CommentCardShape.Line
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onOpenPlace)
+            // IN THE LINE SHAPE THE WORDS ARE NO DOOR: the card is reached
+            // through its pointer, its Reply and its replies line
+            // (ProfileComments.md:23-27).
+            .then(if (line == null) Modifier.clickable(onClick = onOpenPlace) else Modifier)
             .dataNode(card),
     ) {
         Column(
@@ -131,36 +155,198 @@ internal fun CommentFeedCard(
                     onCite = onCite,
                     onLicense = onLicense,
                     onRemove = onRemove,
+                    // A profile's list draws the words whole (`CommentCard`'s
+                    // `clampLines`, off outside the feed).
+                    clamped = line == null,
+                    authorHere = authorHere,
                 )
             }
-            if (target != null) {
+            if (line != null) {
+                target?.let { LinePointer(it, card / "target", onOpenTarget) }
+                ownPart()
+            } else if (target != null) {
                 HeadRow(target, testTagPrefix, onOpenTarget)
-                // THE CONNECTOR: a hairline rule down from the head's mark —
-                // centred on its 32dp tile — to the comment, hung inset beside it.
-                // Drawn behind the hung part rather than sized by an intrinsic
-                // pass: the part holds the tags line, whose measured fold reads
-                // its constraints and so answers no intrinsic query.
-                val rule = MaterialTheme.colorScheme.outlineVariant
-                Column(
-                    modifier = Modifier
-                        .padding(start = CONNECTOR_INSET)
-                        .drawBehind {
-                            val x = CONNECTOR.toPx() / 2
-                            drawLine(rule, Offset(x, 0f), Offset(x, size.height), strokeWidth = CONNECTOR.toPx())
-                        }
-                        .padding(start = CONNECTOR + HUNG_INSET),
-                    verticalArrangement = Arrangement.spacedBy(Space.x3),
-                ) {
-                    ownPart()
-                }
+                HungOnTheConnector(ownPart)
             } else {
                 ownPart()
             }
             if (comment.landing.isPending) PendingMarker(testTag = "${testTagPrefix}_pending")
-            FeedCommentRow(comment, testTagPrefix, onReply, onShare, stanceControl, card / "actionRow")
+            if (line != null) {
+                LineCommentRow(comment, testTagPrefix, line.reply, onReply, stanceControl, card / "actionRow")
+            } else {
+                FeedCommentRow(comment, testTagPrefix, onReply, onShare, stanceControl, card / "actionRow")
+            }
             // THE ROW LINE under the face (RowSigning.md): a save or unsave of
             // this comment that did not go through.
             ComfortLine(comment.id, "${testTagPrefix}_row_line")
+        }
+    }
+}
+
+/**
+ * THE CONNECTOR: a hairline rule down from the head's mark — centred on its
+ * 32dp tile — to the comment, hung inset beside it. Drawn behind the hung part
+ * rather than sized by an intrinsic pass: the part holds the tags line, whose
+ * measured fold reads its constraints and so answers no intrinsic query.
+ */
+@Composable
+private fun HungOnTheConnector(part: @Composable () -> Unit) {
+    val rule = MaterialTheme.colorScheme.outlineVariant
+    Column(
+        modifier = Modifier
+            .padding(start = CONNECTOR_INSET)
+            .drawBehind {
+                val x = CONNECTOR.toPx() / 2
+                drawLine(rule, Offset(x, 0f), Offset(x, size.height), strokeWidth = CONNECTOR.toPx())
+            }
+            .padding(start = CONNECTOR + HUNG_INSET),
+        verticalArrangement = Arrangement.spacedBy(Space.x3),
+    ) {
+        part()
+    }
+}
+
+/**
+ * HOW A COMMENT CARD NAMES WHAT IT ANSWERS (`CommentCard`'s `targetShape`).
+ * [Thread] is the feed's: the post as a head row, the comment hung under it.
+ * [Line] is a comment listed away from its thread — a profile's comments
+ * view (ProfileComments): the one-line `On …` pointer leading, the words
+ * whole, the thread's text Reply in the row, and no score and no share.
+ */
+sealed interface CommentCardShape {
+    data object Thread : CommentCardShape
+
+    data class Line(val reply: LineReply) : CommentCardShape
+}
+
+/** What the line shape's text Reply does for this reader (`CommentCard`'s `replyOpacity`, `signedIn`). */
+enum class LineReply {
+    /** A member: the thread opens, its composer aimed at the comment (ProfileComments.md:25). */
+    Open,
+
+    /** An applicant: the locked look, still tappable, its tap answered in the snackbar (:29). */
+    Locked,
+
+    /** A guest: no Reply, as the thread draws none for one. */
+    None,
+}
+
+/**
+ * A LISTED COMMENT, AND ITS COLLAPSED BRANCH UNDER IT (`CommentCard`'s line
+ * shape; ProfileComments.md): the card, then — 12dp below, outside its
+ * surface — the "View n replies" line, its door the thread (:27). The line
+ * wears [repliesNode] keyed by the comment's id, the card's sibling path.
+ */
+@Composable
+internal fun ListedCommentCard(
+    comment: CommentView,
+    repliesNode: DataNode,
+    testTagPrefix: String,
+    onOpenReplies: () -> Unit,
+    card: @Composable () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.x3)) {
+        card()
+        if (comment.replyCount > 0) ViewRepliesLine(comment, repliesNode, testTagPrefix, onOpenReplies)
+    }
+}
+
+/** The collapsed branch: a short rule and the count, indented under the card (`CommentCard.jsx` 437-468). */
+@Composable
+private fun ViewRepliesLine(comment: CommentView, node: DataNode, testTagPrefix: String, onOpen: () -> Unit) {
+    val rule = MaterialTheme.colorScheme.outlineVariant
+    Row(
+        modifier = Modifier
+            .padding(start = REPLIES_INSET)
+            .clip(RoundedCornerShape(Space.x2))
+            .dataNode(node.keyed(comment.id))
+            .clickable(role = Role.Button, onClick = onOpen)
+            .padding(top = Space.x1, bottom = Space.x1, end = Space.x2),
+        horizontalArrangement = Arrangement.spacedBy(Space.x3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(width = REPLIES_RULE, height = 1.dp)
+                .drawBehind { drawRect(rule) },
+        )
+        Text(
+            text = pluralStringResource(R.plurals.content_comment_view_replies, comment.replyCount, comment.replyCount),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("${testTagPrefix}_replies"),
+        )
+    }
+}
+
+/**
+ * THE TARGET POINTER (`CommentCard`'s line shape; ProfileComments.md:5): one
+ * line, one tap — the target kind's glyph, then `On …` in the quiet ink at
+ * label-small, ellipsized.
+ */
+@Composable
+private fun LinePointer(target: CommentTarget, node: DataNode, onOpen: () -> Unit) {
+    val row = headRowOf(target)
+    val words = stringResource(R.string.content_card_on, row.label)
+    Row(
+        modifier = Modifier
+            // The pointer stands across the card, a block in its column
+            // (`CommentCard.jsx`: the button stretches in the card's flex column).
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Space.x2))
+            .dataNode(node)
+            .clickable(role = Role.Button, onClick = onOpen),
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = if (row.comment) Icons.Filled.ChatBubble else Icons.Filled.DynamicFeed,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(POINTER_GLYPH),
+        )
+        Text(
+            text = words,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * THE LINE SHAPE'S ROW (`CommentCard` without `replyGlyph`, `score` or
+ * `onShare`): the opinion, then the thread's text `Reply`, spread across the
+ * card. A removed comment keeps its Reply, as in its thread (CommentRemoved.md).
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun LineCommentRow(
+    comment: CommentView,
+    testTagPrefix: String,
+    reply: LineReply,
+    onReply: () -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
+    node: DataNode,
+) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth().dataNode(node),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalArrangement = Arrangement.spacedBy(Space.x1),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        CommentStanceTarget { stanceControl(comment.id, testTagPrefix, node / "stance") }
+        if (reply != LineReply.None) {
+            CograButton(
+                text = stringResource(R.string.content_comment_reply),
+                onClick = onReply,
+                kind = ButtonKind.Text,
+                size = ButtonSize.Compact,
+                modifier = Modifier
+                    .dataNode(node / "reply")
+                    .alpha(if (reply == LineReply.Locked) StateTokens.DISABLED else 1f),
+            )
         }
     }
 }
@@ -320,11 +506,15 @@ private fun OwnPart(
     onCite: () -> Unit,
     onLicense: () -> Unit,
     onRemove: (() -> Unit)?,
+    /** The words fold at two lines under `More` — in the feed, never on a listed comment. */
+    clamped: Boolean,
+    authorHere: Boolean,
 ) {
     ContentCardHeader(
         author = comment.author,
         at = comment.createdAt,
         onOpenActor = onOpenActor,
+        authorHere = authorHere,
         testTagPrefix = testTagPrefix,
         // A REMOVED COMMENT HAS NO MENU LEFT (CommentRemoved.md:9): its ⋮ goes
         // with the payload.
@@ -346,7 +536,7 @@ private fun OwnPart(
         moderation = comment.moderation,
         removal = comment.removal,
         testTagPrefix = testTagPrefix,
-        collapsed = true,
+        collapsed = clamped,
         wordsClampLines = FEED_COMMENT_CLAMP_LINES,
         surface = BodySurface.Comment,
         revealed = revealed,

@@ -8,7 +8,11 @@
 //   then the gear, chats and the bell.
 // - A drill-in wears the house page header, titled `@handle` and carrying the
 //   way back alone — a deleted account's title stays empty.
-// - The compact header, then the chronicle's tab row, then the chronicle.
+// - The compact header, then the tab row, then the list the tab names: the
+//   person's posts as the feed's post cards (ProfilePosts.md:3), their
+//   comments as comment cards (ProfileComments.md:3), and on the right-most
+//   tab, Everything, the chronicle of all their acts (Profile.md:23). The
+//   cards are the feed's own, handed down by the shell ([ProfileCardsHost]).
 
 package com.cogra.feature.profile
 
@@ -22,7 +26,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -37,6 +43,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -53,9 +60,11 @@ import com.cogra.core.designsystem.CollapsingTop
 import com.cogra.core.designsystem.CollapsingTopBand
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.RootReselectEffect
 import com.cogra.core.designsystem.RowLine
+import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
@@ -72,13 +81,18 @@ import com.cogra.core.designsystem.v2.atom.EmptyState
 import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.core.designsystem.v2.atom.TabBar
 import com.cogra.core.designsystem.v2.atom.chronicleTabs
+import com.cogra.core.designsystem.v2.media.ScrollStageHost
+import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.StateTokens
+import com.cogra.domain.PostView
+import com.cogra.domain.ProfileComment
 import com.cogra.domain.ProfileView
 import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.feature.saved.LocalSavedHost
 import com.cogra.feature.saved.SavedHost
 import com.cogra.feature.saved.rememberHiddenSet
 import com.cogra.feature.saved.rememberSavedHost
@@ -130,6 +144,8 @@ fun ProfileRoute(
     onMessage: () -> Unit = {},
     /** The figures' one door: the opinions page on this profile (Profile.md:49). */
     onOpenOpinions: () -> Unit = {},
+    /** The feed's own cards, which the Posts and Comments tabs draw; the shell hosts them. */
+    cardsHost: ProfileCardsHost = NoProfileCards,
     /** The ⋮'s `Mention in a new post`: the wizard with this person staged (ProfileMenu.md:17). */
     onMention: (profileId: String) -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
@@ -162,8 +178,9 @@ fun ProfileRoute(
         reselectSignal = reselectSignal,
         profileSavedResult = profileSavedResult,
         onProfileSavedResultConsumed = onProfileSavedResultConsumed,
-        onFilterChange = viewModel::onFilterChange,
+        onTabChange = viewModel::onTabChange,
         onLoadMore = viewModel::onLoadMore,
+        onRetryPage = viewModel::onRetryPage,
         onRetry = viewModel::refresh,
         onEdit = onEdit,
         onOpenSettings = onOpenSettings,
@@ -187,9 +204,51 @@ fun ProfileRoute(
         onChats = onChats,
         onMessage = onMessage,
         onOpenOpinions = onOpenOpinions,
+        cardsHost = cardsHost,
+        seen = viewModel.seen,
         onMention = onMention,
     )
 }
+
+/**
+ * WHAT THE CARD TABS DRAW THEIR CARDS WITH — the feed's own post card and
+ * comment card, live (ProfilePosts.md:3, ProfileComments.md:3) — and whether
+ * a sheet the cards raised covers the list.
+ */
+class ProfileCards(
+    /** One post card, wearing [node] (`profile.posts.card`) keyed by the post's id. */
+    val post: @Composable (post: PostView, node: DataNode) -> Unit,
+    /**
+     * One comment card, wearing [node] (`profile.comments.commentCard`) keyed
+     * by its id, its replies line [repliesNode] (`profile.comments.viewReplies`).
+     * [lockedReply] answers an applicant's Reply (ProfileComments.md:29); null
+     * opens the thread.
+     */
+    val comment: @Composable (
+        listed: ProfileComment,
+        node: DataNode,
+        repliesNode: DataNode,
+        lockedReply: (() -> Unit)?,
+    ) -> Unit,
+    val covered: Boolean = false,
+)
+
+/**
+ * THE SHELL HOSTS THE CARDS: it wraps the list, keeps the sheets the cards
+ * raise over it, and tells their aftermath through [notify], on the page's
+ * own snackbar.
+ */
+typealias ProfileCardsHost = @Composable (notify: (String) -> Unit, content: @Composable (ProfileCards) -> Unit) -> Unit
+
+/** No host: the card tabs list nothing — for previews and the screen's own tests. */
+val NoProfileCards: ProfileCardsHost = { _, content -> content(ProfileCards({ _, _ -> }, { _, _, _, _ -> })) }
+
+/** What the list reports to History as the reader sees it (History.md:11, :13). */
+class ProfileSeen(
+    val onCardsSeen: (List<String>) -> Unit = {},
+    val onCardEdgesSeen: (List<EdgeSighting>) -> Unit = {},
+    val onCheckpoint: () -> Unit = {},
+)
 
 /** The `from` a Saved row's person is opened with. */
 const val SAVED_ORIGIN = "saved"
@@ -240,8 +299,10 @@ fun ProfileScreen(
     reselectSignal: Int = 0,
     profileSavedResult: Boolean,
     onProfileSavedResultConsumed: () -> Unit,
-    onFilterChange: (ChronicleFilter) -> Unit,
+    onTabChange: (ProfileTab) -> Unit,
     onLoadMore: () -> Unit,
+    /** The tail's Retry: the page that did not arrive (ProfileMoreFailed.md). */
+    onRetryPage: () -> Unit = onLoadMore,
     onRetry: () -> Unit,
     onEdit: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -279,6 +340,10 @@ fun ProfileScreen(
     onMessage: () -> Unit = {},
     /** The figures' one door: the opinions page on this profile (Profile.md:49, ProfileOther.md:57). */
     onOpenOpinions: () -> Unit = {},
+    /** The feed's own cards, which the Posts and Comments tabs draw. */
+    cardsHost: ProfileCardsHost = NoProfileCards,
+    /** What the cards report to History as they are seen. */
+    seen: ProfileSeen = ProfileSeen(),
     /** The ⋮'s `Mention in a new post`: the wizard with this person staged (ProfileMenu.md:17). */
     onMention: (profileId: String) -> Unit = {},
     now: Instant = Instant.now(),
@@ -327,8 +392,9 @@ fun ProfileScreen(
                     savedHost = savedHost,
                     snackbarHostState = snackbarHostState,
                     actions = ProfileActions(
-                        onFilterChange = onFilterChange,
+                        onTabChange = onTabChange,
                         onLoadMore = onLoadMore,
+                        onRetryPage = onRetryPage,
                         onRetry = onRetry,
                         onEdit = onEdit,
                         onOpenInvites = onOpenInvites,
@@ -339,11 +405,13 @@ fun ProfileScreen(
                         onRequireAccount = onRequireAccount,
                         onMessage = onMessage,
                         onOpenOpinions = onOpenOpinions,
+                        seen = seen,
                         onMention = onMention,
                     ),
                     banners = banners,
                     drillIn = onBack != null,
                     stanceControl = stanceControl,
+                    cardsHost = cardsHost,
                     now = now,
                 )
             }
@@ -353,8 +421,9 @@ fun ProfileScreen(
 
 /** What the page's controls do, carried as one value so the body's signature stays readable. */
 internal class ProfileActions(
-    val onFilterChange: (ChronicleFilter) -> Unit,
+    val onTabChange: (ProfileTab) -> Unit,
     val onLoadMore: () -> Unit,
+    val onRetryPage: () -> Unit,
     val onRetry: () -> Unit,
     val onEdit: () -> Unit,
     val onOpenInvites: () -> Unit,
@@ -365,6 +434,7 @@ internal class ProfileActions(
     val onRequireAccount: (() -> Unit)?,
     val onMessage: () -> Unit,
     val onOpenOpinions: () -> Unit,
+    val seen: ProfileSeen,
     val onMention: (profileId: String) -> Unit = {},
 )
 
@@ -414,6 +484,7 @@ private fun ProfileBody(
     banners: @Composable () -> Unit,
     drillIn: Boolean,
     stanceControl: @Composable (String, String, DataNode) -> Unit,
+    cardsHost: ProfileCardsHost,
     now: Instant,
 ) {
     when {
@@ -441,18 +512,30 @@ private fun ProfileBody(
                 }
             }
         else -> state.profile?.let { profile ->
-            ProfileList(
-                state,
-                list,
-                profile,
-                savedHost,
-                snackbarHostState,
-                actions,
-                banners,
-                drillIn,
-                stanceControl,
-                now,
-            )
+            // THE CARDS' AFTERMATH READS ON THE PAGE'S OWN SNACKBAR, and their
+            // menus save and hide through the page's one overlay — as the
+            // profile's own ⋮ does.
+            val scope = rememberCoroutineScope()
+            val notify: (String) -> Unit = { text ->
+                scope.launch { snackbarHostState.showSnackbar(NodeSnackbarVisuals(text, PROFILE / "snackbar")) }
+            }
+            CompositionLocalProvider(LocalSavedHost provides savedHost) {
+                cardsHost(notify) { cards ->
+                    ProfileList(
+                        state,
+                        list,
+                        profile,
+                        savedHost,
+                        snackbarHostState,
+                        actions,
+                        banners,
+                        drillIn,
+                        stanceControl,
+                        cards,
+                        now,
+                    )
+                }
+            }
         }
     }
 }
@@ -468,20 +551,76 @@ private fun ProfileList(
     banners: @Composable () -> Unit,
     drillIn: Boolean,
     stanceControl: @Composable (String, String, DataNode) -> Unit,
+    cards: ProfileCards,
     now: Instant,
 ) {
     LoadNextAtTheTail(
         list = list,
-        rows = state.rows.size,
+        rows = state.listed,
         ready = state.hasMore && !state.pageFailed && !state.rowsLoading,
         onLoadMore = actions.onLoadMore,
     )
+    // SEEN, AT THE LIST: a post or comment card fully in the viewport joins
+    // the reader's History, as itself (History.md:11); the header and the
+    // chronicle's acts are never reported.
+    val cardIds = remember(state.posts, state.comments) {
+        state.posts.associate { postKey(it.id) to it.id } +
+            state.comments.associate { commentKey(it.comment.id) to it.comment.id }
+    }
+    SeenCardsEffect(
+        listState = list,
+        nodeIdOf = { key -> (key as? String)?.let(cardIds::get) },
+        onSeen = actions.seen.onCardsSeen,
+        onEdgesSeen = actions.seen.onCardEdgesSeen,
+        onCheckpoint = actions.seen.onCheckpoint,
+        suspended = cards.covered,
+    )
+    // THE FEED'S ONE STAGE (ProfilePosts.md:7-11): at most one clip plays in
+    // the list, and it re-elects at the list's hard top.
+    ScrollStageHost(list, suspended = cards.covered, hardTopReelects = true) {
+        ProfileColumn(
+            state,
+            list,
+            profile,
+            savedHost,
+            snackbarHostState,
+            actions,
+            banners,
+            drillIn,
+            stanceControl,
+            cards,
+            now,
+        )
+    }
+}
+
+@Composable
+private fun ProfileColumn(
+    state: ProfileUiState,
+    list: LazyListState,
+    profile: ProfileView,
+    savedHost: SavedHost?,
+    snackbarHostState: SnackbarHostState,
+    actions: ProfileActions,
+    banners: @Composable () -> Unit,
+    drillIn: Boolean,
+    stanceControl: @Composable (String, String, DataNode) -> Unit,
+    cards: ProfileCards,
+    now: Instant,
+) {
     val identity = PROFILE / "identity"
-    val chronicle = PROFILE / "chronicle"
-    // ONE SCROLL, ONE NAME: the chronicle column is the list the header rides
-    // at the top of (a lazy list has no box around a run of its items), so
-    // `profile.chronicle` names the scrolling list and its acts sit inside it.
-    LazyColumn(state = list, modifier = Modifier.fillMaxSize().dataNode(chronicle)) {
+    // ONE SCROLL, ONE NAME: the tab's view is the list the header rides at
+    // the top of (a lazy list has no box around a run of its items), so the
+    // view's node — `profile.posts`, `profile.comments` or
+    // `profile.chronicle` — names the scrolling list, its cards inside it.
+    val view = viewNode(state.tab)
+    val scope = rememberCoroutineScope()
+    val replyLocked = stringResource(R.string.profile_reply_locked)
+    val showLocked: () -> Unit = {
+        scope.launch { snackbarHostState.showSnackbar(NodeSnackbarVisuals(replyLocked, PROFILE / "snackbar")) }
+    }
+    val lockedReply = showLocked.takeIf { state.applicant }
+    LazyColumn(state = list, modifier = Modifier.fillMaxSize().dataNode(view)) {
         // The status banners (the own root only), seamed only when they draw.
         item(key = "banners") {
             Box(Modifier.padding(horizontal = Space.x4)) { banners() }
@@ -504,45 +643,92 @@ private fun ProfileList(
                 onFigures = actions.onOpenOpinions,
             )
         }
-        item(key = "tabs") { ChronicleTabRow(state.filter, actions.onFilterChange) }
-        // The chronicle's column: cards 8dp apart on 8dp of surface
-        // (`ChronicleList`), the gap carried by each card's own top.
-        item(key = "chronicle-top") {
-            Spacer(Modifier.fillMaxWidth().height(CHRONICLE_TOP))
+        item(key = "tabs") { ProfileTabRow(state.tab, actions.onTabChange) }
+        // Every view's list stands 8dp under the tab row, its cards 8dp
+        // apart (`ChronicleList`; the ProfilePosts and ProfileComments
+        // boards' `8px 0 0`), the gap carried under each card.
+        item(key = "list-top") {
+            Spacer(Modifier.fillMaxWidth().height(LIST_TOP))
         }
-        if (state.rows.isEmpty() && !state.rowsLoading && !state.pageFailed) {
-            item(key = "empty") { ChronicleEmpty(state.applicant && state.own, chronicle) }
+        if (state.listed == 0 && !state.rowsLoading && !state.pageFailed) {
+            item(key = "empty") { TabEmpty(state.tab, state.applicant && state.own, view) }
         }
-        itemsIndexed(state.rows, key = { _, row -> row.id }) { index, row ->
-            Box(Modifier.padding(bottom = CHRONICLE_GAP)) {
-                ChronicleAct(row, index + 1, state.own, now, chronicle / "act", actions.onOpenPost)
-            }
-        }
+        tabItems(state, view, cards, lockedReply, now, actions.onOpenPost)
         item(key = "tail") {
             ChronicleTail(
                 paging = state.rowsLoading,
                 failed = state.pageFailed,
-                onRetry = actions.onLoadMore,
+                onRetry = actions.onRetryPage,
             )
         }
     }
 }
 
 /**
- * The chronicle with nothing in it, at `EmptyState`. The applicant's says
- * what fills it and when (ProfileApplicant.md:22), because that is new; a
- * member's reads `Nothing here yet.`, the line alone (Profile.md, round 22;
- * `ProfileComments`' `comments` chip) — a member knows why their own is
- * empty, and another's needs no reason.
+ * THE LIST THE TAB NAMES: the post cards (ProfilePosts.md:3), the comment
+ * cards (ProfileComments.md:3), or the chronicle's acts (Profile.md:23), each
+ * card on the list's one stage under its own key.
+ */
+private fun LazyListScope.tabItems(
+    state: ProfileUiState,
+    view: DataNode,
+    cards: ProfileCards,
+    lockedReply: (() -> Unit)?,
+    now: Instant,
+    onOpenPost: (String) -> Unit,
+) {
+    when (state.tab) {
+        ProfileTab.POSTS -> items(state.posts, key = { postKey(it.id) }) { post ->
+            ScrollStageRow(postKey(post.id)) {
+                Box(Modifier.padding(bottom = LIST_GAP)) { cards.post(post, view / "card") }
+            }
+        }
+        ProfileTab.COMMENTS -> items(state.comments, key = { commentKey(it.comment.id) }) { listed ->
+            ScrollStageRow(commentKey(listed.comment.id)) {
+                Box(Modifier.padding(bottom = LIST_GAP)) {
+                    cards.comment(listed, view / "commentCard", view / "viewReplies", lockedReply)
+                }
+            }
+        }
+        ProfileTab.EVERYTHING -> itemsIndexed(state.rows, key = { _, row -> row.id }) { index, row ->
+            Box(Modifier.padding(bottom = LIST_GAP)) {
+                ChronicleAct(row, index + 1, state.own, now, view / "act", onOpenPost)
+            }
+        }
+    }
+}
+
+/** The view the tab names, registered under the page's prefix (round 27, seam 252). */
+private fun viewNode(tab: ProfileTab): DataNode = when (tab) {
+    ProfileTab.POSTS -> PROFILE / "posts"
+    ProfileTab.COMMENTS -> PROFILE / "comments"
+    ProfileTab.EVERYTHING -> PROFILE / "chronicle"
+}
+
+/** A post card's list key, apart from a comment's and an act's. */
+private fun postKey(id: String) = "post:$id"
+
+/** A comment card's list key. */
+private fun commentKey(id: String) = "comment:$id"
+
+/**
+ * A tab with nothing in it, at `EmptyState`: `Nothing here yet.`, the line
+ * alone (Profile.md:27; ProfilePosts.md:5; ProfileComments.md:9) — a member
+ * knows why their own is empty, and another's needs no reason. The
+ * applicant's own chronicle says what fills it and when
+ * (ProfileApplicant.md:22), because that is new.
  */
 @Composable
-private fun ChronicleEmpty(applicant: Boolean, chronicle: DataNode) {
+private fun TabEmpty(tab: ProfileTab, applicantsOwn: Boolean, view: DataNode) {
+    val applicant = applicantsOwn && tab == ProfileTab.EVERYTHING
     EmptyState(
-        testTag = (chronicle / "empty").tag,
+        testTag = (view / "empty").tag,
         title = stringResource(
             if (applicant) R.string.profile_chronicle_empty_applicant else R.string.profile_chronicle_empty,
         ),
-        modifier = Modifier.padding(horizontal = Space.x4),
+        // The state is a block across the view, its line at the start
+        // (`EmptyState.jsx`: a flex column, `alignItems: flex-start`).
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Space.x4),
         registered = true,
     )
 }
@@ -648,11 +834,11 @@ private fun RowScope.OtherActions(
     )
 }
 
-/** The chronicle's own 8dp ground above its first card (`ChronicleList` `padding: 8 16 0`). */
-private val CHRONICLE_TOP = 8.dp
+/** A view's own 8dp ground above its first card (`ChronicleList` `padding: 8 16 0`; ProfilePosts' `8px 0 0`). */
+private val LIST_TOP = 8.dp
 
-/** Between two cards (`ChronicleList` `gap: 8`). */
-private val CHRONICLE_GAP = 8.dp
+/** Between two cards (`ChronicleList` `gap: 8`; ProfilePosts' and ProfileComments' `gap: 8`). */
+private val LIST_GAP = 8.dp
 
 /**
  * THE HEADER BAR CARRIES ONLY THE WAY BACK (ProfileOther.md:3), and it leaves
@@ -704,17 +890,17 @@ private fun ProfileStance(
     )
 }
 
-/** The chronicle's tab row: Posts, Comments and Everything, by glyph (Profile.md:21). */
+/** The tab row: Posts, Comments and Everything, by glyph (Profile.md:21). */
 @Composable
-private fun ChronicleTabRow(filter: ChronicleFilter, onFilterChange: (ChronicleFilter) -> Unit) {
+private fun ProfileTabRow(tab: ProfileTab, onTabChange: (ProfileTab) -> Unit) {
     TabBar(
         tabs = chronicleTabs(
             posts = stringResource(R.string.profile_filter_posts),
             comments = stringResource(R.string.profile_filter_comments),
             everything = stringResource(R.string.profile_filter_everything),
         ),
-        value = filter.id,
-        onSelect = { id -> onFilterChange(ChronicleFilter.entries.first { it.id == id }) },
+        value = tab.id,
+        onSelect = { id -> onTabChange(ProfileTab.entries.first { it.id == id }) },
         label = stringResource(R.string.profile_tabs),
         node = PROFILE / "tabRow",
     )

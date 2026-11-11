@@ -275,6 +275,9 @@
     <string name="content_back_saved">Back to Saved</string>
     <string name="content_back_notifications">Back to Notifications</string>
     <string name="content_back_search">Back to the search</string>
+    <!-- A post or thread opened from a profile's tab names the profile (ProfilePosts.md:47-49). -->
+    <string name="content_back_own_profile">Back to your profile</string>
+    <string name="content_back_profile">Back to the profile</string>
     <string name="content_comment_edited">Edited</string>
     <string name="content_comment_reply">Reply</string>
     <string name="content_comment_edit_save">Save</string>

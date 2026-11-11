@@ -23,8 +23,10 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
+import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileComment
 import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordAbout
@@ -916,14 +918,12 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
 
     override suspend fun authorRecords(
         authorId: String,
-        family: Family?,
         first: Int,
         after: String?,
     ): Outcome<Page<RecordRow>> = guard.run {
         client.query(
             AuthorRecordsQuery(
                 author = authorId,
-                family = Optional.presentIfNotNull(family?.toRecordFamily()),
                 first = first,
                 after = Optional.presentIfNotNull(after),
             ),
@@ -935,6 +935,12 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
             )
         }
     }
+
+    override suspend fun profilePosts(authorId: String, after: String?): Outcome<Page<PostView>> =
+        guard.run { readProfilePosts(client, authorId, after) }
+
+    override suspend fun profileComments(authorId: String, after: String?): Outcome<Page<ProfileComment>> =
+        guard.run { readProfileComments(client, authorId, after) }
 
     // Posts is a `RecordConnection.totalCount` and the two opinion figures its
     // `bundleCount` — one per person, however often revised (open-questions
@@ -984,10 +990,6 @@ class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient
         }
     }
 }
-
-/** The reverse of RecordFamily.toDomain — null for UNKNOWN (no filter). */
-private fun Family.toRecordFamily(): com.cogra.network.graphql.type.RecordFamily? =
-    com.cogra.network.graphql.type.RecordFamily.knownEntries.find { it.rawValue == name }
 
 /**
  * One chronicle row: family + genesis mark, the touched content's

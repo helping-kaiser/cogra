@@ -222,14 +222,22 @@ fun PostDetailRoute(
 /** The `from` a search result opens a post with (`Back to the search`). */
 const val POST_FROM_SEARCH = "search"
 
+/** The `from` the reader's own profile opens a post with (`Back to your profile`, ProfilePosts.md:49). */
+const val POST_FROM_OWN_PROFILE = "profile"
+
+/** The `from` another's profile opens a post with (`Back to the profile`, ProfilePosts.md:47): web's `u:<handle>`. */
+fun postFromProfile(handle: String): String = "u:$handle"
+
 /** The origin-naming table (`Back to Saved`, `Back to Notifications`); null for the plain arrow. */
 @Composable
-private fun originBack(from: String?): String? = when (from) {
-    "saved" -> stringResource(R.string.content_back_saved)
-    "history" -> stringResource(R.string.content_back_history)
-    "notifications" -> stringResource(R.string.content_back_notifications)
+private fun originBack(from: String?): String? = when {
+    from == "saved" -> stringResource(R.string.content_back_saved)
+    from == "history" -> stringResource(R.string.content_back_history)
+    from == "notifications" -> stringResource(R.string.content_back_notifications)
     // A result opened from a standing search (PostDetail's origin nouns; Explore.md:19).
-    POST_FROM_SEARCH -> stringResource(R.string.content_back_search)
+    from == POST_FROM_SEARCH -> stringResource(R.string.content_back_search)
+    from == POST_FROM_OWN_PROFILE -> stringResource(R.string.content_back_own_profile)
+    from != null && from.startsWith("u:") -> stringResource(R.string.content_back_profile)
     else -> null
 }
 
