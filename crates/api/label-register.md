@@ -432,6 +432,7 @@ label.
 | `test:integration:an-applicants-staged-opinion-does-not-end-the-borrowing`                                     | an_applicants_staged_opinion_does_not_end_the_borrowing                                     |
 | `test:integration:an-application-becoming-approvable-notifies-its-approver`                                    | an_application_becoming_approvable_notifies_its_approver                                    |
 | `test:integration:an-application-names-its-approver-to-the-applicant`                                          | an_application_names_its_approver_to_the_applicant                                          |
+| `test:integration:an-approval-refusal-names-its-approvals-entry`                                               | an_approval_refusal_names_its_approvals_entry                                               |
 | `test:integration:an-approved-application-keeps-holding-the-slot`                                              | an_approved_application_keeps_holding_the_slot                                              |
 | `test:integration:an-approved-not-landed-applicant-cannot-delete`                                              | an_approved_not_landed_applicant_cannot_delete                                              |
 | `test:integration:an-archived-unit-reproduces-its-records-witness`                                             | an_archived_unit_reproduces_its_records_witness                                             |

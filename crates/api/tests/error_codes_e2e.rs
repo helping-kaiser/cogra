@@ -228,6 +228,52 @@ async fn a_staged_write_past_gc_is_staged_write_expired(pool: PgPool) {
     assert_eq!(error["field"], json!(["proposals", "0"]));
 }
 
+/// A per-entry refusal names the entry by the input list it came in:
+/// `UserError.field` is the path to the offending input field
+/// (api-spec.md "Error types"), and `approveActs` takes `approvals`
+/// (`ApproveActsInput`). The entry is a write approved before it was
+/// sealed, which the relay refuses at that entry.
+///
+/// A refused approval is pinned to its own entry in the approvals list.
+/// ´claim:relay:an-approval-refusal-names-its-approvals-entry´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_approval_refusal_names_its_approvals_entry(pool: PgPool) {
+    let rig = rig(pool);
+    rig.seed_member("eager", "eager@example.com").await;
+    let token = rig.log_in("eager@example.com").await;
+    let prepared = rig
+        .gql(
+            Some(&token),
+            "mutation($input: PreparePostInput!) {
+               preparePost(input: $input) { writes { id } userErrors { code } }
+             }",
+            json!({ "input": {
+                "content": "approved before it was sealed",
+                "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+            }}),
+        )
+        .await;
+    let id = prepared["preparePost"]["writes"][0]["id"]
+        .as_str()
+        .expect("id");
+    let data = rig
+        .gql(
+            Some(&token),
+            "mutation($input: ApproveActsInput!) {
+               approveActs(input: $input) { stagedWrites { id } userErrors { code field } }
+             }",
+            json!({ "input": { "approvals": [{
+                "stagedWriteId": id,
+                "signature": B64.encode([0u8; 64]),
+            }]}}),
+        )
+        .await;
+    let error = first_error(&data, "approveActs");
+    assert_eq!(error["code"], "BAD_INPUT", "{data}");
+    assert_eq!(error["field"], json!(["approvals", "0"]), "{data}");
+}
+
 /// A link that does not exist registers nobody.
 ///
 /// Registering through a link that is not usable is refused as an unusable invite.
