@@ -8,7 +8,7 @@ ALWAYS the line names the earliest matching post, and a later post never repoint
 
 ALWAYS the line is a door in the tappable-marker form, underlined in the quiet ink, and its accessible name is its own words
 
-WHEN tap composeDetails.published -> the post it names opens AND NEVER a dialog opens AND NEVER a confirm step appears
+WHEN tap composeDetails.published -> the post it names opens over the composer AND Back returns to the composer with the draft as it was left AND NEVER the flow is left AND NEVER a dialog opens AND NEVER a confirm step appears
 
 WHEN media attaches GIVEN it matches media only in the author's drafts or only in other people's posts -> NEVER the line stands
 

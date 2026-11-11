@@ -10,7 +10,7 @@ WHEN media attaches GIVEN it matches media only in other people's posts -> NEVER
 
 WHEN media attaches GIVEN it matches media in a published post of the author -> NEVER a dialog opens AND NEVER a confirm step appears
 
-WHEN tap the already-published marker -> the earliest matching post opens
+WHEN tap the already-published marker -> the earliest matching post opens over the composer AND Back returns to the composer with the draft as it was left AND NEVER the flow is left
 
 ALWAYS the already-published marker never blocks composing or publishing
 

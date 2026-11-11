@@ -1191,7 +1191,7 @@
     { "from": "ComposeDetailsReused", "via": 11, "kind": "advance", "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet — one entry per picture" }] },
     { "from": "ComposeDetailsReused", "via": 12, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPadCompose" }] },
     { "from": "ComposeDetailsReused", "via": 13, "kind": "advance", "label": "staged reference row", "to": [{ "board": "RefPair" }] },
-    { "from": "ComposeDetailsReused", "via": 14, "kind": "detour", "label": "Already in your post from 12 September. (the marker's door)", "to": [{ "board": "PostDetail", "case": "the post the line names — the earliest of the author's published posts the media stands in; no dialog, no confirm step, no gate" }] },
+    { "from": "ComposeDetailsReused", "via": 14, "kind": "detour", "label": "Already in your post from 12 September. (the marker's door)", "to": [{ "board": "PostDetail", "case": "the post the line names — the earliest of the author's published posts the media stands in, opened over the composer, Back returning to the draft as it was left; no dialog, no confirm step, no gate" }] },
     { "from": "ComposeDetailsWords", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeWords", "case": "one stage back — the words" }] },
     { "from": "ComposeDetailsWords", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
     { "from": "ComposeDetailsWords", "via": 3, "kind": "advance", "label": "Title", "to": [{ "terminal": "self", "case": "typing — inside the last stretch of the hundred the count appears, as on ComposeDetailsCaps" }] },

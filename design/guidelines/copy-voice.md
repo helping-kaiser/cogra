@@ -4105,8 +4105,9 @@ settling` wear:
   post's publication date, always present, so the line never leans on
   that post having a title.
 - The line is a door, in the tappable-marker form `Edited` wears
-  (underline, quiet ink), and opens the post it names. Checking costs
-  one tap, and nothing asks a question: no dialog, no confirm step, no
+  (underline, quiet ink), and opens the post it names over the
+  composer; Back returns to the composer with the draft as it was left.
+  Checking costs one tap, and nothing asks a question: no dialog, no confirm step, no
   gate.
 - Where several published posts match, the line names and opens the
   **earliest** — the origin, and stable: a later repost never repoints
