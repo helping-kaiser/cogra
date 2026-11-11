@@ -55,6 +55,14 @@ function Demo(){return (
     <MonogramAvatar name="Ada Okonkwo" size="lg" src={PHOTO}/>
     <MonogramAvatar name="Mira Lindqvist" size="lg"/>
   </div>
+  <span className="lbl">A deleted account — the reserved disc and its ring, 40, 56 and 80px</span>
+  <div style={{display:"flex",gap:12,alignItems:"center"}}>
+    <MonogramAvatar redacted size={40}/>
+    <MonogramAvatar redacted size={56}/>
+    <MonogramAvatar redacted size={80}/>
+    <ActorChip handle="ada" redacted/>
+  </div>
+  <p><b>The kept space wears a ring.</b> A deleted account's disc keeps the reserved fill and a 1px <code>--border-field</code> ring drawn inside its box, the one treatment on every surface in both themes: the fill alone is the sheet's own tone. The disc measures what a live one does at every size; a removed post's or comment's tile wears the same ring.</p>
   <p><b>Two counts, each labelled, never merged.</b> "Opinions on them" and "Opinions by them" — the two directions are different facts, so the label says which one it counts. Not "followers": a link here has a direction and carries an opinion, and one merged figure would hide one of those.</p>
   <p><b>The avatar is decorative at every size.</b> The adjacent text names the actor, so a photo carries no alt text and never becomes the only way to tell two people apart. A broken image falls back to the monogram silently.</p>
   <p><b>No cover image, no banner.</b> The largest thing on a person's screen should not be decoration.</p>
