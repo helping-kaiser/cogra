@@ -185,6 +185,21 @@ class StancePadVariantTest {
         for (part in parts) compose.onNodeWithTag(part.tag, useUnmergedTree = true).assertExists()
     }
 
+    // The named knob IS the drawn knob: its box centres on the pick, inside the square.
+    @Test
+    fun theNamedKnobStandsWhereThePickIs() {
+        show(open)
+        val square = compose.onNodeWithTag((PAD / "field" / "square").tag, useUnmergedTree = true).fetchSemanticsNode()
+        val knob = compose.onNodeWithTag((PAD / "field" / "square" / "knob").tag, useUnmergedTree = true).fetchSemanticsNode()
+        val side = square.size.width.toFloat()
+        val inset = with(compose.density) { knobTravelInset().toPx() }
+        val expected = pairKnobAt(PairPoint(0.1, 0.1), side, inset, PairRanges.Signed)
+        val centre = knob.boundsInRoot.center - square.boundsInRoot.topLeft
+        assertThat(centre.x).isWithin(1f).of(expected.x)
+        assertThat(centre.y).isWithin(1f).of(expected.y)
+        assertThat(knob.boundsInRoot.width).isWithin(1f).of(with(compose.density) { (KNOB_RADIUS * 2).toPx() })
+    }
+
     // The readouts are blocks the pad's whole content wide (StanceStanding's div).
     @Test
     fun theStandingIsTheWholeContentWide() {
