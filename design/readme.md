@@ -2422,7 +2422,7 @@ The rulings the layer rests on:
   rather than pinned to one of them, so the flow claims every place it
   is offered and the census grows as boards are drawn. Where the
   control's outcome depends on **what it was pressed on** — a post's
-  media, which opens a picture's post or a portrait clip's stream —
+  media, which opens a picture's post or a portrait or square clip's stream —
   `case` or `to` narrows the start to the journey meant, the same
   narrowing a given start edge already takes. It is still one control
   everywhere; without a narrowing, divergence is still a failure.
@@ -2723,9 +2723,9 @@ item 33, jakob's rulings the same day).
   in that strip, so a control there is not a control but a swipe that
   closes the app. The bar is inset from it, and the stream's seek line
   rides above the bottom bar rather than under it.
-- **The stream carries portrait clips only** — clips taller than they
-  are wide. Square and landscape clips keep the ordinary grammar, a
-  tap to their post. **It is the list it was opened from narrowed to
+- **The stream carries portrait and square clips** — clips at least
+  as tall as they are wide (squares since round 35). A landscape clip
+  keeps the ordinary grammar, a tap to its post. **It is the list it was opened from narrowed to
   them**, in that list's order — the feed, Saved's cards, History's rows,
   a profile's posts (jakob 2026-10-12; Saved, History's sibling, round
   26): the same graph, the same order, a mechanical
@@ -2733,8 +2733,8 @@ item 33, jakob's rulings the same day).
   is the reassurance only a product that ranks two ways needs. What
   says it instead is the **score on the rail** — the reader's own
   reach into this post, the same number the card wore.
-- **A portrait clip's tap opens the stream; any other media's tap
-  opens the post.** From the clip detail, tapping the clip
+- **A portrait or square clip's tap opens the stream; any other
+  media's tap opens the post.** From the clip detail, tapping the clip
   expands back into the stream with the reader's place held.
 - **The detail door on a reel is the score element** — the exact
   element a feed card wears, so the way in is a thing the reader has
@@ -7298,7 +7298,7 @@ transport. jakob's ruling, drawn as `PostDetailVideoSensitive`:
   makes the per-post law hold when a surface wraps the card from
   outside.
 - The board is a **declared entry** in the graph's own idiom —
-  the same detail any non-portrait clip tap opens, in the state
+  the same detail any clip wider than tall opens, in the state
   the record brings, not a different tap.
 
 ### The v1.0.0 scope cut — 2026-09-25
@@ -9771,9 +9771,9 @@ each).
   amendment to the viewer's black-to-the-edges. Boards stay the
   inset-zero case (*The viewer-grammar close*).
 - **The stream is the list it was opened from**, narrowed to its portrait
-  clips in that list's order — the feed, History, a profile's posts, and
-  a tag's page, whose stream carries only the clips tagged with that tag
-  (jakob 2026-11-11). It
+  and square clips (squares since round 35) in that list's order — the
+  feed, History, a profile's posts, and a tag's page, whose stream
+  carries only the clips tagged with that tag (jakob 2026-11-11). It
   pages vertically both ways from the tapped clip, never wraps and never
   moves on by itself; the last clip carries `That's the last clip here.`
   at its caption's head, and a load that does not come keeps the clip
