@@ -1,4 +1,5 @@
 import React from "react";
+import { nameInLine } from "../people/ActorChip.jsx";
 
 /* The bottom sheet (backlog item 3; readme §7, *Intentional additions*). The
    product never built one, so three surfaces were each
@@ -211,7 +212,9 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
 
 /* One row in a sheet: `label-large`, the 48px minimum, left-aligned, one line.
    No icons in the list — a mixed list of iconned and un-iconned rows is how an
-   icon set starts to look accidental (§5). */
+   icon set starts to look accidental (§5). A ONE-LINE PLACE (round 40): a
+   handle in the label — `Hide @ada` — is the part cut with "…", the words keep
+   their room (`nameInLine`). */
 export function SheetItem({ label, onSelect, ariaLabel, node }) {
   return (
     <button
@@ -237,7 +240,7 @@ export function SheetItem({ label, onSelect, ariaLabel, node }) {
         textAlign: "left",
       }}
     >
-      {label}
+      {nameInLine(label)}
     </button>
   );
 }

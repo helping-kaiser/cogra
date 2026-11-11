@@ -1,5 +1,6 @@
 import React from "react";
 import { Icon } from "./Icon.jsx";
+import { nameInLine } from "../people/ActorChip.jsx";
 
 /* The house page header (Android's TopAppBar): a back arrow, the page title, and
    an optional trailing action — one pattern for every inner surface. Tab roots
@@ -30,7 +31,7 @@ import { Icon } from "./Icon.jsx";
 export function PageHeader({ title, backHref, backLabel, onBack, action, node }) {
   return (
     <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)", minHeight: "48px", padding: "0 var(--space-3)" }} data-node={node}>
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", minWidth: 0 }}>
         {(backHref || onBack) && (
           <a
             href={backHref ?? "#"}
@@ -62,12 +63,18 @@ export function PageHeader({ title, backHref, backLabel, onBack, action, node })
               fontWeight: "var(--text-title-large--font-weight)",
               // A page title is a name and never wraps — a two-line header
               // steals the content's first row (seen on the seals, where the
-              // trailing group is widest).
+              // trailing group is widest). A ONE-LINE PLACE (round 40): a
+              // title too long for the band is cut with "…" — a name or handle
+              // standing in its words is the part cut, the words keep their
+              // room (`nameInLine`) — and the trailing action keeps its width.
               whiteSpace: "nowrap",
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
             data-node={node && "title"}
           >
-            {title}
+            {nameInLine(title)}
           </h1>
         )}
       </div>
