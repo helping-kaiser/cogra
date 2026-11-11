@@ -44,11 +44,13 @@ ALWAYS sensitive content in History keeps its veil, as on the feed
 
 ALWAYS History offers no way to clear the list and no way to remove one thing from it
 
-WHEN history.commentCard's head row is tapped -> the post it answers opens AND its back arrow reads Back to History
+WHEN history.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to History
 
-WHEN history.commentCard is tapped outside its head row and its own controls -> the post's comment section opens scrolled to that comment AND the post's back arrow beneath the thread reads Back to History
+WHEN history.commentCard is tapped outside history.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment AND the post's back arrow beneath the thread reads Back to History
 
 WHEN the comment glyph on a history.commentCard is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
+
+ALWAYS the comments sheet a History card raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
 
 WHEN tap a portrait clip on history.card -> the stream opens on that clip, History's rows narrowed to their portrait clips in History's order, AND its back arrow reads Back to History
 

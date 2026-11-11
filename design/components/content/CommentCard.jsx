@@ -163,22 +163,24 @@ export function CommentCard({
   score,
   onOpenScore,
   /* THE DATA-NODE NAME its placer gives this card (design ⇄ impl seam 002),
-     keyed by the author's handle — `PostCard`'s rule. Given one, it names the
+     keyed by the comment's `id` — `PostCard`'s rule. Given one, it names the
      card's media too: `media`, `frame` per item, and a clip's `soundDisc`;
      its author's `authorChip` and its ⋮ `menu` (as `PostCard` names them),
      the mark a removed comment wears `removalMark` (as
      `PostCard` names it), and the thread's text buttons `reply` and `edit`
-     (seam 248, the thread sheet named); the line pointer to what it answers
-     `target` (as `commentEdit` names its own) and the collapsed replies'
+     (seam 248, the thread sheet named); the pointer to what it answers
+     `target` in either shape, the line or the thread's head row (as
+     `commentEdit` names its own; round 32) and the collapsed replies'
      line `viewReplies` (round 28, seam 254 A3). That line hangs under the
      card, outside its surface, so its path is the card's sibling and it
      carries the card's own key. Given none, the card renders exactly as
      before. */
   node,
-  /* THE CARD'S KEY WHERE ITS AUTHOR CANNOT TELL IT APART (round 27) — a
-     profile's comments view lists one author's comments, so its placer keys
-     each by the comment's id (`PATH_KEY_RULES`). `PostCard`'s `nodeKey`.
-     Given none, the author's handle keys the card. */
+  /* THE COMMENT'S ID, as the wire carries it (round 33, seam 264): what keys
+     the card and its `viewReplies` line when it is named — what has an id on
+     the wire is keyed by that id. Draws nothing. A placer may key the card
+     itself with `nodeKey`, `PostCard`'s; given none, `id` keys it. */
+  id,
   nodeKey,
   children,
 }) {
@@ -312,7 +314,7 @@ export function CommentCard({
     >
       {/* `attach` squares the top-left corner so a row flag (TaggedRow) fuses
           with the card (jakob's review, the tag round). */}
-      <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={Boolean(onOpen)} node={node} nodeKey={node && (nodeKey ?? author?.handle)}>
+      <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={Boolean(onOpen)} node={node} nodeKey={node && (nodeKey ?? id)}>
         {/* The comment's TARGET pointer (jakob 2026-09-01): where a comment
             shows OUT of its thread — the profile's comments view, a search
             result — the card leads with what it answers, one line, one tap to
@@ -368,7 +370,7 @@ export function CommentCard({
                 at the body's weight, the register `Deleted account` takes —
                 over the author, who stays. The comment stays readable under
                 it; a node is never deleted, and neither is what answers it. */}
-            <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} className="cg-state cg-focus" style={{ ...TARGET_DOOR, display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+            <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} data-node={node && "target"} className="cg-state cg-focus" style={{ ...TARGET_DOOR, display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
               <NodeMark kind={targetKind} src={targetDetail.cover} redacted={targetDetail.removed} onCard />
               <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
                 <span
@@ -440,7 +442,7 @@ export function CommentCard({
           type="button"
           onClick={onOpenReplies}
           data-node={node && "viewReplies"}
-          data-node-key={node && (nodeKey ?? author?.handle)}
+          data-node-key={node && (nodeKey ?? id)}
           className="cg-state cg-focus cg-hit"
           style={{
             alignSelf: "flex-start",

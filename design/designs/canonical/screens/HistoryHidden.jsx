@@ -39,6 +39,7 @@ export function Screen() {
           Today
         </HistoryDayDivider>
         <CommentFeedCard
+          id={TOBIAS_COMMENT_ID}
           author={TOBIAS}
           content={TOBIAS_COMMENT}
           timestamp="1h"

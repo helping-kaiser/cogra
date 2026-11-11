@@ -74,6 +74,8 @@ ALWAYS a line on the stream's plate stands until it is answered, another act is 
 
 WHEN tap reel.rail.comments -> the same comments sheet opens over the clip AND the clip stops
 
+ALWAYS the comments sheet the stream raises is postDetail.threadSheet, the thread drawn once, one path wherever it is raised
+
 WHEN tap reel.rail.share -> the platform's own share sheet opens with the post's link
 
 WHEN tap reel.rail.share GIVEN the platform has no share sheet -> the link lands on the clipboard AND reel.snackbar reads Link copied, at the house snackbar's place above reel.bottomBar

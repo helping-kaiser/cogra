@@ -208,15 +208,26 @@ function mkBundle(pDirected, pInterest) {
   return { current: pair, rawSum: pair, records: 1 };
 }
 
-/* The people of the canonical canvas (readme: mock people and photos). */
-const ADA = { handle: "ada", displayName: "Ada Okonkwo" };
-const TOBIAS = { handle: "tobias", displayName: "Tobias Lindqvist" };
-const SOL = { handle: "sol", displayName: "Sol Ferreira" };
-const MIRA = { handle: "mira", displayName: "Mira Voss" };
+/* The people of the canonical canvas (readme: mock people and photos).
+
+   EVERY SAMPLE THING WITH AN ID ON THE WIRE CARRIES ONE (round 33, seam
+   264): what has an id on the wire is keyed by that id, so a named card or
+   row keys by its thing's `id` — the lowercase UUID the wire carries, the
+   form `ProfilePosts` first drew. Each id is spelled once, beside its thing,
+   so one sample post, comment, person or tag carries one id on every board
+   that draws it. */
+const ADA = { id: "86982040-67f1-48a7-bb2d-6d3439c510c1", handle: "ada", displayName: "Ada Okonkwo" };
+const TOBIAS = { id: "42fa3a4f-a350-4812-bd79-26561c2ffca3", handle: "tobias", displayName: "Tobias Lindqvist" };
+const SOL = { id: "155e1af5-bf6b-4aec-aa14-f94dcdadc189", handle: "sol", displayName: "Sol Ferreira" };
+const MIRA = { id: "cdbd41fc-faec-4c16-9813-7f718b8a0989", handle: "mira", displayName: "Mira Voss" };
+const MAREN = { id: "a650f0bb-e923-4745-9d77-43d75d5c944a", handle: "maren", displayName: "Maren Holt" };
+const MATEO = { id: "4919da08-40fc-47f5-8f62-bff07dd183f3", handle: "mateo", displayName: "Mateo Ruiz" };
 
 /* @tobias's comment at the thread's top — spelled once, because the thread
-   draws it and the reply composer aimed at it quotes it. */
+   draws it and the reply composer aimed at it quotes it; History, Saved and
+   the feed draw the same comment, so it keys by the same id there. */
 const TOBIAS_COMMENT = "That stretch after the second bend is the reason I keep a camera in the glovebox.";
+const TOBIAS_COMMENT_ID = "8c7296e7-8e4b-45b1-9889-279e7a713f9c";
 
 /* Genesis content always declares a license, so every card has at least that
    menu entry — without one the dot vanishes, and it must not. Citing rides the
@@ -238,6 +249,7 @@ const CARD_MENU = [SAVE_ROW, CITE_ROW];
    carries its words as the DESCRIPTION — the caption beside the body — and no
    `content`; only the text posts below have one. */
 const ADA_POST = {
+  id: "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
   author: ADA,
   title: "The long way home",
   description: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.",
@@ -253,6 +265,7 @@ const ADA_POST = {
 };
 
 const TOBIAS_POST = {
+  id: "dd44f5de-d68c-4931-aabc-915cefadab7f",
   author: TOBIAS,
   content: "Low tide at six tomorrow — anyone walking the flats?",
   timestamp: "1h",
@@ -264,6 +277,7 @@ const TOBIAS_POST = {
 };
 
 const SOL_POST = {
+  id: "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
   author: SOL,
   title: "Salt maps of the coast road",
   description:
@@ -281,9 +295,23 @@ const SOL_POST = {
   menuItems: CARD_MENU,
 };
 
+/* @mira's words post — the one History's and Saved's searches both find. */
+const MIRA_WORDS_POST = {
+  id: "d6d4651b-1dfe-467b-8142-85ea954558c3",
+  author: MIRA,
+  content: "Honey's back at the stand by the sea wall — the first jars since June.",
+  timestamp: "5h",
+  score: "4.30",
+  comments: 1,
+  opinions: 3,
+  license: { attribution: 0, provenance: 0 },
+  menuItems: CARD_MENU,
+};
+
 /* The gallery post (media slice, 2026-08-31): four pictures at one crop shape,
    one frame swiped, dots only. Shared the moment its detail view needed it too. */
 const MIRA_GALLERY_POST = {
+  id: "d5d08554-f939-4573-be35-529614cd5373",
   author: MIRA,
   title: "Sunday at the tide market",
   description:
@@ -2842,6 +2870,7 @@ const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
 /* @sol's 3h comment, the one with a branch under it — drawn as the reader's own
    or as someone else's, so its words are written once. */
 const SOL_THREAD_COMMENT = {
+  id: "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220",
   author: SOL,
   content: "Which headland is the third one, counting from the ferry landing?",
   timestamp: "3h",
@@ -2887,7 +2916,7 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    detail's thread, so a registered board places it as `threadSheet` under
    `postDetail` — the surface that hosts every comment menu, confirm and mark
    the thread raises. Its title is `title`, and each top-level comment
-   `commentCard`, keyed by its author's handle as every comment card is; a
+   `commentCard`, keyed by its id as every comment card is; a
    branch's replies stay unnamed until a board needs them, named then as pure
    addition. The comment menus and the removal confirm are raised OVER the
    sheet, never inside it, so they keep their own names beside it
@@ -2908,7 +2937,7 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    A BOARD THAT NAMES THE SHEET AND DRAWS BOTH READERS (`ReplyEntry`, round 27)
    marks the `shown` pair as its `reader` chip's copies: @sol's comment is one
    card in two readings, so each copy names it `commentCard` under its own
-   key, `sol` (ruling 39).
+   key, the comment's id (ruling 39).
 
    `pick` DRAWS A KEPT PICK ON THE FIRST COMMENT (round 27, seam 252): given,
    @tobias's card stands in `PickCopies`, so the board's `pick` chip adds the
@@ -2947,6 +2976,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
   const tobias = (stance) => (
     <CommentCard
       node={card}
+      id={TOBIAS_COMMENT_ID}
       author={TOBIAS}
       content={TOBIAS_COMMENT}
       timestamp="1h"
@@ -2976,6 +3006,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
           opinion stay readable. */}
       <CommentCard
         node={card}
+        id="ffa1b4f3-1efd-4363-9237-3ad8e739b8f5"
         author={MIRA}
         content="The gulls had been at it before the tide came back. Two frames, both grim."
         timestamp="2h"
@@ -3022,6 +3053,7 @@ const CLIP_LAKESIDE = {
 };
 
 const MIRA_CLIP_POST = {
+  id: "c5af64e2-621c-49ef-8f4c-9a6d09bce490",
   author: MIRA,
   title: "The lake, doing nothing, for forty seconds",
   description:
@@ -3072,6 +3104,7 @@ const CLIP_GRAPES = {
 };
 
 const TOBIAS_CANOE_POST = {
+  id: "1388f7d3-19f6-466c-9522-624227697932",
   author: TOBIAS,
   title: "Crossing at the narrows before the wind got up",
   description:
@@ -3086,6 +3119,7 @@ const TOBIAS_CANOE_POST = {
 };
 
 const ADA_GRAPES_POST = {
+  id: "88fffaa4-3c4b-4dc8-a0d8-ba737e63c330",
   author: ADA,
   title: "Nine seconds of the last of the crop",
   timestamp: "5h",
@@ -4104,10 +4138,10 @@ function SettingsBackupBody({ app = false, value = "", error }) {
    the weaker paths, and the holders on the opinions sheet. They live beside the
    drill-down rather than up with ADA/TOBIAS/SOL/MIRA because these five boards
    and the opinions sheet are everywhere they appear. */
-const KEL = { handle: "kel", displayName: "Kel Moreau" };
-const WREN = { handle: "wren", displayName: "Wren Aliyev" };
-const NADIA = { handle: "nadia", displayName: "Nadia Rask" };
-const JUNO = { handle: "juno", displayName: "Juno Baptiste" };
+const KEL = { id: "c4fb60a5-9b66-4db3-a043-88986744abbc", handle: "kel", displayName: "Kel Moreau" };
+const WREN = { id: "59959e13-ced7-462c-b7cd-c0381ec09b90", handle: "wren", displayName: "Wren Aliyev" };
+const NADIA = { id: "b1a7ca95-9571-4509-9e42-d1c45c67b233", handle: "nadia", displayName: "Nadia Rask" };
+const JUNO = { id: "22dd3e59-8c50-4ce3-b2f5-e12c57abb984", handle: "juno", displayName: "Juno Baptiste" };
 
 /* THE POST THE DRILL-DOWN IS ABOUT, and the viewer it reached. `ADA_POST` is
    the canvas's canonical post and @sol is its canonical reader (`ProfileOwnBody`
@@ -4473,15 +4507,15 @@ function ScoreColumn({ children }) {
    handle left. It is one of the nine the count names (`MIRA_GALLERY_POST`'s
    `opinions`). */
 const POST_OPINION_HOLDERS = [
-  { name: MIRA.displayName, handle: MIRA.handle, src: "inviter.jpg", pDirected: 0.9, pInterest: 0.25 },
-  { name: ADA.displayName, handle: ADA.handle, src: "comment-camera.jpg", pDirected: 0.7, pInterest: 0.4 },
-  { name: TOBIAS.displayName, handle: TOBIAS.handle, pDirected: 0.6, pInterest: 0.65 },
-  { name: SOL.displayName, handle: SOL.handle, pDirected: 0.55, pInterest: 0.2 },
-  { name: KEL.displayName, handle: KEL.handle, pDirected: 0.25, pInterest: 0.95 },
+  { id: MIRA.id, name: MIRA.displayName, handle: MIRA.handle, src: "inviter.jpg", pDirected: 0.9, pInterest: 0.25 },
+  { id: ADA.id, name: ADA.displayName, handle: ADA.handle, src: "comment-camera.jpg", pDirected: 0.7, pInterest: 0.4 },
+  { id: TOBIAS.id, name: TOBIAS.displayName, handle: TOBIAS.handle, pDirected: 0.6, pInterest: 0.65 },
+  { id: SOL.id, name: SOL.displayName, handle: SOL.handle, pDirected: 0.55, pInterest: 0.2 },
+  { id: KEL.id, name: KEL.displayName, handle: KEL.handle, pDirected: 0.25, pInterest: 0.95 },
   { redacted: true, actorId: "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98", pDirected: 0.2, pInterest: 0.2 },
-  { name: NADIA.displayName, handle: NADIA.handle, pDirected: 0.15, pInterest: 0.15 },
-  { name: WREN.displayName, handle: WREN.handle, pDirected: -0.2, pInterest: 0.1 },
-  { name: JUNO.displayName, handle: JUNO.handle, pDirected: -0.55, pInterest: 0.25 },
+  { id: NADIA.id, name: NADIA.displayName, handle: NADIA.handle, pDirected: 0.15, pInterest: 0.15 },
+  { id: WREN.id, name: WREN.displayName, handle: WREN.handle, pDirected: -0.2, pInterest: 0.1 },
+  { id: JUNO.id, name: JUNO.displayName, handle: JUNO.handle, pDirected: -0.55, pInterest: 0.25 },
 ];
 
 
@@ -4724,10 +4758,11 @@ const commentTarget = (parent, kind) =>
           cover: parent.media?.[0]?.src,
         };
 
-function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, stancePendingPick, stancePendingReview, node }) {
+function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, stancePendingPick, stancePendingReview, node }) {
   const target = commentTarget(parent, parentKind);
   return (
     <CommentCard
+      id={id}
       author={author}
       content={content}
       timestamp={timestamp}
@@ -4800,7 +4835,7 @@ const FEED_BIO = {
 const FEED_DELETED_PROFILE_MENU = PROFILE_DELETED_MENU.filter((row) => row.label !== "Share this profile");
 
 /* NAMED BY ITS PLACER (design ⇄ impl seam 062/063): `History` registers it as
-   `profileCard`, keyed by the person's handle, the card's own parts named as
+   `profileCard`, keyed by the person's id (round 33), the card's own parts named as
    `PostCard` names them and the lead's as `avatar`, `name`, `handle`, with the
    bio as `bio`. */
 function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false, node }) {
@@ -4836,7 +4871,7 @@ function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false, no
         ) : undefined
       }
       node={node}
-      nodeKey={person.handle}
+      nodeKey={person.id}
       targetLabel={handle ?? "this account"}
       bundle={bundle}
       score={score}
@@ -4901,13 +4936,14 @@ const SALTMAPS_TAGGED = [
   { kind: "post", title: SOL_POST.title, by: SOL, age: "3d", cover: SOL_POST.media[0].src },
   { kind: "comment", title: "Low tide is kinder to the rubbings than noon ever was.", by: ADA, age: "4d" },
 ];
+const SALTMAPS_TAG_ID = "fc7d18fe-c334-4c2a-82b3-eed28f2eaa26";
 
 /* NAMED BY ITS PLACER (design ⇄ impl seam 062/063): `History` registers it as
-   `tagCard`, keyed by the tag's name, the card's own parts named as `PostCard`
+   `tagCard`, keyed by the tag's id (round 33), the card's own parts named as `PostCard`
    names them; the lead's are `mark`, `name` and the why-line `through`, the
    glimpse is `glimpse` with its newest thing's `newest` and `by` (or the
    empty tag's one line as `nothing`), and the kind's own act is `compose`. */
-function TagFeedCard({ name, through, tagged, score, bundle, node }) {
+function TagFeedCard({ id, name, through, tagged, score, bundle, node }) {
   const [newest, ...rest] = tagged;
   const glimpse = newest ? (
     <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }} data-node={node && "glimpse"}>
@@ -4957,7 +4993,7 @@ function TagFeedCard({ name, through, tagged, score, bundle, node }) {
       act={<GlyphAction glyph="add" label={TAG_ACT} onPress={() => {}} node={node && "compose"} />}
       onOpen={() => {}}
       node={node}
-      nodeKey={name.replace(/^#/, "")}
+      nodeKey={id}
     />
   );
 }
@@ -5041,6 +5077,16 @@ const SOL_INVITE_ID = "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15";
 /* The actor id of the asker who deleted their account (`Invites`' `asker`
    chip): the lowercase UUID the wire carries, the row's only key left. */
 const DELETED_ASKER_ID = "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608";
+/* The askers' ids (round 33): an application row keys by its asker's id,
+   the lowercase UUID the wire carries, as every person row does. */
+const ASKER_IDS = {
+  noor: "b6077abd-d6a6-4639-9956-f9a82f14f7db",
+  imke: "ab2c5f9b-37c0-4bca-bbe3-2d02a387a630",
+  vora81: "c1713389-4c20-4826-be12-e1e9ad9a6e13",
+  vora82: "c9ae8851-9214-4e5a-bcaf-887e758df006",
+  vora83: "b7b20d2c-a1b1-4c3a-a6ba-60156276bff5",
+  rafa: "39fe9a1a-85c4-41b4-a1e2-c5de97325ef4",
+};
 /* A section of Invites with nothing in it (`Invites`' `sections` chip): the
    empty list's quiet register, at the rows' inset. */
 const INVITES_EMPTY_LINE = {
@@ -5351,7 +5397,7 @@ function KeptApprovalRow({ shown }) {
         action={<CloseApplication handle="@noor" node="close" />}
         onOpen={() => {}}
         node="application"
-        nodeKey="noor"
+        nodeKey={ASKER_IDS.noor}
       />
     </div>
   );
@@ -5430,7 +5476,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             action={<CloseApplication handle="@imke" node="close" />}
             onOpen={() => {}}
             node="application"
-            nodeKey="imke"
+            nodeKey={ASKER_IDS.imke}
           />
           <ContentRow
             variant="chronicle"
@@ -5442,7 +5488,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             action={<CloseApplication handle="@vora81" node="close" />}
             onOpen={() => {}}
             node="application"
-            nodeKey="vora81"
+            nodeKey={ASKER_IDS.vora81}
           />
           <ContentRow
             variant="chronicle"
@@ -5454,7 +5500,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             action={<CloseApplication handle="@vora82" node="close" />}
             onOpen={() => {}}
             node="application"
-            nodeKey="vora82"
+            nodeKey={ASKER_IDS.vora82}
           />
           <div style={{ display: shown ? shown.askerNamed : "flex", flexDirection: "column" }}>
             <ContentRow
@@ -5467,7 +5513,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
               action={<CloseApplication handle="@vora83" node="close" />}
               onOpen={() => {}}
               node="application"
-              nodeKey="vora83"
+              nodeKey={ASKER_IDS.vora83}
             />
           </div>
           {shown && (
@@ -5511,7 +5557,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             }
             onOpen={() => {}}
             node="application"
-            nodeKey="rafa"
+            nodeKey={ASKER_IDS.rafa}
           />
         </div>
 

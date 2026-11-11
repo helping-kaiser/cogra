@@ -153,6 +153,10 @@ export function PostCard({
      stand, before the share. Additive: given none, the card renders exactly
      as before. */
   act,
+  /* THE POST'S ID, as the wire carries it (round 33, seam 264): what keys
+     the card when it is named — what has an id on the wire is keyed by that
+     id. Draws nothing. */
+  id,
   node,
   nodeKey,
 }) {
@@ -207,6 +211,7 @@ export function PostCard({
       style={{
         margin: 0,
         fontSize: detail ? "var(--text-headline-small)" : "var(--text-title-medium)",
+        letterSpacing: detail ? "var(--text-headline-small--letter-spacing)" : "var(--text-title-medium--letter-spacing)",
         lineHeight: detail ? "var(--text-headline-small--line-height)" : "var(--text-title-medium--line-height)",
         fontWeight: detail ? "var(--text-headline-small--font-weight)" : "var(--text-title-medium--font-weight)",
         ...(detail ? {} : { ...CLAMP(1), wordBreak: "break-word" }),
@@ -235,6 +240,8 @@ export function PostCard({
   const contentStyle = {
     margin: 0,
     fontSize: detail ? "var(--text-body-large)" : "var(--text-body-medium)",
+    letterSpacing: detail ? "var(--text-body-large--letter-spacing)" : "var(--text-body-medium--letter-spacing)",
+    fontWeight: detail ? "var(--text-body-large--font-weight)" : "var(--text-body-medium--font-weight)",
     lineHeight: detail ? "var(--text-body-large--line-height)" : "var(--text-body-medium--line-height)",
     ...(detail ? { whiteSpace: "pre-wrap" } : open ? null : CLAMP(TEXT_BODY_CLAMP_LINES)),
   };
@@ -622,7 +629,7 @@ export function PostCard({
      the card instead of floating beside its curve (jakob's review, the tag
      round). */
   return (
-    <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={door} node={node} nodeKey={node && (nodeKey ?? author?.handle)}>
+    <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={door} node={node} nodeKey={node && (nodeKey ?? id)}>
       {veil ? <SensitiveScope>{body}</SensitiveScope> : body}
     </Card>
   );

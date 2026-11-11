@@ -26,19 +26,6 @@
 export const NODE = "saved";
 export const FRAME = { width: 390, height: 1110 };
 
-const MAREN = { handle: "maren", displayName: "Maren Holt" };
-const MATEO = { handle: "mateo", displayName: "Mateo Ruiz" };
-const MIRA_WORDS_POST = {
-  author: MIRA,
-  content: "Honey's back at the stand by the sea wall — the first jars since June.",
-  timestamp: "5h",
-  score: "4.30",
-  comments: 1,
-  opinions: 3,
-  license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
-};
-
 export function Screen() {
   return (
     <>
