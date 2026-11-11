@@ -42,7 +42,7 @@ class ProfileReselectTest {
                 reselectSignal = reselects,
                 profileSavedResult = false,
                 onProfileSavedResultConsumed = {},
-                onFilterChange = {},
+                onTabChange = {},
                 onLoadMore = {},
                 onRetry = { reloads += 1 },
                 onEdit = {},

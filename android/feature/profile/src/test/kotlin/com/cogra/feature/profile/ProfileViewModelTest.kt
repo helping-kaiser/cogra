@@ -1,11 +1,12 @@
 package com.cogra.feature.profile
 
-import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
+import com.cogra.domain.PostView
+import com.cogra.domain.ProfileComment
 import com.cogra.domain.ProfileFigures
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
@@ -15,10 +16,13 @@ import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
+import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testModeratedField
+import com.cogra.domain.testing.testPost
 import com.cogra.domain.testing.testProfile
 import com.cogra.domain.testing.testSeenRecord
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -41,7 +45,17 @@ class ProfileViewModelTest {
         var byHandle: MutableMap<String, Outcome<ProfileView?>> = mutableMapOf()
         var rows: Outcome<Page<RecordRow>> =
             Outcome.Success(Page(emptyList(), endCursor = null, hasNextPage = false))
-        val rowRequests = mutableListOf<Family?>()
+        var posts: Outcome<Page<PostView>> =
+            Outcome.Success(Page(emptyList(), endCursor = null, hasNextPage = false))
+        var comments: Outcome<Page<ProfileComment>> =
+            Outcome.Success(Page(emptyList(), endCursor = null, hasNextPage = false))
+
+        /** Which list each read asked for — `records`, `posts` or `comments` — and from which cursor. */
+        val rowRequests = mutableListOf<String>()
+        val cursors = mutableListOf<String?>()
+
+        /** A read that hangs until the test lets it through: a tab's page still on its way. */
+        var gate: CompletableDeferred<Unit>? = null
         var figures: Outcome<ProfileFigures> = Outcome.Failed(IOException("not scripted"))
         val figureRequests = mutableListOf<String>()
 
@@ -55,14 +69,25 @@ class ProfileViewModelTest {
         override suspend fun profileByHandle(handle: String): Outcome<ProfileView?> =
             byHandle[handle] ?: Outcome.Success(null)
 
-        override suspend fun authorRecords(
-            authorId: String,
-            family: Family?,
-            first: Int,
-            after: String?,
-        ): Outcome<Page<RecordRow>> {
-            rowRequests += family
+        override suspend fun authorRecords(authorId: String, first: Int, after: String?): Outcome<Page<RecordRow>> {
+            rowRequests += "records"
+            cursors += after
+            gate?.await()
             return rows
+        }
+
+        override suspend fun profilePosts(authorId: String, after: String?): Outcome<Page<PostView>> {
+            rowRequests += "posts"
+            cursors += after
+            gate?.await()
+            return posts
+        }
+
+        override suspend fun profileComments(authorId: String, after: String?): Outcome<Page<ProfileComment>> {
+            rowRequests += "comments"
+            cursors += after
+            gate?.await()
+            return comments
         }
     }
 
@@ -116,10 +141,10 @@ class ProfileViewModelTest {
         assertThat(s.loading).isFalse()
         assertThat(s.profile?.handle).isEqualTo("jakob")
         assertThat(s.own).isTrue()
-        assertThat(s.filter).isEqualTo(ChronicleFilter.EVERYTHING)
+        assertThat(s.tab).isEqualTo(ProfileTab.EVERYTHING)
         // Every visitor lands on Everything: every profile board draws the
-        // tab row at `value="everything"` (Profile.md:21).
-        assertThat(profiles.rowRequests).containsExactly(null)
+        // tab row at `value="everything"` (Profile.md:21) — the chronicle.
+        assertThat(profiles.rowRequests).containsExactly("records")
     }
 
     /**
@@ -219,14 +244,87 @@ class ProfileViewModelTest {
         assertThat(vm.state.value.profile).isNull()
     }
 
+    // ProfilePosts.md:3, ProfileComments.md:3 — the Posts tab reads the
+    // person's posts as cards and the Comments tab their comments, each on a
+    // read of its own; the chronicle is Everything's alone.
     @Test
-    fun aFilterChangeReloadsTheChronicle() = runTest(dispatcher) {
+    fun eachTabReadsItsOwnList() = runTest(dispatcher) {
+        profiles.posts = postsPage("p1", "p2", next = "c1")
+        profiles.comments = Outcome.Success(Page(listOf(listed("c1")), endCursor = null, hasNextPage = false))
         val vm = viewModel()
         vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onFilterChange(ChronicleFilter.POSTS)
+
+        vm.onTabChange(ProfileTab.POSTS)
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(profiles.rowRequests).containsExactly(null, Family.PUBLISH).inOrder()
+        assertThat(vm.state.value.posts.map { it.id }).containsExactly("p1", "p2").inOrder()
+        assertThat(vm.state.value.rows).isEmpty()
+        assertThat(vm.state.value.hasMore).isTrue()
+
+        vm.onTabChange(ProfileTab.COMMENTS)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.comments.map { it.comment.id }).containsExactly("c1")
+        assertThat(vm.state.value.posts).isEmpty()
+        assertThat(profiles.rowRequests).containsExactly("records", "posts", "comments").inOrder()
+    }
+
+    // ProfilePosts.md:21 — a tap on the standing tab changes nothing.
+    @Test
+    fun theStandingTabReadsNothingAgain() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start(null)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTabChange(ProfileTab.EVERYTHING)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.rowRequests).containsExactly("records")
+    }
+
+    // ProfilePosts.md:13 — only the list below the tab row changes, and only
+    // to the tab the reader stands on: an old tab's page, landing late, never
+    // lands on the new one.
+    @Test
+    fun aLateOldTabsPageNeverLandsOnTheNewTab() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start(null)
+        dispatcher.scheduler.advanceUntilIdle()
+        profiles.posts = Outcome.Success(Page(listOf(testPost("p1")), endCursor = null, hasNextPage = false))
+        profiles.gate = CompletableDeferred()
+        vm.onTabChange(ProfileTab.POSTS)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTabChange(ProfileTab.COMMENTS)
+        profiles.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val s = vm.state.value
+        assertThat(s.tab).isEqualTo(ProfileTab.COMMENTS)
+        assertThat(s.posts).isEmpty()
+        assertThat(s.rowsLoading).isFalse()
+    }
+
+    // Profile.md:31 — the next page arrives in place, below the cards already
+    // on screen, from the cursor the last one ended on; a card the walk meets
+    // twice stands once.
+    @Test
+    fun theNextPageJoinsBelowFromItsCursor() = runTest(dispatcher) {
+        profiles.posts = postsPage("p1", "p2", next = "c1")
+        val vm = viewModel()
+        vm.start(null)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTabChange(ProfileTab.POSTS)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        profiles.posts = postsPage("p2", "p3")
+        vm.onLoadMore()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.posts.map { it.id }).containsExactly("p1", "p2", "p3").inOrder()
+        assertThat(profiles.cursors.last()).isEqualTo("c1")
+        assertThat(vm.state.value.hasMore).isFalse()
+
+        // The end reached, nothing more is asked.
+        vm.onLoadMore()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.rowRequests.count { it == "posts" }).isEqualTo(2)
     }
 
     @Test
@@ -234,14 +332,62 @@ class ProfileViewModelTest {
         val vm = viewModel()
         vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
-        profiles.rows = Outcome.Failed(IOException("offline"))
-        vm.onFilterChange(ChronicleFilter.COMMENTS)
+        profiles.comments = Outcome.Failed(IOException("offline"))
+        vm.onTabChange(ProfileTab.COMMENTS)
         dispatcher.scheduler.advanceUntilIdle()
         val s = vm.state.value
         assertThat(s.pageFailed).isTrue()
         assertThat(s.transportFailed).isFalse()
         assertThat(s.profile).isNotNull()
     }
+
+    // ProfileMoreFailed.md — Retry asks again for the page that did not
+    // arrive: the first page when nothing has landed yet, else the next.
+    @Test
+    fun retryAsksAgainForThePageThatDidNotArrive() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start(null)
+        dispatcher.scheduler.advanceUntilIdle()
+        profiles.posts = Outcome.Failed(IOException("offline"))
+        vm.onTabChange(ProfileTab.POSTS)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        profiles.posts = Outcome.Success(Page(listOf(testPost("p1")), endCursor = "c1", hasNextPage = true))
+        vm.onRetryPage()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.pageFailed).isFalse()
+        assertThat(vm.state.value.posts.map { it.id }).containsExactly("p1")
+        assertThat(profiles.cursors.last()).isNull()
+
+        profiles.posts = Outcome.Failed(IOException("offline"))
+        vm.onLoadMore()
+        dispatcher.scheduler.advanceUntilIdle()
+        profiles.posts = Outcome.Success(Page(listOf(testPost("p2")), endCursor = null, hasNextPage = false))
+        vm.onRetryPage()
+        dispatcher.scheduler.advanceUntilIdle()
+        // The rows already on screen stayed; the retried page joined below them.
+        assertThat(vm.state.value.posts.map { it.id }).containsExactly("p1", "p2").inOrder()
+        assertThat(profiles.cursors.last()).isEqualTo("c1")
+    }
+
+    // History.md:11 — a profile's cards join History only as the reader
+    // scrolls each fully into view, and the reading's pause sends them.
+    @Test
+    fun aCardSeenOnTheProfileJoinsHistoryAtTheCheckpoint() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start(null)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onCardsSeen(listOf("p1", "c1"))
+        vm.onSeenCheckpoint()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(history.calls).containsExactly(listOf("p1", "c1"))
+    }
+
+    private fun listed(id: String) = ProfileComment(testComment(id), target = null, threadPostId = "p1")
+
+    /** One page of posts, ending on [next] when more follow. */
+    private fun postsPage(vararg ids: String, next: String? = null): Outcome<Page<PostView>> =
+        Outcome.Success(Page(ids.map { testPost(it) }, endCursor = next, hasNextPage = next != null))
 
     // PostDetailViewModel's twin case: pulling to refresh a profile
     // already on screen is what feeds the ProfileScreen's
