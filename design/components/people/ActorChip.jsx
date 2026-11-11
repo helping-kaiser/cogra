@@ -196,7 +196,7 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
    scale: the words are `flex: none`, the handle the one part that yields
    (`minWidth: 0` and the clip). Every one-line master clips its own line at
    the end ("…", the why-line's way — `Through @ada`) and passes its text
-   through `nameInLine`: where the handle ENDS the line (`Hide @ada`, `on
+   through `nameInLine`: where the handle ENDS the line (`Hide @ada`, `Unhide @ada`, `on
    @mira`, a title that is only `@ada`) the end clip already cuts the handle
    and keeps the words, so the text returns untouched; only words AFTER the
    handle split the line, so a line that fits draws exactly what it drew. The
