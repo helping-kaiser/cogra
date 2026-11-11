@@ -295,6 +295,9 @@ export function MediaAttachment({
             display: "grid",
             placeItems: "center",
             fontSize: "var(--text-label-medium)",
+            lineHeight: "var(--text-label-medium--line-height)",
+            letterSpacing: "var(--text-label-medium--letter-spacing)",
+            fontWeight: "var(--text-label-medium--font-weight)",
             color: "var(--text-secondary)",
           }}
         >

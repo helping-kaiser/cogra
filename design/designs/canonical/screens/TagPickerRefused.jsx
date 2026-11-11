@@ -52,6 +52,7 @@ export function Screen() {
             style={{
               margin: 0,
               fontSize: "var(--text-body-small)",
+              fontWeight: "var(--text-body-small--font-weight)",
               lineHeight: "var(--text-body-small--line-height)",
               letterSpacing: "var(--text-body-small--letter-spacing)",
               color: "var(--error)",
@@ -64,7 +65,7 @@ export function Screen() {
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ flex: 1 }} />
-        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="footnote">
+        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="footnote">
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
         </p>
       </div>

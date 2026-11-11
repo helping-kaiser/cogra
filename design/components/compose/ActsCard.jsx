@@ -81,6 +81,7 @@ const LABEL = {
 const COUNT = {
   flex: "none",
   fontSize: "var(--text-label-small)",
+  fontWeight: "var(--text-label-small--font-weight)",
   lineHeight: "var(--text-label-small--line-height)",
   letterSpacing: "var(--text-label-small--letter-spacing)",
   color: "var(--text-secondary)",
@@ -90,6 +91,8 @@ const VALUE = {
   flex: 1,
   minWidth: 0,
   fontSize: "var(--text-body-medium)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  fontWeight: "var(--text-body-medium--font-weight)",
   lineHeight: "var(--text-body-medium--line-height)",
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -181,6 +184,7 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
           data-node={part("total")}
           style={{
             fontSize: "var(--text-body-medium)",
+            letterSpacing: "var(--text-body-medium--letter-spacing)",
             lineHeight: "var(--text-body-medium--line-height)",
             fontWeight: "var(--text-label-large--font-weight)",
           }}
@@ -200,6 +204,7 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
             role={noteTone === "slow" ? "status" : undefined}
             style={{
               fontSize: "var(--text-label-small)",
+              fontWeight: "var(--text-label-small--font-weight)",
               lineHeight: "var(--text-label-small--line-height)",
               letterSpacing: "var(--text-label-small--letter-spacing)",
               color: noteTone === "slow" ? "var(--tertiary)" : "var(--text-secondary)",

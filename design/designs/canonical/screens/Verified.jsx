@@ -8,7 +8,12 @@
    mail may be opened on a device or a browser with no CoGra session; the
    verification has landed all the same, because the link is the proof, and
    `Back to CoGra` then opens `SignIn`, which lands wherever app-open lands
-   for that account. */
+   for that account.
+
+   REGISTERED under the `verify` prefix (round 28, seam 254 A1), the
+   verification family's surface `VerifyExpired` named: the brand mark `mark`
+   (`ChangeEmailLinked`'s), `title`, `body`, and the way on `onward`. */
+export const NODE = "verify";
 export function Screen() {
   return (
     <div
@@ -22,17 +27,19 @@ export function Screen() {
         overflow: "hidden",
       }}
     >
-      <span style={{ display: "inline-flex", color: "var(--primary)" }}>
+      <span style={{ display: "inline-flex", color: "var(--primary)" }} data-node="mark">
         <Icon name="mark" size={56} />
       </span>
       <h1
         style={{
           margin: "24px 0 0",
           fontSize: "var(--text-headline-small)",
+          letterSpacing: "var(--text-headline-small--letter-spacing)",
           lineHeight: "var(--text-headline-small--line-height)",
           fontWeight: "var(--text-headline-small--font-weight)",
           textAlign: "center",
         }}
+        data-node="title"
       >
         Email verified
       </h1>
@@ -41,16 +48,18 @@ export function Screen() {
           margin: "8px 0 0",
           maxWidth: 300,
           fontSize: "var(--text-body-medium)",
+          fontWeight: "var(--text-body-medium--font-weight)",
           lineHeight: "var(--text-body-medium--line-height)",
           letterSpacing: "var(--text-body-medium--letter-spacing)",
           color: "var(--text-secondary)",
           textAlign: "center",
         }}
+        data-node="body"
       >
         Your application moved a step. You can go back to the app — it already knows.
       </p>
       <div style={{ marginTop: 24 }}>
-        <Button variant="text">Back to CoGra</Button>
+        <Button variant="text" node="onward">Back to CoGra</Button>
       </div>
     </div>
   );

@@ -61,38 +61,43 @@ export function Screen() {
     <>
       <WizardHeader title="Reply" leaveLabel="Leave — the reply is discarded" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuotedRow
-          title="The long way home — @ada"
-          snippet="The light does something at the third headland that I have never managed…"
-          name="Ada Okonkwo"
-          src="comment-camera.jpg"
-        />
+        {/* The fields scroll under the pinned foot, the edits' reading
+            (`EditComposeVideo`): with the refused clip drawn the composer runs
+            taller than the phone, and the foot stays where it stands at rest. */}
+        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 16, overflow: "hidden" }}>
+          <QuotedRow
+            title="The long way home — @ada"
+            snippet="The light does something at the third headland that I have never managed…"
+            name="Ada Okonkwo"
+            src="comment-camera.jpg"
+          />
 
-        <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["Eighteen seconds of the same headland, if the light comes through at all."]} />
+          <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["Eighteen seconds of the same headland, if the light comes through at all."]} />
 
-        <MediaThumb
-          src="comment-camera.jpg"
-          alt="A person holding a film camera up to the light."
-          width={220}
-          height={220}
-          fit="contain"
-          video
-          duration="0:18"
-          onRemove={() => {}}
-          removeLabel="Remove this video"
-        />
+          <MediaThumb
+            src="comment-camera.jpg"
+            alt="A person holding a film camera up to the light."
+            width={220}
+            height={220}
+            fit="contain"
+            video
+            duration="0:18"
+            onRemove={() => {}}
+            removeLabel="Remove this video"
+          />
 
-        <div style={{ display: "{{secondShown}}", flexDirection: "column", gap: 10 }}>
-          <RefusedFile src="clip-lakeside.jpg" video message="A comment carries one video." />
+          <div style={{ display: "{{secondShown}}", flexDirection: "column", gap: 10 }}>
+            <RefusedFile src="clip-lakeside.jpg" video message="A comment carries one video." />
+          </div>
+
+          <QuietNote>A video is the whole comment. Give it a cover below.</QuietNote>
+
+          <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
+
+          <CoverRow frames={CLIP_FRAMES} />
+
+          <div style={{ flex: 1 }} />
         </div>
-
-        <QuietNote>A video is the whole comment. Give it a cover below.</QuietNote>
-
-        <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
-
-        <CoverRow frames={CLIP_FRAMES} />
-
-        <div style={{ flex: 1 }} />
 
         <QuietNote>Words first — a video can join them, and it uploads while you write.</QuietNote>
         <Button style={{ width: "100%" }}>Next</Button>

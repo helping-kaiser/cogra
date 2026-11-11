@@ -55,7 +55,7 @@
      per kept pick, each with a × that drops it at once; `Sign them` leads to
      the standard seal (`KeptPicksSeal`), which signs the batch all or
      nothing. A review left unsigned keeps them, and the settings page's Key
-     backup group carries `3 kept picks waiting` to reopen it — only while
+     backup group carries `4 kept picks waiting` to reopen it — only while
      the key is here; if it goes again, the waiting-for-key state owns the
      surface. A kept vouch-back or approval never joins the batch: each
      surfaces as its own card, ceremony kept — the vouch-back on the feed,
@@ -124,8 +124,8 @@ export function Screen() {
               Your pick
             </span>
             <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
-              <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
-              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
+              <span style={{ fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", fontWeight: "var(--text-title-large--font-weight)", lineHeight: 1.2 }}>🙂</span>
+              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
             </span>
             <span style={SR_ONLY}>
               Nice, For or against +0.10, How much reaches you +0.10

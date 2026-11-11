@@ -62,13 +62,13 @@ export function Screen() {
               <SkyField height={180} />
             </div>
             <h2
-              style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}
+              style={{ margin: 0, fontSize: "var(--text-title-medium)", letterSpacing: "var(--text-title-medium--letter-spacing)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}
               data-node="title"
             >
               The Sky — coming soon
             </h2>
             <p
-              style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}
+              style={{ margin: 0, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}
               data-node="description"
             >
               Your sky — every account a star, sized by your own paths to it.

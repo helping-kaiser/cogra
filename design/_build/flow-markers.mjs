@@ -2241,17 +2241,28 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   // The bare seal. `ReplyCited` is this list plus its staged reference's ×.
+  // The `tags` and `state` chips (round 29) draw every acts card they can
+  // reach, one shown at a time, so the card's controls stamp every copy; the
+  // refused copies carry the staged reference and its line, the bug foot its
+  // three ways out.
   ReplySeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="How signing works"', tag: "button" },
-    { n: 4, find: "+ Add a tag", tag: "button" },
-    { n: 5, find: "+ Cite something", tag: "button" },
+    { n: 4, find: "+ Add a tag", tag: "button", all: true },
+    { n: 5, find: "+ Cite something", tag: "button", all: true },
     { n: 6, find: ">Adjust</button>", tag: "button" },
     { n: 7, find: ">Change</button>", tag: "button" },
     { n: 8, find: ">Mark</button>", tag: "button" },
     { n: 9, find: ">Sign comment</button>", tag: "button" },
     { n: 10, find: ">Back</button>", tag: "button" },
+    { n: 11, find: 'aria-label="Manage the 7 tags"', tag: "button", all: true },
+    { n: 12, find: ">Remove it</button>", tag: "button", all: true },
+    { n: 13, find: 'aria-label="Remove Tide tables', tag: "button", all: true },
+    { n: 14, find: "aria-label=\"Tide tables and the third headland — set how it relates\"", tag: "button", all: true },
+    { n: 15, find: ">Try again</button>", tag: "button" },
+    { n: 16, find: ">Report a problem</button>", tag: "button" },
+    { n: 17, find: ">Discard the reply</button>", tag: "button" },
   ],
   // The composer and the seal answering a comment (the reply pack): the same
   // surfaces as `ReplyCompose` and `ReplySeal`, so the same numbers.

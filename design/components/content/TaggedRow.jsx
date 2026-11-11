@@ -65,11 +65,13 @@ export function TaggedRow({ pair, pending = false, children }) {
           background: "var(--surface-container-high)",
           borderRadius: "var(--radius-small) var(--radius-small) 0 0",
           fontSize: "var(--text-body-small)",
+          letterSpacing: "var(--text-body-small--letter-spacing)",
+          fontWeight: "var(--text-body-small--font-weight)",
           lineHeight: "var(--text-body-small--line-height)",
           color: "var(--text-secondary)",
         }}
       >
-        <span aria-hidden="true" style={{ fontSize: "var(--text-body-medium)", lineHeight: 1 }}>{anchor.emoji}</span>
+        <span aria-hidden="true" style={{ fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: 1 }}>{anchor.emoji}</span>
         <span aria-hidden="true">Tagged</span>
         <span className="cg-exact" aria-hidden="true" style={{ whiteSpace: "nowrap" }}>{exact}</span>
         <span style={SR_ONLY}>{`Tagged: ${anchor.label}, ${exact}`}</span>

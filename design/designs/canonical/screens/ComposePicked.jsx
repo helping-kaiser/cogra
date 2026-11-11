@@ -17,6 +17,13 @@ const PICKED = [
   { src: "gallery-honey.jpg", alt: "", onDescribe: () => {}, onRemove: () => {} },
 ];
 
+/* REGISTERED under the `composeDetails` prefix (round 28, seam 254 A2): the
+   manager is `pickedSheet`, `EditPicked`'s grammar. The sheet is drawn once and
+   both stages raise it (the pick step's Show all, the details stage's picked
+   row), so it keeps one path wherever it is raised — round 27's sheet law — and
+   the wizard's registered stage carries it. The pick step beneath stays
+   unnamed. */
+export const NODE = "composeDetails";
 export function Screen() {
   return (
     <>
@@ -30,7 +37,7 @@ export function Screen() {
       <div style={{ flex: 1 }} />
       <WizardFooter />
 
-      <PickedSheet open items={PICKED} onClose={() => {}} />
+      <PickedSheet open items={PICKED} onClose={() => {}} node="pickedSheet" />
     </>
   );
 }

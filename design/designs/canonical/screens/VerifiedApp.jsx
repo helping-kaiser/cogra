@@ -19,7 +19,11 @@
    Signed out, the way on reads `Sign in` and opens `SignIn`, as
    `VerifyExpired`'s does; signed in to a different account, the link
    verifies its own and the app switches nothing — the way on lands where
-   app-open lands for the signed-in account (jakob 2026-10-05). */
+   app-open lands for the signed-in account (jakob 2026-10-05).
+
+   REGISTERED under the `verify` prefix (round 28): `Verified`'s names, one
+   landing in its app reading. */
+export const NODE = "verify";
 export function Screen() {
   return (
     <div
@@ -33,17 +37,19 @@ export function Screen() {
         overflow: "hidden",
       }}
     >
-      <span style={{ display: "inline-flex", color: "var(--primary)" }}>
+      <span style={{ display: "inline-flex", color: "var(--primary)" }} data-node="mark">
         <Icon name="mark" size={56} />
       </span>
       <h1
         style={{
           margin: "24px 0 0",
           fontSize: "var(--text-headline-small)",
+          letterSpacing: "var(--text-headline-small--letter-spacing)",
           lineHeight: "var(--text-headline-small--line-height)",
           fontWeight: "var(--text-headline-small--font-weight)",
           textAlign: "center",
         }}
+        data-node="title"
       >
         Email verified
       </h1>
@@ -52,16 +58,18 @@ export function Screen() {
           margin: "8px 0 0",
           maxWidth: 300,
           fontSize: "var(--text-body-medium)",
+          fontWeight: "var(--text-body-medium--font-weight)",
           lineHeight: "var(--text-body-medium--line-height)",
           letterSpacing: "var(--text-body-medium--letter-spacing)",
           color: "var(--text-secondary)",
           textAlign: "center",
         }}
+        data-node="body"
       >
         Your application moved a step. The rest of it is waiting for you on the feed.
       </p>
       <div style={{ marginTop: 24 }}>
-        <Button variant="text">Go to the feed</Button>
+        <Button variant="text" node="onward">Go to the feed</Button>
       </div>
     </div>
   );

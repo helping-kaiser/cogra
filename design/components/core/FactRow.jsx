@@ -56,6 +56,8 @@ export function FactRow({ label, value, action, onAction, emphasis = "seal", las
   const shape = EMPHASIS[emphasis] ?? EMPHASIS.seal;
   const type = {
     fontSize: "var(--text-body-medium)",
+    letterSpacing: "var(--text-body-medium--letter-spacing)",
+    fontWeight: "var(--text-body-medium--font-weight)",
     lineHeight: "var(--text-body-medium--line-height)",
   };
   const wrapped =

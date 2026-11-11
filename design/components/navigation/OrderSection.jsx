@@ -28,11 +28,11 @@ export const FILTER_ORDER = [
 export function FilterSection({ label, hint, children, node }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", padding: "0 var(--space-6) var(--space-4)" }} data-node={node}>
-      <span style={{ fontSize: "var(--text-label-large)", fontWeight: 500 }} data-node={node && "label"}>
+      <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", letterSpacing: "var(--text-label-large--letter-spacing)", fontWeight: 500 }} data-node={node && "label"}>
         {label}
       </span>
       {hint && (
-        <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
+        <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
           {hint}
         </span>
       )}

@@ -39,6 +39,7 @@ export function Screen() {
             margin: 0,
             padding: "8px 4px 16px",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
