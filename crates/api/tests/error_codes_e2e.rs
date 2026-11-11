@@ -2,7 +2,9 @@
 //! 3: every declared `ErrorCode` has an integration test that provokes
 //! it): the reset token's spent and expired refusals, the staged write
 //! collected before it was signed, the three registration-and-attach
-//! refusals, and the collapsed `INTERNAL` fault. Every request goes
+//! refusals, the collapsed `INTERNAL` fault, and the read-side
+//! `BAD_INPUT` of a malformed argument, one test per class of malformed
+//! read argument. Every request goes
 //! through the real router. Requires a live Postgres (`make up`).
 //!
 //! Census, `removeContent`: its codes are provoked in
@@ -345,10 +347,9 @@ async fn a_store_fault_reaches_the_wire_as_internal(pool: PgPool) {
 
 /// The collapse touches only errors that name no code and carry a Rust
 /// error: a refusal that already declares its code keeps code and
-/// message, and an argument the schema cannot parse keeps the library's
-/// own message, the caller's fault rather than the server's.
+/// message.
 ///
-/// An error that declares its code, or names a malformed argument, passes the collapse untouched.
+/// An error that declares its code passes the collapse untouched.
 /// ´claim:server:a-declared-code-passes-the-collapse´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_declared_code_passes_the_internal_collapse(pool: PgPool) {
@@ -365,6 +366,139 @@ async fn a_declared_code_passes_the_internal_collapse(pool: PgPool) {
         "{answer}"
     );
     assert_eq!(answer["errors"][0]["message"], "authentication required");
+}
+
+/// The `extensions.code` of every error an answer carries.
+fn transport_codes(answer: &Value) -> Vec<String> {
+    answer["errors"]
+        .as_array()
+        .map(|errors| {
+            errors
+                .iter()
+                .map(|e| e["extensions"]["code"].as_str().unwrap_or("").to_string())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// Asserts a read is refused at the transport as `BAD_INPUT` alone, with
+/// the message the site wrote.
+async fn assert_bad_input(rig: &WireRig, token: Option<&str>, query: &str, message: &str) {
+    let answer = rig.gql_raw(token, query, json!({})).await;
+    assert_eq!(
+        transport_codes(&answer),
+        vec!["BAD_INPUT"],
+        "{query}: {answer}"
+    );
+    let said = answer["errors"][0]["message"].as_str().unwrap_or("");
+    assert!(said.contains(message), "{query}: {answer}");
+}
+
+/// A cursor that does not decode is malformed input, on a keyset
+/// connection and on the registry's own cursor alike (api-spec.md:1247).
+///
+/// A cursor that does not decode is refused as malformed input.
+/// ´claim:server:a-malformed-cursor-is-bad-input´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_malformed_cursor_is_bad_input(pool: PgPool) {
+    let rig = rig(pool);
+    for query in [
+        r#"{ records(after: "not a cursor") { edges { cursor } } }"#,
+        r#"{ posts(before: "not a cursor", last: 1) { edges { cursor } } }"#,
+        r#"{ appVersions(after: "not a cursor") { edges { cursor } } }"#,
+    ] {
+        assert_bad_input(&rig, None, query, "invalid cursor").await;
+    }
+}
+
+/// Over-asking, a negative page and a page asked in both directions are
+/// all malformed page arguments (api-spec.md "Pagination is Relay cursor
+/// connections": at most 100).
+///
+/// Page arguments outside the budget, or in both directions, are refused as malformed input.
+/// ´claim:server:out-of-bounds-page-arguments-are-bad-input´
+#[sqlx::test(migrations = "../../migrations")]
+async fn out_of_bounds_page_arguments_are_bad_input(pool: PgPool) {
+    let rig = rig(pool);
+    for (query, message) in [
+        (
+            "{ records(first: 101) { edges { cursor } } }",
+            "at most 100",
+        ),
+        ("{ posts(last: 101) { edges { cursor } } }", "at most 100"),
+        (
+            "{ appVersions(first: -1) { edges { cursor } } }",
+            "non-negative",
+        ),
+        (
+            r#"{ records(first: 1, before: "x") { edges { cursor } } }"#,
+            "not both",
+        ),
+    ] {
+        assert_bad_input(&rig, None, query, message).await;
+    }
+}
+
+/// A `limit`-bounded list takes the page budget too, and over-asking
+/// refuses rather than clamping.
+///
+/// A list limit outside the page budget is refused as malformed input.
+/// ´claim:server:an-out-of-bounds-list-limit-is-bad-input´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_out_of_bounds_list_limit_is_bad_input(pool: PgPool) {
+    let rig = rig(pool);
+    assert_bad_input(
+        &rig,
+        None,
+        r#"{ referenceCandidates(query: "anything", limit: 101) { targetId } }"#,
+        "limit must lie in",
+    )
+    .await;
+}
+
+/// The batch node lookup is bounded by the page budget; a longer list is
+/// malformed input, before anything is read.
+///
+/// A batch lookup past the page budget is refused as malformed input.
+/// ´claim:server:too-many-ids-per-lookup-is-bad-input´
+#[sqlx::test(migrations = "../../migrations")]
+async fn too_many_ids_per_lookup_is_bad_input(pool: PgPool) {
+    let rig = rig(pool);
+    let ids: Vec<String> = (0..101)
+        .map(|_| format!("\"{}\"", Uuid::new_v4()))
+        .collect();
+    let query = format!("{{ nodes(ids: [{}]) {{ id }} }}", ids.join(", "));
+    assert_bad_input(&rig, None, &query, "ids per lookup").await;
+}
+
+/// An actor is looked up by its id or by its handle — naming neither, or
+/// both, is malformed input on `user` and `actor` alike.
+///
+/// An actor lookup naming neither or both of id and handle is refused as malformed input.
+/// ´claim:server:an-actor-lookup-takes-exactly-one-key´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_actor_lookup_takes_exactly_one_key(pool: PgPool) {
+    let rig = rig(pool);
+    let id = Uuid::new_v4();
+    for query in [
+        "{ user { id } }".to_string(),
+        format!(r#"{{ actor(id: "{id}", handle: "someone") {{ id }} }}"#),
+    ] {
+        assert_bad_input(&rig, None, &query, "exactly one of id or handle").await;
+    }
+}
+
+/// An argument a scalar refuses to parse — a malformed UUID, a Dimension
+/// off its grid — is the caller's malformed input: `BAD_INPUT`, with the
+/// library's message naming what was wrong, never the collapsed
+/// `INTERNAL`.
+///
+/// An argument a scalar cannot parse is refused as malformed input, its message kept.
+/// ´claim:server:an-unparsable-argument-is-bad-input´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unparsable_argument_is_bad_input(pool: PgPool) {
+    let rig = rig(pool);
+    assert_bad_input(&rig, None, r#"{ post(id: "not-a-uuid") { id } }"#, "UUID").await;
 
     rig.seed_member("caller", "caller@example.com").await;
     let token = rig.log_in("caller@example.com").await;
@@ -375,10 +509,9 @@ async fn a_declared_code_passes_the_internal_collapse(pool: PgPool) {
             json!({ "input": { "target": Uuid::new_v4(), "pDirected": 0.005, "pInterest": 0.0 }}),
         )
         .await;
-    let error = &answer["errors"][0];
-    assert_ne!(error["extensions"]["code"], "INTERNAL", "{answer}");
+    assert_eq!(transport_codes(&answer), vec!["BAD_INPUT"], "{answer}");
     assert!(
-        error["message"]
+        answer["errors"][0]["message"]
             .as_str()
             .is_some_and(|m| m.contains("Dimension")),
         "{answer}"
