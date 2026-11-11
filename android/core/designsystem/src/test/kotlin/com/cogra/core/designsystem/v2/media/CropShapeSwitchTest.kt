@@ -85,7 +85,8 @@ class CropShapeSwitchTest {
         assertThat(after.width / after.height).isWithin(SHAPE_SLACK).of(MediaShape.Wide.ratio)
 
         // And it is the window the view draws.
-        val shown = CropWindowMath.framingOf(requireNotNull(cropView().cropRect), requireNotNull(cropView().wholeImageRect))
+        val view = cropView()
+        val shown = CropWindowMath.framingOf(requireNotNull(view.cropRect), requireNotNull(view.wholeImageRect))
         assertThat(shown.left).isWithin(SLACK).of(after.left)
         assertThat(shown.top).isWithin(SLACK).of(after.top)
         assertThat(shown.width).isWithin(SLACK).of(after.width)

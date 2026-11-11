@@ -193,11 +193,9 @@ class CropState internal constructor(initial: CropFraming) {
         val ratio = whole.width().toFloat() / whole.height().toFloat()
         pictureRatio = ratio
         holdCeiling(view, whole)
-        val from = reshapeFrom
+        val next = restore?.let { carriedAcrossShapes(it, ratio) }
         reshapeFrom = null
-        val aspect = framedAspect
-        if (restore != null && from != null && aspect != null && restore.matches(from, ratio)) {
-            val next = CropWindowMath.reshaped(restore, from.ratio, aspect.ratio, ratio)
+        if (next != null) {
             pendingRestore = null
             seeded = true
             framing = next
@@ -280,8 +278,8 @@ class CropState internal constructor(initial: CropFraming) {
         // rotation — the one thing the saveable state exists to keep.
         if (previous == null) return
         framing = kept
-        val whole = view.wholeImageRect
-        if (!seeded || whole == null || whole.width() <= 0 || whole.height() <= 0) {
+        val whole = view.wholeImageRect?.takeIf { it.width() > 0 && it.height() > 0 }
+        if (!seeded || whole == null) {
             // The view is between pictures: the framing is carried to the
             // decode, which re-shapes it against the right bitmap.
             reshapeFrom = previous
@@ -297,6 +295,18 @@ class CropState internal constructor(initial: CropFraming) {
      * on while its picture was off the stage ([frameTo]).
      */
     private var reshapeFrom: CropAspect? = null
+
+    /**
+     * A framing carried in from before a shape switch, re-shaped to the
+     * current shape ([CropWindowMath.reshaped]) — or null when there was no
+     * switch, or the framing was never one of the shape it is said to be.
+     */
+    private fun carriedAcrossShapes(restore: CropFraming, pictureRatio: Float): CropFraming? {
+        val from = reshapeFrom ?: return null
+        val to = framedAspect ?: return null
+        if (!restore.matches(from, pictureRatio)) return null
+        return CropWindowMath.reshaped(restore, from.ratio, to.ratio, pictureRatio)
+    }
 
     /**
      * Puts the window back to the opening window at the current shape —

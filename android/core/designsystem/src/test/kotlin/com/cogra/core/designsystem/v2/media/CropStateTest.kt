@@ -409,7 +409,8 @@ class CropStateTest {
     fun aShapeSwitchKeepsTheWindowsCentreAndZoom() {
         // Square at 2× on a square picture, framing the upper left. Wide's
         // fill is 1 × 1/1.91 = 0.5236, so at 2× the window is 0.5 × 0.2618.
-        val next = CropWindowMath.reshaped(CropFraming(0.1f, 0.1f, 0.6f, 0.6f), from = 1f, to = 1.91f, pictureRatio = 1f)
+        val upperLeft = CropFraming(0.1f, 0.1f, 0.6f, 0.6f)
+        val next = CropWindowMath.reshaped(upperLeft, from = 1f, to = 1.91f, pictureRatio = 1f)
 
         next.assertIs(0.1f, 0.2191f, 0.6f, 0.4809f)
     }
@@ -419,7 +420,8 @@ class CropStateTest {
         // Wide at the fill on a 1:2 picture, at its top: (0, 0, 1, 0.2618).
         // Tall's fill there is 1 × 0.625; centred on 0.1309 it would start at
         // −0.1816, so it slides down to the edge and no further.
-        val next = CropWindowMath.reshaped(CropFraming(0f, 0f, 1f, 0.2618f), from = 1.91f, to = 0.8f, pictureRatio = 0.5f)
+        val atTop = CropFraming(0f, 0f, 1f, 0.2618f)
+        val next = CropWindowMath.reshaped(atTop, from = 1.91f, to = 0.8f, pictureRatio = 0.5f)
 
         next.assertIs(0f, 0f, 1f, 0.625f)
     }

@@ -135,9 +135,13 @@ class CropTwoFingerTest {
                     "${"%.1f".format(window.height())} is ${"%.3f".format(drawnShape)}:1"
             }
             // Inside the picture.
-            if (rect.left < whole.left - PX || rect.top < whole.top - PX ||
-                rect.right > whole.right + PX || rect.bottom > whole.bottom + PX
-            ) {
+            val overhang = listOf(
+                whole.left - rect.left,
+                whole.top - rect.top,
+                rect.right - whole.right,
+                rect.bottom - whole.bottom,
+            )
+            if (overhang.any { it > PX }) {
                 violations += "$label: window $rect leaves the picture $whole"
             }
             // Between the fill and about 4×.
@@ -178,7 +182,10 @@ class CropTwoFingerTest {
         Hand().apply {
             down(0, c + Offset(-3f, -120f))
             down(1, c + Offset(3f, 120f))
-            repeat(STEPS) { move(0 to c + Offset(-3f, -120f + (it + 1) * 3f), 1 to c + Offset(3f, 120f - (it + 1) * 3f)) }
+            repeat(STEPS) {
+                val d = (it + 1) * 3f
+                move(0 to c + Offset(-3f, -120f + d), 1 to c + Offset(3f, 120f - d))
+            }
             up(1)
             up(0)
         }.assertClean()
@@ -194,7 +201,10 @@ class CropTwoFingerTest {
         Hand().apply {
             down(0, c + Offset(0f, -120f))
             down(1, c + Offset(0f, 120f))
-            repeat(STEPS) { move(0 to c + Offset(0f, -120f + (it + 1) * 3f), 1 to c + Offset(0f, 120f - (it + 1) * 3f)) }
+            repeat(STEPS) {
+                val d = (it + 1) * 3f
+                move(0 to c + Offset(0f, -120f + d), 1 to c + Offset(0f, 120f - d))
+            }
             up(1)
             up(0)
         }.assertClean()
@@ -213,7 +223,7 @@ class CropTwoFingerTest {
             down(1, c + Offset(100f, 30f))
             repeat(STEPS) {
                 val k = (it + 1).toFloat()
-                move(0 to c + Offset(-100f - k * 2f + k * 6f, -30f - k * 2f), 1 to c + Offset(100f + k * 2f + k * 6f, 30f + k * 2f))
+                move(0 to c + Offset(-100f + k * 4f, -30f - k * 2f), 1 to c + Offset(100f + k * 8f, 30f + k * 2f))
             }
             up(0)
             up(1)
@@ -227,7 +237,10 @@ class CropTwoFingerTest {
         Hand().apply {
             down(0, c + Offset(-110f, 0f))
             down(1, c + Offset(110f, 0f))
-            repeat(STEPS / 2) { move(0 to c + Offset(-110f - (it + 1) * 3f, 0f), 1 to c + Offset(110f + (it + 1) * 3f, 0f)) }
+            repeat(STEPS / 2) {
+                val d = (it + 1) * 3f
+                move(0 to c + Offset(-110f - d, 0f), 1 to c + Offset(110f + d, 0f))
+            }
             up(0)
             val from = c + Offset(110f + STEPS / 2 * 3f, 0f)
             repeat(STEPS / 2) { move(1 to from + Offset(0f, (it + 1) * 5f)) }
