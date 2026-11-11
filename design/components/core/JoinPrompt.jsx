@@ -1,6 +1,7 @@
 import React from "react";
 import { buttonStyle, BUTTON_CLASS } from "./Button.jsx";
 import { useModalFocus } from "./BottomSheet.jsx";
+import { nameInText } from "../people/ActorChip.jsx";
 
 /* The guest prompt behind an account-needing slot (readme §13, *The pattern
    boards*): ASK, NEVER
@@ -54,8 +55,9 @@ import { useModalFocus } from "./BottomSheet.jsx";
 // The whole headline-small role, tracking included — left out, the title
 // inherited the body's 0.5px (seam 248; seam 245's ask-6/7 pattern).
 // TEXT THAT WRAPS (round 40): the title, the body and the line wrap at their
-// spaces, and a handle or name too long for the dialog breaks inside the word
-// rather than running off it — never an ellipsis.
+// spaces; a handle or name in them is one unit (`nameInText`) that moves whole
+// to the next line, cut at its end with "…" only when longer than a line.
+// `overflow-wrap: anywhere` stays for other unbroken tokens (a pasted URL).
 const DIALOG_TITLE_STYLE = {
   margin: 0,
   overflowWrap: "anywhere",
@@ -88,7 +90,7 @@ const asParagraphs = (body) =>
   (Array.isArray(body) ? body : [body]).map((part, index) =>
     typeof part === "string" ? (
       <p key={index} style={{ margin: 0 }}>
-        {part}
+        {nameInText(part)}
       </p>
     ) : (
       <React.Fragment key={index}>{part}</React.Fragment>
@@ -129,11 +131,11 @@ export function DialogSurface({ children, ariaLabel, inline = false, onScrimPres
     >
       {slotted ? (
         <>
-          {title !== undefined && <h2 style={DIALOG_TITLE_STYLE} data-node={node && "title"}>{title}</h2>}
+          {title !== undefined && <h2 style={DIALOG_TITLE_STYLE} data-node={node && "title"}>{nameInText(title)}</h2>}
           {body !== undefined && <div style={{ ...DIALOG_BODY_STYLE, marginTop: title !== undefined ? "var(--space-4)" : 0 }} data-node={node && "body"}>{asParagraphs(body)}</div>}
           {line !== undefined && (
             <p role="alert" style={{ ...DIALOG_LINE_STYLE, marginTop: title !== undefined || body !== undefined ? "var(--space-4)" : 0 }} data-node={node && "line"}>
-              {line}
+              {nameInText(line)}
             </p>
           )}
           {actions !== undefined && (

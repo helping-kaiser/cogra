@@ -1,5 +1,5 @@
 import React from "react";
-import { MonogramAvatar } from "../people/ActorChip.jsx";
+import { MonogramAvatar, nameInText } from "../people/ActorChip.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 
 /* The borrowed-view band (readme §13). A guest or applicant feed shows a
@@ -45,8 +45,8 @@ export function BorrowedViewBand({ handle, displayName, avatarSrc, line, actionL
       <span
         style={{
           flex: 1,
-          // TEXT THAT WRAPS (round 40): the line wraps at its spaces, and a
-          // handle too long for the band breaks inside the word, never cut.
+          // TEXT THAT WRAPS (round 40): the line wraps at its spaces; the
+          // handle is one unit (`nameInText`), whole on a line or end-cut.
           minWidth: 0,
           overflowWrap: "anywhere",
           fontSize: "var(--text-body-small)",
@@ -57,7 +57,7 @@ export function BorrowedViewBand({ handle, displayName, avatarSrc, line, actionL
         }}
         data-node={node && "line"}
       >
-        {text}
+        {nameInText(text)}
       </span>
       {actionLabel && (
         <button

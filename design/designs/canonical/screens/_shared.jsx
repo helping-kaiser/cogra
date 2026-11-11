@@ -18,6 +18,7 @@ const {
   ActorChip,
   HIDE_ACTOR_LABEL,
   UNHIDE_ACTOR_LABEL,
+  nameInText,
   REDACTED_ACTOR_NAME,
   ProfileHeader,
   EmptyState,
@@ -582,8 +583,8 @@ function TaskCard({ title, body, tone, children, node }) {
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
         {/* TEXT THAT WRAPS (round 40): the title and the body wrap at their
-            spaces; a handle too long for the card breaks inside the word —
-            `All set — waiting on @…` is never cut. */}
+            spaces; the handle is one unit (`nameInText`) — `All set — waiting
+            on @…` takes the handle whole to its own line, end-cut past one. */}
         <h2
           style={{
             margin: 0,
@@ -596,11 +597,11 @@ function TaskCard({ title, body, tone, children, node }) {
           }}
           data-node={node && "title"}
         >
-          {title}
+          {nameInText(title)}
         </h2>
         <Icon name="mark" size={20} pickColor="var(--primary-container)" style={{ flex: "none", color: "var(--primary)" }} />
       </div>
-      <p style={{ margin: 0, overflowWrap: "anywhere", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node={node && "body"}>{body}</p>
+      <p style={{ margin: 0, overflowWrap: "anywhere", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node={node && "body"}>{nameInText(body)}</p>
       {children}
     </Card>
   );
@@ -5587,7 +5588,7 @@ function VouchBackHint({ node }) {
 function PadLine({ children }) {
   return (
     <p style={{ margin: 0, overflowWrap: "anywhere", fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
-      {children}
+      {nameInText(children)}
     </p>
   );
 }
@@ -6140,7 +6141,7 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
             }}
             data-node="body"
           >
-            {line}
+            {nameInText(line)}
           </p>
         ))}
         {note}

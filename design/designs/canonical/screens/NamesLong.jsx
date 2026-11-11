@@ -16,8 +16,10 @@
       aside, a menu row — the line never wraps; the handle is what is cut with
       "…", the words around it keep their room (`nameInLine`).
    3. TEXT THAT WRAPS (`wraps`): a card's title and body, a dialog, a
-      snackbar, the band — it wraps at its spaces, and an unbroken handle or
-      name breaks inside the word; never an ellipsis.
+      snackbar, the band — the sentence wraps at its spaces and is never cut;
+      a handle or name is one unit that never stands on two lines, moving
+      whole to the next line and cut at its end with "…" only when longer
+      than a line, its punctuation kept beside it (`nameInText`).
 
    A pattern exemplar: every control on it is its own board's, wired there,
    so the board is scan-exempt and registers nothing. */

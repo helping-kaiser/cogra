@@ -1,4 +1,5 @@
 import React from "react";
+import { nameInText } from "../people/ActorChip.jsx";
 
 /* The transient confirmation (readme §13, *The audit answers*): a completed
    action is confirmed by a snackbar on both platforms, fired once per event.
@@ -77,11 +78,11 @@ export function Snackbar({ message, action, onAction, onDismiss, durationMs = 40
           }}
           data-node={node}
         >
-          {/* TEXT THAT WRAPS (round 40): a name in the message breaks at its
-              spaces, and an unbroken handle breaks inside the word rather than
-              running off the surface — never an ellipsis. */}
+          {/* TEXT THAT WRAPS (round 40): the message wraps at its spaces; a
+              handle or name in it is one unit (`nameInText`) that moves whole
+              to the next line, cut at its end only when longer than a line. */}
           <span style={{ minWidth: 0, overflowWrap: "anywhere" }} data-node={node && "message"}>
-            {message}
+            {nameInText(message)}
           </span>
           {action && (
             <button
