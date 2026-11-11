@@ -597,6 +597,59 @@ async fn the_batch_lands_whole(pool: PgPool) {
     );
 }
 
+/// A record that ends at a Type serves that topic, typed: a Tag's terminal
+/// leg and a binary stance toward a topic alike, the aside the chronicle
+/// and the trace print (`Tagged a post` … `#rust`). A record whose far end
+/// is no Type — the post's own Publish — serves none.
+///
+/// A record ending at a Type serves that topic typed, and a record ending anywhere else serves none.
+/// ´claim:topics:a-record-names-the-topic-it-ends-at´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_record_names_the_topic_it_ends_at(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author_id, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    rig.landed_post(&token, &ak, "A post", json!([tag("rust")]))
+        .await;
+    rig.follow_topic(&token, &ak, "saltmaps", 0.5, 0.5).await;
+
+    let listing = rig
+        .gql(
+            None,
+            r#"query($a: UUID!) {
+                 records(author: $a, first: 20) {
+                   edges { node { family topic { id name { value status } } } }
+                 }
+               }"#,
+            json!({ "a": author_id.to_string() }),
+        )
+        .await;
+    let edges = listing["records"]["edges"].as_array().expect("edges");
+    let topic_of = |family: &str| -> Vec<Value> {
+        edges
+            .iter()
+            .map(|edge| &edge["node"])
+            .filter(|node| node["family"] == family)
+            .map(|node| node["topic"].clone())
+            .collect()
+    };
+    let tags = topic_of("TAG");
+    assert_eq!(tags.len(), 1, "{listing}");
+    assert_eq!(tags[0]["name"]["value"], "rust");
+    assert_eq!(tags[0]["name"]["status"], "NORMAL");
+    assert_eq!(
+        tags[0]["id"],
+        common::hashtag_uuid("rust").to_string(),
+        "the Hashtag the topic page reads"
+    );
+    let stances = topic_of("AFFINITY");
+    assert_eq!(stances.len(), 1, "the follow is an Affinity toward the Type: {listing}");
+    assert_eq!(stances[0]["name"]["value"], "saltmaps");
+    let publishes = topic_of("PUBLISH");
+    assert!(!publishes.is_empty(), "{listing}");
+    assert!(publishes.iter().all(Value::is_null), "a post is no topic: {listing}");
+}
+
 /// Prepare only — no signing, no landing. The registry row is written in
 /// the transaction that stages the act (D5), because the composer needs
 /// the name the moment it is declared.

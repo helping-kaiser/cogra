@@ -739,11 +739,18 @@ type Record {
   targetId: String!
   "Hyper-edge only: the terminal leg's node — minted by the act
    (Review's Comment, Send's Message, Bid's Offer) or pre-existing
-   (Tag's Type, Invitation's Profile, Reference's cited target).
-   Null on binary families."
+   (Invitation's Profile, Reference's cited target; a Tag's Type,
+   which no Node types — `topic` serves it). Null on binary families."
   terminal: Node
   "The raw L1 identifier of terminal; null on binary families."
   terminalId: String
+  "The topic the record ends at: the Type its terminal leg reaches —
+   a Tag's topic — or, on a binary family, its target's — an Opinion
+   or Affinity toward a topic. A Type is a commons, not a node CoGra
+   carries a row for, so terminal and target cannot type it; this
+   does — the chronicle's and the trace's `#saltmaps` aside. Null
+   when the record's far end is no Type."
+  topic: Hashtag
   "Authoritative act time — the causal key's first component."
   actTime: Int!
   "Position within the epoch's authoritative order."

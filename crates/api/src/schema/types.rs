@@ -819,6 +819,19 @@ impl Record {
         self.0.terminal().map(|leg| leg.target.clone())
     }
 
+    /// The topic the record ends at: the Type its terminal leg reaches —
+    /// a Tag's topic — or, on a binary family, its target's — an Opinion
+    /// or Affinity toward a topic. A Type is a commons, not a node CoGra
+    /// carries a row for, so `terminal` and `target` cannot type it; this
+    /// does. Null when the record's far end is no Type.
+    async fn topic(&self) -> Option<HashtagType> {
+        let far_end = self.0.terminal().or_else(|| self.0.target())?;
+        match NodeId::parse(&far_end.target) {
+            Ok(NodeId::Name(name)) => Some(HashtagType { name }),
+            _ => None,
+        }
+    }
+
     /// The authored directed parameter, as the actor's leg renders it.
     async fn p_directed(&self) -> Dimension {
         Dimension(self.0.target().map_or(0.0, |leg| leg.p_d))
