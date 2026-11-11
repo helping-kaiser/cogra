@@ -18,7 +18,7 @@
    does.`
 
    THE COMMIT NAMES WHAT IT SIGNS (`SealFooter`'s rule): `Sign the
-   opinions`. Signed, the batch leaves the seal for where the review was
+   picks`. Signed, the batch leaves the seal for where the review was
    opened from, with the usual settled snackbar in its batch form, `Signed 4
    things, still settling.`, and each target's anchor wears `Still settling`
    until its record is ordered. The X leaves with every pick still kept, as
