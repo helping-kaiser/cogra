@@ -50,6 +50,7 @@ export function OpinionsSheet({
   opinions,
   stacked = false,
   node,
+  from,
   testId = "opinions-sheet",
 }: {
   open: boolean;
@@ -66,6 +67,11 @@ export function OpinionsSheet({
    * @ (an address no account fronts, by that address).
    */
   node?: DataNode;
+  /**
+   * The origin a row's door carries: the post's on its detail, so the profile
+   * reads `Back to the post` (ProfileOther.md:73; PostOpinions.md:15).
+   */
+  from?: string;
   testId?: string;
 }) {
   return (
@@ -98,6 +104,7 @@ export function OpinionsSheet({
           // The sheet is the door, not the destination: dropped as the row is
           // followed, so Back lands where the reader opened it from.
           onOpen={onClose}
+          from={from}
           node={instance(node, "opinion", opinion.holder.handle ?? opinion.holderId)}
           testId={`${testId}-row-${index + 1}`}
         />

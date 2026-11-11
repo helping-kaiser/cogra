@@ -393,6 +393,9 @@ export function CommentFeedCard({
             testId={`${testId}-author`}
             node={part(node, "authorChip")}
             here={authorHere}
+            // The chip is a door like the card's others: it carries the
+            // list's origin (ProfileOther.md:73, `Back to Saved from Saved`).
+            from={from}
           />
         )}
         <div className="flex flex-none items-center gap-3">
@@ -500,6 +503,7 @@ export function CommentFeedCard({
           }))}
           references={comment.references.length}
           testIdPrefix={testId}
+          from={from}
         />
       )}
     </>
