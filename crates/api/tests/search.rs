@@ -765,6 +765,80 @@ async fn seen(rig: &WireRig, token: &str, content: Uuid) {
     assert_eq!(marked["markSeen"]["ok"], true, "{marked}");
 }
 
+/// Search never looks at the seen-list: a post, a person, a topic and a
+/// comment the reader has opened are found as if they had not been
+/// (api-spec.md "The seen-list never narrows a search"). Plain words find
+/// the post, the person and the topic; the comment, which plain words
+/// never reach, is found under its author's cue.
+///
+/// Search finds what the reader has already seen, people and topics included.
+/// ´claim:search:search-finds-what-the-reader-has-seen´
+#[sqlx::test(migrations = "../../migrations")]
+async fn search_finds_what_the_reader_has_seen(pool: PgPool) {
+    let rig = rig(pool);
+    rig.seed_member("reader", "reader@example.test").await;
+    let token = rig.log_in("reader@example.test").await;
+    let sol = person(&rig.pool, "saltine", None).await;
+    let read = post_as(&rig.pool, sol, &minted("saltine", 1), 1, Some("Salt read")).await;
+    post_as(&rig.pool, sol, &minted("saltine", 2), 2, Some("Salt fresh")).await;
+    let answer = comment_as(&rig.pool, sol, &minted("saltine", 3), (read, "post"), 3).await;
+    let topic = {
+        let mut conn = rig.pool.acquire().await.expect("conn");
+        hashtag::upsert(&mut conn, "saltmaps").await.expect("tag")
+    };
+    for node in [read, sol, answer, topic] {
+        seen(&rig, &token, node).await;
+    }
+
+    let found = search(&rig, Some(&token), json!({ "query": "salt" })).await;
+    assert_eq!(
+        names(&found),
+        vec![
+            "User:saltine",
+            "Hashtag:saltmaps",
+            "Post:Salt fresh",
+            "Post:Salt read"
+        ]
+    );
+    assert_eq!(found["totalCount"], 4);
+    let cued = scoped(&rig, Some(&token), json!({ "query": "@saltine salt" })).await;
+    assert_eq!(
+        hits(&cued),
+        vec![
+            as_comment(answer),
+            "Post:Salt fresh".to_string(),
+            "Post:Salt read".to_string()
+        ]
+    );
+    assert_eq!(cued["totalCount"], 3);
+}
+
+/// The search declares no seen argument: a request that names one is
+/// refused by validation, so no client can ask search to read the
+/// seen-list.
+///
+/// Search declares no seen argument.
+/// ´claim:search:search-declares-no-seen-argument´
+#[sqlx::test(migrations = "../../migrations")]
+async fn search_declares_no_seen_argument(pool: PgPool) {
+    let rig = rig(pool);
+    let response = rig
+        .gql_raw(
+            None,
+            r#"query { search(query: "salt", includeSeen: false) { totalCount } }"#,
+            json!({}),
+        )
+        .await;
+    let refused = response["errors"].as_array().is_some_and(|errors| {
+        errors.iter().any(|e| {
+            e["message"]
+                .as_str()
+                .is_some_and(|m| m.contains("includeSeen"))
+        })
+    });
+    assert!(refused, "{response}");
+}
+
 /// With a session, `includeSeen: false` drops what the viewer has seen
 /// — wherever they saw it — and the default keeps it.
 ///
