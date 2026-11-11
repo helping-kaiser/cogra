@@ -29,9 +29,13 @@ import { nameInLine } from "../people/ActorChip.jsx";
    gutter without depending on anyone. */
 
 export function PageHeader({ title, backHref, backLabel, onBack, action, node }) {
+  /* Only a title that names a handle yields its room to the action: a plain
+     title keeps its whole width, as it always has (the seals' "What you sign"
+     beside the widest trailing group). */
+  const namesSomeone = typeof title === "string" && /(?<![\w@])@[A-Za-z0-9_]/.test(title);
   return (
     <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)", minHeight: "48px", padding: "0 var(--space-3)" }} data-node={node}>
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", ...(namesSomeone ? { minWidth: 0 } : null) }}>
         {(backHref || onBack) && (
           <a
             href={backHref ?? "#"}

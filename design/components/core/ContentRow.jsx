@@ -78,7 +78,7 @@ const TYPE = {
 const ASIDE_FLEX = {
   none: { flex: "none" },
   bare: { flexShrink: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
-  words: { flexShrink: 1, minWidth: 0, overflow: "hidden", display: "flex" },
+  words: { flexShrink: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
 };
 
 const TONES = {
@@ -199,7 +199,7 @@ export function ContentRow({
      destination — the same card, with nothing to press. */
   const Tag = inert ? "div" : "button";
   const ellipsis = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
-  const asideHandle = typeof titleAside !== "string" ? "none" : /^@[A-Za-z0-9_]+$/.test(titleAside) ? "bare" : nameInLine(titleAside) !== titleAside ? "words" : "none";
+  const asideHandle = typeof titleAside !== "string" ? "none" : /^@[A-Za-z0-9_]+$/.test(titleAside) ? "bare" : /(?<![\w@])@[A-Za-z0-9_]/.test(titleAside) ? "words" : "none";
   const heading = (
     <span
       style={{

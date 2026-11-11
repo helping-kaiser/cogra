@@ -185,9 +185,13 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
    HANDLE is what is cut with "…", and the words around it keep their room
    first: `@mmmmmmmm… commented on your post`. The chip's own arithmetic at line
    scale: the words are `flex: none`, the handle the one part that yields
-   (`minWidth: 0` and the clip). Every one-line master passes its text through
-   `nameInLine`; text with no handle returns untouched, so a line that fits
-   draws exactly what it drew. The first handle is the one that yields. */
+   (`minWidth: 0` and the clip). Every one-line master clips its own line at
+   the end ("…", the why-line's way — `Through @ada`) and passes its text
+   through `nameInLine`: where the handle ENDS the line (`Hide @ada`, `on
+   @mira`, a title that is only `@ada`) the end clip already cuts the handle
+   and keeps the words, so the text returns untouched; only words AFTER the
+   handle split the line, so a line that fits draws exactly what it drew. The
+   first handle is the one that yields. */
 const HANDLE_IN_LINE = /(?<![\w@])@[A-Za-z0-9_]+/;
 const LINE_WORDS = { flex: "none", whiteSpace: "pre" };
 export function nameInLine(text) {
@@ -196,6 +200,7 @@ export function nameInLine(text) {
   if (!found) return text;
   const before = text.slice(0, found.index);
   const after = text.slice(found.index + found[0].length);
+  if (!after.trim()) return text;
   return (
     <span style={{ display: "flex", minWidth: 0, whiteSpace: "nowrap" }} data-name-line="">
       {before && <span style={LINE_WORDS}>{before}</span>}

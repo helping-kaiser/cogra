@@ -2645,23 +2645,23 @@ Object.assign(FLOW_MARKERS, {
 Object.assign(FLOW_MARKERS, {
   Notifications: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
-    { n: 2, find: ">@ada commented on your post<", tag: "button" },
-    { n: 3, find: ">@tobias replied to your comment<", tag: "button" },
-    { n: 4, find: ">@sol gave an opinion on you<", tag: "button" },
-    { n: 5, find: ">@mira mentioned you<", tag: "button" },
-    { n: 6, find: ">@ada cited your post<", tag: "button" },
-    { n: 7, find: ">@juno landed through your invite<", tag: "button" },
-    { n: 8, find: ">@mira approved your application<", tag: "button" },
+    { n: 2, find: "> commented on your post</span>", tag: "button" },
+    { n: 3, find: "> replied to your comment</span>", tag: "button" },
+    { n: 4, find: "> gave an opinion on you</span>", tag: "button" },
+    { n: 5, find: "> mentioned you</span>", tag: "button" },
+    { n: 6, find: "> cited your post</span>", tag: "button" },
+    { n: 7, find: "> landed through your invite</span>", tag: "button" },
+    { n: 8, find: "> approved your application</span>", tag: "button" },
     ...nav(9),
     // The eighth kind arrived after the list was numbered, and a row inserted
     // mid-list would renumber five nav edges to say nothing new: the badge is
     // an identity, not a position (the settings page's own rule).
-    { n: 14, find: ">@rafa is ready for your approval<", tag: "button" },
+    { n: 14, find: "> is ready for your approval</span>", tag: "button" },
     // The ninth, the eighth's twin (the reject extension), taking its next
     // free number for the same reason.
-    { n: 15, find: ">@kel closed your application<", tag: "button" },
+    { n: 15, find: "> closed your application</span>", tag: "button" },
     // The tenth, the opinion row's sibling (PR-72), the next free number.
-    { n: 16, find: ">@sol walked back their opinion on you<", tag: "button" },
+    { n: 16, find: "> walked back their opinion on you</span>", tag: "button" },
     // The `load` chip's two Retries (seam 248), the next free numbers.
     { n: 17, find: 'data-node="notifications.list.moreFault.retry"', tag: "button" },
     { n: 18, find: 'data-node="notifications.list.fault.retry"', tag: "button" },
@@ -3868,11 +3868,11 @@ Object.assign(FLOW_MARKERS, {
   ],
   ChatNotifications: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: ">@mira invited you to Night fishing crew</span>", tag: "button" },
-    { n: 3, find: ">@saltorres asks to join Headland honey</span>", tag: "button" },
+    { n: 2, find: "> invited you to Night fishing crew</span>", tag: "button" },
+    { n: 3, find: "> asks to join Headland honey</span>", tag: "button" },
     { n: 4, find: ">Harbour office approved your request to join</span>", tag: "button" },
-    { n: 5, find: ">@ada commented on your post</span>", tag: "button" },
-    { n: 5, find: ">@tobias replied to your comment</span>", tag: "button" },
+    { n: 5, find: "> commented on your post</span>", tag: "button" },
+    { n: 5, find: "> replied to your comment</span>", tag: "button" },
   ],
   // Three real `PostCard`s: each card's own door (its text link) takes its own
   // number because each lands somewhere different; the affordances every card
