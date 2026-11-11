@@ -1869,7 +1869,7 @@
       "x": -5930,
       "y": 0,
       "w": 5510,
-      "h": 8591,
+      "h": 8712,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -2345,6 +2345,15 @@
       "file": "AppCrash.dc.html",
       "title": "Crash · this shouldn't have happened",
       "x": 1920,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "NamesLong.dc.html",
+      "title": "Names · when they are long",
+      "x": 2400,
       "y": 1928,
       "w": 390,
       "h": 844,

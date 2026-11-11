@@ -115,11 +115,13 @@
     "ApprovePad": "the scrim wash covers the invites list — its semantic elements (the page's New invite, the rows, the close controls and the link cards) are inactive in this state; only the parked pad is live",
     "RejectConfirm": "the think-twice dialog covers the invites list — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
     "RejectAllConfirm": "the batch think-twice dialog covers the invites list — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
+    "NamesLong": "the long-name law — a pattern exemplar drawn on the masters; its rows, menu rows, dialog and snackbar are their own boards' controls (Notifications, Profile, FeedPostMenu, ApplicantWaiting, ChangeHandleConfirm, FeedHidden, SettingsHidden), wired there",
     "NetworkError": "the fault in place — a pattern exemplar drawn on the seal, where the retry the failure offers is the only thing this board is about; the seal's own header, facts and way back are `ComposeSeal`'s controls, wired on that board",
     "ProfileMoreFailed": "the page that didn't come — exempt for `NetworkError`'s reason, cited: the failed next page is the only thing this board is about, and the band, the header, the chronicle tabs, the rows and the five nav slots are `Profile`'s controls, wired on that board"
   },
   "entries": {
     "AppCrash": "the app itself broke and no surface is left to carry a notice — a fault, not a tap",
+    "NamesLong": "a pattern exemplar — the masters any board draws, at the longest legal handle and display name; content, not a tap",
     "PostDetailVideoSensitive": "the same video detail any clip wider than tall opens, when the post is sensitive and unrevealed — the state the record brings, not a different tap (jakob 2026-09-24)",
     "ReelSensitive": "the same stream any portrait or square clip opens, when the clip on its stage is sensitive and unrevealed — a feed card's veil reveals in place, so it is the swipe that brings one; the state the record brings, not a different tap (jakob 2026-09-30)",
     "TagPageHeld": "the same tag page, opened by a reader whose netted Affinity on this topic is not (0, 0) — a state the record brings, not a different tap",
