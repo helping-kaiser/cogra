@@ -792,6 +792,8 @@ async fn an_upload_without_a_verified_session_is_refused_unparsed(pool: PgPool) 
 /// The door's refusal is the resolvers' own: the same status, media type,
 /// `data` and error as a session-needing mutation refuses an anonymous
 /// caller with — so a client that refreshes on one refreshes on the other.
+/// The body is exactly the one android's `RefreshTest` and the web's
+/// `uploads.test.ts` feed their refresh-and-replay paths.
 ///
 /// The door's refusal of an upload has the status, media type and error the resolvers' UNAUTHENTICATED has.
 /// ´claim:server:the-upload-door-answers-as-the-resolvers-do´
@@ -850,7 +852,17 @@ async fn the_upload_door_answers_as_the_resolvers_do(pool: PgPool) {
             "{field}: {door} / {resolver}"
         );
     }
-    assert_eq!(door["errors"][0]["extensions"]["code"], "UNAUTHENTICATED");
+    assert_eq!(
+        door,
+        serde_json::json!({
+            "data": null,
+            "errors": [{
+                "message": "authentication required",
+                "extensions": { "code": "UNAUTHENTICATED" },
+            }],
+        }),
+        "the body both clients' refresh tests are fed"
+    );
 }
 
 /// An anonymous upload that declares more than any client sends in one
