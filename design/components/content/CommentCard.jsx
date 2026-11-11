@@ -168,8 +168,9 @@ export function CommentCard({
      its author's `authorChip` and its ⋮ `menu` (as `PostCard` names them),
      the mark a removed comment wears `removalMark` (as
      `PostCard` names it), and the thread's text buttons `reply` and `edit`
-     (seam 248, the thread sheet named); the line pointer to what it answers
-     `target` (as `commentEdit` names its own) and the collapsed replies'
+     (seam 248, the thread sheet named); the pointer to what it answers
+     `target` in either shape, the line or the thread's head row (as
+     `commentEdit` names its own; round 32) and the collapsed replies'
      line `viewReplies` (round 28, seam 254 A3). That line hangs under the
      card, outside its surface, so its path is the card's sibling and it
      carries the card's own key. Given none, the card renders exactly as
@@ -368,7 +369,7 @@ export function CommentCard({
                 at the body's weight, the register `Deleted account` takes —
                 over the author, who stays. The comment stays readable under
                 it; a node is never deleted, and neither is what answers it. */}
-            <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} className="cg-state cg-focus" style={{ ...TARGET_DOOR, display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+            <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} data-node={node && "target"} className="cg-state cg-focus" style={{ ...TARGET_DOOR, display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
               <NodeMark kind={targetKind} src={targetDetail.cover} redacted={targetDetail.removed} onCard />
               <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
                 <span

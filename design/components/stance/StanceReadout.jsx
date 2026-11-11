@@ -843,7 +843,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, words, head, onExp
         </span>
       ) : (
       <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
-        <span style={{ fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)", lineHeight: 1.2 }} data-node={node && "face"}>
+        <span style={{ fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)", letterSpacing: big ? "var(--text-title-large--letter-spacing)" : "var(--text-title-medium--letter-spacing)", fontWeight: big ? "var(--text-title-large--font-weight)" : "var(--text-title-medium--font-weight)", lineHeight: 1.2 }} data-node={node && "face"}>
           {emoji}
         </span>
         <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: big ? "var(--on-surface)" : "var(--text-secondary)", whiteSpace: "nowrap" }} data-node={node && "exact"}>

@@ -3729,6 +3729,10 @@
         "feed.commentCard.menu": [
           "tobias",
           "sol"
+        ],
+        "feed.commentCard.target": [
+          "tobias",
+          "sol"
         ]
       }
     },
@@ -4405,6 +4409,9 @@
           "tobias"
         ],
         "feed.commentCard.menu": [
+          "tobias"
+        ],
+        "feed.commentCard.target": [
           "tobias"
         ],
         "feed.profileCard": [
@@ -6081,6 +6088,9 @@
         "history.commentCard.menu": [
           "tobias"
         ],
+        "history.commentCard.target": [
+          "tobias"
+        ],
         "history.day": [
           "today",
           "yesterday",
@@ -6332,6 +6342,9 @@
         "history.commentCard.menu": [
           "tobias"
         ],
+        "history.commentCard.target": [
+          "tobias"
+        ],
         "history.filterSheet": [],
         "history.filterSheet.dragHandle": [],
         "history.filterSheet.foot": [],
@@ -6486,6 +6499,9 @@
           "tobias"
         ],
         "history.commentCard.menu": [
+          "tobias"
+        ],
+        "history.commentCard.target": [
           "tobias"
         ],
         "history.day": [
@@ -10945,6 +10961,9 @@
         "saved.commentCard.menu": [
           "tobias"
         ],
+        "saved.commentCard.target": [
+          "tobias"
+        ],
         "saved.header": [],
         "saved.header.back": [],
         "saved.header.title": [],
@@ -11280,6 +11299,9 @@
           "tobias"
         ],
         "saved.commentCard.menu": [
+          "tobias"
+        ],
+        "saved.commentCard.target": [
           "tobias"
         ],
         "saved.header": [],
