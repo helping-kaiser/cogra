@@ -43,7 +43,7 @@ import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
-import { backFor } from "@/lib/ui/back-origin";
+import { backFor, postOrigin } from "@/lib/ui/back-origin";
 import { streamClipOf, streamHref } from "@/lib/reel/stream-origin";
 
 import { freezeReducer, type Freeze } from "./detail-freeze";
@@ -430,6 +430,9 @@ export function PostView({
           // THE SCORE OPENS ITS TRACE, whose back arrow reads `Back to the
           // post` and returns here with this detail's own origin kept.
           scoreOrigin={{ kind: "post", postId: post.id, via: from }}
+          // ITS AUTHOR CHIP AND ITS SHEET'S ROWS NAME THE POST, returning here with
+          // this detail's own origin kept (ProfileOther.md:73, TagPage.md:35).
+          doorFrom={postOrigin(post.id, from)}
           testId="post"
           authorTestId="post-author"
           stanceTestId="post-stance"
@@ -498,6 +501,8 @@ export function PostView({
         on="post"
         opinions={opinions}
         node={{ path: "postDetail.opinionsSheet" }}
+        // A holder's profile reads `Back to the post` (ProfileOther.md:73).
+        from={postOrigin(postId, from)}
         testId="opinions-sheet"
       />
       <CitedBySheet

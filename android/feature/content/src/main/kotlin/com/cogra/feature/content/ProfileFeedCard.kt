@@ -74,6 +74,12 @@ internal fun ProfileFeedCard(
     onOpen: () -> Unit,
     onShare: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
+    /**
+     * The ⋮'s `Mention in a new post`: the composer with the person staged as
+     * a reference — a citation whose target is a User is a mention
+     * (api-spec.md, `ReferenceTarget`), so it is the cite door's destination.
+     */
+    onMention: () -> Unit = {},
 ) {
     val card = node.keyed(profile.id)
     Card(
@@ -91,7 +97,7 @@ internal fun ProfileFeedCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ProfileLead(profile, card)
                 CograOverflowMenu(
-                    items = profileCardMenu(profile, viewerId, testTagPrefix),
+                    items = profileCardMenu(profile, viewerId, testTagPrefix, onMention),
                     contentDescription = if (profile.deleted) {
                         stringResource(R.string.content_profile_menu_deleted)
                     } else {
@@ -214,12 +220,17 @@ private fun ProfileRow(
 
 /**
  * The profile's menu less its share row (`FEED_PROFILE_MENU`,
- * `FEED_DELETED_PROFILE_MENU`). Mention waits on the wizard's profile
- * reference and a deleted account's Report on the profile report, as on the
+ * `FEED_DELETED_PROFILE_MENU`). Mention opens the composer with the person
+ * staged; a deleted account's Report waits on the profile report, as on the
  * profile's own ⋮ (the introduced-but-inert law).
  */
 @Composable
-private fun profileCardMenu(profile: ProfileView, viewerId: String?, testTagPrefix: String): List<MenuRow> {
+private fun profileCardMenu(
+    profile: ProfileView,
+    viewerId: String?,
+    testTagPrefix: String,
+    onMention: () -> Unit,
+): List<MenuRow> {
     val host = LocalSavedHost.current
     val inert: () -> Unit = {}
     val save = host?.menuRow(profile.id, profile.viewerBookmarkedAt, "${testTagPrefix}_menu_save")
@@ -243,7 +254,7 @@ private fun profileCardMenu(profile: ProfileView, viewerId: String?, testTagPref
         profile.id == viewerId -> listOf(save)
         else -> listOf(
             save,
-            MenuRow(stringResource(R.string.content_menu_mention), "${testTagPrefix}_menu_mention", inert),
+            MenuRow(stringResource(R.string.content_menu_mention), "${testTagPrefix}_menu_mention", onMention),
             MenuRow(
                 stringResource(R.string.content_menu_hide_actor, "@${profile.handle}"),
                 "${testTagPrefix}_menu_hide",

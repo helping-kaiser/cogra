@@ -2295,13 +2295,14 @@ describe("PostView", () => {
     expect(stamp.textContent).toMatch(/^(now|\d+[mhd])$/);
   });
 
+  // ProfileOther.md:73: "… Back to the post from a post's author chip".
   it("links authors as chips into their profiles", async () => {
     server.use(
       ...thread("author-1", [{ id: "c1", body: "top" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
-    expect(await screen.findByTestId(byNode("postDetail.card.authorChip"))).toHaveAttribute("href", "/u/alice");
+    expect(await screen.findByTestId(byNode("postDetail.card.authorChip"))).toHaveAttribute("href", "/u/alice?from=post%3Ap1");
     expect(screen.getByTestId(byNode("postDetail.threadSheet.commentCard.authorChip", "c1"))).toHaveAttribute("href", "/u/bob");
   });
 

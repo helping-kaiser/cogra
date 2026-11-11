@@ -135,6 +135,12 @@ pub struct Declaration {
     /// proposal's payload bytes, which already are the encoded envelope, so
     /// the bound counts those bytes as they arrive.
     pub payload_encoding: &'static str,
+    /// The boundary triple's minimum duration, in seconds (§5 host contract
+    /// (vi)): 0, because the stand-in closes only on its clock and never
+    /// early on a filled target. The triple's other two members, the
+    /// target and the clock, are operating values of the stand-in's
+    /// config (`StandInConfig::boundary`), published with every package.
+    pub min_epoch_duration_secs: i64,
 }
 
 impl Declaration {
@@ -276,6 +282,7 @@ pub const DECLARATION: Declaration = Declaration {
     marker_identity: "stand-in: the epoch close",
     marker_edition: 1,
     payload_encoding: "identity over the proposal's payload bytes",
+    min_epoch_duration_secs: 0,
 };
 
 #[cfg(test)]

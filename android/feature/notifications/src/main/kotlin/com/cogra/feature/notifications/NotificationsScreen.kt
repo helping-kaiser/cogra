@@ -187,6 +187,7 @@ private fun LoadFailed(onRetry: () -> Unit) {
     ) {
         Text(
             stringResource(R.string.notifications_load_failed),
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.weight(1f).testTag("notifications_transport_error"),
         )
@@ -216,6 +217,7 @@ private fun MoreFailed(onLoadMore: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.dataNode(fault.keyed("more"))) {
         Text(
             stringResource(R.string.notifications_more_failed),
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("notifications_more_failed"),
         )

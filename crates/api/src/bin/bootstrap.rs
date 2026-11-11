@@ -6,7 +6,7 @@
 use anyhow::Context;
 use api::bootstrap::{BootstrapOutcome, GenesisInput, guidelines_hash, run};
 use api::env_or;
-use l1_standin::{StandIn, StandInConfig};
+use l1_standin::StandIn;
 
 /// Runs the bootstrap and prints what an operator needs afterwards: the
 /// genesis identity, the login that reaches it, and the one-time recovery
@@ -38,7 +38,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("running Postgres migrations")?;
 
-    let standin = StandIn::new(pool.clone(), StandInConfig::default());
+    let standin = StandIn::new(pool.clone(), api::boot::standin_config()?);
     let input = GenesisInput {
         handle: env_or("GENESIS_HANDLE", "genesis"),
         display_name: env_or("GENESIS_DISPLAY_NAME", "Genesis Moderator"),

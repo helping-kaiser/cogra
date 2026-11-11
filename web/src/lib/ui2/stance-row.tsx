@@ -44,21 +44,21 @@ export function StanceValue({
 }) {
   const readout = bundleReadout(pair, zeroLabel);
   const exact = formatStancePair(pair);
-  // Sizes alone, as the master sets them; the leading is the font's own
-  // (`normal`), never the page's body leading inherited.
+  // Each part sets its role whole (`StanceValue`, round 28): the face
+  // title-medium, the pair body-small.
   return (
     <span
       role="img"
       aria-label={`${readout.label}, ${exact}`}
-      className="inline-flex flex-none items-center gap-1.5 [line-height:normal]"
+      className="inline-flex flex-none items-center gap-1.5"
       {...testAttributes(node, testId)}
     >
-      <span aria-hidden="true" className="text-[length:var(--text-title-medium)]" {...testAttributes(part(node, "face"))}>
+      <span aria-hidden="true" className="text-title-medium" {...testAttributes(part(node, "face"))}>
         {readout.emoji}
       </span>
       <span
         aria-hidden="true"
-        className="cg-exact whitespace-nowrap text-[length:var(--text-body-small)] text-on-surface-variant"
+        className="cg-exact whitespace-nowrap text-body-small text-on-surface-variant"
         {...testAttributes(part(node, "exact"))}
       >
         {exact}
@@ -115,11 +115,11 @@ export function StanceRow({
         >
           {name}
         </span>
-        {/* The master sets the handle's size and leading alone: the
-            label-small ROLE would bring its 500 weight, which is the name's. */}
+        {/* The handle is label-small whole, its 500 weight included
+            (`StanceRow.jsx`, round 28). */}
         {handle !== null && !redacted && (
           <span
-            className="truncate text-[length:var(--text-label-small)] [line-height:var(--text-label-small--line-height)] text-on-surface-variant"
+            className="truncate text-label-small text-on-surface-variant"
             {...testAttributes(part(node, "handle"))}
           >
             @{handle}

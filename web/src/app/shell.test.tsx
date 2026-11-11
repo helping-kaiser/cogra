@@ -246,6 +246,16 @@ describe("AppShell", () => {
     ["/posts/post-1", "from=stream%3Av2%2Fsaved", "/profile"],
     ["/u/alice", "from=stream%3Av2%2Fhistory", "/profile"],
     ["/u/alice", "from=stream%3Av2%2Fu%3Aada%2Fsearch", "/explore"],
+    // A post's detail as an origin (its author chip, opinions, references
+    // and tags-and-references sheet): the detail's own.
+    ["/u/alice", "from=post%3Apost-1", "/feed"],
+    ["/u/alice", "from=post%3Apost-1%3Asaved", "/profile"],
+    ["/posts/post-2", "from=tag%3Acoast%2Fpost%3Apost-1%3Asearch", "/explore"],
+    // A tag page opened from Explore at rest or Your topics, Explore's
+    // subpage, is Explore's stack (readme §4, "a tag page stays lit on the
+    // root it was opened from").
+    ["/posts/post-1", "from=tag%3Acoast%2FyourTopics", "/explore"],
+    ["/posts/post-1", "from=tag%3Acoast%2Fexplore", "/explore"],
   ])("keeps the chained origin's root lit on %s?%s, its slot going to %s", async (path, query, root) => {
     pathname = path;
     search = query;

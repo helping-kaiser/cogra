@@ -45,10 +45,10 @@ describe("the identity row's stance face", () => {
 });
 
 describe("the identity row's trailing age", () => {
-  it("sets the label-small tracking with its leading (ContentRow.jsx TYPE)", () => {
+  it("sets label-small whole, weight with it (ContentRow.jsx TYPE, round 28)", () => {
     render(<ContentRow title="@ada commented on your post" trailing="35m" disc={{ kind: "monogram", name: "Ada" }} testId="row" />);
     const age = screen.getByTestId("row-trailing");
-    expect(age.style.letterSpacing).toBe("var(--text-label-small--letter-spacing)");
-    expect(age.style.lineHeight).toBe("var(--text-label-small--line-height)");
+    expect(age.className.split(" ")).toContain("text-label-small");
+    expect(age.getAttribute("style")).toBeNull();
   });
 });

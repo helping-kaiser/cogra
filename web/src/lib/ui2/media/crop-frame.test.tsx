@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { useState } from "react";
+import { createRef, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CENTERED, MAX_ZOOM, MIN_ZOOM, type Crop } from "./crop";
@@ -148,6 +148,25 @@ describe("switching shape re-frames against the original", () => {
     expect(given().aspect).toBe(POST_SHAPES.wide.ratio);
     expect(given().image).toBe("blob:original");
     expect(given().objectFit).toBe("contain");
+  });
+
+  // The library scales a kept offset by the cut's growth when its cut changes
+  // (6.2.4 `recomputeCropPosition`, a window resize's rule); on a shape change
+  // that would move the picture the host kept in place (`reshape`), so each
+  // shape gets a fresh cropper — and anything else keeps the one it has.
+  it("hands each shape a fresh cropper, and keeps it through anything else", () => {
+    const { rerender } = render(<CropFrame src="blob:original" shape="tall" onChange={() => {}} />);
+    const tall = screen.getByTestId("cropper");
+    rerender(<CropFrame src="blob:original" shape="tall" crop={{ ...CENTERED, zoom: 2 }} onChange={() => {}} />);
+    expect(screen.getByTestId("cropper")).toBe(tall);
+    rerender(<CropFrame src="blob:original" shape="wide" crop={{ ...CENTERED, zoom: 2 }} onChange={() => {}} />);
+    expect(screen.getByTestId("cropper")).not.toBe(tall);
+  });
+
+  it("hands its host the viewport, whose width the host re-frames against", () => {
+    const viewport = createRef<HTMLDivElement>();
+    render(<CropFrame src="blob:original" shape="tall" onChange={() => {}} viewportRef={viewport} />);
+    expect(viewport.current).toBe(screen.getByTestId("crop-frame"));
   });
 });
 
