@@ -10944,6 +10944,58 @@ Q14), the ruled part.
   tags`; `sign-the-picks-kept-while-the-key-was-away`, its snackbar's 4). The registry holds at **167 screens**, **6102 → 6111** board
   paths, **1910 → 1915** distinct.
 
+### Round 31, the pickers, the pad's way out, the deleted disc — 2026-11-11
+
+jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
+
+- **The staged rows are the list's first rows.** On both pickers the fixed
+  head ends at the field, the naming rule or the filter, and the cap line;
+  below it one list scrolls, the staged section its first rows and the
+  results after them, drawn at its top as the edits draw a scrolled column.
+  At most the three newest staged show, newest on top, so a reader typing
+  still sees the results. Past three, `Show all` under them — the pick
+  tray's door, its words and control — opens the sheet the seals open
+  (`ComposeTags`, `ComposeCitations`); nothing unfolds in place. The cap
+  line stands in the head, under the rule or the filter. The `state` chip
+  adds `none` and `seven`; `cap` draws ten staged, three shown and the
+  door, the results dimmed. Sample sets: the tags `SEAL_TAGS_MANY` and,
+  for ten, `saltmarsh`, `saltflats`, `fieldnotes`, `coastroad`, `tidal`,
+  `estuary`, `cartography`, `lowtide`, `photography`, `tidetables`; the
+  citations `SEAL_CITATIONS` with Juno Baptiste, Kel Moreau, `First try at
+  a rubbing`, `Salt maps of the coast road`, and for ten Ines Salas,
+  Salome Ward, Nadia Rask.
+- **The search sections' cap of three** is the rule on every sectioned
+  surface, Saved and History included (backlog 141).
+- **The way out while an act signs.** Cancel and Close are the way out of a
+  pad that stalls. Until the app begins sending the act — the proposal,
+  `submitProposals` — Cancel, the press outside, Back and Escape truly
+  cancel: nothing lands, the row untouched. From that instant the act is
+  expected to happen; the same button reads `Close`, only leaves, and the
+  wait passes to the target's row (`Signing…`, then the face and the
+  snackbar, or `That didn't sign.` with Retry). A regretted Set is walked
+  back afterwards. `PadFailed`'s `moment` draws `setting`, `sending` and
+  `closed`. The alternates take it; the walk-back and the empty sign take
+  it on `Keep it`, a walk-back cancelling only until the first of its acts
+  is being sent. The hold keeps no exit once it fires.
+- **The deleted account's disc and the removed thing's tile** keep the
+  reserved fill and wear a 1px solid `--border-field` ring inside their
+  box, one treatment on every surface (`REDACTED_RING`). The ring against
+  each surface, light / dark: page 4.29 / 5.83, card 3.49 / 3.89, sheet
+  3.66 / 4.54, bar 3.88 / 5.15, the reel's dark 6.61; the card's pair
+  recomputed here. The removal block with words is unchanged.
+- **Two leftovers**: the canvas title of `YourTopics` reads `Your tags`;
+  the kept picks' seal's note names `Sign the picks`.
+- **Measured.** The ringed disc and tile keep their boxes: 40, 56 and 80px
+  discs and the 32px tile measure as before on `ProfileStances`,
+  `PostOpinions`, `FeedProfileShapes`, `SettingsHidden`, `Invites`,
+  `ProfileDeleted` and `KeptPicksReview`, the ring 1px `#8c7165` in light.
+- **Not drawn here** (backlog 151): each picker state on a board of its own
+  for the harness, and the sheet raised over the picker.
+- **The gate**: edges **2167 → 2169** (the two doors); flows hold at
+  **227**, none re-blessed. The registry holds at **167 screens**, **6111 →
+  6113** board paths, **1915 → 1917** distinct (`tagPicker.staged.door`,
+  `referencePicker.staged.door`).
+
 ---
 
 ## 14. The canvases
