@@ -9,15 +9,19 @@
 //! version, silently and only for that query.
 //!
 //! What can be shared is the check. This test needs no database: it reads
-//! the crate's own sources and the migration that declares the indexes.
+//! the crate's own sources and the migrations that declare the indexes and
+//! the search derivation. A merged migration is never edited (sqlx checks
+//! its checksum), so the migrations are read for the definition in force —
+//! the latest one to state it — not for every historical form.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// The ordering as the version tables carrying a pending mark write it.
+/// The ordering as the version tables carrying a pending mark write it:
+/// the pending version first, then the newest landing by its key of
+/// record `(epoch, position)` (layer1-interface.md §8.3).
 const WITH_PENDING: &str = "pending DESC, \
     landed_epoch DESC NULLS LAST, \
-    act_time DESC NULLS LAST, \
     position DESC NULLS LAST, \
     created_at DESC, version_id DESC";
 
@@ -25,9 +29,19 @@ const WITH_PENDING: &str = "pending DESC, \
 /// a flag of its own, and the tables whose rows are only ever promotions
 /// or seeds have none.
 const WITHOUT_PENDING: &str = "landed_epoch DESC NULLS LAST, \
-    act_time DESC NULLS LAST, \
     position DESC NULLS LAST, \
     created_at DESC, version_id DESC";
+
+/// The seven version tables' current-version indexes.
+const CURRENT_INDEXES: [&str; 7] = [
+    "post_versions_current_idx",
+    "comment_versions_current_idx",
+    "actor_profile_versions_current_idx",
+    "chat_versions_current_idx",
+    "chat_message_versions_current_idx",
+    "item_versions_current_idx",
+    "network_parameter_versions_current_idx",
+];
 
 /// The key the whole rule turns on. Every occurrence of it must be part
 /// of one of the two orderings above — that is the whole check.
@@ -55,6 +69,22 @@ fn short_form_count(flat: &str, full: usize) -> usize {
 
 fn read_flat(path: &Path) -> String {
     flatten(&fs::read_to_string(path).unwrap_or_else(|e| panic!("{}: {e}", path.display())))
+}
+
+/// Every migration, flattened, in the order sqlx applies them — by file
+/// name, whose leading timestamp is the version.
+fn migrations_in_order() -> Vec<(PathBuf, String)> {
+    let dir = crate_dir().join("../../migrations");
+    let mut all: Vec<(PathBuf, String)> = fs::read_dir(&dir)
+        .expect("migrations are readable")
+        .map(|entry| {
+            let path = entry.expect("entry").path();
+            let flat = read_flat(&path);
+            (path, flat)
+        })
+        .collect();
+    all.sort_by(|a, b| a.0.cmp(&b.0));
+    all
 }
 
 /// Every place the crate orders version rows uses one of the two forms of
@@ -100,41 +130,21 @@ fn derivation_body(flat: &str) -> &str {
 }
 
 /// The search index's derivation lives in migrations, not in the crate,
-/// so the crate-wide check above cannot see it. Every migration that
-/// defines it orders versions in one of the rule's two forms, and the
-/// definition in force — the latest — orders both a post's and a
-/// profile's versions with the pending key, once each: both tables carry
-/// a pending mark, and the index must find what the reads show.
+/// so the crate-wide check above cannot see it. The definition in force —
+/// the latest migration to state it — orders both a post's and a
+/// profile's versions with the pending key, once each and in no other
+/// form: both tables carry a pending mark, and the index must find what
+/// the reads show.
 ///
 /// The search index's trigger derivation orders versions the way the reads do.
 /// ´claim:content:the-search-derivation-carries-the-version-ordering-rule´
 #[test]
 fn the_search_index_derivation_orders_versions_the_same_way() {
-    let migrations = crate_dir().join("../../migrations");
-    let mut definitions: Vec<(PathBuf, String)> = Vec::new();
-    for entry in fs::read_dir(&migrations).expect("migrations are readable") {
-        let path = entry.expect("entry").path();
-        let flat = read_flat(&path);
-        if !flat.contains("FUNCTION search_index_rederive(") {
-            continue;
-        }
-        let body = derivation_body(&flat);
-        let key = body.matches(KEY).count();
-        let full = body.matches(WITH_PENDING).count();
-        let short = short_form_count(body, full);
-        assert_eq!(
-            key,
-            full + short,
-            "{}: {key} version orderings, {full} with the pending key and \
-             {short} without — the rest are a third form",
-            path.display()
-        );
-        definitions.push((path, body.to_owned()));
-    }
-    definitions.sort_by(|a, b| a.0.cmp(&b.0));
-    let (path, body) = definitions
-        .last()
+    let (path, flat) = migrations_in_order()
+        .into_iter()
+        .rfind(|(_, flat)| flat.contains("FUNCTION search_index_rederive("))
         .expect("the derivation vanished from the migrations");
+    let body = derivation_body(&flat);
     let key = body.matches(KEY).count();
     let full = body.matches(WITH_PENDING).count();
     assert_eq!(
@@ -145,29 +155,38 @@ fn the_search_index_derivation_orders_versions_the_same_way() {
     );
 }
 
-/// The indexes that serve the rule encode it again. Each `*_current_idx`
-/// carries the same key sequence the queries order by.
+/// The indexes that serve the rule encode it again. Each `*_current_idx`,
+/// as the latest migration to create it defines it, carries the same key
+/// sequence the queries order by.
 ///
 /// The current-version indexes order versions the way the queries do.
 /// ´claim:content:the-indexes-carry-the-version-ordering-rule´
 #[test]
 fn the_current_version_indexes_carry_the_same_rule() {
-    let migration = crate_dir().join("../../migrations/20260821000002_l1_ordered_versions.sql");
-    let flat = read_flat(&migration);
-    let definitions: Vec<&str> = flat
-        .match_indices("_current_idx ON")
-        .map(|(i, _)| {
-            let rest = &flat[i..];
-            &rest[..rest
-                .find(INDEX_END)
-                .map_or(rest.len(), |e| e + INDEX_END.len())]
-        })
-        .collect();
-    assert_eq!(definitions.len(), 7, "seven version tables carry the rule");
-    for definition in definitions {
+    let migrations = migrations_in_order();
+    for index in CURRENT_INDEXES {
+        let header = format!("CREATE INDEX {index} ON");
+        let (path, definition) = migrations
+            .iter()
+            .filter_map(|(path, flat)| {
+                let start = flat.rfind(&header)?;
+                let rest = &flat[start..];
+                let end = rest
+                    .find(INDEX_END)
+                    .map_or(rest.len(), |e| e + INDEX_END.len());
+                Some((path, &rest[..end]))
+            })
+            .next_back()
+            .unwrap_or_else(|| panic!("no migration creates {index}"));
         assert!(
             definition.contains(WITHOUT_PENDING),
-            "an index orders versions differently from the queries: {definition}"
+            "{}: {index} orders versions differently from the queries: {definition}",
+            path.display()
+        );
+        assert!(
+            !definition.contains("act_time"),
+            "{}: {index} still orders by act time: {definition}",
+            path.display()
         );
     }
 }
