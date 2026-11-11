@@ -102,11 +102,11 @@ ALWAYS the trigger reads the people extra by the borrowed view's account's name,
 
 ALWAYS Order's line reads Ranked puts what's closest to @mira first — the view you're browsing from. Newest ignores it and lists by time. GIVEN the feed borrows a view
 
-ALWAYS the topic chips are the topics the borrowed view's account holds and is for, under Topics @mira holds and is for. A topic @mira holds against stays a record — it just never narrows a feed. GIVEN the feed borrows a view
+ALWAYS the topic chips are the topics the borrowed view's account holds and is for, under Tags @mira holds and is for. A tag @mira holds against stays a record — it just never narrows a feed. GIVEN the feed borrows a view
 
 ALWAYS Show what you've already seen, the kinds, the kinds of post, Also show, Reset and the "?" keep the reader's own first person GIVEN the feed borrows a view
 
-ALWAYS All your topics keeps its words and opens the reader's own Your topics, never the borrowed view's account's list GIVEN the feed borrows a view
+ALWAYS All your tags keeps its words and opens the reader's own Your tags, never the borrowed view's account's list GIVEN the feed borrows a view
 
 ALWAYS the topic section does not stand GIVEN the feed borrows a view and the borrowed view's account holds no topic it is for
 

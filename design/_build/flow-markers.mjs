@@ -206,9 +206,9 @@ Object.assign(FLOW_MARKERS, {
     /* The topics door takes the board's next free number, the way the band's
        chats and bell and the card's share all did — the page's numbering is
        append-only, so a row added above the recents does not renumber them. */
-    { n: 10, find: ">Your topics</span>", tag: "button" },
+    { n: 10, find: ">Your tags</span>", tag: "button" },
   ],
-  /* Every row on Your topics opens the same page, so they share one via —
+  /* Every row on Your tags opens the same page, so they share one via —
        the tag page in its HELD state, because a row on this list is held by
        definition. */
   YourTopics: [
@@ -292,7 +292,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "already seen", tag: "label" },
     { n: 5, find: ">Reset</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
-    { n: 7, find: ">All your topics</button>", tag: "button" },
+    { n: 7, find: ">All your tags</button>", tag: "button" },
     { n: 8, find: ">Done</button>", tag: "button" },
     // The People rows (ruling 77): one choice, two rows, one number — on
     // both of the `people` chip's copies.

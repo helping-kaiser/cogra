@@ -2810,11 +2810,11 @@ topic stance row and with it the face, the accessible path and the same
 else in the ruling moved: `TagPageHeld` still wires no gate, for the
 reason given.
 
-### 82 · A tag page reached from Your topics goes back to the wrong place · *design* · **ruled + wired**
+### 82 · A tag page reached from Your tags goes back to the wrong place · *design* · **ruled + wired**
 
 Surfaced by the topic round 2026-09-14. The tag round ruled the page a
 subpage of search, so its arrow is a LINK back to Explore rather than
-history — `Back to Explore`, always. Your topics is now a second route
+history — `Back to Explore`, always. Your tags is now a second route
 to it, one level further out, so a reader who opens `#saltmaps` from
 their own list and presses back lands on Explore rather than on the list
 they came from.
@@ -2825,7 +2825,7 @@ the skip is accepted as the cost of a link. The tag round's reasoning
 for a link is real and this round did not disturb it.
 
 Ruled by jakob 2026-09-15 — back goes where the reader came from, and
-the label names that origin: `Back to Explore`, `Back to Your topics`,
+the label names that origin: `Back to Explore`, `Back to Your tags`,
 `Back to feed`. A cold entry with no history, which is what a shared URL
 is, falls back to `Back to Explore`. The whole family carries it —
 `TagPage`, `TagPageHeld`, `TagPageEmpty` — as the graph's `back`
@@ -4935,7 +4935,7 @@ make alone:
   words, as the card anchor rests. The tag page leaves about 254px and
   fits handles to roughly twenty characters.
 - **The filter's topic door under a borrowed view.** The topic chips
-  become the vantage's topics, but `All your topics` opens the reader's
+  become the vantage's topics, but `All your tags` opens the reader's
   own list, and no page lists another account's topics. Keep, drop
   under a borrowed view, or re-voice to a page still owed. Until ruled
   the door stands as drawn. Note too that a guest now sees the

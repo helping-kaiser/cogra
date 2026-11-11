@@ -1467,7 +1467,7 @@
     },
     {
       "name": "walk-your-topics",
-      "description": "Your topics, Explore's door, lists every topic held; a row opens that topic's page, held, and its stance face opens the pad in the topic family's own words.",
+      "description": "Your tags, Explore's door, lists every topic held; a row opens that topic's page, held, and its stance face opens the pad in the topic family's own words.",
       "start": { "board": "Explore", "via": 10 },
       "waypoints": [
         { "board": "YourTopics", "via": 2 }

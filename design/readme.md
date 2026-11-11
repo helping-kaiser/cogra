@@ -614,7 +614,7 @@ A funnel arrow carries no origin noun: `Join` reads a plain `Back`, and
 About opened from the join form keeps that plain `Back`.
 
 **A sheet that launched a forward navigation comes back.** A chip in the
-comments sheet, a holder in an opinions sheet, `All your topics` in the
+comments sheet, a holder in an opinions sheet, `All your tags` in the
 filter, `Cite in a new post` in a comment's menu: back from wherever it
 led returns the screen with its sheet up, at the sheet's offset, its
 expanded branches still expanded. The cite's wizard X returns the thread
@@ -5542,14 +5542,14 @@ slice-3 remainders beside it. The round's premise is one sentence:
 - **HELD IS THE PREDICATE**: a topic is held while the viewer's netted
   bundle is not `(0, 0)`. The TOPIC FEED is narrower than that — it
   admits positive association only. A negative Affinity stands as a
-  public record and stands on *Your topics*; its topic simply never
+  public record and stands on *Your tags*; its topic simply never
   enters a feed. The two rules are deliberately not the same rule, and
   only one surface shows the difference (the filter's own hint).
 - **AFFINITY IS ITS OWN KIND** under the applicant once-each rule.
 - **THE WORD "FOLLOW" NEVER APPEARS ON SCREEN.** copy-voice's ban
   (written for the notifications round) extends to topics and is now
   unconditional. Docs and dev vocabulary keep the word; boards and
-  copy-voice may not. The list is **Your topics**.
+  copy-voice may not. The list is **Your tags**.
 - **THE TAG PAGE GAINS A STANCE ROW** — `StanceControl` `wide`, the
   profile's one-primary-action idiom, under the title and above the
   list. That position is the whole fix for item 46.5: the tag round drew
@@ -5711,7 +5711,7 @@ none of them needing a board. Ruled by jakob the same day.
   applicant boards already answer an exhausted kind, so the page needs
   no wiring of its own for it.
 - **Back from the tag page is history.** Back to where you came from,
-  and the label names it: `Back to Explore`, `Back to Your topics`,
+  and the label names it: `Back to Explore`, `Back to Your tags`,
   `Back to feed`. A shared URL with no history behind it falls back to
   `Back to Explore`. This replaces the tag round's link to Explore — a
   second route to the page turned that link into a skip over the place
@@ -5729,7 +5729,7 @@ none of them needing a board. Ruled by jakob the same day.
   |---|---|
   | Explore, at rest | `Back to Explore` |
   | Explore, mid-query | `Back to the search` |
-  | Your topics | `Back to Your topics` |
+  | Your tags | `Back to Your tags` |
   | the feed, in any of its states | `Back to feed` |
   | a post, through its tags-and-references sheet | `Back to the post` |
   | a comment's chips, in the thread | `Back to the comments` |
@@ -5799,7 +5799,7 @@ a pad nobody could open. This round rules the words and draws the pad.
   which is what a canvas review cannot catch. It is also the only board
   where the way out of a held topic is visible: held, the pad carries it,
   and it is the same ceremony every held record has, at this topic's own
-  price. The row cannot show it and *Your topics* deliberately offers no
+  price. The row cannot show it and *Your tags* deliberately offers no
   per-row removal, so without this board the door existed in the code
   and nowhere on the canvas.
 - **The gate**: boards **194 → 195** (`TagPageHeldPad`), edges
@@ -8643,7 +8643,7 @@ below have their home here or where named.
 - **Comments.** Square is the comment scale's shape in every docblock.
   The comment edit asks only when it changed since it opened,
   `Discard the changes?`; a bug notice at comment scale offers `Discard
-  the reply` or `Discard the edit`. Your topics' strongest-first order
+  the reply` or `Discard the edit`. Your tags' strongest-first order
   is blessed. Screens write MB; the caps stay enforced in MiB.
 - **Search.** `ExploreUnscoped` draws item 105's line for Comments with
   no scope.
@@ -9978,7 +9978,7 @@ drafted and wait for his review (copy-voice marks each).
   hidden-account snackbars, an applicant's waiting-opinion snackbars,
   the vouch card's body, History, Saved, Notifications and the own
   profile. Explore never borrows — the band never stands there, a guest
-  has no Your topics, and an applicant's lists are their own. The trace's
+  has no Your tags, and an applicant's lists are their own. The trace's
   `Why this reached you` stays: the thing did reach the reader.
 - **Done re-queries only for Kinds or the topic.** A Done whose staged
   changes are all the device's own — the people row and its sign, the
@@ -10548,7 +10548,7 @@ from the tree and the bar's Explore slot opens `Explore`.
   key-away plates, `FeedSheet`, `FeedNothing` and `FeedKinds` join
   `feed`; `ComposeDetailsReused` joins `composeDetails`.
 - **A repeated row keys by its content where it has one**: the opinions
-  sheet's `opinion` by the holder's handle, Your topics' `heldTopic`
+  sheet's `opinion` by the holder's handle, Your tags' `heldTopic`
   and the tag picker's rows by the name. Where content cannot tell two
   rows apart, by place: `citation` (newest first), `pick`, `actRow`,
   `picture`, the picker's `result`.
@@ -10626,7 +10626,7 @@ docblock and sidecar, *blessed (jakob 2026-11-10)*.
   the video edits' feet hold at 4 and 3, and `Cover changed` is no row. A
   clip post's edit carries its References block.
 - **The empty and removed faces.** History's tag card that nothing carries,
-  Your topics empty (`0 held` on the door, no second line before the count
+  Your tags empty (`0 held` on the door, no second line before the count
   arrives) and a held topic whose name was removed (`Removed under the
   platform's rules`, opening nothing), the post-scale opinions and cited-by
   sheets empty, and the kept picks' spoken drop's region.

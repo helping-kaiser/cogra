@@ -1630,7 +1630,7 @@ const KEPT_PICKS = [
   { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 } },
   { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 }, consequence: "This takes you back to zero." },
   { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 }, removed: "Removed by its author" },
-  { kind: "topic", name: "saltmaps", sub: "Topic", pair: { pDirected: 0.6, pInterest: 0.35 } },
+  { kind: "topic", name: "saltmaps", sub: "Tag", pair: { pDirected: 0.6, pInterest: 0.35 } },
 ];
 /* The family word a kept pick's seal row names it by: an opinion on a post
    or a person, a feeling about a topic. */
@@ -4479,7 +4479,7 @@ const AFFINITY_SEVERANCE = {
   gone: (name) => `No opinion towards ${name}.`,
   zero: "No opinion",
   landing: "This leaves you with no opinion towards it.",
-  help: "Disconnect takes everything you've said about the topic to nothing. It has its own confirmation, and each thing you've said is cleared by its own signature.",
+  help: "Disconnect takes everything you've said about the tag to nothing. It has its own confirmation, and each thing you've said is cleared by its own signature.",
   helpAlternates: "Disconnect takes everything to nothing, and each thing you've said is cleared by its own signature.",
 };
 
@@ -4925,7 +4925,7 @@ const HELD_TOPICS = [
 /* WHAT THE FEED FILTER MAY NARROW TO — derived, never listed twice. The topic
    feed admits POSITIVE association only (jakob's predicate), so the section's
    chips are the held set minus the ones held against; deriving it here means
-   the filter and Your topics can never disagree about who is missing and why. */
+   the filter and Your tags can never disagree about who is missing and why. */
 const FEED_TOPICS = HELD_TOPICS.filter((topic) => topic.pair.pDirected > 0).map((topic) => topic.name);
 
 /* THE PEOPLE SECTION IN BOTH ITS STATES, for the two boards that host the
