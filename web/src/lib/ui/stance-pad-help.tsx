@@ -50,12 +50,12 @@ export function alternatesHelp(axes?: StanceAxes): readonly string[] {
 export function unreachableHelp(axes: StanceAxes | undefined, targetLabel: string): readonly string[] {
   // THE FIRST LINE NAMES THE LIST THE TARGET STAYS ON, by the label's kind
   // (StanceReadout.jsx `unreachableHelp`, round 21): a person stays under
-  // `Your people`, a topic on `Your topics`; a post or a comment sits on no
+  // `Your people`, a tag on `Your tags` (round 30); a post or a comment sits on no
   // list of the reader's, so its line stops at the opinion.
   const stays = targetLabel.startsWith("@")
     ? `${targetLabel} stays under Your people`
     : targetLabel.startsWith("#")
-      ? `${targetLabel} stays on Your topics`
+      ? `${targetLabel} stays on Your tags`
       : null;
   return [
     stays === null ? "It still counts among your opinions." : `It still counts among your opinions — ${stays}.`,

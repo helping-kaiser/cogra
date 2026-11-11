@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { MonogramAvatar, monogramOf } from "./monogram-avatar";
+import { MonogramAvatar, monogramOf, monogramRole } from "./monogram-avatar";
 
 describe("monogramOf", () => {
   it("takes the first letter, uppercased", () => {
@@ -50,12 +50,24 @@ describe("MonogramAvatar", () => {
     expect(document.querySelector("img")).toBeNull();
   });
 
-  it("takes the size it is given, both as a box and as a mark", () => {
-    render(<MonogramAvatar name="Mira" size={24} testId="avatar" />);
+  it("takes the size it is given as a box, and the master's role for its disc", () => {
+    render(<MonogramAvatar name="Mira" size={24} tier="sm" testId="avatar" />);
     const avatar = screen.getByTestId("avatar");
     expect(avatar.style.width).toBe("24px");
-    // The mark scales with the disc rather than taking a fixed type role, or a
-    // 24px avatar would overflow.
-    expect((screen.getByText("M") as HTMLElement).style.fontSize).toBe("10px");
+    expect((screen.getByText("M") as HTMLElement).className).toBe("text-label-small [font-weight:500]");
+  });
+
+  // `ActorChip.jsx` MonogramAvatar: sm/md/lg discs read their roles whole; a
+  // disc sized by number label-large below 56px, headline-small from 56.
+  it.each([
+    [24, "sm", "text-label-small"],
+    [32, "md", "text-label-medium"],
+    [64, "lg", "text-headline-small"],
+    [32, undefined, "text-label-large"],
+    [40, undefined, "text-label-large"],
+    [56, undefined, "text-headline-small"],
+    [80, undefined, "text-headline-small"],
+  ] as const)("a %ipx disc (%s) reads %s", (size, tier, role) => {
+    expect(monogramRole(size, tier)).toBe(role);
   });
 });

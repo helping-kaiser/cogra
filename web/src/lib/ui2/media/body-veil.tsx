@@ -182,7 +182,7 @@ export function BodyVeil({
               type="button"
               data-testid={`${testId}-reveal`}
               onClick={reveal}
-              className="cg-state cg-focus cg-hit flex-none cursor-pointer border-0 bg-transparent p-0 font-sans text-[length:var(--text-label-small)] [font-weight:400] [line-height:normal] text-on-surface-variant underline"
+              className="cg-state cg-focus cg-hit flex-none cursor-pointer border-0 bg-transparent p-0 font-sans text-label-small text-on-surface-variant underline"
             >
               {revealLabel}
             </button>

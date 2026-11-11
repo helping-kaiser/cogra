@@ -25,10 +25,28 @@ export function monogramOf(name: string): string {
   return [...trimmed][0]!.toUpperCase();
 }
 
+/** The master's named discs (`ActorChip.jsx` `MonogramAvatar` `size`): 24, 32 and 64px. */
+export type MonogramTier = "sm" | "md" | "lg";
+
+/**
+ * The monogram's type role (`ActorChip.jsx` `MonogramAvatar`): a named disc
+ * takes its role whole — `sm` label-small, `md` label-medium, `lg`
+ * headline-small; a disc sized by number takes label-large below 56px and
+ * headline-small from 56. The weight is the master's one-part override, 500
+ * on every disc.
+ */
+export function monogramRole(size: number, tier?: MonogramTier): string {
+  if (tier === "sm") return "text-label-small";
+  if (tier === "md") return "text-label-medium";
+  if (tier === "lg" || size >= 56) return "text-headline-small";
+  return "text-label-large";
+}
+
 export function MonogramAvatar({
   name,
   src,
   size = 40,
+  tier,
   testId,
   node,
   redacted = false,
@@ -36,6 +54,8 @@ export function MonogramAvatar({
   name: string;
   src?: string | null;
   size?: number;
+  /** The master's named disc this one is, which picks its type role (`monogramRole`). */
+  tier?: MonogramTier;
   testId?: string;
   /** The registered node this avatar is, which then names it instead of `testId`. */
   node?: DataNode;
@@ -89,14 +109,8 @@ export function MonogramAvatar({
       ) : (
         <span
           aria-hidden="true"
-          // The monogram scales with the disc rather than taking a type role:
-          // this is a drawn mark, not text a reader reads, and a fixed role
-          // would overflow the 24px avatar in a reference row.
-          // Weight 500 matches the label roles the rest of the system sets a
-          // mark in; it rides the inline style because the size does too — a
-          // bare Tailwind weight utility is exactly what type.test.ts bans, in
-          // favour of reading a role.
-          style={{ fontSize: Math.round(size * 0.42), lineHeight: 1, fontWeight: 500 }}
+          // The disc's role whole (`monogramRole`), at the master's 500.
+          className={`${monogramRole(size, tier)} [font-weight:500]`}
         >
           {monogramOf(name)}
         </span>
