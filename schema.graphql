@@ -4949,6 +4949,18 @@ type User implements Node & Actor {
 	"""
 	hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
 	"""
+	The people this user vouched in — every account whose admitting
+	vouch, the one `invitedBy` names on that account, is this user's
+	Opinion (auth.md "Approval and landing"). A vouch on an account
+	that has not landed, and a later vouch-Opinion on one that has, is
+	not one. Newest vouch first, keyset on the vouch record's
+	landing-order key; `vouchedAt` is that record's `landedAt`. The
+	admission stands whatever followed it: a stance walked back since,
+	or the account deleted since, which reads as every deleted account
+	reads. An invalid cursor is BAD_INPUT. Field-level: viewer-only.
+	"""
+	vouchedIn(first: Int, after: String, last: Int, before: String): VouchedInConnection
+	"""
 	The topics the viewer holds — every Type toward which their netted
 	Affinity bundle is not `(0, 0)`, the read-side bundle fold taken
 	across every Type at once, and nothing else: a bundle walked back
@@ -5273,6 +5285,37 @@ members as their kinds join. A union, not `Node`: a Hashtag is not a
 Node, and History serves topics (GraphQL spec §3.8, *Unions*).
 """
 union ViewHistoryItem = Post | Comment | User | Hashtag
+
+type VouchedInConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [VouchedInEdge!]!
+}
+
+"""
+An edge in a connection.
+"""
+type VouchedInEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Actor!
+	"""
+	When the viewer's vouch that let this person in landed — the vouch
+	record's `landedAt`. The list's order is that record's place in
+	the published order, newest first.
+	"""
+	vouchedAt: DateTime!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
 
 """
 Directs the executor to include this field or fragment only when the `if` argument is true.
