@@ -17,7 +17,8 @@ p{margin:0;font-size:12px;color:var(--text-secondary);line-height:1.55}b{color:v
 </head><body><div id="root"></div>
 <script type="text/babel">
 const { BottomSheet, SheetItem, SheetTitle, Card, Button, PostCard, BottomNav } = window.CoGraDesignSystem_9084ba;
-const POST_MENU = [{label:"Save"},{label:"Cite in a new post"},{label:"Hide @ada"},{label:"License terms"}];
+// A card appends the license itself; the report row stands after it (`tail`).
+const POST_MENU = [{label:"Save"},{label:"Cite in a new post"},{label:"Hide @ada"},{label:"Report",tail:true}];
 function Demo(){
   const [open,setOpen]=React.useState(false);
   return (
@@ -35,6 +36,7 @@ function Demo(){
       <SheetItem label="Cite in a new post" onSelect={()=>setOpen(false)}/>
       <SheetItem label="Hide @ada" onSelect={()=>setOpen(false)}/>
       <SheetItem label="License terms" onSelect={()=>setOpen(false)}/>
+      <SheetItem label="Report" onSelect={()=>setOpen(false)}/>
     </BottomSheet>
   </div>
   <div className="frame">

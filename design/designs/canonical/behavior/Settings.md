@@ -144,9 +144,19 @@ ALWAYS settings.clearing.footnote reads Your key lives only in this browser, and
 
 ALWAYS settings.clearing.footnote opens on the key and says the account is gone for good before it names anything else that goes
 
-ALWAYS settings.clearing carries one row, settings.clearing.erase, reading Erase everything from this browser on the web and Erase everything from this app on android, quiet like Sign out and in no error colour
+ALWAYS settings.clearing ends on settings.clearing.erase, reading Erase everything from this browser on the web and Erase everything from this app on android, quiet like Sign out and in no error colour
 
 WHEN tap settings.clearing.erase -> the dialog Erase everything from this browser? opens over settings AND NEVER anything is erased before an answer
+
+ALWAYS settings.clearing.install leads settings.clearing, reading Add CoGra to your home screen, one line and a chevron GIVEN the browser can install the web app and it is not running installed
+
+ALWAYS settings.clearing.install is absent GIVEN the web app runs installed from the home screen, or the browser can neither ask to install it nor install it by hand
+
+ALWAYS settings.clearing.install is absent on android
+
+WHEN tap settings.clearing.install GIVEN the browser can ask to install the web app (Android Chrome) -> the browser's own install prompt opens AND NEVER a dialog of ours opens
+
+WHEN tap settings.clearing.install GIVEN the browser installs by hand and never asks (iOS Safari) -> the dialog Add CoGra to your home screen opens over settings
 
 WHEN tap Manage space on the phone's own storage screen for CoGra on android -> settings opens with settings.clearing in view AND NEVER anything is cleared
 
@@ -175,3 +185,11 @@ WHEN tap Delete account GIVEN User.deletionPath reads IMMEDIATE or BY_LINK and n
 ALWAYS Delete account wears the locked look, visibly inactive at the disabled opacity and still tappable GIVEN User.deletionPath reads LOCKED
 
 WHEN tap Delete account GIVEN User.deletionPath reads LOCKED -> the snackbar reads You can delete your account once your registration lands. AND NEVER the deletion's request screen opens AND NEVER anything is deleted
+
+ALWAYS a handle change closed on while in flight carries its wait and its answer on settings.credentials.handle, the old handle standing as its value until the change is taken
+
+WHEN tap settings.credentials.handle GIVEN its second line reads Changing handle… -> NEVER the form opens
+
+ALWAYS settings.backup.kept reads That didn't sign. in the failure voice in its second line followed by Retry in its trailing slot GIVEN the kept picks' batch was closed on while it signed and did not go through, the row inert apart from its Retry
+
+WHEN tap Retry on settings.backup.kept -> the whole batch is asked to sign again AND each target's row reads Signing… under its face until the batch answers AND NEVER part of the batch is signed alone

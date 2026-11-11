@@ -52,14 +52,18 @@ WHEN the signing has not answered 5s after the press -> the line Still signing �
 
 WHEN the signing answers GIVEN the slow line stands under the acts footer -> the slow line goes
 
-WHEN press the header back arrow or the header X GIVEN the batch holds an act -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
+WHEN press the header back arrow or the header X GIVEN the batch holds an act and Sign the edit was not pressed -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
 
-WHEN press the header back arrow GIVEN the batch is empty -> the edit is left toward where it began AND NEVER a dialog asks
+WHEN press the header back arrow GIVEN the batch is empty and Sign the edit was not pressed -> the edit is left toward where it began AND NEVER a dialog asks
 
-WHEN press the header X GIVEN the batch is empty -> the edit is left AND nothing is kept or discarded AND NEVER a dialog asks
+WHEN press the header X GIVEN the batch is empty and Sign the edit was not pressed -> the edit is left AND nothing is kept or discarded AND NEVER a dialog asks
 
 WHEN tap Discard in the dialog Discard the changes? -> the changes are discarded AND the edit is left toward where it began with the post as it was AND NEVER a draft is kept
 
 WHEN the words stage opens -> the body takes focus with its caret at the end AND the keyboard rises
 
-WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
+WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND NEVER a spinner appears
+
+WHEN press Sign the edit -> the header X is named Close from the press itself AND NEVER the dialog Discard the changes? opens while it signs
+
+WHEN press the header back arrow, the header X or the system's Back GIVEN Sign the edit was pressed and has not answered -> the edit closes AND the edit goes on, its wait and its answer on the edited card as SigningAfterClose draws them AND NEVER the edit is cancelled

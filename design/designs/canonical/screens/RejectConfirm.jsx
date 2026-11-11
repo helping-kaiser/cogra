@@ -34,28 +34,54 @@
    REGISTERED under the `invites` prefix (design ⇄ impl seam 078): a dialog
    belongs to the surface it is raised over, so the page beneath keeps its
    `Invites` names and the dialog is `dialog`, its two answers `close` and
-   `keep`. */
+   `keep`. 
+   THE `answer` CHIP'S `closing` IS THE CLOSING CLOSED ON (round 37, jakob
+   2026-11-11: the reject dialogs take the same Close while they sign): past
+   200ms `Close it` reads `Closing it…`, and `Keep it` reads `Close` from the
+   press itself; it, the scrim, Back and Escape close the dialog and the
+   closing goes on, its wait and its answer on the application's own row on
+   Invites. The copy is drawn unnamed, so no path moves. */
 export const NODE = "invites";
+export const PROPS = { answer: { editor: "enum", options: ["asking", "closing"], default: "asking" } };
+export const VALS = `askingShown: this.props.answer === "closing" ? "none" : "block", closingShown: this.props.answer === "closing" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
       <InvitesBody />
 
-      <DialogSurface
-        node="dialog"
-        onScrimPress={() => {}}
-        title="Close @imke's application?"
-        body={[
-          "It leaves your list and @imke is told. Their account stays exactly as it is — signed in, and free to keep reading.",
-          "This is your call and nobody else's. Any member can still vouch them in, and @imke gets a link to ask with.",
-        ]}
-        actions={
-          <>
-            <Button variant="text" node="close">Close it</Button>
-            <Button node="keep">Keep it</Button>
-          </>
-        }
-      />
+      <div style={{ display: "{{askingShown}}" }}>
+        <DialogSurface
+          node="dialog"
+          onScrimPress={() => {}}
+          title="Close @imke's application?"
+          body={[
+            "It leaves your list and @imke is told. Their account stays exactly as it is — signed in, and free to keep reading.",
+            "This is your call and nobody else's. Any member can still vouch them in, and @imke gets a link to ask with.",
+          ]}
+          actions={
+            <>
+              <Button variant="text" node="close">Close it</Button>
+              <Button node="keep">Keep it</Button>
+            </>
+          }
+        />
+      </div>
+      <div style={{ display: "{{closingShown}}" }}>
+        <DialogSurface
+          onScrimPress={() => {}}
+          title="Close @imke's application?"
+          body={[
+            "It leaves your list and @imke is told. Their account stays exactly as it is — signed in, and free to keep reading.",
+            "This is your call and nobody else's. Any member can still vouch them in, and @imke gets a link to ask with.",
+          ]}
+          actions={
+            <>
+              <Button variant="text" busy busyLabel="Closing it…">Close it</Button>
+              <Button>Close</Button>
+            </>
+          }
+        />
+      </div>
     </>
   );
 }

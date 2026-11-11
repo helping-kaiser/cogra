@@ -542,9 +542,11 @@ rule covers all three button variants:
   round): never hidden, and never left live only to refuse on press — the
   reader sees the commitment exists and reads what it is waiting for.
   The reason is one quiet line right above the commit, in the voice for
-  what something waits on — `Waiting for both passwords` — and the
+  what something waits on — `Waiting for your email` — and the
   commit's description (`WaitingCommit`; drawn on every credential and
-  entry form, jakob 2026-10-05; the reasons blessed the same day).
+  entry form, jakob 2026-10-05; the reasons blessed the same day). A wait
+  that explains itself carries no line — change password's three fields
+  (jakob 2026-11-11).
   **The law gates commits; a handoff that only prefills another app's
   draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
   by email` stays live from an empty field, because what it enforces is
@@ -2317,9 +2319,11 @@ entry first". What stands:
   raised: the thread is `postDetail.threadSheet` from a feed, History or
   Saved card, a profile's posts and the stream alike, and what it raises
   is the detail's (`postDetail.menuSheet`, `.licenseSheet`, `.dialog`).
-  A sheet a host's own card raises — the card's ⋮ and the rows it opens —
-  is drawn over that host, so it takes the host's prefix
-  (`feed.menuSheet`, `feed.licenseSheet`). One rule, two readings.
+  The menu a host's own card raises — the card's ⋮ — is drawn over that
+  host, so it takes the host's prefix (`feed.menuSheet`,
+  `history.menuSheet`). The sheets its rows raise — license, report,
+  remove — are drawn once and keep that one path wherever they are raised
+  (round 32; round 36's graph).
 - **`_build/check-help-notes.mjs` holds the "? contents" notes to
   copy-voice** (item 109): each note section names a dialog of
   copy-voice's *The "?" dialogs* and must carry its blessed text, and
@@ -7691,9 +7695,10 @@ page.
   `OWN_COMMENT_MENU`). The row stands as the last of the acts: after
   Save and Cite, before the two readings, with the license closing the
   menu. That is the own-post menu's place for it, and the place
-  `ChatMessageMenuOwn` takes at message scale. The menu has no Edit
-  row, because the card carries Edit. It has no sensitive row, because
-  a comment's mark rides its edit. Every comment ⋮ edge gains the
+  `ChatMessageMenuOwn` takes at message scale. `Edit` stands before it,
+  the own-post menu's place, and is the one door to the comment's edit:
+  no card carries an Edit button (jakob 2026-11-11). It has no sensitive
+  row, because a comment's mark rides its edit. Every comment ⋮ edge gains the
   own-comment case.
 - **The confirm is the post's dialog with the nouns swapped**
   (`CommentRemoveConfirm`). `RemoveConfirm`'s body moved to `_shared` as
@@ -7909,10 +7914,9 @@ jakob's rulings from his review of the day's rounds.
 - **Your own comments say so in the thread** (jakob: "'own' should be
   added to the existing boards so it is clear that you can interact
   differently with your own comments"). @sol's 3h comment and the landed
-  reply wear `CommentCard`'s `own`: `Edit` beside `Reply`, the anatomy
-  `ReplyMedia` drew first, wired to `CommentEdit` on `ReplyEntry` and
-  `ReplySettled`. Their ⋮ holds the own menu's acts. The removed comment
-  keeps `own` and loses `Edit` with its payload.
+  reply carry the own menu in their ⋮, `Edit` among its rows, wired to
+  `CommentEdit` from `CommentMenuOwn`. The removed comment loses its ⋮
+  with its payload.
 - **A pick stages and the picker stays open** (both pickers, the shared
   anatomy's law). A row tap stages at once, and so does the tag
   picker's action key on the typed name; the reader goes on picking.
@@ -8227,12 +8231,14 @@ newer-version message, which he widened.
 - **The post seal's key notice keeps the header's "?"** beside its own,
   by the stopper exception, as its reply-scale twin does.
 - **A signed reply lands by scrolling the thread to its card** (K6.6's
-  direction): the return anchors to the new card at its branch's end.
+  direction): the return anchors to the new card on its parent.
   `ReplySettled` keeps its drawn offset.
-- **While a seal signs, it holds the reader.** For the label swap's
-  duration the back arrow, Back and the X are inert with the commit; the
-  fact rows stay readable; an app killed mid-sign says the outcome on
-  the next open with the ordinary settled or failure notice. Past 5s
+- **Once a seal's commit is pressed, the way out only closes it** (round
+  37, jakob 2026-11-11). From the press Back reads `Close` and the X is named
+  so; they and the back arrow close the seal and the act goes on, its wait
+  and its answer where it lands (`SigningAfterClose`); a seal left open keeps
+  its fact rows readable; an app killed mid-sign says the outcome on the
+  next open where the act lands. Past 5s
   the acts card's subline swaps to `Still signing — the network is slow
   right now.` in olive `--tertiary` and nothing feigns progress
   (`SealSigningSlow`, `ActsCard`'s `noteTone`) — §4's *Loading* names it
@@ -10491,11 +10497,11 @@ jakob after his hand test.
   spent.` where the fault line stands — the act dimmed, no Retry, `Keep
   it` the way back. The board's `answer` chip draws it.
 - **The way out while Set signs.** Once Set is pressed nothing cancels
-  the act: past 200ms Cancel reads `Close`, and it, the press outside, Back
-  and Escape only close the pad; the wait passes to the target's row, a
+  the act: from the press Cancel reads `Close`, and it, the press outside,
+  Back and Escape only close the pad; the wait passes to the target's row, a
   hold's (`Signing…`, then the face and the snackbar, or `That didn't
   sign.` with a Retry that asks the same pick again). `PadFailed`'s
-  `moment` chip draws `setting` and `closed` (round 34).
+  `moment` chip draws `pressed`, `setting` and `closed` (rounds 34, 37).
 - **The key-absent pad's "?"** says only what its notice does not: where
   the key lives, and what waits for the restore.
 - **The target label's family**: `this post`, `this comment`, `@ada`,
@@ -11086,11 +11092,10 @@ wait (network issues) but the act is done"; one rule for every signing
 surface.
 
 - **Once a commit is pressed, the act is done: nothing cancels it.** The
-  way out only closes the surface so the reader need not wait. Past 200ms,
-  beside the in-flight label, the control that read `Cancel` or `Keep it`
-  reads `Close` in the same place, live and never dimmed; inside the 200ms
-  nothing on screen changes, and a press on the way out closes the surface
-  all the same.
+  way out only closes the surface so the reader need not wait. From the
+  press itself the control that read `Cancel` or `Keep it` reads `Close` in
+  the same place, live and never dimmed (round 37); the in-flight label
+  stands beside it once 200ms pass.
 - **The pad and the alternates.** Closed mid-signing, the wait passes to
   the target's row as a hold's (`Signing…`, then the face and the
   snackbar, or `That didn't sign.` with Retry). `StanceControl`'s and
@@ -11173,6 +11178,242 @@ option b), with two of his hand-test findings (seam 275).
   `chats.*` added, nothing removed. The fifteen boards that draw the
   numeric 32 disc change only the letter's role inside the fixed 32px
   box.
+
+### Round 36, the host-card menus — 2026-11-11
+
+jakob's answers to the host-menu questions (H1–H7: "as rec" on all but H4,
+which keeps the row), and two fixes to the written law (backlog 149).
+
+- **One menu board per place a card's menu is raised.** History: the
+  post's, the comment's, your own post's, your own comment's
+  (`HistoryPostMenu`, `HistoryCommentMenu`, `HistoryPostMenuOwn`,
+  `HistoryCommentMenuOwn`). Saved: the post's and the comment's, the first
+  row reading `Unsave` (`SavedPostMenu`, `SavedCommentMenu`). The profile's
+  posts and comments views, someone else's and your own
+  (`ProfilePostsMenu`, `ProfilePostsMenuOwn`, `ProfileCommentsMenu`,
+  `ProfileCommentsMenuOwn`). The tag page's post menu (`TagPageMenu`). The
+  profile card's on the feed (`FeedProfileMenu`). Each menu's rows are the
+  feed's or the detail's atom; only the host beneath differs. History and
+  Saved add no row of their own.
+- **The sheets beneath are drawn once**: License, Report and Remove raise
+  the feed's and the thread's drawn sheets over the host, and no host draws
+  its own (backlog 161).
+- **Own content joins History** like anything seen, and its cards raise the
+  own menus (H1).
+- **The profile card's menu ends with Report** (H2): Save · Mention in a
+  new post · Hide · Report. **On a hidden person's card the Hide row reads
+  `Unhide`**, Settings · hidden accounts' word, with that sheet's snackbar
+  (H3, law only — backlog 159).
+- **`Hide @ada` stays on @ada's own posts tab** (H4); its aftermath is the
+  profile menu's: the reader stays on the profile.
+- **A comment's menu rises over a list host unstacked** (H5): the profile's
+  Comments tab, History and Saved; Cited by, Opinions on this, License and
+  Report rise over that host too. Stacked over the thread only when opened
+  in the thread.
+- **A guest's tap on any row of a post's or a comment's menu opens the
+  guest gate** (H6), the profile menu's rule; nothing new is drawn.
+- **A card's own ⋮ is the menu its sheet draws** (F1, F2): the card master
+  appends the license before a `tail` row, so Report stays last; the shared
+  post fixtures carry the reader's post menu less the license, the comment
+  fixtures the comment's. No board's pixels move (closed menus draw no row);
+  the rest of the sweep is backlog 162.
+- **The profile's settling post reads `now`** (`ProfilePosts`' `posts`
+  chip at `settling`), as every drawn settling card does.
+- **Not drawn**: the own profile's posts and comments views as a setting on
+  their host boards would re-key registered paths (backlog 160); the own
+  views stand beneath the own menu boards.
+- **The gate**: graph edge lines **2177 → 2255** (the twelve boards' rows
+  and scrims; eight host doors now land on them); flows hold at **227**,
+  three re-blessed (`unsave-and-undo` through `SavedPostMenu`;
+  `cite-a-post` and `mention-someone`, whose first step now names the new
+  boards' rows). The registry **169 → 181 screens**, **6134 → 6771**
+  board paths, **1934 → 1972** distinct — `history.menuSheet.*`,
+  `saved.menuSheet.*`, `tagPage.menuSheet.*`, the profile menu's card rows
+  and `feed.menuSheet.mention` added, no path, key or key rule changed.
+
+### Round 37, Close on every signing surface; the act shows where it lands — 2026-11-11
+
+jakob's answers to round 34's four questions (Q34-1 "b) sounds best please
+go for this option first", Q34-2 "yep", Q34-3 "yes", Q34-4 "swap at the
+press everything else would be missleading").
+
+- **The way out reads `Close` from the press**, the one named exception to
+  the 200ms law: the commit's own in-flight label still waits the 200ms.
+  `PadFailed`'s `moment` chip gains `pressed` (`Close` beside `Set`);
+  `StanceControl`'s and `StanceAlternates`' `signing` gain `"pressed"`. The
+  dialogs' drawn waiting states already showed `Close` and gain no setting.
+- **The pattern: an act's wait and its failure where it lands**
+  (`SigningAfterClose`, the patterns page). The wait is the commit's own
+  in-flight label in the pending marker's quiet register where the act will
+  show — a post's `Signing and publishing…` at the feed's head, a reply's
+  `Signing comment…` on its parent, an edit's `Signing…` under the
+  edited card; nothing stands as a card before its signature. The failure
+  stands in the same place in the failure voice with `Retry`: an edit's is the
+  row's `That didn't sign.`; a post's and a reply's, which never became a
+  card, are `Your post didn't sign.` and `Your comment didn't sign.`
+  (*drafted — review-pending*). A post's draft stays on the device until the
+  signature is taken, so New post's draft card reaches it. Never the
+  snackbar.
+- **Every seal and edit closes from the press**: Back reads `Close`, the X is
+  named so, and they and the back arrow close the surface while the act goes
+  on. Each board gains a `signing` setting (`ComposeSeal`, `ReplySeal`,
+  `ComposeSealUploading`, `ReplySealUploading`, `ProfileEditSeal`,
+  `AvatarSeal`, `KeptPicksSeal` on `state`; `CommentEdit`,
+  `CommentEditVideo`, `EditComposeVideo`, `EditWords` on `signing`);
+  `EditCompose`'s `signing: slow`, `SealSigning` and `SealSigningSlow`
+  already drew it. A press held at the upload gate is the act: Close leaves,
+  the uploads finish and the signing proceeds; an upload failing after Close
+  is the post's or the reply's failure in the pattern. `SealFooter` and
+  `WizardHeader` gain `closing`. The profile change's landing place (backlog
+  165) and the kept picks' failure place (166) wait for jakob.
+- **The handle change** leaves the dialog and the form for settings; the
+  Handle row carries `Changing handle…`, `That didn't go through.` with
+  `Retry`, and `That handle is taken.`, the row still opening the form
+  (`Settings`' `handle` chip).
+- **The remove and reject dialogs** read `Close` from the press; their act's
+  wait stands on its row (`Removing…`, `Closing it…`), each dialog's
+  `answer` chip drawing `removing` or `closing`; the failure's words on the
+  row wait for jakob (backlog 167). Backlog 155 and 156 close.
+- **The gate**: one board added, `SigningAfterClose`, a reference plate on
+  the patterns page; edges **2178 → 2179** (`Settings`' handle `Retry`, a
+  self edge), the seals' Back edges gaining their Close case; flows hold at
+  **227**. The signing, removing and closing copies and the Handle row's
+  states are drawn unnamed beside the named controls, so the registry holds
+  at **169 screens**, **6134** board paths, **1934** distinct.
+
+### Round 38, the password twice and the people you let in — 2026-11-11
+
+jakob's hand-test findings (seam 275) and his answers J1–J3 and Q6–Q8 to
+rounds 34 + 35 ("as rec", "sounds fine", "blessed").
+
+- **Every new password is asked twice.** `Join`, `ResetNew` and
+  `ChangePassword` take `Repeat password` under the new password, masked
+  like it, with its own reveal control and no hint; the new password's
+  return key reads `next`. When the two differ, the press refuses with `The
+  two passwords don't match.` under the repeat field (*both blessed*), the
+  way each form refuses a short password — on the press, re-checking as
+  either password changes, the commit waiting on every field. Drawn at rest
+  on all three and refused on `JoinErrors`, beside its other two lines;
+  `ResetNew` and `ChangePassword` draw no refused state, and their sidecars
+  carry the line. The field is `confirm` (`RecoveryCode`'s name for the
+  field that types a thing back). Client-side only: no API field changes.
+- **The people you let in.** `Invites` lists, between the applications and
+  the live links, everyone the reader vouched in, newest first, under
+  `People you let in` (*blessed*): the application's row without its
+  control — face, name, age — opening the person's profile with `Back to
+  Invites` (the profile's table, by its construction; *its wording jakob's at
+  review*). A deleted person's row reads as a deleted asker's does. Absent
+  until someone is let in (backlog 171). Drawn on `Invites`' `letIn` chip
+  (`people`, `deleted`); registered `invites.peopleLabel`, `invites.person`
+  and `invites.redactedPerson`, keyed by the person's id. Its read is owed by
+  the implementation side: the people this account vouched in, newest first,
+  with the time each vouch landed. Open: an Invites with only these people
+  (backlog 170), a long list and a hidden person (backlog 174).
+- **Join's heading names the inviter whole**: `Mira Voss invited you`, the
+  display name else the handle; the heading wraps and never cuts the name.
+- **The intro names the inviter by handle**: `@mira's link is your first way
+  in to everyone else, and theirs to you.` (backlog 158 closed).
+- **The stream's keys and wheel are desktop web's** — a desktop browser, a
+  device with no touch; the loop and posts-only lines hold everywhere.
+- **The crop's shape switch shifts a picture just enough** that its edge
+  meets the new frame, never further, beside the fill floor.
+- **The crash screen's words are blessed** (`This shouldn't have happened`,
+  `Reload`).
+- **Long names and handles** (jakob's question with J1): swept, not ruled —
+  backlog 173 lists every family drawn outside `ActorChip`, what the tree
+  says and what the markup does at the longest legal handle and name.
+- **The gate**: no board added; `Invites` gains the `letIn` chip. Five
+  edges added (each form's `Repeat password`, the people's rows), **2261**
+  in check-flows' count; flows hold at **227**, none re-blessed. The
+  registry holds at **181 screens**, **6771 → 6799** board paths, **1972 →
+  1996** distinct — `join.confirm`,
+  `reset.confirm`, `changePassword.confirm` and `invites.peopleLabel`,
+  `invites.person`, `invites.redactedPerson` with their parts, and the two
+  rows' key rules; nothing removed.
+
+### Round 39, the install row; four leftovers — 2026-11-11
+
+jakob's ruling on the installable web app (seam 285: "and yes ask design to
+add this to settings"; "A row in Settings" in the design session). The row's
+details are a proposal drawn for his review.
+
+- **The install row.** `Add CoGra to your home screen` (*review-pending*), a
+  `SettingsRow` with its chevron and no second line, leads the Clearing data
+  group — the group whose rows concern the app on this device; the wipe stays
+  its last row. Where the browser asks by itself (Android Chrome) the tap
+  raises its own install prompt; where it installs only by hand (iOS
+  Safari) the tap raises `SettingsInstallHelp`, `HelpDialog`'s shape titled
+  by the row: `In Safari, tap Share, then Add to Home Screen.`
+  (*review-pending*) and `Close`. Installed, or in a browser that can do
+  neither, the row is absent; the android app never shows it. Drawn on
+  `Settings`' `install` chip (`absent`, the default — the page as every
+  other board draws it, 0 of 147 named boxes moved, measured; `shown`). The
+  shown page outgrows the board's frame by 25px (backlog 175).
+- **The sheets a host menu raises keep one path** (backlog 161 closed): the
+  menu takes the host's prefix, the license, report and remove sheets it
+  raises do not — §13's sheet node law now reads so.
+- **The fixtures' menus** (backlog 162 closed): the ladder boards and
+  `ReplyMedia` take the menu their sheet draws, the specimens drop their
+  doubled license and gain Report. Every rendered board is byte-identical —
+  a closed menu renders no row. The ladder's two redacted records keep Save
+  and Cite (backlog 176). `SigningAfterClose`'s own card drew the license
+  twice; it takes the filtered own menu.
+- **The intro's vouch note** in copy-voice reads as the board does — `A
+  friend who's already in has to let you in. Ask around once you have
+  verified your email.`, jakob's 2026-10-07 wording (rulings item 59).
+- **`ChangePassword`'s press** lists in the graph the refusals its sidecar
+  states: the wrong current password, the refused new one, the mismatch,
+  the spent re-auth budget.
+- **The gate**: one board added (`SettingsInstallHelp`, profile page, beside
+  `EraseConfirm`); `Settings` gains the `install` chip. Three edges added
+  (the row, the dialog's Close and scrim), **2265** in check-flows' count;
+  flows hold at **227**. The registry grows to **182 screens**, **6799 →
+  6946** board paths, **1996 → 2000** distinct — `settings.clearing.install`
+  with its label and chevron, and `settings.dialog.close`; nothing removed.
+
+### Round 41, Unhide on a hidden person's card, Edit on your own, the last failure places — 2026-11-11
+
+jakob's answers to rounds 36–39 (M1–M3, R2, S1–S6, I1–I2), executed.
+
+- **Unhide wherever a hidden person's card lands** (M1). The hide row reads
+  `Unhide @ada` — Settings' word in the row's own form (`UNHIDE_ACTOR_LABEL`,
+  beside `HIDE_ACTOR_LABEL` on `ActorChip`), answered by Settings' snackbar
+  with Undo — on every host where a hidden person's post, profile card or
+  profile still stands: History until its next load (posts) and for good
+  (the profile card), Saved, the tag's page, and a post or profile reached
+  by a link or a search. The feed never holds such a card; a comment's menu
+  has no hide row. Drawn: `HistoryPostMenu`'s `author` hidden and
+  `HistoryProfileMenu` (new). The row keeps its name, `hide`.
+- **Your own card offers Edit wherever it stands, in its ⋮** (M3; jakob
+  2026-11-11: "this belongs in the three dot bottom sheet as always"). The
+  own comment's menu carries `Edit` on every host — Save · Cite · Edit ·
+  Remove · Cited by · Opinions on this · License terms, the own post menu's
+  place for it — and no card carries an Edit button, the thread's included:
+  `CommentCard` has no Edit affordance, and the registered
+  `postDetail.threadSheet.commentCard.actionRow.edit` is deleted, a named
+  breaking change. The own post's menu already holds Edit on every host. The own profile's posts and comments
+  views are boards of their own (M2): `ProfilePostsOwn`, `ProfileCommentsOwn`,
+  and the own profile's tabs lead to them.
+- **The last failure places after Close** (S3–S5). A profile or picture
+  change: the line under the profile's head, `Signing…` then `That didn't
+  sign.` with `Retry` (`Profile`'s `change`; `SigningAfterClose`'s `act`
+  `profile`). The kept picks' batch: the Key backup row reads `That didn't
+  sign.` with `Retry`, signing the whole batch again (`Settings`' `kept`). A
+  removal: the same line under the card (`FeedRemoveConfirm`'s
+  `closedFailed`); a closed application's row says it too, law only (backlog
+  190). The dialogs' own failure while open keeps `That didn't send. Try
+  again.` `Your post didn't sign.` and `Your comment didn't sign.` are kept as
+  drawn for now (S1); replies and edits keep no draft (S2).
+- **Change password waits silently** (R2): the line `Waiting for both
+  passwords` is gone; the registered `changePassword.commit.reason` is deleted
+  with it, a named breaking change.
+- **The install row's words are blessed** (I1); the row stays in Clearing
+  data (I2). **Settings' frame is 3103px** (backlog 175).
+- **Not drawn, at jakob:** Close on the plain forms (S6, backlog 191) — the
+  entry forms have no place a guest sees a result, and a page whose only way
+  out is a back arrow has no drawn precedent for that arrow reading Close.
+  Backlog 176 stays open: `FeedRemoved.md` says a removed card carries no
+  menu.
 
 ---
 

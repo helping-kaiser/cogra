@@ -8,6 +8,10 @@ WHEN a live invite link is opened GIVEN the reader is signed in -> Join opens ho
 
 ALWAYS the face and the name over the form are the link's inviter's
 
+ALWAYS the heading names the inviter by the whole display name, else by the handle with its @, and reads Mira Voss invited you over the sample's inviter
+
+ALWAYS the heading wraps as running text and the inviter's name in it is never cut
+
 ALWAYS the header's arrow reads a plain Back, with no origin noun
 
 WHEN press the header's back arrow GIVEN the link was pasted at the invite door -> InviteEntry opens
@@ -22,7 +26,7 @@ WHEN tap the header's "?" -> About opens with a plain Back on its arrow
 
 WHEN About's back arrow is pressed GIVEN About was opened from the form -> the form comes back with every field as it was left
 
-WHEN Join opens again in the same session GIVEN the reader left it by Already have an account? Sign in or the back arrow -> the Handle and Email fields hold what was typed AND the Password field is empty
+WHEN Join opens again in the same session GIVEN the reader left it by Already have an account? Sign in or the back arrow -> the Handle and Email fields hold what was typed AND the Password and Repeat password fields are empty
 
 WHEN the app is launched cold -> NEVER a field of the form holds what was typed before
 
@@ -32,9 +36,11 @@ ALWAYS the Handle field's hint reads 3–30 characters: a–z, 0–9, _ GIVEN th
 
 ALWAYS the Password field's hint reads At least 12 characters. GIVEN the field carries no error line
 
-WHEN press the password's reveal control GIVEN the password is hidden -> the password shows AND the control is named Hide password
+ALWAYS a second field, Repeat password, stands under Password, masked like it, with its own reveal control and no hint
 
-WHEN press the password's reveal control GIVEN the password shows -> the password hides AND the control is named Show password
+WHEN press a password field's reveal control GIVEN its password is hidden -> that field's password shows AND its control is named Hide password
+
+WHEN press a password field's reveal control GIVEN its password shows -> that field's password hides AND its control is named Show password
 
 WHEN typing in a field that carries no error line -> NEVER the field turns to its error state before the next press of Create account
 
@@ -62,6 +68,10 @@ WHEN press Create account GIVEN the password is shorter than 12 characters -> th
 
 WHEN press Create account GIVEN the password is longer than 128 characters -> the Password field's line reads A password is at most 128 characters. in place of its hint AND the field takes the error state
 
+WHEN press Create account GIVEN Repeat password differs from Password -> the Repeat password field's line reads The two passwords don't match. AND the field takes the error state
+
+WHEN typing in Password or Repeat password GIVEN Repeat password carries The two passwords don't match. -> the line re-checks as the text changes AND it goes once the two passwords match
+
 WHEN the registration is refused because the password turned up in a data breach -> the Password field's line reads That password has turned up in a data breach — pick another one. in place of its hint AND the field takes the error state
 
 ALWAYS an errored field's line replaces its hint, and an unerrored field keeps its own
@@ -86,6 +96,6 @@ WHEN tap Terms -> the Terms open AND the form keeps every field as it was left o
 
 WHEN tap Privacy Policy -> the Privacy Policy opens AND the form keeps every field as it was left on the way back
 
-ALWAYS Create account stands disabled with Waiting for a handle, your email and a password right above it GIVEN Handle, Email or Password is empty
+ALWAYS Create account stands disabled with Waiting for a handle, your email and a password right above it GIVEN Handle, Email, Password or Repeat password is empty
 
-WHEN all three fields hold a character -> Create account wakes AND the line Waiting for a handle, your email and a password goes
+WHEN all four fields hold a character -> Create account wakes AND the line Waiting for a handle, your email and a password goes

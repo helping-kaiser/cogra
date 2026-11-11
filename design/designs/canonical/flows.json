@@ -250,8 +250,8 @@
     },
     {
       "name": "edit-your-comment",
-      "description": "Edit on your own comment opens the edit surface; the signed edit settles back into the thread it belongs to.",
-      "start": { "board": "ReplyMedia", "via": 6 },
+      "description": "Edit in your own comment's menu opens the edit surface; the signed edit settles back into the thread it belongs to.",
+      "start": { "board": "CommentMenuOwn", "via": 8 },
       "end": { "board": "CommentEdit", "via": 12, "case": "signed — the thread reopened where it was left, the edit settling on its card" }
     },
     {
@@ -1509,7 +1509,7 @@
       "description": "A card's own Save, its ⋮'s first row reading Unsave in Saved, takes it out of the list, the list closing over it, and the line offers Undo; Undo puts the card back where it was.",
       "start": { "board": "Saved", "via": 4 },
       "waypoints": [
-        { "board": "ReaderPostMenu", "via": 1, "to": "SavedUndo" }
+        { "board": "SavedPostMenu", "via": 1, "to": "SavedUndo" }
       ],
       "end": { "board": "SavedUndo", "via": 16, "to": "Saved" }
     },

@@ -21,7 +21,8 @@ const P = "../../assets/photos/";
 const mira = {handle:"mira_l",displayName:"Mira Lindqvist"};
 const rey = {handle:"rey",displayName:"Rey Alvarez"};
 const jun = {handle:"jun",displayName:"Jun Watanabe"};
-const menuFor = (handle) => [{label:"Save"},{label:"Cite in a new post"},{label:"Hide @"+handle},{label:"License terms"}];
+// A card appends the license itself; the report row stands after it (`tail`).
+const menuFor = (handle) => [{label:"Save"},{label:"Cite in a new post"},{label:"Hide @"+handle},{label:"Report",tail:true}];
 function Demo(){return (
 <div className="grid">
   <div className="col">

@@ -28,6 +28,14 @@ WHEN tap Hide with the person's handle GIVEN the menu was opened from a profile 
 
 ALWAYS the menu carries no Share this profile row GIVEN it was opened from a profile card in the feed, whose own row carries the share
 
+ALWAYS the menu opened from a profile card reads Save or Unsave, then Mention in a new post, then Hide with the person's handle, then Report at the sheet tail, on the feed, History and Saved alike
+
+ALWAYS the hide row reads Unhide with the person's handle GIVEN the person is already hidden, wherever their card or profile stands — the profile card in History, Saved or a search of either, and the profile itself reached by a link, a search or a row
+
+WHEN tap Unhide with the person's handle on the profile's own menu -> the sheet closes AND the reader stays on the profile AND the person is unhidden AND the snackbar reads @ada is unhidden — their posts can reach your feed again. with Undo AND NEVER a dialog asks
+
+WHEN tap Unhide on a profile card's menu -> the sheet closes AND the person is unhidden AND the snackbar reads the handle, then is unhidden — their posts can reach your feed again., as @ada is unhidden — their posts can reach your feed again., with Undo AND NEVER a dialog asks
+
 ALWAYS a hidden person's profile still opens
 
 WHEN tap profile.menuSheet.report -> the sheet closes AND the report confirm sheet rises over the profile, its title reading Report @ada? AND NEVER anything is sent yet

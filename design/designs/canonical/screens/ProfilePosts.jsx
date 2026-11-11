@@ -34,7 +34,7 @@ const ADA_SECOND_POST = {
   score: "4.70",
   comments: 1,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("ada"),
 };
 
 export function Screen() {
@@ -68,9 +68,11 @@ export function Screen() {
             </div>
             {/* The same post still settling: the feed's settling row
                 (FeedSheet.md), `Still settling` worn under the words and the
-                score slot bare, the glyph with no figure (ruling 90). */}
+                score slot bare, the glyph with no figure (ruling 90). Its age
+                reads `now`, as every settling card the tree draws reads it
+                (`ComposeLanded`, the thread's landed reply). */}
             <div style={{ display: "{{secondSettling}}" }} data-node-chip="posts" data-node-key="settling">
-              <PostCard {...ADA_SECOND_POST} pending score={null} node="card" />
+              <PostCard {...ADA_SECOND_POST} timestamp="now" pending score={null} node="card" />
             </div>
           </div>
           <div style={{ display: "{{noneShown}}", padding: "8px 16px 0" }}>

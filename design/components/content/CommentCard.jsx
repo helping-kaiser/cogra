@@ -90,8 +90,6 @@ export function CommentCard({
   stancePendingPick,
   stancePendingReview,
   onReply,
-  onEdit,
-  own = false,
   attach = false,
   targetLabel = "this comment",
   target,
@@ -167,7 +165,7 @@ export function CommentCard({
      card's media too: `media`, `frame` per item, and a clip's `soundDisc`;
      its author's `authorChip` and its ⋮ `menu` (as `PostCard` names them),
      the mark a removed comment wears `removalMark` (as
-     `PostCard` names it), and the thread's text buttons `reply` and `edit`
+     `PostCard` names it), and the thread's text button `reply`
      (seam 248, the thread sheet named); the pointer to what it answers
      `target` in either shape, the line or the thread's head row (as
      `commentEdit` names its own; round 32) and the collapsed replies'
@@ -187,8 +185,16 @@ export function CommentCard({
   // Same rule as PostCard: the license is a rare read, so it arrives from the
   // menu rather than sitting on the comment, and it comes up in a sheet over
   // the thread rather than on the card. It rode the payload, so a redacted
-  // record has none to show.
-  const items = license && !redacted ? [...menuItems, { label: LICENSE_MENU_LABEL, onSelect: () => {} }] : menuItems;
+  // record has none to show. A row marked `tail` stands after the license, as
+  // on `PostCard`: the report row, at the sheet tail (ruling 75).
+  const items =
+    license && !redacted
+      ? [
+          ...menuItems.filter((item) => !item.tail),
+          { label: LICENSE_MENU_LABEL, onSelect: () => {} },
+          ...menuItems.filter((item) => item.tail),
+        ]
+      : menuItems;
   /* THE VEIL TAKES THE WHOLE BODY, words and pictures as one block. A comment
      has no title to leave outside it, so what carries the informed choice is
      the frame the card already wears — the author, the timestamp, the topics,
@@ -407,7 +413,7 @@ export function CommentCard({
             the comment grows lands beside it — and it spreads across the card
             the same way, every control on a 48px target (jakob's ruling, the
             geek round). */}
-        {(showStance || score !== undefined || (signedIn && (onReply || (own && onEdit))) || onShare || actions) && (
+        {(showStance || score !== undefined || (signedIn && onReply) || onShare || actions) && (
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }} data-node={node && "actionRow"}>
           {/* Owned by the shell — see PostCard. Named as PostCard names its
               row (seam 248): `stance`, `score`, `reply`, `share`. */}
@@ -421,11 +427,6 @@ export function CommentCard({
           {signedIn && onReply && !replyGlyph && (
             <Button variant="text" size="sm" onClick={onReply} style={replyOpacity !== undefined ? { opacity: replyOpacity } : undefined} node={node && "reply"}>
               Reply
-            </Button>
-          )}
-          {signedIn && own && onEdit && (
-            <Button variant="text" size="sm" onClick={onEdit} node={node && "edit"}>
-              Edit
             </Button>
           )}
           {onShare && <ShareButton targetLabel={targetLabel} onShare={onShare} node={node && "share"} />}

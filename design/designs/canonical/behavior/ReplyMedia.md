@@ -14,7 +14,7 @@ WHEN tap a comment clip's play disc -> the clip plays where it stands in the thr
 
 WHEN tap a comment clip's sound disc -> sound turns on or off for every clip on every surface together
 
-ALWAYS the reader's own comment wears Edit
+ALWAYS the reader's own comment's ⋮ holds the own comment menu, Edit among its rows
 
 ALWAYS a comment wears the Edited marker GIVEN it has been edited
 

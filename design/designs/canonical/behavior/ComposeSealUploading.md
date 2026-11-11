@@ -8,13 +8,13 @@ ALWAYS Sign and publish is enabled GIVEN an upload is running
 
 WHEN press Sign and publish GIVEN an upload is running -> Sign and publish refuses a second press AND NEVER anything is signed before the last upload lands AND NEVER Sign and publish dims
 
-WHEN the signing has not answered 200ms after the press GIVEN Sign and publish was pressed while the uploads ran -> Sign and publish reads Signing and publishing… in its own place AND the header back arrow, Back and the header X refuse a press AND NEVER a spinner appears
+WHEN the signing has not answered 200ms after the press GIVEN Sign and publish was pressed while the uploads ran -> Sign and publish reads Signing and publishing… in its own place AND NEVER a spinner appears
 
 WHEN the signing has not answered 5s after the press GIVEN Sign and publish was pressed while the uploads ran -> the subline under the total reads Still signing — the network is slow right now. AND NEVER a progress indicator appears
 
 WHEN the last upload lands GIVEN Sign and publish was pressed while the uploads ran -> signing proceeds AND NEVER a second press is asked
 
-WHEN an upload fails GIVEN Sign and publish was pressed while the uploads ran -> the held press drops AND Sign and publish reads Sign and publish again AND the header back arrow, Back and the header X answer again AND NEVER anything is signed
+WHEN an upload fails GIVEN Sign and publish was pressed while the uploads ran -> the held press drops AND Sign and publish reads Sign and publish again AND Back reads Back again AND NEVER anything is signed
 
 WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER signing proceeds until Sign and publish is pressed again
 
@@ -27,3 +27,9 @@ WHEN press the header back arrow GIVEN Sign and publish was not pressed -> the d
 WHEN press Back GIVEN Sign and publish was not pressed -> the details stage comes back with its uploads running
 
 WHEN press the header X GIVEN Sign and publish was not pressed -> the whole flow is left AND the draft is kept AND the uploads finish quietly AND NEVER a dialog asks
+
+WHEN press Sign and publish GIVEN an upload is running -> Back reads Close in its place from the press itself AND the header X is named Close
+
+WHEN press Close, the header back arrow, the header X or the system's Back GIVEN Sign and publish was pressed while the uploads ran -> the seal closes AND the uploads finish AND the signing proceeds once the last upload lands AND its wait and its answer stand at the feed's head as SigningAfterClose draws them AND NEVER the post is cancelled
+
+WHEN an upload fails GIVEN the seal was closed after Sign and publish was pressed -> nothing is signed AND the feed's head reads Your post didn't sign. followed by Retry AND the draft stays on this device

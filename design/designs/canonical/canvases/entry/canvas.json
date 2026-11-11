@@ -519,7 +519,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 6325,
+      "h": 6381,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -590,6 +590,15 @@
       "file": "PadFailed.dc.html",
       "title": "Pad · the signing didn't go through",
       "x": 1920,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SigningAfterClose.dc.html",
+      "title": "Signing · after Close, where the act lands",
+      "x": 2880,
       "y": 964,
       "w": 390,
       "h": 844,

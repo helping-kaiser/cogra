@@ -872,6 +872,8 @@ Kept picks` — the arrow from the kept picks' review or their seal, the
 named surface by its title, as `Back to Saved` and `Back to History`
 are (blessed, jakob 2026-10-06). Its other origins take
 nouns already blessed: `Back to your profile`, `Back to Notifications`.
+The profile's table adds `Back to Invites`, from the people you let in
+(round 38, by the same construction — *its wording jakob's at review*).
 
 **The citation's pair** (`RefPair`), where the field and its readout are
 `aria-hidden` and these words are what is said in their place:
@@ -1067,14 +1069,46 @@ a quick answer never flashes a word.
   2026-11-11). **Drawn** on `PadFailed`'s `closed`.
 - `Close` — the way out of a signing surface once its commit is
   pressed (jakob 2026-11-11): the pad, the alternates, the walk-back,
-  the empty sign, the handle change. Once someone submits, the act is
-  done and nothing cancels it, so `Cancel` or `Keep it` would promise
-  what the press cannot do; past 200ms, beside the in-flight label, the
-  same control in the same place reads `Close`, which says only what
-  the press does — it shuts a layer (*The stream and the viewer*) so the
-  reader need not wait. The wait passes to the target's row. **Drawn**
-  on `PadFailed`'s `setting`, `SeveranceConfirm`'s `signing` and
-  `EmptySignConfirm`'s `setting`.
+  the empty sign, the handle change, every seal and edit, and the
+  remove and reject dialogs. Once someone submits, the act is done and
+  nothing cancels it, so `Cancel`, `Back`, `Keep it` or `Keep them`
+  would promise what the press cannot do; from the press itself — the
+  one exception to the 200ms law, since anything else would mislead —
+  the same control in the same place reads `Close`, which says only
+  what the press does: it shuts a layer (*The stream and the viewer*)
+  so the reader need not wait. The commit's own in-flight label still
+  waits the 200ms. A seal's or an edit's X is named `Close` too. The
+  wait and the answer pass to where the act lands (`SigningAfterClose`).
+  **Drawn** on `PadFailed`'s `pressed` and `setting`,
+  `SeveranceConfirm`'s `signing`, `EmptySignConfirm`'s `setting`,
+  `SealSigning`, and the `signing`, `removing` and `closing` settings of
+  the seals, the edits and the dialogs.
+- `Signing and publishing…`, `Signing comment…` and `Signing…` — a
+  post's, a reply's and an edit's wait after `Close`, where each will
+  stand: the feed's head, the parent it answers, under the
+  edited card, in the pending marker's quiet register. **Drawn** on
+  `SigningAfterClose`.
+- `Your post didn't sign.` and `Your comment didn't sign.` — a post's or
+  a reply's failure after `Close`, in the failure voice with `Retry`,
+  where the card would have stood; built from the row's `That didn't
+  sign.` and the did-not-land notice's family titles (`Your post didn't
+  land`). An edit's failure is the row's own `That didn't sign.` under
+  the card. **Drawn** on `SigningAfterClose`. (*New 2026-11-11, round 37;
+  kept as drawn by jakob 2026-11-11 for now, S1.*) A reply and an edit keep
+  no draft: after their failure `Retry` is the way back (jakob 2026-11-11,
+  S2).
+- `That didn't sign.` with `Retry` — every other signed act's failure
+  after `Close`, on its own row: a profile or picture change under the
+  profile's head (`Profile`'s `change`), the kept picks' batch on the Key
+  backup row `4 kept picks waiting`, its `Retry` signing the whole batch
+  again (`Settings`' `kept`), a removal under the removed thing's card
+  (`FeedRemoveConfirm`'s `closedFailed`) and a closed application on its
+  row (jakob 2026-11-11, S3–S5, round 41). The dialogs' own failure while
+  they stand open keeps `That didn't send. Try again.`
+- `Changing handle…`, `That didn't go through.` with `Retry`, and `That
+  handle is taken.` — the handle change's wait, failure and refusal on
+  the Handle row after `Close`, the dialog's and the hidden-accounts
+  row's own words. **Drawn** on `Settings`' `handle` chip.
 
 Every other commit follows the same construction and needs no separate
 entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes
@@ -1130,6 +1164,12 @@ doesn't know which field is wrong.
   reader can act on (auth.md). Drawn on `RestoreLength`.
 - `That doesn't match the code above.` — the key ceremony's confirm
   field, on RecoveryCodeMismatch.
+- `The two passwords don't match.` — the `Repeat password` field, a
+  local failure on the press, on every form that sets a new password
+  (`Join`, `ResetNew`, `ChangePassword`); drawn on `JoinErrors`, and the
+  `ResetNew` and `ChangePassword` sidecars carry it. The field's label,
+  `Repeat password`, stands under the new password's own, masked like it,
+  with no hint. (*New 2026-11-11, blessed (jakob 2026-11-11, J2).*)
 
 **Local format failures** — each answers on the press, under its own
 field:
@@ -1155,7 +1195,6 @@ your key`) — the construction `Report a problem`'s empty foot first
 drew. One line per form (`WaitingCommit`; *new 2026-10-05, blessed
 (jakob 2026-10-05)*):
 
-- `Waiting for both passwords` — `ChangePassword`.
 - `Waiting for a new handle` — `ChangeHandle`.
 - `Waiting for a new email and your password` — `ChangeEmail`,
   `ApplicantEmail`.
@@ -1168,7 +1207,9 @@ drew. One line per form (`WaitingCommit`; *new 2026-10-05, blessed
 - `Waiting for a handle, your email and a password` — `Join`.
 - `Waiting for a new password` — `ResetNew`.
 
-`Report a problem` carries none: its `Send by email` only prefills a
+`ChangePassword` carries none: its commit simply stays disabled until the
+three fields hold something — the wait explains itself (jakob 2026-11-11,
+R2). `Report a problem` carries none: its `Send by email` only prefills a
 draft, which is no commit for the law to gate.
 
 ## Menu rows
@@ -1555,8 +1596,8 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     have happened`, with one action, `Reload` (jakob 2026-11-11, T11).
     The notice's other sentences stay off it: a crash cannot promise
     that nothing was signed or spent, and the page has no report door.
-    **Drawn** on `AppCrash`. (*New 2026-11-11, drafted — wording
-    jakob's at review.*)
+    **Drawn** on `AppCrash`. (*New 2026-11-11, blessed (jakob
+    2026-11-11).*)
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide,
 the default license; not a code): it reverts, and the target's row says `That didn't go
@@ -1569,7 +1610,7 @@ Blessed with the audit-states round:
 
 - `Set a new password` · `New password` · `Set the new password` — the
   reset link's destination (`ResetNew`): heading, field label,
-  commitment.
+  commitment; `Repeat password` under the field (*Field errors*).
 - `Setting a new password signs out every device. You sign in again
   with the new one.` — the consequence, said where the act happens
   (auth.md: password reset revokes every session).
@@ -1680,9 +1721,11 @@ round*; every one blessed (jakob 2026-10-02).
 
 ### The collected rulings' entry lines — 2026-10-05
 
-- `Mira invited you` — `Join`'s heading (and `JoinErrors`'): the first
+- `Mira Voss invited you` — `Join`'s heading (and `JoinErrors`'): the first
   screen says *invited*, never *vouched*, because no vouch exists until
-  the inviter approves. *Blessed (jakob 2026-10-05).*
+  the inviter approves. *Blessed (jakob 2026-10-05).* The name is the
+  inviter's whole display name, else the handle; the heading is running
+  text, so it wraps and the name is never cut (jakob 2026-11-11, J1).
 - The applicant's own profile once the application is closed
   (`ProfileApplicant`, the `application` chip at `closed`) takes the
   turned-down card's blessed words, the handle the approver's:
@@ -1912,7 +1955,7 @@ server's and returns on sign-in, so the words never call it lost;
 `the choices kept on this device` echoes Theme's and Reading's own
 phrase. (*New 2026-10-13, drafted — wording jakob's at review.*)
 
-**The wipe** is the group's one row, `Erase everything from this
+**The wipe** is the group's last row, `Erase everything from this
 browser` — `Erase everything from this app` in the app — an action row
 as quiet as `Sign out` (jakob 2026-10-13: "the wipe everything from this
 device… with warnings"). It raises `EraseConfirm`: the title repeats
@@ -1932,6 +1975,16 @@ answers are `Erase everything and sign out` and `Cancel`, the safe one
 filled. `Erase everything and sign out` is `Erase them and sign out`'s
 construction for the whole device. (*New 2026-10-13, drafted — wording
 jakob's at review.*)
+
+**The install row** (jakob 2026-11-11, seam 285) leads the Clearing data
+group in a browser that can install the web app and is not running it
+installed: `Add CoGra to your home screen`, one line and a chevron. Where
+the browser asks by itself (Android Chrome) the tap raises its own prompt;
+where it installs only by hand (iOS Safari) the tap raises the help
+dialog's shape, titled by the row, with one paragraph: `In Safari, tap
+Share, then Add to Home Screen.` and `Close` (`SettingsInstallHelp`). The
+android app never shows the row. (*New 2026-11-11, round 39, blessed
+(jakob 2026-11-11, I1); its group stays Clearing data (I2).*)
 
 **Sessions** keeps `Revoke` and `Sign out everywhere else`, and says the
 delay before it happens rather than only after:
@@ -2073,8 +2126,9 @@ footnote said where the act is, plus the half it could not say there:
 `Changing your password signs out every other device. This one stays
 signed in.` `ResetNew`'s *every device* is not a drift — a reset
 revokes the session doing it and a change does not, and the two lines
-exist to keep that difference visible. Fields `Current password` and
-`New password` with `At least 12 characters.`, the commitment `Change
+exist to keep that difference visible. Fields `Current password`,
+`New password` with `At least 12 characters.` and `Repeat password`
+(*Field errors*), the commitment `Change
 password`, and last, the reason the first field is there at all:
 `Your current password is asked for even though you are signed in: a
 live session is not proof enough to change the credential behind it.`
@@ -3018,6 +3072,17 @@ profile menu, because the handle is what a reader recognises and what
 they will look for again in settings. The pair on the other side is
 `Hidden accounts` and `Unhide`.
 
+**On a hidden person's card the row turns.** Wherever a hidden person's
+post, profile card or profile still stands — History until its next load,
+Saved, the tag's page, a post or profile reached by a link or a search —
+the hide row reads `Unhide @ada`: Settings' word in the row's own form, the
+handle after it (`Unhide this account` where the actor is redacted, as
+`Hide this account` is). It answers with Settings' snackbar, `@ada is
+unhidden — their posts can reach your feed again.` with `Undo` (jakob
+2026-11-11, M1; round 41). **Drawn** on `HistoryPostMenu` (`author`
+hidden) and `HistoryProfileMenu`. (*`Unhide @ada` and `Unhide this
+account` are `Unhide` taking the row's handle, review-pending.*)
+
 **Hiding is confirm-free, and the snackbar is the whole ceremony.**
 `@ada is hidden — their posts stay out of your feed.` with `Undo`
 beside it. It says what changed and how far it reaches, which is what
@@ -3672,9 +3737,10 @@ recorded so the registry is whole.
   were built from. Pictures added, words changed — the whole history
   stays readable.`
 - **5** — `Someone brings you in` · `You are here because @mira invited
-  you. Her link is your first way in to everyone else, and theirs to
-  you.`, with the quiet note `The friend who sent you this invite has to
-  let you in. Ask them once you have verified your email.`
+  you. @mira's link is your first way in to everyone else, and theirs
+  to you.` (the inviter by handle, *Naming*; jakob 2026-11-11), with the quiet note `A friend who's already in has to let you
+  in. Ask around once you have verified your email.` (*blessed (jakob
+  2026-10-07)*)
 
 ## About
 
@@ -3849,6 +3915,13 @@ surfaces teaches faster than four near-synonyms would.
 you": only one of those rows is waiting on the reader and the other is
 waiting on its own applicant, so a caption claiming both would make the
 second row a lie. Who is waited on is the ROW's to say.
+
+**`People you let in`** stands between them once the reader has vouched
+someone in: each row the person's name and when, no line of status —
+nothing waits on anyone there (*new 2026-11-11, blessed (jakob
+2026-11-11, J3)*). A row opens the person's profile, whose arrow reads
+`Back to Invites`, the named surface by its title as `Back to Kept
+picks` is.
 
 **An application's second line is its status, and it names the
 reader's fact and not the mechanism** (jakob 2026-09-15). Which proof
