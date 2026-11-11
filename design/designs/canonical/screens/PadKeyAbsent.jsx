@@ -55,7 +55,7 @@
      per kept pick, each with a × that drops it at once; `Sign them` leads to
      the standard seal (`KeptPicksSeal`), which signs the batch all or
      nothing. A review left unsigned keeps them, and the settings page's Key
-     backup group carries `3 kept picks waiting` to reopen it — only while
+     backup group carries `4 kept picks waiting` to reopen it — only while
      the key is here; if it goes again, the waiting-for-key state owns the
      surface. A kept vouch-back or approval never joins the batch: each
      surfaces as its own card, ceremony kept — the vouch-back on the feed,

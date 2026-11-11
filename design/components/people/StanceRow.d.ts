@@ -10,8 +10,9 @@ export interface StanceRowProps {
   src?: string;
   /**
    * A deleted account's row: the reserved disc, `Deleted account` in the
-   * system's voice and no handle line (`ActorChip`'s law). Its placer names it
-   * `redactedRow`, keyed by the actor's id.
+   * system's voice and no handle line (`ActorChip`'s law). Each placer names it
+   * as its own node, keyed by the actor's id: `redactedRow` on the opinions
+   * page, `redactedOpinion` on the post's opinions sheet.
    */
   redacted?: boolean;
   pDirected?: number;

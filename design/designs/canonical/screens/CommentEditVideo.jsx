@@ -54,48 +54,53 @@ export function Screen() {
     <>
       <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <QuietNote node="target">Your comment on "The long way home".</QuietNote>
+        {/* The fields scroll under the pinned foot, the post edit's reading
+            (`EditComposeVideo`): with the gate drawn the form runs taller
+            than the phone, and the foot stays where it stands at rest. */}
+        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
+          <QuietNote node="target">Your comment on "The long way home".</QuietNote>
 
-        <TextField label="Words" rows={2} cap={2000} value="Eighteen seconds of the same headland, if the light comes through at all." node="words" />
+          <TextField label="Words" rows={2} cap={2000} value="Eighteen seconds of the same headland, if the light comes through at all." node="words" />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="video">
-          <FieldLabel node="label">Video</FieldLabel>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" video onRemove={() => {}} removeLabel="Remove this video" node="thumb" />
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="video">
+            <FieldLabel node="label">Video</FieldLabel>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" video onRemove={() => {}} removeLabel="Remove this video" node="thumb" />
+            </div>
+            <DescribeCounter subject="video" described={1} total={1} onDescribe={() => {}} node="describeRow" />
           </div>
-          <DescribeCounter subject="video" described={1} total={1} onDescribe={() => {}} node="describeRow" />
-        </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="cover">
-          <FieldLabel node="label">Cover</FieldLabel>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MediaThumb src="comment-camera.jpg" alt="" size={56} fit="contain" node="thumb" />
-            <Button variant="text" size="sm" node="change">Change the cover</Button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="cover">
+            <FieldLabel node="label">Cover</FieldLabel>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <MediaThumb src="comment-camera.jpg" alt="" size={56} fit="contain" node="thumb" />
+              <Button variant="text" size="sm" node="change">Change the cover</Button>
+            </div>
           </div>
-        </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
-          <FieldLabel node="label">Tags</FieldLabel>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <TopicRemovable topic="glovebox" onEdit={() => {}} node="tag" />
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
+            <FieldLabel node="label">Tags</FieldLabel>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <TopicRemovable topic="glovebox" onEdit={() => {}} node="tag" />
+            </div>
+            <InlineAction size="sm" selfStart node="add">+ Add a tag</InlineAction>
+            {/* The tag withdrawn in this edit, read back with its Undo, as
+                `CommentEdit` reads its own (`WithdrawnLine`). */}
+            <WithdrawnLine name="#coastroad" node="withdrawn" />
           </div>
-          <InlineAction size="sm" selfStart node="add">+ Add a tag</InlineAction>
-          {/* The tag withdrawn in this edit, read back with its Undo, as
-              `CommentEdit` reads its own (`WithdrawnLine`). */}
-          <WithdrawnLine name="#coastroad" node="withdrawn" />
-        </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="references">
-          <FieldLabel node="label">References</FieldLabel>
-          <InlineAction size="sm" selfStart node="add">+ Cite something</InlineAction>
-        </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="references">
+            <FieldLabel node="label">References</FieldLabel>
+            <InlineAction size="sm" selfStart node="add">+ Cite something</InlineAction>
+          </div>
 
-        <div style={{ display: "flex", flexDirection: "column" }} data-node="facts">
-          <LockedLicenseRow />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last node="sensitive" />
-        </div>
+          <div style={{ display: "flex", flexDirection: "column" }} data-node="facts">
+            <LockedLicenseRow />
+            <FactRow label="Sensitive" value="Not marked" action="Mark" last node="sensitive" />
+          </div>
 
-        <div style={{ flex: 1 }} />
+          <div style={{ flex: 1 }} />
+        </div>
 
         <div style={{ display: "{{gateShown}}", flexDirection: "column" }}>
           <UploadStatusLine done={0} total={1} media="cover" node="gate" />

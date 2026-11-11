@@ -46,13 +46,13 @@
    nothing is lost that the reader cannot make again — the pick is re-made
    from its pad. The drop is spoken in the pickers' status idiom
    (`PickAnnouncement`), `Removed —
-   2 picks left.`, and focus moves to the next row (jakob 2026-10-02, kept
+   3 picks left.`, and focus moves to the next row (jakob 2026-10-02, kept
    picks 6). Dropping the last row leaves the review, with the snackbar
    `Nothing left to sign.`, where the review was opened from.
 
    LEAVING UNSIGNED KEEPS THEM (B3). The back arrow — and the system's Back —
    leave every remaining pick kept on this device, and the settings page's
-   Key backup group carries a quiet row, `3 kept picks waiting`, that opens
+   Key backup group carries a quiet row, `4 kept picks waiting`, that opens
    this review again. "Never silently" stays honest without a nag: the row is
    the one place the waiting batch is named, and nothing else reminds. The
    row shows only while the key is here and unsigned picks wait; if the key
@@ -111,7 +111,7 @@ export function Screen() {
         </div>
         {/* THE SPOKEN DROP'S REGION (seam 248): the pickers' polite status
             message, mounted whether or not it has anything to say, so the ×'s
-            `Removed — 2 picks left.` reaches an ear (copy-voice, the kept
+            `Removed — 3 picks left.` reaches an ear (copy-voice, the kept
             picks' rulings). At rest it says nothing and draws nothing. */}
         <PickAnnouncement node="announcement" />
         <div style={{ flex: 1 }} />

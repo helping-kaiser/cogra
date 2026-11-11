@@ -36,15 +36,26 @@
 
    THE `pick` CHIP DRAWS A KEPT PICK on the post (round 27, seam 252;
    `PickCopies`): `key` and `review` add the stance control's `pending` line
-   to `card` as the feed's `PadPending` and `PadPendingReview` draw it. */
+   to `card` as the feed's `PadPending` and `PadPendingReview` draw it.
+
+   THE TWO PICK STATES ARE DRAWN SCROLLED (round 29, jakob's review: the line
+   stood below the frame, under the bar). The page is carried up 160px, the
+   way `FeedScrolled` carries its list and `CommentsSheet`'s `scrolledBy` its
+   thread — a zero-height spacer at the column's head pulling everything under
+   it up, so the post is entered mid-way and its affordance row, the `pending`
+   line under the stance, and the card's foot stand above the bar. `none`
+   stays the page at rest. */
+const PICK_SCROLL = 160;
 export const NODE = "postDetail";
 export const PROPS = { read: { editor: "enum", options: ["as-opened", "changed"], default: "as-opened" }, ...PICK_CHIP };
-export const VALS = `newerVersion: this.props.read === "changed" ? "block" : "none", ${PICK_VALS}`;
+export const VALS = `newerVersion: this.props.read === "changed" ? "block" : "none", pickScrolled: this.props.pick === "none" ? "none" : "block", ${PICK_VALS}`;
 export function Screen() {
   return (
     <>
       <DetailHeader items={READER_POST_MENU} node="header" />
       <DetailColumn>
+        {/* The column's gap rides under the spacer, so it is pulled back too. */}
+        <div aria-hidden="true" style={{ display: "{{pickScrolled}}", flex: "none", height: 0, marginTop: -(PICK_SCROLL + 12) }} />
         <EditedSinceLine node="newerVersion" display="{{newerVersion}}" />
         <PickCopies
           draw={(pick) => (

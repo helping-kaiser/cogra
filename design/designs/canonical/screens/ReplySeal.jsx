@@ -24,7 +24,31 @@
    WHILE IT SIGNS, IT HOLDS THE READER AS THE POST'S SEAL DOES (jakob
    2026-10-01): `Signing comment…` locks the back arrow, Back and the X, and
    past 5s the subline under the total says the network is slow
-   (`SealSigning`, `SealSigningSlow`). */
+   (`SealSigning`, `SealSigningSlow`).
+
+   IT READS ITS STAGED TAGS AS THE POST'S SEAL DOES (seam 254 item 10, jakob
+   2026-11-10: the reply seal mirrors the post seal exactly). The `tags` chip
+   draws the Tags row in both of `ComposeSeal`'s readings, with the post
+   seal's own fixtures: `two`, `#fieldnotes` and `#coastroad` as chips, the
+   slot's capacity (`ComposeSeal`); `seven`, `7 tags` and a bare count, the row
+   a door to the tags sheet (`ComposeSealTagged`). The row stands under the
+   act, the post seal's order, and the add-rows stay beneath, since this seal
+   is also the comment's details stage.
+
+   A STAGED ACT REFUSED AT SIGNING (seam 254 item 11, jakob 2026-11-10: "the
+   reply seal reuses that row and never shows server words"). The `state`
+   chip draws the post seal's two boards of it at reply scale: `refused`, the
+   seal with its one citation (`ReplyCited`'s) whose post never landed — the
+   row reads back as before and under it `This post didn't land, so it can't
+   be cited.` with `Remove it`, the commit staying (`SealFaultRow`);
+   `bug`, `This shouldn't have happened` in the commit's place, `Try again` in
+   it, then `Report a problem` and `Discard the reply` (`SealFaultBug`). */
+export const PROPS = {
+  tags: { editor: "enum", options: ["none", "two", "seven"], default: "none" },
+  state: { editor: "enum", options: ["rest", "refused", "bug"], default: "rest" },
+};
+export const VALS = `none0Shown: this.props.tags === "none" && this.props.state !== "refused" ? "flex" : "none", none1Shown: this.props.tags === "none" && this.props.state === "refused" ? "flex" : "none", two0Shown: this.props.tags === "two" && this.props.state !== "refused" ? "flex" : "none", two1Shown: this.props.tags === "two" && this.props.state === "refused" ? "flex" : "none", seven0Shown: this.props.tags === "seven" && this.props.state !== "refused" ? "flex" : "none", seven1Shown: this.props.tags === "seven" && this.props.state === "refused" ? "flex" : "none", signShown: this.props.state === "bug" ? "none" : "flex", bugShown: this.props.state === "bug" ? "flex" : "none"`;
+
 export function Screen() {
-  return <ReplySealBody />;
+  return <ReplySealBody chipped />;
 }
