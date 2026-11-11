@@ -72,6 +72,7 @@ class ProfileScreensTest {
         backDescription: String? = null,
         onOpenHistory: () -> Unit = {},
         onOpenOpinions: () -> Unit = {},
+        onMention: (String) -> Unit = {},
     ) {
         compose.setContent {
             ProfileScreen(
@@ -94,6 +95,7 @@ class ProfileScreensTest {
                 backDescription = backDescription,
                 onOpenHistory = onOpenHistory,
                 onOpenOpinions = onOpenOpinions,
+                onMention = onMention,
                 now = now,
             )
         }
@@ -323,6 +325,28 @@ class ProfileScreensTest {
         compose.onNodeWithTag((row / "invites").tag).performScrollTo().performClick()
         assertThat(invites).isFalse()
         compose.onNodeWithTag("profile.snackbar.message").assertTextEquals("You can invite once you're in.")
+    }
+
+    // ProfileMenu.md:17 — another person's ⋮ `Mention in a new post` opens the
+    // wizard with that person staged (jakob's round-2 hand test: it only closed the sheet).
+    @Test
+    fun mentionOnAnothersMenuOpensTheWizardWithThePerson() {
+        val mentioned = mutableListOf<String>()
+        render(loaded(), onMention = { mentioned += it })
+        compose.onNodeWithTag((row / "menu").tag).performScrollTo().performClick()
+        compose.onNodeWithTag("profile.menuSheet.mention").performClick()
+        assertThat(mentioned).containsExactly("u1")
+    }
+
+    // ProfileMenu.md:19 — an applicant is told, and the wizard never opens.
+    @Test
+    fun anApplicantsMentionExplainsInsteadOfOpeningTheWizard() {
+        val mentioned = mutableListOf<String>()
+        render(loaded(applicant = true), onMention = { mentioned += it })
+        compose.onNodeWithTag((row / "menu").tag).performScrollTo().performClick()
+        compose.onNodeWithTag("profile.menuSheet.mention").performClick()
+        assertThat(mentioned).isEmpty()
+        compose.onNodeWithTag("profile.snackbar.message").assertTextEquals("You can post once you're in.")
     }
 
     // ProfileApplicant.md:22: the applicant's empty chronicle says what fills it.

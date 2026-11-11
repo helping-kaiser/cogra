@@ -375,6 +375,8 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
         // The figures' one door: the opinions page, in this profile's stack.
         onOpenOpinions = { navController.navigate(ProfileStances(route.handle)) },
         cardsHost = cardsHost,
+        // The ⋮'s Mention: the wizard, the person staged (ProfileMenu.md:17).
+        onMention = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
     )
 }
 

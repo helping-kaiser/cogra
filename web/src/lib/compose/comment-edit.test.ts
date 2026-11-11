@@ -4,11 +4,18 @@ import { COMMENT_ATTACHMENT_CAP } from "./comment-media";
 import { COMMENT_BODY_MAX_CHARS } from "./reply-wizard";
 import {
   addTo,
+  bodyClipOf,
   clipOf,
   coverChosen,
   describedCount,
   editBlocked,
   editClaims,
+  editUploads,
+  failedLineOf,
+  failureRetryable,
+  VIDEO_UPLOAD_FAILED,
+  withAutoCover,
+  withClip,
   galleryChanged,
   galleryOf,
   keptMediaIds,
@@ -23,6 +30,7 @@ import {
   type EditGallery,
 } from "./comment-edit";
 import type { PickedAsset } from "./wizard";
+import { CENTERED } from "@/lib/ui2/media/crop";
 
 const ATTACHMENTS = [
   { id: "m1", url: "https://media.test/1.webp", altText: "A film camera" },
@@ -246,6 +254,99 @@ describe("a clip's face (EditComposeVideo, CommentEditVideo)", () => {
     const back = withNewCover(withNewCover(opened, "v1", newFace({ kind: "waiting" })), "v1", null);
     expect(editClaims(back)).toEqual(editClaims(opened));
     expect(uploadsPending(back)).toBe(0);
+  });
+});
+
+/** A clip picked at the edit, the way the add row hands it over. */
+const pickedClip = (upload: PickedAsset["upload"] = { kind: "waiting" }): PickedAsset => ({
+  id: "clip",
+  file: new Blob(["v"], { type: "video/mp4" }),
+  crop: CENTERED,
+  altText: "",
+  upload,
+  kind: "video",
+});
+
+const frameZero = (upload: PickedAsset["upload"]) => ({
+  id: "frame0",
+  file: new Blob(["f"], { type: "image/webp" }),
+  frame: 0,
+  upload,
+});
+
+describe("a clip picked at the edit (CommentEdit.md:23, CommentEditVideo)", () => {
+  it("arrives as the whole body of a comment holding words alone — including one whose pictures this edit removed", () => {
+    // jakob's case, 2026-11-11: a comment that had a picture, removed in this
+    // same edit, takes a video — "holds words alone" is the edit's own state.
+    const wordsAgain = removeFrom(galleryOf([ATTACHMENTS[0]!]), "m1");
+    const gallery = withClip(wordsAgain, pickedClip());
+    expect(gallery).toHaveLength(1);
+    expect(bodyClipOf(gallery)?.kind).toBe("addedClip");
+    // The post edit's reading of a clip stays the kept one alone.
+    expect(clipOf(gallery)).toBeUndefined();
+  });
+
+  it("never mixes into a body that still holds pictures", () => {
+    const opened = galleryOf(ATTACHMENTS);
+    expect(withClip(opened, pickedClip())).toBe(opened);
+  });
+
+  it("is uploaded once, its silent frame riding the clip's own leg", () => {
+    const gallery = withAutoCover(withClip([], pickedClip()), "clip", frameZero({ kind: "waiting" }));
+    expect(editUploads(gallery).map((asset) => asset.id)).toEqual(["clip"]);
+    expect(uploadsPending(gallery)).toBe(1);
+    expect(editClaims(gallery)).toBeNull();
+  });
+
+  it("names its frame 0 as a TAKEN face while no face was chosen", () => {
+    let gallery = withAutoCover(withClip([], pickedClip()), "clip", frameZero({ kind: "waiting" }));
+    gallery = withUpload(gallery, "frame0", { kind: "done", mediaId: "f0" });
+    gallery = withUpload(gallery, "clip", { kind: "done", mediaId: "v9" });
+    expect(editClaims(gallery)).toEqual([{ mediaId: "v9", altText: null, coverMediaId: "f0", coverTaken: true }]);
+    expect(coverChosen(bodyClipOf(gallery)!)).toBe(false);
+  });
+
+  it("goes faceless where no frame was found, which the contract accepts", () => {
+    const gallery = withUpload(withClip([], pickedClip()), "clip", { kind: "done", mediaId: "v9" });
+    expect(editClaims(gallery)).toEqual([{ mediaId: "v9", altText: null, coverMediaId: null, coverTaken: null }]);
+  });
+
+  it("names a chosen face over its frame, and waits for it", () => {
+    let gallery = withAutoCover(withClip([], pickedClip()), "clip", frameZero({ kind: "done", mediaId: "f0" }));
+    gallery = withUpload(gallery, "clip", { kind: "done", mediaId: "v9" });
+    gallery = withNewCover(gallery, "clip", newFace({ kind: "waiting" }));
+    expect(coverChosen(bodyClipOf(gallery)!)).toBe(true);
+    expect(uploadsPending(gallery)).toBe(1);
+    expect(editClaims(gallery)).toBeNull();
+    gallery = withUpload(gallery, "face", { kind: "done", mediaId: "c9" });
+    expect(editClaims(gallery)).toEqual([{ mediaId: "v9", altText: null, coverMediaId: "c9", coverTaken: null }]);
+  });
+
+  it("reads the clip's line when the clip fails, the picture line when its chosen face does", () => {
+    const failedClip = withUpload(withClip([], pickedClip()), "clip", {
+      kind: "failed",
+      message: "Couldn't reach the server.",
+      retryable: true,
+    });
+    expect(failedLineOf(failedClip)).toBe(VIDEO_UPLOAD_FAILED);
+    expect(editBlocked(failedClip, "Words")).toBe(VIDEO_UPLOAD_FAILED);
+    const tooBig = withUpload(withClip([], pickedClip()), "clip", {
+      kind: "failed",
+      message: "That video is too big — a comment's video can be up to 50 MB.",
+      retryable: false,
+    });
+    expect(failedLineOf(tooBig)).toBe("That video is too big — a comment's video can be up to 50 MB.");
+    expect(failureRetryable(tooBig)).toBe(false);
+    const failedFace = withNewCover(
+      withUpload(withClip([], pickedClip()), "clip", { kind: "done", mediaId: "v9" }),
+      "clip",
+      newFace({ kind: "failed", message: "x", retryable: true }),
+    );
+    expect(failedLineOf(failedFace)).toBe("One picture didn't upload.");
+  });
+
+  it("leaves whole, and the comment is its words again", () => {
+    expect(removeFrom(withClip([], pickedClip()), "clip")).toEqual([]);
   });
 });
 

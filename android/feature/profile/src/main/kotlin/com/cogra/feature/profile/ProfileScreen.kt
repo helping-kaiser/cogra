@@ -145,6 +145,8 @@ fun ProfileRoute(
     onOpenOpinions: () -> Unit = {},
     /** The feed's own cards, which the Posts and Comments tabs draw; the shell hosts them. */
     cardsHost: ProfileCardsHost = NoProfileCards,
+    /** The ⋮'s `Mention in a new post`: the wizard with this person staged (ProfileMenu.md:17). */
+    onMention: (profileId: String) -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
     shareModel: ProfileShareViewModel = hiltViewModel(),
 ) {
@@ -203,6 +205,7 @@ fun ProfileRoute(
         onOpenOpinions = onOpenOpinions,
         cardsHost = cardsHost,
         seen = ProfileSeen(viewModel::onCardsSeen, viewModel::onCardEdgesSeen, viewModel::onSeenCheckpoint),
+        onMention = onMention,
     )
 }
 
@@ -340,6 +343,8 @@ fun ProfileScreen(
     cardsHost: ProfileCardsHost = NoProfileCards,
     /** What the cards report to History as they are seen. */
     seen: ProfileSeen = ProfileSeen(),
+    /** The ⋮'s `Mention in a new post`: the wizard with this person staged (ProfileMenu.md:17). */
+    onMention: (profileId: String) -> Unit = {},
     now: Instant = Instant.now(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -400,6 +405,7 @@ fun ProfileScreen(
                         onMessage = onMessage,
                         onOpenOpinions = onOpenOpinions,
                         seen = seen,
+                        onMention = onMention,
                     ),
                     banners = banners,
                     drillIn = onBack != null,
@@ -428,6 +434,7 @@ internal class ProfileActions(
     val onMessage: () -> Unit,
     val onOpenOpinions: () -> Unit,
     val seen: ProfileSeen,
+    val onMention: (profileId: String) -> Unit = {},
 )
 
 /**
@@ -627,7 +634,7 @@ private fun ProfileColumn(
                     if (state.own) {
                         OwnActions(state, profile, savedHost, snackbarHostState, actions, identity)
                     } else {
-                        OtherActions(profile, savedHost, actions, identity, stanceControl)
+                        OtherActions(state, profile, savedHost, snackbarHostState, actions, identity, stanceControl)
                     }
                 },
                 under = { savedHost?.comfortLine(profile.id)?.let { RowLine(it, "profile_row_line") } },
@@ -768,12 +775,25 @@ private fun RowScope.OwnActions(
  */
 @Composable
 private fun RowScope.OtherActions(
+    state: ProfileUiState,
     profile: ProfileView,
     savedHost: SavedHost?,
+    snackbarHostState: SnackbarHostState,
     actions: ProfileActions,
     identity: DataNode,
     stanceControl: @Composable (String, String, DataNode) -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    val postLocked = stringResource(R.string.profile_mention_locked)
+    // MENTION OPENS THE WIZARD WITH THE PERSON STAGED (ProfileMenu.md:17); an
+    // applicant is told instead, and the wizard never opens (ProfileMenu.md:19).
+    val mention: () -> Unit = {
+        if (state.applicant) {
+            scope.launch { snackbarHostState.showSnackbar(NodeSnackbarVisuals(postLocked, PROFILE / "snackbar")) }
+        } else {
+            actions.onMention(profile.id)
+        }
+    }
     val row = identity / "actionRow"
     val label = if (profile.deleted) stringResource(R.string.profile_target_account) else "@${profile.handle}"
     Box(Modifier.weight(1f)) { stanceControl(profile.id, label, row / "stance") }
@@ -792,6 +812,7 @@ private fun RowScope.OtherActions(
         onOpenHistory = actions.onOpenHistory,
         onShare = { actions.onShareProfile(profile.handle) },
         onRequireAccount = actions.onRequireAccount,
+        onMention = mention,
     )
 }
 
