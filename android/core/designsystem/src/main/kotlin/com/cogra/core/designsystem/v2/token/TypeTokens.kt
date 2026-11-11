@@ -1,6 +1,7 @@
 package com.cogra.core.designsystem.v2.token
 
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.em
 
 /**
  * The weights the masters draw OFF the type ramp — each one a single drawing's
@@ -22,4 +23,11 @@ object TypeTokens {
 
     /** The failed tile's `!`: `label-medium` at 700 (`MediaThumb.jsx:266-268`). */
     val FailedMarkWeight = FontWeight.Bold
+
+    /**
+     * A readout's face line: its role's size at line-height 1.2, not the
+     * role's own leading (`StanceReadout.jsx` `ReadoutBlock` and the landing's
+     * face: `lineHeight: 1.2`).
+     */
+    val FaceLineHeight = 1.2.em
 }
