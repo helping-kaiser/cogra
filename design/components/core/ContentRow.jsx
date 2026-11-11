@@ -203,7 +203,7 @@ export function ContentRow({
   const heading = (
     <span
       style={{
-        ...(asideHandle === "bare" ? { flexShrink: 999 } : asideHandle === "words" ? { flexShrink: 0.001 } : null),
+        ...(asideHandle === "bare" ? { flexShrink: 999 } : asideHandle === "words" ? { flex: "none", maxWidth: "100%" } : null),
         fontSize: "var(--text-label-large)",
         lineHeight: "var(--text-label-large--line-height)",
         letterSpacing: "var(--text-label-large--letter-spacing)",
