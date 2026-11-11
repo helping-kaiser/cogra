@@ -1,7 +1,7 @@
 /* ERASE EVERYTHING FROM THIS BROWSER? — the think-twice dialog in front of
    the wipe (jakob 2026-10-13: "Settings needs the wipe everything from this
    device yes. ofcourse with warnings and stuff"; the settings round). Raised
-   by the Clearing data group's one row.
+   by the Clearing data group's last row.
 
    WHY IT ASKS. Erasing is irreversible (readme §11, Dialogs): the key goes,
    and with it — unless a recovery code exists — the account, for good. That

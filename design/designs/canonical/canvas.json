@@ -2378,6 +2378,15 @@
       "page": "profile"
     },
     {
+      "file": "SettingsInstallHelp.dc.html",
+      "title": "Settings · adding to your home screen, in Safari",
+      "x": 8640,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "NoScreenLock.dc.html",
       "title": "Settings · no screen lock (Android)",
       "x": 3360,
