@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -280,12 +281,13 @@ private fun PairSquare(
     val view = LocalView.current
     val reading = "${axes.directed} ${twoPlaces(value.directed)}, ${axes.interest} ${twoPlaces(value.interest)}"
     val square = node?.div("square")
-    BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f)) {
-        val sidePx = constraints.maxWidth.toFloat()
-        Canvas(
+    Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
+        // The square is the value space: the gesture, the field's spoken
+        // reading and its name sit on the box that HOLDS the ground and the
+        // marks, as the master's `square` div holds its hairlines and knob.
+        BoxWithConstraints(
             modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
+                .fillMaxSize()
                 .then(
                     if (enabled) {
                         Modifier.pairGesture(knobTravelInset(), standing, report, pressed, ranges, view)
@@ -305,9 +307,12 @@ private fun PairSquare(
                 }
                 .testTag(testTag),
         ) {
-            drawRoundRect(color = ground, cornerRadius = CornerRadius(FIELD_CORNER.toPx()))
+            val sidePx = constraints.maxWidth.toFloat()
+            Canvas(Modifier.fillMaxSize()) {
+                drawRoundRect(color = ground, cornerRadius = CornerRadius(FIELD_CORNER.toPx()))
+            }
+            PairMarks(value, layered, ranges, sidePx, square)
         }
-        PairMarks(value, layered, ranges, sidePx, square)
         PairPole(axes.left, Alignment.CenterStart, -PAIR_GUTTER_X, TextAlign.End, node = node?.div("left"))
         PairPole(axes.right, Alignment.CenterEnd, PAIR_GUTTER_X, TextAlign.Start, node = node?.div("right"))
         PairPole(axes.top, Alignment.TopCenter, 0.dp, TextAlign.Center, dy = -PAIR_GUTTER_Y, node = node?.div("top"))
@@ -330,10 +335,12 @@ private fun BoxScope.PairMarks(value: PairPoint, layered: Boolean, ranges: PairR
     val knob = MaterialTheme.colorScheme.primaryContainer
     val inset = with(LocalDensity.current) { knobTravelInset().toPx() }
     val inert = Modifier.semantics { hideFromAccessibility() }
+    // The offset comes first, so the named box IS where the mark is drawn.
     ranges.interest.zeroFraction?.let { f ->
         Box(
-            inert
+            Modifier
                 .offset { IntOffset(0, ((1f - f.toFloat()) * sidePx).roundToInt()) }
+                .then(inert)
                 .fillMaxWidth()
                 .height(1.dp)
                 .background(dead)
@@ -342,8 +349,9 @@ private fun BoxScope.PairMarks(value: PairPoint, layered: Boolean, ranges: PairR
     }
     ranges.directed.zeroFraction?.let { f ->
         Box(
-            inert
+            Modifier
                 .offset { IntOffset((f.toFloat() * sidePx).roundToInt(), 0) }
+                .then(inert)
                 .fillMaxHeight()
                 .width(1.dp)
                 .background(dead)
@@ -362,8 +370,9 @@ private fun BoxScope.PairMarks(value: PairPoint, layered: Boolean, ranges: PairR
 private fun PairDisc(at: Offset, radius: Dp, color: Color, modifier: Modifier) {
     val r = with(LocalDensity.current) { radius.toPx() }
     Box(
-        modifier
+        Modifier
             .offset { IntOffset((at.x - r).roundToInt(), (at.y - r).roundToInt()) }
+            .then(modifier)
             .size(radius * 2)
             .background(color, CircleShape),
     )
