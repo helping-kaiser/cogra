@@ -1555,8 +1555,8 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     have happened`, with one action, `Reload` (jakob 2026-11-11, T11).
     The notice's other sentences stay off it: a crash cannot promise
     that nothing was signed or spent, and the page has no report door.
-    **Drawn** on `AppCrash`. (*New 2026-11-11, drafted — wording
-    jakob's at review.*)
+    **Drawn** on `AppCrash`. (*New 2026-11-11, blessed (jakob
+    2026-11-11).*)
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide,
 the default license; not a code): it reverts, and the target's row says `That didn't go
