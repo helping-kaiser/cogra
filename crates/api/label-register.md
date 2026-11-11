@@ -1174,6 +1174,7 @@ label.
 | `test:unit:an-in-target-video-is-copied-whatever-its-audio`                                                    | an_in_target_video_is_copied_whatever_its_audio                                             |
 | `test:unit:an-inert-citation-does-not-claim-a-slot`                                                            | an_inert_citation_does_not_claim_a_slot                                                     |
 | `test:unit:an-odd-length-kept-chunk-is-padded`                                                                 | an_odd_length_kept_chunk_is_padded                                                          |
+| `test:unit:an-oversized-upload-is-refused-before-its-read`                                                     | an_oversized_upload_is_refused_before_its_read                                              |
 | `test:unit:an-smtp-url-under-the-dev-mailer-is-refused`                                                        | an_smtp_url_under_the_dev_mailer_is_refused                                                 |
 | `test:unit:an-unknown-mailer-is-refused`                                                                       | an_unknown_mailer_is_refused                                                                |
 | `test:unit:an-unpadded-final-chunk-is-normalised`                                                              | an_unpadded_final_chunk_is_normalised                                                       |
