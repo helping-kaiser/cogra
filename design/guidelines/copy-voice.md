@@ -901,7 +901,10 @@ act) keeps them and says itself.
 
 **A picker's staged row** speaks through its ×: `Remove saltmarsh`,
 `StagedReference`'s own name for the control, once a pick has moved the row
-above the list (the pickers' staged section, jakob 2026-10-01).
+into the staged section, the list's first rows above the results (jakob
+2026-10-01, 2026-11-10). Past three staged, `Show all` under the three
+newest is the pick tray's door in the same words (`PickTray`), opening the
+sheet that holds them all.
 
 **A pick, and its undoing, said aloud** — the pickers' status message
 (`PickAnnouncement`), polite and spoken only, since the row's move is all
@@ -1050,7 +1053,17 @@ a quick answer never flashes a word.
   commitment, in each family's own words.
 - `Signing…` — the line under the face while a press-and-hold signs.
   A hold has no label to swap, so the target's row carries it, in the
-  pending marker's quiet register. **Drawn** on `RowSigning`.
+  pending marker's quiet register. **Drawn** on `RowSigning`. The same
+  line carries a pad's or a dialog's act after `Close` shut it, the act
+  being sent (jakob 2026-11-11). **Drawn** on `PadFailed`'s `closed`.
+- `Close` — the way out of a pad, the alternates, the walk-back or the
+  empty sign once their act is being sent (jakob 2026-11-11). It takes
+  `Cancel`'s place, or `Keep it`'s, in the same control: until the send
+  begins that word truly cancels and nothing lands; from then on the act
+  is expected to happen, so the word would promise what it cannot do,
+  and `Close` says only what the press does — it shuts a layer (*The
+  stream and the viewer*). The wait passes to the target's row.
+  **Drawn** on `PadFailed`'s `sending`.
 
 Every other commit follows the same construction and needs no separate
 entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes

@@ -346,15 +346,21 @@ didn't sign.` with `Retry`. The snackbar never carries a failure.
 signature is taken, and a failure keeps it open at the pick with the
 fault above its commit row.
 
-**Cancel closes the pad, never the act** (seam 245, ask 16). While `Set`
-reads `Setting…`, `Cancel` — and the outside press, and Esc — stay live:
-the pad is not the act, and the act was sent and cannot be called back.
-The pad closes and the signing's wait moves to the target's row, exactly
-a hold's: `Signing…` under the face, the anchor refusing a second hold,
-then the new face and the snackbar, or `That didn't sign.` with a
-`Retry` that asks the same pick again. `PadFailed`'s `moment` chip draws
-it. The dialogs raised over the pad keep their own law: their ways out
-wait while their act signs.
+**Cancel truly cancels until the act is being sent; then it reads
+`Close`** (jakob 2026-11-11). Cancel and Close are the way out of a pad
+that stalls. From the press on `Set` until the app begins sending the
+act, `Cancel` — and the outside press, Back and Esc — closes the pad and
+nothing lands: the target's row is untouched, no line under the face, no
+snackbar. From that instant the act is expected to happen, and the same
+button, in the same place, reads `Close`. Close only leaves the pad: the
+signing's wait moves to the target's row, exactly a hold's — `Signing…`
+under the face, the anchor refusing a second hold, then the new face and
+the snackbar, or `That didn't sign.` with a `Retry` that asks the same
+pick again. A Set the reader regrets is walked back afterwards.
+`PadFailed`'s `moment` chip draws it. The walk-back and the empty sign
+raised over the pad take the same rule on their `Keep it`; a walk-back
+signs a batch, so it cancels only until the first of its acts is being
+sent. The hold has no exit once it fires.
 
 **The alternates wait the same way** (ask 14): their commit reads
 `Signing…`, a fault keeps the dialog at the pick with `Retry` in the
