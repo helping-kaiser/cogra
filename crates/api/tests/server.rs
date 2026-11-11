@@ -410,13 +410,10 @@ async fn post_endless_multipart(
             counter.fetch_add(chunk.len(), Ordering::Relaxed);
             Ok::<_, std::io::Error>(chunk)
         });
-    let mut request = Request::builder()
-        .method("POST")
-        .uri("/graphql")
-        .header(
-            "content-type",
-            format!("multipart/form-data; boundary={BOUNDARY}"),
-        );
+    let mut request = Request::builder().method("POST").uri("/graphql").header(
+        "content-type",
+        format!("multipart/form-data; boundary={BOUNDARY}"),
+    );
     if let Some(token) = token {
         request = request.header("authorization", format!("Bearer {token}"));
     }
@@ -526,8 +523,7 @@ async fn an_endless_run_of_tiny_multipart_parts_is_refused_while_it_streams(pool
     let (app, token) = small_upload_app(pool).await;
     const TINY_PART: &[u8] =
         b"--cogra-test-boundary\r\nContent-Disposition: form-data; name=\"x\"\r\n\r\n\r\n";
-    let (response, pulled) =
-        post_endless_multipart(app, Some(&token), Vec::new(), TINY_PART).await;
+    let (response, pulled) = post_endless_multipart(app, Some(&token), Vec::new(), TINY_PART).await;
     assert!(
         pulled <= PULLED_BEFORE_REFUSAL,
         "the server pulled {pulled} bytes of endless tiny parts"
@@ -588,10 +584,7 @@ const SMALL_ABSORB_BOUND: usize = api::media::RESUMABLE_THRESHOLD_BYTES
 /// request-body bytes the router pulls off the connection.
 async fn serve_counting(
     app: axum::Router,
-) -> (
-    std::net::SocketAddr,
-    Arc<std::sync::atomic::AtomicUsize>,
-) {
+) -> (std::net::SocketAddr, Arc<std::sync::atomic::AtomicUsize>) {
     use async_graphql::futures_util::StreamExt;
     use std::sync::atomic::{AtomicUsize, Ordering};
     let pulled = Arc::new(AtomicUsize::new(0));
@@ -752,11 +745,13 @@ async fn an_upload_without_a_verified_session_is_refused_unparsed(pool: PgPool) 
     let (alice, _) = rig.seed_member("alice", "alice@example.com").await;
     let (gone, _) = rig.seed_member("gone", "gone@example.com").await;
     let gone_token = rig.log_in("gone@example.com").await;
-    sqlx::query("UPDATE user_credentials SET email = NULL, password_hash = NULL WHERE actor_id = $1")
-        .bind(gone)
-        .execute(&pool)
-        .await
-        .expect("the login goes");
+    sqlx::query(
+        "UPDATE user_credentials SET email = NULL, password_hash = NULL WHERE actor_id = $1",
+    )
+    .bind(gone)
+    .execute(&pool)
+    .await
+    .expect("the login goes");
     let (address, pulled) = serve_counting(rig.app.clone()).await;
 
     let body = vec![b'x'; 6 * 1024 * 1024];
@@ -765,7 +760,10 @@ async fn an_upload_without_a_verified_session_is_refused_unparsed(pool: PgPool) 
         ("no bearer", None),
         ("a bearer that does not verify", Some("not-a-token")),
         ("an expired bearer", Some(expired.as_str())),
-        ("the bearer of an account with no login", Some(gone_token.as_str())),
+        (
+            "the bearer of an account with no login",
+            Some(gone_token.as_str()),
+        ),
     ];
     for (case, bearer) in cases {
         let before = pulled.load(std::sync::atomic::Ordering::Relaxed);
@@ -920,7 +918,10 @@ async fn an_oversized_anonymous_upload_is_refused_unread(pool: PgPool) {
     sending.abort();
 
     assert_eq!(answer.0, 200);
-    assert_eq!(answer.1["errors"][0]["extensions"]["code"], "UNAUTHENTICATED");
+    assert_eq!(
+        answer.1["errors"][0]["extensions"]["code"],
+        "UNAUTHENTICATED"
+    );
     assert_eq!(answer.2.as_deref(), Some("close"));
     assert_eq!(pulled.load(std::sync::atomic::Ordering::Relaxed), 0);
 }
