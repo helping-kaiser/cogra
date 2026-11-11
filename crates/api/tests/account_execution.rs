@@ -544,6 +544,65 @@ async fn a_cancelled_or_superseded_deletion_never_executes(pool: PgPool) {
     );
 }
 
+/// A superseded request never executes: the second request supersedes
+/// the first, whose link then answers `DELETION_TOKEN_INVALID`; the second
+/// is confirmed and comes due, and the executor runs exactly that one —
+/// once, with its own content choice — leaving the superseded row
+/// unexecuted.
+///
+/// A superseded deletion request never executes; only the request that superseded it does.
+/// ´claim:deletion:a-superseded-request-never-executes´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_superseded_request_never_executes(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = member(&rig, "sol").await;
+    let first = rig
+        .gql(
+            Some(&sol.token),
+            REQUEST,
+            json!({ "input": { "includeContent": true } }),
+        )
+        .await;
+    no_errors(&first["requestAccountDeletion"]);
+    let superseded = rig.mailer.latest_token_for(&sol.email);
+    confirmed(&rig, &sol.token, &sol.email, false).await;
+
+    let dead = confirm(&rig, &superseded).await;
+    assert_eq!(
+        dead["confirmAccountDeletion"]["userErrors"],
+        json!([{ "code": "DELETION_TOKEN_INVALID", "field": ["deletionToken"] }]),
+        "{dead}"
+    );
+
+    pass_deadline(&rig, sol.id).await;
+    let ticked = tick(&rig).await;
+    assert_eq!(ticked.executed, vec![sol.id], "{ticked:?}");
+    assert_eq!(
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM auth_account_deletions
+             WHERE user_id = $1 AND executed_at IS NOT NULL
+               AND superseded_at IS NULL AND NOT include_content",
+            sol.id
+        )
+        .await,
+        1,
+        "the standing request executed, with its own choice"
+    );
+    assert_eq!(
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM auth_account_deletions
+             WHERE user_id = $1 AND superseded_at IS NOT NULL AND executed_at IS NULL",
+            sol.id
+        )
+        .await,
+        1,
+        "the superseded request stays unexecuted"
+    );
+    assert_eq!(tick(&rig).await, Tick::default(), "nothing is left due");
+}
+
 /// A cancel and the claim serialize on the deletion row. A cancel holding
 /// the row when the claim arrives wins — the claim waits, re-reads, and
 /// finds nothing due. A cancel arriving after the claim committed finds

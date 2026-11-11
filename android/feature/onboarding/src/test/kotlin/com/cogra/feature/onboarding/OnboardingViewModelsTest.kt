@@ -5,6 +5,7 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.InviteCheck
+import com.cogra.domain.InviterView
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
 import com.cogra.domain.identity.KeyCeremony
@@ -127,7 +128,7 @@ class OnboardingViewModelsTest {
         vm.onContinue()
         assertThat(vm.state.value.inFlight).isTrue()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.exit).isEqualTo(InviteEntryExit.Join(link, "inviter"))
+        assertThat(vm.state.value.exit).isEqualTo(InviteEntryExit.Join(link, InviterView("inviter")))
         assertThat(vm.state.value.invalid).isFalse()
     }
 
@@ -178,7 +179,7 @@ class OnboardingViewModelsTest {
         vm.onContinue()
         assertThat(vm.state.value.noAnswer).isFalse()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.exit).isEqualTo(InviteEntryExit.Join(link, "inviter"))
+        assertThat(vm.state.value.exit).isEqualTo(InviteEntryExit.Join(link, InviterView("inviter")))
     }
 
     @Test
@@ -193,7 +194,7 @@ class OnboardingViewModelsTest {
         vm.onContinue()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(onboarding.checks).isEqualTo(1)
-        assertThat(vm.state.value.exit).isEqualTo(InviteEntryExit.Join(link, "inviter"))
+        assertThat(vm.state.value.exit).isEqualTo(InviteEntryExit.Join(link, InviterView("inviter")))
     }
 
     @Test

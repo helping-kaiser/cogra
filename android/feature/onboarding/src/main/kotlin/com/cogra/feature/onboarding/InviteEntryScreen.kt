@@ -42,6 +42,7 @@ import com.cogra.core.designsystem.v2.atom.TaskPage
 import com.cogra.core.designsystem.v2.atom.WaitingCommit
 import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.token.Layout
+import com.cogra.domain.InviterView
 import com.cogra.core.designsystem.R as DesignR
 
 /**
@@ -57,7 +58,7 @@ fun InviteEntryRoute(
     arrivalInviteId: String?,
     /** The form found its link spent: the door opens in its unusable reading. */
     openedInvalid: Boolean,
-    onJoin: (inviteId: String, inviterHandle: String) -> Unit,
+    onJoin: (inviteId: String, inviter: InviterView) -> Unit,
     onDeadArrival: () -> Unit,
     onSignIn: () -> Unit,
     onBrowseFeed: () -> Unit,
@@ -70,7 +71,7 @@ fun InviteEntryRoute(
     }
     LaunchedEffect(state.exit) {
         when (val exit = state.exit) {
-            is InviteEntryExit.Join -> onJoin(exit.inviteId, exit.inviterHandle)
+            is InviteEntryExit.Join -> onJoin(exit.inviteId, exit.inviter)
             InviteEntryExit.DeadArrival -> onDeadArrival()
             null -> return@LaunchedEffect
         }

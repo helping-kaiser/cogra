@@ -64,6 +64,13 @@ query AuthorRecords($author: UUID!, $first: Int!, $after: String) {
         act
         targetId
         terminalId
+        # A Type is no Node, so a topic the record ends at — a Tag's, or an
+        # opinion's on a topic — is read here: the card's `#saltmaps` aside.
+        topic {
+          name {
+            value
+          }
+        }
         # The chronicle card's age, and an opinion's own face (Profile.md:23).
         landedAt
         pDirected
@@ -228,23 +235,26 @@ query ProfileComments($id: UUID!, $after: String) {
   }
 }
 
-# The header's three figures (ProfileHeader; open-questions.md Q35):
-# record counts, each labelled and never merged, each a `totalCount`
-# with `first: 0` — the number without a page. `Posts` counts the
-# records that minted the person's posts (`genesis: true`), never an
-# edit; `Opinions on them` the Opinion records aimed at their profile;
-# `Opinions by them` the Opinion records they authored toward a person.
+# The header's three figures (ProfileHeader; open-questions.md Q35): they
+# count BUNDLES, never records (jakob 2026-11-10) — one person's opinions
+# toward one target are one, however often revised — each labelled and
+# never merged, each read with `first: 0`, the number without a page.
+# `Posts` is the records that minted the person's posts (`genesis: true`),
+# one per post, so its `totalCount` is its bundles; `Opinions on them` the
+# people holding an opinion on them and `Opinions by them` the people they
+# hold one on, each a `bundleCount` over the unmarked Opinion records —
+# exactly the rows the opinions page folds and lists.
 query ProfileFigures($id: UUID!) {
   user(id: $id) {
     id
     posts: outgoingRecords(family: PUBLISH, toKind: POST, genesis: true, first: 0) {
       totalCount
     }
-    opinionsOn: incomingRecords(family: OPINION, first: 0) {
-      totalCount
+    opinionsOn: incomingRecords(family: OPINION, payloadMarked: false, first: 0) {
+      bundleCount
     }
-    opinionsBy: outgoingRecords(family: OPINION, toKind: USER, first: 0) {
-      totalCount
+    opinionsBy: outgoingRecords(family: OPINION, toKind: USER, payloadMarked: false, first: 0) {
+      bundleCount
     }
   }
 }

@@ -14,9 +14,8 @@
 //!
 //! States with no verb yet are seeded by raw SQL: a hidden actor (the
 //! hidden-actors packet's `hideActor`) is a raw `user_hidden_actors` row,
-//! a removal is a raw tombstone version, and a deleted account reads as
-//! its erasure husk — a redacted profile version — which the erasure
-//! engine will write.
+//! a removal is a raw tombstone version. A deleted account is the husk
+//! the real deletion executor leaves (`WireRig::execute_deletion`).
 
 mod rig;
 
@@ -733,15 +732,7 @@ async fn a_kept_deleted_account_stays_as_a_husk(pool: PgPool) {
     let (_, token) = reader(&rig, "reader").await;
     let sol = person(&rig.pool, "sol").await;
     save(&rig, &token, sol).await;
-    sqlx::query(
-        "INSERT INTO actor_profile_versions
-             (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'erasure', 99, 99, 1)",
-    )
-    .bind(sol)
-    .execute(&rig.pool)
-    .await
-    .expect("husk");
+    rig.execute_deletion(sol).await;
 
     let page = saved(&rig, &token, json!({})).await;
     assert_eq!(ids(&page), vec![sol]);

@@ -79,6 +79,13 @@ const PREPARE_SEVERANCE: &str = r#"mutation($input: PrepareSeveranceInput!) {
   }
 }"#;
 
+const PREPARE_TAG: &str = r#"mutation($input: PrepareTagInput!) {
+  prepareTag(input: $input) {
+    writes { id canonicalProposal }
+    userErrors { code message field }
+  }
+}"#;
+
 const APPROVE_APPLICANTS: &str = r#"mutation($input: ApproveApplicantsInput!) {
   approveApplicants(input: $input) {
     writes { id canonicalProposal }
@@ -380,6 +387,30 @@ async fn a_creation_batch_over_the_claim_budget_is_refused_whole_and_stages_noth
         .await;
     let writes = accepted(&data, "preparePost");
     assert_eq!(writes.as_array().expect("writes").len(), 4);
+}
+
+/// A standalone tag spends the claim window, one act per call: with a
+/// window of one, the first tag on a post stages and the second is
+/// refused by the write rule's code, staging nothing.
+///
+/// A standalone tag the claim budget cannot carry is refused by the write rule.
+/// ´claim:ratelimit:a-standalone-tag-spends-the-claim-window´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_standalone_tag_over_the_claim_budget_fails_the_write_rule(pool: PgPool) {
+    let rig = WireRig::new(pool, budget(|b| b.claim = window(1)));
+    let author = member(&rig, "retagger").await;
+    let target = landed_post(&rig, &author, "a post to tag").await;
+    let tag = |name: &str| json!({ "input": { "target": target, "name": name, "pDirected": 0.1, "pInterest": 1.0 }});
+
+    let data = rig
+        .gql(Some(&author.token), PREPARE_TAG, tag("first"))
+        .await;
+    accepted(&data, "prepareTag");
+    let data = rig
+        .gql(Some(&author.token), PREPARE_TAG, tag("second"))
+        .await;
+    assert_budget_refusal(&data, "prepareTag");
+    assert!(data["prepareTag"]["writes"].is_null(), "{data}");
 }
 
 /// The daily backstop counts every staged act whatever its class: a post,

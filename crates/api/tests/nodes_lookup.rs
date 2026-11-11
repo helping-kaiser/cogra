@@ -5,8 +5,8 @@
 //! No ErrorCode is emitted by these reads: an unknown id is a null slot, not
 //! an error, and the batch cap is a transport-tier refusal pinned elsewhere.
 //!
-//! A deleted account is seeded as its erasure husk — a redacted profile
-//! version — which the erasure engine will write.
+//! A deleted account is the husk the real deletion executor leaves
+//! (`WireRig::execute_deletion`).
 
 mod rig;
 
@@ -195,15 +195,7 @@ async fn node_resolves_a_user(pool: PgPool) {
 async fn a_deleted_user_reads_as_its_husk_through_node(pool: PgPool) {
     let rig = rig(pool);
     let gone = person(&rig.pool, "gone").await;
-    sqlx::query(
-        "INSERT INTO actor_profile_versions
-             (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
-         VALUES ($1, '[redacted]', 'erasure', 99, 99, 1)",
-    )
-    .bind(gone)
-    .execute(&rig.pool)
-    .await
-    .expect("husk");
+    rig.execute_deletion(gone).await;
 
     let via_user = rig.gql(None, USER, json!({ "id": gone })).await["user"].clone();
     assert_eq!(via_user["displayName"]["status"], "REDACTED");

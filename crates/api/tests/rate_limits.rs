@@ -620,6 +620,46 @@ async fn token_confirmations_share_one_ip_budget(pool: PgPool) {
     assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
 }
 
+/// The reset link's read-only check spends the confirmation verbs' per-IP
+/// budget: checks alone trip it, the confirm is then refused, and another
+/// address is untouched — reading a token is no free guess beside them.
+///
+/// (´claim:ratelimit:the-confirmation-verbs-share-one-budget´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_reset_link_check_spends_the_confirmation_budget(pool: PgPool) {
+    let mut limits = RateLimitConfig::unlimited();
+    limits.confirm_ip = Window {
+        limit: 2,
+        window_secs: 3600.0,
+    };
+    let rig = Rig::new(pool, limits);
+    const CHECK: &str = "query($token: String!) { passwordResetLinkCheck(token: $token) }";
+
+    for _ in 0..2 {
+        let json = rig
+            .gql("10.5.0.1", CHECK, json!({ "token": "guess" }))
+            .await;
+        assert_eq!(transport_code(&json), None, "{json}");
+        assert_eq!(json["data"]["passwordResetLinkCheck"], false);
+    }
+    let json = rig
+        .gql("10.5.0.1", CHECK, json!({ "token": "guess" }))
+        .await;
+    assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
+    let json = rig
+        .gql(
+            "10.5.0.1",
+            CONFIRM_RESET,
+            json!({ "input": { "resetToken": "guess", "newPassword": "a strong password" } }),
+        )
+        .await;
+    assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
+    let json = rig
+        .gql("10.5.0.2", CHECK, json!({ "token": "guess" }))
+        .await;
+    assert_eq!(json["data"]["passwordResetLinkCheck"], false, "{json}");
+}
+
 /// A window counts attempts and resets when it expires. A zero-length
 /// window has always just expired, so every attempt is the first of a
 /// fresh one.

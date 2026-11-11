@@ -325,8 +325,7 @@ pub(crate) async fn page(
     before: Option<String>,
 ) -> async_graphql::Result<NotificationConnection> {
     let pool = ctx.data::<PgPool>()?;
-    validate_page_args(first, last, after.as_deref(), before.as_deref())
-        .map_err(|e| super::query::bad_input(e.message))?;
+    validate_page_args(first, last, after.as_deref(), before.as_deref())?;
     let backward = last.is_some() || before.is_some();
     let cursor = match if backward { &before } else { &after } {
         Some(raw) => {
