@@ -964,7 +964,23 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  ComposeKeyAbsent: [
+  // Round 31: the pickers' Show all sheets, `ComposeTags` and
+  // `ComposeCitations` over the picker. scanExempt likewise: only the sheet's
+  // controls and its scrim are numbered; `skip` steps over the picker
+  // beneath, whose staged ×s (eight on the tag picker, nine on the citation
+  // picker, every state's copy) and Done come first in the markup.
+  TagPickerShowAll: [
+    { n: 1, find: "— set how it relates\"", tag: "button", all: true },
+    { n: 2, find: 'aria-label="Remove #', tag: "button", all: true },
+    { n: 3, find: ">Done</button>", tag: "button", skip: 1 },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ReferencePickerShowAll: [
+    { n: 1, find: "— set how it relates\"", tag: "button", all: true },
+    { n: 2, find: 'aria-label="Remove ', tag: "button", all: true, skip: 9 },
+    { n: 3, find: ">Done</button>", tag: "button", skip: 1 },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],  ComposeKeyAbsent: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Change</button>", tag: "button" },
@@ -2947,12 +2963,21 @@ Object.assign(FLOW_MARKERS, {
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];
   if (!markers) return html;
-  for (const { n, find, tag, all } of markers) {
+  for (const { n, find, tag, all, skip = 0 } of markers) {
     let from = 0;
     let hits = 0;
+    let skipped = 0;
     for (;;) {
       const at = html.indexOf(find, from);
       if (at === -1) break;
+      /* `skip`: the first matches belong to a covered layer beneath, the
+         same markup a sheet over it repeats (round 31's pickers); only the
+         sheet's are stamped. */
+      if (skipped < skip) {
+        skipped += 1;
+        from = at + find.length;
+        continue;
+      }
       const tagStart = html.lastIndexOf(`<${tag}`, at);
       if (tagStart === -1) throw new Error(`${name}: no <${tag}> before marker ${n} (${find})`);
       const stamped = html.slice(tagStart).replace(new RegExp(`^<(${tag})(?=[\\s>])`), `<$1 data-flow="${n}"`);

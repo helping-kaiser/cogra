@@ -1689,7 +1689,7 @@
       "x": -3900,
       "y": 0,
       "w": 3480,
-      "h": 4877,
+      "h": 4851,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -2318,6 +2318,24 @@
       "file": "TagPickerRefused.dc.html",
       "title": "Add a tag · a name it can't take",
       "x": 4320,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "TagPickerShowAll.dc.html",
+      "title": "Add a tag · show all",
+      "x": 4800,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "ReferencePickerShowAll.dc.html",
+      "title": "Cite something · show all",
+      "x": 5280,
       "y": 0,
       "w": 390,
       "h": 844,
