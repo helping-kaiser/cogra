@@ -485,7 +485,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'data-field="Words"', tag: "div" },
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
-    { n: 6, find: "+ Add pictures · 1 of 4", tag: "button" },
+    // The add row's words are the `body` chip's hole (round 30).
+    { n: 6, find: "{{addLabel}}", tag: "button" },
     { n: 7, find: ">Describe the pictures</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },

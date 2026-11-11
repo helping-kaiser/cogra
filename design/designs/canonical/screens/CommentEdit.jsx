@@ -36,7 +36,10 @@
    does, and a picked clip arrives as `CommentEditVideo` draws it, with its
    cover row; until the edit's video path ships the clip is refused with the
    staged line (staged-surfaces). This board draws a comment holding a
-   picture, so its row keeps `+ Add pictures · 1 of 4`.
+   picture, so its row keeps `+ Add pictures · 1 of 4`; the `body` chip's
+   `words` draws the comment holding words alone (round 30, jakob 2026-11-11:
+   "draw it"): its media block is the add row alone, `+ Add pictures or a
+   video`, as the reply composer's words stage draws it.
 
    THE BODY IS `_shared.jsx`'s `CommentEditBody`, because the acts sheet stands
    on this edit and draws it whole.
@@ -47,9 +50,10 @@ export const NODE = "commentEdit";
 export const PROPS = {
   target: { editor: "enum", options: ["live", "removed"], default: "live" },
   upload: { editor: "enum", options: ["none", "uploading"], default: "none" },
+  body: { editor: "enum", options: ["pictures", "words"], default: "pictures" },
 };
-export const VALS = `liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none"`;
+export const VALS = `liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none", picturesShown: this.props.body === "words" ? "none" : "flex", addLabel: this.props.body === "words" ? "+ Add pictures or a video" : "+ Add pictures · 1 of 4"`;
 
 export function Screen() {
-  return <CommentEditBody holes />;
+  return <CommentEditBody holes bodyChip />;
 }

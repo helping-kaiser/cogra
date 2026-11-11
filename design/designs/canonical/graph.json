@@ -924,7 +924,7 @@
     { "from": "CommentEdit", "via": 3, "kind": "detour", "label": "? — Editing", "to": [{ "board": "HelpDialog", "case": "the Editing text" }] },
     { "from": "CommentEdit", "via": 4, "kind": "advance", "label": "Words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "CommentEdit", "via": 5, "kind": "advance", "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the batch" }] },
-    { "from": "CommentEdit", "via": 6, "kind": "advance", "label": "+ Add pictures · 1 of 4", "to": [{ "terminal": "os", "case": "the platform's own picker — comments have no pick stage" }] },
+    { "from": "CommentEdit", "via": 6, "kind": "advance", "label": "+ Add pictures · 1 of 4", "to": [{ "terminal": "os", "case": "the platform's own picker — comments have no pick stage; at the body chip's words the row reads + Add pictures or a video, and a picked clip arrives with its cover row, as CommentEditVideo draws it" }] },
     { "from": "CommentEdit", "via": 7, "kind": "advance", "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet (master on the media page)" }] },
     { "from": "CommentEdit", "via": 8, "kind": "advance", "label": "tag chip ×", "to": [{ "terminal": "self", "case": "the tag withdraws — a signed act in the batch" }] },
     { "from": "CommentEdit", "via": 9, "kind": "advance", "label": "+ Add a tag", "to": [{ "board": "TagPicker" }] },

@@ -2582,8 +2582,17 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
    so the foot reads five. Sign is the confirmation; no dialog asks again.
 
    THE FIELDS SCROLL UNDER THE PINNED FOOT, the post edit's reading: a comment
-   with its citations drawn runs taller than the phone. */
-function CommentEditBody({ holes = false } = {}) {
+   with its citations drawn runs taller than the phone.
+
+   `bodyChip` IS `CommentEdit`'s `body` chip (round 30, jakob 2026-11-11, Q14:
+   "draw it"): at `words` the comment holds words alone, so the media block
+   draws only its add row, `+ Add pictures or a video` — the reply composer's
+   own row under its words (`ReplyComposeBody`), since a comment holds words,
+   pictures or one video (jakob 2026-11-10). The block's label, thumbnail and
+   describe row stand only while a picture does; the add row stays the one
+   `pictures.add`, its words a hole. */
+function CommentEditBody({ holes = false, bodyChip = false } = {}) {
+  const shown = (hole) => (bodyChip ? `{{${hole}}}` : "flex");
   return (
     <>
       <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
@@ -2594,12 +2603,18 @@ function CommentEditBody({ holes = false } = {}) {
           <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." node="words" />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="pictures">
-            <FieldLabel node="label">Pictures</FieldLabel>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} node="thumb" nodeKey="1" />
-              <InlineAction size="sm" node="add">+ Add pictures · 1 of 4</InlineAction>
+            <div style={{ display: shown("picturesShown"), flexDirection: "column" }}>
+              <FieldLabel node="label">Pictures</FieldLabel>
             </div>
-            <DescribeCounter described={1} total={1} onDescribe={() => {}} node="describeRow" />
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: shown("picturesShown") }}>
+                <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} node="thumb" nodeKey="1" />
+              </div>
+              <InlineAction size="sm" node="add">{bodyChip ? "{{addLabel}}" : "+ Add pictures · 1 of 4"}</InlineAction>
+            </div>
+            <div style={{ display: shown("picturesShown"), flexDirection: "column" }}>
+              <DescribeCounter described={1} total={1} onDescribe={() => {}} node="describeRow" />
+            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
