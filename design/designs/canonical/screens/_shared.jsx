@@ -200,6 +200,8 @@ const PICKER_NOTE = {
   color: "var(--text-secondary)",
 };
 
+
+
 /* An opinion of one gentle record — the vouch-back default made a bundle. */
 function mkBundle(pDirected, pInterest) {
   const pair = { pDirected, pInterest };
@@ -5980,5 +5982,190 @@ function DeadGrid() {
         <div key={index} style={{ width: 125, height: 125, background: bg, outline: "1px solid var(--border-hairline)", outlineOffset: -1 }} />
       ))}
     </div>
+  );
+}
+
+/* THE TAG PICKER'S BODY, written once (round 31): `TagPicker` draws it with its chip's holes, and `TagPickerShowAll` beneath the sheet its door raises, at `seven` — the picker beneath is the picker, as the seal beneath the seals' sheets is the seal (`ComposeSealBody`). */
+/* The staged sets the `state` chip draws, oldest first; the list shows the
+   three newest, newest on top. `seven` is the seal's well-tagged post
+   (`SEAL_TAGS_MANY`), so the sheet it opens is the seals' own; the cap's ten
+   add the tree's other sample tags. */
+const TAG_PICKER_SEVEN = SEAL_TAGS_MANY;
+const TAG_PICKER_TEN = ["saltmarsh", "saltflats", "fieldnotes", "coastroad", "tidal", "estuary", "cartography", "lowtide", "photography", "tidetables"];
+const tagPickerNewestThree = (tags) => tags.slice(-3).reverse();
+const tagPickerStagedRows = (tags) => tagPickerNewestThree(tags).map((name) => <StagedReference key={name} kind="topic" name={name} onRemove={() => {}} node="tag" nodeKey={name} />);
+const PICKER_DOOR = (
+  <div style={{ display: "flex", padding: "0 12px" }}>
+    <InlineAction size="sm" selfStart node="door">
+      Show all
+    </InlineAction>
+  </div>
+);
+
+const TAG_PICKER_HOLES = Object.fromEntries(["capShown", "faultShown", "candidatesShown", "rowsOpacity", "twoShown", "sevenShown", "tenShown", "saltmapsShown"].map((k) => [k, `{{${k}}}`]));
+const TAG_PICKER_AT_SEVEN = { capShown: "none", faultShown: "none", candidatesShown: "flex", rowsOpacity: "1", twoShown: "none", sevenShown: "flex", tenShown: "none", saltmapsShown: "none" };
+function TagPickerBody({ v = TAG_PICKER_HOLES }) {
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" node="help" />} node="header" />
+      <div style={{ flex: "none" }}>
+        <SearchBar query="salt" placeholder="Name a tag" ariaLabel="Name a tag" node="nameField" />
+        {/* The naming rule stands under the field at rest too (copy-voice; the
+            gate is stated, not discovered — `TagPickerTyping`). */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
+          <p style={{ margin: 0, fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="rule">
+            Letters, digits, dot, dash and underscore. Capitals become lowercase.
+          </p>
+        </div>
+        {/* The cap line stands in the fixed head, under the rule, in sight
+            however far the list is scrolled (jakob 2026-11-11). */}
+        <div style={{ display: v.capShown }} data-node-chip="state" data-node-key="cap">
+          <p style={PICKER_NOTE} data-node="cap">
+            Up to 10 tags per post.
+          </p>
+        </div>
+        <PickAnnouncement said="Added — in the staged list." node="announcement" />
+      </div>
+      {/* ONE SCROLLING LIST: the staged rows are its first rows, the results
+          follow (jakob 2026-11-10), drawn at its top as the edits draw a
+          scrolled column (`ReplyVideo`). */}
+      <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }} data-node="staged">
+          <div style={{ display: v.twoShown, flexDirection: "column", gap: 8 }}>
+            <StagedReference kind="topic" name="saltflats" onRemove={() => {}} node="tag" nodeKey="saltflats" />
+            <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} node="tag" nodeKey="saltmarsh" />
+          </div>
+          <div style={{ display: v.sevenShown, flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="seven">
+            {tagPickerStagedRows(TAG_PICKER_SEVEN)}
+            {PICKER_DOOR}
+          </div>
+          <div style={{ display: v.tenShown, flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="cap">
+            {tagPickerStagedRows(TAG_PICKER_TEN)}
+            {PICKER_DOOR}
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", opacity: v.rowsOpacity }}>
+          <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="salt" />
+          <div style={{ display: v.candidatesShown, flexDirection: "column" }}>
+            <div style={{ display: v.saltmapsShown, flexDirection: "column" }}>
+              <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltmaps" />
+            </div>
+            <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltcrust" />
+          </div>
+        </div>
+        <div style={{ display: v.faultShown, padding: "8px 24px" }} data-node-chip="state" data-node-key="fault">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)" }} data-node="fault">
+            <TransportError message="Can't reach the server — tags can't load right now." />
+            <Button variant="outline" size="sm" selfStart node="retry">
+              Retry
+            </Button>
+          </div>
+        </div>
+        <div style={{ flex: 1 }} />
+        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="footnote">
+          Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
+        </p>
+      </div>
+      <div style={{ flex: "none", padding: "0 24px 24px" }}>
+        <Button style={{ width: "100%" }} node="done">Done</Button>
+      </div>
+    </>
+  );
+}
+
+/* THE CITATION PICKER'S BODY, written once (round 31): `ReferencePicker` draws it with its chip's holes, `ReferencePickerShowAll` beneath the sheet its door raises, at `seven` (`TagPickerBody`'s reason). */
+const REF_PICKER_KINDS = FEED_KINDS.filter((kind) => kind.value !== "topics");
+
+/* The staged sets the `state` chip draws, oldest first; the list shows the
+   three newest, newest on top, each keyed by its place from the top. The
+   seven begin with the seals' three (`SEAL_CITATIONS`) and end with this
+   board's own staged post; the cap's ten add three of the tree's sample
+   people. */
+const REF_PICKER_PAIR = { pDirected: 0.1, pInterest: 0.1 };
+const refPickerStaged = (kind, name, sub, src, pair = REF_PICKER_PAIR) => ({ kind, name, sub, src, pair, onRemove: () => {}, onEdit: () => {} });
+const REF_PICKER_SEVEN = [
+  ...SEAL_CITATIONS,
+  refPickerStaged("person", "Juno Baptiste", "Person"),
+  refPickerStaged("person", "Kel Moreau", "Person"),
+  refPickerStaged("post", "First try at a rubbing", "Post"),
+  refPickerStaged("post", "Salt maps of the coast road", "Post", "post-photo.jpg"),
+];
+const REF_PICKER_TEN = [...REF_PICKER_SEVEN, refPickerStaged("person", "Ines Salas", "Person"), refPickerStaged("person", "Salome Ward", "Person"), refPickerStaged("person", "Nadia Rask", "Person")];
+const refPickerStagedRows = (items) =>
+  items
+    .slice(-3)
+    .reverse()
+    .map((item, i) => <StagedReference key={item.name} kind={item.kind} name={item.name} sub={item.sub} src={item.src} onRemove={() => {}} node="stagedReference" nodeKey={String(i + 1)} />);
+const REF_PICKER_TODAYS = <StagedReference kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" onRemove={() => {}} node="stagedReference" nodeKey="1" />;
+
+const REF_PICKER_HOLES = Object.fromEntries(["capShown", "faultRowShown", "faultShown", "filterRowShown", "filterShown", "pickingShown", "rowsOpacity", "rowsShown", "sevenShown", "tenShown"].map((k) => [k, `{{${k}}}`]));
+const REF_PICKER_AT_SEVEN = { capShown: "none", faultRowShown: "none", faultShown: "none", filterRowShown: "none", filterShown: "none", pickingShown: "none", rowsOpacity: "1", rowsShown: "flex", sevenShown: "flex", tenShown: "none" };
+function ReferencePickerBody({ v = REF_PICKER_HOLES }) {
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back to the post" title="Cite something" action={<HelpDot ariaLabel="Citing" node="help" />} node="header" />
+      <div style={{ flex: "none" }}>
+        <SearchBar query="salt" ariaLabel="Cite something" node="searchField" />
+        <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
+          <FilterTrigger reading="Everything" ariaLabel="What the search shows" node="filterTrigger" />
+        </div>
+        {/* The cap line stands in the fixed head, under the filter (jakob
+            2026-11-11). */}
+        <div style={{ display: v.capShown }} data-node-chip="state" data-node-key="cap">
+          <p style={PICKER_NOTE} data-node="cap">
+            Up to 10 citations per post.
+          </p>
+        </div>
+        <PickAnnouncement said="Added — in the staged list." node="announcement" />
+      </div>
+      {/* ONE SCROLLING LIST, the staged rows first (`TagPicker`). */}
+      <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }} data-node="staged">
+          <div style={{ display: v.pickingShown, flexDirection: "column" }} data-node-chip="state" data-node-key="picking">
+            {REF_PICKER_TODAYS}
+          </div>
+          <div style={{ display: v.filterRowShown, flexDirection: "column" }} data-node-chip="state" data-node-key="filter">
+            {REF_PICKER_TODAYS}
+          </div>
+          <div style={{ display: v.faultRowShown, flexDirection: "column" }} data-node-chip="state" data-node-key="fault">
+            {REF_PICKER_TODAYS}
+          </div>
+          <div style={{ display: v.sevenShown, flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="seven">
+            {refPickerStagedRows(REF_PICKER_SEVEN)}
+            {PICKER_DOOR}
+          </div>
+          <div style={{ display: v.tenShown, flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="cap">
+            {refPickerStagedRows(REF_PICKER_TEN)}
+            {PICKER_DOOR}
+          </div>
+        </div>
+        <div style={{ display: v.faultShown, padding: "8px 24px" }} data-node-chip="state" data-node-key="fault">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)" }} data-node="fault">
+            <TransportError message="Can't reach the server — results can't load right now." />
+            <Button variant="outline" size="sm" selfStart node="retry">
+              Retry
+            </Button>
+          </div>
+        </div>
+        <div style={{ display: v.rowsShown, flexDirection: "column", opacity: v.rowsOpacity }}>
+          <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="result" nodeKey="1" />
+        </div>
+      </div>
+      <div style={{ flex: "none", padding: "8px 24px 24px" }}>
+        <Button style={{ width: "100%" }} node="done">Done</Button>
+      </div>
+
+      <div style={{ display: v.filterShown }} data-node-chip="state" data-node-key="filter">
+        <BottomSheet open ariaLabel="What the search shows" node="filterSheet">
+          <SheetTitle node="title">What the search shows</SheetTitle>
+          <FilterSection label="Kinds" hint="Combine as many as you like. All, until you narrow it." node="kinds">
+            {REF_PICKER_KINDS.map((kind) => (
+              <Chip key={kind.value} label={kind.label} selected={false} node={`${kind.value}Chip`} />
+            ))}
+          </FilterSection>
+          <FilterFoot node="foot" />
+        </BottomSheet>
+      </div>
+    </>
   );
 }
