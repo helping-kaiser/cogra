@@ -59,10 +59,7 @@ export function SeveranceConfirm({
   bundle,
   records = 1,
   alreadySevered = false,
-  busy: busyGiven = false,
-  /* The batch's first act is being sent (round 31): the commit still waits,
-     and the way out reads `Close`. Implies `busy`. */
-  sent = false,
+  busy = false,
   failed = false,
   /* THE WRITE RULE REFUSED THE WALK-BACK (seam 245, ask 15). Its pre-check
      staged nothing and spent nothing, so it is a notice, not a fault, and it
@@ -83,7 +80,6 @@ export function SeveranceConfirm({
   /* THE COST IS COUNTED IN THINGS, NOT IN ACTIONS (jakob's ruling, the geek
      round). "Signed action" is the repo's word for a record; what the reader
      has is a pile of things they said, each of which has to be said back. */
-  const busy = busyGiven || sent;
   const cost = records === 1 ? "It signs 1 thing, paid on its own." : `It signs ${records} things, each paid separately.`;
   /* The pick wears the face every pair wears (`bundleReadout`): a pick with
      one number at zero thinks, as it does on the pad. A pick of (0, 0) reaches
@@ -159,21 +155,19 @@ export function SeveranceConfirm({
           >
             {busy ? sever.busy ?? "Signing…" : failed ? "Retry" : sever.control}
           </button>
-          {/* THE WAY OUT STAYS LIVE WHILE IT SIGNS (jakob 2026-11-11, round
-              31): it is the way out of a dialog that stalls. Until the first
-              of the batch's acts is being sent, `Keep it` — and the scrim,
-              Escape and Back — truly cancels: the dialog closes, nothing
-              lands, the target's row is untouched. From that instant the
-              walk-back is expected to happen, and the same button reads
-              `Close`: it only leaves, the wait passing to the target's row as
-              the pad's does. */}
+          {/* ONCE `Walk it back` IS PRESSED THE WALK-BACK IS DONE (jakob
+              2026-11-11): nothing cancels it. While it signs, `Keep it` reads
+              `Close` in the same place, live, and it — the scrim, Escape and
+              Back too — closes the dialog and the pad beneath, so the reader
+              need not wait: the whole batch goes on, its wait on the target's
+              row as the pad's is. */}
           <button
             type="button"
             onClick={onCancel}
             className={BUTTON_CLASS}
             style={buttonStyle({ variant: "primary" })}
           >
-            {sent ? "Close" : "Keep it"}
+            {busy ? "Close" : "Keep it"}
           </button>
         </>
       }

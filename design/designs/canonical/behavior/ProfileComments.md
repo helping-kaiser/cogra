@@ -24,11 +24,11 @@ WHEN tap profile.tabRow.commentsTab -> NEVER anything changes
 
 WHEN tap profile.comments.commentCard.authorChip on one of the person's own comments -> NEVER anything changes
 
-WHEN tap profile.comments.commentCard.target -> the thread it lives in opens
+WHEN tap profile.comments.commentCard.target -> the thread it lives in opens scrolled to that comment
 
-WHEN tap Reply on a comment -> the thread the comment lives in opens
+WHEN tap Reply on a comment -> the thread the comment lives in opens scrolled to that comment
 
-WHEN tap profile.comments.viewReplies -> the thread the comment lives in opens
+WHEN tap profile.comments.viewReplies -> the thread the comment lives in opens scrolled to that comment
 
 WHEN tap Reply on a comment GIVEN the reader is an applicant -> the snackbar reads You can comment once you're in. AND NEVER the thread's composer opens
 

@@ -66,6 +66,8 @@ WHEN tap profile.bottomBar.profileSlot GIVEN the profile stands at its top -> NE
 
 WHEN tap profile.bottomBar.profileSlot GIVEN a screen deeper in the Profile tab's stack is showing -> the profile comes back at the scroll it was left, its list as it was left AND the header's facts are read again beneath it AND NEVER the list reloads
 
+WHEN press Android's system Back GIVEN the Profile tab's root is showing -> Feed's root opens for the reader's state AND NEVER the app leaves from the Profile tab
+
 WHEN pull down GIVEN the profile stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
 
 ALWAYS the system draws no refresh indicator of its own

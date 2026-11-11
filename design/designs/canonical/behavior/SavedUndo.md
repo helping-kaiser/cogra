@@ -18,9 +18,9 @@ WHEN tap Unsave on another card's ⋮ GIVEN the snackbar stands -> that card lea
 
 WHEN the snackbar has stood 4s without Undo -> the snackbar clears AND the list stays without the card
 
-WHEN saved.commentCard's head row is tapped -> the post it answers opens AND its back arrow reads Back to Saved
+WHEN saved.commentCard.target is tapped -> the post it answers opens AND its back arrow reads Back to Saved
 
-WHEN saved.commentCard is tapped outside its head row and its own controls -> the post's comment section opens scrolled to that comment AND the post's back arrow beneath the thread reads Back to Saved
+WHEN saved.commentCard is tapped outside saved.commentCard.target and its own controls -> the post's comment section opens scrolled to that comment AND the post's back arrow beneath the thread reads Back to Saved
 
 WHEN saved.profileCard is tapped -> that person's profile opens AND its back arrow reads Back to Saved
 

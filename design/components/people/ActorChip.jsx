@@ -86,7 +86,7 @@ export function MonogramAvatar({ name, size = "sm", src, redacted = false, node 
   const initial = redacted ? null : (name ?? "").trim().charAt(0).toUpperCase() || "?";
   const box =
     typeof size === "number"
-      ? { height: `${size}px`, width: `${size}px`, fontSize: size >= 56 ? "var(--text-headline-small)" : "var(--text-label-large)" }
+      ? { height: `${size}px`, width: `${size}px`, fontSize: size >= 56 ? "var(--text-headline-small)" : "var(--text-label-large)", lineHeight: size >= 56 ? "var(--text-headline-small--line-height)" : "var(--text-label-large--line-height)", letterSpacing: size >= 56 ? "var(--text-headline-small--letter-spacing)" : "var(--text-label-large--letter-spacing)", fontWeight: size >= 56 ? "var(--text-headline-small--font-weight)" : "var(--text-label-large--font-weight)" }
       : size === "lg"
         ? { height: "64px", width: "64px", fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", letterSpacing: "var(--text-headline-small--letter-spacing)", fontWeight: "var(--text-headline-small--font-weight)" }
         : size === "md"

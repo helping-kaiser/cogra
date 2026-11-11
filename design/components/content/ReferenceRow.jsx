@@ -107,6 +107,8 @@ export function NodeMark({ kind, name, src, onCard = false, redacted = false, si
         ...tile,
         fontFamily: "var(--font-sans)",
         fontSize: small ? "var(--text-label-large)" : "var(--text-title-medium)",
+        lineHeight: small ? "var(--text-label-large--line-height)" : "var(--text-title-medium--line-height)",
+        letterSpacing: small ? "var(--text-label-large--letter-spacing)" : "var(--text-title-medium--letter-spacing)",
         fontWeight: small ? "var(--text-label-large--font-weight)" : "var(--text-title-medium--font-weight)",
       }}
       aria-hidden="true"

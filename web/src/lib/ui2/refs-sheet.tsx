@@ -122,7 +122,7 @@ function referenceMark(view: ReferenceTargetView): ReactNode {
     case "User":
       // The monogram is the DESIGNED placeholder rather than a gap waiting for a
       // photo, so a mention needs no avatar on the wire to draw its circle.
-      return <MonogramAvatar name={view.displayName ?? view.label} size={32} />;
+      return <MonogramAvatar name={view.displayName ?? view.label} size={32} tier="md" />;
     case "Post":
       return <NodeTile>T</NodeTile>;
     case "Comment":

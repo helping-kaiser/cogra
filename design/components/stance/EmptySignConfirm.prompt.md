@@ -10,4 +10,4 @@ The words are fixed: `Sign an empty opinion?` · `This says nothing about @ada, 
 
 **`SeveranceConfirm`'s shape**: the safe action, `Keep it`, filled in the right-hand slot; the act a text button on the left; no `error` colour; the pad stays parked beneath, so `Keep it`, the scrim, Escape and Back return to the pick as it was. `StanceControl` raises it on its own — reach for the component directly only to draw the moment.
 
-**The signing waits, and says so.** `busy` swaps the act to `Setting…` and makes it inert, never dimmed, and the ways out wait with it; `failed` keeps the dialog up with `That didn't send. Try again.` and the act's slot reads `Retry`.
+**The signing waits, and says so.** `busy` swaps the act to `Setting…` and makes it inert, never dimmed; nothing cancels the act, so `Keep it` reads `Close` and, with the scrim, Escape and Back, closes the dialog and the pad beneath, the act going on, its wait on the target's row; `failed` keeps the dialog up with `That didn't send. Try again.` and the act's slot reads `Retry`.

@@ -32,7 +32,6 @@ import { cssRatio, tileRatio } from "@/lib/ui2/media/aspect";
 import { formatDuration } from "@/lib/ui2/media/video";
 import { setMuted, useMuted } from "@/lib/ui2/media/mute";
 import { VideoTransport } from "@/lib/ui2/media/video-transport";
-import { LABEL_SMALL_PLAIN } from "@/lib/ui2/plain-type";
 
 export function CoverStep({
   videoUrl,
@@ -192,7 +191,7 @@ function Preview({
       ) : noFrames && !started ? (
         <div
           data-testid="wizard-cover-no-frame"
-          className={`grid size-full place-items-center px-2 text-center ${LABEL_SMALL_PLAIN} text-on-surface-variant`}
+          className={`grid size-full place-items-center px-2 text-center text-label-small text-on-surface-variant`}
         >
           No frame
         </div>
