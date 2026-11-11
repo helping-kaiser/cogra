@@ -906,8 +906,6 @@ async fn two_vouches_landing_in_one_epoch_pick_the_earlier_position(pool: PgPool
     };
     assert_eq!(rig.landed_paths(noa.account).await, vec![winner]);
 
-    // The earlier position carries the higher act time now: the reads that
-    // name the admitting vouch still pick it, by position.
     sqlx::query(
         "UPDATE mirror_records SET act_time = CASE WHEN record_id = $1 THEN 900 ELSE 100 END
          WHERE record_id = ANY($2)",

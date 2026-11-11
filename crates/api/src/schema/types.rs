@@ -6221,8 +6221,6 @@ mod page_tests {
             .expect("base64"),
             b"7:3"
         );
-        // One epoch, the later position carrying the lower act time: the
-        // key the cursor resumes from is the position's.
         let earlier = CursorKey {
             epoch: 7,
             position: 3,
