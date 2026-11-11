@@ -14,15 +14,15 @@ WHEN tap feed.commentCard.media.frame.playDisc -> feed.commentCard.media.frame's
 
 WHEN tap feed.commentCard.media.frame.soundDisc -> sound turns on or off for every clip on every surface together
 
-ALWAYS feed.commentCard's head row names a comment it answers by its author's handle over its first words, with the comment's own mark
+ALWAYS feed.commentCard.target names a comment it answers by its author's handle over its first words, with the comment's own mark
 
-ALWAYS feed.commentCard's head row names an untitled post it answers by the post's first words in the title's place, over its author, with the text post's mark
+ALWAYS feed.commentCard.target names an untitled post it answers by the post's first words in the title's place, over its author, with the text post's mark
 
-ALWAYS feed.commentCard's head row reads Removed by its author in the title's place, in the system's voice, over the author, with an empty tile GIVEN the post it answers was removed by its author
+ALWAYS feed.commentCard.target reads Removed by its author in the title's place, in the system's voice, over the author, with an empty tile GIVEN the post it answers was removed by its author
 
 ALWAYS feed.commentCard stays readable GIVEN the post it answers was removed
 
-ALWAYS the compact veil takes a veiled feed.commentCard's words and its head row stays readable
+ALWAYS the compact veil takes a veiled feed.commentCard's words and feed.commentCard.target stays readable
 
 ALWAYS feed.commentCard's menu is the reader's own comment menu GIVEN the comment is the reader's own, and nothing else on the card changes
 

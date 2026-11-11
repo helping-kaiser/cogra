@@ -54,7 +54,7 @@
    tag page is: `header`, and one `heldTopic` per row, keyed by its name.
 
    THE `list` CHIP DRAWS TWO MORE STATES (seam 248). `empty` is a reader who
-   holds nothing: the line alone, `No topics yet — say how you feel about one
+   holds nothing: the line alone, `No tags yet — say how you feel about one
    from its page.` (copy-voice, *The empty list*, blessed), as `empty`, and
    Explore's door reads `0 held`. `redacted` is a held topic whose NAME
    moderation took away — never erased silently: the reader's own record
@@ -84,7 +84,7 @@ const heldRow = (topic) => (
 export function Screen() {
   return (
     <>
-      <PageHeader title="Your topics" backHref="#" backLabel="Back to Explore" node="header" />
+      <PageHeader title="Your tags" backHref="#" backLabel="Back to Explore" node="header" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "4px 0 0" }}>
         <div style={{ display: "{{rowsShown}}", flexDirection: "column" }}>
           {HELD_TOPICS.slice(0, 4).map(heldRow)}
@@ -103,7 +103,7 @@ export function Screen() {
           {HELD_TOPICS.slice(4).map(heldRow)}
         </div>
         <div style={{ display: "{{emptyShown}}", padding: "8px 24px" }} data-node-chip="list" data-node-key="empty">
-          <EmptyState title="No topics yet — say how you feel about one from its page." node="empty" />
+          <EmptyState title="No tags yet — say how you feel about one from its page." node="empty" />
         </div>
       </div>
     </>

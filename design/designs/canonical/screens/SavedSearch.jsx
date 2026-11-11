@@ -6,10 +6,8 @@
    it stand first and the saved things those people authored follow them.
    No full handle is needed — `@m` reaches @mira, @maren and @mateo alike.
 
-   PEOPLE FIRST, CAPPED AT THREE — THE CAP IS THE ORCHESTRATOR'S REC, NOT YET
-   JAKOB'S WORD. The ruling drew the cap for search; whether Saved and
-   History cap too is enumerated for jakob, drawn here as recommended (one
-   law for every sectioned surface). So the people take a section under the
+   PEOPLE FIRST, CAPPED AT THREE (one law for every sectioned surface,
+   Saved and History included; jakob 2026-11-11). So the people take a section under the
    house's quiet caption (`SectionLabel`, `People`, the caption Explore's
    recents wear), at most three — the newest saves among the matches — and
    `See all profiles` closes it when more match. Saved has no kind filter, so
@@ -27,19 +25,6 @@
    `profilesDoor`, as `ExplorePerson` names them. */
 export const NODE = "saved";
 export const FRAME = { width: 390, height: 1110 };
-
-const MAREN = { handle: "maren", displayName: "Maren Holt" };
-const MATEO = { handle: "mateo", displayName: "Mateo Ruiz" };
-const MIRA_WORDS_POST = {
-  author: MIRA,
-  content: "Honey's back at the stand by the sea wall — the first jars since June.",
-  timestamp: "5h",
-  score: "4.30",
-  comments: 1,
-  opinions: 3,
-  license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
-};
 
 export function Screen() {
   return (

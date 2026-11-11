@@ -92,6 +92,7 @@ export function Screen() {
         <PickCopies
           draw={(pick) => (
             <CommentFeedCard
+              id={TOBIAS_COMMENT_ID}
               author={TOBIAS}
               content={TOBIAS_COMMENT}
               timestamp="1h"
@@ -114,7 +115,7 @@ export function Screen() {
           score="11.70"
           node="profileCard"
         />
-        <TagFeedCard name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" node="tagCard" />
+        <TagFeedCard id={SALTMAPS_TAG_ID} name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" node="tagCard" />
         <HistoryDayDivider node="day" nodeKey="2-october">
           2 October
         </HistoryDayDivider>

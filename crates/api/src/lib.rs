@@ -19,6 +19,7 @@ pub mod l1;
 pub mod loaders;
 pub mod mailer;
 pub mod media;
+pub mod multipart;
 pub mod nodes;
 pub mod onboarding;
 pub mod prepare;
@@ -40,7 +41,6 @@ pub mod topics;
 use std::sync::Arc;
 
 use async_graphql::futures_util::TryStreamExt;
-use async_graphql::http::MultipartOptions;
 use async_graphql_axum::GraphQLResponse;
 use async_graphql_axum::rejection::GraphQLRejection;
 use axum::body::Bytes;
@@ -102,7 +102,7 @@ pub struct UploadRouting {
 struct AppState {
     schema: ApiSchema,
     auth: AuthConfig,
-    multipart: MultipartOptions,
+    multipart: multipart::MultipartLimits,
     uploads: UploadRouting,
 }
 
@@ -120,9 +120,11 @@ struct AppState {
 /// defaults, and the defaults are *no limits at all*: an unbounded file
 /// size and an unbounded file count. `uploadMedia` is the one mutation
 /// that carries a binary, so leaving that as it comes would make a
-/// single request an unbounded write. Everything else about the parse is
-/// the extractor's own pipeline — body stream, `StreamReader`, the
-/// compatibility shim, `receive_batch_body`.
+/// single request an unbounded write. A JSON body takes the extractor's
+/// own pipeline — body stream, `StreamReader`, the compatibility shim,
+/// `receive_batch_body`; a multipart body takes [`multipart`]'s parse,
+/// because the library's gives the `operations` and `map` fields the
+/// file's limit.
 ///
 /// The whole body is bounded a layer above, by
 /// `RequestBodyLimitLayer` on the route (see [`app`]): consuming the body
@@ -131,7 +133,10 @@ struct AppState {
 /// an extractor. That ceiling is sized for an upload; every body that is
 /// not one answers to [`GRAPHQL_JSON_BODY_LIMIT_BYTES`] instead, wrapped
 /// here in `http_body_util::Limited` before the library reads a byte,
-/// because the library reads a JSON body whole before it parses it.
+/// because the library reads a JSON body whole before it parses it. A
+/// multipart body holds its `operations` and `map` fields to the same
+/// ceiling, and the rest of its envelope to
+/// [`multipart::MULTIPART_ENVELOPE_BYTES`].
 async fn graphql_handler(
     State(state): State<AppState>,
     client_ip: Result<ClientIp, axum_client_ip::Rejection>,
@@ -147,25 +152,47 @@ async fn graphql_handler(
         .get(axum::http::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .map(str::to_owned);
-    let body = if is_multipart(content_type.as_deref()) {
-        body
-    } else if declared_length(&parts.headers).is_some_and(|n| n > GRAPHQL_JSON_BODY_LIMIT_BYTES) {
+    let multipart_type = multipart_type(content_type.as_deref());
+    if multipart_type.is_none()
+        && declared_length(&parts.headers).is_some_and(|n| n > GRAPHQL_JSON_BODY_LIMIT_BYTES)
+    {
         return body_too_large();
-    } else {
-        axum::body::Body::new(http_body_util::Limited::new(
-            body,
-            GRAPHQL_JSON_BODY_LIMIT_BYTES,
-        ))
-    };
+    }
     let viewer = match bearer_viewer(&state.auth, &parts.headers) {
         Some(v) if deletion::viewer_has_login(&state.uploads.pool, v.user_id).await => Some(v),
         _ => None,
     };
 
-    let reader = StreamReader::new(body.into_data_stream().map_err(std::io::Error::other)).compat();
-    let parsed = async_graphql::http::receive_batch_body(content_type, reader, state.multipart)
-        .await
-        .and_then(async_graphql::BatchRequest::into_single);
+    let parsed = match multipart_type {
+        Some(mime) => {
+            match multipart::receive_batch_multipart(
+                &mime,
+                body.into_data_stream(),
+                state.multipart,
+            )
+            .await
+            {
+                Ok(batch) => batch.into_single(),
+                Err(multipart::MultipartRefusal::TooLarge) => return body_too_large(),
+                Err(multipart::MultipartRefusal::Malformed(e)) => Err(e),
+            }
+        }
+        None => {
+            let body = axum::body::Body::new(http_body_util::Limited::new(
+                body,
+                GRAPHQL_JSON_BODY_LIMIT_BYTES,
+            ));
+            let reader =
+                StreamReader::new(body.into_data_stream().map_err(std::io::Error::other)).compat();
+            async_graphql::http::receive_batch_body(
+                content_type,
+                reader,
+                async_graphql::http::MultipartOptions::default(),
+            )
+            .await
+            .and_then(async_graphql::BatchRequest::into_single)
+        }
+    };
     let mut request = match parsed {
         Ok(request) => request,
         Err(e) if over_the_body_limit(&e) => return body_too_large(),
@@ -327,14 +354,14 @@ fn over_the_body_limit(err: &(dyn std::error::Error + 'static)) -> bool {
 /// both against it.
 pub const GRAPHQL_JSON_BODY_LIMIT_BYTES: usize = 320 * 1024;
 
-/// Whether async-graphql will read the body as a multipart upload. The
-/// same parse and the same test the library's `receive_batch_body`
-/// applies, so the upload ceiling never covers a body the library reads
-/// as JSON: an absent or unparseable content type is JSON there too.
-fn is_multipart(content_type: Option<&str>) -> bool {
+/// The body's content type when it is a multipart upload. The same parse
+/// and the same test the library's `receive_batch_body` applies, so the
+/// upload ceiling never covers a body the library reads as JSON: an
+/// absent or unparseable content type is JSON there too.
+fn multipart_type(content_type: Option<&str>) -> Option<mime::Mime> {
     content_type
         .and_then(|value| value.parse::<mime::Mime>().ok())
-        .is_some_and(|value| value.type_() == mime::MULTIPART)
+        .filter(|value| value.type_() == mime::MULTIPART)
 }
 
 /// The body length the request declares, when it declares one.
@@ -508,10 +535,9 @@ async fn upload_part(
 /// code, so the readable refusal naming the expected byte count is left
 /// to the handler and this catches only what is wildly out of range.
 ///
-/// `/graphql` carries the same kind of ceiling one layer out.
-/// `MultipartOptions` bounds the *file part* of a multipart request and
-/// nothing else — a plain JSON body, or the non-file fields of a
-/// multipart envelope, pass it untouched — and `DefaultBodyLimit` cannot
+/// `/graphql` carries the same kind of ceiling one layer out. The
+/// multipart limits bound the fields of a multipart request and nothing
+/// else — a plain JSON body passes them untouched — and `DefaultBodyLimit` cannot
 /// help, because it reaches only extractors that read the body through
 /// `Bytes` and this handler consumes the body stream itself.
 /// `tower_http`'s `RequestBodyLimitLayer` wraps the body instead of the
@@ -533,9 +559,11 @@ pub fn app(
     uploads: UploadRouting,
 ) -> Router {
     let media = &uploads.media;
-    let multipart = MultipartOptions::default()
-        .max_file_size(media.transport_limit_bytes())
-        .max_num_files(1);
+    let multipart = multipart::MultipartLimits {
+        json_field_bytes: GRAPHQL_JSON_BODY_LIMIT_BYTES,
+        file_bytes: media.transport_limit_bytes(),
+        max_files: 1,
+    };
     let part_limit = media.upload_part_size_bytes.saturating_mul(2);
     let graphql_limit = media
         .transport_limit_bytes()

@@ -186,11 +186,13 @@ function PickAnnouncement({ said = "", node }) {
 }
 
 /* THE PICKERS' CAP LINE (seam 248, GAP B): the batch's ten reached, said once
-   above the rows it stills — the naming rule's register under the field, a
-   fact and not a fault, so never `--error`. */
+   in the fixed head — under the naming rule on the tag picker, under the
+   filter on the citation picker (jakob 2026-11-11) — so it stays in sight
+   however the list below is scrolled. The naming rule's register and its
+   padding, a fact and not a fault, so never `--error`. */
 const PICKER_NOTE = {
   margin: 0,
-  padding: "8px 24px",
+  padding: "0 24px 8px",
   fontSize: "var(--text-body-small)",
   fontWeight: "var(--text-body-small--font-weight)",
   lineHeight: "var(--text-body-small--line-height)",
@@ -198,21 +200,34 @@ const PICKER_NOTE = {
   color: "var(--text-secondary)",
 };
 
+
+
 /* An opinion of one gentle record — the vouch-back default made a bundle. */
 function mkBundle(pDirected, pInterest) {
   const pair = { pDirected, pInterest };
   return { current: pair, rawSum: pair, records: 1 };
 }
 
-/* The people of the canonical canvas (readme: mock people and photos). */
-const ADA = { handle: "ada", displayName: "Ada Okonkwo" };
-const TOBIAS = { handle: "tobias", displayName: "Tobias Lindqvist" };
-const SOL = { handle: "sol", displayName: "Sol Ferreira" };
-const MIRA = { handle: "mira", displayName: "Mira Voss" };
+/* The people of the canonical canvas (readme: mock people and photos).
+
+   EVERY SAMPLE THING WITH AN ID ON THE WIRE CARRIES ONE (round 33, seam
+   264): what has an id on the wire is keyed by that id, so a named card or
+   row keys by its thing's `id` — the lowercase UUID the wire carries, the
+   form `ProfilePosts` first drew. Each id is spelled once, beside its thing,
+   so one sample post, comment, person or tag carries one id on every board
+   that draws it. */
+const ADA = { id: "86982040-67f1-48a7-bb2d-6d3439c510c1", handle: "ada", displayName: "Ada Okonkwo" };
+const TOBIAS = { id: "42fa3a4f-a350-4812-bd79-26561c2ffca3", handle: "tobias", displayName: "Tobias Lindqvist" };
+const SOL = { id: "155e1af5-bf6b-4aec-aa14-f94dcdadc189", handle: "sol", displayName: "Sol Ferreira" };
+const MIRA = { id: "cdbd41fc-faec-4c16-9813-7f718b8a0989", handle: "mira", displayName: "Mira Voss" };
+const MAREN = { id: "a650f0bb-e923-4745-9d77-43d75d5c944a", handle: "maren", displayName: "Maren Holt" };
+const MATEO = { id: "4919da08-40fc-47f5-8f62-bff07dd183f3", handle: "mateo", displayName: "Mateo Ruiz" };
 
 /* @tobias's comment at the thread's top — spelled once, because the thread
-   draws it and the reply composer aimed at it quotes it. */
+   draws it and the reply composer aimed at it quotes it; History, Saved and
+   the feed draw the same comment, so it keys by the same id there. */
 const TOBIAS_COMMENT = "That stretch after the second bend is the reason I keep a camera in the glovebox.";
+const TOBIAS_COMMENT_ID = "8c7296e7-8e4b-45b1-9889-279e7a713f9c";
 
 /* Genesis content always declares a license, so every card has at least that
    menu entry — without one the dot vanishes, and it must not. Citing rides the
@@ -234,6 +249,7 @@ const CARD_MENU = [SAVE_ROW, CITE_ROW];
    carries its words as the DESCRIPTION — the caption beside the body — and no
    `content`; only the text posts below have one. */
 const ADA_POST = {
+  id: "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
   author: ADA,
   title: "The long way home",
   description: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.",
@@ -249,6 +265,7 @@ const ADA_POST = {
 };
 
 const TOBIAS_POST = {
+  id: "dd44f5de-d68c-4931-aabc-915cefadab7f",
   author: TOBIAS,
   content: "Low tide at six tomorrow — anyone walking the flats?",
   timestamp: "1h",
@@ -260,6 +277,7 @@ const TOBIAS_POST = {
 };
 
 const SOL_POST = {
+  id: "734cd530-6c98-4f22-9027-2ff4ff46b5b5",
   author: SOL,
   title: "Salt maps of the coast road",
   description:
@@ -277,9 +295,23 @@ const SOL_POST = {
   menuItems: CARD_MENU,
 };
 
+/* @mira's words post — the one History's and Saved's searches both find. */
+const MIRA_WORDS_POST = {
+  id: "d6d4651b-1dfe-467b-8142-85ea954558c3",
+  author: MIRA,
+  content: "Honey's back at the stand by the sea wall — the first jars since June.",
+  timestamp: "5h",
+  score: "4.30",
+  comments: 1,
+  opinions: 3,
+  license: { attribution: 0, provenance: 0 },
+  menuItems: CARD_MENU,
+};
+
 /* The gallery post (media slice, 2026-08-31): four pictures at one crop shape,
    one frame swiped, dots only. Shared the moment its detail view needed it too. */
 const MIRA_GALLERY_POST = {
+  id: "d5d08554-f939-4573-be35-529614cd5373",
   author: MIRA,
   title: "Sunday at the tide market",
   description:
@@ -1154,8 +1186,8 @@ function ProfileOwnBody({ tail = null }) {
             bio="Field notes from the flats — salt, paper, and whatever the wind allows."
             website="solferreira.art"
             posts={5}
-            stancesOn={9}
-            stancesTaken={14}
+            stancesOn={5}
+            stancesTaken={5}
             own
             /* AN APPLICATION IS WAITING (the invites round). @rafa's proofs
                are both in and nobody but Sol can act on it, so the row that
@@ -1212,8 +1244,8 @@ function ProfileOtherBody({ bundle } = {}) {
             avatarSrc="comment-camera.jpg"
             bio="A dozen tries at the third headland light and counting."
             posts={12}
-            stancesOn={48}
-            stancesTaken={31}
+            stancesOn={6}
+            stancesTaken={6}
             bundle={bundle}
             onCounts={() => {}}
             onCommit={() => {}}
@@ -1254,8 +1286,8 @@ function ProfileDeletedBody() {
             redacted
             bio={<RedactedContent reason="account" when="3d" node="removalMark" />}
             posts={7}
-            stancesOn={22}
-            stancesTaken={19}
+            stancesOn={6}
+            stancesTaken={6}
             onCounts={() => {}}
             onCommit={() => {}}
             menu={deletedProfileMenu()}
@@ -1571,7 +1603,11 @@ const TAGS_ROW_HOLDS = 2;
    reason — the reply seal reads its staged tags as the post seal does (seam
    254 item 10, jakob 2026-11-10: "the reply seal mirrors the post seal
    exactly"). */
-const sealTagsRow = (tags) =>
+/* `fault` is the unlanded tag's line (round 30, jakob 2026-11-11, Q7):
+   `This tag didn't land.` with `Remove it` under the chips, no reason given —
+   the unlanded citation's row (`citedOneRow`'s `fault`), at the Tags row. */
+const SEAL_UNLANDED_TAG = "This tag didn't land.";
+const sealTagsRow = (tags, fault) =>
   tags.length > TAGS_ROW_HOLDS
     ? tagsRow(tags.length)
     : {
@@ -1585,6 +1621,7 @@ const sealTagsRow = (tags) =>
         ),
         count: String(tags.length),
         countNoun: "tag",
+        ...(fault ? { fault } : null),
       };
 
 /* The post's staged set past the first, written once: the seal that COUNTS
@@ -1630,7 +1667,7 @@ const KEPT_PICKS = [
   { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 } },
   { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 }, consequence: "This takes you back to zero." },
   { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 }, removed: "Removed by its author" },
-  { kind: "topic", name: "saltmaps", sub: "Topic", pair: { pDirected: 0.6, pInterest: 0.35 } },
+  { kind: "topic", name: "saltmaps", sub: "Tag", pair: { pDirected: 0.6, pInterest: 0.35 } },
 ];
 /* The family word a kept pick's seal row names it by: an opinion on a post
    or a person, a feeling about a topic. */
@@ -1723,25 +1760,42 @@ const WRITE_RULE_HELP = "Why signing waits";
    under `ActsFooter` (jakob 2026-10-05). */
 const SEAL_SLOW_LINE = "Still signing — the network is slow right now.";
 
-function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
+/* `chipped` is `ComposeSeal`'s own drawing of its `state` chip (round 30):
+   the acts card at rest and the card whose one staged tag never landed —
+   `state` `tagRefused` stages that tag alone, as the reply seal's `refused`
+   stages its one citation — each behind its hole (`ComposeSeal`'s VALS). */
+function composeSealCard({ cited, tags, state }) {
+  return (
+    <ActsCard
+      rows={[
+        { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
+        sealTagsRow(tags, state === "tagRefused" ? { message: SEAL_UNLANDED_TAG, onRemove: () => {} } : undefined),
+        cited > 1
+          ? citedRow(cited)
+          : citedOneRow(state === "refused" ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined),
+      ]}
+      total={`${1 + tags.length + cited} things, signed together`}
+      note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}
+      noteTone={state === "slow" ? "slow" : "quiet"}
+    />
+  );
+}
+
+function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state, chipped = false }) {
   return (
     <>
       <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
 
-        <ActsCard
-          rows={[
-            { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
-            sealTagsRow(tags),
-            cited > 1
-              ? citedRow(cited)
-              : citedOneRow(state === "refused" ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined),
-          ]}
-          total={`${1 + tags.length + cited} things, signed together`}
-          note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}
-          noteTone={state === "slow" ? "slow" : "quiet"}
-        />
+        {chipped ? (
+          <>
+            <div style={{ display: "{{restCardShown}}", flexDirection: "column" }}>{composeSealCard({ cited, tags, state })}</div>
+            <div style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }}>{composeSealCard({ cited, tags: [tags[0]], state: "tagRefused" })}</div>
+          </>
+        ) : (
+          composeSealCard({ cited, tags, state })
+        )}
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value={LICENSE_SUMMARY()} action="Change" />
@@ -1868,20 +1922,28 @@ function ReplyPadBody() {
    label is singular here — it names the EDGE staged rather than the block it
    sits in (copy-voice), and one edge is a reference. `fault` is the seal's
    unlanded-citation line, `citedOneRow`'s: the row reads back as before and
-   the line stands under its value (seam 254 item 11). */
+   the line stands under its value (seam 254 item 11).
+
+   THE NAME STANDS OVER ITS PAIR (round 30, jakob 2026-11-11, Q8 (c)): the
+   row keeps its singular label and its ×, and under the name it reads the
+   pair the citation signs, `citedOneRow`'s two lines — the gentle default
+   the post seal's one citation draws. */
 const replyCitedRow = (fault) => ({
   label: "Reference",
   countNoun: "citation",
   value: (
     <span style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
-      <button
-        type="button"
-        aria-label={`${REPLY_CITATION} — set how it relates`}
-        className="cg-state cg-focus"
-        style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
-      >
-        {REPLY_CITATION} — @juno
-      </button>
+      <span style={{ flex: 1, display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
+        <button
+          type="button"
+          aria-label={`${REPLY_CITATION} — set how it relates`}
+          className="cg-state cg-focus"
+          style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
+        >
+          {REPLY_CITATION} — @juno
+        </button>
+        <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
+      </span>
       <button
         type="button"
         aria-label={`Remove ${REPLY_CITATION}`}
@@ -1928,20 +1990,23 @@ const replyCitedRow = (fault) => ({
    with `Remove it` and the commit stays (`SealFaultRow`); `bug` — any other
    refusal of one staged act: `This shouldn't have happened` takes the
    commit's place, with `Try again`, then `Report a problem` and `Discard the
-   reply` (`SealFaultBug`, whose docblock names the reply's noun).
+   reply` (`SealFaultBug`, whose docblock names the reply's noun);
+   `tagRefused` — the one staged tag never landed, so the Tags row says
+   `This tag didn't land.` with `Remove it`, the commit staying (round 30,
+   the post seal's own state at reply scale).
 
    `chipped` is `ReplySeal`'s own drawing of both as chips: every card the
    `tags` and `state` chips can draw, and both feet, each behind its hole
    (`ReplySeal`'s VALS). */
 const REPLY_TAG_SETS = { none: [], two: SEAL_TAGS, seven: SEAL_TAGS_MANY };
 
-function replySealCard({ named, cited, tags, refused }) {
+function replySealCard({ named, cited, tags, refused, tagRefused = false }) {
   const acts = 1 + tags.length + cited;
   return (
     <ActsCard
       rows={[
         { label: "Comment", value: named.act, count: "1", countNoun: "comment" },
-        ...(tags.length ? [sealTagsRow(tags)] : []),
+        ...(tags.length ? [sealTagsRow(tags, tagRefused ? { message: SEAL_UNLANDED_TAG, onRemove: () => {} } : undefined)] : []),
         ...(cited === 1 ? [replyCitedRow(refused ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined)] : cited > 1 ? [citedRow(cited)] : []),
         ...ADD_ROWS,
       ]}
@@ -1989,8 +2054,12 @@ function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent
                   {replySealCard({ named, cited: one, tags: staged, refused: one === 1 })}
                 </div>
               )),
+            ).concat(
+              <div key="tagRefused" style={{ display: "{{tagRefusedShown}}", flexDirection: "column" }}>
+                {replySealCard({ named, cited: 0, tags: [SEAL_TAGS[0]], tagRefused: true })}
+              </div>,
             )
-          : replySealCard({ named, cited, tags, refused: state === "refused" })}
+          : replySealCard({ named, cited, tags, refused: state === "refused", tagRefused: state === "tagRefused" })}
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow
@@ -2545,8 +2614,17 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
    so the foot reads five. Sign is the confirmation; no dialog asks again.
 
    THE FIELDS SCROLL UNDER THE PINNED FOOT, the post edit's reading: a comment
-   with its citations drawn runs taller than the phone. */
-function CommentEditBody({ holes = false } = {}) {
+   with its citations drawn runs taller than the phone.
+
+   `bodyChip` IS `CommentEdit`'s `body` chip (round 30, jakob 2026-11-11, Q14:
+   "draw it"): at `words` the comment holds words alone, so the media block
+   draws only its add row, `+ Add pictures or a video` — the reply composer's
+   own row under its words (`ReplyComposeBody`), since a comment holds words,
+   pictures or one video (jakob 2026-11-10). The block's label, thumbnail and
+   describe row stand only while a picture does; the add row stays the one
+   `pictures.add`, its words a hole. */
+function CommentEditBody({ holes = false, bodyChip = false } = {}) {
+  const shown = (hole) => (bodyChip ? `{{${hole}}}` : "flex");
   return (
     <>
       <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" node="header" />
@@ -2557,12 +2635,18 @@ function CommentEditBody({ holes = false } = {}) {
           <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." node="words" />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="pictures">
-            <FieldLabel node="label">Pictures</FieldLabel>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} node="thumb" nodeKey="1" />
-              <InlineAction size="sm" node="add">+ Add pictures · 1 of 4</InlineAction>
+            <div style={{ display: shown("picturesShown"), flexDirection: "column" }}>
+              <FieldLabel node="label">Pictures</FieldLabel>
             </div>
-            <DescribeCounter described={1} total={1} onDescribe={() => {}} node="describeRow" />
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: shown("picturesShown") }}>
+                <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} node="thumb" nodeKey="1" />
+              </div>
+              <InlineAction size="sm" node="add">{bodyChip ? "{{addLabel}}" : "+ Add pictures · 1 of 4"}</InlineAction>
+            </div>
+            <div style={{ display: shown("picturesShown"), flexDirection: "column" }}>
+              <DescribeCounter described={1} total={1} onDescribe={() => {}} node="describeRow" />
+            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
@@ -2786,6 +2870,7 @@ const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
 /* @sol's 3h comment, the one with a branch under it — drawn as the reader's own
    or as someone else's, so its words are written once. */
 const SOL_THREAD_COMMENT = {
+  id: "f2df0aa4-ae4c-4ec0-9e27-00cf6f55e220",
   author: SOL,
   content: "Which headland is the third one, counting from the ferry landing?",
   timestamp: "3h",
@@ -2831,7 +2916,7 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    detail's thread, so a registered board places it as `threadSheet` under
    `postDetail` — the surface that hosts every comment menu, confirm and mark
    the thread raises. Its title is `title`, and each top-level comment
-   `commentCard`, keyed by its author's handle as every comment card is; a
+   `commentCard`, keyed by its id as every comment card is; a
    branch's replies stay unnamed until a board needs them, named then as pure
    addition. The comment menus and the removal confirm are raised OVER the
    sheet, never inside it, so they keep their own names beside it
@@ -2852,7 +2937,7 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    A BOARD THAT NAMES THE SHEET AND DRAWS BOTH READERS (`ReplyEntry`, round 27)
    marks the `shown` pair as its `reader` chip's copies: @sol's comment is one
    card in two readings, so each copy names it `commentCard` under its own
-   key, `sol` (ruling 39).
+   key, the comment's id (ruling 39).
 
    `pick` DRAWS A KEPT PICK ON THE FIRST COMMENT (round 27, seam 252): given,
    @tobias's card stands in `PickCopies`, so the board's `pick` chip adds the
@@ -2891,6 +2976,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
   const tobias = (stance) => (
     <CommentCard
       node={card}
+      id={TOBIAS_COMMENT_ID}
       author={TOBIAS}
       content={TOBIAS_COMMENT}
       timestamp="1h"
@@ -2920,6 +3006,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
           opinion stay readable. */}
       <CommentCard
         node={card}
+        id="ffa1b4f3-1efd-4363-9237-3ad8e739b8f5"
         author={MIRA}
         content="The gulls had been at it before the tide came back. Two frames, both grim."
         timestamp="2h"
@@ -2966,6 +3053,7 @@ const CLIP_LAKESIDE = {
 };
 
 const MIRA_CLIP_POST = {
+  id: "c5af64e2-621c-49ef-8f4c-9a6d09bce490",
   author: MIRA,
   title: "The lake, doing nothing, for forty seconds",
   description:
@@ -3016,6 +3104,7 @@ const CLIP_GRAPES = {
 };
 
 const TOBIAS_CANOE_POST = {
+  id: "1388f7d3-19f6-466c-9522-624227697932",
   author: TOBIAS,
   title: "Crossing at the narrows before the wind got up",
   description:
@@ -3030,6 +3119,7 @@ const TOBIAS_CANOE_POST = {
 };
 
 const ADA_GRAPES_POST = {
+  id: "88fffaa4-3c4b-4dc8-a0d8-ba737e63c330",
   author: ADA,
   title: "Nine seconds of the last of the crop",
   timestamp: "5h",
@@ -4048,10 +4138,10 @@ function SettingsBackupBody({ app = false, value = "", error }) {
    the weaker paths, and the holders on the opinions sheet. They live beside the
    drill-down rather than up with ADA/TOBIAS/SOL/MIRA because these five boards
    and the opinions sheet are everywhere they appear. */
-const KEL = { handle: "kel", displayName: "Kel Moreau" };
-const WREN = { handle: "wren", displayName: "Wren Aliyev" };
-const NADIA = { handle: "nadia", displayName: "Nadia Rask" };
-const JUNO = { handle: "juno", displayName: "Juno Baptiste" };
+const KEL = { id: "c4fb60a5-9b66-4db3-a043-88986744abbc", handle: "kel", displayName: "Kel Moreau" };
+const WREN = { id: "59959e13-ced7-462c-b7cd-c0381ec09b90", handle: "wren", displayName: "Wren Aliyev" };
+const NADIA = { id: "b1a7ca95-9571-4509-9e42-d1c45c67b233", handle: "nadia", displayName: "Nadia Rask" };
+const JUNO = { id: "22dd3e59-8c50-4ce3-b2f5-e12c57abb984", handle: "juno", displayName: "Juno Baptiste" };
 
 /* THE POST THE DRILL-DOWN IS ABOUT, and the viewer it reached. `ADA_POST` is
    the canvas's canonical post and @sol is its canonical reader (`ProfileOwnBody`
@@ -4417,15 +4507,15 @@ function ScoreColumn({ children }) {
    handle left. It is one of the nine the count names (`MIRA_GALLERY_POST`'s
    `opinions`). */
 const POST_OPINION_HOLDERS = [
-  { name: MIRA.displayName, handle: MIRA.handle, src: "inviter.jpg", pDirected: 0.9, pInterest: 0.25 },
-  { name: ADA.displayName, handle: ADA.handle, src: "comment-camera.jpg", pDirected: 0.7, pInterest: 0.4 },
-  { name: TOBIAS.displayName, handle: TOBIAS.handle, pDirected: 0.6, pInterest: 0.65 },
-  { name: SOL.displayName, handle: SOL.handle, pDirected: 0.55, pInterest: 0.2 },
-  { name: KEL.displayName, handle: KEL.handle, pDirected: 0.25, pInterest: 0.95 },
+  { id: MIRA.id, name: MIRA.displayName, handle: MIRA.handle, src: "inviter.jpg", pDirected: 0.9, pInterest: 0.25 },
+  { id: ADA.id, name: ADA.displayName, handle: ADA.handle, src: "comment-camera.jpg", pDirected: 0.7, pInterest: 0.4 },
+  { id: TOBIAS.id, name: TOBIAS.displayName, handle: TOBIAS.handle, pDirected: 0.6, pInterest: 0.65 },
+  { id: SOL.id, name: SOL.displayName, handle: SOL.handle, pDirected: 0.55, pInterest: 0.2 },
+  { id: KEL.id, name: KEL.displayName, handle: KEL.handle, pDirected: 0.25, pInterest: 0.95 },
   { redacted: true, actorId: "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98", pDirected: 0.2, pInterest: 0.2 },
-  { name: NADIA.displayName, handle: NADIA.handle, pDirected: 0.15, pInterest: 0.15 },
-  { name: WREN.displayName, handle: WREN.handle, pDirected: -0.2, pInterest: 0.1 },
-  { name: JUNO.displayName, handle: JUNO.handle, pDirected: -0.55, pInterest: 0.25 },
+  { id: NADIA.id, name: NADIA.displayName, handle: NADIA.handle, pDirected: 0.15, pInterest: 0.15 },
+  { id: WREN.id, name: WREN.displayName, handle: WREN.handle, pDirected: -0.2, pInterest: 0.1 },
+  { id: JUNO.id, name: JUNO.displayName, handle: JUNO.handle, pDirected: -0.55, pInterest: 0.25 },
 ];
 
 
@@ -4479,7 +4569,7 @@ const AFFINITY_SEVERANCE = {
   gone: (name) => `No opinion towards ${name}.`,
   zero: "No opinion",
   landing: "This leaves you with no opinion towards it.",
-  help: "Disconnect takes everything you've said about the topic to nothing. It has its own confirmation, and each thing you've said is cleared by its own signature.",
+  help: "Disconnect takes everything you've said about the tag to nothing. It has its own confirmation, and each thing you've said is cleared by its own signature.",
   helpAlternates: "Disconnect takes everything to nothing, and each thing you've said is cleared by its own signature.",
 };
 
@@ -4668,10 +4758,11 @@ const commentTarget = (parent, kind) =>
           cover: parent.media?.[0]?.src,
         };
 
-function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, stancePendingPick, stancePendingReview, node }) {
+function CommentFeedCard({ id, author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, stancePendingPick, stancePendingReview, node }) {
   const target = commentTarget(parent, parentKind);
   return (
     <CommentCard
+      id={id}
       author={author}
       content={content}
       timestamp={timestamp}
@@ -4744,7 +4835,7 @@ const FEED_BIO = {
 const FEED_DELETED_PROFILE_MENU = PROFILE_DELETED_MENU.filter((row) => row.label !== "Share this profile");
 
 /* NAMED BY ITS PLACER (design ⇄ impl seam 062/063): `History` registers it as
-   `profileCard`, keyed by the person's handle, the card's own parts named as
+   `profileCard`, keyed by the person's id (round 33), the card's own parts named as
    `PostCard` names them and the lead's as `avatar`, `name`, `handle`, with the
    bio as `bio`. */
 function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false, node }) {
@@ -4780,7 +4871,7 @@ function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false, no
         ) : undefined
       }
       node={node}
-      nodeKey={person.handle}
+      nodeKey={person.id}
       targetLabel={handle ?? "this account"}
       bundle={bundle}
       score={score}
@@ -4845,13 +4936,14 @@ const SALTMAPS_TAGGED = [
   { kind: "post", title: SOL_POST.title, by: SOL, age: "3d", cover: SOL_POST.media[0].src },
   { kind: "comment", title: "Low tide is kinder to the rubbings than noon ever was.", by: ADA, age: "4d" },
 ];
+const SALTMAPS_TAG_ID = "fc7d18fe-c334-4c2a-82b3-eed28f2eaa26";
 
 /* NAMED BY ITS PLACER (design ⇄ impl seam 062/063): `History` registers it as
-   `tagCard`, keyed by the tag's name, the card's own parts named as `PostCard`
+   `tagCard`, keyed by the tag's id (round 33), the card's own parts named as `PostCard`
    names them; the lead's are `mark`, `name` and the why-line `through`, the
    glimpse is `glimpse` with its newest thing's `newest` and `by` (or the
    empty tag's one line as `nothing`), and the kind's own act is `compose`. */
-function TagFeedCard({ name, through, tagged, score, bundle, node }) {
+function TagFeedCard({ id, name, through, tagged, score, bundle, node }) {
   const [newest, ...rest] = tagged;
   const glimpse = newest ? (
     <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }} data-node={node && "glimpse"}>
@@ -4901,7 +4993,7 @@ function TagFeedCard({ name, through, tagged, score, bundle, node }) {
       act={<GlyphAction glyph="add" label={TAG_ACT} onPress={() => {}} node={node && "compose"} />}
       onOpen={() => {}}
       node={node}
-      nodeKey={name.replace(/^#/, "")}
+      nodeKey={id}
     />
   );
 }
@@ -4925,7 +5017,7 @@ const HELD_TOPICS = [
 /* WHAT THE FEED FILTER MAY NARROW TO — derived, never listed twice. The topic
    feed admits POSITIVE association only (jakob's predicate), so the section's
    chips are the held set minus the ones held against; deriving it here means
-   the filter and Your topics can never disagree about who is missing and why. */
+   the filter and Your tags can never disagree about who is missing and why. */
 const FEED_TOPICS = HELD_TOPICS.filter((topic) => topic.pair.pDirected > 0).map((topic) => topic.name);
 
 /* THE PEOPLE SECTION IN BOTH ITS STATES, for the two boards that host the
@@ -4985,6 +5077,16 @@ const SOL_INVITE_ID = "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15";
 /* The actor id of the asker who deleted their account (`Invites`' `asker`
    chip): the lowercase UUID the wire carries, the row's only key left. */
 const DELETED_ASKER_ID = "3b9e0c47-1f62-4d85-a0b3-7c2e91d4f608";
+/* The askers' ids (round 33): an application row keys by its asker's id,
+   the lowercase UUID the wire carries, as every person row does. */
+const ASKER_IDS = {
+  noor: "b6077abd-d6a6-4639-9956-f9a82f14f7db",
+  imke: "ab2c5f9b-37c0-4bca-bbe3-2d02a387a630",
+  vora81: "c1713389-4c20-4826-be12-e1e9ad9a6e13",
+  vora82: "c9ae8851-9214-4e5a-bcaf-887e758df006",
+  vora83: "b7b20d2c-a1b1-4c3a-a6ba-60156276bff5",
+  rafa: "39fe9a1a-85c4-41b4-a1e2-c5de97325ef4",
+};
 /* A section of Invites with nothing in it (`Invites`' `sections` chip): the
    empty list's quiet register, at the rows' inset. */
 const INVITES_EMPTY_LINE = {
@@ -5295,7 +5397,7 @@ function KeptApprovalRow({ shown }) {
         action={<CloseApplication handle="@noor" node="close" />}
         onOpen={() => {}}
         node="application"
-        nodeKey="noor"
+        nodeKey={ASKER_IDS.noor}
       />
     </div>
   );
@@ -5374,7 +5476,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             action={<CloseApplication handle="@imke" node="close" />}
             onOpen={() => {}}
             node="application"
-            nodeKey="imke"
+            nodeKey={ASKER_IDS.imke}
           />
           <ContentRow
             variant="chronicle"
@@ -5386,7 +5488,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             action={<CloseApplication handle="@vora81" node="close" />}
             onOpen={() => {}}
             node="application"
-            nodeKey="vora81"
+            nodeKey={ASKER_IDS.vora81}
           />
           <ContentRow
             variant="chronicle"
@@ -5398,7 +5500,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             action={<CloseApplication handle="@vora82" node="close" />}
             onOpen={() => {}}
             node="application"
-            nodeKey="vora82"
+            nodeKey={ASKER_IDS.vora82}
           />
           <div style={{ display: shown ? shown.askerNamed : "flex", flexDirection: "column" }}>
             <ContentRow
@@ -5411,7 +5513,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
               action={<CloseApplication handle="@vora83" node="close" />}
               onOpen={() => {}}
               node="application"
-              nodeKey="vora83"
+              nodeKey={ASKER_IDS.vora83}
             />
           </div>
           {shown && (
@@ -5455,7 +5557,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             }
             onOpen={() => {}}
             node="application"
-            nodeKey="rafa"
+            nodeKey={ASKER_IDS.rafa}
           />
         </div>
 
@@ -5926,5 +6028,190 @@ function DeadGrid() {
         <div key={index} style={{ width: 125, height: 125, background: bg, outline: "1px solid var(--border-hairline)", outlineOffset: -1 }} />
       ))}
     </div>
+  );
+}
+
+/* THE TAG PICKER'S BODY, written once (round 31): `TagPicker` draws it with its chip's holes, and `TagPickerShowAll` beneath the sheet its door raises, at `seven` — the picker beneath is the picker, as the seal beneath the seals' sheets is the seal (`ComposeSealBody`). */
+/* The staged sets the `state` chip draws, oldest first; the list shows the
+   three newest, newest on top. `seven` is the seal's well-tagged post
+   (`SEAL_TAGS_MANY`), so the sheet it opens is the seals' own; the cap's ten
+   add the tree's other sample tags. */
+const TAG_PICKER_SEVEN = SEAL_TAGS_MANY;
+const TAG_PICKER_TEN = ["saltmarsh", "saltflats", "fieldnotes", "coastroad", "tidal", "estuary", "cartography", "lowtide", "photography", "tidetables"];
+const tagPickerNewestThree = (tags) => tags.slice(-3).reverse();
+const tagPickerStagedRows = (tags) => tagPickerNewestThree(tags).map((name) => <StagedReference key={name} kind="topic" name={name} onRemove={() => {}} node="tag" nodeKey={name} />);
+const PICKER_DOOR = (
+  <div style={{ display: "flex", padding: "0 12px" }}>
+    <InlineAction size="sm" selfStart node="door">
+      Show all
+    </InlineAction>
+  </div>
+);
+
+const TAG_PICKER_HOLES = Object.fromEntries(["capShown", "faultShown", "candidatesShown", "rowsOpacity", "twoShown", "sevenShown", "tenShown", "saltmapsShown"].map((k) => [k, `{{${k}}}`]));
+const TAG_PICKER_AT_SEVEN = { capShown: "none", faultShown: "none", candidatesShown: "flex", rowsOpacity: "1", twoShown: "none", sevenShown: "flex", tenShown: "none", saltmapsShown: "none" };
+function TagPickerBody({ v = TAG_PICKER_HOLES }) {
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" node="help" />} node="header" />
+      <div style={{ flex: "none" }}>
+        <SearchBar query="salt" placeholder="Name a tag" ariaLabel="Name a tag" node="nameField" />
+        {/* The naming rule stands under the field at rest too (copy-voice; the
+            gate is stated, not discovered — `TagPickerTyping`). */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
+          <p style={{ margin: 0, fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="rule">
+            Letters, digits, dot, dash and underscore. Capitals become lowercase.
+          </p>
+        </div>
+        {/* The cap line stands in the fixed head, under the rule, in sight
+            however far the list is scrolled (jakob 2026-11-11). */}
+        <div style={{ display: v.capShown }} data-node-chip="state" data-node-key="cap">
+          <p style={PICKER_NOTE} data-node="cap">
+            Up to 10 tags per post.
+          </p>
+        </div>
+        <PickAnnouncement said="Added — in the staged list." node="announcement" />
+      </div>
+      {/* ONE SCROLLING LIST: the staged rows are its first rows, the results
+          follow (jakob 2026-11-10), drawn at its top as the edits draw a
+          scrolled column (`ReplyVideo`). */}
+      <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }} data-node="staged">
+          <div style={{ display: v.twoShown, flexDirection: "column", gap: 8 }}>
+            <StagedReference kind="topic" name="saltflats" onRemove={() => {}} node="tag" nodeKey="saltflats" />
+            <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} node="tag" nodeKey="saltmarsh" />
+          </div>
+          <div style={{ display: v.sevenShown, flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="seven">
+            {tagPickerStagedRows(TAG_PICKER_SEVEN)}
+            {PICKER_DOOR}
+          </div>
+          <div style={{ display: v.tenShown, flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="cap">
+            {tagPickerStagedRows(TAG_PICKER_TEN)}
+            {PICKER_DOOR}
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", opacity: v.rowsOpacity }}>
+          <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="salt" />
+          <div style={{ display: v.candidatesShown, flexDirection: "column" }}>
+            <div style={{ display: v.saltmapsShown, flexDirection: "column" }}>
+              <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltmaps" />
+            </div>
+            <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="tag" nodeKey="saltcrust" />
+          </div>
+        </div>
+        <div style={{ display: v.faultShown, padding: "8px 24px" }} data-node-chip="state" data-node-key="fault">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)" }} data-node="fault">
+            <TransportError message="Can't reach the server — tags can't load right now." />
+            <Button variant="outline" size="sm" selfStart node="retry">
+              Retry
+            </Button>
+          </div>
+        </div>
+        <div style={{ flex: 1 }} />
+        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="footnote">
+          Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
+        </p>
+      </div>
+      <div style={{ flex: "none", padding: "0 24px 24px" }}>
+        <Button style={{ width: "100%" }} node="done">Done</Button>
+      </div>
+    </>
+  );
+}
+
+/* THE CITATION PICKER'S BODY, written once (round 31): `ReferencePicker` draws it with its chip's holes, `ReferencePickerShowAll` beneath the sheet its door raises, at `seven` (`TagPickerBody`'s reason). */
+const REF_PICKER_KINDS = FEED_KINDS.filter((kind) => kind.value !== "topics");
+
+/* The staged sets the `state` chip draws, oldest first; the list shows the
+   three newest, newest on top, each keyed by its place from the top. The
+   seven begin with the seals' three (`SEAL_CITATIONS`) and end with this
+   board's own staged post; the cap's ten add three of the tree's sample
+   people. */
+const REF_PICKER_PAIR = { pDirected: 0.1, pInterest: 0.1 };
+const refPickerStaged = (kind, name, sub, src, pair = REF_PICKER_PAIR) => ({ kind, name, sub, src, pair, onRemove: () => {}, onEdit: () => {} });
+const REF_PICKER_SEVEN = [
+  ...SEAL_CITATIONS,
+  refPickerStaged("person", "Juno Baptiste", "Person"),
+  refPickerStaged("person", "Kel Moreau", "Person"),
+  refPickerStaged("post", "First try at a rubbing", "Post"),
+  refPickerStaged("post", "Salt maps of the coast road", "Post", "post-photo.jpg"),
+];
+const REF_PICKER_TEN = [...REF_PICKER_SEVEN, refPickerStaged("person", "Ines Salas", "Person"), refPickerStaged("person", "Salome Ward", "Person"), refPickerStaged("person", "Nadia Rask", "Person")];
+const refPickerStagedRows = (items) =>
+  items
+    .slice(-3)
+    .reverse()
+    .map((item, i) => <StagedReference key={item.name} kind={item.kind} name={item.name} sub={item.sub} src={item.src} onRemove={() => {}} node="stagedReference" nodeKey={String(i + 1)} />);
+const REF_PICKER_TODAYS = <StagedReference kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" onRemove={() => {}} node="stagedReference" nodeKey="1" />;
+
+const REF_PICKER_HOLES = Object.fromEntries(["capShown", "faultRowShown", "faultShown", "filterRowShown", "filterShown", "pickingShown", "rowsOpacity", "rowsShown", "sevenShown", "tenShown"].map((k) => [k, `{{${k}}}`]));
+const REF_PICKER_AT_SEVEN = { capShown: "none", faultRowShown: "none", faultShown: "none", filterRowShown: "none", filterShown: "none", pickingShown: "none", rowsOpacity: "1", rowsShown: "flex", sevenShown: "flex", tenShown: "none" };
+function ReferencePickerBody({ v = REF_PICKER_HOLES }) {
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back to the post" title="Cite something" action={<HelpDot ariaLabel="Citing" node="help" />} node="header" />
+      <div style={{ flex: "none" }}>
+        <SearchBar query="salt" ariaLabel="Cite something" node="searchField" />
+        <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
+          <FilterTrigger reading="Everything" ariaLabel="What the search shows" node="filterTrigger" />
+        </div>
+        {/* The cap line stands in the fixed head, under the filter (jakob
+            2026-11-11). */}
+        <div style={{ display: v.capShown }} data-node-chip="state" data-node-key="cap">
+          <p style={PICKER_NOTE} data-node="cap">
+            Up to 10 citations per post.
+          </p>
+        </div>
+        <PickAnnouncement said="Added — in the staged list." node="announcement" />
+      </div>
+      {/* ONE SCROLLING LIST, the staged rows first (`TagPicker`). */}
+      <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }} data-node="staged">
+          <div style={{ display: v.pickingShown, flexDirection: "column" }} data-node-chip="state" data-node-key="picking">
+            {REF_PICKER_TODAYS}
+          </div>
+          <div style={{ display: v.filterRowShown, flexDirection: "column" }} data-node-chip="state" data-node-key="filter">
+            {REF_PICKER_TODAYS}
+          </div>
+          <div style={{ display: v.faultRowShown, flexDirection: "column" }} data-node-chip="state" data-node-key="fault">
+            {REF_PICKER_TODAYS}
+          </div>
+          <div style={{ display: v.sevenShown, flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="seven">
+            {refPickerStagedRows(REF_PICKER_SEVEN)}
+            {PICKER_DOOR}
+          </div>
+          <div style={{ display: v.tenShown, flexDirection: "column", gap: 8 }} data-node-chip="state" data-node-key="cap">
+            {refPickerStagedRows(REF_PICKER_TEN)}
+            {PICKER_DOOR}
+          </div>
+        </div>
+        <div style={{ display: v.faultShown, padding: "8px 24px" }} data-node-chip="state" data-node-key="fault">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)" }} data-node="fault">
+            <TransportError message="Can't reach the server — results can't load right now." />
+            <Button variant="outline" size="sm" selfStart node="retry">
+              Retry
+            </Button>
+          </div>
+        </div>
+        <div style={{ display: v.rowsShown, flexDirection: "column", opacity: v.rowsOpacity }}>
+          <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" trailing={<Icon name="add" size={20} />} onOpen={() => {}} node="result" nodeKey="1" />
+        </div>
+      </div>
+      <div style={{ flex: "none", padding: "8px 24px 24px" }}>
+        <Button style={{ width: "100%" }} node="done">Done</Button>
+      </div>
+
+      <div style={{ display: v.filterShown }} data-node-chip="state" data-node-key="filter">
+        <BottomSheet open ariaLabel="What the search shows" node="filterSheet">
+          <SheetTitle node="title">What the search shows</SheetTitle>
+          <FilterSection label="Kinds" hint="Combine as many as you like. All, until you narrow it." node="kinds">
+            {REF_PICKER_KINDS.map((kind) => (
+              <Chip key={kind.value} label={kind.label} selected={false} node={`${kind.value}Chip`} />
+            ))}
+          </FilterSection>
+          <FilterFoot node="foot" />
+        </BottomSheet>
+      </div>
+    </>
   );
 }

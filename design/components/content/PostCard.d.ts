@@ -231,9 +231,11 @@ export interface PostCardProps {
    * card. Defaults to false.
    */
   attach?: boolean;
-  /** The data-node name its placer gives this card — keyed by the author's handle (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `authorChip` (`avatar`, `name`, `handle`), `timestamp`, `menu`, `title`, `media` (`frame` per picture, keyed by its position from 1; `dots`), `description`, `body`, `opener`, `tagsLine` (`tag` keyed by name, `counts`), `opinions`, `citedBy`, `actionRow` (`stance` with its `anchor`, `score` with its `value`, `comments` with its `count`, `share`). */
+  /** The post's id, the lowercase UUID the wire carries — keys the card when it is named (round 33). Draws nothing. */
+  id?: string;
+  /** The data-node name its placer gives this card — keyed by the post's id (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `authorChip` (`avatar`, `name`, `handle`), `timestamp`, `menu`, `title`, `media` (`frame` per picture, keyed by its position from 1; `dots`), `description`, `body`, `opener`, `tagsLine` (`tag` keyed by name, `counts`), `opinions`, `citedBy`, `actionRow` (`stance` with its `anchor`, `score` with its `value`, `comments` with its `count`, `share`). */
   node?: string;
-  /** The card's key where it has no author to key it — a kind riding this shell with its own `lead` (the profile card, the tag card) passes its own content key, by its placer's rule. Given none, the author's handle keys the card. */
+  /** The card's key where it is not a post — a kind riding this shell with its own `lead` (the profile card, the tag card) passes its own id, by its placer's rule. Given none, `id` keys the card. */
   nodeKey?: string;
 }
 

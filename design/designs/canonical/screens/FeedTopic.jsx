@@ -25,7 +25,7 @@
 
    ONLY A TOPIC HELD *FOR* CAN BE ON. The predicate is jakob's: held is a netted
    Affinity that is not (0, 0), and the topic feed admits positive association
-   only. A topic held against stays a public record and stays on Your topics; it
+   only. A topic held against stays a public record and stays on Your tags; it
    simply never reaches this pill. */
 const NARROWED = { kinds: ["posts"], topic: "#saltmaps", forms: ["text", "photos", "video"], order: "ranked", seen: false, also: ["settling"] };
 

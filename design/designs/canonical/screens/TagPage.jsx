@@ -9,7 +9,7 @@
    fifth tab.
 
    THE ARROW IS HISTORY, AND THE LABEL NAMES THE ORIGIN (jakob 2026-09-15):
-   `Back to Explore` from Explore, `Back to Your topics` from the list, `Back to
+   `Back to Explore` from Explore, `Back to Your tags` from the list, `Back to
    feed` from a feed chip. A cold entry with no history — a shared URL — falls
    back to `Back to Explore`, which is the state this board draws.
 
