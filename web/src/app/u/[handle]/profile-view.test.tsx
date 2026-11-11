@@ -803,7 +803,7 @@ describe("ProfileScreen", () => {
       fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
       fireEvent.click(screen.getByTestId("profile.menuSheet.mention"));
       expect(push).toHaveBeenCalledWith("/compose?reference=u2");
-      await waitFor(() => expect(screen.queryByTestId("profile.menuSheet")).not.toBeInTheDocument());
+      await waitFor(() => expect((screen.getByTestId("profile.menuSheet") as HTMLDialogElement).open).toBe(false));
     });
 
     // ProfileMenu.md:19 — an applicant is told, and the wizard never opens.
@@ -817,7 +817,7 @@ describe("ProfileScreen", () => {
         "You can post once you're in.",
       );
       expect(push).not.toHaveBeenCalledWith(expect.stringMatching(/^\/compose/));
-      await waitFor(() => expect(screen.queryByTestId("profile.menuSheet")).not.toBeInTheDocument());
+      await waitFor(() => expect((screen.getByTestId("profile.menuSheet") as HTMLDialogElement).open).toBe(false));
     });
 
     // ProfileMenu.md:35 — a guest's Mention opens the gate, never the wizard.
