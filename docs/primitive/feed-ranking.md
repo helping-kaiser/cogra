@@ -355,7 +355,7 @@ what the feed *does* with quadrant III is this section.
 Nothing in `w̃` ages: `τ_e` is novelty at landing — how
 established the endpoints already were — frozen at write time
 ([layer1-interface.md §8.3](layer1-interface.md#83-temporal-structure)),
-and the act time `𝕋^act_q` is pure order. A three-year-old record carries the
+and the act time `𝕋^act_q` is a summary of the order. A three-year-old record carries the
 `w̃` it had the day it landed. Without a recency input, stale
 accumulated signal beats a friend's brand-new post forever. So the
 feed applies its own factor on each path's **terminal stance
@@ -510,9 +510,9 @@ folded bundles toward `t`, summed per stance-author `a` — and
 genesis recency. The genesis seed names recency only; the
 statistics keys stay defined and governable but unseeded. Genesis
 recency is newest content first: the target's **genesis**
-authorship record read by its place in the published order — its
-landing epoch, then its authoritative causal key (Lamport time, then
-host position; ``def:graph:authoritative-act-order``) — which is
+authorship record read by its key of record — landing epoch, then
+position in that epoch's published order
+(``def:graph:authoritative-act-order``) — which is
 total over accepted acts, so no tie outlasts it. An update record never
 refreshes it: "newest" means newest content, not
 most-recently-edited.

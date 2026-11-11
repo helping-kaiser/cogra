@@ -558,7 +558,7 @@ backend then runs the admission sequence:
    first vouch-Opinion on any of its paths have both confirmed in
    the mirror, the account state flips to `member` and the path that
    vouch was decided on is marked landed. The first to land, by the
-   mirror's causal key, wins; the account's other paths leave their
+   mirror's key of record (epoch, position), wins; the account's other paths leave their
    members' queues, and a later vouch-Opinion is an ordinary Opinion.
    Nothing moves and nothing is claimed: the credentials have been
    the account's since registration, the identity association since

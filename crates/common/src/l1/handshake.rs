@@ -311,7 +311,8 @@ pub struct PublishedRecord {
     pub family: Family,
     /// Landing epoch, numbered from [`FIRST_EPOCH`].
     pub epoch: i64,
-    /// Authoritative causal key (§8.3).
+    /// Act time 𝕋^act (§8.3): a recomputable summary of the order of
+    /// record; it decides no precedence.
     pub act_time: i64,
     /// The act's place in its epoch, numbered from [`FIRST_POSITION`].
     pub position: i64,
