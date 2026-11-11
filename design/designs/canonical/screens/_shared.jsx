@@ -244,6 +244,29 @@ const TOBIAS_COMMENT_ID = "8c7296e7-8e4b-45b1-9889-279e7a713f9c";
 const CITE_ROW = { label: "Cite in a new post", onSelect: () => {}, node: "cite" };
 const SAVE_ROW = { label: "Save", onSelect: () => {}, node: "save" };
 const CARD_MENU = [SAVE_ROW, CITE_ROW];
+/* THE REPORT ROW, AT THE SHEET TAIL OF EVERY OTHER-PERSON MENU (jakob
+   2026-10-09, ruling 75). Minimal and via mail for MVP: the row opens a
+   confirm sheet naming the thing (`ReportConfirm`), the commit sends the
+   report out, and no report machinery exists until proposals/moderation
+   land. It sits LAST — below even the license — because it is the one row
+   a reader reaches for about someone else's conduct, not about using the
+   thing, and the tail is where the rows that take or send something have
+   always lived. It NEVER connects to Report-a-problem: reporting content
+   must not read as reporting the app (jakob). Own menus carry no Report —
+   a reader has nothing to report themselves for. `tail` tells a card's own ⋮
+   the same: the card appends the license, and the row stays after it. */
+const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report", tail: true };
+/* A POST CARD'S OWN ⋮ IS THE MENU THE BOARDS DRAW (round 36): the reader's
+   post menu (`READER_POST_MENU`) less the license the card appends — Save,
+   Cite, Hide with the author's handle, then Report after the license — so a
+   card and the sheet its ⋮ raises cannot disagree. A board drawing a card of
+   the reader's own hands it the own rows instead (`FeedPostMenuOwn`). */
+const readerCardMenu = (handle) => [
+  SAVE_ROW,
+  CITE_ROW,
+  { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {}, node: "hide" },
+  REPORT_ROW,
+];
 
 /* A POST'S BODY IS WORDS XOR MEDIA (post.md). Every fixture with a picture
    carries its words as the DESCRIPTION — the caption beside the body — and no
@@ -261,7 +284,7 @@ const ADA_POST = {
   comments: 3,
   opinions: 9,
   license: { attribution: 1, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("ada"),
 };
 
 const TOBIAS_POST = {
@@ -273,7 +296,7 @@ const TOBIAS_POST = {
   comments: 1,
   opinions: 2,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("tobias"),
 };
 
 const SOL_POST = {
@@ -292,7 +315,7 @@ const SOL_POST = {
   comments: 2,
   opinions: 4,
   license: { attribution: 0.5, provenance: 0.5 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("sol"),
 };
 
 /* @mira's words post — the one History's and Saved's searches both find. */
@@ -305,7 +328,7 @@ const MIRA_WORDS_POST = {
   comments: 1,
   opinions: 3,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("mira"),
 };
 
 /* The gallery post (media slice, 2026-08-31): four pictures at one crop shape,
@@ -328,7 +351,7 @@ const MIRA_GALLERY_POST = {
   comments: 2,
   opinions: 9,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("mira"),
 };
 
 /* CograBand moved into the system (components/navigation/CograBand.jsx) the
@@ -676,18 +699,6 @@ const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {}, node: "lice
    where the post's menu has always put it: the rarest act, and the one that
    takes the content away. */
 const REMOVE_ROW = { label: "Remove", onSelect: () => {}, node: "remove" };
-/* THE REPORT ROW, AT THE SHEET TAIL OF EVERY OTHER-PERSON MENU (jakob
-   2026-10-09, ruling 75). Minimal and via mail for MVP: the row opens a
-   confirm sheet naming the thing (`ReportConfirm`), the commit sends the
-   report out, and no report machinery exists until proposals/moderation
-   land. It sits LAST — below even the license — because it is the one row
-   a reader reaches for about someone else's conduct, not about using the
-   thing, and the tail is where the rows that take or send something have
-   always lived. It NEVER connects to Report-a-problem: reporting content
-   must not read as reporting the app (jakob). Own menus carry no Report —
-   a reader has nothing to report themselves for. `tail` tells a card's own ⋮
-   the same: the card appends the license, and the row stays after it. */
-const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report", tail: true };
 const OWN_POST_MENU = [
   SAVE_ROW,
   CITE_ROW,
@@ -741,6 +752,11 @@ const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REP
    menu row would be a second door to one act; and a comment's sensitive mark
    rides its edit, which is where the post's row sends the reader too. */
 const OWN_COMMENT_MENU = [...CARD_MENU, REMOVE_ROW, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
+/* A COMMENT CARD'S OWN ⋮ IS THE COMMENT'S MENU (round 36), the post card's
+   rule (`readerCardMenu`): the rows less the license the card appends, the
+   report row standing after it. */
+const COMMENT_CARD_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+const OWN_COMMENT_CARD_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 
 /* THE THINK-TWICE DIALOG BEHIND AN AUTHOR'S `Remove`, ONE ANATOMY PER KIND
    (`RemoveConfirm`'s, shared the moment the comment's confirm drew it a second
@@ -2808,7 +2824,7 @@ const TOBIAS_REPLIES = [
     timestamp: "35m",
     onReply: () => {},
     license: { attribution: 0, provenance: 0 },
-    menuItems: CARD_MENU,
+    menuItems: COMMENT_CARD_MENU,
   },
   {
     id: "t2",
@@ -2817,7 +2833,7 @@ const TOBIAS_REPLIES = [
     timestamp: "28m",
     onReply: () => {},
     license: { attribution: 0, provenance: 0 },
-    menuItems: CARD_MENU,
+    menuItems: COMMENT_CARD_MENU,
   },
 ];
 
@@ -2863,10 +2879,10 @@ const REMOVED_COMMENT_SCROLL = 440;
    differently with your own comments"). The 3h comment and the landed reply
    wear `CommentCard`'s `own` — `Edit` beside `Reply` in the affordance row,
    the anatomy `ReplyMedia` drew first — and their ⋮ holds the own menu's acts
-   (`OWN_COMMENT_MENU`'s `Remove` after Save and Cite; the card appends the
-   license). The removed comment keeps `own` but loses `Edit` with its payload:
-   there is nothing left on it to edit, the same reason its ⋮ goes. */
-const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
+   (`OWN_COMMENT_MENU`'s rows; the card appends the license). The removed
+   comment keeps `own` but loses `Edit` with its payload: there is nothing
+   left on it to edit, the same reason its ⋮ goes. */
+const OWN_THREAD_MENU = OWN_COMMENT_CARD_MENU;
 
 /* @sol's 3h comment, the one with a branch under it — drawn as the reader's own
    or as someone else's, so its words are written once. */
@@ -2885,7 +2901,7 @@ const SOL_THREAD_COMMENT = {
       timestamp: "40m",
       onReply: () => {},
       license: { attribution: 0, provenance: 0 },
-      menuItems: CARD_MENU,
+      menuItems: COMMENT_CARD_MENU,
     },
     {
       id: "r2",
@@ -2894,7 +2910,7 @@ const SOL_THREAD_COMMENT = {
       timestamp: "22m",
       onReply: () => {},
       license: { attribution: 0, provenance: 0 },
-      menuItems: CARD_MENU,
+      menuItems: COMMENT_CARD_MENU,
     },
   ],
 };
@@ -2991,7 +3007,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
       topics={["glovebox", "coastroad"]}
       references={1}
       license={{ attribution: 0, provenance: 0 }}
-      menuItems={CARD_MENU}
+      menuItems={COMMENT_CARD_MENU}
     >
       {landed ? settledReply : null}
     </CommentCard>
@@ -3019,7 +3035,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         onReply={() => {}}
         replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CARD_MENU}
+        menuItems={COMMENT_CARD_MENU}
       />
       {shown ? (
         <>
@@ -3028,7 +3044,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
           </li>
           <li style={{ display: shown.applicant, flexDirection: "column", listStyle: "none" }} {...readerCopy("applicant")}>
             <ul style={NESTED_LIST}>
-              <CommentCard {...solComment} menuItems={CARD_MENU} node={card} />
+              <CommentCard {...solComment} menuItems={COMMENT_CARD_MENU} node={card} />
             </ul>
           </li>
         </>
@@ -3066,7 +3082,7 @@ const MIRA_CLIP_POST = {
   comments: 2,
   opinions: 6,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("mira"),
 };
 
 /* ── The other two clip shapes (video-cover round, 2026-09-10) ─────────────
@@ -3116,7 +3132,7 @@ const TOBIAS_CANOE_POST = {
   score: "4.80",
   comments: 1,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("tobias"),
 };
 
 const ADA_GRAPES_POST = {
@@ -3129,7 +3145,7 @@ const ADA_GRAPES_POST = {
   score: "3.60",
   comments: 4,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
+  menuItems: readerCardMenu("ada"),
 };
 
 /* The bottom bar's height — what the stream's own chrome has to clear. */
@@ -4725,8 +4741,8 @@ const FEED_LEAD_TITLE = {
    The card appends the license row itself, so the rows handed it stop short
    of it, and the report row, marked `tail`, stays after it: the card's ⋮
    ends License terms · Report, as `CommentMenu` reads. */
-const FEED_COMMENT_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
-const FEED_OWN_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+const FEED_COMMENT_MENU = COMMENT_CARD_MENU;
+const FEED_OWN_COMMENT_MENU = OWN_COMMENT_CARD_MENU;
 /* WHAT THE HEAD ROW NAMES, PER TARGET (the closing batch, jakob 2026-10-01).
    · AN UNTITLED POST — a text post's title is optional — is named by its
      first words in the title's place, the way the quote names a comment:
