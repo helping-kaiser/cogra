@@ -43,7 +43,7 @@
    2026-10-05, the 134 residue's 3b) — the seal's grammar unchanged
    (`ComposeSealUploading`). `UploadStatusLine` stands over the foot and `Sign
    the edit` stays enabled. Pressed, its label swaps in place to `Signing the
-   edit…`, the ways out locked with it, and signing proceeds the moment the
+   edit…`, the X named `Close` from the press, and signing proceeds the moment the
    bytes land, with no second press. An upload that fails drops the held press:
    the line takes its fault reading — `One picture didn't upload. Signing waits
    for it.` with `Retry` — `Sign the edit` reads itself again, disabled until
@@ -69,7 +69,7 @@
    round's 1). An edit has no acts card, so `ActsFooter` carries the seals'
    line as its subline, `Still signing — the network is slow right now.`,
    counted from the press and gone when the signing answers, with `Sign the
-   edit` reading `Signing the edit…` and the ways out locked, undimmed, as on
+   edit` reading `Signing the edit…` and the X named `Close`, as on
    `SealSigningSlow`. It holds for every edit's signing, gated or not, and for
    all five edit boards; this chip draws it once. The `signing` chip's `slow`
    draws it; with `upload` at `failed` it draws nothing, because a failed

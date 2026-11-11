@@ -19,7 +19,7 @@
    THE COMMIT STAYS ENABLED THROUGH THE GATE (jakob 2026-10-02, the fix-fix
    round's 20), drawn as it is at rest. Pressed, its label swaps in place to
    `Signing comment…` — the failure pack's label-swap idiom (`SealFooter`'s
-   `busy`), the ways out locked with it — and signing proceeds the moment the
+   `busy`), Back reading `Close` from the press — and signing proceeds the moment the
    bytes land; no second press is asked. The slow line counts from the press
    (jakob 2026-10-02, the residue round's Q6): 5s after it the subline under
    the total swaps to `Still signing — the network is slow right now.`,

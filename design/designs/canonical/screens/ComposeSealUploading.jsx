@@ -11,8 +11,7 @@
    the line shows. Pressed, its label swaps in place to the in-flight word,
    `Signing and publishing…` — the failure pack's label-swap idiom
    (`SealFooter`'s `busy`): inert from the press, the word once the wait
-   passes 200ms, never dimmed and no spinner, and the ways out locked with it
-   for the swap's duration. Signing proceeds the moment the bytes land; no
+   passes 200ms, never dimmed and no spinner, and from the press Back reads `Close`. Signing proceeds the moment the bytes land; no
    second press is asked. Unpressed, the line goes when the last upload lands
    and the commit stands as it was.
 
