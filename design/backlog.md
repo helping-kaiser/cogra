@@ -5683,3 +5683,5 @@ named exception [lean — a guest who closes has nothing to come back to];
 (b) Close, and the result is lost unless it lands while the app is open
 (the feed's snackbar); (c) Close, and a signed-in landing tells it at the
 next open.
+
+Ruled by jakob 2026-11-11 (on the round 41 review): (a) — on the signed-in plain forms the back arrow is named `Close` from the press and only leaves, the submit going on; the entry forms keep their exits held while they submit, the named exception. Not built yet: where a failure shows after Close is still at him.
