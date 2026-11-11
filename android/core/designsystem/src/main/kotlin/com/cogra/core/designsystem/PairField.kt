@@ -29,18 +29,24 @@ import android.os.Build
 import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,9 +62,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -69,7 +75,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 
 /** One axis's census range. */
 @Immutable
@@ -247,6 +255,7 @@ fun PairField(
             layered = held || pressed.value,
             enabled = enabled,
             testTag = node?.div("square")?.tag ?: testTag,
+            node = node,
         )
     }
 }
@@ -263,15 +272,16 @@ private fun PairSquare(
     layered: Boolean,
     enabled: Boolean,
     testTag: String,
+    node: DataNode?,
 ) {
     val ground = MaterialTheme.colorScheme.surfaceContainerHighest
-    val dead = MaterialTheme.colorScheme.outlineVariant
-    val knob = MaterialTheme.colorScheme.primaryContainer
     val standing = rememberUpdatedState(value)
     val report = rememberUpdatedState(onValueChange)
     val view = LocalView.current
     val reading = "${axes.directed} ${twoPlaces(value.directed)}, ${axes.interest} ${twoPlaces(value.interest)}"
-    Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
+    val square = node?.div("square")
+    BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f)) {
+        val sidePx = constraints.maxWidth.toFloat()
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
@@ -295,18 +305,73 @@ private fun PairSquare(
                 }
                 .testTag(testTag),
         ) {
-            drawPairField(value, layered, ranges, ground, dead, knob, knobTravelInset().toPx())
+            drawRoundRect(color = ground, cornerRadius = CornerRadius(FIELD_CORNER.toPx()))
         }
-        PairPole(axes.left, Alignment.CenterStart, -PAIR_GUTTER_X, TextAlign.End)
-        PairPole(axes.right, Alignment.CenterEnd, PAIR_GUTTER_X, TextAlign.Start)
-        PairPole(axes.top, Alignment.TopCenter, 0.dp, TextAlign.Center, dy = -PAIR_GUTTER_Y)
-        PairPole(axes.bottom, Alignment.BottomCenter, 0.dp, TextAlign.Center, dy = PAIR_GUTTER_Y)
+        PairMarks(value, layered, ranges, sidePx, square)
+        PairPole(axes.left, Alignment.CenterStart, -PAIR_GUTTER_X, TextAlign.End, node = node?.div("left"))
+        PairPole(axes.right, Alignment.CenterEnd, PAIR_GUTTER_X, TextAlign.Start, node = node?.div("right"))
+        PairPole(axes.top, Alignment.TopCenter, 0.dp, TextAlign.Center, dy = -PAIR_GUTTER_Y, node = node?.div("top"))
+        PairPole(axes.bottom, Alignment.BottomCenter, 0.dp, TextAlign.Center, dy = PAIR_GUTTER_Y, node = node?.div("bottom"))
     }
+}
+
+/**
+ * What the field draws over its ground, each as its own box so it wears the
+ * name the master gives it (`zeroAcross`, `zeroDown`, `knobLayer`, `knob`
+ * inside the `square`): the dead-ground hairlines at each axis's zero —
+ * only where the range crosses it, 1dp from the zero's position down or
+ * across, as the master's `top: <zero>%; height: 1px` — then the pressed
+ * layer and the knob at the pick. None of them takes a pointer, so every
+ * touch still reaches the field's gesture beneath.
+ */
+@Composable
+private fun BoxScope.PairMarks(value: PairPoint, layered: Boolean, ranges: PairRanges, sidePx: Float, square: DataNode?) {
+    val dead = MaterialTheme.colorScheme.outlineVariant
+    val knob = MaterialTheme.colorScheme.primaryContainer
+    val inset = with(LocalDensity.current) { knobTravelInset().toPx() }
+    val inert = Modifier.semantics { hideFromAccessibility() }
+    ranges.interest.zeroFraction?.let { f ->
+        Box(
+            inert
+                .offset { IntOffset(0, ((1f - f.toFloat()) * sidePx).roundToInt()) }
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(dead)
+                .dataNode(square?.div("zeroAcross")),
+        )
+    }
+    ranges.directed.zeroFraction?.let { f ->
+        Box(
+            inert
+                .offset { IntOffset((f.toFloat() * sidePx).roundToInt(), 0) }
+                .fillMaxHeight()
+                .width(1.dp)
+                .background(dead)
+                .dataNode(square?.div("zeroDown")),
+        )
+    }
+    val at = pairKnobAt(value, sidePx, inset, ranges)
+    if (layered) {
+        PairDisc(at, PAIR_KNOB_LAYER_RADIUS, knob.copy(alpha = PAIR_PRESS_ALPHA), inert.dataNode(square?.div("knobLayer")))
+    }
+    PairDisc(at, KNOB_RADIUS, knob, inert.dataNode(square?.div("knob")))
+}
+
+/** A disc of [radius] centred on [at] (px from the field's top-left). */
+@Composable
+private fun PairDisc(at: Offset, radius: Dp, color: Color, modifier: Modifier) {
+    val r = with(LocalDensity.current) { radius.toPx() }
+    Box(
+        modifier
+            .offset { IntOffset((at.x - r).roundToInt(), (at.y - r).roundToInt()) }
+            .size(radius * 2)
+            .background(color, CircleShape),
+    )
 }
 
 /** One pole word, held in its own gutter outside the field and pushed against the edge it names. */
 @Composable
-private fun BoxScope.PairPole(text: String, at: Alignment, dx: Dp, align: TextAlign, dy: Dp = 0.dp) {
+private fun BoxScope.PairPole(text: String, at: Alignment, dx: Dp, align: TextAlign, dy: Dp = 0.dp, node: DataNode? = null) {
     val sideways = dx != 0.dp
     Text(
         text = text,
@@ -321,38 +386,9 @@ private fun BoxScope.PairPole(text: String, at: Alignment, dx: Dp, align: TextAl
             // Measured inside the field's box, so its alignment is the
             // field's own edge, then drawn shifted out into its gutter.
             .offset(x = dx, y = dy)
-            .semantics { hideFromAccessibility() },
+            .semantics { hideFromAccessibility() }
+            .dataNode(node),
     )
-}
-
-private fun DrawScope.drawPairField(
-    value: PairPoint,
-    layered: Boolean,
-    ranges: PairRanges,
-    ground: Color,
-    dead: Color,
-    knob: Color,
-    insetPx: Float,
-) {
-    drawRoundRect(color = ground, cornerRadius = CornerRadius(FIELD_CORNER.toPx()))
-    val stroke = 1.dp.toPx()
-    // Dead ground marks an axis's zero, so only where the range crosses it.
-    ranges.interest.zeroFraction?.let { f ->
-        val y = (1f - f.toFloat()) * size.height
-        drawLine(dead, Offset(0f, y), Offset(size.width, y), strokeWidth = stroke)
-    }
-    ranges.directed.zeroFraction?.let { f ->
-        val x = f.toFloat() * size.width
-        drawLine(dead, Offset(x, 0f), Offset(x, size.height), strokeWidth = stroke)
-    }
-    val at = pairKnobAt(value, size.width, insetPx, ranges)
-    // The pressed state layer (the K13 round): a 40dp disc in the knob's own
-    // colour at the press opacity, for as long as the pointer is down — a
-    // layer, never a scale.
-    if (layered) {
-        drawCircle(color = knob.copy(alpha = PAIR_PRESS_ALPHA), radius = PAIR_KNOB_LAYER_RADIUS.toPx(), center = at)
-    }
-    drawCircle(color = knob, radius = KNOB_RADIUS.toPx(), center = at)
 }
 
 /**
