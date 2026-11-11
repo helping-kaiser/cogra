@@ -29,6 +29,15 @@
    upload.` with `Retry · Remove it` under the pictures, beside the gate's
    fault reading and the disabled Sign; `Remove it` un-gates Sign.
 
+   A WORDS COMMENT'S EDIT TAKES A VIDEO (backlog 148's reading (a), jakob
+   2026-11-10: "all comments can hold words/images/one video. there is no
+   specific 'text-comment'"). The family's: a comment holding words alone
+   reads its add row `+ Add pictures or a video`, as the reply's composer
+   does, and a picked clip arrives as `CommentEditVideo` draws it, with its
+   cover row; until the edit's video path ships the clip is refused with the
+   staged line (staged-surfaces). This board draws a comment holding a
+   picture, so its row keeps `+ Add pictures · 1 of 4`.
+
    THE BODY IS `_shared.jsx`'s `CommentEditBody`, because the acts sheet stands
    on this edit and draws it whole.
 

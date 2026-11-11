@@ -294,7 +294,7 @@ const MIRA_GALLERY_POST = {
   topics: ["tidemarket", "coastroad"],
   score: "6.40",
   comments: 2,
-  opinions: 8,
+  opinions: 9,
   license: { attribution: 0, provenance: 0 },
   menuItems: CARD_MENU,
 };
@@ -1566,6 +1566,27 @@ const SEAL_TAGS_MANY = ["fieldnotes", "coastroad", "saltmaps", "tidal", "estuary
    where the drawing stops being readable. */
 const TAGS_ROW_HOLDS = 2;
 
+/* THE TAGS ROW IN EITHER READING, for a staged set: the chips while they fit,
+   the count and its door past that. ONE FACTORY FOR BOTH SEALS, `citedRow`'s
+   reason — the reply seal reads its staged tags as the post seal does (seam
+   254 item 10, jakob 2026-11-10: "the reply seal mirrors the post seal
+   exactly"). */
+const sealTagsRow = (tags) =>
+  tags.length > TAGS_ROW_HOLDS
+    ? tagsRow(tags.length)
+    : {
+        label: "Tags",
+        value: (
+          <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
+            {tags.map((tag) => (
+              <Chip key={tag} label={`#${tag}`} tone="readout" />
+            ))}
+          </span>
+        ),
+        count: String(tags.length),
+        countNoun: "tag",
+      };
+
 /* The post's staged set past the first, written once: the seal that COUNTS
    these and the sheet that LISTS them are two boards of one moment, and a
    count drawn beside a list it disagreed with would be the very defect this
@@ -1712,20 +1733,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
         <ActsCard
           rows={[
             { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
-            tags.length > TAGS_ROW_HOLDS
-              ? tagsRow(tags.length)
-              : {
-                  label: "Tags",
-                  value: (
-                    <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
-                      {tags.map((tag) => (
-                        <Chip key={tag} label={`#${tag}`} tone="readout" />
-                      ))}
-                    </span>
-                  ),
-                  count: String(tags.length),
-                  countNoun: "tag",
-                },
+            sealTagsRow(tags),
             cited > 1
               ? citedRow(cited)
               : citedOneRow(state === "refused" ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined),
@@ -1858,8 +1866,10 @@ function ReplyPadBody() {
    the name that opens the citation's pair, and the × that drops it, each naming
    the citation it acts on (`StagedReference`'s rule, jakob 2026-09-10). The
    label is singular here — it names the EDGE staged rather than the block it
-   sits in (copy-voice), and one edge is a reference. */
-const replyCitedRow = () => ({
+   sits in (copy-voice), and one edge is a reference. `fault` is the seal's
+   unlanded-citation line, `citedOneRow`'s: the row reads back as before and
+   the line stands under its value (seam 254 item 11). */
+const replyCitedRow = (fault) => ({
   label: "Reference",
   countNoun: "citation",
   value: (
@@ -1883,6 +1893,7 @@ const replyCitedRow = () => ({
     </span>
   ),
   count: "1",
+  ...(fault ? { fault } : null),
 });
 
 /* THE REPLY'S SEAL IS ONE SURFACE IN THREE STATES, and `cited` is which one:
@@ -1904,8 +1915,58 @@ const replyCitedRow = () => ({
    uploads run, `Sign comment` stays enabled and, pressed, swaps to `Signing
    comment…` until the bytes land and the signing answers (the fix-fix
    round's 20, `ReplySealUploading`); at the failed reading it is disabled
-   (`ReplySealUploadFailed`). */
-function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploading = null }) {
+   (`ReplySealUploadFailed`).
+
+   `tags` is the staged set, read as the post seal reads it (`sealTagsRow`,
+   seam 254 item 10): none draws no row, while they fit the chips, past that
+   the count and its door. The row stands where the post seal's stands, under
+   the act and above the references.
+
+   `state` is what became of the commit, the post seal's own two refusals at
+   reply scale (seam 254 item 11, `ComposeSealBody`'s `refused` and `bug`):
+   `refused` — the one staged citation's post never landed, so its row says so
+   with `Remove it` and the commit stays (`SealFaultRow`); `bug` — any other
+   refusal of one staged act: `This shouldn't have happened` takes the
+   commit's place, with `Try again`, then `Report a problem` and `Discard the
+   reply` (`SealFaultBug`, whose docblock names the reply's noun).
+
+   `chipped` is `ReplySeal`'s own drawing of both as chips: every card the
+   `tags` and `state` chips can draw, and both feet, each behind its hole
+   (`ReplySeal`'s VALS). */
+const REPLY_TAG_SETS = { none: [], two: SEAL_TAGS, seven: SEAL_TAGS_MANY };
+
+function replySealCard({ named, cited, tags, refused }) {
+  const acts = 1 + tags.length + cited;
+  return (
+    <ActsCard
+      rows={[
+        { label: "Comment", value: named.act, count: "1", countNoun: "comment" },
+        ...(tags.length ? [sealTagsRow(tags)] : []),
+        ...(cited === 1 ? [replyCitedRow(refused ? { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } : undefined)] : cited > 1 ? [citedRow(cited)] : []),
+        ...ADD_ROWS,
+      ]}
+      total={acts > 1 ? `${acts} things, signed together` : "1 thing, signed"}
+      note={acts > 1 ? "They land together, or none does." : undefined}
+    />
+  );
+}
+
+function ReplySealBugFoot() {
+  return (
+    <>
+      <NoticePanel title={SEAL_BUG_TITLE}>
+        <NoticeLine>{SEAL_BUG_FACT}</NoticeLine>
+        <Button variant="inverse" style={{ width: "100%" }}>Try again</Button>
+      </NoticePanel>
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        <Button variant="text" style={{ width: "100%" }}>Report a problem</Button>
+        <Button variant="text" style={{ width: "100%" }}>Discard the reply</Button>
+      </div>
+    </>
+  );
+}
+
+function ReplySealBody({ cited = 0, tags = [], state, target = "post", keyAbsent = false, uploading = null, chipped = false }) {
   const named = REPLY_TARGETS[target];
   return (
     <>
@@ -1921,15 +1982,15 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
         {/* The all-or-nothing subline appears the moment a signature carries
             more than one thing (`ActsCard`'s rule), so the bare comment —
             one act signed — draws neither it nor the plural total. */}
-        <ActsCard
-          rows={[
-            { label: "Comment", value: named.act, count: "1", countNoun: "comment" },
-            ...(cited === 1 ? [replyCitedRow()] : cited > 1 ? [citedRow(cited)] : []),
-            ...ADD_ROWS,
-          ]}
-          total={cited ? `${1 + cited} things, signed together` : "1 thing, signed"}
-          note={cited ? "They land together, or none does." : undefined}
-        />
+        {chipped
+          ? Object.entries(REPLY_TAG_SETS).flatMap(([set, staged]) =>
+              [0, 1].map((one) => (
+                <div key={`${set}${one}`} style={{ display: `{{${set}${one}Shown}}`, flexDirection: "column" }}>
+                  {replySealCard({ named, cited: one, tags: staged, refused: one === 1 })}
+                </div>
+              )),
+            )
+          : replySealCard({ named, cited, tags, refused: state === "refused" })}
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow
@@ -1953,6 +2014,17 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
             <KeyAbsentNotice line="A reply can't wait as pending — restore the key to sign this one." />
             <Button variant="text" style={{ width: "100%" }}>Discard the reply</Button>
           </>
+        ) : chipped ? (
+          <>
+            <div style={{ display: "{{signShown}}", flexDirection: "column" }}>
+              <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" />
+            </div>
+            <div style={{ display: "{{bugShown}}", flexDirection: "column", gap: 12 }}>
+              <ReplySealBugFoot />
+            </div>
+          </>
+        ) : state === "bug" ? (
+          <ReplySealBugFoot />
         ) : (
           <>
             {uploading &&
@@ -3071,7 +3143,7 @@ function LicenseAxis({ axis, name, tiers, chosen, node }) {
 
    `keptPicks` is the count of picks still waiting after their review was
    left unsigned (backlog item 113, jakob's ruling B3): a quiet row in the
-   Key backup group, after `Your key`, reading `3 kept picks waiting`, that
+   Key backup group, after `Your key`, reading `4 kept picks waiting`, that
    reopens `KeptPicksReview`. It exists only while that is true — the key
    here and unsigned kept picks waiting; with the key gone again, the
    waiting-for-key state owns the surface — so it defaults to none, and
@@ -4337,13 +4409,20 @@ function ScoreColumn({ children }) {
    for-or-against value. That order is the precedent's, read off the board
    rather than found written down — it is what a reader of the profile page has
    already learned to expect, and a second surface sorting the same rows a
-   different way would teach them it means nothing. */
+   different way would teach them it means nothing.
+
+   ONE HOLDER DELETED THEIR ACCOUNT (round 29, seam 254 item 12): their row
+   stands where its value puts it, `StanceRow`'s `redacted`, keyed by the
+   actor's id — the one `ProfileStances` draws — since a deleted holder has no
+   handle left. It is one of the nine the count names (`MIRA_GALLERY_POST`'s
+   `opinions`). */
 const POST_OPINION_HOLDERS = [
   { name: MIRA.displayName, handle: MIRA.handle, src: "inviter.jpg", pDirected: 0.9, pInterest: 0.25 },
   { name: ADA.displayName, handle: ADA.handle, src: "comment-camera.jpg", pDirected: 0.7, pInterest: 0.4 },
   { name: TOBIAS.displayName, handle: TOBIAS.handle, pDirected: 0.6, pInterest: 0.65 },
   { name: SOL.displayName, handle: SOL.handle, pDirected: 0.55, pInterest: 0.2 },
   { name: KEL.displayName, handle: KEL.handle, pDirected: 0.25, pInterest: 0.95 },
+  { redacted: true, actorId: "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98", pDirected: 0.2, pInterest: 0.2 },
   { name: NADIA.displayName, handle: NADIA.handle, pDirected: 0.15, pInterest: 0.15 },
   { name: WREN.displayName, handle: WREN.handle, pDirected: -0.2, pInterest: 0.1 },
   { name: JUNO.displayName, handle: JUNO.handle, pDirected: -0.55, pInterest: 0.25 },

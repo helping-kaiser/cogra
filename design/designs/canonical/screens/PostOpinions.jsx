@@ -6,7 +6,7 @@
    IT IS THE TAGS-AND-REFERENCES SHEET'S PATTERN, which is what jakob's ruling
    names: a quiet count row on the detail opens a bottom sheet holding the whole
    set. THE COUNT IS THE LIST'S LENGTH, `RefsSheet`'s discipline exactly — the
-   card says eight and eight rows stand here, because this sheet is the only
+   card says nine and nine rows stand here, because this sheet is the only
    place that number can be checked.
 
    THE ROWS ARE `StanceRow`, the master the profile's own opinions page uses, so
@@ -26,7 +26,17 @@
 
    REGISTERED under the `postDetail` prefix (seam 248): the sheet is
    `opinionsSheet`, each row an `opinion` keyed by its holder's handle — a
-   person is content, so the row keys by who, never by position. */
+   person is content, so the row keys by who, never by position.
+
+   A DELETED HOLDER'S ROW (round 29, seam 254 item 12; `ProfileStances`'
+   round-27 row, mirrored) stands in the list as any other, where its value
+   puts it — `StanceRow`'s `redacted`: the reserved disc, `Deleted account`, no
+   handle line, the opinion read as any row's, the row a door to the deleted
+   account's page, since an account that existed and was removed is shown, not
+   hidden. It has no handle to key by, so it is its own node,
+   `redactedOpinion`, keyed by the actor's id, the lowercase UUID the wire
+   carries — `opinion`'s rule names the handle, and a registered rule is never
+   reworded (`redactedRow`'s precedent, itself `redactedAccount`'s). */
 /* THE `list` CHIP DRAWS THE SHEET EMPTY AT POST SCALE (seam 248). The count
    line drops away at zero, so a post's sheet meets nothing only when the
    count it was opened from had gone stale — every opinion walked back since
@@ -40,16 +50,20 @@ export function Screen() {
     <>
       <DetailHeader items={READER_POST_MENU} node="header" />
       <DetailColumn>
-        <PostCard {...MIRA_GALLERY_POST} variant="detail" opinions={8} onOpenOpinions={() => {}} node="card" />
+        <PostCard {...MIRA_GALLERY_POST} variant="detail" opinions={9} onOpenOpinions={() => {}} node="card" />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
       <BottomSheet open ariaLabel="Opinions on this post" maxHeight="88%" node="opinionsSheet">
         <SheetTitle node="title">Opinions on this post</SheetTitle>
         <div style={{ display: "{{rowsShown}}", flexDirection: "column", overflow: "hidden" }}>
-          {POST_OPINION_HOLDERS.map((holder) => (
-            <StanceRow key={holder.handle} {...holder} onOpen={() => {}} node="opinion" nodeKey={holder.handle} />
-          ))}
+          {POST_OPINION_HOLDERS.map(({ actorId, ...holder }) =>
+            holder.redacted ? (
+              <StanceRow key={actorId} {...holder} onOpen={() => {}} node="redactedOpinion" nodeKey={actorId} />
+            ) : (
+              <StanceRow key={holder.handle} {...holder} onOpen={() => {}} node="opinion" nodeKey={holder.handle} />
+            ),
+          )}
         </div>
         <div style={{ display: "{{emptyShown}}", padding: "0 24px 8px" }} data-node-chip="list" data-node-key="empty">
           <EmptyState title="No opinions yet — yours would be the first." node="empty" />

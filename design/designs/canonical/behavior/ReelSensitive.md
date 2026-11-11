@@ -8,6 +8,10 @@ ALWAYS the stream and its veil stand below the system status bar, whose strip st
 
 ALWAYS the stream carries no reel.soundDisc and no reel.seekLine GIVEN the clip is veiled
 
+ALWAYS reel.bottomBar lights the root of the stack the stream was opened from, the root its list stands in
+
+ALWAYS reel.bottomBar lights Feed GIVEN the stream was reached with no origin, as from a shared link
+
 ALWAYS reel.stage.veil reads Sensitive — tap to view over the source line naming whose mark it is, The author's warning or The platform's verdict, the reason after it where there is one
 
 ALWAYS reel.caption.handle and reel.caption.title stay readable and reel.caption.description veils, reel.caption.show beside it

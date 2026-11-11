@@ -8315,7 +8315,8 @@
         "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
         "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
         "postDetail.opinionsSheet.empty": "the list chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "postDetail.opinionsSheet.opinion": "the opinion holder's handle, without @ (the opinions sheet)"
+        "postDetail.opinionsSheet.opinion": "the opinion holder's handle, without @ (the opinions sheet)",
+        "postDetail.opinionsSheet.redactedOpinion": "the deleted holder's actor id, the lowercase UUID the wire carries (the opinions sheet, where a holder who deleted their account has no handle left to key by)"
       },
       "nodes": {
         "postDetail.bottomBar": [],
@@ -8477,6 +8478,24 @@
           "nadia",
           "wren",
           "juno"
+        ],
+        "postDetail.opinionsSheet.redactedOpinion": [
+          "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98"
+        ],
+        "postDetail.opinionsSheet.redactedOpinion.avatar": [
+          "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98"
+        ],
+        "postDetail.opinionsSheet.redactedOpinion.name": [
+          "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98"
+        ],
+        "postDetail.opinionsSheet.redactedOpinion.value": [
+          "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98"
+        ],
+        "postDetail.opinionsSheet.redactedOpinion.value.exact": [
+          "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98"
+        ],
+        "postDetail.opinionsSheet.redactedOpinion.value.face": [
+          "9d3f6a1b-4c2e-4b8a-a7d5-2e6f1c0b3a98"
         ],
         "postDetail.opinionsSheet.title": []
       }
