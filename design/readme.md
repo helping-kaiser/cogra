@@ -11371,6 +11371,47 @@ details are a proposal drawn for his review.
   6946** board paths, **1996 → 2000** distinct — `settings.clearing.install`
   with its label and chevron, and `settings.dialog.close`; nothing removed.
 
+### Round 41, Unhide on a hidden person's card, Edit on your own, the last failure places — 2026-11-11
+
+jakob's answers to rounds 36–39 (M1–M3, R2, S1–S6, I1–I2), executed.
+
+- **Unhide wherever a hidden person's card lands** (M1). The hide row reads
+  `Unhide @ada` — Settings' word in the row's own form (`UNHIDE_ACTOR_LABEL`,
+  beside `HIDE_ACTOR_LABEL` on `ActorChip`), answered by Settings' snackbar
+  with Undo — on every host where a hidden person's post, profile card or
+  profile still stands: History until its next load (posts) and for good
+  (the profile card), Saved, the tag's page, and a post or profile reached
+  by a link or a search. The feed never holds such a card; a comment's menu
+  has no hide row. Drawn: `HistoryPostMenu`'s `author` hidden and
+  `HistoryProfileMenu` (new). The row keeps its name, `hide`.
+- **Your own card offers Edit wherever it stands** (M3). The own comment's
+  card wears `Edit` in its row on every host, the thread card's form
+  (`CommentCard`'s `own`); the own comment menu keeps no Edit row, the
+  card's being the one door (`OWN_COMMENT_MENU`'s note). The own post's menu
+  already holds Edit on every host. The own profile's posts and comments
+  views are boards of their own (M2): `ProfilePostsOwn`, `ProfileCommentsOwn`,
+  and the own profile's tabs lead to them.
+- **The last failure places after Close** (S3–S5). A profile or picture
+  change: the line under the profile's head, `Signing…` then `That didn't
+  sign.` with `Retry` (`Profile`'s `change`; `SigningAfterClose`'s `act`
+  `profile`). The kept picks' batch: the Key backup row reads `That didn't
+  sign.` with `Retry`, signing the whole batch again (`Settings`' `kept`). A
+  removal: the same line under the card (`FeedRemoveConfirm`'s
+  `closedFailed`); a closed application's row says it too, law only (backlog
+  190). The dialogs' own failure while open keeps `That didn't send. Try
+  again.` `Your post didn't sign.` and `Your comment didn't sign.` are kept as
+  drawn for now (S1); replies and edits keep no draft (S2).
+- **Change password waits silently** (R2): the line `Waiting for both
+  passwords` is gone; the registered `changePassword.commit.reason` is deleted
+  with it, a named breaking change.
+- **The install row's words are blessed** (I1); the row stays in Clearing
+  data (I2). **Settings' frame is 3103px** (backlog 175).
+- **Not drawn, at jakob:** Close on the plain forms (S6, backlog 191) — the
+  entry forms have no place a guest sees a result, and a page whose only way
+  out is a back arrow has no drawn precedent for that arrow reading Close.
+  Backlog 176 stays open: `FeedRemoved.md` says a removed card carries no
+  menu.
+
 ---
 
 ## 14. The canvases

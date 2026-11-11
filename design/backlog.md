@@ -5629,6 +5629,9 @@ drawing 89px of surface under the footnote [lean — a frame is the page, and
 nothing on the default moves]; (b) the clip stands, the row being what the
 setting shows; (c) the shown page as a board of its own.
 
+Closed by round 41, by (a): the frame is 3103px; a row's second line costs
+nothing (54px inside the 56px minimum), so no other setting needs more.
+
 ### 176 · The ladder's redacted records: which menu · *design* · **filed 2026-11-11**
 
 Round 39 (backlog 162). `LadderStates` draws a post removed by its author and
