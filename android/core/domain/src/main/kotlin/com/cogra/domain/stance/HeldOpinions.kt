@@ -59,7 +59,6 @@ data class OpinionRecord(
     val severed: Boolean?,
     val payloadMarked: Boolean,
     val landingEpoch: Int,
-    val actTime: Int,
     val position: Int,
 )
 
@@ -95,6 +94,6 @@ fun foldHeldOpinions(records: List<OpinionRecord>): List<HeldOpinion> = records
             .thenBy { it.holderId },
     )
 
-/** A record's place in the published order: landing epoch, act time, then position. */
+/** A record's place in the published order: the key of record, landing epoch then position. */
 private val PUBLISHED_ORDER: Comparator<OpinionRecord> =
-    compareBy<OpinionRecord> { it.landingEpoch }.thenBy { it.actTime }.thenBy { it.position }
+    compareBy<OpinionRecord> { it.landingEpoch }.thenBy { it.position }
