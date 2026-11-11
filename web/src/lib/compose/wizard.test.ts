@@ -337,6 +337,37 @@ describe("the picker", () => {
     expect(framed.assets[0]!.crop.area).toBeNull();
   });
 
+  // The hand test (2026-11-11): "when swapping from tall to square or wide the
+  // image shrinks. i would just expect the rectangle/frame to change". A
+  // 3000×4000 picture framed at 1× in tall stands 386.25 wide in a 412 frame;
+  // a kept zoom would draw it 161.78 wide in wide. The shape changes around it
+  // instead: the zoom rises to 2.3875, and the place it stood stays.
+  it("keeps each measured picture at the size it stood at when the shape changes", () => {
+    const framed = run(
+      emptyWizard(),
+      picks(2),
+      {
+        type: "crop",
+        id: "a1",
+        crop: {
+          x: 10,
+          y: -20,
+          zoom: 1,
+          area: { x: 0, y: 250, width: 3000, height: 3750 },
+          areaPercent: { x: 0, y: 6.25, width: 100, height: 93.75 },
+        },
+      },
+      { type: "shape", shape: "wide", frameWidth: 412 },
+    );
+    const crop = framed.assets[1]!.crop;
+    expect(crop.zoom).toBeCloseTo(2.3875, 4);
+    expect(crop.x).toBe(10);
+    expect(crop.y).toBe(-20);
+    expect(crop.area).toBeNull();
+    // Never measured, so there is no size to keep it at: it stays as it was.
+    expect(framed.assets[0]!.crop).toEqual({ x: 0, y: 0, zoom: 1, area: null, areaPercent: null });
+  });
+
   it("leaves the framing untouched when the shape does not actually change", () => {
     const area = { x: 0, y: 100, width: 800, height: 1000 };
     const framed = run(

@@ -1154,7 +1154,7 @@ export function ComposeWizard({
           previews={previews}
           shape={state.shape}
           focused={state.focused}
-          onShape={(shape) => dispatch({ type: "shape", shape })}
+          onShape={(shape, frameWidth) => dispatch({ type: "shape", shape, frameWidth })}
           onFocus={(index) => dispatch({ type: "focus", index })}
           onCrop={(id, crop) => dispatch({ type: "crop", id, crop })}
           onNext={() => dispatch({ type: "advance" })}

@@ -55,6 +55,7 @@ import { RefsSheet } from "@/lib/ui2/refs-sheet";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
+import { useClampFold } from "./clamp-fold";
 import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { useNarrowShare } from "./narrow-share";
@@ -79,36 +80,16 @@ import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
 import { TopicsLine } from "./topics-line";
 
-/* THE DESCRIPTION IS TWO LINES in the feed, on both kinds of post. It is the
-   caption, not the body: enough to say what the thing is, never enough to
-   become the reading. */
-const DESCRIPTION_CLAMP_LINES = 2;
-
-/* THE TEXT BODY'S CEILING — the media law's drawn clamp (title 1 line, body
-   18, description 2; tmp_dev/2026-09-11-mvp-design-queue-rulings.md) keeps a
-   text post about as tall as a media post, so a feed of both keeps one
-   rhythm. Past that the body folds and `More` opens it. The detail view is
-   the read surface and clamps nothing. */
-const TEXT_BODY_CLAMP_LINES = 18;
-
-/* A render cannot measure a paragraph, so the opener is offered on an estimate
-   from the same tokens: at `--text-body-medium` (14px) the sans averages about
-   half an em to the glyph, so 358 / 7 ≈ 51 characters to the line. A media
-   post needs no estimate — its caption is clamped to two lines and the opener
-   always stands under it. */
-const CHARS_PER_LINE = 51;
-
-/**
- * Whether anything is folded away, and so whether the opener is offered.
- */
-function isFolded(media: boolean, words: string | null, description: string | null): boolean {
-  if (media) return description !== null && description !== "";
-  return (
-    (words !== null && words.length > TEXT_BODY_CLAMP_LINES * CHARS_PER_LINE) ||
-    (description !== null && description.length > DESCRIPTION_CLAMP_LINES * CHARS_PER_LINE)
-  );
-}
-
+/* THE CLAMPS — the media law's drawn ones (title 1 line, body 18, description
+   2; tmp_dev/2026-09-11-mvp-design-queue-rulings.md): the description is the
+   caption, two lines on both kinds of post, and the text body's eighteen keep
+   a text post about as tall as a media post, so a feed of both keeps one
+   rhythm. The detail view is the read surface and clamps nothing.
+   `More` STANDS ONLY WHERE A CLAMP CUTS SOMETHING (`PostCard.jsx`: "only where
+   there is something folded away"). The master offers it on a character
+   estimate, and under every media caption, because a static render cannot
+   measure; the card measures the clamped paragraph itself (`clamp-fold.ts`),
+   so a caption that fits its two lines carries no opener. */
 /**
  * The comments affordance: `chat_bubble` plus the count, the same
  * glyph-plus-number shape as the score beside it, with the count spoken by the
@@ -351,7 +332,10 @@ export function PostCard({
   // `content` even when a caller hands it one.
   const words = redacted || media ? null : (post.content.value ?? null);
   const description = redacted ? null : (post.description.value ?? null);
-  const folded = isFolded(media, words, description);
+  const clamped = !detail && !open;
+  const [holdBody, bodyFolds] = useClampFold(clamped, words);
+  const [holdDescription, descriptionFolds] = useClampFold(clamped, description);
+  const folded = bodyFolds || descriptionFolds;
   const stamp = shortTimestamp(post.createdAt);
 
   const menuItems = postMenuItems({
@@ -439,6 +423,7 @@ export function PostCard({
       {hasWords &&
         veilPart(
           <p
+            ref={holdBody}
             {...testAttributes(part(node, "body"), `${testId}-body`)}
             className={
               detail
@@ -455,6 +440,7 @@ export function PostCard({
       {hasDescription &&
         veilPart(
           <p
+            ref={holdDescription}
             {...testAttributes(part(node, "description"), `${testId}-description`)}
             className={`text-body-medium text-on-surface-variant ${
               detail || open ? "" : "line-clamp-2"
