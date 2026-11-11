@@ -37,7 +37,6 @@ import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
-import com.cogra.core.designsystem.v2.token.TypeTokens
 import kotlinx.coroutines.delay
 
 /**
@@ -172,7 +171,7 @@ fun CoverRow(
                 reading && late -> "Reading the video…"
                 else -> "A frame, or a picture of your own."
             },
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.then(
                 testTagPrefix?.let { Modifier.testTag("${it}_note") } ?: Modifier,

@@ -2425,7 +2425,7 @@ The rulings the layer rests on:
   rather than pinned to one of them, so the flow claims every place it
   is offered and the census grows as boards are drawn. Where the
   control's outcome depends on **what it was pressed on** — a post's
-  media, which opens a picture's post or a portrait clip's stream —
+  media, which opens a picture's post or a portrait or square clip's stream —
   `case` or `to` narrows the start to the journey meant, the same
   narrowing a given start edge already takes. It is still one control
   everywhere; without a narrowing, divergence is still a failure.
@@ -2726,9 +2726,9 @@ item 33, jakob's rulings the same day).
   in that strip, so a control there is not a control but a swipe that
   closes the app. The bar is inset from it, and the stream's seek line
   rides above the bottom bar rather than under it.
-- **The stream carries portrait clips only** — clips taller than they
-  are wide. Square and landscape clips keep the ordinary grammar, a
-  tap to their post. **It is the list it was opened from narrowed to
+- **The stream carries portrait and square clips** — clips at least
+  as tall as they are wide (squares since round 35). A landscape clip
+  keeps the ordinary grammar, a tap to its post. **It is the list it was opened from narrowed to
   them**, in that list's order — the feed, Saved's cards, History's rows,
   a profile's posts (jakob 2026-10-12; Saved, History's sibling, round
   26): the same graph, the same order, a mechanical
@@ -2736,8 +2736,8 @@ item 33, jakob's rulings the same day).
   is the reassurance only a product that ranks two ways needs. What
   says it instead is the **score on the rail** — the reader's own
   reach into this post, the same number the card wore.
-- **A portrait clip's tap opens the stream; any other media's tap
-  opens the post.** From the clip detail, tapping the clip
+- **A portrait or square clip's tap opens the stream; any other
+  media's tap opens the post.** From the clip detail, tapping the clip
   expands back into the stream with the reader's place held.
 - **The detail door on a reel is the score element** — the exact
   element a feed card wears, so the way in is a thing the reader has
@@ -7301,7 +7301,7 @@ transport. jakob's ruling, drawn as `PostDetailVideoSensitive`:
   makes the per-post law hold when a surface wraps the card from
   outside.
 - The board is a **declared entry** in the graph's own idiom —
-  the same detail any non-portrait clip tap opens, in the state
+  the same detail any clip wider than tall opens, in the state
   the record brings, not a different tap.
 
 ### The v1.0.0 scope cut — 2026-09-25
@@ -9774,9 +9774,9 @@ each).
   amendment to the viewer's black-to-the-edges. Boards stay the
   inset-zero case (*The viewer-grammar close*).
 - **The stream is the list it was opened from**, narrowed to its portrait
-  clips in that list's order — the feed, History, a profile's posts, and
-  a tag's page, whose stream carries only the clips tagged with that tag
-  (jakob 2026-11-11). It
+  and square clips (squares since round 35) in that list's order — the
+  feed, History, a profile's posts, and a tag's page, whose stream
+  carries only the clips tagged with that tag (jakob 2026-11-11). It
   pages vertically both ways from the tapped clip, never wraps and never
   moves on by itself; the last clip carries `That's the last clip here.`
   at its caption's head, and a load that does not come keeps the clip
@@ -11117,6 +11117,62 @@ surface.
   (`PadFailed`, `SeveranceConfirm`, `EmptySignConfirm`), none registered.
   The registry holds at **167 screens**, **6120** board paths, **1920**
   distinct.
+
+### Round 35, squares join the stream; impl's thirteen asks — 2026-11-11
+
+jakob's answers to round 30's stream questions ("1. a) yes", "2. yes") and
+to impl's thirteen asks (T1–T13, "as rec" on all but T2; T2 then ruled
+option b), with two of his hand-test findings (seam 275).
+
+- **A clip at least as tall as it is wide opens the stream** — portrait
+  or square; only a clip wider than tall opens its post. The stream
+  carries every such clip of the list it was opened from, in that list's
+  order (`Reel`, `Main`, `History`, `Saved`, `ProfilePosts`, `TagPage`,
+  `FeedShapes`; the `post media` edges' stream case and `watch-the-stream`
+  read `portrait or square`). Of the sample clips, the lakeside is
+  portrait, the grapes square, the canoe landscape.
+- **The stream on web** pages by the arrow keys and the wheel as the
+  swipes do; a clip that reaches its end loops; the stream carries posts'
+  clips only. Law only.
+- **Settling counts.** The already-published marker counts a post the
+  author signed that is still settling, and its door opens the post over
+  the composer, Back returning to the draft as it was left. The One-tag
+  chips count a signed feeling not yet landed. The profile's posts view
+  lists a settling post, wearing `Still settling` with its score slot
+  bare — `ProfilePosts`' `posts` chip at `settling`, the second post.
+- **The filter's Done keeps the filter that was set** when the new
+  ranking fails, and the feed shows the failure with Retry; no board draws
+  that fault yet (backlog 157).
+- **The rank drill-down prints no sum line**; the arithmetic closes in its
+  drawn figures (`RankRecords`).
+- **A kept approval's pad reopens on the vouch that was kept** (`Invites`).
+  An applicant or a guest at the Invites page's own address lands where
+  app-open lands for them, with `You can invite once you're in.`
+  (*blessed*); an invite link a guest opens is unchanged.
+- **A person is named by handle, never by a gendered pronoun**
+  (copy-voice, *Naming*): the publish step reads `@ada's own opinion
+  rides the post`. The sweep's one other drawn hit waits for jakob
+  (backlog 158).
+- **The crash surface** is `AppCrash`: `This shouldn't have happened`,
+  the bug notice's first line alone, with `Reload`, on the plain landing
+  (`VerifyExpired`'s form), registered under `crash` (*drafted — wording
+  jakob's at review*).
+- **Every 32px disc's letter is label-medium**; the weight 500 is the
+  disc's own at every size (backlog 152 closed).
+- **Chats · coming soon registers** under `chats`: its header, card and
+  bottom bar, the drill-in names `Notifications` uses.
+- **The crop's shape switch keeps the framing**: each picture keeps its
+  scale and position and the frame changes around it; only the fill floor
+  lifts a scale (`ComposeCrop`). The verification mail's paste line is
+  not in the design tree (the mails' words live outside it).
+- **The gate**: edges **2177 → 2178** (`AppCrash`'s `Reload`); flows
+  hold at **227**, two re-blessed (`watch-the-stream`, its start now
+  `portrait or square`; the already-published marker's flow, its door
+  now over the composer). The registry **167 → 169 screens**, **6120 →
+  6134** board paths, **1920 → 1934** distinct — `crash.*` and
+  `chats.*` added, nothing removed. The fifteen boards that draw the
+  numeric 32 disc change only the letter's role inside the fixed 32px
+  box.
 
 ---
 
