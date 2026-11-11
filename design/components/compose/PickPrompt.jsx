@@ -19,7 +19,7 @@ import { Button } from "../core/Button.jsx";
 export function PickPrompt({ caption, escapeLabel, onEscape }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 24px" }}>
-      <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
+      <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
         {caption}
       </p>
       <Button variant="text" size="sm" onClick={onEscape}>{escapeLabel}</Button>

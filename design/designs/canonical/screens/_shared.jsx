@@ -192,6 +192,7 @@ const PICKER_NOTE = {
   margin: 0,
   padding: "8px 24px",
   fontSize: "var(--text-body-small)",
+  fontWeight: "var(--text-body-small--font-weight)",
   lineHeight: "var(--text-body-small--line-height)",
   letterSpacing: "var(--text-body-small--letter-spacing)",
   color: "var(--text-secondary)",
@@ -335,7 +336,11 @@ function ApkLine() {
    nothing reads as if a reader consented to data handling by registering.
 
    Both live here because `Join` and `JoinErrors` draw one form, and a legal
-   line spelled twice is a legal line that drifts. */
+   line spelled twice is a legal line that drifts.
+
+   The names are the `join` prefix's (round 28): the lines are `terms` and
+   `privacy`, as Settings' About rows name the same two documents, and each
+   line's door is its `open`. */
 function JoinTermsLine() {
   return (
     <p
@@ -343,12 +348,14 @@ function JoinTermsLine() {
         margin: 0,
         textAlign: "center",
         fontSize: "var(--text-body-small)",
+        fontWeight: "var(--text-body-small--font-weight)",
         lineHeight: "var(--text-body-small--line-height)",
         letterSpacing: "var(--text-body-small--letter-spacing)",
         color: "var(--text-secondary)",
       }}
+      data-node="terms"
     >
-      By creating your account you accept the <a href="#">Terms</a>.
+      By creating your account you accept the <a href="#" data-node="open">Terms</a>.
     </p>
   );
 }
@@ -360,12 +367,14 @@ function JoinPrivacyNotice() {
         margin: 0,
         textAlign: "center",
         fontSize: "var(--text-body-small)",
+        fontWeight: "var(--text-body-small--font-weight)",
         lineHeight: "var(--text-body-small--line-height)",
         letterSpacing: "var(--text-body-small--letter-spacing)",
         color: "var(--text-secondary)",
       }}
+      data-node="privacy"
     >
-      How CoGra handles your data: the <a href="#">Privacy Policy</a>.
+      How CoGra handles your data: the <a href="#" data-node="open">Privacy Policy</a>.
     </p>
   );
 }
@@ -431,6 +440,7 @@ function HistoryDayDivider({ children, node, nodeKey }) {
         alignSelf: "center",
         padding: "4px 0",
         fontSize: "var(--text-label-small)",
+        fontWeight: "var(--text-label-small--font-weight)",
         lineHeight: "var(--text-label-small--line-height)",
         letterSpacing: "var(--text-label-small--letter-spacing)",
         color: "var(--text-secondary)",
@@ -519,6 +529,7 @@ function TaskCard({ title, body, tone, children, node }) {
           style={{
             margin: 0,
             fontSize: "var(--text-title-medium)",
+            letterSpacing: "var(--text-title-medium--letter-spacing)",
             lineHeight: "var(--text-title-medium--line-height)",
             fontWeight: "var(--text-title-medium--font-weight)",
           }}
@@ -528,7 +539,7 @@ function TaskCard({ title, body, tone, children, node }) {
         </h2>
         <Icon name="mark" size={20} pickColor="var(--primary-container)" style={{ flex: "none", color: "var(--primary)" }} />
       </div>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node={node && "body"}>{body}</p>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node={node && "body"}>{body}</p>
       {children}
     </Card>
   );
@@ -553,6 +564,7 @@ function KeyPledge() {
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
@@ -563,6 +575,7 @@ function KeyPledge() {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-large)",
+            fontWeight: "var(--text-body-large--font-weight)",
             lineHeight: "var(--text-body-large--line-height)",
             letterSpacing: "var(--text-body-large--letter-spacing)",
           }}
@@ -791,6 +804,7 @@ function ReportPostSheet() {
           margin: 0,
           padding: "0 var(--space-6) var(--space-2)",
           fontSize: "var(--text-body-medium)",
+          fontWeight: "var(--text-body-medium--font-weight)",
           lineHeight: "var(--text-body-medium--line-height)",
           letterSpacing: "var(--text-body-medium--letter-spacing)",
           color: "var(--text-secondary)",
@@ -872,7 +886,7 @@ function RecentRow({ text, node, nodeKey }) {
       <span style={{ display: "inline-flex", color: "var(--text-secondary)" }} data-node={node && "glyph"}>
         <Icon name="search" size={18} />
       </span>
-      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "query"}>
+      <span style={{ fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "query"}>
         {text}
       </span>
     </button>
@@ -933,6 +947,7 @@ function Seam({ node, nodeKey, children = "Beyond your reach — newest first" }
         style={{
           flex: "none",
           fontSize: "var(--text-label-small)",
+          letterSpacing: "var(--text-label-small--letter-spacing)",
           lineHeight: "var(--text-label-small--line-height)",
           fontWeight: "var(--text-label-small--font-weight)",
           color: "var(--text-secondary)",
@@ -1379,16 +1394,16 @@ function ComposeDraftBody() {
             "linear-gradient(var(--surface-card), var(--surface-card)) padding-box, var(--ring-task) border-box",
         }}
       >
-        <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
+        <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", letterSpacing: "var(--text-title-medium--letter-spacing)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
           Your draft is here
         </h2>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <MediaThumb src="post-photo.jpg" size={40} />
           <span style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
+            <span style={{ fontSize: "var(--text-body-medium)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
               Salt maps of the coast road
             </span>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
               2 pictures — kept on this device
             </span>
           </span>
@@ -1400,7 +1415,7 @@ function ComposeDraftBody() {
       </Card>
 
       <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 8, padding: "8px 24px" }}>
-        <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
+        <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
           Or start fresh —
         </p>
       </div>
@@ -1620,6 +1635,7 @@ function KeptApprovalLine({ shown, node }) {
         display: shown,
         margin: 0,
         fontSize: "var(--text-body-medium)",
+        fontWeight: "var(--text-body-medium--font-weight)",
         lineHeight: "var(--text-body-medium--line-height)",
         letterSpacing: "var(--text-body-medium--letter-spacing)",
         color: "var(--text-secondary)",
@@ -1817,8 +1833,8 @@ function ReplyPadBody() {
             Toward what you answer
           </span>
           <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
-            <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
-            <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
+            <span style={{ fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", fontWeight: "var(--text-title-large--font-weight)", lineHeight: 1.2 }}>🙂</span>
+            <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
           </span>
           <span style={SR_ONLY}>
             Nice, For or against +0.10, How much reaches you +0.10
@@ -2024,7 +2040,7 @@ function WordsBody({ paragraphs, cap, used, error, rows, node }) {
         {paragraphs.map((text, index) => (
           <p
             key={text}
-            style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)", letterSpacing: "var(--text-body-large--letter-spacing)" }}
+            style={{ margin: 0, fontSize: "var(--text-body-large)", fontWeight: "var(--text-body-large--font-weight)", lineHeight: "var(--text-body-large--line-height)", letterSpacing: "var(--text-body-large--letter-spacing)" }}
           >
             {text}
             {index === paragraphs.length - 1 && <Caret />}
@@ -3021,10 +3037,10 @@ function LicenseAxis({ axis, name, tiers, chosen, node }) {
             data-node={node && "dot"}
           />
           <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }} data-node={node && "label"}>
+            <span style={{ fontSize: "var(--text-body-medium)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }} data-node={node && "label"}>
               {tier.label}
             </span>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
+            <span style={{ fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
               {tier.hint}
             </span>
           </span>
@@ -3165,6 +3181,7 @@ function Release({ version, date, installed = false, newest = false, notes }) {
               style={{
                 margin: 0,
                 fontSize: "var(--text-body-medium)",
+                fontWeight: "var(--text-body-medium--font-weight)",
                 lineHeight: "var(--text-body-medium--line-height)",
                 letterSpacing: "var(--text-body-medium--letter-spacing)",
               }}
@@ -3204,6 +3221,7 @@ function WhatsNewBody({ newer }) {
               margin: 0,
               padding: "8px 24px 0",
               fontSize: "var(--text-body-medium)",
+              fontWeight: "var(--text-body-medium--font-weight)",
               lineHeight: "var(--text-body-medium--line-height)",
               letterSpacing: "var(--text-body-medium--letter-spacing)",
               color: "var(--text-secondary)",
@@ -3257,6 +3275,7 @@ function WaitingCommit({ id, label, reason, waiting = true, node }) {
             fontSize: "var(--text-label-small)",
             lineHeight: "var(--text-label-small--line-height)",
             letterSpacing: "var(--text-label-small--letter-spacing)",
+            fontWeight: "var(--text-label-small--font-weight)",
             color: "var(--text-secondary)",
           }}
         >
@@ -3283,6 +3302,7 @@ function ChangeHandleBody({ value = "" } = {}) {
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
@@ -3294,6 +3314,7 @@ function ChangeHandleBody({ value = "" } = {}) {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
@@ -3346,6 +3367,7 @@ function ReportProblemBody({ words }) {
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
@@ -3356,6 +3378,7 @@ function ReportProblemBody({ words }) {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
@@ -3756,6 +3779,7 @@ function RestoreBody({ value = "", error }) {
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
@@ -3766,6 +3790,7 @@ function RestoreBody({ value = "", error }) {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
@@ -3790,6 +3815,7 @@ function RestoreBody({ value = "", error }) {
           style={{
             margin: "24px 0 0",
             fontSize: "var(--text-body-small)",
+            fontWeight: "var(--text-body-small--font-weight)",
             lineHeight: "var(--text-body-small--line-height)",
             letterSpacing: "var(--text-body-small--letter-spacing)",
             color: "var(--text-secondary)",
@@ -3812,19 +3838,26 @@ function RestoreBody({ value = "", error }) {
    is no field, and no lost-code line either — the line exists because a
    browser whose code is gone cannot re-key. `error` is the field's M3 error
    line, `RestoreError`'s words for the same secret refused; `value` seeds the
-   field with the code that was pressed. */
+   field with the code that was pressed.
+
+   The names are the `settingsBackup` prefix's (round 28), the credential
+   family's: the code asked for is the proof, `current`; the line under it
+   `lostNote`; the commit with its reason `commit`; and the thing to know last
+   `note`, as `KeyCeremony` names its code paragraph. */
 function SettingsBackupBody({ app = false, value = "", error }) {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           A new recovery code
         </h1>
@@ -3832,10 +3865,12 @@ function SettingsBackupBody({ app = false, value = "", error }) {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           A new code re-encrypts your key and replaces the old backup — recovery always uses the
           newest one. Your current code was made on 12.08.2026.
@@ -3852,10 +3887,11 @@ function SettingsBackupBody({ app = false, value = "", error }) {
                 placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX"
                 value={value}
                 error={error}
+                node="current"
               />
             </div>
             <div style={{ marginTop: 8 }}>
-              <QuietNote>
+              <QuietNote node="lostNote">
                 Lost it? This browser can&apos;t make a new code without the current one. If the Android app holds your
                 key, make the new code there.
               </QuietNote>
@@ -3869,6 +3905,7 @@ function SettingsBackupBody({ app = false, value = "", error }) {
             label="Create a new recovery code"
             reason="Waiting for your current recovery code"
             waiting={!app && !value && !error}
+            node="commit"
           />
         </div>
 
@@ -3876,10 +3913,12 @@ function SettingsBackupBody({ app = false, value = "", error }) {
           style={{
             margin: "24px 0 0",
             fontSize: "var(--text-body-small)",
+            fontWeight: "var(--text-body-small--font-weight)",
             lineHeight: "var(--text-body-small--line-height)",
             letterSpacing: "var(--text-body-small--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="note"
         >
           The new code is shown once and never stored. Have somewhere to write it down before you go
           on — the old code keeps working until the new one is confirmed.
@@ -4034,6 +4073,8 @@ function ScoreOrigin({ kind = "post", score = "15.20" }) {
           background: "var(--surface-container-high)",
           borderRadius: "var(--radius-small) var(--radius-small) 0 0",
           fontSize: "var(--text-body-small)",
+          letterSpacing: "var(--text-body-small--letter-spacing)",
+          fontWeight: "var(--text-body-small--font-weight)",
           lineHeight: "var(--text-body-small--line-height)",
           color: "var(--text-secondary)",
         }}
@@ -4138,6 +4179,8 @@ function PathRow({ people, through, value, onOpen, kind = "post", node, nodeKey 
         <span
           style={{
             fontSize: "var(--text-label-small)",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
+            fontWeight: "var(--text-label-small--font-weight)",
             lineHeight: "var(--text-label-small--line-height)",
             color: "var(--text-secondary)",
             overflow: "hidden",
@@ -4149,7 +4192,7 @@ function PathRow({ people, through, value, onOpen, kind = "post", node, nodeKey 
           Through {through}
         </span>
       </span>
-      <span style={{ flex: "none", fontSize: "var(--text-body-small)", fontWeight: 500 }} data-node={node && "value"}>
+      <span style={{ flex: "none", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: 500 }} data-node={node && "value"}>
         {value}
       </span>
       <span
@@ -4239,13 +4282,13 @@ function ActionLog({ records }) {
         >
           <span style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
             <span
-              style={{ flex: 1, minWidth: 0, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+              style={{ flex: 1, minWidth: 0, fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
               data-node="what"
             >
               {record.what}
             </span>
             <span
-              style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}
+              style={{ flex: "none", fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}
               data-node="when"
             >
               {record.when}
@@ -4256,7 +4299,7 @@ function ActionLog({ records }) {
               <StanceValue pDirected={record.pair.pDirected} pInterest={record.pair.pInterest} node="pair" />
             </span>
             <span
-              style={{ flex: 1, minWidth: 0, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+              style={{ flex: 1, minWidth: 0, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
               data-node="key"
             >
               {record.key}
@@ -4464,16 +4507,17 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
 function FeedLeadName({ children, node }) {
   return (
     <span
-      style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+      style={{ fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
       data-node={node}
     >
       {children}
     </span>
   );
 }
-const FEED_LEAD_SMALL = { fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" };
+const FEED_LEAD_SMALL = { fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" };
 const FEED_LEAD_TITLE = {
   fontSize: "var(--text-title-medium)",
+  letterSpacing: "var(--text-title-medium--letter-spacing)",
   lineHeight: "var(--text-title-medium--line-height)",
   fontWeight: "var(--text-title-medium--font-weight)",
   whiteSpace: "nowrap",
@@ -4596,6 +4640,8 @@ const FEED_PROFILE_MENU = (handle) => [
 const FEED_BIO = {
   margin: 0,
   fontSize: "var(--text-body-medium)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  fontWeight: "var(--text-body-medium--font-weight)",
   lineHeight: "var(--text-body-medium--line-height)",
   color: "var(--text-secondary)",
   display: "-webkit-box",
@@ -4737,7 +4783,7 @@ function TagFeedCard({ name, through, tagged, score, bundle, node }) {
       </span>
       <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
         <span
-          style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+          style={{ fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
           data-node={node && "newest"}
         >
           {newest.title}
@@ -4866,6 +4912,7 @@ const INVITES_EMPTY_LINE = {
   margin: 0,
   padding: "0 24px 8px",
   fontSize: "var(--text-body-medium)",
+  fontWeight: "var(--text-body-medium--font-weight)",
   lineHeight: "var(--text-body-medium--line-height)",
   letterSpacing: "var(--text-body-medium--letter-spacing)",
   color: "var(--text-secondary)",
@@ -4992,6 +5039,7 @@ function VouchBackCard({ body, actions, node }) {
           style={{
             margin: 0,
             fontSize: "var(--text-title-medium)",
+            letterSpacing: "var(--text-title-medium--letter-spacing)",
             lineHeight: "var(--text-title-medium--line-height)",
             fontWeight: "var(--text-title-medium--font-weight)",
           }}
@@ -5000,7 +5048,7 @@ function VouchBackCard({ body, actions, node }) {
           @mira vouched you in
         </h2>
       </div>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "body"}>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "body"}>
         {body}
       </p>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>{actions}</div>
@@ -5022,6 +5070,7 @@ function VouchBackHint({ node }) {
         minWidth: 0,
         textAlign: "end",
         fontSize: "var(--text-body-small)",
+        fontWeight: "var(--text-body-small--font-weight)",
         lineHeight: "var(--text-body-small--line-height)",
         letterSpacing: "var(--text-body-small--letter-spacing)",
         color: "var(--on-tertiary-container)",
@@ -5039,7 +5088,7 @@ function VouchBackHint({ node }) {
    never disagree about what a pad's own voice looks like. */
 function PadLine({ children }) {
   return (
-    <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+    <p style={{ margin: 0, fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
       {children}
     </p>
   );
@@ -5517,6 +5566,7 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
@@ -5530,6 +5580,7 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
             style={{
               margin: "8px 0 0",
               fontSize: "var(--text-body-medium)",
+              fontWeight: "var(--text-body-medium--font-weight)",
               lineHeight: "var(--text-body-medium--line-height)",
               letterSpacing: "var(--text-body-medium--letter-spacing)",
               color: "var(--text-secondary)",
@@ -5588,6 +5639,7 @@ function IntroCaption({ children, x, y, width = 88, node }) {
         width,
         textAlign: "center",
         fontSize: "var(--text-label-small)",
+        fontWeight: "var(--text-label-small--font-weight)",
         lineHeight: "var(--text-label-small--line-height)",
         letterSpacing: "var(--text-label-small--letter-spacing)",
         color: "var(--text-secondary)",
@@ -5622,12 +5674,12 @@ function IntroPostCard({ title, timestamp = "2h", author = ADA, src = "post-phot
     >
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "10px var(--space-3)" }}>
         <MonogramAvatar name={author.displayName} src={author.src} />
-        <span style={{ flex: 1, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
+        <span style={{ flex: 1, fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
           @{author.handle}
         </span>
-        <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{timestamp}</span>
+        <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{timestamp}</span>
       </div>
-      <div style={{ padding: "0 var(--space-3) 10px", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{title}</div>
+      <div style={{ padding: "0 var(--space-3) 10px", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }}>{title}</div>
       <img src={src} alt="" style={{ display: "block", width: "100%", height, objectFit: "cover" }} />
       {tail}
     </div>
@@ -5663,6 +5715,7 @@ function PickRing({ index }) {
         background: chosen ? "var(--primary)" : undefined,
         color: chosen ? "var(--on-primary)" : undefined,
         fontSize: "var(--text-label-small)",
+        letterSpacing: "var(--text-label-small--letter-spacing)",
         lineHeight: "var(--text-label-small--line-height)",
         fontWeight: "var(--text-label-small--font-weight)",
       }}

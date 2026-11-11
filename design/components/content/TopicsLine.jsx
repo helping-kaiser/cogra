@@ -108,6 +108,8 @@ const COUNT_STYLE = {
   flex: "none",
   color: "var(--text-secondary)",
   fontSize: "var(--text-body-small)",
+  letterSpacing: "var(--text-body-small--letter-spacing)",
+  fontWeight: "var(--text-body-small--font-weight)",
   lineHeight: "var(--text-body-small--line-height)",
   whiteSpace: "nowrap",
 };

@@ -30,6 +30,7 @@ export function Screen() {
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
@@ -43,7 +44,7 @@ export function Screen() {
             href="/downloads/app-debug.apk"
             download
             className="cg-state cg-focus"
-            style={{ alignSelf: "flex-start", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "inherit", textDecoration: "underline" }}
+            style={{ alignSelf: "flex-start", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "inherit", textDecoration: "underline" }}
           >
             On Android? Download the app (APK)
           </a>

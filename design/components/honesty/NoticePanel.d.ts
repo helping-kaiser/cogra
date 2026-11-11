@@ -14,6 +14,8 @@ export interface NoticePanelProps {
   corner?: "medium" | "large";
   /** `NoticeLine`s, then what the reader can do — a `Button variant="inverse"`. */
   children?: React.ReactNode;
+  /** The data-node name its placer gives this panel (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `title`, `help`. */
+  node?: string;
 }
 
 export declare function NoticePanel(props: NoticePanelProps): JSX.Element;
@@ -21,6 +23,8 @@ export declare function NoticePanel(props: NoticePanelProps): JSX.Element;
 /** The panel's sentence, `body-medium` in the panel's own ink. */
 export interface NoticeLineProps {
   children?: React.ReactNode;
+  /** The data-node name its placer gives this line (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function NoticeLine(props: NoticeLineProps): JSX.Element;

@@ -179,6 +179,8 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
         <span
           style={{
             fontSize: "var(--text-body-medium)",
+            letterSpacing: "var(--text-body-medium--letter-spacing)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             whiteSpace: "nowrap",
             overflow: "hidden",
@@ -193,6 +195,8 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
           <span
             style={{
               fontSize: "var(--text-body-small)",
+              letterSpacing: "var(--text-body-small--letter-spacing)",
+              fontWeight: "var(--text-body-small--font-weight)",
               lineHeight: "var(--text-body-small--line-height)",
               color: "var(--text-secondary)",
               whiteSpace: "nowrap",
@@ -225,6 +229,8 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
               alignItems: "center",
               gap: "4px",
               fontSize: "var(--text-body-small)",
+              letterSpacing: "var(--text-body-small--letter-spacing)",
+              fontWeight: "var(--text-body-small--font-weight)",
               lineHeight: "var(--text-body-small--line-height)",
               color: "var(--text-secondary)",
               whiteSpace: "nowrap",
@@ -245,6 +251,8 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
               flexDirection: "column",
               alignItems: "flex-end",
               fontSize: "var(--text-body-small)",
+              letterSpacing: "var(--text-body-small--letter-spacing)",
+              fontWeight: "var(--text-body-small--font-weight)",
               lineHeight: "var(--text-body-small--line-height)",
               color: "var(--text-secondary)",
               whiteSpace: "nowrap",
@@ -255,7 +263,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
             {!value && exact && (
               <>
                 <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                  {anchor && <span style={{ fontSize: "var(--text-body-medium)", lineHeight: 1 }}>{anchor.emoji}</span>}
+                  {anchor && <span style={{ fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: 1 }}>{anchor.emoji}</span>}
                   <span className="cg-exact">{exact}</span>
                 </span>
                 <span style={SR_ONLY}>{spokenWord && anchor ? `${anchor.label}, ${exact}` : exact}</span>

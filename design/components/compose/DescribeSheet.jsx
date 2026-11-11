@@ -35,6 +35,7 @@ export function DescribeSheet({ open = false, onClose, src, alt = "", value, onC
               style={{
                 margin: 0,
                 fontSize: "var(--text-title-large)",
+                letterSpacing: "var(--text-title-large--letter-spacing)",
                 lineHeight: "var(--text-title-large--line-height)",
                 fontWeight: "var(--text-title-large--font-weight)",
               }}
@@ -45,6 +46,7 @@ export function DescribeSheet({ open = false, onClose, src, alt = "", value, onC
               style={{
                 margin: 0,
                 fontSize: "var(--text-label-small)",
+                fontWeight: "var(--text-label-small--font-weight)",
                 lineHeight: "var(--text-label-small--line-height)",
                 letterSpacing: "var(--text-label-small--letter-spacing)",
                 color: "var(--text-secondary)",

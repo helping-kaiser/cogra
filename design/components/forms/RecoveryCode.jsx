@@ -41,7 +41,14 @@ import { TextField } from "./TextField.jsx";
    A COPY THAT WORKED SAYS SO (the key-loss round): `Code copied`, in the line
    the refused copy already speaks in. This is the browser's line — Android's
    own clip confirmation answers there, masked by `EXTRA_IS_SENSITIVE`
-   (auth.md), and a second confirmation on top would say it twice. */
+   (auth.md), and a second confirmation on top would say it twice.
+
+   `node` turns on its parts' names where a registered board places it
+   (design ⇄ impl seam 002; round 28). The master draws no box, so it has no
+   element of its own to carry a name: the board names the `Card` it sits in,
+   and the parts join under that — the code `value`, the `explainer`, `copy`
+   and the line it answers with `copied`, the confirm field `confirm`, and
+   `done`. */
 
 /** The one normalization every recovery-code input applies (auth.md, "Blob
     format"): upper case, I/L → 1, O → 0, whitespace and dashes stripped. */
@@ -53,7 +60,8 @@ export function readRecoveryCode(text) {
     .replace(/O/g, "0");
 }
 
-export function RecoveryCode({ code, explainer, onConfirmed, error, defaultTypedBack = "" }) {
+export function RecoveryCode({ code, explainer, onConfirmed, error, defaultTypedBack = "", node }) {
+  const part = (name) => (node ? name : undefined);
   const [typedBack, setTypedBack] = React.useState(defaultTypedBack);
   const [copy, setCopy] = React.useState(null);
   const typed = readRecoveryCode(typedBack);
@@ -78,23 +86,25 @@ export function RecoveryCode({ code, explainer, onConfirmed, error, defaultTyped
           textAlign: "center",
           fontFamily: "var(--font-mono)",
           fontSize: "var(--text-body-large)",
+          fontWeight: "var(--text-body-large--font-weight)",
           lineHeight: "var(--text-body-large--line-height)",
           letterSpacing: "0.05em",
         }}
+        data-node={part("value")}
       >
         {code}
       </p>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", color: "var(--text-secondary)" }}>{explainer}</p>
-      <Button variant="text" size="sm" selfStart onClick={onCopy}>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", color: "var(--text-secondary)" }} data-node={part("explainer")}>{explainer}</p>
+      <Button variant="text" size="sm" selfStart onClick={onCopy} node={part("copy")}>
         Copy
       </Button>
       {copy !== null && (
-        <p role="status" style={{ margin: 0, fontSize: "var(--text-body-medium)" }}>
+        <p role="status" style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)" }} data-node={part("copied")}>
           {copy === "copied" ? "Code copied" : "This browser would not let the page copy. Select the code and copy it yourself."}
         </p>
       )}
-      <TextField label="Type or paste the code to confirm" mono value={typedBack} onChange={setTypedBack} error={diverged ? error : undefined} />
-      <Button size="sm" selfStart disabled={!matches} onClick={onConfirmed}>
+      <TextField label="Type or paste the code to confirm" mono value={typedBack} onChange={setTypedBack} error={diverged ? error : undefined} node={part("confirm")} />
+      <Button size="sm" selfStart disabled={!matches} onClick={onConfirmed} node={part("done")}>
         I&apos;ve written it down
       </Button>
     </>

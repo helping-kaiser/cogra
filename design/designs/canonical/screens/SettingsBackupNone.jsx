@@ -20,19 +20,26 @@
    is no current code to prove. ON ANDROID the commitment raises the phone's
    own unlock, as every act that shows a secret does, a cancelled prompt
    leaves the screen as it was, and a phone with no screen lock is warned
-   first (`NoScreenLock`). */
+   first (`NoScreenLock`).
+
+   REGISTERED under the `settingsBackup` prefix (round 28): `title`, `body`,
+   the ceremony's own commitment `create` (`KeyCeremony`'s name for the same
+   words) and the thing to know last `note`. */
+export const NODE = "settingsBackup";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Make a recovery code
         </h1>
@@ -40,27 +47,31 @@ export function Screen() {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           Without a recovery code, losing this device means losing your key. Your sign-in survives, but no one —
           including CoGra — can bring the key back.
         </p>
 
         <div style={{ marginTop: 32 }}>
-          <Button style={{ width: "100%" }}>Create my recovery code</Button>
+          <Button style={{ width: "100%" }} node="create">Create my recovery code</Button>
         </div>
 
         <p
           style={{
             margin: "24px 0 0",
             fontSize: "var(--text-body-small)",
+            fontWeight: "var(--text-body-small--font-weight)",
             lineHeight: "var(--text-body-small--line-height)",
             letterSpacing: "var(--text-body-small--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="note"
         >
           The code is shown once and never stored. Have somewhere to write it down before you go on.
         </p>

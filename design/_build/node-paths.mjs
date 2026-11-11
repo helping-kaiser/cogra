@@ -122,6 +122,7 @@ export const KEY_RULES = {
   session: "the session's position in the list, this device first, counted from 1 (Settings' sessions)",
   stagedReference: "the reference's position in the staged set, counted from 1 (the screen that stages it)",
   step: "the step's position along its path, from the path's start, counted from 1 (the score's trace)",
+  viewReplies: "the comment author's handle, without @ — the key of the card the line hangs under (CommentCard)",
 };
 
 // A PATH'S OWN RULE, where its segment's rule cannot tell its instances apart
@@ -134,6 +135,7 @@ export const KEY_RULES = {
 export const PATH_KEY_RULES = {
   "profile.posts.card": "the post's id, the lowercase UUID the wire carries (a profile's posts view, where every card has the one author)",
   "profile.comments.commentCard": "the comment's id, the lowercase UUID the wire carries (a profile's comments view, where every card has the one author)",
+  "profile.comments.viewReplies": "the comment's id, the lowercase UUID the wire carries — the key of the card the line hangs under (a profile's comments view)",
 };
 
 // The key rule of a chip-drawn state duplicate (above): one rule for every

@@ -113,9 +113,9 @@ export function SeveranceConfirm({
            work: "my opinion is +1.00, so why does walking it back take +1.40?"
            The two lines are one statement, so they keep a tight 4px apart. */
         read.sentence !== undefined ? (
-          <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }}>{read.sentence}</p>
+          <p style={{ margin: 0, fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)" }}>{read.sentence}</p>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)" }}>
             <p style={{ margin: 0 }}>{sever.sum(targetLabel, read.raw)}</p>
             {read.capped && <p style={{ margin: 0 }}>Your feed reads it capped at {read.folded}.</p>}
           </div>

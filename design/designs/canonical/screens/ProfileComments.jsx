@@ -20,7 +20,10 @@
    `ProfilePosts` is: a tab of the profile page takes the page's prefix. The
    list is `comments`, each `commentCard` in it keyed by the comment's id
    (`PATH_KEY_RULES`: one author's cards share a handle), and `empty` in the
-   cards' place. */
+   cards' place. A card's pointer to what it answers is its `target`; the
+   collapsed replies' line hangs under the card, outside its surface, so it is
+   `viewReplies` beside the card, keyed by the same id (round 28, seam 254
+   A3). */
 export const NODE = "profile";
 const ADA_COMMENT_ID = "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e";
 const ADA_SECOND_COMMENT_ID = "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f";

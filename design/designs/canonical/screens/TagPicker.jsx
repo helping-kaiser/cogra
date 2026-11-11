@@ -125,7 +125,7 @@ export function Screen() {
         {/* The naming rule stands under the field at rest too (copy-voice; the
             gate is stated, not discovered — `TagPickerTyping`). */}
         <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
-          <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="rule">
+          <p style={{ margin: 0, fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="rule">
             Letters, digits, dot, dash and underscore. Capitals become lowercase.
           </p>
         </div>
@@ -157,7 +157,7 @@ export function Screen() {
           </div>
         </div>
         <div style={{ flex: 1 }} />
-        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="footnote">
+        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="footnote">
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
         </p>
       </div>

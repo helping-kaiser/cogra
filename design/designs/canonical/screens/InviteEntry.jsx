@@ -2,19 +2,28 @@
    invite-only, so a stranger's first screen is a field for the link and the
    three ways out of it: sign in, browse as a guest, or go back. The link
    stack below Continue keeps SignIn's idiom — plain text rows flush with the
-   screen's own gutter, not a second row of pills. */
+   screen's own gutter, not a second row of pills.
+
+   REGISTERED under the `inviteEntry` prefix (round 28, seam 254 A1), with
+   `InviteEntryError` and `JoinInvalid` — the entry step in its three states:
+   `title`, `body`, the field `link`, the commit with its reason `commit`, and
+   the ways out `signInDoor` and `browse`, `Join`'s and `SignIn`'s names for the
+   same rows. */
+export const NODE = "inviteEntry";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Enter your invite
         </h1>
@@ -22,27 +31,29 @@ export function Screen() {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           CoGra is invite-only. Paste your invite link to get started.
         </p>
 
         <div style={{ marginTop: 32 }}>
-          <TextField id="invite-link" label="Invite link" kind="url" enterKeyHint="go" value="" />
+          <TextField id="invite-link" label="Invite link" kind="url" enterKeyHint="go" value="" node="link" />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <WaitingCommit id="invite-link" label="Continue" reason="Waiting for your invite link" />
+          <WaitingCommit id="invite-link" label="Continue" reason="Waiting for your invite link" node="commit" />
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column" }}>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="signInDoor">
             Already have an account? Sign in
           </Button>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="browse">
             Just looking? Browse the feed →
           </Button>
         </div>

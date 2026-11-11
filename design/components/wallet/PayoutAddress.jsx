@@ -31,10 +31,10 @@ export function PayoutAddressRow({ address, onOpen }) {
         boxSizing: "border-box",
       }}
     >
-      <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+      <span style={{ flex: "none", fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
         Payouts land at
       </span>
-      <code style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-mono)", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      <code style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-mono)", fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
         {short}
       </code>
       <span style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true">
@@ -139,6 +139,8 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, copy
         style={{
           fontFamily: "var(--font-mono)",
           fontSize: "var(--text-body-small)",
+          letterSpacing: "var(--text-body-small--letter-spacing)",
+          fontWeight: "var(--text-body-small--font-weight)",
           lineHeight: "var(--text-body-small--line-height)",
           overflowWrap: "anywhere",
           wordBreak: "break-all",
@@ -149,7 +151,7 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, copy
         {address}
       </code>
       {caption && (
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "caption"}>
+        <span style={{ fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "caption"}>
           {caption}
         </span>
       )}
