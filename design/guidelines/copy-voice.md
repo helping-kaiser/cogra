@@ -1680,9 +1680,11 @@ round*; every one blessed (jakob 2026-10-02).
 
 ### The collected rulings' entry lines — 2026-10-05
 
-- `Mira invited you` — `Join`'s heading (and `JoinErrors`'): the first
+- `Mira Voss invited you` — `Join`'s heading (and `JoinErrors`'): the first
   screen says *invited*, never *vouched*, because no vouch exists until
-  the inviter approves. *Blessed (jakob 2026-10-05).*
+  the inviter approves. *Blessed (jakob 2026-10-05).* The name is the
+  inviter's whole display name, else the handle; the heading is running
+  text, so it wraps and the name is never cut (jakob 2026-11-11, J1).
 - The applicant's own profile once the application is closed
   (`ProfileApplicant`, the `application` chip at `closed`) takes the
   turned-down card's blessed words, the handle the approver's:

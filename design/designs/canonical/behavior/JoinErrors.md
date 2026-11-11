@@ -14,6 +14,8 @@ WHEN typing in the Handle field GIVEN it carries That handle is taken. -> the li
 
 WHEN typing in a field that carries no error line -> NEVER the field turns to its error state before the next press of Create account
 
+ALWAYS the heading names the inviter by the whole display name, else by the handle with its @, and wraps as running text, the name never cut
+
 ALWAYS the header's arrow reads a plain Back, with no origin noun
 
 WHEN press the header's back arrow GIVEN the link was pasted at the invite door -> InviteEntry opens

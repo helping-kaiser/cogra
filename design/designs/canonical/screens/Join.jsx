@@ -18,8 +18,10 @@
 
    THE HEADING SAYS INVITED (jakob 2026-10-05, D1). No vouch exists yet when
    the form opens — the inviter's approval comes after the account does — so
-   the heading reads `Mira invited you`, the entry flow's *invited, never
-   vouched*.
+   the heading reads `Mira Voss invited you`, the entry flow's *invited, never
+   vouched*. It names the inviter by the whole display name, else by the
+   handle, and wraps as running text, never cutting the name (jakob
+   2026-11-11, J1).
 
    THE ARROW READS A BARE `Back` — the funnel exception (readme §4,
    *Navigation*): the entry funnel's screens carry no origin nouns, and the
@@ -64,7 +66,7 @@ export function Screen() {
             }}
             data-node="title"
           >
-            Mira invited you
+            Mira Voss invited you
           </h1>
           <p
             style={{

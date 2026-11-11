@@ -24,7 +24,7 @@ export function Screen() {
             }}
             data-node="title"
           >
-            Mira invited you
+            Mira Voss invited you
           </h1>
           <p
             style={{

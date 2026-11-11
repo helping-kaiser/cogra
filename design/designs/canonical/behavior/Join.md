@@ -8,6 +8,10 @@ WHEN a live invite link is opened GIVEN the reader is signed in -> Join opens ho
 
 ALWAYS the face and the name over the form are the link's inviter's
 
+ALWAYS the heading names the inviter by the whole display name, else by the handle with its @, and reads Mira Voss invited you over the sample's inviter
+
+ALWAYS the heading wraps as running text and the inviter's name in it is never cut
+
 ALWAYS the header's arrow reads a plain Back, with no origin noun
 
 WHEN press the header's back arrow GIVEN the link was pasted at the invite door -> InviteEntry opens
