@@ -434,8 +434,19 @@ internal fun Modifier.desaturated(): Modifier = drawWithCache {
     }
 }
 
-/** The open pad's width — the master's `17rem` (StanceControl.jsx:661). */
-internal val PAD_WIDTH = 272.dp
+/**
+ * The open pad's CONTENT width — the master's `17rem` (StanceControl.jsx
+ * `width: "17rem"`). The master's dialog sets no `box-sizing`, so CSS's
+ * default `content-box` applies: the 17rem is what sits inside the card's
+ * `--card-padding`, not the card's outer edge.
+ */
+internal val PAD_CONTENT_WIDTH = 272.dp
+
+/** The card's `--card-padding` on every side (`--space-4`). */
+internal val PAD_PADDING = Space.x4
+
+/** The open pad's outer width: the 17rem content box plus its padding — 304dp, as the boards render it. */
+internal val PAD_WIDTH = PAD_CONTENT_WIDTH + PAD_PADDING * 2
 
 /** `--radius-extra-large`, the rung every parked pad and sheet wears. */
 private val PAD_CORNER = 28.dp
@@ -1034,7 +1045,7 @@ private fun StancePadCard(
                     // A parked pad over a short window scrolls rather than
                     // snapping away from its spot (`overflowY: auto`).
                     .verticalScroll(rememberScrollState())
-                    .padding(Space.x4),
+                    .padding(PAD_PADDING),
             ) {
                 // The help REPLACES the field, the note and the landing rather
                 // than growing below them: the pad is parked, and a panel
