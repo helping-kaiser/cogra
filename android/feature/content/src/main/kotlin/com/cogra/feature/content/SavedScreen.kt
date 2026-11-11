@@ -447,6 +447,7 @@ private fun SavedCardFor(entry: SavedEntry, actions: CardActions) {
             viewerId = actions.viewerId,
             onOpen = { doors.onOpenActor(card.profile.handle) },
             onShare = { actions.onShare(actions.shareUrls.profile(card.profile.handle)) },
+            onMention = { actions.onCitePost(card.profile.id) },
             stanceControl = actions.stanceControl,
         )
     }

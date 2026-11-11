@@ -26,7 +26,7 @@ import { parseAspectRatio } from "@/lib/ui2/media/aspect";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { COMMENT_ATTACHMENT_CAP } from "./comment-media";
 import { commentBodyProblem } from "./reply-wizard";
-import type { PickedAsset } from "./wizard";
+import { effectiveCover, type CoverAsset, type PickedAsset } from "./wizard";
 
 /** A placement the edit opened with. */
 export type KeptPicture = {
@@ -61,13 +61,40 @@ export type KeptPicture = {
   readonly newCover: PickedAsset | null;
 };
 
+/**
+ * A clip picked in this editor — the body of a comment that held words alone
+ * (CommentEdit.md: "a picked video arrives as the comment's video with its
+ * cover row, as CommentEditVideo draws it").
+ *
+ * IT CARRIES TWO FACES, and they are different facts. `autoCover` is the
+ * clip's own frame 0, taken silently and uploaded ahead of the clip on the
+ * same leg the reply composer's clip rides (the feed-video rulings,
+ * 2026-09-23/24: a coverless clip stores its frame 0, TAKEN). `newCover` is a
+ * face the author CHOSE through the cover row's picker and the square crop
+ * (CommentEditVideo.md), uploaded on its own so choosing one never re-sends
+ * the clip. A chosen face wins; the taken frame stands in only while none was
+ * chosen and its own leg has not failed (`effectiveCover`).
+ */
+export type AddedClip = {
+  readonly kind: "addedClip";
+  /** The clip itself, `kind: "video"`, uploading at the comment's scale. */
+  readonly asset: PickedAsset;
+  readonly autoCover: CoverAsset | null;
+  readonly newCover: PickedAsset | null;
+};
+
 export type EditPicture =
   /** Already on the server when the editor opened; its bytes never move. */
   | KeptPicture
   /** Chosen in this editor; it uploads like any other picture. */
-  | { readonly kind: "added"; readonly asset: PickedAsset };
+  | { readonly kind: "added"; readonly asset: PickedAsset }
+  /** A clip chosen in this editor, the whole body. */
+  | AddedClip;
 
 export type EditGallery = readonly EditPicture[];
+
+/** The one clip a comment's body holds, whether it was kept or added in this edit. */
+export type EditClip = KeptPicture | AddedClip;
 
 /** Each picture's own handle, whichever kind it is. */
 export function pictureId(picture: EditPicture): string {
@@ -117,27 +144,61 @@ export function clipOf(gallery: EditGallery): KeptPicture | undefined {
 }
 
 /**
+ * The clip a comment's body holds — kept from before the edit or picked in it
+ * — or undefined where the body is pictures or words. The post edit reads
+ * `clipOf`: it never takes a clip at an edit (EditWords.md, still staged).
+ */
+export function bodyClipOf(gallery: EditGallery): EditClip | undefined {
+  const first = gallery[0];
+  if (gallery.length !== 1 || first === undefined) return undefined;
+  if (first.kind === "addedClip") return first;
+  return clipOf(gallery);
+}
+
+/**
  * Whether the clip's face is one its author CHOSE — a still they picked when
  * they published, or a face this edit set. A taken frame is a still nobody
  * picked, so the cover field offers the door over it (EditComposeVideo.md:
  * "Add a cover GIVEN no cover was ever chosen, even when a taken still
  * exists"). Chosen-vs-taken is the stored authoring fact, never a guess from
- * the bytes.
+ * the bytes. A clip picked in this edit has a chosen face only once the cover
+ * row set one: its frame 0 is taken, never chosen.
  */
-export function coverChosen(clip: KeptPicture): boolean {
+export function coverChosen(clip: EditClip): boolean {
+  if (clip.kind === "addedClip") return clip.newCover !== null;
   return clip.newCover !== null || (clip.coverMediaId !== null && clip.coverTaken !== true);
 }
 
-/** Sets, or with null takes back, the face this edit gives a kept clip. */
+/** Sets, or with null takes back, the face this edit gives the comment's clip. */
 export function withNewCover(
   gallery: EditGallery,
   clipId: string,
   cover: PickedAsset | null,
 ): EditGallery {
+  return gallery.map((picture) => {
+    if (picture.kind === "kept" && picture.mediaId === clipId && picture.video) {
+      return { ...picture, newCover: cover };
+    }
+    if (picture.kind === "addedClip" && picture.asset.id === clipId) return { ...picture, newCover: cover };
+    return picture;
+  });
+}
+
+/**
+ * A clip picked from `+ Add pictures or a video`, arriving as the whole body.
+ * Only a body holding words alone takes one — the screening refuses a clip
+ * beside pictures or a second clip (`screenPick`), so a non-empty gallery
+ * here is a caller bug and is left as it was rather than mixed.
+ */
+export function withClip(gallery: EditGallery, clip: PickedAsset): EditGallery {
+  if (gallery.length > 0) return gallery;
+  return [{ kind: "addedClip", asset: { ...clip, kind: "video" }, autoCover: null, newCover: null }];
+}
+
+/** The silent frame-0 face of the clip picked in this edit, and its leg's steps. */
+export function withAutoCover(gallery: EditGallery, clipId: string, cover: CoverAsset | null): EditGallery {
   return gallery.map((picture) =>
-    picture.kind === "kept" && picture.mediaId === clipId && picture.video
-      ? { ...picture, newCover: cover }
-      : picture,
+    picture.kind === "addedClip" && picture.asset.id === clipId ? { ...picture, autoCover: cover } : picture,
   );
 }
 
@@ -199,6 +260,12 @@ export function withUpload(
     if (picture.kind === "added") {
       return picture.asset.id === id ? { ...picture, asset: { ...picture.asset, upload } } : picture;
     }
+    if (picture.kind === "addedClip") {
+      if (picture.asset.id === id) return { ...picture, asset: { ...picture.asset, upload } };
+      if (picture.autoCover !== null && picture.autoCover.id === id) {
+        return { ...picture, autoCover: { ...picture.autoCover, upload } };
+      }
+    }
     return picture.newCover !== null && picture.newCover.id === id
       ? { ...picture, newCover: { ...picture.newCover, upload } }
       : picture;
@@ -231,7 +298,30 @@ export function keptPreviews(gallery: EditGallery): Readonly<Record<string, stri
 export function editBlocked(gallery: EditGallery, words: string): string | null {
   const bodyIssue = commentBodyProblem(words);
   if (bodyIssue !== null) return bodyIssue;
-  return uploadsFailed(gallery) > 0 ? failedUploadLine(uploadsFailed(gallery)) : null;
+  return uploadsFailed(gallery) > 0 ? failedLineOf(gallery) : null;
+}
+
+/** The clip's own words when its upload failed: the family's clip line, or what refused it. */
+export const VIDEO_UPLOAD_FAILED = "The video didn't upload.";
+
+/**
+ * The fault reading for whatever the edit took that failed. A failed clip
+ * reads the family's clip line (`comment-media.ts`, the reply's seal) — or,
+ * where a retry cannot help (the clip came out over its cap), the refusal's
+ * own words; pictures and a cover read the picture line, the cover being one
+ * picture (CommentEditVideo.md).
+ */
+export function failedLineOf(gallery: EditGallery): string {
+  const clip = gallery[0]?.kind === "addedClip" ? gallery[0] : undefined;
+  if (clip !== undefined && clip.asset.upload.kind === "failed") {
+    return clip.asset.upload.retryable ? VIDEO_UPLOAD_FAILED : clip.asset.upload.message;
+  }
+  return failedUploadLine(uploadsFailed(gallery));
+}
+
+/** Whether a retry could help what failed — a refusal of the bytes offers Remove it alone. */
+export function failureRetryable(gallery: EditGallery): boolean {
+  return editUploads(gallery).every((asset) => asset.upload.kind !== "failed" || asset.upload.retryable);
 }
 
 /** The failed uploads' words — the fault reading's first sentence, and the line under the row. */
@@ -250,17 +340,28 @@ export function addedAssets(gallery: EditGallery): readonly PickedAsset[] {
 /** The faces this edit set on its clip — none, or one. */
 export function newCovers(gallery: EditGallery): readonly PickedAsset[] {
   return gallery.flatMap((picture) =>
-    picture.kind === "kept" && picture.newCover !== null ? [picture.newCover] : [],
+    picture.kind !== "added" && picture.newCover !== null ? [picture.newCover] : [],
   );
 }
 
+/** The clip this edit picked, as the asset it uploads — none, or one. */
+export function addedClips(gallery: EditGallery): readonly PickedAsset[] {
+  return gallery.flatMap((picture) => (picture.kind === "addedClip" ? [picture.asset] : []));
+}
+
 /**
- * Every upload this edit took — its added pictures and its clip's new face.
- * What the uploader starts, what the preview hook draws, and all the gate
- * counts: a picture the content already carried never uploads again.
+ * Every upload this edit took — its added pictures, the clip it picked, and
+ * its clip's new face. What the uploader starts, what the preview hook draws,
+ * and all the gate counts: a picture the content already carried never
+ * uploads again.
+ *
+ * A picked clip's silent frame-0 face is not among them: it rides the clip's
+ * own leg ahead of the clip (`runVideoUpload`), so the clip is not done until
+ * its face is, and a failed face fails the clip — the gate counts the clip
+ * once.
  */
 export function editUploads(gallery: EditGallery): readonly PickedAsset[] {
-  return [...addedAssets(gallery), ...newCovers(gallery)];
+  return [...addedAssets(gallery), ...addedClips(gallery), ...newCovers(gallery)];
 }
 
 function running(upload: PickedAsset["upload"]): boolean {
@@ -326,12 +427,23 @@ export function editClaims(gallery: EditGallery): readonly GalleryEntryDraft[] |
       continue;
     }
     if (picture.asset.upload.kind !== "done") return null;
-    claims.push({
-      mediaId: picture.asset.upload.mediaId,
-      altText: picture.asset.altText.trim() === "" ? null : picture.asset.altText.trim(),
-      coverMediaId: null,
-      coverTaken: null,
-    });
+    const altText = picture.asset.altText.trim() === "" ? null : picture.asset.altText.trim();
+    if (picture.kind === "addedClip") {
+      // A chosen face wins; the taken frame 0 stands in while none was chosen
+      // and its leg has not failed; with neither the clip goes faceless,
+      // which the contract accepts (`commentGate`'s docblock).
+      const face = picture.newCover ?? effectiveCover(null, picture.autoCover);
+      if (face !== null && face.upload.kind !== "done") return null;
+      const coverMediaId = face !== null && face.upload.kind === "done" ? face.upload.mediaId : null;
+      claims.push({
+        mediaId: picture.asset.upload.mediaId,
+        altText,
+        coverMediaId,
+        coverTaken: coverMediaId !== null && picture.newCover === null ? true : null,
+      });
+      continue;
+    }
+    claims.push({ mediaId: picture.asset.upload.mediaId, altText, coverMediaId: null, coverTaken: null });
   }
   return claims;
 }
@@ -342,7 +454,12 @@ export function editClaims(gallery: EditGallery): readonly GalleryEntryDraft[] |
  * at sign time (`keptMediaIds`), since no gallery read selects them.
  */
 export function addedLedger(gallery: EditGallery): MediaLedger {
-  return new Map(editUploads(gallery).flatMap((asset) => ledgerEntry(asset.upload)));
+  const autoCovers = gallery.flatMap((picture) =>
+    picture.kind === "addedClip" && picture.autoCover !== null ? [picture.autoCover.upload] : [],
+  );
+  return new Map(
+    [...editUploads(gallery).map((asset) => asset.upload), ...autoCovers].flatMap((upload) => ledgerEntry(upload)),
+  );
 }
 
 /**
