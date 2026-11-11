@@ -39,6 +39,8 @@ import kotlin.math.max
 @Config(
     shadows = [ShadowBitmapLoadingWorkerJob::class],
     instrumentedPackages = ["com.canhub.cropper"],
+    // Room for a stage wide enough to hold a real pinch (below).
+    qualifiers = "w800dp-h1200dp",
 )
 class CropTwoFingerTest {
 
@@ -159,14 +161,22 @@ class CropTwoFingerTest {
 
     private fun centre(): Offset = drawn().let { Offset(it.centerX(), it.centerY()) }
 
+    /*
+     * The fingers sit further apart than the platform's minimum pinch span
+     * (`ScaleGestureDetector`'s `config_minScalingSpan`, 27 mm — 170 px at
+     * the test's 160 dpi): closer than that, Android does not read two
+     * fingers as a pinch at all. On jakob's phone the same 27 mm is ~450 px,
+     * an ordinary two-finger hold.
+     */
+
     @Test
     fun aVerticalPinchKeepsTheShape() {
         stage()
         val c = centre()
         Hand().apply {
-            down(0, c + Offset(-2f, -40f))
-            down(1, c + Offset(2f, 40f))
-            repeat(STEPS) { move(0 to c + Offset(-2f, -40f + (it + 1) * 4f), 1 to c + Offset(2f, 40f - (it + 1) * 4f)) }
+            down(0, c + Offset(-3f, -120f))
+            down(1, c + Offset(3f, 120f))
+            repeat(STEPS) { move(0 to c + Offset(-3f, -120f + (it + 1) * 3f), 1 to c + Offset(3f, 120f - (it + 1) * 3f)) }
             up(1)
             up(0)
         }.assertClean()
@@ -177,11 +187,11 @@ class CropTwoFingerTest {
         stage()
         val c = centre()
         Hand().apply {
-            down(0, c + Offset(-20f, -10f))
-            down(1, c + Offset(20f, 10f))
+            down(0, c + Offset(-100f, -30f))
+            down(1, c + Offset(100f, 30f))
             repeat(STEPS) {
                 val k = (it + 1).toFloat()
-                move(0 to c + Offset(-20f - k + k * 3f, -10f - k), 1 to c + Offset(20f + k + k * 3f, 10f + k))
+                move(0 to c + Offset(-100f - k * 2f + k * 6f, -30f - k * 2f), 1 to c + Offset(100f + k * 2f + k * 6f, 30f + k * 2f))
             }
             up(0)
             up(1)
@@ -193,11 +203,11 @@ class CropTwoFingerTest {
         stage()
         val c = centre()
         Hand().apply {
-            down(0, c + Offset(-25f, 0f))
-            down(1, c + Offset(25f, 0f))
-            repeat(STEPS / 2) { move(0 to c + Offset(-25f - (it + 1) * 2f, 0f), 1 to c + Offset(25f + (it + 1) * 2f, 0f)) }
+            down(0, c + Offset(-110f, 0f))
+            down(1, c + Offset(110f, 0f))
+            repeat(STEPS / 2) { move(0 to c + Offset(-110f - (it + 1) * 3f, 0f), 1 to c + Offset(110f + (it + 1) * 3f, 0f)) }
             up(0)
-            val from = c + Offset(25f + STEPS, 0f)
+            val from = c + Offset(110f + STEPS / 2 * 3f, 0f)
             repeat(STEPS / 2) { move(1 to from + Offset(0f, (it + 1) * 5f)) }
             up(1)
         }.assertClean()
@@ -212,9 +222,10 @@ class CropTwoFingerTest {
             down(0, corner)
             repeat(3) { move(0 to corner + Offset((it + 1) * 4f, (it + 1) * 4f)) }
             val held = corner + Offset(12f, 12f)
-            down(1, Offset(w.centerX() + 20f, w.bottom - 30f))
+            val second = Offset(w.centerX() + 60f, w.bottom - 40f)
+            down(1, second)
             repeat(STEPS) {
-                move(0 to held + Offset(0f, (it + 1) * 3f), 1 to Offset(w.centerX() + 20f + (it + 1) * 3f, w.bottom - 30f))
+                move(0 to held + Offset(0f, (it + 1) * 3f), 1 to second + Offset((it + 1) * 3f, 0f))
             }
             up(1)
             up(0)
@@ -226,11 +237,11 @@ class CropTwoFingerTest {
         stage()
         val c = centre()
         Hand().apply {
-            down(0, c + Offset(-30f, -6f))
-            down(1, c + Offset(30f, 6f))
+            down(0, c + Offset(-110f, -6f))
+            down(1, c + Offset(110f, 6f))
             repeat(CROSSING_STEPS) {
-                val k = (it + 1) * 5f
-                move(0 to c + Offset(-30f + k, -6f), 1 to c + Offset(30f - k, 6f))
+                val k = (it + 1) * 10f
+                move(0 to c + Offset(-110f + k, -6f), 1 to c + Offset(110f - k, 6f))
             }
             up(0)
             up(1)
@@ -240,11 +251,11 @@ class CropTwoFingerTest {
     private companion object {
         const val TAG = "crop"
         const val PICTURE_URL = "content://cogra.test/two-fingers"
-        const val PICTURE = 400
-        val STAGE = 300.dp
+        const val PICTURE = 800
+        val STAGE = 600.dp
         const val START_ZOOM = 2f
         const val STEPS = 8
-        const val CROSSING_STEPS = 12
+        const val CROSSING_STEPS = 22
 
         /** The window's integer trips, as a share of its shape. */
         const val SHAPE_SLACK = 0.03f
