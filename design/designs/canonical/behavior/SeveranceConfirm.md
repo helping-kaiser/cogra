@@ -24,7 +24,7 @@ ALWAYS the dialog's words are the target family's own: a person or a post is wal
 
 ALWAYS the pad it was picked on stays parked behind the dialog's scrim
 
-WHEN press Walk it back in the dialog -> the dialog stays up until the signing answers AND Walk it back refuses a second press AND NEVER Walk it back dims
+WHEN press Walk it back in the dialog -> the dialog stays up until the signing answers or the reader closes it AND Walk it back refuses a second press AND NEVER Walk it back dims
 
 WHEN the signing has not answered 200ms after Walk it back -> Walk it back reads Walking it back… AND NEVER a spinner appears
 

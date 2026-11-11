@@ -22,7 +22,7 @@ ALWAYS the pad it was picked on stays parked behind the dialog's scrim
 
 ALWAYS the profile's stance face beneath stays the empty face, Your opinion with 🫥
 
-WHEN press Set it anyway -> the dialog stays up until the signing answers AND Set it anyway refuses a second press AND NEVER Set it anyway dims
+WHEN press Set it anyway -> the dialog stays up until the signing answers or the reader closes it AND Set it anyway refuses a second press AND NEVER Set it anyway dims
 
 WHEN the signing has not answered 200ms after Set it anyway -> Set it anyway reads Setting… AND NEVER a spinner appears
 
