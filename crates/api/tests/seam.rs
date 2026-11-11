@@ -66,7 +66,7 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
         "the empty boundary"
     );
 
-    standin.close_epoch().await.expect("closes").expect("acts");
+    standin.close_epoch().await.expect("closes");
     let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
         .await
         .expect("pass");
@@ -113,7 +113,7 @@ async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool)
         let host_key = boundary.host_public_key().await.expect("host key");
         let witness = actor.approve(&pre, &sealed, &host_key).expect("approves");
         boundary.approve(witness).await.expect("approved");
-        standin.close_epoch().await.expect("closes").expect("acts");
+        standin.close_epoch().await.expect("closes");
     }
     api::ingest::ingest_pending(&boundary, &pool, 8)
         .await
@@ -163,4 +163,69 @@ async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool)
     for (epoch, at) in &attested {
         assert_eq!(refilled[epoch], *at);
     }
+}
+
+/// The clock closes epochs whether or not anything is orderable, and an
+/// empty package crosses the seam like any other: ingestion takes it in,
+/// records its instant, and advances the cursor past it, so the epoch a
+/// record lands in afterwards is the next one. Nothing in the mirror
+/// stands for the empty epoch but its instant.
+///
+/// An empty epoch package crosses the seam and advances the mirror's cursor.
+/// ´claim:relay:an-empty-epoch-crosses-the-seam´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_empty_epoch_crosses_the_seam(pool: PgPool) {
+    let standin = StandIn::new(pool.clone(), StandInConfig::default());
+    let boundary = StandInBoundary(standin.clone());
+    for _ in 0..3 {
+        assert!(
+            standin
+                .close_epoch()
+                .await
+                .expect("closes")
+                .records
+                .is_empty()
+        );
+    }
+    let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
+        .await
+        .expect("pass");
+    assert_eq!(outcome.epochs, 3);
+    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 3);
+    assert_eq!(
+        mirror::epoch_instants(&pool, &[1, 2, 3])
+            .await
+            .expect("instants")
+            .len(),
+        3,
+        "every empty epoch has its instant"
+    );
+    assert!(
+        mirror::record_ids_in_epoch(&pool, 2)
+            .await
+            .expect("ids")
+            .is_empty()
+    );
+
+    let actor = ActorKey::generate();
+    standin
+        .credit_burn(&actor.address(), 10_000_000)
+        .await
+        .expect("burn");
+    let proposal = registration(&actor);
+    let act_id = proposal.body.act_id();
+    let pre = actor.pre_sign(proposal);
+    let sealed = boundary.seal(pre.clone()).await.expect("seals");
+    let host_key = boundary.host_public_key().await.expect("host key");
+    let witness = actor.approve(&pre, &sealed, &host_key).expect("approves");
+    boundary.approve(witness).await.expect("approved");
+    standin.close_epoch().await.expect("closes");
+    let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
+        .await
+        .expect("pass");
+    assert_eq!(outcome.epochs, 1);
+    assert_eq!(
+        mirror::record_ids_in_epoch(&pool, 4).await.expect("ids"),
+        vec![act_id.to_string()]
+    );
 }

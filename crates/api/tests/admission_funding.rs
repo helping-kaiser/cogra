@@ -345,11 +345,7 @@ impl Rig {
         let host_key = self.standin.host_public_key().await.expect("host key");
         let witness = ticker.approve(&pre, &sealed, &host_key).expect("approves");
         self.standin.approve(witness).await.expect("approval");
-        self.standin
-            .close_epoch()
-            .await
-            .expect("closes")
-            .expect("the ticker's act publishes an epoch");
+        self.standin.close_epoch().await.expect("closes");
         self.ingest().await
     }
 
@@ -748,11 +744,7 @@ async fn the_registration_relay_waits_for_settlement(pool: PgPool) {
     assert!(rig.held_signature(registration.id).await.is_none());
     assert_eq!(rig.l1_status(&act_id).await.as_deref(), Some("approved"));
 
-    rig.standin
-        .close_epoch()
-        .await
-        .expect("closes")
-        .expect("the Registration and the vouch publish");
+    rig.standin.close_epoch().await.expect("closes");
     rig.ingest().await;
     assert_eq!(
         staged::load(&rig.pool, registration.id)
@@ -798,11 +790,7 @@ async fn at_the_default_delay_the_registration_relays_at_once(pool: PgPool) {
         Ok(StagedState::Relaying)
     );
     assert!(rig.held_signature(registration.id).await.is_none());
-    rig.standin
-        .close_epoch()
-        .await
-        .expect("closes")
-        .expect("the Registration and the vouch publish");
+    rig.standin.close_epoch().await.expect("closes");
     rig.ingest().await;
     assert_eq!(rig.account_state(applicant.account).await, "member");
 }
