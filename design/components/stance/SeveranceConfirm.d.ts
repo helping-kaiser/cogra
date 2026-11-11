@@ -14,6 +14,10 @@ export interface SeveranceConfirmProps {
   /** The signing is in flight (past 200ms): the confirm reads the family's
    *  present participle ("Walking it back…") and goes inert, never dimmed. */
   busy?: boolean;
+  /** The first of the batch's acts is being sent (implies `busy`): `Keep it`
+   *  reads `Close` and only leaves, the wait passing to the target's row.
+   *  Until then `Keep it`, the scrim, Escape and Back truly cancel. */
+  sent?: boolean;
   /** The signing did not go through; the dialog stays open, says so above
    *  the pair, and the confirm's slot reads `Retry`. */
   failed?: boolean;

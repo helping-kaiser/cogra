@@ -5021,6 +5021,9 @@ not make alone:
   Carving them out returns them to an uncapped people section, which is
   what the web client serves today. If the cap stays, the server may
   need a per-section `first` (seam 224).
+  - **Ruled yes** (jakob 2026-11-11): three per section before `See all …`
+    on every sectioned surface; the boards' notes say it as the rule
+    (round 31).
 - **Saved's own people-only narrowing.** Saved has no kind filter, so
   `See all profiles` there opens a state of Saved's own — the query kept,
   the people alone. It is described in `SavedSearch.md`, not drawn, and
@@ -5263,3 +5266,24 @@ sheets), `feed.filterSheet.topic` (with `.allTopics`, `.hint`, `.label`,
 key rules naming *Your topics* (`heldTopic`, `redactedTopic` in
 `node-paths.mjs`) move with them. `about.topic` is a help dialog's subject
 and keeps its word.
+
+### 151 · The pickers' states, one at a time · *system* · **filed 2026-11-11**
+
+Round 31 (seam 254 item 14). The pickers' `state` chips (`TagPicker`:
+`picking`, `cap`, `fault`, `none`, `seven`; `ReferencePicker` the same with
+`filter`) draw every copy at once on a board opened outside the canvas: a
+`{{hole}}` the canvas substitutes stays literal, so `display:` is dropped
+and each copy shows. The tree's other multi-state families stand one board
+per state under one prefix (`TagPickerTyping`, `TagPickerRefused`; round
+28's `signIn` states), but the chips' paths are registered on the two
+boards and append-only, so splitting them keeps the chips and adds the
+boards beside them. Three ways, for jakob and the implementation side:
+(a) a board per state beside the chip (`TagPickerCap`, `TagPickerSeven`,
+`TagPickerNone`, `TagPickerFault`, and the citation picker's five), each
+with its markers and edges; (b) the shell writes each board's default
+values in place of its holes for a board opened outside the canvas, so
+every chip board in the tree measures at its default (a build change,
+every chip board's standalone geometry moves); (c) the harness evaluates
+the board's own `VALS` for a chosen value. The sheet `Show all` raises is
+drawn (`TagPickerShowAll`, `ReferencePickerShowAll`); this item stays open
+for the per-state measuring alone.

@@ -12,7 +12,7 @@ WHEN typing -> the first row follows the name as it is typed
 
 WHEN a character no tag name may carry is typed -> the first row goes AND the line under tagPicker.nameField turns into the refusal
 
-WHEN tap the first row -> the typed name is staged in the composer's tags AND the row moves into the staged section AND the status message announces the stage AND NEVER the picker closes
+WHEN tap the first row -> the typed name is staged in the composer's tags AND the row moves to the top of the staged section, the list's first rows above the results AND the status message announces the stage AND NEVER the picker closes
 
 WHEN tap Done -> the picker closes to the composer it was opened from AND every staged tag is kept AND NEVER the typed name is staged by leaving
 

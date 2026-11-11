@@ -50,20 +50,22 @@ export const EMPTY_SIGN_WORDS = {
   confirm: "Set it anyway",
   busy: "Setting…",
   keep: "Keep it",
+  close: "Close",
 };
 
 /* THE WRITE RULE'S NO IS `SeveranceConfirm`'S (seam 245, ask 15): the same
    moment over the same pad, so the same answer — the quiet line where the
    fault line would stand, `Set it anyway` dimmed, no Retry, and `Keep it` the
    way back to the pick. */
-export function EmptySignConfirm({ targetLabel, vouchIn = false, busy = false, failed = false, writeRule = false, onConfirm, onCancel, inline = false }) {
+export function EmptySignConfirm({ targetLabel, vouchIn = false, busy: busyGiven = false, sent = false, failed = false, writeRule = false, onConfirm, onCancel, inline = false }) {
   const words = EMPTY_SIGN_WORDS;
+  const busy = busyGiven || sent;
   return (
-    /* The scrim, Escape and Back take `Keep it`, the safe answer — and wait,
-       as it does, while the act signs. */
+    /* The scrim, Escape and Back take `Keep it`, the safe answer — and, as
+       it does, cancel until the act is being sent and close after. */
     <DialogSurface
       inline={inline}
-      onScrimPress={busy ? undefined : onCancel}
+      onScrimPress={onCancel}
       title={words.title}
       body={[
         vouchIn ? words.vouchIn(targetLabel) : words.effect(targetLabel),
@@ -92,14 +94,16 @@ export function EmptySignConfirm({ targetLabel, vouchIn = false, busy = false, f
           >
             {busy ? words.busy : failed ? "Retry" : words.confirm}
           </button>
+          {/* THE WAY OUT STAYS LIVE WHILE IT SIGNS, `SeveranceConfirm`'s rule
+              for one act (round 31): `Keep it` truly cancels until the act is
+              being sent, then reads `Close` and only leaves. */}
           <button
             type="button"
-            onClick={busy ? undefined : onCancel}
-            aria-disabled={busy || undefined}
+            onClick={onCancel}
             className={BUTTON_CLASS}
-            style={buttonStyle({ variant: "primary", busy })}
+            style={buttonStyle({ variant: "primary" })}
           >
-            {words.keep}
+            {sent ? words.close : words.keep}
           </button>
         </>
       }

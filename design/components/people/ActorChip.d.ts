@@ -10,7 +10,8 @@ export interface ActorChipProps {
   /**
    * The actor is still there and its identity payloads are gone (a deleted
    * account, `erasure.md` §2–3). The disc keeps its space and fills with
-   * nothing, the name slot reads `REDACTED_ACTOR_NAME` in `text-secondary` —
+   * nothing but the reserved surface, ringed 1px in `--border-field` inside
+   * its box (`REDACTED_RING`), the name slot reads `REDACTED_ACTOR_NAME` in `text-secondary` —
    * the system's voice, not a name somebody chose — and the handle is dropped
    * rather than invented. `displayName`, `handle` and `avatarSrc` are ignored.
    */
@@ -45,10 +46,14 @@ export interface MonogramAvatarProps {
   size?: "sm" | "md" | "lg" | number;
   src?: string;
   /** A redacted actor: the disc reserved and empty — there is no name to take
-   *  a monogram from, and a glyph would be imagery with no source. */
+   *  a monogram from, and a glyph would be imagery with no source — ringed
+   *  1px in `--border-field` inside its box (`REDACTED_RING`). */
   redacted?: boolean;
   /** The data-node name its placer gives this avatar (design ⇄ impl seam 002; renders as attributes only). */
   node?: string;
 }
 
 export declare function MonogramAvatar(props: MonogramAvatarProps): JSX.Element;
+
+/** The 1px `--border-field` ring, drawn inside the box, every mark whose payload went wears (a deleted account's disc, a removed thing's tile). */
+export declare const REDACTED_RING: { border: string; boxSizing: "border-box" };

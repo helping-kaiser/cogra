@@ -1,14 +1,22 @@
 # TagPicker · `spec:design:behavior-tag-picker`
 
-ALWAYS the list's first row is the canonicalized typed name GIVEN the typed name is a legal tag name
+ALWAYS the results' first row is the canonicalized typed name GIVEN the typed name is a legal tag name
 
-ALWAYS a staged tag stands only in the staged section above the list
+ALWAYS a staged tag stands only in the staged section, the first rows of the one scrolling list, above the results
 
-WHEN press the keyboard's action key GIVEN the typed name is a legal tag name -> the first row's name is staged in the composer's tags AND the first row moves into the staged section AND the status message announces the stage AND NEVER the picker closes
+ALWAYS the staged section shows at most three staged tags, the three newest, newest on top
+
+ALWAYS tagPicker.staged.door reads Show all under the three GIVEN more than three tags are staged
+
+WHEN tap tagPicker.staged.door -> the sheet that holds every staged tag rises over the picker, the one the seals open AND NEVER the staged section unfolds in place
+
+ALWAYS the three staged rows stay above the results while a name is typed, and their × un-stages
+
+WHEN press the keyboard's action key GIVEN the typed name is a legal tag name -> the first row's name is staged in the composer's tags AND the first row moves to the top of the staged section AND the status message announces the stage AND NEVER the picker closes
 
 WHEN press the keyboard's action key GIVEN tagPicker.nameField refuses the typed name -> NEVER a tag is staged AND the refusal stays under tagPicker.nameField
 
-WHEN tap a row in the list -> the row's name is staged in the composer's tags AND the row moves into the staged section AND the status message announces the stage AND NEVER the picker closes
+WHEN tap a row in the list -> the row's name is staged in the composer's tags AND the row moves to the top of the staged section AND the status message announces the stage AND NEVER the picker closes
 
 WHEN tap the remove control of a staged row -> the row's name is unstaged from the composer's tags AND the row leaves the staged section AND the status message announces the unstage AND NEVER the picker closes
 
@@ -24,11 +32,11 @@ ALWAYS the back arrow reads Back to the post from a post's composer or its edit,
 
 WHEN the picker opens -> tagPicker.nameField takes focus AND the keyboard rises
 
-ALWAYS tagPicker.cap reads Up to 10 tags per post. above the list GIVEN the composer holds ten tags and was opened from a post's composer or its edit
+ALWAYS tagPicker.cap reads Up to 10 tags per post. in the fixed head under tagPicker.rule GIVEN the composer holds ten tags and was opened from a post's composer or its edit
 
-ALWAYS tagPicker.cap reads Up to 10 tags per comment. above the list GIVEN the composer holds ten tags and was opened from a reply's composer or a comment's edit
+ALWAYS tagPicker.cap reads Up to 10 tags per comment. in the fixed head under tagPicker.rule GIVEN the composer holds ten tags and was opened from a reply's composer or a comment's edit
 
-ALWAYS every row in the list, the typed name's included, is dimmed and takes no tap GIVEN the composer holds ten tags
+ALWAYS every result row, the typed name's included, is dimmed and takes no tap GIVEN the composer holds ten tags
 
 WHEN press the keyboard's action key GIVEN the composer holds ten tags -> NEVER a tag is staged
 

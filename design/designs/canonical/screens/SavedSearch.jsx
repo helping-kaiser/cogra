@@ -6,10 +6,8 @@
    it stand first and the saved things those people authored follow them.
    No full handle is needed — `@m` reaches @mira, @maren and @mateo alike.
 
-   PEOPLE FIRST, CAPPED AT THREE — THE CAP IS THE ORCHESTRATOR'S REC, NOT YET
-   JAKOB'S WORD. The ruling drew the cap for search; whether Saved and
-   History cap too is enumerated for jakob, drawn here as recommended (one
-   law for every sectioned surface). So the people take a section under the
+   PEOPLE FIRST, CAPPED AT THREE (one law for every sectioned surface,
+   Saved and History included; jakob 2026-11-11). So the people take a section under the
    house's quiet caption (`SectionLabel`, `People`, the caption Explore's
    recents wear), at most three — the newest saves among the matches — and
    `See all profiles` closes it when more match. Saved has no kind filter, so

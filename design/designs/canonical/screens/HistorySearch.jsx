@@ -7,9 +7,8 @@
    things whose words start with it all answer — the people first, then the
    tags, then the content. No full name is needed.
 
-   PEOPLE FIRST, CAPPED AT THREE — THE CAP IS THE ORCHESTRATOR'S REC, NOT YET
-   JAKOB'S WORD (one law for every sectioned surface; he may carve History
-   out). The people take a section under the house's quiet caption
+   PEOPLE FIRST, CAPPED AT THREE (one law for every sectioned surface;
+   jakob 2026-11-11). The people take a section under the house's quiet caption
    (`SectionLabel`, `People`), at most three — the most recently first seen
    among the matches — and `See all profiles` closes it when more match.
    History HAS a kind filter, so its door opens the narrowing that already
