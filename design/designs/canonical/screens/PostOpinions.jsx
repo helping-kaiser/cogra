@@ -61,7 +61,7 @@ export function Screen() {
             holder.redacted ? (
               <StanceRow key={actorId} {...holder} onOpen={() => {}} node="redactedOpinion" nodeKey={actorId} />
             ) : (
-              <StanceRow key={holder.handle} {...holder} onOpen={() => {}} node="opinion" nodeKey={holder.handle} />
+              <StanceRow key={holder.handle} {...holder} onOpen={() => {}} node="opinion" nodeKey={holder.id} />
             ),
           )}
         </div>

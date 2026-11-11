@@ -60,7 +60,7 @@ export function Screen() {
               </InlineAction>
             }
             node="account"
-            nodeKey="juno"
+            nodeKey={JUNO.id}
           />
           <ContentRow
             variant="chronicle"
@@ -76,7 +76,7 @@ export function Screen() {
               </InlineAction>
             }
             node="account"
-            nodeKey="ada"
+            nodeKey={ADA.id}
           />
           <ContentRow
             variant="chronicle"
@@ -92,7 +92,7 @@ export function Screen() {
               </InlineAction>
             }
             node="account"
-            nodeKey="tobias"
+            nodeKey={TOBIAS.id}
           />
           <ContentRow
             variant="chronicle"
