@@ -3672,8 +3672,8 @@ recorded so the registry is whole.
   were built from. Pictures added, words changed — the whole history
   stays readable.`
 - **5** — `Someone brings you in` · `You are here because @mira invited
-  you. Her link is your first way in to everyone else, and theirs to
-  you.`, with the quiet note `The friend who sent you this invite has to
+  you. @mira's link is your first way in to everyone else, and theirs
+  to you.` (the inviter by handle, *Naming*; jakob 2026-11-11), with the quiet note `The friend who sent you this invite has to
   let you in. Ask them once you have verified your email.`
 
 ## About

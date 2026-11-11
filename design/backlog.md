@@ -5402,7 +5402,7 @@ drawn faults are a next page's (`ProfileMoreFailed`, Notifications'
 jakob: the feed's failed read, drawn once — its line and where the band and
 the filter trigger stand over it.
 
-### 158 · One more gendered pronoun on a drawn line · *design* · **filed 2026-11-11**
+### 158 · One more gendered pronoun on a drawn line · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 35's sweep under the handle rule (copy-voice, *Naming*): the intro's
 vouch card reads `You are here because @mira invited you. Her link is your
@@ -5410,3 +5410,7 @@ first way in to everyone else, and theirs to you.` (`OnboardingVouch`;
 copy-voice, *The intro*). The intro's lines are carried over, blessed by use
 (jakob 2026-10-06), so the line waits for his word: by the rule it reads
 `@mira's link is your first way in to everyone else, and theirs to you.`
+
+Closed by round 38 (jakob 2026-11-11): the line reads `@mira's link is your
+first way in to everyone else, and theirs to you.`, on the board and in
+copy-voice.
