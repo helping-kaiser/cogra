@@ -150,7 +150,7 @@ class ProfileRepositoryTest {
         severed: Boolean = false,
     ) = """{"node":{"__typename":"Record","id":"$id","authorId":"$author","targetId":${quoted(target)},
         "pDirected":$d,"pInterest":$i,"severed":$severed,"payloadMarked":false,
-        "landingEpoch":$epoch,"actTime":0,"position":0,$person}}"""
+        "landingEpoch":$epoch,"position":0,$person}}"""
 
     private fun user(id: String, handle: String, name: String?, status: String = "NORMAL") =
         """{"__typename":"User","id":"$id","handle":"$handle",

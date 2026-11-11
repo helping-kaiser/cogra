@@ -33,7 +33,6 @@ class HeldOpinionsTest {
         severed = severed,
         payloadMarked = marked,
         landingEpoch = epoch,
-        actTime = 0,
         position = position,
     )
 
@@ -107,5 +106,16 @@ class HeldOpinionsTest {
             ),
         )
         assertThat(rows.single().holder.handle).isEqualTo("new")
+    }
+
+    @Test
+    fun `inside one epoch the later position is the newest record, wherever it sits in the page`() {
+        val later = record("ada", 0.1, 0.1, epoch = 1, position = 2, severed = true, handle = "ada-new")
+        val earlier = record("ada", 0.1, 0.1, epoch = 1, position = 1, severed = false, handle = "ada-old")
+        listOf(listOf(later, earlier), listOf(earlier, later)).forEach { page ->
+            val row = foldHeldOpinions(page).single()
+            assertThat(row.severed).isTrue()
+            assertThat(row.holder).isEqualTo(later.holder)
+        }
     }
 }
