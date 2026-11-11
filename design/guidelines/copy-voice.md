@@ -825,7 +825,9 @@ DO, the way the sound toggle already does:
   the profiles, `VouchAsk`, the tag page's origin table and the stream
   alike — and it is the cold entry's label on a post, a comment or a
   profile, whose root is Feed (readme §4, *Navigation*).
-- `Close` — the viewer's X, which IS shutting a layer.
+- `Close` — the viewer's X, which IS shutting a layer; and, for the same
+  reason, a signing surface's way out once its commit is pressed (*In-flight
+  labels*).
 - `Open the stream` — a portrait clip's door on a card, the one media door
   that leads somewhere other than its post: the verb and the stream's own
   common noun (`Back to the stream`'s), one control one verb. Never the
@@ -1054,16 +1056,18 @@ a quick answer never flashes a word.
 - `Signing…` — the line under the face while a press-and-hold signs.
   A hold has no label to swap, so the target's row carries it, in the
   pending marker's quiet register. **Drawn** on `RowSigning`. The same
-  line carries a pad's or a dialog's act after `Close` shut it, the act
-  being sent (jakob 2026-11-11). **Drawn** on `PadFailed`'s `closed`.
-- `Close` — the way out of a pad, the alternates, the walk-back or the
-  empty sign once their act is being sent (jakob 2026-11-11). It takes
-  `Cancel`'s place, or `Keep it`'s, in the same control: until the send
-  begins that word truly cancels and nothing lands; from then on the act
-  is expected to happen, so the word would promise what it cannot do,
-  and `Close` says only what the press does — it shuts a layer (*The
-  stream and the viewer*). The wait passes to the target's row.
-  **Drawn** on `PadFailed`'s `sending`.
+  line carries a pad's or a dialog's act after `Close` shut it (jakob
+  2026-11-11). **Drawn** on `PadFailed`'s `closed`.
+- `Close` — the way out of a signing surface once its commit is
+  pressed (jakob 2026-11-11): the pad, the alternates, the walk-back,
+  the empty sign, the handle change. Once someone submits, the act is
+  done and nothing cancels it, so `Cancel` or `Keep it` would promise
+  what the press cannot do; past 200ms, beside the in-flight label, the
+  same control in the same place reads `Close`, which says only what
+  the press does — it shuts a layer (*The stream and the viewer*) so the
+  reader need not wait. The wait passes to the target's row. **Drawn**
+  on `PadFailed`'s `setting`, `SeveranceConfirm`'s `signing` and
+  `EmptySignConfirm`'s `setting`.
 
 Every other commit follows the same construction and needs no separate
 entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes

@@ -12,12 +12,11 @@ export interface SeveranceConfirmProps {
   /** The fold reports nothing left to walk back; severing would be a no-op. */
   alreadySevered?: boolean;
   /** The signing is in flight (past 200ms): the confirm reads the family's
-   *  present participle ("Walking it back…") and goes inert, never dimmed. */
+   *  present participle ("Walking it back…") and goes inert, never dimmed.
+   *  Nothing cancels it: `Keep it` reads `Close` and, with the scrim, Escape
+   *  and Back, closes the dialog and the pad, the wait passing to the
+   *  target's row. */
   busy?: boolean;
-  /** The first of the batch's acts is being sent (implies `busy`): `Keep it`
-   *  reads `Close` and only leaves, the wait passing to the target's row.
-   *  Until then `Keep it`, the scrim, Escape and Back truly cancel. */
-  sent?: boolean;
   /** The signing did not go through; the dialog stays open, says so above
    *  the pair, and the confirm's slot reads `Retry`. */
   failed?: boolean;

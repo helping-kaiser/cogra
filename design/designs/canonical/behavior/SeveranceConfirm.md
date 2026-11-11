@@ -24,7 +24,7 @@ ALWAYS the dialog's words are the target family's own: a person or a post is wal
 
 ALWAYS the pad it was picked on stays parked behind the dialog's scrim
 
-WHEN press Walk it back in the dialog -> the dialog stays up until the signing answers AND Walk it back refuses a second press AND NEVER Walk it back dims
+WHEN press Walk it back in the dialog -> the dialog stays up until the signing answers or the reader closes it AND Walk it back refuses a second press AND NEVER Walk it back dims
 
 WHEN the signing has not answered 200ms after Walk it back -> Walk it back reads Walking it back… AND NEVER a spinner appears
 
@@ -42,8 +42,10 @@ WHEN press Keep it GIVEN Walk it back is not waiting on its signing -> the dialo
 
 WHEN tap the scrim, press the system's Back or press Escape GIVEN Walk it back is not waiting on its signing -> the dialog closes as Keep it closes it AND nothing is signed AND the pick is still parked on the pad beneath
 
-WHEN tap Keep it, tap the scrim, press the system's Back or press Escape GIVEN Walk it back is waiting and the first of its acts is not yet being sent -> the dialog closes AND nothing lands AND the target's row is untouched AND the pick is still parked on the pad beneath AND NEVER Keep it dims
+ALWAYS nothing cancels the walk-back GIVEN Walk it back was pressed
 
-WHEN the app begins sending the first of the walk-back's acts -> Keep it reads Close in the same place AND Walk it back still reads Walking it back… and refuses a press
+WHEN the signing has not answered 200ms after Walk it back -> Walk it back reads Walking it back… and refuses a press AND Keep it reads Close in the same place, filled and live, as the answer chip's signing draws it AND NEVER Close dims
 
-WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN the walk-back is being sent -> the dialog and the pad beneath it close AND the walk-back goes on, its wait carried by the line under the target's face, Signing… in the pending marker's quiet register, as PadFailed's closed moment draws it AND NEVER the face moves before the signing is taken
+WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN Walk it back is waiting on its signing -> the dialog and the pad beneath it close AND the whole walk-back goes on, its wait carried by the line under the target's face, Signing… in the pending marker's quiet register, as PadFailed's closed moment draws it AND NEVER the face moves before the signing is taken
+
+WHEN tap Keep it, tap the scrim, press the system's Back or press Escape GIVEN Walk it back was pressed under 200ms ago -> the dialog and the pad beneath it close as Close closes them AND the walk-back goes on AND NEVER the walk-back is cancelled
