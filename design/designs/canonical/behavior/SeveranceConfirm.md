@@ -42,4 +42,8 @@ WHEN press Keep it GIVEN Walk it back is not waiting on its signing -> the dialo
 
 WHEN tap the scrim, press the system's Back or press Escape GIVEN Walk it back is not waiting on its signing -> the dialog closes as Keep it closes it AND nothing is signed AND the pick is still parked on the pad beneath
 
-WHEN tap Keep it, tap the scrim, press the system's Back or press Escape GIVEN Walk it back is waiting on its signing -> NEVER the dialog closes AND NEVER Keep it dims
+WHEN tap Keep it, tap the scrim, press the system's Back or press Escape GIVEN Walk it back is waiting AND the first of its acts is not yet being sent -> the dialog closes AND nothing lands AND the target's row is untouched AND the pick is still parked on the pad beneath AND NEVER Keep it dims
+
+WHEN the app begins sending the first of the walk-back's acts -> Keep it reads Close in the same place AND Walk it back still reads Walking it back… and refuses a press
+
+WHEN tap Close, tap the scrim, press the system's Back or press Escape GIVEN the walk-back is being sent -> the dialog and the pad beneath it close AND the walk-back goes on, its wait carried by the line under the target's face, Signing… in the pending marker's quiet register, as PadFailed's closed moment draws it AND NEVER the face moves before the signing is taken

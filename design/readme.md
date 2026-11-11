@@ -10473,11 +10473,13 @@ jakob after his hand test.
   row's quiet register — `You can't sign right now. Nothing was signed or
   spent.` where the fault line stands — the act dimmed, no Retry, `Keep
   it` the way back. The board's `answer` chip draws it.
-- **Cancel while Set signs.** Cancel, the press outside and Escape stay
-  live and close the pad, never the act: its wait passes to the target's
-  row, a hold's (`Signing…`, then the face and the snackbar, or `That
-  didn't sign.` with a Retry that asks the same pick again). `PadFailed`'s
-  `moment` chip draws `setting` and `cancelled`.
+- **The way out while Set signs.** Until the act is being sent, Cancel,
+  the press outside, Back and Escape truly cancel: the pad closes, nothing
+  lands, the row untouched. Once it is being sent the same button reads
+  `Close` and only leaves: the wait passes to the target's row, a hold's
+  (`Signing…`, then the face and the snackbar, or `That didn't sign.`
+  with a Retry that asks the same pick again). `PadFailed`'s `moment` chip
+  draws `setting`, `sending` and `closed` (round 31).
 - **The key-absent pad's "?"** says only what its notice does not: where
   the key lives, and what waits for the restore.
 - **The target label's family**: `this post`, `this comment`, `@ada`,
@@ -10488,9 +10490,8 @@ jakob after his hand test.
   still asks the walk-back — that record stands, and severance is a
   `(0, 0)` landing over anything standing.
 - **Every new string above was merged under the autonomy order and is
-  blessed (jakob 2026-11-10)**, but the words of Cancel while Set signs
-  (`Signing…` under the face after a cancel) and their law, whose review
-  stays pending. Backlog 147 banks the type sites round 20 left.
+  blessed (jakob 2026-11-10)**; the way out while Set signs is jakob's
+  2026-11-11 rule (round 31). Backlog 147 banks the type sites round 20 left.
 - **The gate**: edges hold at **2127**, flows at **227**, the registry
   at **100 screens**; no board added — two boards gain a chip.
 
