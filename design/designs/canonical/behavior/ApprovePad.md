@@ -28,7 +28,7 @@ WHEN drag on the pad field -> the pick moves AND its face and pair follow AND th
 
 WHEN tap Cancel -> the pad closes onto Invites AND nothing is signed AND the application is still waiting
 
-WHEN tap Cancel GIVEN Set is waiting AND the act is not yet being sent -> the pad closes AND nothing lands AND the target's row is untouched, as PadFailed's setting moment draws it
+WHEN tap Cancel GIVEN Set is waiting and the act is not yet being sent -> the pad closes AND nothing lands AND the target's row is untouched, as PadFailed's setting moment draws it
 
 WHEN tap Close GIVEN the act is being sent -> the pad closes AND the act goes on, its wait carried by the line under the target's face, as PadFailed's sending and closed moments draw it
 

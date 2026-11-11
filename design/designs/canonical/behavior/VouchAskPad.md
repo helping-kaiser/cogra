@@ -44,7 +44,7 @@ WHEN tap Set GIVEN the write rule refuses -> nothing is staged or spent AND the 
 
 WHEN tap Cancel -> the pad closes onto the ask AND nothing is signed AND the ask is still there to answer
 
-WHEN tap Cancel GIVEN Set is waiting AND the act is not yet being sent -> the pad closes AND nothing lands AND the target's row is untouched, as PadFailed's setting moment draws it
+WHEN tap Cancel GIVEN Set is waiting and the act is not yet being sent -> the pad closes AND nothing lands AND the target's row is untouched, as PadFailed's setting moment draws it
 
 WHEN tap Close GIVEN the act is being sent -> the pad closes AND the act goes on, its wait carried by the line under the target's face, as PadFailed's sending and closed moments draw it
 

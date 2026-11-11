@@ -32,9 +32,9 @@ WHEN tap the pad's ? -> the pad's four help lines replace its body in place AND 
 
 WHEN the pad's signing has not answered 200ms after Set -> Set reads Setting… and refuses a second press AND the pick, the field and the landing line stay as they were AND Cancel stays live AND NEVER Set dims AND NEVER a spinner appears
 
-WHEN tap Cancel GIVEN Set is waiting AND the act is not yet being sent -> the pad closes AND nothing lands AND the target's row is untouched AND NEVER a line stands under the face AND NEVER the face moves AND NEVER a snackbar appears
+WHEN tap Cancel GIVEN Set is waiting and the act is not yet being sent -> the pad closes AND nothing lands AND the target's row is untouched AND NEVER a line stands under the face AND NEVER the face moves AND NEVER a snackbar appears
 
-WHEN press outside the pad, press the system's Back or press Escape GIVEN Set is waiting AND the act is not yet being sent -> the pad closes as Cancel closes it AND nothing lands
+WHEN press outside the pad, press the system's Back or press Escape GIVEN Set is waiting and the act is not yet being sent -> the pad closes as Cancel closes it AND nothing lands
 
 WHEN the app begins sending the act GIVEN the pad is open -> Cancel reads Close in the same place AND Set still reads Setting… and refuses a press
 
@@ -50,7 +50,7 @@ WHEN tap Retry on the row line GIVEN the pad was closed while it signed -> the s
 
 WHEN the alternates' signing has not answered 200ms after Sign it GIVEN the reader's input is sliders or typed values -> Sign it reads Signing… and refuses a second press AND Cancel stays live AND NEVER Sign it dims
 
-WHEN tap Cancel in the alternates GIVEN Sign it is waiting AND the act is not yet being sent -> the alternates close AND nothing lands AND the target's row is untouched
+WHEN tap Cancel in the alternates GIVEN Sign it is waiting and the act is not yet being sent -> the alternates close AND nothing lands AND the target's row is untouched
 
 WHEN the app begins sending the act GIVEN the alternates are up -> Cancel reads Close in the same place AND tap Close leaves the alternates as Close leaves the pad
 

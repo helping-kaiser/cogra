@@ -24,7 +24,7 @@ WHEN tap Disconnect -> the dialog opens titled Disconnect from #saltmaps? AND NE
 
 WHEN tap Cancel -> the pad closes AND nothing is staged AND the topic stays held exactly as it was
 
-WHEN tap Cancel GIVEN Set is waiting AND the act is not yet being sent -> the pad closes AND nothing lands AND the target's row is untouched, as PadFailed's setting moment draws it
+WHEN tap Cancel GIVEN Set is waiting and the act is not yet being sent -> the pad closes AND nothing lands AND the target's row is untouched, as PadFailed's setting moment draws it
 
 WHEN tap Close GIVEN the act is being sent -> the pad closes AND the act goes on, its wait carried by the line under the target's face, as PadFailed's sending and closed moments draw it
 
