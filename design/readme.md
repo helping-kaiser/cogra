@@ -2288,9 +2288,12 @@ entry first". What stands:
   supplies the prefix, and `render-screens` (`_build/node-paths.mjs`)
   joins each segment with its annotated ancestors into the full path
   on the built board — `feed.card.actionRow.score`. A repeated
-  instance carries `data-node-key`, a content key (the author's
-  handle, the tag's name; a position only where content has none),
-  and so does every node inside it: the implementation side diffs
+  instance carries `data-node-key`, a content key — what has an id on
+  the wire is keyed by that id (a post, comment, profile or tag card
+  and a row naming a person, by the lowercase UUID the wire carries;
+  round 33, seam 264), else a name or slug its list holds once (a tag
+  chip inside a card by its name), a position only where content has
+  none — and so does every node inside it: the implementation side diffs
   (path, key), never DOM order. A copy a board's tweak chip draws once
   per value is one element in several states: it keeps one path and
   carries the chip's value as its key (`history.searchField` under
@@ -2302,7 +2305,10 @@ entry first". What stands:
   writes. **Registered paths are append-only**: a collision fails the
   render, and so does a registered path that stops rendering — a
   rename is a breaking change for the implementation side, made only
-  by deleting the path from `nodes.json` by hand in a reviewed PR.
+  by deleting the path from `nodes.json` by hand in a reviewed PR. A
+  key rule changes the same way, only in a named, announced breaking
+  change: its old rule entries leave `nodes.json` by hand, and the
+  render registers the new rule; the paths stay (round 33).
 - **A sheet's path names the sheet, not the host it is raised over**
   (rounds 27, 28). A sheet drawn once keeps one path wherever it is
   raised: the thread is `postDetail.threadSheet` from a feed, History or
