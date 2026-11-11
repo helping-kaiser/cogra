@@ -2942,8 +2942,20 @@ const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
    `pick` DRAWS A KEPT PICK ON THE FIRST COMMENT (round 27, seam 252): given,
    @tobias's card stands in `PickCopies`, so the board's `pick` chip adds the
    stance control's `pending` line to `threadSheet.commentCard`. */
-function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, pick = false, node }) {
+function CommentsThreadSheet({ landed = false, afterClose, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown, pick = false, node }) {
   const card = node && "commentCard";
+  /* A REPLY SENT AND CLOSED ON (round 37, `SigningAfterClose`): the branch
+     opens as a landing opens it, and where the new card would stand at the
+     branch's end the reply's wait or its failure stands instead — the
+     commit's own in-flight label in the pending marker's quiet register, or
+     the failure line with Retry. Nothing is drawn as a card before its
+     signature is taken. */
+  const expanded = landed || afterClose !== undefined;
+  const closeLine = afterClose === undefined ? null : (
+    <div style={{ padding: "var(--space-2) 0 0 var(--space-6)" }}>
+      {afterClose === "failed" ? <SigningPending row message="Your comment didn't sign." onRetry={() => {}} /> : <PendingMarker label="Signing comment…" />}
+    </div>
+  );
   const readerCopy = (value) => (node ? { "data-node-chip": "reader", "data-node-key": value } : null);
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
@@ -2985,14 +2997,14 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
       onReply={() => {}}
       replyOpacity={replyOpacity}
       replyCount={2}
-      onOpenReplies={landed ? undefined : () => {}}
-      replies={landed ? TOBIAS_REPLIES : []}
+      onOpenReplies={expanded ? undefined : () => {}}
+      replies={expanded ? TOBIAS_REPLIES : []}
       topics={["glovebox", "coastroad"]}
       references={1}
       license={{ attribution: 0, provenance: 0 }}
       menuItems={CARD_MENU}
     >
-      {landed ? settledReply : null}
+      {landed ? settledReply : closeLine}
     </CommentCard>
   );
   return (

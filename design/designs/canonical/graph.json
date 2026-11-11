@@ -185,6 +185,7 @@
     "SealSigningSlow": "reference",
     "FeedNewerVersion": "reference",
     "RowSigning": "reference",
+    "SigningAfterClose": "reference",
     "RowWriteRule": "reference",
     "FeedShapes": "reference",
     "FeedCommentShapes": "reference",
