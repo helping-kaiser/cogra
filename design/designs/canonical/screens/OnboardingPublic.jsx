@@ -44,6 +44,7 @@ const BUBBLE = {
   boxSizing: "border-box",
   padding: "8px 12px",
   fontSize: "var(--text-body-small)",
+  fontWeight: "var(--text-body-small--font-weight)",
   lineHeight: "var(--text-body-small--line-height)",
   letterSpacing: "var(--text-body-small--letter-spacing)",
 };
@@ -70,7 +71,7 @@ export function Screen() {
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
             <MonogramAvatar name="Ada Okonkwo" src="comment-camera.jpg" />
             <MonogramAvatar name="Tobias Lindqvist" />
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
               @ada and @tobias
             </span>
           </div>
@@ -117,10 +118,10 @@ export function Screen() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
             <MonogramAvatar name="Sol Ferreira" />
-            <span style={{ flex: 1, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
+            <span style={{ flex: 1, fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
               @sol
             </span>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>2h</span>
+            <span style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>2h</span>
           </div>
           <div
             style={{
@@ -128,13 +129,15 @@ export function Screen() {
               paddingLeft: "var(--space-3)",
               borderLeft: "2px solid var(--border-field)",
               fontSize: "var(--text-body-small)",
+              letterSpacing: "var(--text-body-small--letter-spacing)",
+              fontWeight: "var(--text-body-small--font-weight)",
               lineHeight: "var(--text-body-small--line-height)",
               color: "var(--text-secondary)",
             }}
           >
             At least our eavesdroppers can say hi.
           </div>
-          <div style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
+          <div style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)" }}>
             Hi.
           </div>
         </div>

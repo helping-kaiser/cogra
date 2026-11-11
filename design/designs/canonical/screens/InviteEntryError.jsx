@@ -17,19 +17,26 @@
    email address.` is already the wording for a local format failure on an
    entry field, and this is the same failure on the next field along. It
    names the link because the field asks for a link — the web app's added
-   "or its code" describes a field this design does not draw. */
+   "or its code" describes a field this design does not draw.
+
+   REGISTERED under the `inviteEntry` prefix (round 28): `InviteEntry`'s names.
+   The live commit is `WaitingCommit` with nothing to wait for, so it keeps
+   `InviteEntry`'s `commit.action`. */
+export const NODE = "inviteEntry";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Enter your invite
         </h1>
@@ -37,27 +44,29 @@ export function Screen() {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           CoGra is invite-only. Paste your invite link to get started.
         </p>
 
         <div style={{ marginTop: 32 }}>
-          <TextField id="invite-link" label="Invite link" kind="url" enterKeyHint="go" value="cogra" error="That doesn't look like an invite link." />
+          <TextField id="invite-link" label="Invite link" kind="url" enterKeyHint="go" value="cogra" error="That doesn't look like an invite link." node="link" />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <Button style={{ width: "100%" }}>Continue</Button>
+          <WaitingCommit id="invite-link" label="Continue" waiting={false} node="commit" />
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column" }}>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="signInDoor">
             Already have an account? Sign in
           </Button>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="browse">
             Just looking? Browse the feed →
           </Button>
         </div>

@@ -42,6 +42,7 @@ export function StanceSlider({ label, value, onChange, minLabel, maxLabel, id, m
         htmlFor={fieldId}
         style={{
           fontSize: "var(--text-label-large)",
+          letterSpacing: "var(--text-label-large--letter-spacing)",
           lineHeight: "var(--text-label-large--line-height)",
           fontWeight: "var(--text-label-large--font-weight)",
         }}
@@ -61,7 +62,7 @@ export function StanceSlider({ label, value, onChange, minLabel, maxLabel, id, m
       {(minLabel || maxLabel) && (
         <div
           aria-hidden="true"
-          style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}
+          style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)" }}
         >
           <span>{minLabel}</span>
           <span>{maxLabel}</span>

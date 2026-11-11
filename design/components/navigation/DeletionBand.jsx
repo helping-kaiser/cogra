@@ -65,6 +65,7 @@ export function DeletionBand({ days = 7, content = false, line, actionLabel = "C
         style={{
           flex: 1,
           fontSize: "var(--text-body-small)",
+          fontWeight: "var(--text-body-small--font-weight)",
           lineHeight: "var(--text-body-small--line-height)",
           letterSpacing: "var(--text-body-small--letter-spacing)",
           color: "var(--on-surface)",

@@ -12,6 +12,8 @@ export interface RecoveryCodeProps {
   /** Seeds the confirm field — how a board draws the typed-back state at
    *  rest (the diverged prefix on RecoveryCodeMismatch). Defaults to empty. */
   defaultTypedBack?: string;
+  /** Turns on its parts' data-node names (design ⇄ impl seam 002; renders as attributes only): the master draws no box of its own, so its placer names the `Card` it sits in and the parts join under it — `value`, `explainer`, `copy`, `copied`, `confirm`, `done`. */
+  node?: string;
 }
 
 export declare function RecoveryCode(props: RecoveryCodeProps): JSX.Element;

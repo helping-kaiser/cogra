@@ -74,10 +74,10 @@ export function MonogramAvatar({ name, size = "sm", src, redacted = false, node 
     typeof size === "number"
       ? { height: `${size}px`, width: `${size}px`, fontSize: size >= 56 ? "var(--text-headline-small)" : "var(--text-label-large)" }
       : size === "lg"
-        ? { height: "64px", width: "64px", fontSize: "var(--text-headline-small)" }
+        ? { height: "64px", width: "64px", fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", letterSpacing: "var(--text-headline-small--letter-spacing)", fontWeight: "var(--text-headline-small--font-weight)" }
         : size === "md"
-          ? { height: "32px", width: "32px", fontSize: "var(--text-label-medium)" }
-          : { height: "24px", width: "24px", fontSize: "var(--text-label-small)" };
+          ? { height: "32px", width: "32px", fontSize: "var(--text-label-medium)", lineHeight: "var(--text-label-medium--line-height)", letterSpacing: "var(--text-label-medium--letter-spacing)", fontWeight: "var(--text-label-medium--font-weight)" }
+          : { height: "24px", width: "24px", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)" };
   return (
     <span
       aria-hidden="true"
@@ -151,7 +151,7 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
       >
         {name}
       </span>
-      {!redacted && <span style={{ ...clip, flexShrink: 1, fontSize: "var(--text-label-medium)", color: "var(--text-secondary)" }} data-node={node && "handle"}>@{handle}</span>}
+      {!redacted && <span style={{ ...clip, flexShrink: 1, fontSize: "var(--text-label-medium)", lineHeight: "var(--text-label-medium--line-height)", letterSpacing: "var(--text-label-medium--letter-spacing)", fontWeight: "var(--text-label-medium--font-weight)", color: "var(--text-secondary)" }} data-node={node && "handle"}>@{handle}</span>}
     </a>
   );
 }

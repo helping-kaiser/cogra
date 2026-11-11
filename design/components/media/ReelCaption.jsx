@@ -57,13 +57,14 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore, s
     >
       {notice}
       {handle && (
-        <span style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }} data-node={node && "handle"}>@{handle}</span>
+        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", letterSpacing: "var(--text-label-large--letter-spacing)", fontWeight: "var(--text-label-large--font-weight)" }} data-node={node && "handle"}>@{handle}</span>
       )}
       {title && (
         <span
           data-node={node && "title"}
           style={{
             fontSize: "var(--text-title-small)",
+            letterSpacing: "var(--text-title-small--letter-spacing)",
             lineHeight: "var(--text-title-small--line-height)",
             fontWeight: "var(--text-title-small--font-weight)",
           }}
@@ -76,6 +77,9 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore, s
           data-node={node && "description"}
           style={{
             fontSize: "var(--text-body-small)",
+            lineHeight: "var(--text-body-small--line-height)",
+            letterSpacing: "var(--text-body-small--letter-spacing)",
+            fontWeight: "var(--text-body-small--font-weight)",
             display: "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
@@ -99,6 +103,8 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore, s
             cursor: "pointer",
             fontFamily: "var(--font-sans)",
             fontSize: "var(--text-label-medium)",
+            lineHeight: "var(--text-label-medium--line-height)",
+            letterSpacing: "var(--text-label-medium--letter-spacing)",
             fontWeight: "var(--text-label-medium--font-weight)",
             color: "#fff",
           }}

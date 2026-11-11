@@ -60,8 +60,8 @@ export function Screen() {
               Your pick
             </span>
             <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
-              <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🔍</span>
-              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: "var(--text-title-large)", letterSpacing: "var(--text-title-large--letter-spacing)", fontWeight: "var(--text-title-large--font-weight)", lineHeight: 1.2 }}>🔍</span>
+              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
                 +0.10 / 1.00
               </span>
             </span>
@@ -75,7 +75,7 @@ export function Screen() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
-            <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+            <span style={{ flex: 1, fontSize: "var(--text-body-small)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
               Signed with the post, as its own action.
             </span>
             <Button>Done</Button>

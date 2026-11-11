@@ -26,49 +26,54 @@ export function Screen() {
     <>
       <WizardHeader title="Reply" leaveLabel="Leave — the reply is discarded" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuotedRow
-          title="The long way home — @ada"
-          snippet="The light does something at the third headland that I have never managed…"
-          name="Ada Okonkwo"
-          src="comment-camera.jpg"
-        />
-
-        <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["I have the whole walk on film somewhere — these four are the ones that survived."]} />
-
-        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-          <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" width={58} height={72} fit="contain" onRemove={() => {}} />
-          <MediaThumb src="gallery-market.jpg" alt="" width={96} height={72} fit="contain" onRemove={() => {}} />
-          <MediaThumb src="gallery-honey.jpg" alt="" width={72} height={72} fit="contain" onRemove={() => {}} />
-          <MediaThumb src="gallery-veg.jpg" alt="" width={96} height={72} fit="contain" progress={0.65} />
-        </div>
-
-        <DescribeCounter described={0} total={4} onDescribe={() => {}} />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <RefusedFile
+        {/* The fields scroll under the pinned foot, the edits' reading
+            (`EditComposeVideo`): five refusals run the composer taller than
+            the phone, and the foot stays where the composer's stands. */}
+        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 16, overflow: "hidden" }}>
+          <QuotedRow
+            title="The long way home — @ada"
+            snippet="The light does something at the third headland that I have never managed…"
+            name="Ada Okonkwo"
             src="comment-camera.jpg"
-            video
-            message="That video is too big — a comment's video can be up to 50 MB."
           />
-          <RefusedFile
-            src="gallery-grapes.jpg"
-            message="That GIF moves, and CoGra can't take a moving GIF here. A still one is fine."
-          />
-          <RefusedFile message="That file isn't a picture or a video CoGra can read." />
-          <RefusedFile
-            src="comment-camera.jpg"
-            video
-            message="A comment carries pictures or one video, not both."
-          />
-          <RefusedFile
-            src="post-photo.jpg"
-            message="That's more than a comment carries — up to four pictures."
-          />
+
+          <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["I have the whole walk on film somewhere — these four are the ones that survived."]} />
+
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+            <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" width={58} height={72} fit="contain" onRemove={() => {}} />
+            <MediaThumb src="gallery-market.jpg" alt="" width={96} height={72} fit="contain" onRemove={() => {}} />
+            <MediaThumb src="gallery-honey.jpg" alt="" width={72} height={72} fit="contain" onRemove={() => {}} />
+            <MediaThumb src="gallery-veg.jpg" alt="" width={96} height={72} fit="contain" progress={0.65} />
+          </div>
+
+          <DescribeCounter described={0} total={4} onDescribe={() => {}} />
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <RefusedFile
+              src="comment-camera.jpg"
+              video
+              message="That video is too big — a comment's video can be up to 50 MB."
+            />
+            <RefusedFile
+              src="gallery-grapes.jpg"
+              message="That GIF moves, and CoGra can't take a moving GIF here. A still one is fine."
+            />
+            <RefusedFile message="That file isn't a picture or a video CoGra can read." />
+            <RefusedFile
+              src="comment-camera.jpg"
+              video
+              message="A comment carries pictures or one video, not both."
+            />
+            <RefusedFile
+              src="post-photo.jpg"
+              message="That's more than a comment carries — up to four pictures."
+            />
+          </div>
+
+          <InlineAction size="sm" selfStart>+ Add pictures · 4 of 4</InlineAction>
+
+          <div style={{ flex: 1 }} />
         </div>
-
-        <InlineAction size="sm" selfStart>+ Add pictures · 4 of 4</InlineAction>
-
-        <div style={{ flex: 1 }} />
 
         <QuietNote>Words first — pictures can join them, and they upload while you write.</QuietNote>
         <Button style={{ width: "100%" }}>Next</Button>

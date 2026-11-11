@@ -251,7 +251,7 @@ export function SheetItem({ label, onSelect, ariaLabel, node }) {
    row, so a sheet that needs one stops assembling a heading by hand; a close
    control is still the one thing it never takes. */
 export function SheetTitle({ children, trailing, node }) {
-  const heading = { fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" };
+  const heading = { fontSize: "var(--text-title-medium)", letterSpacing: "var(--text-title-medium--letter-spacing)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" };
   if (!trailing) {
     return (
       <h2 style={{ margin: 0, padding: "0 var(--space-6) var(--space-2)", ...heading }} data-node={node}>

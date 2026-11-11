@@ -95,7 +95,7 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
                   hit areas stand clear under WCAG 2.5.8's spacing rule. */}
               <span style={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: "var(--space-3)", rowGap: "var(--space-2)" }}>
                 {item.described ? (
-                  <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={part("described")}>
+                  <span style={{ fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={part("described")}>
                     Described
                   </span>
                 ) : (
@@ -146,6 +146,7 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
           margin: 0,
           padding: "var(--space-3) var(--space-6) 0",
           fontSize: "var(--text-label-small)",
+          fontWeight: "var(--text-label-small--font-weight)",
           lineHeight: "var(--text-label-small--line-height)",
           letterSpacing: "var(--text-label-small--letter-spacing)",
           color: "var(--text-secondary)",

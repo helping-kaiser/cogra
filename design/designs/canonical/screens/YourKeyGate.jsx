@@ -15,20 +15,26 @@
    and warned about first on a phone with no screen lock (`NoScreenLock`). A
    browser that still keeps the seed (no backup yet) asks nothing, because a
    prompt there would prove nothing. A refused code wears `RestoreError`'s
-   line in place; offline is `NetworkError`'s. */
+   line in place; offline is `NetworkError`'s.
+
+   REGISTERED under the `yourKey` prefix (round 28), `SettingsBackup`'s names
+   for the same secret asked: `body`, the proof `current`, `commit`. */
+export const NODE = "yourKey";
 export function Screen() {
   return (
     <>
-      <PageHeader title="Your key" backHref="/settings" backLabel="Back to settings" />
+      <PageHeader title="Your key" backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <p
           style={{
             margin: 0,
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           On this browser your key is sealed inside its backup. Enter your recovery code to open it and see the key.
         </p>
@@ -41,11 +47,12 @@ export function Screen() {
             enterKeyHint="go"
             placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX"
             value=""
+            node="current"
           />
         </div>
 
         <div style={{ marginTop: 16 }}>
-          <WaitingCommit id="your-key-gate" label="Show my key" reason="Waiting for your recovery code" />
+          <WaitingCommit id="your-key-gate" label="Show my key" reason="Waiting for your recovery code" node="commit" />
         </div>
       </div>
     </>

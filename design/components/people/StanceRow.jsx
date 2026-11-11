@@ -52,9 +52,11 @@ export const HISTORY_DOOR_LABEL = "See how this opinion built";
    since printing one would invent a handle the reader could try to reach. The
    opinion it holds or is held by stays, read as any row's. The row is still a
    door: a deleted account's page is reached by structure that still points at
-   it (`ProfileDeleted`). Its placer names it `redactedRow`, keyed by the
-   actor's id — `row`'s rule names the handle, and a registered rule is never
-   reworded (ruling 56(c), `redactedAccount`'s precedent). */
+   it (`ProfileDeleted`). Each placer names it as its own node, keyed by the
+   actor's id — the opinions page `redactedRow`, the post's opinions sheet
+   `redactedOpinion` — because the live row's rule names the handle (`row`,
+   `opinion`), and a registered rule is never reworded (ruling 56(c),
+   `redactedAccount`'s precedent). */
 export function StanceRow({ name: nameGiven, handle, src, redacted = false, pDirected, pInterest, severed = false, onOpen, onOpenHistory, node, nodeKey }) {
   const name = redacted ? REDACTED_ACTOR_NAME : nameGiven;
   const zeroLabel = severed ? SEVERED_LABEL : EMPTY_PICK_LABEL;
@@ -70,8 +72,8 @@ export function StanceRow({ name: nameGiven, handle, src, redacted = false, pDir
     >
       <MonogramAvatar name={name} size={40} src={redacted ? undefined : src} redacted={redacted} node={node && "avatar"} />
       <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", ...(redacted ? { color: "var(--text-secondary)" } : null) }} data-node={node && "name"}>{name}</span>
-        {!redacted && <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>@{handle}</span>}
+        <span style={{ fontSize: "var(--text-label-large)", letterSpacing: "var(--text-label-large--letter-spacing)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", ...(redacted ? { color: "var(--text-secondary)" } : null) }} data-node={node && "name"}>{name}</span>
+        {!redacted && <span style={{ fontSize: "var(--text-label-small)", letterSpacing: "var(--text-label-small--letter-spacing)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>@{handle}</span>}
       </span>
       {!onOpenHistory && <StanceValue pDirected={pDirected} pInterest={pInterest} zeroLabel={zeroLabel} node={node && "value"} />}
     </button>

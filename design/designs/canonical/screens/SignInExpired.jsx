@@ -16,19 +16,25 @@
    carrying on, not starting over.
 
    EVERY CONTROL IS `SignIn`'s, and so is every outcome: the fields, the
-   remember switch, `Sign in` and the four ways round it. */
+   remember switch, `Sign in` and the four ways round it.
+
+   REGISTERED under the `signIn` prefix (round 28): `SignIn`'s names, the
+   signed-out sentence its `body`, standing where the welcome line stood. */
+export const NODE = "signIn";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
             margin: 0,
             fontSize: "var(--text-headline-small)",
+            letterSpacing: "var(--text-headline-small--letter-spacing)",
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Sign in to CoGra
         </h1>
@@ -36,32 +42,34 @@ export function Screen() {
           style={{
             margin: "8px 0 0",
             fontSize: "var(--text-body-medium)",
+            fontWeight: "var(--text-body-medium--font-weight)",
             lineHeight: "var(--text-body-medium--line-height)",
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           You&apos;ve been signed out. Sign in again to carry on.
         </p>
 
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-          <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="" />
-          <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="" />
-          <Checkbox label="Don't remember this account on this device" />
-          <WaitingCommit id="signin" label="Sign in" reason="Waiting for your email and password" />
+          <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="" node="email" />
+          <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="" node="password" />
+          <Checkbox label="Don't remember this account on this device" node="forget" />
+          <WaitingCommit id="signin" label="Sign in" reason="Waiting for your email and password" node="commit" />
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column" }}>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="forgot">
             Forgot password?
           </Button>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="invite">
             New here? Enter your invite
           </Button>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="browse">
             Just looking? Browse the feed →
           </Button>
-          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }}>
+          <Button variant="text" style={{ width: "100%", justifyContent: "flex-start", padding: 0 }} node="apk">
             On Android? Download the app (APK)
           </Button>
         </div>

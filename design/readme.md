@@ -945,11 +945,12 @@ paper over:
   because the two directions are different facts and the label has to
   say which one it counts; one merged "followers" figure would describe
   a different product, where a link is one-way and carries no opinion.
-  Each figure counts records, never a fold (open-questions Q35, closed
-  2026-10-28 under the autonomy order, jakob's confirmation pending):
-  the posts published, never their edits; the Opinion records toward
-  the person; the Opinion records they gave toward people — a revision
-  is one more. The figures are one tap target toward the
+  Each figure counts bundles, never records (jakob 2026-11-10): the
+  posts published, never their edits; `Opinions on them` the people who
+  hold an opinion on the person; `Opinions by them` the people they hold
+  an opinion on. One person's opinions toward one target are one
+  bundle, counted once however often they were revised; a revision count
+  belongs only inside that person's bundle view. The figures are one tap target toward the
   stances page. On another's profile the stance wears the wide anchor with
   Message beside it; one's own avatar wears the change badge (the
   standalone crop-and-seal shortcut). No cover image: the largest thing on
@@ -4020,8 +4021,10 @@ four-rung ladder.
   from the feed are Feed's stack, and one screen may sit in two tabs at
   two positions at once. The Profile TAB is your own profile; your own
   profile reached from a chip in the feed is still Feed's. The reel
-  stream is Feed's too, which is what its edge has said since the reel
-  round.
+  stream lights its origin's root, the stack of the list it was opened
+  from; an arrival with no origin, a shared link, lights Feed. A tag
+  page stays lit on the root it was opened from, and a stream opened
+  from a tag page lights that same root (jakob 2026-11-10).
 - **The compose slot has no ladder** — it is an action, not a
   destination, the deviation the master already declares, and the
   kept-draft rules govern what a second tap meets.
@@ -10482,8 +10485,10 @@ jakob after his hand test.
   stands, blessed; a `(0, 0)` pick over the standing an empty sign left
   still asks the walk-back — that record stands, and severance is a
   `(0, 0)` landing over anything standing.
-- **Every new string above is merged under the autonomy order, review
-  pending.** Backlog 147 banks the type sites round 20 left.
+- **Every new string above was merged under the autonomy order and is
+  blessed (jakob 2026-11-10)**, but the words of Cancel while Set signs
+  (`Signing…` under the face after a cancel) and their law, whose review
+  stays pending. Backlog 147 banks the type sites round 20 left.
 - **The gate**: edges hold at **2127**, flows at **227**, the registry
   at **100 screens**; no board added — two boards gain a chip.
 
@@ -10491,7 +10496,7 @@ jakob after his hand test.
 
 Seam 245's asks 9–13, under the same autonomy order: built, merged,
 reviewed by jakob after his hand test. Every new string is in copy-voice,
-marked *merged under the autonomy order, review pending*.
+marked *blessed (jakob 2026-11-10)*.
 
 - **The profile figures stand** (Q35 closed in docs/open-questions.md,
   jakob's confirmation pending): the header counts records, never a
@@ -10577,7 +10582,7 @@ from the tree and the bar's Explore slot opens `Explore`.
 
 Seam 248's undrawn states, under the same autonomy order: built, merged,
 reviewed by jakob after his hand test. Every new string is in its board's
-docblock and sidecar, *merged under the autonomy order, review pending*.
+docblock and sidecar, *blessed (jakob 2026-11-10)*.
 
 - **The thread is named.** `CommentsThreadSheet` registers as
   `postDetail.threadSheet` — its `title` and one `commentCard` per top-level
@@ -10633,8 +10638,7 @@ docblock and sidecar, *merged under the autonomy order, review pending*.
 
 Seam 248's wordings, sidecar confirms and contradictions, under the same
 autonomy order: built, merged, reviewed by jakob after his hand test.
-Every new string is in copy-voice, *merged under the autonomy order,
-review pending*.
+Every new string is in copy-voice, *blessed (jakob 2026-11-10)*.
 
 - **The words.** The kept picks' seal commits `Sign the picks` — its
   batch can hold a feeling; `A post` · `A comment` · `A person` name a
@@ -10677,8 +10681,7 @@ review pending*.
 
 Seam 250's two surfaces the web built before any round registered them,
 and the gaps their lanes found, under the same autonomy order. Every new
-string is in copy-voice, *merged under the autonomy order, review
-pending*.
+string is in copy-voice, *blessed (jakob 2026-11-10)*.
 
 - **The ids the web minted are the registry's**, with three departures,
   each the join law's: the face's row line and its Retry are named
@@ -10719,8 +10722,8 @@ pending*.
 
 Seam 252's registrations, rulings, geometry and undrawn states, under the
 same autonomy order: built, merged, reviewed by jakob after his hand test.
-Every new string is in its board's docblock and copy-voice, *merged under
-the autonomy order, review pending*.
+Every new string is in its board's docblock and copy-voice, *blessed
+(jakob 2026-11-10)*.
 
 - **A kept pick stands on every host.** The stance control's `pending` line
   registers wherever the control does: a `pick` chip (`none` · `key` ·
@@ -10786,6 +10789,120 @@ the autonomy order, review pending*.
   landing's `Try again`); flows hold at **227**, none re-blessed. The
   registry grows **140 → 143 screens**, **5599 → 5775** board paths,
   **1689 → 1750** distinct.
+
+### Round 28, the closing registrations and the whole roles — 2026-11-10
+
+Seam 254's registrations (A1–A3), android's five registry questions (item
+13) and the four masters' type roles (items 5–8), ruled by jakob 2026-11-10;
+backlog 147 finished in the same pass. Nothing is drawn differently except
+the type.
+
+- **The entry and settings boards register**, one prefix per surface:
+  `signIn` (with its error, signed-out and backoff states), `join`,
+  `inviteEntry` (`JoinInvalid` among them — it is the entry step answering a
+  link), `reset` (the request, the new password, the dead link), `verify`
+  (`Verified` and `VerifiedApp` join `VerifyExpired`), `settingsBackup`,
+  `yourKey` and `recoveryCode`. Names follow the credential family: fields
+  for what they hold, the proof `current`, the commit with its reason
+  `commit`, the quiet note `note`; the remember box is `forget`, as Settings
+  names the same words; the plain way on is `onward`. `NoticePanel`,
+  `NoticeLine` and `RecoveryCode` take `node`; the code master draws no box,
+  so the board names the card (`recoveryCode.code`) and the parts join under
+  it.
+- **A live commit is the waiting commit with nothing to wait for.** The error
+  states drew a bare button where their twins draw `WaitingCommit`; they now
+  draw the master with `waiting` off, so `.commit.action` is one path in both
+  states. The wrapper adds no geometry (measured, 0 boxes moved on the four
+  boards).
+- **A name never forbids its own words**, again: the account switch is
+  `signInDoor` and the key export's card `exportCard`, so the sidecars keep
+  `Sign in` and `actor key`.
+- **The wizard's picked sheet** is `composeDetails.pickedSheet` on
+  `ComposePicked`, `postEdit.pickedSheet`'s grammar: drawn once over the pick
+  step and raised from both stages, it keeps one path wherever it is raised.
+- **The profile comment card's parts.** `target` is the card's pointer, the
+  comment edit's own name; `removalMark` is the master's name already and
+  registers once the comments view draws a removed comment. The replies line
+  hangs under the card, outside its surface, so it is `viewReplies` beside
+  the card — `profile.comments.viewReplies`, keyed by the comment's id — and
+  the thread's is `postDetail.threadSheet.viewReplies`. The card's own ⋮
+  waits with the other host menus (backlog 149, each named).
+- **Android's questions, from precedent.** A group's heading is the group's
+  `label` (`postEdit.body.label` beside `.words`, as `postEdit.tags.label`),
+  never the field's own. A chip key is the board's state address, read from
+  that board's registry entry; one element keyed by different chips on two
+  boards is the law, not a drift. Parts drawn inside one line keep their
+  paths, and a node's two attributes are its whole identity — never its
+  nesting in a client's tree — so a × standing beside a merged picture node
+  still carries `…thumb.remove`. A card keyed by its author's handle collides
+  wherever one person stands twice, and both clients key every list card by
+  its wire id: the re-key is jakob's (seam 254 item 13, G4).
+- **The masters take their whole roles** (round 20's law): the fault line
+  draws body-medium's 20px leading and 0.25px tracking (−4px a line); the
+  waiting reason label-small's weight 500; the password input body-large's
+  24px leading and 0.5px tracking (+5px, the text field's height); the pending
+  line label-small's 16px (−8px a line). Measured headless, Figtree loaded.
+- **Backlog 147 closed.** 348 sites set size, leading, tracking and weight
+  from one role; 20 that set one part on purpose keep it. The collective
+  shifts, measured: body-medium lines take 0.25px tracking where they
+  inherited 0.5px (173 boards; widths, and 23 lines rewrap one shorter); the
+  header and band titles in title-large and headline-small lose the inherited
+  0.5px (151 and 52 boards, widths only); label-large controls that drew the
+  browser's leading measure 20px and 0.1px (166 boards, +2–3px); body-small
+  and label-medium lines that inherited 24px measure 16px (133 and 90 boards,
+  −8px a line); label-small lines take the role's weight 500 (119 boards,
+  widths only); inputs take body-large's 0.5px tracking (50 boards, widths
+  only).
+- **The gate**: edges hold at **2159**, flows at **227**, none re-blessed. The
+  registry grows **143 → 167 screens**, **5775 → 6096** board paths, **1750
+  → 1904** distinct.
+
+### Round 29, the review's first answers — 2026-11-10
+
+jakob's review of rounds 20–27 and his rulings on seam 254's drawn items,
+act 1: what was fully ruled.
+
+- **A commit never moves.** A state that adds lines above a foot scrolls
+  the fields under it, the post edits' reading: `CommentEditVideo`'s
+  gate had pushed `Sign the edit` 15px down, `ReplyVideo`'s refused
+  second clip pushed `Next` out of the frame, `ReplyMediaErrors`' five
+  refusals 10px down. Measured on every edit, compose, reply and seal
+  state: each commit now stands where its rest state puts it.
+- **A deleted holder's row on the post's opinions** is `ProfileStances`'
+  row: `postDetail.opinionsSheet.redactedOpinion`, keyed by the actor's
+  id — `opinion`'s rule names the handle, so it takes its own segment, as
+  `redactedRow` did — a door to `ProfileDeleted`, whose arrow reads
+  `Back to the post`. The ninth holder makes the post's count nine.
+- **The reply seal mirrors the post seal.** Its `tags` chip draws the
+  Tags row in both readings (the chips while they fit, `7 tags` and its
+  door), its `state` chip the two refusals: the unlanded citation's row
+  with `Remove it`, the commit staying, and `This shouldn't have
+  happened` in the commit's place with `Discard the reply`.
+  `ReplySeal.md` carries the post seal's lines at reply scale.
+- **A kept pick is drawn in reach.** `PostDetail`'s `key` and `review`
+  carry the page up 160px, `FeedScrolled`'s way; History and Saved are
+  tall boards and hold every pending line inside their frames.
+- **The stream lights its origin's root**; a shared link lights Feed, and
+  a tag page keeps the root it was opened from (*A stack is where a
+  screen was opened FROM*, `Reel.md`, `BottomNav`'s prompt).
+- **The profile's figures count bundles**: the people on each side, a
+  revision counted only inside one person's bundle (§7).
+- **The device's committed filter wins**: a newly saved default opens
+  only a feed with none committed (`FeedSheet.md`, `SettingsReading.md`).
+- **A words comment's edit takes a video** (backlog 148's (a)), as law in
+  `CommentEdit.md`; the staged line holds until the edit's video path
+  ships.
+- **The blessings.** Rounds 20–27's strings and calls are blessed (jakob
+  2026-11-10) but the words of Cancel while Set signs.
+- **Not settled here**: the seam's missing hairlines on `ExplorePerson`
+  draw at 1:1 and vanish only in a canvas zoomed below about half, a
+  raster's, not the board's; the reply seal's one-citation row (`Reference`,
+  its ×, no pair) against the post seal's name over its pair; how a words
+  comment's empty media block reads.
+- **The gate**: edges **2159 → 2166** (the reply seal's seven); flows hold
+  at **227**, none re-blessed. The registry holds at **167 screens**,
+  **6096 → 6102** board paths, **1904 → 1910** distinct
+  (`redactedOpinion` and its five parts).
 
 ---
 

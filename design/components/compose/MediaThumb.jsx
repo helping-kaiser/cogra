@@ -126,6 +126,7 @@ export function MediaThumb({
         <span
           style={{
             fontSize: "var(--text-label-small)",
+            fontWeight: "var(--text-label-small--font-weight)",
             lineHeight: "var(--text-label-small--line-height)",
             letterSpacing: "var(--text-label-small--letter-spacing)",
             color: "var(--text-secondary)",
@@ -250,6 +251,7 @@ export function MediaThumb({
             alignItems: "center",
             justifyContent: "center",
             fontSize: "var(--text-label-medium)",
+            letterSpacing: "var(--text-label-medium--letter-spacing)",
             lineHeight: "var(--text-label-medium--line-height)",
             fontWeight: 700,
           }}

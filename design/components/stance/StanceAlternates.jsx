@@ -60,7 +60,7 @@ function DirectEntry({ label, value, onChange, min = -1, max = 1, text }) {
   const [draft, setDraft] = React.useState(text ?? null);
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)" }}>
-      <label htmlFor={id} style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}>
+      <label htmlFor={id} style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", letterSpacing: "var(--text-label-large--letter-spacing)", fontWeight: "var(--text-label-large--font-weight)" }}>
         {label}
       </label>
       <input
@@ -87,6 +87,9 @@ function DirectEntry({ label, value, onChange, min = -1, max = 1, text }) {
           padding: "8px",
           fontFamily: "var(--font-sans)",
           fontSize: "var(--text-body-medium)",
+          lineHeight: "var(--text-body-medium--line-height)",
+          letterSpacing: "var(--text-body-medium--letter-spacing)",
+          fontWeight: "var(--text-body-medium--font-weight)",
         }}
       />
     </div>
@@ -156,6 +159,9 @@ function AlternateInputs({ showing, setShowing, pick, onPick, axes, ranges, axis
           marginTop: "var(--space-2)",
           color: "var(--text-secondary)",
           fontSize: "var(--text-label-medium)",
+          lineHeight: "var(--text-label-medium--line-height)",
+          letterSpacing: "var(--text-label-medium--letter-spacing)",
+          fontWeight: "var(--text-label-medium--font-weight)",
         }}
       >
         {showing === "sliders" ? (one ? "Type an exact value" : "Type exact values") : one ? "Use a slider" : "Use sliders"}
@@ -305,6 +311,8 @@ export function StanceAlternates({
               color: "var(--primary)",
               fontFamily: "var(--font-sans)",
               fontSize: "var(--text-label-large)",
+              lineHeight: "var(--text-label-large--line-height)",
+              letterSpacing: "var(--text-label-large--letter-spacing)",
               fontWeight: "var(--text-label-large--font-weight)",
             }}
           >
@@ -316,6 +324,7 @@ export function StanceAlternates({
             margin: 0,
             paddingRight: "40px",
             fontSize: "var(--text-title-large)",
+            letterSpacing: "var(--text-title-large--letter-spacing)",
             lineHeight: "var(--text-title-large--line-height)",
             fontWeight: "var(--text-title-large--font-weight)",
           }}
@@ -329,7 +338,7 @@ export function StanceAlternates({
       {zeroHelp ? (
         <div style={{ minHeight: slotHeight ?? undefined, display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
           {zeroHelp.map((line) => (
-            <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
+            <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)" }}>
               <HelpLine line={line} />
             </p>
           ))}
@@ -352,7 +361,7 @@ export function StanceAlternates({
           }}
         >
           {alternatesHelp(axes).map((line) => (
-            <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
+            <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)" }}>
               <HelpLine line={line} />
             </p>
           ))}

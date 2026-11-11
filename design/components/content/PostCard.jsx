@@ -223,6 +223,8 @@ export function PostCard({
   const descriptionStyle = {
     margin: 0,
     fontSize: "var(--text-body-medium)",
+    letterSpacing: "var(--text-body-medium--letter-spacing)",
+    fontWeight: "var(--text-body-medium--font-weight)",
     // The page ground sets `body-large` leading on everything unclassed, which
     // on a two-line caption at body-medium reads as a gap, not a paragraph. The
     // role's own line-height comes with the role.
@@ -335,7 +337,7 @@ export function PostCard({
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
         {lead ?? (author && <ActorChip handle={author.handle} displayName={author.displayName} node={node && "authorChip"} />)}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
-          {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "timestamp"}>{timestamp}</span>}
+          {timestamp && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", color: "var(--text-secondary)" }} data-node={node && "timestamp"}>{timestamp}</span>}
           {/* ON A DETAIL SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW — a dot in
               the header and another in the card would be two menus for one post.
               The summary card keeps its own: in a feed there is no header to
@@ -439,6 +441,8 @@ export function PostCard({
             cursor: "pointer",
             fontFamily: "var(--font-sans)",
             fontSize: "var(--text-body-small)",
+            letterSpacing: "var(--text-body-small--letter-spacing)",
+            fontWeight: "var(--text-body-small--font-weight)",
             lineHeight: "var(--text-body-small--line-height)",
             color: "var(--text-secondary)",
             textAlign: "left",
@@ -484,6 +488,8 @@ export function PostCard({
             cursor: "pointer",
             fontFamily: "var(--font-sans)",
             fontSize: "var(--text-body-small)",
+            letterSpacing: "var(--text-body-small--letter-spacing)",
+            fontWeight: "var(--text-body-small--font-weight)",
             lineHeight: "var(--text-body-small--line-height)",
             color: "var(--text-secondary)",
             textAlign: "left",
@@ -587,6 +593,8 @@ export function PostCard({
                 color: "var(--text-secondary)",
                 fontFamily: "var(--font-sans)",
                 fontSize: "var(--text-label-large)",
+                lineHeight: "var(--text-label-large--line-height)",
+                letterSpacing: "var(--text-label-large--letter-spacing)",
                 fontWeight: "var(--text-label-large--font-weight)",
                 cursor: "pointer",
               }}
