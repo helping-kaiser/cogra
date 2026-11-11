@@ -9757,7 +9757,9 @@ each).
   amendment to the viewer's black-to-the-edges. Boards stay the
   inset-zero case (*The viewer-grammar close*).
 - **The stream is the list it was opened from**, narrowed to its portrait
-  clips in that list's order — the feed, History, a profile's posts. It
+  clips in that list's order — the feed, History, a profile's posts, and
+  a tag's page, whose stream carries only the clips tagged with that tag
+  (jakob 2026-11-11). It
   pages vertically both ways from the tapped clip, never wraps and never
   moves on by itself; the last clip carries `That's the last clip here.`
   at its caption's head, and a load that does not come keeps the clip
