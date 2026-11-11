@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -204,7 +205,7 @@ fun ProfileRoute(
         onMessage = onMessage,
         onOpenOpinions = onOpenOpinions,
         cardsHost = cardsHost,
-        seen = ProfileSeen(viewModel::onCardsSeen, viewModel::onCardEdgesSeen, viewModel::onSeenCheckpoint),
+        seen = viewModel.seen,
         onMention = onMention,
     )
 }
@@ -652,31 +653,47 @@ private fun ProfileColumn(
         if (state.listed == 0 && !state.rowsLoading && !state.pageFailed) {
             item(key = "empty") { TabEmpty(state.tab, state.applicant && state.own, view) }
         }
-        when (state.tab) {
-            ProfileTab.POSTS -> items(state.posts, key = { postKey(it.id) }) { post ->
-                ScrollStageRow(postKey(post.id)) {
-                    Box(Modifier.padding(bottom = LIST_GAP)) { cards.post(post, view / "card") }
-                }
-            }
-            ProfileTab.COMMENTS -> items(state.comments, key = { commentKey(it.comment.id) }) { listed ->
-                ScrollStageRow(commentKey(listed.comment.id)) {
-                    Box(Modifier.padding(bottom = LIST_GAP)) {
-                        cards.comment(listed, view / "commentCard", view / "viewReplies", lockedReply)
-                    }
-                }
-            }
-            ProfileTab.EVERYTHING -> itemsIndexed(state.rows, key = { _, row -> row.id }) { index, row ->
-                Box(Modifier.padding(bottom = LIST_GAP)) {
-                    ChronicleAct(row, index + 1, state.own, now, view / "act", actions.onOpenPost)
-                }
-            }
-        }
+        tabItems(state, view, cards, lockedReply, now, actions.onOpenPost)
         item(key = "tail") {
             ChronicleTail(
                 paging = state.rowsLoading,
                 failed = state.pageFailed,
                 onRetry = actions.onRetryPage,
             )
+        }
+    }
+}
+
+/**
+ * THE LIST THE TAB NAMES: the post cards (ProfilePosts.md:3), the comment
+ * cards (ProfileComments.md:3), or the chronicle's acts (Profile.md:23), each
+ * card on the list's one stage under its own key.
+ */
+private fun LazyListScope.tabItems(
+    state: ProfileUiState,
+    view: DataNode,
+    cards: ProfileCards,
+    lockedReply: (() -> Unit)?,
+    now: Instant,
+    onOpenPost: (String) -> Unit,
+) {
+    when (state.tab) {
+        ProfileTab.POSTS -> items(state.posts, key = { postKey(it.id) }) { post ->
+            ScrollStageRow(postKey(post.id)) {
+                Box(Modifier.padding(bottom = LIST_GAP)) { cards.post(post, view / "card") }
+            }
+        }
+        ProfileTab.COMMENTS -> items(state.comments, key = { commentKey(it.comment.id) }) { listed ->
+            ScrollStageRow(commentKey(listed.comment.id)) {
+                Box(Modifier.padding(bottom = LIST_GAP)) {
+                    cards.comment(listed, view / "commentCard", view / "viewReplies", lockedReply)
+                }
+            }
+        }
+        ProfileTab.EVERYTHING -> itemsIndexed(state.rows, key = { _, row -> row.id }) { index, row ->
+            Box(Modifier.padding(bottom = LIST_GAP)) {
+                ChronicleAct(row, index + 1, state.own, now, view / "act", onOpenPost)
+            }
         }
     }
 }

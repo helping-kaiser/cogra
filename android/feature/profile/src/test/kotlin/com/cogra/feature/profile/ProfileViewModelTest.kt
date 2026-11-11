@@ -377,8 +377,8 @@ class ProfileViewModelTest {
         val vm = viewModel()
         vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onCardsSeen(listOf("p1", "c1"))
-        vm.onSeenCheckpoint()
+        vm.seen.onCardsSeen(listOf("p1", "c1"))
+        vm.seen.onCheckpoint()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(history.calls).containsExactly(listOf("p1", "c1"))
     }

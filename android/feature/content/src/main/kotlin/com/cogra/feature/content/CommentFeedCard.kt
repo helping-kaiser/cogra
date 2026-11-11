@@ -166,24 +166,7 @@ internal fun CommentFeedCard(
                 ownPart()
             } else if (target != null) {
                 HeadRow(target, testTagPrefix, onOpenTarget)
-                // THE CONNECTOR: a hairline rule down from the head's mark —
-                // centred on its 32dp tile — to the comment, hung inset beside it.
-                // Drawn behind the hung part rather than sized by an intrinsic
-                // pass: the part holds the tags line, whose measured fold reads
-                // its constraints and so answers no intrinsic query.
-                val rule = MaterialTheme.colorScheme.outlineVariant
-                Column(
-                    modifier = Modifier
-                        .padding(start = CONNECTOR_INSET)
-                        .drawBehind {
-                            val x = CONNECTOR.toPx() / 2
-                            drawLine(rule, Offset(x, 0f), Offset(x, size.height), strokeWidth = CONNECTOR.toPx())
-                        }
-                        .padding(start = CONNECTOR + HUNG_INSET),
-                    verticalArrangement = Arrangement.spacedBy(Space.x3),
-                ) {
-                    ownPart()
-                }
+                HungOnTheConnector(ownPart)
             } else {
                 ownPart()
             }
@@ -197,6 +180,29 @@ internal fun CommentFeedCard(
             // this comment that did not go through.
             ComfortLine(comment.id, "${testTagPrefix}_row_line")
         }
+    }
+}
+
+/**
+ * THE CONNECTOR: a hairline rule down from the head's mark — centred on its
+ * 32dp tile — to the comment, hung inset beside it. Drawn behind the hung part
+ * rather than sized by an intrinsic pass: the part holds the tags line, whose
+ * measured fold reads its constraints and so answers no intrinsic query.
+ */
+@Composable
+private fun HungOnTheConnector(part: @Composable () -> Unit) {
+    val rule = MaterialTheme.colorScheme.outlineVariant
+    Column(
+        modifier = Modifier
+            .padding(start = CONNECTOR_INSET)
+            .drawBehind {
+                val x = CONNECTOR.toPx() / 2
+                drawLine(rule, Offset(x, 0f), Offset(x, size.height), strokeWidth = CONNECTOR.toPx())
+            }
+            .padding(start = CONNECTOR + HUNG_INSET),
+        verticalArrangement = Arrangement.spacedBy(Space.x3),
+    ) {
+        part()
     }
 }
 

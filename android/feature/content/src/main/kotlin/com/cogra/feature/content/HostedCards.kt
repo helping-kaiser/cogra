@@ -155,26 +155,10 @@ internal fun HostedCardsScope(
     )
     val cards = HostedCards(
         post = { post, node ->
-            PostCard(
-                post = post,
-                onClick = { doors.onOpenPost(post.id) },
-                onOpenComments = {
-                    commentsPost = post
-                    actions.onOpenComments(post.id)
-                },
-                onOpenPost = doors.onOpenPost,
-                onOpenActor = doors.onOpenActor,
-                onOpenTopic = doors.onOpenTopic,
-                onShare = { id -> actions.onShare(actions.shareUrls.post(id)) },
-                viewerId = actions.viewerId,
-                onEdit = actions.onEditPost,
-                onCite = actions.onCitePost,
-                onReport = { actions.onReport(post.id) },
-                revealed = actions.reveals.isRevealed(post.id, post.sensitiveMark()),
-                onReveal = { actions.onReveal(post.id, post.sensitiveMark()) },
-                stanceControl = actions.stanceControl,
-                placement = hostedPlacement(node, tag),
-            )
+            HostedPostCard(post, node, tag, actions) {
+                commentsPost = post
+                actions.onOpenComments(post.id)
+            }
         },
         comment = { listed, node, repliesNode, lockedReply ->
             HostedCommentCard(listed, node, repliesNode, tag, routes.signedIn, lockedReply, actions)
@@ -204,6 +188,35 @@ internal fun HostedCardsScope(
             reportDoor(routes.onRequireAccount, "${tag}_report_sheet")(postId, { reportFor = null }, notify)
         }
     }
+}
+
+/** A hosted post as the feed's own card; its count raises the thread over the list through [onOpenComments]. */
+@Composable
+private fun HostedPostCard(
+    post: PostView,
+    node: DataNode,
+    tag: String,
+    actions: CardActions,
+    onOpenComments: () -> Unit,
+) {
+    val doors = actions.doors
+    PostCard(
+        post = post,
+        onClick = { doors.onOpenPost(post.id) },
+        onOpenComments = onOpenComments,
+        onOpenPost = doors.onOpenPost,
+        onOpenActor = doors.onOpenActor,
+        onOpenTopic = doors.onOpenTopic,
+        onShare = { id -> actions.onShare(actions.shareUrls.post(id)) },
+        viewerId = actions.viewerId,
+        onEdit = actions.onEditPost,
+        onCite = actions.onCitePost,
+        onReport = { actions.onReport(post.id) },
+        revealed = actions.reveals.isRevealed(post.id, post.sensitiveMark()),
+        onReveal = { actions.onReveal(post.id, post.sensitiveMark()) },
+        stanceControl = actions.stanceControl,
+        placement = hostedPlacement(node, tag),
+    )
 }
 
 /**

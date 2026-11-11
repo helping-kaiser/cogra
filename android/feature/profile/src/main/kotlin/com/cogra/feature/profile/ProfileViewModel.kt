@@ -221,15 +221,19 @@ class ProfileViewModel @Inject constructor(
         loadRows(reset = s.listed == 0 && s.endCursor == null)
     }
 
-    /** Post and comment cards that stood fully in the viewport, in order (History.md:11). */
-    fun onCardsSeen(nodeIds: List<String>) = seenTracker.saw(nodeIds)
-
-    /** Tall cards with an edge on screen; each joins once both edges have been (History.md:13). */
-    fun onCardEdgesSeen(sightings: List<EdgeSighting>) =
-        sightings.forEach { seenTracker.sawEdges(it.nodeId, top = it.top, bottom = it.bottom) }
-
-    /** The reading paused — the scroll rested or the reader left. */
-    fun onSeenCheckpoint() = seenTracker.flush()
+    /**
+     * What the list reports as the reader sees it: post and comment cards
+     * that stood fully in the viewport (History.md:11), tall cards whose two
+     * edges have each been on screen (:13), and the reading's pause, which
+     * sends them.
+     */
+    val seen = ProfileSeen(
+        onCardsSeen = { nodeIds -> seenTracker.saw(nodeIds) },
+        onCardEdgesSeen = { sightings: List<EdgeSighting> ->
+            sightings.forEach { seenTracker.sawEdges(it.nodeId, top = it.top, bottom = it.bottom) }
+        },
+        onCheckpoint = { seenTracker.flush() },
+    )
 
     /**
      * The header's figures, read beside the list. A failed read leaves
