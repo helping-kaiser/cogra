@@ -13,7 +13,7 @@ export interface SeveranceConfirmProps {
   alreadySevered?: boolean;
   /** The signing is in flight (past 200ms): the confirm reads the family's
    *  present participle ("Walking it back…") and goes inert, never dimmed.
-   *  Nothing cancels it: `Keep it` reads `Close` and, with the scrim, Escape
+   *  Nothing cancels it: `Keep it` reads `Close` from the press itself and, with the scrim, Escape
    *  and Back, closes the dialog and the pad, the wait passing to the
    *  target's row. */
   busy?: boolean;

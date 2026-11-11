@@ -8227,12 +8227,14 @@ newer-version message, which he widened.
 - **The post seal's key notice keeps the header's "?"** beside its own,
   by the stopper exception, as its reply-scale twin does.
 - **A signed reply lands by scrolling the thread to its card** (K6.6's
-  direction): the return anchors to the new card at its branch's end.
+  direction): the return anchors to the new card on its parent.
   `ReplySettled` keeps its drawn offset.
-- **While a seal signs, it holds the reader.** For the label swap's
-  duration the back arrow, Back and the X are inert with the commit; the
-  fact rows stay readable; an app killed mid-sign says the outcome on
-  the next open with the ordinary settled or failure notice. Past 5s
+- **Once a seal's commit is pressed, the way out only closes it** (round
+  37, jakob 2026-11-11). From the press Back reads `Close` and the X is named
+  so; they and the back arrow close the seal and the act goes on, its wait
+  and its answer where it lands (`SigningAfterClose`); a seal left open keeps
+  its fact rows readable; an app killed mid-sign says the outcome on the
+  next open where the act lands. Past 5s
   the acts card's subline swaps to `Still signing — the network is slow
   right now.` in olive `--tertiary` and nothing feigns progress
   (`SealSigningSlow`, `ActsCard`'s `noteTone`) — §4's *Loading* names it
@@ -10491,11 +10493,11 @@ jakob after his hand test.
   spent.` where the fault line stands — the act dimmed, no Retry, `Keep
   it` the way back. The board's `answer` chip draws it.
 - **The way out while Set signs.** Once Set is pressed nothing cancels
-  the act: past 200ms Cancel reads `Close`, and it, the press outside, Back
-  and Escape only close the pad; the wait passes to the target's row, a
+  the act: from the press Cancel reads `Close`, and it, the press outside,
+  Back and Escape only close the pad; the wait passes to the target's row, a
   hold's (`Signing…`, then the face and the snackbar, or `That didn't
   sign.` with a Retry that asks the same pick again). `PadFailed`'s
-  `moment` chip draws `setting` and `closed` (round 34).
+  `moment` chip draws `pressed`, `setting` and `closed` (rounds 34, 37).
 - **The key-absent pad's "?"** says only what its notice does not: where
   the key lives, and what waits for the restore.
 - **The target label's family**: `this post`, `this comment`, `@ada`,
@@ -11086,11 +11088,10 @@ wait (network issues) but the act is done"; one rule for every signing
 surface.
 
 - **Once a commit is pressed, the act is done: nothing cancels it.** The
-  way out only closes the surface so the reader need not wait. Past 200ms,
-  beside the in-flight label, the control that read `Cancel` or `Keep it`
-  reads `Close` in the same place, live and never dimmed; inside the 200ms
-  nothing on screen changes, and a press on the way out closes the surface
-  all the same.
+  way out only closes the surface so the reader need not wait. From the
+  press itself the control that read `Cancel` or `Keep it` reads `Close` in
+  the same place, live and never dimmed (round 37); the in-flight label
+  stands beside it once 200ms pass.
 - **The pad and the alternates.** Closed mid-signing, the wait passes to
   the target's row as a hold's (`Signing…`, then the face and the
   snackbar, or `That didn't sign.` with Retry). `StanceControl`'s and
@@ -11225,6 +11226,56 @@ which keeps the row), and two fixes to the written law (backlog 149).
   board paths, **1934 → 1972** distinct — `history.menuSheet.*`,
   `saved.menuSheet.*`, `tagPage.menuSheet.*`, the profile menu's card rows
   and `feed.menuSheet.mention` added, no path, key or key rule changed.
+
+### Round 37, Close on every signing surface; the act shows where it lands — 2026-11-11
+
+jakob's answers to round 34's four questions (Q34-1 "b) sounds best please
+go for this option first", Q34-2 "yep", Q34-3 "yes", Q34-4 "swap at the
+press everything else would be missleading").
+
+- **The way out reads `Close` from the press**, the one named exception to
+  the 200ms law: the commit's own in-flight label still waits the 200ms.
+  `PadFailed`'s `moment` chip gains `pressed` (`Close` beside `Set`);
+  `StanceControl`'s and `StanceAlternates`' `signing` gain `"pressed"`. The
+  dialogs' drawn waiting states already showed `Close` and gain no setting.
+- **The pattern: an act's wait and its failure where it lands**
+  (`SigningAfterClose`, the patterns page). The wait is the commit's own
+  in-flight label in the pending marker's quiet register where the act will
+  show — a post's `Signing and publishing…` at the feed's head, a reply's
+  `Signing comment…` on its parent, an edit's `Signing…` under the
+  edited card; nothing stands as a card before its signature. The failure
+  stands in the same place in the failure voice with `Retry`: an edit's is the
+  row's `That didn't sign.`; a post's and a reply's, which never became a
+  card, are `Your post didn't sign.` and `Your comment didn't sign.`
+  (*drafted — review-pending*). A post's draft stays on the device until the
+  signature is taken, so New post's draft card reaches it. Never the
+  snackbar.
+- **Every seal and edit closes from the press**: Back reads `Close`, the X is
+  named so, and they and the back arrow close the surface while the act goes
+  on. Each board gains a `signing` setting (`ComposeSeal`, `ReplySeal`,
+  `ComposeSealUploading`, `ReplySealUploading`, `ProfileEditSeal`,
+  `AvatarSeal`, `KeptPicksSeal` on `state`; `CommentEdit`,
+  `CommentEditVideo`, `EditComposeVideo`, `EditWords` on `signing`);
+  `EditCompose`'s `signing: slow`, `SealSigning` and `SealSigningSlow`
+  already drew it. A press held at the upload gate is the act: Close leaves,
+  the uploads finish and the signing proceeds; an upload failing after Close
+  is the post's or the reply's failure in the pattern. `SealFooter` and
+  `WizardHeader` gain `closing`. The profile change's landing place (backlog
+  165) and the kept picks' failure place (166) wait for jakob.
+- **The handle change** leaves the dialog and the form for settings; the
+  Handle row carries `Changing handle…`, `That didn't go through.` with
+  `Retry`, and `That handle is taken.`, the row still opening the form
+  (`Settings`' `handle` chip).
+- **The remove and reject dialogs** read `Close` from the press; their act's
+  wait stands on its row (`Removing…`, `Closing it…`), each dialog's
+  `answer` chip drawing `removing` or `closing`; the failure's words on the
+  row wait for jakob (backlog 167). Backlog 155 and 156 close.
+- **The gate**: one board added, `SigningAfterClose`, a reference plate on
+  the patterns page; edges **2178 → 2179** (`Settings`' handle `Retry`, a
+  self edge), the seals' Back edges gaining their Close case; flows hold at
+  **227**. The signing, removing and closing copies and the Handle row's
+  states are drawn unnamed beside the named controls, so the registry holds
+  at **169 screens**, **6134** board paths, **1934** distinct.
 
 ### Round 38, the password twice and the people you let in — 2026-11-11
 

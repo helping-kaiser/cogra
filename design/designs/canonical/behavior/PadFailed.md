@@ -32,13 +32,15 @@ WHEN tap the pad's ? -> the pad's four help lines replace its body in place AND 
 
 ALWAYS nothing cancels the act GIVEN Set was pressed
 
-WHEN the pad's signing has not answered 200ms after Set -> Set reads Setting… and refuses a second press AND the pick, the field and the landing line stay as they were AND Cancel reads Close in the same place AND NEVER Set dims AND NEVER a spinner appears
+WHEN press Set -> Cancel reads Close in the same place from the press itself, as the moment chip's pressed draws it AND Set keeps its own label and refuses a second press AND the pick, the field and the landing line stay as they were
+
+WHEN the pad's signing has not answered 200ms after Set -> Set reads Setting… beside Close AND NEVER Set dims AND NEVER a spinner appears
 
 WHEN tap Close GIVEN Set is waiting on its signing -> the pad closes AND the act goes on AND the line under the target's face reads Signing… in the pending marker's quiet register AND the anchor refuses a second hold until the signing answers AND NEVER the face moves before the signature is taken
 
 WHEN press outside the pad, press the system's Back or press Escape GIVEN Set is waiting on its signing -> the pad closes as Close closes it AND the act goes on, carried by the target's row
 
-WHEN tap Cancel, press outside the pad, press the system's Back or press Escape GIVEN Set was pressed under 200ms ago -> the pad closes as Close closes it AND the act goes on, carried by the target's row AND NEVER the act is cancelled
+WHEN tap Close, press outside the pad, press the system's Back or press Escape GIVEN Set was pressed under 200ms ago -> the pad closes AND the act goes on, carried by the target's row AND NEVER the act is cancelled
 
 WHEN the signing is taken GIVEN the pad was closed while it signed -> the face on the target moves to the new opinion AND the line under it goes AND the snackbar confirms the signature
 
@@ -46,7 +48,9 @@ WHEN the signing does not go through GIVEN the pad was closed while it signed ->
 
 WHEN tap Retry on the row line GIVEN the pad was closed while it signed -> the same pick is signed again AND NEVER the hold's +0.10 / +0.10 is signed in its place
 
-WHEN the alternates' signing has not answered 200ms after Sign it GIVEN the reader's input is sliders or typed values -> Sign it reads Signing… and refuses a second press AND Cancel reads Close in the same place AND NEVER Sign it dims
+WHEN press Sign it GIVEN the reader's input is sliders or typed values -> Cancel reads Close in the same place from the press itself AND Sign it keeps its own label and refuses a second press
+
+WHEN the alternates' signing has not answered 200ms after Sign it GIVEN the reader's input is sliders or typed values -> Sign it reads Signing… beside Close AND NEVER Sign it dims
 
 WHEN tap Close in the alternates GIVEN Sign it is waiting on its signing -> the alternates close as Close closes the pad AND the act goes on, carried by the target's row
 

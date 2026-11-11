@@ -14,16 +14,13 @@
    law that a wait is shown in words. It refuses a second press from the first
    one — that part shows nothing, and needs nothing shown.
 
-   THE WAYS OUT LOCK WITH IT (jakob 2026-10-01, backlog item 117). For the
-   swap's duration the header's back arrow, the foot's Back and the header's X
-   are inert too: signing is seconds, and leaving mid-sign would orphan the
-   outcome. The fact rows stay readable. An app killed mid-sign says the
-   outcome on the next open with the ordinary settled or failure notice.
-
-   THE LOCKED WAYS OUT DO NOT DIM (jakob 2026-10-02, curate 3). They are inert
-   for seconds, and a dimmed arrow or X reads as broken, not as waiting — so
-   they keep their face, as the commit keeps its own, and nothing about them
-   is drawn differently on this plate.
+   THE WAY OUT ONLY CLOSES (jakob 2026-11-11: once someone submits there is
+   no cancel; Close on every seal). From the press itself the foot's Back
+   reads `Close`, live and never dimmed, and the header's X is named so; it,
+   the X and the back arrow close the seal and the post goes on, its wait and
+   its answer at the feed's head (`SigningAfterClose`). A seal left open keeps
+   its fact rows readable. An app killed mid-sign says the outcome on the
+   next open where the act lands.
 
    PAST 5s THE SUBLINE SAYS SO (`SealSigningSlow`): an honest olive line under
    the total, never a progress bar the signing cannot measure.

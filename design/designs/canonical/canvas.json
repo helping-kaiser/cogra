@@ -1797,7 +1797,7 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 3562,
+      "h": 3601,
       "page": "comments",
       "title": "Comments · flow map"
     },
@@ -1869,7 +1869,7 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 8440,
+      "h": 8496,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -2273,6 +2273,15 @@
       "file": "PadFailed.dc.html",
       "title": "Pad · the signing didn't go through",
       "x": 1920,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SigningAfterClose.dc.html",
+      "title": "Signing · after Close, where the act lands",
+      "x": 2880,
       "y": 964,
       "w": 390,
       "h": 844,
