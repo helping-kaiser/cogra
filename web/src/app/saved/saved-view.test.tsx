@@ -31,9 +31,10 @@ import {
   SavedScreen,
 } from "./saved-view";
 
+const push = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
+  useRouter: () => ({ push, replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
 }));
 
 const server = startMswServer(...stanceHandlers());
@@ -312,6 +313,20 @@ describe("SavedScreen — a feed of kept things", () => {
     expect(screen.getByTestId("saved-person-u3-link")).toHaveAttribute("href", "/u/mira?from=saved");
   });
 
+  it("an_author_chip_opens_the_profile_its_back_arrow_reading_back_to_saved", async () => {
+    // ProfileOther.md:73: "ALWAYS the back arrow reads … Back to Saved from
+    // Saved" — the chip's door carries the origin, so the profile names it and
+    // keeps Profile lit (shell.test.tsx, `from=saved`).
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    expect(screen.getByTestId(byNode("saved.card.authorChip", "p1"))).toHaveAttribute("href", expect.stringMatching(/^\/u\/[^?]+\?from=saved$/));
+    expect(screen.getByTestId(byNode("saved.commentCard.authorChip", "c1"))).toHaveAttribute(
+      "href",
+      expect.stringMatching(/^\/u\/[^?]+\?from=saved$/),
+    );
+  });
+
   it("the_back_arrow_reads_back_to_your_profile", async () => {
     serve(THREE);
     renderWithProviders(<SavedScreen />, { store: signedIn() });
@@ -357,6 +372,17 @@ describe("SavedScreen — the unsave is the card's own ⋮ first row", () => {
     expect(commentMenu()[0]).toHaveTextContent("Unsave");
     fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
     expect(personMenu()[0]).toHaveTextContent("Unsave");
+  });
+
+  // ProfileMenu.md:17, on the profile card's own ⋮ (FeedProfileShapes.md).
+  it("a_person_cards_mention_opens_the_composer_with_the_person_staged", async () => {
+    push.mockClear();
+    serve(THREE);
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    personMenu();
+    fireEvent.click(screen.getByTestId("saved-person-u3-menu-mention"));
+    expect(push).toHaveBeenCalledWith("/compose?reference=u3");
   });
 
   it("unsave_takes_the_card_and_undo_puts_it_back_where_it_was", async () => {

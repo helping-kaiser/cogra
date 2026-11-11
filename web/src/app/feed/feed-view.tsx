@@ -1081,6 +1081,9 @@ export function FeedView({
                   stream={{ href: streamHref(post.id), onOpen: () => openFeedStream(post.id) }}
                   testId={`feed-post-${post.id}`}
                   authorTestId={`feed-author-${post.id}`}
+                  // The tag chips' doors name the feed (TagPage.md:35), where a
+                  // cold tag page would read `Back to Explore`.
+                  doorFrom={FROM}
                   stanceTestId={`feed-stance-${post.id}`}
                   comments={
                     liveComments?.id === post.id ? liveComments.total : post.comments.totalCount

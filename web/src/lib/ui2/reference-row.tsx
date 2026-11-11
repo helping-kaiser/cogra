@@ -42,7 +42,7 @@ function Mark({
   redacted: boolean;
   node?: DataNode;
 }) {
-  if (kind === "person") return <MonogramAvatar name={name} src={src} size={32} redacted={redacted} node={node} />;
+  if (kind === "person") return <MonogramAvatar name={name} src={src} size={32} tier="md" redacted={redacted} node={node} />;
   // A result list stands off any card, so the tile keeps its own tone (`onCard`).
   return <NodeMark kind={kind} src={src} redacted={redacted} onCard={false} node={node} />;
 }
@@ -79,7 +79,7 @@ function PairValue({
       {...testAttributes(node)}
     >
       <span aria-hidden="true" className="inline-flex items-center gap-1">
-        <span className="text-[length:var(--text-body-medium)] [line-height:1]" {...testAttributes(part(node, "face"))}>
+        <span className="text-body-medium [line-height:1]" {...testAttributes(part(node, "face"))}>
           {anchor.emoji}
         </span>
         <span className="cg-exact" {...testAttributes(part(node, "exact"))}>

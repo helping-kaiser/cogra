@@ -16,7 +16,9 @@ use crate::l1::L1Boundary;
 
 /// Default staged-write GC bound, in epochs (data-model.md "Staged
 /// writes"; overridden by STAGED_WRITE_GC_EPOCHS — development.md).
-pub const DEFAULT_GC_AFTER_EPOCHS: i64 = 8;
+/// Epochs close on the clock, so the bound is a wall-time window: about
+/// one hour at the stand-in's 3-second clock.
+pub const DEFAULT_GC_AFTER_EPOCHS: i64 = 1_200;
 
 #[derive(Debug, thiserror::Error)]
 pub enum IngestError {

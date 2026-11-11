@@ -41,7 +41,6 @@ import com.cogra.core.designsystem.v2.media.imageModel
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
-import com.cogra.core.designsystem.v2.token.TypeTokens
 
 /**
  * Writing a description — a picture's alt text, or a clip's one description
@@ -192,7 +191,7 @@ private fun DescribeHeader(video: Boolean, onHelp: (() -> Unit)?) {
             )
             Text(
                 text = "Read aloud to people who can't see it.",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

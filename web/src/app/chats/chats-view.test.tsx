@@ -27,6 +27,8 @@ describe("ChatsView", () => {
   it.each([
     ["profile", "/profile", "Back to your profile"],
     ["u:ada", "/u/ada", "Back to the profile"],
+    // The profile returns opened as it was, its own origin kept (ChatsComingSoon.md:21).
+    ["u:ada/saved", "/u/ada?from=saved", "Back to the profile"],
   ])("names the origin it was opened from (%s)", (from, href, label) => {
     render(<ChatsView from={from} />);
     const back = screen.getByTestId("chats-back");

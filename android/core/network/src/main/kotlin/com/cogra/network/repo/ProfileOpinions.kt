@@ -108,7 +108,6 @@ private fun OpinionRecordFields.toRecord(holderId: String, person: OpinionPerson
     severed = severed,
     payloadMarked = payloadMarked,
     landingEpoch = landingEpoch,
-    actTime = actTime,
     position = position,
 )
 

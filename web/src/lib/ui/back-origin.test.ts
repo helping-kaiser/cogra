@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { backFor, carriedOrigin, personOrigin, tagOrigin } from "./back-origin";
+import { backFor, carriedOrigin, EXPLORE_COLD, personOrigin, postOrigin, tagOrigin } from "./back-origin";
 
 // The origin-naming table (design/readme.md "Back labels"; ProfileOther.md:63;
 // Profile.md: a chronicle card's post; ChatsComingSoon.md:15-17).
@@ -84,5 +84,24 @@ describe("backFor", () => {
 
   it("never builds a profile link from an empty handle", () => {
     expect(backFor("u:")).toEqual({ href: "/feed", label: "Back to feed" });
+  });
+
+  // TagPage.md:37: a tag page entered with no history reads Back to Explore.
+  it("wears the cold label a screen names when nothing is behind it", () => {
+    expect(backFor(null, EXPLORE_COLD)).toEqual({ href: "/explore", label: "Back to Explore" });
+    expect(backFor("nowhere", EXPLORE_COLD)).toEqual({ href: "/explore", label: "Back to Explore" });
+    expect(backFor("feed", EXPLORE_COLD)).toEqual({ href: "/feed", label: "Back to feed" });
+  });
+
+  // ProfileOther.md:73 and TagPage.md:35: Back to the post, from its author
+  // chip, opinions, references and tags-and-references sheet.
+  it("names a post's detail, returning to it opened as it was", () => {
+    expect(backFor(postOrigin("p1"))).toEqual({ href: "/posts/p1", label: "Back to the post" });
+    expect(backFor(postOrigin("p1", "saved"))).toEqual({ href: "/posts/p1?from=saved", label: "Back to the post" });
+    expect(backFor(postOrigin("p1", tagOrigin("coast", "search")))).toEqual({
+      href: "/posts/p1?from=tag%3Acoast%2Fsearch",
+      label: "Back to the post",
+    });
+    expect(carriedOrigin(personOrigin("ada", postOrigin("p1", "saved")))).toBe("post:p1:saved");
   });
 });

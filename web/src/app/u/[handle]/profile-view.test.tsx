@@ -376,6 +376,23 @@ describe("ProfileScreen", () => {
     expect(push).toHaveBeenCalledWith("/chats?from=u%3Aada");
   });
 
+  // ChatsComingSoon.md:17 and :21: the page reads Back to the profile and its
+  // arrow brings the profile back as it was left — opened with the origin it was
+  // opened with, so the profile still names Saved and keeps its root lit.
+  it("hands Chats the profile's own origin on Message", async () => {
+    push.mockClear();
+    server.use(
+      meHandler(),
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" from="saved" />, { store: signedInStore() });
+    fireEvent.click(await screen.findByTestId(byNode("profile.identity.actionRow.message")));
+    expect(push).toHaveBeenCalledWith("/chats?from=u%3Aada%2Fsaved");
+  });
+
   it("asks a guest to join on Message", async () => {
     server.use(
       gqlLink.query("UserProfile", () =>
@@ -591,8 +608,7 @@ describe("ProfileScreen", () => {
   });
 
   // THE PROFILE'S ⋮ (ProfileOwnMenu.md, ProfileMenu.md, ProfileDeletedMenu.md;
-  // saved-surface SS-1): three sheets, built whole; Mention stands inert until
-  // its packet wires it.
+  // saved-surface SS-1): three sheets, built whole.
   describe("the profile menu", () => {
     function rows() {
       return Array.from(
@@ -777,6 +793,42 @@ describe("ProfileScreen", () => {
       fireEvent.click(screen.getByTestId("profile.menuSheet.save"));
       expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
       expect(log.sets).toEqual([]);
+    });
+
+    // ProfileMenu.md:17 — the wizard opens with the person staged, through
+    // the door a card's Cite uses (`?reference=`).
+    it("mention_opens_the_wizard_with_the_person_staged", async () => {
+      server.use(meHandler(), other(), recordsHandler([]));
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.mention"));
+      expect(push).toHaveBeenCalledWith("/compose?reference=u2");
+      await waitFor(() => expect((screen.getByTestId("profile.menuSheet") as HTMLDialogElement).open).toBe(false));
+    });
+
+    // ProfileMenu.md:19 — an applicant is told, and the wizard never opens.
+    it("an_applicants_mention_says_post_once_in_and_opens_no_wizard", async () => {
+      push.mockClear();
+      server.use(meHandler("APPLICANT"), other(), recordsHandler([]));
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.mention"));
+      expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
+        "You can post once you're in.",
+      );
+      expect(push).not.toHaveBeenCalledWith(expect.stringMatching(/^\/compose/));
+      await waitFor(() => expect((screen.getByTestId("profile.menuSheet") as HTMLDialogElement).open).toBe(false));
+    });
+
+    // ProfileMenu.md:35 — a guest's Mention opens the gate, never the wizard.
+    it("a_guest_meets_the_ask_on_mention", async () => {
+      push.mockClear();
+      server.use(other(), recordsHandler([]));
+      renderWithProviders(<ProfileScreen handle="ada" />);
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.mention"));
+      expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+      expect(push).not.toHaveBeenCalledWith(expect.stringMatching(/^\/compose/));
     });
 
     it("opened_from_saved_the_back_arrow_reads_back_to_saved", async () => {

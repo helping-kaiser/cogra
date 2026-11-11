@@ -92,11 +92,13 @@ export const TOO_MANY_POST = "That's more than a post carries — up to ten pict
 export const TOO_MANY_COMMENT = "That's more than a comment carries — up to four pictures.";
 
 /**
- * A video picked into an edit whose body has no clip. The add path is staged
+ * A video picked into a POST's words edit. That add path is staged
  * (staged-surfaces, *A video picked at an edit*): the drawn path takes the clip
  * through the cover step (EditWords.md: "its face is chosen on the cover step
  * before the edit takes it"), and until it ships the media row refuses the clip
  * in these words, `Remove it` alone (copy-voice, *Refused files*, seam 248).
+ * The comment edit's path is built — a clip arrives with its cover row
+ * (CommentEdit.md:23) — so only the post edit still speaks this line.
  */
 export const VIDEO_AT_EDIT = "A video can't join an edit yet — post it on its own.";
 

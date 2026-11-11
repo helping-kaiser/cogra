@@ -38,6 +38,7 @@ import { SEVERED_LABEL } from "@/lib/ui/stance-readout";
 import type { ReferenceClaimNode } from "@/lib/references/claims";
 import { targetView, untypedTargetView } from "@/lib/references/normalize";
 import type { ReferenceTargetView } from "@/lib/references/draft";
+import { personHref, tagPageHref } from "@/lib/ui/back-origin";
 import { Icon } from "@/lib/ui/icons";
 import { formatReferenceParamWords } from "@/lib/ui/reference-format";
 import { formatStancePair } from "@/lib/ui/stance-format";
@@ -121,7 +122,7 @@ function referenceMark(view: ReferenceTargetView): ReactNode {
     case "User":
       // The monogram is the DESIGNED placeholder rather than a gap waiting for a
       // photo, so a mention needs no avatar on the wire to draw its circle.
-      return <MonogramAvatar name={view.displayName ?? view.label} size={32} />;
+      return <MonogramAvatar name={view.displayName ?? view.label} size={32} tier="md" />;
     case "Post":
       return <NodeTile>T</NodeTile>;
     case "Comment":
@@ -143,12 +144,18 @@ export function RefsSheet({
   onClose,
   topics,
   references,
+  from = null,
   testId = "refs-sheet",
 }: {
   open: boolean;
   onClose: () => void;
   topics: readonly TopicClaimNode[];
   references: readonly ReferenceClaimNode[];
+  /**
+   * The origin the rows' doors carry: the post's on its detail, so the tag's
+   * page reads `Back to the post` (TagPage.md:35), the card's list elsewhere.
+   */
+  from?: string | null;
   testId?: string;
 }) {
   // THE SHEET IS THE DOOR, NOT THE DESTINATION. A row that navigated left the
@@ -173,7 +180,7 @@ export function RefsSheet({
             kind="Tag"
             // `RefsSheet` 1: a tag row goes to the tag's page, the one
             // destination a chip's tap already has on every other surface.
-            href={`/topics/${name}`}
+            href={tagPageHref(name, from)}
             onNavigate={onClose}
             trailing={
               <PairReadout
@@ -201,7 +208,12 @@ export function RefsSheet({
         // `ReferenceRow`'s face: the value's own (seam 243); only the glyph
         // is drawn, a citation's anchor word is never spoken.
         const anchor = bundleReadout(pair, SEVERED_LABEL);
-        const href = view.href;
+        // A person's row names the sheet's origin on their profile
+        // (ProfileOther.md:73, `Back to the post` from a post's references).
+        const href =
+          view.kind === "User" && view.href !== null && view.handle !== undefined
+            ? personHref(view.handle, from)
+            : view.href;
         return (
           <ListRow
             key={claim.targetId}

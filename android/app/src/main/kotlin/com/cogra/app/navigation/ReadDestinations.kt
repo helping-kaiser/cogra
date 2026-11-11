@@ -358,6 +358,8 @@ private fun ShellScope.ProfileDestination(entry: NavBackStackEntry) {
         onMessage = { navController.navigate(ChatsComingSoon(CHATS_FROM_MESSAGE)) },
         // The figures' one door: the opinions page, in this profile's stack.
         onOpenOpinions = { navController.navigate(ProfileStances(route.handle)) },
+        // The ⋮'s Mention: the wizard, the person staged (ProfileMenu.md:17).
+        onMention = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
     )
 }
 

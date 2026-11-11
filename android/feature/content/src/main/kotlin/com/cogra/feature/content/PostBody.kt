@@ -181,9 +181,6 @@ internal fun PostBody(
     val reading = CaptionReading(
         collapsed = collapsed,
         wordsClampLines = wordsClampLines,
-        // `PostCard.jsx:265`: a media post's caption is clamped to two lines
-        // and ALWAYS carries the opener.
-        alwaysOpenable = mediaIsTheBody && !description?.value.isNullOrEmpty(),
         // The detail reads its words at `body-large` (`PostCard.jsx:235`).
         detailWords = surface == BodySurface.Post && !collapsed,
     )
@@ -272,10 +269,15 @@ private fun Caption(
     val collapsed = reading.collapsed
     val type = MaterialTheme.typography
     val wordsStyle = if (reading.detailWords) type.bodyLarge else type.bodyMedium
-    // What the clamp hid, remembered from the reading that hid it: once
-    // the opener has unfolded the text nothing overflows any more, so a
-    // live measurement would take the opener away with the fold.
-    var folded by remember(testTagPrefix) { mutableStateOf(false) }
+    // WHETHER EACH CLAMPED PARAGRAPH HIDES ANYTHING, read from its own
+    // layout (`TextLayoutResult.hasVisualOverflow`) every time it lays out
+    // clamped — a new width (a rotation) can unfold a caption on its own,
+    // and the opener goes with it. While the text is open the clamp is
+    // off and nothing can overflow, so the last clamped reading stands:
+    // that is what keeps `Less` under the text it opened (web's
+    // `clamp-fold.ts`, #405).
+    var wordsFold by remember(testTagPrefix, words) { mutableStateOf(false) }
+    var descriptionFold by remember(testTagPrefix, description) { mutableStateOf(false) }
     var open by remember(testTagPrefix) { mutableStateOf(false) }
     val clamping = collapsed && !open
     val shownDescription = description?.takeIf { it.isNotEmpty() }
@@ -290,7 +292,7 @@ private fun Caption(
                     color = MaterialTheme.colorScheme.onSurface,
                     style = wordsStyle,
                     maxLines = if (clamping) reading.wordsClampLines else Int.MAX_VALUE,
-                    onOverflow = { folded = true },
+                    onClampedLayout = { folds -> if (clamping) wordsFold = folds },
                     testTag = node.partTag("body", "${testTagPrefix}_words"),
                 )
             }
@@ -300,17 +302,18 @@ private fun Caption(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = if (clamping) DESCRIPTION_CLAMP_LINES else Int.MAX_VALUE,
-                    onOverflow = { folded = true },
+                    onClampedLayout = { folds -> if (clamping) descriptionFold = folds },
                     testTag = node.partTag("description", "${testTagPrefix}_description"),
                 )
             }
         }
     }
-    // Only where there is something folded away — and always under a media
-    // post's caption. A text control, not a link: it opens the text in place
-    // and never navigates. Drawn on its `4px 0` padding, it answers at 48dp
-    // (`PostCard.jsx:269-291`, `cg-hit`).
-    if (collapsed && (folded || reading.alwaysOpenable)) {
+    // Only where there is something folded away (`PostCard.jsx`) — a media
+    // post's caption included: the master's "always" under a caption is a
+    // static render's limit, not a rule (seam 292). A text control, not a
+    // link: it opens the text in place and never navigates. Drawn on its
+    // `4px 0` padding, it answers at 48dp (`PostCard.jsx:269-291`, `cg-hit`).
+    if (collapsed && (wordsFold || descriptionFold)) {
         Opener(open, onToggle = { open = !open }, testTag = node.partTag("opener", "${testTagPrefix}_opener"))
     }
 }
@@ -347,7 +350,7 @@ private fun ClampedText(
     color: Color,
     style: TextStyle,
     maxLines: Int,
-    onOverflow: () -> Unit,
+    onClampedLayout: (folds: Boolean) -> Unit,
     testTag: String,
 ) {
     Text(
@@ -356,7 +359,7 @@ private fun ClampedText(
         color = color,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
-        onTextLayout = { if (it.hasVisualOverflow) onOverflow() },
+        onTextLayout = { onClampedLayout(it.hasVisualOverflow) },
         modifier = Modifier.testTag(testTag),
     )
 }
@@ -546,13 +549,11 @@ private fun DataNode?.partTag(part: String, fallback: String): String = this?.di
 
 /**
  * How a caption reads where it stands: [collapsed] on a summary card, folding
- * its words at [wordsClampLines]; [alwaysOpenable] under a media post's
- * caption; [detailWords] at the detail's `body-large`.
+ * its words at [wordsClampLines]; [detailWords] at the detail's `body-large`.
  */
 private data class CaptionReading(
     val collapsed: Boolean,
     val wordsClampLines: Int,
-    val alwaysOpenable: Boolean,
     val detailWords: Boolean,
 )
 

@@ -451,6 +451,23 @@ describe("History — the seen-list as a feed (History.md)", () => {
     expect(screen.getByTestId("history-tag-t1-link")).toHaveAttribute("href", "/topics/saltmaps?from=history");
   });
 
+  it("an_author_chip_opens_the_profile_its_back_arrow_reading_back_to_history", async () => {
+    // ProfileOther.md:73: "ALWAYS the back arrow reads … Back to History from
+    // History" — the chip's door carries the origin (shell.test.tsx keeps
+    // Profile lit on `from=history`).
+    serveHistory(() => page(ALL));
+    render();
+    await screen.findByTestId("history-list");
+    expect(screen.getByTestId(byNode("history.card.authorChip", "p1"))).toHaveAttribute(
+      "href",
+      expect.stringMatching(/^\/u\/[^?]+\?from=history$/),
+    );
+    expect(screen.getByTestId(byNode("history.commentCard.authorChip", "c1"))).toHaveAttribute(
+      "href",
+      expect.stringMatching(/^\/u\/[^?]+\?from=history$/),
+    );
+  });
+
   it("a_tag_card_reaching_the_reader_through_no_one_stands_no_through_line", async () => {
     // History.md:59.
     serveHistory(() => page([TAG]));
@@ -480,6 +497,15 @@ describe("History — the seen-list as a feed (History.md)", () => {
     expect(compose).toHaveAccessibleName("Tag a new post with it");
     fireEvent.click(compose);
     expect(push).toHaveBeenCalledWith("/compose?tag=saltmaps");
+  });
+
+  it("a_person_cards_mention_opens_the_composer_with_the_person_staged", async () => {
+    // ProfileMenu.md:17, on the profile card's own ⋮ (FeedProfileShapes.md).
+    serveHistory(() => page([PERSON]));
+    render();
+    fireEvent.click(await screen.findByTestId(byNode("history.profileCard.menu", "u3")));
+    fireEvent.click(screen.getByTestId("history-person-u3-menu-mention"));
+    expect(push).toHaveBeenCalledWith("/compose?reference=u3");
   });
 
   it("an_empty_tag_keeps_its_card_and_its_glimpse_reads_one_quiet_line", async () => {

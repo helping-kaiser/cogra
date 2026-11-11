@@ -211,7 +211,7 @@ export function DetailsStep({
       {mode === "media" && assets.some((asset) => thumbState(asset).progress !== undefined) && (
         <p
           data-testid="wizard-upload-aside"
-          className="m-0 text-center text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)] text-on-surface-variant"
+          className="m-0 text-center text-label-small text-on-surface-variant"
         >
           Pictures upload while you write — signing waits for them.
         </p>
@@ -359,7 +359,7 @@ function BodyStrip({
           type="button"
           onClick={() => onOpenPublished(published.postId)}
           data-testid="composeDetails.published"
-          className="cg-state cg-focus cg-hit cursor-pointer self-start border-0 bg-transparent p-0 text-left font-sans text-[length:var(--text-label-small)] text-on-surface-variant underline"
+          className="cg-state cg-focus cg-hit cursor-pointer self-start border-0 bg-transparent p-0 text-left font-sans text-label-small text-on-surface-variant underline"
         >
           {publishedMarkerText(published.date)}
         </button>

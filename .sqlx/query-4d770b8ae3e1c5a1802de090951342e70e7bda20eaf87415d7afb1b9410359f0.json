@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO l1_epochs\n             (epoch, act_count, theta_charged_micro, closure_cause,\n              marker_policy, marker_edition,\n              wall_num, wall_den, width_num, width_den, rung_num, rung_den,\n              proposal_num, proposal_den, delivered_num, delivered_den,\n              theta_next_micro, target_acts, min_duration_secs, max_duration_secs)\n         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,\n                 $18, $19, $20)\n         RETURNING closed_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "closed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8",
+        "Text",
+        "Text",
+        "Int4",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4d770b8ae3e1c5a1802de090951342e70e7bda20eaf87415d7afb1b9410359f0"
+}
