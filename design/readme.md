@@ -2299,7 +2299,10 @@ entry first". What stands:
   carries the chip's value as its key (`history.searchField` under
   `search` and under `kinds`; jakob 2026-10-06, seam 069); an element
   two chips draw keys each copy by its own chip's value, and its rule
-  names both chips (`postEdit.sign`; seam 248). Every
+  names both chips (`postEdit.sign`; seam 248). A board's `VALS` — its
+  `renderVals()` — read only `this.props`, never the DOM or a canvas
+  global, so a harness renders one setting at a time by its chip values
+  and no state needs a board of its own (seam 270). Every
   other board renders the annotations stripped, so a name reaches a built board only once it
   is registered in `designs/canonical/nodes.json`, which the render
   writes. **Registered paths are append-only**: a collision fails the
@@ -10487,13 +10490,12 @@ jakob after his hand test.
   row's quiet register — `You can't sign right now. Nothing was signed or
   spent.` where the fault line stands — the act dimmed, no Retry, `Keep
   it` the way back. The board's `answer` chip draws it.
-- **The way out while Set signs.** Until the act is being sent, Cancel,
-  the press outside, Back and Escape truly cancel: the pad closes, nothing
-  lands, the row untouched. Once it is being sent the same button reads
-  `Close` and only leaves: the wait passes to the target's row, a hold's
-  (`Signing…`, then the face and the snackbar, or `That didn't sign.`
-  with a Retry that asks the same pick again). `PadFailed`'s `moment` chip
-  draws `setting`, `sending` and `closed` (round 31).
+- **The way out while Set signs.** Once Set is pressed nothing cancels
+  the act: past 200ms Cancel reads `Close`, and it, the press outside, Back
+  and Escape only close the pad; the wait passes to the target's row, a
+  hold's (`Signing…`, then the face and the snackbar, or `That didn't
+  sign.` with a Retry that asks the same pick again). `PadFailed`'s
+  `moment` chip draws `setting` and `closed` (round 34).
 - **The key-absent pad's "?"** says only what its notice does not: where
   the key lives, and what waits for the restore.
 - **The target label's family**: `this post`, `this comment`, `@ada`,
@@ -10505,7 +10507,7 @@ jakob after his hand test.
   `(0, 0)` landing over anything standing.
 - **Every new string above was merged under the autonomy order and is
   blessed (jakob 2026-11-10)**; the way out while Set signs is jakob's
-  2026-11-11 rule (round 31). Backlog 147 banks the type sites round 20 left.
+  2026-11-11 rule (round 34). Backlog 147 banks the type sites round 20 left.
 - **The gate**: edges hold at **2127**, flows at **227**, the registry
   at **100 screens**; no board added — two boards gain a chip.
 
@@ -10982,17 +10984,8 @@ jakob's answers to round 30's proposals (Q1–Q7), the ruled part.
   Salome Ward, Nadia Rask.
 - **The search sections' cap of three** is the rule on every sectioned
   surface, Saved and History included (backlog 141).
-- **The way out while an act signs.** Cancel and Close are the way out of a
-  pad that stalls. Until the app begins sending the act — the proposal,
-  `submitProposals` — Cancel, the press outside, Back and Escape truly
-  cancel: nothing lands, the row untouched. From that instant the act is
-  expected to happen; the same button reads `Close`, only leaves, and the
-  wait passes to the target's row (`Signing…`, then the face and the
-  snackbar, or `That didn't sign.` with Retry). A regretted Set is walked
-  back afterwards. `PadFailed`'s `moment` draws `setting`, `sending` and
-  `closed`. The alternates take it; the walk-back and the empty sign take
-  it on `Keep it`, a walk-back cancelling only until the first of its acts
-  is being sent. The hold keeps no exit once it fires.
+- **The way out while an act signs** is round 34's: once the commit is
+  pressed nothing cancels it, and `Close` only leaves.
 - **The deleted account's disc and the removed thing's tile** keep the
   reserved fill and wear a 1px solid `--border-field` ring inside their
   box, one treatment on every surface (`REDACTED_RING`). The ring against
@@ -11085,6 +11078,46 @@ clients already key them by the wire id (seam 263). jakob ruled the re-key
   families, and no (path, key) repeats on any board beyond the chip copies
   that stood before.
 
+### Round 34, once submitted there is no cancel — 2026-11-11
+
+jakob's answer to round 31's first question: "once someone submits there
+is no more cancel. afterwards they can just close the ui to not have to
+wait (network issues) but the act is done"; one rule for every signing
+surface.
+
+- **Once a commit is pressed, the act is done: nothing cancels it.** The
+  way out only closes the surface so the reader need not wait. Past 200ms,
+  beside the in-flight label, the control that read `Cancel` or `Keep it`
+  reads `Close` in the same place, live and never dimmed; inside the 200ms
+  nothing on screen changes, and a press on the way out closes the surface
+  all the same.
+- **The pad and the alternates.** Closed mid-signing, the wait passes to
+  the target's row as a hold's (`Signing…`, then the face and the
+  snackbar, or `That didn't sign.` with Retry). `StanceControl`'s and
+  `StanceAlternates`' `signing` keep one waiting state, `busy`, which reads
+  `Close`; `PadFailed`'s `moment` draws `failed`, `setting` (`Close` beside
+  `Setting…`) and `closed`. `PadStanding`, `ApprovePad`, `VouchAskPad`,
+  `VouchBackPad` and `TagPageHeldPad` write the same lines; the staging
+  pads sign nothing.
+- **The walk-back and the empty sign.** While their act signs, `Keep it`
+  reads `Close`; it, the scrim, Back and Escape close the dialog and the pad
+  beneath, and the act — a walk-back's whole batch — goes on, its wait on
+  the target's row. `SeveranceConfirm`'s `answer` chip draws `signing`;
+  `EmptySignConfirm` gains `answer` (`asking`, `setting`).
+- **The handle change.** `ChangeHandleConfirm`'s `Keep it` reads `Close`
+  once `Change it` is pressed and the change goes on. Where its wait and its
+  answer show after that is not drawn (backlog 155).
+- **The seals and the edits keep their held exits** until each has a drawn
+  place for an act on its way, landed and failed after leaving (backlog
+  155); the remove and close dialogs' ways out while they answer are
+  backlog 156.
+- **Boards.** A board's `VALS` read only `this.props`; impl's harness
+  renders one setting at a time (seam 270), and backlog 151 closes.
+- **The gate**: no board added; three boards gain or change a chip
+  (`PadFailed`, `SeveranceConfirm`, `EmptySignConfirm`), none registered.
+  The registry holds at **167 screens**, **6120** board paths, **1920**
+  distinct.
+
 ### Round 35, squares join the stream; impl's thirteen asks — 2026-11-11
 
 jakob's answers to round 30's stream questions ("1. a) yes", "2. yes") and
@@ -11109,7 +11142,7 @@ option b), with two of his hand-test findings (seam 275).
   bare — `ProfilePosts`' `posts` chip at `settling`, the second post.
 - **The filter's Done keeps the filter that was set** when the new
   ranking fails, and the feed shows the failure with Retry; no board draws
-  that fault yet (backlog 155).
+  that fault yet (backlog 157).
 - **The rank drill-down prints no sum line**; the arithmetic closes in its
   drawn figures (`RankRecords`).
 - **A kept approval's pad reopens on the vouch that was kept** (`Invites`).
@@ -11119,7 +11152,7 @@ option b), with two of his hand-test findings (seam 275).
 - **A person is named by handle, never by a gendered pronoun**
   (copy-voice, *Naming*): the publish step reads `@ada's own opinion
   rides the post`. The sweep's one other drawn hit waits for jakob
-  (backlog 156).
+  (backlog 158).
 - **The crash surface** is `AppCrash`: `This shouldn't have happened`,
   the bug notice's first line alone, with `Reload`, on the plain landing
   (`VerifyExpired`'s form), registered under `crash` (*drafted — wording
