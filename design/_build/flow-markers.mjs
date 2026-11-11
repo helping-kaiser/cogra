@@ -3134,6 +3134,9 @@ Object.assign(FLOW_MARKERS, {
     // page — one act, one edge.
     { n: 11, find: 'data-node="invites.person"', tag: "button", all: true },
     { n: 11, find: 'data-node="invites.redactedPerson"', tag: "button" },
+    // Round 40: the list's door under its third row (the `letIn` chip's
+    // `more`), appended so no via renumbers.
+    { n: 12, find: 'data-node="invites.peopleDoor"', tag: "button" },
   ],
   RejectAllConfirm: [
     { n: 1, find: ">Close them</button>", tag: "button" },

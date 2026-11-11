@@ -5746,6 +5746,12 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
           <Button style={{ width: "100%" }} node="create">New invite</Button>
         </div>
 
+        {/* ONLY PEOPLE LET IN (jakob 2026-11-11, round 40): with no
+            application waiting and no link live but someone let in, the page
+            is not its empty state — `New invite` and `People you let in`
+            stand, and the two empty sections go, labels and all (the
+            `sections` chip's `only-let-in`). */}
+        <div style={{ display: shown ? shown.applicationsSection : "flex", flexDirection: "column" }}>
         <SectionLabel node="applicationsLabel">Applications</SectionLabel>
         {shown && (
           <div style={{ display: shown.applicationsEmpty }} data-node-chip="sections" data-node-key="no-applications">
@@ -5851,6 +5857,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             nodeKey={ASKER_IDS.rafa}
           />
         </div>
+        </div>
 
         {/* THE PEOPLE YOU LET IN (jakob 2026-11-11, J3): under the waiting
             applications, every person the reader vouched in, newest first —
@@ -5868,10 +5875,30 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
               <div style={{ display: shown.personDeleted, flexDirection: "column" }} data-node-chip="letIn" data-node-key="deleted">
                 <ContentRow variant="chronicle" redacted trailing="5d" onOpen={() => {}} node="redactedPerson" nodeKey={DELETED_LET_IN_ID} />
               </div>
+              {/* NO LIST IS UNCAPPED IN ITS DEFAULT STATE (jakob 2026-11-11,
+                  round 40): three rows, the newest, then `Show all` under the
+                  third — the pickers' door (`PICKER_DOOR`), an inline action
+                  under the rows — which opens the rest in place: the list
+                  grows, nothing else leaves the page, and no "show fewer"
+                  follows. The `letIn` chip's `more` draws it shut, `more-opened`
+                  open. */}
+              <div style={{ display: shown.personMore, flexDirection: "column" }} data-node-chip="letIn" data-node-key="more">
+                <ContentRow variant="chronicle" name={JUNO.displayName} title={JUNO.displayName} trailing="9d" onOpen={() => {}} node="person" nodeKey={JUNO.id} />
+              </div>
+              <div style={{ display: shown.peopleDoor }} data-node-chip="letIn" data-node-key="more">
+                <InlineAction size="sm" selfStart node="peopleDoor">
+                  Show all
+                </InlineAction>
+              </div>
+              <div style={{ display: shown.personRest, flexDirection: "column", gap: 8 }} data-node-chip="letIn" data-node-key="more-opened">
+                <ContentRow variant="chronicle" name={KEL.displayName} title={KEL.displayName} trailing="12d" onOpen={() => {}} node="person" nodeKey={KEL.id} />
+                <ContentRow variant="chronicle" name={TOBIAS.displayName} title={TOBIAS.displayName} trailing="16d" onOpen={() => {}} node="person" nodeKey={TOBIAS.id} />
+              </div>
             </div>
           </div>
         )}
 
+        <div style={{ display: shown ? shown.linksSection : "flex", flexDirection: "column" }}>
         <SectionLabel node="linksLabel">Live links</SectionLabel>
         {shown && (
           <div style={{ display: shown.linksEmpty }} data-node-chip="sections" data-node-key="no-links">
@@ -5936,6 +5963,7 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown }) {
             node="link"
             nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)}
           />
+        </div>
         </div>
 
         <div style={{ flex: 1 }} />
