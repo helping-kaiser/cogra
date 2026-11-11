@@ -3249,8 +3249,10 @@
     "ExploreFilter": {
       "prefix": "explore",
       "keys": {
+        "explore.contentLabel": "the reader chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "explore.filterSheet.order": "the reader chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
+        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
+        "explore.tagsLabel": "the reader chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "explore.bottomBar": [],
@@ -3259,6 +3261,10 @@
         "explore.bottomBar.profileSlot": [],
         "explore.bottomBar.searchSlot": [],
         "explore.bottomBar.walletSlot": [],
+        "explore.contentLabel": [
+          "member",
+          "guest"
+        ],
         "explore.filterSheet": [],
         "explore.filterSheet.dragHandle": [],
         "explore.filterSheet.foot": [],
@@ -3327,7 +3333,11 @@
         "explore.searchField": [],
         "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
-        "explore.searchField.input": []
+        "explore.searchField.input": [],
+        "explore.tagsLabel": [
+          "member",
+          "guest"
+        ]
       }
     },
     "ExploreNone": {
@@ -3363,6 +3373,7 @@
         "explore.bottomBar.profileSlot": [],
         "explore.bottomBar.searchSlot": [],
         "explore.bottomBar.walletSlot": [],
+        "explore.contentLabel": [],
         "explore.filterTrigger": [],
         "explore.help": [],
         "explore.profilesDoor": [],
@@ -3421,14 +3432,17 @@
         "explore.searchField": [],
         "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
-        "explore.searchField.input": []
+        "explore.searchField.input": [],
+        "explore.tagsLabel": []
       }
     },
     "ExploreSearch": {
       "prefix": "explore",
       "keys": {
+        "explore.contentLabel": "the order chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
-        "explore.seam": "the section the seam splits — people, topics or content — each section standing its own ranked head, then its own rest (Explore's search)"
+        "explore.seam": "the section the seam splits — people, topics or content — each section standing its own ranked head, then its own rest (Explore's search)",
+        "explore.tagsLabel": "the order chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "explore.bottomBar": [],
@@ -3437,6 +3451,10 @@
         "explore.bottomBar.profileSlot": [],
         "explore.bottomBar.searchSlot": [],
         "explore.bottomBar.walletSlot": [],
+        "explore.contentLabel": [
+          "ranked",
+          "newest"
+        ],
         "explore.filterTrigger": [],
         "explore.help": [],
         "explore.result": [
@@ -3481,7 +3499,11 @@
         "explore.searchField": [],
         "explore.searchField.clear": [],
         "explore.searchField.glyph": [],
-        "explore.searchField.input": []
+        "explore.searchField.input": [],
+        "explore.tagsLabel": [
+          "ranked",
+          "newest"
+        ]
       }
     },
     "ExploreUnscoped": {
