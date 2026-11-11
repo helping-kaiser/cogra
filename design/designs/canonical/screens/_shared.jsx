@@ -18,7 +18,7 @@ const {
   ActorChip,
   HIDE_ACTOR_LABEL,
   UNHIDE_ACTOR_LABEL,
-  nameInText,
+  NameInText,
   REDACTED_ACTOR_NAME,
   ProfileHeader,
   EmptyState,
@@ -597,11 +597,11 @@ function TaskCard({ title, body, tone, children, node }) {
           }}
           data-node={node && "title"}
         >
-          {nameInText(title)}
+          <NameInText text={title} />
         </h2>
         <Icon name="mark" size={20} pickColor="var(--primary-container)" style={{ flex: "none", color: "var(--primary)" }} />
       </div>
-      <p style={{ margin: 0, overflowWrap: "anywhere", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node={node && "body"}>{nameInText(body)}</p>
+      <p style={{ margin: 0, overflowWrap: "anywhere", fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node={node && "body"}><NameInText text={body} /></p>
       {children}
     </Card>
   );
@@ -5588,7 +5588,7 @@ function VouchBackHint({ node }) {
 function PadLine({ children }) {
   return (
     <p style={{ margin: 0, overflowWrap: "anywhere", fontSize: "var(--text-body-small)", letterSpacing: "var(--text-body-small--letter-spacing)", fontWeight: "var(--text-body-small--font-weight)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
-      {nameInText(children)}
+      <NameInText text={children} />
     </p>
   );
 }
@@ -6141,7 +6141,7 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
             }}
             data-node="body"
           >
-            {nameInText(line)}
+            <NameInText text={line} />
           </p>
         ))}
         {note}

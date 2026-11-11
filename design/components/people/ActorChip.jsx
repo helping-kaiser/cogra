@@ -238,6 +238,10 @@ export function nameInText(text, names = []) {
   out.push(text.slice(last));
   return out;
 }
+/* The same, as an element, for the screens: `<NameInText text={…} />`. */
+export function NameInText({ text, names }) {
+  return <>{nameInText(text, names)}</>;
+}
 
 const HANDLE_IN_LINE = /(?<![\w@])@[A-Za-z0-9_]+/;
 const LINE_WORDS = { flex: "none", whiteSpace: "pre" };

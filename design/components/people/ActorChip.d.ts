@@ -80,5 +80,8 @@ export declare function nameInLine(text: React.ReactNode): React.ReactNode;
  */
 export declare function nameInText(text: React.ReactNode, names?: string[]): React.ReactNode;
 
+/** `nameInText` as an element, for the screens. */
+export declare function NameInText(props: { text: React.ReactNode; names?: string[] }): JSX.Element;
+
 /** The 1px `--border-field` ring, drawn inside the box, every mark whose payload went wears (a deleted account's disc, a removed thing's tile). */
 export declare const REDACTED_RING: { border: string; boxSizing: "border-box" };
