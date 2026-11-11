@@ -23,12 +23,20 @@
    cards' place. A card's pointer to what it answers is its `target`; the
    collapsed replies' line hangs under the card, outside its surface, so it is
    `viewReplies` beside the card, keyed by the same id (round 28, seam 254
-   A3). */
+   A3).
+
+   A REMOVED COMMENT IN THE LIST (round 30, jakob 2026-11-11, Q13) is the
+   `comments` chip's `removed`: the second comment, removed by its author,
+   drawn as the thread draws a removed comment (`CommentRemoved`,
+   `CommentsThreadSheet`'s `redacted`) — `RedactedContent` in the words'
+   place over the thread's own note, the author, the age, the reply and the
+   pointer to what it answered kept, no menu's license. Its mark registers as `removalMark` under the card
+   (round 28's promise, seam 259), the card keyed by its id in both copies. */
 export const NODE = "profile";
 const ADA_COMMENT_ID = "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e";
 const ADA_SECOND_COMMENT_ID = "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f";
-export const PROPS = { comments: { editor: "enum", options: ["some", "none"], default: "some" } };
-export const VALS = `someShown: this.props.comments === "none" ? "none" : "flex", noneShown: this.props.comments === "none" ? "flex" : "none"`;
+export const PROPS = { comments: { editor: "enum", options: ["some", "none", "removed"], default: "some" } };
+export const VALS = `someShown: this.props.comments === "none" ? "none" : "flex", noneShown: this.props.comments === "none" ? "flex" : "none", secondLive: this.props.comments === "removed" ? "none" : "contents", secondRemoved: this.props.comments === "removed" ? "contents" : "none"`;
 
 export function Screen() {
   return (
@@ -69,18 +77,35 @@ export function Screen() {
             node="commentCard"
             nodeKey={ADA_COMMENT_ID}
           />
-          <CommentCard
-            author={ADA}
-            content="Low tide is kinder to the rubbings than noon ever was."
-            timestamp="4d"
-            license={{ attribution: 0, provenance: 0 }}
-            onOpenReplies={() => {}}
-            onReply={() => {}}
-            target="“Salt maps of the coast road” — @sol"
-            onOpenTarget={() => {}}
-            node="commentCard"
-            nodeKey={ADA_SECOND_COMMENT_ID}
-          />
+          <div style={{ display: "{{secondLive}}" }} data-node-chip="comments" data-node-key="some">
+            <CommentCard
+              author={ADA}
+              content="Low tide is kinder to the rubbings than noon ever was."
+              timestamp="4d"
+              license={{ attribution: 0, provenance: 0 }}
+              onOpenReplies={() => {}}
+              onReply={() => {}}
+              target="“Salt maps of the coast road” — @sol"
+              onOpenTarget={() => {}}
+              node="commentCard"
+              nodeKey={ADA_SECOND_COMMENT_ID}
+            />
+          </div>
+          {/* The same comment removed by its author: the thread's removed
+              comment (`CommentRemoved`), the mark in the words' place, author,
+              age, reply and pointer kept, the license gone with the payload. */}
+          <div style={{ display: "{{secondRemoved}}" }} data-node-chip="comments" data-node-key="removed">
+            <CommentCard
+              author={ADA}
+              timestamp="4d"
+              redacted={{ reason: "author", note: REMOVED_COMMENT_NOTE }}
+              onReply={() => {}}
+              target="“Salt maps of the coast road” — @sol"
+              onOpenTarget={() => {}}
+              node="commentCard"
+              nodeKey={ADA_SECOND_COMMENT_ID}
+            />
+          </div>
         </div>
         <div style={{ flex: 1, overflow: "hidden", display: "{{noneShown}}", flexDirection: "column", padding: "8px 16px 0" }}>
           <EmptyState title="Nothing here yet." node="empty" />
