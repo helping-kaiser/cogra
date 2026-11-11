@@ -4,7 +4,7 @@ WHEN tap the ⋮ on a feed card of the reader's own -> feed.menuSheet rises over
 
 ALWAYS feed.menuSheet reads Save or Unsave, then Cite in a new post, then Edit, then Mark as sensitive, then Remove, then License terms, the own post menu's rows on the post detail, and carries no Hide and no Report row
 
-ALWAYS the own menu off the post detail is the detail's own menu, on the feed, the own profile's Posts and Comments tabs and a comment card of the reader's own in the feed, a comment's menu holding the own comment menu's rows
+ALWAYS the own menu off the post detail is the detail's own menu, on the feed, History, Saved, the own profile's Posts and Comments tabs and a comment card of the reader's own on any of them, a comment's menu holding the own comment menu's rows
 
 ALWAYS feed.menuSheet.save reads Unsave GIVEN the post is kept
 

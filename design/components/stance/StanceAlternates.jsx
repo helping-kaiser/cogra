@@ -222,8 +222,10 @@ export function StanceAlternates({
   onZeroBack,
   /* THE COMMIT WAITS FOR ITS SIGNATURE, AS SET DOES (seam 245, ask 14 —
      `StanceControl`'s `signing`, handed on while the alternates are up).
+     `"pressed"`: the first 200ms — the button that read `Cancel` already
+     reads `Close`, the commit keeps its label and refuses a second press.
      `"busy"`: past 200ms the commit reads `Signing…` and goes inert, never
-     dimmed, and the button that read `Cancel` reads `Close`: the act is
+     dimmed, beside `Close`: the act is
      done, nothing cancels it, and Close only leaves, the wait passing to the
      target's row (`StanceControl`'s law). `"failed"`: the dialog stays up at the pick, the fault line
      stands above the action row in the seal's words, and `Retry`, outlined,
@@ -246,6 +248,8 @@ export function StanceAlternates({
 }) {
   const state = signing ?? (busy ? "busy" : undefined);
   const waiting = state === "busy";
+  /* From the press the way out reads `Close`; the commit's label waits 200ms. */
+  const closing = waiting || state === "pressed";
   const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
   // The same help affordance the pad carries, for the same reason: TWO VALUES per
   // interaction is the genuinely new idea in this control, and a reader meeting it
@@ -436,13 +440,13 @@ export function StanceAlternates({
               </button>
             )}
             <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })}>
-              {waiting ? "Close" : "Cancel"}
+              {closing ? "Close" : "Cancel"}
             </button>
             <button
               type="button"
-              onClick={waiting ? undefined : onCommit}
+              onClick={closing ? undefined : onCommit}
               aria-busy={waiting ? true : undefined}
-              aria-disabled={waiting ? true : undefined}
+              aria-disabled={closing ? true : undefined}
               className={BUTTON_CLASS}
               style={buttonStyle({ variant: state === "failed" ? "outline" : "primary", size: "sm", busy: waiting })}
             >

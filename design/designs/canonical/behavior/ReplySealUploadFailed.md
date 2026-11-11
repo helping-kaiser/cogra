@@ -12,7 +12,7 @@ ALWAYS every row of the reply's seal reads back as it did while the upload ran G
 
 ALWAYS no Remove it stands on the reply's seal
 
-WHEN an upload fails GIVEN Sign comment was pressed while the uploads ran -> the held press drops AND Sign comment reads Sign comment again AND the header back arrow, Back and the header X answer again AND NEVER anything is signed
+WHEN an upload fails GIVEN Sign comment was pressed while the uploads ran -> the held press drops AND Sign comment reads Sign comment again AND Back reads Back again AND NEVER anything is signed
 
 WHEN press Retry -> the upload starts again AND the gate line returns to its running reading AND Sign comment is enabled again AND NEVER signing proceeds until Sign comment is pressed again
 

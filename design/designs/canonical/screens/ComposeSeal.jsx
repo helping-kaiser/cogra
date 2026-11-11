@@ -27,9 +27,16 @@
    `#fieldnotes`, refused at signing — the Tags row reads back as before and
    under it `This tag didn't land.` with `Remove it`, no reason given, and
    `Sign and publish` stays. It is `SealFaultRow`'s unlanded-citation row at
-   the Tags row, the state `ReplySeal`'s `refused` draws at reply scale. */
-export const PROPS = { state: { editor: "enum", options: ["rest", "tagRefused"], default: "rest" } };
-export const VALS = `restCardShown: this.props.state === "tagRefused" ? "none" : "flex", tagRefusedShown: this.props.state === "tagRefused" ? "flex" : "none"`;
+   the Tags row, the state `ReplySeal`'s `refused` draws at reply scale. 
+   THE `state` CHIP'S `signing` IS THE SEAL CLOSED ON (round 37, jakob
+   2026-11-11: Close on every seal). From the press on `Sign and publish`
+   the act is done: past 200ms it reads `Signing and publishing…`, and Back
+   beneath it reads `Close` from the press itself; it, the header's arrow
+   and its X close the seal and the post goes on, its wait and its answer at
+   the feed's head (`SigningAfterClose`). `SealSigning` draws the same
+   moment whole. */
+export const PROPS = { state: { editor: "enum", options: ["rest", "tagRefused", "signing"], default: "rest" } };
+export const VALS = `restCardShown: this.props.state === "tagRefused" ? "none" : "flex", tagRefusedShown: this.props.state === "tagRefused" ? "flex" : "none", restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none"`;
 
 export function Screen() {
   return <ComposeSealBody chipped />;

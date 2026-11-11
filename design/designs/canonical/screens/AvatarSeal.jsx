@@ -1,7 +1,15 @@
 /* The profile picture's seal (media slice): every change to a profile is a
    signed act, so the new picture gets the same "What you sign" moment as a
    post — the acts card is the master ActsCard; the "?" is copy-voice's
-   "Changing your picture". */
+   "Changing your picture". 
+   THE `state` CHIP'S `signing` IS THE SEAL CLOSED ON (round 37, jakob
+   2026-11-11: Close on every seal). From the press on `Sign the change`
+   the act is done: past 200ms it reads `Signing the change…` over Back,
+   which reads `Close` from the press itself; it, the arrow and the X close
+   the seal and the change goes on. Its wait and its answer belong where it lands, the profile, by `SigningAfterClose`'s edit form — the profile's own head standing as it was with the row line under it; that placement is not drawn yet (backlog 165). */
+export const PROPS = { state: { editor: "enum", options: ["rest", "signing"], default: "rest" } };
+export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none"`;
+
 export function Screen() {
   return (
     <>
@@ -25,7 +33,12 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <SealFooter signLabel="Sign the change" />
+        <div style={{ display: "{{restFootShown}}", flexDirection: "column" }}>
+          <SealFooter signLabel="Sign the change" busyLabel="Signing the change…" />
+        </div>
+        <div style={{ display: "{{signFootShown}}", flexDirection: "column" }}>
+          <SealFooter signLabel="Sign the change" busy busyLabel="Signing the change…" />
+        </div>
       </div>
     </>
   );

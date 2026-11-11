@@ -20,7 +20,8 @@ const { PostCard, PagerDots, VideoTransport } = window.CoGraDesignSystem_9084ba;
 const ada = { handle: "ada", displayName: "Ada Okonkwo" };
 const mira = { handle: "mira_l", displayName: "Mira Lindqvist" };
 const b = (d,i,n) => ({current:{pDirected:d,pInterest:i},rawSum:{pDirected:d,pInterest:i},records:n,severed:false,severance:{records:n}});
-const menuFor = (handle) => [{label:"Save"},{label:"Cite in a new post"},{label:"Hide @"+handle},{label:"License terms"}];
+// A card appends the license itself; the report row stands after it (`tail`).
+const menuFor = (handle) => [{label:"Save"},{label:"Cite in a new post"},{label:"Hide @"+handle},{label:"Report",tail:true}];
 const P = "../../assets/photos/";
 
 function Demo(){return (

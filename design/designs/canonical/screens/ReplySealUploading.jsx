@@ -19,7 +19,7 @@
    THE COMMIT STAYS ENABLED THROUGH THE GATE (jakob 2026-10-02, the fix-fix
    round's 20), drawn as it is at rest. Pressed, its label swaps in place to
    `Signing comment…` — the failure pack's label-swap idiom (`SealFooter`'s
-   `busy`), the ways out locked with it — and signing proceeds the moment the
+   `busy`), Back reading `Close` from the press — and signing proceeds the moment the
    bytes land; no second press is asked. The slow line counts from the press
    (jakob 2026-10-02, the residue round's Q6): 5s after it the subline under
    the total swaps to `Still signing — the network is slow right now.`,
@@ -33,7 +33,15 @@
 
    A PATTERN EXEMPLAR (readme §13, *Canvas pages and flows*): only the gated
    commit is this board's own; the header, the acts card and the rows are
-   `ReplySeal`'s controls, wired on that board. */
+   `ReplySeal`'s controls, wired on that board. 
+   THE `state` CHIP'S `signing` IS A PRESS WHILE THE UPLOADS RUN, CLOSED ON
+   (round 37): past 200ms `Signing comment…` stands over `Close`; Close, the
+   arrow and the X leave while the pictures finish and the signing proceeds.
+   An upload that fails after Close signs nothing and says so at the branch's
+   end, as a failed signing does (`SigningAfterClose`). */
+export const PROPS = { state: { editor: "enum", options: ["rest", "signing"], default: "rest" } };
+export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "flex", signFootShown: this.props.state === "signing" ? "flex" : "none"`;
+
 export function Screen() {
-  return <ReplySealBody uploading={{ done: 1, total: 2 }} />;
+  return <ReplySealBody uploading={{ done: 1, total: 2 }} signChip />;
 }

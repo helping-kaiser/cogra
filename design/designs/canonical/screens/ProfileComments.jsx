@@ -74,6 +74,7 @@ export function Screen() {
             onReply={() => {}}
             target="“The long way home” — @ada"
             onOpenTarget={() => {}}
+            menuItems={COMMENT_CARD_MENU}
             node="commentCard"
             id={ADA_COMMENT_ID}
           />
@@ -87,6 +88,7 @@ export function Screen() {
               onReply={() => {}}
               target="“Salt maps of the coast road” — @sol"
               onOpenTarget={() => {}}
+              menuItems={COMMENT_CARD_MENU}
               node="commentCard"
               id={ADA_SECOND_COMMENT_ID}
             />

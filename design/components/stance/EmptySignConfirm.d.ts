@@ -4,7 +4,7 @@ export interface EmptySignConfirmProps {
   targetLabel: string;
   /** The opinion vouches its target in (approving, a vouch asked for): the first line warns that they start cut off. */
   vouchIn?: boolean;
-  /** The signing is in flight (past 200ms): the act reads `Setting…` and goes inert, never dimmed. Nothing cancels it: `Keep it` reads `Close` and only leaves. */
+  /** The signing is in flight (past 200ms): the act reads `Setting…` and goes inert, never dimmed. Nothing cancels it: `Keep it` reads `Close` — from the press itself, the act's label alone waiting the 200ms — and only leaves. */
   busy?: boolean;
   /** The signing did not go through; the dialog stays open, says so, and the act's slot reads `Retry`. */
   failed?: boolean;

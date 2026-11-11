@@ -10,13 +10,15 @@ WHEN the signing has not answered 200ms after the press -> the commit reads its 
 
 ALWAYS Sign and publish reads Signing and publishing… GIVEN the post's seal has signed for more than 200ms without an answer
 
-WHEN the signing has not answered 200ms after the press -> the header back arrow, Back and the header X refuse a press AND NEVER they dim AND NEVER their face changes
+WHEN the commit is pressed -> Back reads Close in its place from the press itself AND the header X is named Close AND NEVER Close dims
+
+WHEN press Close, the header back arrow or the header X GIVEN the commit was pressed and has not answered -> the seal closes AND the act goes on, its wait and its answer where it lands, as SigningAfterClose draws them AND NEVER the act is cancelled
 
 ALWAYS the fact rows stay readable GIVEN the commit reads its in-flight label
 
 WHEN the signing has not answered 200ms after the press -> every fact row's Change, Adjust and Mark refuse a press AND NEVER they dim
 
-WHEN press Android's system Back GIVEN the commit reads its in-flight label -> NEVER the seal is left AND NEVER the signing is abandoned
+WHEN press Android's system Back GIVEN the commit was pressed and has not answered -> the seal closes as Close closes it AND the signing goes on, its wait and its answer where it lands, as SigningAfterClose draws them AND NEVER the signing is abandoned
 
 ALWAYS the header's ? stays live and opens the signing text GIVEN the commit reads its in-flight label
 
@@ -26,7 +28,7 @@ ALWAYS the design sets no timeout of its own: the seal waits on the signing's ow
 
 ALWAYS a seal never sends a signing again by itself: Retry is the only re-send
 
-WHEN press Retry -> the same signing is asked again AND past 200ms the commit's slot reads the original commit's in-flight label, Signing and publishing… on the post's seal AND the header back arrow, Back and the header X refuse a press again AND NEVER the slot reads a Retry of its own in flight
+WHEN press Retry -> the same signing is asked again AND past 200ms the commit's slot reads the original commit's in-flight label, Signing and publishing… on the post's seal AND Back reads Close again AND NEVER the slot reads a Retry of its own in flight
 
 WHEN the reader goes a stage back and returns, or changes a fact, GIVEN a refusal reading stood on the seal -> the seal shows its plain commit AND NEVER the refusal reading stands again before the next press
 
@@ -46,7 +48,7 @@ WHEN the commit is pressed GIVEN the seal's uploads are still running -> the pre
 
 WHEN the last upload lands GIVEN the press is held -> signing proceeds AND NEVER a second press is asked
 
-WHEN an upload fails GIVEN the press is held -> the held press drops AND the commit reads its resting label again AND the header back arrow, Back and the header X answer again AND NEVER anything is signed
+WHEN an upload fails GIVEN the press is held -> the held press drops AND the commit reads its resting label again AND Back reads Back again AND NEVER anything is signed
 
 ALWAYS the commit is disabled only while a failed upload stands, and the gate line above it says why
 
@@ -60,6 +62,6 @@ WHEN the signing is refused for one staged act GIVEN the act's target landed -> 
 
 WHEN the write rule refuses the signing -> the notice You can't sign right now takes the commit's place AND nothing is staged or spent AND NEVER Retry appears
 
-WHEN the app opens again GIVEN it was closed while a signing was in flight -> the signing's outcome shows as the ordinary settled or failure notice
+WHEN the app opens again GIVEN it was closed while a signing was in flight -> the signing's outcome shows where the act lands, as SigningAfterClose draws it
 
 ALWAYS the acts on a seal land together or none of them lands

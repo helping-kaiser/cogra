@@ -16,20 +16,23 @@
 
    NOTHING IS PASTED HERE. The link carried what proves the reader owns the
    address; asking them to carry it too is asking them to do the link's job.
-   The surface is one field and one commitment.
+   The surface is the new password, asked twice, and one commitment.
 
-   ONE FIELD, NO CONFIRM. `Join` sets a password with one field and the
-   reveal toggle, and this is the same act — a typo is answered by looking,
-   not by typing it twice. The recovery code is the one thing in the system
-   that earns a confirm field, because it is the one thing the reader cannot
-   look at later.
+   THE PASSWORD TWICE (jakob 2026-11-11, J2). Every form that sets a new
+   password asks for it again under the first field — `Repeat password`,
+   masked, with its own reveal toggle — and refuses on the press when the two
+   differ, the way this form refuses a short password: `The two passwords
+   don't match.` under the repeat field. `Join` and `ChangePassword` do the
+   same.
 
    THE QUIET NOTE IS `Reset`'s, VERBATIM, and it matters more here. A reader
    who has just finished a password reset is exactly the reader most likely
    to believe their key came back with it.
 
    REGISTERED under the `reset` prefix (round 28): `title`, `body`, the field
-   `password` (`ChangePassword`'s name for the new one), `commit` and `note`. */
+   `password` (`ChangePassword`'s name for the new one), its repeat `confirm`
+   (`RecoveryCode`'s name for the field that types a thing back; round 38),
+   `commit` and `note`. */
 export const NODE = "reset";
 export function Screen() {
   return (
@@ -61,7 +64,11 @@ export function Screen() {
       </p>
 
       <div style={{ marginTop: 32 }}>
-        <PasswordField id="new-password" label="New password" autoComplete="new-password" account="sol@solferreira.art" value="" hint="At least 12 characters." node="password" />
+        <PasswordField id="new-password" label="New password" autoComplete="new-password" account="sol@solferreira.art" enterKeyHint="next" value="" hint="At least 12 characters." node="password" />
+      </div>
+
+      <div style={{ marginTop: 24 }}>
+        <PasswordField id="new-password-repeat" label="Repeat password" autoComplete="new-password" value="" node="confirm" />
       </div>
 
       <div style={{ marginTop: 24 }}>
