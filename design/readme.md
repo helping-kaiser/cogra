@@ -10906,6 +10906,43 @@ act 1: what was fully ruled.
   **6096 → 6102** board paths, **1904 → 1910** distinct
   (`redactedOpinion` and its five parts).
 
+### Round 30, jakob's answers — 2026-11-11
+
+jakob's answers to the review's open questions (seam 254's held items, Q2–
+Q14), the ruled part.
+
+- **Every section of a search answer is captioned**: `Profiles`, `Tags`,
+  `Posts and comments`, each `SectionLabel` (`tagsLabel`, `contentLabel`
+  beside `profilesLabel`), on `ExplorePerson`, `ExploreSearch` and the
+  results under `ExploreFilter`'s sheet.
+- **Tags everywhere.** *Topic* leaves every label: `Your tags`, `One tag`,
+  `All your tags`, the kept feeling's kind `Tag`, the filter's hint, the
+  empty list, the pad's help line, the way back `Back to Your tags`. The
+  registry's paths keep the word until a re-key (backlog 150).
+- **A portrait clip on a tag page opens the stream**, carrying only the
+  clips tagged with that tag in the page's order; a clip wider than tall
+  opens the post. Law and edges only.
+- **A tag that never landed** reads `This tag didn't land.` with `Remove
+  it` on the Tags row, no reason given — the `state` chip's `tagRefused`
+  on `ComposeSeal` and `ReplySeal`, the unlanded citation's row.
+- **The reply's one citation** keeps `Reference` and its ×, and reads its
+  name over its pair.
+- **The profile figures count the lists drawn**: @ada 6 / 6, one's own
+  @sol 5 / 5, the deleted account 6 / 6.
+- **A removed comment on the profile's comments view** is the `comments`
+  chip's `removed`, `CommentRemoved`'s mark, registering
+  `profile.comments.commentCard.removalMark`.
+- **A words-only comment's edit** is `CommentEdit`'s `body` chip at
+  `words`: the media block is its add row alone, `+ Add pictures or a
+  video`.
+- **Blessed**: `This comment didn't land, so it can't be cited.` The kept
+  picks' snackbar reads `Signed 4 things, still settling.`, the four
+  drawn.
+- **The gate**: edges **2166 → 2167** (`ComposeSeal`'s `Remove it`); flows
+  hold at **227**, two re-blessed (`walk-your-topics`, its door now `Your
+  tags`; `sign-the-picks-kept-while-the-key-was-away`, its snackbar's 4). The registry holds at **167 screens**, **6102 → 6111** board
+  paths, **1910 → 1915** distinct.
+
 ---
 
 ## 14. The canvases
