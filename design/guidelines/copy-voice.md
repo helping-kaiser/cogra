@@ -185,6 +185,11 @@ The product is **CoGra** in prose. The wordmark is lowercase `cogra`.
 Handles are shown with `@`. A person or group is an *actor* internally
 and never on screen — on screen they have a name and a handle.
 
+**A person is named by handle, never by a gendered pronoun** (jakob
+2026-11-11, T4: the app holds no gender). Where a line would say *he*,
+*she*, *him*, *her*, *his* or *hers* of a person, it names them by handle:
+`@ada's own opinion rides the post`.
+
 **A `#name` is a TAG on screen and a topic in the record** (jakob's
 rulings, 2026-09-09 and 2026-11-11: "tags is the learned name … tags
 everywhere"). *Tags* is the word people already use for this, and the
@@ -3430,7 +3435,7 @@ piece of borrowed vocabulary and it is load-bearing: a step does not
 says that.
 
 **What a step is, in words**: `Your opinion of @ada` · `@ada published
-it`, with `Her own opinion rides the post` under the second. A publish is
+it`, with `@ada's own opinion rides the post` under the second. A publish is
 a step like any other, and what makes it one is the opinion the author
 signed with it — which the composer's seal already told them.
 
