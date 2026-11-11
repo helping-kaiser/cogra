@@ -63,7 +63,7 @@ export function Screen() {
             <SigningPending row message="Your post didn't sign." onRetry={() => {}} />
           </div>
           <div style={{ display: "{{editShown}}" }}>
-            <PostCard {...SOL_POST} menuItems={OWN_POST_MENU} />
+            <PostCard {...SOL_POST} menuItems={OWN_POST_MENU.filter((row) => row !== LICENSE_ROW)} />
             <div style={{ display: "{{editSigningShown}}", ...LINE }}>
               <PendingMarker label="Signing…" />
             </div>

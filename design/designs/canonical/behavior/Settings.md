@@ -144,9 +144,19 @@ ALWAYS settings.clearing.footnote reads Your key lives only in this browser, and
 
 ALWAYS settings.clearing.footnote opens on the key and says the account is gone for good before it names anything else that goes
 
-ALWAYS settings.clearing carries one row, settings.clearing.erase, reading Erase everything from this browser on the web and Erase everything from this app on android, quiet like Sign out and in no error colour
+ALWAYS settings.clearing ends on settings.clearing.erase, reading Erase everything from this browser on the web and Erase everything from this app on android, quiet like Sign out and in no error colour
 
 WHEN tap settings.clearing.erase -> the dialog Erase everything from this browser? opens over settings AND NEVER anything is erased before an answer
+
+ALWAYS settings.clearing.install leads settings.clearing, reading Add CoGra to your home screen, one line and a chevron GIVEN the browser can install the web app and it is not running installed
+
+ALWAYS settings.clearing.install is absent GIVEN the web app runs installed from the home screen, or the browser can neither ask to install it nor install it by hand
+
+ALWAYS settings.clearing.install is absent on android
+
+WHEN tap settings.clearing.install GIVEN the browser can ask to install the web app (Android Chrome) -> the browser's own install prompt opens AND NEVER a dialog of ours opens
+
+WHEN tap settings.clearing.install GIVEN the browser installs by hand and never asks (iOS Safari) -> the dialog Add CoGra to your home screen opens over settings
 
 WHEN tap Manage space on the phone's own storage screen for CoGra on android -> settings opens with settings.clearing in view AND NEVER anything is cleared
 

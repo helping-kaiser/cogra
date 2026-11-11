@@ -13,7 +13,7 @@ export function Screen() {
           score="11.40"
           comments={2}
           license={{ attribution: 1, provenance: 0 }}
-          menuItems={CARD_MENU}
+          menuItems={readerCardMenu("ada")}
         />
         <PostCard
           author={SOL}
@@ -23,7 +23,7 @@ export function Screen() {
           score="4.20"
           comments={0}
           license={{ attribution: 0, provenance: 0 }}
-          menuItems={CARD_MENU}
+          menuItems={readerCardMenu("sol")}
         />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />

@@ -1944,7 +1944,7 @@ server's and returns on sign-in, so the words never call it lost;
 `the choices kept on this device` echoes Theme's and Reading's own
 phrase. (*New 2026-10-13, drafted — wording jakob's at review.*)
 
-**The wipe** is the group's one row, `Erase everything from this
+**The wipe** is the group's last row, `Erase everything from this
 browser` — `Erase everything from this app` in the app — an action row
 as quiet as `Sign out` (jakob 2026-10-13: "the wipe everything from this
 device… with warnings"). It raises `EraseConfirm`: the title repeats
@@ -1964,6 +1964,16 @@ answers are `Erase everything and sign out` and `Cancel`, the safe one
 filled. `Erase everything and sign out` is `Erase them and sign out`'s
 construction for the whole device. (*New 2026-10-13, drafted — wording
 jakob's at review.*)
+
+**The install row** (jakob 2026-11-11, seam 285) leads the Clearing data
+group in a browser that can install the web app and is not running it
+installed: `Add CoGra to your home screen`, one line and a chevron. Where
+the browser asks by itself (Android Chrome) the tap raises its own prompt;
+where it installs only by hand (iOS Safari) the tap raises the help
+dialog's shape, titled by the row, with one paragraph: `In Safari, tap
+Share, then Add to Home Screen.` and `Close` (`SettingsInstallHelp`). The
+android app never shows the row. (*New 2026-11-11, round 39, drafted —
+review-pending, wording jakob's at review.*)
 
 **Sessions** keeps `Revoke` and `Sign out everywhere else`, and says the
 delay before it happens rather than only after:
@@ -3706,8 +3716,9 @@ recorded so the registry is whole.
   stays readable.`
 - **5** — `Someone brings you in` · `You are here because @mira invited
   you. @mira's link is your first way in to everyone else, and theirs
-  to you.` (the inviter by handle, *Naming*; jakob 2026-11-11), with the quiet note `The friend who sent you this invite has to
-  let you in. Ask them once you have verified your email.`
+  to you.` (the inviter by handle, *Naming*; jakob 2026-11-11), with the quiet note `A friend who's already in has to let you
+  in. Ask around once you have verified your email.` (*blessed (jakob
+  2026-10-07)*)
 
 ## About
 
