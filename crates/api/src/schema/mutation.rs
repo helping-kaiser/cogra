@@ -3778,15 +3778,14 @@ impl Mutation {
         let config = ctx.data::<MediaConfig>()?;
         let blobs = ctx.data::<Arc<dyn BlobStore>>()?;
         let value = input.file.value(ctx)?;
+        let size = value.size()?;
         let destination = media::GalleryKind::from(input.scale);
         let caps = config.caps_for(destination);
 
         let _permit = config.process_permits.acquire().await?;
         let processed = tokio::task::spawn_blocking(move || {
-            use std::io::Read;
-            let mut bytes = Vec::new();
-            value.into_read().read_to_end(&mut bytes)?;
-            std::io::Result::Ok(media::process(&bytes, caps))
+            media::read_upload(value.into_read(), size, caps)
+                .map(|read| read.and_then(|bytes| media::process(&bytes, caps)))
         })
         .await??;
 

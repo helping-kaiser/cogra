@@ -611,6 +611,17 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
     })
 }
 
+/// Reads an uploaded file of `size` bytes into memory for [`process`].
+pub fn read_upload(
+    mut file: impl std::io::Read,
+    _size: u64,
+    _caps: UploadCaps,
+) -> std::io::Result<Result<Vec<u8>, MediaError>> {
+    let mut bytes = Vec::new();
+    file.read_to_end(&mut bytes)?;
+    Ok(Ok(bytes))
+}
+
 /// One stored format's half of the pipeline: the cap that bounds it, the
 /// strip that cleans it, the probe that proves it.
 ///
