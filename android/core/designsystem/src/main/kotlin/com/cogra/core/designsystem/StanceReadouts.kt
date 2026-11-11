@@ -57,6 +57,7 @@ import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.ButtonSize
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.token.TypeTokens
 import kotlinx.coroutines.delay
 
 /** How long a readout's value has to rest before it is spoken (`SETTLE_MS`). */
@@ -157,7 +158,8 @@ private fun ReadoutBlock(
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
             Text(
                 text = emoji,
-                style = if (big) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
+                style = (if (big) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium)
+                    .copy(lineHeight = TypeTokens.FaceLineHeight),
                 modifier = Modifier.semantics { hideFromAccessibility() }.dataNode(node?.div("face")),
             )
             ExactSpan(
@@ -393,7 +395,11 @@ private fun WordsLanding(emoji: String, words: String, tag: String, door: ZeroDo
                         .clickable(role = Role.Button, onClick = door.onOpen)
                 },
             )
-            Text(text = emoji, style = MaterialTheme.typography.titleMedium, modifier = face)
+            Text(
+                text = emoji,
+                style = MaterialTheme.typography.titleMedium.copy(lineHeight = TypeTokens.FaceLineHeight),
+                modifier = face,
+            )
             Text(
                 text = words,
                 style = MaterialTheme.typography.bodySmall,
