@@ -1185,7 +1185,6 @@ your key`) — the construction `Report a problem`'s empty foot first
 drew. One line per form (`WaitingCommit`; *new 2026-10-05, blessed
 (jakob 2026-10-05)*):
 
-- `Waiting for both passwords` — `ChangePassword`.
 - `Waiting for a new handle` — `ChangeHandle`.
 - `Waiting for a new email and your password` — `ChangeEmail`,
   `ApplicantEmail`.
@@ -1198,7 +1197,9 @@ drew. One line per form (`WaitingCommit`; *new 2026-10-05, blessed
 - `Waiting for a handle, your email and a password` — `Join`.
 - `Waiting for a new password` — `ResetNew`.
 
-`Report a problem` carries none: its `Send by email` only prefills a
+`ChangePassword` carries none: its commit simply stays disabled until the
+three fields hold something — the wait explains itself (jakob 2026-11-11,
+R2). `Report a problem` carries none: its `Send by email` only prefills a
 draft, which is no commit for the law to gate.
 
 ## Menu rows

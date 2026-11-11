@@ -42,6 +42,6 @@ WHEN press the header back arrow -> settings returns AND NEVER the password chan
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
-ALWAYS Change password stands disabled with Waiting for both passwords right above it GIVEN any password field is empty
+ALWAYS Change password stands disabled, with no line above it, GIVEN any password field is empty
 
-WHEN all three password fields hold a character -> Change password wakes AND the line Waiting for both passwords goes
+WHEN all three password fields hold a character -> Change password wakes

@@ -3518,14 +3518,16 @@ function WhatsNewBody({ newer }) {
    wait*).
 
    `waiting` false draws the live commit alone, for a state whose fields are
-   filled.
+   filled. A form with no `reason` waits silently: the commit disabled and no
+   line (`ChangePassword`, jakob 2026-11-11, R2 — a self-evident wait says
+   nothing).
 
    `node` names the pair where a registered board places it (design ⇄ impl
    seam 002): the line is its `reason` and the button its `action`. */
 function WaitingCommit({ id, label, reason, waiting = true, node }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node={node}>
-      {waiting && (
+      {waiting && reason && (
         <span
           id={`${id}-waits`}
           data-node={node && "reason"}
@@ -3541,7 +3543,7 @@ function WaitingCommit({ id, label, reason, waiting = true, node }) {
           {reason}
         </span>
       )}
-      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting ? `${id}-waits` : undefined} node={node && "action"}>
+      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting && reason ? `${id}-waits` : undefined} node={node && "action"}>
         {label}
       </Button>
     </div>

@@ -542,9 +542,11 @@ rule covers all three button variants:
   round): never hidden, and never left live only to refuse on press — the
   reader sees the commitment exists and reads what it is waiting for.
   The reason is one quiet line right above the commit, in the voice for
-  what something waits on — `Waiting for both passwords` — and the
+  what something waits on — `Waiting for your email` — and the
   commit's description (`WaitingCommit`; drawn on every credential and
-  entry form, jakob 2026-10-05; the reasons blessed the same day).
+  entry form, jakob 2026-10-05; the reasons blessed the same day). A wait
+  that explains itself carries no line — change password's three fields
+  (jakob 2026-11-11).
   **The law gates commits; a handoff that only prefills another app's
   draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
   by email` stays live from an empty field, because what it enforces is

@@ -5544,7 +5544,7 @@ their construction: `No one let in yet.`). Lean: absent — the two halves stand
 because something can arrive in them now; this one fills only by the
 reader's own act.
 
-### 172 · `Waiting for both passwords` over three fields · *design* · **filed 2026-11-11**
+### 172 · `Waiting for both passwords` over three fields · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 38 (J2). `ChangePassword` now asks for the current password and the
 new one twice; its commit's waiting line still reads `Waiting for both
@@ -5553,6 +5553,11 @@ empty. `Join`'s `Waiting for a handle, your email and a password` and
 `ResetNew`'s `Waiting for a new password` still read true. For jakob: keep it
 (the new one asked twice is still one password), or a new line (a draft:
 `Waiting for your passwords`). Lean: keep.
+
+Closed by round 41 (jakob 2026-11-11, R2: "super self explaining… remove
+it"): the line is gone; `Change password` simply stays disabled until the
+three fields hold something. The registered `changePassword.commit.reason`
+is deleted with it, a named breaking change for impl.
 
 ### 173 · Names and handles outside the actor chip: no rule yet · *design* · **filed 2026-11-11**
 

@@ -1031,7 +1031,6 @@
         "changePassword.body": [],
         "changePassword.commit": [],
         "changePassword.commit.action": [],
-        "changePassword.commit.reason": [],
         "changePassword.confirm": [],
         "changePassword.confirm.input": [],
         "changePassword.confirm.label": [],
