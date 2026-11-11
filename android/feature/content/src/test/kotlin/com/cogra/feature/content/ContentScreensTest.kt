@@ -620,6 +620,34 @@ class ContentScreensTest {
         assertThat(cited).isEqualTo("p1")
     }
 
+    /**
+     * A person card's ⋮ `Mention in a new post` stages that person in the
+     * composer (ProfileMenu.md:17, the card's menu being the profile's less its
+     * share row) — a citation whose target is a User is a mention.
+     */
+    @Test
+    fun aPersonCardsMentionRowStagesThePersonInTheComposer() {
+        var cited: String? = null
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                filter = com.cogra.domain.feed.FeedFilter.DEFAULT.copy(
+                    kinds = com.cogra.domain.feed.FeedKind.entries.toSet(),
+                ),
+                cards = listOf(
+                    com.cogra.domain.feed.FeedCard.Person(
+                        com.cogra.domain.testing.testProfile("u-mira", "mira", "Mira"),
+                    ),
+                ),
+            ),
+            viewerId = "someone-else",
+            onCitePost = { cited = it },
+        )
+        compose.onNodeWithTag("feed.profileCard.menu").performClick()
+        compose.onNodeWithTag("feed_person_u-mira_menu_mention").performClick()
+        assertThat(cited).isEqualTo("u-mira")
+    }
+
     /** The license row opens the terms on the card that asked for them. */
     @Test
     fun theCardsLicenseRowOpensTheTermsOverTheFeed() {

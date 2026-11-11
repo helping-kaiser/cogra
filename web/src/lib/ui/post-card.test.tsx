@@ -1,7 +1,8 @@
 import { fireEvent, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PostView } from "@/lib/api/content-api";
+import { fakeClampLayout } from "@/test/fake-clamp-layout";
 import { renderWithProviders } from "@/test/providers";
 import { createTokenStore } from "@/lib/session/token-store";
 import { setAccountFilterLevel } from "@/lib/settings/sensitive-content";
@@ -200,30 +201,72 @@ describe("PostCard", () => {
     expect(screen.queryByTestId("card-opener")).not.toBeInTheDocument();
   });
 
-  // A media post's caption is clamped to two lines and always carries the
-  // opener; a text post's body has eighteen lines to fill first.
-  it("offers the opener only where something is folded away", () => {
-    mount(post());
-    expect(screen.queryByTestId("card-opener")).not.toBeInTheDocument();
-    mount(post({ attachments: [picture()], content: moderated(null), description: moderated("A caption") }));
-    expect(screen.getByTestId("card-opener")).toHaveTextContent("More");
-  });
+  // `More` STANDS ONLY WHERE A CLAMP CUTS SOMETHING (`PostCard.jsx`: "only
+  // where there is something folded away"), read off the clamped paragraph's
+  // own heights (`clamp-fold.ts`). jsdom lays nothing out, so the heights are
+  // the stand-in layout's: 40 characters to a 20px line.
+  describe("the opener, measured", () => {
+    let layout: ReturnType<typeof fakeClampLayout>;
+    beforeEach(() => {
+      layout = fakeClampLayout(40);
+    });
+    afterEach(() => layout.restore());
 
-  it("unfolds the text in place, and folds it back", () => {
-    mount(post({ content: moderated("x".repeat(18 * 51 + 1)) }));
-    const opener = screen.getByTestId("card-opener");
-    expect(opener).toHaveAttribute("aria-expanded", "false");
-    fireEvent.click(opener);
-    expect(opener).toHaveTextContent("Less");
-    expect(screen.getByTestId("card-body").className).not.toContain("line-clamp");
-    fireEvent.click(opener);
-    expect(opener).toHaveTextContent("More");
+    const captioned = (caption: string) =>
+      post({ attachments: [picture()], content: moderated(null), description: moderated(caption) });
+
+    it("offers no opener under a caption that fits its two lines", () => {
+      mount(captioned("A caption"));
+      expect(screen.queryByTestId("card-opener")).not.toBeInTheDocument();
+    });
+
+    it("offers no opener under a short text post", () => {
+      mount(post({ description: moderated("A short description") }));
+      expect(screen.queryByTestId("card-opener")).not.toBeInTheDocument();
+    });
+
+    it("offers More under a caption its two lines cut", () => {
+      mount(captioned("x".repeat(81)));
+      expect(screen.getByTestId("card-opener")).toHaveTextContent("More");
+    });
+
+    it("offers More under a text body its eighteen lines cut", () => {
+      mount(post({ content: moderated("x".repeat(18 * 40 + 1)) }));
+      expect(screen.getByTestId("card-opener")).toHaveTextContent("More");
+    });
+
+    it("unfolds the text in place, and folds it back", () => {
+      mount(post({ content: moderated("x".repeat(18 * 40 + 1)) }));
+      const opener = screen.getByTestId("card-opener");
+      expect(opener).toHaveAttribute("aria-expanded", "false");
+      fireEvent.click(opener);
+      expect(opener).toHaveTextContent("Less");
+      expect(screen.getByTestId("card-body").className).not.toContain("line-clamp");
+      fireEvent.click(opener);
+      expect(opener).toHaveTextContent("More");
+    });
+
+    it("drops the opener when a wider line lets the caption fit", () => {
+      mount(captioned("x".repeat(81)));
+      expect(screen.getByTestId("card-opener")).toBeInTheDocument();
+      layout.resize(60);
+      expect(screen.queryByTestId("card-opener")).not.toBeInTheDocument();
+      layout.resize(40);
+      expect(screen.getByTestId("card-opener")).toHaveTextContent("More");
+    });
+
+    it("offers no opener on the read surface", () => {
+      mount(captioned("x".repeat(200)), { variant: "detail" });
+      expect(screen.queryByTestId("card-opener")).not.toBeInTheDocument();
+    });
   });
 
   // `More` opens text in place and never navigates, so it stands outside the
   // link — as does everything else with a meaning of its own.
   it("keeps the acting controls outside the link", () => {
-    mount(post({ content: moderated("x".repeat(18 * 51 + 1)) }));
+    const layout = fakeClampLayout(40);
+    mount(post({ content: moderated("x".repeat(18 * 40 + 1)) }));
+    layout.restore();
     const link = screen.getByTestId("card-link");
     expect(link).toHaveAttribute("href", "/posts/p1");
     expect(link).not.toContainElement(screen.getByTestId("card-opener"));

@@ -49,6 +49,13 @@ fn formation(msg: impl Into<String>) -> StandInError {
 ///   fold reads it. Offer revision is a new Offer.
 /// - **Carriage and dependency bounds**, checked against
 ///   `StandInConfig::max_payload_bytes` and `MAX_DEPS`.
+/// - **The nonce's checkable part** (layer1-interface.md §8.2, "Proposal
+///   pre-commitment"): its length is the published entropy floor
+///   `crypto::SALT_LEN`, and it is fresh across the author's acts. The
+///   nonce itself is removed at acceptance, so non-reuse is held by its
+///   digest ([`crypto::nonce_digest`]), which the act's row keeps for
+///   good under `UNIQUE (author, nonce_digest)`: a reuse is refused as a
+///   conflict whether the first act is still in custody or accepted.
 /// - **Storable sequence.** The author-local sequence is a `u64` in the
 ///   identifier and a BIGINT in storage. A value above `i64::MAX` would
 ///   store as a negative beside an `act_id` text carrying the unsigned
@@ -64,7 +71,8 @@ fn formation(msg: impl Into<String>) -> StandInError {
 ///   host seal.
 /// - **Persistence.** The insert is the uniqueness check — a second
 ///   record claiming the same act identifier, or reusing the
-///   author-local sequence, is equivocation and produces no Layer-1
+///   author-local sequence, is equivocation, and one reusing the
+///   author's nonce is refused alike; neither produces a Layer-1
 ///   object. Sealed-but-never-approved rows are never collected:
 ///   unbounded, but stand-in-scoped, since the whole l1_* table set
 ///   drops at the swap, so a reaper here would only be machinery for
@@ -112,6 +120,13 @@ pub(crate) async fn seal(
             "payload exceeds M_payload ({} > {})",
             pre.proposal.payload.len(),
             standin.config().max_payload_bytes
+        )));
+    }
+    if pre.nonce.len() != crypto::SALT_LEN {
+        return Err(formation(format!(
+            "the proposal nonce is {} bytes; the entropy floor is {}",
+            pre.nonce.len(),
+            crypto::SALT_LEN
         )));
     }
     if pre.proposal.deps.len() + body.asserted_parents.len() > MAX_DEPS {
@@ -177,6 +192,7 @@ pub(crate) async fn seal(
     let deps: Vec<String> = pre.proposal.deps.iter().map(|d| d.to_string()).collect();
     let payload_len = i64::try_from(pre.proposal.payload.len())
         .map_err(|_| formation("payload length exceeds the stored range"))?;
+    let nonce_digest = crypto::nonce_digest(&body.author, &pre.nonce);
     let mut tx = standin.pool().begin().await?;
     let inserted = sqlx::query!(
         "INSERT INTO l1_acts (
@@ -184,8 +200,8 @@ pub(crate) async fn seal(
             p_d, p_i, settlement_ref, license, asserted_parents, deps,
             payload, payload_len, nonce, pre_signature, pre_commitment,
             content_salt, deps_salt, content_commitment, deps_commitment,
-            host_seal, status
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,'sealed')
+            host_seal, nonce_digest, status
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,'sealed')
          ON CONFLICT DO NOTHING",
         act_id.to_string(),
         body.author,
@@ -210,13 +226,26 @@ pub(crate) async fn seal(
         &act.content_commitment,
         &act.deps_commitment,
         &act.host_seal,
+        &nonce_digest[..],
     )
     .execute(&mut *tx)
     .await?;
     if inserted.rows_affected() == 0 {
-        return Err(StandInError::Conflict(format!(
-            "act identifier {act_id} (or its author-local sequence) already exists"
-        )));
+        let identifier_taken = sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                   SELECT 1 FROM l1_acts WHERE act_id = $1 OR (author = $2 AND seq = $3)
+               ) AS "taken!""#,
+            act_id.to_string(),
+            body.author,
+            body.seq as i64,
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+        return Err(StandInError::Conflict(if identifier_taken {
+            format!("act identifier {act_id} (or its author-local sequence) already exists")
+        } else {
+            format!("the proposal nonce of {act_id} was already used by its author")
+        }));
     }
 
     sqlx::query!(

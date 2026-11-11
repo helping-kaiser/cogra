@@ -23,6 +23,12 @@
 // clip's frames — and the picture passes the cover's crop, locked to the
 // comment's square, before it lands here.
 //
+// A COMMENT HOLDING WORDS ALONE TAKES A CLIP (CommentEdit.md:17–23): its media
+// block is the add row alone, `+ Add pictures or a video`, and a picked clip
+// arrives as the video block and cover row above — uploading at once, its
+// tile wearing its frame 0, its cover row at `Add a cover`. Words alone is the
+// edit's own state, so a body whose pictures this edit removed reads it too.
+//
 // THE BYTES THE EDIT TAKES GATE ITS SIGN in the seal's grammar: the gate line
 // over the foot, Sign enabled while they run and a press held until they land;
 // a failed upload drops the press and shuts Sign until Retry re-gates.
@@ -69,12 +75,15 @@ import {
   type EditActRow,
 } from "@/lib/compose/edit-batch";
 import { COMMENT_ATTACHMENT_CAP } from "@/lib/compose/comment-media";
+import { PICKABLE_VIDEO_TYPES } from "@/lib/ui2/media/video";
 import {
-  clipOf,
+  bodyClipOf,
   coverChosen,
   describedCount,
   editUploads,
+  failedLineOf,
   failedUploadLine,
+  failureRetryable,
   pictureAltText,
   pictureId,
   uploadsDone,
@@ -266,7 +275,19 @@ export function CommentEditView({
   onSign: () => void;
   onLeave: () => void;
 }) {
-  const clip = clipOf(gallery);
+  const clip = bodyClipOf(gallery);
+  // A clip picked in this edit is its own upload; a kept one never moves.
+  const clipUpload = clip?.kind === "addedClip" ? clip.asset.upload : null;
+  const clipRunning =
+    clipUpload !== null &&
+    (clipUpload.kind === "waiting" ||
+      clipUpload.kind === "encoding" ||
+      clipUpload.kind === "uploading" ||
+      clipUpload.kind === "processing");
+  // THE COMMENT HOLDS WORDS ALONE — read off the edit as it stands, so a body
+  // whose pictures this edit removed is words again (CommentEdit.md:17–19).
+  const wordsAlone = gallery.length === 0;
+  const retryable = failureRetryable(gallery);
   const full = gallery.length >= COMMENT_ATTACHMENT_CAP;
   const count = editActCount(acts);
   const signing = busy || held;
@@ -374,313 +395,338 @@ export function CommentEditView({
             node={part(NODE, "header")}
           />
 
-          <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto px-6 pb-4 pt-3">
-            <QuietNote testId="comment-edit-lede" node={part(NODE, "target")}>
-              Your comment on &ldquo;{targetLabel}&rdquo;.
-            </QuietNote>
+          <div className="flex min-h-0 flex-1 flex-col gap-3.5 px-6 pb-4 pt-3">
+            {/* The fields scroll under the pinned foot (CommentEditVideo's
+                docblock, the post edit's reading): with a clip, its cover row
+                and the gate drawn the form runs taller than the phone, and the
+                gate, the count and Sign stay where they stand at rest. */}
+            <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto">
+              <QuietNote testId="comment-edit-lede" node={part(NODE, "target")}>
+                Your comment on &ldquo;{targetLabel}&rdquo;.
+              </QuietNote>
 
-            <TextField
-              label="Words"
-              value={words}
-              onChange={onWords}
-              multiline
-              rows={clip !== undefined ? 2 : 3}
-              testId="comment-edit-input"
-              node={part(NODE, "words")}
-              cap={COMMENT_BODY_MAX_CHARS}
-              error={wordsIssue ?? undefined}
-            />
+              <TextField
+                label="Words"
+                value={words}
+                onChange={onWords}
+                multiline
+                rows={clip !== undefined ? 2 : 3}
+                testId="comment-edit-input"
+                node={part(NODE, "words")}
+                cap={COMMENT_BODY_MAX_CHARS}
+                error={wordsIssue ?? undefined}
+              />
 
-            {clip !== undefined ? (
-              <>
-                <div className="flex flex-col gap-1.5" {...testAttributes(VIDEO)}>
-                  <FieldLabel node={part(VIDEO, "label")}>Video</FieldLabel>
-                  <div className="flex items-center gap-2">
-                    <MediaThumb
-                      src={clip.coverUrl}
-                      altText={clip.altText}
-                      width={COMMENT_TILE}
-                      height={COMMENT_TILE}
-                      fit="contain"
-                      durationMs={0}
-                      onRemove={() => onRemovePicture(clip.mediaId)}
-                      removeLabel="Remove this video"
-                      testId="comment-edit-clip"
-                      node={part(VIDEO, "thumb")}
-                      removeNode={part(VIDEO, "thumb.remove")}
-                    />
-                  </div>
-                  {/* One description for the clip, none for its cover. */}
-                  <DescribeCounter
-                    subject="the video"
-                    described={describedCount([clip])}
-                    total={1}
-                    onDescribe={() => onDescribe(clip.mediaId)}
-                    testId="comment-edit-describe-counter"
-                    node={part(VIDEO, "describeRow")}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5" {...testAttributes(COVER)}>
-                  <FieldLabel node={part(COVER, "label")}>Cover</FieldLabel>
-                  {coverChosen(clip) ? (
+              {clip !== undefined ? (
+                <>
+                  <div className="flex flex-col gap-1.5" {...testAttributes(VIDEO)}>
+                    <FieldLabel node={part(VIDEO, "label")}>Video</FieldLabel>
                     <div className="flex items-center gap-2">
                       <MediaThumb
-                        src={clip.newCover !== null ? (previews[clip.newCover.id] ?? null) : clip.coverUrl}
+                        // A kept clip wears the face it was served with; one
+                        // picked here wears its own frame 0 (ReplyVideo.md:9).
+                        src={clip.kind === "kept" ? clip.coverUrl : (previews[clip.asset.id] ?? null)}
+                        altText={pictureAltText(clip)}
                         width={COMMENT_TILE}
                         height={COMMENT_TILE}
                         fit="contain"
-                        crop={clip.newCover?.crop ?? null}
-                        {...coverThumbState(clip.newCover)}
-                        testId="comment-edit-cover"
-                        node={part(COVER, "thumb")}
+                        durationMs={0}
+                        progress={clipRunning ? "indeterminate" : undefined}
+                        failed={clipUpload?.kind === "failed"}
+                        onRemove={() => onRemovePicture(pictureId(clip))}
+                        removeLabel="Remove this video"
+                        testId="comment-edit-clip"
+                        node={part(VIDEO, "thumb")}
+                        removeNode={part(VIDEO, "thumb.remove")}
                       />
-                      <PillButton
-                        variant="text"
+                    </div>
+                    {clipUpload?.kind === "failed" && (
+                      // The family's clip line with its two ways out; a refusal
+                      // of the bytes offers Remove it alone — a retry cannot
+                      // make a clip smaller (UploadErrorLine).
+                      <UploadErrorLine
+                        message={failedLineOf(gallery)}
+                        onRetry={clipUpload.retryable ? onRetryUploads : undefined}
+                        onRemove={() => onRemovePicture(pictureId(clip))}
+                        testId="comment-edit-clip-error"
+                      />
+                    )}
+                    {refusals.length > 0 && (
+                      <RefusalList refusals={refusals} onDismiss={onDismissRefusal} />
+                    )}
+                    {/* One description for the clip, none for its cover. */}
+                    <DescribeCounter
+                      subject="the video"
+                      described={describedCount([clip])}
+                      total={1}
+                      onDescribe={() => onDescribe(pictureId(clip))}
+                      testId="comment-edit-describe-counter"
+                      node={part(VIDEO, "describeRow")}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5" {...testAttributes(COVER)}>
+                    <FieldLabel node={part(COVER, "label")}>Cover</FieldLabel>
+                    {coverChosen(clip) ? (
+                      <div className="flex items-center gap-2">
+                        <MediaThumb
+                          src={
+                            clip.newCover !== null
+                              ? (previews[clip.newCover.id] ?? null)
+                              : clip.kind === "kept"
+                                ? clip.coverUrl
+                                : null
+                          }
+                          width={COMMENT_TILE}
+                          height={COMMENT_TILE}
+                          fit="contain"
+                          crop={clip.newCover?.crop ?? null}
+                          {...coverThumbState(clip.newCover)}
+                          testId="comment-edit-cover"
+                          node={part(COVER, "thumb")}
+                        />
+                        <PillButton
+                          variant="text"
+                          size="sm"
+                          testId="comment-edit-change-cover"
+                          node={part(COVER, "change")}
+                          onClick={() => coverInput.current?.click()}
+                        >
+                          Change the cover
+                        </PillButton>
+                      </div>
+                    ) : (
+                      // The field's other state: no picture, and the door
+                      // (CommentEditVideo.md: "Add a cover and no picture").
+                      <InlineAction
                         size="sm"
-                        testId="comment-edit-change-cover"
-                        node={part(COVER, "change")}
+                        testId="comment-edit-add-cover"
                         onClick={() => coverInput.current?.click()}
                       >
-                        Change the cover
-                      </PillButton>
-                    </div>
-                  ) : (
-                    // The field's other state: no picture, and the door
-                    // (CommentEditVideo.md: "Add a cover and no picture").
+                        Add a cover
+                      </InlineAction>
+                    )}
+                    {clip.newCover?.upload.kind === "failed" && (
+                      // The cover is one picture, so its line is the one-picture
+                      // line, under the cover row with its two ways out.
+                      <UploadErrorLine
+                        message={failedUploadLine(1)}
+                        onRetry={onRetryUploads}
+                        onRemove={onRemoveCover}
+                        testId="comment-edit-cover-error"
+                      />
+                    )}
+                    <input
+                      ref={coverInput}
+                      type="file"
+                      accept="image/*"
+                      data-testid="comment-edit-cover-input"
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file !== undefined) onPickCover(file);
+                        event.target.value = "";
+                      }}
+                      className="sr-only"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col gap-1.5" {...testAttributes(PICTURES)}>
+                  {/* Words alone: the add row alone — no label, no tile, no
+                      describe row (CommentEdit.md:19, the board's `body` chip). */}
+                  {!wordsAlone && <FieldLabel node={part(PICTURES, "label")}>Pictures</FieldLabel>}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {gallery.map((picture, index) => {
+                      const id = pictureId(picture);
+                      const thumb = instance(PICTURES, "thumb", String(index + 1));
+                      const upload = picture.kind === "added" ? picture.asset.upload : null;
+                      return (
+                        <MediaThumb
+                          key={id}
+                          src={previews[id] ?? null}
+                          altText={pictureAltText(picture)}
+                          width={COMMENT_TILE}
+                          height={COMMENT_TILE}
+                          fit="contain"
+                          progress={
+                            upload !== null &&
+                            (upload.kind === "waiting" ||
+                              upload.kind === "encoding" ||
+                              upload.kind === "uploading" ||
+                              upload.kind === "processing")
+                              ? "indeterminate"
+                              : undefined
+                          }
+                          failed={upload?.kind === "failed"}
+                          onRemove={() => onRemovePicture(id)}
+                          testId={`comment-edit-media-${id}`}
+                          node={thumb}
+                          removeNode={part(thumb, "remove")}
+                        />
+                      );
+                    })}
+                    {/* The platform's own dialog: an editor has no pick stage
+                        either. NEVER SHUT AT THE CAP — a fifth picture is
+                        refused in words, which a closed picker would hide. The
+                        same reading keeps clips offered beside pictures: the
+                        pictures-or-video refusal is said in words
+                        (CommentEdit.md:27), never by a picker hiding them. */}
                     <InlineAction
                       size="sm"
-                      testId="comment-edit-add-cover"
-                      onClick={() => coverInput.current?.click()}
+                      testId="comment-edit-add-media"
+                      node={part(PICTURES, "add")}
+                      onClick={() => pickInput.current?.click()}
                     >
-                      Add a cover
+                      {wordsAlone
+                        ? "+ Add pictures or a video"
+                        : `+ Add pictures · ${gallery.length} of ${COMMENT_ATTACHMENT_CAP}`}
                     </InlineAction>
-                  )}
-                  {clip.newCover?.upload.kind === "failed" && (
-                    // The cover is one picture, so its line is the one-picture
-                    // line, under the cover row with its two ways out.
+                    <input
+                      ref={pickInput}
+                      type="file"
+                      accept={`image/*,${PICKABLE_VIDEO_TYPES}`}
+                      multiple
+                      data-testid="comment-edit-media-input"
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      data-full={full || undefined}
+                      onChange={(event) => {
+                        const files = event.target.files;
+                        if (files !== null && files.length > 0) onPick([...files]);
+                        event.target.value = "";
+                      }}
+                      className="sr-only"
+                    />
+                  </div>
+                  {faulted > 0 && (
                     <UploadErrorLine
-                      message={failedUploadLine(1)}
+                      message={failedUploadLine(faulted)}
                       onRetry={onRetryUploads}
-                      onRemove={onRemoveCover}
-                      testId="comment-edit-cover-error"
+                      onRemove={onRemoveFailed}
+                      count={faulted}
+                      testId="comment-edit-upload-error"
                     />
                   )}
-                  <input
-                    ref={coverInput}
-                    type="file"
-                    accept="image/*"
-                    data-testid="comment-edit-cover-input"
-                    tabIndex={-1}
-                    aria-hidden="true"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file !== undefined) onPickCover(file);
-                      event.target.value = "";
-                    }}
-                    className="sr-only"
-                  />
+                  {refusals.length > 0 && <RefusalList refusals={refusals} onDismiss={onDismissRefusal} />}
+                  {!wordsAlone && (
+                    <DescribeCounter
+                      described={describedCount(gallery)}
+                      total={gallery.length}
+                      onDescribe={() => {
+                        const first = gallery[0];
+                        if (first !== undefined) onDescribe(pictureId(first));
+                      }}
+                      testId="comment-edit-describe-counter"
+                      node={part(PICTURES, "describeRow")}
+                    />
+                  )}
                 </div>
-              </>
-            ) : (
-              <div className="flex flex-col gap-1.5" {...testAttributes(PICTURES)}>
-                <FieldLabel node={part(PICTURES, "label")}>Pictures</FieldLabel>
-                <div className="flex flex-wrap items-center gap-2">
-                  {gallery.map((picture, index) => {
-                    const id = pictureId(picture);
-                    const thumb = instance(PICTURES, "thumb", String(index + 1));
-                    const upload = picture.kind === "added" ? picture.asset.upload : null;
-                    return (
-                      <MediaThumb
-                        key={id}
-                        src={previews[id] ?? null}
-                        altText={pictureAltText(picture)}
-                        width={COMMENT_TILE}
-                        height={COMMENT_TILE}
-                        fit="contain"
-                        progress={
-                          upload !== null &&
-                          (upload.kind === "waiting" ||
-                            upload.kind === "encoding" ||
-                            upload.kind === "uploading" ||
-                            upload.kind === "processing")
-                            ? "indeterminate"
-                            : undefined
-                        }
-                        failed={upload?.kind === "failed"}
-                        onRemove={() => onRemovePicture(id)}
-                        testId={`comment-edit-media-${id}`}
-                        node={thumb}
-                        removeNode={part(thumb, "remove")}
+              )}
+
+              {/* The fields carry their own `Tags` and `References` labels. A
+                  staged chip or row opens its pair in a sheet over the edit
+                  (CommentEdit.md). The fields add nothing themselves, so they
+                  hold no cap; the pickers they open hold the comment's ten
+                  (TagPicker.md:29, ReferencePicker.md:37). */}
+              <TagEntryField
+                tags={tags}
+                onChange={onTags}
+                fieldErrors={tagErrors}
+                cap={null}
+                testIdPrefix="comment-edit"
+                pairs="sheet"
+                onOpenPicker={onOpenTagPicker}
+                node={part(NODE, "tags")}
+                after={withdrawnTags(loadedTags, tags).map((tag) => (
+                  <WithdrawnLine
+                    key={tag.name}
+                    name={`#${tag.name}`}
+                    onUndo={() => onUndoTag(tag.name)}
+                    testId={`comment-edit-withdrawn-tag-${tag.name}`}
+                    node={part(NODE, "tags.withdrawn")}
+                  />
+                ))}
+              />
+
+              <ReferenceEntryField
+                references={references}
+                onChange={onReferences}
+                fieldErrors={referenceErrors}
+                cap={null}
+                testIdPrefix="comment-edit"
+                pairs="sheet"
+                onOpenPicker={onOpenReferencePicker}
+                node={part(NODE, "references")}
+                after={
+                  <>
+                    {/* CommentEdit.md: a citation whose target never landed reads
+                        why, followed by Remove it — never Retry. */}
+                    {refusedCitation !== undefined && (
+                      <UploadErrorLine
+                        message={unlandedCitationLine(refusedCitation)}
+                        onRemove={() => onRemoveRefusedCitation(refusedCitation.targetId)}
+                        testId="comment-edit-citation-fault"
                       />
-                    );
-                  })}
-                  {/* The platform's own dialog: an editor has no pick stage
-                      either. NEVER SHUT AT THE CAP — a fifth picture is
-                      refused in words, which a closed picker would hide. */}
-                  <InlineAction
-                    size="sm"
-                    testId="comment-edit-add-media"
-                    node={part(PICTURES, "add")}
-                    onClick={() => pickInput.current?.click()}
-                  >
-                    + Add pictures · {gallery.length} of {COMMENT_ATTACHMENT_CAP}
-                  </InlineAction>
-                  <input
-                    ref={pickInput}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    data-testid="comment-edit-media-input"
-                    tabIndex={-1}
-                    aria-hidden="true"
-                    data-full={full || undefined}
-                    onChange={(event) => {
-                      const files = event.target.files;
-                      if (files !== null && files.length > 0) onPick([...files]);
-                      event.target.value = "";
-                    }}
-                    className="sr-only"
-                  />
-                </div>
-                {faulted > 0 && (
-                  <UploadErrorLine
-                    message={failedUploadLine(faulted)}
-                    onRetry={onRetryUploads}
-                    onRemove={onRemoveFailed}
-                    count={faulted}
-                    testId="comment-edit-upload-error"
-                  />
-                )}
-                {refusals.length > 0 && (
-                  <ul data-testid="comment-edit-refusals" className="m-0 flex list-none flex-col gap-2.5 p-0">
-                    {refusals.map((one) => (
-                      <li key={one.id}>
-                        <RefusedFileRow
-                          refusal={one}
-                          onDismiss={() => onDismissRefusal(one.id)}
-                          testIdPrefix="comment-edit"
-                        />
-                      </li>
+                    )}
+                    {withdrawnReferences(loadedReferences, references).map((reference) => (
+                      <WithdrawnLine
+                        key={reference.targetId}
+                        name={reference.target.label}
+                        onUndo={() => onUndoReference(reference.targetId)}
+                        testId={`comment-edit-withdrawn-reference-${reference.targetId}`}
+                        node={part(NODE, "references.withdrawn")}
+                      />
                     ))}
-                  </ul>
-                )}
-                {gallery.length > 0 && (
-                  <DescribeCounter
-                    described={describedCount(gallery)}
-                    total={gallery.length}
-                    onDescribe={() => {
-                      const first = gallery[0];
-                      if (first !== undefined) onDescribe(pictureId(first));
-                    }}
-                    testId="comment-edit-describe-counter"
-                    node={part(PICTURES, "describeRow")}
-                  />
-                )}
-              </div>
-            )}
+                  </>
+                }
+              />
 
-            {/* The fields carry their own `Tags` and `References` labels. A
-                staged chip or row opens its pair in a sheet over the edit
-                (CommentEdit.md). The fields add nothing themselves, so they
-                hold no cap; the pickers they open hold the comment's ten
-                (TagPicker.md:29, ReferencePicker.md:37). */}
-            <TagEntryField
-              tags={tags}
-              onChange={onTags}
-              fieldErrors={tagErrors}
-              cap={null}
-              testIdPrefix="comment-edit"
-              pairs="sheet"
-              onOpenPicker={onOpenTagPicker}
-              node={part(NODE, "tags")}
-              after={withdrawnTags(loadedTags, tags).map((tag) => (
-                <WithdrawnLine
-                  key={tag.name}
-                  name={`#${tag.name}`}
-                  onUndo={() => onUndoTag(tag.name)}
-                  testId={`comment-edit-withdrawn-tag-${tag.name}`}
-                  node={part(NODE, "tags.withdrawn")}
+              {/* The two term rows the board draws shut: the licence, stated and
+                  locked, then the author's own mark — FactRow's seal emphasis. */}
+              <div className="flex flex-col" {...testAttributes(FACTS)}>
+                <FactRow
+                  label="License"
+                  node={part(FACTS, "license")}
+                  value={
+                    <span
+                      className="text-body-medium text-on-surface-variant"
+                      {...testAttributes(part(FACTS, "license.value"))}
+                    >
+                      {licenseName(license)}
+                    </span>
+                  }
+                  action={
+                    <span
+                      className="inline-flex text-on-surface-variant"
+                      aria-label="The license never changes"
+                      {...testAttributes(part(FACTS, "license.lock"))}
+                    >
+                      <LockGlyph />
+                    </span>
+                  }
                 />
-              ))}
-            />
+                <FactRow
+                  label="Sensitive"
+                  node={part(FACTS, "sensitive")}
+                  value={
+                    <span
+                      className="text-body-medium text-on-surface-variant"
+                      {...testAttributes(part(FACTS, "sensitive.value"))}
+                    >
+                      {sensitive ? "Marked" : "Not marked"}
+                    </span>
+                  }
+                  action={sensitive ? "Change" : "Mark"}
+                  onAction={() => onSensitiveOpen(true)}
+                  testId="comment-edit-open-sensitive"
+                  last
+                />
+              </div>
 
-            <ReferenceEntryField
-              references={references}
-              onChange={onReferences}
-              fieldErrors={referenceErrors}
-              cap={null}
-              testIdPrefix="comment-edit"
-              pairs="sheet"
-              onOpenPicker={onOpenReferencePicker}
-              node={part(NODE, "references")}
-              after={
-                <>
-                  {/* CommentEdit.md: a citation whose target never landed reads
-                      why, followed by Remove it — never Retry. */}
-                  {refusedCitation !== undefined && (
-                    <UploadErrorLine
-                      message={unlandedCitationLine(refusedCitation)}
-                      onRemove={() => onRemoveRefusedCitation(refusedCitation.targetId)}
-                      testId="comment-edit-citation-fault"
-                    />
-                  )}
-                  {withdrawnReferences(loadedReferences, references).map((reference) => (
-                    <WithdrawnLine
-                      key={reference.targetId}
-                      name={reference.target.label}
-                      onUndo={() => onUndoReference(reference.targetId)}
-                      testId={`comment-edit-withdrawn-reference-${reference.targetId}`}
-                      node={part(NODE, "references.withdrawn")}
-                    />
-                  ))}
-                </>
-              }
-            />
-
-            {/* The two term rows the board draws shut: the licence, stated and
-                locked, then the author's own mark — FactRow's seal emphasis. */}
-            <div className="flex flex-col" {...testAttributes(FACTS)}>
-              <FactRow
-                label="License"
-                node={part(FACTS, "license")}
-                value={
-                  <span
-                    className="text-body-medium text-on-surface-variant"
-                    {...testAttributes(part(FACTS, "license.value"))}
-                  >
-                    {licenseName(license)}
-                  </span>
-                }
-                action={
-                  <span
-                    className="inline-flex text-on-surface-variant"
-                    aria-label="The license never changes"
-                    {...testAttributes(part(FACTS, "license.lock"))}
-                  >
-                    <LockGlyph />
-                  </span>
-                }
-              />
-              <FactRow
-                label="Sensitive"
-                node={part(FACTS, "sensitive")}
-                value={
-                  <span
-                    className="text-body-medium text-on-surface-variant"
-                    {...testAttributes(part(FACTS, "sensitive.value"))}
-                  >
-                    {sensitive ? "Marked" : "Not marked"}
-                  </span>
-                }
-                action={sensitive ? "Change" : "Mark"}
-                onAction={() => onSensitiveOpen(true)}
-                testId="comment-edit-open-sensitive"
-                last
-              />
+              <div className="flex-1" />
             </div>
-
-            <div className="flex-1" />
 
             {refusal && (
               <p role="alert" data-testid="comment-edit-refused" className="m-0 text-body-medium text-error">
@@ -698,8 +744,8 @@ export function CommentEditView({
                 total={0}
                 failed
                 failedCount={faulted}
-                message={failedUploadLine(faulted)}
-                onRetry={onRetryUploads}
+                message={failedLineOf(gallery)}
+                onRetry={retryable ? onRetryUploads : undefined}
                 testId="comment-edit-gate"
                 node={part(NODE, "gate")}
               />
@@ -708,7 +754,9 @@ export function CommentEditView({
                 <UploadStatusLine
                   done={uploadsDone(gallery)}
                   total={editUploads(gallery).length}
-                  media={clip !== undefined ? "cover" : "pictures"}
+                  // What signing waits for: the clip picked here while it
+                  // goes up, else the face the edit set, else the pictures.
+                  media={clipRunning ? "video" : clip !== undefined ? "cover" : "pictures"}
                   testId="comment-edit-gate"
                   node={part(NODE, "gate")}
                 />
@@ -749,6 +797,29 @@ export function CommentEditView({
         testId="comment-edit-acts-sheet"
       />
     </div>
+  );
+}
+
+/**
+ * The files the add control turned away, each with its Remove it — under the
+ * pictures, or under the clip a batch's first video became, where its second
+ * clip's `A comment carries one video.` stands (ReplyVideo.md:29).
+ */
+function RefusalList({
+  refusals,
+  onDismiss,
+}: {
+  refusals: readonly PickRefusal[];
+  onDismiss: (id: string) => void;
+}) {
+  return (
+    <ul data-testid="comment-edit-refusals" className="m-0 flex list-none flex-col gap-2.5 p-0">
+      {refusals.map((one) => (
+        <li key={one.id}>
+          <RefusedFileRow refusal={one} onDismiss={() => onDismiss(one.id)} testIdPrefix="comment-edit" />
+        </li>
+      ))}
+    </ul>
   );
 }
 

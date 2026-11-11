@@ -30,6 +30,8 @@ const AMENDMENTS: &[&str] = &[
     "20261014180000_l1_acts_witness_only.sql",
     "20261015120001_l1_acts_carriage_drop.sql",
     "20261110200000_l1_standin_number_from_one.sql",
+    "20261111100000_l1_standin_nonce_digest.sql",
+    "20261111100001_l1_standin_boundary_triple.sql",
 ];
 
 /// The one recorded exception, with the reason it cannot be removed.

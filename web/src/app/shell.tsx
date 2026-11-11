@@ -32,6 +32,7 @@ import type { BellRoot } from "@/lib/notifications/row-content";
 import { parseOpinionsOrigin } from "@/lib/profile/opinions-route";
 import { useAuthPhase } from "@/lib/session/provider";
 import { KeptPicksNavigation } from "@/lib/stance/kept-picks-route";
+import { FROM_YOUR_TOPICS } from "@/lib/topics/your-topics";
 import { carriedOrigin } from "@/lib/ui/back-origin";
 import { BottomNav, type NavSlot } from "@/lib/ui/bottom-nav";
 import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
@@ -69,7 +70,10 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
  * opened from the feed, a link or a chip, and lights Feed.
  */
 export function detailRoot(from: string | null): NavSlot {
-  if (from === "search") return "search";
+  // Explore at rest and Your topics, its subpage, are Explore's stack as its
+  // standing search is (readme §4: a tag page stays lit on the root it was
+  // opened from).
+  if (from === "search" || from === "explore" || from === FROM_YOUR_TOPICS) return "search";
   const opinions = parseOpinionsOrigin(from);
   if (opinions !== null) return opinions.handle === null ? "profile" : detailRoot(opinions.from);
   const carried = carriedOrigin(from);

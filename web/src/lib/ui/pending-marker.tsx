@@ -30,9 +30,10 @@ export function PendingMarker({
   /** What the content waits on; `Still settling` for a signed record. */
   label?: string;
 }) {
-  // The label-small SIZE in the secondary ink, and nothing else (`PendingMarker.jsx`:
-  // `fontSize`, `color`) — leading and weight are the line's surroundings'.
-  const ink = "text-[length:var(--text-label-small)] text-on-surface-variant";
+  // label-small whole — size, leading, tracking and weight — in the secondary
+  // ink (`PendingMarker.jsx`, round 28): the line measures the role's 16px
+  // wherever it stands, never its container's.
+  const ink = "text-label-small text-on-surface-variant";
   if (inline) {
     return (
       <span {...testAttributes(node, testId)} className={ink}>

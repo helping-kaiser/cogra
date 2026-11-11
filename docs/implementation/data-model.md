@@ -305,6 +305,14 @@ and keeps the payload length and both commitments. The nonce goes
 with them: the public pre-commitment is formed over it and the
 payload, so a kept nonce would confirm a guessed payload. The
 dependency salt stays, because an ordering fraud proof opens it.
+The nonce's digest stays too — SHA-256 over a tag, the author's
+address and the nonce, unique per author — because the host refuses
+a nonce its author already used, whether or not the earlier act was
+accepted ([layer1-interface.md](../primitive/layer1-interface.md),
+"Proposal pre-commitment"). The digest is one-way and the
+pre-commitment is formed over the nonce itself, not its digest, so
+the digest confirms no payload. An act accepted before the host kept
+digests has none, and a reuse of its nonce goes unseen.
 From acceptance on, `act_payloads` is the only carriage.
 
 At confirm, promotion moves the envelope and the seal's private

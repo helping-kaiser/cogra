@@ -54,7 +54,6 @@ import com.cogra.core.designsystem.bundleReadout
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.v2.media.CograAvatar
-import com.cogra.core.designsystem.v2.token.TypeTokens
 
 private val DISC = 40.dp
 
@@ -247,7 +246,6 @@ private fun TrailingEdge(trailing: String?, unread: Boolean, part: (String) -> D
             Text(
                 text = it,
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = TypeTokens.RowTrailingWeight,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.dataNode(part("trailing")),
             )

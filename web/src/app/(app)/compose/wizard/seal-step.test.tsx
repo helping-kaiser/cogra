@@ -440,8 +440,9 @@ describe("SealStep", () => {
     // and what it spent came out of the value slot. What is DRAWN is the
     // digit; the reading beside it is `sr-only` (item 73).
     expect((count.firstElementChild as HTMLElement).textContent).toBe("1");
-    // The count takes label-small's size at the ground's weight (`ActsCard.jsx` COUNT).
-    expect(count.className).toContain("text-[length:var(--text-label-small)]");
+    // The count is label-small whole, weight 500 with it (`ActsCard.jsx` COUNT, round 28).
+    expect(count.className.split(" ")).toContain("text-label-small");
+    expect(count.className).not.toContain("text-[length:");
   });
 
   // CW-27/CW-28: the license sheet carries its own help dot and the

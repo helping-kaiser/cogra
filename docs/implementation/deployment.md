@@ -151,9 +151,9 @@ origins and endpoints:
 - `CLIENT_IP_SOURCE=RightmostXForwardedFor` — sound because the proxy
   is the sole ingress ([auth.md](auth.md#rate-limiting)).
 - `L1_EPOCH_CLOSE_INTERVAL_SECS=3` — on the stand-in an unset clock
-  closes an epoch only at 10,000 acts, so a small instance's writes
-  would never land. Three seconds is the cadence the pending states
-  were tested against.
+  closes no epoch at all, so writes would never land. Three seconds is
+  the cadence the pending states were tested against; an epoch closes
+  on every tick, empty or not.
 - `MAILER=smtp` with `MAIL_FROM` on the instance's domain; no
   `DEV_MAILER_LOG`, so no token log file exists on the disk.
 - `RUST_LOG=info` and `NO_COLOR=1`: plain info-level lines in the
@@ -291,8 +291,9 @@ Readiness end to end is the GraphQL query through the proxy:
 { health { backendVersion postgresConnected mirrorEpoch } }
 ```
 
-`postgresConnected: true` is the signal. `mirrorEpoch` advancing is
-not a liveness signal: an idle epoch publishes nothing.
+`postgresConnected: true` is the signal. `mirrorEpoch` advances on
+every tick of the epoch clock, empty epochs included, so a stalled
+`mirrorEpoch` means the clock or ingestion has stopped.
 
 ---
 

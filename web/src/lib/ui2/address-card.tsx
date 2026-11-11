@@ -98,13 +98,8 @@ export function AddressCard({
       {caption !== undefined && (
         <span
           {...testAttributes(part(node, "caption"))}
-          // The master sets label-small's size, leading and tracking only — the
-          // weight is the ground's (PayoutAddress.jsx), never the role's 500.
-          className="text-[length:var(--text-label-small)] text-on-surface-variant"
-          style={{
-            lineHeight: "var(--text-label-small--line-height)",
-            letterSpacing: "var(--text-label-small--letter-spacing)",
-          }}
+          // label-small whole, its weight 500 included (PayoutAddress.jsx, round 28).
+          className="text-label-small text-on-surface-variant"
         >
           {caption}
         </span>

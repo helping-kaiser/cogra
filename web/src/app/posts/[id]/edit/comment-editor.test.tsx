@@ -433,7 +433,7 @@ describe("CommentEditor — a clip's face (CommentEditVideo)", () => {
     const { onSigned } = draw(comment([CLIP]));
     fireEvent.click(await screen.findByLabelText("Remove this video"));
     expect(screen.queryByTestId("commentEdit.video.thumb")).not.toBeInTheDocument();
-    expect(screen.getByTestId("commentEdit.pictures.add")).toHaveTextContent("+ Add pictures · 0 of 4");
+    expect(screen.getByTestId("commentEdit.pictures.add")).toHaveTextContent("+ Add pictures or a video");
     fireEvent.click(save());
     await waitFor(() => expect(onSigned).toHaveBeenCalled());
     // An omitted gallery is a comment without one (api-spec.md, edit as complete state).
