@@ -156,15 +156,15 @@ describe("the readouts' words and the family's way out", () => {
 
   // StanceReadout.jsx `unreachableHelp` (round 21, seam 245 ask 18): the
   // first line names the list the target stays on, by the label's kind.
-  it("names Your people for a person and Your topics for a topic", () => {
+  it("names Your people for a person and Your tags for a tag (round 30)", () => {
     expect(unreachableHelp(undefined, "@ada")[0]).toBe(
       "It still counts among your opinions — @ada stays under Your people.",
     );
     expect(unreachableHelp(undefined, "#saltmaps")[0]).toBe(
-      "It still counts among your opinions — #saltmaps stays on Your topics.",
+      "It still counts among your opinions — #saltmaps stays on Your tags.",
     );
     expect(unreachableHelp(undefined, "this comment")[0]).toBe("It still counts among your opinions.");
-    expect(MASTER).toContain("`${targetLabel} stays on Your topics`");
+    expect(MASTER).toContain("`${targetLabel} stays on Your tags`");
   });
 
   it("writes a negative pair with U+2212, substituted by part, in en-US", () => {
