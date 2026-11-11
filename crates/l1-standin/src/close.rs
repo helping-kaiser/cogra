@@ -616,8 +616,9 @@ fn publishable(package: &EpochPackage) -> Result<(), StandInError> {
 /// accepts, and the row keeps its length and both commitments. The nonce
 /// goes with them because the public pre-commitment is formed over it and
 /// the payload, so a kept nonce would let anyone confirm a guessed
-/// payload. The dependency salt stays — the ordering fraud proof opens it
-/// (data-model.md "Act payload carriage").
+/// payload. The nonce's digest stays, so its non-reuse is still checked
+/// at the author's later seals, and the dependency salt stays — the
+/// ordering fraud proof opens it (data-model.md "Act payload carriage").
 async fn persist(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     epoch: i64,

@@ -473,6 +473,156 @@ async fn seal_rejects_identifier_reuse_and_key_change(pool: PgPool) {
     ));
 }
 
+/// The actor's pre-signature over a proposal under a nonce the test
+/// chooses, where `ActorKey::pre_sign` would draw a fresh one.
+fn pre_sign_under(
+    actor: &ActorKey,
+    proposal: Proposal,
+    nonce: Vec<u8>,
+) -> common::l1::PreSignedProposal {
+    let key = ed25519_dalek::SigningKey::from_bytes(&actor.seed());
+    let pre_signature = common::l1::crypto::sign_digest(
+        &key,
+        &common::l1::handshake::pre_commitment(&proposal, &nonce),
+    );
+    common::l1::PreSignedProposal {
+        proposal,
+        author_pubkey: actor.public_key_bytes(),
+        nonce,
+        pre_signature,
+    }
+}
+
+/// A nonce shorter or longer than the published entropy floor is refused
+/// at seal as a formation fault, and leaves nothing behind: the same act
+/// seals afterwards under a nonce of the right length.
+///
+/// A proposal nonce whose length is not the entropy floor is refused at seal.
+/// ´claim:seal:a-nonce-off-the-entropy-floor-is-refused´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_nonce_off_the_entropy_floor_is_refused(pool: PgPool) {
+    let host = standin(pool);
+    let actor = funded_actor(&host, 3 * THETA).await;
+    let floor = common::l1::crypto::SALT_LEN;
+    for length in [0, 16, floor - 1, floor + 1] {
+        let refused = host
+            .seal(pre_sign_under(
+                &actor,
+                registration(&actor),
+                vec![7; length],
+            ))
+            .await;
+        assert!(
+            matches!(refused, Err(StandInError::Formation(_))),
+            "a {length}-byte nonce: {refused:?}"
+        );
+    }
+    host.seal(pre_sign_under(&actor, registration(&actor), vec![7; floor]))
+        .await
+        .expect("the same act seals under a nonce of the floor's length");
+}
+
+/// The author's second act under the first act's nonce is refused as a
+/// conflict — while the first is in custody, and again after it was
+/// accepted and its nonce removed — and the refused act leaves nothing
+/// behind. Another author may use the same nonce bytes.
+///
+/// An author's nonce is fresh across their acts, before and after the first act's acceptance.
+/// ´claim:seal:an-authors-nonce-is-never-reused´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_authors_nonce_is_never_reused(pool: PgPool) {
+    let host = standin(pool.clone());
+    let alice = funded_actor(&host, 10 * THETA).await;
+    let bob = funded_actor(&host, 10 * THETA).await;
+    let nonce = vec![42u8; common::l1::crypto::SALT_LEN];
+    let host_key = host.host_public_key().await.expect("host key");
+
+    let first = pre_sign_under(&alice, registration(&alice), nonce.clone());
+    let sealed = host.seal(first.clone()).await.expect("the first act seals");
+    let in_custody = host
+        .seal(pre_sign_under(
+            &alice,
+            opinion(&alice, 1, "carol", vec![]),
+            nonce.clone(),
+        ))
+        .await;
+    assert!(
+        matches!(in_custody, Err(StandInError::Conflict(ref m)) if m.contains("nonce")),
+        "reused while the first is in custody: {in_custody:?}"
+    );
+
+    host.approve(alice.approve(&first, &sealed, &host_key).expect("approves"))
+        .await
+        .expect("approval accepted");
+    let package = host.close_epoch().await.expect("closes").expect("epoch 1");
+    assert_eq!(package.records.len(), 1);
+    let (nonce_held, digest_kept): (bool, bool) = sqlx::query_as(
+        "SELECT nonce IS NOT NULL, nonce_digest IS NOT NULL FROM l1_acts WHERE act_id = $1",
+    )
+    .bind(first.proposal.body.act_id().to_string())
+    .fetch_one(&pool)
+    .await
+    .expect("the accepted row");
+    assert_eq!(
+        (nonce_held, digest_kept),
+        (false, true),
+        "acceptance removes the nonce and keeps its digest"
+    );
+
+    let after_acceptance = host
+        .seal(pre_sign_under(
+            &alice,
+            opinion(&alice, 2, "carol", vec![]),
+            nonce.clone(),
+        ))
+        .await;
+    assert!(
+        matches!(after_acceptance, Err(StandInError::Conflict(ref m)) if m.contains("nonce")),
+        "reused after the first was accepted: {after_acceptance:?}"
+    );
+    let refused_rows: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM l1_acts WHERE author = $1 AND seq IN (1, 2)")
+            .bind(alice.address())
+            .fetch_one(&pool)
+            .await
+            .expect("count");
+    assert_eq!(refused_rows, 0, "a refused seal stores nothing");
+
+    host.seal(pre_sign_under(&bob, registration(&bob), nonce.clone()))
+        .await
+        .expect("another author may use the same nonce bytes");
+    host.seal(alice.pre_sign(opinion(&alice, 1, "carol", vec![])))
+        .await
+        .expect("alice's act seals under a fresh nonce");
+}
+
+/// The migration's SQL digest — what it backfilled the acts still in
+/// custody with — is the host's digest, byte for byte, so a backfilled
+/// nonce is caught as a reuse like any other.
+///
+/// The migration's nonce digest is the host's, byte for byte.
+/// ´claim:seal:the-backfilled-nonce-digest-is-the-hosts´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_backfilled_nonce_digest_is_the_hosts(pool: PgPool) {
+    for (author, nonce) in [
+        ("alice", vec![0u8; 32]),
+        ("3f9a0c", vec![0xFF; 32]),
+        ("é-non-ascii", (0..32).collect::<Vec<u8>>()),
+    ] {
+        let sql: Vec<u8> = sqlx::query_scalar("SELECT l1_nonce_digest($1, $2)")
+            .bind(author)
+            .bind(&nonce)
+            .fetch_one(&pool)
+            .await
+            .expect("the SQL digest");
+        assert_eq!(
+            sql,
+            common::l1::crypto::nonce_digest(author, &nonce).to_vec(),
+            "{author}"
+        );
+    }
+}
+
 /// An unknown act rejects with UnknownAct; a witness signed by the
 /// wrong key rejects with Authentication (mallory signing the same
 /// message must not verify as the actor); and the genuine witness
