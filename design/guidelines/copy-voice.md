@@ -3072,6 +3072,17 @@ the person's profile (`ProfileOtherHidden`).
 A deleted account has no handle to spell, so hiding one answers `This
 account is hidden — its posts stay out of your feed.`, with the same
 `Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).
+**On a hidden person's card the row turns.** Wherever a hidden person's
+post, profile card or profile still stands — History until its next load,
+Saved, the tag's page, a post or profile reached by a link or a search —
+the hide row reads `Unhide @ada`: Settings' word in the row's own form, the
+handle after it (`Unhide this account` where the actor is redacted, as
+`Hide this account` is). It answers with Settings' snackbar, `@ada is
+unhidden — their posts can reach your feed again.` with `Undo` (jakob
+2026-11-11, M1; round 41). **Drawn** on `HistoryPostMenu` (`author`
+hidden) and `HistoryProfileMenu`. (*`Unhide @ada` and `Unhide this
+account` are `Unhide` taking the row's handle, review-pending.*)
+
 
 **Saving is confirmed like every other completed act.** `Saved.` The
 sheet closes on the tap, so without the snackbar nothing would answer

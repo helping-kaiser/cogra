@@ -5437,7 +5437,7 @@ Closed by round 38 (jakob 2026-11-11): the line reads `@mira's link is your
 first way in to everyone else, and theirs to you.`, on the board and in
 copy-voice.
 
-### 159 · The profile card's menu for someone already hidden has no host board · *design* · **filed 2026-11-11**
+### 159 · The profile card's menu for someone already hidden has no host board · *design* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 36 (H3) wrote the law: on a hidden person's profile card the Hide row
 reads `Unhide`, Settings · hidden accounts' word (ProfileMenu.md). The ruling
@@ -5447,7 +5447,13 @@ there; it stands in History and Saved. Ways: (a) a History-hosted profile-card
 menu board with a `hidden` setting, `history.menuSheet` (rec — History is where
 the ruling places the card); (b) the same on Saved; (c) the law line alone.
 
-### 160 · The own profile's Posts and Comments views as a setting on their host boards · *system* · **filed 2026-11-11**
+Closed by round 41 (jakob 2026-11-11, M1: "the unhide should be visible
+whenever we land on a card of a hidden account"): the row reads `Unhide @ada`,
+the row's own form, on every host where a hidden person's post, card or
+profile stands; drawn on `HistoryProfileMenu` and `HistoryPostMenu`'s `author`
+hidden, the row keeping its name `hide`.
+
+### 160 · The own profile's Posts and Comments views as a setting on their host boards · *system* · **filed 2026-11-11** · **closed 2026-11-11**
 
 Round 36 (H7) asked for the own views as a setting on "Profile · the posts
 view" and "Profile · the comments view". A chip copy keys every node inside

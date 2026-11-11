@@ -697,7 +697,17 @@ Object.assign(FLOW_MARKERS, {
   // The host-card menus (round 36, backlog 149): each host's sheet numbered as
   // the feed's or the detail's numbers the same sheet — the badge is an
   // identity, not a position — scanExempt like every menu board.
-  HistoryPostMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),
+  // Round 41 (M1): the `author` chip's hidden copy of the hide row.
+  HistoryPostMenu: [...readerMenuMarks(">Save</button>", ">Hide @ada</button>"), { n: 7, find: ">Unhide @ada</button>", tag: "button" }],
+  // A hidden person's profile card in History (round 41, M1): `FeedProfileMenu`'s
+  // numbers, the hide row reading Unhide.
+  HistoryProfileMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Mention in a new post</button>", tag: "button" },
+    { n: 3, find: ">Unhide @mira</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Report</button>", tag: "button" },
+  ],
   SavedPostMenu: readerMenuMarks(">Unsave</button>", ">Hide @ada</button>"),
   TagPageMenu: readerMenuMarks(">Save</button>", ">Hide @tobias</button>"),
   ProfilePostsMenu: readerMenuMarks(">Save</button>", ">Hide @ada</button>"),

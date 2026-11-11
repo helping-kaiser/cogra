@@ -17,6 +17,7 @@ const {
   MonogramAvatar,
   ActorChip,
   HIDE_ACTOR_LABEL,
+  UNHIDE_ACTOR_LABEL,
   REDACTED_ACTOR_NAME,
   ProfileHeader,
   EmptyState,
