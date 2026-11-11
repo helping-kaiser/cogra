@@ -123,8 +123,8 @@ export interface CommentCardProps {
   onShare?: () => void;
   /** Extra affordances in the same row as the stance control, Reply and Edit. */
   actions?: React.ReactNode;
-  /** Extra overflow-menu items, appended after the license entry. */
-  menuItems?: readonly { label: string; onSelect?: () => void }[];
+  /** The overflow menu's rows; the license entry is appended after them, and a row marked `tail` (the report row) stands after the license. */
+  menuItems?: readonly { label: string; onSelect?: () => void; tail?: boolean }[];
   /**
    * Renders the record's SKELETON instead of its content, as `PostCard` does:
    * redaction is record-granular, so the words, the pictures, the topics line

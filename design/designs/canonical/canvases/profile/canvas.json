@@ -46,6 +46,96 @@
       "page": "profile"
     },
     {
+      "file": "HistoryPostMenu.dc.html",
+      "title": "History · the post menu",
+      "x": 1440,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "HistoryCommentMenu.dc.html",
+      "title": "History · the comment menu",
+      "x": 1920,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "HistoryPostMenuOwn.dc.html",
+      "title": "History · your own post's menu",
+      "x": 2400,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "HistoryCommentMenuOwn.dc.html",
+      "title": "History · your own comment's menu",
+      "x": 2880,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SavedPostMenu.dc.html",
+      "title": "Saved · the post menu",
+      "x": 3840,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SavedCommentMenu.dc.html",
+      "title": "Saved · the comment menu",
+      "x": 4320,
+      "y": 6107,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfilePostsMenu.dc.html",
+      "title": "Profile · the posts view, the post menu",
+      "x": 4800,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfilePostsMenuOwn.dc.html",
+      "title": "Profile · your own posts view, your own post's menu",
+      "x": 5280,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileCommentsMenu.dc.html",
+      "title": "Profile · the comments view, the comment menu",
+      "x": 5760,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileCommentsMenuOwn.dc.html",
+      "title": "Profile · your own comments view, your own comment's menu",
+      "x": 6240,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "AvatarCrop.dc.html",
       "title": "Profile picture · crop",
       "x": 3360,
@@ -95,7 +185,7 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 8267,
+      "h": 8440,
       "page": "profile",
       "title": "Profile · flow map"
     },

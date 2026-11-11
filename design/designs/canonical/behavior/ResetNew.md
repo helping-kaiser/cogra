@@ -4,15 +4,17 @@ WHEN the reset mail's link is opened GIVEN the link is live -> ResetNew opens AN
 
 ALWAYS the screen carries no header and no back arrow
 
-ALWAYS the screen holds one password field and one commitment, Set the new password, and no confirm field
+ALWAYS the screen holds two password fields, New password and under it Repeat password, masked alike, each with its own reveal control, and one commitment, Set the new password
 
-ALWAYS the field's hint reads At least 12 characters.
+ALWAYS New password's hint reads At least 12 characters. GIVEN the field carries no error line
+
+ALWAYS Repeat password carries no hint, only its error line when it is refused
 
 ALWAYS the quiet note says the reset restores the sign-in only, never the key, in Reset's own words
 
-WHEN press the password's reveal control GIVEN the password is hidden -> the password shows AND the control is named Hide password
+WHEN press a password field's reveal control GIVEN its password is hidden -> that field's password shows AND its control is named Hide password
 
-WHEN press the password's reveal control GIVEN the password shows -> the password hides AND the control is named Show password
+WHEN press a password field's reveal control GIVEN its password shows -> that field's password hides AND its control is named Show password
 
 WHEN press Set the new password -> Set the new password refuses a second press until the reset answers AND NEVER Set the new password dims
 
@@ -20,17 +22,21 @@ WHEN the reset has not answered 200ms after the press -> Set the new password re
 
 WHEN the new password is taken -> every device is signed out, this one included AND SignIn opens
 
-WHEN press Set the new password GIVEN the password is shorter than 12 characters -> the field's line reads A password is at least 12 characters. in place of the hint AND the field takes the error state
+WHEN press Set the new password GIVEN the password is shorter than 12 characters -> New password's line reads A password is at least 12 characters. in place of the hint AND the field takes the error state
 
-WHEN the new password is refused as one that turned up in a data breach -> the field's line reads That password has turned up in a data breach — pick another one. in place of the hint AND the field takes the error state
+WHEN press Set the new password GIVEN Repeat password differs from New password -> Repeat password's line reads The two passwords don't match. AND the field takes the error state AND NEVER the password changes
 
-WHEN press Set the new password GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Set the new password AND Set the new password stays, the retry
+WHEN typing in New password or Repeat password GIVEN Repeat password carries The two passwords don't match. -> the line re-checks as the text changes AND it goes once the two passwords match
+
+WHEN the new password is refused as one that turned up in a data breach -> New password's line reads That password has turned up in a data breach — pick another one. in place of the hint AND the field takes the error state
+
+WHEN press Set the new password GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Set the new password AND Set the new password stays, the retry
 
 ALWAYS a line the server answered stands until the next press of Set the new password, and only a field's local format line re-checks as the text changes
 
 WHEN no answer has come 5s after the press of Set the new password -> Set the new password still reads Setting the new password… AND NEVER a slow line or a progress indicator appears
 
-WHEN press Set the new password GIVEN the password is longer than 128 characters -> the field's line reads A password is at most 128 characters. in place of the hint AND the field takes the error state
+WHEN press Set the new password GIVEN the password is longer than 128 characters -> New password's line reads A password is at most 128 characters. in place of the hint AND the field takes the error state
 
 WHEN press Set the new password GIVEN the link was spent or went past its time while the form stood open -> ResetExpired opens AND NEVER the password changes
 
@@ -40,6 +46,6 @@ ALWAYS the page scrolls when its content outgrows the screen at any width or tex
 
 WHEN press system Back -> the platform leaves to wherever the mail link was opened from AND NEVER a CoGra screen opens in its place
 
-ALWAYS Set the new password stands disabled with Waiting for a new password right above it GIVEN New password is empty
+ALWAYS Set the new password stands disabled with Waiting for a new password right above it GIVEN New password or Repeat password is empty
 
-WHEN the first character is typed in New password -> Set the new password wakes AND the line Waiting for a new password goes
+WHEN both password fields hold a character -> Set the new password wakes AND the line Waiting for a new password goes
