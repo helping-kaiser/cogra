@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
@@ -65,9 +66,11 @@ class ThreadSheetLayersTest {
         compose.waitForIdle()
         val fieldBefore = compose.onNodeWithTag("detail_add_comment").getUnclippedBoundsInRoot()
 
-        compose.mainClock.autoAdvance = false
         signed = true
-        compose.mainClock.advanceTimeBy(SNACKBAR_SETTLED_MS)
+        // Polled frame by frame, well inside the snackbar's 4 s.
+        compose.waitUntil(timeoutMillis = SNACKBAR_WAIT_MS) {
+            compose.onAllNodesWithTag(THREAD_SNACKBAR_TAG).fetchSemanticsNodes().isNotEmpty()
+        }
 
         val bar = compose.onNodeWithTag(THREAD_SNACKBAR_TAG).getUnclippedBoundsInRoot()
         val sheet = compose.onNodeWithTag(THREAD_SHEET.tag).getUnclippedBoundsInRoot()
@@ -146,7 +149,7 @@ class ThreadSheetLayersTest {
     }
 
     private companion object {
-        /** Past the snackbar's enter animation, well inside its 4 s. */
-        const val SNACKBAR_SETTLED_MS = 1_000L
+        /** Long enough for the snackbar to rise, short of its 4 s on screen. */
+        const val SNACKBAR_WAIT_MS = 3_000L
     }
 }
