@@ -5309,3 +5309,26 @@ role weight is overridden: the 56px-and-up and `lg` discs take
 `headline-small`, weight 400, and draw 500. For jakob: which role a 32px
 disc takes, and whether the large discs' 500 is the disc's own weight (kept,
 named) or the role's 400.
+
+### 153 · One author's two cards share a key · *system* · **filed 2026-11-11** · **closed 2026-11-11**
+
+Android's collision report (G4, seam 263): list cards were keyed by their
+author's handle, so one person's two cards on one list took one key. Closed
+by round 33 (jakob 2026-11-11, "12. as rec"; seam 264): what has an id on the
+wire is keyed by that id — post, comment, profile and tag cards, and the
+person rows (`invites.application`, `profileStances.list.row`,
+`settings.hiddenSheet.list.account`, `postDetail.opinionsSheet.opinion`), by
+the lowercase UUID the wire carries; everything inside a card follows its
+key. No path moved.
+
+### 154 · The redacted twins' rules still explain themselves by the handle · *system* · **filed 2026-11-11**
+
+Round 33. `redactedAccount`, `redactedApplication`, `redactedRow` and
+`redactedOpinion` key by the deleted person's actor id, and each rule ends
+"where … has no handle left to key by" — written when the live twin keyed by
+handle. The live rows now key by the person's id too, so the clause explains
+a difference that is gone, and the rules call the same id "actor id" where
+the live rows' say "id". A rule is reworded only in a named breaking change
+(readme's registry law): for jakob and impl, whether to reword the four in
+the next one, and whether "actor id" and the person's id are one wire field
+(both clients mint the live rows from `User.id`, seam 263).
