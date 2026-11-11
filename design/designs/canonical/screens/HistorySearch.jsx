@@ -39,19 +39,6 @@
 export const NODE = "history";
 export const FRAME = { width: 390, height: 1740 };
 
-const MAREN = { handle: "maren", displayName: "Maren Holt" };
-const MATEO = { handle: "mateo", displayName: "Mateo Ruiz" };
-const MIRA_WORDS_POST = {
-  author: MIRA,
-  content: "Honey's back at the stand by the sea wall — the first jars since June.",
-  timestamp: "5h",
-  score: "4.30",
-  comments: 1,
-  opinions: 3,
-  license: { attribution: 0, provenance: 0 },
-  menuItems: CARD_MENU,
-};
-
 export function Screen() {
   return (
     <>
@@ -79,12 +66,12 @@ export function Screen() {
           </Button>
         </div>
         <SectionLabel node="tagsLabel">Tags</SectionLabel>
-        <TagFeedCard name="#moorings" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="7.40" node="tagCard" />
-        <TagFeedCard name="#mudflats" through={["mira"]} tagged={[SALTMAPS_TAGGED[0]]} score="5.20" node="tagCard" />
+        <TagFeedCard id="a8805dc4-c9d2-42fd-857d-e327f62371cf" name="#moorings" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="7.40" node="tagCard" />
+        <TagFeedCard id="04853246-a072-47ad-b106-9899a119a09b" name="#mudflats" through={["mira"]} tagged={[SALTMAPS_TAGGED[0]]} score="5.20" node="tagCard" />
         {/* #midsummer is a tag nothing carries right now (seam 248): the card
             keeps its why-line, and `Nothing carries this tag right now.` stands
             in the glimpse's place as `nothing` — the empty tag's face. */}
-        <TagFeedCard name="#midsummer" through={["sol", "ada"]} tagged={[]} score="3.60" node="tagCard" />
+        <TagFeedCard id="bb6770d8-ed5c-406c-a974-b80a1013a85a" name="#midsummer" through={["sol", "ada"]} tagged={[]} score="3.60" node="tagCard" />
         <div style={{ display: "flex", padding: "0 8px" }}>
           <Button variant="text" size="sm" node="tagsDoor">
             See all tags
