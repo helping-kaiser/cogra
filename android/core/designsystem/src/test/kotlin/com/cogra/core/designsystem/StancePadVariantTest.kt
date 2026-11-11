@@ -172,4 +172,24 @@ class StancePadVariantTest {
         compose.onNodeWithTag("${TAG}_stance").assertDoesNotExist()
         compose.onNodeWithTag(PAD.tag).assertExists()
     }
+
+    // Ruling 40 (the pad tails): every part the master names wears its path —
+    // the four pole words, the square's hairlines and knob, the readouts' parts.
+    @Test
+    fun everyNamedPartOfThePadWearsItsPath() {
+        show(open.copy(landing = StanceLanding(StancePoint(0.4, 0.3), inertDirected = false, inertInterest = false, severance = false)))
+        val field = PAD / "field"
+        val parts = listOf("left", "right", "top", "bottom").map { field / it } +
+            listOf("zeroAcross", "zeroDown", "knob").map { field / "square" / it } +
+            listOf("label", "face").flatMap { listOf(PAD / "standing" / "pick" / it, PAD / "landing" / it) }
+        for (part in parts) compose.onNodeWithTag(part.tag, useUnmergedTree = true).assertExists()
+    }
+
+    // The readouts are blocks the pad's whole content wide (StanceStanding's div).
+    @Test
+    fun theStandingIsTheWholeContentWide() {
+        show(open)
+        val width = compose.onNodeWithTag((PAD / "standing").tag, useUnmergedTree = true).fetchSemanticsNode().size.width
+        assertThat(width.toFloat()).isWithin(1f).of(with(compose.density) { PAD_CONTENT_WIDTH.toPx() })
+    }
 }

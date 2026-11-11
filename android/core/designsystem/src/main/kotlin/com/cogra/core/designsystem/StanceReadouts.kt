@@ -141,39 +141,41 @@ private fun ReadoutBlock(
     testTag: String,
     exactTag: String,
     modifier: Modifier = Modifier,
+    node: DataNode? = null,
 ) {
     val said = rememberSettled(spoken)
     Column(
         modifier = modifier
+            .fillMaxWidth()
             .semantics(mergeDescendants = true) {
                 contentDescription = said
                 liveRegion = LiveRegionMode.Polite
             }
             .testTag(testTag),
     ) {
-        ReadoutLabel(label)
+        ReadoutLabel(label, node?.div("label"))
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
             Text(
                 text = emoji,
                 style = if (big) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
-                modifier = Modifier.semantics { hideFromAccessibility() },
+                modifier = Modifier.semantics { hideFromAccessibility() }.dataNode(node?.div("face")),
             )
             ExactSpan(
                 text = pair,
                 color = if (big) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                testTag = exactTag,
+                testTag = node?.div("exact")?.tag ?: exactTag,
             )
         }
     }
 }
 
 @Composable
-private fun ReadoutLabel(label: String) {
+private fun ReadoutLabel(label: String, node: DataNode? = null) {
     Text(
         text = label,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.semantics { hideFromAccessibility() },
+        modifier = Modifier.fillMaxWidth().semantics { hideFromAccessibility() }.dataNode(node),
     )
 }
 
@@ -186,6 +188,7 @@ private fun ReadoutSentence(sentence: String, testTag: String, modifier: Modifie
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier
+            .fillMaxWidth()
             .semantics {
                 contentDescription = said
                 liveRegion = LiveRegionMode.Polite
@@ -218,7 +221,9 @@ internal fun StanceStanding(
     val pickLabel = stringResource(R.string.stance_pick)
     Column(
         verticalArrangement = Arrangement.spacedBy(Space.x2),
-        modifier = modifier.dataNode(node),
+        // A block, as the master's `StanceStanding` div: the whole row wide,
+        // its readouts clear of the `?` inside it.
+        modifier = Modifier.fillMaxWidth().dataNode(node).then(modifier),
     ) {
         val currentTag = node?.div("current")?.tag ?: "${testTagPrefix}_stance_standing"
         when {
@@ -258,6 +263,7 @@ internal fun StanceStanding(
             big = true,
             testTag = node?.div("pick")?.tag ?: "${testTagPrefix}_stance_readout",
             exactTag = "${testTagPrefix}_stance_exact_pair",
+            node = node?.div("pick"),
         )
     }
 }
@@ -291,7 +297,7 @@ internal fun StanceLandingLine(
     val tag = node?.tag ?: "${testTagPrefix}_stance_landing"
     val keepsBorrowed = borrowed && landing != null &&
         (landing.severance || landing.inertDirected || landing.inertInterest)
-    Column(verticalArrangement = Arrangement.spacedBy(Space.x1), modifier = modifier) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.x1), modifier = modifier.fillMaxWidth()) {
         when {
             landing == null -> ReadoutSentence(stringResource(R.string.stance_landing_working), tag)
             landing.empty -> EmptyLanding(tag)
@@ -309,6 +315,7 @@ internal fun StanceLandingLine(
                     big = false,
                     testTag = tag,
                     exactTag = "${testTagPrefix}_stance_landing_pair",
+                    node = node,
                 )
             }
         }
@@ -361,6 +368,7 @@ private fun WordsLanding(emoji: String, words: String, tag: String, door: ZeroDo
     val said = rememberSettled("$resulting: $words")
     Column(
         modifier = Modifier
+            .fillMaxWidth()
             .semantics(mergeDescendants = true) {
                 contentDescription = said
                 liveRegion = LiveRegionMode.Polite
