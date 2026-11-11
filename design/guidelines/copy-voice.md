@@ -4111,8 +4111,9 @@ settling` wear:
 - Where several published posts match, the line names and opens the
   **earliest** — the origin, and stable: a later repost never repoints
   it.
-- Only the author's own published posts count. A match in drafts alone,
-  or in someone else's post, draws nothing.
+- Only the author's own published posts count, a post the author
+  signed that is still settling among them. A match in drafts alone, or
+  in someone else's post, draws nothing.
 - **The date reads the way the chronicle's datelines do** (*Change
   histories*): day and month in the viewer's locale conventions on the
   clients, English on the boards — `12 September` — with the year

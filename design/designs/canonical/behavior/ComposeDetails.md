@@ -2,6 +2,8 @@
 
 WHEN media attaches GIVEN it matches media in a published post of the author -> composeDetails.mediaRow shows the already-published marker
 
+WHEN media attaches GIVEN it matches media in a post the author signed that is still settling -> composeDetails.mediaRow shows the already-published marker
+
 WHEN media attaches GIVEN it matches media only in the author's drafts -> NEVER composeDetails.mediaRow shows the already-published marker
 
 WHEN media attaches GIVEN it matches media only in other people's posts -> NEVER composeDetails.mediaRow shows the already-published marker

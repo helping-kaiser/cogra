@@ -1,6 +1,6 @@
 # ComposeDetailsReused · `spec:design:behavior-compose-details-reused`
 
-ALWAYS composeDetails.published, Already in your post from 12 September., stands under composeDetails.mediaRow in the honesty-marker ink GIVEN media on the stage matches media in a published post of the author
+ALWAYS composeDetails.published, Already in your post from 12 September., stands under composeDetails.mediaRow in the honesty-marker ink GIVEN media on the stage matches media in a published post of the author, a post the author signed that is still settling among them
 
 ALWAYS the line's date is the matched post's publication date, day and month, with the year appended only when the post's year differs from the current one
 
