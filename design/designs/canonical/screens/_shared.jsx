@@ -1154,8 +1154,8 @@ function ProfileOwnBody({ tail = null }) {
             bio="Field notes from the flats — salt, paper, and whatever the wind allows."
             website="solferreira.art"
             posts={5}
-            stancesOn={9}
-            stancesTaken={14}
+            stancesOn={5}
+            stancesTaken={5}
             own
             /* AN APPLICATION IS WAITING (the invites round). @rafa's proofs
                are both in and nobody but Sol can act on it, so the row that
@@ -1212,8 +1212,8 @@ function ProfileOtherBody({ bundle } = {}) {
             avatarSrc="comment-camera.jpg"
             bio="A dozen tries at the third headland light and counting."
             posts={12}
-            stancesOn={48}
-            stancesTaken={31}
+            stancesOn={6}
+            stancesTaken={6}
             bundle={bundle}
             onCounts={() => {}}
             onCommit={() => {}}
@@ -1254,8 +1254,8 @@ function ProfileDeletedBody() {
             redacted
             bio={<RedactedContent reason="account" when="3d" node="removalMark" />}
             posts={7}
-            stancesOn={22}
-            stancesTaken={19}
+            stancesOn={6}
+            stancesTaken={6}
             onCounts={() => {}}
             onCommit={() => {}}
             menu={deletedProfileMenu()}

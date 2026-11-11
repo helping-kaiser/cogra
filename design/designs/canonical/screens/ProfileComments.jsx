@@ -43,8 +43,8 @@ export function Screen() {
             avatarSrc="comment-camera.jpg"
             bio="A dozen tries at the third headland light and counting."
             posts={12}
-            stancesOn={48}
-            stancesTaken={31}
+            stancesOn={6}
+            stancesTaken={6}
             onCounts={() => {}}
             onCommit={() => {}}
             onMessage={() => {}}
