@@ -1495,7 +1495,7 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     the reader's own or anyone else's, and its staged act expired. On
     the row: `This post didn't land, so it can't be cited.` with
     `Remove it`; a comment takes `This comment didn't land, so it can't
-    be cited.` **Drawn** on `SealFaultRow`, where the line wraps to a
+    be cited.` (*blessed (jakob 2026-11-11)*). **Drawn** on `SealFaultRow`, where the line wraps to a
     second line on the row — accepted as drawn.
   - **Any other refusal** — a bug the picking stage should have
     blocked. A notice in the commit's place, never the failure voice:
