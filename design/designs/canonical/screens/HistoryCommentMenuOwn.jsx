@@ -2,10 +2,8 @@
    H7). The reader's own comment joins History like anything they see — @sol's
    on @mira's gallery post, as `FeedCommentShapes` draws it — and its
    ⋮ raises the own comment menu, `OWN_COMMENT_MENU`'s rows: Save, Cite,
-   Remove, Cited by, Opinions on this, the license closing it, and no Report
-   (`CommentMenuOwn`). Unstacked, over History, as `HistoryCommentMenu`. The
-   card beneath wears `Edit` in its row, as the thread's own card does (round
-   41; jakob 2026-11-11, M3).
+   Edit, Remove, Cited by, Opinions on this, the license closing it, and no
+   Report (`CommentMenuOwn`). Unstacked, over History, as `HistoryCommentMenu`.
 
    REGISTERED under the `history` prefix, `history.menuSheet`. */
 export const NODE = "history";

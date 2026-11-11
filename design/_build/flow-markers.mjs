@@ -76,6 +76,8 @@ const ownCommentMenuMarks = [
   { n: 5, find: ">Opinions on this</button>", tag: "button" },
   { n: 6, find: ">Cited by</button>", tag: "button" },
   { n: 7, find: ">Remove</button>", tag: "button" },
+  // Edit (round 41, jakob 2026-11-11): the own comment's door to its edit.
+  { n: 8, find: ">Edit</button>", tag: "button" },
 ];
 
 // The details stage's controls, shared by the stage and by the stage drawn
@@ -464,9 +466,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "View 2 replies", tag: "button" },
     { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
-    // @sol's comment is the reader's own (jakob 2026-10-01), so its Edit
-    // stands beside Reply — appended so no via renumbers.
-    { n: 9, find: ">Edit</button>", tag: "button", all: true },
   ],
   // The same sheet at the end of the reply flow (item 85): the same controls,
   // minus the "View n replies" line the landing has already opened — so every
@@ -482,9 +481,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: ">Add a comment</span>", tag: "span" },
     { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
-    // The landed reply and the 3h comment are the reader's own: one Edit,
-    // drawn twice, one number.
-    { n: 8, find: ">Edit</button>", tag: "button", all: true },
   ],
   // The thread after the reader's own Remove (the comment-removal round): the
   // same sheet with the same controls, so ReplyEntry's numbers. The removed
@@ -512,7 +508,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
     { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
-    { n: 6, find: ">Edit</button>", tag: "button" },
     { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 9, find: 'aria-label="Turn sound on"', tag: "button" },
@@ -780,6 +775,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Opinions on this</button>", tag: "button" },
     { n: 6, find: ">Cited by</button>", tag: "button" },
     { n: 7, find: ">Remove</button>", tag: "button" },
+    // Edit (round 41, jakob 2026-11-11): a row in the menu, never on the card.
+    { n: 8, find: ">Edit</button>", tag: "button" },
   ],
   ProfileMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },
@@ -1535,7 +1532,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: 'aria-label="Give your opinion on this comment"', tag: "button", all: true },
     { n: 11, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
     { n: 12, find: ">Reply</button>", tag: "button", all: true },
-    { n: 13, find: ">Edit</button>", tag: "button", all: true },
     { n: 14, find: ">On “", tag: "button", all: true },
     { n: 15, find: 'aria-label="Notifications"', tag: "button" },
     ...nav(16),

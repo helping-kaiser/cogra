@@ -7695,9 +7695,10 @@ page.
   `OWN_COMMENT_MENU`). The row stands as the last of the acts: after
   Save and Cite, before the two readings, with the license closing the
   menu. That is the own-post menu's place for it, and the place
-  `ChatMessageMenuOwn` takes at message scale. The menu has no Edit
-  row, because the card carries Edit. It has no sensitive row, because
-  a comment's mark rides its edit. Every comment ⋮ edge gains the
+  `ChatMessageMenuOwn` takes at message scale. `Edit` stands before it,
+  the own-post menu's place, and is the one door to the comment's edit:
+  no card carries an Edit button (jakob 2026-11-11). It has no sensitive
+  row, because a comment's mark rides its edit. Every comment ⋮ edge gains the
   own-comment case.
 - **The confirm is the post's dialog with the nouns swapped**
   (`CommentRemoveConfirm`). `RemoveConfirm`'s body moved to `_shared` as
@@ -7913,10 +7914,9 @@ jakob's rulings from his review of the day's rounds.
 - **Your own comments say so in the thread** (jakob: "'own' should be
   added to the existing boards so it is clear that you can interact
   differently with your own comments"). @sol's 3h comment and the landed
-  reply wear `CommentCard`'s `own`: `Edit` beside `Reply`, the anatomy
-  `ReplyMedia` drew first, wired to `CommentEdit` on `ReplyEntry` and
-  `ReplySettled`. Their ⋮ holds the own menu's acts. The removed comment
-  keeps `own` and loses `Edit` with its payload.
+  reply carry the own menu in their ⋮, `Edit` among its rows, wired to
+  `CommentEdit` from `CommentMenuOwn`. The removed comment loses its ⋮
+  with its payload.
 - **A pick stages and the picker stays open** (both pickers, the shared
   anatomy's law). A row tap stages at once, and so does the tag
   picker's action key on the typed name; the reader goes on picking.
@@ -11384,11 +11384,14 @@ jakob's answers to rounds 36–39 (M1–M3, R2, S1–S6, I1–I2), executed.
   by a link or a search. The feed never holds such a card; a comment's menu
   has no hide row. Drawn: `HistoryPostMenu`'s `author` hidden and
   `HistoryProfileMenu` (new). The row keeps its name, `hide`.
-- **Your own card offers Edit wherever it stands** (M3). The own comment's
-  card wears `Edit` in its row on every host, the thread card's form
-  (`CommentCard`'s `own`); the own comment menu keeps no Edit row, the
-  card's being the one door (`OWN_COMMENT_MENU`'s note). The own post's menu
-  already holds Edit on every host. The own profile's posts and comments
+- **Your own card offers Edit wherever it stands, in its ⋮** (M3; jakob
+  2026-11-11: "this belongs in the three dot bottom sheet as always"). The
+  own comment's menu carries `Edit` on every host — Save · Cite · Edit ·
+  Remove · Cited by · Opinions on this · License terms, the own post menu's
+  place for it — and no card carries an Edit button, the thread's included:
+  `CommentCard` has no Edit affordance, and the registered
+  `postDetail.threadSheet.commentCard.actionRow.edit` is deleted, a named
+  breaking change. The own post's menu already holds Edit on every host. The own profile's posts and comments
   views are boards of their own (M2): `ProfilePostsOwn`, `ProfileCommentsOwn`,
   and the own profile's tabs lead to them.
 - **The last failure places after Close** (S3–S5). A profile or picture

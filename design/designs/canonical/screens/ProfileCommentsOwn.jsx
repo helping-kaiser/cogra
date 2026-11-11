@@ -3,9 +3,9 @@
    own beside `ProfileComments` (@ada's) rather than a setting on it: a chip
    copy would re-key that board's registered paths. The head is `Profile`'s,
    with the Comments tab lit; the card is the reader's own comment as
-   `ProfileCommentsMenuOwn` draws it, its row wearing `Edit` as the thread's
-   own card does (M3) and its ⋮ the own comment menu (Save, Cite, Remove,
-   Cited by, Opinions on this, the license closing it; no Report).
+   `ProfileCommentsMenuOwn` draws it, its ⋮ the own comment menu (Save, Cite,
+   Edit, Remove, Cited by, Opinions on this, the license closing it; no
+   Report).
 
    REGISTERED under the `profile` prefix, told apart by board as
    `ProfileCommentsMenuOwn`. */
@@ -19,8 +19,6 @@ export function Screen() {
         timestamp={SOL_OWN_COMMENT.timestamp}
         license={{ attribution: 0, provenance: 0 }}
         onReply={() => {}}
-        own
-        onEdit={() => {}}
         target={`“${MIRA_GALLERY_POST.title}” — @mira`}
         onOpenTarget={() => {}}
         menuItems={OWN_COMMENT_CARD_MENU}
