@@ -41,7 +41,10 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.currentStateAsState
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.CommentStanceTarget
 import com.cogra.core.designsystem.DataNode
@@ -170,6 +173,17 @@ fun CommentsSheetRoute(
     // post's own are raised by the surface below — so it is always the
     // stacked case (`CommentLicense.jsx`, design/readme.md:2364).
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
+    // THE SHEET STANDS ONLY OVER A SURFACE THE READER IS ON. The open state is
+    // saved with the surface, and a predictive back gesture from a page above
+    // it composes that surface for the preview — Navigation Compose holds an
+    // entry at STARTED while a transition into it runs, RESUMED only once it
+    // lands — and a modal sheet is its own window, so raised mid-gesture it took the
+    // gesture from the page — the sheet flashed and the reader stayed on the
+    // profile. It rises once the surface is resumed, as it does after the
+    // header's back arrow.
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val onSurface by lifecycle.currentStateAsState()
+    if (!onSurface.isAtLeast(Lifecycle.State.RESUMED)) return
     CommentsSheet(
         state = state,
         viewerId = viewerId,
