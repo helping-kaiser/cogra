@@ -615,11 +615,10 @@ private fun ProfileColumn(
     val view = viewNode(state.tab)
     val scope = rememberCoroutineScope()
     val replyLocked = stringResource(R.string.profile_reply_locked)
-    val lockedReply: (() -> Unit)? = if (state.applicant) {
-        { scope.launch { snackbarHostState.showSnackbar(NodeSnackbarVisuals(replyLocked, PROFILE / "snackbar")) } }
-    } else {
-        null
+    val showLocked: () -> Unit = {
+        scope.launch { snackbarHostState.showSnackbar(NodeSnackbarVisuals(replyLocked, PROFILE / "snackbar")) }
     }
+    val lockedReply = showLocked.takeIf { state.applicant }
     LazyColumn(state = list, modifier = Modifier.fillMaxSize().dataNode(view)) {
         // The status banners (the own root only), seamed only when they draw.
         item(key = "banners") {

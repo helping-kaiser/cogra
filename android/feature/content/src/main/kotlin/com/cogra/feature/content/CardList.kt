@@ -157,9 +157,13 @@ internal fun ListCommentCard(
                 is CommentTarget.Comment -> threadPostId?.let { doors.onOpenComment(it, target.id, false) }
                 null -> Unit
             }
+            Unit
         },
         onOpenPlace = { threadPostId?.let { doors.onOpenComment(it, comment.id, false) } },
-        onReply = onReply ?: { threadPostId?.let { doors.onOpenComment(it, comment.id, true) } },
+        onReply = onReply ?: {
+            threadPostId?.let { doors.onOpenComment(it, comment.id, true) }
+            Unit
+        },
         onShare = { threadPostId?.let { actions.onShare(actions.shareUrls.comment(it, comment.id)) } },
         onOpenActor = doors.onOpenActor,
         onOpenTopic = doors.onOpenTopic,
