@@ -7,6 +7,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import type { StanceData } from "@/lib/stance/stance-data";
 import { gqlLink, startMswServer } from "@/test/msw";
+import { expectWrapsWithUnits, LONG_HANDLE } from "@/test/names";
 import { renderWithProviders } from "@/test/providers";
 import { LONG_PRESS_MS, SETTING_AFTER_MS } from "@/lib/ui/stance-control";
 import { VouchCard } from "./vouch-card";
@@ -146,6 +147,19 @@ describe("VouchCard", () => {
     expect(screen.getByTestId("feed.vouchCard.dismiss")).toHaveTextContent("Got it");
     // The olive register.
     expect(screen.getByTestId("feed.vouchCard").className).toContain("bg-tertiary-container");
+  });
+
+  // NamesLong.md:11-17 — a card's title and body wrap; the handle is one unit.
+  it("the vouch card keeps a long handle whole in its wrapping title and body", async () => {
+    server.use(
+      meHandler(() => me({ invitedBy: { id: "max-id", handle: LONG_HANDLE, displayName: null } })),
+    );
+    renderCard();
+    const title = await screen.findByTestId("feed.vouchCard.title");
+    expect(title).toHaveTextContent(`@${LONG_HANDLE} vouched you in`);
+    expect(title.className).toContain("min-w-0");
+    expectWrapsWithUnits(title, [`@${LONG_HANDLE}`]);
+    expectWrapsWithUnits(screen.getByTestId("feed.vouchCard.body"), [`@${LONG_HANDLE}`], ",");
   });
 
   // VouchBack.md:11, :13, :17 — the card's act is the stance face, not a
