@@ -710,8 +710,8 @@ private fun PersonRow(person: LetInPerson, now: Instant, onOpen: () -> Unit, mod
         title = person.name.orEmpty(),
         disc = when {
             person.redacted -> ContentRowDisc.Redacted
-            person.avatarUrl != null -> ContentRowDisc.Picture(person.avatarUrl, person.monogram)
-            else -> ContentRowDisc.Monogram(person.monogram)
+            else -> person.avatarUrl?.let { ContentRowDisc.Picture(it, person.monogram) }
+                ?: ContentRowDisc.Monogram(person.monogram)
         },
         testTag = "invites_person_${person.id}",
         trailing = ageLadder(person.vouchedAt, now),
