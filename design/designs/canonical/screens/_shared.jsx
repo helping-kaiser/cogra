@@ -3581,8 +3581,7 @@ function ChangeHandleBody({ value = "" } = {}) {
           }}
           data-node="body"
         >
-          @sol is how people mention and find you. Everything you have published stays yours — the
-          handle is a name, not the account.
+          <NameInText text="@sol is how people mention and find you. Everything you have published stays yours — the handle is a name, not the account." />
         </p>
 
         <div style={{ marginTop: 32 }}>
@@ -6207,7 +6206,10 @@ function IntroLines({ width = 342, height = 300, children }) {
 }
 
 /* A node's caption — the word under a face, `label-small` and quiet, so the
-   drawing says who each dot is without a legend beside it. */
+   drawing says who each dot is without a legend beside it. A handle in it is
+   one unit (`NameInText`, the long-names rule): longer than the caption's own
+   width, it is cut at its end with "…" inside that width (round 43, backlog
+   183). */
 function IntroCaption({ children, x, y, width = 88, node }) {
   return (
     <span
@@ -6225,7 +6227,7 @@ function IntroCaption({ children, x, y, width = 88, node }) {
         color: "var(--text-secondary)",
       }}
     >
-      {children}
+      {typeof children === "string" ? <NameInText text={children} /> : children}
     </span>
   );
 }

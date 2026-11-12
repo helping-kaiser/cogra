@@ -10,7 +10,7 @@ ALWAYS the face and the name over the form are the link's inviter's
 
 ALWAYS the heading names the inviter by the whole display name, else by the handle with its @, and reads Mira Voss invited you over the sample's inviter
 
-ALWAYS the heading wraps as running text and the inviter's name in it is never cut
+ALWAYS the heading wraps as running text and the inviter's name in it is one unit that never stands on two lines, whole on a line or cut at its end with … when longer than the line
 
 ALWAYS the header's arrow reads a plain Back, with no origin noun
 
