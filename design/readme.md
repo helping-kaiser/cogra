@@ -1620,7 +1620,9 @@ the newest-first device grid, whose first tile opens the device's
 own photos app — picks made there land in the tray. **The crop** is
 Instagram's model: one shape for the whole post — Tall 4:5, Square
 1:1, or Wide 1.91:1 — with drag-to-move and pinch-to-zoom framing
-per picture; 4:5 as the tallest shape is what guarantees the feed
+per picture: the frame stands still at the shape and the picture moves
+and zooms under it, on a stage that keeps its 390 × 488 under every
+shape (round 44, one crop model on both clients); 4:5 as the tallest shape is what guarantees the feed
 card's height cap (below). Wizard screens carry no step numbers
 (paths differ in length; the title names the stage, only the seal
 says "Last step").

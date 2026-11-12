@@ -672,10 +672,9 @@ Retry (`UploadErrorLine` with both ways out):
   the line is drawn short because Retry stands beside it and the pair
   would say "try again" twice.
 
-**The cover's own words** — the crop a gallery picture goes through,
-and the way back to it from an edit:
+**The cover's own words** — the way to the crop a gallery picture goes
+through, from an edit:
 
-- `The cover takes the video's shape.`
 - `Add a cover`
 - `Change the cover`
 
@@ -704,16 +703,12 @@ and the way back to it from an edit:
 
 ## The crops' how-to line
 
-The three crops (`ComposeCrop`, `AvatarCrop`, `CoverCrop`) say how the
-picture moves in one quiet line under the zoom: `Drag to move, pinch to
-zoom.` On `ComposeCrop` the line opens with what the crop decides, `One
-shape for the whole post.` — the prefix *blessed (jakob 2026-10-06)*, so
-the post crop's line reads `One shape for the whole post. Drag to move,
-pinch to zoom.`. A device with no touch to pinch — a desktop browser — reads
-`Drag or use the arrow keys to move, the slider to zoom.` in its place,
-naming the two ways the crop offers there (jakob 2026-10-05; *new
-2026-10-05, flagged for blessing*). The arrow keys move the picture 1 %
-a press, 10 % with Shift.
+No crop says how the picture moves: the frame stands still and the
+picture moves and zooms under it on every crop (`ComposeCrop`,
+`AvatarCrop`, `CoverCrop`; jakob's removable-text pass, round 44). The one line under a zoom is
+`ComposeCrop`'s `One shape for the whole post.` — what the crop decides,
+*blessed (jakob 2026-10-06)*. The arrow keys move the picture 1 % a
+press, 10 % with Shift.
 
 ## Editing a media post
 
@@ -2528,10 +2523,8 @@ words, recorded so the registry is whole:
   `1 profile change`; under the card `Every change to your profile is
   signed in your name and stays in your public record.`; its "?" is named
   `Changing your profile`.
-- **The picture** — the crop titled `Your picture` with `One picture,
-  shown everywhere you appear.` under the how-to line (`AvatarCrop`); its
-  seal's `Your profile picture` over `Shown everywhere you appear.`, the
-  acts row `Picture` reading `A new profile picture`, and the same
+- **The picture** — the crop titled `Your picture`, no line under its
+  zoom (`AvatarCrop`); its seal's `Your profile picture`, the acts row `Picture` reading `A new profile picture`, and the same
   signed-change line (`AvatarSeal`).
 
 **The chronicle's verbs, one per family it lists** (seam 245, ask 10;

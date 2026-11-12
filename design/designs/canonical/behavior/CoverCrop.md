@@ -4,9 +4,15 @@ ALWAYS the crop's shape is locked to the clip's display shape, the clip's own ra
 
 ALWAYS the crop offers no shape chips
 
-WHEN drag inside the crop viewport -> the picture moves within the locked shape
+ALWAYS the crop's frame stands still at the locked shape, and the picture is what moves and zooms under it, on both platforms
 
-WHEN pinch inside the crop viewport -> the picture zooms within the locked shape AND the zoom slider follows
+ALWAYS the crop's stage stands 390 × 390, the frame inside it 342 wide between the 24 gutters and centred in its height: 342 × 192 at 99 below the stage's top for a 16:9 clip, 342 × 342 at 24 for the comment's square
+
+ALWAYS the picture outside the frame stays in view under a 45 % black
+
+WHEN drag inside the crop viewport -> the picture moves under the frame AND NEVER the frame moves
+
+WHEN pinch inside the crop viewport -> the picture zooms under the frame AND the zoom slider follows AND NEVER the frame changes size
 
 WHEN press Next -> the cover is set AND the step that asked for it comes back AND only the cropped export leaves the device
 
@@ -27,7 +33,3 @@ WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill
 WHEN press an arrow key GIVEN the crop has focus -> the picture moves 1 % that way AND NEVER past where its edge meets the crop's
 
 WHEN press an arrow key with Shift held GIVEN the crop has focus -> the picture moves 10 % that way AND NEVER past where its edge meets the crop's
-
-ALWAYS the lines Drag to move, pinch to zoom. and The cover takes the video's shape. stand under the zoom slider
-
-ALWAYS the line Drag to move, pinch to zoom. reads Drag or use the arrow keys to move, the slider to zoom. GIVEN a device with no touch to pinch

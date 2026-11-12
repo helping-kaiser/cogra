@@ -1216,7 +1216,7 @@
     { "from": "ComposeCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }, { "board": "DiscardConfirm", "case": "entered from an edit — the edit's own X: the confirm first where its batch holds an act" }] },
     { "from": "ComposeCrop", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeDetails", "case": "pictures — details next" }, { "terminal": "back", "case": "entered from an edit's add-pictures — the edit comes back, the pictures on its media row; never a pick stage" }] },
     { "from": "ComposeCrop", "via": 4, "kind": "advance", "label": "shape chips", "to": [{ "terminal": "self", "case": "one shape for the whole post" }] },
-    { "from": "ComposeCrop", "via": 5, "kind": "advance", "label": "the crop viewport", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom; focused, the arrow keys move it" }] },
+    { "from": "ComposeCrop", "via": 5, "kind": "advance", "label": "the crop viewport", "to": [{ "terminal": "self", "case": "the frame stands still at the shape; drag moves the picture under it, pinch zooms it; focused, the arrow keys move it" }] },
     { "from": "ComposeCrop", "via": 6, "kind": "advance", "label": "picture strip", "to": [{ "terminal": "self", "case": "frames each picture in turn" }] },
     { "from": "ComposeCrop", "via": 7, "kind": "advance", "label": "zoom slider", "to": [{ "terminal": "self", "case": "the zoom, from the fill (1×) to about 4× — the pinch, on screen" }] },
 
@@ -1268,7 +1268,7 @@
     { "from": "CoverCrop", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — the cover row that asked, the picture unused" }] },
     { "from": "CoverCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "entered from a post's compose — leaves the flow, draft kept" }, { "board": "DiscardConfirm", "case": "entered from a reply's, a comment edit's or a post edit's cover row — that composer's own X: the confirm first" }] },
     { "from": "CoverCrop", "via": 3, "kind": "advance", "label": "Next", "to": [{ "terminal": "back", "case": "the cover is set — back to the cover row that asked for it" }] },
-    { "from": "CoverCrop", "via": 4, "kind": "advance", "label": "the crop viewport", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom; focused, the arrow keys move it — the shape is the video's, and locked" }] },
+    { "from": "CoverCrop", "via": 4, "kind": "advance", "label": "the crop viewport", "to": [{ "terminal": "self", "case": "the frame stands still at the video's locked shape; drag moves the picture under it, pinch zooms it; focused, the arrow keys move it" }] },
     { "from": "CoverCrop", "via": 5, "kind": "advance", "label": "zoom slider", "to": [{ "terminal": "self", "case": "the zoom, from the fill (1×) to about 4× — the pinch, on screen" }] },
 
     { "from": "ComposeDetails", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeCrop", "case": "one stage back" }] },
@@ -2167,7 +2167,7 @@
     { "from": "AvatarCrop", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — where the picture was chosen" }] },
     { "from": "AvatarCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow" }] },
     { "from": "AvatarCrop", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "AvatarSeal", "case": "the standalone change off the profile badge — its own seal" }, { "board": "ProfileEdit", "case": "come from the edit screen — the edit's one seal signs it" }] },
-    { "from": "AvatarCrop", "via": 4, "kind": "advance", "label": "the crop stage", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom; focused, the arrow keys move it" }] },
+    { "from": "AvatarCrop", "via": 4, "kind": "advance", "label": "the crop stage", "to": [{ "terminal": "self", "case": "the circle stands still; drag moves the picture under it, pinch zooms it; focused, the arrow keys move it" }] },
     { "from": "AvatarCrop", "via": 5, "kind": "advance", "label": "zoom slider", "to": [{ "terminal": "self", "case": "the zoom, from the fill (1×) to about 4× — the pinch, on screen" }] },
 
     { "from": "AvatarSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "AvatarCrop", "case": "one stage back" }] },
