@@ -51,6 +51,7 @@ import { useComfortLine } from "@/lib/saved/comfort-line";
 import { REMOVED_BY_AUTHOR, postTitle } from "@/lib/saved/row-content";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
+import { useReaderIsApplicant } from "@/lib/session/reader-state";
 import { useAuthGuard } from "@/lib/session/runtime";
 import type { Notify } from "@/lib/saved/save-row";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
@@ -293,6 +294,7 @@ export function CommentFeedCard({
   const writes = useSavedWrites();
   const viewerId = useActiveAccountId();
   const phase = useAuthPhase();
+  const applicant = useReaderIsApplicant();
   const guard = useAuthGuard();
   const openEditDoor = useOpenCommentEdit();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -435,6 +437,7 @@ export function CommentFeedCard({
         // (GuestGate.md:5) — the profile's Comments tab and the feed are read
         // by guests.
         onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+        applicant,
         navigate: (route) => router.push(route),
         openCitedBy,
         openOpinions,

@@ -75,6 +75,12 @@ export type PostMenuContext = {
    * Report carry their own ask, and License terms opens for a guest (:7).
    */
   onGuest?: (() => void) | null;
+  /**
+   * The host's `POST_LOCKED` answer, null for a member. An applicant's Cite
+   * tells rather than opening the wizard (ProfileMenu.md:19's Mention, the
+   * same door with a post behind it; `reader-state.ts`).
+   */
+  onApplicant?: (() => void) | null;
   /** Row test ids derive from this — `post-menu` gives `post-menu-save`. */
   testIdPrefix: string;
   /**
@@ -114,6 +120,7 @@ export function postMenuItems({
   save,
   hide,
   onGuest = null,
+  onApplicant = null,
   testIdPrefix,
   rowNode = () => undefined,
 }: PostMenuContext): MenuItem[] {
@@ -134,7 +141,12 @@ export function postMenuItems({
   // 100): self-citation is a real authorial act, so the thumb finds the row
   // in one place on every menu that has it.
   rows.push(
-    row("cite", "cite", "Cite in a new post", onGuest ?? (() => navigate(`/compose?reference=${postId}`))),
+    row(
+      "cite",
+      "cite",
+      "Cite in a new post",
+      onGuest ?? onApplicant ?? (() => navigate(`/compose?reference=${postId}`)),
+    ),
   );
   if (own) {
     rows.push(

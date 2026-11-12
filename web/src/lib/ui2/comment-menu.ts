@@ -23,6 +23,7 @@
 
 import type { License } from "@/lib/license";
 import { saveRow, type Notify } from "@/lib/saved/save-row";
+import { POST_LOCKED } from "@/lib/session/reader-state";
 import type { SavedWrites } from "@/lib/saved/saved-writes";
 import type { DataNode } from "@/lib/ui/data-node";
 import type { MenuItem } from "./overflow-menu";
@@ -46,6 +47,7 @@ export function commentMenuItems({
   writes,
   notify,
   onGuest,
+  applicant = false,
   navigate,
   openCitedBy,
   openOpinions,
@@ -66,6 +68,11 @@ export function commentMenuItems({
   notify: Notify;
   /** The host's join prompt; null means the reader is signed in. */
   onGuest: (() => void) | null;
+  /**
+   * The reader is an applicant (`useReaderIsApplicant`): Cite tells on the
+   * host's snackbar rather than opening the wizard — the post menu's rule.
+   */
+  applicant?: boolean;
   navigate: (route: string) => void;
   openCitedBy: (id: string) => void;
   /** The comment's opinions sheet (CommentOpinionsEmpty.md), stacked over the host. */
@@ -115,7 +122,13 @@ export function commentMenuItems({
       testId: `${testIdPrefix}-save-${comment.id}`,
       rowNode: rowNode("save"),
     }),
-    row("cite", "cite", "Cite in a new post", onGuest ?? (() => navigate(`/compose?reference=${comment.id}`))),
+    row(
+      "cite",
+      "cite",
+      "Cite in a new post",
+      onGuest ??
+        (applicant ? () => notify(POST_LOCKED) : () => navigate(`/compose?reference=${comment.id}`)),
+    ),
   ];
   // EDIT, THEN REMOVE, ARE THE LAST OF THE ACTS, before the two readings —
   // `OWN_POST_MENU`'s place for the pair, at comment scale (`CommentMenuOwn.jsx`).

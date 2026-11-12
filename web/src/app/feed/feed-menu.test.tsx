@@ -247,6 +247,44 @@ describe("the feed's post menu", () => {
     expect(push).toHaveBeenCalledWith("/compose?reference=p1");
   });
 
+  // ApplicantFeed.md:49 (NEVER the wizard opens) and ProfileMenu.md:19's
+  // answer, at the post's own door: an applicant's Cite tells on the feed's
+  // snackbar.
+  it("an_applicants_cite_says_post_once_in_and_opens_no_wizard", async () => {
+    server.use(...rankedFeed([post("p1")]));
+    renderWithProviders(<FeedView />, { store: signedInStore(), reader: "APPLICANT" });
+    const menu = await openMenu();
+    fireEvent.click(screen.getByTestId("feed.menuSheet.cite"));
+    expect(await screen.findByTestId("feed.snackbar")).toHaveTextContent("You can post once you're in.");
+    expect(push).not.toHaveBeenCalled();
+    await waitFor(() => expect(menu.open).toBe(false));
+  });
+
+  // GuestGate.md:5 — a guest's Cite still asks to join.
+  it("a_guests_cite_still_raises_the_join_ask", async () => {
+    server.use(
+      ...rankedFeed([post("p1")]),
+      gqlLink.query("BorrowedView", () =>
+        HttpResponse.json({
+          data: {
+            borrowedView: {
+              __typename: "User",
+              id: "genesis-id",
+              handle: "genesis_mod",
+              displayName: { __typename: "ModeratedText", value: "Genesis Moderator" },
+              avatar: null,
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<FeedView />, { reader: null });
+    await openMenu();
+    fireEvent.click(screen.getByTestId("feed.menuSheet.cite"));
+    expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+  });
+
   // FeedPostMenu.md:21
   it("license_closes_the_menu_and_raises_the_terms_over_the_feed", async () => {
     server.use(...rankedFeed([post("p1")]));
