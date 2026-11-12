@@ -7,6 +7,7 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.ApplicationView
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.ReaderStanding
 import com.cogra.domain.UserError
 import com.cogra.domain.UserProfile
 import com.cogra.domain.identity.KeyCeremony
@@ -146,6 +147,7 @@ class HomeViewModelTest {
     )
 
     private val kept = InMemoryKeptPickStore()
+    private val standing = ReaderStanding()
 
     private fun viewModel(registration: RegistrationFlow = registrationFlow()) =
         HomeViewModel(
@@ -157,6 +159,7 @@ class HomeViewModelTest {
             invites,
             "https://cogra.example",
             kept,
+            standing,
         )
 
     private fun applicationView(
@@ -564,6 +567,8 @@ class HomeViewModelTest {
         val vm = viewModel(registration)
         dispatcher.scheduler.runCurrent()
         assertThat(vm.state.value.progress).isEqualTo(RegistrationProgress.AwaitingLanding)
+        // The posting doors read the same answer, locked (ApplicantFeed.md:49).
+        assertThat(standing.applicant).isTrue()
 
         // The Registration confirmed: the account state flips, the
         // session never changes, and the shell greets once.
@@ -572,6 +577,8 @@ class HomeViewModelTest {
         dispatcher.scheduler.advanceTimeBy(FAST_DELAY_MS)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.applicant).isFalse()
+        // …and the landing's re-read unlocks them without a restart.
+        assertThat(standing.applicant).isFalse()
         assertThat(vm.state.value.welcome).isTrue()
         vm.onWelcomeShown()
         assertThat(vm.state.value.welcome).isFalse()
