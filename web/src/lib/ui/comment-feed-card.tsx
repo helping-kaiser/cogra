@@ -20,7 +20,11 @@
 // carries no view-replies line.
 //
 // ITS ⋮ IS THE COMMENT'S MENU (`comment-menu.ts`), the sheet every comment's ⋮
-// opens, never the post card's.
+// opens, never the post card's. It rises over the card's host, unstacked, and
+// wears the host's `menuSheet` nodes while it is up (HistoryCommentMenu,
+// SavedCommentMenu, ProfileCommentsMenu; round 36); everything its rows raise
+// rises over that host too — the report confirm, the think-twice dialog, the
+// edit (CommentMenuOwn.md:13), the guest's join prompt.
 //
 // THE LINE SHAPE (`CommentCard`'s `targetShape="line"`, ProfileComments): where
 // a comment is listed away from its thread and nothing ranks it — a profile's
@@ -36,7 +40,9 @@ import { useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { CommentFieldsFragment } from "@/__generated__/graphql";
-import { isPending } from "@/lib/api/content-api";
+import { fetchComment, isPending } from "@/lib/api/content-api";
+import { sendReport } from "@/lib/api/report-api";
+import { COMMENT_SETTLING, useOpenCommentEdit } from "@/lib/compose/comment-edit-door";
 import { withRemoval, type Removal } from "@/lib/api/removal-api";
 import { fetchHeldOpinions, type HeldOpinionView } from "@/lib/api/opinions-api";
 import { fetchCitingArtifacts, type CitingArtifactView } from "@/lib/api/references-api";
@@ -44,25 +50,29 @@ import type { License } from "@/lib/license";
 import { useComfortLine } from "@/lib/saved/comfort-line";
 import { REMOVED_BY_AUTHOR, postTitle } from "@/lib/saved/row-content";
 import { useSavedWrites } from "@/lib/saved/provider";
-import { useActiveAccountId } from "@/lib/session/provider";
+import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
+import { useAuthGuard } from "@/lib/session/runtime";
 import type { Notify } from "@/lib/saved/save-row";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
 import { OpinionsSheet } from "@/lib/ui2/opinions-sheet";
-import { commentMenuItems } from "@/lib/ui2/comment-menu";
+import { REPORT_COMMENT_TITLE, commentMenuItems } from "@/lib/ui2/comment-menu";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import {
   REMOVED_COMMENT_NOTE,
   RemovedPlaceholder,
   type RemovalReason,
 } from "@/lib/ui2/media/removed-placeholder";
-import { OverflowMenu } from "@/lib/ui2/overflow-menu";
+import { MenuSheet, OverflowTrigger, menuHostOf, menuSheetNodes } from "@/lib/ui2/overflow-menu";
+import { REPORTED, REPORT_NOT_SENT } from "@/lib/ui2/post-menu-host";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
+import { ReportConfirm } from "@/lib/ui2/report-confirm";
 import { ActorChip } from "./actor-chip";
 import { buttonClassName } from "./button";
 import { Card } from "./card";
 import { useClampFold } from "./clamp-fold";
 import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
+import { JoinPrompt } from "./join-prompt";
 import { NodeMark } from "./node-mark";
 import { PendingMarker } from "./pending-marker";
 import {
@@ -211,6 +221,26 @@ export function headRowOf(target: CommentTargetView): HeadRow {
   return { kind: "post", title, sub: by, cover, removed: false, label: `“${title}” — ${by}` };
 }
 
+/** What an edit signed off the thread can do next, from the card it was opened on. */
+type EditLanding = {
+  /** The card settles in place: it reads itself again and the host's snackbar says so. */
+  readonly settleInPlace: () => void;
+  /** The comment's thread opens, landed on the comment. */
+  readonly openThread: () => void;
+};
+
+/**
+ * WHERE A COMMENT EDIT OPENED OFF THE THREAD LANDS ONCE IT IS SIGNED (seam 316
+ * item 7, at jakob as design's question 21). Built to design's lean: back on
+ * the host it was opened from, the card settling in place with the thread's
+ * settling snackbar — the composer's rule, leaving returns to where it was
+ * opened. The alternative, landing in the thread on the comment, is
+ * `landing.openThread()` here.
+ */
+export function landSignedEdit(landing: EditLanding): void {
+  landing.settleInPlace();
+}
+
 export function CommentFeedCard({
   comment: given,
   from,
@@ -261,12 +291,26 @@ export function CommentFeedCard({
   const client = useApolloClient();
   const writes = useSavedWrites();
   const viewerId = useActiveAccountId();
+  const phase = useAuthPhase();
+  const guard = useAuthGuard();
+  const openEditDoor = useOpenCommentEdit();
+  const [menuOpen, setMenuOpen] = useState(false);
+  // THE REPORT CONFIRM over the host (CommentMenu.md:31), mounted from the
+  // first ask on so its exit is drawn; a guest is asked to join instead.
+  const [reportAsked, setReportAsked] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
   // THE OWN COMMENT'S REMOVAL, OFF THE THREAD (RM-G9's build word: the
   // `OWN_COMMENT_MENU` rows, and the card standing as its mark in place). The
   // card is its own menu's host, so it keeps a taken removal itself.
   const [removing, setRemoving] = useState(false);
   const [taken, setTaken] = useState<Removal | null>(null);
-  const comment = taken === null ? given : withRemoval(given, taken);
+  // AN EDIT SIGNED FROM THIS CARD'S MENU: the comment as it reads afresh,
+  // laid over what the host served, so the card settles in place.
+  const [reread, setReread] = useState<CommentFieldsFragment | null>(null);
+  const current = reread === null ? given : { ...given, ...reread };
+  const comment = taken === null ? current : withRemoval(current, taken);
   const own = viewerId !== null && comment.author?.id === viewerId;
   const comfort = useComfortLine(comment.id);
   const [unfolded, setUnfolded] = useState(false);
@@ -331,13 +375,65 @@ export function CommentFeedCard({
     });
   };
 
+  // THE EDIT OPENS OVER THE HOST (CommentMenuOwn.md:13) through the shell's
+  // door: what it answers is the target the head row names, and the thread
+  // it lives in is the card's `post`.
+  const target = comment.target ?? null;
+  const editThread = threadPost ?? (target?.__typename === "Post" ? target.id : null);
+  const openEdit =
+    !own || openEditDoor === null || target === null || editThread === null
+      ? undefined
+      : () =>
+          openEditDoor({
+            comment,
+            parentId: target.__typename === "Comment" ? target.id : null,
+            postId: editThread,
+            targetLabel: head?.kind === "post" ? head.title : (head?.label ?? "this post"),
+            onLeave: () => {},
+            onSigned: () =>
+              landSignedEdit({
+                settleInPlace: () => {
+                  onNotify(COMMENT_SETTLING);
+                  void fetchComment(client, comment.id).then((outcome) => {
+                    if (outcome.kind === "success" && outcome.value !== null) setReread(outcome.value);
+                  });
+                },
+                openThread: () => {
+                  if (place !== null) router.push(place);
+                },
+              }),
+          });
+
+  // THE COMMIT SENDS THE MAIL; refused or unanswered, the sheet stays and the
+  // snackbar never claims a report that did not go out (ReportConfirm.md:13-17).
+  const commitReport = async () => {
+    if (sending) return;
+    setSending(true);
+    const outcome = await guard.run(() => sendReport(client, comment.id));
+    setSending(false);
+    if (outcome.kind === "success") {
+      setReportOpen(false);
+      onNotify(REPORTED);
+    } else {
+      onNotify(REPORT_NOT_SENT);
+    }
+  };
+
+  // THE OPEN SHEET WEARS ITS HOST'S NODES (`history.menuSheet.citedBy`): every
+  // card mounts its own sheet, and one registered node names one open sheet.
+  const host = menuHostOf(node);
+  const sheetNodes = host === undefined || !menuOpen ? undefined : menuSheetNodes(host);
+
   const items = redacted
     ? []
     : commentMenuItems({
         comment,
         writes,
         notify: onNotify,
-        onGuest: null,
+        // A GUEST IS ASKED TO JOIN before anything is kept, cited or reported
+        // (GuestGate.md:5) — the profile's Comments tab and the feed are read
+        // by guests.
+        onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
         navigate: (route) => router.push(route),
         openCitedBy,
         openOpinions,
@@ -345,8 +441,14 @@ export function CommentFeedCard({
           setLicenseShown(license);
           setLicenseOpen(true);
         },
+        openEdit,
         openRemove: own ? () => setRemoving(true) : undefined,
+        openReport: () => {
+          setReportAsked(true);
+          setReportOpen(true);
+        },
         testIdPrefix: `${testId}-menu`,
+        rowNode: sheetNodes?.row,
       });
 
   const body = (
@@ -412,55 +514,79 @@ export function CommentFeedCard({
               {stamp}
             </time>
           )}
-          <OverflowMenu
-            items={items}
-            ariaLabel="More on this comment"
-            sheetLabel="Comment actions"
-            testId={`${testId}-menu`}
-            node={part(node, "menu")}
-            trailing={
-              <>
-                {licenseShown !== null && (
-                  <LicenseSheet
-                    open={licenseOpen}
-                    onClose={() => setLicenseOpen(false)}
-                    license={licenseShown}
-                    testId={`${testId}-license-sheet`}
-                  />
-                )}
-                {citedBy !== null && (
-                  <CitedBySheet
-                    open
-                    onClose={() => setCitedBy(null)}
-                    artifacts={citedBy.artifacts}
-                    testId={`${testId}-cited-by-sheet`}
-                  />
-                )}
-                {opinions !== null && (
-                  <OpinionsSheet
-                    open
-                    onClose={() => setOpinions(null)}
-                    on="comment"
-                    opinions={opinions.opinions}
-                    testId={`${testId}-opinions-sheet`}
-                  />
-                )}
-                {removing && (
-                  <RemoveConfirm
-                    kind="comment"
-                    nodeId={comment.id}
-                    record={comment.genesisRecordId}
-                    onClose={() => setRemoving(false)}
-                    onRemoved={(removal) => {
-                      setTaken(removal);
-                      onRemoved?.(removal);
-                    }}
-                    testId={`${testId}-remove-confirm`}
-                  />
-                )}
-              </>
-            }
-          />
+          {/* A menu with no rows is no menu: a removed comment keeps none. */}
+          {items.length > 0 && (
+            <OverflowTrigger
+              ariaLabel="More on this comment"
+              testId={`${testId}-menu`}
+              node={part(node, "menu")}
+              expanded={menuOpen}
+              onOpen={() => setMenuOpen(true)}
+            />
+          )}
+          {items.length > 0 && (
+            <MenuSheet
+              open={menuOpen}
+              onClose={() => setMenuOpen(false)}
+              items={items}
+              ariaLabel="Comment actions"
+              testId={`${testId}-menu-sheet`}
+              node={sheetNodes?.sheet}
+            />
+          )}
+          <>
+            {licenseShown !== null && (
+              <LicenseSheet
+                open={licenseOpen}
+                onClose={() => setLicenseOpen(false)}
+                license={licenseShown}
+                testId={`${testId}-license-sheet`}
+              />
+            )}
+            {citedBy !== null && (
+              <CitedBySheet
+                open
+                onClose={() => setCitedBy(null)}
+                artifacts={citedBy.artifacts}
+                testId={`${testId}-cited-by-sheet`}
+              />
+            )}
+            {opinions !== null && (
+              <OpinionsSheet
+                open
+                onClose={() => setOpinions(null)}
+                on="comment"
+                opinions={opinions.opinions}
+                testId={`${testId}-opinions-sheet`}
+              />
+            )}
+            {removing && (
+              <RemoveConfirm
+                kind="comment"
+                nodeId={comment.id}
+                record={comment.genesisRecordId}
+                onClose={() => setRemoving(false)}
+                onRemoved={(removal) => {
+                  setTaken(removal);
+                  onRemoved?.(removal);
+                }}
+                testId={`${testId}-remove-confirm`}
+              />
+            )}
+            {reportAsked && (
+              <ReportConfirm
+                open={reportOpen}
+                onClose={() => setReportOpen(false)}
+                onReport={() => void commitReport()}
+                sending={sending}
+                title={REPORT_COMMENT_TITLE}
+                testId={`${testId}-report-sheet`}
+              />
+            )}
+            {/* Conditionally mounted: `JoinPrompt` always draws its own
+                test id, and a stance gate may already hold one. */}
+            {joinOpen && <JoinPrompt open onClose={() => setJoinOpen(false)} />}
+          </>
         </div>
       </div>
       {redacted ? (
