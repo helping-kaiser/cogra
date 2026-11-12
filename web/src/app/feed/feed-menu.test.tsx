@@ -13,6 +13,7 @@ import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import { byNode } from "@/test/data-node";
+import { CarriedSnackbar } from "@/lib/ui/carried-snackbar";
 import { FeedView } from "./feed-view";
 import { forgetFeed } from "./feed-memory";
 
@@ -258,6 +259,24 @@ describe("the feed's post menu", () => {
     expect(await screen.findByTestId("feed.snackbar")).toHaveTextContent("You can post once you're in.");
     expect(push).not.toHaveBeenCalled();
     await waitFor(() => expect(menu.open).toBe(false));
+  });
+
+  // ApplicantFeed.md:45, :53 — every feed.card.actionRow.stance.anchor wears
+  // the locked look; a tap tells AND NEVER the pad blooms.
+  it("an_applicants_card_stance_anchor_is_locked_and_its_tap_says_give_your_opinion_once_in", async () => {
+    server.use(...rankedFeed([post("p1")]));
+    renderWithProviders(
+      <>
+        <FeedView />
+        <CarriedSnackbar />
+      </>,
+      { store: signedInStore(), reader: "APPLICANT" },
+    );
+    const anchor = await screen.findByTestId(byNode("feed.card.actionRow.stance.anchor", "p1"));
+    expect(anchor.className).toContain("opacity-[var(--state-disabled)]");
+    fireEvent.click(anchor);
+    expect(screen.getByTestId("carried-snackbar")).toHaveTextContent("You can give your opinion once you're in.");
+    expect(document.querySelector('[data-testid$="-pad"], [data-testid$=".pad"]')).toBeNull();
   });
 
   // GuestGate.md:5 — a guest's Cite still asks to join.
