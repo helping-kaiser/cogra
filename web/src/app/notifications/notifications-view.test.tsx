@@ -17,6 +17,7 @@ import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { intersect } from "@/test/media-env";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { wholeText } from "@/test/text";
 import { NotificationsScreen } from "./notifications-view";
 
 vi.mock("next/navigation", async (importOriginal) => ({
@@ -443,8 +444,8 @@ describe("NotificationsScreen", () => {
       }),
     );
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    await screen.findByText("@ada commented on your post");
-    await waitFor(() => expect(screen.queryByText("@sol gave an opinion on you")).not.toBeInTheDocument());
+    await screen.findByText(wholeText("@ada commented on your post"));
+    await waitFor(() => expect(screen.queryByText(wholeText("@sol gave an opinion on you"))).not.toBeInTheDocument());
     expect(rows()).toHaveLength(2);
   });
 });
