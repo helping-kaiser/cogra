@@ -10,6 +10,10 @@ WHEN a clip is picked at the edit -> the clip rides the edit's own record, stage
 
 ALWAYS the line Uploading N of M — signing waits for the video. stands above the acts footer GIVEN the clip picked in the edit is uploading
 
+ALWAYS the gate names what is still uploading GIVEN a clip picked in the edit and a new cover upload together: Uploading 0 of 2 — signing waits for the video. while the clip climbs, then Uploading 1 of 2 — signing waits for the cover. once the clip has landed, the two lines the gate already has
+
+ALWAYS no note stands under the cover row GIVEN a clip picked in the edit, with a cover or without one
+
 WHEN tap Add a cover GIVEN the clip was picked in the edit -> the platform's own picker opens AND NEVER the clip's frames are offered
 
 WHEN the clip picked in the edit fails to upload -> its thumbnail is marked AND the line That video didn't upload. stands under it with Retry and Remove it AND the gate line reads The video didn't upload. Signing waits for it. followed by Retry AND Sign the edit is disabled

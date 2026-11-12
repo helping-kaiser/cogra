@@ -5919,7 +5919,7 @@ stage grows with the shape (the model jakob's ruling replaced).
 
 Closed by round 46 (jakob 2026-11-12, on the review and question 1): the cover's frame always has the clip's dimensions — tall a tall cover, square a square, wide a wide — and the crop enforces it. Drawn on the post crop's 390 × 488 stage (the orchestrator's reading, shown to him): `CoverCrop`'s `clip` chip, wide 342 × 192 at 148, tall 342 × 427.5 at 30.25, square 342 × 342 at 73.
 
-### 201 · A clip picked in a comment's edit: what the board does not draw · *design* · **filed 2026-11-12**
+### 201 · A clip picked in a comment's edit: what the board does not draw · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 44 drew a clip picked in the edit (`CommentEditVideo`'s `clip`
 setting: picked, failed, second) from strings already on the reply's and
@@ -5938,6 +5938,8 @@ drift for the clients: the failed clip's line under the clip reads `That
 video didn't upload.` (the reply's, copy-voice), the gate's fault `The
 video didn't upload. Signing waits for it.`; the web built `The video
 didn't upload.` under the clip.
+
+Closed by round 46 (jakob 2026-11-12, question 2, as recommended): the gate names what is still uploading in its two existing lines, the video's first, then the cover's; no note under the cover row (`CommentEditVideo`'s `clip` = picked-cover). The failed clip's line reads `That video didn't upload.` on the board and in the sidecar.
 
 ### 202 · `More` under a media caption that fits whole, on the sample boards · *design* · **filed 2026-11-12**
 
