@@ -25,7 +25,7 @@
      its tabs keep `On them` and `By them`.
    · THE EMPTY LINE IS THE FIGURE'S OWN NOUN AT ZERO, in the empty sheet's
      calm register: another's `On them` keeps the sheet's blessed `No opinions
-     yet — yours would be the first.` (the reader's would be); `No opinions
+     yet.`; `No opinions
      by @ada yet.`, `No opinions on you yet.`, `No opinions by you yet.`, `No
      opinions on this account yet.` (others still can). A deleted account will
      give none again, so its `By them` says so in the past: `This account gave
@@ -53,7 +53,7 @@ export const PROPS = {
   tab: { editor: "enum", options: ["on", "by"], default: "on" },
   list: { editor: "enum", options: ["rows", "empty"], default: "rows" },
 };
-export const VALS = `title: this.props.whose === "own" ? "@sol · Opinions" : this.props.whose === "deleted" ? "Opinions" : "@ada · Opinions", backLabel: this.props.whose === "own" ? "Back to your profile" : "Back to the profile", onWord: this.props.whose === "own" ? "On you" : "On them", byWord: this.props.whose === "own" ? "By you" : "By them", onShown: this.props.tab === "on" ? "block" : "none", byShown: this.props.tab === "by" ? "block" : "none", rowsShown: this.props.list === "rows" ? "flex" : "none", emptyShown: this.props.list === "empty" ? "block" : "none", solRow: this.props.whose === "own" ? "none" : "contents", emptyLine: this.props.whose === "own" ? (this.props.tab === "on" ? "No opinions on you yet." : "No opinions by you yet.") : this.props.whose === "deleted" ? (this.props.tab === "on" ? "No opinions on this account yet." : "This account gave no opinions.") : (this.props.tab === "on" ? "No opinions yet — yours would be the first." : "No opinions by @ada yet.")`;
+export const VALS = `title: this.props.whose === "own" ? "@sol · Opinions" : this.props.whose === "deleted" ? "Opinions" : "@ada · Opinions", backLabel: this.props.whose === "own" ? "Back to your profile" : "Back to the profile", onWord: this.props.whose === "own" ? "On you" : "On them", byWord: this.props.whose === "own" ? "By you" : "By them", onShown: this.props.tab === "on" ? "block" : "none", byShown: this.props.tab === "by" ? "block" : "none", rowsShown: this.props.list === "rows" ? "flex" : "none", emptyShown: this.props.list === "empty" ? "block" : "none", solRow: this.props.whose === "own" ? "none" : "contents", emptyLine: this.props.whose === "own" ? (this.props.tab === "on" ? "No opinions on you yet." : "No opinions by you yet.") : this.props.whose === "deleted" ? (this.props.tab === "on" ? "No opinions on this account yet." : "This account gave no opinions.") : (this.props.tab === "on" ? "No opinions yet." : "No opinions by @ada yet.")`;
 
 const DIRECTIONS = [
   { id: "on", label: "{{onWord}}" },

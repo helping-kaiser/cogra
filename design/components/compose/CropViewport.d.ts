@@ -1,6 +1,6 @@
 /**
- * The crop surface — the picture under a locked window, everything outside it
- * darkened by the window's own box shadow. The shape is the shape the result
+ * The crop surface — a fixed frame (the window) the picture moves and zooms
+ * under, everything outside it darkened by the window's own box shadow. The shape is the shape the result
  * will be shown in; there are no shape chips.
  */
 export interface CropViewportProps {

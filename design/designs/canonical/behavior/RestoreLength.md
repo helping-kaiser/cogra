@@ -8,8 +8,6 @@ ALWAYS the length is counted after the reading takes the dashes and spaces out
 
 WHEN typing in the field GIVEN it carries A recovery code is 26 characters. -> the field re-checks the length as the text changes AND the line goes once the code reads 26 characters AND the field leaves the error state
 
-ALWAYS the body reads Enter your recovery code to bring your signing key onto this browser. on the web and Enter your recovery code to bring your signing key into this app. in the app
-
 ALWAYS the header's arrow reads Back and is a link to the reader's own home, never history
 
 WHEN press the header's back arrow GIVEN a member -> KeyElsewhere opens

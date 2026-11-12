@@ -37,7 +37,7 @@ export const VALS = `restFootShown: this.props.state === "signing" ? "none" : "f
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
+      <WizardHeader title="What you sign" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Sunday at the tide market — 4 pictures.</QuietNote>
 
@@ -57,7 +57,6 @@ export function Screen() {
             },
           ]}
           total="3 things, signed together"
-          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>

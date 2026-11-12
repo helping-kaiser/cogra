@@ -16,7 +16,7 @@ WHEN tap feed.menuSheet.save GIVEN the post is kept -> the sheet closes AND feed
 
 WHEN tap feed.menuSheet.cite -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
 
-WHEN tap feed.menuSheet.hide -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND feed.snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
+WHEN tap feed.menuSheet.hide -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND feed.snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
 
 WHEN tap feed.menuSheet.license -> the menu closes AND the post's terms come up in feed.licenseSheet over the feed
 

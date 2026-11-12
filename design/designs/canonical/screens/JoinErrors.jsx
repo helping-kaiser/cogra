@@ -23,10 +23,11 @@ export function Screen() {
               letterSpacing: "var(--text-headline-small--letter-spacing)",
               lineHeight: "var(--text-headline-small--line-height)",
               fontWeight: "var(--text-headline-small--font-weight)",
+              maxWidth: "100%",
             }}
             data-node="title"
           >
-            Mira Voss invited you
+            <NameInText text="Mira Voss invited you" names={["Mira Voss"]} />
           </h1>
           <p
             style={{

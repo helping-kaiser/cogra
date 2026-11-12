@@ -9,9 +9,8 @@
    it changes and nothing marks it: the graph is untouched, and the feed is
    where the hide shows, the next time it is opened (`FeedHidden`).
 
-   THE SNACKBAR IS THE FEED'S, WORD FOR WORD. `@ada is hidden — their posts
-   stay out of your feed.` with `Undo`: the line says how far the act reaches,
-   and that reach is the same whichever surface the tap was made on. It lands
+   THE SNACKBAR IS THE FEED'S, WORD FOR WORD. `@ada is hidden.` with `Undo`:
+   the act is the same whichever surface the tap was made on. It lands
    where the tap was made, over the detail and above its bar (`Snackbar`'s
    80px).
 
@@ -30,7 +29,7 @@ export function Screen() {
       <DetailColumn>
         <PostCard {...ADA_POST} variant="detail" node="card" />
       </DetailColumn>
-      <Snackbar message="@ada is hidden — their posts stay out of your feed." action="Undo" offset={80} node="snackbar" />
+      <Snackbar message="@ada is hidden." action="Undo" offset={80} node="snackbar" />
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );

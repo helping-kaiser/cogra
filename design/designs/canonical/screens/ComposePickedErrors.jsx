@@ -38,7 +38,7 @@ export function Screen() {
   return (
     <>
       <WizardHeader title="New post" backLabel="Back" />
-      <PickPrompt caption="Pick one picture, several, or one video." escapeLabel="Write words instead" />
+      <PickPrompt escapeLabel="Write words instead" />
       <PickTray count={10} onShowAll={() => {}} clip>
         {PICKED.map((item, index) => (
           <MediaThumb key={index} src={item.src} alt={item.alt} cover={index === 0} onRemove={() => {}} />

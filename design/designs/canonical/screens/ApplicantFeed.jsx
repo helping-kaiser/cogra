@@ -43,12 +43,12 @@ export function Screen() {
           handle="mira"
           displayName="Mira Voss"
           avatarSrc="inviter.jpg"
-          line="Browsing from @mira's view while your application lands."
+          line="Browsing from @mira's view."
           node="borrowedViewBand"
         />
       </CograBand>
       <FeedList>
-        <TaskCard tone="notice" title="Verify your email" body="We sent you a verification link — open it to prove this email is yours." node="verifyCard">
+        <TaskCard tone="notice" title="Verify your email" node="verifyCard">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <span
               style={{

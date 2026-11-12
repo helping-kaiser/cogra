@@ -36,6 +36,6 @@ WHEN press the header back arrow -> settings returns AND NEVER a code is made AN
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
-ALWAYS Create a new recovery code stands disabled with Waiting for your current recovery code right above it GIVEN Current recovery code is empty
+ALWAYS Create a new recovery code stands disabled with no line above it and its spoken description reads Waiting for your current recovery code GIVEN Current recovery code is empty
 
-WHEN the first character is typed in Current recovery code -> Create a new recovery code wakes AND the line Waiting for your current recovery code goes
+WHEN the first character is typed in Current recovery code -> Create a new recovery code wakes AND its spoken description Waiting for your current recovery code goes

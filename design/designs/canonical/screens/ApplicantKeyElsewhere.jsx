@@ -37,7 +37,7 @@ export function Screen() {
   return (
     <>
       <CograBand trailing={<FeedFilter />}>
-        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view while your application lands." />
+        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view." />
       </CograBand>
       <FeedList>
         <TaskCard

@@ -36,6 +36,6 @@ ALWAYS the screen's ways out stay live while Show my key waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
-ALWAYS Show my key stands disabled with Waiting for your recovery code right above it GIVEN Current recovery code is empty
+ALWAYS Show my key stands disabled with no line above it and its spoken description reads Waiting for your recovery code GIVEN Current recovery code is empty
 
-WHEN the first character is typed in Current recovery code -> Show my key wakes AND the line Waiting for your recovery code goes
+WHEN the first character is typed in Current recovery code -> Show my key wakes AND its spoken description Waiting for your recovery code goes

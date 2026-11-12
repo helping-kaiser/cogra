@@ -4,7 +4,7 @@ ALWAYS postDetail.card.removalMark stands in the post's words and pictures' plac
 
 ALWAYS postDetail.card.removalMark.line reads Removed by its author GIVEN the post went with its author's account deletion, its content sweep chosen
 
-ALWAYS postDetail.card.removalMark.detail reads The words and pictures are gone. The post's place in the thread, and every response, remain.
+ALWAYS postDetail.card.removalMark carries the line and the removal's date and no detail
 
 ALWAYS the author's mark never reads like Removed under the platform's rules
 

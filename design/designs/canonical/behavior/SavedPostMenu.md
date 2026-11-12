@@ -8,7 +8,7 @@ ALWAYS saved.menuSheet carries no row of Saved's own, Unsave being how a thing l
 
 WHEN tap saved.menuSheet.save -> the sheet closes AND the card leaves Saved AND the cards behind it move up AND saved.snackbar reads Removed from Saved. with Undo
 
-WHEN tap saved.menuSheet.hide -> the sheet closes AND every card in Saved stays where it is AND the snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
+WHEN tap saved.menuSheet.hide -> the sheet closes AND every card in Saved stays where it is AND the snackbar reads @ada is hidden. with Undo AND NEVER a confirm step appears
 
 WHEN tap saved.menuSheet.license -> the menu closes AND the post's terms come up in a sheet over Saved
 

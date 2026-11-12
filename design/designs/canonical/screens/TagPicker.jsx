@@ -23,8 +23,10 @@
    V1.0 audit's K14.1). The list's first row is the canonicalized form of what
    is typed, whether or not rows match below it, and the name field's keyboard
    action key stages it — the same pick as a tap on it. It is a row, not a
-   "Create" button: the `Signs as #salt` preview made tappable, the
-   `ReferenceRow` every other row is, its preview on the row's second line. It
+   "Create" button: the `ReferenceRow` every other row is, its preview
+   `Signs as #…` on the row's second line only where the canonical form
+   differs from what was typed (`Signs as #saltmaps` under `SaltMaps`; jakob
+   2026-11-12). It
    names a Type that already exists; it creates nothing. A name in use that is
    the typed name is that row, never listed twice. So a name nobody has used is
    exactly as pickable as one everybody has, which is the footnote's promise

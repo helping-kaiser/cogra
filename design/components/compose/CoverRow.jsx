@@ -30,10 +30,10 @@ import { Icon } from "../navigation/Icon.jsx";
    picture of your own is the only cover that can disagree with the clip's
    shape.
 
-   THE ROW IS THE WHOLE CLUSTER — the "Cover" field label, the strip, and the
-   line underneath — because those three only ever appear together. The comment
-   composer inlines it at 56px and the post's cover stage draws it larger; both
-   want the label and the line.
+   THE ROW IS THE WHOLE CLUSTER — the "Cover" field label and the strip, and a
+   line underneath only where the row has something to explain: the frame strip
+   and the own-picture tile show the choice themselves (jakob 2026-11-12). The
+   comment composer inlines it at 56px and the post's cover stage draws it larger.
 
    NO FRAMES IS A STATE THE ROW HOLDS (video-cover round, 2026-09-10): hand it
    an empty `frames` and what remains is the way out to the gallery, alone,
@@ -60,7 +60,7 @@ export function CoverRow({
   label = "Cover",
   frames = [],
   selected = null,
-  caption = "A frame, or a picture of your own.",
+  caption,
 }) {
   const chosen = selected !== null && selected !== undefined;
   return (
@@ -109,9 +109,11 @@ export function CoverRow({
           <Icon name="image" size={20} />
         </div>
       </div>
-      <p style={{ margin: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
-        {caption}
-      </p>
+      {caption && (
+        <p style={{ margin: 0, fontSize: "var(--text-label-small)", fontWeight: "var(--text-label-small--font-weight)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+          {caption}
+        </p>
+      )}
     </div>
   );
 }

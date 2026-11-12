@@ -3,6 +3,14 @@ import React from "react";
 /* The crop surface (item 17, the conformance round): the picture at the size
    it will be cut, with everything outside the cut darkened.
 
+   ONE CROP MODEL, EVERY CROP, BOTH CLIENTS (jakob 2026-11-11, seam 301: "the
+   instagram approach (fixed frame with mooving and zooming image)"). The
+   frame — the window below — is FIXED: it stands still at its shape, and the
+   PICTURE is what moves (drag, the arrow keys) and zooms (pinch, `CropZoom`)
+   under it. No window ever moves over a still picture, and the stage never
+   changes size with the shape: this master's stage is `size` square (390),
+   the post crop's (`ComposeCrop`) 390 × 488 under all three of its shapes.
+
    THE MASK IS ONE BOX SHADOW, not four dimming panels. `0 0 0 400px` spreads a
    45% black outward from the window's own edges, so the darkened region is
    whatever the frame has left over — no arithmetic, nothing to keep in sync
@@ -99,13 +107,34 @@ export const CROP_ZOOM_NAME = "Zoom";
    at the crop's current scale between `CROP_ZOOM_MIN` and `CROP_ZOOM_MAX`.
    No words beside it: the viewport above is what it acts on, and its name
    carries what it does. The input stands 48px tall, so the thumb's target is
-   the system's minimum. */
+   the system's minimum.
+
+   THE TRACK IS DRAWN, NEVER THE PLATFORM'S DEFAULT (round 44, seam 292-2):
+   an 8px track with full rounding, its ground `--border-field` and the part
+   from the floor to the thumb `primary`, under a 16px `primary` thumb with no
+   rim — the same on both clients. The ground is the house's: the drawn
+   track nearest this one, `Timeline`'s unplayed part on a page ground
+   (`VideoControls`, `tone="surface"`), takes `--border-field`, as the off
+   `Switch` does for its rim and knob. The slider carries its own rules
+   (`CROP_ZOOM_CSS`, `ProfileHeader`'s construction for a master's own
+   stylesheet), the filled part read from `--cg-range-at`. */
+const CROP_ZOOM_CSS = `
+.cg-range { -webkit-appearance: none; appearance: none; background: transparent; }
+.cg-range::-webkit-slider-runnable-track { height: 8px; border-radius: var(--radius-full); background: linear-gradient(var(--primary), var(--primary)) 0 0 / var(--cg-range-at, 0%) 100% no-repeat, var(--border-field); }
+.cg-range::-moz-range-track { height: 8px; border-radius: var(--radius-full); background: var(--border-field); }
+.cg-range::-moz-range-progress { height: 8px; border-radius: var(--radius-full); background: var(--primary); }
+.cg-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin-top: -4px; border: 0; border-radius: var(--radius-full); background: var(--primary); }
+.cg-range::-moz-range-thumb { width: 16px; height: 16px; border: 0; border-radius: var(--radius-full); background: var(--primary); }
+`;
+
 export function CropZoom({ scale = CROP_ZOOM_MIN, onChange, node }) {
+  const at = `${(((scale - CROP_ZOOM_MIN) / (CROP_ZOOM_MAX - CROP_ZOOM_MIN)) * 100).toFixed(2)}%`;
   return (
     // `data-field` for the flow badge, `TextField`'s reason: a range input is a
     // replaced element and cannot host the badge's ::after. `node` names the
     // slider where a placer gives one (seam 248), its range `input`.
     <div data-field={CROP_ZOOM_NAME} style={{ flex: "none" }} data-node={node}>
+      <style dangerouslySetInnerHTML={{ __html: CROP_ZOOM_CSS }} />
       <input
         data-node={node && "input"}
         type="range"
@@ -115,8 +144,8 @@ export function CropZoom({ scale = CROP_ZOOM_MIN, onChange, node }) {
         value={scale}
         aria-label={CROP_ZOOM_NAME}
         onChange={(event) => onChange && onChange(Number(event.target.value))}
-        className="cg-focus"
-        style={{ display: "block", width: "100%", height: "var(--touch-target-min)", margin: 0, accentColor: "var(--primary)" }}
+        className="cg-focus cg-range"
+        style={{ display: "block", width: "100%", height: "var(--touch-target-min)", margin: 0, "--cg-range-at": at }}
       />
     </div>
   );

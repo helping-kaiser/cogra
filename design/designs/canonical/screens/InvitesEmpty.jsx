@@ -30,8 +30,15 @@
    slot is what makes this a choice rather than a fork — the component's calm
    default stays the default for every other empty list in the tree.
 
+   THE MECHANIC IS BEHIND A "?" (jakob 2026-11-12, the re-ask's 4): the empty
+   state says one thing, `No invites out yet.`, and the two sentences on the
+   link and the vouch — `How vouching works`' first paragraph word for word —
+   open from a "?" beside `Create invite`, a plain dialog, its subject its
+   name. The "?" trails the button in its row, `SheetTitle`'s `trailing`
+   construction, and the button keeps the rest of the column's width.
+
    REGISTERED under the `invites` prefix (seam 248): the empty state `empty`,
-   its action `empty.create`. */
+   its action `empty.create`, the "?" `empty.help` (the house name for a "?"). */
 export const NODE = "invites";
 export function Screen() {
   return (
@@ -39,11 +46,14 @@ export function Screen() {
       <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "16px 24px 32px" }}>
         <EmptyState
-          title="No invites out yet. A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in."
+          title="No invites out yet."
           action={
-            <Button style={{ width: "100%" }} onClick={() => {}} node="create">
-              Create invite
-            </Button>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", alignSelf: "stretch" }}>
+              <Button style={{ flex: 1 }} onClick={() => {}} node="create">
+                Create invite
+              </Button>
+              <HelpDot ariaLabel="How vouching works" onOpen={() => {}} node="help" />
+            </div>
           }
           node="empty"
         />

@@ -46,7 +46,7 @@ export function Screen() {
           handle="mira"
           displayName="Mira Voss"
           avatarSrc="inviter.jpg"
-          line="Browsing from @mira's view while your application lands."
+          line="Browsing from @mira's view."
           node="borrowedViewBand"
         />
       </CograBand>
@@ -62,7 +62,7 @@ export function Screen() {
             address={ASK_LINK}
             onCopy={() => {}}
             copyLabel="Copy your ask link"
-            caption="Send it to anyone who is already in. It does not expire, and it works however many people you send it to."
+            caption="It does not expire, and it works however many people you send it to."
             node="link"
           />
           <Button variant="outline" selfStart node="dismiss">

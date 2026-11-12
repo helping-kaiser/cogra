@@ -1,10 +1,14 @@
 # ComposePick · `spec:design:behavior-compose-pick`
 
+ALWAYS the composer carries the door it was opened from: the bottom bar's New post on the tab it stood on, Cite in a new post or Mention in a new post on the surface its menu was opened over, a tag card's compose glyph on the page the card stands on, Open the draft on the feed's Your post didn't land card
+
+ALWAYS leaving the composer before Sign and publish is pressed returns to the surface its door stood on, a menu's sheet closed, from every stage of the wizard
+
+ALWAYS publishing lands where the seal draws it, whichever door opened the composer
+
 ALWAYS the device grid stands newest first
 
 ALWAYS the first picture in the tray is the cover
-
-ALWAYS the tray's line The first one is the cover. stands beside the tiles only while they leave it its one line, and past that the tiles stand alone, clipped at the band's edge and never scrolled
 
 WHEN tap an unpicked picture tile in the grid GIVEN the tray holds fewer than ten pictures and no video -> the picture is picked AND its tile's ring shows its place in the post
 
@@ -40,11 +44,11 @@ WHEN press Next GIVEN the body is one video -> NEVER the clip's length decides w
 
 ALWAYS the header back arrow is named Back, never Back a step
 
-WHEN press the header back arrow -> the wizard leaves toward where compose began AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow -> the wizard leaves for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
 
-WHEN make the platform back gesture -> the wizard leaves toward where compose began AND the draft is kept AND NEVER a dialog asks
+WHEN make the platform back gesture -> the wizard leaves for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
 
-WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
 
 ALWAYS a reference brought by Cite in a new post or Mention in a new post rides the draft unseen until the details stage
 

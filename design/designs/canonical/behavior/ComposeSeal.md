@@ -34,9 +34,7 @@ ALWAYS every act the signature commits is read back in the acts card, one row pe
 
 ALWAYS the acts card's total reads the number of things signed together
 
-ALWAYS the acts card carries the line They land together, or none does. GIVEN the seal signs more than one act
-
-ALWAYS the acts card carries no all-or-nothing line GIVEN the seal signs one act
+ALWAYS the acts card carries no all-or-nothing line, the seal's "?" How signing works saying it
 
 ALWAYS the References row reads the one staged citation by its name over its pair GIVEN one citation is staged
 
@@ -70,7 +68,7 @@ WHEN press the header back arrow GIVEN Sign and publish was not pressed -> the d
 
 WHEN press Back GIVEN Sign and publish was not pressed -> the details stage comes back, one stage behind
 
-WHEN press the header X GIVEN Sign and publish was not pressed -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X GIVEN Sign and publish was not pressed -> the whole flow is left for where the composer was opened from AND the draft is kept AND NEVER a dialog asks
 
 WHEN press Sign and publish -> Back reads Close in its place from the press itself AND the header X is named Close AND NEVER Close dims
 

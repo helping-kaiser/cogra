@@ -4,7 +4,7 @@ ALWAYS postDetail.header.menu is the post's one overflow and postDetail.card car
 
 ALWAYS postDetail.card holds the post as it was when the detail opened, never changing under the reader, until the reader asks for the newest
 
-WHEN a fresh read finds the post changed since the detail opened -> postDetail.newerVersion appears between postDetail.header and postDetail.card reading Edited since you opened it — tap for the newest version. AND NEVER postDetail.card changes
+WHEN a fresh read finds the post changed since the detail opened -> postDetail.newerVersion appears between postDetail.header and postDetail.card reading Edited since you opened it AND NEVER postDetail.card changes
 
 WHEN a fresh read finds the post's tags or citations changed since the detail opened -> postDetail.newerVersion appears the same way, in the same words AND NEVER postDetail.card changes
 

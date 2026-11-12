@@ -191,13 +191,12 @@ export function ActsCard({ rows = [], total, note, noteTone = "quiet", node }) {
         >
           {total}
         </span>
-        {/* The all-or-nothing subline — "they land together, or none does" —
-            rides the total whenever the seal commits more than one act. It had
-            drifted: on the key-absent and sheet boards but not the seal itself
-            (found by the implementation session, 2026-08-31); now it lives
-            here once. Past 5s of signing it swaps to the slow line in the
-            olive `--tertiary` (`noteTone="slow"`, jakob 2026-10-01): the wait
-            said honestly in words, no progress the signing cannot measure. */}
+        {/* The subline under the total. A seal draws none at rest — its "?"
+            says the all-or-nothing (jakob 2026-11-12); the edit's acts sheets,
+            which carry no "?", pass "They land together, or none does." Past 5s
+            of signing the slow line takes the place in the olive `--tertiary`
+            (`noteTone="slow"`, jakob 2026-10-01): the wait said honestly in
+            words, no progress the signing cannot measure. */}
         {note && (
           <span
             data-node={part("note")}

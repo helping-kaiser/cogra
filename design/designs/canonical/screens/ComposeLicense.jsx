@@ -10,19 +10,17 @@
    so what a license promises is written once and this board cannot say a
    shorter version of it.
 
-   THE NOTE IS WRITTEN FOR ONE POST. *Terms for anyone who reuses this* is about
-   the thing being signed, and it stays here: the settings route sets what a new
-   post starts from and says so in its own words, on its own board.
+   NO INTRO UNDER THE TITLE: the sheet's "?" (`License`) opens on what the
+   terms are for (jakob 2026-11-12, a line repeating the "?" goes).
 
    THE RADIOS STAGE, AND `Done` COMMITS (the sheet law, readme §4, *Sheets*).
    A pick changes the sheet and nothing else; `Done` carries the pair to the
    seal's row; the scrim, a swipe down, system Back and Escape discard it, and the post's
    terms are what they were.
 
-   THE FOOT AND THE ROW READ ONE SENTENCE. `licenseSummary` joins the pair's
-   name and both tier hints — drawn here at `Credit always` / `Not logged` —
-   and the seal's License row reads the same sentence for whatever pair the
-   post carries, so the sheet shows what Done will put on the row.
+   THE FOOT AND THE ROW READ ONE NAME. `licenseSummary` is the pair's name —
+   drawn here at `Credit always · Not logged` — and the seal's License row
+   reads the same name for whatever pair the post carries, so the sheet shows what Done will put on the row.
 
    THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
    `ComposeSeal` draws. What a sheet covers is inert, not shortened. */
@@ -35,8 +33,6 @@ export function Screen() {
       <BottomSheet open ariaLabel="License terms" maxHeight="88%">
         <SheetTitle trailing={<HelpDot ariaLabel="License" />}>License</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 24px" }}>
-          <QuietNote>Terms for anyone who reuses this.</QuietNote>
-
           <LicenseAxisLabel>Credit</LicenseAxisLabel>
           <LicenseAxis axis="credit" name="license-attribution" tiers={ATTRIBUTION_TIERS} chosen={2} />
 

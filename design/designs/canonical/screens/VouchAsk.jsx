@@ -73,7 +73,7 @@ export function Screen() {
             </h2>
           </div>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", letterSpacing: "var(--text-body-medium--letter-spacing)", fontWeight: "var(--text-body-medium--font-weight)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node="body">
-            They have an account and can read; what they do not have yet is anyone standing for them. Your opinion is what brings them in.
+            Your opinion is what brings them in.
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
             <Button variant="text" node="later">Not now</Button>

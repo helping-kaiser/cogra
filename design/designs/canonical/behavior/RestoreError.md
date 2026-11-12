@@ -6,8 +6,6 @@ ALWAYS a mistyped character and a wrong backup read the same line, That code doe
 
 WHEN typing in the field GIVEN it carries That code doesn't check out. -> the line stands AND NEVER it goes before the next press of Restore the key
 
-ALWAYS the body reads Enter your recovery code to bring your signing key onto this browser. on the web and Enter your recovery code to bring your signing key into this app. in the app
-
 ALWAYS the header's arrow reads Back and is a link to the reader's own home, never history
 
 WHEN press the header's back arrow GIVEN a member -> KeyElsewhere opens

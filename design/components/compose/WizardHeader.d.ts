@@ -17,7 +17,7 @@ export interface WizardHeaderProps {
   leaveLabel?: string;
   /** The surface's commit was pressed and has not answered: the X is named `Close`, and it and the arrow close the surface while the act goes on. */
   closing?: boolean;
-  /** The stage's name, quiet and trailing — "Last step" on every seal. */
+  /** A stage's name, quiet and trailing, where it says more than the title; the canonical seals carry none (jakob 2026-11-12). */
   stageLabel?: string;
   /** The screen's one "?", by its aria-label: what the dialog behind it
    *  explains ("How signing works", "Changing your picture"). */
