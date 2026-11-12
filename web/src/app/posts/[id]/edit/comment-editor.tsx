@@ -172,9 +172,9 @@ export function CommentEditor({
   postId: string;
   /** What the comment is on, for the editor's lede. */
   targetLabel: string;
-  /** Back to the thread, nothing kept. */
+  /** Back to where the edit was opened — the thread, or a card's host — nothing kept. */
   onLeave: () => void;
-  /** The signing was taken: the thread reopens with the edit settling. */
+  /** The signing was taken: the host it was opened from shows the edit settling. */
   onSigned: () => void;
 }) {
   const client = useApolloClient();
