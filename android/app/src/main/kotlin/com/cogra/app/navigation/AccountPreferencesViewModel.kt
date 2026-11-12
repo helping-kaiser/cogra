@@ -5,12 +5,17 @@
 // post's detail and its pinned clip, the comments sheet — answers the
 // account's sensitive-content choice without each screen asking for it.
 // Signed out, it forgets: a guest reads veiled.
+//
+// The same read records the reader's own standing ([ReaderStanding]): every
+// door an applicant meets — the bar's New post, a card's Cite and Mention —
+// reads that one answer, never a read of its own.
 
 package com.cogra.app.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.Outcome
+import com.cogra.domain.ReaderStanding
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.settings.SensitiveContentChoice
 import com.cogra.domain.store.TokenStore
@@ -27,6 +32,7 @@ class AccountPreferencesViewModel @Inject constructor(
     tokens: TokenStore,
     private val account: AccountRepository,
     private val sensitive: SensitiveContentChoice,
+    private val standing: ReaderStanding,
 ) : ViewModel() {
 
     /** Whether the signed-in account always unveils sensitive content. */
@@ -38,9 +44,13 @@ class AccountPreferencesViewModel @Inject constructor(
                 // A new account (or none) starts veiled until its own read
                 // answers; nothing of the previous account's choice carries.
                 sensitive.record(null)
+                standing.record(null)
                 if (accountId == null) return@collectLatest
                 val read = account.me()
-                if (read is Outcome.Success) sensitive.record(read.value?.contentFilteringSeverityLevel)
+                if (read is Outcome.Success) {
+                    sensitive.record(read.value?.contentFilteringSeverityLevel)
+                    standing.record(read.value?.accountState)
+                }
             }
         }
     }
