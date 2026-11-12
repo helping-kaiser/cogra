@@ -180,6 +180,15 @@ class ScriptedAccountRepository : ThrowingAccountRepository() {
         profile = profile?.copy(handle = handle)
         return Outcome.Success(Unit)
     }
+
+    /** How the reset's new-password step answers, and the tokens it was sent with. */
+    var resetOutcome: Outcome<Unit> = Outcome.Success(Unit)
+    val resetTokens = mutableListOf<String>()
+
+    override suspend fun confirmPasswordReset(resetToken: String, newPassword: String): Outcome<Unit> {
+        resetTokens += resetToken
+        return resetOutcome
+    }
 }
 
 /**
