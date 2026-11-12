@@ -32,7 +32,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
+import type { PostView } from "@/lib/api/content-api";
 import { fetchHashtagDetail, type HashtagDetail } from "@/lib/api/topics-api";
+import { useHostSnack } from "@/lib/saved/save-row";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { backFor, EXPLORE_COLD, tagOrigin } from "@/lib/ui/back-origin";
@@ -47,14 +49,21 @@ import { AFFINITY_AXES } from "@/lib/ui/stance-format";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError } from "@/lib/ui/transport-error";
 import { StageHost } from "@/lib/ui2/media/stage-host";
+import { menuSheetNodes } from "@/lib/ui2/overflow-menu";
+import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 
 export function TopicView({ name, from = null }: { name: string; from?: string | null }) {
   const client = useApolloClient();
   const [hashtag, setHashtag] = useState<HashtagDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
-  const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
+  // THE PAGE'S ONE SNACKBAR (`tagPage.snackbar`, TagPageHidden): a card's
+  // copied link and every aftermath of a card's menu — a hide's Undo, a save.
+  const { snack, notify, dismiss } = useHostSnack();
+  // A POST CARD'S MENU, OVER THE TAG'S PAGE (TagPageMenu.md:3): the one post
+  // menu every host shares, its sheet `tagPage.menuSheet`.
+  const [menuPost, setMenuPost] = useState<PostView | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const refresh = useCallback(() => {
     let cancelled = false;
@@ -199,7 +208,12 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
                     authorTestId={`topic-author-${node.id}`}
                     stanceTestId={`topic-stance-${node.id}`}
                     comments={node.comments.totalCount}
-                    onLinkCopied={() => setLinkCopied(true)}
+                    onLinkCopied={() => notify(LINK_COPIED)}
+                    onOpenMenu={() => {
+                      setMenuPost(node);
+                      setMenuOpen(true);
+                    }}
+                    menuOpen={menuOpen && menuPost?.id === node.id}
                   />
                 </li>
               );
@@ -238,11 +252,39 @@ export function TopicView({ name, from = null }: { name: string; from?: string |
           })}
         </ul>
       </StageHost>
-      {/* One region for the list: a card that copied a link says so here. */}
+      {/* One region for the list: a copied link, a menu's aftermath. */}
       <Snackbar
-        testId="topic-link-copied"
-        message={linkCopied ? LINK_COPIED : null}
-        onDismiss={dismissLinkCopied}
+        testId="topic-snackbar"
+        node={{ path: "tagPage.snackbar" }}
+        message={snack?.message ?? null}
+        action={snack?.action}
+        token={snack?.token}
+        onDismiss={dismiss}
+      />
+      {/* HIDING LEAVES THE PAGE AS IT STOOD (TagPageMenu.md:5): the page
+          filters nobody at the tap, so no row moves. A removal taken from the
+          author's own menu stands the card as its mark in place (RM-G9). */}
+      <PostMenuHost
+        post={menuPost}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        nodes={menuSheetNodes("tagPage")}
+        testId="topic-menu"
+        notify={notify}
+        onRemoved={(removed) =>
+          setHashtag((current) =>
+            current === null
+              ? current
+              : {
+                  ...current,
+                  taggedContent: current.taggedContent.map((item) =>
+                    item.node.__typename === "Post" && item.node.id === removed.id
+                      ? { ...item, node: { ...item.node, removal: removed.removal } }
+                      : item,
+                  ),
+                },
+          )
+        }
       />
     </main>
   );

@@ -34,6 +34,32 @@ export type MenuItem = {
 };
 
 /**
+ * THE NODES A HOST'S CARD MENU WEARS (nodes.json: `history.menuSheet`,
+ * `saved.menuSheet.save`, `tagPage.menuSheet.hide`, …). Every card ⋮ rises as
+ * its host's one sheet, named for the host the card stands on rather than for
+ * the card's kind, and its rows are named by the row — so a post's, a
+ * profile card's and a comment's menu on History share `history.menuSheet` and
+ * differ only in which rows stand (round 36). `host` is the screen's prefix:
+ * `feed`, `history`, `saved`, `tagPage`, `profile`, `postDetail`.
+ */
+export function menuSheetNodes(host: string): { sheet: DataNode; row: (row: string) => DataNode } {
+  return {
+    sheet: { path: `${host}.menuSheet` },
+    row: (row) => ({ path: `${host}.menuSheet.${row}` }),
+  };
+}
+
+/**
+ * The host a registered card stands on, read off its own path — the screen's
+ * prefix (`history.profileCard` → `history`, `profile.comments.commentCard` →
+ * `profile`) — so a card that hosts its own menu wears its host's sheet nodes
+ * without the host naming them twice. Undefined for an unregistered card.
+ */
+export function menuHostOf(card: DataNode | undefined): string | undefined {
+  return card?.path.split(".")[0];
+}
+
+/**
  * The ⋮ alone — for a surface that hosts the one sheet its cards' menus share
  * (the feed's `feed.menuSheet`), where each card carries a trigger and the
  * surface carries the sheet.
