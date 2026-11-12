@@ -5960,7 +5960,7 @@ those boards: four registered paths removed across 32 boards and the flows'
 `More` steps dropped (an announced breaking change for both clients); (c)
 leave the boards as they are and read the law from the docblocks.
 
-Closed by round 46 (jakob 2026-11-12, question 3, as recommended, (a)): the sample captions were lengthened in their own voice — `ADA_POST`'s to 147 characters, the canoe clip's to 140 — so `More` stands where the caption is cut, and `PostCard` now offers it on a media caption only past two lines' estimate, `ReelCaption`'s way. No registered path moved.
+Closed by round 46 (jakob 2026-11-12, question 3, as recommended, (a)): the sample captions were lengthened in their own voice — `ADA_POST`'s to 143 characters, the canoe clip's to 139 — so `More` stands where the caption is cut, and `PostCard` now offers it on a media caption only past two lines' estimate, `ReelCaption`'s way. No registered path moved.
 
 ### 203 · Who else reads the seen list · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
