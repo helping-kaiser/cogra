@@ -506,7 +506,7 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | parallel bundles, all other folds | — | the guild / user | L2 | **reimplement freely** (`rem:graph:authored-act-bundle-consumers`) |
 | membership fold $\mathrm{member}^{(k)}(a,C)$ | — | guild / chat policy | L2 | reimplement freely; policy defaults L1·by-product |
 | raw $\tilde{w}(e)$ and $\epsilon(e)$ **formulas** | — | feed, raw bridge, raw signed diagnostics | **L2** | reimplement freely at terminal read-sites |
-| payload projection / bytes | — (terminal by postulate) | user / L2 service | L2 | reimplement freely; carriage custody per phase |
+| payload projection / bytes | — (terminal by postulate) | user / L2 service | L2 | reimplement freely; carriage custody per carriage mode |
 | content witness | — (evidence; authenticates carriage) | any verifier | L1·verify | consume only; retained by Layer 1 across phases (`rem:graph:act-payload-custody-phases`) |
 | feed $S(u,c)$ | — | the user | L2 | **reimplement freely** |
 | reward $R_C$ | — | the guild | L2 | **reimplement freely** |
@@ -534,7 +534,7 @@ pruned-node state (`rem:sorting:raw-pruning-is-implementation`).
 
 Note: the payload **projection / bytes** are terminal by postulate — no
 closure quantity reads them (removable-projection invariance), so they are
-**L2**, a carriage-custody concern per phase. The **content witness** is
+**L2**, a carriage-custody concern per carriage mode. The **content witness** is
 not: it is **L1·verify** evidence — no formula consumes it, but it
 authenticates carriage and is retained by Layer 1 across both deployment
 phases (`rem:graph:act-payload-custody-phases`); withholding it breaks
@@ -1543,34 +1543,76 @@ recognition quantity.
 
 1. **Proposal pre-commitment (`def:graph:proposal-pre-commitment`).**
    Because the host contributes the final projection salts, the actor first
-   binds its proposal: with a fresh private nonce, it forms domain-separated
-   pre-digests of the content bytes and canonical dependency encoding, each
-   over the act identifier, the nonce, and the bytes; the pre-commitment is
-   the hash of the canonical structural body plus both pre-digests, and the
-   actor signs it. The pre-commitment exists before host salting, binds the
-   exact proposal, cannot be transplanted to another act identifier,
-   carries no host order, and grants no inclusion. The nonce's entropy
-   custody is the actor's when it is client-generated; the host receives
-   it at proposal, validates its checkable part at append (format, length,
-   freshness, and non-reuse across the author's acts), and custodies and
-   removes it with the payload (`subsec:deployment:concealment-entropy`,
-   `rem:graph:erasure-floor`).
-2. **Verified act (`def:graph:verified-act`).** The host verifies the actor
-   signature, act-identifier uniqueness, canonical formation, hyper-edge
-   A/T consistency, public protocol references, carriage and dependency
-   bounds, and the recomputed pre-commitment (a failure produces no Layer-1
-   object); chooses independent fresh domain-separated salts meeting the
-   published entropy floor; forms the binding content and dependency
-   commitments, each over the act identifier, the pre-commitment, its salt,
-   and the projection's bytes; and seals the resulting **verified act**
-   header — body, pre-commitment, pre-signature, both commitments, and the
-   content and dependency edition tags, no host order fields — with its
-   host signature. The seal attests receipt, verification, and salt
-   addition; it promises no inclusion.
+   binds its proposal: with two independent fresh private nonces, one per
+   projection — a **content nonce** and a **dependency nonce** — it forms
+   domain-separated pre-digests of the content bytes and of the canonical
+   dependency encoding, each over the act identifier, its projection's
+   nonce, and the bytes; the pre-commitment is the hash of the canonical
+   structural body plus both pre-digests, and the actor signs it. The
+   pre-commitment exists before host salting, binds the exact proposal,
+   cannot be transplanted to another act identifier, carries no host order,
+   and grants no inclusion. The dependency nonce is disclosed to the host at
+   proposal with the dependency list. The content nonce stays on the
+   author's content-carriage side, beside the payload, is removed atomically
+   with it, and is never disclosed as dependency-verification input; the
+   host receives it only inside the optional content pair (step 2). With two
+   independent nonces, dependency verification carries no content
+   capability. **Entropy custody** (`subsec:deployment:concealment-entropy`,
+   `rem:graph:erasure-floor`): the host generates the commitment salts in
+   both carriage modes; the content nonce's entropy custody belongs to the
+   actor or the carriage layer under the published generation rule. When the
+   pair is absent the host never holds the content nonce, and the carrier
+   owns its checkable format, length, freshness, and non-reuse checks; these
+   are carriage obligations, not conditions of act acceptance. A low-entropy
+   content nonce exposes that actor's payload, not another actor's record.
+2. **Verified act (`def:graph:verified-act`).** The proposal carries the
+   structural body, the optional **content pair** (payload, content nonce),
+   the dependency list and the dependency nonce, the content pre-digest, the
+   pre-commitment, and the pre-signature. The pair is optional as a unit:
+   bytes without their nonce cannot be verified against the content
+   pre-digest. The host uses one submission procedure whether or not it
+   holds the pair. **Act checks:** it verifies the actor signature,
+   act-identifier uniqueness, canonical formation, hyper-edge A/T
+   consistency, public protocol references, dependency bounds, absence of
+   self-dependency, and the pre-commitment recomputed from the encoded
+   structural body, the received opaque content pre-digest, and the
+   dependency pre-digest recomputed from the dependency nonce and the
+   canonical dependency encoding. The act checks never require the payload
+   or the content nonce; a failure of an act check produces no Layer-1
+   object. The host then chooses independent fresh domain-separated salts
+   meeting the published entropy floor and forms the binding commitments:
+   the content commitment over the act identifier, the pre-commitment, its
+   salt, and the content pre-digest — binding the payload transitively and
+   inheriting the pre-digest's concealment, by one formula with or without
+   the pair — and the dependency commitment over the act identifier, the
+   pre-commitment, its salt, and the canonical dependency encoding.
+   **Carriage checks:** when the pair is present, the host additionally
+   recomputes the content pre-digest from the payload and content nonce,
+   requires equality with the received pre-digest, enforces the
+   $M_{\text{payload}}$ carriage bound, and carries the pair under
+   `rem:graph:act-payload-custody-phases`, removing both members atomically
+   on request; a failure refuses carriage of the pair, not the act. When the
+   pair is absent, those checks and that custody belong to whoever carries
+   it and are not conditions of the act. What the host verifies for the act,
+   commits to, seals, or orders never depends on possession of the payload
+   or content nonce. It seals the resulting **verified act** header — body,
+   pre-commitment, pre-signature, both commitments, and the content and
+   dependency edition tags, no host order fields — with its host signature.
+   The seal attests receipt, pre-commitment verification from the two
+   pre-digests, formation validity, and salt addition, identically in both
+   carriage modes; it promises no inclusion. The seal does not attest
+   carriage of the content pair: a party on the submission path can remove
+   an offered pair without invalidating the act, and a host can seal and
+   order an act while declining its carriage. Where carriage matters to the
+   actor, the layer that accepts it returns an authenticated carriage result
+   separate from the seal; its form is a deployment concern.
 3. **Approval witness (`def:graph:approval-witness`).** The actor verifies
    the host seal, exact equality of the returned body, references,
-   pre-commitment and pre-signature, correct opening of both commitments,
-   correct editions, and (for a hyper-edge) agreement of all act-level
+   pre-commitment and pre-signature, correct recomputation of its own
+   content pre-digest from the payload and content nonce, correct formation
+   of the content commitment over that pre-digest and of the dependency
+   commitment over the canonical dependency encoding with the returned
+   salts, correct editions, and (for a hyper-edge) agreement of all act-level
    fields across both legs — then signs the **approval witness** over the
    encoded verified act together with its host seal. The witness signs no
    epoch index, position, logical time,
@@ -1589,6 +1631,13 @@ recognition quantity.
    (a *compliant* order satisfies both placement conditions); by finalizing
    an act the host attests it held and validated the full dependency
    opening.
+
+**Submission-path disclosure (`subsec:deployment:concealment-entropy`).**
+Every submission discloses the dependency list and its nonce, and the
+content pair when it is sent, to the host and to whatever carries the
+submission. Confidentiality of the submission path is deployment scope; a
+later tombstone conceals the dependency projection from holders of the
+record, not from parties that observed the submission.
 
 **Post-finalization faults (`def:graph:parent-placement-fault`,
 `def:graph:stamp-fault`, `def:graph:title-certificate-fault`).** A
@@ -1748,8 +1797,9 @@ determinant sign, damped weight, and both commitment verifications
 of an accepted act has exactly these fields: act identifier, author, and
 family; structural body; public protocol references and causal parents;
 payload and dependency commitments; admission handshake and approval
-witness; finalization epoch and act time. The payload bytes, salts, and
-dependency opening travel beside the envelope and are not part of it. Its
+witness; finalization epoch and act time. The payload and content nonce
+(the content pair), the salts, and the dependency opening travel beside the
+envelope and are not part of it. Its
 serialization, carriage, and transport are deployment concerns.
 
 **Act payload projection (`def:graph:act-payload-projection`).** **Every
@@ -1771,12 +1821,19 @@ without exception. The payload is removable; the structural record is not.
 controller of an act is its **author** — there is no separate A-leg or
 T-leg controller; the initiating author owns the one act payload. The
 payload is removable at the request of its controller **or of any
-legitimate entity**, under the phase-custody split below. Derived raw
+legitimate entity**, under the carriage-custody split below. Derived raw
 edges carry no payload projection; there is nothing to control.
 
 **Payload state (`def:graph:act-payload-state`).** Three states:
 **full-empty** (canonical zero-length bytes, private value present),
-**full**, **reduced**. State moves toward reduced only.
+**full**, **reduced**. State moves toward reduced only. Payload state
+belongs to the projection wherever its content pair is held: a pair held
+only by its author is full until its custodian removes it, and absence of
+the pair at the host is neither an empty payload nor a reduction. A
+requested publication state constrains how the projection may move, not
+where it is held; making a full projection available is the duty of
+whichever layer accepts its carriage, and Layer 1 promises no availability
+for a pair that no layer carries.
 
 **Separable, Concealing Act Commitment
 (`post:graph:separable-act-projections`).** The append mechanism's
@@ -1812,10 +1869,14 @@ never an action-denomination rule.
 
 **Custody across phases (`rem:graph:act-payload-custody-phases`):** the
 content commitment (*witness*) is invariant across phases; only carriage
-migrates. Centralized: Layer 1 tracks payload and salt, removable on
-request. Decentralized: Layer 1 tracks only the witness; payload and salt
-are a terminal carriage obligation. The structural record is identical in
-both.
+migrates. Centralized carriage: the host tracks the optional content pair
+and its opening material, removable on request with both pair members
+removed atomically. Decentralized carriage: Layer 1 tracks only the
+witness; the pair and its opening material are a terminal carriage
+obligation. Carriage custody may precede append decentralization: a
+centralized-phase deployment may use decentralized carriage. The structural
+record and the witness are identical in all four combinations of append and
+carriage custody; the phase split binds only who operates append.
 
 ### 8.5 The stored sentiment slice
 
