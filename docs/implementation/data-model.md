@@ -630,7 +630,8 @@ Lifecycle rules, driven off the ingestion pass:
 - **A carried act waits for the landing.** An applicant's once-each
   post, Opinion and Affinity stay `carried` — author-only, never
   collected — until the account lands; the landing releases them as
-  one batch whose GC window starts then.
+  one batch whose GC window starts then. No client stages one
+  ([auth.md](auth.md) "Application").
 - **An admission Registration's approval waits for its funding.**
   While the address's admission burn has not settled, the approval
   witness is held on the row and the write reads `relaying`; every
