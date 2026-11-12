@@ -2183,18 +2183,20 @@ Object.assign(FLOW_MARKERS, {
 // field and toggle carries its own number now, matched by `id` where the
 // field starts empty (no distinguishing value text to key off).
 Object.assign(FLOW_MARKERS, {
+  // The `answer` chip's `failed` (round 46) draws the fields and the commit
+  // again: the same controls, so the same numbers.
   Join: [
     { n: 8, find: 'aria-label="About CoGra"', tag: "button" },
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'data-field="Handle"', tag: "div" },
-    { n: 3, find: 'data-field="Email"', tag: "div" },
-    { n: 4, find: 'data-field="Password"', tag: "div" },
+    { n: 2, find: 'data-field="Handle"', tag: "div", all: true },
+    { n: 3, find: 'data-field="Email"', tag: "div", all: true },
+    { n: 4, find: 'data-field="Password"', tag: "div", all: true },
     // One reveal control drawn on both password fields (ChangePassword's rule).
     { n: 5, find: 'aria-label="Show password"', tag: "button", all: true },
-    { n: 6, find: ">Create account</button>", tag: "button" },
+    { n: 6, find: ">Create account</button>", tag: "button", all: true },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
     // The password asked twice (round 38, jakob's J2).
-    { n: 11, find: 'data-field="Repeat password"', tag: "div" },
+    { n: 11, find: 'data-field="Repeat password"', tag: "div", all: true },
     // The two legal doors (jakob 2026-10-09, ruling 76): the accept
     // sentence's Terms above the commit, the privacy notice at the foot.
     { n: 9, find: ">Terms</a>", tag: "a" },
