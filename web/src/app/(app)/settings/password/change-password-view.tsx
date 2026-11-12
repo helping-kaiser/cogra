@@ -4,13 +4,15 @@
 // behavior/ChangePassword.md; copy-voice *The settings subpages*).
 //
 // The form opens at rest and typing never marks a field before the next
-// press. A press checks the new password's length here — the client knows
-// 12 and 128 — and only a well-formed pair goes out; the server's own
-// WEAK_PASSWORD past those checks is the breach. The length line re-checks
-// live once it stands; a wrong current password and the breach line stand
-// until the next press. A run of wrong current passwords answers the
-// account's re-authentication budget, said in the whole-act slot above the
-// commit (B7's line, ruled PR-4), as does a press that gets no answer.
+// press. A press checks the new password's length and its repeat here — the
+// client knows 12 and 128, and whether the two match — each field on its own,
+// and only a well-formed pair goes out; the server's own WEAK_PASSWORD past
+// those checks is the breach. The length and mismatch lines re-check live
+// once they stand; a wrong current password and the breach line stand until
+// the next press. A run of wrong current passwords answers the account's
+// re-authentication budget, said in the whole-act slot above the commit (B7's
+// line, ruled PR-4), as does a press that gets no answer. The commit waits on
+// the three fields with no line above it: the wait explains itself (round 41).
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -19,6 +21,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { hasCode } from "@/lib/api/outcome";
 import { changePassword, fetchSettingsAccount } from "@/lib/api/settings-api";
 import { passwordLength } from "@/lib/onboarding/registration-rules";
+import { mismatchAfterEdit, mismatchOnPress } from "@/lib/onboarding/repeat-password";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { part, type DataNode } from "@/lib/ui/data-node";
 import { FormPasswordField } from "@/lib/ui2/form-fields";
@@ -47,6 +50,8 @@ export function ChangePasswordView() {
   const [currentError, setCurrentError] = useState<string | null>(null);
   /** `length` re-checks live; `breach` stands until the next press. */
   const [nextError, setNextError] = useState<{ kind: "length" | "breach"; line: string } | null>(null);
+  const [repeat, setRepeat] = useState("");
+  const [repeatError, setRepeatError] = useState<string | null>(null);
   const [fault, setFault] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -63,19 +68,23 @@ export function ChangePasswordView() {
       const length = passwordLength(value);
       setNextError(length === "ok" ? null : { kind: "length", line: LENGTH_LINES[length] });
     }
+    setRepeatError(mismatchAfterEdit(repeatError, value, repeat));
+  };
+  const onRepeat = (value: string) => {
+    setRepeat(value);
+    setRepeatError(mismatchAfterEdit(repeatError, next, value));
   };
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (busy || current === "" || next === "") return;
+    if (busy || current === "" || next === "" || repeat === "") return;
     setCurrentError(null);
-    setNextError(null);
     setFault(null);
     const length = passwordLength(next);
-    if (length !== "ok") {
-      setNextError({ kind: "length", line: LENGTH_LINES[length] });
-      return;
-    }
+    const mismatch = mismatchOnPress(next, repeat);
+    setNextError(length === "ok" ? null : { kind: "length", line: LENGTH_LINES[length] });
+    setRepeatError(mismatch);
+    if (length !== "ok" || mismatch !== null) return;
     setBusy(true);
     const outcome = await guard.run(() => changePassword(client, current, next));
     setBusy(false);
@@ -116,17 +125,27 @@ export function ChangePasswordView() {
             value={next}
             onChange={onNext}
             autoComplete="new-password"
+            enterKeyHint="next"
             hint="At least 12 characters."
             error={nextError?.line ?? null}
             node={part(NODE, "password")}
           />
         </div>
         <div className="mt-6">
+          <FormPasswordField
+            label="Repeat password"
+            value={repeat}
+            onChange={onRepeat}
+            autoComplete="new-password"
+            error={repeatError}
+            node={part(NODE, "confirm")}
+          />
+        </div>
+        <div className="mt-6">
           <WaitingCommit
             label="Change password"
             busyLabel="Changing password…"
-            reason="Waiting for both passwords"
-            waiting={current === "" || next === ""}
+            waiting={current === "" || next === "" || repeat === ""}
             busy={busy}
             fault={fault}
             node={part(NODE, "commit")}
