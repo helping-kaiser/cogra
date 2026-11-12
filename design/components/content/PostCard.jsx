@@ -67,8 +67,9 @@ const TEXT_BODY_CLAMP_LINES = 18;
 /* A static render cannot measure a paragraph, so the opener is offered on an
    estimate from the same tokens: at `--text-body-medium` (0.875rem = 14px) the
    sans averages about half an em to the glyph, so 358 / 7 ≈ 51 characters to
-   the line. A media post needs no estimate — its caption is clamped to two
-   lines and the opener always stands under it. */
+   the line. A media post's caption takes the same estimate against its two
+   lines: `More` stands only where the caption is actually clamped, never
+   under one that fits whole (jakob's finding, seam 276 item 2). */
 const CHARS_PER_LINE = 51;
 
 export function PostCard({
@@ -275,12 +276,11 @@ export function PostCard({
 
   // Only where there is something folded away. "More" is a text control, not a
   // link: it opens the text in place and never navigates. A media post's caption
-  // is clamped to two lines and always carries it; a text post's body has 18
-  // lines to fill first, so there the opener waits on the estimate above.
-  const folded = hasMedia
-    ? Boolean(description)
-    : (words && words.length > TEXT_BODY_CLAMP_LINES * CHARS_PER_LINE) ||
-      (description && description.length > DESCRIPTION_CLAMP_LINES * CHARS_PER_LINE);
+  // is clamped to two lines and carries it only when it runs past them; a text
+  // post's body has 18 lines to fill first. Both wait on the estimate above.
+  const folded =
+    (!hasMedia && words && words.length > TEXT_BODY_CLAMP_LINES * CHARS_PER_LINE) ||
+    (description && description.length > DESCRIPTION_CLAMP_LINES * CHARS_PER_LINE);
   const opener =
     !detail && folded ? (
       <button
