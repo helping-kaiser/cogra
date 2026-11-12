@@ -3246,6 +3246,8 @@ Object.assign(FLOW_MARKERS, {
     // Round 43: the queue's door under its third row (the `applications`
     // chip's `capped`), appended so no via renumbers.
     { n: 13, find: 'data-node="invites.applicationsDoor"', tag: "button" },
+    // Round 46: Live links' door under the third link (the `links` chip).
+    { n: 14, find: 'data-node="invites.linksDoor"', tag: "button" },
   ],
   RejectAllConfirm: [
     { n: 1, find: ">Close them</button>", tag: "button" },

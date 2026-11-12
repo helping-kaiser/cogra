@@ -5703,7 +5703,7 @@ Never capped: History, Saved, Notifications, the profile's chronicle, posts
 and comments, `TagPage`, `ProfileStances`, `PostOpinions`, `CitedBy`,
 `YourTopics`, Hidden accounts (readme §13, beside the search sections' cap).
 
-### 182 · Invites' Live links: the cap is not drawn · *design* · **filed 2026-11-11**
+### 182 · Invites' Live links: the cap is not drawn · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
 Round 40. The ruling caps Live links at three in the screen's order, but the
 page draws two links, so no setting can show the cap without two more sample
@@ -5711,7 +5711,7 @@ links (their ids, addresses and captions — fixture data, no new words). Left
 for the next round on Invites, with backlog 180. Round 43 left it undrawn:
 nothing writes the order Live links stands in (the queue's is by age, the
 people's newest first), so which three a cap shows is not settled — backlog
-195.
+195. Closed by round 46 with 195: the cap drawn on `Invites`' `links` chip.
 
 ### 183 · Long names on the boards round 40 did not touch · *design* · **filed 2026-11-11** · **closed 2026-11-12**
 
@@ -5840,7 +5840,7 @@ the lines move into the pad's "?" whole / the sheets keep the subline [lean];
 jakob 2026-11-12 "fix the wrong side"): the drawn line, which names the seen
 record sign-out clears (PR-69), is the true side; copy-voice takes it.
 
-### 195 · Live links: the order a cap would keep · *design* · **filed 2026-11-12**
+### 195 · Live links: the order a cap would keep · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 43 (backlog 182). The cap is ruled — three, then `Show all`, People
 you let in's door — but no law says in what order Live links stand: the
@@ -5849,7 +5849,9 @@ queue stands by age, the people newest first, and the two drawn links
 as drawn. Which three a capped section shows follows from the order, and
 two more sample links follow from it too. For jakob: (a) newest made first,
 People you let in's order [lean — the drawn pair already reads so]; (b)
-soonest to expire first; (c) single-use links first, then many-use.
+soonest to expire first; (c) single-use links first, then many-use. Closed
+by round 46 (jakob 2026-11-12, 4 "as rec"): newest made first, three, then
+`Show all` in place (`Invites`' `links` chip; two older sample links).
 
 ### 196 · The Sensitive content footnote and the Reading "?" · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 

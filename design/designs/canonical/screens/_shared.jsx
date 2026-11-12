@@ -5451,6 +5451,10 @@ const SOL_INVITE_LINK_OPEN = "https://cogra.social/join/c47b19e0-3a52-4f68-b1d9-
    it used it up, so it keys his group and never stands under Live links: a
    link that no longer works is not live (Invites.md). */
 const SOL_INVITE_USED_ID = "3e9a6b52-71d4-4c08-b5f3-9c2e18a07d64";
+/* Two older live links, Invites' cap only (round 46): made 05.09 and 01.09,
+   both for 30 days. */
+const SOL_INVITE_OLDER_ID = "5d2e8f41-0c6a-4b93-8e17-a4f6c3b9d025";
+const SOL_INVITE_OLDEST_ID = "e71a0c36-9f24-4d58-b3e2-1c8d5a7f4b90";
 
 /* THE ASK LINK — the invite link's mirror, and shaped as its mirror: the same
    origin, its own path, one id. What it is NOT is the difference that matters.
@@ -6058,6 +6062,43 @@ function InvitesBody({ approving = false, kept = "none", revoke, shown, closedFa
             node="link"
             nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)}
           />
+          {/* LIVE LINKS ARE CAPPED (jakob 2026-11-12, 4): newest made first,
+              three, then `Show all` under the third — the queue's door, the
+              rest opening in place. Two older sample links, by the drawn
+              cards' form, stand on `Invites` alone (its `links` chip). */}
+          {shown && (
+            <>
+              <PayoutAddress
+                label="Single use · not used yet"
+                address={`https://cogra.social/join/${SOL_INVITE_OLDER_ID}`}
+                onCopy={() => {}}
+                copyLabel="Copy the link"
+                onChange={() => {}}
+                changeLabel="Revoke"
+                caption="Expires in 20 days · 05.10.2026"
+                node="link"
+                nodeKey={SOL_INVITE_OLDER_ID}
+              />
+              <div style={{ display: shown.linksDoor }} data-node-chip="links" data-node-key="capped">
+                <InlineAction size="sm" selfStart node="linksDoor">
+                  Show all
+                </InlineAction>
+              </div>
+              <div style={{ display: shown.linksRest, flexDirection: "column", gap: 8 }}>
+                <PayoutAddress
+                  label="Many uses"
+                  address={`https://cogra.social/join/${SOL_INVITE_OLDEST_ID}`}
+                  onCopy={() => {}}
+                  copyLabel="Copy the link"
+                  onChange={() => {}}
+                  changeLabel="Revoke"
+                  caption="Expires in 16 days · 01.10.2026"
+                  node="link"
+                  nodeKey={SOL_INVITE_OLDEST_ID}
+                />
+              </div>
+            </>
+          )}
         </div>
         </div>
 
