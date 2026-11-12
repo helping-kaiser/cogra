@@ -1839,9 +1839,9 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -7960,
+      "x": -8250,
       "y": 0,
-      "w": 7540,
+      "w": 7830,
       "h": 5545,
       "page": "feed",
       "title": "Feed & Search · flow map"
@@ -1905,7 +1905,7 @@
       "x": -5930,
       "y": 0,
       "w": 5510,
-      "h": 8803,
+      "h": 9062,
       "page": "profile",
       "title": "Profile · flow map"
     },

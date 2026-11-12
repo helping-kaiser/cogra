@@ -5481,6 +5481,112 @@
         ]
       }
     },
+    "FeedRemovedMenu": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the post's id, the lowercase UUID the wire carries (PostCard)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.comments": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.score": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.score.value": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.share": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip.avatar": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip.handle": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.authorChip.name": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.body": [
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.menu": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.card.removalMark": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.removalMark.detail": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.removalMark.line": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c"
+        ],
+        "feed.card.timestamp": [
+          "7c1e4b2a-3f5d-4a8e-9b6c-1d2e3f4a5b6c",
+          "dd44f5de-d68c-4931-aabc-915cefadab7f"
+        ],
+        "feed.menuSheet": [],
+        "feed.menuSheet.cite": [],
+        "feed.menuSheet.dragHandle": [],
+        "feed.menuSheet.hide": [],
+        "feed.menuSheet.report": [],
+        "feed.menuSheet.save": []
+      }
+    },
     "FeedReportConfirm": {
       "prefix": "feed",
       "keys": {
@@ -9686,12 +9792,18 @@
         "profile.comments.commentCard.removalMark.line": [
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
         ],
+        "profile.comments.commentCard.removalMark.when": [
+          "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
+        ],
         "profile.comments.commentCard.target": [
           "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e",
           "c4d2e6f8-1a3b-4d5c-8e9f-6a7b8c9d0e1f"
         ],
         "profile.comments.empty": [],
         "profile.comments.empty.title": [],
+        "profile.comments.loading": [],
+        "profile.comments.moreFault": [],
+        "profile.comments.moreFault.retry": [],
         "profile.comments.viewReplies": [
           "5e8a1c3d-2b4f-4c6a-9d7e-3f1a2b3c4d5e"
         ],
@@ -9964,6 +10076,11 @@
         "profile.comments.commentCard.target": [
           "0b7e3c9a-5d21-4f8e-a6c4-2e9d1f7b3a58"
         ],
+        "profile.comments.empty": [],
+        "profile.comments.empty.title": [],
+        "profile.comments.loading": [],
+        "profile.comments.moreFault": [],
+        "profile.comments.moreFault.retry": [],
         "profile.identity": [],
         "profile.identity.actionRow": [],
         "profile.identity.actionRow.edit": [],
@@ -10615,6 +10732,9 @@
         ],
         "profile.posts.empty": [],
         "profile.posts.empty.title": [],
+        "profile.posts.loading": [],
+        "profile.posts.moreFault": [],
+        "profile.posts.moreFault.retry": [],
         "profile.tabRow": [],
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
@@ -11002,6 +11122,11 @@
         "profile.posts.card.title": [
           "734cd530-6c98-4f22-9027-2ff4ff46b5b5"
         ],
+        "profile.posts.empty": [],
+        "profile.posts.empty.title": [],
+        "profile.posts.loading": [],
+        "profile.posts.moreFault": [],
+        "profile.posts.moreFault.retry": [],
         "profile.tabRow": [],
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
@@ -12157,6 +12282,8 @@
         "postDetail.header": [],
         "postDetail.header.back": [],
         "postDetail.header.menu": [],
+        "postDetail.snackbar": [],
+        "postDetail.snackbar.message": [],
         "postDetail.threadSheet": [],
         "postDetail.threadSheet.commentCard": [
           "8c7296e7-8e4b-45b1-9889-279e7a713f9c",
