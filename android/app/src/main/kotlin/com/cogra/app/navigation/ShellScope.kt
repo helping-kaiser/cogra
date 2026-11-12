@@ -52,6 +52,25 @@ internal interface ShellScope {
      */
     val signedIn: Boolean?
 
+    /**
+     * The reader is an applicant — registered, not yet let in — and cannot
+     * post (`ReaderStanding`). False until the shell's account read answers.
+     */
+    val applicant: Boolean
+
+    /**
+     * EVERY DOOR TO THE POST WIZARD, one answer for each reader: a guest meets
+     * the join prompt; an applicant is told `You can post once you're in.` and
+     * the wizard never opens (ApplicantFeed.md:49, ProfileApplicant.md:26,
+     * ProfileMenu.md:19; copy-voice "The applicant-foot family": the bar's
+     * `New post` and the menus' `Cite in a new post` and `Mention in a new
+     * post`); a member's opens [route].
+     */
+    fun openComposer(route: ComposePost)
+
+    /** Says the applicant's posting line on the shell's snackbar; nothing opens. */
+    fun announcePostLocked()
+
     /** The bar's slot of [tab] re-tapped over the tab's own root, counted: the root answers each one. */
     fun reselects(tab: TopLevelTab): Int
 
@@ -155,12 +174,25 @@ internal class Shell(
     override val navController: NavHostController,
     override val authState: AuthStateViewModel,
     override val signedIn: Boolean?,
+    override val applicant: Boolean,
     private val state: ShellState,
     private val bellLit: Boolean,
     private val snackbar: SnackbarHostState,
     private val scope: CoroutineScope,
+    /** `You can post once you're in.` — the one wording the profile's Mention says too. */
+    private val postLockedLine: String,
 ) : ShellScope {
     override fun reselects(tab: TopLevelTab): Int = state.reselects(tab)
+
+    override fun openComposer(route: ComposePost) {
+        when {
+            signedIn != true -> requireJoin()
+            applicant -> announcePostLocked()
+            else -> navController.navigate(route)
+        }
+    }
+
+    override fun announcePostLocked() = announce(postLockedLine)
 
     // The slots every destination that has them draws the same way, written
     // once here, where the session and the controller are in hand, rather

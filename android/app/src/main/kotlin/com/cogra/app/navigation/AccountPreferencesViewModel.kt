@@ -14,6 +14,7 @@ package com.cogra.app.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.domain.AccountState
 import com.cogra.domain.Outcome
 import com.cogra.domain.ReaderStanding
 import com.cogra.domain.repo.AccountRepository
@@ -37,6 +38,9 @@ class AccountPreferencesViewModel @Inject constructor(
 
     /** Whether the signed-in account always unveils sensitive content. */
     val alwaysUnveil: StateFlow<Boolean> = sensitive.alwaysUnveil
+
+    /** The reader's own account state, as the shell's read and the feed's re-reads last answered. */
+    val readerState: StateFlow<AccountState?> = standing.state
 
     init {
         viewModelScope.launch {

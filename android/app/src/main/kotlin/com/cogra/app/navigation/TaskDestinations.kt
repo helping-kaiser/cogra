@@ -5,6 +5,7 @@
 package com.cogra.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -105,6 +106,17 @@ internal fun NavController.openReplyWizard(target: ReplyTarget) {
 @Composable
 private fun ShellScope.ComposeDestination(entry: NavBackStackEntry) {
     val editing = entry.toRoute<ComposePost>().postId != null
+    // THE WIZARD NEVER OPENS FOR AN APPLICANT (ApplicantFeed.md:49): every
+    // door answers in place ([ShellScope.openComposer]), and an entry that
+    // reached the stack another way — a restored stack — leaves it, saying
+    // the line once, as Invites sends a non-member back (ProfileApplicant.md:18).
+    if (!editing && applicant) {
+        LaunchedEffect(entry.id) {
+            if (navController.currentBackStackEntry?.id == entry.id) navController.popBackStack()
+            announcePostLocked()
+        }
+        return
+    }
     // Creating a post runs the wizard (D19); editing one runs
     // the post edit, one screen and one batch (EditCompose).
     // Both live behind the same destination so the bottom
