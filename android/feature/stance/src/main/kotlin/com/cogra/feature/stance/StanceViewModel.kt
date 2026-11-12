@@ -23,7 +23,9 @@ package com.cogra.feature.stance
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.domain.AccountState
 import com.cogra.domain.Outcome
+import com.cogra.domain.ReaderStanding
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.signing.Expectation
@@ -193,6 +195,13 @@ data class StanceUiState(
     val reviewFrom: StanceTarget? = null,
     /** The kept picks just signed, until their records are ordered (PadPendingReview.md:21). */
     val settling: Set<StanceTarget> = emptySet(),
+    /**
+     * The reader is an applicant (`ReaderStanding`): every plain face is
+     * locked — its tap and its hold answer in place and nothing blooms, is
+     * signed or is kept (ApplicantFeed.md:45-47, ProfileOther.md:45-49). The
+     * vouch flow's own pads are not plain faces and stay open.
+     */
+    val applicant: Boolean = false,
 )
 
 @HiltViewModel
@@ -206,6 +215,8 @@ class StanceViewModel @Inject constructor(
     private val account: AccountRepository,
     /** The picks kept on this device while the key was elsewhere (PadKeyAbsent.md:27). */
     private val keptPicks: KeptPickStore,
+    /** The reader's own account state: an applicant's faces are locked. */
+    private val standing: ReaderStanding,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StanceUiState())
@@ -237,6 +248,11 @@ class StanceViewModel @Inject constructor(
         // anchor already composed (PadPending.md:3; KeptPicksReview.md:19).
         viewModelScope.launch {
             keptPicks.watch().collect { kept -> _state.update { it.copy(kept = kept) } }
+        }
+        // Collected, so a landing watched live unlocks the faces already
+        // composed, without a restart.
+        viewModelScope.launch {
+            standing.state.collect { s -> _state.update { it.copy(applicant = s == AccountState.APPLICANT) } }
         }
         viewModelScope.launch {
             signals.settling.collect { settling ->
@@ -346,7 +362,19 @@ class StanceViewModel @Inject constructor(
      * without opening anything (design/guidelines/stance-control.md "The
      * gesture" — the shortcut that signs takes a held finger).
      */
-    fun onHoldDefault(target: StanceTarget) = signFromRow(target, StancePair.TapDefault)
+    fun onHoldDefault(target: StanceTarget) {
+        if (locked(target)) return
+        signFromRow(target, StancePair.TapDefault)
+    }
+
+    /**
+     * An applicant's plain face: the gestures that would bloom, sign or keep
+     * do nothing here — the control answers with the line instead. The
+     * vouch-back's pad (the [KeptFamily.VOUCH_BACK] family) is the vouch
+     * flow's own and stays open.
+     */
+    fun locked(target: StanceTarget): Boolean =
+        _state.value.applicant && _state.value.targets[target]?.family != KeptFamily.VOUCH_BACK
 
     /**
      * THE ROW'S RETRY ASKS THE ACT THAT WAS SENT (round 21, seam 245 ask 16;
@@ -387,6 +415,7 @@ class StanceViewModel @Inject constructor(
      * let a restart teach twice.
      */
     fun onOpenPad(target: StanceTarget) {
+        if (locked(target)) return
         if (opensReview(target)) return askForReview(target)
         // A reader who chose sliders or typed values meets the alternates
         // wherever the pad would bloom: the choice replaces the pad
@@ -448,6 +477,7 @@ class StanceViewModel @Inject constructor(
      * considered route has met the gesture — without drawing the lines.
      */
     fun onOpenAlternates(target: StanceTarget) {
+        if (locked(target)) return
         if (opensReview(target)) return askForReview(target)
         open(target, PadMode.ALTERNATES)
         if (taught != true) {

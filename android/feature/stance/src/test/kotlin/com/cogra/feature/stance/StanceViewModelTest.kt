@@ -1,10 +1,12 @@
 package com.cogra.feature.stance
 
 import com.cogra.crypto.ActorKey
+import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ReaderStanding
 import com.cogra.domain.UserError
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.WriteSigner
@@ -157,8 +159,9 @@ class StanceViewModelTest {
     }
 
     private val kept = InMemoryKeptPickStore()
+    private val standing = ReaderStanding()
 
-    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals, account, kept)
+    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals, account, kept, standing)
 
     private fun entry(vm: StanceViewModel) = vm.state.value.targets.getValue(TARGET)
 
@@ -1490,5 +1493,87 @@ class StanceViewModelTest {
         vm.onDismissPad(TARGET)
 
         assertThat(entry(vm).severance).isNull()
+    }
+
+    // -- The applicant's locked face (ApplicantFeed.md:43-53, ProfileOther.md:45-49; PR-103) --
+
+    @Test
+    fun anApplicantsTapBloomsNoPad() = runTest(dispatcher) {
+        standing.record(AccountState.APPLICANT)
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onOpenPad(TARGET)
+        vm.onOpenAlternates(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+        assertThat(vm.locked(TARGET)).isTrue()
+    }
+
+    @Test
+    fun anApplicantsHoldSignsAndStagesNothing() = runTest(dispatcher) {
+        standing.record(AccountState.APPLICANT)
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onHoldDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(stances.staged).isEmpty()
+        assertThat(entry(vm).busy).isFalse()
+    }
+
+    @Test
+    fun anApplicantWithoutTheKeyKeepsNoPick() = runTest(dispatcher) {
+        identity.seed = null
+        standing.record(AccountState.APPLICANT)
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onHoldDefault(TARGET)
+        vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.kept).isEmpty()
+        assertThat(stances.staged).isEmpty()
+    }
+
+    // A landing watched live unlocks the faces already composed, without a restart.
+    @Test
+    fun aLiveLandingUnlocksTheFace() = runTest(dispatcher) {
+        standing.record(AccountState.APPLICANT)
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+
+        standing.record(AccountState.MEMBER)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.applicant).isFalse()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
+    }
+
+    // The vouch flow's own pad stays open (PR-103's carve-out; VouchBackPad.md).
+    @Test
+    fun theVouchBacksPadIsNotLocked() = runTest(dispatcher) {
+        standing.record(AccountState.APPLICANT)
+        val vm = viewModel()
+        vm.setFamily(TARGET, com.cogra.domain.stance.KeptFamily.VOUCH_BACK)
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
     }
 }

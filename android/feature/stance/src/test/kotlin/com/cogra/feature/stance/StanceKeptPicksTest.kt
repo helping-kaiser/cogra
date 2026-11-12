@@ -44,6 +44,7 @@ class StanceKeptPicksTest {
     private val writes = SealingWriteRepository(actor)
     private val signals = StanceSignals()
     private val kept = InMemoryKeptPickStore()
+    private val standing = com.cogra.domain.ReaderStanding()
 
     private val stances = object : ThrowingStanceRepository() {
         val staged = mutableListOf<StancePair>()
@@ -82,7 +83,7 @@ class StanceKeptPicksTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals, account, kept)
+    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals, account, kept, standing)
 
     private fun idle() = dispatcher.scheduler.advanceUntilIdle()
 
