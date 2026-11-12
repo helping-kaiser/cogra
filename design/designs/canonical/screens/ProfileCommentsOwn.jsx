@@ -41,7 +41,7 @@ export function Screen() {
       <div style={{ display: "{{noneShown}}", padding: "0 16px" }}>
         <EmptyState title="Nothing here yet." node="empty" />
       </div>
-      <ProfileTabFirstPage top={0} />
+      <ProfileTabFirstPage top={0} kind="comments" />
     </ProfileTabTop>
   );
 }

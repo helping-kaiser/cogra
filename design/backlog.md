@@ -6011,10 +6011,12 @@ detail header carries the reader's post menu as the card does, no license row
 [lean — one menu per post, wherever it is opened]; (b) the detail stays
 menu-less; and whether the reader's own removed card and detail keep none.
 
-### 207 · A first page that failed reads `Couldn't load more` · *design* · **filed 2026-11-12**
+### 207 · A first page that failed reads `Couldn't load more` · *design* · **filed 2026-11-12** · **closed 2026-11-12**
 
 Round 45 (re-ask 15, as recommended: `ProfileMoreFailed`'s quiet row where the
 list would stand). The row is copied word for word, so a tab whose first page
 never came says `more` with nothing above it. For jakob: (a) keep it, one row
 for every page [as drawn]; (b) the first page's row takes a line of its
 own, his words. Nothing waits on it.
+
+Closed by round 46 (jakob 2026-11-12, question 19, as recommended): the row stays quiet and takes the first-page family's words, `Can't reach the server — posts can't load right now.` / `… comments can't load right now.`, with `Retry`; `Couldn't load more` is a failed next page's line alone.

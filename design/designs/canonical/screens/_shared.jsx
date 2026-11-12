@@ -5122,11 +5122,14 @@ const SOL_OWN_COMMENT = {
    · IN FLIGHT, the chronicle's own wait (`Profile`, `ProfileMoreFailed`):
      nothing for the first 200ms — no empty line meanwhile — then
      `LoadingState`'s `Loading…`, no skeleton cards and no spinner.
-   · NOT COMING, `ProfileMoreFailed`'s quiet row, word for word —
-     `Couldn't load more — Retry` at body-medium in the secondary colour,
-     never `--error` — standing where the list would stand, never a full-tab
-     fault. Named as `Notifications` names the same row: `moreFault` and its
-     `retry`; the wait `loading`. */
+   · NOT COMING, `ProfileMoreFailed`'s quiet row — body-medium in the
+     secondary colour, never `--error`, standing where the list would stand,
+     never a full-tab fault — in the first-page family's words (jakob
+     2026-11-12, question 19): `Can't reach the server — posts can't load
+     right now.` or `… comments can't load right now.`, then `Retry`.
+     `Couldn't load more` stays a failed NEXT page's line alone. Named
+     `moreFault` and its `retry` (round 45's paths, kept); the wait
+     `loading`. */
 const PROFILE_TAB_FAULT = {
   margin: 0,
   padding: "8px 4px 16px",
@@ -5138,7 +5141,7 @@ const PROFILE_TAB_FAULT = {
 };
 /* `top` is the list's own top padding still owed: `ProfileTabTop`'s list
    already carries its 8px, the posts and comments boards' own do not. */
-function ProfileTabFirstPage({ top = 8 }) {
+function ProfileTabFirstPage({ top = 8, kind = "posts" }) {
   return (
     <>
       <div style={{ display: "{{loadingShown}}", padding: `${top}px 16px 0` }}>
@@ -5148,7 +5151,7 @@ function ProfileTabFirstPage({ top = 8 }) {
       </div>
       <div style={{ display: "{{failedShown}}", padding: "0 12px", marginTop: top - 8 }}>
         <p style={PROFILE_TAB_FAULT} data-node="moreFault">
-          Couldn&apos;t load more <span aria-hidden="true">—</span> <InlineAction size="sm" node="retry">Retry</InlineAction>
+          Can&apos;t reach the server — {kind} can&apos;t load right now. <InlineAction size="sm" node="retry">Retry</InlineAction>
         </p>
       </div>
     </>

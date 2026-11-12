@@ -20,7 +20,7 @@ ALWAYS profile.comments.empty below profile.tabRow reads Nothing here yet., the 
 
 WHEN the tab's first page has not arrived 200ms after it was asked for -> profile.comments.loading stands in the list's place, reading Loading… AND NEVER profile.comments.empty stands meanwhile AND NEVER a skeleton card or a spinner appears
 
-WHEN the tab's first page does not arrive -> profile.comments.moreFault stands where the list would stand, reading Couldn't load more, then profile.comments.moreFault.retry as an inline action AND NEVER the line takes the error colour AND NEVER a full-tab fault stands
+WHEN the tab's first page does not arrive -> profile.comments.moreFault stands where the list would stand, reading Can't reach the server — comments can't load right now., then profile.comments.moreFault.retry as an inline action, Couldn't load more being a failed next page's line alone AND NEVER the line takes the error colour AND NEVER a full-tab fault stands
 
 WHEN the first page has not arrived 200ms after profile.comments.moreFault.retry is tapped -> Loading… stands in the row's place AND NEVER a spinner appears
 
