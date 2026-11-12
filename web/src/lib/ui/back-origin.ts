@@ -75,6 +75,27 @@ export function parsePersonOrigin(from: string | null | undefined): { handle: st
   return found === null ? null : { handle: found.head, from: found.from };
 }
 
+/**
+ * Invites as an origin (Invites.md:23, :27; ProfileOther.md:73: `Back to
+ * Invites` from the people you let in): `from=invites`, chaining the origin
+ * Invites itself was opened with — `invites/notifications` — so the way back
+ * hands Invites its own back arrow again.
+ */
+export const INVITES_ORIGIN = "invites";
+
+/** The `from` a door out of People you let in carries, chaining Invites' own. */
+export function letInOrigin(from: string | null = null): string {
+  return chained(INVITES_ORIGIN, from);
+}
+
+/** The origin Invites was opened with, when `from` names Invites; null where it names something else. */
+export function parseInvitesOrigin(from: string | null | undefined): { from: string | null } | null {
+  if (from === INVITES_ORIGIN) return { from: null };
+  if (typeof from !== "string" || !from.startsWith(`${INVITES_ORIGIN}/`)) return null;
+  const tail = from.slice(INVITES_ORIGIN.length + 1);
+  return { from: tail === "" ? null : tail };
+}
+
 /** A tag's page as an origin: `from=tag:<name>`. */
 export const TAG_ORIGIN = "tag:";
 
@@ -170,6 +191,13 @@ export function backFor(from: string | null | undefined, cold: BackTarget = FEED
   // page opened with the origin it was opened with.
   const tag = parseTagOrigin(from);
   if (tag !== null) return { href: tagPageHref(tag.name, tag.from), label: `Back to #${tag.name}` };
+  // A person let in reads `Back to Invites` (Invites.md:23, :27), the named
+  // surface by its title, and returns to Invites opened with its own origin.
+  const invites = parseInvitesOrigin(from);
+  if (invites !== null) {
+    const via = invites.from === null ? "" : `?from=${encodeURIComponent(invites.from)}`;
+    return { href: `/invites${via}`, label: "Back to Invites" };
+  }
   // The stream reads `Back to the stream` and returns into it at the clip the
   // reader left (copy-voice.md:721-722; PostDetailVideo.md:33).
   const clip = streamClipOf(from);
