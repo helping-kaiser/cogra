@@ -1656,8 +1656,7 @@ sign-in*, never the token underneath it.
 **An ask that can't be taken up** (`VouchAskUnusable`), in `JoinInvalid`'s
 idiom, one pair per case:
 
-- `@noor is already in` · `Someone has vouched them in already, so this
-  ask has nothing left to do.` — then `See @noor's profile` (jakob
+- `@noor is already in`, the title alone — then `See @noor's profile` (jakob
   2026-10-02, F4: the member came to vouch, so they will want to look;
   *new 2026-10-02, blessed (jakob 2026-10-02)*).
 - `@noor is waiting on someone else` · `Another member is deciding on
@@ -1722,9 +1721,8 @@ round*; every one blessed (jakob 2026-10-02).
   this app and stays in your hands — CoGra never holds it and can never
   reissue it.`; `YourKey`'s `This key signs everything you publish, and
   it lives only in this app.` and `Nothing here is sent anywhere — the
-  key is read from this app and shown.`; `YourKeyAbsent`'s `There is no
-  key in this app to show.` under `KeyElsewhere`'s blessed `Your key
-  isn't in this app`. *New 2026-10-05, blessed (jakob 2026-10-05).*
+  key is read from this app and shown.`; `YourKeyAbsent`'s title,
+  `KeyElsewhere`'s blessed `Your key isn't in this app`. *New 2026-10-05, blessed (jakob 2026-10-05).*
 - `VerifyExpired`'s resend answers in `Reset`'s construction, never saying
   whether the account was still waiting: signed in, `If your account is
   still waiting on its email, a fresh link is on its way to
@@ -2052,10 +2050,8 @@ changing this never reaches one you have already published.` The reading under t
 `Public domain`, as on the seal's row.
 
 **What your feed shows** (`SettingsReading`) is titled with the row and
-the filter's accessible name, and carries the group footnote's opening
-where a covering sheet hides the footnote: `Every feed starts from
-this.` The rest stays under the group, where the reader meets it first.
-The sections and hints are the feed's own, and so is the
+the filter's accessible name, and carries no note under the title
+(jakob 2026-11-12: what a default is needs no line). The sections and hints are the feed's own, and so is the
 foot: `Reset` in its corner and `Done`, the word both of the page's
 sheets use, at its end. Here `Reset` brings back CoGra's own default —
 the one place a reader gets back to it; on a feed's sheet the same word

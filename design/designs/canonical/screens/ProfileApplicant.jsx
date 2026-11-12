@@ -19,9 +19,7 @@
    THE CARD NAMES THE APPROVER (the approver sweep, 2026-09-15). "Waiting on
    your inviter" named a person this reader does not have — the inviter is
    fixed at the vouch-back — so the title names whoever's approval is in play.
-   Its body takes `ApplicantWaiting`'s first sentence and adds what the reader
-   can do meanwhile: `Their approval brings you in. Until then, you can read
-   everything.`
+   Its body is `ApplicantWaiting`'s: `Their approval brings you in.`
 
    THE ASK LINK LIVES HERE FOR GOOD (jakob 2026-10-02). The waiting card on the
    feed carries it until `Got it` puts that card away; this card is never put
