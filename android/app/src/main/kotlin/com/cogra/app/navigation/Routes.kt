@@ -59,6 +59,10 @@ data object PasswordReset
 @Serializable
 data class ResetNew(val token: String)
 
+/** A spent or expired reset link (`ResetExpired`), opened in ResetNew's place. */
+@Serializable
+data object ResetExpired
+
 @Serializable
 data object Restore
 
