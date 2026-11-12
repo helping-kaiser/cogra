@@ -209,7 +209,8 @@
     <string name="change_password_new">New password</string>
     <string name="change_password_new_hint">At least 12 characters.</string>
     <string name="change_password_commit">Change password</string>
-    <string name="change_password_reason">Waiting for both passwords</string>
+    <string name="change_password_confirm">Repeat password</string>
+    <string name="passwords_differ">The two passwords don\'t match.</string>
     <string name="change_password_in_flight">Changing password…</string>
     <string name="change_password_note">Your current password is asked for even though you are signed in: a live session is not proof enough to change the credential behind it.</string>
     <string name="change_password_done">Password changed — other devices are signed out.</string>
