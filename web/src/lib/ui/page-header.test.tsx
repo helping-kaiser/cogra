@@ -73,7 +73,11 @@ describe("PageHeader", () => {
 
     it("cuts the handle and keeps the words that follow it", () => {
       render(<PageHeader title={`${H} · Opinions`} backHref="/feed" backLabel="Back to feed" />);
-      const line = screen.getByRole("heading", { name: `${H} · Opinions` }).querySelector("[data-name-line]");
+      // By role alone: dom-accessibility-api trims each part's text, so jsdom
+      // would read `…haugh· Opinions`; the text itself is whole.
+      const heading = screen.getByRole("heading");
+      expect(heading).toHaveTextContent(`${H} · Opinions`);
+      const line = heading.querySelector("[data-name-line]");
       expect(line?.lastElementChild?.textContent).toBe(" · Opinions");
       expect(line?.lastElementChild?.className).toContain("flex-none");
     });
